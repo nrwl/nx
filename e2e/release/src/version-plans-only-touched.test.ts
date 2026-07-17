@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -11,7 +12,7 @@ import {
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -75,7 +76,7 @@ describe('nx release version plans only touched', () => {
     await runCommandAsync(`git tag -a ${pkg3}@0.0.0 -m "${pkg3}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 

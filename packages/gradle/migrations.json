@@ -1,12 +1,5 @@
 {
   "generators": {
-    "add-include-subprojects-tasks": {
-      "version": "20.2.0-beta.4",
-      "cli": "nx",
-      "description": "Add includeSubprojectsTasks to build.gradle file",
-      "factory": "./dist/src/migrations/20-2-0/add-include-subprojects-tasks",
-      "documentation": "./dist/src/migrations/20-2-0/add-include-subprojects-tasks.md"
-    },
     "change-plugin-to-v1": {
       "version": "21.0.0-beta.5",
       "cli": "nx",
@@ -166,6 +159,27 @@
       "description": "Rename imports of `createNodesV2` from `@nx/gradle` and `@nx/gradle/plugin-v1` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "change-plugin-version-0-1-22": {
+      "version": "23.0.0-rc.2",
+      "cli": "nx",
+      "description": "Change dev.nx.gradle.project-graph to version 0.1.22 in build file",
+      "factory": "./dist/src/migrations/23-0-0/change-plugin-version-0-1-22",
+      "documentation": "./dist/src/migrations/23-0-0/change-plugin-version-0-1-22.md"
+    },
+    "change-plugin-version-0-1-23": {
+      "version": "23.1.0-beta.4",
+      "cli": "nx",
+      "description": "Change dev.nx.gradle.project-graph to version 0.1.23 in build file",
+      "factory": "./dist/src/migrations/23-1-0/change-plugin-version-0-1-23",
+      "documentation": "./dist/src/migrations/23-1-0/change-plugin-version-0-1-23.md"
+    },
+    "change-plugin-version-0-1-24": {
+      "version": "23.1.0-beta.7",
+      "cli": "nx",
+      "description": "Change dev.nx.gradle.project-graph to version 0.1.24 in build file",
+      "factory": "./dist/src/migrations/23-1-0/change-plugin-version-0-1-24",
+      "documentation": "./dist/src/migrations/23-1-0/change-plugin-version-0-1-24.md"
     }
   },
   "packageJsonUpdates": {}

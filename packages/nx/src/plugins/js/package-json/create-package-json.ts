@@ -225,10 +225,32 @@ export function createPackageJson(
 
   // npm
   if (rootPackageJson.overrides && !options.skipOverrides) {
-    packageJson.overrides = {
+    // npm throws EOVERRIDE when an override key is also a direct dependency
+    // (unless specs match). The pruned dist pins exact versions and already
+    // resolved everything via the lockfile, so drop those redundant overrides.
+    const mergedOverrides = {
       ...rootPackageJson.overrides,
       ...packageJson.overrides,
     };
+    const overrides: typeof mergedOverrides = {};
+    let hasOverrides = false;
+    for (const name in mergedOverrides) {
+      if (
+        packageJson.dependencies?.[name] ||
+        packageJson.devDependencies?.[name] ||
+        packageJson.peerDependencies?.[name] ||
+        packageJson.optionalDependencies?.[name]
+      ) {
+        continue;
+      }
+      overrides[name] = mergedOverrides[name];
+      hasOverrides = true;
+    }
+    if (hasOverrides) {
+      packageJson.overrides = overrides;
+    } else {
+      delete packageJson.overrides;
+    }
   }
 
   // pnpm

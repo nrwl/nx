@@ -43,6 +43,22 @@ Distinguish platform features from ecosystem tools to prevent "Features" from be
 - Yes: **Platform Features**.
 - No (only React users): **Technologies**.
 
+### 6. The golden path (the "one way" rule)
+
+Feature pages teach the default workflow. Limit flags and variants to the ones a reader needs
+to make a decision.
+
+**The test:** Would a first-time user need this sentence to succeed or to choose? If not, it
+belongs in the corresponding Knowledge Base guide.
+
+- Show one command form. If `nx migrate` works without arguments, don't also show `nx migrate latest`.
+- When a flag presents a real choice, explain it briefly on the feature page (for example, why
+  pick `--include=required` over `all`) and link the Knowledge Base guide for constraints and
+  edge cases.
+- Remove deprecated options entirely when a replacement exists - no deprecation asides. The same
+  applies to workflows a new flag has superseded.
+- When two sections converge on the same flag or topic after a rewrite, merge them into one.
+
 ### Sidebar structure
 
 The sidebar has four top-level sections that follow the user journey:

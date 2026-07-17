@@ -1,26 +1,8 @@
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as packageManagerUtils from 'nx/src/utils/package-manager';
 import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
 import { addDependenciesToPackageJson, ensurePackage } from './package-json';
-
-// Mock fs for catalog tests
-jest.mock('fs', () => require('memfs').fs);
-jest.mock('node:fs', () => require('memfs').fs);
-
-// Mock yaml reading functions
-jest.mock('nx/src/devkit-internals', () => ({
-  ...jest.requireActual('nx/src/devkit-internals'),
-  readYamlFile: jest.fn((path: string) => {
-    const { vol } = require('memfs');
-    try {
-      const content = vol.readFileSync(path, 'utf8');
-      return require('@zkochan/js-yaml').load(content);
-    } catch (error) {
-      throw new Error(`Cannot read YAML file at ${path}`);
-    }
-  }),
-}));
 
 describe('addDependenciesToPackageJson', () => {
   let tree: Tree;
@@ -491,7 +473,9 @@ describe('addDependenciesToPackageJson', () => {
 
   describe('catalog support', () => {
     beforeEach(() => {
-      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('pnpm');
+      jest
+        .spyOn(packageManagerUtils, 'detectPackageManager')
+        .mockReturnValue('pnpm');
       tree.root = '/test-workspace';
     });
 
@@ -520,7 +504,7 @@ catalog:
       expect(result.dependencies).toEqual({ react: 'catalog:' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should add new dependencies as regular dependencies when no existing catalog reference', () => {
@@ -533,7 +517,9 @@ catalog:
     });
 
     it('should use direct dependencies with unsupported package managers', () => {
-      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('npm');
+      jest
+        .spyOn(packageManagerUtils, 'detectPackageManager')
+        .mockReturnValue('npm');
       writeJson(tree, 'package.json', {
         dependencies: { react: 'catalog:' },
       });
@@ -567,7 +553,7 @@ catalog:
       });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should preserve existing catalog references when updating with direct versions', () => {
@@ -586,7 +572,7 @@ catalog:
       expect(result.dependencies).toEqual({ react: 'catalog:' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should update only the specific catalog when package exists in multiple catalogs', () => {
@@ -643,7 +629,7 @@ catalog:
       expect(result.devDependencies).toEqual({ jest: 'catalog:dev' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('jest: "^29.0.0"');
+      expect(workspace).toContain('jest: ^29.0.0');
     });
 
     it('should resolve catalog references for version comparison', () => {

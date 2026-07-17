@@ -21,7 +21,6 @@ import {
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
-  eslintVersion,
   isbotVersion,
   nxVersion,
   reactDomVersion,
@@ -31,6 +30,7 @@ import {
   typesReactDomVersion,
   typesReactVersion,
   viteVersion,
+  assertSupportedRemixVersion,
 } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { updateDependencies } from '../utils/update-dependencies';
@@ -62,11 +62,14 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
     _options.addPlugin,
     _options.useTsSolution
   );
+  // initGenerator enforces the TS pin and hard-errors on TS6.
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {
       skipFormat: true,
@@ -125,7 +128,6 @@ export async function remixApplicationGeneratorInternal(
     reactDomVersion,
     typesReactVersion,
     typesReactDomVersion,
-    eslintVersion,
     typescriptVersion,
     viteVersion,
   };

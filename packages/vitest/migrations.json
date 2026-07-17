@@ -1,11 +1,5 @@
 {
   "generators": {
-    "update-20-3-0": {
-      "version": "20.3.0-beta.2",
-      "description": "Add gitignore entry for temporary vitest config files.",
-      "implementation": "./dist/src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore",
-      "documentation": "./dist/src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore.md"
-    },
     "update-22-1-0": {
       "version": "22.1.0-beta.8",
       "requires": {
@@ -112,6 +106,31 @@
         },
         "@analogjs/vitest-angular": {
           "version": "~2.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.1-happy-dom": {
+      "version": "23.0.1",
+      "requires": {
+        "happy-dom": "<=20.10.4"
+      },
+      "packages": {
+        "happy-dom": {
+          "version": "^20.10.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-analog": {
+      "version": "23.1.0-beta.0",
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "~2.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "~2.6.0",
           "alwaysAddToPackageJson": false
         }
       }

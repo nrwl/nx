@@ -216,10 +216,22 @@ describe('Nx Build Verification', () => {
         cwd: repoDir,
       });
 
-      // Build all publishable packages (same as what nx-release builds)
-      runCommand('pnpm nx run-many -t build --projects tag:npm:public', {
+      // The dotnet analyzer builds with `--no-restore`; restore nx.sln first to
+      // generate obj/project.assets.json (else NETSDK1004). Plain dotnet restore
+      // avoids the nx graph overhead for this one setup step.
+      runCommand('dotnet restore', {
         cwd: repoDir,
+        failOnError: true,
       });
+
+      // Build all publishable packages (same as what nx-release builds)
+      runCommand(
+        'pnpm nx run-many -t build --projects tag:npm:public --parallel=6',
+        {
+          cwd: repoDir,
+          failOnError: true,
+        }
+      );
     },
     20 * 60 * 1000
   );
@@ -275,9 +287,13 @@ describe('Nx Build Verification', () => {
       }
 
       // Single rebuild of all packages
-      runCommand('pnpm nx run-many -t build --projects tag:npm:public', {
-        cwd: repoDir,
-      });
+      runCommand(
+        'pnpm nx run-many -t build --projects tag:npm:public --parallel=6',
+        {
+          cwd: repoDir,
+          failOnError: true,
+        }
+      );
 
       // Verify all outputs contain their markers
       for (const { name } of packagesToVerify) {

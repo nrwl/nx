@@ -425,12 +425,6 @@ export function interpolate(template: string, data: any): string {
     );
   }
 
-  if (data.projectRoot == '.' && template.includes('{projectRoot}', 1)) {
-    throw new Error(
-      `Output '${template}' is invalid. When {projectRoot} is '.', it can only be used at the beginning of the expression.`
-    );
-  }
-
   const parts = template.split('/').map((s) => _interpolate(s, data));
 
   return join(...parts).replace('{workspaceRoot}/', '');
@@ -460,8 +454,14 @@ export function getTargetConfigurationForTask(
   task: Task,
   projectGraph: ProjectGraph
 ): TargetConfiguration | undefined {
-  const project = projectGraph.nodes[task.target.project].data;
-  return project.targets[task.target.target];
+  const node = projectGraph.nodes[task.target.project];
+  if (!node) {
+    throw new Error(
+      `Task "${task.id}" references project "${task.target.project}", which does not exist in the project graph. ` +
+        `This can happen when the project graph in this environment diverges from the one the task was created from.`
+    );
+  }
+  return node.data.targets[task.target.target];
 }
 
 export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
@@ -654,6 +654,10 @@ export function shouldStreamOutput(
   if (longRunningTask(task)) return true;
   if (task.target.project === initiatingProject) return true;
   return false;
+}
+
+export function isCacheableTask(task: Task): boolean {
+  return task.cache;
 }
 
 function longRunningTask(task: Task) {

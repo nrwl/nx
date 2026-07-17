@@ -21,7 +21,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json",
     "executors.json",
     "generators.json"
@@ -43,7 +42,7 @@
   "executors": "./executors.json",
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "exports": {
     ".": {
@@ -69,7 +68,6 @@
     "@nx/vitest": "workspace:*",
     "@nx/web": "workspace:*",
     "picomatch": "catalog:",
-    "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

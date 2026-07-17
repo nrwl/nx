@@ -321,6 +321,57 @@
       "version": "23.0.0-beta.25",
       "description": "Rewrites the now-removed deep `@nx/angular/src/utils`, `@nx/angular/src/generators/utils` and `@nx/angular/src/generators/move/move-impl` subpath imports to the new `@nx/angular/internal` entry. The executor/builder/generator schema and impl subpaths remain available and are left untouched.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-1-0-rename-ssr-experimental-platform": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.0.0"
+      },
+      "description": "Rename the `ssr.experimentalPlatform` option to `ssr.platform` in `@angular/build:application`, `@angular-devkit/build-angular:application`, and `@nx/angular:application` targets, matching the Angular v22 rename.",
+      "factory": "./dist/src/migrations/update-23-1-0/rename-ssr-experimental-platform",
+      "documentation": "./dist/src/migrations/update-23-1-0/rename-ssr-experimental-platform.md"
+    },
+    "update-23-1-0-add-istanbul-instrumenter": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.0.0"
+      },
+      "description": "Add `istanbul-lib-instrument` to `devDependencies` when a project runs unit tests with Karma (the `@angular-devkit/build-angular:karma` / `@angular/build:karma` builders, or `@angular/build:unit-test` / `@nx/angular:unit-test` with `runner: karma`), matching the Angular v22 `add-istanbul-instrumenter` migration.",
+      "factory": "./dist/src/migrations/update-23-1-0/add-istanbul-instrumenter",
+      "documentation": "./dist/src/migrations/update-23-1-0/add-istanbul-instrumenter.md"
+    },
+    "update-23-1-0-add-trust-proxy-headers": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.0.0"
+      },
+      "description": "Add the `trustProxyHeaders` option to `AngularNodeAppEngine` and `AngularAppEngine` instantiations in SSR server files, matching the Angular v22 `trust-proxy-headers` migration.",
+      "factory": "./dist/src/migrations/update-23-1-0/add-trust-proxy-headers",
+      "documentation": "./dist/src/migrations/update-23-1-0/add-trust-proxy-headers.md"
+    },
+    "update-23-1-0-add-angular-build": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.0.0"
+      },
+      "description": "Add `@angular/build` to `devDependencies` when a project uses the `@nx/angular:application` or `@nx/angular:unit-test` executor, or an `@angular/build:*` executor, and it is not already installed. These executors import `@angular/build` directly at runtime, but it has only ever been available transitively via `@angular-devkit/build-angular`, which is not reliable across package managers.",
+      "factory": "./dist/src/migrations/update-23-1-0/add-angular-build",
+      "documentation": "./dist/src/migrations/update-23-1-0/add-angular-build.md"
+    },
+    "update-23-1-0-remove-conflicting-extended-diagnostics": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.0.0"
+      },
+      "description": "Remove the `extendedDiagnostics` Angular compiler option from tsconfig files where `strictTemplates` resolves to `false`. Angular v22's `strict-templates-default` and `strict-safe-navigation-narrow` migrations can together produce this combination, which the Angular compiler rejects (`extendedDiagnostics` requires `strictTemplates` to be enabled).",
+      "factory": "./dist/src/migrations/update-23-1-0/remove-conflicting-extended-diagnostics",
+      "documentation": "./dist/src/migrations/update-23-1-0/remove-conflicting-extended-diagnostics.md"
+    },
+    "update-23-1-0-add-optional-webpack-packages": {
+      "version": "23.1.0-rc.3",
+      "description": "Add optional webpack, Module Federation, and Rspack packages when existing targets require them.",
+      "factory": "./dist/src/migrations/update-23-1-0/add-optional-webpack-packages",
+      "documentation": "./dist/src/migrations/update-23-1-0/add-optional-webpack-packages.md"
     }
   },
   "packageJsonUpdates": {
@@ -1935,6 +1986,167 @@
         },
         "@module-federation/node": {
           "version": "^2.7.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=21.2.0 <22.0.0"
+      },
+      "packages": {
+        "@angular/cli": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false,
+          "ignorePackageGroup": true,
+          "ignoreMigrations": true
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.2200.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.2200.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "zone.js": {
+          "version": "~0.16.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-angular-eslint": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">= 22.0.0 < 23.0.0",
+        "typescript-eslint": "^8.0.0",
+        "eslint": "^9.0.0 || ^10.0.0"
+      },
+      "packages": {
+        "angular-eslint": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-@angular-eslint": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">= 22.0.0 < 23.0.0",
+        "eslint": "^9.0.0 || ^10.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^22.0.0",
           "alwaysAddToPackageJson": false
         }
       }

@@ -2,6 +2,7 @@
   "name": "@nx/angular",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
   "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
@@ -21,7 +22,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "!dist/package.json",
     "migrations.json",
     "executors.json",
@@ -68,25 +68,22 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/module-federation": "workspace:*",
-    "@nx/rspack": "workspace:*",
     "@nx/web": "workspace:*",
-    "@nx/webpack": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "catalog:eslint",
     "enquirer": "catalog:",
+    "jsonc-parser": "catalog:",
     "magic-string": "~0.30.2",
     "picocolors": "catalog:",
     "picomatch": "catalog:",
     "semver": "catalog:",
-    "tslib": "catalog:typescript",
-    "webpack-merge": "^5.8.0"
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",
@@ -99,8 +96,12 @@
     "@angular-devkit/core": "catalog:angular-supported-versions",
     "@angular-devkit/schematics": "catalog:angular-supported-versions",
     "@schematics/angular": "catalog:angular-supported-versions",
+    "@nx/module-federation": "workspace:*",
+    "@nx/rspack": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "ng-packagr": "catalog:angular-supported-versions",
-    "rxjs": "catalog:angular-supported-versions"
+    "rxjs": "catalog:angular-supported-versions",
+    "webpack-merge": "^5.8.0"
   },
   "peerDependenciesMeta": {
     "@angular/build": {
@@ -109,7 +110,19 @@
     "@angular-devkit/build-angular": {
       "optional": true
     },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "@nx/rspack": {
+      "optional": true
+    },
+    "@nx/webpack": {
+      "optional": true
+    },
     "ng-packagr": {
+      "optional": true
+    },
+    "webpack-merge": {
       "optional": true
     }
   },

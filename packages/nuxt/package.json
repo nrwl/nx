@@ -21,7 +21,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json",
     "generators.json"
   ],
@@ -56,7 +55,7 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "tslib": "catalog:typescript",

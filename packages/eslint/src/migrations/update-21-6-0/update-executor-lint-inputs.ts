@@ -1,20 +1,11 @@
 import { type Tree, formatFiles, readNxJson, updateNxJson } from '@nx/devkit';
-import {
-  normalizeTargetDefaults,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree) ?? {};
   const executor = '@nx/eslint:lint';
 
-  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-    (e) =>
-      e.executor === executor &&
-      e.target === undefined &&
-      e.projects === undefined &&
-      e.plugin === undefined
-  );
+  const existing = findTargetDefault(nxJson.targetDefaults, { executor });
 
   if (!existing?.inputs) {
     return;

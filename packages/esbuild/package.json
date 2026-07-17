@@ -22,7 +22,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json",
     "executors.json",
     "generators.json"
@@ -38,7 +37,7 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -63,7 +62,11 @@
     "access": "public"
   },
   "typesVersions": {
-    "*": {}
+    "*": {
+      "executors": [
+        "dist/executors.d.ts"
+      ]
+    }
   },
   "exports": {
     ".": {
@@ -74,6 +77,11 @@
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
-    "./executors.json": "./executors.json"
+    "./executors.json": "./executors.json",
+    "./executors": {
+      "@nx/nx-source": "./executors.ts",
+      "types": "./dist/executors.d.ts",
+      "default": "./dist/executors.js"
+    }
   }
 }

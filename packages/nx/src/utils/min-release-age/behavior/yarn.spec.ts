@@ -75,6 +75,23 @@ const pkgEdge = metadataFromAges(
   { latest: '1.0.1' }
 );
 
+// Multiple prerelease channels sharing a release line, for the channel-aware
+// tag degrade.
+const pkgChannels = metadataFromAges(
+  'pkg-ch',
+  {
+    '22.7.0': 200,
+    '22.7.5': 6,
+    '22.7.0-rc.2': 220,
+    '23.0.0-beta.1': 100,
+    '23.0.0-pr.5': 90,
+    '23.0.0-rc.0': 2,
+    '23.1.0-rc.1': 80,
+    '23.1.0-rc.4': 4,
+  },
+  { latest: '22.7.5', next: '23.0.0-rc.0', pre: '23.1.0-rc.4' }
+);
+
 function policy(
   windowHours: number,
   opts: {
@@ -141,32 +158,32 @@ describe('yarn min-release-age behavior', () => {
       });
     });
 
-    it('non-latest tag too new -> violation references derived ^range (tag-nonlatest)', () => {
-      expect(() => pickYarnVersion('hot', pkgA, p)).toThrow(
-        MinReleaseAgeViolationError
-      );
-      try {
-        pickYarnVersion('hot', pkgA, p);
-      } catch (e) {
-        // yarn add re-resolves the tag through the gated semver resolver using a
-        // `^<target>` range (default modifier), so the message names ^2.0.0.
-        expect((e as MinReleaseAgeViolationError).pmShapedDetail).toBe(
-          'All versions satisfying "^2.0.0" are quarantined'
-        );
-      }
+    it('non-latest tag (hot) degrades to the newest approved stable (2.0.0 -> 1.2.0)', () => {
+      expect(pickYarnVersion('hot', pkgA, p)).toEqual({
+        version: '1.2.0',
+        unconstrained: '2.0.0',
+      });
     });
 
-    it('prerelease tag too new -> violation references derived ^range (tag-prerelease)', () => {
-      expect(() => pickYarnVersion('canary', pkgA, p)).toThrow(
-        MinReleaseAgeViolationError
-      );
-      try {
-        pickYarnVersion('canary', pkgA, p);
-      } catch (e) {
-        expect((e as MinReleaseAgeViolationError).pmShapedDetail).toBe(
-          'All versions satisfying "^3.0.0-canary.3" are quarantined'
-        );
-      }
+    it('prerelease tag keeps a compliant same-line same-channel version (canary.3 -> canary.1)', () => {
+      expect(pickYarnVersion('canary', pkgA, p)).toEqual({
+        version: '3.0.0-canary.1',
+        unconstrained: '3.0.0-canary.3',
+      });
+    });
+
+    it('too-new rc tag falls to its same-line beta, never into pr', () => {
+      expect(pickYarnVersion('next', pkgChannels, p)).toEqual({
+        version: '23.0.0-beta.1',
+        unconstrained: '23.0.0-rc.0',
+      });
+    });
+
+    it('too-new rc tag keeps a compliant same-line rc (pre -> 23.1.0-rc.1)', () => {
+      expect(pickYarnVersion('pre', pkgChannels, p)).toEqual({
+        version: '23.1.0-rc.1',
+        unconstrained: '23.1.0-rc.4',
+      });
     });
 
     it('prerelease range degrades within its line (range-prerelease)', () => {
@@ -215,8 +232,8 @@ describe('yarn min-release-age behavior', () => {
       }
     });
 
-    it('latest walk-down with no lower version -> dedicated tag message', () => {
-      // Every version too new -> latest cannot fall back.
+    it('tag with no compliant degrade -> YN0016 quarantined', () => {
+      // Every version too new -> the tag cannot degrade.
       const allFresh = metadataFromAges(
         'pkg-fresh',
         { '1.0.0': 2, '1.1.0': 1 },
@@ -227,46 +244,24 @@ describe('yarn min-release-age behavior', () => {
         throw new Error('expected throw');
       } catch (e) {
         expect((e as MinReleaseAgeViolationError).pmShapedDetail).toBe(
-          'The version for tag "latest" is quarantined, and no lower version is available'
+          'All versions satisfying "latest" are quarantined'
         );
       }
     });
   });
 
-  describe('walk-down prerelease tolerance flips at 4.11', () => {
-    // latest is a too-new stable; the only approved lower version is a
-    // prerelease, all lower stables are too new.
-    const meta = metadataFromAges(
-      'pkg-pre',
-      { '2.0.0': 1, '1.5.0': 2, '1.0.0-beta.1': 9600 },
-      { latest: '2.0.0' }
-    );
-
-    it('pre-4.11 tolerates a lower prerelease in the fallback', () => {
-      expect(
-        pickYarnVersion('latest', meta, policy(24, { pmVersion: '4.10.1' }))
-      ).toEqual({ version: '1.0.0-beta.1', unconstrained: '2.0.0' });
-    });
-
-    it('4.11+ excludes prereleases when latest is stable -> violation', () => {
-      expect(() =>
-        pickYarnVersion('latest', meta, policy(24, { pmVersion: '4.11.0' }))
-      ).toThrow(MinReleaseAgeViolationError);
-    });
-
-    it('4.11+ tolerates a lower prerelease when latest is itself a prerelease', () => {
-      const preLatest = metadataFromAges(
-        'pkg-prelatest',
-        { '3.0.0-canary.3': 2, '3.0.0-canary.1': 9600 },
-        { latest: '3.0.0-canary.3' }
+  describe('stable tag excludes prereleases', () => {
+    it('a too-new stable tag never degrades to a lower prerelease -> violation', () => {
+      // latest -> 2.0.0 (stable, too new). The only compliant lower version is a
+      // prerelease, so a stable target degrades to nothing and quarantines.
+      const meta = metadataFromAges(
+        'pkg-pre',
+        { '2.0.0': 1, '1.5.0': 2, '1.0.0-beta.1': 9600 },
+        { latest: '2.0.0' }
       );
-      expect(
-        pickYarnVersion(
-          'latest',
-          preLatest,
-          policy(24, { pmVersion: '4.11.0' })
-        )
-      ).toEqual({ version: '3.0.0-canary.1', unconstrained: '3.0.0-canary.3' });
+      expect(() => pickYarnVersion('latest', meta, policy(24))).toThrow(
+        MinReleaseAgeViolationError
+      );
     });
   });
 

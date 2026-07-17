@@ -1011,6 +1011,127 @@ A	packages/nx/src/migrations/update-22-0-0/consolidate-release-tag-config.ts
           - James Henry"
         `);
       });
+
+      it('should stop the breaking change explanation at trailing PR body sections and metadata', async () => {
+        const breakingChangeFollowedByPrBody: ChangelogChange = {
+          shortHash: '192f66811',
+          authors: [{ name: 'Test User', email: 'test@example.com' }],
+          body: `## Current behavior
+
+Angular v22 is not supported.
+
+## Expected behavior
+
+Angular v22 should be supported.
+
+BREAKING CHANGE: Angular v19 is no longer supported.
+
+## Related issues
+
+Fixes #35910
+
+<!-- polygraph-session-start -->
+---
+[View session information ↗](https://app.trypolygraph.com/orgs/example/sessions/angular-v22)
+<!-- polygraph-session-end -->
+
+---------
+
+Co-authored-by: nx-cloud[bot] <71083854+nx-cloud[bot]@users.noreply.github.com>"
+
+M	packages/angular/src/utils/versions.ts
+"`,
+          description: 'support angular v22',
+          type: 'feat',
+          scope: 'angular',
+          githubReferences: [
+            { type: 'pull-request', value: '#35851' },
+            { value: '192f66811', type: 'hash' },
+          ],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['angular'],
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [breakingChangeFollowedByPrBody],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: { authors: true, commitReferences: true },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🚀 Features
+
+          - ⚠️  **angular:** support angular v22 ([#35851](https://example.com/example/example/pull/35851))
+
+          ### ⚠️  Breaking Changes
+
+          - **angular:** support angular v22  ([#35851](https://example.com/example/example/pull/35851))
+            Angular v19 is no longer supported.
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+      });
+
+      it('should strip HTML comments from the explanation without truncating the text around them', async () => {
+        const breakingChangeWithInlineComment: ChangelogChange = {
+          shortHash: 'def456',
+          authors: [{ name: 'Test User', email: 'test@example.com' }],
+          body:
+            'BREAKING CHANGE: The old API has been removed.\n' +
+            '<!-- internal review note, please ignore -->\n' +
+            'Migrate to the new API instead.\n' +
+            '"\n\nM\tpackages/nx/file.ts\n"',
+          description: 'remove the old API',
+          type: 'feat',
+          scope: 'core',
+          githubReferences: [
+            { type: 'pull-request', value: '#54321' },
+            { value: 'def456', type: 'hash' },
+          ],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['nx'],
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [breakingChangeWithInlineComment],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: { authors: true, commitReferences: true },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🚀 Features
+
+          - ⚠️  **core:** remove the old API ([#54321](https://example.com/example/example/pull/54321))
+
+          ### ⚠️  Breaking Changes
+
+          - **core:** remove the old API  ([#54321](https://example.com/example/example/pull/54321))
+            The old API has been removed.
+            Migrate to the new API instead.
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+      });
     });
 
     describe('dependency bumps', () => {

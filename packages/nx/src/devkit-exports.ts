@@ -74,7 +74,9 @@ export type {
   PluginConfiguration,
   TargetDefaults,
   TargetDefaultEntry,
-  TargetDefaultsRecord,
+  TargetDefaultValue,
+  TargetDefaultArrayEntry,
+  TargetDefaultFilter,
 } from './config/nx-json';
 
 /**

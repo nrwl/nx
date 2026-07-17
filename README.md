@@ -15,6 +15,12 @@
     <a href=""><img src="https://img.shields.io/npm/l/nx.svg?style=for-the-badge" alt="License"></a>
     <a href="https://go.nx.dev/community"><img src="https://img.shields.io/discord/1143497901675401286?label=discord&style=for-the-badge" alt="Discord"></a>
     <a href="https://x.com/nxdevtools"><img src="https://img.shields.io/badge/@nxdevtools-555?style=for-the-badge&logo=x" alt="X (Twitter)"></a>
+    <a href="https://nx.dev/nx-cloud"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fstaging.nx.app%2Fnx-cloud%2Fbadge%2F62d013ea0852fe0a2df74438%2Fhours-saved.json&style=for-the-badge" alt="Hours saved"></a>
+    <a href="https://nx.dev/nx-cloud"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fstaging.nx.app%2Fnx-cloud%2Fbadge%2F62d013ea0852fe0a2df74438%2Fcache-hit-rate.json&style=for-the-badge" alt="Cache hit rate"></a>
+    <a href="https://nx.dev/docs/features/ci-features/sandboxing"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fstaging.nx.app%2Fnx-cloud%2Fbadge%2F62d013ea0852fe0a2df74438%2Fsandbox.json&style=for-the-badge" alt="Nx Sandboxing"></a>
+    <a href="https://nx.dev/nx-cloud"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fstaging.nx.app%2Fnx-cloud%2Fbadge%2F62d013ea0852fe0a2df74438%2Fremote-cache.json&style=for-the-badge" alt="Remote caching"></a>
+    <a href="https://nx.dev/nx-cloud"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fstaging.nx.app%2Fnx-cloud%2Fbadge%2F62d013ea0852fe0a2df74438%2Fself-healing.json&style=for-the-badge" alt="Self-healing CI"></a>
+    <a href="https://nx.dev/nx-cloud"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fstaging.nx.app%2Fnx-cloud%2Fbadge%2F62d013ea0852fe0a2df74438%2Fflaky-detection.json&style=for-the-badge" alt="Flaky task retries"></a>
   </p>
 
  <br />

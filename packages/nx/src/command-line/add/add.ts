@@ -54,10 +54,18 @@ async function installPackage(
     const pmc = getPackageManagerCommand(pm);
 
     // if we explicitly specify latest in yarn berry, it won't resolve the version
-    const command =
+    let command =
       pm === 'yarn' && gte(pmv, '2.0.0') && version === 'latest'
         ? `${pmc.addDev} ${pkgName}`
         : `${pmc.addDev} ${pkgName}@${version}`;
+
+    // pnpm 11+ fails the install when the plugin's own dependency tree
+    // carries unacknowledged build scripts, and the plugin's generators can
+    // only record allowBuilds decisions after this install. Warn and skip
+    // for this one install, like pnpm 10 did.
+    if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
+      command += ' --config.strictDepBuilds=false';
+    }
     await new Promise<void>((resolve) =>
       exec(
         command,

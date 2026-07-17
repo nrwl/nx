@@ -19,9 +19,8 @@ describe('nx wrapper / .nx installation', () => {
   beforeAll(() => {
     runNxWrapper = newWrappedNxWorkspace();
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      const entries = (json.targetDefaults as any) ?? [];
-      entries.push({ target: 'echo', cache: true });
-      json.targetDefaults = entries;
+      json.targetDefaults ??= {};
+      json.targetDefaults.echo = { cache: true };
       json.installation.plugins = {
         '@nx/js': getPublishedVersion(),
       };

@@ -10,6 +10,7 @@ export {
   SchemaResolutionError,
   resolvePrompt,
   PromptResolutionError,
+  acknowledgeBuildScripts,
 } from 'nx/src/devkit-internals';
 
 // Generators
@@ -46,12 +47,9 @@ export {
   addE2eCiTargetDefaults,
   findTargetDefault,
   readTargetDefaultsForTarget,
+  updateTargetDefault,
   upsertTargetDefault,
 } from './src/generators/target-defaults-utils';
-export {
-  downgradeTargetDefaults,
-  normalizeTargetDefaults,
-} from './src/utils/normalize-target-defaults';
 
 // Utils
 export { addPlugin } from './src/utils/add-plugin';
@@ -72,7 +70,8 @@ export {
   calculateHashForCreateNodes,
   calculateHashesForCreateNodes,
 } from './src/utils/calculate-hash-for-create-nodes';
-export { getCatalogManager } from './src/utils/catalog';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- nx/src/utils/catalog exists since nx 22.0.0, the whole supported range; swap to the nx/src/devkit-internals re-export in v25
+export { getCatalogManager } from 'nx/src/utils/catalog';
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';

@@ -14,13 +14,13 @@ import {
   addProjectConfiguration,
   readNxJson,
   updateNxJson,
+  type NxJsonConfiguration,
   type Tree,
 } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import {
   addBuildTargetDefaults,
-  addE2eCiTargetDefaults,
-  readTargetDefaultsForTarget,
+  findTargetDefault,
+  updateTargetDefault,
   upsertTargetDefault,
 } from './target-defaults-utils';
 
@@ -31,21 +31,21 @@ describe('target-defaults-utils', () => {
       tree = createTreeWithEmptyWorkspace();
     });
 
-    it('appends a new entry when nx.json has no targetDefaults', () => {
+    it('writes the object value form when nx.json has no targetDefaults', () => {
       const nxJson = readNxJson(tree);
       delete nxJson.targetDefaults;
 
       upsertTargetDefault(tree, nxJson, { target: 'test', cache: true });
       updateNxJson(tree, nxJson);
 
-      expect(readNxJson(tree).targetDefaults).toEqual([
-        { target: 'test', cache: true },
-      ]);
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: { cache: true },
+      });
     });
 
-    it('merges into an existing array entry with same filter tuple', () => {
+    it('merges into an existing object value (config wins)', () => {
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = [{ target: 'test', cache: true }];
+      nxJson.targetDefaults = { test: { cache: true } };
 
       upsertTargetDefault(tree, nxJson, {
         target: 'test',
@@ -53,87 +53,274 @@ describe('target-defaults-utils', () => {
       });
       updateNxJson(tree, nxJson);
 
-      expect(readNxJson(tree).targetDefaults).toEqual([
-        { target: 'test', cache: true, inputs: ['default'] },
-      ]);
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: { cache: true, inputs: ['default'] },
+      });
     });
 
-    it('appends a new array entry when filter tuple differs', () => {
+    it('writes an executor-only entry under an executor key', () => {
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = [{ target: 'test', cache: true }];
+      delete nxJson.targetDefaults;
+
+      upsertTargetDefault(tree, nxJson, {
+        executor: '@nx/js:tsc',
+        cache: true,
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        '@nx/js:tsc': { cache: true },
+      });
+    });
+
+    it('merges a context filter with no matching entry into the generic (never authors a filtered entry)', () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = { test: { cache: false } };
 
       upsertTargetDefault(tree, nxJson, {
         target: 'test',
         plugin: '@nx/vite',
-        inputs: ['vite'],
+        inputs: ['vite.config.ts'],
       });
       updateNxJson(tree, nxJson);
 
-      expect(readNxJson(tree).targetDefaults).toEqual([
-        { target: 'test', cache: true },
-        { target: 'test', plugin: '@nx/vite', inputs: ['vite'] },
-      ]);
+      // No entry matches the `@nx/vite` context, so the config merges into the
+      // generic; upsert never writes a new filtered entry.
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: { cache: false, inputs: ['vite.config.ts'] },
+      });
     });
 
-    it('upgrades a legacy record to array on any upsert', () => {
+    it('merges into an existing entry with the same filter', () => {
       const nxJson = readNxJson(tree);
-      (nxJson as any).targetDefaults = {
-        build: { cache: true },
-        '@nx/vite:test': { inputs: ['default'] },
-      };
-
-      upsertTargetDefault(tree, nxJson, { target: 'test', cache: true });
-      updateNxJson(tree, nxJson);
-
-      // Record is normalized first (executor-shaped key splits to executor),
-      // then the new entry is appended.
-      expect(readNxJson(tree).targetDefaults).toEqual([
-        { target: 'build', cache: true },
-        { executor: '@nx/vite:test', inputs: ['default'] },
-        { target: 'test', cache: true },
-      ]);
-    });
-
-    it('upgrades a legacy record to array when a filter is requested', () => {
-      const nxJson = readNxJson(tree);
-      (nxJson as any).targetDefaults = {
-        build: { cache: true },
+      nxJson.targetDefaults = {
+        test: [{ filter: { plugin: '@nx/vite' }, cache: true }],
       };
 
       upsertTargetDefault(tree, nxJson, {
         target: 'test',
-        projects: 'tag:dotnet',
-        inputs: ['x'],
+        plugin: '@nx/vite',
+        inputs: ['vite.config.ts'],
       });
       updateNxJson(tree, nxJson);
 
-      expect(readNxJson(tree).targetDefaults).toEqual([
-        { target: 'build', cache: true },
-        { target: 'test', projects: 'tag:dotnet', inputs: ['x'] },
-      ]);
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          {
+            filter: { plugin: '@nx/vite' },
+            cache: true,
+            inputs: ['vite.config.ts'],
+          },
+        ],
+      });
     });
 
-    it('uses workspace targets to preserve colon target keys during upserts', () => {
-      addProjectConfiguration(tree, 'app', {
-        root: 'app',
-        targets: {
-          'serve:dev': {
-            executor: '@nx/js:node',
-          },
-        },
-      });
+    it('appends a catch-all to an existing array when upserting unfiltered', () => {
       const nxJson = readNxJson(tree);
-      (nxJson as any).targetDefaults = {
-        'serve:dev': { cache: true },
+      nxJson.targetDefaults = {
+        test: [{ filter: { plugin: '@nx/vite' }, cache: true }],
       };
 
-      upsertTargetDefault(tree, nxJson, { target: 'build', cache: true });
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        inputs: ['default'],
+      });
       updateNxJson(tree, nxJson);
 
-      expect(readNxJson(tree).targetDefaults).toEqual([
-        { target: 'serve:dev', cache: true },
-        { target: 'build', cache: true },
-      ]);
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { filter: { plugin: '@nx/vite' }, cache: true },
+          { inputs: ['default'] },
+        ],
+      });
+    });
+
+    it('updates the matching filtered entry (not the generic) when the context filter matches', () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: [
+          { cache: true },
+          { filter: { plugin: '@nx/vite' }, inputs: ['old'] },
+        ],
+      };
+
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        plugin: '@nx/vite',
+        inputs: ['vite.config.ts'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { cache: true },
+          { filter: { plugin: '@nx/vite' }, inputs: ['vite.config.ts'] },
+        ],
+      });
+    });
+
+    it('updates the generic when the context filter matches no existing entry', () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: [
+          { cache: true },
+          { filter: { plugin: '@nx/vite' }, inputs: ['vite'] },
+        ],
+      };
+
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        plugin: '@nx/jest',
+        inputs: ['jest'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { cache: true, inputs: ['jest'] },
+          { filter: { plugin: '@nx/vite' }, inputs: ['vite'] },
+        ],
+      });
+    });
+
+    it('updates a `projects` filtered entry that covers the configured project (by tag)', () => {
+      addProjectConfiguration(tree, 'app-a', {
+        root: 'apps/app-a',
+        tags: ['unit'],
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: [
+          { cache: true },
+          { filter: { projects: ['tag:unit'] }, inputs: ['old'] },
+        ],
+      };
+
+      // Configuring `app-a` (which has `tag:unit`) — the filtered entry covers
+      // it, so it is the one updated.
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        projects: ['app-a'],
+        inputs: ['new'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { cache: true },
+          { filter: { projects: ['tag:unit'] }, inputs: ['new'] },
+        ],
+      });
+    });
+
+    it('updates the generic when no `projects` filtered entry covers the configured project', () => {
+      addProjectConfiguration(tree, 'app-b', {
+        root: 'apps/app-b',
+        tags: ['e2e'],
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: [
+          { cache: true },
+          { filter: { projects: ['tag:unit'] }, inputs: ['old'] },
+        ],
+      };
+
+      // `app-b` lacks `tag:unit`, so the filtered entry does not cover it.
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        projects: ['app-b'],
+        inputs: ['new'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { cache: true, inputs: ['new'] },
+          { filter: { projects: ['tag:unit'] }, inputs: ['old'] },
+        ],
+      });
+    });
+
+    it('downgrades a single unfiltered array entry back to the object form', () => {
+      const nxJson = readNxJson(tree);
+      // A hand-authored single-element array with no filter is equivalent to
+      // the plain object form; merging into it should collapse it back.
+      nxJson.targetDefaults = { test: [{ cache: true }] };
+
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        inputs: ['default'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: { cache: true, inputs: ['default'] },
+      });
+    });
+
+    it('keeps an executor used with a target as a config field (object form)', () => {
+      const nxJson = readNxJson(tree);
+      delete nxJson.targetDefaults;
+
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        executor: '@nx/jest:jest',
+        inputs: ['jest.config.ts'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: { executor: '@nx/jest:jest', inputs: ['jest.config.ts'] },
+      });
+    });
+
+    it('throws when neither target nor executor is set', () => {
+      const nxJson = readNxJson(tree);
+      expect(() =>
+        upsertTargetDefault(tree, nxJson, { cache: true } as any)
+      ).toThrow(/at least one of `target` or `executor`/);
+    });
+  });
+
+  describe('findTargetDefault', () => {
+    it('finds an unfiltered entry by target across the object form', () => {
+      expect(
+        findTargetDefault(
+          { build: { cache: true }, test: { cache: false } },
+          { target: 'build' }
+        )
+      ).toEqual({ target: 'build', cache: true });
+    });
+
+    it('finds a filtered entry inside an array value', () => {
+      expect(
+        findTargetDefault(
+          {
+            test: [
+              { cache: false },
+              { filter: { plugin: '@nx/vite' }, inputs: ['vite.config.ts'] },
+            ],
+          },
+          { target: 'test', plugin: '@nx/vite' }
+        )
+      ).toEqual({
+        target: 'test',
+        plugin: '@nx/vite',
+        inputs: ['vite.config.ts'],
+      });
+    });
+
+    it('returns undefined when no entry matches the locator', () => {
+      expect(
+        findTargetDefault({ build: { cache: true } }, { target: 'test' })
+      ).toBeUndefined();
+    });
+
+    it('throws on an empty locator', () => {
+      expect(() => findTargetDefault({ build: { cache: true } }, {})).toThrow(
+        /at least one of/
+      );
     });
   });
 
@@ -143,466 +330,288 @@ describe('target-defaults-utils', () => {
       tree = createTreeWithEmptyWorkspace();
     });
 
-    function findExecutorEntry(tree: Tree, executor: string) {
-      const td = readNxJson(tree).targetDefaults;
-      if (!Array.isArray(td)) return undefined;
-      return td.find((e: any) => e.executor === executor);
-    }
-
-    it('upgrades a legacy record to array and writes the executor entry', () => {
+    it('adds an executor-keyed cache default', () => {
       const nxJson = readNxJson(tree);
-      (nxJson as any).targetDefaults = {};
+      delete nxJson.targetDefaults;
       updateNxJson(tree, nxJson);
 
-      addBuildTargetDefaults(tree, '@nx/vite:build');
+      addBuildTargetDefaults(tree, '@nx/esbuild:esbuild');
 
-      const td = readNxJson(tree).targetDefaults;
-      expect(Array.isArray(td)).toBe(true);
-      expect(td).toContainEqual({
-        executor: '@nx/vite:build',
-        cache: true,
-        dependsOn: ['^build'],
-        inputs: ['default', '^default'],
-      });
-    });
-
-    it('appends to array shape and is idempotent', () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = [{ target: 'test', cache: true }];
-      updateNxJson(tree, nxJson);
-
-      addBuildTargetDefaults(tree, '@nx/vite:build');
-      addBuildTargetDefaults(tree, '@nx/vite:build');
-
-      expect(readNxJson(tree).targetDefaults).toEqual([
-        { target: 'test', cache: true },
-        {
-          executor: '@nx/vite:build',
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        '@nx/esbuild:esbuild': {
           cache: true,
           dependsOn: ['^build'],
           inputs: ['default', '^default'],
         },
-      ]);
-    });
-
-    it('writes an executor-keyed entry with default inputs', () => {
-      addBuildTargetDefaults(tree, '@nx/example:build');
-
-      expect(findExecutorEntry(tree, '@nx/example:build')).toEqual({
-        executor: '@nx/example:build',
-        cache: true,
-        dependsOn: ['^build'],
-        inputs: ['default', '^default'],
       });
     });
 
-    it('uses production named inputs when available', () => {
+    it('does not duplicate an existing unfiltered executor default', () => {
       const nxJson = readNxJson(tree);
-      nxJson.namedInputs = {
-        default: ['{projectRoot}/**/*'],
-        production: ['default'],
-      };
+      nxJson.targetDefaults = { '@nx/esbuild:esbuild': { cache: true } };
       updateNxJson(tree, nxJson);
 
-      addBuildTargetDefaults(tree, '@nx/example:build');
+      addBuildTargetDefaults(tree, '@nx/esbuild:esbuild');
 
-      expect(findExecutorEntry(tree, '@nx/example:build').inputs).toEqual([
-        'production',
-        '^production',
-      ]);
-    });
-
-    it('honors a custom build target name in dependsOn', () => {
-      addBuildTargetDefaults(tree, '@nx/example:build', 'compile');
-
-      expect(findExecutorEntry(tree, '@nx/example:build').dependsOn).toEqual([
-        '^compile',
-      ]);
-    });
-
-    it('appends extra inputs after the default/production inputs', () => {
-      addBuildTargetDefaults(tree, '@nx/example:build', 'build', [
-        {
-          json: '{workspaceRoot}/tsconfig.json',
-          fields: ['extends', 'files', 'include'],
-        },
-      ]);
-
-      expect(findExecutorEntry(tree, '@nx/example:build').inputs).toEqual([
-        'default',
-        '^default',
-        {
-          json: '{workspaceRoot}/tsconfig.json',
-          fields: ['extends', 'files', 'include'],
-        },
-      ]);
-    });
-
-    it('does not overwrite an existing entry for the executor', () => {
-      const nxJson = readNxJson(tree);
-      (nxJson as any).targetDefaults = [
-        { executor: '@nx/example:build', cache: true, inputs: ['custom'] },
-      ];
-      updateNxJson(tree, nxJson);
-
-      addBuildTargetDefaults(tree, '@nx/example:build', 'build', [
-        { json: '{workspaceRoot}/tsconfig.json', fields: ['extends'] },
-      ]);
-
-      expect(findExecutorEntry(tree, '@nx/example:build')).toEqual({
-        executor: '@nx/example:build',
-        cache: true,
-        inputs: ['custom'],
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        '@nx/esbuild:esbuild': { cache: true },
       });
     });
   });
 
-  describe('readTargetDefaultsForTarget', () => {
-    it('preserves exact legacy record-key reads for colon target names', () => {
-      expect(
-        readTargetDefaultsForTarget('vite:serve', {
-          'vite:serve': {
-            options: {
-              port: 4400,
-            },
+  describe('updateTargetDefault', () => {
+    // Strips the bad option, mirroring the jest tsConfig-removal migration.
+    const removeTsConfig = (config: { options?: Record<string, unknown> }) => {
+      if (config.options) {
+        delete config.options.tsConfig;
+        if (Object.keys(config.options).length === 0) delete config.options;
+      }
+    };
+
+    it('runs the callback for object, executor-key, field, and filter forms that reference the executor', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          // target-key with the executor as a config field
+          build: {
+            executor: '@nx/jest:jest',
+            options: { tsConfig: 'x', a: 1 },
           },
-        })
-      ).toEqual({
-        options: {
-          port: 4400,
-        },
-      });
-    });
-
-    it('still supports array-shaped reads', () => {
-      expect(
-        readTargetDefaultsForTarget(
-          'build',
-          [
+          // executor-key form
+          '@nx/jest:jest': { options: { tsConfig: 'y', b: 2 } },
+          test: [
+            // target-key with the executor in the filter
             {
-              target: 'build',
-              executor: '@nx/js:tsc',
-              options: {
-                outputPath: 'dist/libs/demo',
-              },
+              filter: { executor: '@nx/jest:jest' },
+              options: { tsConfig: 'z', c: 3 },
             },
+            // unrelated entry — untouched
+            { options: { keep: true } },
           ],
-          '@nx/js:tsc'
-        )
-      ).toEqual({
-        executor: '@nx/js:tsc',
-        options: {
-          outputPath: 'dist/libs/demo',
+          // unrelated key — untouched
+          lint: { options: { tsConfig: 'should-stay' } },
         },
+      };
+
+      updateTargetDefault(
+        nxJson,
+        { executor: '@nx/jest:jest' },
+        removeTsConfig
+      );
+
+      expect(nxJson.targetDefaults).toEqual({
+        build: { executor: '@nx/jest:jest', options: { a: 1 } },
+        '@nx/jest:jest': { options: { b: 2 } },
+        test: [
+          { filter: { executor: '@nx/jest:jest' }, options: { c: 3 } },
+          { options: { keep: true } },
+        ],
+        lint: { options: { tsConfig: 'should-stay' } },
       });
     });
-  });
 
-  describe('addE2eCiTargetDefaults', () => {
-    let tree: Tree;
-    let tempFs: TempFs;
-    beforeEach(() => {
-      tempFs = new TempFs('target-defaults-utils');
-      tree = createTreeWithEmptyWorkspace();
-      tree.root = tempFs.tempDir;
-    });
-
-    afterEach(() => {
-      tempFs.cleanup();
-      jest.resetModules();
-    });
-
-    function findGlobEntry(tree: Tree, target: string) {
-      const td = readNxJson(tree).targetDefaults;
-      if (!Array.isArray(td)) return undefined;
-      return td.find(
-        (e: any) =>
-          e.target === target &&
-          e.executor === undefined &&
-          e.projects === undefined &&
-          e.plugin === undefined
-      );
-    }
-
-    it('adds an e2e-ci--**/** entry with the build target dependency', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
+    it('passes the right info (target/executor/filter) per entry form', () => {
+      const seen: Array<Record<string, unknown>> = [];
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          build: { executor: '@nx/jest:jest', cache: true },
+          '@nx/jest:jest': { cache: true },
+          test: [{ filter: { executor: '@nx/jest:jest' }, cache: true }],
         },
-      });
-      updateNxJson(tree, nxJson);
+      };
 
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
-
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        'apps/myapp-e2e/cypress.config.ts'
+      updateTargetDefault(
+        nxJson,
+        { executor: '@nx/jest:jest' },
+        (_config, info) => {
+          seen.push({
+            key: info.key,
+            target: info.target,
+            executor: info.executor,
+            filter: info.filter,
+          });
+        }
       );
 
-      // ASSERT
-      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
-        target: 'e2e-ci--**/**',
-        dependsOn: ['^build'],
-      });
-    });
-
-    it('appends a new build target to an existing entry without duplicating', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
+      expect(seen).toEqual([
+        {
+          key: 'build',
+          target: 'build',
+          executor: '@nx/jest:jest',
+          filter: undefined,
         },
-      });
-      nxJson.targetDefaults = [
-        { target: 'e2e-ci--**/**', dependsOn: ['^build'] },
-      ];
-      updateNxJson(tree, nxJson);
-
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
-
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build-base',
-        'apps/myapp-e2e/cypress.config.ts'
-      );
-
-      // ASSERT
-      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
-        target: 'e2e-ci--**/**',
-        dependsOn: ['^build', '^build-base'],
-      });
-    });
-
-    it('reads the ciTargetName and adds a new entry under that glob', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'cypress:e2e-ci',
+        {
+          key: '@nx/jest:jest',
+          target: undefined,
+          executor: '@nx/jest:jest',
+          filter: undefined,
         },
-      });
-      nxJson.targetDefaults = [
-        { target: 'e2e-ci--**/**', dependsOn: ['^build'] },
-      ];
-      updateNxJson(tree, nxJson);
-
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
-
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build-base',
-        'apps/myapp-e2e/cypress.config.ts'
-      );
-
-      // ASSERT
-      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
-        target: 'e2e-ci--**/**',
-        dependsOn: ['^build'],
-      });
-      expect(findGlobEntry(tree, 'cypress:e2e-ci--**/**')).toEqual({
-        target: 'cypress:e2e-ci--**/**',
-        dependsOn: ['^build-base'],
-      });
-    });
-
-    it('does not duplicate the build target when it already depends on it', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/cypress/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
+        {
+          key: 'test',
+          target: 'test',
+          executor: '@nx/jest:jest',
+          filter: { executor: '@nx/jest:jest' },
         },
-      });
-      nxJson.targetDefaults = [
-        { target: 'e2e-ci--**/**', dependsOn: ['^build'] },
-      ];
-      updateNxJson(tree, nxJson);
-
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
-
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        'apps/myapp-e2e/cypress.config.ts'
-      );
-
-      // ASSERT — single entry, single build dependency
-      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
-        target: 'e2e-ci--**/**',
-        dependsOn: ['^build'],
-      });
+      ]);
     });
 
-    it('does nothing when nxJson.plugins is absent', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      const before = nxJson.targetDefaults;
-      nxJson.plugins = undefined;
-      updateNxJson(tree, nxJson);
-
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
-
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        'apps/myapp-e2e/cypress.config.ts'
-      );
-
-      // ASSERT — unchanged
-      expect(readNxJson(tree).targetDefaults).toEqual(before);
-    });
-
-    it('does nothing when the e2e plugin is not registered', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      const before = nxJson.targetDefaults;
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/playwright/plugin',
-        options: {
-          targetName: 'e2e',
-          ciTargetName: 'e2e-ci',
+    it('drops an array entry whose callback returns null and collapses to the object form', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          test: [
+            {
+              filter: { executor: '@nx/jest:jest' },
+              options: { tsConfig: 'z' },
+            },
+            { cache: true },
+          ],
         },
-      });
-      updateNxJson(tree, nxJson);
+      };
 
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
+      updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null);
 
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        'apps/myapp-e2e/cypress.config.ts'
-      );
-
-      // ASSERT — unchanged
-      expect(readNxJson(tree).targetDefaults).toEqual(before);
+      // The filtered jest entry is dropped; the lone unfiltered entry collapses
+      // back to the plain object form.
+      expect(nxJson.targetDefaults).toEqual({ test: { cache: true } });
     });
 
-    it('chooses the matching plugin registration via include', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/cypress/plugin',
-        options: { targetName: 'e2e', ciTargetName: 'e2e-ci' },
-        include: ['libs/**'],
-      });
-      nxJson.plugins.push({
-        plugin: '@nx/cypress/plugin',
-        options: { targetName: 'e2e', ciTargetName: 'cypress:e2e-ci' },
-        include: ['apps/**'],
-      });
-      updateNxJson(tree, nxJson);
+    it('deletes the key when an object-form value callback returns null', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          '@nx/jest:jest': { options: { tsConfig: 'z' } },
+          build: { cache: true },
+        },
+      };
 
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
+      updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null);
 
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        'apps/myapp-e2e/cypress.config.ts'
-      );
+      expect(nxJson.targetDefaults).toEqual({ build: { cache: true } });
+    });
 
-      // ASSERT
-      expect(findGlobEntry(tree, 'cypress:e2e-ci--**/**')).toEqual({
-        target: 'cypress:e2e-ci--**/**',
-        dependsOn: ['^build'],
+    it('removes targetDefaults entirely when the last key is deleted', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: { '@nx/jest:jest': { options: { tsConfig: 'z' } } },
+      };
+
+      updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null);
+
+      expect(nxJson.targetDefaults).toBeUndefined();
+    });
+
+    it('replaces the entry payload when the callback returns a new config', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: { '@nx/jest:jest': { cache: true } },
+      };
+
+      updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, (config) => ({
+        ...config,
+        cache: false,
+        inputs: ['production'],
+      }));
+
+      expect(nxJson.targetDefaults).toEqual({
+        '@nx/jest:jest': { cache: false, inputs: ['production'] },
       });
     });
 
-    it('chooses the matching plugin registration via exclude', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push({
-        plugin: '@nx/cypress/plugin',
-        options: { targetName: 'e2e', ciTargetName: 'e2e-ci' },
-        exclude: ['apps/**'],
-      });
-      nxJson.plugins.push({
-        plugin: '@nx/cypress/plugin',
-        options: { targetName: 'e2e', ciTargetName: 'cypress:e2e-ci' },
-        exclude: ['libs/**'],
-      });
-      updateNxJson(tree, nxJson);
+    it('narrows to project-filtered entries that cover the scoped projects', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          build: [
+            { filter: { projects: ['app-a'] }, options: { a: 1 } },
+            { filter: { projects: ['tag:unit'] }, options: { b: 2 } },
+            { filter: { projects: ['other'] }, options: { c: 3 } },
+            { options: { d: 4 } },
+          ],
+        },
+      };
 
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
-
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        'apps/myapp-e2e/cypress.config.ts'
+      updateTargetDefault(
+        nxJson,
+        {
+          projects: {
+            'app-a': { data: { root: 'apps/app-a', tags: ['unit'] } },
+          },
+        },
+        (config) => {
+          (config.options as Record<string, unknown>).touched = true;
+        }
       );
 
-      // ASSERT
-      expect(findGlobEntry(tree, 'cypress:e2e-ci--**/**')).toEqual({
-        target: 'cypress:e2e-ci--**/**',
-        dependsOn: ['^build'],
+      // app-a is matched by name and by `tag:unit`, and the unfiltered entry
+      // always applies; the `other`-scoped entry is left alone.
+      expect(nxJson.targetDefaults).toEqual({
+        build: [
+          { filter: { projects: ['app-a'] }, options: { a: 1, touched: true } },
+          {
+            filter: { projects: ['tag:unit'] },
+            options: { b: 2, touched: true },
+          },
+          { filter: { projects: ['other'] }, options: { c: 3 } },
+          { options: { d: 4, touched: true } },
+        ],
       });
     });
 
-    it('uses the default ciTargetName when the plugin registration is a string', async () => {
-      // ARRANGE
-      const nxJson = readNxJson(tree);
-      nxJson.plugins ??= [];
-      nxJson.plugins.push('@nx/cypress/plugin');
-      updateNxJson(tree, nxJson);
+    it('combines executor selection with project narrowing', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          test: [
+            {
+              filter: { executor: '@nx/jest:jest', projects: ['app-a'] },
+              options: { a: 1 },
+            },
+            {
+              filter: { executor: '@nx/jest:jest', projects: ['other'] },
+              options: { b: 2 },
+            },
+            { filter: { executor: '@nx/jest:jest' }, options: { c: 3 } },
+            { filter: { executor: '@nx/vite:test' }, options: { d: 4 } },
+          ],
+        },
+      };
 
-      tree.write('apps/myapp-e2e/cypress.config.ts', '');
-      await tempFs.createFile('apps/myapp-e2e/cypress.config.ts', '');
-
-      // ACT
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        '^build',
-        'apps/myapp-e2e/cypress.config.ts'
+      updateTargetDefault(
+        nxJson,
+        {
+          executor: '@nx/jest:jest',
+          projects: { 'app-a': { data: { root: 'apps/app-a' } } },
+        },
+        (config) => {
+          (config.options as Record<string, unknown>).touched = true;
+        }
       );
 
-      // ASSERT
-      expect(findGlobEntry(tree, 'e2e-ci--**/**')).toEqual({
-        target: 'e2e-ci--**/**',
-        dependsOn: ['^build'],
+      expect(nxJson.targetDefaults).toEqual({
+        test: [
+          {
+            filter: { executor: '@nx/jest:jest', projects: ['app-a'] },
+            options: { a: 1, touched: true },
+          },
+          {
+            filter: { executor: '@nx/jest:jest', projects: ['other'] },
+            options: { b: 2 },
+          },
+          {
+            filter: { executor: '@nx/jest:jest' },
+            options: { c: 3, touched: true },
+          },
+          { filter: { executor: '@nx/vite:test' }, options: { d: 4 } },
+        ],
       });
+    });
+
+    it('throws when neither executor nor projects is provided', () => {
+      expect(() =>
+        updateTargetDefault({ targetDefaults: {} }, {}, () => null)
+      ).toThrow(/at least one of `executor` or `projects`/);
+    });
+
+    it('is a no-op when nx.json has no targetDefaults', () => {
+      const nxJson: NxJsonConfiguration = {};
+      expect(
+        updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null)
+      ).toBe(nxJson);
+      expect(nxJson.targetDefaults).toBeUndefined();
     });
   });
 });

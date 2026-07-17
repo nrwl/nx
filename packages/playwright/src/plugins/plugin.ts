@@ -372,6 +372,7 @@ async function buildPlaywrightTargets(
     }
     targets[options.mergeReportsTargetName] = {
       executor: '@nx/playwright:merge-reports',
+      continuous: false,
       cache: true,
       inputs: ciBaseTargetConfig.inputs,
       outputs: Array.from(mergeReportsTargetOutputs),

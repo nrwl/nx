@@ -1,45 +1,5 @@
 {
   "generators": {
-    "set-inject-document-domain": {
-      "cli": "nx",
-      "version": "20.8.0-beta.0",
-      "requires": {
-        "cypress": ">=14.0.0"
-      },
-      "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
-      "implementation": "./dist/src/migrations/update-20-8-0/set-inject-document-domain",
-      "documentation": "./dist/src/migrations/update-20-8-0/set-inject-document-domain.md"
-    },
-    "remove-experimental-fetch-polyfill": {
-      "cli": "nx",
-      "version": "20.8.0-beta.0",
-      "requires": {
-        "cypress": ">=14.0.0"
-      },
-      "description": "Removes the `experimentalFetchPolyfill` configuration option.",
-      "implementation": "./dist/src/migrations/update-20-8-0/remove-experimental-fetch-polyfill",
-      "documentation": "./dist/src/migrations/update-20-8-0/remove-experimental-fetch-polyfill.md"
-    },
-    "replace-experimental-just-in-time-compile": {
-      "cli": "nx",
-      "version": "20.8.0-beta.0",
-      "requires": {
-        "cypress": ">=14.0.0"
-      },
-      "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
-      "implementation": "./dist/src/migrations/update-20-8-0/replace-experimental-just-in-time-compile",
-      "documentation": "./dist/src/migrations/update-20-8-0/replace-experimental-just-in-time-compile.md"
-    },
-    "update-component-testing-mount-imports": {
-      "cli": "nx",
-      "version": "20.8.0-beta.0",
-      "requires": {
-        "cypress": ">=14.0.0"
-      },
-      "description": "Updates the module specifier for the Component Testing `mount` function.",
-      "implementation": "./dist/src/migrations/update-20-8-0/update-component-testing-mount-imports",
-      "documentation": "./dist/src/migrations/update-20-8-0/update-component-testing-mount-imports.md"
-    },
     "remove-tsconfig-and-copy-files-options-from-cypress-executor": {
       "version": "21.0.0-beta.10",
       "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
@@ -92,30 +52,18 @@
       "description": "Rename imports of `createNodesV2` from `@nx/cypress/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "disable-webpack-ct-just-in-time-compile": {
+      "version": "23.1.0-beta.6",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Set `justInTimeCompile: false` in webpack component testing Cypress configs on Cypress 14+, where it defaults to true and can intermittently run 0 tests in CI.",
+      "implementation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile",
+      "documentation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile.md"
     }
   },
   "packageJsonUpdates": {
-    "20.8.0": {
-      "version": "20.8.0-beta.0",
-      "x-prompt": "Do you want to update the Cypress version to v14?",
-      "requires": {
-        "cypress": ">=13.0.0 <14.0.0"
-      },
-      "packages": {
-        "cypress": {
-          "version": "^14.2.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@cypress/vite-dev-server": {
-          "version": "^6.0.3",
-          "alwaysAddToPackageJson": false
-        },
-        "@cypress/webpack-dev-server": {
-          "version": "^4.0.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "22.1.0": {
       "version": "22.1.0-beta.6",
       "x-prompt": "Do you want to update the Cypress version to v15?",
@@ -173,6 +121,30 @@
       "packages": {
         "@cypress/vite-dev-server": {
           "version": "^7.3.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-cypress-15.17": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "cypress": ">=15.0.0 <15.17.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^15.17.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-eslint-plugin-cypress": {
+      "version": "23.1.0-beta.6",
+      "requires": {
+        "eslint-plugin-cypress": ">=2.0.0 <3.5.0"
+      },
+      "packages": {
+        "eslint-plugin-cypress": {
+          "version": "^3.5.0",
           "alwaysAddToPackageJson": false
         }
       }

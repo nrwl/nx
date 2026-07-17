@@ -1,33 +1,5 @@
 {
   "generators": {
-    "update-20-2-0-update-module-federation-config-import": {
-      "cli": "nx",
-      "version": "20.2.0-beta.2",
-      "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
-      "factory": "./dist/src/migrations/update-20-2-0/migrate-mf-imports-to-new-package",
-      "documentation": "./dist/src/migrations/update-20-2-0/migrate-mf-imports-to-new-package.md"
-    },
-    "update-20-2-0-update-with-module-federation-import": {
-      "cli": "nx",
-      "version": "20.2.0-beta.2",
-      "description": "Update the withModuleFederation import use @nx/module-federation/webpack.",
-      "factory": "./dist/src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package",
-      "documentation": "./dist/src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package.md"
-    },
-    "ensure-nx-module-federation-package": {
-      "cli": "nx",
-      "version": "20.3.0-beta.2",
-      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
-      "factory": "./dist/src/migrations/update-20-3-0/ensure-nx-module-federation-package",
-      "documentation": "./dist/src/migrations/update-20-3-0/ensure-nx-module-federation-package.md"
-    },
-    "add-mf-env-var-to-target-defaults": {
-      "cli": "nx",
-      "version": "20.4.0-beta.0",
-      "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
-      "factory": "./dist/src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults",
-      "documentation": "./dist/src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults.md"
-    },
     "update-21-0-0-update-babel-loose": {
       "cli": "nx",
       "version": "21.0.0-beta.11",
@@ -58,70 +30,18 @@
       "version": "23.0.0-beta.25",
       "description": "Rewrites `@nx/react/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/react`'s exports map. Named imports/exports of public symbols are routed to `@nx/react` and the rest to the new `@nx/react/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/react/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-1-0-create-ai-instructions-for-react-19": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "react": ">=19.0.0"
+      },
+      "description": "Create AI instructions to help migrate workspaces from React 18 to 19.",
+      "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-react-19.md",
+      "documentation": "./dist/src/migrations/update-23-1-0/upgrade-to-react-19.md"
     }
   },
   "packageJsonUpdates": {
-    "20.0.0": {
-      "version": "20.0.0-beta.8",
-      "packages": {
-        "eslint-plugin-import": {
-          "version": "2.31.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.1.0": {
-      "version": "20.1.0-beta.0",
-      "requires": {
-        "eslint-plugin-react-hooks": ">=4.0.0 <5.0.0"
-      },
-      "packages": {
-        "eslint-plugin-react-hooks": {
-          "version": "5.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "eslint-plugin-jsx-a11y": {
-          "version": "6.10.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.2.0": {
-      "version": "20.2.0-beta.3",
-      "requires": {
-        "@module-federation/enhanced": ">=0.6.0 <0.7.0"
-      },
-      "packages": {
-        "@module-federation/enhanced": {
-          "version": "0.7.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@module-federation/runtime": {
-          "version": "0.7.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@module-federation/sdk": {
-          "version": "0.7.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@module-federation/node": {
-          "version": "2.6.11",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.3.0": {
-      "version": "20.3.0-beta.0",
-      "requires": {
-        "@testing-library/react": ">=15.0.0 <16.0.0"
-      },
-      "packages": {
-        "@testing-library/react": {
-          "version": "16.1.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "21.4.0": {
       "version": "21.4.0-beta.8",
       "requires": {
@@ -288,6 +208,53 @@
         },
         "@react-router/remix-routes-option-adapter": {
           "version": "7.14.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0": {
+      "version": "23.1.0-beta.0",
+      "incompatibleWith": {
+        "@remix-run/react": "*"
+      },
+      "requires": {
+        "react": ">=18.0.0 <19.0.0"
+      },
+      "packages": {
+        "react": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-is": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-is": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-eslint-plugin-react": {
+      "version": "23.1.0-beta.5",
+      "requires": {
+        "eslint-plugin-react": "<7.35.0"
+      },
+      "packages": {
+        "eslint-plugin-react": {
+          "version": "^7.35.0",
           "alwaysAddToPackageJson": false
         }
       }

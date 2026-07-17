@@ -11,7 +11,8 @@
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "module": "preserve",
-    "lib": ["dom", "es2022"]
+    "lib": ["dom", "es2022"],
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],

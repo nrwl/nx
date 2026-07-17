@@ -14,7 +14,10 @@ import { e2eProjectGenerator } from './e2e';
 
 describe('NxPlugin e2e-project Generator', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // add a plugin project to the workspace for validations
@@ -25,6 +28,11 @@ describe('NxPlugin e2e-project Generator', () => {
     writeJson(tree, 'libs/my-plugin/package.json', {
       name: 'my-plugin',
     });
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should validate the plugin name', async () => {
@@ -219,9 +227,14 @@ describe('NxPlugin e2e-project Generator', () => {
       addPlugin: true,
     });
 
-    expect(
-      tree.read('my-plugin-e2e/.eslintrc.json', 'utf-8')
-    ).toMatchSnapshot();
+    expect(tree.exists('my-plugin-e2e/eslint.config.mjs')).toBeTruthy();
+    expect(tree.read('my-plugin-e2e/eslint.config.mjs', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import baseConfig from '../eslint.config.mjs';
+
+      export default [...baseConfig];
+      "
+    `);
   });
 
   describe('TS solution setup', () => {

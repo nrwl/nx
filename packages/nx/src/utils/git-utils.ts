@@ -1,15 +1,25 @@
-import { exec, ExecOptions, execSync } from 'child_process';
+import {
+  ExecFileOptions,
+  execFile,
+  execFileSync,
+  execSync,
+} from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { dirname, join, posix, sep } from 'path';
 import { logger } from './logger';
 
-function execAsync(command: string, execOptions: ExecOptions) {
+function execFileAsync(
+  file: string,
+  args: string[],
+  execOptions: ExecFileOptions
+) {
   return new Promise<string>((res, rej) => {
-    exec(
-      command,
+    execFile(
+      file,
+      args,
       { ...execOptions, windowsHide: true },
-      (err, stdout, stderr) => {
+      (err, stdout) => {
         if (err) {
           return rej(err);
         }
@@ -26,10 +36,16 @@ export async function cloneFromUpstream(
     originName: 'origin',
   }
 ) {
-  await execAsync(
-    `git clone ${url} ${destination} ${
-      depth ? `--depth ${depth}` : ''
-    } --origin ${originName}`,
+  await execFileAsync(
+    'git',
+    [
+      'clone',
+      url,
+      destination,
+      ...(depth ? ['--depth', `${depth}`] : []),
+      '--origin',
+      originName,
+    ],
     {
       cwd: dirname(destination),
       maxBuffer: 10 * 1024 * 1024,
@@ -44,7 +60,7 @@ export class GitRepository {
   constructor(private directory: string) {}
 
   getGitRootPath(cwd: string) {
-    return execSync('git rev-parse --show-toplevel', {
+    return execFileSync('git', ['rev-parse', '--show-toplevel'], {
       cwd,
       windowsHide: true,
     })
@@ -53,22 +69,25 @@ export class GitRepository {
   }
 
   async hasUncommittedChanges() {
-    const data = await this.execAsync(`git status --porcelain`);
+    const data = await this.execGit(['status', '--porcelain']);
     return data.trim() !== '';
   }
 
   async addFetchRemote(remoteName: string, branch: string) {
-    return await this.execAsync(
-      `git config --add remote.${remoteName}.fetch "+refs/heads/${branch}:refs/remotes/${remoteName}/${branch}"`
-    );
+    return await this.execGit([
+      'config',
+      '--add',
+      `remote.${remoteName}.fetch`,
+      `+refs/heads/${branch}:refs/remotes/${remoteName}/${branch}`,
+    ]);
   }
 
   async showStat() {
-    return await this.execAsync(`git show --stat`);
+    return await this.execGit(['show', '--stat']);
   }
 
   async listBranches() {
-    return (await this.execAsync(`git ls-remote --heads --quiet`))
+    return (await this.execGit(['ls-remote', '--heads', '--quiet']))
       .trim()
       .split('\n')
       .map((s) =>
@@ -82,7 +101,7 @@ export class GitRepository {
   async getGitFiles(path: string) {
     // Use -z to return file names exactly as they are stored in git, separated by NULL (\x00) character.
     // This avoids problems with special characters in file names.
-    return (await this.execAsync(`git ls-files -z ${path}`))
+    return (await this.execGit(['ls-files', '-z', '--', path]))
       .trim()
       .split('\x00')
       .map((s) => s.trim())
@@ -90,16 +109,22 @@ export class GitRepository {
   }
 
   async reset(ref: string) {
-    return await this.execAsync(`git reset ${ref} --hard`);
+    return await this.execGit(['reset', '--hard', ref]);
   }
 
   async mergeUnrelatedHistories(ref: string, message: string) {
-    return await this.execAsync(
-      `git merge ${ref} -X ours --allow-unrelated-histories -m "${message}"`
-    );
+    return await this.execGit([
+      'merge',
+      ref,
+      '-X',
+      'ours',
+      '--allow-unrelated-histories',
+      '-m',
+      message,
+    ]);
   }
   async fetch(remote: string, ref?: string) {
-    return await this.execAsync(`git fetch ${remote}${ref ? ` ${ref}` : ''}`);
+    return await this.execGit(['fetch', remote, ...(ref ? [ref] : [])]);
   }
 
   async checkout(
@@ -109,41 +134,40 @@ export class GitRepository {
       base: string;
     }
   ) {
-    return await this.execAsync(
-      `git checkout ${opts.new ? '-b ' : ' '}${branch}${
-        opts.base ? ' ' + opts.base : ''
-      }`
-    );
+    return await this.execGit([
+      'checkout',
+      ...(opts.new ? ['-b'] : []),
+      branch,
+      ...(opts.base ? [opts.base] : []),
+    ]);
   }
 
   async move(path: string, destination: string) {
-    return await this.execAsync(
-      `git mv ${this.quotePath(path)} ${this.quotePath(destination)}`
-    );
+    return await this.execGit(['mv', '--', path, destination]);
   }
 
   async push(ref: string, remoteName: string) {
-    return await this.execAsync(`git push -u -f ${remoteName} ${ref}`);
+    return await this.execGit(['push', '-u', '-f', remoteName, ref]);
   }
 
   async commit(message: string) {
-    return await this.execAsync(`git commit -am "${message}"`);
+    return await this.execGit(['commit', '-am', message]);
   }
   async amendCommit() {
-    return await this.execAsync(`git commit --amend -a --no-edit`);
+    return await this.execGit(['commit', '--amend', '-a', '--no-edit']);
   }
 
   async deleteGitRemote(name: string) {
-    return await this.execAsync(`git remote rm ${name}`);
+    return await this.execGit(['remote', 'rm', name]);
   }
 
   async addGitRemote(name: string, url: string) {
-    return await this.execAsync(`git remote add ${name} ${url}`);
+    return await this.execGit(['remote', 'add', name, url]);
   }
 
   async hasFilterRepoInstalled() {
     try {
-      await this.execAsync(`git filter-repo --help`);
+      await this.execGit(['filter-repo', '--help']);
       return true;
     } catch {
       return false;
@@ -156,33 +180,39 @@ export class GitRepository {
     // NOTE: filter-repo requires POSIX path to work
     const sourcePosixPath = source.split(sep).join(posix.sep);
     const destinationPosixPath = destination.split(sep).join(posix.sep);
-    await this.execAsync(
-      `git filter-repo -f ${
-        source !== '' ? `--path ${this.quotePath(sourcePosixPath)}` : ''
-      } ${
-        source !== destination
-          ? `--path-rename ${this.quotePath(
-              sourcePosixPath,
-              true
-            )}:${this.quotePath(destinationPosixPath, true)}`
-          : ''
-      }`
-    );
+    const sourcePath = ensureTrailingSlash(sourcePosixPath);
+    const destinationPath = ensureTrailingSlash(destinationPosixPath);
+    await this.execGit([
+      'filter-repo',
+      '-f',
+      ...(source !== '' ? ['--path', sourcePosixPath] : []),
+      ...(source !== destination
+        ? ['--path-rename', `${sourcePath}:${destinationPath}`]
+        : []),
+    ]);
   }
 
   async filterBranch(source: string, destination: string, branchName: string) {
     // We need non-ASCII file names to not be quoted, or else filter-branch will exclude them.
-    await this.execAsync(`git config core.quotepath false`);
+    await this.execGit(['config', 'core.quotepath', 'false']);
     // NOTE: filter-repo requires POSIX path to work
     const sourcePosixPath = source.split(sep).join(posix.sep);
     const destinationPosixPath = destination.split(sep).join(posix.sep);
     // First, if the source is not a root project, then only include commits relevant to the subdirectory.
     if (source !== '') {
-      const indexFilterCommand = this.quoteArg(
-        `node ${join(__dirname, 'git-utils.index-filter.js')}`
-      );
-      await this.execAsync(
-        `git filter-branch -f --index-filter ${indexFilterCommand} --prune-empty -- ${branchName}`,
+      const indexFilterCommand = `node ${quoteForShell(
+        join(__dirname, 'git-utils.index-filter.js')
+      )}`;
+      await this.execGit(
+        [
+          'filter-branch',
+          '-f',
+          '--index-filter',
+          indexFilterCommand,
+          '--prune-empty',
+          '--',
+          branchName,
+        ],
         {
           NX_IMPORT_SOURCE: sourcePosixPath,
           NX_IMPORT_DESTINATION: destinationPosixPath,
@@ -191,11 +221,18 @@ export class GitRepository {
     }
     // Then, move files to their new location if necessary.
     if (source === '' || source !== destination) {
-      const treeFilterCommand = this.quoteArg(
-        `node ${join(__dirname, 'git-utils.tree-filter.js')}`
-      );
-      await this.execAsync(
-        `git filter-branch -f --tree-filter ${treeFilterCommand} -- ${branchName}`,
+      const treeFilterCommand = `node ${quoteForShell(
+        join(__dirname, 'git-utils.tree-filter.js')
+      )}`;
+      await this.execGit(
+        [
+          'filter-branch',
+          '-f',
+          '--tree-filter',
+          treeFilterCommand,
+          '--',
+          branchName,
+        ],
         {
           NX_IMPORT_SOURCE: sourcePosixPath,
           NX_IMPORT_DESTINATION: destinationPosixPath,
@@ -204,8 +241,8 @@ export class GitRepository {
     }
   }
 
-  private execAsync(command: string, env?: Record<string, string>) {
-    return execAsync(command, {
+  private execGit(args: string[], env?: Record<string, string>) {
+    return execFileAsync('git', args, {
       cwd: this.root,
       maxBuffer: 10 * 1024 * 1024,
       env: {
@@ -214,27 +251,14 @@ export class GitRepository {
       },
     });
   }
+}
 
-  private quotePath(path: string, ensureTrailingSlash?: true) {
-    return this.quoteArg(
-      ensureTrailingSlash && path !== '' && !path.endsWith('/')
-        ? `${path}/`
-        : path
-    );
-  }
+function ensureTrailingSlash(path: string) {
+  return path !== '' && !path.endsWith('/') ? `${path}/` : path;
+}
 
-  private quoteArg(arg: string) {
-    return process.platform === 'win32'
-      ? // Windows/CMD only understands double-quotes, single-quotes are treated as part of the file name
-        // Bash and other shells will substitute `$` in file names with a variable value.
-        `"${arg
-          // Need to keep two slashes for Windows or else the path will be invalid.
-          // e.g. 'C:\Users\bob\projects\repo' is invalid, but 'C:\\Users\\bob\\projects\\repo' is valid
-          .replaceAll('\\', '\\\\')}"`
-      : // e.g. `git mv "$$file.txt" "libs/a/$$file.txt"` will not work since `$$` is swapped with the PID of the last process.
-        // Using single-quotes prevents this substitution.
-        `'${arg}'`;
-  }
+function quoteForShell(arg: string) {
+  return `'${arg.replaceAll("'", "'\"'\"'")}'`;
 }
 
 export interface VcsRemoteInfo {
@@ -354,6 +378,23 @@ export function isGitRepository(directory?: string): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+// Checked-out branch name, or null when there isn't one to act on: a detached
+// HEAD reports the literal "HEAD" (treated as no branch), and any git error
+// (not a repo, no commits yet) also yields null.
+export function getGitCurrentBranch(directory?: string): string | null {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+      encoding: 'utf8',
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'ignore'],
+      windowsHide: true,
+    }).trim();
+    return branch && branch !== 'HEAD' ? branch : null;
+  } catch {
+    return null;
   }
 }
 

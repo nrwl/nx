@@ -5,11 +5,7 @@ import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
-import {
-  NxJsonConfiguration,
-  TargetDefaults,
-  TargetDefaultsRecord,
-} from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
   ProjectMetadata,
@@ -54,7 +50,7 @@ export interface NxMigrationsConfiguration {
   migrations?: string;
   packageGroup?: PackageGroup;
   /** Signals the package supports `nx migrate --include`. */
-  supportsOptionalUpdates?: boolean;
+  supportsOptionalMigrations?: boolean;
 }
 
 type PackageOverride = { [key: string]: string | PackageOverride };
@@ -104,6 +100,9 @@ export interface PackageJson {
     ignoredOptionalDependencies?: string[];
   };
   overrides?: PackageOverride;
+  // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
+  // or git specs; `true` approves, `false` denies.
+  allowScripts?: Record<string, boolean>;
   bin?: Record<string, string> | string;
   workspaces?:
     | string[]
@@ -132,7 +131,7 @@ export interface NxPackageJson extends PackageJson {
   'nx-migrations'?: {
     migrations?: string;
     packageGroup?: (string | { package: string; version: string })[];
-    supportsOptionalUpdates?: boolean;
+    supportsOptionalMigrations?: boolean;
   };
 }
 
@@ -167,8 +166,8 @@ export function readNxMigrateConfig(
       ...(fromJson.packageGroup
         ? { packageGroup: normalizePackageGroup(fromJson.packageGroup) }
         : {}),
-      ...(fromJson.supportsOptionalUpdates
-        ? { supportsOptionalUpdates: true }
+      ...(fromJson.supportsOptionalMigrations
+        ? { supportsOptionalMigrations: true }
         : {}),
     };
   };
@@ -286,8 +285,11 @@ export function readTargetsFromPackageJson(
     !res['nx-release-publish'] &&
     hasNxJsPlugin(projectRoot, workspaceRoot)
   ) {
+    // No project/plugin context here, so only catch-all entries of a
+    // `targetDefaults` value apply (the reader resolves both the object and
+    // array value forms).
     const nxReleasePublishTargetDefaults =
-      readCompatibleTargetDefaultsForTarget(
+      readTargetDefaultsForTarget(
         'nx-release-publish',
         nxJson?.targetDefaults,
         '@nx/js:release-publish'
@@ -307,22 +309,6 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
-}
-
-function readCompatibleTargetDefaultsForTarget(
-  targetName: string,
-  targetDefaults: TargetDefaults | undefined,
-  executor?: string
-): Partial<TargetConfiguration> | null {
-  if (
-    targetDefaults &&
-    !Array.isArray(targetDefaults) &&
-    Object.prototype.hasOwnProperty.call(targetDefaults, targetName)
-  ) {
-    return (targetDefaults as TargetDefaultsRecord)[targetName] ?? null;
-  }
-
-  return readTargetDefaultsForTarget(targetName, targetDefaults, executor);
 }
 
 /**
@@ -430,9 +416,25 @@ function preparePackageInstallation(
   // it into the temp dir, so the `-w` here resolves to the temp dir.
   const pmCommands = getPackageManagerCommand(packageManager);
   const preInstallCommand = pmCommands.preInstall;
-  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion} ${
-    pmCommands.ignoreScriptsFlag ?? ''
-  }`;
+
+  // Omit peer dependencies from the temp install. `ensurePackage` puts the
+  // workspace's `node_modules` on `NODE_PATH`, so a loaded package resolves its
+  // peers from the workspace instead of pulling its own (possibly incompatible)
+  // copies into the temp dir.
+  const omitPeerDependenciesFlag =
+    packageManager === 'npm' || packageManager === 'bun'
+      ? '--omit=peer'
+      : packageManager === 'pnpm'
+        ? '--config.auto-install-peers=false'
+        : '';
+  const installCommand = [
+    pmCommands.addDev,
+    `${pkg}@${requiredVersion}`,
+    omitPeerDependenciesFlag,
+    pmCommands.ignoreScriptsFlag,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const execOptions = {
     cwd: tempDir,

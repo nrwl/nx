@@ -46,6 +46,33 @@ describe('updatePaths', () => {
     });
   });
 
+  it('should not double the output when the root is a substring of the output and the mapping points to the output', () => {
+    // Repro for #36079: project root `base` is a substring of the output
+    // `dist/libs/base`, and the mapping already points into the output.
+    const paths: Record<string, string[]> = {
+      '@proj/base/features/clipboard': [
+        'dist/libs/base/src/lib/features/clipboard.d.ts',
+      ],
+    };
+
+    updatePaths(
+      [
+        {
+          name: '@proj/base',
+          node: { name: 'base', type: 'lib', data: { root: 'base' } } as any,
+          outputs: ['dist/libs/base'],
+        },
+      ],
+      paths
+    );
+
+    expect(paths['@proj/base/features/clipboard']).toEqual([
+      './dist/libs/base/features/clipboard',
+      './dist/libs/base/src/lib/features/clipboard.d',
+      './dist/libs/base/src/lib/features/clipboard.d.ts',
+    ]);
+  });
+
   it('should handle outputs with glob patterns', () => {
     const paths: Record<string, string[]> = {
       '@proj/lib1': ['libs/lib1/src/index.ts'],
@@ -439,6 +466,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib2:build': {
           id: 'lib2:build',
@@ -447,6 +475,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
@@ -455,6 +484,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib3:build': {
           id: 'lib3:build',
@@ -463,6 +493,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib4:build': {
           id: 'lib4:build',
@@ -471,6 +502,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
       },
     };
@@ -620,6 +652,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib1:build-base': {
           id: 'lib1:build-base',
@@ -628,6 +661,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib2:build': {
           id: 'lib2:build',
@@ -636,6 +670,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
@@ -644,6 +679,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib3:build': {
           id: 'lib3:build',
@@ -652,6 +688,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib3:build-base': {
           id: 'lib3:build-base',
@@ -660,6 +697,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib4:build': {
           id: 'lib4:build',
@@ -668,6 +706,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib4:build-base': {
           id: 'lib4:build-base',
@@ -676,6 +715,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
       },
     };

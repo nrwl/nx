@@ -27,17 +27,34 @@ import {
   eslintVersion,
   typescriptESLintVersion,
 } from '../../utils/versions';
+import {
+  BASE_ESLINT_CONFIG_FILENAMES,
+  ESLINT_FLAT_CONFIG_FILENAMES,
+} from '../../utils/config-file';
 import { ESLint } from 'eslint';
 import {
   convertEslintJsonToFlatConfig,
   renameLegacyEslintrcFile,
 } from './converters/json-converter';
+import {
+  migrateAngularEslintV22FlatConfig,
+  resolveAngularEslintVersion,
+} from './angular-eslint';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
   options: ConvertToFlatConfigGeneratorSchema
 ): Promise<void | GeneratorCallback> {
   assertSupportedEslintVersion(tree);
+
+  // Already on flat config at the root? There is nothing to convert.
+  const hasRootFlatConfig = [
+    ...ESLINT_FLAT_CONFIG_FILENAMES,
+    ...BASE_ESLINT_CONFIG_FILENAMES,
+  ].some((file) => tree.exists(file));
+  if (hasRootFlatConfig) {
+    return;
+  }
 
   const eslintFile = findEslintFile(tree);
   if (!eslintFile) {
@@ -54,7 +71,12 @@ export async function convertToFlatConfigGenerator(
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
 
   // convert root eslint config to eslint.config.cjs or eslint.base.config.mjs based on eslintConfigFormat
-  convertRootToFlatConfig(tree, eslintFile, options.eslintConfigFormat);
+  convertRootToFlatConfig(
+    tree,
+    eslintFile,
+    options.eslintConfigFormat,
+    options.keepExistingVersions
+  );
 
   // convert project eslint files to eslint.config.cjs
   const projects = getProjects(tree);
@@ -65,7 +87,8 @@ export async function convertToFlatConfigGenerator(
       projectConfig,
       readNxJson(tree),
       eslintIgnoreFiles,
-      options.eslintConfigFormat
+      options.eslintConfigFormat,
+      options.keepExistingVersions
     );
   }
 
@@ -77,7 +100,11 @@ export async function convertToFlatConfigGenerator(
   // replace references in nx.json and project.json files
   updateNxJsonConfig(tree, options.eslintConfigFormat);
   updateProjectConfigsInputs(tree, options.eslintConfigFormat);
-  // install missing packages
+
+  // The converter carries angular-eslint's removed eslintrc configs over as
+  // FlatCompat shims; on v22 those no longer resolve, so reconcile them to the
+  // flat-native config before formatting (no-op below v22).
+  await migrateAngularEslintV22FlatConfig(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -91,7 +118,8 @@ export default convertToFlatConfigGenerator;
 function convertRootToFlatConfig(
   tree: Tree,
   eslintFile: string,
-  format: 'cjs' | 'mjs'
+  format: 'cjs' | 'mjs',
+  keepExistingVersions?: boolean
 ) {
   if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
     convertConfigToFlatConfig(
@@ -99,16 +127,25 @@ function convertRootToFlatConfig(
       '',
       eslintFile,
       `eslint.base.config.${format}`,
-      format
+      format,
+      undefined,
+      keepExistingVersions
     );
   }
-  convertConfigToFlatConfig(
-    tree,
-    '',
-    eslintFile.replace('.base.', '.'),
-    `eslint.config.${format}`,
-    format
-  );
+  // A workspace can ship `.eslintrc.base.json` without a sibling root config, so
+  // only convert the non-base root config when it actually exists.
+  const rootEslintFile = eslintFile.replace('.base.', '.');
+  if (tree.exists(rootEslintFile)) {
+    convertConfigToFlatConfig(
+      tree,
+      '',
+      rootEslintFile,
+      `eslint.config.${format}`,
+      format,
+      undefined,
+      keepExistingVersions
+    );
+  }
 }
 
 const ESLINT_LINT_EXECUTOR = '@nx/eslint:lint';
@@ -128,20 +165,20 @@ function hasMatchingEslintTargetDefault(
     return false;
   }
 
-  if (Array.isArray(targetDefaults)) {
-    return targetDefaults.some(
-      (entry) =>
-        entry.target !== undefined &&
-        projectConfig.targets[entry.target] !== undefined &&
-        (entry.target === ESLINT_LINT_EXECUTOR || isEslintTarget(entry))
-    );
-  }
-
-  return Object.entries(targetDefaults).some(
-    ([targetName, targetConfig]) =>
-      projectConfig.targets[targetName] !== undefined &&
-      (targetName === ESLINT_LINT_EXECUTOR || isEslintTarget(targetConfig))
-  );
+  return Object.entries(targetDefaults).some(([targetName, value]) => {
+    if (projectConfig.targets[targetName] === undefined) {
+      return false;
+    }
+    if (targetName === ESLINT_LINT_EXECUTOR) {
+      return true;
+    }
+    // A target default value can be a plain config object or an array of
+    // filtered entries; match against the filter-less (catch-all) entry.
+    const targetConfig = Array.isArray(value)
+      ? value.find((e) => e.filter === undefined)
+      : value;
+    return targetConfig ? isEslintTarget(targetConfig) : false;
+  });
 }
 
 function convertProjectToFlatConfig(
@@ -150,10 +187,21 @@ function convertProjectToFlatConfig(
   projectConfig: ProjectConfiguration,
   nxJson: NxJsonConfiguration,
   eslintIgnoreFiles: Set<string>,
-  format: 'cjs' | 'mjs'
+  format: 'cjs' | 'mjs',
+  keepExistingVersions?: boolean
 ) {
   const eslintFile = findEslintFile(tree, projectConfig.root);
-  if (!eslintFile || eslintFile.endsWith('.js')) {
+  if (!eslintFile) {
+    return;
+  }
+  if (eslintFile === '.eslintrc.js' || eslintFile === '.eslintrc.cjs') {
+    logger.warn(
+      `Skipping "${project}": ${eslintFile} is a JavaScript-based ESLint config, which cannot be converted automatically. Convert it to flat config manually.`
+    );
+    return;
+  }
+  if (eslintFile.endsWith('.js')) {
+    // Already on a JavaScript-based flat config (eslint.config.js); nothing to convert.
     return;
   }
 
@@ -198,7 +246,8 @@ function convertProjectToFlatConfig(
     eslintFile,
     `eslint.config.${format}`,
     format,
-    ignorePath
+    ignorePath,
+    keepExistingVersions
   );
   eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
   if (ignorePath) {
@@ -272,16 +321,16 @@ function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
         : rewriteLegacyInputs(target.inputs, format);
     };
     if (json.targetDefaults) {
-      if (Array.isArray(json.targetDefaults)) {
-        for (const entry of json.targetDefaults) {
-          const isLintTarget =
-            entry.target === 'lint' || entry.target === ESLINT_LINT_EXECUTOR;
-          rewriteTargetInputs(entry, isLintTarget);
-        }
-      } else {
-        for (const [name, target] of Object.entries(json.targetDefaults)) {
-          const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
-          rewriteTargetInputs(target, isLintTarget);
+      for (const [name, value] of Object.entries(json.targetDefaults)) {
+        const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
+        // A target default value can be a plain config object or an array of
+        // filtered entries; rewrite inputs on each entry in the array case.
+        if (Array.isArray(value)) {
+          for (const entry of value) {
+            rewriteTargetInputs(entry, isLintTarget);
+          }
+        } else {
+          rewriteTargetInputs(value, isLintTarget);
         }
       }
     }
@@ -343,7 +392,8 @@ function convertConfigToFlatConfig(
   source: string,
   target: string,
   format: 'cjs' | 'mjs',
-  ignorePath?: string
+  ignorePath?: string,
+  keepExistingVersions?: boolean
 ) {
   const ignorePaths = ignorePath
     ? [ignorePath, `${root}/.eslintignore`]
@@ -359,7 +409,14 @@ function convertConfigToFlatConfig(
       ignorePaths,
       format
     );
-    return processConvertedConfig(tree, root, source, target, conversionResult);
+    return processConvertedConfig(
+      tree,
+      root,
+      source,
+      target,
+      conversionResult,
+      keepExistingVersions
+    );
   }
   if (source.endsWith('.yaml') || source.endsWith('.yml')) {
     const originalContent = tree.read(`${root}/${source}`, 'utf-8');
@@ -375,7 +432,14 @@ function convertConfigToFlatConfig(
       ignorePaths,
       format
     );
-    return processConvertedConfig(tree, root, source, target, conversionResult);
+    return processConvertedConfig(
+      tree,
+      root,
+      source,
+      target,
+      conversionResult,
+      keepExistingVersions
+    );
   }
 }
 
@@ -388,7 +452,8 @@ function processConvertedConfig(
     content,
     addESLintRC,
     addESLintJS,
-  }: { content: string; addESLintRC: boolean; addESLintJS: boolean }
+  }: { content: string; addESLintRC: boolean; addESLintJS: boolean },
+  keepExistingVersions?: boolean
 ) {
   // remove original config file
   tree.delete(join(root, source));
@@ -396,10 +461,9 @@ function processConvertedConfig(
   // save new
   tree.write(join(root, target), content);
 
-  // Once converted to flat config, the workspace is on the v9 ESLint stack —
-  // install the latest typescript-eslint v8 lane explicitly rather than
-  // routing through `versions(tree)` which would pick the legacy lane based
-  // on the pre-conversion `eslintrc` workspace state.
+  // Once converted to flat config, the workspace should use the latest ESLint
+  // stack. Install the versions directly instead of routing through
+  // `versions(tree)`, which keys off the pre-conversion declared ESLint version.
   const devDependencies: Record<string, string> = {
     eslint: eslintVersion,
     'eslint-config-prettier': eslintConfigPrettierVersion,
@@ -426,7 +490,21 @@ function processConvertedConfig(
     devDependencies['@eslint/js'] = eslintVersion;
   }
 
-  // Convert-to-flat-config is an opt-in "upgrade" — we intentionally overwrite
-  // existing pins to land the workspace on the latest flat-config-ready stack.
-  addDependenciesToPackageJson(tree, {}, devDependencies);
+  // The flat/angular presets import the umbrella `angular-eslint` package; add
+  // it when the converted config references them so the result resolves.
+  if (content.includes('flat/angular')) {
+    devDependencies['angular-eslint'] = resolveAngularEslintVersion(tree);
+  }
+
+  // Direct invocation is an opt-in upgrade, so by default existing pins are
+  // overwritten to land the workspace on the latest flat-config-ready stack.
+  // Migrations pass `keepExistingVersions` so the version bump stays owned by
+  // `packageJsonUpdates` and only newly added packages are installed here.
+  addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    'package.json',
+    keepExistingVersions
+  );
 }

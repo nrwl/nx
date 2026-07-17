@@ -1,11 +1,20 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-// const mockFormatFiles = jest.fn();
-// jest.mock('@nx/devkit', () => {
-//   return {
-//     ...jest.requireActual('@nx/devkit'),
-//     formatFiles: (...args) => mockFormatFiles(...args),
-// }
-// })
+// Mock `@nx/devkit` so that (1) the project graph is empty during generation and
+// (2) the detected package manager is pinned. Pinning keeps inferred lock-file
+// outputs (e.g. prune-lockfile) deterministic regardless of which package
+// manager runs the tests. Individual tests can override `detectPackageManager`.
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    createProjectGraphAsync: jest
+      .fn()
+      .mockResolvedValue({ nodes: {}, dependencies: {} }),
+    detectPackageManager: jest.fn(() => 'npm'),
+    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
 
 import {
   getProjects,
@@ -24,11 +33,22 @@ import { applicationGenerator } from './application';
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
 
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -195,42 +215,7 @@ describe('app', () => {
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
       ]);
-      const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
-      expect(eslintrc).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      expect(tree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -426,12 +411,8 @@ describe('app', () => {
             'src/**/*.test.ts',
           ],
         },
-        {
-          path: 'my-dir/my-node-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(tree.exists('my-dir/my-node-app/eslint.config.mjs')).toBeTruthy();
     });
   });
 
@@ -491,6 +472,18 @@ describe('app', () => {
         '/api': { target: 'http://localhost:3000', secure: false },
         '/billing-api': { target: 'http://localhost:3000', secure: false },
       });
+    });
+  });
+
+  describe('eslintrc (legacy)', () => {
+    it('should generate .eslintrc.json when ESLINT_USE_FLAT_CONFIG=false', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        addPlugin: true,
+      });
+      const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
+      expect(eslintrc.extends).toEqual(['../.eslintrc.json']);
     });
   });
 
@@ -1157,6 +1150,45 @@ describe('app', () => {
       expect(buildTarget.configurations.development.env).toEqual({
         NODE_ENV: 'development',
       });
+    });
+  });
+
+  describe('--rootProject base compiler options', () => {
+    it('should inline "bundler" moduleResolution into the root tsconfig.json when typescript is not declared', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        directory: '.',
+        addPlugin: true,
+      });
+
+      const { compilerOptions } = readJson(tree, 'tsconfig.json');
+      // default tree has no declared typescript -> assumes the >=6 default
+      expect(compilerOptions.moduleResolution).toBe('bundler');
+      expect(compilerOptions.strict).toBe(false);
+      // module and target come from the inlined base options
+      expect(compilerOptions.module).toBe('esnext');
+      expect(compilerOptions.target).toBe('es2015');
+      // esModuleInterop is an explicit override on top of the base options
+      expect(compilerOptions.esModuleInterop).toBe(true);
+    });
+
+    it('should inline "node10" moduleResolution into the root tsconfig.json when typescript is pinned below 6', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        directory: '.',
+        addPlugin: true,
+      });
+
+      const { compilerOptions } = readJson(tree, 'tsconfig.json');
+      // typescript <6 is declared -> node-family moduleResolution
+      expect(compilerOptions.moduleResolution).toBe('node10');
+      expect(compilerOptions.strict).toBe(false);
+      expect(compilerOptions.esModuleInterop).toBe(true);
     });
   });
 });

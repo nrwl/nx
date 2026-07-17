@@ -160,7 +160,13 @@
       "cli": "nx",
       "version": "22.6.0-rc.0",
       "description": "Adds .claude/settings.local.json to .gitignore",
-      "implementation": "./dist/src/migrations/update-17-3-0/update-nxw"
+      "implementation": "./dist/src/migrations/update-22-6-0/add-claude-settings-local-to-git-ignore"
+    },
+    "22-6-0-enable-analytics-prompt": {
+      "cli": "nx",
+      "version": "22.6.0-beta.11",
+      "description": "Prompts to enable usage analytics",
+      "implementation": "./dist/src/migrations/update-22-6-0/enable-analytics-prompt"
     },
     "22-7-0-add-self-healing-to-gitignore": {
       "cli": "nx",
@@ -173,13 +179,6 @@
       "version": "23.0.0-beta.16",
       "description": "Consolidates any remaining legacy releaseTag* flat properties into the nested releaseTag object. The flat properties were removed in Nx 23.",
       "implementation": "./dist/src/migrations/update-23-0-0/consolidate-release-tag-config"
-    },
-    "23-0-0-convert-target-defaults-to-array": {
-      "cli": "nx",
-      "version": "23.0.0-beta.13",
-      "description": "Converts nx.json `targetDefaults` from the legacy record shape to the new filtered array shape.",
-      "implementation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array",
-      "documentation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array.md"
     },
     "23-0-0-add-migrate-runs-to-git-ignore": {
       "version": "23.0.0-beta.18",

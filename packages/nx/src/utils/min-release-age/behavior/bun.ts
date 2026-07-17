@@ -5,7 +5,12 @@ import { parse as parseToml } from 'smol-toml';
 import { MS_PER_DAY, MS_PER_SECOND } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
 import type { RegistryMetadata } from '../packument';
-import { blockedVersionsFrom, classifySpec, type PickOutcome } from '../pick';
+import {
+  blockedVersionsFrom,
+  classifySpec,
+  degradeTagToCompliant,
+  type PickOutcome,
+} from '../pick';
 import type {
   MinReleaseAgePolicy,
   MinReleaseAgePolicyReadResult,
@@ -148,8 +153,9 @@ function readBunInstall(path: string): BunInstallConfig | 'error' {
 }
 
 /**
- * Mirrors bun's resolver (find_best_version_with_filter /
- * find_by_dist_tag_with_filter, byte-identical 1.3.0 -> 1.3.14):
+ * bun resolution. Exact pins and ranges mirror bun's resolver
+ * (find_best_version_with_filter, byte-identical 1.3.0 -> 1.3.14); dist-tag
+ * degrade uses the shared cross-PM rule:
  * - exact pin too new -> hard error (TooRecentVersion), no fallback.
  * - range -> the `latest` dist-tag is checked first: in-range and age-passing ->
  *   return it immediately. Otherwise walk newest to oldest skipping age-blocked;
@@ -157,9 +163,9 @@ function readBunInstall(path: string): BunInstallConfig | 'error' {
  *   version >= min(window, 7d), inclusive); unstable -> keep walking but remember
  *   it; stop past `now - (window + 7d)`; no stable -> newest age-passing fallback.
  *   No in-range version at all -> err.not_found (a plain, non-cooldown error).
- * - dist-tag (ALL tags) -> target passes -> return; else the same stability
- *   walk over versions <= the tag target, constrained to the tag's prerelease
- *   channel (canary never falls back to beta).
+ * - dist-tag too new -> degrade via the shared channel-aware rule (see
+ *   `degradeTagToCompliant` for the ordering); none compliant ->
+ *   TooRecentVersion.
  * Missing/unparseable publish times are treated as timestamp 0 (always pass);
  * future timestamps are blocked.
  */
@@ -185,14 +191,11 @@ export function pickBunVersion(
     if (passesGate(metadata, policy, target)) {
       return { version: target, unconstrained: target };
     }
-    const picked = walkStability(
-      metadata,
-      policy,
-      candidatesForTag(metadata, target),
-      target
+    const degraded = degradeTagToCompliant(target, metadata, (v) =>
+      passesGate(metadata, policy, v)
     );
-    if (picked) {
-      return { version: picked, unconstrained: target };
+    if (degraded) {
+      return { version: degraded, unconstrained: target };
     }
     throw tooRecent(metadata, policy, spec);
   }
@@ -276,39 +279,6 @@ function walkStability(
 
   // No stable candidate: fall back to the newest age-passing version, if any.
   return best;
-}
-
-/**
- * The candidate set for a too-recent dist-tag: versions at or below the tag
- * target, sorted newest-first, constrained to the same prerelease channel as
- * the target (a stable target excludes all prereleases).
- */
-function candidatesForTag(
-  metadata: RegistryMetadata,
-  target: string
-): string[] {
-  const targetChannel = prereleaseChannel(target);
-  return metadata.versions
-    .filter((v) => {
-      if (rcompare(v, target) < 0) {
-        // newer than the target
-        return false;
-      }
-      return prereleaseChannel(v) === targetChannel;
-    })
-    .sort(rcompare);
-}
-
-// The base prerelease channel ("canary" from "3.0.0-canary.1"), or null for a
-// stable version.
-function prereleaseChannel(version: string): string | null {
-  const dash = version.indexOf('-');
-  if (dash === -1) {
-    return null;
-  }
-  const pre = version.slice(dash + 1);
-  const dot = pre.indexOf('.');
-  return dot === -1 ? pre : pre.slice(0, dot);
 }
 
 // A version passes when its publish time is at or before the cutoff

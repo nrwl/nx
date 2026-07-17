@@ -54,25 +54,24 @@ export async function setupCompilationWithAngularCompilation(
     return result.contents;
   };
 
-  try {
-    const { referencedFiles } = await angularCompilation.initialize(
-      config.source?.tsconfigPath ?? options.tsConfig,
-      {
-        sourceFileCache,
-        fileReplacements,
-        modifiedFiles,
-        transformStylesheet: wrappedTransformStylesheet,
-        processWebWorker(workerFile: string) {
-          return workerFile;
-        },
+  // Initialization errors are intentionally not caught here: callers must
+  // surface them as build errors instead of continuing with a compilation
+  // that was never initialized.
+  const { referencedFiles } = await angularCompilation.initialize(
+    config.source?.tsconfigPath ?? options.tsConfig,
+    {
+      sourceFileCache,
+      fileReplacements,
+      modifiedFiles,
+      transformStylesheet: wrappedTransformStylesheet,
+      processWebWorker(workerFile: string) {
+        return workerFile;
       },
-      () => compilerOptions
-    );
-    if (sourceFileCache) {
-      sourceFileCache.referencedFiles = referencedFiles;
-    }
-  } catch (e) {
-    console.error('Failed to initialize Angular Compilation', e);
+    },
+    () => compilerOptions
+  );
+  if (sourceFileCache) {
+    sourceFileCache.referencedFiles = referencedFiles;
   }
   return {
     angularCompilation,

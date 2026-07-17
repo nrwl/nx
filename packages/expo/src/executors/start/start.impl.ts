@@ -2,6 +2,7 @@ import * as pc from 'picocolors';
 import { ExecutorContext, logger, names } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
+import { resolveExpoCliPath } from '../../utils/resolve-expo-cli';
 import { resolve as pathResolve } from 'path';
 
 import { ExpoStartOptions } from './schema';
@@ -47,7 +48,7 @@ function startAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('@expo/cli/build/bin/cli'),
+      resolveExpoCliPath(),
       ['start', ...createStartOptions(options)],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),

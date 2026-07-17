@@ -1,11 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/out-tsc/nx-dev/models-menu",
+    "outDir": "dist",
     "declaration": true,
     "types": ["node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
   "include": ["**/*.ts"]

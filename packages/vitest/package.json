@@ -6,7 +6,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json",
     "executors.json",
     "generators.json"
@@ -66,7 +65,7 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "executors": "./executors.json",
   "generators": "./generators.json",

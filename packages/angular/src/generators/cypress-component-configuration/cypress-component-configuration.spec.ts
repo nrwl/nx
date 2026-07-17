@@ -3,7 +3,6 @@ import {
   DependencyType,
   joinPathFragments,
   ProjectGraph,
-  readJson,
   readProjectConfiguration,
   Tree,
   updateJson,
@@ -453,58 +452,48 @@ describe('Cypress Component Testing Configuration', () => {
     ).toMatchSnapshot('component.ts');
   });
 
-  it('should exclude Cypress-related files from tsconfig.editor.json for applications', async () => {
-    // the tsconfig.editor.json is only generated for versions lower than v20
-    updateJson(tree, 'package.json', (json) => {
-      json.dependencies = {
-        ...json.dependencies,
-        '@angular/core': '~19.2.0',
-      };
-      return json;
-    });
-    await generateTestApplication(tree, {
-      directory: 'fancy-app',
-      bundler: 'webpack',
-      zoneless: false,
-      skipFormat: true,
-    });
-    await componentGenerator(tree, {
-      name: 'fancy-cmp',
-      path: 'fancy-app/src/app/fancy-cmp/fancy-cmp',
-      export: true,
-      skipFormat: true,
+  it('should disable justInTimeCompile on Cypress 14+', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(14);
+    await generateTestLibrary(tree, { directory: 'my-lib', skipFormat: true });
+    await setup(tree, {
+      project: 'my-lib',
+      name: 'something',
+      standalone: false,
     });
     projectGraph = {
       nodes: {
-        'fancy-app': {
-          name: 'fancy-app',
+        something: {
+          name: 'something',
           type: 'app',
-          data: {
-            ...readProjectConfiguration(tree, 'fancy-app'),
-          } as any,
+          data: { ...readProjectConfiguration(tree, 'something') } as any,
+        },
+        'my-lib': {
+          name: 'my-lib',
+          type: 'lib',
+          data: { ...readProjectConfiguration(tree, 'my-lib') } as any,
         },
       },
-      dependencies: {},
+      dependencies: {
+        'my-lib': [
+          {
+            type: DependencyType.static,
+            source: 'my-lib',
+            target: 'something',
+          },
+        ],
+      },
     };
 
-    useVite7ForCypressCT(tree);
     await cypressComponentConfiguration(tree, {
-      project: 'fancy-app',
+      project: 'my-lib',
+      buildTarget: 'something:build',
       generateTests: false,
       skipFormat: true,
     });
 
-    const tsConfig = readJson(tree, 'fancy-app/tsconfig.editor.json');
-    expect(tsConfig.exclude).toStrictEqual(
-      expect.arrayContaining([
-        'cypress/**/*',
-        'cypress.config.ts',
-        '**/*.cy.ts',
-        '**/*.cy.js',
-        '**/*.cy.tsx',
-        '**/*.cy.jsx',
-      ])
-    );
+    const config = tree.read('my-lib/cypress.config.ts', 'utf-8');
+    expect(config).toContain('...nxComponentTestingPreset(__filename)');
+    expect(config).toContain('justInTimeCompile: false');
   });
 
   it('should work with simple components', async () => {

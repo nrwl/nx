@@ -5,6 +5,7 @@ import {
   readJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { statSync } from 'fs';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
@@ -481,6 +482,23 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
       return {
         success: false,
       };
+    }
+
+    // pnpm 11 dropped the per-file size field from its publish --json output,
+    // so recover the sizes from disk for the tarball contents log.
+    if (Array.isArray(jsonData.files)) {
+      for (const file of jsonData.files as Array<{
+        path?: string;
+        size?: number;
+      }>) {
+        if (typeof file.size !== 'number' && typeof file.path === 'string') {
+          try {
+            file.size = statSync(join(packageRoot, file.path)).size;
+          } catch {
+            // leave the size unknown, logTar omits it
+          }
+        }
+      }
     }
 
     if (isDryRun) {

@@ -70,15 +70,16 @@ export default defineConfig({
       expect(tree.read('vitest.config.ts', 'utf-8')).toContain('projects: ');
     });
 
-    it('logs unhandled when the external vitest.workspace file form is present', async () => {
+    it('logs unhandled when the external vitest.workspace file is not statically inlineable', async () => {
       const tree = createTreeWithEmptyWorkspace();
       tree.write(
         'vitest.workspace.ts',
-        `import { defineWorkspace } from 'vitest/config';\nexport default defineWorkspace(['apps/*']);\n`
+        `import { defineWorkspace } from 'vitest/config';\nimport { extra } from './extra';\nexport default defineWorkspace(['apps/*', ...extra]);\n`
       );
 
       const result = await migrateToVitest4(tree);
 
+      expect(tree.exists('vitest.workspace.ts')).toBe(true);
       expect(
         result?.agentContext?.some((s) => s.includes('vitest.workspace'))
       ).toBe(true);
@@ -86,6 +87,626 @@ export default defineConfig({
       expect(
         result?.agentContext?.some((s) => s.includes('defineWorkspace'))
       ).toBe(true);
+    });
+  });
+
+  describe('vitest.workspace inlining (V4-2)', () => {
+    it('inlines a static array default export into a new root vitest.config.ts and deletes the workspace file', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.ts')).toBe(false);
+      const config = tree.read('vitest.config.ts', 'utf-8');
+      expect(config).toContain("import { defineConfig } from 'vitest/config'");
+      expect(config).toContain("'**/vite.config.{mjs,js,ts,mts}'");
+      expect(config).toContain("'**/vitest.config.{mjs,js,ts,mts}'");
+      expect(config).toContain('projects:');
+      expect(config).toContain("'!vitest.config.ts'");
+      expect(
+        result?.agentContext?.some((s) => s.includes('vitest.workspace'))
+      ).toBeFalsy();
+    });
+
+    it('inlines the defineWorkspace call form', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `import { defineWorkspace } from 'vitest/config';\nexport default defineWorkspace(['apps/*', 'libs/*']);\n`
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.ts')).toBe(false);
+      const config = tree.read('vitest.config.ts', 'utf-8');
+      expect(config).toContain("'apps/*'");
+      expect(config).toContain("'libs/*'");
+      // The deleted file's defineWorkspace import must not be flagged.
+      expect(
+        result?.agentContext?.some((s) => s.includes('defineWorkspace'))
+      ).toBeFalsy();
+    });
+
+    it('creates an .mjs config when the workspace file is plain .js', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.js', `export default ['apps/*'];\n`);
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.js')).toBe(false);
+      expect(tree.read('vitest.config.mjs', 'utf-8')).toContain('projects:');
+      expect(tree.read('vitest.config.mjs', 'utf-8')).toContain(
+        "'!vitest.config.mjs'"
+      );
+    });
+
+    it('merges the projects into an existing root vitest.config.ts test block', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: { globals: true },
+});
+`
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.ts')).toBe(false);
+      const config = tree.read('vitest.config.ts', 'utf-8');
+      // The merged config has no own `test.include`, so it gets the same root
+      // self-exclusion the create path applies.
+      expect(config).toContain("projects: ['packages/*', '!vitest.config.ts']");
+      expect(config).toContain('globals: true');
+    });
+
+    it('adds a test block to an existing root vitest.config.ts without one', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  cacheDir: './node_modules/.vitest',
+});
+`
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.ts')).toBe(false);
+      const config = tree.read('vitest.config.ts', 'utf-8');
+      expect(config).toContain("projects: ['packages/*', '!vitest.config.ts']");
+      expect(config).toContain('cacheDir:');
+    });
+
+    it('skips the self-exclusion when the existing config has its own test.include', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: { include: ['src/**/*.spec.ts'] },
+});
+`
+      );
+
+      await migrateToVitest4(tree);
+
+      const config = tree.read('vitest.config.ts', 'utf-8');
+      expect(config).toContain("'**/vitest.config.{mjs,js,ts,mts}'");
+      // The glob matches this file, but its own `test.include` runs its tests;
+      // excluding it would drop them, so the guard is skipped.
+      expect(config).not.toContain("'!vitest.config");
+    });
+
+    it('defers when the existing root config already defines test.projects', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: { projects: ['apps/*'] },
+});
+`
+      );
+
+      const before = tree.read('vitest.config.ts', 'utf-8');
+
+      const result = await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.ts')).toBe(true);
+      // The deferral must not leave partial edits behind.
+      expect(tree.read('vitest.config.ts', 'utf-8')).toBe(before);
+      expect(
+        result?.agentContext?.some((s) => s.includes('vitest.workspace'))
+      ).toBe(true);
+    });
+
+    it('defers when only a root vite.config.ts exists', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'vite.config.ts',
+        `import { defineConfig } from 'vite';
+export default defineConfig({});
+`
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.ts')).toBe(true);
+      expect(tree.exists('vitest.config.ts')).toBe(false);
+      expect(
+        result?.agentContext?.some((s) => s.includes('vitest.workspace'))
+      ).toBe(true);
+    });
+
+    it('excludes the vite config of directories where both configs resolve to the same default project name', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+      tree.write(
+        'packages/dual/package.json',
+        JSON.stringify({ name: '@repro/dual' })
+      );
+      tree.write(
+        'packages/dual/vite.config.ts',
+        `import { defineConfig } from 'vite';\nexport default defineConfig({ test: { environment: 'node' } });\n`
+      );
+      tree.write(
+        'packages/dual/vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';\nexport default defineConfig({ test: { environment: 'node' } });\n`
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.read('vitest.config.ts', 'utf-8')).toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
+    });
+
+    it('does not exclude configs with distinct explicit test.name values', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+      tree.write(
+        'packages/dual/vite.config.ts',
+        `import { defineConfig } from 'vite';\nexport default defineConfig({ test: { name: 'dual-unit' } });\n`
+      );
+      tree.write(
+        'packages/dual/vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';\nexport default defineConfig({ test: { name: 'dual-e2e' } });\n`
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
+    });
+
+    it('excludes the vite config when its explicit test.name equals the other config default name', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+      tree.write(
+        'packages/dual/package.json',
+        JSON.stringify({ name: '@repro/dual' })
+      );
+      tree.write(
+        'packages/dual/vite.config.ts',
+        `import { defineConfig } from 'vite';\nexport default defineConfig({ test: { name: '@repro/dual' } });\n`
+      );
+      tree.write(
+        'packages/dual/vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';\nexport default defineConfig({ test: {} });\n`
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.read('vitest.config.ts', 'utf-8')).toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
+    });
+
+    it('does not exclude configs whose project name is not statically determinable and forwards an advisory', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+      tree.write(
+        'packages/dual/vite.config.ts',
+        `import { defineConfig } from 'vite';\nimport { base } from './base';\nexport default defineConfig({ ...base });\n`
+      );
+      tree.write(
+        'packages/dual/vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';\nexport default defineConfig({ test: {} });\n`
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
+      expect(
+        result?.agentContext?.some(
+          (s) =>
+            s.includes('packages/dual/vite.config.ts') &&
+            s.includes('negative glob')
+        )
+      ).toBe(true);
+    });
+
+    it('forwards an advisory when the vitest config side is not statically determinable', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+      tree.write(
+        'packages/dual/vite.config.ts',
+        `import { defineConfig } from 'vite';\nexport default defineConfig({ test: {} });\n`
+      );
+      tree.write(
+        'packages/dual/vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';\nimport { base } from './base';\nexport default defineConfig({ ...base });\n`
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      expect(tree.read('vitest.config.ts', 'utf-8')).not.toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
+      expect(
+        result?.agentContext?.some(
+          (s) =>
+            s.includes('packages/dual/vitest.config.ts') &&
+            s.includes('negative glob')
+        )
+      ).toBe(true);
+    });
+
+    it('matches ./-prefixed globs when computing exclusions', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['./**/vite.config.ts', './**/vitest.config.ts'];\n`
+      );
+      tree.write(
+        'packages/dual/vite.config.ts',
+        `import { defineConfig } from 'vite';\nexport default defineConfig({});\n`
+      );
+      tree.write(
+        'packages/dual/vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';\nexport default defineConfig({ test: {} });\n`
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.read('vitest.config.ts', 'utf-8')).toContain(
+        "'!packages/dual/vite.config.ts'"
+      );
+    });
+
+    it('inlines a workspace file located in a non-root directory', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/sub/vitest.workspace.ts',
+        `export default ['**/vitest.config.{mjs,js,ts,mts}'];\n`
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('apps/sub/vitest.workspace.ts')).toBe(false);
+      expect(tree.read('apps/sub/vitest.config.ts', 'utf-8')).toContain(
+        "projects: ['**/vitest.config.{mjs,js,ts,mts}', '!vitest.config.ts']"
+      );
+      expect(tree.exists('vitest.config.ts')).toBe(false);
+    });
+
+    it('inlines array elements wrapped in as-const assertions', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'vitest.workspace.ts',
+        `export default ['apps/*' as const, 'libs/*'];\n`
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.ts')).toBe(false);
+      const config = tree.read('vitest.config.ts', 'utf-8');
+      expect(config).toContain("'apps/*'");
+      expect(config).toContain("'libs/*'");
+    });
+
+    it('creates an .mjs config for CJS-flavored workspace file extensions', async () => {
+      for (const ext of ['cts', 'cjs']) {
+        const tree = createTreeWithEmptyWorkspace();
+        tree.write(`vitest.workspace.${ext}`, `export default ['apps/*'];\n`);
+
+        await migrateToVitest4(tree);
+
+        expect(tree.exists(`vitest.workspace.${ext}`)).toBe(false);
+        expect(tree.read('vitest.config.mjs', 'utf-8')).toContain('projects:');
+      }
+    });
+
+    it('defers when the existing root config has duplicate test properties', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: { globals: true },
+  test: { environment: 'node' },
+});
+`
+      );
+      const before = tree.read('vitest.config.ts', 'utf-8');
+
+      const result = await migrateToVitest4(tree);
+
+      expect(tree.exists('vitest.workspace.ts')).toBe(true);
+      expect(tree.read('vitest.config.ts', 'utf-8')).toBe(before);
+      expect(
+        result?.agentContext?.some((s) => s.includes('vitest.workspace'))
+      ).toBe(true);
+    });
+  });
+
+  describe('config-less package local config generation', () => {
+    it('generates a minimal local config for packages running vitest via a package.json script', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('tsconfig.base.json', '{}');
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'packages/config-less/package.json',
+        JSON.stringify({
+          name: '@repro/config-less',
+          scripts: { test: 'vitest run' },
+        })
+      );
+
+      const result = await migrateToVitest4(tree);
+
+      const config = tree.read(
+        'packages/config-less/vitest.config.ts',
+        'utf-8'
+      );
+      expect(config).toContain("import { defineConfig } from 'vitest/config'");
+      expect(
+        result?.nextSteps?.some((s) =>
+          s.includes('packages/config-less/vitest.config.ts')
+        )
+      ).toBe(true);
+    });
+
+    it('generates an .mjs config when no tsconfig is present', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      // createTreeWithEmptyWorkspace seeds a root tsconfig.base.json; drop it
+      // to simulate a JS-only workspace.
+      tree.delete('tsconfig.base.json');
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'packages/config-less/package.json',
+        JSON.stringify({
+          name: '@repro/config-less',
+          scripts: { test: 'cross-env NODE_ENV=test vitest run' },
+        })
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('packages/config-less/vitest.config.mjs')).toBe(true);
+    });
+
+    it('skips packages that already have a config and packages without vitest scripts', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'packages/with-config/package.json',
+        JSON.stringify({ name: 'with-config', scripts: { test: 'vitest run' } })
+      );
+      tree.write(
+        'packages/with-config/vitest.config.ts',
+        `import { defineConfig } from 'vitest/config';\nexport default defineConfig({ test: {} });\n`
+      );
+      tree.write(
+        'packages/no-vitest/package.json',
+        JSON.stringify({ name: 'no-vitest', scripts: { test: 'jest' } })
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('packages/with-config/vitest.config.mjs')).toBe(false);
+      expect(tree.exists('packages/no-vitest/vitest.config.ts')).toBe(false);
+      expect(tree.exists('packages/no-vitest/vitest.config.mjs')).toBe(false);
+    });
+
+    it('does not treat `npm run vitest` style scripts as vitest invocations', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      for (const [pkg, script] of [
+        ['npm-delegated', 'npm run vitest'],
+        ['pnpm-delegated', 'pnpm run vitest'],
+        ['yarn-delegated', 'yarn run vitest'],
+      ]) {
+        tree.write(
+          `packages/${pkg}/package.json`,
+          JSON.stringify({
+            name: pkg,
+            scripts: { vitest: 'jest', test: script },
+          })
+        );
+      }
+
+      await migrateToVitest4(tree);
+
+      for (const pkg of ['npm-delegated', 'pnpm-delegated', 'yarn-delegated']) {
+        expect(tree.exists(`packages/${pkg}/vitest.config.ts`)).toBe(false);
+        expect(tree.exists(`packages/${pkg}/vitest.config.mjs`)).toBe(false);
+      }
+    });
+
+    it('skips packages whose directory hosts a vitest.workspace file', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'apps/sub/vitest.workspace.ts',
+        `import { extra } from './extra';\nexport default ['packages/*', ...extra];\n`
+      );
+      tree.write(
+        'apps/sub/package.json',
+        JSON.stringify({ name: 'sub', scripts: { test: 'vitest run' } })
+      );
+
+      await migrateToVitest4(tree);
+
+      // The deferred workspace file marks this directory as the
+      // projects-mode entry point; no local config is generated.
+      expect(tree.exists('apps/sub/vitest.config.ts')).toBe(false);
+    });
+
+    it('generates a .ts config when only the package has a tsconfig', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.delete('tsconfig.base.json');
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write('packages/local-ts/tsconfig.json', '{}');
+      tree.write(
+        'packages/local-ts/package.json',
+        JSON.stringify({ name: 'local-ts', scripts: { test: 'vitest run' } })
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('packages/local-ts/vitest.config.ts')).toBe(true);
+    });
+
+    it('skips packages whose vitest script points at an explicit config or root', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'packages/shared-config/package.json',
+        JSON.stringify({
+          name: 'shared-config',
+          scripts: { test: 'vitest run --config ../shared/vitest.shared.ts' },
+        })
+      );
+      tree.write(
+        'packages/short-config/package.json',
+        JSON.stringify({
+          name: 'short-config',
+          scripts: { test: 'vitest run -c=../shared/vitest.shared.ts' },
+        })
+      );
+      tree.write(
+        'packages/explicit-root/package.json',
+        JSON.stringify({
+          name: 'explicit-root',
+          scripts: { test: 'vitest run --root=.' },
+        })
+      );
+      tree.write(
+        'packages/spaced-root/package.json',
+        JSON.stringify({
+          name: 'spaced-root',
+          scripts: { test: 'vitest run --root .' },
+        })
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('packages/shared-config/vitest.config.ts')).toBe(
+        false
+      );
+      expect(tree.exists('packages/short-config/vitest.config.ts')).toBe(false);
+      expect(tree.exists('packages/explicit-root/vitest.config.ts')).toBe(
+        false
+      );
+      expect(tree.exists('packages/spaced-root/vitest.config.ts')).toBe(false);
+    });
+
+    it('detects vitest invocations behind package manager runner prefixes', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('tsconfig.base.json', '{}');
+      tree.write('vitest.workspace.ts', `export default ['packages/*'];\n`);
+      tree.write(
+        'packages/pnpm-runner/package.json',
+        JSON.stringify({
+          name: 'pnpm-runner',
+          scripts: { test: 'pnpm vitest run' },
+        })
+      );
+      tree.write(
+        'packages/yarn-runner/package.json',
+        JSON.stringify({
+          name: 'yarn-runner',
+          scripts: { test: 'yarn vitest' },
+        })
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('packages/pnpm-runner/vitest.config.ts')).toBe(true);
+      expect(tree.exists('packages/yarn-runner/vitest.config.ts')).toBe(true);
+    });
+
+    it('generates local configs even when the workspace file inlining was deferred', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write('tsconfig.base.json', '{}');
+      tree.write(
+        'vitest.workspace.ts',
+        `import { extra } from './extra';\nexport default ['packages/*', ...extra];\n`
+      );
+      tree.write(
+        'packages/config-less/package.json',
+        JSON.stringify({
+          name: '@repro/config-less',
+          scripts: { test: 'vitest run' },
+        })
+      );
+
+      await migrateToVitest4(tree);
+
+      // The agent will still inline the workspace file into a root projects
+      // config; the local config must exist either way.
+      expect(tree.exists('vitest.workspace.ts')).toBe(true);
+      expect(tree.exists('packages/config-less/vitest.config.ts')).toBe(true);
+    });
+
+    it('does not generate local configs when no vitest.workspace file exists', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      tree.write(
+        'packages/config-less/package.json',
+        JSON.stringify({
+          name: '@repro/config-less',
+          scripts: { test: 'vitest run' },
+        })
+      );
+
+      await migrateToVitest4(tree);
+
+      expect(tree.exists('packages/config-less/vitest.config.ts')).toBe(false);
+      expect(tree.exists('packages/config-less/vitest.config.mjs')).toBe(false);
     });
   });
 

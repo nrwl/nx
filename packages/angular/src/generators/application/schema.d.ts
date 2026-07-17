@@ -27,7 +27,6 @@ export interface Schema {
   minimal?: boolean;
   bundler?: 'webpack' | 'esbuild' | 'rspack';
   ssr?: boolean;
-  serverRouting?: boolean;
   nxCloudToken?: string;
   addPlugin?: boolean;
   zoneless?: boolean;

@@ -1,3 +1,17 @@
+// Pin the detected package manager so inferred lock-file outputs (e.g.
+// prune-lockfile) and package-manager commands are deterministic regardless of
+// which package manager runs the tests.
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    detectPackageManager: jest.fn(() => 'npm'),
+    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
+
 import {
   readJson,
   readProjectConfiguration,
@@ -11,9 +25,17 @@ import { Schema } from './schema';
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     appTree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should generate files', async () => {
@@ -43,6 +65,15 @@ describe('app', () => {
         ],
       }
     `);
+
+    expect(appTree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
+  });
+
+  it('should generate the .eslintrc.json file (eslintrc)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    await applicationGenerator(appTree, {
+      directory: 'my-node-app',
+    } as Schema);
 
     const eslintrcJson = readJson(appTree, 'my-node-app/.eslintrc.json');
     expect(eslintrcJson).toMatchInlineSnapshot(`

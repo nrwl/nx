@@ -3,7 +3,7 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
-  type TargetDefaultsRecord,
+  type TargetDefaults,
   type Tree,
   updateNxJson,
   writeJson,
@@ -14,7 +14,7 @@ import migrateVitestToVitestPackage from './migrate-vitest-to-vitest-package';
 // This migration ran before targetDefaults supported the array shape, so
 // the test fixtures all use the legacy record shape.
 const td = (n: { targetDefaults?: unknown }) =>
-  n.targetDefaults as TargetDefaultsRecord;
+  n.targetDefaults as TargetDefaults;
 
 describe('migrate-vitest-to-vitest-package', () => {
   let tree: Tree;

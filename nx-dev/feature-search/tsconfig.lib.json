@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/feature-search",
+    "outDir": "dist",
     "types": ["node"],
     "lib": ["dom", "es2021"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "rootDir": "."
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

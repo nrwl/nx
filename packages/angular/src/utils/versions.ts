@@ -2,12 +2,12 @@ import { join } from 'path';
 
 export const nxVersion = require(join('@nx/angular', 'package.json')).version;
 
-export const angularVersion = '~21.2.0';
-export const angularDevkitVersion = '~21.2.0';
-export const ngPackagrVersion = '~21.2.0';
+export const angularVersion = '~22.0.4';
+export const angularDevkitVersion = '~22.0.4';
+export const ngPackagrVersion = '~22.0.0';
 export const ngrxVersion = '^21.0.0';
 export const rxjsVersion = '~7.8.0';
-export const zoneJsVersion = '~0.16.0';
+export const zoneJsVersion = '~0.16.2';
 export const tsLibVersion = '^2.3.0';
 
 export const corsVersion = '~2.8.5';
@@ -19,15 +19,15 @@ export const moduleFederationNodeVersion = '^2.7.21';
 export const moduleFederationEnhancedVersion = '^2.1.0';
 export const webpackMergeVersion = '^5.8.0';
 
-export const angularEslintVersion = '^21.2.0';
-export const typescriptEslintVersion = '^7.16.0';
+export const angularEslintVersion = '^22.0.0';
+export const typescriptEslintVersion = '^8.40.0';
 export const postcssVersion = '^8.4.5';
 export const postcssUrlVersion = '~10.1.3';
 export const autoprefixerVersion = '^10.4.0';
 export const tsNodeVersion = '10.9.1';
 export const lessVersion = '^4.3.0';
 
-export const jestPresetAngularVersion = '~16.0.0';
+export const jestPresetAngularVersion = '~17.0.0';
 export const typesNodeVersion = '^22.0.0';
 export const jasmineMarblesVersion = '^0.9.2';
 
