@@ -118,174 +118,43 @@ Only attempt Level 1 for `LOCAL_TEST` or `LOCAL_NX_TARGET` scenarios. For other 
 
 Only attempt Level 2 when `RUN_LEVEL_2: true` is passed by the caller. Default is off — Level 2 takes ~10-15 minutes per invocation.
 
-Level 2 publishes nx packages from the worktree at HEAD into a local verdaccio instance, then runs the external repro against that build. This is **HEAD-only** — we do not re-publish at master for the baseline. The verdict becomes `PR_REPRO_PASSES` or `PR_REPRO_FAILS`, describing what happened _at the PR_ without trying to confirm the bug existed on master. That limitation is a deliberate trade for wall-clock time. If the caller needs a master baseline, they can run Level 2 twice manually.
+Level 2 publishes nx packages from the worktree at HEAD into a local verdaccio instance, then runs the external repro against that build **inside an isolated sandbox** — the clone/install/run is delegated to the **`reproduce-issue`** skill (Step 4), so untrusted repro code never executes on the host. This is **HEAD-only** — we do not re-publish at master for the baseline. The verdict becomes `PR_REPRO_PASSES` or `PR_REPRO_FAILS`, describing what happened _at the PR_ without trying to confirm the bug existed on master. That limitation is a deliberate trade for wall-clock time. If the caller needs a master baseline, they can run Level 2 twice manually.
 
 **Critical:** you MUST always clean up, even on failure. Use the exit-trap pattern described in step 9 below.
 
 #### Prerequisites
 
-1. Node 20+ and pnpm 10.28.2+ in PATH.
-2. Worktree has been built or can be built (`pnpm install` may need to run first).
-3. Port 4873 is free (or a different port is specified via `VERDACCIO_PORT`).
-4. Disk space for `dist/local-registry/storage` (~500MB-1GB).
+1. The `nx-review-sandbox` image exists: `docker image inspect nx-review-sandbox:latest`. If not, run `setup-review-sandbox` — it carries the repo's full toolchain (node/java/dotnet/maven/rust via mise). **java + dotnet are required** because nx dogfoods the `@nx/dotnet` + `@nx/gradle` graph plugins; the build fails without them.
+2. Docker + the isolation runtime (gVisor on Linux / the Docker VM on macOS) + container networking are healthy — see the `reproduce-issue` skill's Preflight.
 
-If any prerequisite is missing, report and skip Level 2 — do NOT attempt partial setup.
+If a prerequisite is missing, report and skip Level 2 — **never build or run on the host.**
 
-#### Step 1: Install dependencies in the worktree (if needed)
+#### Steps 1–3: build the PR — INSIDE the sandbox (no host build)
 
-```bash
-cd "$WORKTREE_PATH"
-test -d node_modules || pnpm install --frozen-lockfile
+**Nothing builds on the host.** The build is done by the `reproduce-issue` skill's **PR-build mode** (`nx-build:<HEAD_SHA>`): the skill's sandbox container clones `nrwl/nx`, checks out that SHA, runs `mise install` + `pnpm install`, then builds + publishes nx to a verdaccio on **`localhost` inside the same container** — and reproduces against it. One container, localhost, no host verdaccio, no `WORKTREE_PATH` build.
+
+So the old host Steps 1–3 are gone — the whole build → publish → reproduce happens in **Step 4's single skill call**. (`WORKTREE_PATH` is still used read-only by Levels 0–1; Level 2 never builds it.)
+
+#### Step 4: Run the external repro IN THE SANDBOX (via the `reproduce-issue` skill)
+
+**Do NOT clone, install, or run the untrusted repro on the host.** Its `install` scripts and repro command are arbitrary third-party code — delegate the whole thing to the **`reproduce-issue`** skill, which clones/creates → rewrites the nx deps → installs → runs the repro → classifies, **all inside an isolated container** (gVisor on Linux, the Docker VM on macOS), then destroys it. There is no host scratch dir.
+
+```
+Skill(skill="reproduce-issue", args="""
+repro: repo:<REPO_URL>            # EXTERNAL_REPO
+  # -- or, for GENERATED_WORKSPACE:
+  # repro: create:"--preset=<PRESET_FROM_ISSUE> <OTHER_FLAGS_FROM_ISSUE> --no-interactive --skipGit"
+nx-build: <HEAD_SHA>             # PR-build mode: the skill builds THIS commit in-sandbox and reproduces against it
+command: <REPRO_COMMAND, verbatim from the issue>
+node-image: node:<major from the issue's Nx Report; default 22>
+expect: <the reported symptom, one line>
+setup: <files the issue says to create first, else omit>
+""")
 ```
 
-If `pnpm install` fails, stop and report. Do not try to continue.
+The skill returns a block whose `verdict:` is one of `PR_REPRO_PASSES | PR_REPRO_FAILS | PR_REPRO_FAILS_DIFFERENT | PR_REPRO_INCONCLUSIVE | SETUP_FAILED`, plus the exit code and an output tail. **Use that verdict directly** in your report — do not re-run anything on the host. If it returns `SETUP_FAILED`, note which step (clone / create / install) broke; do not fall back to the host.
 
-#### Step 2: Start the local registry
-
-Start verdaccio in the background. It must outlive the publish step but be killable on cleanup.
-
-```bash
-cd "$WORKTREE_PATH"
-PORT=${VERDACCIO_PORT:-4873}
-pnpm nx local-registry @nx/nx-source --port=$PORT >/tmp/verdaccio-<PR_NUMBER>.log 2>&1 &
-VERDACCIO_PID=$!
-echo "$VERDACCIO_PID" > /tmp/verdaccio-<PR_NUMBER>.pid
-```
-
-Wait up to 60s for the registry to accept connections:
-
-```bash
-for i in $(seq 1 60); do
-  if curl -sf http://localhost:$PORT/-/ping >/dev/null 2>&1; then break; fi
-  sleep 1
-done
-curl -sf http://localhost:$PORT/-/ping >/dev/null || { echo "verdaccio failed to start"; exit 1; }
-```
-
-If startup fails, kill the pid (if set), report, and exit.
-
-#### Step 3: Publish nx to the local registry
-
-```bash
-cd "$WORKTREE_PATH"
-NX_LOCAL_REGISTRY_PORT=$PORT \
-NX_VERBOSE_LOGGING=true \
-PUBLISHED_VERSION=${TARGET_PUBLISHED_VERSION:-major} \
-pnpm nx populate-local-registry-storage @nx/nx-source 2>&1 | tee /tmp/publish-<PR_NUMBER>.log
-```
-
-This runs `pnpm nx-release --local ${PUBLISHED_VERSION}` internally — it builds all packages, versions them, and publishes to verdaccio. Takes 5-10 minutes. If it fails, capture the error and skip to cleanup.
-
-After success, determine the exact published version:
-
-```bash
-PUBLISHED_NX_VERSION=$(node -p "require('$WORKTREE_PATH/dist/packages/nx/package.json').version")
-echo "Published version: $PUBLISHED_NX_VERSION"
-```
-
-#### Step 4: Prepare the scratch repro workspace
-
-Use `/tmp/pr-<PR_NUMBER>-repro/` as the scratch dir — deliberately outside the nx repo, so the generated/cloned workspace's own nx root can't be mistaken for (or nested inside) the repo you're reviewing. Always wipe it at the start of this step:
-
-```bash
-REPRO_DIR=/tmp/pr-<PR_NUMBER>-repro
-rm -rf "$REPRO_DIR"
-mkdir -p "$REPRO_DIR"
-```
-
-**For `EXTERNAL_REPO`:**
-
-1. Clone the repro repo:
-
-   ```bash
-   git clone --depth=1 <REPO_URL> "$REPRO_DIR"
-   ```
-
-2. Rewrite all `nx` / `@nx/*` / `@nrwl/*` dependency versions in `$REPRO_DIR/package.json` to the exact `$PUBLISHED_NX_VERSION`:
-
-   ```bash
-   node -e '
-     const fs = require("fs");
-     const p = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-     const v = process.argv[2];
-     for (const section of ["dependencies", "devDependencies"]) {
-       const deps = p[section] || {};
-       for (const name of Object.keys(deps)) {
-         if (name === "nx" || name.startsWith("@nx/") || name.startsWith("@nrwl/")) {
-           deps[name] = v;
-         }
-       }
-     }
-     fs.writeFileSync(process.argv[1], JSON.stringify(p, null, 2) + "\n");
-   ' "$REPRO_DIR/package.json" "$PUBLISHED_NX_VERSION"
-   ```
-
-3. If the repo has a lockfile, delete it (it's now stale after the rewrite):
-
-   ```bash
-   rm -f "$REPRO_DIR/package-lock.json" "$REPRO_DIR/pnpm-lock.yaml" "$REPRO_DIR/yarn.lock"
-   ```
-
-4. Detect the package manager (prefer the same one used by the repo; fall back to npm):
-
-   ```bash
-   if test -f "$REPRO_DIR/pnpm-workspace.yaml"; then PM=pnpm;
-   elif grep -q '"packageManager"' "$REPRO_DIR/package.json" 2>/dev/null; then
-     PM=$(node -p "require('$REPRO_DIR/package.json').packageManager?.split('@')[0] || 'npm'")
-   else PM=npm; fi
-   ```
-
-5. Install with the registry env var pointing at verdaccio:
-
-   ```bash
-   cd "$REPRO_DIR"
-   npm_config_registry=http://localhost:$PORT \
-   BUN_CONFIG_REGISTRY=http://localhost:$PORT \
-   YARN_REGISTRY=http://localhost:$PORT \
-   $PM install 2>&1 | tee /tmp/install-<PR_NUMBER>.log
-   ```
-
-   If install fails, capture why. Common causes: lockfile not deleted, version mismatch the rewrite didn't catch (peer deps of sibling packages), missing `@nx/*` plugins in our publish set. Record and stop.
-
-**For `GENERATED_WORKSPACE`:**
-
-Instead of cloning, run `create-nx-workspace` pointed at the local registry:
-
-```bash
-cd /tmp
-npm_config_registry=http://localhost:$PORT \
-BUN_CONFIG_REGISTRY=http://localhost:$PORT \
-YARN_REGISTRY=http://localhost:$PORT \
-npx --yes create-nx-workspace@$PUBLISHED_NX_VERSION \
-  --name=pr-<PR_NUMBER>-repro \
-  --preset=<PRESET_FROM_ISSUE> \
-  --no-interactive \
-  --skipGit \
-  <OTHER_FLAGS_FROM_ISSUE> 2>&1 | tee /tmp/create-workspace-<PR_NUMBER>.log
-```
-
-Pull `<PRESET_FROM_ISSUE>` and `<OTHER_FLAGS_FROM_ISSUE>` from the reported repro steps. If the issue doesn't specify a preset, use `apps` as a safe default and flag it in the report.
-
-#### Step 5: Run the reported repro command
-
-Extract the exact command from the issue body. If it references specific files to create first, create them in the scratch dir. Run with a timeout:
-
-```bash
-cd "$REPRO_DIR"
-timeout 300 <REPRO_COMMAND> 2>&1 | tee /tmp/repro-<PR_NUMBER>.log
-REPRO_EXIT=$?
-```
-
-Note: `timeout` may not be available on macOS by default — use `gtimeout` (from `brew install coreutils`) or emulate with a background kill. If neither is available, run without a timeout but watch carefully.
-
-#### Step 6: Classify the outcome
-
-Compare the output (`/tmp/repro-<PR_NUMBER>.log` + `REPRO_EXIT`) to the reported behavior:
-
-- `PR_REPRO_PASSES` — the command succeeded, matching the PR's claimed fix. Verdict.
-- `PR_REPRO_FAILS_WITH_REPORTED_ERROR` — the command failed with the same error the issue describes. The PR did NOT fix the bug. Verdict `PR_REPRO_FAILS`.
-- `PR_REPRO_FAILS_DIFFERENT` — the command failed but with a different error. Flag for human review — may be env-specific or a related-but-different bug.
-- `PR_REPRO_INCONCLUSIVE` — output doesn't clearly match either direction. Capture the tail of the log and stop.
+**Registry — where the PR's nx comes from.** Target architecture: the PR is **built inside the sandbox** and served from a verdaccio on `localhost` in that same sandbox, so `nx-registry:http://localhost:<PORT>` — no host reachability, no listen-address change. That build (Steps 1–3) is being migrated off the host into the sandbox and needs the `nx-review-sandbox` image (`setup-review-sandbox`). Until the migration lands, Steps 1–3 still publish to a host verdaccio; status + the container-to-container handoff are tracked in `tmp/notes/review-in-container-plan.md`.
 
 #### Step 7: Always clean up (cleanup trap)
 
@@ -303,15 +172,15 @@ fi
 # 2. Belt-and-suspenders: free the port even if pid is gone
 npx -y kill-port $PORT 2>/dev/null || true
 
-# 3. Remove scratch workspace
-rm -rf /tmp/pr-<PR_NUMBER>-repro
+# 3. No host scratch dir to remove — the repro lived and died inside the sandbox
+#    (the reproduce-issue skill's container self-destroys via --rm). If a sandbox
+#    container ever lingers, clear it with /sandbox-prune.
 
-# 4. Remove the ephemeral logs only AFTER capturing their tails in your report
-#    Keep them on failure so the user can inspect them:
+# 4. Remove the ephemeral HOST logs only AFTER capturing their tails in your report.
+#    Only verdaccio + publish run on the host now; the repro's own output comes
+#    back inside the skill's returned block:
 #    - /tmp/verdaccio-<PR_NUMBER>.log
 #    - /tmp/publish-<PR_NUMBER>.log
-#    - /tmp/install-<PR_NUMBER>.log  (or create-workspace)
-#    - /tmp/repro-<PR_NUMBER>.log
 ```
 
 Do NOT `rm -rf dist/local-registry/storage` in the nx worktree — that storage is shared state used by E2E tests. Leave it.
