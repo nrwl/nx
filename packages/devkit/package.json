@@ -89,6 +89,11 @@
       "types": "./dist/internal-testing-utils.d.ts",
       "default": "./dist/internal-testing-utils.js"
     },
+    "./internal-testing-utils/mock-project-graph": {
+      "@nx/nx-source": "./internal-testing-utils/mock-project-graph.ts",
+      "types": "./dist/internal-testing-utils/mock-project-graph.d.ts",
+      "default": "./dist/internal-testing-utils/mock-project-graph.js"
+    },
     "./ngcli-adapter": {
       "@nx/nx-source": "./ngcli-adapter.ts",
       "types": "./dist/ngcli-adapter.d.ts",

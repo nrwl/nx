@@ -22,7 +22,7 @@
     "jest.config.ts",
     ".eslintrc.json"
   ],
-  "include": ["*.ts", "src/**/*.ts"],
+  "include": ["*.ts", "internal-testing-utils/**/*.ts", "src/**/*.ts"],
   "references": [
     {
       "path": "../nx/tsconfig.lib.json"
