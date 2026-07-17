@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   readFile,
@@ -12,7 +13,7 @@ import {
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -94,7 +95,7 @@ describe('nx release conventional commits config', () => {
     await runCommandAsync(`git tag -a ${pkg4}@0.0.1 -m "${pkg4}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.1 -m "${pkg5}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg6}@0.0.1 -m "${pkg6}@0.0.1"`);
-  }, 60000);
+  });
   afterEach(() => cleanupProject());
 
   it('should respect custom conventional commits configuration', async () => {
@@ -103,6 +104,7 @@ describe('nx release conventional commits config', () => {
         ...json.release,
         version: {
           conventionalCommits: true,
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: {
@@ -458,6 +460,7 @@ describe('nx release conventional commits config', () => {
         ...json.release,
         version: {
           conventionalCommits: true,
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: {

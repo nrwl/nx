@@ -1,4 +1,4 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
 import { createNodesV2 } from './plugin';
@@ -10,7 +10,7 @@ jest.mock('nx/src/utils/cache-directory', () => ({
 
 describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd: string;
 
@@ -192,7 +192,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       {
                         "options": "forward",
                         "params": "forward",
-                        "projects": "self",
                         "target": "test-ci--src/unit.spec.ts",
                       },
                     ],
@@ -268,6 +267,57 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
         ],
       ]
     `);
+  });
+
+  it('should sort atomized test target names regardless of test discovery order', async () => {
+    // Cover both branches via the parameterized describe.each:
+    //  - disableJestRuntime=true: discovery via globWithWorkspaceContext (Rust
+    //    glob, already sorted).
+    //  - disableJestRuntime=false: discovery via jest.SearchSource which walks
+    //    through jest-haste-map's parallel workers; ordering is not guaranteed.
+    // Create spec files in non-alphabetic creation order to surface any
+    // creation-time-vs-name ordering quirks in the discovery layer.
+    mockJestConfig(
+      {
+        testMatch: ['**/*.spec.ts'],
+        testPathIgnorePatterns: ['ignore.spec.ts'],
+      },
+      context
+    );
+    await tempFs.createFiles({
+      'proj/src/c.spec.ts': '',
+      'proj/src/a.spec.ts': '',
+      'proj/src/b.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+      context
+    );
+
+    const targets = results[0][1].projects!['proj'].targets!;
+    const atomizedTargetNames = Object.keys(targets).filter((name) =>
+      name.startsWith('test-ci--')
+    );
+    expect(atomizedTargetNames).toEqual([
+      'test-ci--src/a.spec.ts',
+      'test-ci--src/b.spec.ts',
+      'test-ci--src/c.spec.ts',
+      'test-ci--src/unit.spec.ts',
+    ]);
+
+    // dependsOn and target group ordering must match insertion order so that
+    // `nx graph`, CI workflow generators, and snapshots stay reproducible.
+    const dependsOnTargets = (
+      targets['test-ci'].dependsOn as Array<{ target: string }>
+    ).map((d) => d.target);
+    expect(dependsOnTargets).toEqual([
+      'test-ci--src/a.spec.ts',
+      'test-ci--src/b.spec.ts',
+      'test-ci--src/c.spec.ts',
+      'test-ci--src/unit.spec.ts',
+    ]);
   });
 
   it('should add preset to the inputs', async () => {
@@ -500,7 +550,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         {
                           "options": "forward",
                           "params": "forward",
-                          "projects": "self",
                           "target": "test-ci--src/unit.spec.ts",
                         },
                       ],
@@ -655,7 +704,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         {
                           "options": "forward",
                           "params": "forward",
-                          "projects": "self",
                           "target": "test-ci--src/unit.spec.ts",
                         },
                       ],
@@ -810,7 +858,6 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         {
                           "options": "forward",
                           "params": "forward",
-                          "projects": "self",
                           "target": "testci--src/unit.spec.ts",
                         },
                       ],
@@ -892,7 +939,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
 
 describe('@nx/jest/plugin config file inputs', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd: string;
 
@@ -1413,6 +1460,211 @@ describe('@nx/jest/plugin config file inputs', () => {
     expect(extDeps).not.toContain('@my-org/jest-preset');
   });
 
+  it('should add dependentTasksOutputFiles when ts-jest is used without isolatedModules', async () => {
+    mockConfig({
+      transform: { '^.+\\.ts$': 'ts-jest' },
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).toContainEqual({
+      dependentTasksOutputFiles: '**/*.d.ts',
+      transitive: true,
+    });
+  });
+
+  it('should add dependentTasksOutputFiles when ts-jest has tsconfig without isolatedModules', async () => {
+    await tempFs.createFiles({
+      'proj/tsconfig.json': JSON.stringify({
+        compilerOptions: { isolatedModules: false },
+      }),
+    });
+    mockConfig({
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
+      },
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).toContainEqual({
+      dependentTasksOutputFiles: '**/*.d.ts',
+      transitive: true,
+    });
+  });
+
+  it('should not add dependentTasksOutputFiles when ts-jest has isolatedModules enabled in tsconfig', async () => {
+    await tempFs.createFiles({
+      'proj/tsconfig.spec.json': JSON.stringify({
+        compilerOptions: { isolatedModules: true },
+      }),
+    });
+    mockConfig({
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }],
+      },
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).not.toContainEqual(
+      expect.objectContaining({ dependentTasksOutputFiles: '**/*.d.ts' })
+    );
+  });
+
+  it('should not add dependentTasksOutputFiles when using @swc/jest', async () => {
+    mockConfig({
+      transform: { '^.+\\.ts$': '@swc/jest' },
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).not.toContainEqual(
+      expect.objectContaining({ dependentTasksOutputFiles: '**/*.d.ts' })
+    );
+  });
+
+  it('should add dependentTasksOutputFiles when ts-jest is inherited from a preset', async () => {
+    await tempFs.createFiles({
+      'jest.preset.js': `module.exports = { transform: { '^.+\\\\.ts$': 'ts-jest' } };`,
+    });
+    mockConfig({ preset: '../jest.preset.js' });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).toContainEqual({
+      dependentTasksOutputFiles: '**/*.d.ts',
+      transitive: true,
+    });
+  });
+
+  it('should resolve <rootDir> in the ts-jest tsconfig option', async () => {
+    await tempFs.createFiles({
+      'proj/tsconfig.spec.json': JSON.stringify({
+        compilerOptions: { isolatedModules: true },
+      }),
+    });
+    mockConfig({
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+      },
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).not.toContainEqual(
+      expect.objectContaining({ dependentTasksOutputFiles: '**/*.d.ts' })
+    );
+  });
+
+  it('should follow the tsconfig extends chain to find isolatedModules', async () => {
+    await tempFs.createFiles({
+      'proj/tsconfig.json': JSON.stringify({
+        compilerOptions: { isolatedModules: true },
+      }),
+      'proj/tsconfig.spec.json': JSON.stringify({
+        extends: './tsconfig.json',
+        compilerOptions: { types: ['jest'] },
+      }),
+    });
+    mockConfig({
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }],
+      },
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).not.toContainEqual(
+      expect.objectContaining({ dependentTasksOutputFiles: '**/*.d.ts' })
+    );
+  });
+
+  it('should treat verbatimModuleSyntax as implying isolatedModules', async () => {
+    await tempFs.createFiles({
+      'proj/tsconfig.json': JSON.stringify({
+        compilerOptions: { verbatimModuleSyntax: true },
+      }),
+    });
+    mockConfig({
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
+      },
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).not.toContainEqual(
+      expect.objectContaining({ dependentTasksOutputFiles: '**/*.d.ts' })
+    );
+  });
+
+  it('should respect last-entry precedence in multi-extends arrays', async () => {
+    await tempFs.createFiles({
+      'proj/tsconfig.isolated.json': JSON.stringify({
+        compilerOptions: { isolatedModules: true },
+      }),
+      'proj/tsconfig.not-isolated.json': JSON.stringify({
+        compilerOptions: { isolatedModules: false },
+      }),
+      'proj/tsconfig.spec.json': JSON.stringify({
+        extends: ['./tsconfig.isolated.json', './tsconfig.not-isolated.json'],
+      }),
+    });
+    mockConfig({
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }],
+      },
+    });
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).toContainEqual({
+      dependentTasksOutputFiles: '**/*.d.ts',
+      transitive: true,
+    });
+  });
+
+  it('should not add dependentTasksOutputFiles when no transform is specified', async () => {
+    mockConfig({});
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', disableJestRuntime: true },
+      context
+    );
+    const inputs = getTestInputs(results);
+    expect(inputs).not.toContainEqual(
+      expect.objectContaining({ dependentTasksOutputFiles: '**/*.d.ts' })
+    );
+  });
+
   it('should not crash when preset fails to load', async () => {
     mockConfig({
       preset: '../nonexistent-preset.js',
@@ -1429,7 +1681,7 @@ describe('@nx/jest/plugin config file inputs', () => {
   });
 });
 
-function mockJestConfig(config: any, context: CreateNodesContextV2) {
+function mockJestConfig(config: any, context: CreateNodesContext) {
   jest.mock(join(context.workspaceRoot, 'proj/jest.config.js'), () => config, {
     virtual: true,
   });

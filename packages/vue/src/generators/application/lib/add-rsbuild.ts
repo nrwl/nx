@@ -11,9 +11,12 @@ import { nxVersion } from '../../../utils/versions';
 export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
   ensurePackage('@nx/rsbuild', nxVersion);
-  const { initGenerator, configurationGenerator } = await import(
-    '@nx/rsbuild/generators'
-  );
+  // `require()` honors Module._initPaths (which ensurePackage updates); ESM
+  // dynamic `import()` doesn't, so it can't see the on-demand temp install.
+  const {
+    initGenerator,
+    configurationGenerator,
+  }: typeof import('@nx/rsbuild/generators') = require('@nx/rsbuild/generators');
   const initTask = await initGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
     addPlugin: true,
@@ -30,9 +33,11 @@ export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
   });
   tasks.push(rsbuildTask);
 
-  const { addBuildPlugin, addHtmlTemplatePath, versions } = await import(
-    '@nx/rsbuild/config-utils'
-  );
+  const {
+    addBuildPlugin,
+    addHtmlTemplatePath,
+    versions,
+  }: typeof import('@nx/rsbuild/config-utils') = require('@nx/rsbuild/config-utils');
 
   const deps = { '@rsbuild/plugin-vue': versions.rsbuildPluginVueVersion };
 
@@ -50,18 +55,10 @@ export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
       'pluginSass'
     );
     deps['@rsbuild/plugin-sass'] = versions.rsbuildPluginSassVersion;
-  } else if (options.style === 'less') {
-    addBuildPlugin(
-      tree,
-      pathToConfigFile,
-      '@rsbuild/plugin-less',
-      'pluginLess'
-    );
-    deps['@rsbuild/plugin-less'] = versions.rsbuildPluginLessVersion;
   }
 
   addHtmlTemplatePath(tree, pathToConfigFile, './index.html');
-  tasks.push(addDependenciesToPackageJson(tree, {}, deps));
+  tasks.push(addDependenciesToPackageJson(tree, {}, deps, undefined, true));
 
   return tasks;
 }

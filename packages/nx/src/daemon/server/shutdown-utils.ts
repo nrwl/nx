@@ -8,7 +8,6 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import { removeDbConnections } from '../../utils/db-connection';
 import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 import { MESSAGE_END_SEQ } from '../../utils/consume-messages-from-socket';
 import { cleanupLatestNx } from './latest-nx';
@@ -143,8 +142,6 @@ async function performShutdown(
 
     deleteDaemonJsonProcessCache();
     cleanupPlugins();
-
-    removeDbConnections();
 
     // Clean up shared latest Nx installation
     cleanupLatestNx();

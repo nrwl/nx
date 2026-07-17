@@ -2,6 +2,14 @@
   "name": "@nx/eslint",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
   "repository": {
     "type": "git",
@@ -16,9 +24,18 @@
     "CLI",
     "Testing"
   ],
-  "main": "./index.js",
-  "type": "commonjs",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -27,13 +44,36 @@
   "homepage": "https://nx.dev",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    }
+  },
   "peerDependencies": {
+    "@nx/jest": "workspace:*",
     "@zkochan/js-yaml": "0.0.7",
-    "eslint": "^8.0.0 || ^9.0.0 || ^10.0.0"
+    "eslint": "^9.0.0 || ^10.0.0"
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -46,6 +86,9 @@
     "nx": "workspace:*"
   },
   "peerDependenciesMeta": {
+    "@nx/jest": {
+      "optional": true
+    },
     "@zkochan/js-yaml": {
       "optional": true
     }

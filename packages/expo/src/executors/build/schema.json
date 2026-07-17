@@ -7,6 +7,7 @@
   "title": "Expo EAS Build executor",
   "description": "Start an EAS build for your expo project.",
   "type": "object",
+  "x-deprecated": "The `@nx/expo:build` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/expo:convert-to-inferred` to migrate to the `@nx/expo/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "presets": [
     {
       "name": "Build for a specific platform",

@@ -1,0 +1,1135 @@
+import {
+  cleanupProject,
+  newProject,
+  readJson,
+  runCLI,
+  tmpProjPath,
+  trimDaemonLog,
+  uniq,
+  updateFile,
+  updateJson,
+} from '@nx/e2e-utils';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+describe('Spread Token Merging', () => {
+  let proj: string;
+  beforeAll(
+    () => (proj = newProject({ packages: ['@nx/js'] })),
+    10 * 60 * 1000
+  );
+  afterAll(() => cleanupProject());
+
+  // Ensures that nx.json is restored to its original state after each test
+  let existingNxJson;
+  beforeEach(() => {
+    existingNxJson = readJson('nx.json');
+  });
+  afterEach(() => {
+    // Dump the daemon log to stdout BEFORE reset (which stops the daemon and
+    // may rotate the file), so CI shows it next to the failing assertion.
+    try {
+      const daemonLog = join(
+        tmpProjPath(),
+        '.nx',
+        'workspace-data',
+        'd',
+        'daemon.log'
+      );
+      if (existsSync(daemonLog)) {
+        // Trimmed — see trimDaemonLog; the raw log is thousands of lines.
+        const contents = trimDaemonLog(readFileSync(daemonLog, 'utf-8'));
+        console.log(
+          `\n========== daemon.log (trimmed) for "${
+            expect.getState().currentTestName ?? 'unknown'
+          }" ==========\n${contents}\n========== end daemon.log ==========\n`
+        );
+      } else {
+        console.log(`[spread-debug] no daemon log at ${daemonLog}`);
+      }
+    } catch (e) {
+      console.log(`[spread-debug] failed to read daemon log: ${e}`);
+    }
+
+    updateFile('nx.json', JSON.stringify(existingNxJson, null, 2));
+    // Reset daemon cache so the next test does not see stale plugin-inferred
+    // project graph data.  The PR enabling NX_DAEMON=true in runCLI means the
+    // daemon persists across tests; without a reset, re-adding a previously
+    // removed plugin to nx.json can cause the daemon to return a cached graph
+    // that is missing inferred targets.
+    runCLI('reset');
+  });
+
+  function getResolvedProject(name: string) {
+    return JSON.parse(
+      runCLI(`show project ${name} --json`, { verbose: false })
+    );
+  }
+
+  /**
+   * Creates a local plugin file at tools/<name>.js that infers targets
+   * for projects matching libs/* /project.json.
+   */
+  function createPlugin(
+    name: string,
+    targetFactory: string // JS expression returning targets object; has access to `root` and `name`
+  ) {
+    updateFile(
+      `tools/${name}.js`,
+      `
+      const { dirname, basename } = require('path');
+      module.exports = {
+        createNodesV2: ['libs/*/project.json', (configFiles) => {
+          const results = [];
+          for (const configFile of configFiles) {
+            const root = dirname(configFile);
+            const name = basename(root);
+            const targets = (function(root, name) { return ${targetFactory}; })(root, name);
+            results.push([configFile, {
+              projects: {
+                [root]: { targets }
+              }
+            }]);
+          }
+          return results;
+        }],
+      };
+    `
+    );
+  }
+
+  describe('spread in specified plugins (nx.json plugins)', () => {
+    it('should resolve spread when first specified plugin contains "..."', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Remove any generator-created targets so they don't interfere
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      // Plugin A: defines build target with inputs
+      createPlugin(
+        'plugin-a',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['first-plugin', '...'],
+        }
+      }`
+      );
+
+      // Plugin B: also defines build target with inputs
+      createPlugin(
+        'plugin-b',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['second-plugin'],
+        }
+      }`
+      );
+
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/plugin-a', './tools/plugin-b'];
+        return json;
+      });
+
+      const project = getResolvedProject(lib);
+      // plugin-b merges on top of plugin-a: overwrites
+      expect(project.targets.build.inputs).toEqual(['second-plugin']);
+    });
+
+    it('should resolve spread when middle specified plugin contains "..."', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Remove any generator-created targets so they don't interfere
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      createPlugin(
+        'plugin-first',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['from-first'],
+        }
+      }`
+      );
+
+      createPlugin(
+        'plugin-middle',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['from-middle', '...'],
+        }
+      }`
+      );
+
+      createPlugin(
+        'plugin-last',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['from-last'],
+        }
+      }`
+      );
+
+      updateJson('nx.json', (json) => {
+        // Order: first, middle (with spread), last
+        // Processing: first sets base, middle spreads first's values, last replaces
+        json.plugins = [
+          './tools/plugin-first',
+          './tools/plugin-middle',
+          './tools/plugin-last',
+        ];
+        return json;
+      });
+
+      const project = getResolvedProject(lib);
+      // last plugin wins (no spread), replaces everything
+      expect(project.targets.build.inputs).toEqual(['from-last']);
+    });
+
+    it('should resolve spread when last specified plugin contains "..."', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Remove any generator-created targets so they don't interfere
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      createPlugin(
+        'plugin-base',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['base-value'],
+        }
+      }`
+      );
+
+      createPlugin(
+        'plugin-spreader',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['last-value', '...'],
+        }
+      }`
+      );
+
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/plugin-base', './tools/plugin-spreader'];
+        return json;
+      });
+
+      const project = getResolvedProject(lib);
+      // last plugin spreads: includes base plugin values
+      expect(project.targets.build.inputs).toEqual([
+        'last-value',
+        'base-value',
+      ]);
+    });
+  });
+
+  describe('spread in project.json (default plugin)', () => {
+    it('should resolve spread in project.json inputs with target defaults as base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            inputs: ['from-target-defaults'],
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            inputs: ['from-project-json', '...'],
+            options: { command: 'echo hello' },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      expect(project.targets.echo.inputs).toEqual([
+        'from-project-json',
+        'from-target-defaults',
+      ]);
+    });
+
+    it('should resolve spread in project.json options with target default options as base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo hello',
+              args: ['default-arg-1', 'default-arg-2'],
+            },
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            options: {
+              args: ['project-arg', '...'],
+            },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      expect(project.targets.echo.options.args).toEqual([
+        'project-arg',
+        'default-arg-1',
+        'default-arg-2',
+      ]);
+    });
+
+    it('should resolve object spread in project.json env with target default env as base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo hello',
+              env: {
+                DEFAULT_VAR: 'from-defaults',
+                SHARED_VAR: 'default-value',
+              },
+            },
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            options: {
+              env: {
+                PROJECT_VAR: 'from-project',
+                '...': true,
+                SHARED_VAR: 'project-value',
+              },
+            },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // Object spread includes base, then SHARED_VAR after spread overrides
+      expect(project.targets.echo.options.env).toEqual({
+        PROJECT_VAR: 'from-project',
+        DEFAULT_VAR: 'from-defaults',
+        SHARED_VAR: 'project-value',
+      });
+    });
+
+    it('should resolve spread in project.json inputs with specified plugin inputs as base (no target defaults)', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Specified plugin infers a build target with inputs
+      createPlugin(
+        'infer-plugin',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['inferred-1', 'inferred-2'],
+        }
+      }`
+      );
+
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/infer-plugin'];
+        // No target defaults for build
+        return json;
+      });
+
+      // project.json uses spread to extend the inferred inputs
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          build: {
+            inputs: ['from-project', '...'],
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // Spread in project.json expands with inferred plugin values
+      expect(project.targets.build.inputs).toEqual([
+        'from-project',
+        'inferred-1',
+        'inferred-2',
+      ]);
+    });
+
+    it('should resolve spread in project.json inputs with specified plugin inputs as base (with target defaults overriding)', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Specified plugin infers a build target with inputs
+      createPlugin(
+        'infer-plugin',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['inferred'],
+        }
+      }`
+      );
+
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/infer-plugin'];
+        // Target defaults override the inferred inputs (no spread)
+        json.targetDefaults = {
+          build: {
+            inputs: ['from-defaults'],
+          },
+        };
+        return json;
+      });
+
+      // project.json uses spread — base should be the resolved value
+      // after target defaults replaced inferred
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          build: {
+            inputs: ['from-project', '...'],
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // Target defaults replaced inferred, so project.json spread sees only defaults
+      expect(project.targets.build.inputs).toEqual([
+        'from-project',
+        'from-defaults',
+      ]);
+    });
+
+    it('should resolve spread in project.json options with specified plugin options as base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Specified plugin infers build target with options
+      createPlugin(
+        'infer-plugin',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo build',
+            args: ['inferred-arg-1', 'inferred-arg-2'],
+            env: { INFERRED_VAR: 'from-plugin' },
+          },
+        }
+      }`
+      );
+
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/infer-plugin'];
+        return json;
+      });
+
+      // project.json uses spread to extend the inferred options
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          build: {
+            options: {
+              args: ['project-arg', '...'],
+              env: { PROJECT_VAR: 'from-project', '...': true },
+            },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      expect(project.targets.build.options.args).toEqual([
+        'project-arg',
+        'inferred-arg-1',
+        'inferred-arg-2',
+      ]);
+      expect(project.targets.build.options.env).toEqual({
+        PROJECT_VAR: 'from-project',
+        INFERRED_VAR: 'from-plugin',
+      });
+    });
+
+    it('should fully replace when project.json does not use spread', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            inputs: ['from-target-defaults'],
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            inputs: ['only-from-project'],
+            options: { command: 'echo hello' },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // No spread: project.json fully replaces
+      expect(project.targets.echo.inputs).toEqual(['only-from-project']);
+    });
+  });
+
+  describe('spread in target defaults', () => {
+    it('should resolve spread in target defaults with specified plugin values as base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Remove any generator-created targets so they don't interfere
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      createPlugin(
+        'infer-plugin',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['inferred-input'],
+        }
+      }`
+      );
+
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/infer-plugin'];
+        json.targetDefaults = {
+          build: {
+            inputs: ['default-input', '...'],
+          },
+        };
+        return json;
+      });
+
+      const project = getResolvedProject(lib);
+      // Target defaults spread includes specified plugin values
+      expect(project.targets.build.inputs).toEqual([
+        'default-input',
+        'inferred-input',
+      ]);
+    });
+
+    it('should override specified plugin values when target defaults do not use spread', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Remove any generator-created targets so they don't interfere
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      createPlugin(
+        'infer-plugin',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['inferred-input'],
+        }
+      }`
+      );
+
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/infer-plugin'];
+        json.targetDefaults = {
+          build: {
+            inputs: ['only-default'],
+          },
+        };
+        return json;
+      });
+
+      const project = getResolvedProject(lib);
+      // No spread: target defaults fully override
+      expect(project.targets.build.inputs).toEqual(['only-default']);
+    });
+  });
+
+  describe('three-layer spread chain (specified + target defaults + project.json)', () => {
+    it('should resolve spread through all three layers for array properties', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Layer 1: specified plugin infers inputs
+      createPlugin(
+        'infer-plugin',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['inferred'],
+        }
+      }`
+      );
+
+      // Layer 2: target defaults use spread to include inferred
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/infer-plugin'];
+        json.targetDefaults = {
+          build: {
+            inputs: ['from-defaults', '...'],
+          },
+        };
+        return json;
+      });
+
+      // Layer 3: project.json uses spread to include (defaults + inferred)
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          build: {
+            inputs: ['from-project', '...'],
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // Full chain: project spreads (defaults + inferred)
+      expect(project.targets.build.inputs).toEqual([
+        'from-project',
+        'from-defaults',
+        'inferred',
+      ]);
+    });
+
+    it('should resolve spread through all three layers for object option properties', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Layer 1: specified plugin infers env
+      createPlugin(
+        'infer-plugin',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo build',
+            env: { INFERRED: 'true' },
+          },
+        }
+      }`
+      );
+
+      // Layer 2: target defaults spread to include inferred env
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/infer-plugin'];
+        json.targetDefaults = {
+          build: {
+            options: {
+              env: { DEFAULT: 'true', '...': true },
+            },
+          },
+        };
+        return json;
+      });
+
+      // Layer 3: project.json spreads to include (defaults + inferred)
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          build: {
+            options: {
+              env: { PROJECT: 'true', '...': true },
+            },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      expect(project.targets.build.options.env).toEqual({
+        PROJECT: 'true',
+        DEFAULT: 'true',
+        INFERRED: 'true',
+      });
+    });
+
+    it('should resolve spread in project.json with specified + defaults base (no spread in defaults)', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // Specified plugin infers inputs
+      createPlugin(
+        'infer-plugin',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['inferred'],
+        }
+      }`
+      );
+
+      // Target defaults override (no spread)
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/infer-plugin'];
+        json.targetDefaults = {
+          build: {
+            inputs: ['from-defaults'],
+          },
+        };
+        return json;
+      });
+
+      // project.json uses spread
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          build: {
+            inputs: ['from-project', '...'],
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // Target defaults replaced inferred, project.json spreads with defaults
+      expect(project.targets.build.inputs).toEqual([
+        'from-project',
+        'from-defaults',
+      ]);
+    });
+  });
+
+  describe('spread in configurations', () => {
+    it('should resolve spread in project.json configuration arrays with target default configuration as base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            configurations: {
+              production: {
+                args: ['default-prod-arg'],
+              },
+            },
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            options: { command: 'echo hello' },
+            configurations: {
+              production: {
+                args: ['project-prod-arg', '...'],
+              },
+            },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      expect(project.targets.echo.configurations.production.args).toEqual([
+        'project-prod-arg',
+        'default-prod-arg',
+      ]);
+    });
+  });
+
+  describe('spread edge cases', () => {
+    it('should handle spread when base has no value for the property', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            // No inputs defined in target defaults
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            inputs: ['from-project', '...'],
+            options: { command: 'echo hello' },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // Spread with no base: just the project values
+      expect(project.targets.echo.inputs).toEqual(['from-project']);
+    });
+
+    it('should strip spread token when project.json is the only source for a target', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      // No plugins define this target, no target defaults exist for it
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            executor: 'nx:run-commands',
+            inputs: ['project-input-1', '...', 'project-input-2'],
+            options: {
+              command: 'echo hello',
+              args: ['arg1', '...'],
+              env: { MY_VAR: 'value', '...': true },
+            },
+            dependsOn: ['prebuild', '...'],
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // '...' in arrays should be removed (nothing to spread)
+      expect(project.targets.echo.inputs).toEqual([
+        'project-input-1',
+        'project-input-2',
+      ]);
+      expect(project.targets.echo.options.args).toEqual(['arg1']);
+      expect(project.targets.echo.dependsOn).toEqual(['prebuild']);
+      // '...' key in objects should be removed when value is `true`
+      expect(project.targets.echo.options.env).toEqual({ MY_VAR: 'value' });
+    });
+
+    it('should expand every spread token in an array against the base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            inputs: ['default-1', 'default-2'],
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            inputs: ['before', '...', 'middle', '...', 'after'],
+            options: { command: 'echo hello' },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      expect(project.targets.echo.inputs).toEqual([
+        'before',
+        'default-1',
+        'default-2',
+        'middle',
+        'default-1',
+        'default-2',
+        'after',
+      ]);
+    });
+
+    it('should not treat string "..." value in object as spread (only boolean true triggers spread)', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo hello',
+              env: { DEFAULT_VAR: 'value' },
+            },
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            options: {
+              env: {
+                PROJECT_VAR: 'value',
+                '...': 'this is a comment, not a spread',
+              },
+            },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      // String value for '...' is kept as-is, not treated as spread
+      expect(project.targets.echo.options.env).toEqual({
+        PROJECT_VAR: 'value',
+        '...': 'this is a comment, not a spread',
+      });
+    });
+
+    it('should support spread in dependsOn with target defaults', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      updateJson('nx.json', (json) => {
+        json.targetDefaults = {
+          echo: {
+            executor: 'nx:run-commands',
+            dependsOn: ['^build'],
+          },
+        };
+        return json;
+      });
+
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {
+          echo: {
+            dependsOn: ['prebuild', '...'],
+            options: { command: 'echo hello' },
+          },
+        };
+        return c;
+      });
+
+      const project = getResolvedProject(lib);
+      expect(project.targets.echo.dependsOn).toEqual(['prebuild', '^build']);
+    });
+  });
+
+  /**
+   * Race-condition stress. Each test mutates nx.json (and tools/*) in tight
+   * loops with no settle time and no `reset`, so the long-lived daemon must
+   * pick up every change via its watcher before serving the graph. A stale
+   * cached graph surfaces as the wrong build.inputs; looping multiplies the
+   * odds of hitting the window a single-shot test flakes on ~1-in-20.
+   */
+  describe('rapid reconfiguration (race-condition stress)', () => {
+    it('reflects the latest specified plugin after rapid nx.json swaps', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      // Pre-create a pool of plugins, each stamping a distinct input.
+      const pluginCount = 6;
+      for (let i = 0; i < pluginCount; i++) {
+        createPlugin(
+          `race-plugin-${i}`,
+          `{
+          build: {
+            executor: 'nx:run-commands',
+            options: { command: 'echo build' },
+            inputs: ['from-plugin-${i}'],
+          }
+        }`
+        );
+      }
+
+      // Swap the active plugin and query immediately, no settle time.
+      // A stale daemon graph surfaces as the previous iteration's input.
+      for (let i = 0; i < pluginCount; i++) {
+        updateJson('nx.json', (json) => {
+          json.plugins = [`./tools/race-plugin-${i}`];
+          return json;
+        });
+        const project = getResolvedProject(lib);
+        expect(project.targets.build.inputs).toEqual([`from-plugin-${i}`]);
+      }
+    });
+
+    it('reflects plugin-list growth and shrink across rapid nx.json edits', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+      updateJson(`libs/${lib}/project.json`, (c) => {
+        c.targets = {};
+        return c;
+      });
+
+      createPlugin(
+        'race-base',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['base'],
+        }
+      }`
+      );
+      createPlugin(
+        'race-spread',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['spread', '...'],
+        }
+      }`
+      );
+
+      // Alternate between one plugin and two (with spread). The resolved
+      // inputs differ each step, so a stale graph is caught immediately.
+      const steps: { plugins: string[]; inputs: string[] }[] = [
+        { plugins: ['./tools/race-base'], inputs: ['base'] },
+        {
+          plugins: ['./tools/race-base', './tools/race-spread'],
+          inputs: ['spread', 'base'],
+        },
+        { plugins: ['./tools/race-spread'], inputs: ['spread'] },
+        {
+          plugins: ['./tools/race-base', './tools/race-spread'],
+          inputs: ['spread', 'base'],
+        },
+        { plugins: ['./tools/race-base'], inputs: ['base'] },
+      ];
+      for (const { plugins, inputs } of steps) {
+        updateJson('nx.json', (json) => {
+          json.plugins = plugins;
+          return json;
+        });
+        const project = getResolvedProject(lib);
+        expect(project.targets.build.inputs).toEqual(inputs);
+      }
+    });
+
+    it('reflects rapid project.json edits against a stable plugin base', () => {
+      const lib = uniq('lib');
+      runCLI(`generate @nx/js:lib libs/${lib}`);
+
+      createPlugin(
+        'race-infer',
+        `{
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'echo build' },
+          inputs: ['inferred'],
+        }
+      }`
+      );
+      updateJson('nx.json', (json) => {
+        json.plugins = ['./tools/race-infer'];
+        return json;
+      });
+
+      // Plugin set is fixed; only project.json changes each round. The
+      // daemon must observe that file change before answering — a stale
+      // graph surfaces as a previous iteration's project input.
+      for (let i = 0; i < 6; i++) {
+        updateJson(`libs/${lib}/project.json`, (c) => {
+          c.targets = {
+            build: {
+              inputs: [`project-${i}`, '...'],
+            },
+          };
+          return c;
+        });
+        const project = getResolvedProject(lib);
+        expect(project.targets.build.inputs).toEqual([
+          `project-${i}`,
+          'inferred',
+        ]);
+      }
+    });
+
+    /**
+     * Mirrors the flaky single-shot test ("...with target defaults
+     * overriding"): per iteration a plugin file, nx.json and project.json
+     * all change together, then one `show project`. A stale graph surfaces
+     * as build being undefined — the plugin set it was built against never ran.
+     */
+    it('reflects a plugin + nx.json + project.json change applied together, repeatedly', () => {
+      for (let i = 0; i < 4; i++) {
+        const lib = uniq('lib');
+        runCLI(`generate @nx/js:lib libs/${lib}`);
+
+        createPlugin(
+          `combo-infer-${i}`,
+          `{
+          build: {
+            executor: 'nx:run-commands',
+            options: { command: 'echo build' },
+            inputs: ['inferred-${i}'],
+          }
+        }`
+        );
+        updateJson('nx.json', (json) => {
+          json.plugins = [`./tools/combo-infer-${i}`];
+          json.targetDefaults = { build: { inputs: [`defaults-${i}`] } };
+          return json;
+        });
+        updateJson(`libs/${lib}/project.json`, (c) => {
+          c.targets = { build: { inputs: [`project-${i}`, '...'] } };
+          return c;
+        });
+
+        const project = getResolvedProject(lib);
+        // Target defaults (no spread) replace the inferred inputs, then
+        // project.json spreads against the resolved defaults.
+        expect(project.targets.build.inputs).toEqual([
+          `project-${i}`,
+          `defaults-${i}`,
+        ]);
+      }
+    });
+  });
+});

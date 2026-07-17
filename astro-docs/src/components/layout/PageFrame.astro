@@ -5,9 +5,12 @@ import { Footer } from '@nx/nx-dev-ui-common/src/lib/footer';
 import { GitHubStarWidget } from '@nx/nx-dev-ui-common/src/lib/github-star-widget';
 import { WebinarNotifier } from '@nx/nx-dev-ui-common/src/lib/webinar-notifier';
 import { getCollection } from 'astro:content';
+import ConfBanner from './ConfBanner.astro';
+import { isConfBannerActive } from './conf-banner';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
 const githubStarsCount = Astro.locals.githubStarsCount ?? 0;
+const showConfBanner = isConfBannerActive();
 
 // Get banner from collection
 const bannerCollection = await getCollection('banner');
@@ -23,7 +26,8 @@ const showBanner = isBannerActive(bannerConfig);
 const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}` : '';
 ---
 
-<div class="page sl-flex">
+<div class:list={['page', 'sl-flex', { 'has-conf-banner': showConfBanner }]}>
+  <ConfBanner />
   <header class="header"><slot name="header" /></header>
   {
     hasSidebar && (
@@ -68,6 +72,7 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       id={bannerId}
       title={bannerConfig.title}
       description={bannerConfig.description}
+      artwork={bannerConfig.artwork}
       primaryCtaUrl={bannerConfig.primaryCtaUrl}
       primaryCtaText={bannerConfig.primaryCtaText}
       secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
@@ -85,6 +90,11 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       min-height: 100vh;
     }
 
+    /* Height of the conference promo strip; reused to offset everything below it. */
+    .page.has-conf-banner {
+      --conf-banner-h: 2.5rem;
+    }
+
     .header {
       z-index: var(--sl-z-index-navbar);
       position: fixed;
@@ -96,6 +106,11 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
       padding-inline-end: var(--sl-nav-pad-x);
       background-color: var(--sl-color-bg-nav);
+    }
+
+    /* Push the fixed header below the banner. */
+    .page.has-conf-banner .header {
+      inset-block-start: var(--conf-banner-h);
     }
 
     :global([data-has-sidebar]) .header {
@@ -113,6 +128,10 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       width: 100%;
       background-color: var(--sl-color-bg-sidebar);
       overflow-y: auto;
+    }
+
+    .page.has-conf-banner .sidebar-pane {
+      inset-block-start: calc(var(--sl-nav-height) + var(--conf-banner-h));
     }
 
     :global([aria-expanded='true']) ~ .sidebar-pane {
@@ -143,6 +162,27 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
     .main-frame {
       padding-top: calc(var(--sl-nav-height) + var(--sl-mobile-toc-height));
       padding-inline-start: var(--sl-content-inline-start);
+    }
+
+    .page.has-conf-banner .main-frame {
+      padding-top: calc(
+        var(--sl-nav-height) + var(--sl-mobile-toc-height) +
+          var(--conf-banner-h)
+      );
+    }
+
+    /* Starlight's mobile on-this-page bar is fixed at the nav height; shift it too. */
+    .page.has-conf-banner :global(mobile-starlight-toc > nav) {
+      top: calc(var(--sl-nav-height) + var(--conf-banner-h));
+    }
+
+    /* The fixed mobile menu (hamburger) toggle is positioned from the viewport
+       top, so it hides under the conf banner unless we clear it too. */
+    .page.has-conf-banner :global(starlight-menu-button button) {
+      top: calc(
+        (var(--sl-nav-height) - var(--sl-menu-button-size)) / 2 +
+          var(--conf-banner-h)
+      );
     }
 
     @media (min-width: 50rem) {

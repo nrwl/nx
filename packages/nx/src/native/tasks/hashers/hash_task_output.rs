@@ -27,7 +27,7 @@ pub fn resolve_task_output_files(
     glob: &str,
     outputs: &[String],
 ) -> Result<Vec<String>> {
-    let output_files = get_files_for_outputs(workspace_root.to_string(), outputs.to_vec())?;
+    let output_files = get_files_for_outputs(Path::new(workspace_root), outputs.to_vec())?;
     let glob_set = build_glob_set(&[glob])?;
     Ok(output_files
         .into_iter()
@@ -55,7 +55,7 @@ pub fn hash_task_output(
 
     trace!("TaskOutput cache MISS for {}", cache_key);
     let now = std::time::Instant::now();
-    let output_files = get_files_for_outputs(workspace_root.to_string(), outputs.to_vec())?;
+    let output_files = get_files_for_outputs(Path::new(workspace_root), outputs.to_vec())?;
     trace!("get_files_for_outputs: {:?}", now.elapsed());
     let glob = build_glob_set(&[glob])?;
 

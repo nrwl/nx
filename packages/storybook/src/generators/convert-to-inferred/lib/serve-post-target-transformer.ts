@@ -1,11 +1,9 @@
 import { joinPathFragments, TargetConfiguration, Tree } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { toProjectRelativePath } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import { AggregatedLog, toProjectRelativePath } from '@nx/devkit/internal';
 import {
   ensureViteConfigPathIsRelative,
   getConfigFilePath,
-  getInstalledPackageVersionInfo,
-  STORYBOOK_PROP_MAPPINGS,
+  getStorybookPropMappings,
 } from './utils';
 export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
@@ -142,10 +140,7 @@ function handlePropertiesFromTargetOptions(
     delete options.docsMode;
   }
 
-  const storybookPropMappings =
-    getInstalledPackageVersionInfo(tree, 'storybook')?.major === 8
-      ? STORYBOOK_PROP_MAPPINGS.v8
-      : STORYBOOK_PROP_MAPPINGS.v7;
+  const storybookPropMappings = getStorybookPropMappings(tree);
   for (const [prevKey, newKey] of Object.entries(storybookPropMappings)) {
     if (prevKey in options) {
       let prevValue = options[prevKey];

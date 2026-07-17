@@ -1,11 +1,21 @@
-import { determineTemplate } from './prompts';
+import { confirmThirdPartyPreset, determineTemplate } from './prompts';
 
 jest.mock('../utils/ci/is-ci', () => ({
   isCI: jest.fn(() => false),
 }));
 
-jest.mock('../utils/git/git', () => ({
-  isGitAvailable: jest.fn(() => true),
+jest.mock('../utils/ai/ai-output', () => ({
+  isAiAgent: jest.fn(() => false),
+  detectAiAgentName: jest.fn(() => null),
+}));
+
+jest.mock('enquirer', () => ({
+  __esModule: true,
+  default: { prompt: jest.fn() },
+}));
+
+jest.mock('../utils/output', () => ({
+  output: { warn: jest.fn(), log: jest.fn() },
 }));
 
 describe('determineTemplate', () => {
@@ -52,5 +62,69 @@ describe('determineTemplate', () => {
       });
       expect(result).toBe('nrwl/empty-template');
     });
+  });
+});
+
+describe('confirmThirdPartyPreset', () => {
+  const enquirer = require('enquirer').default;
+  const { isCI } = require('../utils/ci/is-ci');
+  const { isAiAgent } = require('../utils/ai/ai-output');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (isCI as jest.Mock).mockReturnValue(false);
+    (isAiAgent as jest.Mock).mockReturnValue(false);
+  });
+
+  it('prompts and returns true when user confirms', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({ confirm: 'Yes' });
+    await expect(confirmThirdPartyPreset('core', true)).resolves.toBe(true);
+    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
+  });
+
+  it('prompts and returns false when user declines', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({ confirm: 'No' });
+    await expect(confirmThirdPartyPreset('core', true)).resolves.toBe(false);
+    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips prompt and returns true in non-interactive mode', async () => {
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', false)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+  });
+
+  it('skips prompt and returns true in CI', async () => {
+    (isCI as jest.Mock).mockReturnValue(true);
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', true)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+  });
+
+  it('skips prompt and returns true when running as an AI agent', async () => {
+    (isAiAgent as jest.Mock).mockReturnValue(true);
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', true)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+  });
+
+  it('skips prompt and warning when trusted flag is set', async () => {
+    const { output } = require('../utils/output');
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', true, true)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+    expect(output.warn).not.toHaveBeenCalled();
+  });
+
+  it('still prompts when trusted flag is false', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({ confirm: 'Yes' });
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', true, false)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
   });
 });

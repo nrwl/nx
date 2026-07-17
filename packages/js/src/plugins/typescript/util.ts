@@ -2,7 +2,7 @@ import { readJsonFile, type TargetConfiguration } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { extname, isAbsolute, relative, resolve } from 'node:path';
 import { type PackageManagerCommands } from 'nx/src/utils/package-manager';
-import type { PackageJson } from 'packages/nx/src/utils/package-json';
+import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { type ParsedCommandLine } from 'typescript';
 import picomatch = require('picomatch');
@@ -53,7 +53,7 @@ export function addBuildAndWatchDepsTargets(
     targets[options.watchDepsTargetName ?? 'watch-deps'] = {
       continuous: true,
       dependsOn: [buildDepsTargetName],
-      command: `${pmc.exec} nx watch --projects ${projectName} --includeDependentProjects -- ${pmc.exec} nx ${buildDepsTargetName} ${projectName}`,
+      command: `${pmc.exec} nx watch --projects ${projectName} --includeDependencies -- ${pmc.exec} nx ${buildDepsTargetName} ${projectName}`,
     };
   }
 }

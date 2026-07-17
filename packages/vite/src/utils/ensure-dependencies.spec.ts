@@ -1,7 +1,12 @@
 import { addDependenciesToPackageJson, readJson, type Tree } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ensureDependencies } from './ensure-dependencies';
-import { nxVersion } from './versions';
+import {
+  nxVersion,
+  vitePluginReactV4Version,
+  vitePluginReactVersion,
+} from './versions';
 
 describe('@nx/vite:init', () => {
   let tree: Tree;
@@ -50,36 +55,68 @@ describe('@nx/vite:init', () => {
     );
   });
 
-  it('should support --testEnvironment=jsdom', () => {
-    ensureDependencies(tree, {
-      testEnvironment: 'jsdom',
-      uiFramework: 'none',
-    });
+  it('should default to latest @vitejs/plugin-react when vite range is unparseable', () => {
+    addDependenciesToPackageJson(tree, {}, { vite: 'workspace:*' });
+
+    ensureDependencies(tree, { uiFramework: 'react' });
 
     const packageJson = readJson(tree, 'package.json');
-
-    expect(packageJson).toMatchSnapshot();
+    expect(packageJson.devDependencies['@vitejs/plugin-react']).toEqual(
+      vitePluginReactVersion
+    );
   });
 
-  it('should support --testEnvironment=happy-dom', () => {
-    ensureDependencies(tree, {
-      testEnvironment: 'happy-dom',
-      uiFramework: 'none',
+  describe('with pnpm catalog references', () => {
+    let tempFs: TempFs;
+
+    beforeEach(() => {
+      tempFs = new TempFs('vite-ensure-deps');
+      tree.root = tempFs.tempDir;
+      // force `detectPackageManager` to return `pnpm`
+      tempFs.createFileSync('pnpm-lock.yaml', 'lockfileVersion: 9.0');
     });
 
-    const packageJson = readJson(tree, 'package.json');
-
-    expect(packageJson).toMatchSnapshot();
-  });
-
-  it('should support --testEnvironment=edge-runtime', () => {
-    ensureDependencies(tree, {
-      testEnvironment: 'edge-runtime',
-      uiFramework: 'none',
+    afterEach(() => {
+      tempFs.cleanup();
     });
 
-    const packageJson = readJson(tree, 'package.json');
+    it('should resolve a named catalog reference when picking @vitejs/plugin-react', () => {
+      addDependenciesToPackageJson(tree, {}, { vite: 'catalog:tooling' });
+      tree.write(
+        'pnpm-workspace.yaml',
+        `catalogs:\n  tooling:\n    vite: "^7.3.2"\n`
+      );
 
-    expect(packageJson).toMatchSnapshot();
+      ensureDependencies(tree, { uiFramework: 'react' });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@vitejs/plugin-react']).toEqual(
+        vitePluginReactV4Version
+      );
+    });
+
+    it('should resolve a default catalog reference when picking @vitejs/plugin-react', () => {
+      addDependenciesToPackageJson(tree, {}, { vite: 'catalog:' });
+      tree.write('pnpm-workspace.yaml', `catalog:\n  vite: "^8.0.0"\n`);
+
+      ensureDependencies(tree, { uiFramework: 'react' });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@vitejs/plugin-react']).toEqual(
+        vitePluginReactVersion
+      );
+    });
+
+    it('should default to latest @vitejs/plugin-react when catalog entry is missing', () => {
+      addDependenciesToPackageJson(tree, {}, { vite: 'catalog:tooling' });
+      tree.write('pnpm-workspace.yaml', `catalogs:\n  tooling: {}\n`);
+
+      ensureDependencies(tree, { uiFramework: 'react' });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['@vitejs/plugin-react']).toEqual(
+        vitePluginReactVersion
+      );
+    });
   });
 });

@@ -1,7 +1,6 @@
 import * as path from 'path';
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 import { getCSSModuleLocalIdent } from '../../../utils/get-css-module-local-ident';
 import { getOutputHashFormat } from '../../../utils/hash-format';
@@ -18,6 +17,9 @@ export function getCommonLoadersForCssModules(
   options: NormalizedNxAppWebpackPluginOptions,
   includePaths: string[]
 ) {
+  const MiniCssExtractPlugin =
+    require('mini-css-extract-plugin') as typeof import('mini-css-extract-plugin');
+
   // load component css as raw strings
   return [
     {
@@ -52,6 +54,9 @@ export function getCommonLoadersForGlobalCss(
   options: NormalizedNxAppWebpackPluginOptions,
   includePaths: string[]
 ) {
+  const MiniCssExtractPlugin =
+    require('mini-css-extract-plugin') as typeof import('mini-css-extract-plugin');
+
   return [
     {
       loader: options.extractCss
@@ -75,6 +80,9 @@ export function getCommonLoadersForGlobalStyle(
   options: NormalizedNxAppWebpackPluginOptions,
   includePaths: string[]
 ) {
+  const MiniCssExtractPlugin =
+    require('mini-css-extract-plugin') as typeof import('mini-css-extract-plugin');
+
   return [
     {
       loader: options.extractCss

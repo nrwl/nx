@@ -1,12 +1,28 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/vue",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/vue/tsconfig.tsbuildinfo"
+    "composite": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*_spec.ts",
+    "**/*_test.ts",
+    "jest.config.ts",
+    "jest.config.cts",
+    "eslint.config.mjs"
+  ],
+  "include": ["*.ts", "src/**/*.ts"],
   "references": [
     {
       "path": "../vitest/tsconfig.lib.json"
@@ -28,6 +44,18 @@
     },
     {
       "path": "../nx/tsconfig.lib.json"
+    },
+    {
+      "path": "../storybook/tsconfig.lib.json"
+    },
+    {
+      "path": "../rsbuild/tsconfig.lib.json"
+    },
+    {
+      "path": "../playwright/tsconfig.lib.json"
+    },
+    {
+      "path": "../cypress/tsconfig.lib.json"
     }
   ]
 }

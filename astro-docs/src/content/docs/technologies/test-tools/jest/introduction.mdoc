@@ -1,9 +1,9 @@
 ---
-title: Jest Plugin for Nx
-description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest, including setup and configuration for your Nx workspace.
+title: Nx with Jest
+description: Run Jest through Nx for caching, affected test runs, and faster CI across your monorepo.
 sidebar:
   label: Introduction
-weight: 5
+weight: 2
 filter: 'type:References'
 ---
 
@@ -213,48 +213,11 @@ Open the project details view in Nx Console or run:
 nx show project my-app
 ```
 
-## CI considerations
+## Set up CI
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-### Build and test only what changed
-
-```shell
-nx affected -t build test typecheck lint
-```
-
-This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
-Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
-
-### Remote caching
-
-Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
-
-```shell
-nx connect
-```
-
-### Task splitting for slow tests
-
-For slow test suites (e.g. E2E or integration tests), set `ciTargetName` to split tests by file for distributed CI runs. Each test file becomes its own cacheable CI task with better caching and retries. See [split e2e tasks](/docs/features/ci-features/split-e2e-tasks) for details.
-
-### Feature-based testing
-
-Organize tests by feature to get better cache hits and more targeted CI runs. See the [feature-based testing guide](/docs/guides/tips-n-tricks/feature-based-testing) for strategies on structuring tests in a monorepo.
-
-### Performance with parallelization
-
-Typically, in CI it's recommended to use `nx affected -t test --parallel=[# CPUs] --runInBand` for the best performance.
-
-This is because each Jest process creates workers based on system resources, and running multiple projects via Nx with Jest workers will create too many processes overall, causing the system to run slower than desired. Using the `--runInBand` flag tells Jest to run in a single process. You can then use Nx parallelism to run multiple Jest projects at once.
-
-### Batch mode
-
-For large monorepos with many Jest projects, Batch mode can improve performance by batching compilation across projects into a single process.
-
-```shell
-NX_BATCH_MODE=true nx run-many -t test
-```
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 

@@ -6,10 +6,7 @@
   },
   "files": [],
   "include": [],
-  "references": [<% if (angularMajorVersion < 20) { %>
-    {
-      "path": "./tsconfig.editor.json"
-    },<% } %>
+  "references": [
     {
       "path": "./tsconfig.app.json"
     }

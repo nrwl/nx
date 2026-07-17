@@ -8,8 +8,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureTypescript, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { type RspackExecutorSchema } from '../executors/rspack/schema';
 import { type ConfigurationSchema } from '../generators/configuration/schema';
 import { type Framework } from '../generators/init/schema';
@@ -640,7 +639,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
     `
   );
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
@@ -676,7 +675,6 @@ export async function handleUnknownExecutors(projectName: string) {
       `
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
@@ -701,7 +699,7 @@ export function determineFrameworkAndTarget(
   }
 ): { target: 'node' | 'web'; framework?: Framework } {
   ensureTypescript();
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const { ast, query } = require('@phenomnomnominal/tsquery');
 
   // First try to infer if the target is node

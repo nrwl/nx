@@ -89,7 +89,8 @@ function performInstallation(
   );
 
   try {
-    cp.execSync('npm i', {
+    // --include=dev forces install even if consumer env sets NODE_ENV=production / omit=dev.
+    cp.execSync('npm i --include=dev', {
       cwd: path.dirname(installationPath),
       stdio: 'inherit',
       windowsHide: true,
@@ -155,5 +156,5 @@ function ensureUpToDateInstallation() {
 if (!process.env.NX_WRAPPER_SKIP_INSTALL) {
   ensureUpToDateInstallation();
 }
-// eslint-disable-next-line no-restricted-modules
+
 require('./installation/node_modules/nx/dist/bin/nx');

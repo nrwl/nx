@@ -1,6 +1,26 @@
-@tailwind components;
-@tailwind base;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@source '../src';
+@source '../../ui-code-block/src';
+@source '../../ui-common/src';
+@source '../../ui-icons/src';
+@source '../../ui-project-details/src';
+@source '../../ui-render-config/src';
+@source '../../shared/src';
+
+@source not '../../**/*.spec.*';
+@source not '../../**/eslint.config.*';
+
+/* v3 compat: default border color was gray-200, v4 is currentColor. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
 
 @keyframes fadeIn {
   from {

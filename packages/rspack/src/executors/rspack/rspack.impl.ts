@@ -1,8 +1,8 @@
 import { ExecutorContext, logger } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/internal';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import {
+import { getProjectSourceRoot } from '@nx/js/internal';
+import type {
   Compiler,
   MultiCompiler,
   MultiStats,
@@ -16,11 +16,14 @@ import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { normalizeOptions } from './lib/normalize-options';
 import { RspackExecutorSchema } from './schema';
+import { warnRspackExecutorDeprecation } from '../../utils/deprecation';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
+  warnRspackExecutorDeprecation();
+
   process.env.NODE_ENV ??= options.mode ?? 'production';
   options.target ??= 'web';
 
@@ -49,9 +52,9 @@ export default async function* runExecutor(
     outfile?: string;
   }>(async ({ next, done }) => {
     const watch =
-      (compiler instanceof Compiler
-        ? compiler.options.watch
-        : compiler.options[0].watch) ?? options.watch;
+      (isMultiCompiler(compiler)
+        ? compiler.options[0].watch
+        : compiler.options.watch) ?? options.watch;
 
     if (watch) {
       const watcher = compiler.watch(
@@ -141,7 +144,7 @@ function registerCleanupCallback(callback: () => void) {
   process.on('exit', wrapped);
 }
 
-async function executeTypeCheck(
+export async function executeTypeCheck(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
@@ -151,6 +154,10 @@ async function executeTypeCheck(
     workspaceRoot: resolve(projectConfiguration.root),
     tsConfigPath: options.tsConfig,
     mode: 'noEmit',
+    // TS 6 defaults rootDir to the tsconfig dir, so from-source workspace
+    // libs (outside the project) trip TS6059. rootDir is emit-only and this
+    // is noEmit, so widen it to the workspace root to clear the false error.
+    rootDir: context.root,
   });
 
   await printDiagnostics(result.errors, result.warnings);

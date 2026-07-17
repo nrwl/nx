@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, getProjects, joinPathFragments } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import type { Schema } from './schema';
 import {
   convertScamToStandalone,
@@ -11,10 +12,14 @@ import {
   verifyModuleIsScam,
 } from './lib';
 
+/**
+ * @deprecated SCAMs are superseded by Angular standalone components. Convert any remaining SCAMs before upgrading. It will be removed in Nx v24.
+ */
 export async function scamToStandalone(
   tree: Tree,
   { component, project: projectName, skipFormat }: Schema
 ) {
+  assertSupportedAngularVersion(tree);
   const projects = getProjects(tree);
   let project = getTargetProject(projectName, projects);
 

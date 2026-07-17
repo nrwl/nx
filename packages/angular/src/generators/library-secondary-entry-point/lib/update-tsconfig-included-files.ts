@@ -19,17 +19,27 @@ export function updateTsConfigIncludedFiles(
     return;
   }
 
+  const entryPointPrefix = `${options.name}/`;
+
   updateJson(tree, tsConfigPath, (json) => {
     if (json.include?.length) {
-      json.include = json.include.map((path: string) =>
-        path.replace(/^(?:\.\/)?src\//, '')
-      );
+      const newIncludes: string[] = [];
+      for (const pattern of json.include) {
+        if (pattern.includes('*')) {
+          newIncludes.push(`${entryPointPrefix}${pattern}`);
+        }
+      }
+      json.include = [...json.include, ...newIncludes];
     }
 
     if (json.exclude?.length) {
-      json.exclude = json.exclude.map((path: string) =>
-        path.replace(/^(?:\.\/)?src\//, '')
-      );
+      const newExcludes: string[] = [];
+      for (const pattern of json.exclude) {
+        if (pattern.includes('*')) {
+          newExcludes.push(`${entryPointPrefix}${pattern}`);
+        }
+      }
+      json.exclude = [...json.exclude, ...newExcludes];
     }
 
     return json;

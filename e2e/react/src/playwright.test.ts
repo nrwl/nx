@@ -15,7 +15,7 @@ describe('React Playwright e2e tests', () => {
   beforeAll(async () => {
     projectName = newProject({
       name: uniq('pw-react'),
-      packages: ['@nx/react'],
+      packages: ['@nx/react', '@nx/vite', '@nx/playwright'],
     });
     runCLI(
       `generate @nx/react:app ${appName} --e2eTestRunner=playwright --bundler=vite --no-interactive`

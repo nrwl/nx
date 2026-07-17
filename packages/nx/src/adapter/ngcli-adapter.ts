@@ -14,7 +14,7 @@ import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 
 // Importing @angular-devkit/architect here will cause issues importing this file without @angular-devkit/architect installed
-/* eslint-disable no-restricted-imports */
+
 import type { Architect, Target } from '@angular-devkit/architect';
 import type { NodeModulesBuilderInfo } from '@angular-devkit/architect/node/node-modules-architect-host';
 
@@ -35,7 +35,7 @@ import {
 import type { GenerateOptions } from '../command-line/generate/generate';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { FsTree, Tree } from '../generators/tree';
+import { FileChange, FsTree, Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
 import {
   addProjectConfiguration,
@@ -87,6 +87,16 @@ function getProjectGraph(): Promise<ProjectGraph> {
   }
 }
 
+function getUndefinedDefaultsTransform(isAngularBuild: boolean) {
+  // `addUndefinedObjectDefaults` was introduced in @angular-devkit/core v20.
+  // `@nx/angular` supports Angular >=19, so fall back to `addUndefinedDefaults`
+  // when the object-specific transform is unavailable.
+  if (isAngularBuild && schema.transforms.addUndefinedObjectDefaults) {
+    return schema.transforms.addUndefinedObjectDefaults;
+  }
+  return schema.transforms.addUndefinedDefaults;
+}
+
 export async function createBuilderContext(
   builderInfo: {
     builderName: string;
@@ -119,11 +129,7 @@ export async function createBuilderContext(
     ['@nx/angular:application', '@nx/angular:unit-test'].includes(
       builderInfo.builderName
     );
-  if (isAngularBuild) {
-    registry.addPostTransform(schema.transforms.addUndefinedObjectDefaults);
-  } else {
-    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  }
+  registry.addPostTransform(getUndefinedDefaultsTransform(isAngularBuild));
   registry.addSmartDefaultProvider('unparsed', () => {
     // This happens when context.scheduleTarget is used to run a target using nx:run-commands
     return [];
@@ -265,11 +271,7 @@ export async function scheduleTarget(
     ['@nx/angular:application', '@nx/angular:unit-test'].includes(builderName);
 
   const registry = new schema.CoreSchemaRegistry();
-  if (isAngularBuild) {
-    registry.addPostTransform(schema.transforms.addUndefinedObjectDefaults);
-  } else {
-    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  }
+  registry.addPostTransform(getUndefinedDefaultsTransform(isAngularBuild));
   registry.addSmartDefaultProvider('unparsed', () => {
     // This happens when context.scheduleTarget is used to run a target using nx:run-commands
     return [];
@@ -391,6 +393,9 @@ async function createRecorder(
   host: NxScopedHost,
   record: {
     loggingQueue: string[];
+    // Optional sink — only the migration path populates it; other callers
+    // skip the per-FileChange allocation.
+    changes?: FileChange[];
     error: boolean;
   },
   logger: logging.Logger
@@ -413,18 +418,37 @@ async function createRecorder(
       record.loggingQueue.push(
         tags.oneLine`${pc.white('UPDATE')} ${eventPath}`
       );
+      record.changes?.push(emptyFileChange('UPDATE', eventPath));
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
         tags.oneLine`${pc.green('CREATE')} ${eventPath}`
       );
+      record.changes?.push(emptyFileChange('CREATE', eventPath));
     } else if (event.kind === 'delete') {
       record.loggingQueue.push(`${pc.yellow('DELETE')} ${eventPath}`);
+      record.changes?.push({ type: 'DELETE', path: eventPath, content: null });
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
         `${pc.blue('RENAME')} ${eventPath} => ${event.to}`
       );
+      // Surface as DELETE source + CREATE destination so downstream consumers
+      // (e.g. the agentic validation prompt's `<files_changed>` block) see
+      // both endpoints.
+      const toPath = event.to.startsWith('/') ? event.to.slice(1) : event.to;
+      record.changes?.push({ type: 'DELETE', path: eventPath, content: null });
+      record.changes?.push(emptyFileChange('CREATE', toPath));
     }
   };
+}
+
+// Empty content for non-DELETE FileChange entries: the Angular workflow has
+// already flushed bytes to disk, and our only downstream consumer (agentic
+// prompt builders) reads `path` + `type` only. `null` is reserved for DELETE.
+function emptyFileChange(
+  type: Extract<FileChange['type'], 'CREATE' | 'UPDATE'>,
+  path: string
+): FileChange {
+  return { type, path, content: Buffer.alloc(0) };
 }
 
 async function runSchematic(
@@ -440,7 +464,10 @@ async function runSchematic(
   printDryRunMessage = true,
   recorder: any = null
 ): Promise<{ status: number; loggingQueue: string[] }> {
-  const record = { loggingQueue: [] as string[], error: false };
+  const record = {
+    loggingQueue: [] as string[],
+    error: false,
+  };
   workflow.reporter.subscribe(
     recorder || (await createRecorder(host, record, logger))
   );
@@ -1005,7 +1032,11 @@ export async function runMigration(
   const workflow = createWorkflow(fsHost, root, {}, projects);
   const collection = resolveMigrationsCollection(packageName);
 
-  const record = { loggingQueue: [] as string[], error: false };
+  const record = {
+    loggingQueue: [] as string[],
+    changes: [] as FileChange[],
+    error: false,
+  };
   workflow.reporter.subscribe(await createRecorder(fsHost, record, logger));
 
   await workflow
@@ -1020,6 +1051,7 @@ export async function runMigration(
 
   return {
     loggingQueue: record.loggingQueue,
+    changes: record.changes,
     madeChanges: record.loggingQueue.length > 0,
   };
 }

@@ -4,6 +4,7 @@ import {
   installPackagesTask,
   readProjectConfiguration,
 } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   addDependencies,
   addHydration,
@@ -20,11 +21,16 @@ import {
 import type { Schema } from './schema';
 
 export async function setupSsr(tree: Tree, schema: Schema) {
+  assertSupportedAngularVersion(tree);
   validateOptions(tree, schema);
   const options = await normalizeOptions(tree, schema);
 
   if (!schema.skipPackageJson) {
-    addDependencies(tree, options.isUsingApplicationBuilder);
+    addDependencies(
+      tree,
+      options.isUsingApplicationBuilder,
+      options.isUsingWebpackBuilder
+    );
   }
   generateSSRFiles(tree, options);
 

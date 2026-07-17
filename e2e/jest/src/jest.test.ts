@@ -2,8 +2,10 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   cleanupProject,
   expectJestTestsToPass,
+  getSelectedPackageManager,
   getStrippedEnvironmentVariables,
   newProject,
+  readFile,
   runCLI,
   runCLIAsync,
   uniq,
@@ -13,7 +15,10 @@ import {
 
 describe('Jest', () => {
   beforeAll(() => {
-    newProject({ name: uniq('proj-jest'), packages: ['@nx/js', '@nx/node'] });
+    newProject({
+      name: uniq('proj-jest'),
+      packages: ['@nx/js', '@nx/node', '@nx/eslint', '@nx/jest'],
+    });
   });
 
   afterAll(() => cleanupProject());
@@ -21,6 +26,21 @@ describe('Jest', () => {
   it('should be able test projects using jest', async () => {
     await expectJestTestsToPass('@nx/js:lib --unitTestRunner=jest');
   }, 500000);
+
+  it('should record an allowBuilds decision for unrs-resolver on pnpm', () => {
+    if (getSelectedPackageManager() !== 'pnpm') {
+      return;
+    }
+
+    const name = uniq('lib');
+    runCLI(
+      `generate @nx/js:lib ${name} --unitTestRunner=jest --no-interactive`
+    );
+
+    // pnpm 11 refuses to install deps whose build scripts are neither allowed
+    // nor denied, so the jest init generator must have recorded a decision
+    expect(readFile('pnpm-workspace.yaml')).toContain('unrs-resolver: false');
+  }, 300_000);
 
   it('should be resilient against NODE_ENV values', async () => {
     const name = uniq('lib');
@@ -70,7 +90,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/setup.ts`,
       stripIndents`
-      const { registerTsProject } = require('@nx/js/src/internal');
+      const { registerTsProject } = require('@nx/js/internal');
       const { join } = require('path');
       const cleanup = registerTsProject(join(__dirname, '../../tsconfig.base.json'));
 
@@ -84,7 +104,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/teardown.ts`,
       stripIndents`
-      const { registerTsProject } = require('@nx/js/src/internal');
+      const { registerTsProject } = require('@nx/js/internal');
       const { join } = require('path');
       const cleanup = registerTsProject(join(__dirname, '../../tsconfig.base.json'));
 
@@ -97,7 +117,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/jest.config.cts`,
       stripIndents`
-        export default {
+        module.exports = {
           testEnvironment: 'node',
           displayName: "${mylib}",
           preset: "../../jest.preset.js",

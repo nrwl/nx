@@ -5,10 +5,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/expo/README.md"],
-      "command": "node ./scripts/copy-readme.js expo",
-      "inputs": ["copyReadme"]
+      "command": "node ./scripts/copy-readme.js expo packages/expo/readme-template.md packages/expo/README.md",
+      "inputs": ["copyReadme"],
+      "outputs": ["{projectRoot}/README.md"]
     }
   },
+  "implicitDependencies": ["cypress", "jest", "playwright", "web"],
   "tags": []
 }

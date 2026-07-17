@@ -1,4 +1,8 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/internal';
+import {
   formatFiles,
   getProjects,
   joinPathFragments,
@@ -7,11 +11,8 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isValidVariable } from '@nx/js';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { E2eTestRunner } from '../../utils/test-runners';
 import applicationGenerator from '../application/application';
 import convertToRspack from '../convert-to-rspack/convert-to-rspack';
@@ -25,6 +26,7 @@ import { updateSsrSetup, validateOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function host(tree: Tree, schema: Schema) {
+  assertSupportedAngularVersion(tree);
   assertNotUsingTsSolutionSetup(tree, 'host');
   validateOptions(tree, schema);
   // TODO: Replace with Rspack when confidence is high enough
@@ -73,11 +75,13 @@ export async function host(tree: Tree, schema: Schema) {
       directory: options.directory,
     });
 
+  const hostPort = options.port ?? 4200;
+
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
     standalone: options.standalone,
     routing: true,
-    port: 4200,
+    port: hostPort,
     skipFormat: true,
     bundler: 'webpack',
   });
@@ -88,7 +92,7 @@ export async function host(tree: Tree, schema: Schema) {
     appName: hostProjectName,
     mfType: 'host',
     routing: true,
-    port: 4200,
+    port: hostPort,
     remotes: remotesToIntegrate ?? [],
     federationType: options.dynamic ? 'dynamic' : 'static',
     skipPackageJson: options.skipPackageJson,
@@ -124,7 +128,7 @@ export async function host(tree: Tree, schema: Schema) {
       name: remote,
       directory: remoteDirectory,
       host: hostProjectName,
-      port: isRspack ? 4200 + i + 1 : undefined,
+      port: isRspack ? hostPort + i + 1 : undefined,
       skipFormat: true,
       standalone: options.standalone,
       typescriptConfiguration,
@@ -144,7 +148,7 @@ export async function host(tree: Tree, schema: Schema) {
   const project = readProjectConfiguration(tree, hostProjectName);
   project.targets.serve ??= {};
   project.targets.serve.options ??= {};
-  project.targets.serve.options.port = 4200;
+  project.targets.serve.options.port = hostPort;
   updateProjectConfiguration(tree, hostProjectName, project);
 
   if (!options.skipFormat) {

@@ -1,0 +1,347 @@
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import {
+  setWorkspaceRoot,
+  workspaceRoot as currentWorkspaceRoot,
+} from '../../utils/workspace-root';
+import * as projectGraphModule from '../../project-graph/project-graph';
+
+import {
+  completeGenerator,
+  completeProjectTarget,
+  getGeneratorPluginCompletions,
+  getGeneratorsForPlugin,
+  getProjectNameCompletions,
+  getProjectNamesWithTarget,
+  getTargetNameCompletions,
+  getTargetNamesForProject,
+} from './completion-providers';
+
+describe('completion/completion-providers', () => {
+  let workspaceRoot: string;
+  let originalRoot: string;
+  let readGraphSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-completion-spec-'));
+    originalRoot = currentWorkspaceRoot;
+    setWorkspaceRoot(workspaceRoot);
+
+    // The real readCachedProjectGraph reads from a module-load-frozen
+    // path, so we redirect it to the per-test workspace fixture.
+    readGraphSpy = jest
+      .spyOn(projectGraphModule, 'readCachedProjectGraph')
+      .mockImplementation(() => {
+        const path = join(
+          workspaceRoot,
+          '.nx',
+          'workspace-data',
+          'project-graph.json'
+        );
+        if (!existsSync(path)) {
+          throw new Error('No cached ProjectGraph (test fixture).');
+        }
+        return JSON.parse(readFileSync(path, 'utf-8'));
+      });
+  });
+
+  afterEach(() => {
+    readGraphSpy.mockRestore();
+    rmSync(workspaceRoot, { recursive: true, force: true });
+    setWorkspaceRoot(originalRoot);
+  });
+
+  function writeProjectGraph(graph: object): void {
+    const dataDir = join(workspaceRoot, '.nx', 'workspace-data');
+    mkdirSync(dataDir, { recursive: true });
+    writeFileSync(join(dataDir, 'project-graph.json'), JSON.stringify(graph));
+  }
+
+  function writePluginWithGenerators(
+    name: string,
+    generators: Record<string, { hidden?: boolean }>
+  ): void {
+    const pluginDir = join(workspaceRoot, 'node_modules', name);
+    mkdirSync(pluginDir, { recursive: true });
+    writeFileSync(
+      join(pluginDir, 'package.json'),
+      JSON.stringify({ name, generators: './generators.json' })
+    );
+    writeFileSync(
+      join(pluginDir, 'generators.json'),
+      JSON.stringify({ generators })
+    );
+  }
+
+  function writeRootPackageJson(pkg: object): void {
+    writeFileSync(join(workspaceRoot, 'package.json'), JSON.stringify(pkg));
+  }
+
+  // (walk-up workspace-root lookup is owned by utils/workspace-root.ts and
+  // tested there; completion-providers just consumes the resolved value.)
+
+  describe('project completions', () => {
+    beforeEach(() => {
+      writeProjectGraph({
+        nodes: {
+          'app-one': { data: { targets: { build: {}, test: {} } } },
+          'app-two': { data: { targets: { build: {} } } },
+          'lib-one': { data: { targets: { test: {} } } },
+        },
+      });
+    });
+
+    it('returns all project names when current is empty', () => {
+      expect(getProjectNameCompletions('').sort()).toEqual([
+        'app-one',
+        'app-two',
+        'lib-one',
+      ]);
+    });
+
+    it('filters project names by prefix', () => {
+      expect(getProjectNameCompletions('app').sort()).toEqual([
+        'app-one',
+        'app-two',
+      ]);
+      expect(getProjectNameCompletions('lib').sort()).toEqual(['lib-one']);
+    });
+
+    it('returns [] when graph is missing', () => {
+      rmSync(join(workspaceRoot, '.nx'), { recursive: true, force: true });
+      expect(getProjectNameCompletions('')).toEqual([]);
+    });
+
+    it('filters by target via getProjectNamesWithTarget', () => {
+      expect(getProjectNamesWithTarget('', 'build').sort()).toEqual([
+        'app-one',
+        'app-two',
+      ]);
+      expect(getProjectNamesWithTarget('', 'test').sort()).toEqual([
+        'app-one',
+        'lib-one',
+      ]);
+      expect(getProjectNamesWithTarget('app', 'build').sort()).toEqual([
+        'app-one',
+        'app-two',
+      ]);
+      expect(getProjectNamesWithTarget('', 'nonexistent')).toEqual([]);
+    });
+  });
+
+  describe('target completions', () => {
+    beforeEach(() => {
+      writeProjectGraph({
+        nodes: {
+          'app-one': { data: { targets: { build: {}, test: {} } } },
+          'lib-one': { data: { targets: { lint: {} } } },
+        },
+      });
+    });
+
+    it('returns unique target names across the workspace', () => {
+      expect(getTargetNameCompletions('').sort()).toEqual([
+        'build',
+        'lint',
+        'test',
+      ]);
+    });
+
+    it('restricts to one project when provided', () => {
+      expect(getTargetNamesForProject('', 'app-one').sort()).toEqual([
+        'build',
+        'test',
+      ]);
+      expect(getTargetNamesForProject('', 'lib-one')).toEqual(['lint']);
+    });
+
+    it('filters by prefix', () => {
+      expect(getTargetNameCompletions('bu').sort()).toEqual(['build']);
+    });
+
+    it('falls back to all workspace targets when the project does not exist', () => {
+      // Locked-in quirk: unknown project → all-workspace targets. Covers
+      // `project:t<TAB>` where the user is still typing the project name.
+      expect(getTargetNamesForProject('', 'missing').sort()).toEqual([
+        'build',
+        'lint',
+        'test',
+      ]);
+    });
+  });
+
+  describe('completeProjectTarget (two-stage)', () => {
+    beforeEach(() => {
+      writeProjectGraph({
+        nodes: {
+          'app-one': { data: { targets: { build: {}, test: {} } } },
+          'app-two': { data: { targets: { build: {} } } },
+        },
+      });
+    });
+
+    it('returns `project:` first stage when no colon is typed', () => {
+      expect(completeProjectTarget('app').sort()).toEqual([
+        'app-one:',
+        'app-two:',
+      ]);
+    });
+
+    it('returns `project:target` second stage after the colon', () => {
+      expect(completeProjectTarget('app-one:').sort()).toEqual([
+        'app-one:build',
+        'app-one:test',
+      ]);
+      expect(completeProjectTarget('app-one:bu')).toEqual(['app-one:build']);
+    });
+
+    it('emits `missing:<target>` candidates when the typed project is unknown', () => {
+      // Inherits the quirk from `getTargetNameCompletions` documented above —
+      // unknown project ⇒ all workspace targets, prefixed with the typed name.
+      expect(completeProjectTarget('missing:').sort()).toEqual([
+        'missing:build',
+        'missing:test',
+      ]);
+    });
+  });
+
+  describe('generator completions', () => {
+    beforeEach(() => {
+      writeRootPackageJson({
+        name: 'fixture',
+        devDependencies: {
+          '@scoped/plugin': '*',
+          'plain-plugin': '*',
+          'no-generators': '*',
+        },
+      });
+      writePluginWithGenerators('@scoped/plugin', {
+        app: {},
+        lib: {},
+        hidden: { hidden: true },
+      });
+      writePluginWithGenerators('plain-plugin', {
+        component: {},
+      });
+      // `no-generators` is a dep but has no generators.json — should be skipped.
+      mkdirSync(join(workspaceRoot, 'node_modules', 'no-generators'), {
+        recursive: true,
+      });
+      writeFileSync(
+        join(workspaceRoot, 'node_modules', 'no-generators', 'package.json'),
+        JSON.stringify({ name: 'no-generators' })
+      );
+    });
+
+    it('lists only plugins that contribute generators', () => {
+      expect(getGeneratorPluginCompletions('').sort()).toEqual([
+        '@scoped/plugin',
+        'plain-plugin',
+      ]);
+    });
+
+    it('filters plugin names by prefix', () => {
+      expect(getGeneratorPluginCompletions('@')).toEqual(['@scoped/plugin']);
+      expect(getGeneratorPluginCompletions('plain')).toEqual(['plain-plugin']);
+    });
+
+    it('lists non-hidden generators for a single plugin', () => {
+      expect(getGeneratorsForPlugin('@scoped/plugin', '').sort()).toEqual([
+        'app',
+        'lib',
+      ]);
+    });
+
+    it('completeGenerator returns `plugin:` first stage, then `plugin:gen` after colon', () => {
+      expect(completeGenerator('plain').sort()).toEqual(['plain-plugin:']);
+      expect(completeGenerator('plain-plugin:').sort()).toEqual([
+        'plain-plugin:component',
+      ]);
+      expect(completeGenerator('@scoped/plugin:l')).toEqual([
+        '@scoped/plugin:lib',
+      ]);
+    });
+
+    it('completeGenerator also completes bare generator names (nx g <gen>)', () => {
+      // empty prefix: every plugin (with `:`) plus every non-hidden bare
+      // generator name across all plugins.
+      expect(completeGenerator('').sort()).toEqual([
+        '@scoped/plugin:',
+        'app',
+        'component',
+        'lib',
+        'plain-plugin:',
+      ]);
+      // typed prefix narrows both lanes — no plugin starts with `app`, but
+      // `@scoped/plugin` declares an `app` generator, so the bare name lands.
+      expect(completeGenerator('app').sort()).toEqual(['app']);
+    });
+
+    it('returns [] when the root package.json is missing', () => {
+      rmSync(join(workspaceRoot, 'package.json'));
+      expect(getGeneratorPluginCompletions('')).toEqual([]);
+    });
+
+    it('returns [] for a plugin with malformed package.json', () => {
+      writeFileSync(
+        join(workspaceRoot, 'node_modules', 'plain-plugin', 'package.json'),
+        '{not valid json'
+      );
+      expect(getGeneratorsForPlugin('plain-plugin', '')).toEqual([]);
+    });
+
+    describe('workspace-local plugins', () => {
+      function writeLocalPlugin(
+        projectRoot: string,
+        name: string,
+        generators: Record<string, { hidden?: boolean }>
+      ): void {
+        const dir = join(workspaceRoot, projectRoot);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(
+          join(dir, 'package.json'),
+          JSON.stringify({ name, generators: './generators.json' })
+        );
+        writeFileSync(
+          join(dir, 'generators.json'),
+          JSON.stringify({ generators })
+        );
+      }
+
+      it('discovers plugins from project-graph nodes, not just node_modules', () => {
+        writeLocalPlugin('libs/my-plugin', '@org/my-plugin', {
+          feature: {},
+          secret: { hidden: true },
+        });
+        // A non-plugin project (no generators field) must be ignored.
+        const appDir = join(workspaceRoot, 'apps/my-app');
+        mkdirSync(appDir, { recursive: true });
+        writeFileSync(
+          join(appDir, 'package.json'),
+          JSON.stringify({ name: '@org/my-app' })
+        );
+        writeProjectGraph({
+          nodes: {
+            'my-plugin': { data: { root: 'libs/my-plugin' } },
+            'my-app': { data: { root: 'apps/my-app' } },
+          },
+        });
+
+        expect(getGeneratorPluginCompletions('@org')).toEqual([
+          '@org/my-plugin',
+        ]);
+        expect(getGeneratorsForPlugin('@org/my-plugin', '')).toEqual([
+          'feature',
+        ]);
+      });
+    });
+  });
+});

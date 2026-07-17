@@ -1,10 +1,10 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   joinPathFragments,
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
@@ -24,10 +24,7 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
 function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
 
-  const buildExecutor =
-    angularMajorVersion >= 20
-      ? '@angular/build:application'
-      : '@angular-devkit/build-angular:application';
+  const buildExecutor = '@angular/build:application';
 
   addBuildTargetDefaults(tree, buildExecutor);
 
@@ -68,10 +65,6 @@ function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
         outputs: ['{options.outputPath}'],
         options: {
           outputPath: options.outputPath,
-          index:
-            angularMajorVersion >= 20
-              ? undefined
-              : `${options.appProjectSourceRoot}/index.html`,
           browser: `${options.appProjectSourceRoot}/main.ts`,
           polyfills: options.zoneless ? undefined : ['zone.js'],
           tsConfig: joinPathFragments(
@@ -102,10 +95,7 @@ function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
       },
       serve: {
         continuous: true,
-        executor:
-          angularMajorVersion >= 20
-            ? '@angular/build:dev-server'
-            : '@angular-devkit/build-angular:dev-server',
+        executor: '@angular/build:dev-server',
         options: options.port ? { port: options.port } : undefined,
         configurations: {
           production: {
@@ -120,10 +110,7 @@ function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
       'extract-i18n':
         angularMajorVersion < 21
           ? {
-              executor:
-                angularMajorVersion >= 20
-                  ? '@angular/build:extract-i18n'
-                  : '@angular-devkit/build-angular:extract-i18n',
+              executor: '@angular/build:extract-i18n',
               options: {
                 buildTarget: `${options.name}:build`,
               },

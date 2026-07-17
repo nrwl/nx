@@ -1,9 +1,6 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
-import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 // nx-ignore-next-line
 import { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
-/* eslint-enable @nx/enforce-module-boundaries */
+import { MigrationsJsonMetadata } from '../../migration-shape';
 
 export type AutomaticMigrationState = {
   migrations?: MigrationDetailsWithId[];

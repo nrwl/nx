@@ -9,7 +9,6 @@ import {
   updateJson,
 } from '@nx/devkit';
 import type { Linter } from 'eslint';
-import { gte } from 'semver';
 import {
   baseEsLintConfigFile,
   ESLINT_CONFIG_FILENAMES,
@@ -20,12 +19,7 @@ import {
   eslintFlatConfigFilenames,
   useFlatConfig,
 } from '../../utils/flat-config';
-import { getInstalledEslintVersion } from '../../utils/version-utils';
-import {
-  eslint9__eslintVersion,
-  eslintCompat,
-  eslintrcVersion,
-} from '../../utils/versions';
+import { eslintCompat, eslintrcVersion } from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
@@ -312,7 +306,7 @@ export function updateOverrideInLintConfig(
     if (!existingJson.overrides || !existingJson.overrides.some(lookup)) {
       return;
     }
-    updateJson(tree, fileName, (json: Linter.Config) => {
+    updateJson(tree, fileName, (json: Linter.LegacyConfig) => {
       const index = json.overrides.findIndex(lookup);
       if (index !== -1) {
         const newOverride = update(json.overrides[index]);
@@ -438,44 +432,32 @@ export function addExtendsToLintConfig(
           : 'mjs';
 
     let shouldImportEslintCompat = false;
-    // assume eslint version is 9 if not found, as it's what we'd be generating by default
-    const eslintVersion =
-      getInstalledEslintVersion(tree) ?? eslint9__eslintVersion;
-    if (gte(eslintVersion, '9.0.0')) {
-      // eslint v9 requires the incompatible plugins to be wrapped with a helper from @eslint/compat
-      const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
-        typeof p === 'string' ? { name: p, needCompatFixup: false } : p
-      );
-      let compatiblePluginsBatch: string[] = [];
-      plugins.forEach(({ name, needCompatFixup }) => {
-        if (needCompatFixup) {
-          if (compatiblePluginsBatch.length > 0) {
-            // flush the current batch of compatible plugins and reset it
-            pluginExtends.push(
-              generatePluginExtendsElement(compatiblePluginsBatch)
-            );
-            compatiblePluginsBatch = [];
-          }
-          // generate the extends for the incompatible plugin
-          pluginExtends.push(generatePluginExtendsElementWithCompatFixup(name));
-          shouldImportEslintCompat = true;
-        } else {
-          // add the compatible plugin to the current batch
-          compatiblePluginsBatch.push(name);
+    // eslint v9 requires the incompatible plugins to be wrapped with a helper from @eslint/compat
+    const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
+      typeof p === 'string' ? { name: p, needCompatFixup: false } : p
+    );
+    let compatiblePluginsBatch: string[] = [];
+    plugins.forEach(({ name, needCompatFixup }) => {
+      if (needCompatFixup) {
+        if (compatiblePluginsBatch.length > 0) {
+          // flush the current batch of compatible plugins and reset it
+          pluginExtends.push(
+            generatePluginExtendsElement(compatiblePluginsBatch)
+          );
+          compatiblePluginsBatch = [];
         }
-      });
-
-      if (compatiblePluginsBatch.length > 0) {
-        // flush the batch of compatible plugins
-        pluginExtends.push(
-          generatePluginExtendsElement(compatiblePluginsBatch)
-        );
+        // generate the extends for the incompatible plugin
+        pluginExtends.push(generatePluginExtendsElementWithCompatFixup(name));
+        shouldImportEslintCompat = true;
+      } else {
+        // add the compatible plugin to the current batch
+        compatiblePluginsBatch.push(name);
       }
-    } else {
-      const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
-        typeof p === 'string' ? p : p.name
-      );
-      pluginExtends.push(generatePluginExtendsElement(plugins));
+    });
+
+    if (compatiblePluginsBatch.length > 0) {
+      // flush the batch of compatible plugins
+      pluginExtends.push(generatePluginExtendsElement(compatiblePluginsBatch));
     }
 
     let content = tree.read(fileName, 'utf8');

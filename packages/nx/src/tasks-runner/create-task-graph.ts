@@ -10,7 +10,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
-import { TargetDefaults, TargetDependencies } from '../config/nx-json';
+import { TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
@@ -42,7 +42,7 @@ export class ProcessTasks {
     projectNames: string[],
     targets: string[],
     configuration: string,
-    overrides: Object,
+    overrides: Record<string, unknown>,
     excludeTaskDependencies: boolean
   ): string[] {
     for (const projectName of projectNames) {
@@ -132,7 +132,7 @@ export class ProcessTasks {
     task: Task,
     projectUsedToDeriveDependencies: string,
     configuration: string,
-    overrides: Object
+    overrides: Record<string, unknown>
   ): void {
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
     if (this.seen.has(seenKey)) {
@@ -187,8 +187,10 @@ export class ProcessTasks {
     dependencyConfig: TargetDependencyConfig,
     configuration: string,
     task: Task,
-    taskOverrides: Object | { __overrides_unparsed__: any[] },
-    overrides: Object
+    taskOverrides:
+      | Record<string, unknown>
+      | { __overrides_unparsed__: string[] },
+    overrides: Record<string, unknown>
   ) {
     if (dependencyConfig.projects.length === 0) {
       output.warn({
@@ -215,8 +217,10 @@ export class ProcessTasks {
     projectName: string,
     dependencyConfig: TargetDependencyConfig,
     configuration: string,
-    taskOverrides: Object | { __overrides_unparsed__: any[] },
-    overrides: Object
+    taskOverrides:
+      | Record<string, unknown>
+      | { __overrides_unparsed__: string[] },
+    overrides: Record<string, unknown>
   ) {
     const selfProject = this.projectGraph.nodes[
       projectName
@@ -266,8 +270,10 @@ export class ProcessTasks {
     dependencyConfig: TargetDependencyConfig,
     configuration: string,
     task: Task,
-    taskOverrides: Object | { __overrides_unparsed__: any[] },
-    overrides: Object
+    taskOverrides:
+      | Record<string, unknown>
+      | { __overrides_unparsed__: string[] },
+    overrides: Record<string, unknown>
   ): void {
     if (
       !this.projectGraph.dependencies.hasOwnProperty(
@@ -362,7 +368,7 @@ export class ProcessTasks {
     project: ProjectGraphProjectNode,
     target: string,
     resolvedConfiguration: string | undefined,
-    overrides: Object
+    overrides: Record<string, unknown>
   ): Task {
     if (!project.data.targets[target]) {
       throw new Error(
@@ -398,7 +404,7 @@ export class ProcessTasks {
         qualifiedTarget,
         interpolatedOverrides
       ),
-      cache: project.data.targets[target].cache,
+      cache: project.data.targets[target].cache ?? false,
       parallelism: project.data.targets[target].parallelism ?? true,
       continuous: project.data.targets[target].continuous ?? false,
     };
@@ -424,7 +430,7 @@ export function createTaskGraph(
   projectNames: string[],
   targets: string[],
   configuration: string | undefined,
-  overrides: Object,
+  overrides: Record<string, unknown>,
   excludeTaskDependencies: boolean = false
 ): TaskGraph {
   const p = new ProcessTasks(extraTargetDependencies, projectGraph);
@@ -442,17 +448,6 @@ export function createTaskGraph(
     dependencies: p.dependencies,
     continuousDependencies: p.continuousDependencies,
   };
-}
-
-export function mapTargetDefaultsToDependencies(
-  defaults: TargetDefaults | undefined
-): TargetDependencies {
-  const res = {};
-  Object.keys(defaults ?? {}).forEach((k) => {
-    res[k] = defaults[k].dependsOn;
-  });
-
-  return res;
 }
 
 function interpolateOverrides<T = any>(

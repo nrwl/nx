@@ -47,3 +47,64 @@ For example, if `project-b` is bumped to version `2.1.0`, `project-a` will be up
   }
 }
 ```
+
+### Propagating `--preid` to dependent bumps
+
+Side-effectful bumps are always plain patch versions by default, even when the project that triggered them is being released as a prerelease.
+For example, run:
+
+```shell
+nx release version prepatch --preid rc --projects project-b
+```
+
+`project-b` moves from `2.0.0` to `2.0.1-rc.0`, but `project-a` still receives a stable side-effectful patch to `1.0.1`:
+
+```json
+// project-a after (default behavior)
+{
+  "name": "project-a",
+  "version": "1.0.1",
+  "dependencies": {
+    "project-b": "2.0.1-rc.0"
+  }
+}
+```
+
+That default reflects a deliberate tradeoff. Consuming a prerelease build of a dependency doesn't necessarily mean the dependent itself is a prerelease, and keeping side-effectful bumps on stable versions allows them to ship without promoting every project up the graph into a prerelease.
+
+To propagate the `--preid` value through to dependents, enable `version.applyPreidToDependents` in `nx.json`:
+
+```json
+{
+  "release": {
+    "version": {
+      "updateDependents": "always",
+      "applyPreidToDependents": true
+    }
+  }
+}
+```
+
+With this option enabled and `--preid rc` set, `project-a` receives a `prepatch` bump using the same preid:
+
+```json
+// project-a after (applyPreidToDependents: true)
+{
+  "name": "project-a",
+  "version": "1.0.1-rc.0",
+  "dependencies": {
+    "project-b": "2.0.1-rc.0"
+  }
+}
+```
+
+#### When to enable it
+
+Enable `applyPreidToDependents` when:
+
+- You publish a set of packages that release together (even if versioned independently) and want a single `nx release ... --preid rc` invocation to produce a consistent prerelease across all of them.
+- Your downstream users install all affected packages as a set and would be surprised to see a stable-version dependent pick up a prerelease dependency.
+
+Leave it off (the default) when a stable `1.0.1` of `project-a` depending on an `rc` of `project-b` is a valid, intentional release for you. Prerelease dependencies shouldn't automatically promote their consumers into prereleases.
+
+The option can also be set per release group under `release.groups.<group>.version.applyPreidToDependents` to scope the behavior to only certain groups.

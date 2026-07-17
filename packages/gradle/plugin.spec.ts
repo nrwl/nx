@@ -1,6 +1,6 @@
-import { CreateNodesContextV2, readJsonFile } from '@nx/devkit';
+import { CreateNodesContext, readJsonFile } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { createNodesV2 } from './plugin';
+import { createNodes } from './plugin';
 import { type ProjectGraphReport } from './src/plugin/utils/get-project-graph-from-gradle-plugin';
 import { join } from 'path';
 
@@ -16,8 +16,8 @@ jest.mock('./src/plugin/utils/get-project-graph-from-gradle-plugin', () => {
 });
 
 describe('@nx/gradle/plugin', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
 
   beforeEach(async () => {

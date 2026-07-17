@@ -1,6 +1,9 @@
+import { serialize as v8Serialize } from 'v8';
 import {
   consumeMessagesFromSocket,
+  isJsonMessage,
   MESSAGE_END_SEQ,
+  parseMessage,
 } from './consume-messages-from-socket';
 
 describe('consumeMessagesFromSocket', () => {
@@ -63,5 +66,60 @@ describe('consumeMessagesFromSocket', () => {
     r(buffer.subarray(mid));
 
     expect(messages).toEqual([{ path: '/test/한글테스트.tsx' }]);
+  });
+});
+
+describe('isJsonMessage', () => {
+  it.each([
+    ['{}', true],
+    ['{"a":1}', true],
+    ['[]', true],
+    ['[1,2]', true],
+    ['"hello"', true],
+    ['true', true],
+    ['false', true],
+    ['42', true],
+    ['3.14', true],
+    // v8-serialized buffers start with 0xFF, which is none of the JSON prefixes
+    [v8Serialize({ a: 1 }).toString('binary'), false],
+    [v8Serialize([1, 2, 3]).toString('binary'), false],
+    [v8Serialize(new Date()).toString('binary'), false],
+  ])('returns correct value for %j', (message, expected) => {
+    expect(isJsonMessage(message)).toBe(expected);
+  });
+});
+
+describe('parseMessage', () => {
+  it('parses a JSON-serialized payload', () => {
+    const payload = { type: 'HELLO', nested: { n: 1 } };
+    expect(parseMessage(JSON.stringify(payload))).toEqual(payload);
+  });
+
+  it('parses a v8-serialized payload', () => {
+    const payload = { type: 'HELLO', nested: { n: 1 } };
+    const wire = v8Serialize(payload).toString('binary');
+    expect(parseMessage(wire)).toEqual(payload);
+  });
+
+  it('round-trips v8-only types that JSON cannot represent', () => {
+    const date = new Date('2024-01-02T03:04:05.678Z');
+    const wire = v8Serialize({
+      when: date,
+      buf: Buffer.from([1, 2, 3]),
+    }).toString('binary');
+
+    const parsed = parseMessage<{ when: Date; buf: Buffer }>(wire);
+    expect(parsed.when.toISOString()).toBe(date.toISOString());
+    expect(Buffer.isBuffer(parsed.buf)).toBe(true);
+    expect(Array.from(parsed.buf)).toEqual([1, 2, 3]);
+  });
+
+  it('round-trips v8-serialized arrays and primitives', () => {
+    expect(parseMessage(v8Serialize([1, 2, 3]).toString('binary'))).toEqual([
+      1, 2, 3,
+    ]);
+    // Bare v8 primitives (number/boolean/string) are indistinguishable from
+    // JSON by isJsonMessage, so parseMessage is only guaranteed to round-trip
+    // objects/arrays/Buffers/Dates — the cases used by daemon/pseudo-IPC.
   });
 });

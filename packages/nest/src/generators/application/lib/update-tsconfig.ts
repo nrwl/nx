@@ -1,7 +1,10 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, updateJson } from '@nx/devkit';
 import type { NormalizedOptions } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getTsConfigModuleResolution,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 
 export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
   updateJson(
@@ -12,9 +15,11 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
       json.compilerOptions.emitDecoratorMetadata = true;
       json.compilerOptions.target = 'es2021';
 
-      // Only set this when not using TS solution setup, as TS solution setup uses 'nodenext'
+      // TS solution setup uses 'nodenext'; otherwise pin a version-appropriate
+      // node-family/bundler resolution for this commonjs context.
       if (!isUsingTsSolutionSetup(tree)) {
-        json.compilerOptions.moduleResolution = 'node';
+        json.compilerOptions.moduleResolution =
+          getTsConfigModuleResolution(tree);
       }
       if (options.strict) {
         json.compilerOptions = {

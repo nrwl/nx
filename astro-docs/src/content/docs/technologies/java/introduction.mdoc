@@ -1,13 +1,13 @@
 ---
-title: Java with Nx
-description: Build scalable Java applications with Nx
+title: Nx with Java
+description: Nx scales your Java monorepo with caching, distributed task execution, and affected-only builds.
 sidebar:
   label: 'Introduction'
-weight: 5
+weight: 2
 filter: 'type:References'
 ---
 
-Nx provides powerful tooling for Java projects, supporting both Gradle and Maven build systems. Whether you're working with Spring Boot, Micronaut, Quarkus, or any other Java framework, Nx helps you build faster and more efficiently.
+Nx brings caching, affected-only builds, and a project graph to your Java monorepo, working with both Gradle and Maven build systems. Whether you're working with Spring Boot, Micronaut, Quarkus, or any other Java framework, Nx helps you build faster and more efficiently.
 
 ## Requirements
 
@@ -94,3 +94,9 @@ Nx enhances your Java development workflow with:
 - **[Affected Commands](/docs/features/ci-features/affected)** - Only build and test what changed
 - **[Interactive Graph](/docs/features/explore-graph)** - Visualize your project dependencies
 - **[CI Optimization](/docs/guides/nx-cloud/setup-ci)** - Make your CI pipeline dramatically faster
+
+## Set up CI for your Java monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

@@ -1,5 +1,5 @@
 import {
-  CreateNodesV2,
+  CreateNodes,
   logger,
   ProjectConfiguration,
   TargetConfiguration,
@@ -92,7 +92,16 @@ export interface DotNetPluginOptions {
   run?: TargetConfigurationWithName | false;
 }
 
-const dotnetProjectGlob = '**/*.{csproj,fsproj,vbproj}';
+// MSBuild auto-imports Directory.Build.props/.targets from each ancestor of a project file,
+// reads Directory.Build.rsp from ancestors during CLI builds, applies Directory.Solution.*
+// when building a .sln, and reads Directory.Packages.props from the nearest ancestor when
+// Central Package Management is in use. Matching them here causes createNodesV2 to re-run
+// (and the analyzer's cache to invalidate) when any of them change, and gives us the file
+// list to hand to the analyzer so it can declare per-project ancestor inputs.
+// The analyzer partitions matched paths into project vs directory files by filename, so we
+// don't have to repeat that classification on this side.
+const dotnetProjectGlob =
+  '**/{*.{csproj,fsproj,vbproj},Directory.Build.{props,targets,rsp},Directory.Solution.{props,targets},Directory.Packages.props}';
 
 /**
  * Merge user-specified target configurations with the generated targets from the analyzer
@@ -166,7 +175,7 @@ function mergeUserTargetConfigurations(
   };
 }
 
-export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
+export const createNodes: CreateNodes<DotNetPluginOptions> = [
   dotnetProjectGlob,
   async (configFilePaths, options, context) => {
     // Analyze all projects - the C# analyzer builds the complete Nx structure
@@ -216,10 +225,13 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
       return configFilePaths.map((configFile) => {
         const node = nodesByFile[configFile];
         if (!node) {
+          // Directory.Build.* / Directory.Solution.* files contribute no projects of
+          // their own; returning an empty config is the conventional "skip" response.
           return [configFile, {}];
         }
 
-        // Merge user-specified target configurations with generated targets
+        // Merge user-specified target configurations with generated targets. The analyzer
+        // has already written the Directory.* inputs onto each cacheable target's Inputs.
         const mergedNode = mergeUserTargetConfigurations(
           node,
           normalizedOptions
@@ -241,3 +253,8 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
     }
   },
 ];
+
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;

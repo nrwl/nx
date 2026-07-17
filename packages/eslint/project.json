@@ -3,12 +3,13 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/eslint",
   "projectType": "library",
+  "implicitDependencies": ["eslint-plugin"],
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/eslint/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint",
-      "inputs": ["copyReadme"]
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js eslint packages/eslint/readme-template.md packages/eslint/README.md",
+      "inputs": ["copyReadme"],
+      "dependsOn": ["^build", "build-base"]
     }
-  },
-  "implicitDependencies": ["eslint-plugin"]
+  }
 }

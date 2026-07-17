@@ -1,5 +1,5 @@
 import { type ProjectConfiguration } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { existsSync } from 'fs';
 import { join } from 'path';
 

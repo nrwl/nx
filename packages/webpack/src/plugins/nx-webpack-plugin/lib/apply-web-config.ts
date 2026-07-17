@@ -1,9 +1,6 @@
 import * as path from 'path';
-import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
-import {
+import type {
   Configuration,
-  DefinePlugin,
-  ids,
   RuleSetRule,
   WebpackOptionsNormalized,
   WebpackPluginInstance,
@@ -20,8 +17,6 @@ import {
   getCommonLoadersForGlobalStyle,
 } from './stylesheet-loaders';
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
-import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 export function applyWebConfig(
   options: NormalizedNxAppWebpackPluginOptions,
@@ -36,6 +31,14 @@ export function applyWebConfig(
   } = {}
 ): void {
   if (global.NX_GRAPH_CREATION) return;
+
+  const { DefinePlugin, ids } = require('webpack') as typeof import('webpack');
+  const { SubresourceIntegrityPlugin } =
+    require('webpack-subresource-integrity') as typeof import('webpack-subresource-integrity');
+  const CssMinimizerPlugin =
+    require('css-minimizer-webpack-plugin') as typeof import('css-minimizer-webpack-plugin');
+  const MiniCssExtractPlugin =
+    require('mini-css-extract-plugin') as typeof import('mini-css-extract-plugin');
 
   // Defaults that was applied from executor schema previously.
   options.runtimeChunk ??= true; // need this for HMR and other things to work
@@ -161,7 +164,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForCssModules(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-less-loader.js'
+          ),
           options: {
             lessOptions: {
               paths: includePaths,
@@ -207,7 +213,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalCss(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-less-loader.js'
+          ),
           options: {
             sourceMap: !!options.sourceMap,
             lessOptions: {
@@ -255,7 +264,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalStyle(options, includePaths),
         {
-          loader: require.resolve('less-loader'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-less-loader.js'
+          ),
           options: {
             sourceMap: !!options.sourceMap,
             lessOptions: {

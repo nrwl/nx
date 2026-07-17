@@ -1,6 +1,9 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import { relative } from 'path';
-import { handleServerProcessTermination } from './shutdown-utils';
+import {
+  getWatcherInstance,
+  handleServerProcessTermination,
+} from './shutdown-utils';
 import { Server } from 'net';
 import { normalizePath } from '../../utils/path';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
@@ -13,31 +16,58 @@ export type FileWatcherCallback = (
   changeEvents: WatchEvent[] | null
 ) => Promise<void>;
 
+// Captured by watchWorkspace so flushPendingWorkspaceChanges can route
+// force-flushed events through the same handling as the async callback.
+// Definite-assignment: dispatchWorkspaceChanges only runs after
+// watchWorkspace has set both, so reading them as non-nullable is safe.
+let activeServer!: Server;
+let workspaceChangesCallback!: FileWatcherCallback;
+
+function dispatchWorkspaceChanges(
+  events: WatchEvent[]
+): Promise<void> | undefined {
+  for (const event of events) {
+    if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
+      // If the ignore files themselves have changed we need to dynamically
+      // update our cached ignoreGlobs
+      handleServerProcessTermination({
+        server: activeServer,
+        reason: 'Stopping the daemon the set of ignored files changed (native)',
+        sockets: openSockets,
+      });
+    }
+  }
+  return workspaceChangesCallback(null, events);
+}
+
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
   const { Watcher } = await handleImport('../../native/index.js', __dirname);
 
+  activeServer = server;
+  workspaceChangesCallback = cb;
   const watcher = new Watcher(workspaceRoot);
   watcher.watch((err, events) => {
     if (err) {
       return cb(err, null);
     }
-
-    for (const event of events) {
-      if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
-        // If the ignore files themselves have changed we need to dynamically update our cached ignoreGlobs
-        handleServerProcessTermination({
-          server,
-          reason:
-            'Stopping the daemon the set of ignored files changed (native)',
-          sockets: openSockets,
-        });
-      }
-    }
-
-    cb(null, events);
+    dispatchWorkspaceChanges(events);
   });
 
   return watcher;
+}
+
+/**
+ * Synchronously drain anything the workspace watcher has buffered and feed
+ * it through the normal change-handling pipeline. Call this before serving
+ * a cached project graph so we never return data that the watcher has
+ * already seen invalidated but hasn't flushed yet.
+ */
+export async function flushPendingWorkspaceChanges() {
+  const watcher = getWatcherInstance();
+  if (!watcher) return;
+  const events = watcher.forceFlushPending();
+  if (events.length === 0) return;
+  await dispatchWorkspaceChanges(events);
 }
 
 export async function watchOutputFiles(

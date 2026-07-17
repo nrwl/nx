@@ -1,9 +1,9 @@
 {
   "executors": {
     "jest": {
-      "implementation": "./src/executors/jest/jest.impl",
-      "batchImplementation": "./src/executors/jest/jest.impl#batchJest",
-      "schema": "./src/executors/jest/schema.json",
+      "implementation": "./dist/src/executors/jest/jest.impl",
+      "batchImplementation": "./dist/src/executors/jest/jest.impl#batchJest",
+      "schema": "./dist/src/executors/jest/schema.json",
       "description": "Run Jest unit tests."
     }
   }

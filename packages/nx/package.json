@@ -14,9 +14,9 @@
     "dist/plugins",
     "dist/presets",
     "dist/release",
-    "dist/schemas",
     "dist/src",
     "dist/tasks-runners",
+    "schemas",
     "migrations.json",
     "executors.json",
     "generators.json"
@@ -50,40 +50,38 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@ltd/j-toml": "^1.38.0",
+    "smol-toml": "1.6.1",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
-    "@yarnpkg/parsers": "3.0.2",
     "@zkochan/js-yaml": "catalog:",
-    "axios": "1.13.5",
+    "axios": "1.16.1",
     "picocolors": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
     "cliui": "^8.0.1",
     "dotenv": "~16.4.5",
-    "dotenv-expand": "~11.0.6",
+    "dotenv-expand": "~12.0.3",
     "ejs": "5.0.1",
     "enquirer": "catalog:",
     "figures": "3.2.0",
     "flat": "^5.0.2",
-    "front-matter": "^4.0.2",
     "ignore": "^7.0.5",
-    "jest-diff": "catalog:jest",
-    "jsonc-parser": "3.2.0",
+    "@jest/diff-sequences": "30.0.1",
+    "jsonc-parser": "catalog:",
     "lines-and-columns": "2.0.3",
     "minimatch": "catalog:",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
-    "ora": "5.3.0",
+    "ora": "catalog:",
     "resolve.exports": "2.0.3",
     "semver": "catalog:",
     "string-width": "^4.2.3",
     "tar-stream": "~2.2.0",
-    "tmp": "~0.2.1",
-    "tree-kill": "^1.2.2",
+    "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
-    "yaml": "^2.6.0",
+    "which": "catalog:",
+    "yaml": "^2.8.3",
     "yargs": "catalog:",
     "yargs-parser": "catalog:"
   },
@@ -161,7 +159,8 @@
         "package": "@nrwl/nx-cloud",
         "version": "latest"
       }
-    ]
+    ],
+    "supportsOptionalMigrations": true
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
@@ -172,6 +171,7 @@
   "napi": {
     "binaryName": "nx",
     "packageName": "@nx/nx",
+    "dtsHeaderFile": "packages/nx/src/native/dts-header.d.ts",
     "wasm": {
       "initialMemory": 1024,
       "maximumMemory": 32768
@@ -205,9 +205,6 @@
       ],
       "src/native": [
         "dist/src/native/index.d.ts"
-      ],
-      "src": [
-        "dist/src/index.d.ts"
       ],
       "src/analytics": [
         "dist/src/analytics/index.d.ts"
@@ -244,6 +241,9 @@
       ],
       "src/utils/catalog": [
         "dist/src/utils/catalog/index.d.ts"
+      ],
+      "src/internal-testing-utils/*": [
+        "src/internal-testing-utils/*.ts"
       ],
       "src/*.js": [
         "dist/src/*.d.ts"
@@ -285,8 +285,8 @@
     "./generators": "./generators.json",
     "./executors.json": "./executors.json",
     "./executors": "./executors.json",
-    "./schemas/*": "./dist/schemas/*.json",
-    "./schemas/*.json": "./dist/schemas/*.json",
+    "./schemas/*": "./schemas/*.json",
+    "./schemas/*.json": "./schemas/*.json",
     "./presets/*": {
       "@nx/nx-source": "./presets/*.json",
       "default": "./dist/presets/*.json"
@@ -314,11 +314,6 @@
       "@nx/nx-source": "./plugins/*.ts",
       "types": "./dist/plugins/*.d.ts",
       "default": "./dist/plugins/*.js"
-    },
-    "./src": {
-      "@nx/nx-source": "./src/index.ts",
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
     },
     "./src/analytics": {
       "@nx/nx-source": "./src/analytics/index.ts",
@@ -412,6 +407,10 @@
     "./src/native/*.mjs": {
       "@nx/nx-source": "./src/native/*.mjs",
       "default": "./dist/src/native/*.mjs"
+    },
+    "./src/internal-testing-utils/*": {
+      "types": "./src/internal-testing-utils/*.ts",
+      "default": "./src/internal-testing-utils/*.ts"
     },
     "./src/*.js": {
       "@nx/nx-source": "./src/*.ts",

@@ -1,4 +1,4 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
@@ -70,7 +70,7 @@ jest.mock('../utils/executor-utils', () => ({
 
 describe('@nx/vitest', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
 
   describe('root project', () => {
     beforeEach(async () => {
@@ -128,6 +128,116 @@ describe('@nx/vitest', () => {
 
       expect(nodes).toMatchSnapshot();
     });
+
+    it('should sort atomized target names when test discovery returns shuffled paths', async () => {
+      // tinyglobby (which vitest uses for test discovery) does not sort its
+      // filesystem walk output. Simulate that by returning module IDs in
+      // non-alphabetic order; the plugin must sort them so atomized target
+      // insertion order is stable across runs.
+      // Dynamic import: jest.resetModules() in afterEach replaces the mock
+      // factory's `createVitest` between tests, so a top-level import would
+      // hold a stale reference.
+      const { createVitest } = await import('vitest/node');
+      (createVitest as jest.Mock).mockImplementationOnce(() => ({
+        getRelevantTestSpecifications: jest
+          .fn()
+          .mockResolvedValue([
+            { moduleId: 'src/c.test.ts' },
+            { moduleId: 'src/a.test.ts' },
+            { moduleId: 'src/b.test.ts' },
+          ]),
+      }));
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test', ciTargetName: 'test-ci' },
+        context
+      );
+
+      const targets = nodes[0][1].projects!['.'].targets!;
+      const atomizedTargetNames = Object.keys(targets).filter((name) =>
+        name.startsWith('test-ci--')
+      );
+      expect(atomizedTargetNames).toEqual([
+        'test-ci--src/a.test.ts',
+        'test-ci--src/b.test.ts',
+        'test-ci--src/c.test.ts',
+      ]);
+
+      // dependsOn and target group ordering must agree with insertion order.
+      const dependsOn = (targets['test-ci'].dependsOn as string[]).filter(
+        (d: string) => d.startsWith('test-ci--')
+      );
+      expect(dependsOn).toEqual([
+        'test-ci--src/a.test.ts',
+        'test-ci--src/b.test.ts',
+        'test-ci--src/c.test.ts',
+      ]);
+    });
+  });
+
+  describe('typecheck enabled', () => {
+    beforeEach(async () => {
+      context = {
+        nxJsonConfiguration: {
+          targetDefaults: {},
+          namedInputs: {
+            default: ['{projectRoot}/**/*'],
+            production: ['!{projectRoot}/**/*.spec.ts'],
+          },
+        },
+        workspaceRoot: '',
+      };
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+    });
+
+    it('should include d.ts in dependentTasksOutputFiles when typecheck is enabled', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: {
+            typecheck: {
+              enabled: true,
+            },
+          },
+        }),
+      });
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      const testTarget = nodes[0][1].projects['.'].targets['test'];
+      expect(testTarget.inputs).toContainEqual({
+        dependentTasksOutputFiles: '**/*.{js,d.ts}',
+        transitive: true,
+      });
+    });
+
+    it('should only include js in dependentTasksOutputFiles when typecheck is not enabled', async () => {
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+        },
+        context
+      );
+
+      const testTarget = nodes[0][1].projects['.'].targets['test'];
+      expect(testTarget.inputs).toContainEqual({
+        dependentTasksOutputFiles: '**/*.js',
+        transitive: true,
+      });
+    });
   });
 
   describe('workspace config with projects', () => {
@@ -148,7 +258,7 @@ describe('@nx/vitest', () => {
       jest.resetModules();
     });
 
-    it('should NOT create targets for root config with projects array', async () => {
+    it('should NOT create a project for root config with projects array', async () => {
       (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
         resolveConfig: jest.fn().mockResolvedValue({
           path: 'vitest.config.ts',
@@ -168,15 +278,13 @@ describe('@nx/vitest', () => {
         context
       );
 
-      // Root config with projects should return empty targets
-      expect(nodes[0][1].projects['.']).toMatchObject({
-        targets: {},
-        metadata: {},
-        projectType: 'library',
-      });
+      // The root orchestrator config is not a project; it must not register a
+      // node rooted at the workspace root (which would make `nx format` and
+      // affected detection treat the whole workspace as one project).
+      expect(nodes[0][1].projects).toEqual({});
     });
 
-    it('should NOT create targets for root config with empty projects array', async () => {
+    it('should NOT create a project for root config with empty projects array', async () => {
       (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
         resolveConfig: jest.fn().mockResolvedValue({
           path: 'vitest.config.ts',
@@ -196,12 +304,7 @@ describe('@nx/vitest', () => {
         context
       );
 
-      // Root config with empty projects array should also return empty targets
-      expect(nodes[0][1].projects['.']).toMatchObject({
-        targets: {},
-        metadata: {},
-        projectType: 'library',
-      });
+      expect(nodes[0][1].projects).toEqual({});
     });
   });
 });

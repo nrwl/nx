@@ -4,5 +4,13 @@
   "sourceRoot": "graph/project-details/src",
   "projectType": "library",
   "tags": [],
-  "targets": {}
+  "targets": {
+    "typecheck": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/packages/devkit/tsconfig.lib.json",
+        "{workspaceRoot}/packages/nx/tsconfig.lib.json"
+      ]
+    }
+  }
 }

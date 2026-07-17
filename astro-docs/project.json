@@ -25,7 +25,13 @@
             "devkit",
             "create-nx-workspace",
             "dotnet",
-            "maven"
+            "maven",
+            "esbuild",
+            "gradle",
+            "nuxt",
+            "plugin",
+            "react-native",
+            "remix"
           ],
           "target": "build"
         }
@@ -44,7 +50,13 @@
             "devkit",
             "create-nx-workspace",
             "dotnet",
-            "maven"
+            "maven",
+            "esbuild",
+            "gradle",
+            "nuxt",
+            "plugin",
+            "react-native",
+            "remix"
           ],
           "target": "build"
         }
@@ -53,7 +65,20 @@
         "production",
         "^production",
         "{projectRoot}/src/content/banner.json",
-        { "env": "NX_DEV_URL" }
+        { "env": "NX_DEV_URL" },
+        "{workspaceRoot}/packages/*/package.json",
+        "{workspaceRoot}/packages/*/{generators,executors,migrations}.json",
+        "{workspaceRoot}/packages/*/src/{generators,executors}/**/schema.json",
+        "{workspaceRoot}/packages/*/src/migrations/**/*.md",
+        "{workspaceRoot}/packages/*/docs/**/*.md",
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["compilerOptions"]
+        },
+        {
+          "dependentTasksOutputFiles": "**/*.{d.ts,json,md,js,cjs,mjs}",
+          "transitive": true
+        }
       ],
       "outputs": [
         "{projectRoot}/dist",
@@ -98,17 +123,11 @@
       "command": "playwright show-report dist/astro-docs/playwright-report"
     },
     "validate-links": {
-      "dependsOn": [
-        "build",
-        {
-          "projects": ["nx-dev"],
-          "target": "sitemap"
-        }
-      ],
+      "dependsOn": ["build", "nx-dev:build"],
       "cache": true,
       "inputs": [
         "{projectRoot}/validate-links.ts",
-        "{workspaceRoot}/docs/**/*.md",
+        { "dependentTasksOutputFiles": "**/*.html" },
         { "dependentTasksOutputFiles": "**/sitemap*.xml" },
         "{projectRoot}/src/**/*",
         "{projectRoot}/astro.config.mjs",
@@ -133,7 +152,8 @@
         "{projectRoot}/src/content/docs/**/*.mdx",
         "{projectRoot}/src/content/docs/**/*.md",
         "{projectRoot}/.vale.ini",
-        "{projectRoot}/.vale/styles/**/*"
+        "{projectRoot}/.vale/styles/**/*",
+        "{projectRoot}/scripts/vale-changed.mjs"
       ]
     },
     "vale:all": {
@@ -146,13 +166,20 @@
         "{projectRoot}/src/content/docs/**/*.mdx",
         "{projectRoot}/src/content/docs/**/*.md",
         "{projectRoot}/.vale.ini",
-        "{projectRoot}/.vale/styles/**/*"
+        "{projectRoot}/.vale/styles/**/*",
+        "{projectRoot}/scripts/vale-changed.mjs"
       ]
     },
     "format": {
       "cache": true,
       "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
-      "command": "prettier **/*.mdoc --check"
+      "command": "prettier **/*.mdoc --check",
+      "inputs": [
+        "{projectRoot}/**/*.mdoc",
+        "{workspaceRoot}/.prettierrc",
+        "{workspaceRoot}/.prettierignore",
+        "{workspaceRoot}/.editorconfig"
+      ]
     },
     "format:write": {
       "command": "prettier **/*.mdoc --write"

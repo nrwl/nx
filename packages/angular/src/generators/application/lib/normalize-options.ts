@@ -2,7 +2,7 @@ import { joinPathFragments, readNxJson, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+} from '@nx/devkit/internal';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';

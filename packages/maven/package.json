@@ -17,6 +17,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "@nx/nx-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -28,7 +29,8 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "files": [
     "dist",
@@ -49,6 +51,7 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@xmldom/xmldom": "^0.8.10",
+    "tree-kill": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

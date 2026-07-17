@@ -14,22 +14,22 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
       <% if(packageManager === 'bun'){ %>
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
       <% } else if (packageManager === 'yarn' && packageManagerVersion) { %>
       - run: corepack enable
       <% } else if(packageManager ==='pnpm'){ %>
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:<% if (!packageManagerVersion) { %>
-          version: 9.8.0<% } %>
+          version: 11.13.0<% } %>
           run_install: false
       <% } %>
       # This enables task distribution via Nx Cloud
@@ -40,15 +40,15 @@ jobs:
 
       <% if(packageManager !== 'bun'){ %>
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: '<%= packageManager %>'
        <% } %>
       - run: <%= packageManagerInstall %><% if(hasCypress){ %>
       - run: <%= packageManagerPrefix %> cypress install<% } %><% if(hasPlaywright){ %>
       - run: <%= packageManagerPrefix %> playwright install --with-deps<% } %><% if(!useRunMany){ %>
-      - uses: nrwl/nx-set-shas@v4<% } %>
+      - uses: nrwl/nx-set-shas@v5<% } %>
 
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
       # <%- comment %><% } %><% } %><% if (command.command) { %>

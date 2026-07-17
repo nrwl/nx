@@ -50,22 +50,10 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
           {
             runtime: 'automatic',
             useBuiltIns: 'usage',
-            importSource:
-              options.style === '@emotion/styled'
-                ? '@emotion/react'
-                : undefined,
           },
         ],
       ],
-      plugins: [
-        options.style === 'styled-components'
-          ? ['styled-components', { pure: true, ssr: true }]
-          : undefined,
-        options.style === 'styled-jsx' ? 'styled-jsx/babel' : undefined,
-        options.style === '@emotion/styled'
-          ? '@emotion/babel-plugin'
-          : undefined,
-      ].filter(Boolean),
+      plugins: [],
     });
   }
 

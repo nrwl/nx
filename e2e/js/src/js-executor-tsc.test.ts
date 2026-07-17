@@ -23,7 +23,10 @@ import {
 
 describe('js:tsc executor', () => {
   let scope;
-  beforeAll(() => (scope = newProject({ packages: ['@nx/js'] })));
+  beforeAll(
+    () =>
+      (scope = newProject({ packages: ['@nx/js', '@nx/eslint', '@nx/jest'] }))
+  );
   afterAll(() => cleanupProject());
 
   it('should create libs with js executors (--compiler=tsc)', async () => {
@@ -131,8 +134,8 @@ describe('js:tsc executor', () => {
 
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
-      [`@${scope}/${parentLib}`]: [`libs/${parentLib}/src/index.ts`],
+      [`@${scope}/${lib}`]: [`./libs/${lib}/src/index.ts`],
+      [`@${scope}/${parentLib}`]: [`./libs/${parentLib}/src/index.ts`],
     });
 
     updateFile(`libs/${parentLib}/src/index.ts`, () => {
@@ -243,7 +246,7 @@ describe('js:tsc executor', () => {
 
     updateJson('tsconfig.base.json', (json) => {
       json['compilerOptions']['paths'][`@${scope}/${lib}/*`] = [
-        `libs/${lib}/src/*`,
+        `./libs/${lib}/src/*`,
       ];
       return json;
     });

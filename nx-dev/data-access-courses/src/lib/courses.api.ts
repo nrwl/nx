@@ -6,16 +6,17 @@ import { Course, Lesson } from './course.types';
 import { calculateTotalDuration } from './duration.utils';
 
 export class CoursesApi {
-  // TODO: move to shared lib
-  private readonly blogRoot = 'public/documentation/blog';
-
   constructor(
     private readonly options: {
       coursesRoot: string;
+      authorsPath: string;
     }
   ) {
     if (!options.coursesRoot) {
       throw new Error('courses root cannot be undefined');
+    }
+    if (!options.authorsPath) {
+      throw new Error('authors path cannot be undefined');
     }
   }
 
@@ -43,9 +44,7 @@ export class CoursesApi {
   }
 
   async getCourse(folderName: string): Promise<Course> {
-    const authors = JSON.parse(
-      readFileSync(join(this.blogRoot, 'authors.json'), 'utf8')
-    );
+    const authors = JSON.parse(readFileSync(this.options.authorsPath, 'utf8'));
     const coursePath = join(this.options.coursesRoot, folderName);
     const courseFilePath = join(coursePath, 'course.md');
 

@@ -1115,6 +1115,61 @@ describe('pnpm LockFile utility', () => {
     });
   });
 
+  describe('workspace-only lockfile (no packages block)', () => {
+    // pnpm omits the `packages:` block entirely when a project depends only on
+    // other workspace packages. Stringify must still write the workspace
+    // importer blocks instead of throwing on the missing block.
+    const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/b':
+        specifier: workspace:*
+        version: link:packages/b
+
+  packages/b: {}
+`;
+
+    it('should stringify without throwing and write the workspace importer', () => {
+      const graph: ProjectGraph = {
+        nodes: {
+          b: {
+            name: 'b',
+            type: 'lib',
+            data: {
+              root: 'packages/b',
+              metadata: { js: { packageName: '@myorg/b' } },
+            },
+          } as any,
+        },
+        dependencies: {},
+        externalNodes: {},
+      };
+      const packageJson = {
+        name: '@myorg/a',
+        version: '0.0.0',
+        dependencies: { '@myorg/b': 'workspace:*' },
+      } as any;
+
+      let result = '';
+      expect(() => {
+        result = stringifyPnpmLockfile(
+          graph,
+          lockFile,
+          packageJson,
+          '/virtual'
+        );
+      }).not.toThrow();
+      expect(result).toContain('workspace_modules/@myorg/b');
+    });
+  });
+
   describe('mixed keys', () => {
     let lockFile, lockFileHash;
 
@@ -1910,6 +1965,72 @@ snapshots:
     });
   });
 
+  describe('pnpm 11 multi-document lockfiles', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+        'node_modules/lodash/package.json': '{"version": "4.17.21"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should select the workspace lock document instead of package-manager metadata', () => {
+      const lockFile = `---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 11.0.0-rc.0
+        version: 11.0.0-rc.0
+
+packages:
+
+  pnpm@11.0.0-rc.0:
+    resolution: {integrity: sha512-pnpm-metadata}
+
+---
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-lodash}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const { nodes } = getPnpmLockfileNodes(lockFile, 'pnpm-11-multi-doc');
+
+      expect(nodes['npm:lodash']).toMatchObject({
+        data: {
+          packageName: 'lodash',
+          version: '4.17.21',
+          hash: 'sha512-lodash',
+        },
+        name: 'npm:lodash',
+        type: 'npm',
+      });
+      expect(nodes['npm:pnpm']).toBeUndefined();
+    });
+  });
+
   describe('patched dependencies', () => {
     beforeEach(() => {
       const fileSys = {
@@ -1986,6 +2107,45 @@ snapshots:
           packageName: 'vitest',
           // This is hashArray([integrity, patchHash])
           hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|dde3c7a634692aefe0877c763192102a73d3451e6d12dae61df88fd1e6e9368e',
+        },
+      });
+    });
+
+    it('should include pnpm 11 scalar patch hash in external node hash', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest@3.2.4: pnpm-11-patch-hash
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        'test-lockfile-hash-pnpm-11'
+      );
+
+      expect(externalNodes['npm:vitest']).toMatchObject({
+        type: 'npm',
+        name: 'npm:vitest',
+        data: {
+          version: '3.2.4',
+          packageName: 'vitest',
+          hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|pnpm-11-patch-hash',
         },
       });
     });
@@ -2475,6 +2635,330 @@ snapshots:
           },
         }
       `);
+    });
+  });
+
+  describe('transitive workspace dependencies', () => {
+    beforeEach(() => {
+      vol.fromJSON(
+        { 'node_modules/.modules.yaml': `hoistedDependencies: {}` },
+        '/root'
+      );
+    });
+
+    function makeGraph(
+      workspaceProjects: Array<{
+        projectName: string;
+        packageName: string;
+        root: string;
+      }>,
+      workspaceDeps: Record<string, string[]>,
+      externalNodes: Record<string, ProjectGraphExternalNode>,
+      externalDeps: Record<string, string[]> = {}
+    ): ProjectGraph {
+      const nodes: ProjectGraph['nodes'] = {};
+      const dependencies: ProjectGraph['dependencies'] = {};
+      for (const { projectName, packageName, root } of workspaceProjects) {
+        nodes[projectName] = {
+          name: projectName,
+          type: 'lib',
+          data: {
+            root,
+            metadata: { js: { packageName } },
+          },
+        } as any;
+        dependencies[projectName] = [
+          ...(workspaceDeps[projectName] ?? []).map((target) => ({
+            source: projectName,
+            target,
+            type: 'static' as any,
+          })),
+          ...(externalDeps[projectName] ?? []).map((target) => ({
+            source: projectName,
+            target,
+            type: 'static' as any,
+          })),
+        ];
+      }
+      return { nodes, dependencies, externalNodes };
+    }
+
+    it('should include importer blocks and npm packages for transitive workspace deps', () => {
+      // app -> @myorg/lib-a (workspace:*) -> @myorg/lib-b (workspace:*) -> lodash
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      '@myorg/lib-b':
+        specifier: workspace:*
+        version: link:../lib-b
+
+  libs/lib-b:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {
+          '@myorg/lib-a': ['@myorg/lib-b'],
+        },
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-b': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      expect(result).toContain(`workspace_modules/@myorg/lib-a:`);
+      expect(result).toContain(`workspace_modules/@myorg/lib-b:`);
+      // Specifier must be `file:` to match what copy-workspace-modules writes
+      // to package.json — `workspace:*` would produce ERR_PNPM_OUTDATED_LOCKFILE.
+      expect(result).toMatch(
+        /'@myorg\/lib-a':\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a/
+      );
+      expect(result).toMatch(
+        /'@myorg\/lib-b':\s+specifier: file:\.\.\/lib-b\s+version: link:\.\.\/lib-b/
+      );
+      expect(result).toContain(`lodash@4.17.21:`);
+    });
+
+    it('should not infinite-loop on circular workspace dependencies', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      '@myorg/lib-b':
+        specifier: workspace:*
+        version: link:../lib-b
+
+  libs/lib-b:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:../lib-a
+
+packages: {}
+
+snapshots: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {
+          '@myorg/lib-a': ['@myorg/lib-b'],
+          '@myorg/lib-b': ['@myorg/lib-a'],
+        },
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      expect(result).toContain(`workspace_modules/@myorg/lib-a:`);
+      expect(result).toContain(`workspace_modules/@myorg/lib-b:`);
+    });
+
+    it('should produce a single importer for diamond workspace dependency shapes', () => {
+      // app -> lib-a -> shared
+      // app -> lib-b -> shared
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+      '@myorg/lib-b':
+        specifier: workspace:*
+        version: link:libs/lib-b
+
+  libs/lib-a:
+    dependencies:
+      '@myorg/shared':
+        specifier: workspace:*
+        version: link:../shared
+
+  libs/lib-b:
+    dependencies:
+      '@myorg/shared':
+        specifier: workspace:*
+        version: link:../shared
+
+  libs/shared:
+    dependencies: {}
+
+packages: {}
+
+snapshots: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          '@myorg/lib-a': 'workspace:*',
+          '@myorg/lib-b': 'workspace:*',
+        },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+          {
+            projectName: '@myorg/shared',
+            packageName: '@myorg/shared',
+            root: 'libs/shared',
+          },
+        ],
+        {
+          '@myorg/lib-a': ['@myorg/shared'],
+          '@myorg/lib-b': ['@myorg/shared'],
+        },
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // Exactly one importer block for shared.
+      const sharedImporters =
+        result.match(/workspace_modules\/@myorg\/shared:/g) ?? [];
+      expect(sharedImporters).toHaveLength(1);
+      // Both consumers point at it via the flat layout.
+      expect(result).toMatch(
+        /'@myorg\/shared':\s+specifier: file:\.\.\/shared\s+version: link:\.\.\/shared/
+      );
+    });
+  });
+
+  describe('missing .modules.yaml', () => {
+    beforeEach(() => {
+      vol.fromJSON(
+        { 'node_modules/lodash/package.json': '{"version": "4.17.21"}' },
+        '/root'
+      );
+    });
+
+    it('should throw an actionable error when node_modules/.modules.yaml is absent', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      expect(() =>
+        getPnpmLockfileNodes(lockFile, '__missing_modules_yaml__')
+      ).toThrow(/was not installed with pnpm/);
     });
   });
 });

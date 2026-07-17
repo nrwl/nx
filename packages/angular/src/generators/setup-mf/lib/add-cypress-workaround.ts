@@ -10,7 +10,7 @@ import {
   readProjectConfiguration,
   stripIndents,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { Schema } from '../schema';
 
 export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
@@ -37,7 +37,7 @@ export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
       // don't ensure package is installed, if it's not installed, we don't need to add the workaround
       const {
         CYPRESS_CONFIG_FILE_NAME_PATTERN,
-      } = require('@nx/cypress/src/utils/config');
+      } = require('@nx/cypress/internal');
       if (
         !glob(tree, [`${e2eProject.root}/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`])
           .length

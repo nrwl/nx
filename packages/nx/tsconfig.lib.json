@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": null,
     "outDir": "dist",
     "rootDir": ".",
     "declarationDir": "dist",
@@ -9,17 +8,16 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
     "composite": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "customConditions": ["@nx/nx-source"],
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": false
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
     "node_modules",
     "dist",
     "**/*.spec.ts",
     "**/*_spec.ts",
+    "**/test-utils.ts",
     "jest.config.ts",
     "**/__fixtures__/**/*.*",
     "./src/internal-testing-utils/**/*.ts",

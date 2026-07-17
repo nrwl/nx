@@ -20,7 +20,9 @@ describe('Rollup Plugin', () => {
   beforeAll(() => {
     originalAddPluginsEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
-    newProject({ packages: ['@nx/rollup', '@nx/js'] });
+    newProject({
+      packages: ['@nx/rollup', '@nx/js', '@nx/eslint', '@nx/jest'],
+    });
   });
 
   afterAll(() => {
@@ -142,92 +144,6 @@ describe('Rollup Plugin', () => {
     expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
   });
 
-  it('should be able to build libs generated with @nx/js:lib --bundler rollup with a custom rollup.config.{cjs|mjs}', () => {
-    const jsLib = uniq('jslib');
-    runCLI(
-      `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup`
-    );
-
-    // Update project to use legacy TypeScript plugin for this legacy test
-    updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.useLegacyTypescriptPlugin = true;
-      return config;
-    });
-
-    updateFile(
-      `libs/${jsLib}/rollup.config.cjs`,
-      `module.exports = {
-        output: {
-          format: "cjs",
-          dir: "dist/test",
-          name: "Mylib",
-          entryFileNames: "[name].cjs.js",
-          chunkFileNames: "[name].cjs.js"
-        }
-      }`
-    );
-    updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
-      return config;
-    });
-    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
-    checkFilesExist(`dist/test/index.cjs.js`);
-
-    updateFile(
-      `libs/${jsLib}/rollup.config.mjs`,
-      `export default {
-        output: {
-          format: "es",
-          dir: "dist/test",
-          name: "Mylib",
-          entryFileNames: "[name].mjs.js",
-          chunkFileNames: "[name].mjs.js"
-        }
-      }`
-    );
-    updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.mjs`;
-      return config;
-    });
-    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
-    checkFilesExist(`dist/test/index.mjs.js`);
-  });
-
-  it('should support array config from rollup.config.cjs', () => {
-    const jsLib = uniq('jslib');
-    runCLI(
-      `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup --verbose`
-    );
-
-    // Update project to use legacy TypeScript plugin for this legacy test
-    updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.useLegacyTypescriptPlugin = true;
-      return config;
-    });
-
-    updateFile(
-      `libs/${jsLib}/rollup.config.cjs`,
-      `module.exports = (config) => [{
-        ...config,
-        output: {
-          format: "esm",
-          dir: "dist/test",
-          name: "Mylib",
-          entryFileNames: "[name].js",
-          chunkFileNames: "[name].js"
-        }
-      }]`
-    );
-    updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
-      return config;
-    });
-
-    expect(() => runCLI(`build ${jsLib} --format=esm`)).not.toThrow();
-
-    checkFilesExist(`dist/test/index.js`);
-  });
-
   it('should always generate package.json even if the plugin is removed from rollup config file (Nx < 19.4 behavior)', () => {
     const jsLib = uniq('jslib');
     runCLI(
@@ -333,10 +249,7 @@ describe('Rollup Plugin', () => {
           loadConfig,
           createMatchPath,
         } from 'tsconfig-paths';
-        import {
-          calculateProjectBuildableDependencies,
-          createTmpTsConfig,
-        } from '@nx/js/src/utils/buildable-libs-utils.js';
+        import { calculateProjectBuildableDependencies, createTmpTsConfig } from '@nx/js/internal';
         
         const __dirname = dirname(fileURLToPath(import.meta.url));
         

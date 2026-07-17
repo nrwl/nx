@@ -1,11 +1,11 @@
 import type { Tree } from '@nx/devkit';
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import type { Schema } from '../schema';
 
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function changeBuildTarget(host: Tree, options: Schema) {
   const appConfig = readProjectConfiguration(host, options.appName);

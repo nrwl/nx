@@ -1,13 +1,13 @@
 ---
-title: React Native Plugin for Nx
-description: The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace, including setup and configuration.
+title: Nx with React Native
+description: Nx scales your React Native monorepo with caching, distributed task execution, and affected-only builds.
 sidebar:
   label: 'Introduction'
-weight: 5
+weight: 2
 filter: 'type:References'
 ---
 
-React Native brings the React declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
+In a React Native monorepo, Nx lets you share libraries across apps and run only the tasks a change affects. React Native brings the React declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
 
 The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:
 
@@ -19,10 +19,10 @@ The Nx Plugin for React Native contains generators for managing React Native app
 
 The `@nx/react-native` plugin supports the following package versions.
 
-| Package        | Supported Versions |
-| -------------- | ------------------ |
-| `metro-config` | >= 0.82.0          |
-| `react-native` | ~0.79.3            |
+| Package        | Supported Versions   |
+| -------------- | -------------------- |
+| `metro-config` | >= 0.82.0            |
+| `react-native` | ^0.83.0 \|\| ^0.84.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -197,3 +197,9 @@ The build artifacts will be located under `<your app folder>/android/app/build`.
 
 - [Using Detox](/docs/technologies/test-tools/detox/introduction)
 - [Using Jest](/docs/technologies/test-tools/jest/introduction)
+
+## Set up CI for your React Native monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

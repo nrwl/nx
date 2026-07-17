@@ -42,6 +42,6 @@
   },
   "enabledPlugins": {
     "nx@nx-claude-plugins": true,
-    "polygraph@nx-claude-plugins": true
+    "pr-review-toolkit@claude-plugins-official": true
   }
 }

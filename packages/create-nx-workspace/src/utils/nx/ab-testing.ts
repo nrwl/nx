@@ -10,7 +10,22 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import chalk from 'chalk';
 import { isCI } from '../ci/is-ci';
+import { terminalLink } from '../terminal-link';
 import type { BannerVariant, CompletionMessageKey } from './messages';
+
+export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
+
+/**
+ * Clickable Nx Cloud marketing link for cloud prompt footers. Every
+ * create-nx-workspace prompt reports the same content tag, so the link is a
+ * single baked constant embedded directly in the footers. Visible text stays
+ * the clean `NX_CLOUD_URL` while clicks carry UTM attribution; terminals
+ * without OSC 8 support just render the bare URL (CLOUD-4642).
+ */
+export const NX_CLOUD_HYPERLINK = terminalLink(
+  NX_CLOUD_URL,
+  `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
+);
 
 // Flow variant controls both tracking and banner display (CLOUD-4235)
 // Variants: 0 = control, 1 = updated prompt, 2 = no prompt (auto-connect)
@@ -179,8 +194,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'circleci', name: 'Circle CI' },
         { value: 'skip', name: '\nDo it later' },
       ],
-      footer:
-        '\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: https://nx.dev/nx-cloud',
+      footer: `\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: ${NX_CLOUD_HYPERLINK}`,
       fallback: { value: 'skip', key: 'setupNxCloud' },
       completionMessage: 'ci-setup',
     },
@@ -198,46 +212,17 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip' },
       ],
-      footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+      footer: `\nAutomatically fix broken PRs, 70% faster CI: ${NX_CLOUD_HYPERLINK}`,
       fallback: undefined,
       completionMessage: 'platform-setup',
     },
   ],
   /**
-   * Simplified Cloud prompt for template flow
+   * Simplified Cloud prompt for template flow.
    */
   setupNxCloudV2: [
     {
-      code: 'connect-to-cloud',
-      message: 'Enable remote caching to speed up builds with Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: chalk.dim("No, don't ask again") },
-      ],
-      footer:
-        '\nFree for small teams. 2-minute setup with GitHub — cache locally and in CI: https://nx.dev/nx-cloud',
-      fallback: undefined,
-      completionMessage: 'platform-setup',
-    },
-    {
-      code: 'cloud-ab-never-rebuild',
-      message: 'Never rebuild the same code twice \u2014 enable Nx Cloud?',
-      initial: 0,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: chalk.dim("No, don't ask again") },
-      ],
-      footer:
-        '\nFree for small teams. Remote caching for local dev and CI. 2-minute setup: https://nx.dev/nx-cloud',
-      fallback: undefined,
-      completionMessage: 'platform-setup',
-    },
-    {
-      code: 'cloud-ab-ci-providers-speed',
+      code: 'cloud-ci-providers-speed',
       message: 'Speed up GitHub Actions, GitLab CI, and more with Nx Cloud?',
       initial: 0,
       choices: [
@@ -245,8 +230,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'skip', name: 'Skip for now' },
         { value: 'never', name: chalk.dim("No, don't ask again") },
       ],
-      footer:
-        '\nFree remote caching and task distribution. 2-minute setup: https://nx.dev/nx-cloud',
+      footer: `\nFree for small teams. Remote caching and task distribution. 2-minute setup: ${NX_CLOUD_HYPERLINK}`,
       fallback: undefined,
       completionMessage: 'platform-setup',
     },

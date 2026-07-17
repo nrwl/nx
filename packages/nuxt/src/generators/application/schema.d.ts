@@ -13,7 +13,7 @@ export interface Schema {
   skipPackageJson?: boolean;
   rootProject?: boolean;
   setParserOptionsProject?: boolean;
-  style?: 'css' | 'scss' | 'less' | 'none';
+  style?: 'css' | 'scss' | 'none';
   nxCloudToken?: string;
   useTsSolution?: boolean;
   useProjectJson?: boolean;

@@ -34,7 +34,7 @@ describe('MF Remote App Generator', () => {
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-      'test/src/app/remote-entry/entry-module.ts',
+      './test/src/app/remote-entry/entry-module.ts',
     ]);
   });
 
@@ -93,7 +93,7 @@ describe('MF Remote App Generator', () => {
     `);
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
-      'test/src/app/remote-entry/entry.module.ts',
+      './test/src/app/remote-entry/entry.module.ts',
     ]);
   });
 
@@ -268,7 +268,7 @@ describe('MF Remote App Generator', () => {
     ).toMatchSnapshot();
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Routes']).toEqual([
-      'test/src/app/remote-entry/entry.routes.ts',
+      './test/src/app/remote-entry/entry.routes.ts',
     ]);
   });
 
@@ -515,127 +515,6 @@ describe('MF Remote App Generator', () => {
   });
 
   describe('compat', () => {
-    it('should generate components with the "component" type for versions lower than v20', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-      await generateTestHostApplication(tree, {
-        directory: 'host',
-        typescriptConfiguration: false,
-        skipFormat: true,
-      });
-
-      await generateTestRemoteApplication(tree, {
-        directory: 'test',
-        host: 'host',
-        typescriptConfiguration: false,
-        skipFormat: true,
-      });
-
-      expect(tree.read('host/src/app/app.component.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Component } from '@angular/core';
-        import { RouterModule } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
-        @Component({
-          imports: [NxWelcomeComponent, RouterModule],
-          selector: 'app-root',
-          templateUrl: './app.component.html',
-          styleUrl: './app.component.css',
-        })
-        export class AppComponent {
-          title = 'host';
-        }
-        "
-      `);
-      expect(tree.read('test/src/app/remote-entry/entry.component.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Component } from '@angular/core';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
-        @Component({
-          imports: [NxWelcomeComponent],
-          selector: 'app-test-entry',
-          template: \`<app-nx-welcome></app-nx-welcome>\`
-        })
-        export class RemoteEntryComponent {}
-        "
-      `);
-      expect(tree.read('test/src/app/remote-entry/entry.routes.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Route } from '@angular/router';
-        import { RemoteEntryComponent } from './entry.component';
-
-        export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
-      `);
-    });
-
-    it('should generate modules with the "." type separator for versions lower than v20', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-
-      await generateTestRemoteApplication(tree, {
-        directory: 'test',
-        standalone: false,
-        typescriptConfiguration: false,
-        skipFormat: true,
-      });
-
-      expect(tree.read('test/src/app/app.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { BrowserModule } from '@angular/platform-browser';
-        import { RouterModule } from '@angular/router';
-        import { AppComponent } from './app.component';
-
-        @NgModule({
-          declarations: [AppComponent],
-          imports: [
-            BrowserModule,
-            RouterModule.forRoot([{
-              path: '',
-              loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)
-            }], { initialNavigation: 'enabledBlocking' }),
-          ],
-          providers: [],
-          bootstrap: [AppComponent],
-        })
-        export class AppModule {}"
-      `);
-      expect(tree.read('test/src/app/remote-entry/entry.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { CommonModule } from '@angular/common';
-        import { RouterModule } from '@angular/router';
-
-        import { RemoteEntryComponent } from './entry.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-        import { remoteRoutes } from './entry.routes';
-
-        @NgModule({
-          declarations: [RemoteEntryComponent, NxWelcomeComponent],
-          imports: [
-            CommonModule,
-            RouterModule.forChild(remoteRoutes),
-          ],
-          providers: [],
-        })
-        export class RemoteEntryModule {}"
-      `);
-    });
-
     it('should import from `zone.js/node` in the server file for versions lower than v21', async () => {
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => {

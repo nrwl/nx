@@ -19,6 +19,12 @@ import {
   isUsingPackageManagerWorkspaces,
 } from '../package-manager-workspaces';
 import { getNeededCompilerOptionOverrides } from './configuration';
+import type { JsonInput } from 'nx/src/native';
+
+export const TS_SOLUTION_SETUP_TSCONFIG_INPUT: JsonInput = {
+  json: '{workspaceRoot}/tsconfig.json',
+  fields: ['extends', 'files', 'include'],
+};
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);

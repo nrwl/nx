@@ -10,12 +10,15 @@ type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
 /**
  * Tab configuration for the sidebar. Each tab directly owns its sidebar groups,
  * making the tab ↔ content relationship explicit and impossible to drift.
+ * A tab may instead be a direct `link` (renders as a nav link, not a panel).
  */
 export interface SidebarTab {
   id: string;
   label: string;
   icon?: string;
   groups: SidebarItems;
+  /** If set, the tab navigates straight to this slug instead of opening a panel. */
+  link?: string;
 }
 
 const learnGroups: SidebarItems = [
@@ -34,11 +37,11 @@ const learnGroups: SidebarItems = [
         link: 'getting-started/start-with-existing-project',
       },
       { label: 'AI integrations', link: 'getting-started/ai-setup' },
+      { label: 'CI setup', link: 'getting-started/setup-ci' },
       { label: 'Editor setup', link: 'getting-started/editor-setup' },
       {
         label: 'Tutorials',
-        badge: 'New',
-        collapsed: true,
+        collapsed: false,
         items: [
           {
             label: 'Crafting your workspace',
@@ -69,10 +72,6 @@ const learnGroups: SidebarItems = [
             link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
           {
-            label: 'Setting up CI',
-            link: 'getting-started/tutorials/self-healing-ci-tutorial',
-          },
-          {
             label: 'Gradle monorepo',
             link: 'getting-started/tutorials/gradle-tutorial',
           },
@@ -83,7 +82,7 @@ const learnGroups: SidebarItems = [
 
   {
     label: 'How Nx works',
-    collapsed: false,
+    collapsed: true,
     items: [
       { label: 'Mental model', link: 'concepts/mental-model' },
       { label: 'How caching works', link: 'concepts/how-caching-works' },
@@ -110,15 +109,11 @@ const learnGroups: SidebarItems = [
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
       { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
-      {
-        label: 'Synthetic monorepos',
-        link: 'concepts/synthetic-monorepos',
-      },
     ],
   },
   {
     label: 'Platform features',
-    collapsed: false,
+    collapsed: true,
     items: [
       { label: 'Run tasks', link: 'features/run-tasks' },
       {
@@ -192,10 +187,6 @@ const learnGroups: SidebarItems = [
             link: 'features/ci-features/dynamic-agents',
           },
           {
-            label: 'CI resource usage',
-            link: 'guides/nx-cloud/ci-resource-usage',
-          },
-          {
             label: 'Optimize your TTG',
             link: 'guides/nx-cloud/optimize-your-ttg',
           },
@@ -208,16 +199,35 @@ const learnGroups: SidebarItems = [
             link: 'features/ci-features/github-integration',
           },
           {
-            label: 'Sandboxing',
-            link: 'features/ci-features/sandboxing',
-            badge: 'New',
-          },
-          {
             label: 'CIPE affected project graph',
             link: 'guides/nx-cloud/cipe-affected-project-graph',
           },
           { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
           { label: 'Google auth', link: 'guides/nx-cloud/google-auth' },
+          {
+            label: 'Resource usage',
+            link: 'features/ci-features/resource-usage',
+          },
+          {
+            label: 'Dedicated compute cluster',
+            link: 'features/ci-features/dedicated-compute-cluster',
+          },
+          {
+            label: 'Sandboxing',
+            link: 'features/ci-features/sandboxing',
+          },
+          {
+            label: 'Docker layer caching',
+            link: 'features/ci-features/docker-layer-caching',
+          },
+          {
+            label: 'Docker read-through cache',
+            link: 'features/ci-features/docker-read-through-cache',
+          },
+          {
+            label: 'npm read-through cache',
+            link: 'features/ci-features/npm-read-through-cache',
+          },
         ],
       },
       {
@@ -288,8 +298,8 @@ const learnGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Nx Console migration assistance',
-            link: 'guides/nx-console/console-migrate-ui',
+            label: 'Automate updating dependencies',
+            link: 'features/automate-updating-dependencies',
           },
           {
             label: 'Advanced update process',
@@ -306,10 +316,6 @@ const learnGroups: SidebarItems = [
           {
             label: 'Preserving Git histories',
             link: 'guides/adopting-nx/preserving-git-histories',
-          },
-          {
-            label: 'Nx vs Turborepo',
-            link: 'guides/adopting-nx/nx-vs-turborepo',
           },
           {
             label: 'Migrating from Turborepo',
@@ -331,12 +337,7 @@ const learnGroups: SidebarItems = [
             link: 'enterprise/publish-conformance-rules-to-nx-cloud',
           },
           { label: 'Owners', link: 'enterprise/owners' },
-          { label: 'Polygraph', link: 'enterprise/polygraph' },
           { label: 'Custom workflows', link: 'enterprise/custom-workflows' },
-          {
-            label: 'Metadata only workspace',
-            link: 'enterprise/metadata-only-workspace',
-          },
           { label: 'Activate license', link: 'enterprise/activate-license' },
           {
             label: 'Single tenant',
@@ -450,12 +451,29 @@ const technologiesGroups: SidebarItems = [
           { label: 'Expo', link: 'technologies/react/expo/introduction' },
           { label: 'Vue', link: 'technologies/vue/introduction' },
           { label: 'Nuxt', link: 'technologies/vue/nuxt/introduction' },
+          {
+            label: 'Module Federation',
+            link: 'technologies/module-federation/introduction',
+          },
+          { label: 'ESLint', link: 'technologies/eslint/introduction' },
+        ],
+      },
+      {
+        label: 'Node',
+        collapsed: false,
+        items: [
           { label: 'Node.js', link: 'technologies/node/introduction' },
           {
             label: 'Express',
             link: 'technologies/node/express/introduction',
           },
           { label: 'Nest', link: 'technologies/node/nest/introduction' },
+        ],
+      },
+      {
+        label: 'Java (JVM)',
+        collapsed: false,
+        items: [
           { label: 'Java', link: 'technologies/java/introduction' },
           {
             label: 'Gradle',
@@ -465,13 +483,12 @@ const technologiesGroups: SidebarItems = [
             label: 'Maven',
             link: 'technologies/java/maven/introduction',
           },
-          { label: '.NET', link: 'technologies/dotnet/introduction' },
-          {
-            label: 'Module Federation',
-            link: 'technologies/module-federation/introduction',
-          },
-          { label: 'ESLint', link: 'technologies/eslint/introduction' },
         ],
+      },
+      {
+        label: '.NET',
+        collapsed: false,
+        items: [{ label: '.NET', link: 'technologies/dotnet/introduction' }],
       },
       {
         label: 'Build tools',
@@ -500,6 +517,10 @@ const technologiesGroups: SidebarItems = [
           {
             label: 'Rsbuild',
             link: 'technologies/build-tools/rsbuild/introduction',
+          },
+          {
+            label: 'Docker',
+            link: 'technologies/build-tools/docker/introduction',
           },
         ],
       },
@@ -579,6 +600,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'troubleshooting/troubleshoot-nx-install-issues',
           },
           {
+            label: 'Fix Nx in Claude Code sandbox',
+            link: 'troubleshooting/nx-sandbox-unix-sockets',
+          },
+          {
             label: 'Resolve circular dependencies',
             link: 'troubleshooting/resolve-circular-dependencies',
           },
@@ -599,6 +624,22 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Using Yarn PnP with Nx',
             link: 'guides/tips-n-tricks/yarn-pnp',
+          },
+          {
+            label: 'npm workspaces',
+            link: 'guides/tips-n-tricks/npm-workspaces',
+          },
+          {
+            label: 'pnpm workspaces',
+            link: 'guides/tips-n-tricks/pnpm-workspaces',
+          },
+          {
+            label: 'Yarn workspaces',
+            link: 'guides/tips-n-tricks/yarn-workspaces',
+          },
+          {
+            label: 'Bun workspaces',
+            link: 'guides/tips-n-tricks/bun-workspaces',
           },
           {
             label: 'Identify dependencies between folders',
@@ -627,6 +668,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Standalone to monorepo',
             link: 'guides/tips-n-tricks/standalone-to-monorepo',
+          },
+          {
+            label: 'Migrate `nx` imports to `@nx/devkit`',
+            link: 'guides/tips-n-tricks/migrate-nx-imports-to-devkit',
           },
         ],
       },
@@ -687,7 +732,7 @@ const knowledgeBaseGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Installation',
+        label: 'Installation and updates',
         collapsed: true,
         items: [
           {
@@ -698,6 +743,10 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Update global installation',
             link: 'guides/installation/update-global-installation',
           },
+          {
+            label: 'Nx Console migration assistance',
+            link: 'guides/nx-console/console-migrate-ui',
+          },
         ],
       },
       {
@@ -705,12 +754,12 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Why monorepos',
-            link: 'concepts/decisions/why-monorepos',
+            label: 'What is a monorepo',
+            link: 'concepts/decisions/what-is-a-monorepo',
           },
           {
             label: 'Monorepo or polyrepo',
-            link: 'concepts/decisions/overview',
+            link: 'concepts/decisions/monorepo-vs-polyrepo',
           },
           {
             label: 'Dependency management',
@@ -778,6 +827,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'extending-nx/createnodes-compatibility',
           },
           {
+            label: 'Performant project graph plugins',
+            link: 'extending-nx/performant-project-graph-plugins',
+          },
+          {
             label: 'Organization-specific plugin',
             link: 'extending-nx/organization-specific-plugin',
           },
@@ -809,7 +862,10 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Personal access tokens',
             link: 'guides/nx-cloud/personal-access-tokens',
           },
-          { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
+          {
+            label: 'Bring Your Own Compute',
+            link: 'guides/nx-cloud/bring-your-own-compute',
+          },
           {
             label: 'Source control integration',
             link: 'guides/nx-cloud/source-control-integration',
@@ -858,6 +914,10 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Heartbeat and manual shutdown handling',
             link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
           },
+          {
+            label: 'Fix sandbox violations',
+            link: 'guides/nx-cloud/fix-sandbox-violations',
+          },
         ],
       },
       {
@@ -905,7 +965,7 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tasks--caching/change-cache-location',
           },
           {
-            label: 'Self-hosted caching',
+            label: 'Self-hosted remote cache',
             link: 'guides/tasks--caching/self-hosted-caching',
           },
           {
@@ -941,10 +1001,6 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'TypeScript',
         collapsed: true,
         items: [
-          {
-            label: 'Maintain TypeScript monorepos',
-            link: 'features/maintain-typescript-monorepos',
-          },
           ...getTechnologyKBItems('typescript'),
           {
             label: 'Buildable and publishable libraries',
@@ -1029,6 +1085,31 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'Vitest',
         collapsed: true,
         items: [...getTechnologyKBItems('vitest', 'test-tools')],
+      },
+      {
+        label: 'Comparisons',
+        collapsed: true,
+        items: [
+          {
+            label: 'Nx vs Turborepo',
+            link: 'guides/comparisons/nx-vs-turborepo',
+          },
+          { label: 'Nx vs Vite+', link: 'guides/comparisons/nx-vs-vite-plus' },
+          { label: 'Nx vs Bazel', link: 'guides/comparisons/nx-vs-bazel' },
+          { label: 'Nx vs Depot', link: 'guides/comparisons/nx-vs-depot' },
+          {
+            label: 'Nx vs Blacksmith',
+            link: 'guides/comparisons/nx-vs-blacksmith',
+          },
+          {
+            label: 'Nx vs Develocity',
+            link: 'guides/comparisons/nx-vs-develocity',
+          },
+          {
+            label: 'Nx vs Buildkite',
+            link: 'guides/comparisons/nx-vs-buildkite',
+          },
+        ],
       },
     ],
   },
@@ -1202,10 +1283,6 @@ const referenceGroups: SidebarItems = [
         link: 'reference/nx-cloud/credits-pricing',
       },
       {
-        label: 'Remote cache plugins',
-        link: 'reference/remote-cache-plugins',
-      },
-      {
         label: 'Changelog',
         link: `${resolveNxDevUrl()}/changelog`,
       },
@@ -1241,6 +1318,13 @@ export const sidebarTabs: SidebarTab[] = [
     label: 'Reference',
     icon: 'document',
     groups: referenceGroups,
+  },
+  {
+    id: 'tab-templates',
+    label: 'Templates',
+    icon: 'rocket',
+    link: 'templates',
+    groups: [],
   },
 ];
 

@@ -1,9 +1,11 @@
 import { ExecutorContext, logger, names } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
+import { resolveExpoCliPath } from '../../utils/resolve-expo-cli';
 import { resolve as pathResolve } from 'path';
 import { isPackagerRunning } from './lib/is-packager-running';
 import { ExpoServeExecutorSchema } from './schema';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ExpoServeOutput {
   port?: number;
@@ -15,6 +17,8 @@ export default async function* serveExecutor(
   options: ExpoServeExecutorSchema,
   context: ExecutorContext
 ): AsyncGenerator<ExpoServeOutput> {
+  warnExpoExecutorDeprecation('serve');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
@@ -74,7 +78,7 @@ function serveAsync(
 ): Promise<ChildProcess> {
   return new Promise<ChildProcess>((resolve, reject) => {
     const childProcess = fork(
-      require.resolve('@expo/cli/build/bin/cli'),
+      resolveExpoCliPath(),
       ['start', '--web', ...createServeOptions(options)],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),

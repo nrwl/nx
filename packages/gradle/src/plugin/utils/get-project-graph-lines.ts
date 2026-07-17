@@ -5,6 +5,19 @@ import { GradlePluginOptions } from './gradle-plugin-options';
 
 const DEFAULT_GRAPH_TIMEOUT_SECONDS = isCI() ? 600 : 120;
 
+let currentAbortController: AbortController | undefined;
+
+/**
+ * Cancel any in-flight Gradle project graph process.
+ * Safe to call even if nothing is running.
+ */
+export function cancelPendingProjectGraphRequest(): void {
+  if (currentAbortController) {
+    currentAbortController.abort('cancelled');
+    currentAbortController = undefined;
+  }
+}
+
 export function getGraphTimeoutMs(): number {
   const envTimeout = process.env.NX_GRADLE_PROJECT_GRAPH_TIMEOUT;
   if (envTimeout) {
@@ -30,7 +43,12 @@ export async function getNxProjectGraphLines(
 
   const timeoutMs = getGraphTimeoutMs();
   const timeoutSeconds = timeoutMs / 1000;
+
+  // Cancel any in-flight Gradle process from a previous call, then create a fresh controller.
+  cancelPendingProjectGraphRequest();
   const controller = new AbortController();
+  currentAbortController = controller;
+  const signal = controller.signal;
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
@@ -48,10 +66,14 @@ export async function getNxProjectGraphLines(
         `-PworkspaceRoot=${workspaceRoot}`,
         process.env.NX_GRADLE_VERBOSE_LOGGING ? '--info' : '',
       ],
-      { signal: controller.signal }
+      { signal }
     );
   } catch (e: any) {
-    if (controller.signal.aborted) {
+    // Cancelled by a newer populateProjectGraph call — let the caller handle it
+    if (signal.reason === 'cancelled') {
+      throw new Error('Gradle project graph generation was cancelled');
+    }
+    if (signal.aborted) {
       throw new AggregateCreateNodesError(
         [
           [

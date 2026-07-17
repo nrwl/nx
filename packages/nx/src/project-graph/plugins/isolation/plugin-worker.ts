@@ -1,17 +1,24 @@
+// Must be the first import — see enable-compile-cache.ts.
+import '../../../utils/enable-compile-cache';
 import { performance } from 'node:perf_hooks';
 
 performance.mark(`plugin worker ${process.pid} code loading -- start`);
 
-import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import {
+  consumeMessagesFromSocket,
+  parseMessage,
+} from '../../../utils/consume-messages-from-socket';
 import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
+import { setPluginWorkerHostSocket } from './worker-streaming';
 
 import { unlinkSync } from 'fs';
 import { createServer } from 'net';
-import '../../../utils/perf-logging';
 import { startAnalytics } from '../../../analytics';
+import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
+import '../../../utils/perf-logging';
 
 type Environment = Pick<
   NodeJS.ProcessEnv,
@@ -36,15 +43,23 @@ let plugin: LoadedNxPlugin;
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
 
+const CONNECT_TIMEOUT_MS = 30_000;
+
 let connectErrorTimeout = setErrorTimeout(
-  5000,
-  `The plugin worker for ${expectedPluginName} is exiting as it was not connected to within 5 seconds. ` +
+  CONNECT_TIMEOUT_MS,
+  `The plugin worker for ${expectedPluginName} is exiting as it was not connected to within ${CONNECT_TIMEOUT_MS / 1000} seconds. ` +
     'Plugin workers expect to receive a socket connection from the parent process shortly after being started. ' +
     'If you are seeing this issue, please report it to the Nx team at https://github.com/nrwl/nx/issues.'
 );
 
 const server = createServer((socket) => {
   connectErrorTimeout?.clear();
+
+  // Make the host-facing socket available to plugin code running in this
+  // worker so it can emit log / progress notifications without having
+  // the socket threaded through every call site.
+  setPluginWorkerHostSocket(socket);
+
   logger.verbose(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) connected`
   );
@@ -60,7 +75,7 @@ const server = createServer((socket) => {
   socket.on(
     'data',
     consumeMessagesFromSocket((raw) => {
-      const message = JSON.parse(raw.toString());
+      const message = parseMessage<any>(raw);
       if (!isPluginWorkerMessage(message)) {
         return;
       }
@@ -74,7 +89,7 @@ const server = createServer((socket) => {
         }) => {
           loadErrorTimeout?.clear();
           process.chdir(root);
-          try {
+          return withErrorHandling(async () => {
             const { loadResolvedNxPluginAsync } = await Promise.resolve(
               require(require.resolve('../load-resolved-plugin'))
             );
@@ -109,88 +124,47 @@ const server = createServer((socket) => {
                 'preTasksExecution' in plugin && !!plugin.preTasksExecution,
               hasPostTasksExecution:
                 'postTasksExecution' in plugin && !!plugin.postTasksExecution,
-              success: true,
+              success: true as const,
             };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
+          });
         },
-        createNodes: async function createNodes({ configFiles, context }) {
-          try {
+        createNodes: async ({ configFiles, context }) =>
+          withErrorHandling(async () => {
             const result = await plugin.createNodes[1](configFiles, context);
-            return { result, success: true };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
-        createDependencies: async function createDependencies({ context }) {
-          try {
+            return { result, success: true as const };
+          }),
+        createDependencies: async ({ context }) =>
+          withErrorHandling(async () => {
             const result = await plugin.createDependencies(context);
-            return { dependencies: result, success: true };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
-        createMetadata: async function createMetadata({ graph, context }) {
-          try {
+            return { dependencies: result, success: true as const };
+          }),
+        createMetadata: async ({ graph, context }) =>
+          withErrorHandling(async () => {
             const result = await plugin.createMetadata(graph, context);
-            return { metadata: result, success: true };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
-        preTasksExecution: async ({ context }) => {
-          try {
+            return { metadata: result, success: true as const };
+          }),
+        preTasksExecution: async ({ context }) =>
+          withErrorHandling(async () => {
             const mutations = await plugin.preTasksExecution?.(context);
-            return { success: true, mutations };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
-        postTasksExecution: async ({ context }) => {
-          try {
-            await plugin.postTasksExecution?.(context);
-            return { success: true };
-          } catch (e) {
-            return {
-              success: false,
-              error: createSerializableError(e),
-            };
-          }
-        },
+            return { success: true as const, mutations };
+          }),
+        postTasksExecution: async ({ context }) =>
+          withErrorHandling(() => plugin.postTasksExecution?.(context)),
+        setWorkerEnv: (env) =>
+          withErrorHandling(() => {
+            applyDaemonEnvFromClient(env);
+          }),
       });
     })
   );
 
-  // There should only ever be one host -> worker connection
-  // since the worker is spawned per host process. As such,
-  // we can safely close the worker when the host disconnects.
+  // When the host disconnects, clean up and exit.
   socket.on('end', () => {
-    // Destroys the socket once it's fully closed.
     socket.destroySoon();
-    // Stops accepting new connections, but existing connections are
-    // not closed immediately.
-    server.close(() => {
-      try {
-        unlinkSync(socketPath);
-      } catch (e) {}
-      process.exit(0);
-    });
+    try {
+      unlinkSync(socketPath);
+    } catch (e) {}
+    process.exit(0);
   });
 });
 
@@ -198,6 +172,26 @@ server.listen(socketPath);
 logger.verbose(
   `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
 );
+
+async function withErrorHandling(
+  cb: () => void | Promise<void>
+): Promise<{ success: true } | { success: false; error: Error }>;
+async function withErrorHandling<T>(
+  cb: () => T | Promise<T>
+): Promise<T | { success: false; error: Error }>;
+async function withErrorHandling<T>(
+  cb: () => T | Promise<T>
+): Promise<T | { success: true } | { success: false; error: Error }> {
+  try {
+    const result = await cb();
+    return result ?? ({ success: true as const } as any);
+  } catch (e) {
+    return {
+      success: false as const,
+      error: createSerializableError(e) as Error,
+    };
+  }
+}
 
 function setErrorTimeout(
   timeoutMs: number,

@@ -54,6 +54,13 @@ export async function handleErrors(
           ? formatErrorStackAndCause(projectConfigurationsError, isVerbose)
           : projectConfigurationsError.errors.map((e) => e.message),
       });
+    } else if (err.name === 'MinReleaseAgeViolationError') {
+      // A cooldown violation already carries a user-shaped headline plus
+      // actionable remediation; surface the remediation rather than a stack.
+      output.error({
+        title: err.message,
+        bodyLines: Array.isArray(err.remediation) ? err.remediation : [],
+      });
     } else {
       const lines = (err.message ? err.message : err.toString()).split('\n');
       const bodyLines: string[] = lines.slice(1);

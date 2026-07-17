@@ -46,14 +46,16 @@ describe('release static-mode app', () => {
     describe('externalApi public api', () => {
       it('should focus project', () => {
         cy.window().then((window) => {
-          window.externalApi.focusProject('cart');
+          // Cast the cypress AUTWindow to the augmented global Window (tsgo
+          // doesn't surface the Window augmentation through AUTWindow).
+          (window as Window).externalApi.focusProject('cart');
           checkFocusedProject(nxExamplesJson, 'cart');
         });
       });
 
       it('should select all projects', () => {
         cy.window().then((window) => {
-          window.externalApi.selectAllProjects();
+          (window as Window).externalApi.selectAllProjects();
           checkSelectAll(nxExamplesJson);
         });
       });

@@ -3,6 +3,13 @@
   "description": "The Nx Plugin for Vitest to enable fast unit testing with Vitest.",
   "version": "0.0.1",
   "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -23,31 +30,42 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "generators": [
+        "dist/generators.d.ts"
+      ],
+      "executors": [
+        "dist/executors.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
-    },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
-    "./generators": {
-      "types": "./generators.d.ts",
-      "default": "./generators.js"
-    },
-    "./executors": {
-      "types": "./executors.d.ts",
-      "default": "./executors.js"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./migrations.json": "./migrations.json"
+    "./generators": {
+      "@nx/nx-source": "./generators.ts",
+      "types": "./dist/generators.d.ts",
+      "default": "./dist/generators.js"
+    },
+    "./executors": {
+      "@nx/nx-source": "./executors.ts",
+      "types": "./dist/executors.d.ts",
+      "default": "./dist/executors.js"
+    }
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "executors": "./executors.json",
   "generators": "./generators.json",
@@ -59,10 +77,14 @@
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "peerDependencies": {
-    "vitest": "^1.0.0 || ^2.0.0 || ^3.0.0 || ^4.0.0",
+    "@nx/eslint": "workspace:*",
+    "vitest": "^3.0.0 || ^4.0.0",
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "peerDependenciesMeta": {
+    "@nx/eslint": {
+      "optional": true
+    },
     "vitest": {
       "optional": true
     },

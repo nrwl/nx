@@ -56,11 +56,8 @@ The following resource classes are available:
 
 - `docker_linux_amd64/small`
 - `docker_linux_amd64/medium`
-- `docker_linux_amd64/medium+`
 - `docker_linux_amd64/large`
-- `docker_linux_amd64/large+`
 - `docker_linux_amd64/extra_large`
-- `docker_linux_amd64/extra_large+`
 - `docker_linux_arm64/medium`
 - `docker_linux_arm64/large`
 - `docker_linux_arm64/extra_large`
@@ -71,6 +68,17 @@ See their detailed description and pricing in the [credits pricing reference](/d
 ### `launch-templates.<template-name>.image`
 
 A launch template's `image` defines the available base software for the agent machine.
+
+{% aside type="tip" title="Looking for Docker in Docker support?" %}
+
+Docker-in-Docker (DinD) runs on a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Every agent in
+the cluster can run DinD, so your tasks can build and push container images or run Testcontainers.
+Request the add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
+
+Nx Enterprise [single-tenant](/docs/enterprise/single-tenant/overview) customers get DinD through
+their dedicated deployment.
+{% /aside %}
 
 ```yaml
 // .nx/workflows/agents.yaml
@@ -94,8 +102,6 @@ Nx Cloud provides the following images:
 - `ubuntu22.04-node20.11-v10`: added Docker support (Docker 24.0.2 binaries)
 - `ubuntu22.04-node20.11-v11`: bumped default `pnpm` from v8 to v9
 - `ubuntu22.04-node20.11-v12`: updated Playwright system dependencies
-- `ubuntu22.04-node20.11-dockerd-v2`: Docker daemon via `get-docker.sh` script with pnpm bumped to v9
-- `ubuntu22.04-node20.11-dockerd-v3`: updated Playwright system dependencies
 - `ubuntu22.04-node20.19-v1`: upgrade default node version to Node 20.19.1
 - `ubuntu22.04-node20.19-v2`: updated Playwright system dependencies
 - `ubuntu22.04-node20.19-v3`: upgraded Docker from 24.0.2 to 28.3.1
@@ -120,6 +126,34 @@ launch-templates:
   template-one:
     env:
       MY_ENV_VAR: 'my-var-value'
+```
+
+### `launch-templates.<template-name>.no-output-timeout`
+
+A launch template's `no-output-timeout` defines how long a step can run without producing any output before it's considered stalled and terminated. This prevents hung commands from tying up an agent for the full workflow duration.
+
+The value is a duration string (e.g., `10m`, `30m`, `1h`). Set to `"0"` to disable the timeout entirely. If not specified, the default is **10 minutes**.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    no-output-timeout: '30m'
+```
+
+You can also override this value at runtime via the `NX_NO_OUTPUT_TIMEOUT` environment variable (set on the template or on an individual step). The environment variable takes precedence over the `no-output-timeout` template field.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    no-output-timeout: '30m'
+    init-steps:
+      - name: 'Long-running step with custom timeout'
+        env:
+          NX_NO_OUTPUT_TIMEOUT: '1h'
+        script: |
+          ./scripts/slow-build.sh
 ```
 
 ### `launch-templates.<template-name>.init-steps`
@@ -158,9 +192,9 @@ You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/
 launch-templates:
   template-one:
     init-steps:
-      - uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+      - uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
       - name: 'Install Node Modules'
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`
@@ -206,7 +240,7 @@ launch-templates:
   template-one:
     init-steps:
       - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
         inputs:
           # Include patches directories to ensure cache is busted when patches change
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|patches/**|.yarn/patches/**|pnpm-patches/**'
@@ -287,7 +321,7 @@ grouped together logically. The below cache steps will also be collapsed togethe
 - group-name: Restore Cache
   steps:
     - name: Restore Node Modules Cache
-      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
       inputs:
         # Include patches directories to ensure cache is busted when patches change
         key: 'package-lock.json|patches/**|.yarn/patches/**|pnpm-patches/**'
@@ -295,7 +329,7 @@ grouped together logically. The below cache steps will also be collapsed togethe
           ~/.npm
         base-branch: 'main'
     - name: Restore Browser Binary Cache
-      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
       inputs:
         # Include patches directories to ensure cache is busted when patches change
         key: 'package-lock.json|patches/**|.yarn/patches/**|pnpm-patches/**|"browsers"'

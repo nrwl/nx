@@ -1,9 +1,8 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode, TargetConfiguration } from '@nx/devkit';
 // nx-ignore-next-line
 import { GraphError } from 'nx/src/command-line/graph/graph';
-/* eslint-enable @nx/enforce-module-boundaries */
+
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { twMerge } from 'tailwind-merge';
 import { Tooltip } from '@nx/graph-ui-common';

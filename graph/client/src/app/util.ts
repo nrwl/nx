@@ -1,7 +1,5 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { FileDataDependency } from 'nx/src/config/project-graph';
-/* eslint-enable @nx/enforce-module-boundaries */
 
 export function createTaskName(
   project: string,

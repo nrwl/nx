@@ -1,14 +1,14 @@
-use super::{Component, Frame};
+use super::{Component, Frame, ModalPopup};
 use crate::native::ide::detection::{SupportedEditor, get_current_editor};
 use crate::native::tui::action::Action;
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use color_eyre::eyre::Result;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Clear, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState,
+        Block, BorderType, Borders, Clear, Padding, Scrollbar, ScrollbarOrientation, ScrollbarState,
     },
 };
 use std::any::Any;
@@ -25,6 +25,12 @@ pub struct HelpPopup {
     visible: bool,
     action_tx: Option<UnboundedSender<Action>>,
     console_available: bool,
+    /// Screen rect of the bordered popup box from the last render, used for
+    /// click-outside-to-dismiss hit-testing.
+    last_area: Option<Rect>,
+    /// Screen rect of the inner text area (inside the border, clear of the
+    /// scrollbar) from the last render, used to bound text selection/links.
+    content_area: Option<Rect>,
 }
 
 impl HelpPopup {
@@ -37,11 +43,31 @@ impl HelpPopup {
             visible: false,
             action_tx: None,
             console_available: false,
+            last_area: None,
+            content_area: None,
         }
     }
 
     pub fn set_visible(&mut self, visible: bool) {
         self.visible = visible;
+    }
+
+    pub fn is_visible(&self) -> bool {
+        self.visible
+    }
+
+    /// The bordered popup box drawn last frame, if visible.
+    pub fn last_area(&self) -> Option<Rect> {
+        if self.visible { self.last_area } else { None }
+    }
+
+    /// The inner text area drawn last frame, if visible.
+    pub fn content_area(&self) -> Option<Rect> {
+        if self.visible {
+            self.content_area
+        } else {
+            None
+        }
     }
 
     pub fn set_console_available(&mut self, available: bool) {
@@ -77,6 +103,27 @@ impl HelpPopup {
                 .viewport_content_length(self.viewport_height)
                 .position(self.scroll_offset);
         }
+    }
+
+    pub fn page_up(&mut self) {
+        let page = self.viewport_height.saturating_sub(2).max(1);
+        self.scroll_offset = self.scroll_offset.saturating_sub(page);
+        self.scrollbar_state = self
+            .scrollbar_state
+            .content_length(self.content_height)
+            .viewport_content_length(self.viewport_height)
+            .position(self.scroll_offset);
+    }
+
+    pub fn page_down(&mut self) {
+        let page = self.viewport_height.saturating_sub(2).max(1);
+        let max_scroll = self.content_height.saturating_sub(self.viewport_height);
+        self.scroll_offset = (self.scroll_offset + page).min(max_scroll);
+        self.scrollbar_state = self
+            .scrollbar_state
+            .content_length(self.content_height)
+            .viewport_content_length(self.viewport_height)
+            .position(self.scroll_offset);
     }
 
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
@@ -118,16 +165,21 @@ impl HelpPopup {
             ])
             .split(popup_layout[1])[1];
 
+        // Record the popup box so the app can hit-test mouse events against it.
+        self.last_area = Some(popup_area);
+
         let mut keybindings = vec![
             // Misc
             ("?", "Toggle this popup"),
             ("q or <ctrl>+c", "Quit the TUI"),
+            ("p", "Open performance report"),
             ("", ""),
             // Navigation
             ("↑ or k", "Navigate/scroll task output up"),
             ("↓ or j", "Navigate/scroll task output down"),
             ("<ctrl>+u", "Scroll task output up"),
             ("<ctrl>+d", "Scroll task output down"),
+            ("PgUp or PgDn", "Scroll task output by page"),
             ("", ""),
             // Task List Controls
             ("/", "Filter tasks based on search term"),
@@ -148,7 +200,11 @@ impl HelpPopup {
                 "<tab>",
                 "Move focus between task list and output panes 1 and 2",
             ),
-            ("c", "Copy focused output to clipboard"),
+            ("c", "Copy selection (or full output) to clipboard"),
+            (
+                "F10",
+                "Toggle mouse capture (off lets your terminal select cells natively)",
+            ),
             ("", ""),
             // Interactive Mode
             ("i", "Interact with a continuous task when it is in focus"),
@@ -284,6 +340,13 @@ impl HelpPopup {
                 Span::styled("  Help  ", Style::default().fg(THEME.primary_fg)),
             ]))
             .title_alignment(Alignment::Left)
+            .title_top(
+                Line::from(vec![
+                    Span::styled(" (esc) ", Style::default().fg(THEME.secondary_fg)),
+                    Span::styled("✕  ", Style::default().fg(THEME.info)),
+                ])
+                .alignment(Alignment::Right),
+            )
             .borders(Borders::ALL)
             .border_type(BorderType::Plain)
             .border_style(Style::default().fg(THEME.info))
@@ -291,6 +354,9 @@ impl HelpPopup {
 
         let inner_area = block.inner(popup_area);
         self.viewport_height = inner_area.height as usize;
+        // The text area sits inside the border + padding, so it never includes
+        // the scrollbar (drawn on the far-right border column).
+        self.content_area = Some(inner_area);
 
         // Calculate wrapped height by measuring each line
         let wrapped_height = content
@@ -328,7 +394,7 @@ impl HelpPopup {
         let scroll_end = (self.scroll_offset + self.viewport_height).min(content.len());
         let visible_content = content[scroll_start..scroll_end].to_vec();
 
-        let popup = Paragraph::new(visible_content)
+        let popup = NxParagraph::new(visible_content)
             .block(block)
             .alignment(Alignment::Left)
             .wrap(ratatui::widgets::Wrap { trim: true });
@@ -362,14 +428,14 @@ impl HelpPopup {
 
             // Render padding text
             f.render_widget(
-                Paragraph::new(top_text)
+                NxParagraph::new(top_text)
                     .alignment(Alignment::Right)
                     .style(Style::default().fg(THEME.info)),
                 top_right_area,
             );
 
             f.render_widget(
-                Paragraph::new(bottom_text)
+                NxParagraph::new(bottom_text)
                     .alignment(Alignment::Right)
                     .style(Style::default().fg(THEME.info)),
                 bottom_right_area,
@@ -386,6 +452,20 @@ impl HelpPopup {
     }
 }
 
+impl ModalPopup for HelpPopup {
+    fn is_visible(&self) -> bool {
+        HelpPopup::is_visible(self)
+    }
+
+    fn last_area(&self) -> Option<Rect> {
+        HelpPopup::last_area(self)
+    }
+
+    fn content_area(&self) -> Option<Rect> {
+        HelpPopup::content_area(self)
+    }
+}
+
 impl Component for HelpPopup {
     fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
         self.action_tx = Some(tx);
@@ -395,6 +475,9 @@ impl Component for HelpPopup {
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
+        } else {
+            self.last_area = None;
+            self.content_area = None;
         }
         Ok(())
     }

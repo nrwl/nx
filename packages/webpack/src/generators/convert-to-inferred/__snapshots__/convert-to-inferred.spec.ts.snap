@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`convert-to-inferred all projects should migrate all projects using the webpack executors 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');

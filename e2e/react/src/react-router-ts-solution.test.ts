@@ -13,7 +13,18 @@ import {
 describe('React Router Applications - TS Solution', () => {
   const appName = uniq('app');
   beforeAll(() => {
-    newProject({ preset: 'ts', packages: ['@nx/react'] });
+    newProject({
+      preset: 'ts',
+      packages: [
+        '@nx/react',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/jest',
+        '@nx/cypress',
+        '@nx/playwright',
+        '@nx/eslint',
+      ],
+    });
     ensurePlaywrightBrowsersInstallation();
     runCLI(
       `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`
@@ -37,8 +48,7 @@ describe('React Router Applications - TS Solution', () => {
     checkFilesExist(`${appName}/vite.config.mts`);
   });
 
-  // TODO: re-enable once @react-router/dev supports Vite 8 — currently pnpm can resolve both vite 7 and 8, causing typecheck failures
-  xit('should be able to build, lint, test and typecheck a react-router application', async () => {
+  it('should be able to build, lint, test and typecheck a react-router application', async () => {
     const buildResult = runCLI(`build ${appName}`);
     const lintResult = runCLI(`lint ${appName}`);
     const testResult = runCLI(`test ${appName}`);

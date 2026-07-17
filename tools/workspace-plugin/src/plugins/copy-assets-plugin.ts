@@ -1,11 +1,10 @@
+import { createNodesFromFiles, readJsonFile } from '@nx/devkit';
+import type { CreateNodes, TargetConfiguration } from '@nx/devkit';
 import {
-  createNodesFromFiles,
-  CreateNodesV2,
-  readJsonFile,
-  TargetConfiguration,
-} from '@nx/devkit';
+  getAssetOutputPath,
+  normalizeAssets,
+} from '@nx/js/src/utils/assets/copy-assets-handler';
 import { dirname, join, relative } from 'node:path';
-import { getAssetOutputPath, normalizeAssets } from './normalize-assets';
 
 interface AssetEntry {
   glob: string;
@@ -20,7 +19,7 @@ interface AssetsJson {
   assets: (AssetEntry | string)[];
 }
 
-export const createNodesV2: CreateNodesV2 = [
+export const createNodes: CreateNodes = [
   'packages/*/assets.json',
   async (configFiles, _options, context) => {
     return await createNodesFromFiles(

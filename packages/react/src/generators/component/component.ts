@@ -9,25 +9,24 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { dirname, join, parse, relative } from 'path';
 
-import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { addImport } from '../../utils/ast-utils';
 import { getInSourceVitestTestsTemplate } from '../../utils/get-in-source-vitest-tests-template';
-import { reactRouterDomVersion } from '../../utils/versions';
 import { getComponentTests } from './lib/get-component-tests';
 import { NormalizedSchema, Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
+import { reactRouterDomVersion } from '../../utils/versions';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
 
   const tasks: GeneratorCallback[] = [];
-
-  const styledTask = addStyledModuleDependencies(host, options);
-  tasks.push(styledTask);
 
   addExportsToBarrel(host, options);
 
@@ -35,7 +34,9 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     const routingTask = addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      {}
+      {},
+      undefined,
+      true
     );
     tasks.push(routingTask);
   }
@@ -66,13 +67,13 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
     );
   }
 
-  if (options.styledModule || !options.hasStyles || !options.globalCss) {
+  if (!options.hasStyles || !options.globalCss) {
     host.delete(
       join(options.directory, `${options.fileName}.${options.style}`)
     );
   }
 
-  if (options.styledModule || !options.hasStyles || options.globalCss) {
+  if (!options.hasStyles || options.globalCss) {
     host.delete(
       join(options.directory, `${options.fileName}.module.${options.style}`)
     );

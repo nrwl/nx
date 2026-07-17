@@ -11,7 +11,7 @@ import {
   runCommand,
   createFile,
 } from '@nx/e2e-utils';
-import { mkdirSync, rmdirSync, writeFileSync } from 'fs';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { execSync } from 'node:child_process';
 import { join } from 'path';
 import { createGradleProject } from './utils/create-gradle-project';
@@ -41,7 +41,7 @@ describe('Nx Import Gradle', () => {
     createFile('.gitignore', '.kotlin/');
 
     try {
-      rmdirSync(tempImportE2ERoot);
+      rmSync(tempImportE2ERoot, { recursive: true, force: true });
     } catch {}
     mkdirSync(tempImportE2ERoot, { recursive: true });
 
@@ -58,7 +58,7 @@ describe('Nx Import Gradle', () => {
       tempGradleProjectName
     );
     try {
-      rmdirSync(tempGraldeProjectPath);
+      rmSync(tempGraldeProjectPath, { recursive: true, force: true });
     } catch {}
     mkdirSync(tempGraldeProjectPath, { recursive: true });
     createGradleProject(
@@ -113,7 +113,7 @@ describe('Nx Import Gradle', () => {
       tempGradleProjectName
     );
     try {
-      rmdirSync(tempGraldeProjectPath);
+      rmSync(tempGraldeProjectPath, { recursive: true, force: true });
     } catch {}
     mkdirSync(tempGraldeProjectPath, { recursive: true });
     createGradleProject(

@@ -66,24 +66,6 @@ export default MyLib;
 "
 `;
 
-exports[`lib --style tailwind should not generate any styles file when style is tailwind 1`] = `
-"
-
-export function MyLib() {
-  return (
-    <div>
-      <h1>Welcome to MyLib!</h1>
-    </div>
-  );
-}
-
-export default MyLib;
-
-
-
-"
-`;
-
 exports[`lib should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
@@ -128,7 +110,7 @@ export default defineConfig(() => ({
       // Don't forget to update your package.json as well.
       formats: ['es' as const],
     },
-    rollupOptions: {
+    rolldownOptions: {
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },

@@ -1,17 +1,19 @@
+import { getNamedInputs, PluginCache } from '@nx/devkit/internal';
 import {
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
-  writeJsonFile,
 } from '@nx/devkit';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  isUsingTsSolutionSetup,
+  addBuildAndWatchDepsTargets,
+} from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -19,8 +21,6 @@ import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-
 export interface RspackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
@@ -32,30 +32,13 @@ export interface RspackPluginOptions {
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
-  try {
-    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
-      ? readJsonFile(cachePath)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results?: Record<string, RspackTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
 const rspackConfigGlob = '**/rspack.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
+export const createNodes: CreateNodes<RspackPluginOptions> = [
   rspackConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -63,11 +46,11 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
       workspaceDataDirectory,
       `rspack-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<RspackTargets>(cachePath);
     const isTsSolutionSetup = isUsingTsSolutionSetup();
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -77,25 +60,32 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
             context,
             targetsCache,
             isTsSolutionSetup,
-            pmc
+            pmc,
+            lockFileName
           ),
         configFilePaths,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
 
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;
+
 async function createNodesInternal(
   configFilePath: string,
   options: RspackPluginOptions,
-  context: CreateNodesContextV2,
-  targetsCache: Record<string, RspackTargets>,
+  context: CreateNodesContext,
+  targetsCache: PluginCache<RspackTargets>,
   isTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  lockFileName: string
 ) {
   const projectRoot = dirname(configFilePath);
   // Do not create a project if package.json and project.json isn't there.
@@ -117,12 +107,7 @@ async function createNodesInternal(
   const normalizedOptions = normalizeOptions(options);
 
   const lockFileHash =
-    hashFile(
-      join(
-        context.workspaceRoot,
-        getLockFileName(detectPackageManager(context.workspaceRoot))
-      )
-    ) ?? '';
+    hashFile(join(context.workspaceRoot, lockFileName)) ?? '';
 
   const nodeHash = hashArray([
     hashFile(join(context.workspaceRoot, configFilePath)),
@@ -134,16 +119,21 @@ async function createNodesInternal(
   // to prevent vite/vitest files overwriting the target cache created by the other
   const hash = `${nodeHash}_${configFilePath}`;
 
-  targetsCache[hash] ??= await createRspackTargets(
-    configFilePath,
-    projectRoot,
-    normalizedOptions,
-    context,
-    isTsSolutionSetup,
-    pmc
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await createRspackTargets(
+        configFilePath,
+        projectRoot,
+        normalizedOptions,
+        context,
+        isTsSolutionSetup,
+        pmc
+      )
+    );
+  }
 
-  const { targets, metadata } = targetsCache[hash];
+  const { targets, metadata } = targetsCache.get(hash);
 
   return {
     projects: {
@@ -160,7 +150,7 @@ async function createRspackTargets(
   configFilePath: string,
   projectRoot: string,
   options: RspackPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RspackTargets> {

@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -15,12 +15,14 @@ import {
   getTagsFromPackageJson,
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+  PackageManagerCommands,
+} from '../../utils/package-manager';
 import { joinPathFragments } from '../../utils/path';
 import { nxVersion } from '../../utils/versions';
-import {
-  createNodesFromFiles,
-  CreateNodesV2,
-} from '../../project-graph/plugins';
+import { createNodesFromFiles, CreateNodes } from '../../project-graph/plugins';
 import { basename } from 'path';
 import { hashObject } from '../../hasher/file-hasher';
 import {
@@ -35,7 +37,7 @@ const globPatterns = combineGlobPatterns(
   '**/project.json'
 );
 
-export const createNodesV2: CreateNodesV2 = [
+export const createNodes: CreateNodes = [
   globPatterns,
   (configFiles, _, context) => {
     const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);
@@ -59,6 +61,11 @@ export const createNodesV2: CreateNodesV2 = [
 
     const cache = readPackageJsonConfigurationCache();
 
+    const packageManagerCommand = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot),
+      context.workspaceRoot
+    );
+
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
         const isInPackageManagerWorkspaces =
@@ -75,7 +82,8 @@ export const createNodesV2: CreateNodesV2 = [
           packageJsonPath,
           context.workspaceRoot,
           cache,
-          isInPackageManagerWorkspaces
+          isInPackageManagerWorkspaces,
+          packageManagerCommand
         );
       },
       packageJsons,
@@ -152,10 +160,12 @@ type PackageJsonPatterns = {
 export function buildPackageJsonWorkspacesMatcher(
   patterns: PackageJsonPatterns
 ) {
+  // Compile each glob once; the returned matcher runs per package.json path.
+  const positive = patterns.positive.map((p) => new Minimatch(p));
+  const negative = patterns.negative.map((p) => new Minimatch(p));
   return (p) =>
     // use lookup to avoid unnecessary minimatch calls
-    (patterns.positiveLookup[p] ||
-      patterns.positive.some((positive) => minimatch(p, positive))) &&
+    (patterns.positiveLookup[p] || positive.some((m) => m.match(p))) &&
     /**
      * minimatch will return true if the given p is NOT excluded by the negative pattern.
      *
@@ -166,14 +176,15 @@ export function buildPackageJsonWorkspacesMatcher(
      * excluded by any of the negative patterns.
      */
     !patterns.negativeLookup[p] &&
-    patterns.negative.every((negative) => minimatch(p, negative));
+    negative.every((m) => m.match(p));
 }
 
 export function createNodeFromPackageJson(
   pkgJsonPath: string,
   workspaceRoot: string,
   cache: PackageJsonConfigurationCache,
-  isInPackageManagerWorkspaces: boolean
+  isInPackageManagerWorkspaces: boolean,
+  packageManagerCommand: PackageManagerCommands
 ) {
   const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
 
@@ -200,7 +211,8 @@ export function createNodeFromPackageJson(
     workspaceRoot,
     pkgJsonPath,
     readNxJson(workspaceRoot),
-    isInPackageManagerWorkspaces
+    isInPackageManagerWorkspaces,
+    packageManagerCommand
   );
 
   cache.set(hash, project);
@@ -216,7 +228,8 @@ export function buildProjectConfigurationFromPackageJson(
   workspaceRoot: string,
   packageJsonPath: string,
   nxJson: NxJsonConfiguration,
-  isInPackageManagerWorkspaces: boolean
+  isInPackageManagerWorkspaces: boolean,
+  packageManagerCommand: PackageManagerCommands
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = packageJsonPath.split('\\').join('/');
   const projectRoot = dirname(normalizedPath);
@@ -256,7 +269,8 @@ export function buildProjectConfigurationFromPackageJson(
       packageJson,
       nxJson,
       projectRoot,
-      workspaceRoot
+      workspaceRoot,
+      packageManagerCommand
     ),
     tags: getTagsFromPackageJson(packageJson),
     metadata: getMetadataFromPackageJson(

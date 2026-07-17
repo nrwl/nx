@@ -1,5 +1,5 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { ast, replace } from '@phenomnomnominal/tsquery';
 import type { CallExpression, Printer, PropertyName } from 'typescript';
 import { cypressProjectConfigs } from '../../utils/migrations';

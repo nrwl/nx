@@ -43,7 +43,6 @@ import { yargsDownloadCloudClientCommand } from './nx-cloud/download-cloud-clien
 import { yargsFixCiCommand } from './nx-cloud/fix-ci/command-object';
 import { yargsLoginCommand } from './nx-cloud/login/command-object';
 import { yargsLogoutCommand } from './nx-cloud/logout/command-object';
-import { yargsPolygraphCommand } from './nx-cloud/polygraph/command-object';
 import { yargsRecordCommand } from './nx-cloud/record/command-object';
 import { yargsStartAgentCommand } from './nx-cloud/start-agent/command-object';
 import { yargsStartCiRunCommand } from './nx-cloud/start-ci-run/command-object';
@@ -57,6 +56,8 @@ import { yargsNxInfixCommand, yargsRunCommand } from './run/command-object';
 import { yargsShowCommand } from './show/command-object';
 import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { yargsWatchCommand } from './watch/command-object';
+import { yargsCompletionCommand } from './completion/command-object';
+import { isCompletionRequest } from './completion/trigger';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -118,19 +119,27 @@ export const commandsObject = yargs
   .command(yargsStartAgentCommand)
   .command(yargsStopAllAgentsCommand)
   .command(yargsFixCiCommand)
-  .command(yargsPolygraphCommand)
   .command(yargsApplyLocallyCommand)
   .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
+  .command(yargsCompletionCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')
   .middleware((args) => {
+    // Skip analytics during shell completion (defensive — bin/nx.ts exits
+    // before yargs runs for completion requests, but `NX_COMPLETE` could
+    // leak in if something unusual invokes commandsObject.argv directly).
+    if (isCompletionRequest()) {
+      return;
+    }
     const context = (commandsObject as any).getInternalMethods().getContext();
     const command =
       (context.commands ?? []).join(' ') ||
       (args._ ?? []).slice(0, 1).join(' ');
-    if (command) {
+    // Internal commands (e.g. `_migrate`) are spawned by their public
+    // wrapper, which already reported the run - skip to avoid double counts.
+    if (command && !command.startsWith('_')) {
       reportCommandRunEvent(command, undefined, args);
     }
   })

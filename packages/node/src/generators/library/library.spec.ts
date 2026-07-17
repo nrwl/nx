@@ -21,9 +21,20 @@ const baseLibraryConfig = {
 
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -70,7 +81,7 @@ describe('lib', () => {
       await libraryGenerator(tree, baseLibraryConfig);
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -126,42 +137,7 @@ describe('lib', () => {
       expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
 
-      const eslintrc = readJson(tree, 'my-lib/.eslintrc.json');
-      expect(eslintrc).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeTruthy();
     });
   });
 
@@ -232,7 +208,7 @@ describe('lib', () => {
       });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/my-lib/src/index.ts',
+        './my-dir/my-lib/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-lib/*']).toBeUndefined();
     });
@@ -282,7 +258,7 @@ describe('lib', () => {
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.ts')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists(`my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
+      expect(tree.exists(`my-dir/my-lib/eslint.config.mjs`)).toBeTruthy();
     });
   });
 
@@ -456,6 +432,16 @@ describe('lib', () => {
       `);
     });
   });
+
+  describe('eslintrc (legacy)', () => {
+    it('should generate .eslintrc.json when ESLINT_USE_FLAT_CONFIG=false', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await libraryGenerator(tree, baseLibraryConfig);
+      const eslintrc = readJson(tree, 'my-lib/.eslintrc.json');
+      expect(eslintrc.extends).toEqual(['../.eslintrc.json']);
+    });
+  });
+
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await libraryGenerator(tree, {
@@ -489,7 +475,7 @@ describe('lib', () => {
       await libraryGenerator(tree, { directory: 'my-lib', js: true } as Schema);
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.js',
+        './my-lib/src/index.js',
       ]);
     });
 
@@ -606,7 +592,6 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/tsconfig.lib.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "baseUrl": ".",
             "emitDeclarationOnly": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",

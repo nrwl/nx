@@ -6,11 +6,11 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import {
+  ensureTypescript,
   getProjectSourceRoot,
   getProjectType,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import { minimatch } from 'minimatch';
 import { basename, join } from 'path';
 import {
@@ -19,6 +19,7 @@ import {
 } from '../../utils/ast-utils';
 import { getUiFramework } from '../../utils/framework';
 import componentStoryGenerator from '../component-story/component-story';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 
 let tsModule: typeof import('typescript');
 
@@ -85,7 +86,9 @@ export async function createAllStories(
   schema: StorybookStoriesSchema,
   projectConfiguration: ProjectConfiguration
 ) {
-  const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
+  const {
+    isTheFileAStory,
+  }: typeof import('@nx/storybook/src/utils/utilities') = require('@nx/storybook/src/utils/utilities');
 
   const sourceRoot = getProjectSourceRoot(projectConfiguration, tree);
   let componentPaths: string[] = [];
@@ -142,6 +145,8 @@ export async function storiesGenerator(
   host: Tree,
   schema: StorybookStoriesSchema
 ) {
+  assertSupportedReactVersion(host);
+
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
   schema.interactionTests = schema.interactionTests ?? true;
@@ -154,9 +159,9 @@ export async function storiesGenerator(
 }
 
 async function isNextJsProject(tree: Tree, config: ProjectConfiguration) {
-  const { findStorybookAndBuildTargetsAndCompiler } = await import(
-    '@nx/storybook/src/utils/utilities'
-  );
+  const {
+    findStorybookAndBuildTargetsAndCompiler,
+  }: typeof import('@nx/storybook/src/utils/utilities') = require('@nx/storybook/src/utils/utilities');
 
   const { nextBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
     config.targets

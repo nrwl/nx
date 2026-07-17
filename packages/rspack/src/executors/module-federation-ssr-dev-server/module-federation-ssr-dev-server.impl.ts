@@ -2,20 +2,22 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import {
   combineAsyncIterables,
   createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+} from '@nx/devkit/internal';
+import { getProjectSourceRoot } from '@nx/js/internal';
+import { startRemoteIterators } from '@nx/module-federation/internal';
+import { waitForPortOpen } from '@nx/web/internal';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import ssrDevServerExecutor from '../ssr-dev-server/ssr-dev-server.impl';
 import { normalizeOptions, startRemotes } from './lib';
 import { ModuleFederationSsrDevServerOptions } from './schema';
+import { warnRspackMfSsrDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 export default async function* moduleFederationSsrDevServer(
   ssrDevServerOptions: ModuleFederationSsrDevServerOptions,
   context: ExecutorContext
 ) {
+  warnRspackMfSsrDevServerExecutorDeprecation();
   const options = normalizeOptions(ssrDevServerOptions);
 
   const iter = ssrDevServerExecutor(options, context);

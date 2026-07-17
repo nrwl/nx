@@ -5,9 +5,10 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/cypress/README.md"],
-      "command": "node ./scripts/copy-readme.js cypress",
-      "inputs": ["copyReadme"]
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js cypress packages/cypress/readme-template.md packages/cypress/README.md",
+      "inputs": ["copyReadme"],
+      "dependsOn": ["^build", "build-base"]
     }
   }
 }

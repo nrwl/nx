@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   readNxJson,
   readProjectConfiguration,
@@ -18,23 +18,31 @@ import { Schema } from './schema';
 import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     jest
       .spyOn(devkitExports, 'getPackageManagerCommand')
       .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
 
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   describe('not nested', () => {
@@ -92,7 +100,7 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      expect(tree.exists('my-app-e2e/playwright.config.ts')).toBeTruthy();
+      expect(tree.exists('my-app-e2e/playwright.config.mts')).toBeTruthy();
       const tsconfigE2E = readJson(tree, 'my-app-e2e/tsconfig.json');
       expect(tsconfigE2E).toMatchInlineSnapshot(`
         {
@@ -106,7 +114,7 @@ describe('app', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",
@@ -116,42 +124,7 @@ describe('app', () => {
         }
       `);
 
-      const eslintJson = readJson(tree, '/my-app/.eslintrc.json');
-      expect(eslintJson).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      expect(tree.exists('my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should setup playwright e2e project', async () => {
@@ -161,7 +134,7 @@ describe('app', () => {
         unitTestRunner: 'none',
         addPlugin: true,
       });
-      expect(tree.exists('cool-app-e2e/playwright.config.ts')).toBeTruthy();
+      expect(tree.exists('cool-app-e2e/playwright.config.mts')).toBeTruthy();
     });
 
     it('should setup cypress e2e project correctly for vite', async () => {
@@ -174,9 +147,9 @@ describe('app', () => {
       });
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-        export default defineConfig({
+        "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+        const { defineConfig } = require('cypress');
+        module.exports = defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
@@ -205,9 +178,9 @@ describe('app', () => {
       });
       expect(tree.read('cool-app-e2e/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-        export default defineConfig({
+        "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+        const { defineConfig } = require('cypress');
+        module.exports = defineConfig({
           e2e: {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
@@ -234,7 +207,7 @@ describe('app', () => {
         addPlugin: true,
       });
       expect(
-        tree.read('cool-app-e2e/playwright.config.ts', 'utf-8')
+        tree.read('cool-app-e2e/playwright.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -271,7 +244,7 @@ describe('app', () => {
         },
       ]);
       expect(
-        tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+        tree.read('my-app-e2e/playwright.config.mts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
       expect(tree.exists('my-app/vite.config.mts')).toBeTruthy();
@@ -288,7 +261,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
       });
       expect(
-        tree.read('my-app-e2e/playwright.config.ts', 'utf-8')
+        tree.read('my-app-e2e/playwright.config.mts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -370,12 +343,8 @@ describe('app', () => {
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
         },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(tree.exists('my-dir/my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should extend from root tsconfig.base.json', async () => {
@@ -453,7 +422,8 @@ describe('app', () => {
     expect(tree.read('my-app/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should setup eslint', async () => {
+  it('should setup eslint (eslintrc)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(tree, {
       directory: 'my-app',
       addPlugin: true,
@@ -472,8 +442,8 @@ describe('app', () => {
       skipFormat: true,
     });
 
-    const eslintConfig = readJson(tree, 'myapp/.eslintrc.json');
-    expect(eslintConfig.ignorePatterns).not.toContain('**/out-tsc');
+    const eslintConfig = tree.read('myapp/eslint.config.mjs', 'utf-8');
+    expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
   it('should not ignore "out-tsc" from eslint with flat config', async () => {
@@ -838,6 +808,7 @@ describe('app', () => {
             "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
+              "vite/client",
             ],
           },
           "exclude": [
@@ -916,7 +887,7 @@ describe('app', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",
@@ -1050,8 +1021,8 @@ describe('app', () => {
         skipFormat: true,
       });
 
-      const eslintConfig = readJson(tree, 'apps/myapp/.eslintrc.json');
-      expect(eslintConfig.ignorePatterns).toContain('**/out-tsc');
+      const eslintConfig = tree.read('apps/myapp/eslint.config.mjs', 'utf-8');
+      expect(eslintConfig).toContain('**/out-tsc');
     });
 
     it('should ignore "out-tsc" from eslint with flat config', async () => {

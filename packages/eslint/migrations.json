@@ -1,89 +1,42 @@
 {
   "generators": {
-    "update-typescript-eslint-v8.13.0": {
-      "version": "20.2.0-beta.5",
-      "description": "Update TypeScript ESLint packages to v8.13.0 if they are already on v8",
-      "implementation": "./src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0"
+    "update-executor-lint-inputs": {
+      "version": "22.7.0-beta.12",
+      "description": "Add missing inputs to @nx/eslint:lint executor target defaults",
+      "implementation": "./dist/src/migrations/update-21-6-0/update-executor-lint-inputs"
     },
-    "add-file-extensions-to-overrides": {
-      "version": "20.3.0-beta.1",
-      "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
-      "implementation": "./src/migrations/update-20-3-0/add-file-extensions-to-overrides"
+    "rewrite-eslint-internal-subpath-imports": {
+      "version": "23.0.0-beta.17",
+      "description": "Rewrites `@nx/eslint/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/eslint`'s exports map. Named imports/exports of public symbols are routed to `@nx/eslint` and the rest to the new `@nx/eslint/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/eslint/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/eslint/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-1-0-convert-to-flat-config": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "eslint": ">=9.0.0"
+      },
+      "description": "Convert remaining ESLint configs to flat config for ESLint v9 and keep the workspace lint-passing, disabling rules whose preset defaults changed.",
+      "implementation": "./dist/src/migrations/update-23-1-0/convert-to-flat-config",
+      "prompt": "./dist/src/migrations/update-23-1-0/convert-to-flat-config.md"
+    },
+    "update-23-1-0-remove-removed-typescript-eslint-extension-rules": {
+      "version": "23.1.0-beta.5",
+      "description": "Handle typescript-eslint rules removed in v8 in ESLint flat configs, since referencing a removed rule stops the config from loading. Deletes the removed formatting/extension rules (e.g. @typescript-eslint/no-extra-semi) and rewrites the safe 1:1 renames (no-throw-literal -> only-throw-error, no-useless-template-literals -> no-unnecessary-template-expression) to preserve enforcement.",
+      "implementation": "./dist/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules"
+    },
+    "update-23-1-0-migrate-ban-types-rule": {
+      "version": "23.1.0-beta.5",
+      "description": "Migrate the removed @typescript-eslint/ban-types rule to its v8 successors (no-empty-object-type, no-unsafe-function-type, no-wrapper-object-types), whose options do not map 1:1 - so it is driven by an AI prompt rather than a deterministic codemod.",
+      "prompt": "./dist/src/migrations/update-23-1-0/migrate-ban-types-rule.md"
     }
   },
   "packageJsonUpdates": {
-    "20.4.0-typescript-eslint": {
-      "version": "20.4.0-beta.1",
-      "requires": {
-        "typescript-eslint": ">8.0.0 <8.19.0"
-      },
-      "packages": {
-        "typescript-eslint": {
-          "version": "^8.19.0"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^8.19.0"
-        },
-        "@typescript-eslint/parser": {
-          "version": "^8.19.0"
-        },
-        "@typescript-eslint/utils": {
-          "version": "^8.19.0"
-        },
-        "@typescript-eslint/rule-tester": {
-          "version": "^8.19.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@typescript-eslint/scope-manager": {
-          "version": "^8.19.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@typescript-eslint/typescript-estree": {
-          "version": "^8.19.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.4.0-@typescript-eslint": {
-      "version": "20.4.0-beta.1",
-      "requires": {
-        "@typescript-eslint/eslint-plugin": ">8.0.0 <8.19.0"
-      },
-      "packages": {
-        "typescript-eslint": {
-          "version": "^8.19.0"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^8.19.0"
-        },
-        "@typescript-eslint/parser": {
-          "version": "^8.19.0"
-        },
-        "@typescript-eslint/utils": {
-          "version": "^8.19.0"
-        },
-        "@typescript-eslint/rule-tester": {
-          "version": "^8.19.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@typescript-eslint/scope-manager": {
-          "version": "^8.19.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@typescript-eslint/typescript-estree": {
-          "version": "^8.19.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.7.0": {
-      "version": "20.7.0-beta.4",
-      "packages": {
-        "eslint-config-prettier": {
-          "version": "^10.0.0"
-        }
-      }
-    },
     "21.2.0-typescript-eslint": {
       "version": "21.2.0-beta.0",
       "requires": {
@@ -208,6 +161,118 @@
         },
         "@typescript-eslint/typescript-estree": {
           "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "eslint": ">=8.0.0 <9.0.0"
+      },
+      "packages": {
+        "eslint": {
+          "version": "^9.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript-eslint": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/type-utils": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-prettier": {
+          "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-typescript-eslint": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "typescript-eslint": ">8.0.0 <8.58.0"
+      },
+      "packages": {
+        "typescript-eslint": {
+          "version": "^8.58.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.58.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.58.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.58.0"
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-@typescript-eslint": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@typescript-eslint/eslint-plugin": ">8.0.0 <8.58.0"
+      },
+      "packages": {
+        "typescript-eslint": {
+          "version": "^8.58.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^8.58.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^8.58.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^8.58.0"
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.58.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.58.0",
           "alwaysAddToPackageJson": false
         }
       }

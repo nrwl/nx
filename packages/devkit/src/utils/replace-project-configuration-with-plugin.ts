@@ -1,5 +1,5 @@
 import {
-  CreateNodesV2,
+  CreateNodes,
   glob,
   ProjectConfiguration,
   readNxJson,
@@ -15,7 +15,7 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
   rootMappings: Map<string, string>,
   pluginPath: string,
-  createNodes: CreateNodesV2<T>,
+  createNodes: CreateNodes<T>,
   pluginOptions: T
 ): Promise<void> {
   const nxJson = readNxJson(tree);

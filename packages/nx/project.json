@@ -6,17 +6,10 @@
   "implicitDependencies": ["graph-client"],
   "release": {
     "version": {
-      "generator": "@nx/js:release-version",
-      "preserveLocalDependencyProtocols": true,
-      "manifestRootsToUpdate": ["packages/{projectName}"]
+      "generator": "@nx/js:release-version"
     }
   },
   "targets": {
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "packages/{projectName}"
-      }
-    },
     "build-native-wasm": {
       "cache": true,
       "inputs": ["native"],
@@ -68,6 +61,12 @@
       "command": "node -e \"let i = 0; let interval = setInterval(() => { console.log('Long task running ' + i++ + '---------------------------------------------------------------'); }, 200); setTimeout(() => { clearInterval(interval); console.log('Long task finished'); }, 62_000);\"",
       "dependsOn": ["echo"]
     },
+    "build-base": {
+      "outputs": [
+        "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
+        "{projectRoot}/dist/tsconfig.tsbuildinfo"
+      ]
+    },
     "copy-assets": {
       "dependsOn": ["build-native", "^build-client"]
     },
@@ -101,6 +100,9 @@
       }
     },
     "test-native": {},
+    "test": {
+      "inputs": ["...", "{workspaceRoot}/scripts/patched-jest-resolver.js"]
+    },
     "format-native": {
       "command": "cargo fmt",
       "cache": true,
@@ -114,6 +116,9 @@
           "args": ["--all"]
         }
       }
+    },
+    "expand-deps": {
+      "command": "ts-node scripts/expand-deps.ts nx"
     },
     "lint-native": {
       "command": "cargo clippy",

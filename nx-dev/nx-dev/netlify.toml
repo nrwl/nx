@@ -23,3 +23,45 @@ included_files = [
   "!node_modules/webpack/**",
   "!node_modules/sass/**",
 ]
+
+[[redirects]]
+  from = "https://16.nx.dev/*"
+  to = "https://nx.dev/:splat"
+  status = 308
+  force = true
+
+[[redirects]]
+  from = "https://17.nx.dev/*"
+  to = "https://nx.dev/:splat"
+  status = 308
+  force = true
+
+[[redirects]]
+  from = "https://18.nx.dev/*"
+  to = "https://nx.dev/:splat"
+  status = 308
+  force = true
+
+[[redirects]]
+  from = "https://19.nx.dev/*"
+  to = "https://v19.nx.dev/:splat"
+  status = 308
+  force = true
+
+[[redirects]]
+  from = "https://20.nx.dev/*"
+  to = "https://v20.nx.dev/:splat"
+  status = 308
+  force = true
+
+[[redirects]]
+  from = "https://21.nx.dev/*"
+  to = "https://v21.nx.dev/:splat"
+  status = 308
+  force = true
+
+[[redirects]]
+  from = "https://22.nx.dev/*"
+  to = "https://v22.nx.dev/:splat"
+  status = 308
+  force = true

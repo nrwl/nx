@@ -1,7 +1,8 @@
-import { Configuration } from '@rspack/core';
+import type { Configuration } from '@rspack/core';
 import { ExtraEntryPointClass } from './model';
 import { applyWebConfig } from '../plugins/utils/apply-web-config';
 import { NxRspackExecutionContext } from './config';
+import { warnRspackComposeHelpersDeprecation } from './deprecation';
 
 export interface WithWebOptions {
   baseHref?: string;
@@ -37,7 +38,14 @@ export interface WithWebOptions {
 
 const processed = new Set();
 
+/**
+ * @deprecated Will be removed in Nx v24. Use `NxAppRspackPlugin` from
+ * `@nx/rspack/app-plugin` in a standard rspack config and run
+ * `nx g @nx/rspack:convert-to-inferred`. See
+ * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
+ */
 export function withWeb(pluginOptions: WithWebOptions = {}) {
+  warnRspackComposeHelpersDeprecation();
   return function makeConfig(
     config: Configuration,
     { options, context }: NxRspackExecutionContext

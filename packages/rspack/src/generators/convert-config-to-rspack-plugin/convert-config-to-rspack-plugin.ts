@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   getProjects,
@@ -7,12 +8,12 @@ import {
   updateProjectConfiguration,
   ProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { RspackExecutorSchema } from '../../executors/rspack/schema';
 import { extractRspackOptions } from './lib/extract-rspack-options';
 import { normalizePathOptions } from './lib/normalize-path-options';
 import { parse } from 'path';
 import { validateProject } from './lib/validate-project';
+import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 interface Schema {
   project?: string;
@@ -32,6 +33,8 @@ export async function convertConfigToRspackPluginGenerator(
   tree: Tree,
   options: Schema
 ) {
+  assertSupportedRspackVersion(tree);
+
   let migrated = 0;
 
   const projects = getProjects(tree);
@@ -105,11 +108,7 @@ export async function convertConfigToRspackPluginGenerator(
                 ${
                   withReactConfig
                     ? `new NxReactRspackPlugin(${withReactConfig.getText()})`
-                    : `new NxReactRspackPlugin({
-                  // Uncomment this line if you don't want to use SVGR
-                  // See: https://react-svgr.com/
-                  // svgr: false
-                  })`
+                    : `new NxReactRspackPlugin()`
                 },
                 // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
                 // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.

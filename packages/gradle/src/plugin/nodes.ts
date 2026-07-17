@@ -1,12 +1,12 @@
+import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import {
-  CreateNodesV2,
-  CreateNodesContextV2,
+  CreateNodes,
+  CreateNodesContext,
   ProjectConfiguration,
   workspaceRoot,
   ProjectGraphExternalNode,
   normalizePath,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { dirname, join } from 'node:path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
@@ -105,7 +105,7 @@ function extractNxConfigOnly(
   return result;
 }
 
-export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
+export const createNodes: CreateNodes<GradlePluginOptions> = [
   gradleConfigAndTestGlob,
   async (files, options, context) => {
     const { buildFiles: buildFilesFromSplitConfigFiles, gradlewFiles } =
@@ -136,18 +136,22 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       const results = [];
       const normalizedOptions = normalizeOptions(options);
 
-      for (const gradleFilePath of allBuildFiles) {
-        const projectRoot = dirname(gradleFilePath);
-        const hash = await calculateHashForCreateNodes(
-          projectRoot,
-          normalizedOptions ?? {},
-          context
-        );
+      const buildFileProjectRoots = allBuildFiles.map((f) => dirname(f));
+      const buildFileHashes = await calculateHashesForCreateNodes(
+        buildFileProjectRoots,
+        normalizedOptions ?? {},
+        context
+      );
 
-        // Get project from cache or nodes
+      for (let i = 0; i < allBuildFiles.length; i++) {
+        const gradleFilePath = allBuildFiles[i];
+        const projectRoot = buildFileProjectRoots[i];
+        const hash = buildFileHashes[i];
+
+        // Get project from cache or nodes (report keys are workspace-relative
+        // with `/` separators)
         if (!pluginCache.has(hash)) {
-          const nodeProject =
-            nodes[projectRoot] ?? nodes[join(workspaceRoot, projectRoot)];
+          const nodeProject = nodes[normalizePath(projectRoot)];
           if (nodeProject) {
             pluginCache.set(hash, nodeProject);
           }
@@ -192,30 +196,53 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 
       return results;
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];
+
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;
 
 export const makeCreateNodesForGradleConfigFile =
   (
     projects: Record<string, Partial<ProjectConfiguration>>,
     projectsCache: GradleTargets = {},
-    externalNodes: Record<string, ProjectGraphExternalNode> = {}
+    externalNodes: Record<string, ProjectGraphExternalNode> = {},
+    hashes?: string[]
   ) =>
   async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
-    context: CreateNodesContextV2
+    context: CreateNodesContext,
+    idx?: number
   ) => {
     const projectRoot = dirname(gradleFilePath);
     options = normalizeOptions(options);
 
-    const hash = await calculateHashForCreateNodes(
-      projectRoot,
-      options ?? {},
-      context
-    );
+    let hash: string;
+    if (hashes && idx !== undefined) {
+      hash = hashes[idx];
+      if (hash === undefined) {
+        throw new Error(
+          `Failed to compute hash for gradle project at ${projectRoot}`
+        );
+      }
+    } else {
+      const [computed] = await calculateHashesForCreateNodes(
+        [projectRoot],
+        options ?? {},
+        context
+      );
+      if (computed === undefined) {
+        throw new Error(
+          `Failed to compute hash for gradle project at ${projectRoot}`
+        );
+      }
+      hash = computed;
+    }
     projectsCache[hash] ??=
       projects[projectRoot] ?? projects[join(workspaceRoot, projectRoot)];
     const project = projectsCache[hash];

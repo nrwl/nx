@@ -1,13 +1,31 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/jest",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/jest/tsconfig.tsbuildinfo"
+    "composite": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts", "src/**/schema.json"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "jest.config.ts",
+    ".eslintrc.json"
+  ],
+  "include": [
+    "*.ts",
+    "src/**/*.ts",
+    "plugins/**/*.ts",
+    "preset/**/*.ts",
+    "src/**/schema.json"
+  ],
   "references": [
     {
       "path": "../js/tsconfig.lib.json"

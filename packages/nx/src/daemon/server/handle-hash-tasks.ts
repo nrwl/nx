@@ -12,13 +12,13 @@ let storedHasher: InProcessTaskHasher | null = null;
 
 export async function handleHashTasks(payload: {
   runnerOptions: any;
-  env: any;
   tasks: Task[];
   taskGraph: TaskGraph;
+  perTaskEnvs: Record<string, NodeJS.ProcessEnv>;
   cwd: string;
   collectInputs?: boolean;
 }) {
-  const { error, projectGraph, allWorkspaceFiles, fileMap, rustReferences } =
+  const { error, projectGraph, rustReferences } =
     await getCachedSerializedProjectGraphPromise();
 
   if (error) {
@@ -39,7 +39,7 @@ export async function handleHashTasks(payload: {
   const response = await storedHasher.hashTasks(
     payload.tasks,
     payload.taskGraph,
-    payload.env,
+    payload.perTaskEnvs,
     payload.cwd,
     payload.collectInputs
   );

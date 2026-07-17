@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -9,7 +10,6 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { nxVersion } from '../../utils/versions';
 
 interface ViteTestExecutorOptions {
@@ -178,6 +178,10 @@ function migrateTargetDefaults(tree: Tree): void {
   for (const [targetOrExecutor, targetConfig] of Object.entries(
     nxJson.targetDefaults
   )) {
+    if (Array.isArray(targetConfig)) {
+      // This migration predates the filtered array value form; values are plain objects here.
+      continue;
+    }
     // Pattern A: Executor-keyed (e.g., "@nx/vite:test": { ... })
     if (targetOrExecutor === '@nx/vite:test') {
       // Move config to new executor key

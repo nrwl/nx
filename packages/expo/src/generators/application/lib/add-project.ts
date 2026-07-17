@@ -1,3 +1,4 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -7,15 +8,16 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
+import { warnExpoExecutorGenerating } from '../../../utils/deprecation';
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const hasPlugin = hasExpoPlugin(host);
 
   if (!hasPlugin) {
+    warnExpoExecutorGenerating();
     addBuildTargetDefaults(host, '@nx/expo:build');
   }
 
@@ -52,12 +54,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       packageJson.nx.tags = options.parsedTags;
     }
   } else {
-    addProjectConfiguration(
-      host,
-      options.projectName,
-      projectConfiguration,
-      options.standaloneConfig
-    );
+    addProjectConfiguration(host, options.projectName, projectConfiguration);
   }
 
   if (!options.useProjectJson || options.isTsSolutionSetup) {

@@ -1,5 +1,9 @@
 import { Tree } from '@nx/devkit';
 import {
+  E2EWebServerDetails,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
+import {
   addProjectConfiguration,
   ensurePackage,
   getPackageManagerCommand,
@@ -8,7 +12,6 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
-import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   // since e2e are separate projects, default to adding plugins
@@ -89,20 +92,18 @@ function getAngularE2EWebServerInfo(
 ): E2EWebServerDetails & { e2ePort: number } {
   const nxJson = readNxJson(tree);
   let e2ePort = portOverride ?? 4200;
+  const serveTargetOptions = readTargetDefaultsForTarget(
+    'serve',
+    nxJson.targetDefaults
+  )?.options;
 
-  if (
-    nxJson.targetDefaults?.['serve'] &&
-    (nxJson.targetDefaults?.['serve'].options?.port ||
-      nxJson.targetDefaults?.['serve'].options?.env?.PORT)
-  ) {
-    e2ePort =
-      nxJson.targetDefaults?.['serve'].options?.port ||
-      nxJson.targetDefaults?.['serve'].options?.env?.PORT;
+  if (serveTargetOptions?.port || serveTargetOptions?.env?.PORT) {
+    e2ePort = serveTargetOptions.port || serveTargetOptions.env.PORT;
   }
 
   const pm = getPackageManagerCommand();
   return {
-    e2eCiBaseUrl: 'http://localhost:4200',
+    e2eCiBaseUrl: `http://localhost:${e2ePort}`,
     e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:serve-static`,
     e2eWebServerCommand: `${pm.exec} nx run ${projectName}:serve`,
     e2eWebServerAddress: `http://localhost:${e2ePort}`,

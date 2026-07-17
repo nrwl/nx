@@ -5,6 +5,8 @@ import {
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
+import { workspaceRoot } from '@nx/devkit';
+import { isServeMode } from '../../utils/is-serve-mode';
 
 export async function withModuleFederation(
   options: ModuleFederationConfig,
@@ -17,7 +19,7 @@ export async function withModuleFederation(
   process.env['FEDERATION_WEBPACK_PATH'] = require.resolve('webpack', {
     paths: [require.resolve('@angular-devkit/build-angular')],
   });
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     await getModuleFederationConfig(options, undefined, 'webpack');
@@ -39,6 +41,12 @@ export async function withModuleFederation(
       },
       resolve: {
         ...(config.resolve ?? {}),
+        // Ensure workspace root is in resolve.modules so that expose paths
+        // like "apps/remote/src/..." resolve correctly without baseUrl.
+        modules: [
+          ...(config.resolve?.modules ?? ['node_modules']),
+          workspaceRoot,
+        ],
         alias: {
           ...(config.resolve?.alias ?? {}),
           ...sharedLibraries.getAliases(),
@@ -71,7 +79,7 @@ export async function withModuleFederation(
               ? [
                   ...(configOverride?.runtimePlugins ?? []),
                   require.resolve(
-                    '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
+                    '@nx/module-federation/runtime-library-control-plugin'
                   ),
                 ]
               : configOverride?.runtimePlugins,

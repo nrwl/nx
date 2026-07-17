@@ -22,9 +22,10 @@ import { unlinkSync } from 'fs';
 import {
   consumeMessagesFromSocket,
   MESSAGE_END_SEQ,
+  parseMessage,
 } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
-import { isWindows } from '../daemon/socket-utils';
+import { isWindows, serialize } from '../daemon/socket-utils';
 
 /**
  * Remove a stale socket file if it exists.
@@ -86,7 +87,7 @@ export class PseudoIPCServer {
     socket.on(
       'data',
       consumeMessagesFromSocket(async (rawMessage) => {
-        const { type, message }: PseudoIPCMessage = JSON.parse(rawMessage);
+        const { type, message } = parseMessage<PseudoIPCMessage>(rawMessage);
         if (type === 'TO_PARENT_FROM_CHILDREN') {
           for (const childMessage of this.childMessages) {
             childMessage.onMessage(message);
@@ -114,9 +115,7 @@ export class PseudoIPCServer {
 
   sendMessageToChildren(message: Serializable) {
     this.sockets.forEach((socket) => {
-      socket.write(
-        JSON.stringify({ type: 'TO_CHILDREN_FROM_PARENT', message })
-      );
+      socket.write(serialize({ type: 'TO_CHILDREN_FROM_PARENT', message }));
       // send EOT to indicate that the message has been fully written
       socket.write(MESSAGE_END_SEQ);
     });
@@ -124,9 +123,7 @@ export class PseudoIPCServer {
 
   sendMessageToChild(id: string, message: Serializable) {
     this.sockets.forEach((socket) => {
-      socket.write(
-        JSON.stringify({ type: 'TO_CHILDREN_FROM_PARENT', id, message })
-      );
+      socket.write(serialize({ type: 'TO_CHILDREN_FROM_PARENT', id, message }));
       socket.write(MESSAGE_END_SEQ);
     });
   }
@@ -155,16 +152,14 @@ export class PseudoIPCClient {
   constructor(private path: string) {}
 
   sendMessageToParent(message: Serializable) {
-    this.socket.write(
-      JSON.stringify({ type: 'TO_PARENT_FROM_CHILDREN', message })
-    );
+    this.socket.write(serialize({ type: 'TO_PARENT_FROM_CHILDREN', message }));
     // send EOT to indicate that the message has been fully written
     this.socket.write(MESSAGE_END_SEQ);
   }
 
   notifyChildIsReady(id: string) {
     this.socket.write(
-      JSON.stringify({
+      serialize({
         type: 'CHILD_READY',
         message: id,
       } as PseudoIPCMessage)
@@ -182,7 +177,8 @@ export class PseudoIPCClient {
     this.socket.on(
       'data',
       consumeMessagesFromSocket(async (rawMessage) => {
-        const { id, type, message }: PseudoIPCMessage = JSON.parse(rawMessage);
+        const { id, type, message } =
+          parseMessage<PseudoIPCMessage>(rawMessage);
         if (type === 'TO_CHILDREN_FROM_PARENT') {
           if (id && id === forkId) {
             onMessage(message);

@@ -10,7 +10,6 @@ import { readNxJson } from '../config/configuration';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { toOldFormat } from './angular-json';
 
-/* eslint-disable */
 const Module = require('module');
 const originalRequire: NodeRequire = Module.prototype.require;
 
@@ -84,6 +83,7 @@ export const allowedWorkspaceExtensions = [
   'neverConnectToCloud',
   'analytics',
   'sync',
+  'migrate',
   'useLegacyCache',
   'maxCacheSize',
   'tui',

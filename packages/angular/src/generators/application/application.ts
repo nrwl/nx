@@ -1,3 +1,4 @@
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -10,12 +11,11 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { angularInitGenerator } from '../init/init';
 import { setupSsr } from '../setup-ssr/setup-ssr';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import {
@@ -42,6 +42,7 @@ export async function applicationGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedAngularVersion(tree);
   assertNotUsingTsSolutionSetup(tree, 'application');
   validateOptions(tree, schema);
 
@@ -73,16 +74,8 @@ export async function applicationGenerator(
 
   await createFiles(tree, options, rootOffset);
 
-  if (options.addTailwind) {
-    await setupTailwindGenerator(tree, {
-      project: options.name,
-      skipFormat: true,
-      skipPackageJson: options.skipPackageJson,
-    });
-  }
-
   await addLinting(tree, options);
-  await addUnitTestRunner(tree, options);
+  const unitTestRunnerTask = await addUnitTestRunner(tree, options);
   const e2ePort = await addE2e(tree, options);
   addServeStaticTarget(
     tree,
@@ -107,7 +100,6 @@ export async function applicationGenerator(
       project: options.name,
       standalone: options.standalone,
       skipPackageJson: options.skipPackageJson,
-      serverRouting: options.serverRouting,
     });
   }
 
@@ -141,23 +133,19 @@ export async function applicationGenerator(
   }
 
   if (!options.skipPackageJson) {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
     const devDependencies: Record<string, string> = {};
     const packageVersions = versions(tree);
-    if (angularMajorVersion >= 20) {
-      const angularDevkitVersion =
-        getInstalledAngularDevkitVersion(tree) ??
-        packageVersions.angularDevkitVersion;
+    const angularDevkitVersion =
+      getInstalledAngularDevkitVersion(tree) ??
+      packageVersions.angularDevkitVersion;
 
-      if (options.bundler === 'esbuild') {
-        devDependencies['@angular/build'] = angularDevkitVersion;
-      } else if (isRspack) {
-        devDependencies['@angular/build'] = angularDevkitVersion;
-        devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
-      } else {
-        devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
-      }
+    if (options.bundler === 'esbuild') {
+      devDependencies['@angular/build'] = angularDevkitVersion;
+    } else if (isRspack) {
+      devDependencies['@angular/build'] = angularDevkitVersion;
+      devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
+    } else {
+      devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
     }
     if (options.style === 'less') {
       devDependencies['less'] = packageVersions.lessVersion;
@@ -171,7 +159,8 @@ export async function applicationGenerator(
     await formatFiles(tree);
   }
 
-  return () => {
+  return async () => {
+    await unitTestRunnerTask();
     installPackagesTask(tree);
     logShowProjectCommand(options.name);
   };

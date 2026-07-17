@@ -1,1 +1,5 @@
-export * from '@nx/webpack/src/utils/fs';
+export {
+  findUp,
+  findAllNodeModules,
+  deleteOutputDir,
+} from '@nx/webpack/internal';

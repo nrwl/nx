@@ -4,7 +4,6 @@ import type { UnitTestRunner } from '../../utils/test-runners';
 export interface Schema {
   directory: string;
   name?: string;
-  addTailwind?: boolean;
   skipFormat?: boolean;
   addModuleSpec?: boolean;
   sourceDir?: string;
@@ -31,7 +30,7 @@ export interface Schema {
   inlineStyle?: boolean;
   inlineTemplate?: boolean;
   viewEncapsulation?: 'Emulated' | 'None' | 'ShadowDom';
-  changeDetection?: 'Default' | 'OnPush';
+  changeDetection?: 'Default' | 'Eager' | 'OnPush';
   style?: 'css' | 'scss' | 'sass' | 'less' | 'none';
   skipTests?: boolean;
   selector?: string;

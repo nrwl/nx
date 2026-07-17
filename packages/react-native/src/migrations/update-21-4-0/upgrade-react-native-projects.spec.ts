@@ -1,7 +1,7 @@
 import { Tree, addProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './upgrade-react-native-projects';
-import * as nxDevkitConfigUtils from '@nx/devkit/src/utils/config-utils';
+import * as nxDevkitConfigUtils from '@nx/devkit/internal';
 import * as path from 'path';
 
 // Mock execSync

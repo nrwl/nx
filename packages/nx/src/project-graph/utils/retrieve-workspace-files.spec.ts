@@ -7,9 +7,9 @@ import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
 import {
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
 } from '../plugins';
 
 describe('retrieve-workspace-files', () => {
@@ -90,7 +90,7 @@ describe('retrieve-workspace-files', () => {
       const mockPlugin3 = createTestPlugin('test-plugin-3', '**/package.json');
 
       const result = await retrieveProjectConfigurations(
-        [mockPlugin, mockPlugin3],
+        { specifiedPlugins: [], defaultPlugins: [mockPlugin, mockPlugin3] },
         fs.tempDir,
         {}
       );
@@ -123,7 +123,7 @@ describe('retrieve-workspace-files', () => {
       const mockPlugin2 = createTestPlugin('test-plugin-2', '!**/*');
 
       const result = await retrieveProjectConfigurations(
-        [mockPlugin1, mockPlugin2],
+        { specifiedPlugins: [], defaultPlugins: [mockPlugin1, mockPlugin2] },
         fs.tempDir,
         {}
       );
@@ -140,13 +140,13 @@ function createTestPlugin(name: string, pattern: string): LoadedNxPlugin {
   return new LoadedNxPlugin(
     {
       name,
-      createNodesV2: [
+      createNodes: [
         pattern,
         async (
-          projectFiles: string[],
+          projectFiles: readonly string[],
           _,
-          context: CreateNodesContextV2
-        ): Promise<CreateNodesResultV2> => {
+          context: CreateNodesContext
+        ): Promise<CreateNodesResultArray> => {
           return await createNodesFromFiles(
             async (configFile, options, context) => {
               const fullPath = join(context.workspaceRoot, configFile);

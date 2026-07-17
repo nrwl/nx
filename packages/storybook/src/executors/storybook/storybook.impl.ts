@@ -1,12 +1,11 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import {
   getInstalledStorybookVersion,
-  pleaseUpgrade,
   storybookConfigExistsCheck,
-  storybookMajorVersion,
 } from '../../utils/utilities';
 import type { CLIOptions } from 'storybook/internal/types';
 import { gte } from 'semver';
+import { warnStorybookExecutorDeprecation } from '../../utils/deprecation';
 
 export default async function* storybookExecutor(
   options: CLIOptions,
@@ -15,10 +14,7 @@ export default async function* storybookExecutor(
   success: boolean;
   info?: { port: number; baseUrl?: string };
 }> {
-  const storybookMajor = storybookMajorVersion();
-  if (storybookMajor > 0 && storybookMajor <= 7) {
-    throw pleaseUpgrade();
-  }
+  warnStorybookExecutorDeprecation();
 
   storybookConfigExistsCheck(options.configDir, context.projectName);
   const buildOptions: CLIOptions = options;

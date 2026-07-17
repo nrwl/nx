@@ -5,6 +5,7 @@
   "title": "Vitest executor",
   "description": "Test using Vitest.",
   "type": "object",
+  "x-deprecated": "The `@nx/vitest:test` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/vitest:convert-to-inferred` to migrate to the `@nx/vitest/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "properties": {
     "configFile": {
       "type": "string",

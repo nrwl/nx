@@ -1,7 +1,10 @@
 import { ast, query } from '@phenomnomnominal/tsquery';
-import { readJson, joinPathFragments, type Tree } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { toProjectRelativePath } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import {
+  getDependencyVersionFromPackageJson,
+  joinPathFragments,
+  type Tree,
+} from '@nx/devkit';
+import { AggregatedLog, toProjectRelativePath } from '@nx/devkit/internal';
 import { dirname } from 'path/posix';
 import { coerce, major } from 'semver';
 
@@ -53,46 +56,44 @@ export function addConfigValuesToConfigFile(
   );
 }
 
+// CLI flag names across Storybook v8 / v9 / v10 are identical (verified against
+// storybook v9 and v10 bundled CLI sources); kept as separate entries so a
+// future divergence per major can be expressed in place.
+const MODERN_STORYBOOK_PROP_MAPPING = {
+  port: 'port',
+  previewUrl: 'preview-url',
+  host: 'host',
+  docs: 'docs',
+  configDir: 'config-dir',
+  logLevel: 'loglevel',
+  quiet: 'quiet',
+  webpackStatsJson: 'stats-json',
+  debugWebpack: 'debug-webpack',
+  disableTelemetry: 'disable-telemetry',
+  https: 'https',
+  sslCa: 'ssl-ca',
+  sslCert: 'ssl-cert',
+  sslKey: 'ssl-key',
+  smokeTest: 'smoke-test',
+  noOpen: 'no-open',
+  outputDir: 'output-dir',
+} as const;
+
 export const STORYBOOK_PROP_MAPPINGS = {
-  v7: {
-    port: 'port',
-    previewUrl: 'preview-url',
-    host: 'host',
-    docs: 'docs',
-    configDir: 'config-dir',
-    logLevel: 'loglevel',
-    quiet: 'quiet',
-    webpackStatsJson: 'webpack-stats-json',
-    debugWebpack: 'debug-webpack',
-    disableTelemetry: 'disable-telemetry',
-    https: 'https',
-    sslCa: 'ssl-ca',
-    sslCert: 'ssl-cert',
-    sslKey: 'ssl-key',
-    smokeTest: 'smoke-test',
-    noOpen: 'no-open',
-    outputDir: 'output-dir',
-  },
-  v8: {
-    port: 'port',
-    previewUrl: 'preview-url',
-    host: 'host',
-    docs: 'docs',
-    configDir: 'config-dir',
-    logLevel: 'loglevel',
-    quiet: 'quiet',
-    webpackStatsJson: 'stats-json',
-    debugWebpack: 'debug-webpack',
-    disableTelemetry: 'disable-telemetry',
-    https: 'https',
-    sslCa: 'ssl-ca',
-    sslCert: 'ssl-cert',
-    sslKey: 'ssl-key',
-    smokeTest: 'smoke-test',
-    noOpen: 'no-open',
-    outputDir: 'output-dir',
-  },
-};
+  v8: MODERN_STORYBOOK_PROP_MAPPING,
+  v9: MODERN_STORYBOOK_PROP_MAPPING,
+  v10: MODERN_STORYBOOK_PROP_MAPPING,
+} as const;
+
+export function getStorybookPropMappings(
+  tree: Tree
+): typeof MODERN_STORYBOOK_PROP_MAPPING {
+  const major = getInstalledPackageVersionInfo(tree, 'storybook')?.major;
+  const key = `v${major}` as keyof typeof STORYBOOK_PROP_MAPPINGS;
+  // Above-ceiling falls through to the latest known mapping. Below-floor is
+  // unreachable: the generator-level floor assert blocks it before this runs.
+  return STORYBOOK_PROP_MAPPINGS[key] ?? STORYBOOK_PROP_MAPPINGS.v10;
+}
 
 export function ensureViteConfigPathIsRelative(
   tree: Tree,
@@ -173,14 +174,13 @@ export function getInstalledPackageVersion(
   tree: Tree,
   pkgName: string
 ): string | null {
-  const { dependencies, devDependencies } = readJson(tree, 'package.json');
-  const version = dependencies?.[pkgName] ?? devDependencies?.[pkgName];
-
-  return version;
+  // resolves pnpm catalog: refs (and yarn catalog refs)
+  return getDependencyVersionFromPackageJson(tree, pkgName);
 }
 
 export function getInstalledPackageVersionInfo(tree: Tree, pkgName: string) {
   const version = getInstalledPackageVersion(tree, pkgName);
+  const coerced = version ? coerce(version) : null;
 
-  return version ? { major: major(coerce(version)), version } : null;
+  return coerced ? { major: major(coerced), version } : null;
 }

@@ -5,9 +5,10 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js plugin",
+      "command": "node ./scripts/copy-readme.js plugin packages/plugin/readme-template.md packages/plugin/README.md",
       "inputs": ["copyReadme"],
-      "outputs": ["{workspaceRoot}/dist/packages/plugin/README.md"]
+      "outputs": ["{projectRoot}/README.md"]
     }
-  }
+  },
+  "implicitDependencies": ["vitest"]
 }

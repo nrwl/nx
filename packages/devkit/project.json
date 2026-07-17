@@ -5,8 +5,8 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/devkit/README.md"],
-      "command": "node ./scripts/copy-readme.js devkit",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js devkit packages/devkit/readme-template.md packages/devkit/README.md",
       "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base"]
     }

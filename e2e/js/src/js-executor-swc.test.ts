@@ -15,7 +15,7 @@ describe('js:swc executor', () => {
   let scope: string;
 
   beforeAll(() => {
-    scope = newProject({ packages: ['@nx/js'] });
+    scope = newProject({ packages: ['@nx/js', '@nx/eslint', '@nx/jest'] });
   });
 
   afterAll(() => {
@@ -40,7 +40,7 @@ describe('js:swc executor', () => {
 
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
-      [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
+      [`@${scope}/${lib}`]: [`./libs/${lib}/src/index.ts`],
     });
   }, 240_000);
 

@@ -1,11 +1,13 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { addToNgModule, findModule } from '../utils';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function directiveGenerator(tree: Tree, schema: Schema) {
+  assertSupportedAngularVersion(tree);
   const options = await normalizeOptions(tree, schema);
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);

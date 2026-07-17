@@ -16,7 +16,7 @@ import {
 import { addInitialRoutes } from '../../../utils/ast-utils';
 import { maybeJs } from '../../../utils/maybe-js';
 import { reactRouterDomVersion } from '../../../utils/versions';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 
 let tsModule: typeof import('typescript');
 
@@ -45,7 +45,9 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
     {
       'react-router-dom': reactRouterDomVersion,
     },
-    {}
+    {},
+    undefined,
+    true
   );
 
   // addBrowserRouterToMain

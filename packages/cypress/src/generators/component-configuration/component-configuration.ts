@@ -3,7 +3,6 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getDependencyVersionFromPackageJson,
   joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
@@ -16,8 +15,10 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { coerce, major } from 'semver';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/internal';
+import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
+import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
   versions,
@@ -42,21 +43,9 @@ export async function componentConfigurationGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'cypress', 'component-configuration');
+  assertSupportedCypressVersion(tree);
 
-  // Cypress CT does not support Vite 8 yet (@cypress/vite-dev-server
-  // peer dep is ^5.0.0 || ^6.0.0 || ^7.0.0).
-  const viteVersion = getDependencyVersionFromPackageJson(tree, 'vite');
-  if (viteVersion) {
-    const viteMajor = major(coerce(viteVersion));
-    if (viteMajor >= 8) {
-      throw new Error(
-        `Cypress component testing does not yet support Vite ${viteMajor}. ` +
-          `Downgrade to Vite 7 or earlier to use Cypress component testing. ` +
-          `See: https://github.com/cypress-io/cypress/issues/33078`
-      );
-    }
-  }
+  assertNotUsingTsSolutionSetup(tree, 'cypress', 'component-configuration');
 
   const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(tree, options);
@@ -85,6 +74,7 @@ export async function componentConfigurationGeneratorInternal(
 
   addProjectFiles(tree, projectConfig, opts);
   if (!hasPlugin || opts.addExplicitTargets) {
+    warnCypressExecutorGenerating();
     addTargetToProject(tree, projectConfig, opts);
   }
   updateNxJsonConfiguration(tree, hasPlugin);
@@ -197,15 +187,24 @@ function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {
     ) {
       cacheableOperations.push('component-test');
     }
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['component-test'] ??= {};
-    nxJson.targetDefaults['component-test'].cache ??= true;
-
-    nxJson.targetDefaults['component-test'] ??= {};
-    nxJson.targetDefaults['component-test'].inputs ??= [
-      'default',
-      productionFileSet ? '^production' : '^default',
-    ];
+    // Either a `target: 'component-test'` default or a default keyed on
+    // the executor we're scaffolding will apply to the new target — pick
+    // the more specific (target-keyed) when both are present.
+    const existingForTarget = findTargetDefault(nxJson.targetDefaults, {
+      target: 'component-test',
+    });
+    const existingForExecutor = findTargetDefault(nxJson.targetDefaults, {
+      executor: '@nx/cypress:cypress',
+    });
+    const existing = existingForTarget ?? existingForExecutor;
+    upsertTargetDefault(tree, nxJson, {
+      target: 'component-test',
+      cache: existing?.cache ?? true,
+      inputs: existing?.inputs ?? [
+        'default',
+        productionFileSet ? '^production' : '^default',
+      ],
+    });
   }
   updateNxJson(tree, nxJson);
 }

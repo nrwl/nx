@@ -70,6 +70,35 @@ test.describe('CLI sub-command formatting', () => {
     ).toBe(false);
   });
 
+  test('nested sub-commands beyond two levels are documented', async ({
+    page,
+  }) => {
+    const mainContent = page.getByTestId('main-pane');
+
+    // "nx show target inputs" is a third-level command — it should render as h3
+    // alongside other sub-commands and include its usage block.
+    const showTargetInputsHeading = mainContent.getByRole('heading', {
+      name: 'nx show target inputs',
+      level: 3,
+      exact: true,
+    });
+    await expect(showTargetInputsHeading).toBeVisible();
+
+    const showTargetOutputsHeading = mainContent.getByRole('heading', {
+      name: 'nx show target outputs',
+      level: 3,
+      exact: true,
+    });
+    await expect(showTargetOutputsHeading).toBeVisible();
+
+    const codeBlocks = mainContent.locator('pre code');
+    const allCodeTexts = await codeBlocks.allTextContents();
+
+    expect(
+      allCodeTexts.some((text) => text.includes('nx show target inputs'))
+    ).toBe(true);
+  });
+
   test('release sub-commands use correct heading and usage format', async ({
     page,
   }) => {

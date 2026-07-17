@@ -9,11 +9,8 @@ import {
   ProjectGraphProjectNode,
   workspaceRoot,
 } from '@nx/devkit';
-import { getRootTsConfigFileName } from '@nx/js';
-import {
-  resolveModuleByImport,
-  TargetProjectLocator,
-} from '@nx/js/src/internal';
+import { getRootTsConfigFileName, resolveModuleByImport } from '@nx/js';
+import { TargetProjectLocator } from '@nx/js/internal';
 import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import * as path from 'node:path';
 import {
@@ -452,7 +449,7 @@ export function hasBuildExecutor(
 
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
-const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
+const NRWL_CLI_REGEX = /nx[\/\\]dist[\/\\]bin[\/\\]run-executor\.js$/;
 
 export function isTerminalRun(): boolean {
   return (

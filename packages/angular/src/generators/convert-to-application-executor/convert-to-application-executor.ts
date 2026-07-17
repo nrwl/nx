@@ -11,10 +11,10 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path/posix';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { allTargetOptions } from '../../utils/targets';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { validateProject } from '../utils/validations';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import type { GeneratorOptions } from './schema';
 
 const executorsToConvert = new Set([
@@ -39,6 +39,7 @@ export async function convertToApplicationExecutor(
   tree: Tree,
   options: GeneratorOptions
 ) {
+  assertSupportedAngularVersion(tree);
   let didAnySucceed = false;
   if (options.project) {
     validateProject(tree, options.project);
@@ -105,11 +106,7 @@ async function convertProjectTargets(
   if (useNxExecutor) {
     newExecutor = '@nx/angular:application';
   } else {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-    newExecutor =
-      angularMajorVersion >= 20
-        ? '@angular/build:application'
-        : '@angular-devkit/build-angular:application';
+    newExecutor = '@angular/build:application';
   }
 
   const buildTarget = project.targets[buildTargetName];

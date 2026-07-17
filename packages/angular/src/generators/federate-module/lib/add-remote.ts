@@ -1,5 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import remoteGenerator from '../../remote/remote';
 import { type Schema } from '../schema';

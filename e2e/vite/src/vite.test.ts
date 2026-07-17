@@ -1,9 +1,11 @@
 import {
   cleanupProject,
   getPackageManagerCommand,
+  getSelectedPackageManager,
   killProcessAndPorts,
   newProject,
   readJson,
+  reservePort,
   runCLI,
   runCommand,
   runCommandUntil,
@@ -33,7 +35,7 @@ describe('@nx/vite/plugin', () => {
   describe('with react', () => {
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/react', '@nx/vue'],
+        packages: ['@nx/react', '@nx/vue', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
         `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
@@ -135,7 +137,7 @@ describe('@nx/vite/plugin', () => {
 
     it('should run serve-static', async () => {
       let process: ChildProcess;
-      const port = 8081;
+      const port = await reservePort();
 
       try {
         process = await runCommandUntil(
@@ -173,12 +175,137 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        json.compilerOptions.paths['~/*'] = [`./libs/${mylib}/src/*`];
         return json;
       });
 
       expect(() => runCLI(`test ${mylib}`)).not.toThrow();
     });
+
+    it('should resolve second tsconfig path value with custom build and test targets', () => {
+      const myApp = uniq('myapp');
+      const myBuildableLib = uniq('mybuildablelib');
+      runCLI(
+        `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/react:library ${myBuildableLib} --directory=libs/${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
+      );
+
+      // Note: target names must not collide with the inferred targets or the
+      // atomized targets from ciTargetName (e.g. `test-ci`).
+      updateJson(`apps/${myApp}/project.json`, (json) => {
+        json.targets ??= {};
+        json.targets['custom-test'] = {
+          command: 'vitest run',
+          options: { cwd: `apps/${myApp}` },
+        };
+        return json;
+      });
+      updateJson(`libs/${myBuildableLib}/project.json`, (json) => {
+        json.targets ??= {};
+        json.targets['custom-build'] = {
+          command: 'vite build',
+          options: { cwd: `libs/${myBuildableLib}` },
+        };
+        return json;
+      });
+
+      updateFile(
+        `apps/${myApp}/vite.config.mts`,
+        `/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/${myApp}',
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+  plugins: [
+    react(),
+    nxViteTsPaths({
+      buildLibsFromSource: false,
+      buildTarget: 'custom-build',
+      testTarget: 'custom-test',
+    }),
+  ],
+  build: {
+    outDir: '../../dist/apps/${myApp}',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/${myApp}',
+      provider: 'v8',
+    },
+  },
+});
+`
+      );
+
+      const exportedLibraryComponent = names(myBuildableLib).className;
+      updateFile(
+        `apps/${myApp}/src/app/app.spec.tsx`,
+        `
+        import { render } from '@testing-library/react';
+        import { App } from './app';
+        import { ${exportedLibraryComponent} } from 'multi-path-lib';
+        // Extensionless .tsx subpath is only resolvable through the plugin's
+        // own file matching, which must try every mapped path value.
+        import { ${exportedLibraryComponent} as FromSubpath } from 'multi-path-lib/lib/${myBuildableLib}';
+
+        describe('App', () => {
+          it('should render successfully', () => {
+            const { baseElement } = render(<App />);
+            expect(baseElement).toBeTruthy();
+            expect(${exportedLibraryComponent}).toBeDefined();
+            expect(FromSubpath).toBeDefined();
+          });
+        });
+        `
+      );
+
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['multi-path-lib'] = [
+          `libs/does-not-exist/src/index.ts`,
+          `libs/${myBuildableLib}/src/index.ts`,
+        ];
+        json.compilerOptions.paths['multi-path-lib/*'] = [
+          `libs/does-not-exist/src/*`,
+          `libs/${myBuildableLib}/src/*`,
+        ];
+        return json;
+      });
+
+      try {
+        expect(() => runCLI(`run ${myApp}:custom-test`)).not.toThrow();
+      } finally {
+        // Clean up the shared tsconfig so the path alias does not leak into
+        // subsequent tests.
+        updateJson('tsconfig.base.json', (json) => {
+          delete json.compilerOptions.paths['multi-path-lib'];
+          delete json.compilerOptions.paths['multi-path-lib/*'];
+          return json;
+        });
+      }
+    }, 300_000);
 
     it('should support importing files with "." in the name in tsconfig path', () => {
       const mylib = uniq('mylib');
@@ -202,7 +329,7 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['~/*'] = [`libs/${mylib}/src/*`];
+        json.compilerOptions.paths['~/*'] = [`./libs/${mylib}/src/*`];
         return json;
       });
 
@@ -239,11 +366,13 @@ describe('@nx/vite/plugin', () => {
         `
       );
       updateJson('tsconfig.base.json', (json) => {
-        json.compilerOptions.paths['match-lib-deep/*'] = [`libs/${lib1}/src/*`];
-        json.compilerOptions.paths['match-lib-top-level'] = [
-          `libs/${lib2}/src/bar.enum.ts`,
+        json.compilerOptions.paths['match-lib-deep/*'] = [
+          `./libs/${lib1}/src/*`,
         ];
-        json.compilerOptions.paths['match-lib/*'] = [`libs/${lib3}/src/*`];
+        json.compilerOptions.paths['match-lib-top-level'] = [
+          `./libs/${lib2}/src/bar.enum.ts`,
+        ];
+        json.compilerOptions.paths['match-lib/*'] = [`./libs/${lib3}/src/*`];
         return json;
       });
 
@@ -259,9 +388,8 @@ describe('@nx/vite/plugin', () => {
       // Add a local path alias in the project's tsconfig.app.json
       updateJson(`apps/${myLocalApp}/tsconfig.app.json`, (json) => {
         json.compilerOptions = json.compilerOptions || {};
-        json.compilerOptions.baseUrl = '.';
         json.compilerOptions.paths = {
-          '~/*': ['src/*'],
+          '~/*': ['./src/*'],
         };
         return json;
       });
@@ -292,7 +420,7 @@ describe('@nx/vite/plugin', () => {
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
         `generate @nx/react:app ${vite8App} --directory=apps/${vite8App} --bundler=vite --unitTestRunner=vitest`
@@ -317,16 +445,25 @@ describe('@nx/vite/plugin', () => {
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
         `generate @nx/react:app ${vite7App} --directory=apps/${vite7App} --bundler=vite --unitTestRunner=vitest`
       );
 
       // Downgrade to Vite 7 and @vitejs/plugin-react v4 (v6 only supports Vite 8)
+      const isYarn = getSelectedPackageManager() === 'yarn';
       updateJson('package.json', (json) => {
         json.devDependencies['vite'] = '^7.0.0';
         json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        // Yarn classic's linker bombs ("could not find a copy of vite to link
+        // in node_modules/vitest/node_modules") when intersecting a
+        // top-level `^7.0.0` range with vitest's vite dep+peer combo. Pin
+        // vite via `resolutions` so yarn commits to a single version up
+        // front and skips the buggy hoisting path.
+        if (isYarn) {
+          json.resolutions = { ...(json.resolutions ?? {}), vite: '^7.0.0' };
+        }
         return json;
       });
       runCommand(getPackageManagerCommand().install);
@@ -351,7 +488,7 @@ describe('@nx/vite/plugin', () => {
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/vitest', '@nx/react'],
+        packages: ['@nx/vitest', '@nx/react', '@nx/webpack', '@nx/vite'],
       });
       runCLI(
         `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`

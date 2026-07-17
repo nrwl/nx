@@ -1,11 +1,11 @@
 ---
-title: Crafting Your Workspace
-description: Learn how to structure a monorepo workspace with Nx, including project organization, package manager workspaces, and TypeScript configuration.
+title: Crafting Your Nx Workspace
+description: Learn what an Nx workspace is, how to create one, and how to structure it with project organization, package manager workspaces, and TypeScript configuration.
 sidebar:
   order: 1
 ---
 
-{% llm_copy_prompt title="Tutorial 1/8: Set up an Nx workspace" %}
+{% llm_copy_prompt title="Tutorial 1/7: Set up an Nx workspace" %}
 Help me learn Nx step by step using this tutorial series.
 
 If my current directory already has nx.json, skip setup and teach me using my existing workspace.
@@ -32,7 +32,6 @@ Nx works with any repo structure and plays well with tools you already use: pnpm
 5. [Caching](/docs/getting-started/tutorials/caching)
 6. [Understanding your workspace](/docs/getting-started/tutorials/understanding-your-workspace)
 7. [Reducing boilerplate](/docs/getting-started/tutorials/reducing-configuration-boilerplate)
-8. [Setting up CI](/docs/getting-started/tutorials/self-healing-ci-tutorial)
 
 {% /aside %}
 
@@ -278,7 +277,7 @@ For TypeScript workspaces, the recommended setup uses three levels of `tsconfig.
 }
 ```
 
-This setup gives editors and language servers accurate type information per-project, enables incremental builds (only recompile what changed), and creates clear boundaries between projects. For more details, see [maintain TypeScript monorepos](/docs/features/maintain-typescript-monorepos).
+This setup gives editors and language servers accurate type information per-project, enables incremental builds (only recompile what changed), and creates clear boundaries between projects. For more details, see [maintain TypeScript monorepos](/docs/technologies/typescript/introduction#typescript-project-references-kept-in-sync).
 
 {% aside type="note" title="Workspaces using tsconfig path aliases" %}
 Some workspaces use TypeScript `paths` in `tsconfig.base.json` to link projects. This works but is not recommended for new workspaces. Path aliases were not designed for project linking, and solution-style project references work better with editors and build tools. See the [migration guide](/docs/technologies/typescript/guides/switch-to-workspaces-project-references) to switch.

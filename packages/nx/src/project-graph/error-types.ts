@@ -1,8 +1,8 @@
+import { ProjectGraph } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { CreateNodesFunction } from './plugins/public-api';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import type { ConfigurationSourceMaps } from './utils/project-configuration/source-maps';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { ProjectGraph } from '../config/project-graph';
-import { CreateNodesFunctionV2 } from './plugins/public-api';
 
 export type ProjectGraphErrorTypes =
   | AggregateCreateNodesError
@@ -88,7 +88,7 @@ export class ProjectGraphError extends Error {
   }
 
   /**
-   * This gets the partial project graph despite the errors which occured.
+   * This gets the partial project graph despite the errors which occurred.
    * This partial project graph may be missing nodes, properties of nodes, or dependencies.
    * This is useful mostly for visualization/debugging. It should not be used for running tasks.
    */
@@ -291,7 +291,7 @@ export class AggregateCreateNodesError extends Error {
    */
   constructor(
     public readonly errors: Array<[file: string | null, error: Error]>,
-    public readonly partialResults: Awaited<ReturnType<CreateNodesFunctionV2>>
+    public readonly partialResults: Awaited<ReturnType<CreateNodesFunction>>
   ) {
     super('Failed to create nodes');
     this.name = this.constructor.name;
@@ -310,7 +310,44 @@ export class AggregateCreateNodesError extends Error {
         'AggregateCreateNodesError must be constructed with an array of tuples where the first element is a filename or undefined and the second element is the underlying error.'
       );
     }
+    // Plugins pass through whatever value they caught, which is not
+    // guaranteed to be an Error. Coerce so formatting can rely on
+    // message and stack being present.
+    for (const errorTuple of errors) {
+      errorTuple[1] = coerceToError(errorTuple[1]);
+    }
   }
+}
+
+function coerceToError(value: unknown): Error {
+  if (value instanceof Error) {
+    return value;
+  }
+  let message: string;
+  let stack: string | undefined;
+  if (typeof value === 'object' && value !== null) {
+    const candidate = value as { message?: unknown; stack?: unknown };
+    if (typeof candidate.message === 'string') {
+      message = candidate.message;
+      if (typeof candidate.stack === 'string') {
+        stack = candidate.stack;
+      }
+    } else {
+      try {
+        message = JSON.stringify(value);
+      } catch {
+        // Circular structures cannot be stringified.
+        message = String(value);
+      }
+    }
+  } else {
+    message = String(value);
+  }
+  const error = new Error(message);
+  // A synthesized stack would point at this coercion site rather than
+  // the original failure, so prefer the original stack or just the message.
+  error.stack = stack ?? message;
+  return error;
 }
 
 export function formatAggregateCreateNodesError(
@@ -327,18 +364,46 @@ export function formatAggregateCreateNodesError(
   ];
   const errorStackLines = [];
 
-  const innerErrors = error.errors;
-  for (const [file, e] of innerErrors) {
-    if (file) {
-      errorBodyLines.push(`  - ${file}: ${e.message}`);
-      errorStackLines.push(` - ${file}: ${e.stack}`);
-    } else {
-      errorBodyLines.push(`  - ${e.message}`);
-      errorStackLines.push(` - ${e.stack}`);
+  // Group errors by file so repeated file paths aren't printed multiple times
+  const groupedErrors = new Map<string | null, Error[]>();
+  for (const [file, e] of error.errors) {
+    const key = file ?? null;
+    if (!groupedErrors.has(key)) {
+      groupedErrors.set(key, []);
     }
-    if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
-      const innerStackTrace = '    ' + e.stack.split('\n')?.join('\n    ');
-      errorStackLines.push(innerStackTrace);
+    groupedErrors.get(key).push(e);
+  }
+
+  for (const [file, errors] of groupedErrors) {
+    if (file) {
+      errorBodyLines.push(`  - ${file}:`);
+      errorStackLines.push(` - ${file}:`);
+    }
+    for (const e of errors) {
+      const messageLines = e.message.split('\n');
+      // Errors deserialized from a plugin worker may arrive without a stack.
+      const stackLines = (e.stack ?? e.message).split('\n');
+      if (file) {
+        errorBodyLines.push(...messageLines.map((line) => `      ${line}`));
+        errorStackLines.push(...stackLines.map((line) => `     ${line}`));
+      } else {
+        errorBodyLines.push(
+          `  - ${messageLines[0]}`,
+          ...messageLines.slice(1).map((line) => `    ${line}`)
+        );
+        errorStackLines.push(
+          ` - ${stackLines[0]}`,
+          ...stackLines.slice(1).map((line) => `   ${line}`)
+        );
+      }
+      if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
+        const verboseIndent = file ? '       ' : '     ';
+        const innerStackTrace = e.stack
+          .split('\n')
+          .map((line) => `${verboseIndent}${line}`)
+          .join('\n');
+        errorStackLines.push(innerStackTrace);
+      }
     }
   }
 

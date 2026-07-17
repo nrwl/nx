@@ -1,8 +1,8 @@
 import { cacheDir, ExecutorContext, logger } from '@nx/devkit';
+import { createAsyncIterable } from '@nx/devkit/internal';
 import { exec, execSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { NormalizedSwcExecutorOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
@@ -59,7 +59,10 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
 
   if (watch) {
     typeCheckOptions.incremental = true;
-    typeCheckOptions.cacheDir = cacheDir;
+    // Scope the incremental .tsbuildinfo per project (in its own subdir, not
+    // alongside Nx's cache files) so concurrent watch type-checks don't collide
+    // on a single file.
+    typeCheckOptions.cacheDir = join(cacheDir, 'swc', projectRoot);
   }
 
   if (normalizedOptions.isTsSolutionSetup && normalizedOptions.skipTypeCheck) {

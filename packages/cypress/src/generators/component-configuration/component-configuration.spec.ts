@@ -145,9 +145,9 @@ describe('Cypress Component Configuration', () => {
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
     expect(tree.read('libs/cool-lib/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { defineConfig } from 'cypress';
+      "const { defineConfig } = require('cypress');
 
-      export default defineConfig({});
+      module.exports = defineConfig({});
       "
     `);
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
@@ -177,7 +177,7 @@ describe('Cypress Component Configuration', () => {
       '../**/*.d.ts',
     ]);
     expect(cyTsConfig.compilerOptions.outDir).toEqual('../../dist/out-tsc');
-    expect(cyTsConfig.compilerOptions.moduleResolution).toBe('node10');
+    expect(cyTsConfig.compilerOptions.moduleResolution).toBe('bundler');
     const libTsConfig = readJson(tree, 'libs/cool-lib/tsconfig.lib.json');
     expect(libTsConfig.exclude).toEqual(
       expect.arrayContaining([

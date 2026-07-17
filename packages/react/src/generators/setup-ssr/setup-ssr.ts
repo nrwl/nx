@@ -12,10 +12,11 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import type * as ts from 'typescript';
 
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { join } from 'path';
 import { addStaticRouter } from '../../utils/ast-utils';
 import {
@@ -69,6 +70,8 @@ async function getProjectConfig(tree: Tree, projectName: string) {
 }
 
 export async function setupSsrGenerator(tree: Tree, options: Schema) {
+  assertSupportedReactVersion(tree);
+
   const projectConfig = await getProjectConfig(tree, options.project);
   const projectRoot = projectConfig.root;
   const appImportCandidates: AppComponentInfo[] = [
@@ -229,9 +232,6 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       'server',
     ];
   }
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['server'] ??= {};
-  nxJson.targetDefaults.server.cache = true;
 
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
@@ -260,6 +260,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     tree.write(serverEntry, changes);
   }
 
+  upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
   updateNxJson(tree, nxJson);
 
   const installTask = addDependenciesToPackageJson(
@@ -272,7 +273,9 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     {
       '@types/express': typesExpressVersion,
       '@types/cors': typesCorsVersion,
-    }
+    },
+    undefined,
+    true
   );
 
   await formatFiles(tree);

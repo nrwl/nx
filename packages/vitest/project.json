@@ -5,9 +5,10 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js vitest",
+      "command": "node ./scripts/copy-readme.js vitest packages/vitest/readme-template.md packages/vitest/README.md",
       "inputs": ["copyReadme"],
-      "outputs": ["{workspaceRoot}/dist/packages/vitest/README.md"]
+      "outputs": ["{projectRoot}/README.md"],
+      "dependsOn": ["^build", "build-base"]
     }
   }
 }

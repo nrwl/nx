@@ -1,4 +1,4 @@
-import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { getInstalledPackageVersion } from '@nx/devkit/internal';
 import { major } from 'semver';
 
 export type VersionInfo = { major: number; version: string };
@@ -10,13 +10,6 @@ export function getInstalledAngularVersionInfo(): VersionInfo | null {
 export function getInstalledPackageVersionInfo(
   pkgName: string
 ): VersionInfo | null {
-  try {
-    const {
-      packageJson: { version },
-    } = readModulePackageJson(pkgName);
-
-    return { major: major(version), version };
-  } catch {
-    return null;
-  }
+  const version = getInstalledPackageVersion(pkgName);
+  return version ? { major: major(version), version } : null;
 }

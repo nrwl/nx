@@ -789,49 +789,6 @@ describe('lib migrator', () => {
       });
     });
 
-    it('should set hasTypeAwareRules when there are rules requiring type checking', async () => {
-      writeJson(tree, 'projects/lib1/.eslintrc.json', {
-        extends: '../../.eslintrc.json',
-        ignorePatterns: ['!**/*'],
-        overrides: [
-          {
-            files: ['*.ts', '*.tsx'],
-            extends: ['plugin:@nx/typescript'],
-            rules: { '@typescript-eslint/await-thenable': 'error' },
-          },
-        ],
-      });
-      const project = addProject('lib1', {
-        root: 'projects/lib1',
-        sourceRoot: 'projects/lib1/src',
-        architect: {
-          lint: {
-            builder: '@angular-eslint/builder:lint',
-            options: {
-              eslintConfig: 'projects/lib1/.eslintrc.json',
-              lintFilePatterns: [
-                'projects/lib1/**/*.ts',
-                'projects/lib1/**/*.html',
-              ],
-            },
-          },
-        },
-      });
-      const migrator = new LibMigrator(tree, {}, project);
-
-      await migrator.migrate();
-
-      const { targets } = readProjectConfiguration(tree, 'lib1');
-      expect(targets.lint).toStrictEqual({
-        executor: '@nx/eslint:lint',
-        options: {
-          eslintConfig: 'libs/lib1/.eslintrc.json',
-          hasTypeAwareRules: true,
-          lintFilePatterns: ['libs/lib1/**/*.ts', 'libs/lib1/**/*.html'],
-        },
-      });
-    });
-
     it('should update test target', async () => {
       const project = addProject('lib1', {
         root: 'projects/lib1',

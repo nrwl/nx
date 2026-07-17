@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
-import TOML from '@ltd/j-toml';
+import TOML from 'smol-toml';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { generateFiles } from '../../generators/utils/generate-files';
@@ -16,15 +16,15 @@ import {
   CLIErrorMessageConfig,
   CLINoteMessageConfig,
 } from '../../utils/output';
-import {
-  installPackageToTmp,
-  readModulePackageJson,
-} from '../../utils/package-json';
+import { installPackageToTmp } from '../../utils/package-json';
+import { detectPackageManager } from '../../utils/package-manager';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
   agentsMdPath,
+  analyticsDomain,
   claudeMcpJsonPath,
   geminiMdPath,
   getAgentRulesWrapped,
@@ -50,36 +50,26 @@ export type ModificationResults = {
 };
 
 /**
- * Get the installed Nx version, with fallback to workspace package.json or default version.
+ * Best-effort fallback when `getInstalledNxVersion()` can't find an
+ * installed nx — read the version declared in the workspace's
+ * `package.json` (devDependencies/dependencies), stripping any semver
+ * range prefix, and finally a sane default.
  */
-function getNxVersion(): string {
+function getDeclaredNxVersionOrDefault(): string {
   try {
-    // Try to read from node_modules first
-    const {
-      packageJson: { version },
-    } = readModulePackageJson('nx');
-    return version;
-  } catch {
-    try {
-      // Fallback: try to read from workspace package.json
-      const workspacePackageJson = JSON.parse(
-        readFileSync(join(workspaceRoot, 'package.json'), 'utf-8')
-      );
-      // Check devDependencies first, then dependencies
-      const nxVersion =
-        workspacePackageJson.devDependencies?.nx ||
-        workspacePackageJson.dependencies?.nx;
-      if (nxVersion) {
-        // Remove any semver range characters (^, ~, >=, etc.)
-        return nxVersion.replace(/^[\^~>=<]+/, '');
-      }
-      throw new Error('Nx not found in package.json');
-    } catch {
-      // If we can't determine the version, default to the newer format
-      // This handles cases where nx might not be installed or is globally installed
-      return '22.0.0';
+    const workspacePackageJson = JSON.parse(
+      readFileSync(join(workspaceRoot, 'package.json'), 'utf-8')
+    );
+    const declared =
+      workspacePackageJson.devDependencies?.nx ||
+      workspacePackageJson.dependencies?.nx;
+    if (declared) {
+      return declared.replace(/^[\^~>=<]+/, '');
     }
+  } catch {
+    // fall through to default
   }
+  return '22.0.0';
 }
 
 export async function setupAiAgentsGenerator(
@@ -100,7 +90,8 @@ export async function setupAiAgentsGenerator(
 
     const { tempDir, cleanup } = installPackageToTmp(
       'nx',
-      normalizedOptions.packageVersion
+      normalizedOptions.packageVersion,
+      detectPackageManager(tree.root)
     );
 
     let modulePath = join(
@@ -139,7 +130,7 @@ export async function setupAiAgentsGeneratorImpl(
   options: NormalizedSetupAiAgentsGeneratorSchema
 ): Promise<() => Promise<ModificationResults>> {
   const hasAgent = (agent: Agent) => options.agents.includes(agent);
-  const nxVersion = getNxVersion();
+  const nxVersion = getInstalledNxVersion() ?? getDeclaredNxVersionOrDefault();
 
   const agentsMd = agentsMdPath(options.directory);
 
@@ -181,6 +172,21 @@ export async function setupAiAgentsGeneratorImpl(
       enabledPlugins: {
         ...json.enabledPlugins,
         'nx@nx-claude-plugins': true,
+      },
+      // Allow Nx analytics requests through Claude Code's sandbox network filter
+      sandbox: {
+        ...json.sandbox,
+        network: {
+          ...json.sandbox?.network,
+          allowedDomains: json.sandbox?.network?.allowedDomains?.includes(
+            analyticsDomain
+          )
+            ? json.sandbox.network.allowedDomains
+            : [
+                ...(json.sandbox?.network?.allowedDomains ?? []),
+                analyticsDomain,
+              ],
+        },
       },
     }));
 
@@ -568,13 +574,8 @@ function writeCodexConfig(
   }
 
   // ── Serialize and write ──
-  const tomlString = TOML.stringify(config as any, {
-    newlineAround: 'section',
-  });
-  tree.write(
-    codexTomlPath,
-    Array.isArray(tomlString) ? tomlString.join('\n') : tomlString
-  );
+  const tomlString = TOML.stringify(config);
+  tree.write(codexTomlPath, tomlString);
 }
 
 /**

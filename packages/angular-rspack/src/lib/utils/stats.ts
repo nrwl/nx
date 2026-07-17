@@ -113,7 +113,6 @@ function statsToString(
     return '';
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const colors =
     typeof statsConfig.colors === 'boolean'
       ? statsConfig.colors

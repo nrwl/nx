@@ -4,10 +4,11 @@ import {
   readProjectsConfigurationFromProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { Configuration } from '@rspack/core';
 import { readNxJson } from 'nx/src/config/configuration';
 import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
+import { warnRspackComposeHelpersDeprecation } from './deprecation';
 
 export const nxRspackComposablePlugin = 'nxRspackComposablePlugin';
 
@@ -34,6 +35,13 @@ export interface AsyncNxComposableRspackPlugin {
   ): Configuration | Promise<Configuration>;
 }
 
+/**
+ * @deprecated Will be removed in Nx v24. Use `NxAppRspackPlugin` from
+ * `@nx/rspack/app-plugin` (or `NxReactRspackPlugin` from
+ * `@nx/rspack/react-plugin`) in a standard rspack config and run
+ * `nx g @nx/rspack:convert-to-inferred`. See
+ * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
+ */
 export function composePlugins(
   ...plugins: (
     | NxComposableRspackPlugin
@@ -41,6 +49,7 @@ export function composePlugins(
     | Promise<NxComposableRspackPlugin | AsyncNxComposableRspackPlugin>
   )[]
 ) {
+  warnRspackComposeHelpersDeprecation();
   return Object.assign(
     async function combined(
       config: Configuration,
@@ -68,7 +77,15 @@ export function composePlugins(
   );
 }
 
+/**
+ * @deprecated Will be removed in Nx v24. Use `NxAppRspackPlugin` from
+ * `@nx/rspack/app-plugin` (or `NxReactRspackPlugin` from
+ * `@nx/rspack/react-plugin`) in a standard rspack config and run
+ * `nx g @nx/rspack:convert-to-inferred`. See
+ * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
+ */
 export function composePluginsSync(...plugins: NxComposableRspackPlugin[]) {
+  warnRspackComposeHelpersDeprecation();
   return Object.assign(
     function combined(
       config: Configuration,

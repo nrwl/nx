@@ -1,4 +1,5 @@
 import { ReportData, TrendData } from './model';
+import { getSinceDate } from './scrape-issues';
 import { table } from 'markdown-factory';
 
 export function getSlackMessageJson(body: string) {
@@ -18,17 +19,24 @@ export function getSlackMessageJson(body: string) {
 export function formatGhReport(
   currentData: ReportData,
   trendData: TrendData,
-  prevData: ReportData
+  prevData: ReportData,
+  unlabeledIssuesUrl: string
 ): string {
-  const issueDelta = trendData.totalIssueCount;
-  const formattedIssueDelta = formatDelta(issueDelta);
+  const formattedIssueDelta = formatDelta(trendData.totalIssueCount);
+  const formattedBugDelta = formatDelta(trendData.totalBugCount);
 
-  const bugDelta = trendData.totalBugCount;
-  const formattedBugDelta = formatDelta(bugDelta);
-
-  const header = `Issue Report for ${currentData.collectedDate}
+  const header = `Issue Report for ${currentData.collectedDate} <${unlabeledIssuesUrl}|[view unlabeled]>
 \`\`\`
 Totals, Issues: ${currentData.totalIssueCount} ${formattedIssueDelta} Bugs: ${currentData.totalBugCount} ${formattedBugDelta}\n\n`;
+
+  const prevDate = prevData.collectedDate
+    ? new Date(prevData.collectedDate)
+    : undefined;
+  const closedSinceDate = getSinceDate(prevDate)
+    .toDateString()
+    .split(' ')
+    .slice(1)
+    .join(' ');
 
   const bodyLines: string[] = [
     ...(prevData.collectedDate
@@ -37,7 +45,7 @@ Totals, Issues: ${currentData.totalIssueCount} ${formattedIssueDelta} Bugs: ${cu
     `Untriaged: ${currentData.untriagedIssueCount} ${formatDelta(
       trendData.untriagedIssueCount
     )}`,
-    `Closed since last report: ${currentData.totalClosed} ${formatDelta(
+    `Closed since ${closedSinceDate}: ${currentData.totalClosed} ${formatDelta(
       trendData.totalClosed
     )}`,
   ];
@@ -78,9 +86,8 @@ Totals, Issues: ${currentData.totalIssueCount} ${formattedIssueDelta} Bugs: ${cu
 }
 
 function formatDelta(delta: number | null): string {
-  if (!delta) {
+  if (delta === null || delta === 0) {
     return '';
   }
-
   return delta < 0 ? `(${delta})` : `(+${delta})`;
 }

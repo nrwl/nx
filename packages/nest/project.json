@@ -5,10 +5,10 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/nest/README.md"],
-      "command": "node ./scripts/copy-readme.js nest",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js nest packages/nest/readme-template.md packages/nest/README.md",
       "inputs": ["copyReadme"]
     }
   },
-  "implicitDependencies": ["node", "eslint"]
+  "implicitDependencies": ["node", "eslint", "nx"]
 }

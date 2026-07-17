@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -11,10 +12,12 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
 import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/router-plugin';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
+import { createNodes } from '../../plugins/router-plugin';
 
 export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
+  assertSupportedReactVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   if (!schema.skipPackageJson) {
@@ -31,7 +34,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
           '@nx/react': nxVersion,
         },
         undefined,
-        schema.keepExistingVersions
+        schema.keepExistingVersions ?? true
       )
     );
   }
@@ -46,7 +49,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
       tree,
       await createProjectGraphAsync(),
       '@nx/react/router-plugin',
-      createNodesV2,
+      createNodes,
       {
         buildTargetName: ['build', 'react-router:build', 'react-router-build'],
         devTargetName: ['dev', 'react-router:dev', 'react-router-dev'],

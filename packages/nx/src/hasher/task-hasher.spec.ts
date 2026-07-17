@@ -2,6 +2,7 @@
 
 import {
   expandNamedInput,
+  expandSingleProjectInputs,
   filterUsingGlobPatterns,
   splitInputsIntoSelfAndDependencies,
 } from './task-hasher';
@@ -224,6 +225,26 @@ describe('TaskHasher', () => {
         b: ['c'],
       });
       expect(expanded).toEqual([{ fileset: 'c' }]);
+    });
+  });
+
+  describe('expandSingleProjectInputs', () => {
+    it('should pass through json inputs unchanged', () => {
+      const jsonInput = {
+        json: '{workspaceRoot}/tsconfig.base.json',
+        fields: ['compilerOptions', 'extends', 'files', 'include'],
+      };
+      const expanded = expandSingleProjectInputs([jsonInput], {});
+      expect(expanded).toEqual([jsonInput]);
+    });
+
+    it('should pass through json inputs with excludeFields unchanged', () => {
+      const jsonInput = {
+        json: '{projectRoot}/package.json',
+        excludeFields: ['scripts', 'description'],
+      };
+      const expanded = expandSingleProjectInputs([jsonInput as any], {});
+      expect(expanded).toEqual([jsonInput]);
     });
   });
 

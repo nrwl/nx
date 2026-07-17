@@ -11,9 +11,12 @@ import {
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
 import { dirname, join, parse, relative } from 'path';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
+import { assertSupportedExpoVersion } from '../../utils/versions';
 
 export async function expoComponentGenerator(host: Tree, schema: Schema) {
+  assertSupportedExpoVersion(host);
+
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
 

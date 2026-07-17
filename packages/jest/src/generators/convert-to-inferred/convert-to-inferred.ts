@@ -1,3 +1,9 @@
+import {
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+  processTargetOutputs,
+  toProjectRelativePath,
+} from '@nx/devkit/internal';
 import type { Config } from '@jest/types';
 import {
   createProjectGraphAsync,
@@ -5,18 +11,11 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import {
-  migrateProjectExecutorsToPlugin,
-  NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import {
-  processTargetOutputs,
-  toProjectRelativePath,
-} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import { readConfig } from 'jest-config';
 import { join, normalize, posix } from 'node:path';
 import { createNodesV2, type JestPluginOptions } from '../../plugins/plugin';
 import { jestConfigExtensions } from '../../utils/config/config-file';
+import { assertSupportedJestVersion } from '../../utils/assert-supported-jest-version';
 import { getInstalledJestMajorVersion } from '../../utils/versions';
 
 interface Schema {
@@ -25,6 +24,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedJestVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migratedProjects =
     await migrateProjectExecutorsToPlugin<JestPluginOptions>(

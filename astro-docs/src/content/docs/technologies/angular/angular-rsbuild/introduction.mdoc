@@ -1,9 +1,9 @@
 ---
-title: 'Angular Rsbuild Plugin for Nx'
-description: 'Use Rsbuild as the build tool for Angular applications in your Nx workspace with the @nx/angular-rsbuild plugin.'
+title: Nx with Angular Rsbuild
+description: Use Angular Rsbuild with Nx to build and cache Angular projects across your monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: 'Introduction'
-weight: 5
+weight: 2
 filter: 'type:References'
 ---
 
@@ -390,3 +390,9 @@ Enables usage of TypeScript project references.
 
 `boolean` `default: true`
 When true, creates a separate bundle for vendor (third-party) code.
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

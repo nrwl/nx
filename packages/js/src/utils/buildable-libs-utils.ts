@@ -14,9 +14,10 @@ import { unlinkSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { output } from 'nx/src/utils/output';
-import { dirname, join, relative, extname, resolve } from 'path';
+import { dirname, isAbsolute, join, relative, extname, resolve } from 'path';
 import type * as ts from 'typescript';
-import { readTsConfigPaths } from './typescript/ts-config';
+import { readTsConfigPaths, resolvePathsBaseUrl } from './typescript/ts-config';
+import { stripGlobToBaseDir } from './strip-glob-to-base-dir';
 import { randomUUID } from 'crypto';
 import {
   isProjectGraphExternalNode,
@@ -212,10 +213,20 @@ function readTsConfigWithRemappedPaths(
     normalizedGeneratedTsConfigDir,
     normalizedTsConfig
   );
-  generatedTsConfig.compilerOptions.paths = computeCompilerOptionsPaths(
-    normalizedTsConfig,
-    dependencies
-  );
+  const paths = computeCompilerOptionsPaths(normalizedTsConfig, dependencies);
+  // Resolve paths to absolute so they work regardless of the tmp tsconfig
+  // location and without needing baseUrl (deprecated in TS 6, removed in TS 7).
+  const pathsBase = resolvePathsBaseUrl(normalizedTsConfig);
+  for (const key of Object.keys(paths)) {
+    paths[key] = paths[key].map((p) => {
+      if (isAbsolute(p)) {
+        return p;
+      }
+      const stripped = p.startsWith('./') ? p.slice(2) : p;
+      return resolve(pathsBase, stripped).replace(/\\/g, '/');
+    });
+  }
+  generatedTsConfig.compilerOptions.paths = paths;
 
   if (process.env.NX_VERBOSE_LOGGING_PATH_MAPPINGS === 'true') {
     output.log({
@@ -459,11 +470,6 @@ export function createTmpTsConfig(
   );
   process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
 
-  if (useWorkspaceAsBaseUrl) {
-    parsedTSConfig.compilerOptions ??= {};
-    parsedTSConfig.compilerOptions.baseUrl = workspaceRoot;
-  }
-
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
   return join(tmpTsConfigPath);
 }
@@ -511,7 +517,16 @@ export function updatePaths(
             mappedPaths = mappedPaths.concat(
               paths[path].flatMap((p) =>
                 dep.outputs.flatMap((output) => {
-                  const basePath = p.replace(root, output);
+                  // Re-map the root prefix to the output. Match root only as a
+                  // leading segment (after an optional `./`) so a root that
+                  // also appears later in the value (e.g. output `dist/libs/base`
+                  // for root `base`) isn't doubled.
+                  const dotPrefix = p.startsWith('./') ? './' : '';
+                  const value = dotPrefix ? p.slice(2) : p;
+                  const basePath =
+                    value === root || value.startsWith(`${root}/`)
+                      ? `${dotPrefix}${output}${value.slice(root.length)}`
+                      : p;
                   return [
                     // extension-less path to support compiled output
                     basePath.replace(
@@ -530,6 +545,15 @@ export function updatePaths(
         }
       }
     });
+
+  // Ensure all path values use ./ prefix for TS 6+ compatibility (no baseUrl)
+  for (const key of Object.keys(paths)) {
+    paths[key] = paths[key].map((p) =>
+      p.startsWith('./') || p.startsWith('../') || p.startsWith('/')
+        ? p
+        : `./${p}`
+    );
+  }
 }
 
 /**
@@ -555,7 +579,7 @@ export function updateBuildableProjectPackageJsonDependencies(
     node
   );
 
-  const packageJsonPath = `${outputs[0]}/package.json`;
+  const packageJsonPath = `${stripGlobToBaseDir(outputs[0])}/package.json`;
   let packageJson;
   let workspacePackageJson;
   try {
@@ -596,7 +620,11 @@ export function updateBuildableProjectPackageJsonDependencies(
             entry.node
           );
 
-          const depPackageJsonPath = join(root, outputs[0], 'package.json');
+          const depPackageJsonPath = join(
+            root,
+            stripGlobToBaseDir(outputs[0]),
+            'package.json'
+          );
           depVersion = readJsonFile(depPackageJsonPath).version;
 
           packageJson[typeOfDependency][packageName] = depVersion;

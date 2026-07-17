@@ -1,9 +1,9 @@
 ---
-title: 'Angular Rspack Plugin for Nx'
-description: 'Learn how Rspack can help you speed up your Angular applications.'
+title: Nx with Angular Rspack
+description: Use Angular Rspack with Nx to build and cache Angular projects across your monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: 'Introduction'
-weight: 5
+weight: 2
 filter: 'type:References'
 ---
 
@@ -13,7 +13,7 @@ The `@angular-rspack/nx` plugin supports the following package versions.
 
 | Package         | Supported Versions                                                                        |
 | --------------- | ----------------------------------------------------------------------------------------- |
-| `@rspack/core`  | >=1.3.5 <1.7.0                                                                            |
+| `@rspack/core`  | ^2.0.0 \|\| >=1.3.5 <1.7.0                                                                |
 | `@angular/core` | See [Angular version matrix](/docs/technologies/angular/guides/angular-nx-version-matrix) |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
@@ -76,3 +76,9 @@ Below is a table of benchmarks for different bundlers, tested on an application 
 | Rspack        | 30.589       | 19.269   | 19.940  |
 
 You can find the benchmarks and run them yourself: [https://github.com/nrwl/ng-bundler-benchmark](https://github.com/nrwl/ng-bundler-benchmark)
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

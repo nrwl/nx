@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 

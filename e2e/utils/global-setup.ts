@@ -3,11 +3,31 @@ import { existsSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { exec, execSync } from 'node:child_process';
 import { join } from 'node:path';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
 import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 
 export default async function (globalConfig: Config.ConfigGlobals) {
   try {
+    // TEMP DIAGNOSTIC (cache-miss hunt): log the exact checkout + any working-tree
+    // drift on the agent. Distinguishes "runs are on different SHAs" from
+    // "same SHA but a task mutated the tree". Safe to remove once resolved.
+    if (process.env.CI) {
+      try {
+        const head = execSync('git rev-parse HEAD').toString().trim();
+        const porcelain = execSync('git status --porcelain').toString().trim();
+        console.log(
+          `\n=== [tree-state] target=${process.env.NX_TASK_TARGET_TARGET} HEAD=${head} ===\n` +
+            `git status --porcelain:\n${porcelain || '(clean)'}\n`
+        );
+      } catch (err) {
+        console.log(
+          `[tree-state] diagnostic failed: ${(err as Error).message}`
+        );
+      }
+    }
+
     const isVerbose: boolean =
       process.env.NX_VERBOSE_LOGGING === 'true' || !!globalConfig.verbose;
 
@@ -39,6 +59,26 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // Use environment variable instead of npm config command to avoid polluting other tests
     process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] =
       authToken;
+    // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and they
+    // take precedence over any registry a stray process wrote to ~/.npmrc.
+    process.env.pnpm_config_registry = registry;
+    process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] =
+      authToken;
+    // pnpm 11's minimumReleaseAge policy rejects packages published < 24h
+    // ago; everything e2e installs was just published to the local registry.
+    process.env.pnpm_config_minimum_release_age = '0';
+    // e2e installs plugin packages directly (no generator records allowBuilds
+    // decisions for their transitive deps), and pnpm 11 re-checks the whole
+    // workspace strictly on every implicit deps check (`pnpm exec nx ...`),
+    // so restore pnpm 10's warn-and-skip for the whole harness and skip the
+    // implicit install-before-run entirely.
+    process.env.pnpm_config_strict_dep_builds = 'false';
+    process.env.pnpm_config_verify_deps_before_run = 'false';
+    // pnpm 11 no longer reads pnpm settings from .npmrc, so the workspace
+    // prefer-frozen-lockfile=false workaround stopped applying; without this,
+    // tests that edit a package.json and re-run `pnpm install` fail in CI
+    // where frozen-lockfile defaults to true.
+    process.env.pnpm_config_frozen_lockfile = 'false';
 
     // bun
     process.env.BUN_CONFIG_REGISTRY = registry;
@@ -49,11 +89,21 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     process.env.YARN_NPM_REGISTRY_SERVER = registry;
     process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
 
+    // Use fresh cache directories to avoid serving stale packages when the
+    // same version is republished to the local registry.
+    const e2eCacheDir = mkdtempSync(join(tmpdir(), 'nx-e2e-cache-'));
+    process.env.npm_config_cache = join(e2eCacheDir, 'npm');
+    // yarnv1
+    process.env.YARN_CACHE_FOLDER = join(e2eCacheDir, 'yarn');
+    // yarnv2
+    process.env.YARN_ENABLE_GLOBAL_CACHE = 'false';
+
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
     global.e2eTeardown = () => {
       // Clean up environment variable instead of npm config command
       delete process.env[`npm_config_//${listenAddress}:${port}/:_authToken`];
+      delete process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`];
     };
 
     /**
@@ -68,7 +118,10 @@ export default async function (globalConfig: Config.ConfigGlobals) {
       }
     }
 
-    if (process.env.NX_E2E_SKIP_CLEANUP !== 'true' || !existsSync('./build')) {
+    if (
+      process.env.NX_E2E_SKIP_GLOBAL_CLEANUP !== 'true' ||
+      !existsSync('./build')
+    ) {
       if (!isCI) {
         registerTsConfigPaths(join(__dirname, '../../tsconfig.base.json'));
         const { e2eCwd } = await import('./get-env-info');

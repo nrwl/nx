@@ -1,8 +1,9 @@
-import { TSESLint } from '@typescript-eslint/utils';
+import { RuleTester } from '@typescript-eslint/rule-tester';
+import * as parser from '@typescript-eslint/parser';
 import { rule, RULE_NAME } from './valid-schema-description';
 
-const ruleTester = new TSESLint.RuleTester({
-  parser: require.resolve('@typescript-eslint/parser'),
+const ruleTester = new RuleTester({
+  languageOptions: { parser },
 });
 
 ruleTester.run(RULE_NAME, rule, {

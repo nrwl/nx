@@ -1,4 +1,3 @@
-/* eslint-disable */
 module.exports = {
   testEnvironment: 'jsdom',
   displayName: 'graph-ui-code-block',

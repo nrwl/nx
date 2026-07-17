@@ -4,6 +4,7 @@ import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { UpgradeExecutorSchema } from './schema';
+import { warnReactNativeExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ReactNativeUpgradeOutput {
   success: boolean;
@@ -17,6 +18,8 @@ export default async function* upgradeExecutor(
   options: UpgradeExecutorSchema,
   context: ExecutorContext
 ): AsyncGenerator<ReactNativeUpgradeOutput> {
+  warnReactNativeExecutorDeprecation('upgrade');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

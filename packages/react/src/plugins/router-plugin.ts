@@ -1,10 +1,15 @@
 import {
-  type CreateNodesV2,
-  type CreateNodesContextV2,
+  getNamedInputs,
+  calculateHashesForCreateNodes,
+  clearRequireCache,
+  loadConfigFile,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
+  type CreateNodes,
+  type CreateNodesContext,
   detectPackageManager,
-  readJsonFile,
   type TargetConfiguration,
-  writeJsonFile,
   createNodesFromFiles,
   getPackageManagerCommand,
   joinPathFragments,
@@ -12,19 +17,14 @@ import {
 } from '@nx/devkit';
 
 import { dirname, join } from 'path';
-import { existsSync, readdirSync } from 'fs';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { hashObject } from 'nx/src/devkit-internals';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
-  clearRequireCache,
-  loadConfigFile,
-} from '@nx/devkit/src/utils/config-utils';
-
+  addBuildAndWatchDepsTargets,
+  isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
@@ -42,22 +42,7 @@ type ReactRouterTargets = Pick<
 const pmCommand = getPackageManagerCommand();
 const reactRouterConfigBlob = '**/react-router.config.{ts,js,cjs,cts,mjs,mts}';
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, ReactRouterTargets> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, ReactRouterTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
-export const createNodesV2: CreateNodesV2<ReactRouterPluginOptions> = [
+export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
   reactRouterConfigBlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -66,7 +51,7 @@ export const createNodesV2: CreateNodesV2<ReactRouterPluginOptions> = [
       workspaceDataDirectory,
       `react-router-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<ReactRouterTargets>(cachePath);
 
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
 
@@ -109,15 +94,20 @@ export const createNodesV2: CreateNodesV2<ReactRouterPluginOptions> = [
           );
 
           const hash = hashes[idx] + configFile;
-          const { projectType, metadata, targets } = (targetsCache[hash] ??=
-            await buildReactRouterTargets(
-              configFile,
-              projectRoot,
-              normalizedOptions,
-              context,
-              siblingFiles,
-              isUsingTsSolutionSetup
-            ));
+          if (!targetsCache.has(hash)) {
+            targetsCache.set(
+              hash,
+              await buildReactRouterTargets(
+                configFile,
+                projectRoot,
+                normalizedOptions,
+                context,
+                siblingFiles,
+                isUsingTsSolutionSetup
+              )
+            );
+          }
+          const { projectType, metadata, targets } = targetsCache.get(hash);
 
           const project: ProjectConfiguration = {
             root: projectRoot,
@@ -140,16 +130,21 @@ export const createNodesV2: CreateNodesV2<ReactRouterPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
+
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;
 
 async function buildReactRouterTargets(
   configFilePath: string,
   projectRoot: string,
   options: ReactRouterPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   siblingFiles: string[],
   isUsingTsSolutionSetup: boolean
 ): Promise<ReactRouterTargets> {
@@ -361,7 +356,7 @@ function normalizeOptions(options: ReactRouterPluginOptions) {
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));

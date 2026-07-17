@@ -1,5 +1,6 @@
 import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
+import { createAsyncIterable } from '@nx/devkit/internal';
 import {
   cacheDir,
   joinPathFragments,
@@ -22,14 +23,13 @@ import {
   EsBuildExecutorOptions,
   NormalizedEsBuildExecutorOptions,
 } from './schema';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
   getOutExtension,
   getOutfile,
 } from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
-import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nx/js/internal';
 import { rmSync } from 'node:fs';
 import { join, relative } from 'path';
 
@@ -51,7 +51,7 @@ export async function* esbuildExecutor(
 ) {
   process.env.NODE_ENV ??= context.configurationName ?? 'production';
 
-  const options = normalizeOptions(_options, context);
+  const options = await normalizeOptions(_options, context);
   if (options.deleteOutputPath)
     rmSync(options.outputPath, { recursive: true, force: true });
 
@@ -254,7 +254,10 @@ function getTypeCheckOptions(
 
   if (watch) {
     typeCheckOptions.incremental = true;
-    typeCheckOptions.cacheDir = cacheDir;
+    // Scope the incremental .tsbuildinfo per project (in its own subdir, not
+    // alongside Nx's cache files) so concurrent serves don't collide on a
+    // single file.
+    typeCheckOptions.cacheDir = join(cacheDir, 'esbuild', projectRoot);
   }
 
   if (options.isTsSolutionSetup && options.skipTypeCheck) {

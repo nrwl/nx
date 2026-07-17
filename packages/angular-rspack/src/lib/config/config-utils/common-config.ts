@@ -1,4 +1,4 @@
-import { type Compiler, type Configuration, javascript } from '@rspack/core';
+import type { Compiler, Configuration } from '@rspack/core';
 import { join, resolve } from 'node:path';
 import {
   JS_ALL_EXT_REGEX,
@@ -13,9 +13,11 @@ import {
 import { getStylesConfig } from './style-config-utils';
 import { getCrossOriginLoading } from './helpers';
 import { configureSourceMap } from './sourcemap-utils';
+import { isServeMode } from '../../utils/rspack-serve-env';
 import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
 import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin';
 import { getIndexInputFile } from '../../utils/index-file/get-index-input-file';
+import { isRspackV2 } from '../../utils/rspack-version';
 
 export async function getCommonConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -23,7 +25,7 @@ export async function getCommonConfig(
   i18nHash: string | (() => void),
   hashFormat: HashFormat
 ) {
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
   const crossOriginLoading = getCrossOriginLoading(normalizedOptions);
   const sourceMapOptions = configureSourceMap(normalizedOptions.sourceMap);
   const stylesConfig = await getStylesConfig(
@@ -45,7 +47,6 @@ export async function getCommonConfig(
 
   const defaultConfig: Configuration = {
     context: normalizedOptions.root,
-    profile: normalizedOptions.statsJson,
     mode:
       normalizedOptions.optimization.scripts ||
       normalizedOptions.optimization.styles.minify
@@ -81,9 +82,18 @@ export async function getCommonConfig(
       tsConfig: {
         configFile: normalizedOptions.tsConfig,
       },
-      ...(i18n.shouldInline && normalizedOptions.aot
-        ? { alias: { '@angular/localize/init': false } }
-        : {}),
+      alias: {
+        ...(i18n.shouldInline && normalizedOptions.aot
+          ? { '@angular/localize/init': false }
+          : {}),
+        ...(normalizedOptions.fileReplacements?.reduce(
+          (aliases, replacement) => ({
+            ...aliases,
+            [replacement.replace]: replacement.with,
+          }),
+          {}
+        ) ?? {}),
+      },
     },
     resolveLoader: {
       symlinks: !normalizedOptions.preserveSymlinks,
@@ -170,7 +180,11 @@ export async function getCommonConfig(
                 compiler.hooks.compilation.tap(
                   'AngularRspackPlugin',
                   (compilation) => {
-                    javascript.JavascriptModulesPlugin.getCompilationHooks(
+                    // Resolve from the live compiler: the statically imported
+                    // copy can be a different @rspack/core major than the one
+                    // running the build, and getCompilationHooks rejects
+                    // foreign Compilation instances.
+                    compiler.rspack.javascript.JavascriptModulesPlugin.getCompilationHooks(
                       compilation
                     ).chunkHash.tap('AngularRspackPlugin', (_, hash) => {
                       hash.update(Buffer.from('$localize' + i18nHash));
@@ -184,5 +198,10 @@ export async function getCommonConfig(
       ...stylesConfig.plugins,
     ],
   };
+  // TODO(v24): drop once @rspack/core v1 is out of the support window.
+  // v2 removed top-level `profile`; Rsdoctor replaces it.
+  if (normalizedOptions.statsJson && !isRspackV2()) {
+    (defaultConfig as { profile?: boolean }).profile = true;
+  }
   return defaultConfig;
 }

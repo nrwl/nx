@@ -1,16 +1,16 @@
-import { type CreateNodesContextV2 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { type CreateNodesContext } from '@nx/devkit';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodesV2 } from './plugin';
+import { createNodes } from './plugin';
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 
 describe('@nx/rspack', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
 
@@ -139,7 +139,7 @@ describe('@nx/rspack', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",

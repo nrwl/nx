@@ -836,6 +836,140 @@ describe('releaseVersionGenerator (ported tests)', () => {
           `);
         });
 
+        it('should not apply preid to dependent patch bumps by default when --preid is set', async () => {
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
+                __default__ ({ "projectsRelationship": "independent" }):
+                  - my-lib@0.0.1 [js]
+                  - project-with-dependency-on-my-pkg@0.0.1 [js]
+                    -> depends on my-lib
+                  - project-with-devDependency-on-my-pkg@0.0.1 [js]
+                    -> depends on my-lib {devDependencies}
+              `,
+              {
+                version: {
+                  specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
+                  updateDependents: 'auto',
+                },
+              },
+              undefined,
+              {
+                projects: ['my-lib'],
+              }
+            );
+
+          // Default behavior (applyPreidToDependents unset): dependents only
+          // get a stable patch bump even though the bumped project is a prerelease.
+          await releaseVersionGeneratorForTest(tree, {
+            nxReleaseConfig,
+            filters,
+            projectGraph,
+            userGivenSpecifier: 'prepatch' as SemverBumpType,
+            preid: 'rc',
+          });
+
+          expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "0.0.2-rc.0",
+            }
+          `);
+
+          expect(
+            readJson(tree, 'project-with-dependency-on-my-pkg/package.json')
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.2-rc.0",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.2",
+            }
+          `);
+          expect(
+            readJson(tree, 'project-with-devDependency-on-my-pkg/package.json')
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.2-rc.0",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.2",
+            }
+          `);
+        });
+
+        it('should apply preid to dependent patch bumps when applyPreidToDependents is enabled and --preid is set', async () => {
+          const { nxReleaseConfig, projectGraph, filters } =
+            await createNxReleaseConfigAndPopulateWorkspace(
+              tree,
+              `
+                __default__ ({ "projectsRelationship": "independent" }):
+                  - my-lib@0.0.1 [js]
+                  - project-with-dependency-on-my-pkg@0.0.1 [js]
+                    -> depends on my-lib
+                  - project-with-devDependency-on-my-pkg@0.0.1 [js]
+                    -> depends on my-lib {devDependencies}
+              `,
+              {
+                version: {
+                  specifierSource: 'prompt',
+                  adjustSemverBumpsForZeroMajorVersion: true,
+                  updateDependents: 'auto',
+                  applyPreidToDependents: true,
+                },
+              },
+              undefined,
+              {
+                projects: ['my-lib'],
+              }
+            );
+
+          // With applyPreidToDependents: true, dependents that are only
+          // receiving a dependent patch bump are upgraded to prepatch so the
+          // preid is actually applied.
+          await releaseVersionGeneratorForTest(tree, {
+            nxReleaseConfig,
+            filters,
+            projectGraph,
+            userGivenSpecifier: 'prepatch' as SemverBumpType,
+            preid: 'rc',
+          });
+
+          expect(readJson(tree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "0.0.2-rc.0",
+            }
+          `);
+
+          expect(
+            readJson(tree, 'project-with-dependency-on-my-pkg/package.json')
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.2-rc.0",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.2-rc.0",
+            }
+          `);
+          expect(
+            readJson(tree, 'project-with-devDependency-on-my-pkg/package.json')
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.2-rc.0",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.2-rc.0",
+            }
+          `);
+        });
+
         it('should update dependents with a prepatch when creating a pre-release version', async () => {
           const { nxReleaseConfig, projectGraph, filters } =
             await createNxReleaseConfigAndPopulateWorkspace(

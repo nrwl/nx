@@ -2,8 +2,8 @@ import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/devkit/internal';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 

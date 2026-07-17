@@ -6,17 +6,17 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
+import { isAbsolute, resolve } from 'path';
 import {
   calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
-import {
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
+import { typeDefinitions } from './type-definitions';
+import { resolvePathsBaseUrl } from '@nx/js';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
@@ -232,9 +232,11 @@ export function withNx(
       options.generatePackageJson ??= true;
     }
 
+    const originalTsConfigPath = join(workspaceRoot, options.tsConfig);
     const compilerOptions: Record<string, unknown> = createTsCompilerOptions(
       projectRoot,
       tsConfig,
+      originalTsConfigPath,
       options,
       dependencies
     );
@@ -250,43 +252,24 @@ export function withNx(
       }),
       image(),
       json(),
-      // TypeScript compilation and declaration generation
-      options.useLegacyTypescriptPlugin === true
-        ? (() => {
-            // TODO(v23): Remove in Nx 23
-            // Show deprecation warning
-            logger.warn(
-              `rollup-plugin-typescript2 is deprecated and will be removed in Nx 23. ` +
-                `You are explicitly using it with 'useLegacyTypescriptPlugin: true'. ` +
-                `Consider removing this option to use the official @rollup/plugin-typescript.`
-            );
-
-            return require('rollup-plugin-typescript2')({
-              check: !options.skipTypeCheck,
-              tsconfig: tsConfigPath,
-              tsconfigOverride: {
-                compilerOptions,
-              },
-            });
-          })()
-        : (() => {
-            // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
-            const { outDir, declarationDir, ...tsCompilerOptions } =
-              compilerOptions;
-            const rollupOutputDir = Array.isArray(finalConfig.output)
-              ? finalConfig.output[0].dir
-              : finalConfig.output.dir;
-            return require('@rollup/plugin-typescript')({
-              tsconfig: tsConfigPath,
-              compilerOptions: {
-                ...tsCompilerOptions,
-                composite: false,
-                outDir: rollupOutputDir,
-                declarationDir: rollupOutputDir,
-                noEmitOnError: !options.skipTypeCheck,
-              },
-            });
-          })(),
+      (() => {
+        // @rollup/plugin-typescript needs outDir and declarationDir to match Rollup's output directory
+        const { outDir, declarationDir, ...tsCompilerOptions } =
+          compilerOptions;
+        const rollupOutputDir = Array.isArray(finalConfig.output)
+          ? finalConfig.output[0].dir
+          : finalConfig.output.dir;
+        return require('@rollup/plugin-typescript')({
+          tsconfig: tsConfigPath,
+          compilerOptions: {
+            ...tsCompilerOptions,
+            composite: false,
+            outDir: rollupOutputDir,
+            declarationDir: rollupOutputDir,
+            noEmitOnError: !options.skipTypeCheck,
+          },
+        });
+      })(),
       typeDefinitions({
         projectRoot,
       }),
@@ -366,6 +349,7 @@ function createInput(
 function createTsCompilerOptions(
   projectRoot: string,
   config: ReturnType<typeof ts.parseJsonConfigFileContent>,
+  tsConfigPath: string,
   options: RollupWithNxPluginOptions,
   dependencies?: DependentBuildableProjectNode[]
 ) {
@@ -373,6 +357,18 @@ function createTsCompilerOptions(
     config,
     dependencies ?? []
   );
+  // Resolve paths to absolute so they work without baseUrl and regardless
+  // of which tsconfig the plugin reads (project vs workspace root).
+  const pathsBase = resolvePathsBaseUrl(tsConfigPath);
+  for (const key of Object.keys(compilerOptionPaths)) {
+    compilerOptionPaths[key] = compilerOptionPaths[key].map((p) => {
+      if (isAbsolute(p)) {
+        return p;
+      }
+      const stripped = p.startsWith('./') ? p.slice(2) : p;
+      return resolve(pathsBase, stripped).replace(/\\/g, '/');
+    });
+  }
   const compilerOptions = {
     rootDir: projectRoot,
     allowJs: options.allowJs,

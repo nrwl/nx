@@ -6,14 +6,17 @@ filter: 'type:References'
 
 The Nx Cloud GitHub App requires the following permissions to provide CI/CD integration and setup experiences. Most information is used transiently during operations and not stored in our systems.
 
+{% callout type="note" title="Administration (read & write) permission removed." %}
+The Nx Cloud GitHub App no longer requests the `Administration` (read & write) permission. It was previously required to generate new workspaces from the browser; that feature has since been removed, so we've dropped the permission to reduce the access we request.
+{% /callout %}
+
 ## Required permissions
 
 Repository permissions:
 
-- `Administration: Read & Write`
 - `Checks: Read & Write`
 - `Contents: Read & Write`
-- `Commit Statuses: Read`
+- `Commit Statuses: Read & Write`
 - `Issues: Read & Write`
 - `Metadata: Read`
 - `Pull requests: Read & Write`
@@ -26,12 +29,6 @@ Organization permissions:
 - `Members: Read Only`
 
 ## Permission details
-
-### Administration (write)
-
-**Used for:** Creating new repositories with a pre-configured Nx workspace during initial onboarding.
-
-**When it's used:** Only when you explicitly choose to create a new workspace through Nx Cloud's setup flow. [Single tenant instances](/docs/enterprise/single-tenant/overview) can safely forego this scope and will only lose the ability to create new workspaces through the app.
 
 ### Checks (write)
 
@@ -48,11 +45,14 @@ Organization permissions:
 
 **When it's used:** During initial setup and configuration, and regularly if Self-Healing CI is enabled.
 
-### Commit statuses (read)
+### Commit statuses (read & write)
 
-**Used for:** Reading commit status information to coordinate with other CI tools and provide accurate pipeline context.
+**Used for:**
 
-**When it's used:** During CI pipeline executions to gather context about your commits.
+- **Read:** Reading the existing statuses on a pull request's head commit so Nx Cloud only re-posts the ones that have changed.
+- **Write:** Posting each task's result (passed, failed, or in progress) as a commit status on the pull request, so the outcome of every `nx affected` or `run-many` command shows on the PR. Posted only when the workspace's "Show run status checks in pull requests" setting is enabled.
+
+**When it's used:** During CI pipeline executions on pull request branches.
 
 ### Issues (read & write)
 
@@ -81,9 +81,9 @@ Organization permissions:
 
 ### Actions (read)
 
-**Used for:** Retrieving GitHub Action logs so that they can be surfaced on Nx Cloud to help resolve failures before Nx Cloud had a chance to run tasks, and for Polygraph support.
+**Used for:** Retrieving GitHub Action logs so that they can be surfaced on Nx Cloud to help resolve failures before Nx Cloud had a chance to run tasks.
 
-**When it's used:** Only when using Polygraph, and Nx Cloud MCP tools to get CI information.
+**When it's used:** Only when using Nx Cloud MCP tools to get CI information.
 
 ## Your data and security
 

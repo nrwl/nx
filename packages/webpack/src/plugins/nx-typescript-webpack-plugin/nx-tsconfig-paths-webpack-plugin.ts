@@ -1,15 +1,16 @@
 import * as path from 'path';
-import {
+import type {
   Compiler,
-  type Configuration,
-  type WebpackOptionsNormalized,
+  Configuration,
+  WebpackOptionsNormalized,
 } from 'webpack';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { workspaceRoot } from '@nx/devkit';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
+import { resolvePathsBaseUrl } from '@nx/js';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
 import { WebpackNxBuildCoordinationPlugin } from '../webpack-nx-build-coordination-plugin';
 
@@ -33,11 +34,13 @@ export class NxTsconfigPathsWebpackPlugin {
       ...compiler.options.resolve,
       plugins: compiler.options.resolve?.plugins ?? [],
     };
+    const configFile = !path.isAbsolute(this.options.tsConfig)
+      ? path.join(workspaceRoot, this.options.tsConfig)
+      : this.options.tsConfig;
     compiler.options.resolve.plugins.push(
       new TsconfigPathsPlugin({
-        configFile: !path.isAbsolute(this.options.tsConfig)
-          ? path.join(workspaceRoot, this.options.tsConfig)
-          : this.options.tsConfig,
+        configFile,
+        baseUrl: resolvePathsBaseUrl(configFile),
         extensions: Array.from(extensions),
         mainFields: ['module', 'main'],
       })

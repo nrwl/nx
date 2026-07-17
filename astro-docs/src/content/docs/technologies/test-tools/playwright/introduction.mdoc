@@ -1,9 +1,9 @@
 ---
-title: Playwright Plugin for Nx
-description: The Nx Plugin for Playwright contains executors and generators that support e2e testing with Playwright, including setup and configuration for your Nx workspace.
+title: Nx with Playwright
+description: Run Playwright through Nx for caching, affected test runs, and faster CI across your monorepo.
 sidebar:
   label: Introduction
-weight: 5
+weight: 2
 filter: 'type:References'
 ---
 
@@ -296,3 +296,9 @@ export default defineConfig({
 ```
 
 See the [Playwright configuration docs](https://playwright.dev/docs/test-configuration) for more options for Playwright.
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

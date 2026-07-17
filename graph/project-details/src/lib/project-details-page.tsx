@@ -1,9 +1,7 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphProjectNode } from '@nx/devkit';
 // nx-ignore-next-line
 import { GraphError } from 'nx/src/command-line/graph/graph';
-/* eslint-enable @nx/enforce-module-boundaries */
 
 import {
   ScrollRestoration,
@@ -62,7 +60,7 @@ export function ProjectDetailsPage() {
 
   return (
     <ExpandedTargetsProvider>
-      <div className="flex h-fit w-full flex-col justify-center text-slate-700 dark:text-slate-400">
+      <div className="flex h-fit w-full flex-col text-slate-700 dark:text-slate-400">
         <ScrollRestoration />
         {environment !== 'nx-console' ? (
           <ProjectDetailsHeader />

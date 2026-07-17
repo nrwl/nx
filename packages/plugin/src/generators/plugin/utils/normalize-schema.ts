@@ -2,16 +2,14 @@ import { readNxJson, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+} from '@nx/devkit/internal';
 import type { LinterType } from '@nx/eslint';
 import {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,
-} from '@nx/js/src/utils/generator-prompts';
-import {
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import type { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {

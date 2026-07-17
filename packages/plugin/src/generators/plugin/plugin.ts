@@ -11,20 +11,22 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import {
+  libraryGenerator as jsLibraryGenerator,
+  addTsLibDependencies,
+} from '@nx/js';
 import {
   addSwcDependencies,
   addSwcRegisterDependencies,
-} from '@nx/js/src/utils/swc/add-swc-dependencies';
-import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  getProjectSourceRoot,
+} from '@nx/js/internal';
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
-const nxVersion = require('../../../package.json').version;
+const nxVersion = require(path.join('@nx/plugin', 'package.json')).version;
 
 async function addFiles(host: Tree, options: NormalizedSchema) {
   host.delete(normalizePath(`${options.projectRoot}/src/lib`));
@@ -111,7 +113,14 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       host,
       joinPathFragments(options.projectRoot, 'package.json'),
       (json) => {
-        delete json.type;
+        // Force CommonJS for the plugin package. `jsLibraryGenerator` sets
+        // `type: "module"` for TS-solution libs, but Nx-plugin generators
+        // and executors that get loaded by `nx generate` / `nx run` rely on
+        // CJS globals like `__dirname` (e.g. `path.join(__dirname, 'files')`
+        // in generator factories). Setting `type: "commonjs"` explicitly
+        // overrides Node's content-based ESM detection so the source TS
+        // files load as CJS at runtime.
+        json.type = 'commonjs';
         return json;
       }
     );

@@ -377,7 +377,7 @@ describe('shared', () => {
       expect(tags).toEqual([]);
     });
 
-    it('should use docker version when releaseTagPatternPreferDockerVersion is true', () => {
+    it('should use docker version when releaseTag.preferDockerVersion is true', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
       releaseGroup.releaseTag.preferDockerVersion = true;
@@ -404,7 +404,7 @@ describe('shared', () => {
       expect(tags).toEqual(['my-group-2024.01.abc123']);
     });
 
-    it('should use semver version when releaseTagPatternPreferDockerVersion is false', () => {
+    it('should use semver version when releaseTag.preferDockerVersion is false', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
       releaseGroup.releaseTag.preferDockerVersion = false;
@@ -431,7 +431,7 @@ describe('shared', () => {
       expect(tags).toEqual(['my-group-1.1.0']);
     });
 
-    it('should create tags for both versions when releaseTagPatternPreferDockerVersion is "both"', () => {
+    it('should create tags for both versions when releaseTag.preferDockerVersion is "both"', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
       releaseGroup.releaseTag.preferDockerVersion = 'both';
@@ -940,11 +940,35 @@ describe('shared', () => {
               root: 'apps/app',
             },
           },
+          '@libs/lib-d': {
+            name: '@libs/lib-d',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-d',
+            },
+          },
+          '@foo/graph': {
+            name: '@foo/graph',
+            type: 'lib',
+            data: {
+              root: 'foo/graph',
+            },
+          },
+          '@bar/graph': {
+            name: '@bar/graph',
+            type: 'lib',
+            data: {
+              root: 'bar/graph',
+            },
+          },
         },
         dependencies: {
           'lib-a': [],
           'lib-b': [],
           'lib-c': [],
+          '@libs/lib-d': [],
+          '@foo/graph': [],
+          '@bar/graph': [],
           app: [
             {
               source: 'app',
@@ -1254,10 +1278,200 @@ describe('shared', () => {
       expect(result.size).toBe(0);
     });
 
+    it('should match commit scope using short project name', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'abc123',
+          ['libs/lib-d/src/index.ts'],
+          'feat(lib-d): add short scope feature'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@libs/lib-d'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      const scopedCommits = result.get('@libs/lib-d');
+
+      expect(scopedCommits).toHaveLength(1);
+      expect(scopedCommits?.[0].commit.shortHash).toBe('abc123');
+      expect(scopedCommits?.[0].isProjectScopedCommit).toBe(true);
+    });
+
+    it('should match commit scope using full project name', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'def456',
+          ['libs/lib-d/src/index.ts'],
+          'feat(@libs/lib-d): add full scope feature'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@libs/lib-d'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      const scopedCommits = result.get('@libs/lib-d');
+
+      expect(scopedCommits).toHaveLength(1);
+      expect(scopedCommits?.[0].commit.shortHash).toBe('def456');
+      expect(scopedCommits?.[0].isProjectScopedCommit).toBe(true);
+    });
+
+    it('should throw when commit scope matches multiple projects (ambiguous scope)', async () => {
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'ghi789',
+          ['libs/lib-a/src/index.ts'],
+          'feat(graph): ambiguous scope',
+          'graph'
+        ),
+      ];
+
+      await expect(
+        getCommitsRelevantToProjects(
+          mockProjectGraph,
+          commits,
+          ['@foo/graph', '@bar/graph'],
+          mockReleaseConfig!,
+          mockReleaseGraph
+        )
+      ).rejects.toThrow(/Ambiguous scope "graph"/);
+    });
+
+    it('should NOT throw when ambiguous scope only collides with projects outside the active release group', async () => {
+      // The commit's `graph` scope matches @foo/graph + @bar/graph
+      // (both outside the active release group). The active group is
+      // ['lib-a'] and the commit touches libs/lib-a. The cross-group
+      // ambiguity is irrelevant to lib-a's release and should not
+      // block it. See https://github.com/nrwl/nx/issues/35744.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'cross1',
+          ['libs/lib-a/src/index.ts'],
+          'feat(graph): cross-group ambiguous scope',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      // lib-a is included via file-affectedness path, treated as
+      // non-scoped for this group (mirrors the empty-scope behavior).
+      expect(result.size).toBe(1);
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0].commit.shortHash).toBe('cross1');
+      expect(result.get('lib-a')?.[0].isProjectScopedCommit).toBe(false);
+    });
+
+    it('should treat partially-ambiguous scope as scoped when filtered to a single in-group match', async () => {
+      // Scope `graph` matches @foo/graph + @bar/graph globally, but
+      // only @foo/graph is in the active release group. The filtered
+      // match set has one element, so no throw, and the commit is
+      // treated as scoped to @foo/graph.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'partial1',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): partial cross-group match',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@foo/graph'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      expect(result.size).toBe(1);
+      expect(result.get('@foo/graph')).toHaveLength(1);
+      expect(result.get('@foo/graph')?.[0].commit.shortHash).toBe('partial1');
+      expect(result.get('@foo/graph')?.[0].isProjectScopedCommit).toBe(true);
+    });
+
+    it('should detect intra-group ambiguity for independent release groups even when a single project is being processed', async () => {
+      // For independent release groups, only the single project being
+      // processed is passed as `projects`, but the full release group is
+      // forwarded as `releaseGroupProjects`. The scope `graph` matches
+      // both @foo/graph and @bar/graph, which both live in the active
+      // release group, so this is a genuine in-group ambiguity and must
+      // still throw. See https://github.com/nrwl/nx/issues/35744.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'indep1',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): ambiguous within independent group',
+          'graph'
+        ),
+      ];
+
+      await expect(
+        getCommitsRelevantToProjects(
+          mockProjectGraph,
+          commits,
+          // only the single independent project currently being processed
+          ['@foo/graph'],
+          mockReleaseConfig!,
+          mockReleaseGraph,
+          // the full release group (both siblings)
+          ['@foo/graph', '@bar/graph']
+        )
+      ).rejects.toThrow(/Ambiguous scope "graph"/);
+    });
+
+    it('should NOT throw for independent release groups when the ambiguous scope collides only with projects outside the group', async () => {
+      // The independent project @foo/graph is released on its own (its
+      // release group contains only itself). The scope `graph` also
+      // matches @bar/graph, but that project lives in a different release
+      // group, so there is no in-group ambiguity. The commit should be
+      // treated as scoped to @foo/graph.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'indep2',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): only collides outside the group',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@foo/graph'],
+        mockReleaseConfig!,
+        mockReleaseGraph,
+        // release group only contains the single independent project
+        ['@foo/graph']
+      );
+
+      expect(result.size).toBe(1);
+      expect(result.get('@foo/graph')).toHaveLength(1);
+      expect(result.get('@foo/graph')?.[0].commit.shortHash).toBe('indep2');
+      expect(result.get('@foo/graph')?.[0].isProjectScopedCommit).toBe(true);
+    });
+
     function createMockCommit(
       shortHash: string,
       affectedFiles: string[],
-      message?: string
+      message?: string,
+      scope: string = ''
     ): GitCommit {
       return {
         message: message || `feat: commit ${shortHash}`,
@@ -1266,7 +1480,7 @@ describe('shared', () => {
         author: { name: 'Test Author', email: 'test@example.com' },
         description: `commit ${shortHash}`,
         type: 'feat',
-        scope: '',
+        scope,
         references: [],
         authors: [{ name: 'Test Author', email: 'test@example.com' }],
         isBreaking: false,

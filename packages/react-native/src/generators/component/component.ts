@@ -9,14 +9,15 @@ import {
 } from '@nx/devkit';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript, getProjectType } from '@nx/js/internal';
 import { dirname, join, parse, relative } from 'path';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
-
+import { assertSupportedReactNativeVersion } from '../../utils/versions';
 export async function reactNativeComponentGenerator(
   host: Tree,
   schema: Schema
 ) {
+  assertSupportedReactNativeVersion(host);
+
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
 

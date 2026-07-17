@@ -1,4 +1,11 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+  promptWhenInteractive,
+  addBuildTargetDefaults,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
@@ -21,23 +28,17 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
-import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
+import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import {
@@ -89,6 +90,8 @@ export async function libraryGeneratorInternal(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
+  assertSupportedTypescriptVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
@@ -416,7 +419,7 @@ export async function addLint(
     updateOverrideInLintConfig,
     addIgnoresToLintConfig,
     // nx-ignore-next-line
-  } = require('@nx/eslint/src/generators/utils/eslint-file');
+  } = require('@nx/eslint/internal');
 
   // if config is not supported, we don't need to do anything
   if (!isEslintConfigSupported(tree)) {
@@ -481,7 +484,14 @@ export async function addLint(
           ignoredFiles.add('{projectRoot}/esbuild.config.{js,ts,mjs,mts}');
         }
         if (options.unitTestRunner === 'vitest') {
-          ignoredFiles.add('{projectRoot}/vite.config.{js,ts,mjs,mts}');
+          // When bundler is 'vite', vite.config holds both build and test config
+          // (added above). Otherwise, @nx/vitest:configuration generates a
+          // dedicated vitest.config file for non-framework JS libraries.
+          ignoredFiles.add(
+            options.bundler === 'vite'
+              ? '{projectRoot}/vite.config.{js,ts,mjs,mts}'
+              : '{projectRoot}/vitest.config.{js,ts,mjs,mts}'
+          );
         }
 
         if (ignoredFiles.size) {
@@ -927,7 +937,9 @@ function addProjectDependencies(
         esbuild:
           getDependencyVersionFromPackageJson(tree, 'esbuild') ??
           esbuildVersion,
-      }
+      },
+      undefined,
+      true
     );
   } else if (options.bundler == 'rollup') {
     const { dependencies, devDependencies } = getSwcDependencies();
@@ -938,26 +950,34 @@ function addProjectDependencies(
         ...devDependencies,
         '@nx/rollup': nxVersion,
         '@types/node': typesNodeVersion,
-      }
+      },
+      undefined,
+      true
     );
   } else if (options.bundler === 'tsc') {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { tslib: tsLibVersion, '@types/node': typesNodeVersion }
+      { tslib: tsLibVersion, '@types/node': typesNodeVersion },
+      undefined,
+      true
     );
   } else if (options.bundler === 'swc') {
     const { dependencies, devDependencies } = getSwcDependencies();
     return addDependenciesToPackageJson(
       tree,
       { ...dependencies },
-      { ...devDependencies, '@types/node': typesNodeVersion }
+      { ...devDependencies, '@types/node': typesNodeVersion },
+      undefined,
+      true
     );
   } else {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@types/node': typesNodeVersion }
+      { '@types/node': typesNodeVersion },
+      undefined,
+      true
     );
   }
 
@@ -1083,7 +1103,7 @@ function createProjectTsConfigs(
       ? undefined
       : getRelativePathToRootTsConfig(tree, options.projectRoot),
     compilerOptions: {
-      ...(options.rootProject ? tsConfigBaseOptions : {}),
+      ...(options.rootProject ? getTsConfigBaseOptions(tree) : {}),
       ...compilerOptionOverrides,
     },
     files: [],

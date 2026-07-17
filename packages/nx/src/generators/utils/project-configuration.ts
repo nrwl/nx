@@ -30,8 +30,27 @@ export { readNxJson, updateNxJson } from './nx-json';
  * @param tree - the file system tree
  * @param projectName - unique name. Often directories are part of the name (e.g., mydir-mylib)
  * @param projectConfiguration - project configuration
- * @param standalone - whether the project is configured in workspace.json or not
  */
+export function addProjectConfiguration(
+  tree: Tree,
+  projectName: string,
+  projectConfiguration: ProjectConfiguration
+): void;
+/**
+ * Adds project configuration to the Nx workspace.
+ *
+ * @param tree - the file system tree
+ * @param projectName - unique name. Often directories are part of the name (e.g., mydir-mylib)
+ * @param projectConfiguration - project configuration
+ * @param standalone - whether the project is configured in workspace.json or not
+ * @deprecated Nx only supports standalone projects. The `standalone` parameter is ignored and will be removed in a future version. Use the 3-argument overload instead.
+ */
+export function addProjectConfiguration(
+  tree: Tree,
+  projectName: string,
+  projectConfiguration: ProjectConfiguration,
+  standalone: boolean
+): void;
 export function addProjectConfiguration(
   tree: Tree,
   projectName: string,

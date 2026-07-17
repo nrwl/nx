@@ -1,10 +1,11 @@
 import { runCLI } from 'jest';
-import { readConfig, readConfigs } from 'jest-config';
+import { readConfigs } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
 import { addResult, makeEmptyAggregatedTestResult } from '@jest/test-result';
 import * as path from 'path';
 import { join } from 'path';
 import { JestExecutorOptions } from './schema';
+import schema from './schema.json';
 import { Config } from '@jest/types';
 import {
   ExecutorContext,
@@ -15,12 +16,15 @@ import {
 import { getSummary } from './summary';
 import { readFileSync } from 'fs';
 import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
+import { warnJestExecutorDeprecation } from '../../utils/deprecation';
 process.env.NODE_ENV ??= 'test';
 
 export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  warnJestExecutorDeprecation();
+
   // Jest registers ts-node with module CJS https://github.com/SimenB/jest/blob/v29.6.4/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L117-L119
   // We want to support of ESM via 'module':'nodenext', we need to override the resolution until Jest supports it.
   const existingValue = process.env['TS_NODE_COMPILER_OPTIONS'];
@@ -57,17 +61,8 @@ export async function parseJestConfig(
   context: ExecutorContext,
   multiProjects = false
 ): Promise<Config.Argv> {
-  let jestConfig:
-    | {
-        transform: any;
-        globals: any;
-        setupFilesAfterEnv: any;
-      }
-    | undefined;
-
   // support passing extra args to jest cli supporting 3rd party plugins
   // like 'jest-runner-groups' --group arg
-  const schema = await import('./schema.json');
   const extraArgs = getExtraArgs(options, schema);
 
   const config: Config.Argv = {
@@ -109,17 +104,6 @@ export async function parseJestConfig(
 
   if (!multiProjects) {
     options.jestConfig = path.resolve(context.root, options.jestConfig);
-
-    jestConfig = (await readConfig(config, options.jestConfig)).projectConfig;
-  }
-
-  // for backwards compatibility
-  if (options.setupFile && !multiProjects) {
-    const setupFilesAfterEnvSet = new Set([
-      ...(jestConfig.setupFilesAfterEnv ?? []),
-      path.resolve(context.root, options.setupFile),
-    ]);
-    config.setupFilesAfterEnv = Array.from(setupFilesAfterEnvSet);
   }
 
   if (options.testFile) {

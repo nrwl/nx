@@ -1,3 +1,5 @@
+import { ensureRootProjectName } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
@@ -26,19 +28,21 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 import { NormalizedSchema, Schema } from './schema';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { isValidVariable } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
-import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 import { normalizeHostName } from './lib/normalize-host-name';
+import { warnReactHostGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(host);
+  warnReactHostGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeHostName(host, schema.directory, schema.name);
   const options: NormalizedSchema = {
@@ -176,7 +180,9 @@ export async function hostGenerator(
     {
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
-    }
+    },
+    undefined,
+    true
   );
   tasks.push(installTask);
 

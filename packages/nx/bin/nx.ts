@@ -8,13 +8,13 @@ if (process.env.FORCE_COLOR === '0') {
   delete process.env.FORCE_COLOR;
 }
 
+// Must be the first import — see enable-compile-cache.ts.
+import '../src/utils/enable-compile-cache';
 import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
 import * as pc from 'picocolors';
-import { loadRootEnvFiles } from '../src/utils/dotenv';
-import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
 import {
   getNxInstallationPath,
@@ -26,31 +26,68 @@ import { execSync } from 'child_process';
 import { createRequire } from 'module';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
-import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 import { performance } from 'perf_hooks';
-import { setupWorkspaceContext } from '../src/utils/workspace-context';
-import { daemonClient } from '../src/daemon/client/client';
-import { removeDbConnections } from '../src/utils/db-connection';
-import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
-import { flushAnalytics, startAnalytics } from '../src/analytics';
+// Register the performance observer as early as possible so any
+// `performance.mark` / `measure` anywhere downstream is captured. The module
+// is side-effect only and its heavy deps (analytics, daemon logger) are
+// lazy-loaded inside the observer callback, so the import itself is cheap.
 import '../src/utils/perf-logging';
 
 const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
 
 async function main() {
+  // Tab-completion fast path. Bare env-var read so nothing runs before
+  // the try/catch — a throw here would splice a stack trace into the
+  // user's command line.
+  if (process.env.NX_COMPLETE) {
+    try {
+      performance.mark('init-local');
+      const { tryValueCompletion } = await import(
+        'nx/src/command-line/completion/value-completions'
+      );
+      if (tryValueCompletion()) return;
+      const { tryCommandSurfaceCompletion } = await import(
+        'nx/src/command-line/completion/command-completions'
+      );
+      tryCommandSurfaceCompletion();
+    } catch (e) {
+      // Swallow: a broken completion must produce no suggestions, not a
+      // stack trace. NX_VERBOSE_LOGGING surfaces the cause to stderr.
+      if (process.env.NX_VERBOSE_LOGGING) {
+        console.error(e);
+      }
+    }
+    return;
+  }
+
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
     process.argv[2] !== '--help' &&
-    process.argv[2] !== 'reset'
+    process.argv[2] !== 'reset' &&
+    process.argv[2] !== 'completion'
   ) {
+    const { assertSupportedPlatform } = await import(
+      '../src/native/assert-supported-platform.js'
+    );
     assertSupportedPlatform();
   }
 
   const workspace = findWorkspaceRoot(process.cwd());
 
-  if (workspace) {
+  // --version doesn't need any env / daemon / analytics state — skip dotenv
+  // loading (and the heavy modules it would pull in).
+  if (workspace && process.argv[2] !== '--version') {
+    const { workspaceDataDirectoryForWorkspace } = await import(
+      '../src/utils/cache-directory.js'
+    );
+    process.report.reportOnFatalError = true;
+    process.report.directory = workspaceDataDirectoryForWorkspace(
+      workspace.dir
+    );
+
+    const { loadRootEnvFiles } = await import('../src/utils/dotenv.js');
     performance.mark('loading dotenv files:start');
     loadRootEnvFiles(workspace.dir);
     performance.mark('loading dotenv files:end');
@@ -67,10 +104,22 @@ async function main() {
     process.argv[2] === '_migrate' ||
     process.argv[2] === 'init' ||
     process.argv[2] === 'configure-ai-agents' ||
+    process.argv[2] === 'mcp' ||
+    process.argv[2] === 'completion' ||
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';
-    require('nx/src/command-line/nx-commands').commandsObject.argv;
+    if (process.argv[2] === '_migrate') {
+      // `_migrate` runs the actual migrate flow (spawned by `nx migrate`,
+      // potentially from a temp install of the latest CLI), so its analytics
+      // events would otherwise be silently dropped. A new-enough outer
+      // process prompts for the preference before spawning (making the
+      // ensure step a no-op here), but when the outer is an older nx with no
+      // analytics prompt, this is the first chance to ask. The session ID is
+      // inherited via NX_ANALYTICS_SESSION_ID.
+      await initAnalytics();
+    }
+    (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
   } else {
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
     // https://twitter.com/BenLesh/status/1192478226385428483?s=20
@@ -107,18 +156,27 @@ async function main() {
 
     // this file is already in the local workspace
     if (isNxCloudCommand(process.argv[2])) {
+      const { daemonClient } = await import('../src/daemon/client/client.js');
       if (!daemonClient.enabled() && workspace !== null) {
+        const { setupWorkspaceContext } = await import(
+          '../src/utils/workspace-context.js'
+        );
         setupWorkspaceContext(workspace.dir);
       }
       await initAnalytics();
       // nx-cloud commands can run without local Nx installation
       process.env.NX_DAEMON = 'false';
-      require('nx/src/command-line/nx-commands').commandsObject.argv;
+      (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
     } else if (isLocalInstall) {
+      const { daemonClient } = await import('../src/daemon/client/client.js');
       if (!daemonClient.enabled() && workspace !== null) {
+        const { setupWorkspaceContext } = await import(
+          '../src/utils/workspace-context.js'
+        );
         setupWorkspaceContext(workspace.dir);
       }
       await initAnalytics();
+      const { initLocal } = await import('./init-local.js');
       await initLocal(workspace);
     } else if (localNx) {
       // Nx is being run from globally installed CLI - hand off to the local
@@ -215,17 +273,22 @@ function isNxCloudCommand(command: string): boolean {
     'view-logs',
     'fix-ci',
     'record',
-    'polygraph',
     'download-cloud-client',
   ];
   return nxCloudCommands.includes(command);
 }
 
+let analyticsStarted = false;
 async function initAnalytics() {
+  const { ensureAnalyticsPreferenceSet } = await import(
+    '../src/utils/analytics-prompt.js'
+  );
+  const { startAnalytics } = await import('../src/analytics/index.js');
   try {
     await ensureAnalyticsPreferenceSet();
   } catch {}
   await startAnalytics();
+  analyticsStarted = true;
 }
 
 function handleMissingLocalInstallation(detectedWorkspaceRoot: string | null) {
@@ -246,7 +309,7 @@ function warnIfUsingOutdatedGlobalInstall(
   globalNxVersion: string,
   localNxVersion?: string
 ) {
-  // Never display this warning if Nx is already running via Nx
+  // Skip when Nx is recursively invoking itself.
   if (process.env.NX_CLI_SET) {
     return;
   }
@@ -265,7 +328,7 @@ function warnIfUsingOutdatedGlobalInstall(
       : [];
 
     bodyLines.push(
-      'For more information, see https://nx.dev/more-concepts/global-nx'
+      'For more information, see https://nx.dev/docs/getting-started/installation#global-installation'
     );
     output.warn({
       title: `It's time to update Nx 🎉`,
@@ -340,12 +403,13 @@ const getLatestVersionOfNx = ((fn: () => string) => {
   return () => cache || (cache = fn());
 })(_getLatestVersionOfNx);
 
-process.on('exit', () => {
-  removeDbConnections();
-});
-
-main().catch((error) => {
+main().catch(async (error) => {
   console.error(error);
-  flushAnalytics();
+  if (analyticsStarted) {
+    // analyticsStarted implies '../src/analytics' is already in the module
+    // cache, so this resolves from cache without any disk work.
+    const { flushAnalytics } = await import('../src/analytics/index.js');
+    flushAnalytics();
+  }
   process.exit(1);
 });

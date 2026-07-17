@@ -1,0 +1,42 @@
+---
+title: 'Docker Read-Through Cache'
+description: 'Serve repeated Docker image pulls from a cache close to your Nx Agents instead of the upstream registry.'
+keywords:
+  [
+    docker,
+    read-through cache,
+    registry mirror,
+    pull-through,
+    nx agents,
+    nx cloud,
+    add-on,
+  ]
+sidebar:
+  label: Docker read-through cache
+  order: 22
+  badge: new!
+filter: 'type:Features'
+---
+
+The Docker read-through cache puts a registry mirror close to your [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+The first time an image is pulled, it is fetched from the upstream registry (for example Docker Hub)
+and stored in the cache. Repeated pulls of the same image are then served from the cache instead of
+the upstream registry, cutting image download time and reducing dependence on external registries.
+
+It also protects your organization from Docker registry outages.
+
+## How to enable it
+
+{% aside type="note" title="Requires a dedicated compute cluster" %}
+The Docker read-through cache is an Nx Cloud add-on that runs on a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Request the
+cluster, then enable this add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
+{% /aside %}
+
+You can enable Docker read-through cache through your organization settings:
+
+1. Open [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons) for your organization.
+2. Under **Dedicated compute cluster** card, find **Docker read-through cache** and click **Request add-on** and confirm.
+
+Once enabled, it works automatically. You don't change your Dockerfiles, `docker pull` commands, or
+image references. Repeated image pulls are served from the cache instead of the upstream registry.

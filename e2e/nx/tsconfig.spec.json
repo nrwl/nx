@@ -1,19 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "types": ["jest", "node"]
+    "outDir": "out-tsc/spec",
+    "types": ["jest", "node"],
+    "rootDir": "."
   },
-  "include": [
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.spec.tsx",
-    "**/*.test.tsx",
-    "**/*.spec.js",
-    "**/*.test.js",
-    "**/*.spec.jsx",
-    "**/*.test.jsx",
-    "**/*.d.ts",
-    "jest.config.ts"
-  ]
+  "exclude": ["out-tsc"],
+  "include": ["src/**/*.ts", "**/*.d.ts", "jest.config.ts"]
 }

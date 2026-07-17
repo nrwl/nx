@@ -3,6 +3,7 @@ import {
   killPorts,
   killProcessAndPorts,
   readJson,
+  reservePort,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -40,13 +41,14 @@ describe('Angular Module Federation - SSR', () => {
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
 
+    // ports
+    const hostPort = await reservePort();
+
     // generate remote apps
     runCLI(
-      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
+      `generate @nx/angular:host ${host} --port=${hostPort} --ssr --remotes=${remote1},${remote2} --no-interactive`
     );
 
-    // ports
-    const hostPort = 4500;
     const remote1Port = readJson(join(remote1, 'project.json')).targets.serve
       .options.port;
     const remote2Port = readJson(join(remote2, 'project.json')).targets.serve
