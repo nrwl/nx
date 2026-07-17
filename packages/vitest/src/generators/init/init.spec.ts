@@ -76,7 +76,7 @@ describe('@nx/vitest:init', () => {
   it('should default to vite 8 when no vite is installed', async () => {
     await initGenerator(tree, { skipFormat: true });
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['vite']).toEqual('^8.0.0');
+    expect(packageJson.devDependencies['vite']).toEqual('^8.0.5');
   });
 
   it('should preserve vite 7 when already installed', async () => {

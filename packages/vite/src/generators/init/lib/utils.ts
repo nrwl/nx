@@ -48,7 +48,7 @@ export async function checkDependenciesInstalled(
   // 1. Explicit flags take priority (useViteV5/V6/V7)
   // 2. If vite is already installed, keep the matching major version
   // 3. If esbuild is already installed but incompatible with Vite 8, use Vite 7
-  // 4. Otherwise, use the latest default (^8.0.0)
+  // 4. Otherwise, use the latest default (^8.0.5)
   const installedMajor = getInstalledViteMajorVersion(host);
   const installedEsbuildVersion = getDependencyVersionFromPackageJson(
     host,
