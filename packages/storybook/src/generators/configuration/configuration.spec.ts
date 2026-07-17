@@ -575,6 +575,38 @@ describe('@nx/storybook:configuration', () => {
           readJson(tree, 'package.json').devDependencies['core-js']
         ).toBeTruthy();
       });
+
+      it('should not add tsconfig.storybook.json to nx.json when using Angular', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/angular',
+          addPlugin: false,
+        });
+
+        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        expect(nxJson.namedInputs.production).not.toContain(
+          '!{projectRoot}/tsconfig.storybook.json'
+        );
+        expect(nxJson.targetDefaults['build-storybook'].inputs).not.toContain(
+          '{projectRoot}/tsconfig.storybook.json'
+        );
+      });
+
+      it('should add tsconfig.storybook.json to nx.json when not using Angular', async () => {
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          uiFramework: '@storybook/react-webpack5',
+          addPlugin: false,
+        });
+
+        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        expect(nxJson.namedInputs.production).toContain(
+          '!{projectRoot}/tsconfig.storybook.json'
+        );
+        expect(nxJson.targetDefaults['build-storybook'].inputs).toContain(
+          '{projectRoot}/tsconfig.storybook.json'
+        );
+      });
     });
 
     describe('update root tsconfig.json', () => {

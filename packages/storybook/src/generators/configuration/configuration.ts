@@ -171,9 +171,9 @@ export async function configurationGeneratorInternal(
   updateLintConfig(tree, schema);
 
   addBuildStorybookToCacheableOperations(tree);
-  addStorybookToNamedInputs(tree);
+  addStorybookToNamedInputs(tree, schema);
   if (!hasPlugin) {
-    addStorybookToTargetDefaults(tree);
+    addStorybookToTargetDefaults(tree, schema);
   }
 
   let devDeps = {};
