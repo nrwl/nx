@@ -49,7 +49,11 @@ To see information about the running Nx Daemon (such as its background process I
 ## Customizing the socket location
 
 The Nx Daemon uses a unix socket to communicate between the daemon and the Nx processes. By default this socket gets placed in a temp directory. If you are using Nx in a docker-compose environment, however, you may want to run the daemon manually
-and control its location to enable sharing the daemon among your docker containers. To do so, set the `NX_SOCKET_DIR` environment variable to a shared directory.
+and control its location to enable sharing the daemon among your docker containers. To do so, set the `NX_SOCKET_DIR` environment variable to a directory shared by those containers.
+
+{% aside type="caution" title="Keep the socket directory private" %}
+Do not point `NX_SOCKET_DIR` (or `NX_DAEMON_SOCKET_DIR`) at a directory that other users on the machine can access, such as a world-writable temp directory. The daemon drives work inside a long-lived process, so another user who can reach its socket could execute code in your daemon. Share the socket directory only between processes that belong to the same user and the same workspace; the daemon rejects messages whose workspace root does not match its own.
+{% /aside %}
 
 ## Daemon behavior in containers
 
