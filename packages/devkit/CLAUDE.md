@@ -17,11 +17,47 @@
   └── @nx/devkit/internal      → nx/src/devkit-internals (subset)
 ```
 
+## Importing from `nx`
+
+**Every import from the `nx` package must come from `nx/src/devkit-exports`
+or `nx/src/devkit-internals` — no other `nx` deep imports.** This is
+enforced by the `@typescript-eslint/no-restricted-imports` rule in
+`packages/devkit/eslint.config.mjs`. The two entry points exist so the
+surface devkit depends on is explicit and version-checkable; a deep import
+into arbitrary `nx` internals silently breaks the compatibility contract
+below, because nothing tracks whether that internal exists across the
+supported `nx` versions.
+
+## Rules for the other packages in this repo
+
+Every other first-party package (`@nx/js`, `@nx/react`, ...) must get its
+core types and utilities **from `@nx/devkit` or `@nx/devkit/internal` —
+never by importing `nx` directly**. Devkit is the compatibility boundary:
+it is the one place that knows which `nx` entry points are safe across the
+supported version range, and a direct `nx` import bypasses that entirely.
+
 ## Version Compatibility Contract
 
 **This is the most important thing to understand when modifying devkit or its nx entry points.**
 
 `@nx/devkit` supports `nx` at the current major version **+/- 1 major version**. The `peerDependencies` in `package.json` encode this — e.g. `"nx": ">= 21 <= 23"` means `@nx/devkit@22` works with `nx@21`, `nx@22`, and `nx@23`.
+
+**These rules govern the _main public exports_ of `@nx/devkit` (the root
+entry point).** The `@nx/devkit/internal` entry point is exempt: it exists
+only for the first-party packages in this repo, and those are all released
+in lockstep at the same version — an `@nx/react@23` always runs with
+`@nx/devkit@23` — so the internal API carries no cross-version
+compatibility burden and can change freely between majors.
+
+**The contract cuts both ways.** `@nx/devkit@23` must work with `nx@22`,
+`nx@23`, and keep working up through `nx@24` — and, equally, changes to
+`nx` itself must not break the _previous_ devkit major: while developing
+`nx@23`, verify it remains compatible with the published `@nx/devkit@22`
+(plugins in the wild pair a newer `nx` with an older devkit all the time).
+In practice: treat everything reachable from `devkit-exports` and
+`devkit-internals` as an API that published devkit versions within the
+supported window already depend on — removing or reshaping it is a break
+even when nothing inside this repo still uses it.
 
 ### What This Means for Changes
 
