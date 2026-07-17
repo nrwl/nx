@@ -67,7 +67,10 @@ Nx plugins can infer tasks for your projects based on the configuration of diffe
 The `@nx/react-native` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
 
 - `app.config.js`
+- `app.config.ts`
 - `app.json`
+
+The directory must contain both `package.json` and `metro.config.js`. React Native inference excludes projects whose app configuration has an `expo` key or whose package depends on `expo`. The `@nx/expo/plugin` handles projects that meet both Expo conditions.
 
 ### View inferred tasks
 
@@ -90,14 +93,28 @@ The `@nx/react-native/plugin` is configured in the `plugins` array in `nx.json`.
         "runIosTargetName": "run-ios",
         "runAndroidTargetName": "run-android",
         "buildIosTargetName": "build-ios",
-        "buildAndroidTargetName": "build-android"
+        "buildAndroidTargetName": "build-android",
+        "syncDepsTargetName": "sync-deps",
+        "upgradeTargetName": "upgrade"
       }
     }
   ]
 }
 ```
 
-Once a React Native configuration file has been identified, the targets are created with the name you specify under `startTargetName`, `podInstallTargetName`, `bundleTargetName`, `runIosTargetName`, `runAndroidTargetname`, `buildIosTargetName` or `buildAndroidTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `start`, `pod-install`, `bundle`, `run-ios`, `run-android`, `build-ios` and `build-android`.
+| Option                   | Default         | Inferred behavior                                                    |
+| ------------------------ | --------------- | -------------------------------------------------------------------- |
+| `startTargetName`        | `start`         | Runs `react-native start` continuously.                              |
+| `podInstallTargetName`   | `pod-install`   | Runs `pod install` after the dependency synchronization task.        |
+| `bundleTargetName`       | `bundle`        | Runs `react-native bundle` after bundling project dependencies.      |
+| `runIosTargetName`       | `run-ios`       | Runs `react-native run-ios` continuously.                            |
+| `runAndroidTargetName`   | `run-android`   | Runs `react-native run-android` continuously.                        |
+| `buildIosTargetName`     | `build-ios`     | Runs and caches `react-native build-ios` with the iOS build outputs. |
+| `buildAndroidTargetName` | `build-android` | Runs and caches `react-native build-android` with Android outputs.   |
+| `syncDepsTargetName`     | `sync-deps`     | Runs the `@nx/react-native:sync-deps` executor.                      |
+| `upgradeTargetName`      | `upgrade`       | Runs `react-native upgrade`.                                         |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/react-native/plugin`.
 
 ### Generating applications
 
