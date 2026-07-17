@@ -40,6 +40,9 @@
       ],
       "internal-testing-utils": [
         "dist/internal-testing-utils.d.ts"
+      ],
+      "internal-testing-utils/mock-project-graph": [
+        "dist/internal-testing-utils/mock-project-graph.d.ts"
       ]
     }
   },
