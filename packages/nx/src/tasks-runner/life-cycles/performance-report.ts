@@ -49,20 +49,14 @@ interface RecLink {
  * the terminal and payload as space-aligned columns, Markdown as a nested list
  * (HTML collapses space runs, so aligned columns don't survive rendering there).
  */
-interface RecTaskRows {
-  tasks: Array<{ id: string; duration: number }>;
-}
+type RecTaskRows = Array<{ id: string; duration: number }>;
 
 function phraseLink(phrase: string, taggedUrl: string): RecLink {
   return { visible: phrase, href: taggedUrl };
 }
 
 function isRecLink(part: RecPart): part is RecLink {
-  return typeof part !== 'string' && 'href' in part;
-}
-
-function isRecTaskRows(part: RecPart): part is RecTaskRows {
-  return typeof part !== 'string' && 'tasks' in part;
+  return typeof part !== 'string' && !Array.isArray(part);
 }
 
 /**
@@ -84,8 +78,8 @@ export function recommendationToPayloadString(rec: Recommendation): string {
 }
 
 /** Task rows as the text block the terminal and payload embed: newline-led, space-aligned columns. */
-function taskRowsToText(part: RecTaskRows): string {
-  return ['', ...formatTopTaskRows(part.tasks)].join('\n');
+function taskRowsToText(tasks: RecTaskRows): string {
+  return ['', ...formatTopTaskRows(tasks)].join('\n');
 }
 
 /**
@@ -103,7 +97,7 @@ function recommendationToTerminalString(
       if (typeof part === 'string') {
         return part;
       }
-      if (isRecTaskRows(part)) {
+      if (Array.isArray(part)) {
         return taskRowsToText(part);
       }
       return hyperlinks
@@ -285,7 +279,7 @@ const RECOMMENDATIONS: RecommendationCandidate[] = [
     isApplicable: (c) => criticalPathBound(c) && c.criticalPathTop.length > 0,
     build: (c) => [
       `Speed up or split the longest tasks on the critical path:`,
-      { tasks: c.criticalPathTop },
+      c.criticalPathTop,
     ],
   },
 ];
@@ -405,7 +399,7 @@ function recommendationToMarkdownString(rec: Recommendation): string {
       if (isRecLink(part)) {
         return `[${part.visible}](${part.href})`;
       }
-      return part.tasks
+      return part
         .map((t) => `\n  - \`${t.id}\` — ${formatDuration(t.duration)}`)
         .join('');
     })
