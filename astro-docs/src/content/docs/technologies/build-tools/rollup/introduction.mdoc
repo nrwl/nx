@@ -37,6 +37,59 @@ nx add @nx/rollup
 
 This will install the correct version of `@nx/rollup`.
 
+## Configure task inference
+
+The `@nx/rollup/plugin` plugin looks for these Rollup configuration files:
+
+- `rollup.config.js`
+- `rollup.config.cjs`
+- `rollup.config.mjs`
+- `rollup.config.ts`
+- `rollup.config.cts`
+- `rollup.config.mts`
+
+A configuration file is associated with a project when its directory also contains a `package.json` or `project.json`. Nx reads the Rollup outputs and creates a cached build task that runs `rollup -c`, depends on the same task in dependency projects, and records the configured output paths for cache restoration.
+
+Configure the plugin in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/rollup/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ]
+}
+```
+
+| Option                | Type   | Default      | Description                                         |
+| --------------------- | ------ | ------------ | --------------------------------------------------- |
+| `buildTargetName`     | string | `build`      | Name of the cached Rollup build task.               |
+| `buildDepsTargetName` | string | `build-deps` | Name of the task that builds project dependencies.  |
+| `watchDepsTargetName` | string | `watch-deps` | Name of the task that watches project dependencies. |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. To apply [target defaults](/docs/reference/nx-json#target-defaults) only to Rollup-inferred tasks, filter by the exact plugin identifier:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      {
+        "filter": { "plugin": "@nx/rollup/plugin" },
+        "options": { "sourcemap": true }
+      }
+    ]
+  }
+}
+```
+
 ## Using @nx/rollup
 
 ### Generate a new project using Rollup

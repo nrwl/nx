@@ -175,6 +175,12 @@ Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
 
 Individual Gradle projects can also configure Nx-specific settings using the `nx { }` DSL in `build.gradle` or `build.gradle.kts`.
 
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for inferred Gradle tasks must use the exact identifier `@nx/gradle`.
+
+{% aside type="caution" title="Legacy Gradle plugin" %}
+The public `@nx/gradle/plugin-v1` entry point is deprecated and will be removed in Nx 24. Replace it with `@nx/gradle`. The legacy entry recognizes Gradle build files and test files and supports `buildTargetName` (default `build`), `classesTargetName` (default `classes`), `testTargetName` (default `test`), `ciTargetName`, `includeSubprojectsTasks` (default `false`), and arbitrary `<taskName>TargetName` overrides.
+{% /aside %}
+
 ## Set up CI for your Gradle monorepo
 
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.

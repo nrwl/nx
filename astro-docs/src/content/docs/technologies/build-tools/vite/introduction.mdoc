@@ -104,6 +104,8 @@ The `@nx/vite` plugin infers tasks by reading Vite config files. Any of the foll
 - `vite.config.cjs`
 - `vite.config.cts`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 Build targets are only created when the project is buildable. A project is treated as buildable when any of the following are true:
 
 - `build.lib` is set in `vite.config.*`
@@ -132,6 +134,7 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static",
         "typecheckTargetName": "typecheck",
+        "compiler": "tsc",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
       }
@@ -150,8 +153,11 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 | `devTargetName`         | Name of the Vite dev server target                   | `dev`          |
 | `serveStaticTargetName` | Name of the static file server target                | `serve-static` |
 | `typecheckTargetName`   | Name of the typecheck target                         | `typecheck`    |
+| `compiler`              | Typecheck compiler: `tsc`, `tsgo`, or `vue-tsc`      | auto-detected  |
 | `buildDepsTargetName`   | Name of the build-deps target for dependency builds  | none           |
 | `watchDepsTargetName`   | Name of the watch-deps target for dependency watches | none           |
+
+Build and typecheck tasks are cached with inputs and outputs derived from the Vite and TypeScript configuration. Development, preview, and static-server tasks are continuous. When `compiler` is omitted, Nx uses `vue-tsc` for Vue projects and `tsc` otherwise.
 
 ### Disable or scope inference
 
@@ -178,6 +184,8 @@ To see what tasks Nx inferred for a project, open the [project details view](/do
 ```shell
 nx show project my-app --web
 ```
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/vite/plugin`.
 
 ## Set up CI for your Vite monorepo
 
