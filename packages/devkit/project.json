@@ -9,6 +9,12 @@
       "command": "node ./scripts/copy-readme.js devkit packages/devkit/readme-template.md packages/devkit/README.md",
       "inputs": ["copyReadme"],
       "dependsOn": ["^build", "build-base"]
+    },
+    "build-base": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/packages/nx/src/internal-testing-utils/mock-project-graph.ts"
+      ]
     }
   }
 }
