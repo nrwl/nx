@@ -662,8 +662,8 @@ export function getTsConfigPath(
     path?.length > 0
       ? path
       : getProjectType(tree, root, projectType) === 'application'
-      ? 'tsconfig.app.json'
-      : 'tsconfig.lib.json'
+        ? 'tsconfig.app.json'
+        : 'tsconfig.lib.json'
   );
 }
 
