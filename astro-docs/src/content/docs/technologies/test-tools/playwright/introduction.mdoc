@@ -52,6 +52,8 @@ The `@nx/playwright` plugin will create a task for any project that has a Playwr
 - `playwright.config.cjs`
 - `playwright.config.cts`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
@@ -79,9 +81,11 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 ### Splitting E2E tests
 
-`@nx/playwright/plugin` uses Nx Atomizer to automatically split your e2e tests into smaller tasks for more efficient distribution in CI. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
+The `targetName` task runs the complete Playwright suite and caches the configured test and reporter outputs. The `ciTargetName` task uses Nx Atomizer to create one cached task per test file, plus a report-merging task when the configured reporters produce mergeable output. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
 
-If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
+Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/playwright/plugin`.
 
 ## E2E testing
 
@@ -125,7 +129,7 @@ nx e2e frontend-e2e --grepInvert="feat-a"
 {% /aside %}
 
 By default, Playwright will run in headless mode. You will have the result of all the tests and errors (if any) in your
-terminal. Test output such as reports, screenshots and videos, will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
+terminal. Test output such as reports, screenshots, and videos will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
 
 {% aside type="note" title="Output Caching" %}
 If changing the output directory or report output, make sure to update the [target outputs](/docs/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached
