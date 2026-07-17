@@ -124,15 +124,10 @@
       },
       "test": {
         "dependsOn": [
+          "...",
           "build",
-          "^build-native",
           "angular-rspack-compiler:build"
-        ],
-        "options": {
-          "args": [
-            "--passWithNoTests"
-          ]
-        }
+        ]
       }
     }
   }
