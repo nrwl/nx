@@ -125,6 +125,31 @@ describe('migration-markdown-assets', () => {
     expect(violations[0].message).toContain('resolves outside');
   });
 
+  it('should check the generators entry when schematics declares the same name', () => {
+    writeFile('packages/acme/src/migrations/update-1-0-0/from-generators.md');
+
+    const violations = validate(
+      {
+        schematics: {
+          'update-1-0-0': {
+            version: '1.0.0',
+            documentation: './dist/src/migrations/update-1-0-0/uncopied.md',
+          },
+        },
+        generators: {
+          'update-1-0-0': {
+            version: '1.0.0',
+            documentation:
+              './dist/src/migrations/update-1-0-0/from-generators.md',
+          },
+        },
+      },
+      [{ glob: 'src/migrations/**/*.md' }]
+    );
+
+    expect(violations).toEqual([]);
+  });
+
   it('should return no violations when no migration references markdown', () => {
     const violations = validate(
       {
