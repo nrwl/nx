@@ -358,12 +358,12 @@ git -C "$NX_REPO_PATH" worktree add --detach "$WORKTREE_BASE/pr-<NUMBER>-verify"
 
 (Detached on purpose: the `pr-<NUMBER>` branch is already checked out by the review worktree, and the verifier only ever checks out SHAs.)
 
-Decide whether to opt in to Level 2 (expensive verdaccio-based external-repo reproduction, ~10-15 min per PR). Default is **off** — Level 2 only runs when:
+Decide whether to opt in to Level 2 (expensive **sandboxed** reproduction — the agent builds the PR and runs the external repro inside a container, ~10-15 min per PR). Default is **off** — Level 2 only runs when:
 
 - The caller of this skill explicitly requested deep verification (e.g. invoked with the `--verify-external-repros` flag, or a manual `/review-pr <N> --verify-repros` pattern), OR
 - `$NX_REVIEW_LEVEL_2=1` is set in the environment.
 
-Level 2 is for deep-dive passes where you want end-user-level proof — each run takes ~10-15 minutes and ~0.5-1 GB of disk, so opt in deliberately.
+Level 2 is for deep-dive passes where you want end-user-level proof — each run **builds nx inside the sandbox** (needs the `nx-review-sandbox` image; run `setup-review-sandbox` if missing), takes ~10-15 minutes and several GB, so opt in deliberately. Nothing in Level 2 builds or runs on the host.
 
 ```
 Agent(
