@@ -788,6 +788,40 @@ describe('package-manager', () => {
         'bun publish --cwd="dist/packages/my-pkg" --json --registry="https://registry.npmjs.org/" --tag=latest'
       );
     });
+
+    it('should return pnpm add commands with --config.frozen-lockfile=false in a workspace', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+        if (p === 'pnpm --version') {
+          return '9.15.7';
+        }
+        throw new Error(`Unexpected command: ${p}`);
+      });
+      (existsSync as jest.Mock).mockImplementation((path: string) =>
+        path.endsWith('pnpm-workspace.yaml')
+      );
+      const commands = getPackageManagerCommand('pnpm');
+      expect(commands.add).toEqual(
+        'pnpm add -w --config.frozen-lockfile=false'
+      );
+      expect(commands.addDev).toEqual(
+        'pnpm add -Dw --config.frozen-lockfile=false'
+      );
+    });
+
+    it('should return pnpm add commands with --config.frozen-lockfile=false outside a workspace', () => {
+      jest.spyOn(childProcess, 'execSync').mockImplementation((p) => {
+        if (p === 'pnpm --version') {
+          return '9.15.7';
+        }
+        throw new Error(`Unexpected command: ${p}`);
+      });
+      (existsSync as jest.Mock).mockReturnValue(false);
+      const commands = getPackageManagerCommand('pnpm');
+      expect(commands.add).toEqual('pnpm add --config.frozen-lockfile=false');
+      expect(commands.addDev).toEqual(
+        'pnpm add -D --config.frozen-lockfile=false'
+      );
+    });
   });
 
   describe('packageRegistryView', () => {
