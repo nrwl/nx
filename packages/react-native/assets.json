@@ -1,0 +1,22 @@
+{
+  "outDir": "packages/react-native/dist",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "src/**/schema.json"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    {
+      "glob": "typings/**/*.d.ts"
+    },
+    "LICENSE",
+    "packages/react-native/*.md"
+  ]
+}

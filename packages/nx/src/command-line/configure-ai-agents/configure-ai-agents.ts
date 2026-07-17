@@ -15,11 +15,15 @@ import {
 import { daemonClient } from '../../daemon/client/client';
 import { installPackageToTmp } from '../../devkit-internals';
 import { output } from '../../utils/output';
-import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  resolvePackageVersionUsingRegistry,
+} from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
+import { handleImport } from '../../utils/handle-import';
 import ora = require('ora');
 
 export async function configureAiAgentsHandler(
@@ -57,7 +61,11 @@ export async function configureAiAgentsHandler(
   let cleanup: () => void | undefined;
   try {
     await ensurePackageHasProvenance('nx', 'latest');
-    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    const packageInstallResults = installPackageToTmp(
+      'nx',
+      'latest',
+      detectPackageManager(workspaceRoot)
+    );
     cleanup = packageInstallResults.cleanup;
 
     let modulePath = require.resolve(
@@ -65,7 +73,7 @@ export async function configureAiAgentsHandler(
       { paths: [packageInstallResults.tempDir] }
     );
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     await module.configureAiAgentsHandler(args, true);
     cleanup();
   } catch (error) {

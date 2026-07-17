@@ -1,4 +1,4 @@
-import type { FileExtensionType } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import type { FileExtensionType } from '@nx/devkit/internal';
 
 export interface Schema {
   path: string;

@@ -1,6 +1,7 @@
 import type { Context } from 'https://edge.netlify.com';
 
 const framerUrl = Netlify.env.get('NEXT_PUBLIC_FRAMER_URL');
+const blogUrl = Netlify.env.get('BLOG_URL');
 const GA_MEASUREMENT_ID =
   Netlify.env.get('GA_MEASUREMENT_ID') || 'G-XXXXXXXXXX';
 const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
@@ -8,6 +9,50 @@ const GA_API_SECRET = Netlify.env.get('GA_API_SECRET') || '';
 // GA4 tracking — must live here because Framer-proxied responses skip context.next(),
 // so track-page-requests.ts never fires for these paths due to alphabetical ordering.
 // https://docs.netlify.com/build/edge-functions/declarations/#declaration-processing-order
+
+/**
+ * Creates a TransformStream that performs string replacement on text chunks,
+ * correctly handling matches that span chunk boundaries.
+ */
+function createStreamingReplace(
+  search: string,
+  replace: string
+): TransformStream<string, string> {
+  let buffer = '';
+  return new TransformStream({
+    transform(chunk, controller) {
+      buffer += chunk;
+      // Hold back enough chars to catch matches split across chunks
+      const safeEnd = buffer.length - (search.length - 1);
+      if (safeEnd > 0) {
+        controller.enqueue(
+          buffer.substring(0, safeEnd).replaceAll(search, replace)
+        );
+        buffer = buffer.substring(safeEnd);
+      }
+    },
+    flush(controller) {
+      if (buffer) {
+        controller.enqueue(buffer.replaceAll(search, replace));
+      }
+    },
+  });
+}
+
+/**
+ * Streams a proxied HTML response, rewriting `search` → `replace` on the fly.
+ * Removes Content-Length since the body size changes with replacements.
+ */
+function streamWithRewrite(
+  response: Response,
+  search: string,
+  replace: string
+): ReadableStream<Uint8Array> {
+  return response
+    .body!.pipeThrough(new TextDecoderStream())
+    .pipeThrough(createStreamingReplace(search, replace))
+    .pipeThrough(new TextEncoderStream());
+}
 
 function getClientId(request: Request): string {
   const cookies = request.headers.get('cookie') || '';
@@ -66,16 +111,23 @@ async function sendToGA4(
 }
 
 /**
+ * Common WordPress / exploit-scanner probe patterns. Bots hit nx.dev with these
+ * paths constantly; matching upstreams don't exist and we never want to proxy them.
+ */
+const botProbeRegex =
+  /(wp-(includes|admin|content)|xmlrpc\.php|wlwmanifest|\.env|\.git\/)/i;
+
+/**
  * Paths that should be served by the Next.js app instead of Framer.
- * Everything else is proxied to Framer.
+ * Everything else is proxied to Framer (or the blog site if configured).
  */
 const nextjsPaths = new Set([
-  '/blog',
+  // When BLOG_URL is set, blog/changelog are proxied to the
+  // standalone blog site instead of falling through to Next.js.
+  ...(blogUrl ? [] : ['/blog', '/changelog']),
   '/courses',
-  '/pricing',
   '/podcast',
   '/ai-chat',
-  '/changelog',
   '/resources-library',
   '/whitepaper-fast-ci',
   '/500',
@@ -96,9 +148,71 @@ export default async function handler(
   context: Context
 ): Promise<Response> {
   const url = new URL(request.url);
-  const pathname = url.pathname;
+  // Collapse leading `/+` so a bot path like `//wp/...` can't be parsed as a
+  // protocol-relative URL (which would promote `wp` to the upstream host).
+  const pathname = url.pathname.replace(/^\/+/, '/');
 
-  if (!framerUrl || nextjsPaths.has(pathname)) return context.next();
+  if (botProbeRegex.test(pathname)) {
+    return new Response(null, { status: 404 });
+  }
+
+  if (nextjsPaths.has(pathname)) return context.next();
+
+  // Blog/changelog routing: proxy to standalone blog site, or fall through to Next.js.
+  const isBlogPath =
+    pathname === '/blog' ||
+    pathname.startsWith('/blog/') ||
+    pathname === '/changelog' ||
+    pathname.startsWith('/changelog/');
+
+  if (isBlogPath && !blogUrl) return context.next();
+
+  if (isBlogPath && blogUrl) {
+    const blogDestination = new URL(pathname, blogUrl);
+    url.searchParams.forEach((value, key) => {
+      blogDestination.searchParams.set(key, value);
+    });
+
+    const response = await fetch(blogDestination.toString(), {
+      headers: {
+        'User-Agent': request.headers.get('User-Agent') || '',
+        Accept: request.headers.get('Accept') || 'text/html',
+        'Accept-Language': request.headers.get('Accept-Language') || '',
+      },
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const isHtml = contentType.includes('text/html');
+
+    context.waitUntil(sendToGA4(request, context, pathname));
+
+    const newHeaders = new Headers(response.headers);
+    newHeaders.set('x-nx-edge-function', 'blog-proxy');
+    newHeaders.set('X-Frame-Options', 'DENY');
+    newHeaders.set('Content-Security-Policy', "frame-ancestors 'none'");
+    // Edge CDN cache — stale-while-revalidate serves instantly while revalidating in background
+    newHeaders.set(
+      'Netlify-CDN-Cache-Control',
+      'public, max-age=3600, stale-while-revalidate=86400'
+    );
+    if (isHtml) {
+      // Content-Length is invalid after streaming rewrite changes body size
+      newHeaders.delete('Content-Length');
+    }
+
+    return new Response(
+      isHtml
+        ? streamWithRewrite(response, blogUrl, 'https://nx.dev')
+        : response.body,
+      {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      }
+    );
+  }
+
+  if (!framerUrl) return context.next();
 
   const framerDestination = new URL(pathname, framerUrl);
   url.searchParams.forEach((value, key) => {
@@ -117,24 +231,34 @@ export default async function handler(
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
 
-  const html = await response.text();
-
-  // This handles canonical URLs, og:url, and any other references
-  const rewrittenHtml = html.replaceAll(framerUrl, 'https://nx.dev');
-
   context.waitUntil(sendToGA4(request, context, pathname));
 
   const newHeaders = new Headers(response.headers);
   newHeaders.set('x-nx-edge-function', 'framer-proxy');
+  // Agent discovery (RFC 8288) — point AI agents at nx.dev's machine-readable entry points.
+  newHeaders.set(
+    'Link',
+    '</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml"'
+  );
   newHeaders.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+  // Edge CDN cache — stale-while-revalidate serves instantly while revalidating in background
+  newHeaders.set(
+    'Netlify-CDN-Cache-Control',
+    'public, max-age=3600, stale-while-revalidate=86400'
+  );
   newHeaders.set('X-Frame-Options', 'DENY');
   newHeaders.set('Content-Security-Policy', "frame-ancestors 'none'");
+  // Content-Length is invalid after streaming rewrite changes body size
+  newHeaders.delete('Content-Length');
 
-  return new Response(rewrittenHtml, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: newHeaders,
-  });
+  return new Response(
+    streamWithRewrite(response, framerUrl, 'https://nx.dev'),
+    {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders,
+    }
+  );
 }
 
 export const config = {
@@ -142,12 +266,16 @@ export const config = {
   // Only process HTML requests to save on compute
   accept: ['text/html'],
   excludedPath: [
+    // SEO-critical files — must bypass Framer so Next.js serves them
+    '/robots.txt',
+    '/sitemap.xml',
+    '/sitemap-0.xml',
+    '/llms.txt',
+    '/llms-full.txt',
     '/docs',
     '/docs/*',
     '/api/*',
-    '/blog/*',
     '/courses/*',
-    '/changelog',
     '/_next/*',
     '/.netlify/*',
     // Legacy docs paths — must bypass Framer so _redirects 301 rules fire

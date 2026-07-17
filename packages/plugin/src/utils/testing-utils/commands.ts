@@ -21,7 +21,7 @@ export function runNxCommand(
     const execSyncOptions: ExecSyncOptions = {
       cwd,
       env: { ...process.env, ...opts.env },
-      windowsHide: false,
+      windowsHide: true,
     };
     if (fileExists(tmpProjPath('package.json'))) {
       const pmc = getPackageManagerCommand(detectPackageManager(cwd));
@@ -59,6 +59,7 @@ export function runCommand(
       cwd: opts.cwd ?? tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, ...opts?.env },
+      windowsHide: true,
     }).toString();
   } catch (e) {
     return e.stdout.toString() + e.stderr.toString();

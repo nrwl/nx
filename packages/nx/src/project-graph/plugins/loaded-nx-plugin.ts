@@ -9,9 +9,9 @@ import type { RawProjectGraphDependency } from '../project-graph-builder';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
-  CreateNodesContextV2,
+  CreateNodesContext,
   CreateNodesResult,
-  NxPluginV2,
+  NxPlugin,
   PostTasksExecutionContext,
   PreTasksExecutionContext,
   ProjectsMetadata,
@@ -32,7 +32,7 @@ export class LoadedNxPlugin {
     // the result's context.
     fn: (
       matchedFiles: string[],
-      context: CreateNodesContextV2
+      context: CreateNodesContext
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
     >,
@@ -66,8 +66,15 @@ export class LoadedNxPlugin {
    */
   notifyPhaseAborted?(phase: string, lastCompletedHook: string): void;
 
+  /**
+   * Forwards updated environment variables to the plugin worker process.
+   * Only meaningful for isolated plugins; in-process plugins share the
+   * daemon's process.env automatically.
+   */
+  setWorkerEnv?(env: Record<string, string>): Promise<void>;
+
   constructor(
-    plugin: NxPluginV2,
+    plugin: NxPlugin,
     pluginDefinition: PluginConfiguration,
     public readonly index?: number
   ) {
@@ -78,12 +85,15 @@ export class LoadedNxPlugin {
       this.exclude = pluginDefinition.exclude;
     }
 
-    const createNodesV2Impl = plugin.createNodesV2 ?? plugin.createNodes;
-    if (createNodesV2Impl) {
+    // Fall back to `createNodesV2` for plugins authored against the old name.
+    const createNodesImpl =
+      plugin.createNodes ??
+      (plugin as { createNodesV2?: NxPlugin['createNodes'] }).createNodesV2;
+    if (createNodesImpl) {
       this.createNodes = [
-        createNodesV2Impl[0],
+        createNodesImpl[0],
         async (configFiles, context) => {
-          const result = await createNodesV2Impl[1](
+          const result = await createNodesImpl[1](
             configFiles,
             this.options,
             context

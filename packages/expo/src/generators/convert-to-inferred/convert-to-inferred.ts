@@ -1,14 +1,14 @@
 import {
+  AggregatedLog,
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/internal';
+import {
   createProjectGraphAsync,
   formatFiles,
   getProjects,
   type Tree,
 } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import {
-  migrateProjectExecutorsToPlugin,
-  NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { createNodesV2 } from '../../../plugins/plugin';
 import { processBuildOptions } from './lib/process-build-options';
 import { postTargetTransformer } from './lib/post-target-transformer';
@@ -19,6 +19,7 @@ import { processStartOptions } from './lib/process-start-options';
 import { processSubmitOptions } from './lib/process-submit-options';
 import { processPrebuildOptions } from './lib/process-prebuild-options';
 import { processInstallOptions } from './lib/process-install-options';
+import { assertSupportedExpoVersion } from '../../utils/versions';
 
 interface Schema {
   project?: string;
@@ -26,6 +27,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedExpoVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
   const projects = getProjects(tree);

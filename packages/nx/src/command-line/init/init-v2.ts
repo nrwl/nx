@@ -1,9 +1,10 @@
 import { existsSync } from 'fs';
+import { basename } from 'path';
 
 import { prompt } from 'enquirer';
 import { prerelease } from 'semver';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { readJsonFile } from '../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
@@ -22,18 +23,25 @@ import { addNxToAngularCliRepo } from './implementation/angular';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import {
   createNxJsonFile,
+  extractErrorName,
   initCloud,
-  isCRA,
   isMonorepo,
   printFinalMessage,
+  readErrorStderr,
+  setNeverConnectToCloud,
+  toErrorString,
   updateGitIgnore,
 } from './implementation/utils';
-import { addNxToCraRepo } from './implementation/react';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { installPackageToTmp } from '../../devkit-internals';
+import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
+import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
+import { ensureAnalyticsPreferenceSet } from '../../utils/analytics-prompt';
+import { isCI } from '../../utils/is-ci';
+import { detectPackageManager } from '../../utils/package-manager';
 import {
   logProgress,
   writeAiOutput,
@@ -51,7 +59,6 @@ export interface InitArgs {
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
   verbose?: boolean;
-  force?: boolean;
   aiAgents?: Agent[];
   plugins?: string; // 'skip' | 'all' | comma-separated list
   cacheable?: string[]; // Cacheable operations (e.g., ['build', 'test', 'lint'])
@@ -69,14 +76,18 @@ export async function initHandler(
   let cleanup: () => void | undefined;
   try {
     await ensurePackageHasProvenance('nx', 'latest');
-    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    const packageInstallResults = installPackageToTmp(
+      'nx',
+      'latest',
+      detectPackageManager(process.cwd())
+    );
     cleanup = packageInstallResults.cleanup;
 
     let modulePath = require.resolve('nx/src/command-line/init/init-v2.js', {
       paths: [packageInstallResults.tempDir],
     });
 
-    const module = await import(modulePath);
+    const module = await handleImport(modulePath);
     const result = await module.initHandler(options, true);
     cleanup();
     return result;
@@ -89,8 +100,69 @@ export async function initHandler(
   }
 }
 
+async function recordInitError(
+  error: unknown,
+  baseMeta: Record<string, string | boolean>
+): Promise<void> {
+  const errorMessage = toErrorString(error);
+  const errorCode = determineErrorCode(error);
+  const stderr = readErrorStderr(error).trim();
+  const telemetryMessage = (
+    stderr ? `${errorMessage} | stderr: ${stderr.slice(-250)}` : errorMessage
+  ).slice(0, 500);
+  const errorName = extractErrorName(error, stderr);
+
+  await recordStat({
+    command: 'init',
+    nxVersion,
+    useCloud: false,
+    meta: {
+      type: 'error',
+      errorCode,
+      errorName,
+      errorMessage: telemetryMessage,
+      ...baseMeta,
+    },
+  });
+
+  if (baseMeta.aiAgent) {
+    const errorLogPath = writeErrorLog(error);
+    writeAiOutput(buildErrorResult(errorMessage, errorCode, errorLogPath));
+  } else {
+    // Restore the cursor in case the user bailed during an interactive
+    // prompt. Skip for AI agents — it would corrupt NDJSON output.
+    process.stdout.write('\x1b[?25h');
+  }
+  process.exit(1);
+}
+
 async function initHandlerImpl(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
+  const baseMeta = {
+    nodeVersion: process.versions.node,
+    os: process.platform,
+    packageManager: detectPackageManager(),
+    aiAgent: isAiAgent(),
+    isCI: isCI(),
+  };
+  recordStat({
+    command: 'init',
+    nxVersion,
+    useCloud: false,
+    meta: { type: 'start', ...baseMeta },
+  });
+
+  try {
+    return await runInit(options, baseMeta);
+  } catch (error) {
+    await recordInitError(error, baseMeta);
+  }
+}
+
+async function runInit(
+  options: InitArgs,
+  baseMeta: Record<string, string | boolean>
+): Promise<void> {
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {
@@ -142,17 +214,55 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     return;
   }
 
+  // When in an empty directory (no package.json) and the user hasn't explicitly
+  // chosen a setup method, prompt them to pick between .nx and package.json setup.
+  // Skip the prompt when stdin is not a TTY (e.g. CI, e2e tests) to avoid hangs.
+  if (
+    !existsSync('package.json') &&
+    !options.useDotNxInstallation &&
+    options.interactive &&
+    !aiMode &&
+    process.stdin.isTTY
+  ) {
+    const setupMode = await prompt<{ setupMode: string }>([
+      {
+        type: 'select',
+        name: 'setupMode',
+        message: 'How would you like to set up Nx in this directory?',
+        choices: [
+          {
+            name: '.nx installation (recommended for non-JavaScript projects)',
+          },
+          {
+            name: 'package.json installation (recommended for JavaScript/TypeScript projects)',
+          },
+        ],
+      },
+    ]).then((r) => r.setupMode);
+
+    if (setupMode.startsWith('package.json')) {
+      // Create a minimal package.json so the JS/TS workflow takes over
+      const workspaceName = basename(process.cwd());
+      writeJsonFile('package.json', {
+        name: workspaceName,
+        version: '0.0.0',
+        private: true,
+      });
+    } else {
+      options.useDotNxInstallation = true;
+    }
+  }
+
   const _isNonJs = !existsSync('package.json') || options.useDotNxInstallation;
   const packageJson: PackageJson = _isNonJs
     ? null
     : readJsonFile('package.json');
   const _isTurborepo = existsSync('turbo.json');
   const _isMonorepo = _isNonJs ? false : isMonorepo(packageJson);
-  const _isCRA = _isNonJs ? false : isCRA(packageJson);
 
   // AI mode defaults to minimum setup, humans can choose
   let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans
-  if (options.interactive && !(_isTurborepo || _isCRA || _isNonJs)) {
+  if (options.interactive && !(_isTurborepo || _isNonJs)) {
     const setupType = await prompt<{ setupPreference: string }>([
       {
         type: 'select',
@@ -185,19 +295,7 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
 
   const pmc = getPackageManagerCommand();
 
-  if (_isCRA) {
-    if (aiMode) {
-      logProgress('detecting', 'Detected Create React App project');
-    }
-    await addNxToCraRepo({
-      addE2e: false,
-      force: options.force,
-      vite: true,
-      integrated: false,
-      interactive: options.interactive,
-      nxCloud: false,
-    });
-  } else if (_isMonorepo) {
+  if (_isMonorepo) {
     if (aiMode) {
       logProgress('detecting', 'Detected monorepo project');
     }
@@ -255,17 +353,11 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
       // Need to detect plugins for 'all' or to return needs_input
       logProgress('detecting', 'Checking for recommended plugins...');
 
-      let detectedPluginNames: string[];
-      if (_isCRA) {
-        detectedPluginNames = ['@nx/vite'];
-      } else {
-        const { plugins: detected } = await detectPlugins(
-          nxJson,
-          packageJson,
-          false // non-interactive
-        );
-        detectedPluginNames = detected;
-      }
+      const { plugins: detectedPluginNames } = await detectPlugins(
+        nxJson,
+        packageJson,
+        false // non-interactive
+      );
 
       if (parsedPlugins === 'all') {
         // Install all detected plugins
@@ -315,15 +407,10 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     // Non-AI guided mode: existing behavior with interactive prompts
     output.log({ title: '🧐 Checking dependencies' });
 
-    if (_isCRA) {
-      pluginsToInstall = ['@nx/vite'];
-      updatePackageScripts = true;
-    } else {
-      const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
-        await detectPlugins(nxJson, packageJson, options.interactive);
-      pluginsToInstall = _plugins;
-      updatePackageScripts = _updatePackageScripts;
-    }
+    const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
+      await detectPlugins(nxJson, packageJson, options.interactive);
+    pluginsToInstall = _plugins;
+    updatePackageScripts = _updatePackageScripts;
 
     if (pluginsToInstall.length > 0) {
       output.log({ title: '📦 Installing Nx' });
@@ -363,16 +450,43 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
     }
   }
 
-  let useNxCloud: any = options.nxCloud;
-  if (useNxCloud === undefined) {
-    output.log({ title: '🛠️ Setting up Self-Healing CI and Remote Caching' });
-    useNxCloud = options.interactive
-      ? await connectExistingRepoToNxCloudPrompt()
-      : false;
+  let nxCloudChoice: MessageOptionKey;
+  if (options.nxCloud === true) {
+    nxCloudChoice = 'yes';
+  } else if (options.nxCloud === false) {
+    nxCloudChoice = 'skip';
+  } else {
+    nxCloudChoice = options.interactive
+      ? await connectExistingRepoToNxCloudPrompt('init', 'setupNxCloud', false)
+      : 'skip';
   }
-  if (useNxCloud) {
+  if (nxCloudChoice === 'yes') {
     await initCloud('nx-init');
+  } else if (nxCloudChoice === 'never') {
+    setNeverConnectToCloud(repoRoot);
   }
+
+  const analyticsPrompt = await ensureAnalyticsPreferenceSet(
+    repoRoot,
+    options.interactive
+  );
+
+  await recordStat({
+    command: 'init',
+    nxVersion: version,
+    useCloud: nxCloudChoice === 'yes',
+    meta: {
+      type: 'complete',
+      nxCloudArg: nxCloudChoice,
+      analyticsPrompt,
+      nodeVersion: process.versions.node,
+      os: process.platform,
+      packageManager: detectPackageManager(),
+      aiAgent: aiMode,
+      isCI: isCI(),
+      pluginsInstalled: pluginsToInstall.join(','),
+    },
+  });
 
   // Output success result for AI agents
   if (aiMode) {

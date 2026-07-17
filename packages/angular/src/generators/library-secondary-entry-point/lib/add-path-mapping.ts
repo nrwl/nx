@@ -10,7 +10,7 @@ export function addPathMapping(
     const c = json.compilerOptions;
     c.paths = c.paths || {};
     c.paths[options.secondaryEntryPoint] = [
-      `${options.libraryProject.root}/${options.name}/src/index.ts`,
+      `./${options.libraryProject.root}/${options.name}/src/index.ts`,
     ];
 
     return json;

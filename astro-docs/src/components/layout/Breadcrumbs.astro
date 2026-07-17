@@ -88,8 +88,15 @@ if (crumbs.length === 0) {
     })
     .filter(Boolean) as Crumb[];
 }
+
+// Hide breadcrumbs on the Templates pages - they have their own title and a
+// "back to all templates" link, so a breadcrumb would be redundant.
+const path = Astro.url.pathname.replace(/\/$/, '');
+const hideBreadcrumbs =
+  path === '/docs/templates' || path.startsWith('/docs/templates/');
 ---
 
+{!hideBreadcrumbs && (
 <nav class="not-content flex mb-4" aria-label="Breadcrumb">
   <ol role="list" class="flex m-0 p-0 flex-wrap items-center space-x-2 text-sm">
     {
@@ -118,3 +125,4 @@ if (crumbs.length === 0) {
     }
   </ol>
 </nav>
+)}

@@ -1,5 +1,6 @@
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { readNxJson } from '../../config/configuration';
+import { handleImport } from '../../utils/handle-import';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectGraph,
@@ -60,7 +61,7 @@ export async function runOne(
 
   if (nxArgs.help) {
     await (
-      await import('./run')
+      await handleImport('./run.js', __dirname)
     ).printTargetRunHelp(
       {
         ...opts,
@@ -174,11 +175,15 @@ export function parseRunOneOptions(
   let target;
   let configuration;
 
-  if (parsedArgs[PROJECT_TARGET_CONFIG]?.lastIndexOf(':') > 0) {
+  if (
+    typeof parsedArgs[PROJECT_TARGET_CONFIG] === 'string' &&
+    parsedArgs[PROJECT_TARGET_CONFIG].lastIndexOf(':') > 0
+  ) {
     // run case
     [project, target, configuration] = splitTarget(
       parsedArgs[PROJECT_TARGET_CONFIG],
-      projectGraph
+      projectGraph,
+      { currentProject: defaultProjectName }
     );
     // this is to account for "nx npmscript:dev"
     if (project && !target && defaultProjectName) {
@@ -187,7 +192,7 @@ export function parseRunOneOptions(
     }
   } else if (parsedArgs.target) {
     target = parsedArgs.target;
-  } else if (parsedArgs[PROJECT_TARGET_CONFIG]) {
+  } else if (typeof parsedArgs[PROJECT_TARGET_CONFIG] === 'string') {
     // If project:target:configuration exists but has no colon, check if it's a project with run target
     if (
       projectGraph.nodes[parsedArgs[PROJECT_TARGET_CONFIG]]?.data?.targets?.run

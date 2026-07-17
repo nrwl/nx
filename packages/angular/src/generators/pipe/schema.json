@@ -66,7 +66,7 @@
     "typeSeparator": {
       "type": "string",
       "enum": ["-", "."],
-      "description": "The separator character to use before the type within the generated file's name. For example, if you set the option to `.`, the file will be named `example.pipe.ts`. It defaults to '-' for Angular v20+. For versions below v20, it defaults to '.'."
+      "description": "The separator character to use before the type within the generated file's name. For example, if you set the option to `.`, the file will be named `example.pipe.ts`. It defaults to '-'."
     },
     "skipFormat": {
       "type": "boolean",

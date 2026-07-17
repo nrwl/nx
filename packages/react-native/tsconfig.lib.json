@@ -1,14 +1,32 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/react-native",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/react-native/tsconfig.tsbuildinfo"
+    "composite": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts", "**/*.json"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*_spec.ts",
+    "**/*_test.ts",
+    "jest.config.ts",
+    "jest.config.cts",
+    "eslint.config.mjs"
+  ],
+  "include": ["*.ts", "src/**/*.ts", "plugins/**/*.ts", "typings/**/*.d.ts"],
   "references": [
+    {
+      "path": "../webpack/tsconfig.lib.json"
+    },
     {
       "path": "../react/tsconfig.lib.json"
     },
@@ -22,13 +40,13 @@
       "path": "../devkit/tsconfig.lib.json"
     },
     {
-      "path": "../detox/tsconfig.lib.json"
+      "path": "../nx/tsconfig.lib.json"
     },
     {
       "path": "../rollup/tsconfig.lib.json"
     },
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../detox/tsconfig.lib.json"
     }
   ]
 }

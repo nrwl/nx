@@ -1,22 +1,27 @@
-import * as rollup from 'rollup';
+import type * as Rollup from 'rollup';
 import { parse, resolve } from 'path';
 import { type ExecutorContext, logger } from '@nx/devkit';
+import { loadConfigFile, createAsyncIterable } from '@nx/devkit/internal';
 
 import { RollupExecutorOptions } from './schema';
 import {
   NormalizedRollupExecutorOptions,
   normalizeRollupExecutorOptions,
 } from './lib/normalize';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { withNx } from '../../plugins/with-nx/with-nx';
 import { pluginName as generatePackageJsonPluginName } from '../../plugins/package-json/generate-package-json';
-import { calculateProjectBuildableDependencies } from '@nx/js/src/utils/buildable-libs-utils';
+import { calculateProjectBuildableDependencies } from '@nx/js/internal';
+import { warnRollupExecutorDeprecation } from '../../utils/deprecation';
 
 export async function* rollupExecutor(
   rawOptions: RollupExecutorOptions,
   context: ExecutorContext
 ) {
+  warnRollupExecutorDeprecation();
+
+  // Lazy-loaded: `rollup` is an optional peer, absent at project-graph discovery time.
+  const rollup = require('rollup') as typeof import('rollup');
+
   process.env.NODE_ENV ??= 'production';
   const options = normalizeRollupExecutorOptions(rawOptions, context);
   const rollupOptions = await createRollupOptions(options, context);
@@ -88,7 +93,7 @@ export async function* rollupExecutor(
 export async function createRollupOptions(
   options: NormalizedRollupExecutorOptions,
   context: ExecutorContext
-): Promise<rollup.RollupOptions | rollup.RollupOptions[]> {
+): Promise<Rollup.RollupOptions | Rollup.RollupOptions[]> {
   const { dependencies } = calculateProjectBuildableDependencies(
     context.taskGraph,
     context.projectGraph,
@@ -112,7 +117,7 @@ export async function createRollupOptions(
   const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
     loadConfigFile(plugin)
   );
-  let finalConfig: rollup.RollupOptions = rollupConfig;
+  let finalConfig: Rollup.RollupOptions = rollupConfig;
   for (const _config of userDefinedRollupConfigs) {
     const config = await _config;
     if (typeof config === 'function') {

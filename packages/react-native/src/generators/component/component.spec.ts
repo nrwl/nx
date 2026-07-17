@@ -42,6 +42,16 @@ describe('component', () => {
     expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
   });
 
+  it('should generate jsx when path has .jsx extension', async () => {
+    await reactNativeComponentGenerator(appTree, {
+      path: `${projectName}/src/lib/hello/hello.jsx`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.jsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.jsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeFalsy();
+  });
+
   it('should generate files for an app', async () => {
     await reactNativeComponentGenerator(appTree, {
       name: 'hello',

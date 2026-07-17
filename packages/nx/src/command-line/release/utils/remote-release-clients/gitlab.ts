@@ -59,6 +59,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       const remoteUrl = execSync(`git remote get-url ${remoteName}`, {
         encoding: 'utf8',
         stdio: 'pipe',
+        windowsHide: true,
       }).trim();
 
       // Use the default provider if custom one is not specified or releases are disabled

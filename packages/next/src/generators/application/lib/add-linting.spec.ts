@@ -27,7 +27,6 @@ describe('updateEslint', () => {
       parsedTags: [],
       fileName: 'index',
       e2eTestRunner: 'cypress',
-      styledModule: null,
       isTsSolutionSetup: false,
     };
     tree = createTreeWithEmptyWorkspace();
@@ -110,8 +109,8 @@ describe('updateEslint', () => {
       module.exports = [
           { plugins: { "@next/next": nextEslintPluginNext } },
 
-          ...baseConfig,
           ...nx.configs["flat/react-typescript"],
+          ...baseConfig,
           {
               ignores: [
                   ".next/**/*"

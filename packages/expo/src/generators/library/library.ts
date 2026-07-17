@@ -1,3 +1,4 @@
+import { logShowProjectCommand, getRelativeCwd } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -26,19 +27,18 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
-import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { addRollupBuildTarget } from '@nx/react/internal';
 import { expoComponentGenerator } from '../component/component';
 import { relative, join } from 'path';
 import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { assertSupportedExpoVersion } from '../../utils/versions';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -55,6 +55,8 @@ export async function expoLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedExpoVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
@@ -103,14 +105,13 @@ export async function expoLibraryGeneratorInternal(
   const path = joinPathFragments(
     options.projectRoot,
     'src/lib',
-    options.fileName
+    options.js ? `${options.fileName}.js` : options.fileName
   );
   const componentTask = await expoComponentGenerator(host, {
     path: relativeCwd ? relative(relativeCwd, path) : path,
     skipTests: options.unitTestRunner === 'none',
     export: true,
     skipFormat: true,
-    js: options.js,
   });
   tasks.push(() => componentTask);
 

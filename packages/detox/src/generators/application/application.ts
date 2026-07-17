@@ -13,9 +13,10 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { isExpoV54OrAbove } from '../../utils/expo-version-utils';
+import { assertSupportedDetoxVersion } from '../../utils/versions';
 
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   return await detoxApplicationGeneratorInternal(host, {
@@ -29,6 +30,8 @@ export async function detoxApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ) {
+  assertSupportedDetoxVersion(host);
+
   const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
   const jsInitTask = await jsInitGenerator(host, {
     addTsPlugin,

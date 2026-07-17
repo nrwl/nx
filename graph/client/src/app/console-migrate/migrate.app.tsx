@@ -1,10 +1,8 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { type FileChange } from 'nx/src/devkit-exports';
 import { MigrateUI } from '@nx/graph-migrate';
-/* eslint-enable @nx/enforce-module-boundaries */
 
 import { getExternalApiService } from '@nx/graph-shared';
 import { useSelector } from '@xstate/react';
@@ -113,6 +111,20 @@ export function MigrateApp({
     });
   };
 
+  const onAcknowledgePrompt = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'acknowledge-prompt',
+      payload: { migration },
+    });
+  };
+
+  const onViewPrompt = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'view-prompt',
+      payload: { migration },
+    });
+  };
+
   return (
     <MigrateUI
       migrations={migrations}
@@ -124,8 +136,10 @@ export function MigrateApp({
       onFileClick={onFileClick}
       onSkipMigration={onSkipMigration}
       onUndoMigration={onUndoMigration}
+      onAcknowledgePrompt={onAcknowledgePrompt}
       onViewImplementation={onViewImplementation}
       onViewDocumentation={onViewDocumentation}
+      onViewPrompt={onViewPrompt}
       onStopMigration={onStopMigration}
     ></MigrateUI>
   );

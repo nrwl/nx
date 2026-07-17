@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -7,9 +8,13 @@ import {
   runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
-import { nxVersion, remixVersion } from '../../utils/versions';
+import { assertAndPinRemixTypescript } from '../../utils/assert-and-pin-remix-typescript';
+import {
+  assertSupportedRemixVersion,
+  nxVersion,
+  remixVersion,
+} from '../../utils/versions';
 import { type Schema } from './schema';
 
 export function remixInitGenerator(tree: Tree, options: Schema) {
@@ -17,7 +22,11 @@ export function remixInitGenerator(tree: Tree, options: Schema) {
 }
 
 export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
+  assertSupportedRemixVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(assertAndPinRemixTypescript(tree));
 
   if (!options.skipPackageJson) {
     const installTask = addDependenciesToPackageJson(
@@ -30,7 +39,7 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
         '@remix-run/dev': remixVersion,
       },
       undefined,
-      options.keepExistingVersions
+      options.keepExistingVersions ?? true
     );
     tasks.push(installTask);
   }

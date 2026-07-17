@@ -85,9 +85,18 @@ async function promptForNewVersion(
       name: vs,
       message: vs,
       value: vs,
-      hint: interpolateVersionPattern(versionSchemes[vs], { projectName }),
+      description: interpolateVersionPattern(versionSchemes[vs], {
+        projectName,
+      }),
     })),
-  });
+    // Show only the focused scheme's resolved pattern, not every row's at once.
+    footer: function () {
+      const focused = this.focused as { description?: string };
+      return focused?.description
+        ? this.styles.muted(`  ${focused.description}`)
+        : '';
+    },
+  } as any);
 
   return versionScheme;
 }
@@ -125,7 +134,9 @@ function updateProjectVersion(
   const fullImageRef =
     nxDockerImageRefEnvOverride ?? `${newImageRef}:${newVersion}`;
   if (!isDryRun) {
-    execSync(`docker tag ${imageRef} ${fullImageRef}`);
+    execSync(`docker tag ${imageRef} ${fullImageRef}`, {
+      windowsHide: true,
+    });
   }
   const logs = isDryRun
     ? [`Image would be tagged with ${fullImageRef} but dry run is enabled.`]

@@ -1,8 +1,14 @@
-import { Tree, offsetFromRoot, generateFiles, ensurePackage } from '@nx/devkit';
+import {
+  Tree,
+  offsetFromRoot,
+  generateFiles,
+  ensurePackage,
+  type GeneratorCallback,
+} from '@nx/devkit';
 import { join } from 'path';
 import { updateTsConfigFiles } from '../update-tsconfig-files';
 import { nxVersion } from '../versions';
-import { isExpoV54 } from '../version-utils';
+import { isExpoV53 } from '../version-utils';
 
 export async function addJest(
   host: Tree,
@@ -12,7 +18,7 @@ export async function addJest(
   js: boolean,
   skipPackageJson: boolean,
   addPlugin: boolean
-) {
+): Promise<GeneratorCallback> {
   if (unitTestRunner !== 'jest') {
     return () => {};
   }
@@ -34,16 +40,17 @@ export async function addJest(
     addPlugin,
   });
 
-  // Check if using Expo v54 to determine Jest configuration approach
-  const useExpoV54 = await isExpoV54(host);
+  // Expo SDK 54+ (including 55) use the winter-runtime ImportMetaRegistry mock;
+  // only SDK 53 needs the custom Jest resolver.
+  const useModernJestSetup = !(await isExpoV53(host));
 
   // Overwrite the jest.config.ts file because react native needs to have special transform property
   // use preset from https://github.com/expo/expo/blob/main/packages/jest-expo/jest-preset.js
   // Workaround issue where Jest is not picking tyope node nor jest types from tsconfig by using <reference>.
   const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
 
-  // For Expo v54, we don't use the custom resolver - instead we mock ImportMetaRegistry in test-setup
-  const resolverLine = useExpoV54
+  // For SDK 54+ (modern setup), we don't use the custom resolver - instead we mock ImportMetaRegistry in test-setup
+  const resolverLine = useModernJestSetup
     ? ''
     : "resolver: require.resolve('./jest.resolver.js'),\n  ";
 
@@ -55,16 +62,16 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.${js ? 'js' : 'ts'}'],
   moduleNameMapper: {
-    '\\\\.svg$': '@nx/expo/plugins/jest/svg-mock'
+    '[.]svg$': '@nx/expo/plugins/jest/svg-mock'
   },
   transform: {
-    '\\\\.[jt]sx?$': [
+    '[.][jt]sx?$': [
       'babel-jest',
       {
         configFile: __dirname + '/.babelrc.js',
       },
     ],
-    '^.+\\\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$': require.resolve(
+    '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$': require.resolve(
       'jest-expo/src/preset/assetFileTransformer.js'
     ),
   },
@@ -74,8 +81,8 @@ module.exports = {
 };`;
   host.write(configPath, content);
 
-  if (useExpoV54) {
-    // For Expo v54, generate test-setup with ImportMetaRegistry mock and structuredClone polyfill
+  if (useModernJestSetup) {
+    // For SDK 54+ (modern setup), generate test-setup with ImportMetaRegistry mock and structuredClone polyfill
     const testSetupPath = `${appProjectRoot}/src/test-setup.${
       js ? 'js' : 'ts'
     }`;
@@ -86,6 +93,29 @@ module.exports = {
     },
   },
 }));
+
+// Expo SDK 55+ installs lazy winter-runtime globals (fetch, URL, etc.) that
+// require files Jest treats as "outside of the scope of the test code" in a
+// monorepo. Replace them with the runtime's own globals so the lazy getters
+// never fire during tests.
+const defineGlobal = (name, value) => {
+  try {
+    Object.defineProperty(global, name, {
+      value,
+      configurable: true,
+      writable: true,
+    });
+  } catch {
+    // Ignore environments that don't allow redefining these globals.
+  }
+};
+defineGlobal('fetch', globalThis.fetch);
+defineGlobal('Headers', globalThis.Headers);
+defineGlobal('Request', globalThis.Request);
+defineGlobal('Response', globalThis.Response);
+defineGlobal('FormData', globalThis.FormData);
+defineGlobal('URL', globalThis.URL);
+defineGlobal('URLSearchParams', globalThis.URLSearchParams);
 
 if (typeof global.structuredClone === 'undefined') {
   global.structuredClone = (object) => JSON.parse(JSON.stringify(object));

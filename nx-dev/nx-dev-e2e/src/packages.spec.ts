@@ -42,7 +42,14 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/angular:ng-add',
     path: '/packages/angular/generators/ng-add',
   },
-  { title: '@nx/angular:ngrx', path: '/packages/angular/generators/ngrx' },
+  {
+    title: '@nx/angular:ngrx-root-store',
+    path: '/packages/angular/generators/ngrx-root-store',
+  },
+  {
+    title: '@nx/angular:ngrx-feature-store',
+    path: '/packages/angular/generators/ngrx-feature-store',
+  },
   { title: '@nx/angular:scam', path: '/packages/angular/generators/scam' },
   {
     title: '@nx/angular:scam-directive',
@@ -55,10 +62,6 @@ const pages: Array<{ title: string; path: string }> = [
   {
     title: '@nx/angular:setup-mf',
     path: '/packages/angular/generators/setup-mf',
-  },
-  {
-    title: '@nx/angular:setup-tailwind',
-    path: '/packages/angular/generators/setup-tailwind',
   },
   {
     title: '@nx/angular:stories',
@@ -439,6 +442,7 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/workspace/executors/counter',
   },
 ];
+
 /**
  * Asserting all the packages pages are accounted for and accessible.
  * Generation of the pages is manual since we want to make sure the change is intended.

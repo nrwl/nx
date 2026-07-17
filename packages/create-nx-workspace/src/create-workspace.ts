@@ -7,6 +7,7 @@ import { CreateWorkspaceOptions } from './create-workspace-options';
 import { setupCI } from './utils/ci/setup-ci';
 import { mapErrorToBodyLines } from './utils/error-utils';
 import {
+  GitHubPushError,
   initializeGitRepo,
   pushToGitHub,
   VcsPushStatus,
@@ -16,13 +17,14 @@ import {
   createNxCloudOnboardingUrl,
   getNxCloudInfo,
   getSkippedNxCloudInfo,
+  openCloudSetupUrl,
   readNxCloudToken,
   setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
-import { cloneTemplate } from './utils/template/clone-template';
+import { downloadTemplate } from './utils/template/download-template';
 import {
   addConnectUrlToReadme,
   amendOrCommitReadme,
@@ -33,6 +35,8 @@ import {
   getPackageManagerCommand,
 } from './utils/package-manager';
 import { isAiAgent, logProgress } from './utils/ai/ai-output';
+import { confirmThirdPartyPreset } from './internal-utils/prompts';
+import { CnwError } from './utils/error-utils';
 
 // State for SIGINT handler - only set after workspace is fully installed
 let workspaceDirectory: string | undefined;
@@ -70,27 +74,43 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   let directory: string;
 
   if (options.template) {
+    // Resolve shorthand template names to full GitHub org/repo format
+    options.template = resolveTemplateShorthand(options.template);
+
     if (!options.template.startsWith('nrwl/'))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
-    const templateUrl = `https://github.com/${options.template}`;
-    const workingDir = process.cwd().replace(/\\/g, '/');
+    const workingDir = (options.workingDir ?? process.cwd()).replace(
+      /\\/g,
+      '/'
+    );
     directory = join(workingDir, name);
+
+    // downloadTemplate extracts into `directory`, creating it and overwriting
+    // files. That is intended only when scaffolding into the current directory.
+    // Otherwise refuse to write over an existing path (the CLI already guards
+    // this in determineFolder; this protects direct createWorkspace() callers).
+    if (!options.useCurrentDir && existsSync(directory)) {
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The directory '${directory}' already exists. Choose a different name or remove the existing directory.`
+      );
+    }
 
     const aiMode = isAiAgent();
 
     // Use spinner for human mode, progress logs for AI mode
     let workspaceSetupSpinner: any;
     if (aiMode) {
-      logProgress('cloning', `Cloning template ${options.template}...`);
+      logProgress('downloading', `Downloading template ${options.template}...`);
     } else {
       const ora = require('ora');
       workspaceSetupSpinner = ora(`Creating workspace from template`).start();
     }
 
     try {
-      await cloneTemplate(templateUrl, name);
+      await downloadTemplate(options.template, directory);
 
       // Remove npm lockfile from template since we'll generate the correct one
       const npmLockPath = join(directory, 'package-lock.json');
@@ -154,6 +174,25 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         'Preset is required when not using a template. Please provide --preset or --template.'
       );
     }
+
+    // If the preset is a third-party preset, warn the user before installing
+    // the npm package. A preset name like "core" silently installs an
+    // unrelated npm package; this confirmation makes that explicit.
+    const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
+    if (thirdPartyPackageName) {
+      const confirmed = await confirmThirdPartyPreset(
+        thirdPartyPackageName,
+        options.interactive,
+        options.trustThirdPartyPreset
+      );
+      if (!confirmed) {
+        throw new CnwError(
+          'INVALID_PRESET',
+          `Aborted: not installing third-party preset '${thirdPartyPackageName}'.`
+        );
+      }
+    }
+
     const tmpDir = await createSandbox(packageManager);
     const workspaceGlobs = getWorkspaceGlobsFromPreset(preset);
 
@@ -173,7 +212,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // If the preset is a third-party preset, we need to call createPreset to install it
     // For first-party presets, it will be created by createEmptyWorkspace instead.
     // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
-    const thirdPartyPackageName = getPackageNameFromThirdPartyPreset(preset);
     if (thirdPartyPackageName) {
       await createPreset(
         thirdPartyPackageName,
@@ -205,6 +243,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;
+  let pushFailReason: string | undefined;
 
   if (!skipGit) {
     const aiMode = isAiAgent();
@@ -231,14 +270,29 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         });
       }
     } catch (e) {
-      if (e instanceof Error) {
+      if (e instanceof GitHubPushError) {
+        // GitHub push issues are never fatal — CNW always succeeds.
+        // All reasons are logged in telemetry via pushFailReason.
+        pushedToVcs = VcsPushStatus.FailedToPushToVcs;
+        pushFailReason = e.reason;
+
+        // Only show the push hint when the user actually attempted a push
+        // and it failed. Pre-push issues (gh not installed, auth failed,
+        // timed out during auth) are silent — no point telling the user
+        // about a push they never asked for.
+        if (e.reason === 'push-failed' || e.reason === 'push-timeout') {
+          const githubNewUrl = `https://github.com/new?name=${encodeURIComponent(name)}`;
+          output.log({
+            title: `Push your repo to GitHub: ${githubNewUrl}`,
+          });
+        }
+      } else if (e instanceof Error) {
         if (!aiMode) {
           output.error({
             title: 'Could not initialize git repository',
             bodyLines: mapErrorToBodyLines(e),
           });
         }
-        // In AI mode, error will be handled by the caller
       } else {
         console.error(e);
       }
@@ -287,6 +341,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       options.completionMessageKey,
       name
     );
+
+    // Auto-open the Cloud setup URL in the browser when user selected 'yes'
+    if (!options.skipCloudConnect) {
+      await openCloudSetupUrl(connectUrl);
+    }
   } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
     // Strip marker comments from README
     const readmeUpdated = addConnectUrlToReadme(directory, undefined);
@@ -305,6 +364,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     nxCloudInfo,
     directory,
     pushedToVcs,
+    pushFailReason,
     connectUrl,
   };
 }
@@ -321,6 +381,17 @@ export function extractConnectUrl(text: string): string | null {
   const urlPattern = /(https:\/\/[^\s]+\/connect\/[^\s]+)/g;
   const match = text.match(urlPattern);
   return match ? match[0] : null;
+}
+
+const templateShorthands: Record<string, string> = {
+  angular: 'nrwl/angular-template',
+  react: 'nrwl/react-template',
+  typescript: 'nrwl/typescript-template',
+  empty: 'nrwl/empty-template',
+};
+
+export function resolveTemplateShorthand(template: string): string {
+  return templateShorthands[template] ?? template;
 }
 
 function getWorkspaceGlobsFromPreset(preset: string): string[] {

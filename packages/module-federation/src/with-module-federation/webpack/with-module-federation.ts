@@ -6,6 +6,8 @@ import {
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 import type { NormalModuleReplacementPlugin } from 'webpack';
+import { workspaceRoot } from '@nx/devkit';
+import { isServeMode } from '../../utils/is-serve-mode';
 
 /**
  * @param {ModuleFederationConfig} options
@@ -17,7 +19,7 @@ export async function withModuleFederation(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options, undefined, 'webpack');
@@ -27,6 +29,11 @@ export async function withModuleFederation(
     config.output.publicPath = 'auto';
 
     config.output.scriptType = 'text/javascript';
+    config.resolve ??= {};
+    config.resolve.modules = [
+      ...(config.resolve.modules ?? ['node_modules']),
+      workspaceRoot,
+    ];
     config.optimization = {
       ...(config.optimization ?? {}),
       runtimeChunk:
@@ -69,7 +76,7 @@ export async function withModuleFederation(
             ? [
                 ...(configOverride?.runtimePlugins ?? []),
                 require.resolve(
-                  '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
+                  '@nx/module-federation/runtime-library-control-plugin'
                 ),
               ]
             : configOverride?.runtimePlugins,

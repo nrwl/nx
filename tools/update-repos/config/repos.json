@@ -19,6 +19,11 @@
       "repo": "nrwl/nx-console",
       "branch": "master",
       "packageManager": "yarn"
+    },
+    "nx-labs": {
+      "repo": "nrwl/nx-labs",
+      "branch": "main",
+      "packageManager": "bun"
     }
   }
 }

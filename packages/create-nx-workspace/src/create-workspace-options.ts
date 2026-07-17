@@ -4,6 +4,18 @@ import { PackageManager } from './utils/package-manager';
 
 export interface CreateWorkspaceOptions {
   name: string; // Workspace name (e.g. org name)
+  /**
+   * @description Override the working directory for workspace creation.
+   * When set, the workspace is created under this directory instead of process.cwd().
+   * Used when the user provides "." or an absolute path as the workspace name.
+   */
+  workingDir?: string;
+  /**
+   * @description Scaffold into the current directory in place. Set when the
+   * user passes "." / "./". Relaxes the empty-directory guard, so existing
+   * files in the cwd that collide with generated files are overwritten.
+   */
+  useCurrentDir?: boolean;
   packageManager: PackageManager; // Package manager to use
   nxCloud: NxCloud; // Enable Nx Cloud
   useGitHub?: boolean; // Will you be using GitHub as your git hosting provider?
@@ -59,6 +71,12 @@ export interface CreateWorkspaceOptions {
    * @description Enable or disable usage analytics
    */
   analytics?: boolean;
+  /**
+   * @description Trust third-party presets without prompting for confirmation.
+   * Useful for automated workflows where the preset publisher is already trusted.
+   * @default false
+   */
+  trustThirdPartyPreset?: boolean;
 }
 
 export const supportedAgents = [

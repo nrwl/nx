@@ -37,12 +37,13 @@ import {
   readSourceMapsCache,
   writeCache,
 } from './nx-deps-cache';
-import { getPlugins } from './plugins/get-plugins';
+import { getPlugins, getPluginsSeparated } from './plugins/get-plugins';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
+import { handleImport } from '../utils/handle-import';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -115,10 +116,13 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
   let projectConfigurationsError: ProjectConfigurationsError;
-  const plugins = await getPlugins();
+  const separatedPlugins = await getPluginsSeparated(nxJson);
+  const plugins = separatedPlugins.specifiedPlugins.concat(
+    separatedPlugins.defaultPlugins
+  );
   try {
     configurationResult = await retrieveProjectConfigurations(
-      plugins,
+      separatedPlugins,
       workspaceRoot,
       nxJson
     );
@@ -135,8 +139,10 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:end');
 
   performance.mark('retrieve-workspace-files:start');
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  const { fileMap, rustReferences } = await retrieveWorkspaceFiles(
+    workspaceRoot,
+    projectRootMap
+  );
   performance.mark('retrieve-workspace-files:end');
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
@@ -150,7 +156,6 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       projects,
       externalNodes,
       fileMap,
-      allWorkspaceFiles,
       rustReferences,
       cacheEnabled ? readFileMapCache() : null,
       plugins,
@@ -229,9 +234,11 @@ async function readCachedGraphAndHydrateFileMap(minimumComputedAt?: number) {
       project,
     ])
   );
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-  hydrateFileMap(fileMap, allWorkspaceFiles, rustReferences);
+  const { fileMap, rustReferences } = await retrieveWorkspaceFiles(
+    workspaceRoot,
+    projectRootMap
+  );
+  hydrateFileMap(fileMap, rustReferences);
   return graph;
 }
 
@@ -291,8 +298,9 @@ export async function createProjectGraphAndSourceMapsAsync(
   // If we're already on the daemon, return the in-memory graph directly
   // instead of making an IPC call back to ourselves.
   if (isOnDaemon()) {
-    const { currentProjectGraph, currentSourceMaps } = await import(
-      '../daemon/server/project-graph-incremental-recomputation'
+    const { currentProjectGraph, currentSourceMaps } = await handleImport(
+      '../daemon/server/project-graph-incremental-recomputation.js',
+      __dirname
     );
     if (currentProjectGraph) {
       performance.mark('createProjectGraphAsync:end');

@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "es2021", "esnext"],
-    "outDir": "../../dist/nx-dev/nx-dev",
-    "tsBuildInfoFile": "../../dist/nx-dev/nx-dev/tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "jsx": "preserve",
     "allowJs": true,
     "esModuleInterop": true,
@@ -25,7 +24,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "ignoreDeprecations": "6.0"
   },
   "types": ["node", "jest"],
   "include": [
@@ -34,70 +34,27 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts",
-    "../../dist/nx-dev/nx-dev/.next/types/**/*.ts",
     "public/documentation/**/*.json",
-    "dist/nx-dev/nx-dev/.next/types/**/*.ts"
+    "../../nx-dev/nx-dev/.next/types/**/*.ts"
   ],
   "references": [
     {
-      "path": "../ui-resources"
-    },
-    {
-      "path": "../ui-blog"
-    },
-    {
-      "path": "../ui-fence"
-    },
-    {
-      "path": "../ui-references"
-    },
-    {
-      "path": "../feature-search"
-    },
-    {
-      "path": "../ui-animations"
-    },
-    {
-      "path": "../feature-ai"
-    },
-    {
-      "path": "../ui-theme"
-    },
-    {
-      "path": "../feature-feedback"
-    },
-    {
       "path": "../ui-primitives"
-    },
-    {
-      "path": "../feature-analytics"
-    },
-    {
-      "path": "../ui-markdoc"
-    },
-    {
-      "path": "../ui-icons"
     },
     {
       "path": "../ui-common"
     },
     {
-      "path": "../data-access-courses"
+      "path": "../feature-ai"
     },
     {
       "path": "../data-access-documents"
     },
     {
-      "path": "../models-package"
+      "path": "../data-access-courses"
     },
     {
       "path": "../util-ai"
-    },
-    {
-      "path": "../ui-pricing"
-    },
-    {
-      "path": "../ui-podcast"
     },
     {
       "path": "../ui-video-courses"

@@ -1,25 +1,29 @@
 import {
+  acknowledgeBuildScripts,
+  addPlugin,
+  findTargetDefault,
+  upsertTargetDefault,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   updateNxJson,
   type GeneratorCallback,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import {
   getPresetExt,
   type JestPresetExtension,
 } from '../../utils/config/config-file';
-import {
-  getInstalledJestVersion,
-  validateInstalledJestVersion,
-  versions,
-} from '../../utils/versions';
+import { assertSupportedJestVersion } from '../../utils/assert-supported-jest-version';
+import { versions } from '../../utils/versions';
 import type { JestInitSchema } from './schema';
 
 function updateProductionFileSet(tree: Tree) {
@@ -48,36 +52,60 @@ function updateProductionFileSet(tree: Tree) {
 }
 
 function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
-  const nxJson = readNxJson(tree);
-
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['@nx/jest:jest'] ??= {};
-
+  const nxJson = readNxJson(tree) ?? {};
   const productionFileSet = nxJson.namedInputs?.production;
+  // Manage the workspace-wide `@nx/jest:jest` default; `upsertTargetDefault`
+  // updates the unfiltered entry (or creates one), leaving any project- or
+  // plugin-scoped jest overrides the user authored untouched.
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    executor: '@nx/jest:jest',
+  });
+  const patch = createJestDefaultPatch(existing, productionFileSet, presetExt);
+  if (Object.keys(patch).length > 0) {
+    upsertTargetDefault(tree, nxJson, { executor: '@nx/jest:jest', ...patch });
+    updateNxJson(tree, nxJson);
+  }
+}
 
-  nxJson.targetDefaults['@nx/jest:jest'].cache ??= true;
+function createJestDefaultPatch(
+  existing: Partial<TargetConfiguration> | undefined,
+  productionFileSet: unknown,
+  presetExt: JestPresetExtension
+): Partial<TargetConfiguration> {
+  const patch: Partial<TargetConfiguration> = {};
+  if (existing?.cache === undefined) patch.cache = true;
   // Test targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-    `{workspaceRoot}/jest.preset.${presetExt}`,
-  ];
+  if (existing?.inputs === undefined) {
+    patch.inputs = [
+      'default',
+      productionFileSet ? '^production' : '^default',
+      `{workspaceRoot}/jest.preset.${presetExt}`,
+    ];
+  }
+  if (existing?.options === undefined) {
+    patch.options = { passWithNoTests: true };
+  }
+  if (existing?.configurations === undefined) {
+    patch.configurations = {
+      ci: {
+        ci: true,
+        codeCoverage: true,
+      },
+    };
+  }
 
-  nxJson.targetDefaults['@nx/jest:jest'].options ??= {
-    passWithNoTests: true,
-  };
-  nxJson.targetDefaults['@nx/jest:jest'].configurations ??= {
-    ci: {
-      ci: true,
-      codeCoverage: true,
-    },
-  };
-
-  updateNxJson(tree, nxJson);
+  return patch;
 }
 
 function updateDependencies(tree: Tree, options: JestInitSchema) {
   const { jestVersion, nxVersion } = versions(tree);
+
+  // jest 30 pulls in unrs-resolver; its postinstall only fetches a fallback
+  // binding for platforms not covered by its prebuilt optional dependencies,
+  // so skip it.
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    'unrs-resolver': false,
+  });
 
   return addDependenciesToPackageJson(
     tree,
@@ -87,7 +115,7 @@ function updateDependencies(tree: Tree, options: JestInitSchema) {
       jest: jestVersion,
     },
     undefined,
-    options.keepExistingVersions
+    options.keepExistingVersions ?? true
   );
 }
 
@@ -99,10 +127,7 @@ export async function jestInitGeneratorInternal(
   tree: Tree,
   options: JestInitSchema
 ): Promise<GeneratorCallback> {
-  const installedJestVersion = getInstalledJestVersion(tree);
-  if (installedJestVersion) {
-    validateInstalledJestVersion(tree);
-  }
+  assertSupportedJestVersion(tree);
 
   const nxJson = readNxJson(tree);
   const addPluginDefault =

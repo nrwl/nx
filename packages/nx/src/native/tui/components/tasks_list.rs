@@ -3,19 +3,17 @@ use hashbrown::{HashMap, HashSet};
 use parking_lot::Mutex;
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Modifier, Style, Stylize},
+    layout::{Constraint, Direction, Layout, Position, Rect},
+    style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{
-        Block, Cell, Paragraph, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table,
-    },
+    widgets::{Block, Cell, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table},
 };
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::help_text::HelpText;
+use super::search_filter::FilterProps;
 use super::task_selection_manager::{
     ScrollMetrics, SelectionEntry, SelectionMode, TaskSection, TaskSelectionManager,
 };
@@ -29,6 +27,7 @@ use crate::native::{
         scroll_momentum::{ScrollDirection, ScrollMomentum},
         status_icons::{get_batch_status_char, get_status_char, get_status_style},
         theme::THEME,
+        tui_state::TuiState,
         utils::{format_duration_since, format_live_duration, sort_task_items},
     },
     utils::time::current_timestamp_millis,
@@ -45,12 +44,14 @@ const DURATION_NOT_YET_KNOWN: &str = "...";
 // This is just a fallback value, the real value will be set via start_command on the lifecycle
 const DEFAULT_MAX_PARALLEL: usize = 0;
 
-// Constants for layout calculation
-const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
-const FULL_HELP_WIDTH: u16 = 86; // Full help text width
-const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
-const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Cloud and Help
-const SCROLLBAR_WIDTH: u16 = 3; // Width for scrollbar area (1 scrollbar + 2 padding)
+// Rows consumed by the table header area: top_margin(1) + header content(1) + spacing row(1)
+const TABLE_HEADER_OVERHEAD_ROWS: u16 = 3;
+// The table's bottom row stays blank as breathing room above the status bar;
+// the scrollbar still spans it so it bottom-aligns with the terminal panes.
+const BOTTOM_PADDING_ROWS: u16 = 1;
+// Rows before the scrollbar track starts: top_margin(1) + header content(1)
+// The scrollbar spans from the spacing row (which is part of the visual table area) downward
+const SCROLLBAR_Y_OFFSET: u16 = 2;
 
 // Constants for column layout calculation
 const STATUS_ICON_WIDTH: u16 = 6; // Width for status icon with NX logo
@@ -171,6 +172,24 @@ pub enum TaskStatus {
     Stopped,
 }
 
+impl TaskStatus {
+    /// Whether the task has reached a terminal state (finished; it will not
+    /// transition again). Exhaustive on purpose: a new non-terminal variant
+    /// won't compile until it is classified here.
+    pub fn is_terminal(&self) -> bool {
+        match self {
+            TaskStatus::Success
+            | TaskStatus::Failure
+            | TaskStatus::Skipped
+            | TaskStatus::LocalCacheKeptExisting
+            | TaskStatus::LocalCache
+            | TaskStatus::RemoteCache
+            | TaskStatus::Stopped => true,
+            TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared => false,
+        }
+    }
+}
+
 impl std::str::FromStr for TaskStatus {
     type Err = String;
 
@@ -226,18 +245,19 @@ pub enum DisplayItem {
 /// Provides filtering, sorting, and output display capabilities.
 pub struct TasksList {
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
+    /// Canonical shared state. The list reads/writes the filter text through
+    /// this handle. parking_lot mutexes are non-reentrant, so the app must not
+    /// call the filter methods while holding this lock itself.
+    tui_state: Arc<Mutex<TuiState>>,
     pub display_items: Vec<DisplayItem>, // Hierarchical display items (tasks and batch groups)
     pub task_lookup: HashMap<String, TaskItem>, // Quick lookup for task access by name
     filtered_display_items: Vec<DisplayItem>, // Hierarchical display items that match the filter
     scroll_momentum: ScrollMomentum,     // Track scroll momentum for smooth scrolling
     pub throbber_counter: usize,
     pub filter_mode: bool,
-    filter_text: String,
     filter_persisted: bool, // Whether the filter is in a persisted state
     spacebar_mode: bool,    // Whether we're in spacebar mode (output follows selection)
-    cloud_message: Option<String>,
-    max_parallel: usize, // Maximum number of parallel tasks
-    title_text: String,
+    max_parallel: usize,    // Maximum number of parallel tasks
     pub action_tx: Option<UnboundedSender<Action>>,
     focus: Focus,
     pinned_tasks: [Option<String>; 2],
@@ -245,8 +265,30 @@ pub struct TasksList {
     run_mode: RunMode,
     column_visibility: Option<ColumnVisibility>, // Cached column visibility result
     terminal_width: Option<u16>, // Cached terminal width for column visibility calculation
-    in_progress_tasks: Vec<String>, // Standalone in-progress tasks for selection (excludes batched)
-    needs_sort: bool,            // Deferred sort flag - sort once per render frame
+    // In-progress selectable entries for selection switching: standalone tasks
+    // and running batch groups, in start order. Excludes tasks nested in a batch
+    // (the batch group represents them).
+    in_progress_entries: Vec<SelectionEntry>,
+    needs_sort: bool, // Deferred sort flag - sort once per render frame
+    /// Screen rect of the scrollable rows area (the table minus its header
+    /// overhead), captured during render so mouse clicks can map a row to an
+    /// entry. Each visible viewport entry occupies one row.
+    rows_hit_area: Option<Rect>,
+    /// Screen rect of the table's text region (excluding the scrollbar column),
+    /// captured during render so a drag can select task ids/statuses/durations.
+    text_selection_area: Option<Rect>,
+}
+
+/// Outcome of a mouse click landing inside the task list, returned to the App so
+/// it can react (focus, mode switch, or open a link) outside the component's
+/// borrow.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TaskListClick {
+    /// A task/batch row was selected.
+    Select,
+    /// A task/batch row was double-clicked — open and focus it in the main
+    /// terminal pane area (the same as pressing Enter on the row).
+    OpenInPane,
 }
 
 impl TasksList {
@@ -257,8 +299,8 @@ impl TasksList {
         initiating_tasks: HashSet<String>,
         run_mode: RunMode,
         initial_focus: Focus,
-        title_text: String,
         selection_manager: Arc<Mutex<TaskSelectionManager>>,
+        tui_state: Arc<Mutex<TuiState>>,
     ) -> Self {
         let mut display_items = Vec::new();
         let mut task_lookup = HashMap::new();
@@ -271,20 +313,22 @@ impl TasksList {
 
         let filtered_display_items = Vec::new();
 
+        // A non-empty canonical filter (e.g. restored across a mode switch) is
+        // always persisted since filter_mode doesn't survive reconstruction.
+        let has_filter_text = !tui_state.lock().get_filter_text().is_empty();
+
         let mut s = Self {
             selection_manager,
+            tui_state,
             filtered_display_items,
             display_items,
             task_lookup,
             scroll_momentum: ScrollMomentum::new(),
             throbber_counter: 0,
             filter_mode: false,
-            filter_text: String::new(),
-            filter_persisted: false,
+            filter_persisted: has_filter_text,
             spacebar_mode: false,
-            cloud_message: None,
             max_parallel: DEFAULT_MAX_PARALLEL,
-            title_text,
             action_tx: None,
             focus: initial_focus,
             pinned_tasks: [None, None],
@@ -292,18 +336,44 @@ impl TasksList {
             run_mode,
             column_visibility: None,
             terminal_width: None,
-            in_progress_tasks: Vec::new(),
+            in_progress_entries: Vec::new(),
             needs_sort: false,
+            rows_hit_area: None,
+            text_selection_area: None,
         };
 
-        // Sort tasks to populate task selection list
+        // Sort tasks to populate task selection list (applies any restored filter)
         s.sort_tasks();
 
         s
     }
 
     pub fn set_max_parallel(&mut self, max_parallel: Option<u32>) {
-        self.max_parallel = max_parallel.unwrap_or(DEFAULT_MAX_PARALLEL as u32) as usize;
+        let requested = max_parallel.unwrap_or(DEFAULT_MAX_PARALLEL as u32) as usize;
+        // Cap to the number of tasks in the graph so we don't reserve placeholder
+        // rows for slots that can never be filled (e.g. --parallel=8 with 5 tasks).
+        self.max_parallel = requested.min(self.task_lookup.len());
+    }
+
+    /// The canonical filter text, read from the shared state.
+    fn filter_text(&self) -> String {
+        self.tui_state.lock().get_filter_text().to_string()
+    }
+
+    /// Whether the canonical filter text is empty, without cloning it.
+    fn filter_text_is_empty(&self) -> bool {
+        self.tui_state.lock().get_filter_text().is_empty()
+    }
+
+    /// Returns the display items visible to the renderer: the filtered subset when a
+    /// filter is active, or the full canonical list when no filter is applied.
+    /// Callers should always use this instead of accessing `filtered_display_items` directly.
+    fn visible_display_items(&self) -> &[DisplayItem] {
+        if self.filter_text_is_empty() {
+            &self.display_items
+        } else {
+            &self.filtered_display_items
+        }
     }
 
     /// Sorts the display items and populates the task selection list.
@@ -415,6 +485,41 @@ impl TasksList {
         false
     }
 
+    /// Returns true if a task is nested under any batch group, expanded or
+    /// collapsed. Unlike [`Self::is_task_nested_in_expanded_batch`] (used for
+    /// rendering), this drives in-progress-list membership: a batched task is
+    /// never an independent selection target; the batch group represents it.
+    fn is_task_in_any_batch(&self, task_id: &str) -> bool {
+        // Batch groups live in display_items regardless of any active filter, so
+        // the filtered view is intentionally not scanned here.
+        self.display_items.iter().any(|item| {
+            matches!(item, DisplayItem::BatchGroup(batch_group)
+                if batch_group.nested_tasks.contains(task_id))
+        })
+    }
+
+    /// Returns true if every task in the batch has reached a terminal state.
+    /// Used to defer batch completion until all nested tasks have finished
+    /// (batches report status on intermediate re-run iterations).
+    pub fn is_batch_complete(&self, batch_id: &str) -> bool {
+        match self.get_batch_group_by_id(batch_id) {
+            Some(batch_group) => batch_group.nested_tasks.iter().all(|id| {
+                self.task_lookup
+                    .get(id)
+                    .is_some_and(|task| task.status.is_terminal())
+            }),
+            None => false,
+        }
+    }
+
+    /// Whether a completing batch's output is being followed by a focused output
+    /// pane in spacebar mode, in which case selection should stay on the batch's
+    /// last-completed task so its output remains visible. Only the spacebar case is checked
+    /// here; a pinned batch pane is preserved separately in `handle_batch_complete`.
+    fn is_terminal_showing_batch(&self) -> bool {
+        matches!(self.focus, Focus::MultipleOutput(_)) && self.spacebar_mode
+    }
+
     /// Returns true if the task list is currently focused
     fn is_task_list_focused(&self) -> bool {
         matches!(self.focus, Focus::TaskList)
@@ -477,9 +582,7 @@ impl TasksList {
 
                 // If a nested task was selected, select the batch group instead
                 if should_select_batch {
-                    self.selection_manager
-                        .lock()
-                        .select_batch_group(batch_id.to_string());
+                    self.selection_manager.lock().select_batch_group(batch_id);
                 }
 
                 self.apply_filter(); // Refresh the display
@@ -498,7 +601,7 @@ impl TasksList {
             SelectionEntry::BatchGroup(batch_id) => Some(batch_id),
             SelectionEntry::Task(task_id) => {
                 // Find batch containing this task
-                self.filtered_display_items.iter().find_map(|item| {
+                self.visible_display_items().iter().find_map(|item| {
                     if let DisplayItem::BatchGroup(batch) = item {
                         if batch.nested_tasks.contains(&task_id) {
                             return Some(batch.batch_id.clone());
@@ -537,7 +640,7 @@ impl TasksList {
 
     /// Scrolls the task list up with momentum support
     fn scroll_up(&mut self) {
-        if self.filtered_display_items.is_empty() {
+        if self.visible_display_items().is_empty() {
             return;
         }
         let lines = self.scroll_momentum.calculate_momentum(ScrollDirection::Up) as usize;
@@ -546,7 +649,7 @@ impl TasksList {
 
     /// Scrolls the task list down with momentum support
     fn scroll_down(&mut self) {
-        if self.filtered_display_items.is_empty() {
+        if self.visible_display_items().is_empty() {
             return;
         }
         let lines = self
@@ -613,14 +716,7 @@ impl TasksList {
                     let all_completed = batch_group.nested_tasks.iter().all(|task_id| {
                         self.task_lookup
                             .get(task_id)
-                            .map(|task| {
-                                !matches!(
-                                    task.status,
-                                    TaskStatus::InProgress
-                                        | TaskStatus::Shared
-                                        | TaskStatus::NotStarted
-                                )
-                            })
+                            .map(|task| task.status.is_terminal())
                             .unwrap_or(false)
                     });
 
@@ -644,7 +740,8 @@ impl TasksList {
 
         // When filtering is active, only show parallel section if there are InProgress tasks
         // When not filtering, show parallel section if there are any InProgress or pending tasks
-        let should_show_parallel_section = if self.filter_text.is_empty() {
+        let filter_is_empty = self.filter_text_is_empty();
+        let should_show_parallel_section = if filter_is_empty {
             has_tasks_to_run
         } else {
             !in_progress.is_empty() // Only show if there are filtered InProgress tasks
@@ -696,7 +793,7 @@ impl TasksList {
 
             // Fill remaining slots with None up to self.max_parallel
             // Only add placeholder entries when NOT filtering
-            if self.filter_text.is_empty() {
+            if filter_is_empty {
                 if entries_added < self.max_parallel {
                     // When we have fewer entries than self.max_parallel, fill the remaining slots
                     // with empty placeholder rows to maintain the fixed height
@@ -776,7 +873,8 @@ impl TasksList {
 
     /// Calculate the end position of the parallel section, returning None if no parallel section should be shown
     fn get_parallel_section_end(&self) -> Option<usize> {
-        if self.filter_text.is_empty() {
+        let filter_text = self.filter_text();
+        if filter_text.is_empty() {
             // When not filtering, show if there are any InProgress or pending tasks
             if !self.has_active_tasks() {
                 return None;
@@ -832,9 +930,7 @@ impl TasksList {
                 .values()
                 .filter(|t| {
                     matches!(t.status, TaskStatus::InProgress | TaskStatus::Shared)
-                        && t.name
-                            .to_lowercase()
-                            .contains(&self.filter_text.to_lowercase())
+                        && t.name.to_lowercase().contains(&filter_text.to_lowercase())
                 })
                 .count();
 
@@ -857,30 +953,11 @@ impl TasksList {
         })
     }
 
-    // Add a helper method to check if we're in the initial loading state
-    fn is_loading_state(&self) -> bool {
-        // We're in loading state if all tasks are NotStarted and there are no InProgress tasks
-        !self.task_lookup.is_empty()
-            && self
-                .task_lookup
-                .values()
-                .all(|t| matches!(t.status, TaskStatus::NotStarted))
-            && !self
-                .task_lookup
-                .values()
-                .any(|t| matches!(t.status, TaskStatus::InProgress | TaskStatus::Shared))
-    }
-
-    /// Enters filter mode for task filtering.
-    /// If there is existing filter text that isn't persisted, persists it instead.
+    /// Enters filter mode for task filtering — both starting a new filter and
+    /// re-editing a confirmed one. <enter> confirms, matching the pane search.
     pub fn enter_filter_mode(&mut self) {
-        if !self.filter_text.is_empty() && !self.filter_persisted {
-            self.persist_filter();
-        } else {
-            // Otherwise enter normal filter mode
-            self.filter_persisted = false;
-            self.filter_mode = true;
-        }
+        self.filter_persisted = false;
+        self.filter_mode = true;
     }
 
     /// Exits filter mode and clears the persisted state.
@@ -898,49 +975,35 @@ impl TasksList {
     pub fn clear_filter(&mut self) {
         self.filter_mode = false;
         self.filter_persisted = false;
-        self.filter_text.clear();
+        self.tui_state.lock().set_filter_text(String::new());
         self.apply_filter();
     }
 
-    /// Adds a character to the filter text if not in persisted mode.
-    /// Special handling for '/' character which can trigger filter persistence.
+    /// Adds a character to the filter text if not in persisted mode. Every
+    /// character is literal — including '/', so scoped project names like
+    /// `@nx/react` are filterable; <enter> is what confirms the filter,
+    /// matching the pane search.
     pub fn add_filter_char(&mut self, c: char) {
-        // Never add '/' character to filter text
-        if c == '/' {
-            if !self.filter_text.is_empty() && !self.filter_persisted {
-                // If we have filter text and it's not persisted, pressing / should persist it
-                self.filter_persisted = true;
-                self.filter_mode = false;
-            }
-            return;
-        }
-
-        // Otherwise, only add the character if we're not in persisted mode
         if !self.filter_persisted {
-            self.filter_text.push(c);
+            {
+                let mut state = self.tui_state.lock();
+                let mut text = state.get_filter_text().to_string();
+                text.push(c);
+                state.set_filter_text(text);
+            }
             self.apply_filter();
         }
     }
 
     /// Removes the last character from the filter text.
     pub fn remove_filter_char(&mut self) {
-        self.filter_text.pop();
-        self.apply_filter();
-    }
-
-    /// Gets the current filter text for mode switching persistence.
-    pub fn get_filter_text(&self) -> &str {
-        &self.filter_text
-    }
-
-    /// Sets the filter state from mode switching restoration.
-    /// Always persists the filter since filter_mode is not preserved across mode switches.
-    pub fn set_filter_text(&mut self, filter_text: String) {
-        self.filter_text = filter_text;
-        if !self.filter_text.is_empty() {
-            self.persist_filter();
+        {
+            let mut state = self.tui_state.lock();
+            let mut text = state.get_filter_text().to_string();
+            text.pop();
+            state.set_filter_text(text);
         }
-        self.needs_sort = true; // Triggers sort_tasks -> apply_filter on next draw()
+        self.apply_filter();
     }
 
     /// Checks if the terminal pane is currently showing the given task's output.
@@ -1026,10 +1089,13 @@ impl TasksList {
         self.selection_manager.lock().set_selection_mode(mode);
 
         // Apply filter to display items
-        if self.filter_text.is_empty() {
-            self.filtered_display_items = self.display_items.clone();
+        let filter_text = self.filter_text();
+        if filter_text.is_empty() {
+            // No filter active — visible_display_items() will return &display_items directly.
+            // Clear stale filtered data from a previous filter session.
+            self.filtered_display_items.clear();
         } else {
-            let filter_text = self.filter_text.to_lowercase();
+            let filter_text = filter_text.to_lowercase();
             self.filtered_display_items = self
                 .display_items
                 .iter()
@@ -1089,7 +1155,7 @@ impl TasksList {
 
         // Create entries from filtered display items with section size tracking
         let (entries, in_progress_size) =
-            self.create_entries_from_display_items(&self.filtered_display_items);
+            self.create_entries_from_display_items(self.visible_display_items());
         let mut manager = self.selection_manager.lock();
         manager.update_entries_with_size(entries, in_progress_size);
         // Explicitly scroll to ensure selected task is visible
@@ -1240,8 +1306,9 @@ impl TasksList {
         }
     }
 
-    /// Creates header cells for the task list table.
-    /// Shows either filter input or task status based on current state.
+    /// Creates header cells for the task list table: the column labels, colored
+    /// by run completion state. The first two cells are empty (the " NX " badge
+    /// and run status/title live in the app-level status bar).
     fn get_header_cells(&'_ self, column_visibility: &ColumnVisibility) -> Vec<Cell<'_>> {
         let status_style = if !self.is_task_list_focused() {
             Style::default().fg(THEME.secondary_fg).dim()
@@ -1277,14 +1344,21 @@ impl TasksList {
             THEME.info
         };
 
-        // Leave first cell empty for the logo
-        let status_cell = Cell::from("").style(status_style);
+        // The " NX " badge heads the status icon column, colored by run state
+        let badge_cell = Cell::from(Line::from(Span::styled(
+            " NX ",
+            Style::reset()
+                .add_modifier(Modifier::BOLD)
+                .bg(header_color)
+                .fg(THEME.primary_fg),
+        )));
 
-        // Completion status text is now shown with the logo in the first cell
-        // Just provide an empty second cell
-        let status_text = String::new();
+        // The run title heads the task name column, in the same quiet style as
+        // the column labels (run state and counts live in the status bar).
+        let title_cell =
+            Cell::from(self.tui_state.lock().title_text().to_string()).style(status_style);
 
-        let mut header_cells = vec![status_cell, Cell::from(status_text)];
+        let mut header_cells = vec![badge_cell, title_cell];
 
         // Add cache status column header if visible
         if column_visibility.show_cache_status {
@@ -1317,7 +1391,7 @@ impl TasksList {
 
         for task in &tasks {
             let task_id = &task.id;
-            let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
+            let is_in_batch = self.is_task_in_any_batch(task_id);
 
             // Update in task_lookup
             if let Some(task_item) = self.task_lookup.get_mut(task_id) {
@@ -1349,8 +1423,14 @@ impl TasksList {
             }
 
             // Add to in-progress list if standalone task
-            if !is_in_batch && !self.in_progress_tasks.iter().any(|id| id == task_id) {
-                self.in_progress_tasks.push(task_id.to_string());
+            if !is_in_batch
+                && !self
+                    .in_progress_entries
+                    .iter()
+                    .any(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
+            {
+                self.in_progress_entries
+                    .push(SelectionEntry::Task(task_id.to_string()));
                 has_standalone_change = true;
             }
         }
@@ -1360,134 +1440,104 @@ impl TasksList {
         }
     }
 
-    /// Performs initial in-progress task selection if not yet done.
-    ///
-    /// This is called from render() after tasks have been sorted and entries created.
-    /// It ensures that when tasks first start running, we select the first in-progress task
-    /// (unless the terminal is showing the currently selected task).
-    ///
-    /// Selection behavior:
-    /// - If terminal is showing the currently selected task → keep it selected
-    /// - Otherwise → select the first task in the in-progress section (after sorting)
-    ///
-    /// This implements the selection.md rule for initial startup in run-many mode.
+    /// Drives the selection state machine from `draw()` after sort/entry
+    /// creation. `Explicit` selections are never overridden;
+    /// `AwaitingNextAllocation` never falls back to first-available.
     fn perform_initial_in_progress_selection_if_needed(&mut self) {
-        // Get current state and check if we need to make a selection
-        let (needs_selection, has_in_progress, selected_task) = {
-            let selection_manager = self.selection_manager.lock();
-            let selection = selection_manager.get_selection();
-            let needs_selection = selection.is_none();
-            let in_progress_items = selection_manager.get_in_progress_items();
-            let has_in_progress = !in_progress_items.is_empty();
-            let selected_task = match selection {
-                Some(SelectionEntry::Task(name)) => Some(name.clone()),
-                _ => None,
-            };
-            (needs_selection, has_in_progress, selected_task)
-        };
-
-        // If already selected, nothing to do
-        if !needs_selection {
+        let mut manager = self.selection_manager.lock();
+        if manager.is_explicit() {
             return;
         }
-
-        // Check if terminal is showing a task (even though nothing is selected in state)
-        let terminal_showing_task = if let Some(ref task) = selected_task {
-            self.is_terminal_showing_task(task)
-        } else {
-            false
-        };
-
-        // Only select if terminal isn't showing a specific task
-        if !terminal_showing_task {
-            if has_in_progress {
-                // Select the first in-progress task (from the already-sorted entries)
-                self.select_first_in_progress_entry();
-            } else {
-                // No in-progress tasks yet, select first available entry
-                self.selection_manager.lock().select_first_available();
+        if manager.has_in_progress() {
+            if let Some(entry) = manager.first_in_progress_entry() {
+                manager.select(Some(entry));
             }
+        } else if manager.is_empty() {
+            manager.select_first_available_as_initial_placeholder();
         }
     }
 
-    /// Selects the first entry in the in-progress section.
+    /// Selection transition when the currently-selected in-progress entry
+    /// (`finished`, a standalone task or a batch group) reaches a terminal state.
+    /// Shared by standalone-task completion and batch completion so both behave
+    /// identically. `finished` must already be removed from `in_progress_entries`;
+    /// `old_index` is its index there before removal. `keep_last` is selected when
+    /// no other work remains (the finished task for a standalone task, the
+    /// last-completed nested task for a batch). `terminal_showing` keeps `keep_last`
+    /// selected when the finished entry's output is being followed by a pane.
     ///
-    /// This is used during initial allocation to prioritize showing in-progress tasks.
-    fn select_first_in_progress_entry(&mut self) {
-        let mut selection_manager = self.selection_manager.lock();
-
-        // Get in-progress items from selection manager
-        let in_progress_items = selection_manager.get_in_progress_items();
-
-        // Select the first item if available
-        if let Some(first_item) = in_progress_items.first() {
-            selection_manager.select(Some(first_item.clone()));
-        }
-    }
-
-    /// Handles a standalone task finishing by switching selection to another in-progress task.
-    /// Only changes selection if the finished task was the currently selected task.
-    fn handle_standalone_task_finished(&mut self, task_id: &str, old_index: Option<usize>) {
-        // Only switch selection if the finished task was the selected task
-        let is_selected = {
-            let selection_manager = self.selection_manager.lock();
-            matches!(
-                selection_manager.get_selection(),
-                Some(SelectionEntry::Task(name)) if name == task_id
-            )
-        };
+    /// Only changes selection if `finished` was the currently selected entry.
+    fn select_after_selected_finished(
+        &mut self,
+        finished: &SelectionEntry,
+        old_index: Option<usize>,
+        keep_last: Option<SelectionEntry>,
+        terminal_showing: bool,
+    ) {
+        let is_selected = self.selection_manager.lock().get_selection() == Some(finished);
         if !is_selected {
             return;
         }
 
-        // Check terminal pane exception
-        if self.is_terminal_showing_task(task_id) {
-            return; // Keep selection on finished task
-        }
-
-        let has_pending = self.has_pending_tasks();
-
-        // No more in-progress tasks?
-        if self.in_progress_tasks.is_empty() {
-            if has_pending {
-                // Wait for next allocation
-                self.selection_manager.lock().select(None);
+        // Terminal pane exception: keep the finished entry's output visible.
+        if terminal_showing {
+            if let Some(entry) = keep_last {
+                self.selection_manager.lock().select(Some(entry));
             }
-            // else: last task, keep selection (already on finished task)
             return;
         }
 
-        // Switch to task at same/lower position (clamped to valid range)
-        if let Some(old_idx) = old_index {
-            let clamped_idx = old_idx.min(self.in_progress_tasks.len().saturating_sub(1));
-            if let Some(next_task) = self.in_progress_tasks.get(clamped_idx) {
-                self.selection_manager.lock().select_task(next_task.clone());
+        // No more in-progress entries (tasks or batches)?
+        if self.in_progress_entries.is_empty() {
+            if self.has_pending_tasks() {
+                // Wait for the next task/batch to start rather than latching onto
+                // a completed entry.
+                self.selection_manager.lock().await_next_allocation();
+            } else if let Some(entry) = keep_last {
+                // Last work, so keep a relevant completed entry selected.
+                self.selection_manager.lock().select(Some(entry));
             }
-        } else if let Some(first) = self.in_progress_tasks.first() {
-            self.selection_manager.lock().select_task(first.clone());
+            return;
+        }
+
+        // Switch to the entry at the same/lower position (clamped to valid range).
+        let target = old_index
+            .map(|idx| idx.min(self.in_progress_entries.len() - 1))
+            .and_then(|idx| self.in_progress_entries.get(idx).cloned())
+            .or_else(|| self.in_progress_entries.first().cloned());
+        if let Some(entry) = target {
+            self.selection_manager.lock().select(Some(entry));
         }
     }
 
     /// Updates a task's status and marks the list for deferred sorting.
-    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    pub fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         // Get the old status and check if we're in a batch BEFORE updating
         let old_status = self
             .task_lookup
-            .get(&task_id)
+            .get(task_id)
             .map(|t| t.status)
             .unwrap_or(TaskStatus::NotStarted);
         let old_is_in_progress = matches!(old_status, TaskStatus::InProgress | TaskStatus::Shared);
-        let is_in_batch = self.is_task_nested_in_expanded_batch(&task_id);
+        // Rendering nests tasks only under EXPANDED batches; the in-progress
+        // selectable list excludes tasks under ANY batch (the group represents them).
+        // A task can only be in an expanded batch if it is batched at all, so the
+        // standalone case (the common one) skips the second scan.
+        let is_in_any_batch = self.is_task_in_any_batch(task_id);
+        let is_in_expanded_batch =
+            is_in_any_batch && self.is_task_nested_in_expanded_batch(task_id);
 
         // Get position BEFORE removing (for position-based selection switching)
-        let old_index = if old_is_in_progress && !is_in_batch {
-            self.in_progress_tasks.iter().position(|id| id == &task_id)
+        let old_index = if old_is_in_progress && !is_in_any_batch {
+            self.in_progress_entries
+                .iter()
+                .position(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
         } else {
             None
         };
 
         // Update in task_lookup first
-        if let Some(task_item) = self.task_lookup.get_mut(&task_id) {
+        if let Some(task_item) = self.task_lookup.get_mut(task_id) {
             task_item.update_status(status.clone());
         }
 
@@ -1501,7 +1551,7 @@ impl TasksList {
                     }
                 }
                 DisplayItem::BatchGroup(batch_group) => {
-                    if batch_group.nested_tasks.contains(&task_id) {
+                    if batch_group.nested_tasks.contains(task_id) {
                         break;
                     }
                 }
@@ -1509,24 +1559,43 @@ impl TasksList {
         }
 
         // Update in-progress list and handle selection for standalone tasks
-        if !is_in_batch {
+        // (tasks nested in a batch are represented by the batch group).
+        if !is_in_any_batch {
             let new_is_in_progress = matches!(status, TaskStatus::InProgress | TaskStatus::Shared);
 
             if old_is_in_progress && !new_is_in_progress {
-                // Task finished - remove and handle selection
-                if let Some(idx) = self.in_progress_tasks.iter().position(|id| id == &task_id) {
-                    self.in_progress_tasks.remove(idx);
+                // Task finished - remove and update selection if it was selected.
+                if let Some(idx) = self
+                    .in_progress_entries
+                    .iter()
+                    .position(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
+                {
+                    self.in_progress_entries.remove(idx);
                 }
-                self.handle_standalone_task_finished(&task_id, old_index);
+                let finished = SelectionEntry::Task(task_id.to_owned());
+                let terminal_showing = self.is_terminal_showing_task(task_id);
+                self.select_after_selected_finished(
+                    &finished,
+                    old_index,
+                    Some(finished.clone()),
+                    terminal_showing,
+                );
             } else if !old_is_in_progress && new_is_in_progress {
                 // Task started - add if not already present
-                if !self.in_progress_tasks.iter().any(|id| id == &task_id) {
-                    self.in_progress_tasks.push(task_id.to_string());
+                if !self
+                    .in_progress_entries
+                    .iter()
+                    .any(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
+                {
+                    self.in_progress_entries
+                        .push(SelectionEntry::Task(task_id.to_owned()));
                 }
             }
+        }
 
-            // Only re-sort when a standalone task changed — batch-nested task
-            // status changes don't affect display order.
+        // Re-sort unless the change was to a task nested in an expanded batch
+        // (those don't affect standalone display order).
+        if !is_in_expanded_batch {
             self.needs_sort = true;
         }
     }
@@ -1649,10 +1718,12 @@ impl TasksList {
             return;
         }
 
-        // Create batch group with all tasks
-        let nested_tasks: HashSet<String> = valid_task_ids.iter().cloned().collect();
-        let mut sorted_tasks: Vec<String> = nested_tasks.iter().cloned().collect();
+        // Create batch group with all tasks.
+        // Sort valid_task_ids in place for deterministic display order, then use it
+        // as sorted_tasks directly (move) to avoid a redundant Vec allocation.
+        let mut sorted_tasks = valid_task_ids;
         sorted_tasks.sort();
+        let nested_tasks: HashSet<String> = sorted_tasks.iter().cloned().collect();
 
         let batch_group = BatchGroupItem {
             batch_id,
@@ -1664,13 +1735,13 @@ impl TasksList {
         };
 
         // Register for display
-        self.register_batch_for_display(valid_task_ids, batch_group);
+        self.register_batch_for_display(batch_group);
     }
 
     /// Internal: Registers a batch group for display by removing individual task items
     /// and adding the batch group. If the currently selected task is in the batch,
     /// selects the batch instead.
-    fn register_batch_for_display(&mut self, task_ids: Vec<String>, batch_group: BatchGroupItem) {
+    fn register_batch_for_display(&mut self, batch_group: BatchGroupItem) {
         // Check if batch already exists
         if self.display_items.iter().any(|item| {
             matches!(item, DisplayItem::BatchGroup(bg) if bg.batch_id == batch_group.batch_id)
@@ -1691,11 +1762,13 @@ impl TasksList {
                 }
             });
 
-        // Count how many tasks will actually be grouped
+        // Count how many tasks will actually be grouped (O(1) per task via HashSet)
         let tasks_to_group = self
             .display_items
             .iter()
-            .filter(|item| matches!(item, DisplayItem::Task(task) if task_ids.contains(&task.name)))
+            .filter(|item| {
+                matches!(item, DisplayItem::Task(task) if batch_group.nested_tasks.contains(&task.name))
+            })
             .count();
 
         if tasks_to_group == 0 {
@@ -1704,20 +1777,37 @@ impl TasksList {
 
         // Remove individual task display items
         self.display_items.retain(|item| match item {
-            DisplayItem::Task(task) => !task_ids.contains(&task.name),
+            DisplayItem::Task(task) => !batch_group.nested_tasks.contains(&task.name),
             DisplayItem::BatchGroup(_) => true,
         });
 
         // Add the batch group
+        let nested_tasks = batch_group.nested_tasks.clone();
         let batch_id = batch_group.batch_id.clone();
         self.display_items
             .push(DisplayItem::BatchGroup(batch_group));
         self.needs_sort = true;
 
+        // Reflect the running batch in the in-progress selectable list: drop any
+        // nested tasks tracked individually and represent them by the batch group.
+        self.in_progress_entries
+            .retain(|e| !matches!(e, SelectionEntry::Task(id) if nested_tasks.contains(id)));
+        if !self
+            .in_progress_entries
+            .iter()
+            .any(|e| matches!(e, SelectionEntry::BatchGroup(id) if id == &batch_id))
+        {
+            self.in_progress_entries
+                .push(SelectionEntry::BatchGroup(batch_id.clone()));
+        }
+
         // If selected task is now inside the collapsed batch, select the batch instead
+        // Use the just-pushed batch group's nested_tasks for the O(1) contains check.
         if let Some(ref selected) = currently_selected {
-            if task_ids.iter().any(|id| id == selected) {
-                self.selection_manager.lock().select_batch_group(batch_id);
+            if let Some(DisplayItem::BatchGroup(bg)) = self.display_items.last() {
+                if bg.nested_tasks.contains(selected.as_str()) {
+                    self.selection_manager.lock().select_batch_group(&batch_id);
+                }
             }
         }
     }
@@ -1733,26 +1823,52 @@ impl TasksList {
         // Capture current selection before removing batch
         let currently_selected = self.selection_manager.lock().get_selection().cloned();
 
+        // Capture the batch's slot in the in-progress list before removing it, so a
+        // finishing selected batch can hand selection to the neighbouring entry.
+        let batch_old_index = self
+            .in_progress_entries
+            .iter()
+            .position(|e| matches!(e, SelectionEntry::BatchGroup(id) if id == batch_id));
+        if let Some(idx) = batch_old_index {
+            self.in_progress_entries.remove(idx);
+        }
+
         // Remove batch and get its info
         let Some(batch_group) = self.remove_batch_group(batch_id) else {
             return;
         };
 
         // Restore selection based on what was selected before
-        let task_to_select = currently_selected.and_then(|selection| match &selection {
-            SelectionEntry::BatchGroup(id) if id == batch_id => {
-                // Batch was selected - select the last task to complete
-                self.find_last_completed_task(&batch_group.nested_tasks)
+        match currently_selected {
+            Some(SelectionEntry::BatchGroup(ref id)) if id == batch_id => {
+                // The selected batch finished. Mirror a standalone task finishing:
+                // move to the nearest in-progress entry, wait for the next
+                // allocation when only pending tasks remain, or keep the last
+                // completed task when this was the final work.
+                let keep_last = self
+                    .find_last_completed_task(&batch_group.nested_tasks)
                     .or_else(|| batch_group.sorted_tasks.first().cloned())
+                    .map(SelectionEntry::Task);
+                let terminal_showing = self.is_terminal_showing_batch();
+                let finished = SelectionEntry::BatchGroup(batch_id.to_owned());
+                self.select_after_selected_finished(
+                    &finished,
+                    batch_old_index,
+                    keep_last,
+                    terminal_showing,
+                );
             }
-            SelectionEntry::Task(task_id) if batch_group.nested_tasks.contains(task_id) => {
-                Some(task_id.clone())
+            Some(SelectionEntry::Task(ref task_id))
+                if batch_group.nested_tasks.contains(task_id) =>
+            {
+                // A nested task was selected - keep it selected as a standalone.
+                self.selection_manager.lock().select_task(task_id);
             }
-            _ => Some(selection.id().to_string()),
-        });
-
-        if let Some(task_id) = task_to_select {
-            self.selection_manager.lock().select_task(task_id);
+            Some(other) => {
+                // Unrelated selection (another task or batch) - preserve it.
+                self.selection_manager.lock().select(Some(other));
+            }
+            None => {}
         }
     }
 
@@ -1775,58 +1891,108 @@ impl TasksList {
         Row::new(empty_cells)
     }
 
-    /// Renders the filter display area.
-    fn render_filter(&self, f: &mut Frame<'_>, filter_area: Rect) {
-        let total_tasks = self.task_lookup.len();
-        // Count actual tasks in filtered display items (excluding batch groups)
-        let filtered_task_count = self
-            .filtered_display_items
+    /// Filter session state for the status bar's filter display. `filter_text`
+    /// is the canonical value from TuiState, passed in by the app so this
+    /// method never takes the state lock itself. Returns None when no filter
+    /// session is active.
+    pub fn filter_display(&self, filter_text: &str) -> Option<FilterProps> {
+        if !self.filter_mode && filter_text.is_empty() {
+            return None;
+        }
+        // Count actual tasks in filtered display items (excluding batch groups),
+        // using the passed-in text to pick the visible set so no lock is taken.
+        let visible_items = if filter_text.is_empty() {
+            &self.display_items
+        } else {
+            &self.filtered_display_items
+        };
+        let filtered_task_count = visible_items
             .iter()
             .filter(|item| matches!(item, DisplayItem::Task(_)))
             .count();
-        let hidden_tasks = total_tasks - filtered_task_count;
-        let filter_text = format!("  Filter: {}", self.filter_text);
-        let should_dim = !self.is_task_list_focused();
-
-        let filter_style = if should_dim {
-            Style::default().fg(THEME.warning).dim()
-        } else {
-            Style::default().fg(THEME.warning)
-        };
-
-        let instruction_text = if hidden_tasks > 0 {
-            if self.filter_persisted {
-                format!(
-                    "  -> {} tasks filtered out. Press / to edit, <esc> to clear",
-                    hidden_tasks
-                )
-            } else {
-                format!(
-                    "  -> {} tasks filtered out. Press / to persist, <esc> to clear",
-                    hidden_tasks
-                )
-            }
-        } else if self.filter_persisted {
-            "    Press / to edit filter".to_string()
-        } else {
-            "  Press <esc> to clear filter".to_string()
-        };
-
-        let filter_lines = vec![
-            Line::from(vec![Span::styled(filter_text, filter_style)]),
-            Line::from(vec![Span::styled(instruction_text, filter_style)]),
-        ];
-
-        let filter_paragraph = Paragraph::new(filter_lines).alignment(Alignment::Left);
-        f.render_widget(filter_paragraph, filter_area);
+        Some(FilterProps {
+            text: filter_text.to_string(),
+            input_mode: self.filter_mode,
+            hidden_count: self.task_lookup.len().saturating_sub(filtered_task_count),
+        })
     }
 
     /// Checks if the scrollbar will be needed for the given table height
     fn will_need_scrollbar(&self, table_height: u16) -> bool {
-        let header_and_spacing_rows = 4;
-        let dynamic_viewport_height = table_height.saturating_sub(header_and_spacing_rows) as usize;
+        let dynamic_viewport_height =
+            table_height.saturating_sub(TABLE_HEADER_OVERHEAD_ROWS) as usize;
         let total_entries = self.selection_manager.lock().get_total_entries();
         total_entries > dynamic_viewport_height
+    }
+
+    /// The table's text region from the last render, used to bound a drag-based
+    /// text selection (and exclude the scrollbar).
+    pub fn selection_area(&self) -> Option<Rect> {
+        self.text_selection_area
+    }
+
+    /// Resolve a left-click at terminal cell `(col, row)` within the task list.
+    ///
+    /// The row is mapped to a viewport entry (rows begin
+    /// `TABLE_HEADER_OVERHEAD_ROWS` below the table top and are one entry
+    /// tall). A task/batch row updates the selection and returns `Select`, or
+    /// `OpenInPane` on a double-click; a single click on a batch row also
+    /// toggles its expansion. Returns `None` when the click doesn't land on
+    /// anything actionable (header, blank row, gap).
+    pub fn handle_click(&mut self, col: u16, row: u16, is_double: bool) -> Option<TaskListClick> {
+        // External links (the cloud message in the status bar) are hit-tested by
+        // the app via the bar's link registry, before row clicks reach here.
+        let area = self.rows_hit_area?;
+        if !area.contains(Position::new(col, row)) {
+            return None;
+        }
+
+        // Rows begin below the header overhead; clicks above that aren't rows.
+        let first_row_y = area.y.saturating_add(TABLE_HEADER_OVERHEAD_ROWS);
+        if row < first_row_y {
+            return None;
+        }
+        let index = (row - first_row_y) as usize;
+
+        // Map the row index to the visible viewport entry. Blank/placeholder
+        // rows are `None` and are not selectable.
+        let entry = {
+            let manager = self.selection_manager.lock();
+            manager
+                .get_viewport_entries()
+                .into_iter()
+                .nth(index)
+                .flatten()
+        }?;
+
+        match &entry {
+            SelectionEntry::Task(task_id) => {
+                self.selection_manager.lock().select_task(task_id);
+            }
+            SelectionEntry::BatchGroup(batch_id) => {
+                self.selection_manager.lock().select_batch_group(batch_id);
+                // A single click on a batch row toggles its expansion so the
+                // mouse can open/close batches like the ←/→ keys do. (The first
+                // click of a double-click toggles; the second opens it in a pane.)
+                if !is_double {
+                    let expanded = self
+                        .get_batch_group_by_id(batch_id)
+                        .map(|batch| batch.is_expanded)
+                        .unwrap_or(false);
+                    if expanded {
+                        self.collapse_batch(batch_id);
+                    } else {
+                        self.expand_batch(batch_id);
+                    }
+                }
+            }
+        }
+
+        if is_double {
+            Some(TaskListClick::OpenInPane)
+        } else {
+            Some(TaskListClick::Select)
+        }
     }
 
     /// Renders the main task table with scrollbar if needed.
@@ -1838,132 +2004,21 @@ impl TasksList {
         needs_scrollbar: bool,
         scroll_metrics: &ScrollMetrics,
     ) {
+        // Record the table rect for mouse hit-testing. Rows start
+        // TABLE_HEADER_OVERHEAD_ROWS below the top and are one viewport entry tall.
+        self.rows_hit_area = Some(table_area);
         let visible_entries = self.selection_manager.lock().get_viewport_entries();
         let selected_style = Style::default()
             .fg(THEME.primary_fg)
             .add_modifier(Modifier::BOLD);
         let normal_style = Style::default();
 
-        // Determine if all tasks are completed
-        let all_tasks_completed = !self.task_lookup.is_empty()
-            && self.task_lookup.values().all(|t| {
-                matches!(
-                    t.status,
-                    TaskStatus::Success
-                        | TaskStatus::Failure
-                        | TaskStatus::Skipped
-                        | TaskStatus::Stopped
-                        | TaskStatus::LocalCache
-                        | TaskStatus::LocalCacheKeptExisting
-                        | TaskStatus::RemoteCache
-                )
-            });
-
         let has_visible_parallel_entries =
             self.has_visible_parallel_entries(scroll_metrics.scroll_offset);
 
-        // Determine the color of the NX logo based on task status
-        let logo_color = if self.task_lookup.is_empty() {
-            // No tasks
-            THEME.info
-        } else if all_tasks_completed {
-            // All tasks are completed, check if any failed
-            let has_failures = self
-                .task_lookup
-                .values()
-                .any(|t| matches!(t.status, TaskStatus::Failure));
-            if has_failures {
-                THEME.error
-            } else {
-                THEME.success
-            }
-        } else {
-            // Tasks are still running
-            THEME.info
-        };
-
-        // Get header cells using the existing method but add NX logo to first cell
-        let mut header_cells = self.get_header_cells(column_visibility);
-
-        // Get the style based on whether all tasks are completed
-        let title_color = if all_tasks_completed {
-            // Use the logo color for the title text as well
-            logo_color
-        } else {
-            THEME.primary_fg
-        };
-
-        // Apply modifiers based on focus state
-        let title_style = if !self.is_task_list_focused() {
-            // Keep the color but add dim modifier
-            Style::default()
-                .fg(title_color)
-                .add_modifier(Modifier::BOLD)
-                .add_modifier(Modifier::DIM)
-        } else {
-            // Normal style with bold
-            Style::default()
-                .fg(title_color)
-                .add_modifier(Modifier::BOLD)
-        };
-
-        // Replace the first cell with a new one containing the NX logo and title
-        if !header_cells.is_empty() {
-            let running = self
-                .task_lookup
-                .values()
-                .filter(|t| matches!(t.status, TaskStatus::InProgress))
-                .count();
-
-            // First cell: Just the NX logo and box corner if needed
-            let mut first_cell_spans = vec![Span::styled(
-                " NX ",
-                Style::reset().bold().bg(logo_color).fg(THEME.primary_fg),
-            )];
-
-            // Add spacing if needed - show when parallel section entries are present
-            if has_visible_parallel_entries && running > 0 && !self.is_loading_state() {
-                first_cell_spans.push(Span::raw(" "));
-            }
-
-            // Second cell: Put the title text in the task name column
-            let mut second_cell_spans = vec![];
-
-            // Add title with appropriate styling
-            if all_tasks_completed {
-                // Get the total time if available
-                if let (Some(first_start), Some(last_end)) = (
-                    self.task_lookup.values().filter_map(|t| t.start_time).min(),
-                    self.task_lookup.values().filter_map(|t| t.end_time).max(),
-                ) {
-                    // Create text with separate spans for completed message and time
-                    let title_segment = format!("Completed {} ", self.title_text);
-                    let time_str = format_duration_since(first_start, last_end);
-
-                    second_cell_spans.push(Span::styled(title_segment, title_style));
-                    second_cell_spans.push(Span::styled(
-                        format!("({})", time_str),
-                        Style::default().dim(),
-                    ));
-                } else {
-                    second_cell_spans.push(Span::styled(
-                        format!("Completed {}", self.title_text),
-                        title_style,
-                    ));
-                }
-            } else {
-                second_cell_spans.push(Span::styled(
-                    format!("Running {}...", self.title_text),
-                    title_style,
-                ));
-            }
-
-            // Update the cells
-            header_cells[0] = Cell::from(Line::from(first_cell_spans));
-            if header_cells.len() > 1 {
-                header_cells[1] = Cell::from(Line::from(second_cell_spans));
-            }
-        }
+        // The " NX " badge and the run status/title live in the status bar; the
+        // header row only carries the column labels.
+        let header_cells = self.get_header_cells(column_visibility);
 
         let header = Row::new(header_cells)
             .style(normal_style)
@@ -2147,12 +2202,6 @@ impl TasksList {
             constraints.push(Constraint::Length(DURATION_COLUMN_WIDTH));
         }
 
-        // Use pre-computed scroll metrics passed from main render method
-        // This completely eliminates lock acquisitions in this method
-        let total_task_count = scroll_metrics.total_task_count;
-        let visible_task_count = scroll_metrics.visible_task_count;
-        let selected_task_index = scroll_metrics.selected_task_index;
-
         // Split the area to reserve space for scrollbar and padding when needed
         let (table_render_area, scrollbar_area) = if needs_scrollbar {
             let horizontal_layout = Layout::default()
@@ -2168,6 +2217,13 @@ impl TasksList {
             (table_area, None)
         };
 
+        // The table leaves its bottom row blank (breathing room above the
+        // status bar); the scrollbar spans the full height regardless.
+        let table_render_area = Rect {
+            height: table_render_area.height.saturating_sub(BOTTOM_PADDING_ROWS),
+            ..table_render_area
+        };
+
         // Render the table in the allocated area (with space reserved for scrollbar if needed)
         let t = Table::new(all_rows, &constraints)
             .header(header)
@@ -2176,17 +2232,19 @@ impl TasksList {
 
         f.render_widget(t, table_render_area);
 
+        // The text region is the table minus the scrollbar/padding, so a drag
+        // selection never grabs the scrollbar glyph. (Set after rendering to
+        // avoid overlapping the immutable `header` borrow above.)
+        self.text_selection_area = Some(table_render_area);
+
         // Render scrollbar if needed
         if let Some(scrollbar_area) = scrollbar_area {
-            // Position scrollbar to align with actual table content (below header and empty rows)
-            let header_and_spacing_rows = 2; // Header + 1 empty spacing row
+            // Position scrollbar below top_margin + header, spanning the spacing row and content
             let content_scrollbar_area = Rect {
                 x: scrollbar_area.x,
-                y: scrollbar_area.y + header_and_spacing_rows, // Start at actual content
+                y: scrollbar_area.y + SCROLLBAR_Y_OFFSET,
                 width: scrollbar_area.width,
-                height: scrollbar_area
-                    .height
-                    .saturating_sub(header_and_spacing_rows), // Adjust height accordingly
+                height: scrollbar_area.height.saturating_sub(SCROLLBAR_Y_OFFSET),
             };
 
             // Ensure the scrollbar area is within frame bounds
@@ -2195,15 +2253,23 @@ impl TasksList {
 
             // Only render if we have a valid visible area
             if safe_scrollbar_area.width > 0 && safe_scrollbar_area.height > 0 {
-                // Update scrollbar state using task-centric metrics for consistent task navigation
-                // This ensures thumb positioning accurately reflects progress through tasks
-
-                let selected_position = selected_task_index.unwrap_or(0);
+                // Drive the scrollbar from scroll offset so the thumb accurately
+                // reflects which portion of the list is currently in view.
+                // ratatui positions the thumb over 0..=content_length, so
+                // content_length must be the number of scroll positions
+                // (total - viewport), not the total entry count — otherwise the
+                // thumb never reaches the track bottom at max scroll. This
+                // matches the terminal pane's scrollbar convention. Clamp to
+                // keep the triple consistent during resizes / transitional frames.
+                let total_entries = scroll_metrics.total_entries.max(1);
+                let viewport_len = scroll_metrics.viewport_height.clamp(1, total_entries);
+                let max_pos = total_entries.saturating_sub(viewport_len);
+                let pos = scroll_metrics.scroll_offset.min(max_pos);
 
                 let mut scrollbar_state = ScrollbarState::default()
-                    .content_length(total_task_count) // Total tasks excluding spacers
-                    .viewport_content_length(visible_task_count) // Tasks visible in viewport (no spacers)
-                    .position(selected_position); // Selected task's index among tasks
+                    .content_length(max_pos)
+                    .viewport_content_length(viewport_len)
+                    .position(pos);
 
                 // Determine scrollbar style based on focus state
                 let base_style = Style::default().fg(THEME.info);
@@ -2227,7 +2293,7 @@ impl TasksList {
 
     /// Helper method to get a batch group by its ID from filtered display items
     fn get_batch_group_by_id_filtered(&self, batch_id: &str) -> Option<&BatchGroupItem> {
-        for display_item in &self.filtered_display_items {
+        for display_item in self.visible_display_items() {
             if let DisplayItem::BatchGroup(batch_group) = display_item {
                 if batch_group.batch_id == batch_id {
                     return Some(batch_group);
@@ -2361,7 +2427,7 @@ impl TasksList {
         column_visibility: &ColumnVisibility,
         selected_style: Style,
         normal_style: Style,
-    ) -> Row {
+    ) -> Row<'_> {
         let status_cell = {
             let mut spans = Self::render_status_prefix(is_selected, is_in_parallel_section);
 
@@ -2422,7 +2488,7 @@ impl TasksList {
         column_visibility: &ColumnVisibility,
         selected_style: Style,
         normal_style: Style,
-    ) -> Row {
+    ) -> Row<'_> {
         let status_cell =
             self.render_task_status_cell(task, is_selected, show_vertical_line, trailing_spaces);
         let name = self.render_name_cell(task_name.clone(), &task_name, indent_name);
@@ -2441,101 +2507,6 @@ impl TasksList {
             normal_style
         })
     }
-
-    /// Renders the help text component.
-    fn render_help_text(
-        &self,
-        f: &mut Frame<'_>,
-        help_text_area: Rect,
-        is_collapsed: bool,
-        is_dimmed: bool,
-    ) {
-        let help_text = HelpText::new(is_collapsed, is_dimmed, false);
-        help_text.render(f, help_text_area);
-    }
-
-    /// Renders messages received from Nx Cloud
-    fn render_cloud_message(&self, f: &mut Frame<'_>, cloud_message_area: Rect, is_dimmed: bool) {
-        if let Some(message) = &self.cloud_message {
-            let available_width = cloud_message_area.width;
-            // Ensure minimum width to render anything
-            if available_width == 0 || cloud_message_area.height == 0 {
-                return;
-            }
-
-            let message_style = if is_dimmed {
-                Style::default().fg(THEME.secondary_fg).dim()
-            } else {
-                Style::default().fg(THEME.secondary_fg)
-            };
-
-            // No URL present in the message, render the message as is if it fits, otherwise truncate
-            if !message.contains("https://") {
-                let message_line = Line::from(Span::styled(message.as_str(), message_style));
-                // Line fits as is
-                if message_line.width() <= available_width as usize {
-                    let cloud_message_paragraph =
-                        Paragraph::new(message_line).alignment(Alignment::Left);
-                    f.render_widget(cloud_message_paragraph, cloud_message_area);
-                    return;
-                }
-                // Line doesn't fit, truncate
-                let max_message_render_len = available_width.saturating_sub(3); // Reserve for "..."
-                let truncated_message =
-                    format!("{}...", &message[..max_message_render_len as usize]);
-                let cloud_message_paragraph =
-                    Paragraph::new(Line::from(Span::styled(truncated_message, message_style)))
-                        .alignment(Alignment::Left);
-                f.render_widget(cloud_message_paragraph, cloud_message_area);
-                return;
-            }
-
-            // Find URL position
-            let url_start_pos = message.find("https://").unwrap_or(message.len());
-            // Figure out the "prefix" (i.e. any message contents before the URL)
-            let prefix = &message[0..url_start_pos];
-            let url = &message[url_start_pos..];
-
-            let prefix_len = prefix.len() as u16;
-            let url_len = url.len() as u16;
-
-            let mut spans = vec![];
-
-            let url_style = if is_dimmed {
-                Style::default().fg(THEME.info).underlined().dim()
-            } else {
-                Style::default().fg(THEME.info).underlined()
-            };
-
-            // Determine what fits, prioritizing the URL
-            if url_len <= available_width {
-                // Full URL Fits, check if the full message does, and if so, render the full thing
-                if prefix_len + url_len <= available_width {
-                    spans.push(Span::styled(prefix, message_style));
-                    spans.push(Span::styled(url, url_style));
-                } else {
-                    // Only URL fits, do not render the prefix
-                    spans.push(Span::styled(url, url_style));
-                }
-            } else if available_width >= MIN_CLOUD_URL_WIDTH {
-                // Full URL doesn't fit, but Truncated URL does.
-                let max_url_render_len = available_width.saturating_sub(3); // Reserve for "..."
-                let truncated_url = format!("{}...", &url[..max_url_render_len as usize]);
-                spans.push(Span::styled(truncated_url, url_style));
-            } else {
-                // Not enough space for even truncated URL, show nothing...
-                // Hopefully in this situation user can make their terminal bigger or switch layout mode
-            }
-
-            if !spans.is_empty() {
-                let message_line = Line::from(spans);
-                let cloud_message_paragraph =
-                    Paragraph::new(message_line).alignment(Alignment::Left);
-
-                f.render_widget(cloud_message_paragraph, cloud_message_area);
-            }
-        }
-    }
 }
 
 impl Component for TasksList {
@@ -2552,158 +2523,9 @@ impl Component for TasksList {
         // This happens after sorting and entry creation, ensuring we select from the stable sorted order
         self.perform_initial_in_progress_selection_if_needed();
 
-        // --- 1. Initial Context ---
-        let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
-        let is_dimmed = !self.is_task_list_focused();
-        let has_cloud_message = self.cloud_message.is_some();
-
-        // --- 2. Determine Bottom Layout Mode ---
-        enum BottomLayoutMode {
-            SingleLine { help_collapsed: bool }, // Cloud + Help
-            TwoLine { help_collapsed: bool },    // Cloud / Help
-            NoCloud { help_collapsed: bool },    // Help only
-        }
-        let layout_mode: BottomLayoutMode;
-
-        if has_cloud_message {
-            // Calculate the actual cloud message width that will be rendered
-            // This accounts for the URL-only fallback when the full message doesn't fit
-            let cloud_text_width = if let Some(message) = &self.cloud_message {
-                if message.contains("https://") {
-                    let url_start_pos = message.find("https://").unwrap_or(message.len());
-                    let prefix = &message[0..url_start_pos];
-                    let url = &message[url_start_pos..];
-                    let full_message_width = (prefix.len() + url.len()) as u16;
-                    let url_width = url.len() as u16;
-
-                    // Check if we'll need to fall back to URL-only rendering
-                    // We need to account for the help text that will be on the same line
-                    let available_for_cloud = area
-                        .width
-                        .saturating_sub(SCROLLBAR_WIDTH)
-                        .saturating_sub(COLLAPSED_HELP_WIDTH)
-                        .saturating_sub(MIN_BOTTOM_SPACING);
-
-                    if full_message_width <= available_for_cloud {
-                        full_message_width
-                    } else {
-                        // Will fall back to URL-only rendering
-                        url_width
-                    }
-                } else {
-                    message.len() as u16
-                }
-            } else {
-                0
-            };
-
-            let required_width_full_help =
-                SCROLLBAR_WIDTH + cloud_text_width + FULL_HELP_WIDTH + MIN_BOTTOM_SPACING;
-            let required_width_collapsed_help =
-                SCROLLBAR_WIDTH + cloud_text_width + COLLAPSED_HELP_WIDTH + MIN_BOTTOM_SPACING;
-
-            if required_width_full_help <= area.width {
-                layout_mode = BottomLayoutMode::SingleLine {
-                    help_collapsed: false,
-                };
-            } else if required_width_collapsed_help <= area.width {
-                layout_mode = BottomLayoutMode::SingleLine {
-                    help_collapsed: true,
-                };
-            } else {
-                layout_mode = BottomLayoutMode::TwoLine {
-                    help_collapsed: true,
-                }; // Force collapse in two-line mode
-            }
-        } else {
-            // No Cloud message is present
-            let required_width_full_help = SCROLLBAR_WIDTH + FULL_HELP_WIDTH + MIN_BOTTOM_SPACING;
-            let required_width_collapsed_help =
-                SCROLLBAR_WIDTH + COLLAPSED_HELP_WIDTH + MIN_BOTTOM_SPACING;
-
-            if required_width_full_help <= area.width {
-                layout_mode = BottomLayoutMode::NoCloud {
-                    help_collapsed: false,
-                };
-            } else if required_width_collapsed_help <= area.width {
-                layout_mode = BottomLayoutMode::NoCloud {
-                    help_collapsed: true,
-                };
-            } else {
-                // Force vertical Help split, treat as TwoLine for structure, ensure help is collapsed
-                layout_mode = BottomLayoutMode::TwoLine {
-                    help_collapsed: true,
-                };
-            }
-        }
-
-        // --- 3. Calculate Main Vertical Split ---
-        let mut vertical_constraints = vec![Constraint::Fill(1)]; // Table first
-        let mut bottom_row_indices: std::collections::HashMap<&str, usize> =
-            std::collections::HashMap::new();
-        let mut current_chunk_index = 1; // Index for chunks after the table
-
-        // Determine if help will be collapsed for the separator logic
-        let final_help_collapsed = match layout_mode {
-            BottomLayoutMode::SingleLine { help_collapsed } => help_collapsed,
-            BottomLayoutMode::TwoLine { help_collapsed } => help_collapsed,
-            BottomLayoutMode::NoCloud { help_collapsed } => help_collapsed,
-        };
-
-        let needs_filter_separator = matches!(layout_mode, BottomLayoutMode::TwoLine {..} | BottomLayoutMode::NoCloud {..} if has_cloud_message || !final_help_collapsed);
-        let final_help_width = if final_help_collapsed {
-            COLLAPSED_HELP_WIDTH
-        } else {
-            FULL_HELP_WIDTH
-        };
-
-        if filter_is_active {
-            vertical_constraints.push(Constraint::Length(2)); // Filter area below table
-            bottom_row_indices.insert("filter", current_chunk_index);
-            current_chunk_index += 1;
-            if needs_filter_separator || matches!(layout_mode, BottomLayoutMode::TwoLine { .. }) {
-                // Add separator if filter isn't the very last thing
-                vertical_constraints.push(Constraint::Length(1)); // Separator
-                bottom_row_indices.insert("filter_sep", current_chunk_index);
-                current_chunk_index += 1;
-            }
-        }
-        if matches!(layout_mode, BottomLayoutMode::TwoLine { .. }) {
-            // Reserve space for cloud or the top part of vertical Help
-            vertical_constraints.push(Constraint::Length(1));
-            bottom_row_indices.insert("cloud_or_help_vertical", current_chunk_index);
-            current_chunk_index += 1;
-            // Add separator between cloud and help rows in two-line mode
-            vertical_constraints.push(Constraint::Length(1));
-            bottom_row_indices.insert("cloud_help_sep", current_chunk_index);
-            current_chunk_index += 1;
-        }
-        // Reserve space for help row or the bottom part of vertical Help
-        vertical_constraints.push(Constraint::Length(1));
-        bottom_row_indices.insert("help_vertical", current_chunk_index);
-
-        let vertical_chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(vertical_constraints)
-            .split(area);
-
-        // --- 4. Assign Areas ---
-        let table_area = vertical_chunks[0]; // Table is always the first chunk
-        let filter_area = bottom_row_indices
-            .get("filter")
-            .map(|&i| vertical_chunks[i]);
-        // Separator area not needed directly
-        let cloud_or_help_vertical_area = bottom_row_indices
-            .get("cloud_or_help_vertical")
-            .map(|&i| vertical_chunks[i]);
-        let help_vertical_area = bottom_row_indices
-            .get("help_vertical")
-            .map(|&i| vertical_chunks[i])
-            .unwrap(); // Must exist at this point
-
-        // --- 5. Early Scrollbar Detection and Column Visibility ---
-        // Check if scrollbar will be needed before calculating column visibility
-        let needs_scrollbar = self.will_need_scrollbar(table_area.height);
+        // Check if the scrollbar will be needed before calculating column visibility
+        let needs_scrollbar =
+            self.will_need_scrollbar(area.height.saturating_sub(BOTTOM_PADDING_ROWS));
 
         // Calculate effective width for column visibility (accounting for scrollbar if needed)
         let effective_width = if needs_scrollbar {
@@ -2726,142 +2548,22 @@ impl Component for TasksList {
         // Cache the column visibility
         self.column_visibility = Some(column_visibility.clone());
 
-        // --- 6. Render Table ---
         // Compute scroll metrics once here to reduce lock contention in render_task_table
         let scroll_metrics = {
             let mut manager = self.selection_manager.lock();
-            manager.update_viewport_and_get_metrics(table_area.height.saturating_sub(4) as usize)
+            manager.update_viewport_and_get_metrics(
+                area.height
+                    .saturating_sub(TABLE_HEADER_OVERHEAD_ROWS + BOTTOM_PADDING_ROWS)
+                    as usize,
+            )
         };
         self.render_task_table(
             f,
-            table_area,
+            area,
             &column_visibility,
             needs_scrollbar,
             &scroll_metrics,
         );
-
-        // --- 7. Render Filter ---
-        if let Some(area) = filter_area {
-            if area.height > 0
-                && area.width > 0
-                && area.y < f.area().height
-                && area.x < f.area().width
-            {
-                let safe_area = Rect {
-                    x: area.x,
-                    y: area.y,
-                    width: area.width.min(f.area().width.saturating_sub(area.x)),
-                    height: area.height.min(f.area().height.saturating_sub(area.y)),
-                };
-                self.render_filter(f, safe_area);
-            }
-        }
-
-        // --- 8. Render Bottom Rows ---
-        // Use final_help_collapsed and final_help_width from here down
-        let help_is_collapsed = final_help_collapsed;
-        let help_text_width = final_help_width;
-
-        match layout_mode {
-            BottomLayoutMode::SingleLine { .. } => {
-                // Don't need help_collapsed from enum variant now
-                // Cloud + Help on one line
-                // Calculate exact cloud width based on available space in single line
-                let cloud_message_render_width = area
-                    .width
-                    .saturating_sub(help_text_width) // Use final calculated width
-                    .saturating_sub(MIN_BOTTOM_SPACING);
-
-                let constraints = vec![
-                    Constraint::Length(cloud_message_render_width),
-                    Constraint::Fill(1),
-                    Constraint::Length(help_text_width),
-                ];
-                let row_chunks = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints(constraints)
-                    .split(help_vertical_area);
-
-                // Render components with safety checks
-                if !row_chunks.is_empty()
-                    && row_chunks[0].height > 0
-                    && row_chunks[0].width > 0
-                    && row_chunks[0].y < f.area().height
-                {
-                    self.render_cloud_message(f, row_chunks[0].intersection(f.area()), is_dimmed);
-                }
-                if row_chunks.len() > 2
-                    && row_chunks[2].height > 0
-                    && row_chunks[2].width > 0
-                    && row_chunks[2].y < f.area().height
-                {
-                    self.render_help_text(
-                        f,
-                        row_chunks[2].intersection(f.area()),
-                        help_is_collapsed,
-                        is_dimmed,
-                    );
-                }
-            }
-            BottomLayoutMode::TwoLine { .. } => {
-                // Cloud (if present) row first
-                if has_cloud_message {
-                    if let Some(area) = cloud_or_help_vertical_area {
-                        if area.height > 0
-                            && area.width > 0
-                            && area.y < f.area().height
-                            && area.x < f.area().width
-                        {
-                            // Apply padding safely
-                            let constraints = [Constraint::Length(2), Constraint::Fill(1)];
-                            let padded_chunks = Layout::default()
-                                .direction(Direction::Horizontal)
-                                .constraints(constraints)
-                                .split(area);
-                            if padded_chunks.len() >= 2 {
-                                let safe_padded_area = padded_chunks[1].intersection(f.area());
-                                if safe_padded_area.height > 0 && safe_padded_area.width > 0 {
-                                    self.render_cloud_message(f, safe_padded_area, is_dimmed);
-                                }
-                            } else {
-                                // Fallback: Render in original area if padding fails
-                                let safe_area = area.intersection(f.area());
-                                if safe_area.height > 0 && safe_area.width > 0 {
-                                    self.render_cloud_message(f, safe_area, is_dimmed);
-                                }
-                            }
-                        }
-                    }
-                }
-                // Render help text directly in the area
-                if help_vertical_area.height > 0
-                    && help_vertical_area.width > 0
-                    && help_vertical_area.y < f.area().height
-                {
-                    self.render_help_text(
-                        f,
-                        help_vertical_area.intersection(f.area()),
-                        help_is_collapsed,
-                        is_dimmed,
-                    );
-                }
-            }
-            BottomLayoutMode::NoCloud { .. } => {
-                // Help row
-                // Render help text directly in the area
-                if help_vertical_area.height > 0
-                    && help_vertical_area.width > 0
-                    && help_vertical_area.y < f.area().height
-                {
-                    self.render_help_text(
-                        f,
-                        help_vertical_area.intersection(f.area()),
-                        help_is_collapsed,
-                        is_dimmed,
-                    );
-                }
-            }
-        }
 
         Ok(())
     }
@@ -2914,13 +2616,10 @@ impl Component for TasksList {
                 self.needs_sort = true;
             }
             Action::UpdateTaskStatus(task_name, status) => {
-                self.update_task_status(task_name, status);
+                self.update_task_status(&task_name, status);
             }
             Action::SetTaskTiming(task_id, start_time, end_time) => {
                 self.set_task_timing(task_id, Some(start_time), Some(end_time));
-            }
-            Action::UpdateCloudMessage(message) => {
-                self.cloud_message = Some(message);
             }
             Action::ScrollUp => {
                 self.scroll_up();
@@ -2972,66 +2671,62 @@ impl Component for TasksList {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tasks::types::TaskTarget;
     use crate::native::tui::app::Focus;
     use crate::native::tui::lifecycle::RunMode;
     use hashbrown::HashSet;
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
 
-    // Helper function to create a TasksList with test task data
+    // Canonical TuiState handle for the list to read/write filter text.
+    fn test_tui_state() -> Arc<Mutex<TuiState>> {
+        use crate::native::tasks::types::TaskGraph;
+        use crate::native::tui::config::{TuiCliArgs, TuiConfig};
+        use std::collections::HashMap as StdHashMap;
+
+        let cli_args = TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        Arc::new(Mutex::new(TuiState::new(
+            Vec::new(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Vec::new(),
+            TuiConfig::new(None, None, &cli_args),
+            String::from("Test Tasks"),
+            TaskGraph {
+                tasks: StdHashMap::new(),
+                dependencies: StdHashMap::new(),
+                continuous_dependencies: StdHashMap::new(),
+                roots: vec![],
+            },
+            StdHashMap::new(),
+            None,
+        )))
+    }
+
+    // Helper function to create a TasksList with test task data.
     fn create_test_tasks_list() -> (TasksList, Vec<Task>) {
         let test_tasks = vec![
-            Task {
-                id: "task1".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "task2".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "task3".to_string(),
-                target: TaskTarget {
-                    project: "app2".to_string(),
-                    target: "lint".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app2", "lint")
+                .with_project_root("")
+                .with_continuous(false),
         ];
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
-        let title_text = "Test Tasks".to_string();
 
         let tasks_list = TasksList::new(
             test_tasks.clone(),
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            title_text,
             selection_manager,
+            test_tui_state(),
         );
 
         (tasks_list, test_tasks)
@@ -3050,12 +2745,135 @@ mod tests {
             .unwrap();
     }
 
+    /// Filter keystrokes must write through to the canonical TuiState (the
+    /// status bar and mode-switch persistence read it from there).
+    #[test]
+    fn filter_typing_writes_canonical_state() {
+        let test_tasks = vec![
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app2", "lint")
+                .with_project_root("")
+                .with_continuous(false),
+        ];
+        let state = test_tui_state();
+        let mut tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            Arc::new(Mutex::new(TaskSelectionManager::new(10))),
+            state.clone(),
+        );
+
+        tasks_list.update(Action::EnterFilterMode).unwrap();
+        for c in "app1".chars() {
+            tasks_list.update(Action::AddFilterChar(c)).unwrap();
+        }
+        assert_eq!(state.lock().get_filter_text(), "app1");
+
+        let filter_text = state.lock().get_filter_text().to_string();
+        let display = tasks_list
+            .filter_display(&filter_text)
+            .expect("filter session is active");
+        assert_eq!(display.text, "app1");
+        assert!(display.input_mode);
+        assert_eq!(display.hidden_count, 1);
+
+        tasks_list.update(Action::RemoveFilterChar).unwrap();
+        assert_eq!(state.lock().get_filter_text(), "app");
+
+        // '/' is a literal filter character (scoped names like @nx/react are
+        // filterable); <enter> is what confirms the filter, like the pane search.
+        tasks_list.update(Action::AddFilterChar('/')).unwrap();
+        assert_eq!(state.lock().get_filter_text(), "app/");
+        assert!(tasks_list.filter_mode, "typing '/' must not confirm");
+
+        tasks_list.update(Action::ClearFilter).unwrap();
+        assert_eq!(state.lock().get_filter_text(), "");
+        assert!(tasks_list.filter_display("").is_none());
+    }
+
+    /// A non-empty canonical filter (e.g. restored across a mode switch) is
+    /// picked up and persisted by a freshly constructed list — the old
+    /// set_filter_text restoration step no longer exists.
+    #[test]
+    fn restored_filter_is_persisted_and_applied_on_construction() {
+        let test_tasks = vec![
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app2", "lint")
+                .with_project_root("")
+                .with_continuous(false),
+        ];
+        let state = test_tui_state();
+        state.lock().set_filter_text("app1".to_string());
+
+        let tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            Arc::new(Mutex::new(TaskSelectionManager::new(10))),
+            state.clone(),
+        );
+
+        assert!(tasks_list.filter_persisted);
+        let display = tasks_list
+            .filter_display("app1")
+            .expect("restored filter is active");
+        assert!(!display.input_mode);
+        assert_eq!(display.hidden_count, 1);
+    }
+
     #[test]
     fn test_initial_rendering() {
         let (mut tasks_list, _) = create_test_tasks_list();
         let mut terminal = create_test_terminal(120, 15);
 
         // No tasks have been started yet
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_set_max_parallel_caps_to_task_count() {
+        // When --parallel exceeds the number of tasks in the graph, the parallel
+        // section should only reserve as many slots as there are tasks — otherwise
+        // empty placeholder rows would be rendered for slots that can never fill.
+        let (mut tasks_list, _) = create_test_tasks_list(); // 3 tasks
+
+        tasks_list.update(Action::StartCommand(Some(8))).unwrap();
+        assert_eq!(tasks_list.max_parallel, 3);
+
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        assert_eq!(tasks_list.max_parallel, 2);
+
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+        assert_eq!(tasks_list.max_parallel, 3);
+    }
+
+    #[test]
+    fn test_max_parallel_exceeds_task_count_does_not_reserve_extra_slots() {
+        // Regression: with --parallel=8 and only 3 tasks in the graph, the
+        // parallel section must not reserve empty placeholder rows for the
+        // 5 slots that can never be filled.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        tasks_list.update(Action::StartCommand(Some(8))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
@@ -3075,6 +2893,476 @@ mod tests {
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_selection_holds_in_waiting_state_until_next_in_progress() {
+        // Regression: when the selected in-progress task finishes while
+        // pending tasks remain, the selection enters AwaitingNextAllocation
+        // and must STAY there across renders. The previous behaviour bounced
+        // the highlight onto the first pending task and then carried that
+        // pending task forward via TrackByName instead of latching onto the
+        // next task that actually started running.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        tasks_list.update(Action::StartCommand(Some(1))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // First render: in-progress exists -> selection latches onto it.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[0].id
+        ));
+
+        // The selected in-progress task finishes while pending tasks remain.
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::Success,
+            ))
+            .ok();
+
+        // Selection enters AwaitingNextAllocation and stays there across
+        // renders (no fallback to first pending).
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(manager.is_awaiting_next_allocation());
+            assert!(manager.get_selection().is_none());
+        }
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(manager.is_awaiting_next_allocation());
+            assert!(manager.get_selection().is_none());
+        }
+
+        // The next allocation should pull selection out of the waiting state.
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[1].clone()]))
+            .ok();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[1].id
+        ));
+    }
+
+    #[test]
+    fn test_initial_render_sets_placeholder_then_promotes_on_in_progress() {
+        // The first render before any task starts auto-picks the first
+        // selectable entry as an InitialPlaceholder so the user has a
+        // visual anchor. Once start_tasks fires for a different task, the
+        // placeholder is replaced by the new in-progress entry. A user
+        // who navigates between the two renders keeps their explicit choice.
+
+        // Case 1: no user navigation - placeholder is replaced.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(manager.is_initial_placeholder());
+            assert!(manager.get_selection().is_some());
+        }
+
+        // start_tasks for the second task — placeholder should be replaced
+        // by the first in-progress entry on the next render.
+        tasks_list.update(Action::StartCommand(Some(1))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[1].clone()]))
+            .ok();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[1].id
+        ));
+
+        // Case 2: user navigation between renders - the explicit choice
+        // survives the in-progress arrival.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        // Simulate user pressing Down.
+        tasks_list.update(Action::NextTask).ok();
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(!manager.is_initial_placeholder());
+        }
+
+        let post_nav_selection = tasks_list.selection_manager.lock().get_selection().cloned();
+        tasks_list.update(Action::StartCommand(Some(1))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[1].clone()]))
+            .ok();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert_eq!(
+            tasks_list.selection_manager.lock().get_selection().cloned(),
+            post_nav_selection,
+            "explicit user selection should survive in-progress arrival"
+        );
+    }
+
+    #[test]
+    fn test_initial_placeholder_overridden_when_in_progress_arrives() {
+        // Visual snapshot of the multi-render override path: first render
+        // anchors on the first pending entry (app1:build alphabetically),
+        // then start_tasks for a different task replaces the placeholder
+        // with the new in-progress entry.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Frame 1: placeholder anchors on the first pending entry.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "initial_placeholder_anchors_on_first_pending",
+            terminal.backend()
+        );
+
+        // Now start a task that is NOT the placeholder target.
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Frame 2: placeholder gets replaced by the first in-progress entry.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(
+            "initial_placeholder_promoted_to_first_in_progress",
+            terminal.backend()
+        );
+    }
+
+    #[test]
+    fn test_auto_select_prefers_standalone_in_progress_over_batch() {
+        // When the override fires, the first selectable entry in the
+        // in-progress section is preferred. Standalone tasks come before
+        // batch groups in the sorted entries, so a standalone in-progress
+        // task wins over a concurrently-running batch.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(test_tasks.clone()))
+            .ok();
+        for task in &test_tasks {
+            tasks_list
+                .update(Action::UpdateTaskStatus(
+                    task.id.clone(),
+                    TaskStatus::InProgress,
+                ))
+                .ok();
+        }
+        // Group the first two tasks into a batch; the third (standalone:test)
+        // stays as a standalone in-progress task.
+        tasks_list.start_batch(
+            "build-batch".to_string(),
+            "test-executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            current_timestamp_millis(),
+            false,
+        );
+
+        let mut terminal = create_test_terminal(120, 15);
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        // standalone:test is the only standalone in-progress task — it should
+        // win the auto-select over the batch group.
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[2].id
+        ));
+    }
+
+    #[test]
+    fn test_auto_select_lands_on_batch_when_only_batches_running() {
+        // If no standalone in-progress tasks exist, the override falls onto
+        // the first batch group. Verified for both expanded and collapsed
+        // batches since the in-progress section size accounts for nested
+        // task expansion.
+        for is_expanded in [false, true] {
+            let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+
+            tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+            tasks_list
+                .update(Action::StartTasks(vec![
+                    test_tasks[0].clone(),
+                    test_tasks[1].clone(),
+                ]))
+                .ok();
+            for task in &test_tasks[..2] {
+                tasks_list
+                    .update(Action::UpdateTaskStatus(
+                        task.id.clone(),
+                        TaskStatus::InProgress,
+                    ))
+                    .ok();
+            }
+            tasks_list.start_batch(
+                "build-batch".to_string(),
+                "test-executor".to_string(),
+                vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+                current_timestamp_millis(),
+                is_expanded,
+            );
+
+            let mut terminal = create_test_terminal(120, 15);
+            render_to_test_backend(&mut terminal, &mut tasks_list);
+
+            assert!(
+                matches!(
+                    tasks_list.selection_manager.lock().get_selection(),
+                    Some(SelectionEntry::BatchGroup(id)) if id == "build-batch"
+                ),
+                "expected the batch group to be auto-selected (is_expanded={})",
+                is_expanded
+            );
+        }
+    }
+
+    #[test]
+    fn test_selected_batch_finishing_awaits_when_pending_remain() {
+        // Regression for the reported bug: when a selected in-progress batch
+        // group completes while pending tasks remain, selection must enter
+        // AwaitingNextAllocation (no selection) rather than latching onto a
+        // completed batch task. Selection then promotes to the next task that starts.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        let mut terminal = create_test_terminal(120, 20);
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        // Batch the first two tasks; the batch is the only in-progress work, so
+        // it auto-selects. standalone:test stays pending.
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            0,
+            false,
+        );
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(
+            matches!(
+                tasks_list.selection_manager.lock().get_selection(),
+                Some(SelectionEntry::BatchGroup(id)) if id == "batch1"
+            ),
+            "batch group should auto-select while it is the only in-progress work"
+        );
+
+        // Batch tasks reach terminal state, then the batch completes. (Mirrors the
+        // orchestrator setting task statuses before the batch status.)
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Success);
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Success);
+        tasks_list.ungroup_batch_tasks("batch1");
+
+        // standalone:test is still pending -> selection waits across renders.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(
+                manager.is_awaiting_next_allocation(),
+                "selection should await the next allocation, not a completed batch task"
+            );
+            assert!(manager.get_selection().is_none());
+        }
+
+        // The next task starts -> selection latches onto it.
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[2].clone()]))
+            .unwrap();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[2].id
+        ));
+    }
+
+    #[test]
+    fn test_selected_batch_finishing_selects_other_in_progress_immediately() {
+        // When a selected batch completes while other work is still running,
+        // selection moves immediately to the nearest in-progress entry (no
+        // AwaitingNextAllocation gap).
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        let mut terminal = create_test_terminal(120, 20);
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            0,
+            false,
+        );
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::BatchGroup(id)) if id == "batch1"
+        ));
+
+        // A standalone task starts running alongside the batch; the explicit
+        // batch selection is preserved.
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[2].clone()]))
+            .unwrap();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::BatchGroup(id)) if id == "batch1"
+        ));
+
+        // Batch completes -> selection moves straight to the running standalone task.
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Success);
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Success);
+        tasks_list.ungroup_batch_tasks("batch1");
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(!manager.is_awaiting_next_allocation());
+            assert!(matches!(
+                manager.get_selection(),
+                Some(SelectionEntry::Task(name)) if *name == test_tasks[2].id
+            ));
+        }
+    }
+
+    #[test]
+    fn test_selected_batch_finishing_keeps_last_completed_when_no_work_remains() {
+        // When the selected batch is the final work, selection stays on the
+        // last-completed nested task.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        let mut terminal = create_test_terminal(120, 20);
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        // Mark the standalone task done up front so only the batch is left.
+        tasks_list.update_task_status(&test_tasks[2].id, TaskStatus::Success);
+
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            0,
+            false,
+        );
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Success);
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Success);
+        // Deterministic last-completed: lib:build finishes after app:build.
+        if let Some(t) = tasks_list.task_lookup.get_mut(&test_tasks[0].id) {
+            t.end_time = Some(100);
+        }
+        if let Some(t) = tasks_list.task_lookup.get_mut(&test_tasks[1].id) {
+            t.end_time = Some(200);
+        }
+        tasks_list.ungroup_batch_tasks("batch1");
+
+        let manager = tasks_list.selection_manager.lock();
+        assert!(!manager.is_awaiting_next_allocation());
+        assert!(
+            matches!(
+                manager.get_selection(),
+                Some(SelectionEntry::Task(name)) if *name == test_tasks[1].id
+            ),
+            "should keep the last-completed batch task selected"
+        );
+    }
+
+    #[test]
+    fn test_is_batch_complete_requires_all_nested_terminal() {
+        // Guards the deferred ungroup: a batch is only "complete" once every
+        // nested task has reached a terminal state.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            0,
+            false,
+        );
+
+        assert!(!tasks_list.is_batch_complete("batch1"), "both in progress");
+        // Exercise the non-Success terminal variants the guard admits.
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Failure);
+        assert!(!tasks_list.is_batch_complete("batch1"), "one still running");
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Stopped);
+        assert!(
+            tasks_list.is_batch_complete("batch1"),
+            "Failure and Stopped both count as terminal"
+        );
+        assert!(!tasks_list.is_batch_complete("nonexistent"));
+    }
+
+    #[test]
+    fn test_initial_placeholder_overridden_by_first_in_progress_batch() {
+        // Initial render anchors a placeholder on the first selectable
+        // entry. Once a batch becomes the only in-progress entry, the
+        // override replaces the placeholder with the batch group.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Frame 1: placeholder anchors on the first pending standalone task.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(manager.is_initial_placeholder());
+            assert!(matches!(
+                manager.get_selection(),
+                Some(SelectionEntry::Task(_))
+            ));
+        }
+
+        // A batch starts up — none of the placeholder's siblings are
+        // standalone in-progress yet.
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .ok();
+        tasks_list.start_batch(
+            "build-batch".to_string(),
+            "test-executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            current_timestamp_millis(),
+            false,
+        );
+
+        // Frame 2: override → batch group is now selected.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::BatchGroup(id)) if id == "build-batch"
+        ));
     }
 
     #[test]
@@ -3106,58 +3394,18 @@ mod tests {
         // Actual (bug): Shows │ next to all 4 tasks, but missing └ separator
 
         let test_tasks = vec![
-            Task {
-                id: "task1".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "task2".to_string(),
-                target: TaskTarget {
-                    project: "app2".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "task3".to_string(),
-                target: TaskTarget {
-                    project: "app3".to_string(),
-                    target: "lint".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "task4".to_string(),
-                target: TaskTarget {
-                    project: "app4".to_string(),
-                    target: "deploy".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app2", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app3", "lint")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app4", "deploy")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -3166,8 +3414,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Test Tasks".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         let mut terminal = create_test_terminal(80, 15);
@@ -3312,7 +3560,7 @@ mod tests {
         tasks_list.prepare_for_render();
 
         let (entries, in_progress_size) =
-            tasks_list.create_entries_from_display_items(&tasks_list.filtered_display_items);
+            tasks_list.create_entries_from_display_items(tasks_list.visible_display_items());
         assert_eq!(in_progress_size, 2);
         assert_eq!(
             entries.first(),
@@ -3451,65 +3699,6 @@ mod tests {
     }
 
     #[test]
-    fn test_cloud_message_rendering() {
-        let (mut tasks_list, test_tasks) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(120, 15);
-
-        // All tasks should be complete in some way, we'll do a mixture of success and failure
-        tasks_list
-            .update(Action::EndTasks(vec![
-                TaskResult {
-                    task: test_tasks[0].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[1].clone(),
-                    status: "failure".to_string(),
-                    code: 1,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[2].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-            ]))
-            .unwrap();
-
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[0].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[1].id.clone(),
-                TaskStatus::Failure,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[2].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-
-        // Set a cloud message with a URL
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
-
-    #[test]
     fn test_not_focused() {
         let (mut tasks_list, test_tasks) = create_test_tasks_list();
         let mut terminal = create_test_terminal(120, 15);
@@ -3579,19 +3768,9 @@ mod tests {
         let mut terminal = create_test_terminal(120, 15);
 
         // Create a task list with a continuous task
-        let continuous_task = Task {
-            id: "continuous-task".to_string(),
-            target: TaskTarget {
-                project: "app3".to_string(),
-                target: "serve".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some("".to_string()),
-            continuous: Some(true),
-            start_time: None,
-            end_time: None,
-        };
+        let continuous_task = Task::new("app3", "serve")
+            .with_project_root("")
+            .with_continuous(true);
 
         // Add and start the continuous task
         let task_item = TaskItem::new(continuous_task.id.clone(), true);
@@ -3616,19 +3795,9 @@ mod tests {
 
         // Create 12 tasks to test scrolling
         for i in 1..=12 {
-            let task = Task {
-                id: format!("task{}", i),
-                target: TaskTarget {
-                    project: format!("app{}", i % 3 + 1),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            };
+            let task = Task::new(format!("app{i}"), "test")
+                .with_project_root("")
+                .with_continuous(false);
             tasks.push(task);
         }
 
@@ -3637,8 +3806,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Many Tasks".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         let mut terminal = create_test_terminal(120, 15);
@@ -3667,19 +3836,9 @@ mod tests {
 
         // Create many tasks to ensure scrolling beyond waiting entries
         for i in 1..=10 {
-            let task = Task {
-                id: format!("task{}", i),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            };
+            let task = Task::new(format!("app{i}"), "test")
+                .with_project_root("")
+                .with_continuous(false);
             tasks.push(task);
         }
 
@@ -3688,8 +3847,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Test Tasks".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         let mut terminal = create_test_terminal(80, 10);
@@ -3729,19 +3888,9 @@ mod tests {
 
         // Create many tasks to ensure scrolling beyond waiting entries and bottom corner
         for i in 1..=10 {
-            let task = Task {
-                id: format!("task{}", i),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            };
+            let task = Task::new(format!("app{i}"), "test")
+                .with_project_root("")
+                .with_continuous(false);
             tasks.push(task);
         }
 
@@ -3750,8 +3899,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Test Tasks".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         let mut terminal = create_test_terminal(80, 10);
@@ -3787,32 +3936,12 @@ mod tests {
     fn test_run_one_mode_with_highlighted_task() {
         // Create a task list with a highlighted initiating task
         let test_tasks = vec![
-            Task {
-                id: "task1".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "task2".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         // Create a set of initiating tasks (task1)
@@ -3826,8 +3955,8 @@ mod tests {
             initiating_tasks,
             RunMode::RunOne,
             Focus::TaskList,
-            "Run One Mode".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         // Set 2 parallel tasks
@@ -3861,32 +3990,12 @@ mod tests {
         let long_task_name =
             "very-long-task-name-that-exceeds-thirty-characters-to-test-threshold-logic";
         let test_tasks = vec![
-            Task {
-                id: long_task_name.to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "another-very-long-task-name-for-testing-purposes".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new(long_task_name, "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("another-very-long-task-name-for-testing-purposes", "build")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -3896,8 +4005,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Running Test Tasks...".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         let mut terminal = create_test_terminal(48, 15);
@@ -3930,155 +4039,6 @@ mod tests {
     }
 
     #[test]
-    fn test_cloud_message_without_url() {
-        let (mut tasks_list, _) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(90, 15);
-
-        // Set a cloud message without a URL
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "This is some warning from Nx Cloud".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
-
-    #[test]
-    fn test_cloud_message_without_url_super_wide() {
-        let (mut tasks_list, _) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(150, 15);
-
-        // Set a cloud message without a URL
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "This is some warning from Nx Cloud".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
-
-    #[test]
-    fn test_cloud_message_single_line_url_only() {
-        // Tests SingleLine mode where full message doesn't fit but URL alone does
-        let (mut tasks_list, test_tasks) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(60, 15);
-
-        tasks_list
-            .update(Action::EndTasks(vec![
-                TaskResult {
-                    task: test_tasks[0].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[1].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[2].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-            ]))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[0].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[1].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[2].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-
-        // Set a cloud message
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
-
-    #[test]
-    fn test_cloud_message_two_line_layout() {
-        // Tests actual TwoLine mode where URL + help don't fit on one line
-        let (mut tasks_list, test_tasks) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(45, 15); // Narrower terminal
-
-        tasks_list
-            .update(Action::EndTasks(vec![
-                TaskResult {
-                    task: test_tasks[0].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[1].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[2].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-            ]))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[0].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[1].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[2].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-
-        // Set a cloud message - URL (31) + collapsed help (19) + spacing (4) = 54 chars
-        // Won't fit in 45 char width, forcing TwoLine mode
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
-
-    #[test]
     fn test_very_narrow_layout_handling() {
         let (mut tasks_list, test_tasks) = create_test_tasks_list();
         let mut terminal = create_test_terminal(25, 15);
@@ -4099,19 +4059,11 @@ mod tests {
 
         let mut tasks = Vec::new();
         for i in 1..=num_tasks {
-            tasks.push(Task {
-                id: format!("task{}", i),
-                target: TaskTarget {
-                    project: "app".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            });
+            tasks.push(
+                Task::new(format!("app{i}"), "test")
+                    .with_project_root("")
+                    .with_continuous(false),
+            );
         }
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(viewport_size)));
@@ -4121,8 +4073,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Deep Scrolling Test".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         let mut terminal = create_test_terminal(40, 6);
@@ -4174,7 +4126,10 @@ mod tests {
 
     #[test]
     fn test_column_visibility_task_name_length_variations() {
-        // Test various task name lengths: short, 29, 30, 31, and very long
+        // Test column visibility across task name (id) lengths: short, 29,
+        // 30, 31, and very long. The helper builds an id of the requested
+        // length by using `project` of `(len - 2)` chars and target "x",
+        // yielding id "{project}:x" of length `len`.
 
         // Short task names (like default test tasks)
         let (mut tasks_list_short, _) = create_test_tasks_list();
@@ -4182,16 +4137,14 @@ mod tests {
         assert!(result.show_duration);
         assert!(result.show_cache_status);
 
-        // 29-character task name
-        let task_name_29 = "this-is-exactly-29-chars-here"; // 29 characters
-        let mut tasks_list_29 = create_tasks_list_with_name(task_name_29);
+        // 29-char id
+        let mut tasks_list_29 = create_tasks_list_with_id_of_length(29);
         let result = tasks_list_29.calculate_column_visibility(47);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
 
-        // 30-character task name (threshold)
-        let task_name_30 = "this-is-exactly-thirty-chars-1"; // 30 characters
-        let mut tasks_list_30 = create_tasks_list_with_name(task_name_30);
+        // 30-char id (threshold)
+        let mut tasks_list_30 = create_tasks_list_with_id_of_length(30);
         let result = tasks_list_30.calculate_column_visibility(48);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
@@ -4199,17 +4152,14 @@ mod tests {
         assert!(result.show_duration);
         assert!(result.show_cache_status);
 
-        // 31-character task name
-        let task_name_31 = "this-is-exactly-thirty-one-char"; // 31 characters
-        let mut tasks_list_31 = create_tasks_list_with_name(task_name_31);
+        // 31-char id
+        let mut tasks_list_31 = create_tasks_list_with_id_of_length(31);
         let result = tasks_list_31.calculate_column_visibility(54);
         assert!(result.show_duration);
         assert!(!result.show_cache_status);
 
-        // Very long task name
-        let long_task_name =
-            "very-long-task-name-that-exceeds-thirty-characters-to-test-threshold-logic";
-        let mut tasks_list_long = create_tasks_list_with_name(long_task_name);
+        // Very long id (well past the 30-char cap)
+        let mut tasks_list_long = create_tasks_list_with_id_of_length(74);
         let result = tasks_list_long.calculate_column_visibility(47);
         assert!(!result.show_duration);
         assert!(!result.show_cache_status);
@@ -4218,21 +4168,17 @@ mod tests {
         assert!(result.show_cache_status);
     }
 
-    // Helper function to create tasks list with specific task name
-    fn create_tasks_list_with_name(task_name: &str) -> TasksList {
-        let test_tasks = vec![Task {
-            id: task_name.to_string(),
-            target: TaskTarget {
-                project: "app1".to_string(),
-                target: "test".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some("".to_string()),
-            continuous: Some(false),
-            start_time: None,
-            end_time: None,
-        }];
+    // Helper function: build a TasksList containing a single task whose
+    // id is exactly `len` chars long. Uses target "x" so the project name
+    // is `len - 2` chars.
+    fn create_tasks_list_with_id_of_length(len: usize) -> TasksList {
+        assert!(len >= 3, "id length must allow `<project>:x`");
+        let project: String = std::iter::repeat('a').take(len - 2).collect();
+        let test_tasks = vec![
+            Task::new(project, "x")
+                .with_project_root("")
+                .with_continuous(false),
+        ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
         TasksList::new(
@@ -4240,40 +4186,25 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Test Tasks".to_string(),
             selection_manager,
+            test_tui_state(),
         )
     }
 
     #[test]
     fn test_calculate_column_visibility_mixed_task_name_lengths() {
+        // Mixed-length task ids: one short ("a:test", 6) and one long
+        // (>30 chars) so the threshold formula caps at 30.
         let test_tasks = vec![
-            Task {
-                id: "short".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters".to_string(),
-                target: TaskTarget {
-                    project: "app2".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("a", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new(
+                "this-is-a-very-long-project-name-that-exceeds-thirty-characters",
+                "build",
+            )
+            .with_project_root("")
+            .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
@@ -4282,8 +4213,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Test Tasks".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         // At narrow width, should hide duration due to insufficient space for 30-char threshold
@@ -4310,75 +4241,34 @@ mod tests {
 
     #[test]
     fn test_column_visibility_viewport_consistency() {
-        // Create tasks with mixed name lengths distributed across viewports
+        // Tasks with mixed name lengths distributed across viewports.
+        // Viewport 1 holds short ids ("app1:test", "app1:build", "app1:lint");
+        // viewport 2 holds ids well over the 30-char threshold so the
+        // duration/cache visibility is governed by the long names.
         let test_tasks = vec![
             // Viewport 1: Short task names
-            Task {
-                id: "short1".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "short2".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "short3".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "lint".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "lint")
+                .with_project_root("")
+                .with_continuous(false),
             // Viewport 2: Long task names
-            Task {
-                id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters-viewport2-task1".to_string(),
-                target: TaskTarget {
-                    project: "app2".to_string(),
-                    target: "e2e".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "another-extremely-long-task-name-for-testing-viewport-consistency-viewport2-task2".to_string(),
-                target: TaskTarget {
-                    project: "app2".to_string(),
-                    target: "deploy".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new(
+                "this-is-a-very-long-project-name-that-exceeds-thirty-characters-1",
+                "e2e",
+            )
+            .with_project_root("")
+            .with_continuous(false),
+            Task::new(
+                "this-is-a-very-long-project-name-that-exceeds-thirty-characters-2",
+                "deploy",
+            )
+            .with_project_root("")
+            .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(3))); // viewport size 3
@@ -4387,8 +4277,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Scrolling Test".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         // Force apply filter to update the filtered_names
@@ -4430,64 +4320,28 @@ mod tests {
 
     #[test]
     fn test_scrolling_column_visibility_consistency_wide_terminal() {
-        // Create tasks with mixed name lengths
+        // Tasks with mixed name lengths.
         let test_tasks = vec![
             // Viewport 1: Short task names
-            Task {
-                id: "short1".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "short2".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            // Viewport 2: Long task names
-            Task {
-                id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters-for-testing"
-                    .to_string(),
-                target: TaskTarget {
-                    project: "app2".to_string(),
-                    target: "e2e".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "another-extremely-long-task-name-for-testing-scrolling-consistency-behavior"
-                    .to_string(),
-                target: TaskTarget {
-                    project: "app2".to_string(),
-                    target: "deploy".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            // Viewport 2: Long task names (long project names)
+            Task::new(
+                "this-is-a-very-long-project-name-that-exceeds-thirty-characters-for-testing",
+                "e2e",
+            )
+            .with_project_root("")
+            .with_continuous(false),
+            Task::new(
+                "another-extremely-long-project-name-for-testing-scrolling-consistency-behavior",
+                "deploy",
+            )
+            .with_project_root("")
+            .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(2))); // viewport size 2
@@ -4496,8 +4350,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Scrolling Test".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         // Force apply filter to update the filtered_names
@@ -4539,49 +4393,22 @@ mod tests {
 
     #[test]
     fn test_scrolling_column_visibility_rendering_consistency() {
-        // Create tasks with mixed name lengths
+        // Tasks with mixed name lengths.
         let test_tasks = vec![
             // Viewport 1: Short task names
-            Task {
-                id: "short1".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "short2".to_string(),
-                target: TaskTarget {
-                    project: "app1".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            // Viewport 2: Long task names that would affect column visibility
-            Task {
-                id: "this-is-a-very-long-task-name-that-exceeds-thirty-characters-and-affects-column-visibility".to_string(),
-                target: TaskTarget {
-                    project: "app2".to_string(),
-                    target: "e2e".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            // Viewport 2: Long task name that would affect column visibility
+            Task::new(
+                "this-is-a-very-long-project-name-that-affects-column-visibility",
+                "e2e",
+            )
+            .with_project_root("")
+            .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(2))); // viewport size 2
@@ -4590,8 +4417,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Scrolling Test".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         // Force apply filter to update the filtered_names
@@ -4627,19 +4454,11 @@ mod tests {
     fn test_cache_column_spacing_with_long_truncated_task_name() {
         let long_task_name =
             "this-is-a-very-long-task-name-that-will-definitely-be-truncated-when-displayed";
-        let test_tasks = vec![Task {
-            id: long_task_name.to_string(),
-            target: TaskTarget {
-                project: "app1".to_string(),
-                target: "test".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some("".to_string()),
-            continuous: Some(false),
-            start_time: None,
-            end_time: None,
-        }];
+        let test_tasks = vec![
+            Task::new(long_task_name, "test")
+                .with_project_root("")
+                .with_continuous(false),
+        ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
         let mut tasks_list = TasksList::new(
@@ -4647,8 +4466,8 @@ mod tests {
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            "Test Tasks".to_string(),
             selection_manager,
+            test_tui_state(),
         );
 
         // Use a narrower terminal width to force task name truncation
@@ -4675,14 +4494,18 @@ mod tests {
         // Get effective width without pinned tasks
         let effective_width_without_pins = tasks_list.calculate_effective_task_name_width();
 
-        // Pin a task which adds " [1]" to the effective task name width
-        tasks_list.pinned_tasks[0] = Some(test_tasks[0].id.clone());
+        // Pin the longest task; adding " [1]" should bump the effective
+        // task-name column width by exactly 4 characters.
+        let longest_idx = test_tasks
+            .iter()
+            .enumerate()
+            .max_by_key(|(_, t)| t.id.len())
+            .unwrap()
+            .0;
+        tasks_list.pinned_tasks[0] = Some(test_tasks[longest_idx].id.clone());
         let effective_width_with_pins = tasks_list.calculate_effective_task_name_width();
 
-        // The effective width with pins should be larger than without pins
         assert!(effective_width_with_pins > effective_width_without_pins);
-
-        // The difference should be 4 characters (" [1]" format)
         let expected_difference = 4; // " [1]" format
         assert_eq!(
             effective_width_with_pins,
@@ -4695,37 +4518,34 @@ mod tests {
         let mut test_tasks = Vec::new();
 
         for i in 0..num_tasks {
-            test_tasks.push(Task {
-                id: format!("task-{}", i + 1),
-                target: TaskTarget {
-                    project: format!("app{}", (i % 5) + 1),
-                    target: if i % 3 == 0 {
+            // Project varies per iteration so that auto-derived ids stay
+            // unique; target cycles through test/build/lint as the
+            // original fixture did.
+            test_tasks.push(
+                Task::new(
+                    format!("app{}", i + 1),
+                    if i % 3 == 0 {
                         "test".to_string()
                     } else if i % 3 == 1 {
                         "build".to_string()
                     } else {
                         "lint".to_string()
                     },
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            });
+                )
+                .with_project_root("")
+                .with_continuous(false),
+            );
         }
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
-        let title_text = "Test Tasks with Scrollbar".to_string();
 
         TasksList::new(
             test_tasks,
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            title_text,
             selection_manager,
+            test_tui_state(),
         )
     }
 
@@ -4774,9 +4594,17 @@ mod tests {
         let mut tasks_list = create_large_tasks_list(40); // 40 tasks to force scrollbar
         let mut terminal = create_test_terminal(80, 20);
 
-        // Scroll down several positions to test scrollbar thumb position
-        for _ in 0..10 {
-            tasks_list.update(Action::ScrollDown).ok();
+        // Set up parallel section and populate filtered_display_items
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list.apply_filter();
+
+        // Scroll down via repeated next() calls which move both selection and
+        // scroll offset together, avoiding ensure_selected_visible pulling back
+        {
+            let mut mgr = tasks_list.selection_manager.lock();
+            for _ in 0..25 {
+                mgr.next();
+            }
         }
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
@@ -4977,57 +4805,26 @@ mod tests {
     /// Helper function to create a TasksList with batch-enabled test data
     fn create_test_tasks_list_with_batches() -> (TasksList, Vec<Task>) {
         let test_tasks = vec![
-            Task {
-                id: "app:build".to_string(),
-                target: TaskTarget {
-                    project: "app".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "lib:build".to_string(),
-                target: TaskTarget {
-                    project: "lib".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "standalone:test".to_string(),
-                target: TaskTarget {
-                    project: "standalone".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("lib", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("standalone", "test")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
-        let title_text = "Batch Display Test".to_string();
 
         let tasks_list = TasksList::new(
             test_tasks.clone(),
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            title_text,
             selection_manager,
+            test_tui_state(),
         );
 
         (tasks_list, test_tasks)
@@ -5063,10 +4860,7 @@ mod tests {
             .unwrap();
 
         // Select the app:build task in standalone context
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
 
         // Capture selection state in standalone context
         let standalone_selection = tasks_list.selection_manager.lock().get_selection().cloned();
@@ -5088,10 +4882,7 @@ mod tests {
         tasks_list.expand_batch("batch1");
 
         // Re-select the app:build task after expanding (nested tasks now visible)
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
 
         // Update task statuses to InProgress to show them as running
         tasks_list
@@ -5127,10 +4918,7 @@ mod tests {
         insta::assert_snapshot!("batch_identity_batch_context", terminal.backend());
 
         // Test selection behavior: should be able to select the same task whether in batch or not
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
         let reselection = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             reselection,
@@ -5184,10 +4972,7 @@ mod tests {
             .unwrap();
 
         // Select a task within the batch group when expanded
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let selection_before_collapse =
             tasks_list.selection_manager.lock().get_selection().cloned();
 
@@ -5282,10 +5067,7 @@ mod tests {
         tasks_list.expand_batch("batch1");
 
         // Test 1: Select a task and verify selection type
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
         // Verify we have a task selection
         assert_eq!(
             tasks_list.selection_manager.lock().get_selection(),
@@ -5312,7 +5094,7 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_batch_group("batch1".to_string());
+            .select_batch_group("batch1");
         assert_eq!(
             tasks_list.selection_manager.lock().get_selection(),
             Some(&SelectionEntry::BatchGroup("batch1".to_string())),
@@ -5323,10 +5105,7 @@ mod tests {
         insta::assert_snapshot!("selection_enum_batch_group_selected", terminal.backend());
 
         // Test 3: Verify selections are distinct - selecting one clears the other
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         assert_eq!(
             tasks_list.selection_manager.lock().get_selection(),
             Some(&SelectionEntry::Task("lib:build".to_string())),
@@ -5349,10 +5128,7 @@ mod tests {
             .unwrap();
 
         // Select the standalone task for terminal output
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
         let standalone_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
@@ -5390,10 +5166,7 @@ mod tests {
         tasks_list.expand_batch("batch1");
 
         // Select the same task (app:build) when it's displayed in batch context
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
         let batch_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         // Task selection should be identical regardless of display context
@@ -5409,10 +5182,7 @@ mod tests {
         // This is tested by ensuring that the selection manager returns pure task names
 
         // Test selection to lib:build task in batch context
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let lib_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         assert_eq!(
@@ -5428,7 +5198,7 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_task("standalone:test".to_string());
+            .select_task("standalone:test");
         let standalone_test_selected = tasks_list.selection_manager.lock().get_selection().cloned();
 
         assert_eq!(
@@ -5519,10 +5289,7 @@ mod tests {
 
         // Test 4: Prevention of collapse when nested task is selected
         // First select a nested task
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let selected_task = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selected_task,
@@ -5592,10 +5359,7 @@ mod tests {
 
         // First, simulate a previous task selection before batch creation
         // Select lib:build task when it's still displayed standalone
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let pre_batch_selection = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             pre_batch_selection,
@@ -5671,10 +5435,7 @@ mod tests {
         );
 
         // Test 4: Select a nested task after expanding
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
         let post_expand_selection = tasks_list.selection_manager.lock().get_selection().cloned();
 
         // Verify the selection points to lib:build and the task is now visible in the expanded batch
@@ -5732,96 +5493,35 @@ mod tests {
 
         // Create extended task list with additional tasks for multiple batches
         let test_tasks = vec![
-            Task {
-                id: "app:build".to_string(),
-                target: TaskTarget {
-                    project: "app".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "shared:build".to_string(),
-                target: TaskTarget {
-                    project: "shared".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "app:test".to_string(),
-                target: TaskTarget {
-                    project: "app".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "shared:test".to_string(),
-                target: TaskTarget {
-                    project: "shared".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "lint:check".to_string(),
-                target: TaskTarget {
-                    project: "lint".to_string(),
-                    target: "check".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "format:check".to_string(),
-                target: TaskTarget {
-                    project: "format".to_string(),
-                    target: "check".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("shared", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("shared", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("lint", "check")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("format", "check")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
-        let title_text = "Multiple Concurrent Batches Test".to_string();
 
         let mut tasks_list = TasksList::new(
             test_tasks.clone(),
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            title_text,
             selection_manager,
+            test_tui_state(),
         );
 
         let mut terminal = create_test_terminal(120, 20);
@@ -5965,7 +5665,7 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_task("shared:test".to_string());
+            .select_task("shared:test");
         let selected_task = tasks_list.selection_manager.lock().get_selection().cloned();
         assert_eq!(
             selected_task,
@@ -5983,70 +5683,29 @@ mod tests {
         // and we validate that they are still grouped under the batch?"
 
         let test_tasks = vec![
-            Task {
-                id: "app:build".to_string(),
-                target: TaskTarget {
-                    project: "app".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "app:test".to_string(),
-                target: TaskTarget {
-                    project: "app".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "shared:build".to_string(),
-                target: TaskTarget {
-                    project: "shared".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "shared:test".to_string(),
-                target: TaskTarget {
-                    project: "shared".to_string(),
-                    target: "test".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("shared", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("shared", "test")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
-        let title_text = "Mixed Status Batch Test".to_string();
 
         let mut tasks_list = TasksList::new(
             test_tasks.clone(),
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            title_text,
             selection_manager,
+            test_tui_state(),
         );
 
         let mut terminal = create_test_terminal(120, 20);
@@ -6220,43 +5879,22 @@ mod tests {
         // This tests the transition from running batch with grouped tasks to individual tasks after completion
 
         let test_tasks = vec![
-            Task {
-                id: "app:build".to_string(),
-                target: TaskTarget {
-                    project: "app".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
-            Task {
-                id: "lib:build".to_string(),
-                target: TaskTarget {
-                    project: "lib".to_string(),
-                    target: "build".to_string(),
-                    configuration: None,
-                },
-                outputs: vec![],
-                project_root: Some("".to_string()),
-                continuous: Some(false),
-                start_time: None,
-                end_time: None,
-            },
+            Task::new("app", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("lib", "build")
+                .with_project_root("")
+                .with_continuous(false),
         ];
 
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
-        let title_text = "Test Batch Completion".to_string();
         let mut tasks_list = TasksList::new(
             test_tasks.clone(),
             HashSet::new(),
             RunMode::RunMany,
             Focus::TaskList,
-            title_text,
             selection_manager,
+            test_tui_state(),
         );
         let mut terminal = create_test_terminal(120, 15);
 
@@ -6269,8 +5907,8 @@ mod tests {
             .unwrap();
 
         // Set up initial task statuses - tasks should be running
-        tasks_list.update_task_status("app:build".to_string(), TaskStatus::InProgress);
-        tasks_list.update_task_status("lib:build".to_string(), TaskStatus::InProgress);
+        tasks_list.update_task_status("app:build", TaskStatus::InProgress);
+        tasks_list.update_task_status("lib:build", TaskStatus::InProgress);
 
         // Create and configure batch group (running batch, starts collapsed)
         tasks_list.start_batch(
@@ -6328,8 +5966,8 @@ mod tests {
             task_item.start_time = Some(1000);
             task_item.end_time = Some(39000); // 38s duration
         }
-        tasks_list.update_task_status("app:build".to_string(), TaskStatus::LocalCache);
-        tasks_list.update_task_status("lib:build".to_string(), TaskStatus::RemoteCache);
+        tasks_list.update_task_status("app:build", TaskStatus::LocalCache);
+        tasks_list.update_task_status("lib:build", TaskStatus::RemoteCache);
 
         // Step 2: Simulate batch completion ungrouping
         tasks_list.ungroup_batch_tasks("batch1");
@@ -6476,26 +6114,20 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_batch_group("build-batch".to_string());
+            .select_batch_group("build-batch");
         tasks_list.apply_filter(); // Refresh display after selection
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("navigation_batch_selected", terminal.backend());
 
         // Step 2: Navigate to first nested task (simulate down arrow navigation)
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("app:build".to_string());
+        tasks_list.selection_manager.lock().select_task("app:build");
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("navigation_first_nested_task_selected", terminal.backend());
 
         // Step 3: Navigate to middle nested task
-        tasks_list
-            .selection_manager
-            .lock()
-            .select_task("lib:build".to_string());
+        tasks_list.selection_manager.lock().select_task("lib:build");
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!("navigation_middle_nested_task_selected", terminal.backend());
@@ -6504,7 +6136,7 @@ mod tests {
         tasks_list
             .selection_manager
             .lock()
-            .select_batch_group("build-batch".to_string());
+            .select_batch_group("build-batch");
         tasks_list.apply_filter(); // Refresh display after selection
 
         render_to_test_backend(&mut terminal, &mut tasks_list);

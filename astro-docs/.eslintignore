@@ -1,6 +1,0 @@
-node_modules/
-dist/
-.astro/
-.netlify/
-test-output/
-playwright-report/

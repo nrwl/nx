@@ -4,6 +4,7 @@ import {
   getPackageManagerCommand,
 } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   createFile,
   exists,
@@ -16,6 +17,7 @@ import {
   runCommandUntil,
   tmpProjPath,
   uniq,
+  updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
@@ -24,7 +26,7 @@ import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -269,6 +271,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
     `);
 
@@ -309,8 +315,18 @@ describe('nx release', () => {
     const verdaccioPort = 7190;
     const customRegistryUrl = `http://localhost:${verdaccioPort}`;
     const process = await runCommandUntil(
-      `local-registry @proj/source --port=${verdaccioPort}`,
+      // location=none so a killed process can't leak registry config into
+      // ~/.npmrc; every consumer passes --registry explicitly instead
+      `local-registry @proj/source --port=${verdaccioPort} --location none`,
       (output) => output.includes(`warn --- http address`)
+    );
+
+    // local-registry would normally record the auth token, but location=none
+    // excludes that; npm publish needs it in a config file
+    updateFile(
+      '.npmrc',
+      (contents) =>
+        `${contents}\n//localhost:${verdaccioPort}/:_authToken=secretVerdaccioToken`
     );
 
     const versionOutput2 = runCLI(
@@ -446,6 +462,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
   `);
 
@@ -550,6 +570,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
     `);
 
@@ -586,6 +610,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
     `);
 
@@ -627,6 +655,10 @@ describe('nx release', () => {
       NX   Successfully ran target nx-release-publish for 3 projects
 
 
+      Run duration: {DURATION}
+      Cache: 0/3 hit (0%)
+      Critical path: {DURATION} (2 tasks)
+      Recoverable time: {DURATION}
 
     `);
 
@@ -769,7 +801,7 @@ describe('nx release', () => {
           default: {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
-            releaseTagPattern: 'xx{version}',
+            releaseTag: { pattern: 'xx{version}' },
             version: {
               // Resolve the latest version from the git tag
               currentVersionResolver: 'git-tag',
@@ -839,7 +871,7 @@ describe('nx release', () => {
           default: {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
-            releaseTagPattern: 'xx{version}',
+            releaseTag: { pattern: 'xx{version}' },
             version: {
               specifierSource: 'conventional-commits',
               currentVersionResolver: 'git-tag',
@@ -908,7 +940,7 @@ describe('nx release', () => {
           default: {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
-            releaseTagPattern: 'xx{version}',
+            releaseTag: { pattern: 'xx{version}' },
           },
         },
       };
@@ -944,11 +976,11 @@ describe('nx release', () => {
         groups: {
           group1: {
             projects: [pkg1],
-            releaseTagPattern: 'xx-{version}',
+            releaseTag: { pattern: 'xx-{version}' },
           },
           group2: {
             projects: [pkg2, pkg3],
-            releaseTagPattern: 'zz-{version}',
+            releaseTag: { pattern: 'zz-{version}' },
           },
         },
         git: {
@@ -1063,13 +1095,13 @@ describe('nx release', () => {
       ).length
     ).toEqual(2);
 
-    // change the releaseTagPattern to something that doesn't exist in order to test fallbackCurrentVersionResolver
+    // change the releaseTag.pattern to something that doesn't exist in order to test fallbackCurrentVersionResolver
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         groups: {
           group1: {
             projects: [pkg1, pkg2, pkg3],
-            releaseTagPattern: '>{version}',
+            releaseTag: { pattern: '>{version}' },
           },
         },
         git: {

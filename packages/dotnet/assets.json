@@ -1,0 +1,16 @@
+{
+  "outDir": "packages/dotnet/dist",
+  "assets": [
+    {
+      "glob": "*.md"
+    },
+    { "glob": "**/schema.json", "input": "packages/dotnet/src" },
+    { "glob": "**/schema.d.ts", "input": "packages/dotnet/src" },
+    {
+      "glob": "**/*",
+      "input": "packages/dotnet/analyzer/bin/Release/publish",
+      "output": "/lib/",
+      "includeIgnoredFiles": true
+    }
+  ]
+}

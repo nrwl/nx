@@ -1,0 +1,34 @@
+{
+  "outDir": "packages/nx/dist",
+  "assets": [
+    { "glob": "presets/*.json" },
+    { "glob": "src/migrations/**/*.md" },
+    { "glob": "src/command-line/migrate/run-migration-process.js" },
+    { "glob": "src/ai/set-up-ai-agents/schema.d.ts" },
+    { "glob": "src/utils/perf-hooks.d.ts" },
+    { "glob": "src/utils/yarn-syml/syml-grammar.js" },
+    { "glob": "src/command-line/completion/scripts/*" },
+    { "glob": "src/native/browser.js" },
+    { "glob": "src/native/index.js" },
+    { "glob": "src/native/index.d.ts" },
+    { "glob": "src/native/native-bindings.js" },
+    { "glob": "src/native/nx.wasi-browser.js" },
+    { "glob": "src/native/nx.wasi.cjs" },
+    { "glob": "src/native/wasi-worker-browser.mjs" },
+    { "glob": "src/native/wasi-worker.mjs" },
+    { "glob": "src/native/*.{node,wasm}", "includeIgnoredFiles": true },
+    { "glob": "native-packages/*/package.json" },
+    {
+      "glob": "index.d.ts",
+      "input": "packages/nx/src/native",
+      "output": "/src/native"
+    },
+    {
+      "glob": "**/*",
+      "input": "graph/client/dist",
+      "output": "/src/core/graph",
+      "ignore": ["assets/**"],
+      "includeIgnoredFiles": true
+    }
+  ]
+}

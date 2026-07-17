@@ -8,6 +8,7 @@ import { execCommand } from '../utils/exec-command';
 import {
   getCommitHash,
   getFirstGitCommit,
+  getFirstProjectCommit,
   getLatestGitTagForPattern,
 } from '../utils/git';
 import type { VersionData } from '../utils/shared';
@@ -133,6 +134,7 @@ export async function resolveChangelogFromSHA({
   strictPreid,
   useAutomaticFromRef,
   resolveRepositoryTags,
+  projectRoot,
 }: {
   fromRef?: string;
   tagPattern: string;
@@ -143,6 +145,8 @@ export async function resolveChangelogFromSHA({
   strictPreid: boolean;
   useAutomaticFromRef: boolean;
   resolveRepositoryTags: RepoGitTags['resolveTags'];
+  /** When provided, scopes the fallback to the project's first commit instead of the repo's first commit */
+  projectRoot?: string;
 }): Promise<string | null> {
   // If user provided a from ref, resolve it to a SHA
   if (fromRef) {
@@ -163,9 +167,13 @@ export async function resolveChangelogFromSHA({
   if (latestTag?.tag) {
     return await getCommitHash(latestTag.tag);
   }
-  // Finally, if automatic from ref is enabled, use the first commit as a fallback
+  // Finally, if automatic from ref is enabled, use the first commit as a fallback.
+  // When a projectRoot is provided, scope the fallback to the project's first commit
+  // to avoid scanning the entire repo history for projects added after the repo was created.
   if (useAutomaticFromRef) {
-    return await getFirstGitCommit();
+    return projectRoot
+      ? await getFirstProjectCommit(projectRoot)
+      : await getFirstGitCommit();
   }
 
   return null;

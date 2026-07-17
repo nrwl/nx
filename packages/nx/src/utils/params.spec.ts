@@ -1,4 +1,4 @@
-import * as yargsParser from 'yargs-parser';
+import yargsParser from 'yargs-parser';
 import { logger } from './logger';
 import {
   applyVerbosity,

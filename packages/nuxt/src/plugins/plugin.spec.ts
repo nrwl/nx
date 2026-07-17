@@ -1,8 +1,9 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
-jest.mock('@nx/devkit/src/utils/config-utils', () => ({
+jest.mock('@nx/devkit/internal', () => ({
+  ...jest.requireActual('@nx/devkit/internal'),
   loadConfigFile: jest.fn().mockImplementation(() => {
     return Promise.resolve({
       buildDir: '../dist/my-app/.nuxt',
@@ -19,10 +20,12 @@ jest.mock('../utils/executor-utils', () => ({
 }));
 describe('@nx/nuxt/plugin', () => {
   let createNodesFunction = createNodes[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
 
   describe('root project', () => {
+    let tempFs: TempFs;
     beforeEach(async () => {
+      tempFs = new TempFs('nuxt-root-plugin');
       context = {
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
@@ -37,12 +40,16 @@ describe('@nx/nuxt/plugin', () => {
             production: ['!{projectRoot}/**/*.spec.ts'],
           },
         },
-        workspaceRoot: '',
+        workspaceRoot: tempFs.tempDir,
       };
+      tempFs.createFileSync('nuxt.config.ts', '');
+      tempFs.createFileSync('package.json', JSON.stringify({ name: 'nuxt' }));
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {
       jest.resetModules();
+      tempFs.cleanup();
     });
 
     it('should create nodes', async () => {
@@ -79,6 +86,7 @@ describe('@nx/nuxt/plugin', () => {
         JSON.stringify({ name: 'my-app' })
       );
       tempFs.createFileSync('my-app/nuxt.config.ts', '');
+      tempFs.createFileSync('package-lock.json', '{}');
     });
 
     afterEach(() => {

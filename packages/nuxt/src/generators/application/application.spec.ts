@@ -12,6 +12,17 @@ import { applicationGenerator } from './application';
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
+
+  beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
 
   describe.each(['my-app', 'myApp'])(
     'generated files content - as-provided - %s',
@@ -98,6 +109,7 @@ describe('app', () => {
         });
 
         it('should configure eslint correctly (eslintrc)', async () => {
+          process.env.ESLINT_USE_FLAT_CONFIG = 'false';
           await applicationGenerator(tree, {
             directory: name,
             unitTestRunner: 'vitest',
@@ -124,7 +136,7 @@ describe('app', () => {
           ).toMatchSnapshot();
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
-          expect(packageJson.devDependencies['vitest']).toEqual('~4.0.8');
+          expect(packageJson.devDependencies['vitest']).toEqual('~4.1.0');
         });
 
         it('should configure tsconfig and project.json correctly', async () => {
@@ -586,7 +598,7 @@ describe('app', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",

@@ -1,7 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getAvailablePort,
+  reservePort,
   killPorts,
   newProject,
   readFile,
@@ -14,7 +14,14 @@ import {
 describe('Build React applications and libraries with Vite', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/react'],
+      packages: [
+        '@nx/react',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/jest',
+        '@nx/eslint',
+        '@nx/playwright',
+      ],
     });
   });
 
@@ -66,7 +73,7 @@ describe('Build React applications and libraries with Vite', () => {
 
   it('should generate app with custom port', async () => {
     const viteApp = uniq('viteapp');
-    const customPort = await getAvailablePort();
+    const customPort = await reservePort();
 
     runCLI(
       `generate @nx/react:app apps/${viteApp} --bundler=vite --port=${customPort} --unitTestRunner=vitest --no-interactive --linter=eslint --e2eTestRunner=playwright`

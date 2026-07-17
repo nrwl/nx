@@ -1,8 +1,13 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { addProjectConfiguration, Tree, writeJson } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  Tree,
+  workspaceRoot,
+  writeJson,
+} from '@nx/devkit';
+import { join } from 'node:path';
 
 import update from './generator';
-import { setCwd } from '@nx/devkit/internal-testing-utils';
 
 describe('remove-migrations generator', () => {
   let tree: Tree;
@@ -19,7 +24,7 @@ describe('remove-migrations generator', () => {
 
     jest.spyOn(process, 'cwd').mockReturnValue('/virtual/packages/js');
 
-    setCwd('packages/js');
+    process.env.INIT_CWD = join(workspaceRoot, 'packages/js');
   });
 
   it('should remove migrations older than specified version', async () => {

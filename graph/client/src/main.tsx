@@ -5,7 +5,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 import { projectDetailsMachine } from './app/console-project-details/project-details.machine';
-/* eslint-disable @nx/enforce-module-boundaries */
+
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
 // nx-ignore-next-line
@@ -14,7 +14,7 @@ import type { GraphError } from 'nx/src/command-line/graph/graph';
 import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 // nx-ignore-next-line
 import { GeneratedMigrationDetails } from 'nx/src/config/misc-interfaces';
-/* eslint-enable @nx/enforce-module-boundaries */
+
 import { StrictMode } from 'react';
 import { inspect } from '@xstate/inspect';
 import { App } from './app/app';

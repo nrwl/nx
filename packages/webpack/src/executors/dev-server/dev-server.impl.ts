@@ -1,21 +1,20 @@
-import * as webpack from 'webpack';
+import { eachValueFrom } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
 
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
-import * as WebpackDevServer from 'webpack-dev-server';
 
 import { getDevServerOptions } from './lib/get-dev-server-config';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { runWebpackDevServer } from '../../utils/run-webpack';
 import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
+import { warnWebpackDevServerExecutorDeprecation } from '../../utils/deprecation';
 import { normalizeOptions } from '../webpack/lib/normalize-options';
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { WebDevServerOptions } from './schema';
@@ -26,6 +25,8 @@ export async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
+  warnWebpackDevServerExecutorDeprecation();
+
   // Default to dev mode so builds are faster and HMR mode works better.
   (process.env as any).NODE_ENV ??= 'development';
 
@@ -110,6 +111,11 @@ export async function* devServerExecutor(
       config.devServer ??= devServer;
     }
   }
+
+  // Lazy-loaded: optional peers absent during project-graph discovery.
+  const webpack = require('webpack') as typeof import('webpack');
+  const WebpackDevServer =
+    require('webpack-dev-server') as typeof import('webpack-dev-server');
 
   return yield* eachValueFrom(
     runWebpackDevServer(config, webpack, WebpackDevServer).pipe(

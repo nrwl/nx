@@ -1,4 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -7,8 +8,8 @@ import {
   runTasksInSerial,
   writeJson,
 } from '@nx/devkit';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import { assertSupportedNestJsVersion } from '../../utils/assert-supported-nestjs-version';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import initGenerator from '../init/init';
 import {
@@ -37,6 +38,8 @@ export async function libraryGeneratorInternal(
   tree: Tree,
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
+  assertSupportedNestJsVersion(tree);
+
   const options = await normalizeOptions(tree, rawOptions);
 
   const jsLibraryTask = await jsLibraryGenerator(

@@ -12,10 +12,13 @@ import { addLintingGenerator } from './add-linting';
 
 describe('addLinting generator', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   const appProjectName = 'ng-app1';
   const appProjectRoot = `apps/${appProjectName}`;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, appProjectName, {
@@ -24,6 +27,14 @@ describe('addLinting generator', () => {
       projectType: 'application',
       targets: {},
     } as ProjectConfiguration);
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should invoke the lintProjectGenerator', async () => {
@@ -39,7 +50,8 @@ describe('addLinting generator', () => {
     expect(linter.lintProjectGenerator).toHaveBeenCalled();
   });
 
-  it('should add the Angular specific EsLint devDependencies', async () => {
+  it('should add the Angular specific EsLint devDependencies (eslintrc)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
@@ -56,7 +68,6 @@ describe('addLinting generator', () => {
   });
 
   it('should use flat config and install correct dependencies when using it', async () => {
-    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
@@ -65,11 +76,11 @@ describe('addLinting generator', () => {
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['@typescript-eslint/utils']).toBe('^8.40.0');
-    delete process.env.ESLINT_USE_FLAT_CONFIG;
+    expect(devDependencies['@typescript-eslint/utils']).toBe('^8.58.0');
   });
 
   it('should correctly generate the .eslintrc.json file', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
@@ -104,8 +115,6 @@ describe('addLinting generator', () => {
   });
 
   it('should correctly generate the eslint.config.mjs file for a buildable library', async () => {
-    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
-
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',
       projectType: 'library',
@@ -125,6 +134,8 @@ describe('addLinting generator', () => {
       import baseConfig from "../../eslint.config.mjs";
 
       export default [
+          ...nx.configs["flat/angular"],
+          ...nx.configs["flat/angular-template"],
           ...baseConfig,
           {
               files: [
@@ -144,8 +155,6 @@ describe('addLinting generator', () => {
                   parser: await import("jsonc-eslint-parser")
               }
           },
-          ...nx.configs["flat/angular"],
-          ...nx.configs["flat/angular-template"],
           {
               files: [
                   "**/*.ts"
@@ -236,11 +245,10 @@ describe('addLinting generator', () => {
       ];
       "
     `);
-
-    delete process.env.ESLINT_USE_FLAT_CONFIG;
   });
 
   it('should correctly generate the .eslintrc.json file for a buildable library', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',
       projectType: 'library',

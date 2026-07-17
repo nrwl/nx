@@ -1,3 +1,7 @@
+import {
+  determineArtifactNameAndDirectoryOptions,
+  getRelativeCwd,
+} from '@nx/devkit/internal';
 import { componentGenerator as reactComponentGenerator } from '@nx/react';
 import {
   formatFiles,
@@ -8,11 +12,8 @@ import {
 } from '@nx/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 import { Schema } from './schema';
-import {
-  determineArtifactNameAndDirectoryOptions,
-  getRelativeCwd,
-} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 /*
  * This schematic is basically the React component one, but for Next we need
@@ -20,6 +21,7 @@ import {
  * it is under `pages` folder.
  */
 export async function pageGenerator(host: Tree, schema: Schema) {
+  assertSupportedNextVersion(host);
   const options = await normalizeOptions(host, schema);
   const componentTask = await reactComponentGenerator(host, {
     ...options,
@@ -81,17 +83,18 @@ async function normalizeOptions(host: Tree, options: Schema) {
   }
 
   const fileName = options.fileName || (isAppRouter ? 'page' : 'index');
+  const { js, ...rest } = options;
   const { project: projectName, filePath } =
     await determineArtifactNameAndDirectoryOptions(host, {
       name: pageSymbolName,
       path: joinPathFragments(
         options.path,
-        `${fileName}.${options.js ? 'jsx' : 'tsx'}`
+        `${fileName}.${js ? 'jsx' : 'tsx'}`
       ),
     });
 
   return {
-    ...options,
+    ...rest,
     path: filePath,
     projectName,
   };

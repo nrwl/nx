@@ -15,8 +15,8 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === 'eslint') {
@@ -40,7 +40,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         addPredefinedConfigToFlatLintConfig(
           host,
           options.projectRoot,
-          'flat/react'
+          'flat/react',
+          { checkBaseConfig: true }
         );
         // Add an empty rules object to users know how to add/override rules
         addOverrideToLintConfig(host, options.projectRoot, {
@@ -70,7 +71,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies
+        extraEslintDependencies.devDependencies,
+        undefined,
+        true
       );
       tasks.push(installTask);
     }

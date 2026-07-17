@@ -1,0 +1,27 @@
+{
+  "outDir": "packages/expo/dist",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "src/**/schema.json"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    {
+      "glob": "typings/**/*.d.ts"
+    },
+    {
+      "glob": "src/executors/build-list/build-fragment.d.ts"
+    },
+    {
+      "glob": "**/*.md"
+    },
+    "LICENSE"
+  ]
+}

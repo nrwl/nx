@@ -1,3 +1,4 @@
+import { combineAsyncIterables } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   parseTargetString,
@@ -5,7 +6,6 @@ import {
   runExecutor,
 } from '@nx/devkit';
 import * as pc from 'picocolors';
-import { combineAsyncIterables } from '@nx/devkit/src/utils/async-iterable';
 
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { TargetOptions, WebSsrDevServerOptions } from './schema';

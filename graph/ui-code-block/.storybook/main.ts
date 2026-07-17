@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { mergeConfig } from 'vite';
 
 export default {

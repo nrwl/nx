@@ -1,0 +1,9 @@
+{
+  "outDir": "packages/eslint-plugin/dist",
+  "assets": [
+    { "glob": "**/files/**" },
+    { "glob": "**/files/**/.gitkeep" },
+    { "glob": "src/**/schema.d.ts" },
+    "LICENSE"
+  ]
+}

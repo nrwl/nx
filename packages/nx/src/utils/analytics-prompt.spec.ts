@@ -1,6 +1,13 @@
+const mockPrompt = jest.fn();
+jest.mock('enquirer', () => ({
+  prompt: (...args: any[]) => mockPrompt(...args),
+}));
+
+import { mkdtempSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { ensureAnalyticsPreferenceSet } from './analytics-prompt';
 import * as isCi from './is-ci';
-import * as enquirer from 'enquirer';
 import * as fileUtils from './fileutils';
 import * as writeFormattedModule from './write-formatted-json-file';
 import * as nxJson from '../config/nx-json';
@@ -11,7 +18,6 @@ describe('analytics-prompt', () => {
   let originalStdoutIsTTY: boolean | undefined;
 
   let mockIsCI = jest.spyOn(isCi, 'isCI');
-  let mockPrompt = jest.spyOn(enquirer, 'prompt');
   let mockReadNxJson = jest.spyOn(nxJson, 'readNxJson');
   let mockReadJsonFile = jest.spyOn(fileUtils, 'readJsonFile');
   let mockWriteFormattedJsonFile = jest
@@ -132,6 +138,84 @@ describe('analytics-prompt', () => {
       await ensureAnalyticsPreferenceSet();
 
       expect(mockPrompt).toHaveBeenCalled();
+      expect(mockWriteFormattedJsonFile).toHaveBeenCalledWith(
+        expect.stringContaining('nx.json'),
+        expect.objectContaining({ analytics: false })
+      );
+    });
+  });
+
+  describe('ensureAnalyticsPreferenceSet with explicit root/interactive', () => {
+    let root: string;
+
+    beforeAll(() => {
+      root = mkdtempSync(join(tmpdir(), 'nx-analytics-init-'));
+      writeFileSync(join(root, 'nx.json'), '{}');
+    });
+
+    beforeEach(() => {
+      mockReadJsonFile.mockReturnValue({});
+    });
+
+    it("returns 'unset' in CI without prompting", async () => {
+      mockIsCI.mockReturnValue(true);
+
+      expect(await ensureAnalyticsPreferenceSet(root, true)).toBe('unset');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it("returns 'unset' when non-interactive without prompting", async () => {
+      mockIsCI.mockReturnValue(false);
+
+      expect(await ensureAnalyticsPreferenceSet(root, false)).toBe('unset');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it("returns 'unset' when nx.json does not exist", async () => {
+      mockIsCI.mockReturnValue(false);
+
+      expect(
+        await ensureAnalyticsPreferenceSet(join(root, 'missing'), true)
+      ).toBe('unset');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it("returns existing 'yes' without re-prompting", async () => {
+      mockIsCI.mockReturnValue(false);
+      mockReadNxJson.mockReturnValue({ analytics: true });
+
+      expect(await ensureAnalyticsPreferenceSet(root, true)).toBe('yes');
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockWriteFormattedJsonFile).not.toHaveBeenCalled();
+    });
+
+    it("returns existing 'no' without re-prompting", async () => {
+      mockIsCI.mockReturnValue(false);
+      mockReadNxJson.mockReturnValue({ analytics: false });
+
+      expect(await ensureAnalyticsPreferenceSet(root, true)).toBe('no');
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockWriteFormattedJsonFile).not.toHaveBeenCalled();
+    });
+
+    it("prompts, saves, and returns 'yes' when accepted", async () => {
+      mockIsCI.mockReturnValue(false);
+      mockReadNxJson.mockReturnValue({});
+      mockPrompt.mockResolvedValue({ enableAnalytics: true });
+
+      expect(await ensureAnalyticsPreferenceSet(root, true)).toBe('yes');
+      expect(mockWriteFormattedJsonFile).toHaveBeenCalledWith(
+        expect.stringContaining('nx.json'),
+        expect.objectContaining({ analytics: true })
+      );
+    });
+
+    it("prompts, saves, and returns 'no' when declined", async () => {
+      mockIsCI.mockReturnValue(false);
+      mockReadNxJson.mockReturnValue({});
+      mockPrompt.mockResolvedValue({ enableAnalytics: false });
+
+      expect(await ensureAnalyticsPreferenceSet(root, true)).toBe('no');
       expect(mockWriteFormattedJsonFile).toHaveBeenCalledWith(
         expect.stringContaining('nx.json'),
         expect.objectContaining({ analytics: false })

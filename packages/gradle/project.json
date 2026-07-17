@@ -4,71 +4,24 @@
   "sourceRoot": "packages/gradle/src",
   "projectType": "library",
   "targets": {
-    "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish"],
-      "executor": "@nx/js:release-publish",
-      "options": {
-        "packageRoot": "dist/packages/gradle"
-      }
-    },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/gradle/README.md"],
-      "command": "node ./scripts/copy-readme.js gradle",
-      "dependsOn": ["^build", "build-native", "build-base", "legacy-post-build"]
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js gradle packages/gradle/readme-template.md packages/gradle/README.md",
+      "inputs": ["copyReadme"],
+      "dependsOn": ["^build", "build-base"]
+    },
+    "copy-assets": {
+      "dependsOn": [":gradle-batch-runner:gradle:assemble"]
     },
     "build-base": {
       "dependsOn": [
         "^build-base",
         "build-native",
+        "copy-assets",
         ":gradle-batch-runner:gradle:assemble"
       ]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/gradle",
-            "glob": "**/@(files|files-angular)/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "packages/gradle/batch-runner",
-            "glob": "**/*.jar",
-            "output": "/batch-runner"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
     }
   },
   "tags": [],
-  "implicitDependencies": [":gradle-project-graph"]
+  "implicitDependencies": [":gradle-project-graph", ":gradle-batch-runner"]
 }

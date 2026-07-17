@@ -4,11 +4,13 @@ import { relative } from 'path';
 
 import { readNxJson } from '../../config/configuration';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
+import { ProjectGraph } from '../../config/project-graph';
 import { FileChange, flushChanges, FsTree } from '../../generators/tree';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import { retrieveProjectConfigurationsWithoutPluginInference } from '../../project-graph/utils/retrieve-workspace-files';
 import { logger, NX_PREFIX } from '../../utils/logger';
 import {
   combineOptionsForGenerator,
@@ -16,6 +18,7 @@ import {
   Schema,
 } from '../../utils/params';
 import { handleErrors } from '../../utils/handle-errors';
+import { handleImport } from '../../utils/handle-import';
 import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -305,9 +308,22 @@ export function printGenHelp(
 export async function generate(args: { [k: string]: any }) {
   return handleErrors(args.verbose, async () => {
     const nxJsonConfiguration = readNxJson();
-    const projectGraph = await createProjectGraphAsync();
-    const projectsConfigurations =
-      readProjectsConfigurationFromProjectGraph(projectGraph);
+
+    let projectGraph: ProjectGraph | undefined;
+    let projectsConfigurations: ProjectsConfigurations;
+
+    if (args.skipProjectGraph) {
+      const projects =
+        await retrieveProjectConfigurationsWithoutPluginInference(
+          workspaceRoot
+        );
+      projectsConfigurations = { version: 2, projects };
+    } else {
+      projectGraph = await createProjectGraphAsync();
+      projectsConfigurations =
+        readProjectsConfigurationFromProjectGraph(projectGraph);
+    }
+
     const opts = await convertToGenerateOptions(
       args,
       'generate',
@@ -412,8 +428,15 @@ export async function generate(args: { [k: string]: any }) {
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
       }
     } else {
+      if (!projectGraph) {
+        throw new Error(
+          `Cannot run non-Nx generators with --skipProjectGraph. Remove the flag or use an Nx generator.`
+        );
+      }
       require('../../adapter/compat');
-      return (await import('../../adapter/ngcli-adapter')).generate(
+      return (
+        await handleImport('../../adapter/ngcli-adapter.js', __dirname)
+      ).generate(
         workspaceRoot,
         {
           ...opts,

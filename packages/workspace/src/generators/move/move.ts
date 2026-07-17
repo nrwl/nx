@@ -24,6 +24,7 @@ import { updateDefaultProject } from './lib/update-default-project';
 import { updateEslintConfig } from './lib/update-eslint-config';
 import { updateImplicitDependencies } from './lib/update-implicit-dependencies';
 import { updateImports } from './lib/update-imports';
+import { updateOwnersAndConformance } from './lib/update-owners-and-conformance';
 import { updateJestConfig } from './lib/update-jest-config';
 import { updatePackageJson } from './lib/update-package-json';
 import { updateProjectRootFiles } from './lib/update-project-root-files';
@@ -61,6 +62,7 @@ export async function moveGenerator(tree: Tree, rawSchema: Schema) {
   updateBuildTargets(tree, schema);
   updateDefaultProject(tree, schema);
   updateImplicitDependencies(tree, schema);
+  updateOwnersAndConformance(tree, schema);
 
   if (projectConfig.root === '.') {
     // we want to migrate eslint config once the root project files are moved

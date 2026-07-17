@@ -1,11 +1,13 @@
 import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
 import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
-import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack.js';
+import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';
 import { join } from 'path';
 
 import config from './module-federation.config';
 
 export default {
+  // rspack-cli dev mode defaults this on; it breaks module federation.
+  lazyCompilation: false,
   output: {
     path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
     publicPath: 'auto'

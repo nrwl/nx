@@ -7,7 +7,7 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { join } from 'path';
 import { gte } from 'semver';
 import {
@@ -81,11 +81,8 @@ export async function updateSsrSetup(
     const componentType = getComponentType(tree);
     const componentFileSuffix = componentType ? `.${componentType}` : '';
 
-    const useBootstrapContext =
-      // https://github.com/angular/angular-cli/releases/tag/20.3.0
-      gte(angularVersion, '20.3.0') ||
-      // https://github.com/angular/angular-cli/releases/tag/19.2.16
-      (angularMajorVersion === 19 && gte(angularVersion, '19.2.16'));
+    // https://github.com/angular/angular-cli/releases/tag/20.3.0
+    const useBootstrapContext = gte(angularVersion, '20.3.0');
 
     generateFiles(
       tree,

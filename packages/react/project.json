@@ -5,58 +5,44 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js react",
-      "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
+      "dependsOn": ["build-base"],
+      "command": "node ./scripts/copy-readme.js react packages/react/readme-template.md packages/react/README.md",
+      "inputs": ["copyReadme"],
+      "outputs": ["{projectRoot}/README.md"]
     },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/react",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/files/**/.babelrc__tmpl__",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/files/**/.browserslistrc__tmpl__",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "packages/react",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": [
+            "nx",
+            "devkit",
+            "workspace",
+            "js",
+            "cypress",
+            "docker",
+            "eslint",
+            "module-federation",
+            "node",
+            "playwright",
+            "rollup",
+            "rsbuild",
+            "rspack",
+            "storybook",
+            "vite",
+            "vitest",
+            "web",
+            "webpack",
+            "nest"
+          ],
+          "target": "build-base"
+        },
+        "build-native",
+        "copy-assets"
+      ]
+    },
+    "nx-release-publish": {
+      "dependsOn": []
     }
-  }
+  },
+  "implicitDependencies": ["rspack"]
 }

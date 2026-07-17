@@ -7,7 +7,8 @@ import {
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
-import { classify } from '@nx/devkit/src/utils/string-utils';
+import { names } from '@nx/devkit';
+const classify = (s: string) => names(s).className;
 
 describe('Move Angular Project', () => {
   let proj: string;
@@ -16,7 +17,9 @@ describe('Move Angular Project', () => {
   let newPath: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({
+      packages: ['@nx/angular', '@nx/workspace', '@nx/jest', '@nx/playwright'],
+    });
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
@@ -32,7 +35,7 @@ describe('Move Angular Project', () => {
    */
   it('should work for apps', () => {
     const moveOutput = runCLI(
-      `generate @nx/angular:move --project ${app1} ${newPath} `
+      `generate @nx/workspace:move --project ${app1} ${newPath} `
     );
 
     // just check the output
@@ -74,7 +77,7 @@ describe('Move Angular Project', () => {
   `
     );
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
+      `generate @nx/workspace:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
     );
 
     // just check that the cypress.config.ts is updated correctly
@@ -115,7 +118,7 @@ describe('Move Angular Project', () => {
     );
 
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1}`
+      `generate @nx/workspace:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1}`
     );
 
     const newPath = `shared/${lib1}`;
@@ -154,7 +157,15 @@ describe('Convert Angular Webpack Project to Rspack', () => {
   let app1: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({
+      packages: [
+        '@nx/angular',
+        '@nx/webpack',
+        '@nx/vitest',
+        '@nx/playwright',
+        '@nx/rspack',
+      ],
+    });
     app1 = uniq('app1');
     runCLI(
       `generate @nx/angular:app ${app1} --bundler=webpack --no-interactive`

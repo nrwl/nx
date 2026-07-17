@@ -5,7 +5,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react/src/utils/lint';
+import { extraEslintDependencies } from '@nx/react';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
@@ -13,8 +13,8 @@ import {
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 
 interface NormalizedSchema {
   linter?: Linter | LinterType;
@@ -54,7 +54,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       options.projectRoot,
       (override) => Boolean(override.rules?.['@nx/dependency-checks']),
       (override) => {
-        const rule = override.rules['@nx/dependency-checks'];
+        const rule = override.rules['@nx/dependency-checks'] as
+          | string
+          | [string, { ignoredDependencies?: string[] }];
         if (Array.isArray(rule) && rule.length > 1) {
           // Ensure ignoredDependencies array exists
           if (!rule[1].ignoredDependencies) {
@@ -84,7 +86,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       addPredefinedConfigToFlatLintConfig(
         host,
         options.projectRoot,
-        'flat/react'
+        'flat/react',
+        { checkBaseConfig: true }
       );
       // Add an empty rules object to users know how to add/override rules
       addOverrideToLintConfig(host, options.projectRoot, {
@@ -110,7 +113,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     const installTask = addDependenciesToPackageJson(
       host,
       extraEslintDependencies.dependencies,
-      extraEslintDependencies.devDependencies
+      extraEslintDependencies.devDependencies,
+      undefined,
+      true
     );
     tasks.push(installTask);
   }

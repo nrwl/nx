@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import { Module } from 'module';
 import {
+  detectPackageManager,
   type GeneratorCallback,
   output,
   readJson,
@@ -17,10 +18,11 @@ import type {
 import { join, resolve } from 'path';
 import { clean, coerce, gt } from 'semver';
 import { installPackagesTask } from '../tasks/install-packages-task';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- nx/src/utils/catalog exists since nx 22.0.0, the whole supported range; swap to the nx/src/devkit-internals re-export in v25
 import {
   getCatalogDependenciesFromPackageJson,
   getCatalogManager,
-} from './catalog';
+} from 'nx/src/utils/catalog';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -908,7 +910,11 @@ export function ensurePackage<T extends any = any>(
     );
   }
 
-  const { tempDir } = installPackageToTmp(pkg, requiredVersion);
+  const { tempDir } = installPackageToTmp(
+    pkg,
+    requiredVersion,
+    detectPackageManager(workspaceRoot)
+  );
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));

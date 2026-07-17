@@ -2,7 +2,7 @@ import { ExecutorContext, getPackageManagerCommand } from '@nx/devkit';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { getProjectTsConfigPath } from './options-utils';
 import { execSync } from 'node:child_process';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
@@ -20,6 +20,10 @@ export async function validateTypes(opts: {
         ? opts.tsconfig
         : join(opts.workspaceRoot, opts.tsconfig),
       mode: 'noEmit',
+      // TS 6 defaults rootDir to the tsconfig dir, so from-source workspace
+      // libs (outside the project) trip TS6059. rootDir is emit-only and this
+      // is noEmit, so widen it to the workspace root to clear the false error.
+      rootDir: opts.workspaceRoot,
     });
 
     await printDiagnostics(result.errors, result.warnings);
@@ -34,7 +38,7 @@ export async function validateTypes(opts: {
       {
         cwd: opts.workspaceRoot,
         stdio: 'inherit',
-        windowsHide: false,
+        windowsHide: true,
       }
     );
   }
@@ -75,10 +79,4 @@ export function createBuildableTsConfig(
 
 export function loadViteDynamicImport() {
   return Function('return import("vite")')() as Promise<typeof import('vite')>;
-}
-
-export function loadVitestDynamicImport() {
-  return Function('return import("vitest/node")')() as Promise<
-    typeof import('vitest/node')
-  >;
 }

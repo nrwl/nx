@@ -6,15 +6,13 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 const siteUrl = process.env.NX_DEV_URL || 'https://nx.dev';
-const isNetlify = process.env.NETLIFY === 'true';
-const outDir = isNetlify
-  ? resolve(import.meta.dirname, '../public')
-  : resolve(import.meta.dirname, '../../../dist/nx-dev/nx-dev/public');
+const outDir = resolve(import.meta.dirname, '../public');
 
 const sitemapPath = resolve(outDir, 'sitemap.xml');
 
 const additionalSitemaps = [
   `${siteUrl}/sitemap-1.xml`,
+  `${siteUrl}/sitemap-2.xml`,
   `${siteUrl}/docs/sitemap-index.xml`,
 ];
 

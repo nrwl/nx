@@ -5,48 +5,9 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/rsbuild/README.md"],
-      "command": "node ./scripts/copy-readme.js rsbuild"
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/rsbuild",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/rsbuild",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/rsbuild",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/rsbuild",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/rsbuild",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js rsbuild packages/rsbuild/readme-template.md packages/rsbuild/README.md",
+      "inputs": ["copyReadme"]
     }
   }
 }

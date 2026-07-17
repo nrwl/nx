@@ -1,4 +1,5 @@
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
+use super::strings::display_width;
 use super::utils::normalize_newlines;
 use crossterm::event::{KeyCode, KeyEvent};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
@@ -6,7 +7,7 @@ use std::{
     io::{self, Write},
     sync::{
         Arc,
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
 };
 use tracing::debug;
@@ -68,8 +69,25 @@ pub struct PtyInstance {
     /// Generation counter for async resize. Incremented on each resize request
     /// so that stale background resize threads can detect they've been superseded.
     resize_generation: Arc<AtomicU64>,
+    /// Last value returned by `output_generation()`. Read every frame while a
+    /// pane search is active; using a non-blocking `try_read` plus this cache
+    /// keeps the render thread from stalling on the parser write lock (held by
+    /// the PTY writer during heavy output, and by the async resize swap).
+    output_generation_cache: Arc<AtomicU64>,
+    /// Cached result of cursor-movement detection. Flips true on first hit and
+    /// stays true — so subsequent arrow key events skip the O(n) buffer scan.
+    handles_cursor_movement: Arc<AtomicBool>,
     /// Shared state for background scrollback processing in inline mode
     scrollback_state: Arc<Mutex<ScrollbackState>>,
+}
+
+/// Byte index where the `n`th char of `line` begins, or the line's byte length
+/// when `n` is past the end. Used to slice a char range for width measurement.
+fn char_boundary(line: &str, n: usize) -> usize {
+    line.char_indices()
+        .nth(n)
+        .map(|(byte, _)| byte)
+        .unwrap_or(line.len())
 }
 
 /// Count how many visual rows a single logical line produces when wrapped.
@@ -371,6 +389,8 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
+            handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
                 scrollback_count: 0,
@@ -396,6 +416,8 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
+            handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
                 scrollback_count: 0,
@@ -418,6 +440,8 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
+            handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
                 scrollback_count: 0,
@@ -706,6 +730,230 @@ impl PtyInstance {
         self.parser.read().screen().get_total_content_rows()
     }
 
+    /// A version key for the terminal content and its wrapping, cheap to read.
+    ///
+    /// Derived from the parser itself so it works no matter how the parser is
+    /// fed: the raw-output length changes on every write — both `process_output`
+    /// *and* a live task's PTY reader writing the shared parser directly (which
+    /// bypasses `process_output` entirely) — and, unlike a content-row count,
+    /// never saturates once the scrollback fills. It is not monotonic: the
+    /// `MAX_RAW_OUTPUT_BYTES` compaction *shrinks* it, which still reads as a
+    /// change (a post-compaction length coinciding with a previously-seen one
+    /// would skip one refresh and self-heal on the next write). Folding in the
+    /// screen dimensions makes a resize rewrap (same bytes, shifted rows)
+    /// register as a change too. A cache keyed on this — the pane search's
+    /// match list — recomputes exactly when the screen changed.
+    pub fn output_generation(&self) -> u64 {
+        // Non-blocking: this runs every frame while a search is active, so it
+        // must never wait on the parser write lock (held by the PTY writer
+        // during heavy output and by the async resize swap) — that would stall
+        // the repaint. When the lock is momentarily unavailable, reuse the last
+        // value; the next frame picks up any change.
+        let Some(parser) = self.parser.try_read() else {
+            return self.output_generation_cache.load(Ordering::Relaxed);
+        };
+        let raw_len = parser.get_raw_output().len() as u64;
+        let (rows, cols) = parser.screen().size();
+        // The three facts, simply concatenated into one u64:
+        //   [ raw_len (32 bits) | rows (16 bits) | cols (16 bits) ]
+        // Compaction caps raw_len at ~5 MB — far below 2^32 — so the pack is
+        // lossless: two different states never share a fingerprint.
+        let generation = (raw_len << 32) | ((rows as u64) << 16) | cols as u64;
+        self.output_generation_cache
+            .store(generation, Ordering::Relaxed);
+        generation
+    }
+
+    /// The absolute visual row currently at the top of the viewport — the same
+    /// coordinate basis as `content_coords_at` and `search_visual_positions`.
+    pub fn visual_top(&self) -> usize {
+        let parser = self.parser.read();
+        let screen = parser.screen();
+        let total = screen.get_total_content_rows();
+        let viewport = screen.size().0 as usize;
+        total
+            .saturating_sub(viewport)
+            .saturating_sub(screen.scrollback())
+    }
+
+    /// Force the cached dimensions out of sync with the parser's real width,
+    /// reproducing the window during `resize_async` where `dimensions` has been
+    /// updated but the parser has not yet been reparsed at the new size.
+    #[cfg(test)]
+    pub(crate) fn set_cached_dimensions_for_test(&self, rows: u16, cols: u16) {
+        *self.dimensions.write() = (rows, cols);
+    }
+
+    /// Scroll so the given absolute visual row sits about a third from the
+    /// viewport top (bringing some context above the match into view).
+    pub fn scroll_to_visual_row(&mut self, row: usize) {
+        let mut parser = self.parser.write();
+        let screen = parser.screen();
+        let total = screen.get_total_content_rows();
+        let viewport = screen.size().0 as usize;
+        let max_scrollback = total.saturating_sub(viewport);
+        let desired_top = row.saturating_sub(viewport / 3);
+        let scrollback = total
+            .saturating_sub(viewport)
+            .saturating_sub(desired_top)
+            .min(max_scrollback);
+        parser.screen_mut().set_scrollback(scrollback);
+    }
+
+    /// Case-insensitively find every occurrence of `query` in the terminal
+    /// content (scrollback included). Positions are returned in the wrapped
+    /// visual coordinate basis shared with `content_coords_at`, as
+    /// `(visual_row, col, col_width)` — the third element is the match's width
+    /// in display columns, not a character count — in reading order. Each grid
+    /// row is searched independently, so a query straddling a wrap seam (e.g.
+    /// `error` split as `err`/`or` across two visual rows of a long wrapped
+    /// line) is not matched — a deliberate trade for grid-exact positions.
+    pub fn search_visual_positions(&self, query: &str) -> Vec<(usize, usize, usize)> {
+        if query.is_empty() {
+            return Vec::new();
+        }
+        // Reconstruct the exact grid the pane renders, then search it row by
+        // row. Re-parsing `all_contents_formatted()` into a parser tall enough
+        // to hold every row in its visible screen (zero scrollback) gives the
+        // SAME visual-row layout as `get_total_content_rows()` and the render.
+        //
+        // The previous approach re-wrapped `all_contents()` with wrap_ansi, but
+        // that diverges from the real grid: `all_contents()` trims trailing
+        // blanks from wrapped rows (left behind by `\r`/clear-to-end progress
+        // output), so re-wrapping the joined logical line produces fewer rows
+        // than vt100 actually used. On long, narrow, cursor-heavy output
+        // (e.g. a Maven build past the scrollback cap) the error accumulated and
+        // every highlight drifted downward.
+        let (formatted, cols, total) = {
+            let parser = self.parser.read();
+            let screen = parser.screen();
+            (
+                screen.all_contents_formatted(),
+                screen.size().1,
+                screen.get_total_content_rows(),
+            )
+        };
+        if cols == 0 || total == 0 {
+            return Vec::new();
+        }
+        let mut grid = Parser::new(total.min(u16::MAX as usize) as u16, cols, 0);
+        grid.process(&formatted);
+
+        let needle = query.to_lowercase();
+        let needle_chars = needle.chars().count();
+        let mut matches = Vec::new();
+        for (row, line) in grid.screen().rows(0, cols).enumerate() {
+            let haystack = line.to_lowercase();
+            let mut from = 0usize;
+            while let Some(found) = haystack[from..].find(&needle) {
+                let byte = from + found;
+                // Locate by char offset in the lowercased row, then measure the
+                // prefix in display *columns* so wide characters (CJK, emoji)
+                // don't shift the highlight — the overlay walks the buffer in
+                // columns. (Lowercasing is assumed char-count-preserving.)
+                let char_offset = haystack[..byte].chars().count();
+                let start_byte = char_boundary(&line, char_offset);
+                let end_byte = char_boundary(&line, char_offset + needle_chars);
+                let col = display_width(&line[..start_byte]);
+                let match_cols = display_width(&line[start_byte..end_byte]).max(1);
+                matches.push((row, col, match_cols));
+                from = byte + needle.len().max(1);
+            }
+        }
+        matches
+    }
+
+    /// Extract the plain text covered by a selection expressed in absolute
+    /// content-row + column coordinates (both ends inclusive).
+    ///
+    /// The selection arrives in *visual* (wrapped) row coordinates — the basis
+    /// `content_coords_at`, the overlay, and `get_total_content_rows()` share.
+    /// The buffer is read once as unwrapped logical lines with
+    /// `Screen::all_contents` (scrollback included, no scrolling). Each visual
+    /// endpoint is translated to a character offset inside its logical line by
+    /// counting how many visual rows the preceding lines occupy, then the
+    /// unwrapped lines are sliced directly between the two offsets. This yields
+    /// unwrapped text without ever materializing the wrapped rows, and a
+    /// newline appears only at real line breaks. Trailing whitespace is trimmed
+    /// per line.
+    pub fn selected_text(&self, start: (usize, usize), end: (usize, usize)) -> String {
+        let (start_row, start_col) = start;
+        let (end_row, end_col) = end;
+
+        let (contents, cols) = {
+            let parser = self.parser.read();
+            let screen = parser.screen();
+            let (_, cols) = screen.size();
+            (screen.all_contents(), cols as usize)
+        };
+        if cols == 0 {
+            return String::new();
+        }
+        let logical: Vec<&str> = contents.lines().collect();
+
+        // Translate an absolute visual row to a position in the unwrapped lines:
+        // the logical line it falls on, plus the character offset where that
+        // visual sub-row begins (`sub_row * cols`, since the terminal hard-wraps
+        // at the column count). `None` once the row is past the wrapped content
+        // (the viewport's trailing empty rows, trimmed from `all_contents`).
+        let locate = |visual_row: usize| -> Option<(usize, usize)> {
+            let mut consumed = 0usize;
+            for (index, line) in logical.iter().enumerate() {
+                let height = wrap_logical_line(line, cols);
+                if visual_row < consumed + height {
+                    return Some((index, (visual_row - consumed) * cols));
+                }
+                consumed += height;
+            }
+            None
+        };
+
+        // A selection that starts past the content selects nothing.
+        let Some((start_line, start_base)) = locate(start_row) else {
+            return String::new();
+        };
+        let start_offset = start_base + start_col;
+        // An end dragged into the empty rows below the content selects through
+        // the end of the last logical line.
+        let (end_line, end_offset) = match locate(end_row) {
+            Some((line, base)) => (line, base + end_col + 1),
+            None => {
+                let last = logical.len().saturating_sub(1);
+                (
+                    last,
+                    logical.get(last).map_or(0, |line| line.chars().count()),
+                )
+            }
+        };
+        if end_line < start_line {
+            return String::new();
+        }
+
+        let mut lines: Vec<String> = Vec::new();
+        for (offset, line) in logical[start_line..=end_line].iter().enumerate() {
+            let line_index = start_line + offset;
+            let chars: Vec<char> = line.chars().collect();
+            let len = chars.len();
+            let (from, to) = if start_line == end_line {
+                (start_offset.min(len), end_offset.min(len))
+            } else if line_index == start_line {
+                (start_offset.min(len), len)
+            } else if line_index == end_line {
+                (0, end_offset.min(len))
+            } else {
+                (0, len)
+            };
+            let slice: String = chars[from..to.max(from)].iter().collect();
+            lines.push(slice.trim_end().to_string());
+        }
+        // Drop blank lines dragged past the end of the content so the copy
+        // doesn't gain trailing newlines.
+        while lines.last().is_some_and(|line| line.is_empty()) {
+            lines.pop();
+        }
+        lines.join("\n")
+    }
+
     /// Checks if the process is likely in interactive/raw mode
     /// Uses both alternate screen detection and cursor movement patterns
     pub fn handles_arrow_keys(&self) -> bool {
@@ -723,14 +971,19 @@ impl PtyInstance {
     }
 
     /// Simple check: does the recent output contain cursor movement escape sequences?
-    /// This catches enquirer-style programs that move cursor but don't use alternate screen
+    /// This catches enquirer-style programs that move cursor but don't use alternate screen.
+    /// Result is cached — once true it never reverts, so subsequent calls skip the O(n) scan.
     fn has_cursor_movement_in_output(&self) -> bool {
+        if self.handles_cursor_movement.load(Ordering::Relaxed) {
+            return true;
+        }
+
         let parser = self.parser.read();
         let raw_output = parser.get_raw_output();
         let output_str = std::str::from_utf8(raw_output).unwrap_or("");
 
         // Check for any cursor control sequences in one pass
-        [
+        let found = [
             "\x1b[?25l",
             "\x1b[?25h",
             "\x1b[H",
@@ -740,7 +993,12 @@ impl PtyInstance {
             "\x1b[D",
         ]
         .iter()
-        .any(|seq| output_str.contains(seq))
+        .any(|seq| output_str.contains(seq));
+
+        if found {
+            self.handles_cursor_movement.store(true, Ordering::Relaxed);
+        }
+        found
     }
 
     /// Maximum raw output bytes to retain. The raw output buffer stores every
@@ -791,6 +1049,8 @@ mod tests {
             dimensions: Arc::new(RwLock::new((24, 80))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
+            handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
                 scrollback_count: 0,
@@ -839,6 +1099,80 @@ mod tests {
     }
 
     #[test]
+    fn test_selected_text_single_and_multi_row() {
+        let pty = PtyInstance::non_interactive();
+        pty.process_output(b"line one\r\nline two\r\nline three\r\n");
+
+        // Single row, partial columns.
+        assert_eq!(pty.selected_text((0, 0), (0, 3)), "line");
+        // Whole second row (trailing whitespace trimmed).
+        assert_eq!(pty.selected_text((1, 0), (1, 20)), "line two");
+        // Spanning two rows: tail of row 0 + head of row 1.
+        assert_eq!(pty.selected_text((0, 5), (1, 3)), "one\nline");
+    }
+
+    #[test]
+    fn test_selected_text_out_of_range_is_empty() {
+        let pty = PtyInstance::non_interactive();
+        pty.process_output(b"hello\r\n");
+        // A start row past the content yields nothing rather than panicking.
+        assert_eq!(pty.selected_text((9999, 0), (9999, 5)), "");
+    }
+
+    #[test]
+    fn test_selected_text_joins_wrapped_rows_unwrapped() {
+        let pty = PtyInstance::non_interactive();
+        // 100 chars at 80 cols wraps onto two visual rows (0: 80, 1: 20).
+        let long = "a".repeat(100);
+        pty.process_output(format!("{long}\r\n").as_bytes());
+
+        // Selecting across both visual rows yields the original unwrapped line
+        // with no newline injected at the wrap point.
+        assert_eq!(pty.selected_text((0, 0), (1, 19)), long);
+        assert!(!pty.selected_text((0, 0), (1, 19)).contains('\n'));
+    }
+
+    #[test]
+    fn test_selected_text_partial_span_across_wrap_boundary() {
+        let pty = PtyInstance::non_interactive();
+        // A 100-char line of repeating digits so each column maps to a known
+        // character: index i holds the digit (i % 10).
+        let line: String = (0..100)
+            .map(|i| char::from(b'0' + (i % 10) as u8))
+            .collect();
+        pty.process_output(format!("{line}\r\n").as_bytes());
+
+        // Select from visual row 0 col 75 through visual row 1 col 4. The wrap
+        // is at column 80, so this is character offsets 75..=84 of the unwrapped
+        // line — the slice must cross the wrap point with the right columns.
+        assert_eq!(pty.selected_text((0, 75), (1, 4)), "5678901234");
+    }
+
+    #[test]
+    fn test_selected_text_trailing_empty_rows_dont_shift_columns() {
+        let pty = PtyInstance::non_interactive();
+        pty.process_output(b"alpha\r\nbravo\r\n");
+
+        // Dragging the selection end down into the empty rows below the content
+        // must not pull the end column up onto "bravo" (the previous bug, where
+        // the trimmed re-wrapped array clamped end_row and truncated the line).
+        assert_eq!(pty.selected_text((0, 0), (5, 3)), "alpha\nbravo");
+    }
+
+    #[test]
+    fn test_selected_text_includes_scrollback_rows() {
+        let pty = PtyInstance::non_interactive();
+        // 24-row viewport: writing 30 lines pushes the first 6 into scrollback.
+        for i in 0..30 {
+            pty.process_output(format!("line {i}\r\n").as_bytes());
+        }
+        // Absolute row 0 is the oldest scrollback row, lining up with the
+        // coordinates `content_coords_at` produces.
+        assert_eq!(pty.selected_text((0, 0), (0, 5)), "line 0");
+        assert_eq!(pty.selected_text((2, 0), (2, 5)), "line 2");
+    }
+
+    #[test]
     fn test_handles_arrow_keys_enquirer_style_output() {
         let pty = create_test_pty_instance(false);
 
@@ -851,5 +1185,97 @@ mod tests {
             pty.handles_arrow_keys(),
             "Should detect enquirer-style cursor manipulation"
         );
+    }
+
+    #[test]
+    fn search_finds_case_insensitive_matches_in_visual_coordinates() {
+        let pty = create_test_pty_instance(false);
+        pty.parser
+            .write()
+            .process(b"first Error here\r\nnothing\r\nlast ERROR\r\n");
+
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches, vec![(0, 6, 5), (2, 5, 5)]);
+
+        // Wrapped lines report positions past the first visual row.
+        let long_line = format!("{}error\r\n", "x".repeat(80));
+        pty.parser.write().process(long_line.as_bytes());
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches.last(), Some(&(4, 0, 5)));
+
+        assert!(pty.search_visual_positions("").is_empty());
+        assert!(pty.search_visual_positions("absent").is_empty());
+    }
+
+    /// The output generation must keep changing after the scrollback fills,
+    /// even though the content-row count saturates. This is what lets a cache
+    /// keyed on the generation (the pane search) detect that content is still
+    /// shifting once past `SCROLLBACK_SIZE`.
+    #[test]
+    fn output_generation_changes_after_content_row_count_saturates() {
+        let pty = create_test_pty_instance(false);
+        // Fill well past SCROLLBACK_SIZE (1000).
+        pty.process_output("line\r\n".repeat(1200).as_bytes());
+        let rows_a = pty.get_total_content_rows();
+        let gen_a = pty.output_generation();
+
+        pty.process_output("more\r\n".repeat(200).as_bytes());
+        let rows_b = pty.get_total_content_rows();
+        let gen_b = pty.output_generation();
+
+        assert_eq!(
+            rows_a, rows_b,
+            "the content-row count saturates and stops signalling change"
+        );
+        assert_ne!(
+            gen_a, gen_b,
+            "the output generation still changes after saturation"
+        );
+    }
+
+    /// A live task's PTY reader writes the shared parser directly, bypassing
+    /// `process_output`. The generation must still change, or a pane search
+    /// over a streaming task would freeze (stale count and highlights).
+    #[test]
+    fn output_generation_changes_when_the_parser_is_fed_directly() {
+        let pty = create_test_pty_instance(false);
+        let gen_a = pty.output_generation();
+        pty.parser.write().process(b"streamed output line\r\n");
+        let gen_b = pty.output_generation();
+        assert_ne!(
+            gen_a, gen_b,
+            "generation must change on a direct parser write (the live PTY path)"
+        );
+    }
+
+    #[test]
+    fn search_positions_are_display_columns_not_char_counts() {
+        let pty = create_test_pty_instance(false);
+        // Two double-width CJK chars precede the match. In char counts the
+        // match would start at column 2; in display columns it starts at 4,
+        // which is what the (column-walking) highlight overlay needs.
+        pty.parser.write().process("你好error\r\n".as_bytes());
+
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches, vec![(0, 4, 5)]);
+    }
+
+    #[test]
+    fn scroll_to_visual_row_brings_the_row_into_view() {
+        let mut pty = create_test_pty_instance(false);
+        for i in 0..100 {
+            pty.parser
+                .write()
+                .process(format!("line {}\r\n", i).as_bytes());
+        }
+
+        pty.scroll_to_visual_row(10);
+        let top = pty.visual_top();
+        assert!(top <= 10, "row 10 must be at or below the top, top={top}");
+        assert!(top + 24 > 10, "row 10 must be within the 24-row viewport");
+
+        // Jumping to the very end clamps to the bottom.
+        pty.scroll_to_visual_row(10_000);
+        assert_eq!(pty.get_scroll_offset(), 0);
     }
 }

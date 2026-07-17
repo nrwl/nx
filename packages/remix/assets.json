@@ -1,0 +1,18 @@
+{
+  "outDir": "packages/remix/dist",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "src/**/schema.json"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    {
+      "glob": "**/*.md"
+    },
+    "LICENSE"
+  ]
+}

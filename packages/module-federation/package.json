@@ -3,6 +3,12 @@
   "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
   "version": "0.0.1",
   "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -21,27 +27,131 @@
   "author": "Colum Ferry",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "angular": [
+        "dist/angular.d.ts"
+      ],
+      "rspack": [
+        "dist/rspack.d.ts"
+      ],
+      "webpack": [
+        "dist/webpack.d.ts"
+      ],
+      "url-helpers": [
+        "dist/url-helpers.d.ts"
+      ],
+      "angular.js": [
+        "dist/angular.d.ts"
+      ],
+      "rspack.js": [
+        "dist/rspack.d.ts"
+      ],
+      "webpack.js": [
+        "dist/webpack.d.ts"
+      ],
+      "url-helpers.js": [
+        "dist/url-helpers.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./package": "./package.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./executors": "./executors.json",
+    "./migrations": "./migrations.json",
+    "./angular": {
+      "@nx/nx-source": "./angular.ts",
+      "types": "./dist/angular.d.ts",
+      "default": "./dist/angular.js"
+    },
+    "./angular.js": {
+      "@nx/nx-source": "./angular.ts",
+      "types": "./dist/angular.d.ts",
+      "default": "./dist/angular.js"
+    },
+    "./rspack": {
+      "@nx/nx-source": "./rspack.ts",
+      "types": "./dist/rspack.d.ts",
+      "default": "./dist/rspack.js"
+    },
+    "./rspack.js": {
+      "@nx/nx-source": "./rspack.ts",
+      "types": "./dist/rspack.d.ts",
+      "default": "./dist/rspack.js"
+    },
+    "./webpack": {
+      "@nx/nx-source": "./webpack.ts",
+      "types": "./dist/webpack.d.ts",
+      "default": "./dist/webpack.js"
+    },
+    "./webpack.js": {
+      "@nx/nx-source": "./webpack.ts",
+      "types": "./dist/webpack.d.ts",
+      "default": "./dist/webpack.js"
+    },
+    "./url-helpers": {
+      "@nx/nx-source": "./url-helpers.ts",
+      "types": "./dist/url-helpers.d.ts",
+      "default": "./dist/url-helpers.js"
+    },
+    "./url-helpers.js": {
+      "@nx/nx-source": "./url-helpers.ts",
+      "types": "./dist/url-helpers.d.ts",
+      "default": "./dist/url-helpers.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    },
+    "./runtime-library-control-plugin": {
+      "@nx/nx-source": "./src/utils/plugins/runtime-library-control.plugin.ts",
+      "default": "./dist/src/utils/plugins/runtime-library-control.plugin.js"
+    }
+  },
   "executors": "./executors.json",
   "dependencies": {
-    "@module-federation/enhanced": "^2.1.0",
-    "@module-federation/node": "^2.7.21",
-    "@module-federation/sdk": "^2.1.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
     "@rspack/core": "catalog:rspack",
     "express": "^4.21.2",
-    "http-proxy-middleware": "^3.0.5",
+    "http-proxy-middleware": "catalog:",
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",
-    "webpack": "^5.101.3"
+    "webpack": "catalog:"
+  },
+  "peerDependencies": {
+    "@module-federation/enhanced": "^2.0.0",
+    "@module-federation/node": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@module-federation/enhanced": {
+      "optional": true
+    },
+    "@module-federation/node": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "nx": "workspace:*"
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "publishConfig": {
     "access": "public"

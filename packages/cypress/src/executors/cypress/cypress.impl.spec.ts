@@ -1,19 +1,24 @@
+// Mock detect-port as a callable function that also works with `import * as`
+jest.mock('detect-port', () => {
+  const fn = jest.fn();
+  return Object.assign(fn, { __esModule: true, default: fn });
+});
+
 import { ExecutorContext } from '@nx/devkit';
-import * as detectPort from 'detect-port';
+
+// Get reference to the mocked function
+const mockDetectPortFn = jest.requireMock('detect-port') as jest.Mock;
 import * as executorUtils from 'nx/src/command-line/run/executor-utils';
 import * as path from 'path';
-import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
 
 jest.mock('@nx/devkit');
 let devkit = require('@nx/devkit');
-jest.mock('detect-port', () => jest.fn().mockResolvedValue(4200));
 jest.mock('../../utils/versions', () => ({
   ...jest.requireActual('../../utils/versions'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
-jest.mock('../../utils/ct-helpers');
 const Cypress = require('cypress');
 
 describe('Cypress builder', () => {
@@ -58,9 +63,6 @@ describe('Cypress builder', () => {
     isNxExecutor: true,
   });
   let runExecutor: any;
-  let mockGetTailwindPath: jest.Mock<ReturnType<typeof getTempTailwindPath>> =
-    getTempTailwindPath as any;
-
   beforeEach(async () => {
     mockedInstalledCypressMajorVersion.mockReturnValue(15);
     runExecutor = (devkit as any).runExecutor = jest.fn().mockReturnValue([
@@ -371,13 +373,14 @@ describe('Cypress builder', () => {
     (devkit as any).readTargetOptions = jest
       .fn()
       .mockReturnValue({ port: 4200 });
+    mockDetectPortFn.mockResolvedValue(4200);
 
     const { success } = await cypressExecutor(
       { ...cypressOptions, port: 'cypress-auto' },
       mockContext
     );
     expect(success).toEqual(true);
-    expect(detectPort).toHaveBeenCalledWith(4200);
+    expect(mockDetectPortFn).toHaveBeenCalledWith(4200);
   });
 
   it('should forward watch option to devServerTarget when supported', async () => {
@@ -415,9 +418,6 @@ describe('Cypress builder', () => {
   });
 
   describe('Component Testing', () => {
-    beforeEach(() => {
-      mockGetTailwindPath.mockReturnValue(undefined);
-    });
     it('should forward testingType', async () => {
       const { success } = await cypressExecutor(
         {

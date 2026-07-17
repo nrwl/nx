@@ -3,6 +3,8 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   NxJsonConfiguration,
   readJson,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   writeJson,
@@ -10,6 +12,31 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { LinterInitOptions, lintInitGenerator } from './init';
 import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
+
+function getDefault(
+  td: TargetDefaults | undefined,
+  target: string
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    const found = td.find(
+      (e) =>
+        (e.target === target || e.executor === target) &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+    if (!found) return undefined;
+    const {
+      target: _t,
+      executor: _e,
+      projects: _p,
+      plugin: _pl,
+      ...rest
+    } = found;
+    return rest;
+  }
+  return td[target];
+}
 
 describe('@nx/eslint:init', () => {
   let tree: Tree;
@@ -41,9 +68,10 @@ describe('@nx/eslint:init', () => {
     await lintInitGenerator(tree, options);
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
+      getDefault(
+        readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
         '@nx/eslint:lint'
-      ]
+      )
     ).toBeUndefined();
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
       .toMatchInlineSnapshot(`
@@ -111,14 +139,19 @@ describe('@nx/eslint:init', () => {
         });
 
         expect(
-          readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
+          getDefault(
+            readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
+            '@nx/eslint:lint'
+          )
         ).toEqual({
           cache: true,
           inputs: [
             'default',
+            '^default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
             '{workspaceRoot}/eslint.config.cjs',
+            '{workspaceRoot}/tools/eslint-rules/**/*',
           ],
         });
       });
@@ -137,16 +170,19 @@ describe('@nx/eslint:init', () => {
         });
 
         expect(
-          readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
+          getDefault(
+            readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
             '@nx/eslint:lint'
-          ]
+          )
         ).toEqual({
           cache: true,
           inputs: [
             'default',
+            '^default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
             '{workspaceRoot}/eslint.config.cjs',
+            '{workspaceRoot}/tools/eslint-rules/**/*',
           ],
         });
       });
@@ -161,14 +197,19 @@ describe('@nx/eslint:init', () => {
         });
 
         expect(
-          readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
+          getDefault(
+            readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
+            '@nx/eslint:lint'
+          )
         ).toEqual({
           cache: true,
           inputs: [
             'default',
+            '^default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
             '{workspaceRoot}/eslint.config.mjs',
+            '{workspaceRoot}/tools/eslint-rules/**/*',
           ],
         });
       });
@@ -187,16 +228,19 @@ describe('@nx/eslint:init', () => {
         });
 
         expect(
-          readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
+          getDefault(
+            readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
             '@nx/eslint:lint'
-          ]
+          )
         ).toEqual({
           cache: true,
           inputs: [
             'default',
+            '^default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
             '{workspaceRoot}/eslint.config.mjs',
+            '{workspaceRoot}/tools/eslint-rules/**/*',
           ],
         });
       });

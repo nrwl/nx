@@ -14,7 +14,13 @@ import {
 describe('Vite - TS solution setup', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/react', '@nx/js'],
+      packages: [
+        '@nx/react',
+        '@nx/js',
+        '@nx/vite',
+        '@nx/esbuild',
+        '@nx/rollup',
+      ],
       preset: 'ts',
     });
   });
@@ -100,13 +106,15 @@ ${content}`
     runCLI(`sync`);
 
     // check build
-    expect(runCLI(`build ${reactApp}`)).toContain(
+    expect(runCLI(`build ${reactApp}`, { timeout: 10 * 60 * 1000 })).toContain(
       `Successfully ran target build for project @proj/${reactApp}`
     );
 
     // check typecheck
-    expect(runCLI(`typecheck ${reactApp}`)).toContain(
+    expect(
+      runCLI(`typecheck ${reactApp}`, { timeout: 10 * 60 * 1000 })
+    ).toContain(
       `Successfully ran target typecheck for project @proj/${reactApp}`
     );
-  }, 300_000);
+  }, 1_200_000);
 });

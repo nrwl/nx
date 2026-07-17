@@ -8,7 +8,7 @@ interface Testimonial {
 
 export function TestimonialCard({ data }: { data: Testimonial }): JSX.Element {
   return (
-    <figure className="relative flex flex-col-reverse rounded-lg border border-zinc-200 bg-white/40 p-4 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-white dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800">
+    <figure className="relative flex flex-col-reverse rounded-lg border border-zinc-200 bg-white/40 p-4 text-sm shadow-xs transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-white dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800">
       <blockquote className="mt-4 text-zinc-600 dark:text-zinc-400">
         <p>{data.content}</p>
       </blockquote>

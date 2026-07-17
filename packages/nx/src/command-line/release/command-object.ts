@@ -1,4 +1,5 @@
 import { type Argv, type CommandModule, showHelp } from 'yargs';
+import { handleImport } from '../../utils/handle-import';
 import { logger } from '../../utils/logger';
 import {
   type OutputStyle,
@@ -70,6 +71,18 @@ export type ChangelogOptions = NxReleaseArgs &
     createRelease?: false | 'github' | 'gitlab';
     resolveVersionPlans?: 'all' | 'using-from-and-to';
     replaceExistingContents?: boolean;
+    /**
+     * Force changelog generation to run even when the resolved changelog configuration is
+     * considered effectively disabled (i.e. changelog file writing is disabled via `file: false`
+     * and remote release creation resolves to being disabled).
+     *
+     * This is intended for programmatic API consumers of `releaseChangelog` who intentionally
+     * disable file writing and remote release creation because they want to consume the generated
+     * changelog contents in memory from the returned result instead.
+     *
+     * NOTE: This option is only available via the programmatic API, it is not exposed as a CLI flag.
+     */
+    forceChangelogGeneration?: boolean;
     // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
     releaseGraph?: ReleaseGraph;
   };
@@ -178,7 +191,9 @@ export const yargsReleaseCommand: CommandModule<
             'The --projects and --groups options are mutually exclusive, please use one or the other.'
           );
         }
-        const nxJson = (await import('../../config/nx-json')).readNxJson();
+        const nxJson = (
+          await handleImport('../../config/nx-json.js', __dirname)
+        ).readNxJson();
         if (argv.groups?.length) {
           for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
@@ -242,7 +257,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./release');
+    const release = await handleImport('./release.js', __dirname);
     const result = await release.releaseCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -282,7 +297,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./version');
+    const release = await handleImport('./version.js', __dirname);
     const result = await release.releaseVersionCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -350,7 +365,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
       )
     ),
   handler: async (args) => {
-    const release = await import('./changelog');
+    const release = await handleImport('./changelog.js', __dirname);
     const result = await release.releaseChangelogCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -390,7 +405,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
     ),
   handler: async (args) => {
     const status = await (
-      await import('./publish')
+      await handleImport('./publish.js', __dirname)
     ).releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)));
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -432,7 +447,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
         default: true,
       }),
   handler: async (args) => {
-    const release = await import('./plan');
+    const release = await handleImport('./plan.js', __dirname);
     const result = await release.releasePlanCLIHandler(args);
     if (args.dryRun) {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
@@ -448,7 +463,7 @@ const planCheckCommand: CommandModule<NxReleaseArgs, PlanCheckOptions> = {
     'Ensure that all touched projects have an applicable version plan created for them.',
   builder: (yargs) => withAffectedOptions(yargs),
   handler: async (args) => {
-    const release = await import('./plan-check');
+    const release = await handleImport('./plan-check.js', __dirname);
     const result = await release.releasePlanCheckCLIHandler(args);
     process.exit(result);
   },

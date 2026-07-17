@@ -1,5 +1,5 @@
 import * as pc from 'picocolors';
-import * as stringWidth from 'string-width';
+import stringWidth from 'string-width';
 import { logger } from './logger';
 import { output } from './output';
 import { Schema } from './params';

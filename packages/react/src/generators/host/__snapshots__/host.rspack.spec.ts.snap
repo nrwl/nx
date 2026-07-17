@@ -25,7 +25,7 @@ module.exports = moduleFederationConfig;
 `;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -57,6 +57,8 @@ const { join } = require('path');
 const config = require('./module-federation.config');
 
 module.exports = {
+  // rspack-cli dev mode defaults this on; it breaks module federation.
+  lazyCompilation: false,
   output: {
     path: join(__dirname, '../dist/test'),
     publicPath: 'auto',
@@ -118,12 +120,14 @@ module.exports = {
 exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=true 1`] = `
 "import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
 import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
-import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack.js';
+import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';
 import { join } from 'path';
 
 import config from './module-federation.config';
 
 export default {
+  // rspack-cli dev mode defaults this on; it breaks module federation.
+  lazyCompilation: false,
   output: {
     path: join(__dirname, '../dist/test'),
     publicPath: 'auto'
@@ -160,7 +164,7 @@ export default {
 `;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/module-federation';
+"import type { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',

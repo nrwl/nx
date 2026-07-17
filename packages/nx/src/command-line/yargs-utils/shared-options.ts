@@ -113,7 +113,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .option('nxBail', {
       describe: 'Stop command execution after the first failed task.',
       type: 'boolean',
-      default: false,
+    })
+    .middleware((args) => {
+      if (args.nxBail === undefined) {
+        args.nxBail = process.env.NX_BAIL === 'true';
+      }
     })
     .option('nxIgnoreCycles', {
       describe: 'Ignore cycles in the task graph.',
@@ -383,6 +387,14 @@ export function withRunOneOptions(yargs: Argv) {
     .option('project', {
       describe: 'Target project.',
       type: 'string',
+      alias: 'p',
+    })
+    .option('target', {
+      describe:
+        'Target to run. Useful when the target name contains a colon, which conflicts with the positional `project:target:configuration` form.',
+      type: 'string',
+      alias: 't',
+      requiresArg: true,
     })
     .option('help', {
       describe: 'Show Help.',

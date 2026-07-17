@@ -1,14 +1,12 @@
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import * as path from 'path';
-import * as treeKill from 'tree-kill';
+import { killProcessTreeGraceful } from '../../native';
 import type { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
 import { getPackageManagerCommand } from '../../utils/package-manager';
-
-const LARGE_BUFFER = 1024 * 1000000;
 
 export interface RunScriptOptions {
   script: string;
@@ -54,32 +52,33 @@ function nodeProcess(
   env: Record<string, string>
 ): Promise<void> {
   return new Promise<void>((res, rej) => {
-    let cp = exec(
-      command,
-      { cwd, env, maxBuffer: LARGE_BUFFER, windowsHide: false },
-      (error) => {
-        if (error) {
-          rej(error);
-        } else {
-          res();
-        }
-      }
-    );
+    let cp = spawn(command, [], {
+      shell: true,
+      cwd,
+      env,
+      windowsHide: true,
+    });
 
     // Forward stdout/stderr to parent process
     cp.stdout.pipe(process.stdout);
     cp.stderr.pipe(process.stderr);
 
+    cp.on('error', (error) => {
+      rej(error);
+    });
+
+    cp.on('exit', (code) => {
+      if (code === 0) {
+        res();
+      } else {
+        rej(new Error(`Command "${command}" exited with non-zero status code`));
+      }
+    });
+
     const exitHandler = (signal: NodeJS.Signals) => {
       if (cp && cp.pid && !cp.killed) {
-        treeKill(cp.pid, signal, (error) => {
-          // On Windows, tree-kill (which uses taskkill) may fail when the process or its child process is already terminated.
-          // Ignore the errors, otherwise we will log them unnecessarily.
-          if (error && process.platform !== 'win32') {
-            rej(error);
-          } else {
-            res();
-          }
+        killProcessTreeGraceful(cp.pid, signal).finally(() => {
+          res();
         });
       }
     };

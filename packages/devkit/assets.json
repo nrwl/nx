@@ -1,0 +1,18 @@
+{
+  "outDir": "packages/devkit/dist",
+  "assets": [
+    {
+      "glob": "src/migrations/**/*.md"
+    },
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "**/files/**/.gitkeep"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    "LICENSE"
+  ]
+}

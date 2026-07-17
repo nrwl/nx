@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
+import { assertSupportedVueVersion } from '../../utils/assert-supported-vue-version';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   await storiesGenerator(host, {
@@ -32,6 +33,8 @@ export async function storybookConfigurationGeneratorInternal(
   host: Tree,
   schema: StorybookConfigureSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedVueVersion(host);
+
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);

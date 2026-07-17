@@ -8,7 +8,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
+import { hasPlugin as hasRollupPlugin } from '@nx/rollup/internal';
 import { expoLibraryGenerator } from './library';
 import { Schema } from './schema';
 
@@ -58,7 +58,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, defaultSchema);
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -71,7 +71,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, defaultSchema);
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-lib/src/index.ts',
+        './my-lib/src/index.ts',
       ]);
     });
 
@@ -224,7 +224,7 @@ describe('lib', () => {
       });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
-        'my-dir/src/index.ts',
+        './my-dir/src/index.ts',
       ]);
       expect(tsconfigJson.compilerOptions.paths['my-dir/*']).toBeUndefined();
     });
@@ -310,7 +310,7 @@ describe('lib', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
             "types": ["jest", "node"]
           },
@@ -341,16 +341,16 @@ describe('lib', () => {
           moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           moduleNameMapper: {
-            '\\\\.svg$': '@nx/expo/plugins/jest/svg-mock',
+            '[.]svg$': '@nx/expo/plugins/jest/svg-mock',
           },
           transform: {
-            '\\\\.[jt]sx?$': [
+            '[.][jt]sx?$': [
               'babel-jest',
               {
                 configFile: __dirname + '/.babelrc.js',
               },
             ],
-            '^.+\\\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
+            '^.+[.](bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
               require.resolve('jest-expo/src/preset/assetFileTransformer.js'),
           },
           coverageDirectory: '../coverage/my-lib',
@@ -447,6 +447,8 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('my-lib/src/index.js')).toBe(true);
+      expect(appTree.exists('my-lib/src/lib/my-lib.js')).toBe(true);
+      expect(appTree.exists('my-lib/src/lib/my-lib.tsx')).toBe(false);
     });
   });
 
@@ -560,8 +562,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.1.0",
-            "react-native": "0.81.5",
+            "react": "^19.2.0",
+            "react-native": "0.85.3",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -691,8 +693,8 @@ describe('lib', () => {
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.1.0",
-            "react-native": "0.81.5",
+            "react": "^19.2.0",
+            "react-native": "0.85.3",
           },
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",

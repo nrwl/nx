@@ -4,9 +4,10 @@ import {
   cleanupProject,
   getSelectedPackageManager,
   killPort,
+  killProcessAndPorts,
   newProject,
-  promisifiedTreeKill,
   readFile,
+  reservePort,
   runCLI,
   runCommandUntil,
   uniq,
@@ -14,6 +15,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { join } from 'path';
+import { stripVTControlCharacters } from 'node:util';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
@@ -22,7 +24,7 @@ describe('Node Applications + webpack', () => {
   // TODO(nicholas): Look into how this can work with npm instead of forcing pnpm.
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/node'],
+      packages: ['@nx/node', '@nx/nest', '@nx/webpack'],
       // npm has resolution for ajv some packages require ajv6 and some require ajv8 and npm resolves it to ajv6 (Error: Cannot find module 'ajv/dist/compile/codegen')
       // - ajv@6 (fork-ts-checker-webpack-plugin, terser-webpack-plugin, webpack)
       // - ajv@8 (babel-loader)
@@ -56,7 +58,7 @@ describe('Node Applications + webpack', () => {
     }
   }
 
-  async function runE2eTests(appName: string, port: number = 5000) {
+  async function runE2eTests(appName: string, port: number) {
     process.env.PORT = `${port}`;
     const result = runCLI(`e2e ${appName}-e2e --verbose`);
     expect(result).toContain('Setting up...');
@@ -74,8 +76,16 @@ describe('Node Applications + webpack', () => {
     const fastifyApp = uniq('fastifyapp');
     const koaApp = uniq('koaapp');
     const nestApp = uniq('nest');
+    let expressPort: number;
+    let fastifyPort: number;
+    let koaPort: number;
+    let nestPort: number;
 
-    beforeAll(() => {
+    beforeAll(async () => {
+      expressPort = await reservePort();
+      fastifyPort = await reservePort();
+      koaPort = await reservePort();
+      nestPort = await reservePort();
       runCLI(
         `generate @nx/node:lib libs/${testLib1} --linter=eslint --unitTestRunner=jest --buildable=false`
       );
@@ -83,16 +93,16 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:lib libs/${testLib2} --importPath=@acme/test2 --linter=eslint --unitTestRunner=jest --buildable=false`
       );
       runCLI(
-        `generate @nx/node:app apps/${expressApp} --framework=express --port=7000 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${expressApp} --framework=express --port=${expressPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=7001 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=${fastifyPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${koaApp} --framework=koa --port=7002 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${koaApp} --framework=koa --port=${koaPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
       );
 
       addLibImport(expressApp, testLib1);
@@ -145,19 +155,19 @@ describe('Node Applications + webpack', () => {
     }, 300_000);
 
     it('should e2e test express app', async () => {
-      await runE2eTests(expressApp, 7000);
+      await runE2eTests(expressApp, expressPort);
     });
 
     it('should e2e test fastify app', async () => {
-      await runE2eTests(fastifyApp, 7001);
+      await runE2eTests(fastifyApp, fastifyPort);
     });
 
     it('should e2e test koa app', async () => {
-      await runE2eTests(koaApp, 7002);
+      await runE2eTests(koaApp, koaPort);
     });
 
     it('should e2e test nest app', async () => {
-      await runE2eTests(nestApp, 7003);
+      await runE2eTests(nestApp, nestPort);
     });
   });
 
@@ -174,13 +184,15 @@ describe('Node Applications + webpack', () => {
   it('should support waitUntilTargets for serve target', async () => {
     const nodeApp1 = uniq('nodeapp1');
     const nodeApp2 = uniq('nodeapp2');
+    const nodeApp1Port = await reservePort();
+    const nodeApp2Port = await reservePort();
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app apps/${nodeApp1} --framework=none --no-interactive --port=4444 --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp1} --framework=none --no-interactive --port=${nodeApp1Port} --linter=eslint --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/node:app apps/${nodeApp2} --framework=none --no-interactive --port=4445 --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp2} --framework=none --no-interactive --port=${nodeApp2Port} --linter=eslint --unitTestRunner=jest`
     );
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
@@ -193,5 +205,64 @@ describe('Node Applications + webpack', () => {
 
     checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
     checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+  }, 300_000);
+
+  it('should wait for the previous process to exit on watch restart so the port is released', async () => {
+    const app = uniq('slowshutdown');
+    const port = await reservePort();
+
+    runCLI(
+      `generate @nx/node:app apps/${app} --framework=none --no-interactive --port=${port} --linter=eslint --unitTestRunner=jest`
+    );
+
+    // Server with a slow graceful shutdown that holds the port after SIGTERM.
+    // A watch-mode restart must wait for it to exit, otherwise the new
+    // process fails with EADDRINUSE. The 8s hold exceeds the 5s kill grace
+    // period, so the executor force-kills it rather than waiting forever.
+    updateFile(
+      `apps/${app}/src/main.ts`,
+      `
+      import { createServer } from 'http';
+      const server = createServer((req, res) => res.end('ok'));
+      server.listen(${port}, () => console.log('Listening on ${port} pid ' + process.pid));
+      process.on('SIGTERM', () => {
+        setTimeout(() => process.exit(0), 8000);
+      });
+      `
+    );
+
+    const p = await runCommandUntil(`serve ${app}`, (output) =>
+      output.includes(`Listening on ${port}`)
+    );
+
+    try {
+      const restarted = new Promise<void>((resolve, reject) => {
+        let output = '';
+        const timeoutId = setTimeout(() => {
+          reject(new Error(`Server did not restart. Output:\n${output}`));
+        }, 120_000);
+        const check = (chunk: Buffer) => {
+          output += stripVTControlCharacters(chunk.toString());
+          if (output.includes('EADDRINUSE')) {
+            clearTimeout(timeoutId);
+            reject(new Error(`Restarted server hit EADDRINUSE:\n${output}`));
+          } else if (output.includes(`Listening on ${port}`)) {
+            clearTimeout(timeoutId);
+            resolve();
+          }
+        };
+        p.stdout?.on('data', check);
+        p.stderr?.on('data', check);
+      });
+
+      // Trigger a watch rebuild and restart.
+      updateFile(`apps/${app}/src/main.ts`, (content) =>
+        content.replace(`res.end('ok')`, `res.end('ok v2')`)
+      );
+
+      await restarted;
+    } finally {
+      await killProcessAndPorts(p.pid, port);
+    }
   }, 300_000);
 });

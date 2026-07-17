@@ -1,7 +1,7 @@
 use crate::native::ide::detection::{SupportedEditor, get_current_editor};
 use crate::native::logger::enable_logger;
+use crate::native::utils::command::create_command;
 use napi::Error;
-use std::process::Command;
 use tracing::{debug, trace};
 
 const NX_CONSOLE_EXTENSION_ID: &str = "nrwl.angular-console";
@@ -12,7 +12,7 @@ fn is_nx_console_installed(command: &str) -> Result<bool, Error> {
         command
     );
 
-    let output = match Command::new(command).arg("--list-extensions").output() {
+    let output = match create_command(command).arg("--list-extensions").output() {
         Ok(output) => output,
         Err(e) => match e.kind() {
             std::io::ErrorKind::NotFound => {
@@ -67,7 +67,7 @@ fn install_extension(command: &str) -> Result<bool, Error> {
         command, NX_CONSOLE_EXTENSION_ID
     );
 
-    let output = match Command::new(command)
+    let output = match create_command(command)
         .arg("--install-extension")
         .arg(NX_CONSOLE_EXTENSION_ID)
         .output()
@@ -261,7 +261,7 @@ pub async fn is_editor_installed(editor: SupportedEditor) -> bool {
 
     if let Some(command) = get_command_for_editor(&editor) {
         // Just check if the command exists and is executable
-        match Command::new(command).arg("--version").output() {
+        match create_command(command).arg("--version").output() {
             Ok(_) => {
                 debug!("Editor command '{}' is installed", command);
                 true

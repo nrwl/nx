@@ -1,32 +1,17 @@
-import { sendPageViewEventViaGtm } from '@nx/nx-dev-feature-analytics';
 import { DefaultSeo } from 'next-seo';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { FrontendObservability } from '../lib/components/frontend-observability';
-import GlobalScripts from '../app/global-scripts';
-import { WebinarNotifier, GlobalSearchHandler } from '@nx/nx-dev-ui-common';
-import bannerCollection from '../lib/banner.json';
 
 export default function CustomApp({
   Component,
   pageProps,
 }: AppProps): JSX.Element {
   const router = useRouter();
-  const gtmMeasurementId = 'GTM-KW8423B6';
-
-  useEffect(() => {
-    const handleRouteChange = (url: URL) =>
-      sendPageViewEventViaGtm({ path: url.toString() });
-    router.events.on('routeChangeStart', handleRouteChange);
-    return () => router.events.off('routeChangeStart', handleRouteChange);
-  }, [router.events]);
   return (
     <>
-      <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Monorepos · Fast Builds"
         description="Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents."
@@ -85,30 +70,6 @@ export default function CustomApp({
         Skip to content
       </Link>
       <Component {...pageProps} />
-      <GlobalSearchHandler />
-      {bannerCollection.map((bannerConfig) => {
-        // Check if banner is active
-        const isActive =
-          bannerConfig.activeUntil &&
-          new Date() < new Date(bannerConfig.activeUntil);
-        if (!isActive) return null;
-        return (
-          <WebinarNotifier
-            key={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
-            id={`${bannerConfig.title}-${bannerConfig.activeUntil || 'no-expiry'}`}
-            title={bannerConfig.title}
-            description={bannerConfig.description}
-            primaryCtaUrl={bannerConfig.primaryCtaUrl}
-            primaryCtaText={bannerConfig.primaryCtaText}
-            secondaryCtaUrl={bannerConfig.secondaryCtaUrl}
-            secondaryCtaText={bannerConfig.secondaryCtaText}
-            activeUntil={bannerConfig.activeUntil}
-          />
-        );
-      })}
-
-      {/* All tracking scripts consolidated in GlobalScripts component */}
-      <GlobalScripts gtmMeasurementId={gtmMeasurementId} />
     </>
   );
 }

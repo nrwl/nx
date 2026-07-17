@@ -29,15 +29,16 @@ This ensures:
 
 - `NEXT_PUBLIC_FRAMER_URL`: The Framer site URL (e.g., `https://ready-knowledge-238309.framer.app`)
 
-### `framer-sitemap.ts`
+### `additional-sitemaps.ts`
 
-Proxies Framer's `sitemap.xml` at the path `/sitemap-1.xml` and rewrites URLs to use `nx.dev`. This is a separate edge function from the main Framer proxy so that the main function can keep `accept: ['text/html']` for compute cost savings.
+Proxies the per-source sitemaps referenced by the root sitemap index and rewrites URLs to use `nx.dev`. Separate from the main Framer/blog proxy so that proxy can keep `accept: ['text/html']` for compute cost savings.
 
-The Next.js sitemap index (`sitemap.xml`) references `/sitemap-1.xml` via the `additionalSitemaps` config in `next-sitemap.config.js`.
+| Path             | Upstream                               | Env var                  |
+| ---------------- | -------------------------------------- | ------------------------ |
+| `/sitemap-1.xml` | `<NEXT_PUBLIC_FRAMER_URL>/sitemap.xml` | `NEXT_PUBLIC_FRAMER_URL` |
+| `/sitemap-2.xml` | `<BLOG_URL>/blog/sitemap.xml`          | `BLOG_URL`               |
 
-**Environment variables** (configured in Netlify):
-
-- `NEXT_PUBLIC_FRAMER_URL`: Same as the main proxy function
+The root sitemap index references these via `scripts/patch-sitemap-index.mjs` (`additionalSitemaps` list).
 
 ## Future
 

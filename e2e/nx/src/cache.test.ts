@@ -6,6 +6,7 @@ import {
   newProject,
   readFile,
   removeFile,
+  reservePort,
   rmDist,
   runCLI,
   tmpProjPath,
@@ -20,7 +21,9 @@ import { readdir, stat } from 'fs/promises';
 import { join } from 'path';
 
 describe('cache', () => {
-  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/js'] }));
+  beforeEach(() =>
+    newProject({ packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'] })
+  );
 
   afterEach(() => cleanupProject());
 
@@ -153,6 +156,48 @@ describe('cache', () => {
     updateFile('nx.json', (c) => originalNxJson);
   }, 120000);
 
+  it('should replay cached failures when NX_CACHE_FAILURES is enabled', async () => {
+    const mylib = uniq('mylib');
+    runCLI(`generate @nx/js:library ${mylib} --directory=libs/${mylib}`);
+
+    // A cacheable target that always fails. Each real execution appends to
+    // runs.log at the workspace root — a path outside the task's inputs, so
+    // it never affects the hash and is never restored from the cache. Its
+    // length therefore tells us whether the command actually re-ran.
+    updateJson(join('libs', mylib, 'project.json'), (c) => {
+      c.targets['always-fails'] = {
+        cache: true,
+        executor: 'nx:run-commands',
+        inputs: ['{projectRoot}/**/*'],
+        options: {
+          command: `node -e "require('fs').appendFileSync('runs.log', 'x'); process.exit(1)"`,
+        },
+      };
+      return c;
+    });
+
+    const env = { NX_CACHE_FAILURES: 'true' };
+
+    // First run executes the command, fails, and caches the failure.
+    const firstRun = runCLI(`run ${mylib}:always-fails`, {
+      silenceError: true,
+      env,
+    });
+    expect(runCLI.lastExitCode).toBe(1);
+    expect(firstRun).toContain('Running target always-fails');
+    expect(readFile('runs.log')).toBe('x');
+
+    // Second run must replay the cached failure: it still fails (non-zero
+    // exit) but does NOT re-execute the command, so runs.log is unchanged.
+    const secondRun = runCLI(`run ${mylib}:always-fails`, {
+      silenceError: true,
+      env,
+    });
+    expect(runCLI.lastExitCode).toBe(1);
+    expect(secondRun).toContain('always-fails');
+    expect(readFile('runs.log')).toBe('x');
+  }, 120000);
+
   it('should support using globs as outputs', async () => {
     const mylib = uniq('mylib');
     runCLI(`generate @nx/js:library ${mylib} --directory=libs/${mylib}`);
@@ -190,7 +235,9 @@ describe('cache', () => {
 
     // Rerun without touching anything
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
-    expect(rerunWithUntouchedOutputs).toContain('local cache');
+    expect(rerunWithUntouchedOutputs).toContain(
+      'existing outputs match the cache'
+    );
     const outputsWithUntouchedOutputs = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -209,7 +256,9 @@ describe('cache', () => {
     // Create a file in the dist that does not match output glob
     updateFile('dist/apps/c.ts', '');
 
-    // Rerun
+    // Rerun. Outputs were modified (extra file in dist), so the daemon's
+    // outputs-hash check fails and nx restores from cache → "[local cache]"
+    // rather than the "existing outputs match" no-op path.
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
     expect(rerunWithNewUnrelatedFile).toContain('local cache');
     const outputsAfterAddingUntouchedFileAndRerunning = [
@@ -334,7 +383,7 @@ console.log('Build complete');
 
     // Second run - should hit cache and restore without EEXIST error
     const secondRun = runCLI(`build ${projectName}`);
-    expect(secondRun).toContain('local cache');
+    expect(secondRun).toContain('existing outputs match the cache');
   });
 
   it('should use consider filesets when hashing', async () => {
@@ -581,7 +630,7 @@ console.log('Build complete');
     expect(cacheEntries).toBeGreaterThan(1);
     expect(cacheEntries).toBeLessThan(10);
     expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);
-  });
+  }, 120000);
 
   it('should honor NX_MAX_CACHE_SIZE env var', async () => {
     runCLI('reset');
@@ -630,13 +679,19 @@ console.log('Build complete');
     expect(cacheEntries).toBeGreaterThan(1);
     expect(cacheEntries).toBeLessThan(10);
     expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);
-  });
+  }, 120000);
 
   describe('http remote cache', () => {
     let cacheServer: any;
-    beforeAll(() => {
+    let cachePort: number;
+    let unusedPort: number;
+    beforeAll(async () => {
+      cachePort = await reservePort();
+      // Reserved but never bound — used to simulate a server-not-running error.
+      unusedPort = await reservePort();
       cacheServer = fork(join(__dirname, '__fixtures__', 'remote-cache.js'), {
         stdio: 'inherit',
+        env: { ...process.env, PORT: String(cachePort) },
       });
     });
 
@@ -662,7 +717,7 @@ console.log('Build complete');
       );
       runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
       });
@@ -673,7 +728,7 @@ console.log('Build complete');
       runCLI(`reset`);
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
       });
@@ -699,7 +754,7 @@ console.log('Build complete');
       );
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
         },
         silenceError: true,
       });
@@ -727,13 +782,13 @@ console.log('Build complete');
       );
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3001',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${unusedPort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
         silenceError: true,
       });
 
-      expect(output).toContain('http://localhost:3001');
+      expect(output).toContain(`http://localhost:${unusedPort}`);
     });
   });
 

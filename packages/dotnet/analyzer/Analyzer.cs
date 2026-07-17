@@ -20,9 +20,27 @@ public static class Analyzer
     /// <returns>Analysis results containing node configurations and project references.</returns>
     public static AnalysisResult AnalyzeWorkspace(
         List<string> projectFiles,
+        List<string> directoryFiles,
         string workspaceRoot,
         PluginOptions pluginOptions)
     {
+        // Index Directory.Build.* / Directory.Solution.* matches by their containing directory
+        // (workspace-root-relative, forward-slashed; "." for the workspace root itself). Built
+        // once up-front so per-project ancestor lookup is O(depth) instead of O(directoryFiles).
+        var directoryFilesByDir = new Dictionary<string, HashSet<string>>();
+        foreach (var rel in directoryFiles)
+        {
+            var normalized = rel.Replace('\\', '/');
+            var lastSlash = normalized.LastIndexOf('/');
+            var dir = lastSlash < 0 ? "." : normalized.Substring(0, lastSlash);
+            var name = lastSlash < 0 ? normalized : normalized.Substring(lastSlash + 1);
+            if (!directoryFilesByDir.TryGetValue(dir, out var set))
+            {
+                set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                directoryFilesByDir[dir] = set;
+            }
+            set.Add(name);
+        }
         // Read nx.json from workspace root
         NxJsonConfig? nxJson = null;
         using (PerfLogger.Start("analyze workspace > read nx.json"))
@@ -72,6 +90,14 @@ public static class Analyzer
                 continue;
             }
             var path = node.ProjectInstance.FullPath;
+            // Only real project files become Nx projects. Depending on the MSBuild/SDK version,
+            // imported files (e.g. Directory.Build.props) can appear as graph nodes; treating one
+            // as a project would emit a phantom project named after the file (e.g. "Directory.Build")
+            // whose targets run dotnet against a directory with no project to build.
+            if (!ProjectUtilities.IsProjectFile(path))
+            {
+                continue;
+            }
             if (!nodesByPath.TryGetValue(path, out var nodes))
             {
                 nodes = new List<ProjectGraphNode>();
@@ -121,6 +147,17 @@ public static class Analyzer
 
                     // Build targets
                     var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
+                    var projectDirectory = Path.GetDirectoryName(projectPath)!;
+
+                    // The closest Directory.Build.* / Directory.Solution.* ancestors that exist
+                    // for this project — declared as inputs on every target that already has an
+                    // Inputs array, so Nx invalidates downstream caches when they change.
+                    var directoryBuildInputs = ProjectUtilities.GetDirectoryBuildInputs(
+                        projectPath,
+                        workspaceRoot,
+                        directoryFilesByDir
+                    );
+
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
@@ -128,9 +165,11 @@ public static class Analyzer
                         isExe,
                         packageRefs,
                         properties,
+                        projectDirectory,
                         workspaceRoot,
                         pluginOptions,
-                        nxJson
+                        nxJson,
+                        directoryBuildInputs
                     );
 
                     nodesByFile[relativeProjectFile] = new NxProjectGraphNode

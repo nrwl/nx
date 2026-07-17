@@ -9,7 +9,11 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getTsConfigModuleResolution,
+  isEsmProject,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { join } from 'path';
 
 export interface CypressBaseSetupSchema {
@@ -21,6 +25,17 @@ export interface CypressBaseSetupSchema {
   directory?: string;
   js?: boolean;
   jsx?: boolean;
+  /**
+   * When set, the generated `cypress.config` includes the e2e preset inline so
+   * a fresh config is complete on first write - no post-hoc AST merge or
+   * overwrite. Omit for a bare `defineConfig({})` (e.g. component testing,
+   * which merges in its own `component` block afterwards).
+   */
+  e2ePreset?: {
+    /** Pre-formatted (indented) JSON of NxCypressE2EPresetOptions. */
+    presetOptions: string;
+    baseUrl?: string;
+  };
 }
 
 export function addBaseCypressSetup(
@@ -58,6 +73,13 @@ export function addBaseCypressSetup(
           : getRelativePathToRootTsConfig(tree, projectConfig.root),
     linter: isEslintInstalled(tree) ? 'eslint' : 'none',
     ext: '',
+    moduleResolution: getTsConfigModuleResolution(tree),
+    // The config-*-* templates use `import.meta.url` (ESM) / `__filename`
+    // (CJS) - the shape base-setup already selects below - so the e2e preset is
+    // rendered correctly for the module system without any AST parsing.
+    e2ePreset: !!options.e2ePreset,
+    presetOptions: options.e2ePreset?.presetOptions ?? '',
+    baseUrl: options.e2ePreset?.baseUrl ?? '',
   };
 
   generateFiles(
@@ -76,26 +98,18 @@ export function addBaseCypressSetup(
     templateVars
   );
 
+  const isEsm = isEsmProject(tree, projectConfig.root);
   if (options.js) {
-    if (isEsmProject(tree, projectConfig.root)) {
-      generateFiles(
-        tree,
-        join(__dirname, 'files/config-js-esm'),
-        projectConfig.root,
-        templateVars
-      );
-    } else {
-      generateFiles(
-        tree,
-        join(__dirname, 'files/config-js-cjs'),
-        projectConfig.root,
-        templateVars
-      );
-    }
+    generateFiles(
+      tree,
+      join(__dirname, isEsm ? 'files/config-js-esm' : 'files/config-js-cjs'),
+      projectConfig.root,
+      templateVars
+    );
   } else {
     generateFiles(
       tree,
-      join(__dirname, 'files/config-ts'),
+      join(__dirname, isEsm ? 'files/config-ts-esm' : 'files/config-ts-cjs'),
       projectConfig.root,
       templateVars
     );
@@ -152,19 +166,6 @@ function normalizeOptions(
     offsetFromProjectRoot: `${offsetFromProjectRoot}/`,
     hasTsConfig,
   };
-}
-
-function isEsmProject(tree: Tree, projectRoot: string) {
-  let packageJson: any;
-  if (tree.exists(joinPathFragments(projectRoot, 'package.json'))) {
-    packageJson = readJson(
-      tree,
-      joinPathFragments(projectRoot, 'package.json')
-    );
-  } else {
-    packageJson = readJson(tree, 'package.json');
-  }
-  return packageJson.type === 'module';
 }
 
 function isEslintInstalled(tree: Tree): boolean {

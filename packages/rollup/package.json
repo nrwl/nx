@@ -2,6 +2,14 @@
   "name": "@nx/rollup",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.",
   "repository": {
     "type": "git",
@@ -14,8 +22,21 @@
     "Web",
     "CLI"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "with-nx": [
+        "dist/with-nx.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -26,26 +47,60 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./with-nx": {
+      "@nx/nx-source": "./with-nx.ts",
+      "types": "./dist/with-nx.d.ts",
+      "default": "./dist/with-nx.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    }
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
+    "@phenomnomnominal/tsquery": "catalog:typescript",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-image": "^3.0.3",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^12.1.0",
-    "autoprefixer": "^10.4.9",
+    "autoprefixer": "catalog:css",
     "concat-with-sourcemaps": "^1.1.0",
     "picocolors": "catalog:",
     "picomatch": "catalog:",
-    "postcss": "^8.4.38",
+    "postcss": "catalog:css",
     "postcss-modules": "^6.0.1",
-    "rollup": "^4.14.0",
-    "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "rollup": "^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "rollup": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "nx": "workspace:*",

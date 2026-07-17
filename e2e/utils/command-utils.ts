@@ -35,13 +35,12 @@ export interface RunCmdOpts {
   verbose?: boolean;
   redirectStderr?: boolean;
   timeout?: number;
+  /** Override daemon mode for this call. Defaults to `true`; set `false` to exercise the non-daemon path. */
+  daemon?: boolean;
 }
 
 /**
- * Sets maxWorkers in CI on all projects that require it
- * so that it doesn't try to run it with 34 workers
- *
- * maxWorkers required for: node, web, jest
+ * Caps maxWorkers in CI for node/web/jest builds so they don't spawn ~34 workers.
  */
 export function setMaxWorkers(projectJsonPath: string) {
   if (isCI) {
@@ -51,7 +50,7 @@ export function setMaxWorkers(projectJsonPath: string) {
       };
 
       if (!build) {
-        return;
+        return project;
       }
 
       const executor = build.executor as string;
@@ -102,8 +101,7 @@ export function runCommand(
 
     return stripVTControlCharacters(r as string);
   } catch (e) {
-    // this is intentional
-    // npm ls fails if package is not found
+    // Intentional: some commands (e.g. `npm ls`) exit non-zero but still produce useful output.
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     if (!failOnError && (e.stdout || e.stderr)) {
       return stripVTControlCharacters(e.stdout + e.stderr);
@@ -177,14 +175,13 @@ export function getPackageManagerCommand({
           : `yarn --silent lerna`,
       exec: 'yarn',
     },
-    // Pnpm 3.5+ adds nx to
     pnpm: {
       createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
-      // We need to install with --no-frozen-lockfile when running e2e tests because pnpm will pick up the fact we are in CI and default to --frozen-lockfile
+      // --no-frozen-lockfile: pnpm detects CI and would otherwise default to --frozen-lockfile.
       install: 'pnpm install --no-frozen-lockfile',
       ciInstall: 'pnpm install --frozen-lockfile',
       addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
@@ -249,6 +246,8 @@ export function runCommandAsync(
         cwd: opts.cwd || tmpProjPath(),
         env: {
           CI: 'true',
+          // Force daemon on under CI (matches runCLI); override via opts.daemon = false.
+          NX_DAEMON: opts.daemon === false ? 'false' : 'true',
           // Use new versioning by default in e2e tests
           NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
           ...(opts.env || getStrippedEnvironmentVariables()),
@@ -294,6 +293,7 @@ export function runCommandUntil(
     encoding: 'utf-8',
     env: {
       CI: 'true',
+      NX_DAEMON: 'true',
       // Use new versioning by default in e2e tests
       NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
       ...getStrippedEnvironmentVariables(),
@@ -408,6 +408,38 @@ export function runNgAdd(
   }
 }
 
+/**
+ * Replaces the run-to-run durations / core counts in Nx's performance report with
+ * stable placeholders so the report can stay in snapshots. Scoped to the report
+ * block (from `Run duration:` to the next `NX` section header or end of output);
+ * no-op when no report is present.
+ *
+ * The Recommendations section is dropped entirely: runs under 30s (every e2e run
+ * when healthy) print none, and a slow run crossing that floor must not flake the
+ * snapshot by re-introducing it.
+ */
+export function normalizePerformanceReport(output: string): string {
+  return output.replace(
+    /\n[ \t]*Run duration:[\s\S]*?(?=\n[ \t]*\n(?:[ \t]*\n)*[ \t]*NX |\s*$)/g,
+    (block) =>
+      block
+        .replace(/\n[ \t]*\n[ \t]*Recommendations?:[\s\S]*$/, '')
+        // Durations: match the minute form ("1m 30s") first so its "30s" isn't matched
+        // alone; the optional "<" also captures a "<1ms" (sub-millisecond) duration.
+        .replace(/<?(?:\b\d+m \d+s\b|\b\d+(?:\.\d+)?m?s\b)/g, '{DURATION}')
+        .replace(/\b\d+(?= cores?\b)/g, '{CORES}')
+        // Longest-tasks list right-aligns durations (padStart); collapse the varying
+        // id→duration gap back to a fixed 4-space separator so the table is deterministic.
+        .replace(/^([ \t]+\S+) {4,}(\{DURATION\})$/gm, '$1    $2')
+        // Stat rows align values by padding the label column, whose width may change;
+        // collapse the label→value gap so the snapshot doesn't depend on that padding.
+        .replace(
+          /^([ \t]*(?:Run duration|Cache|Critical path|Recoverable time):) +/gm,
+          '$1 '
+        )
+  );
+}
+
 export function runCLI(
   command: string,
   opts: RunCmdOpts = {
@@ -425,10 +457,13 @@ export function runCLI(
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
     logInfo(`Run Command: ${command}`);
     const startTime = performance.now();
-    const logs = execSync(commandToRun, {
+    const result = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
+        // Daemon is normally off under CI; force it on so e2e exercises the same
+        // daemon-driven graph + watcher path real users hit. Override via opts.daemon = false.
+        NX_DAEMON: opts.daemon === false ? 'false' : 'true',
         // Use new versioning by default in e2e tests
         NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
         ...getStrippedEnvironmentVariables(),
@@ -445,12 +480,12 @@ export function runCLI(
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${command}`,
-        bodyLines: [logs as string],
+        bodyLines: [result as string],
         color: 'green',
       });
     }
 
-    const r = stripVTControlCharacters(logs);
+    const r = stripVTControlCharacters(result);
 
     runCLI.lastExitCode = 0;
     return r;
@@ -466,7 +501,9 @@ export function runCLI(
     }
     if (opts.silenceError) {
       runCLI.lastExitCode = (e.status ?? 1) as number;
-      return stripVTControlCharacters(e.stdout + e.stderr);
+      // Without redirectStderr the shell didn't merge stderr into stdout, so concat both.
+      const output = opts.redirectStderr ? e.stdout : e.stdout + e.stderr;
+      return stripVTControlCharacters(output);
     } else {
       logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
       throw e;

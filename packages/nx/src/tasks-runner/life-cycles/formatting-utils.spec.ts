@@ -23,7 +23,7 @@ describe('formatFlags', () => {
   });
   it('should not break on invalid inputs', () => {
     expect(formatFlags('', 'myflag', (abc) => abc)).toBe(
-      '  --myflag=(abc) => abc'
+      '  --myflag=(abc)=>abc'
     );
     expect(formatFlags('', 'myflag', NaN)).toBe('  --myflag=NaN');
   });

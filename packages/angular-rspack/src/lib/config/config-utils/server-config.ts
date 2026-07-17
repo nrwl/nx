@@ -10,13 +10,14 @@ import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { isPackageInstalled } from '../../utils/misc-helpers';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getOptimization } from './optimization-config';
+import { isServeMode } from '../../utils/rspack-serve-env';
 
 export async function getServerConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
   i18n: I18nOptions,
   defaultConfig: Configuration
 ): Promise<Configuration> {
-  const isDevServer = !!process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
   const { root } = normalizedOptions;
 
   return {
@@ -71,6 +72,7 @@ export async function getServerConfig(
           ],
         },
         {
+          // eslint-disable-next-line @nx/enforce-module-boundaries
           loader: require.resolve(
             '@nx/angular-rspack/loaders/platform-server-exports-loader'
           ),

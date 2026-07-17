@@ -4,6 +4,10 @@
 # Netlify processes these top-to-bottom, first match wins.
 # Specific rules MUST come before wildcard rules.
 
+# --- favicon ---
+/favicon.ico /favicon/favicon.ico 301
+/favicon.svg /favicon/favicon.svg 301
+
 # --- docs ---
 /docs /docs/getting-started/intro 301
 
@@ -70,7 +74,7 @@
 /ci/distributed-builds /docs/concepts/ci-concepts/parallelization-distribution 301
 /ci/setup-incremental-builds-angular /recipes/angular/setup-incremental-builds-angular 301
 /guides/turbo-and-nx /docs/guides/adopting-nx/from-turborepo 301
-/guides/why-monorepos /docs/concepts/decisions/why-monorepos 301
+/guides/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
 /guides/adding-assets-react /recipes/react/adding-assets 301
 /guides/environment-variables /docs/reference/environment-variables 301
 /guides/performance-profiling /docs/troubleshooting/performance-profiling 301
@@ -84,8 +88,8 @@
 /guides/using-tailwind-css-in-react /recipes/react/using-tailwind-css-in-react 301
 /guides/react-18 /nx-api/react 301
 /guides/using-tailwind-css-with-angular-projects /recipes/angular/using-tailwind-css-with-angular-projects 301
-/guides/misc-ngrx /packages/angular/generators/ngrx 301
-/guides/misc-data-persistence /packages/angular/generators/ngrx 301
+/guides/misc-ngrx /packages/angular/generators/ngrx-root-store 301
+/guides/misc-data-persistence /packages/angular/generators/ngrx-root-store 301
 /guides/nx-devkit-angular-devkit /nx-api/angular/documents/nx-devkit-angular-devkit 301
 /module-federation/faster-builds /concepts/module-federation/faster-builds-with-module-federation 301
 /module-federation/micro-frontend-architecture /concepts/module-federation/micro-frontend-architecture 301
@@ -351,9 +355,9 @@
 
 # --- latestRecipesRefactoring ---
 /recipes/getting-started/set-up-a-new-workspace /docs/getting-started/installation 301
-/recipes/other/misc-ngrx /packages/angular/generators/ngrx 301
-/recipes/other/misc-data-persistence /packages/angular/generators/ngrx 301
-/recipes/other/standalone-ngrx-apis /packages/angular/generators/ngrx 301
+/recipes/other/misc-ngrx /packages/angular/generators/ngrx-root-store 301
+/recipes/other/misc-data-persistence /packages/angular/generators/ngrx-root-store 301
+/recipes/other/standalone-ngrx-apis /packages/angular/generators/ngrx-root-store 301
 /recipes/other/export-project-graph /recipes/features/explore-graph 301
 /recipes/executors/use-executor-configurations /docs/concepts/executors-and-configurations 301
 /recipes/other/azure-last-successful-commit /docs/guides/nx-cloud/setup-ci 301
@@ -486,7 +490,7 @@
 /blog/2023-04-19-nx-cloud-3 /blog/nx-cloud-3-0-faster-more-efficient-modernized 301
 
 # --- decisionsSection ---
-/concepts/more-concepts/why-monorepos /docs/concepts/decisions/why-monorepos 301
+/concepts/more-concepts/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
 /concepts/more-concepts/dependency-management /docs/concepts/decisions/dependency-management 301
 /concepts/more-concepts/code-sharing /docs/concepts/decisions/code-ownership 301
 /concepts/more-concepts/applications-and-libraries /docs/concepts/decisions/project-size 301
@@ -514,13 +518,13 @@
 /recipes/installation/activate-powerpack /docs/enterprise/activate-license 301
 
 # --- manualDTEUpdate ---
-/ci/recipes/enterprise/dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/github-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/circle-ci-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/azure-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/bitbucket-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/gitlab-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/jenkins-dte /docs/guides/nx-cloud/manual-dte 301
+/ci/recipes/enterprise/dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/github-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/circle-ci-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/azure-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/bitbucket-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/gitlab-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/jenkins-dte /docs/guides/nx-cloud/bring-your-own-compute 301
 /showcase/benchmarks/dte /docs/reference/benchmarks/nx-agents 301
 
 # --- cliAndCloudLinkFixes ---
@@ -532,9 +536,15 @@
 /nx-api/powerpack-s3-cache /docs/reference/remote-cache-plugins/s3-cache 301
 /nx-api/powerpack-gcs-cache /docs/reference/remote-cache-plugins/gcs-cache 301
 
+# --- remoteCacheShortUrl ---
+/remote-cache /docs/guides/tasks--caching/self-hosted-caching 301
+
 # --- powerpackRedirects ---
-/powerpack /enterprise 301
-/powerpack/* /enterprise 301
+/powerpack /docs/guides/tasks--caching/self-hosted-caching 301
+/powerpack/conformance /docs/enterprise/conformance 301
+/powerpack/owners /docs/enterprise/owners 301
+/powerpack/license /docs/reference/powerpack-license 301
+/powerpack/* /docs/enterprise 301
 /nx-enterprise/powerpack/custom-caching /docs/guides/tasks--caching/self-hosted-caching 301
 /nx-enterprise/powerpack/free-licenses-and-trials /docs/enterprise 301
 /nx-api/powerpack-owners /nx-api/owners 301
@@ -940,7 +950,7 @@
 /extending-nx /docs/extending-nx 301
 /extending-nx/* /docs/extending-nx/:splat 301
 /features/enhance-AI /docs/features/enhance-ai 301
-/features/maintain-ts-monorepos /docs/features/maintain-typescript-monorepos 301
+/features/maintain-ts-monorepos /docs/technologies/typescript/introduction 301
 /features /docs/features 301
 /features/* /docs/features/:splat 301
 /nx-enterprise /docs/enterprise 301
@@ -1304,8 +1314,8 @@
 /ci/recipes/set-up /docs/guides/nx-cloud/setup-ci 301
 /ci/recipes/set-up/* /docs/guides/nx-cloud/setup-ci 301
 /ci/recipes/security /docs/guides/nx-cloud 301
-/ci/recipes/dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/dte/* /docs/guides/nx-cloud/manual-dte 301
+/ci/recipes/dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/dte/* /docs/guides/nx-cloud/bring-your-own-compute 301
 /ci/recipes/other /docs/guides/nx-cloud/setup-ci 301
 /see-also /docs/getting-started/intro 301
 /see-also/sitemap /docs/getting-started/intro 301

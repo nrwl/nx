@@ -1,10 +1,9 @@
-import { dump, load } from '@zkochan/js-yaml';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Tree } from '../../generators/tree';
-import { readYamlFile } from '../fileutils';
-import { output } from '../output';
 import { formatCatalogError, type CatalogManager } from './manager';
+import {
+  readCatalogDefinitions,
+  updateCatalogVersionsInFile,
+} from './manager-utils';
 import type {
   CatalogDefinitions,
   CatalogEntry,
@@ -19,6 +18,8 @@ const PNPM_WORKSPACE_FILENAME = 'pnpm-workspace.yaml';
 export class PnpmCatalogManager implements CatalogManager {
   readonly name = 'pnpm';
   readonly catalogProtocol = 'catalog:';
+  // Parsed fs-root definitions, cached per pass. See readCatalogDefinitions.
+  private definitionsByRoot = new Map<string, CatalogDefinitions | null>();
 
   isCatalogReference(version: string): boolean {
     return version.startsWith(this.catalogProtocol);
@@ -44,18 +45,11 @@ export class PnpmCatalogManager implements CatalogManager {
   }
 
   getCatalogDefinitions(treeOrRoot: Tree | string): CatalogDefinitions | null {
-    if (typeof treeOrRoot === 'string') {
-      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
-      if (!existsSync(configPath)) {
-        return null;
-      }
-      return readConfigFromFs(configPath);
-    } else {
-      if (!treeOrRoot.exists(PNPM_WORKSPACE_FILENAME)) {
-        return null;
-      }
-      return readConfigFromTree(treeOrRoot, PNPM_WORKSPACE_FILENAME);
-    }
+    return readCatalogDefinitions(
+      PNPM_WORKSPACE_FILENAME,
+      treeOrRoot,
+      this.definitionsByRoot
+    );
   }
 
   resolveCatalogReference(
@@ -217,112 +211,6 @@ export class PnpmCatalogManager implements CatalogManager {
       catalogName?: string;
     }>
   ): void {
-    let checkExists: () => boolean;
-    let readYaml: () => string;
-    let writeYaml: (content: string) => void;
-
-    if (typeof treeOrRoot === 'string') {
-      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
-      checkExists = () => existsSync(configPath);
-      readYaml = () => readFileSync(configPath, 'utf-8');
-      writeYaml = (content) => writeFileSync(configPath, content, 'utf-8');
-    } else {
-      checkExists = () => treeOrRoot.exists(PNPM_WORKSPACE_FILENAME);
-      readYaml = () => treeOrRoot.read(PNPM_WORKSPACE_FILENAME, 'utf-8');
-      writeYaml = (content) =>
-        treeOrRoot.write(PNPM_WORKSPACE_FILENAME, content);
-    }
-
-    if (!checkExists()) {
-      output.warn({
-        title: `No ${PNPM_WORKSPACE_FILENAME} found`,
-        bodyLines: [
-          `Cannot update catalog versions without a ${PNPM_WORKSPACE_FILENAME} file.`,
-          `Create a ${PNPM_WORKSPACE_FILENAME} file to use catalogs.`,
-        ],
-      });
-      return;
-    }
-
-    try {
-      const configContent = readYaml();
-      const configData = load(configContent) || {};
-
-      let hasChanges = false;
-      for (const update of updates) {
-        const { packageName, version, catalogName } = update;
-        const normalizedCatalogName =
-          catalogName === 'default' ? undefined : catalogName;
-
-        let targetCatalog: CatalogEntry;
-        if (!normalizedCatalogName) {
-          // Default catalog - update whichever exists, prefer catalog over catalogs.default
-          if (configData.catalog) {
-            targetCatalog = configData.catalog;
-          } else if (configData.catalogs?.default) {
-            targetCatalog = configData.catalogs.default;
-          } else {
-            // Neither exists, create catalog (shorthand syntax)
-            configData.catalog ??= {};
-            targetCatalog = configData.catalog;
-          }
-        } else {
-          // Named catalog
-          configData.catalogs ??= {};
-          configData.catalogs[normalizedCatalogName] ??= {};
-          targetCatalog = configData.catalogs[normalizedCatalogName];
-        }
-
-        if (targetCatalog[packageName] !== version) {
-          targetCatalog[packageName] = version;
-          hasChanges = true;
-        }
-      }
-
-      if (hasChanges) {
-        writeYaml(
-          dump(configData, {
-            indent: 2,
-            quotingType: '"',
-            forceQuotes: true,
-          })
-        );
-      }
-    } catch (error) {
-      output.error({
-        title: 'Failed to update catalog versions',
-        bodyLines: [error instanceof Error ? error.message : String(error)],
-      });
-      throw error;
-    }
-  }
-}
-
-function readConfigFromFs(path: string): CatalogDefinitions | null {
-  try {
-    return readYamlFile<CatalogDefinitions>(path);
-  } catch (error) {
-    output.warn({
-      title: `Unable to parse ${PNPM_WORKSPACE_FILENAME}`,
-      bodyLines: [error.toString()],
-    });
-    return null;
-  }
-}
-
-function readConfigFromTree(
-  tree: Tree,
-  path: string
-): CatalogDefinitions | null {
-  const content = tree.read(path, 'utf-8');
-
-  try {
-    return load(content, { filename: path }) as CatalogDefinitions;
-  } catch (error) {
-    output.warn({
-      title: `Unable to parse ${PNPM_WORKSPACE_FILENAME}`,
-      bodyLines: [error.toString()],
-    });
-    return null;
+    updateCatalogVersionsInFile(PNPM_WORKSPACE_FILENAME, treeOrRoot, updates);
   }
 }

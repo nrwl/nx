@@ -4,11 +4,12 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "outDir": "../../dist/out-tsc/nx-dev/data-access-documents",
+    "outDir": "dist",
     "types": ["node"],
     "composite": true,
     "declaration": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "rootDir": "."
   },
   "references": [
     {

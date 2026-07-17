@@ -1,4 +1,4 @@
-import type { Tree } from '@nx/devkit';
+import { logger, type Tree } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './replace-removed-matcher-aliases';
@@ -320,6 +320,95 @@ describe('useAutoSave', () => {
       });
       "
     `);
+  });
+
+  describe('gracefully handles broken jest configs', () => {
+    let warnSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it('should not fail and warn when a jest config references a missing file', async () => {
+      // Simulates: jest.config.ts reads a .lib.swcrc that does not exist
+      writeFile(
+        tree,
+        'packages/broken/jest.config.ts',
+        `import { readFileSync } from 'fs';
+const swcConfig = JSON.parse(readFileSync(\`\${__dirname}/.lib.swcrc\`, 'utf-8'));
+module.exports = { transform: { '^.+\\.[tj]s$': ['@swc/jest', swcConfig] } };`
+      );
+
+      await expect(migration(tree)).resolves.not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('packages/broken/jest.config.ts')
+      );
+    });
+
+    it('should not fail and warn when a jest config references a missing preset', async () => {
+      // Simulates: jest.config.ts references jest.preset.ts but only .js exists
+      writeFile(
+        tree,
+        'packages/broken/jest.config.ts',
+        `module.exports = { preset: '../../jest.preset.ts' };`
+      );
+
+      await expect(migration(tree)).resolves.not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('packages/broken/jest.config.ts')
+      );
+    });
+
+    it('should not fail and warn when test path resolution throws (e.g. broken regex)', async () => {
+      const { SearchSource } = require('jest');
+      const spy = jest
+        .spyOn(SearchSource.prototype, 'getTestPaths')
+        .mockRejectedValue(new Error('Invalid regular expression'));
+
+      writeFile(tree, 'packages/broken/jest.config.js', `module.exports = {};`);
+
+      await expect(migration(tree)).resolves.not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('packages/broken/jest.config.js')
+      );
+
+      spy.mockRestore();
+    });
+
+    it('should still process valid projects when another has a broken config', async () => {
+      // Broken project: references a file that does not exist
+      writeFile(
+        tree,
+        'packages/broken/jest.config.ts',
+        `import { readFileSync } from 'fs';
+const swcConfig = JSON.parse(readFileSync(\`\${__dirname}/.lib.swcrc\`, 'utf-8'));
+module.exports = { transform: { '^.+\\.[tj]s$': ['@swc/jest', swcConfig] } };`
+      );
+
+      // Valid project with a test file using deprecated aliases
+      writeFile(tree, 'packages/valid/jest.config.js', `module.exports = {};`);
+      writeFile(
+        tree,
+        'packages/valid/src/example.spec.ts',
+        `it('test', () => { expect(fn).toBeCalled(); });`
+      );
+
+      await migration(tree);
+
+      // Broken project was warned about
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('packages/broken/jest.config.ts')
+      );
+
+      // Valid project was still processed
+      const content = tree.read('packages/valid/src/example.spec.ts', 'utf-8');
+      expect(content).toContain('toHaveBeenCalled');
+      expect(content).not.toContain('toBeCalled');
+    });
   });
 
   function writeFile(tree: Tree, path: string, content: string): void {

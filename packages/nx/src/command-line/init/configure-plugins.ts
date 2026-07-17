@@ -1,6 +1,7 @@
 import { bold } from 'picocolors';
 
 import {
+  detectPackageManager,
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../../utils/package-manager';
@@ -32,8 +33,9 @@ export function installPluginPackages(
     return;
   }
   if (existsSync(join(repoRoot, 'package.json'))) {
-    addDepsToPackageJson(repoRoot, plugins);
-    runInstall(repoRoot, pmc);
+    const packageManager = detectPackageManager(repoRoot);
+    addDepsToPackageJson(repoRoot, packageManager, plugins);
+    runInstall(repoRoot, packageManager, pmc);
   } else {
     const nxJson = readNxJson(repoRoot);
     nxJson.installation.plugins ??= {};
@@ -41,8 +43,12 @@ export function installPluginPackages(
       nxJson.installation.plugins[plugin] = nxVersion;
     }
     writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
-    // Invoking nx wrapper to install plugins.
-    runNxSync('--version', { stdio: 'ignore' });
+    try {
+      runNxSync('--version', { stdio: 'pipe' });
+    } catch (e) {
+      if ((e as any)?.stderr) process.stderr.write((e as any).stderr);
+      throw e;
+    }
   }
 }
 
@@ -90,7 +96,7 @@ export async function runPluginInitGenerator(
   runNxSync(command, {
     stdio: [0, 1, 2],
     cwd: repoRoot,
-    windowsHide: false,
+    windowsHide: true,
     packageManagerCommand: pmc,
   });
 }

@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
@@ -14,47 +14,41 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import {
-  angularDevkitVersion,
-  angularVersion,
-  autoprefixerVersion,
-  postcssVersion,
-  tailwindVersion,
-} from '../../utils/versions';
+import { angularDevkitVersion, angularVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use installed version in this repo's package.json
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 jest.mock('enquirer');
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
-  return {
-    ...original,
-    ensurePackage: (pkg: string) => jest.requireActual(pkg),
-    createProjectGraphAsync: jest.fn().mockResolvedValue({
-      nodes: {},
-      dependencies: {},
-    }),
-  };
-});
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(null);
     // @ts-ignore
     enquirer.prompt = jest
       .fn()
       .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
     appTree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should add angular dependencies', async () => {
@@ -204,10 +198,7 @@ describe('app', () => {
       );
       expect(tsconfigApp).toMatchSnapshot('tsconfig.app.json');
 
-      const eslintrcJson = parseJson(
-        appTree.read('my-app/.eslintrc.json', 'utf-8')
-      );
-      expect(eslintrcJson.extends).toEqual(['../.eslintrc.json']);
+      expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
 
       expect(appTree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = parseJson(
@@ -246,7 +237,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('playwright-app-e2e/playwright.config.ts')
+        appTree.exists('playwright-app-e2e/playwright.config.mts')
       ).toBeTruthy();
       expect(
         appTree.exists('playwright-app-e2e/src/example.spec.ts')
@@ -292,6 +283,17 @@ describe('app', () => {
       // ASSERT
       const { defaultProject } = readNxJson(appTree);
       expect(defaultProject).toBe('some-awesome-project');
+    });
+
+    it('should use node10 moduleResolution in e2e tsconfig on TypeScript < 6', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+      await generateApp(appTree);
+
+      const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
+      expect(tsconfigE2E.compilerOptions.moduleResolution).toEqual('node10');
     });
   });
 
@@ -339,6 +341,7 @@ describe('app', () => {
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
+        'my-dir/my-app/eslint.config.mjs',
         'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
@@ -361,11 +364,6 @@ describe('app', () => {
             'jest.config.cts',
             'src/test-setup.ts',
           ],
-        },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -429,6 +427,7 @@ describe('app', () => {
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
+        'my-dir/my-app/eslint.config.mjs',
         'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
@@ -451,11 +450,6 @@ describe('app', () => {
             'jest.config.cts',
             'src/test-setup.ts',
           ],
-        },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -613,9 +607,18 @@ describe('app', () => {
   });
 
   describe('format files', () => {
-    it('should format files', async () => {
-      const formatFilesSpy = jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest.spyOn(devkitModule, 'formatFiles');
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files', async () => {
       await generateApp(appTree, 'my-app', { skipFormat: false });
 
       expect(formatFilesSpy).toHaveBeenCalled();
@@ -682,6 +685,7 @@ describe('app', () => {
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await generateApp(appTree, 'my-app', { linter: 'eslint' });
 
         const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
@@ -736,6 +740,7 @@ describe('app', () => {
       });
 
       it('should set parserOptions.project when enabled (eslintrc)', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await generateApp(appTree, 'my-app', {
           linter: 'eslint',
           setParserOptionsProject: true,
@@ -761,6 +766,8 @@ describe('app', () => {
           const baseConfig = require("../eslint.config.cjs");
 
           module.exports = [
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
               ...baseConfig,
               {
                   files: [
@@ -777,8 +784,6 @@ describe('app', () => {
                       }
                   }
               },
-              ...nx.configs["flat/angular"],
-              ...nx.configs["flat/angular-template"],
               {
                   files: [
                       "**/*.ts"
@@ -871,7 +876,9 @@ describe('app', () => {
         const project = readProjectConfiguration(appTree, 'my-app');
         expect(project.targets.test).toStrictEqual({
           executor: '@angular/build:unit-test',
-          options: {},
+          options: {
+            watch: false,
+          },
         });
         const nxJson = readNxJson(appTree);
         expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual(
@@ -1021,61 +1028,6 @@ describe('app', () => {
     });
   });
 
-  describe('--add-tailwind', () => {
-    it('should not add a tailwind.config.js and relevant packages when "--add-tailwind" is not specified', async () => {
-      // ACT
-      await generateApp(appTree, 'app1');
-
-      // ASSERT
-      expect(appTree.exists('app1/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should not add a tailwind.config.js and relevant packages when "--add-tailwind=false"', async () => {
-      // ACT
-      await generateApp(appTree, 'app1', { addTailwind: false });
-
-      // ASSERT
-      expect(appTree.exists('app1/tailwind.config.js')).toBeFalsy();
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBeUndefined();
-      expect(devDependencies['postcss']).toBeUndefined();
-      expect(devDependencies['autoprefixer']).toBeUndefined();
-    });
-
-    it('should add a tailwind.config.js and relevant packages when "--add-tailwind=true"', async () => {
-      // ACT
-      await generateApp(appTree, 'app1', { addTailwind: true });
-
-      // ASSERT
-      expect(appTree.read('app1/tailwind.config.js', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
-        const { join } = require('path');
-
-        /** @type {import('tailwindcss').Config} */
-        module.exports = {
-          content: [
-            join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}'),
-            ...createGlobPatternsForDependencies(__dirname),
-          ],
-          theme: {
-            extend: {},
-          },
-          plugins: [],
-        };
-        "
-      `);
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
-      expect(devDependencies['postcss']).toBe(postcssVersion);
-      expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
-    });
-  });
-
   describe('--standalone', () => {
     it('should generate a standalone app correctly with routing', async () => {
       // ACT
@@ -1170,7 +1122,7 @@ describe('app', () => {
         e2eTestRunner: E2eTestRunner.Playwright,
         name: 'root-app',
       });
-      expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('e2e/playwright.config.mts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
 
@@ -1402,67 +1354,9 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~19.2.0',
+          '@angular/core': '~20.0.0',
         },
       }));
-    });
-
-    it('should add angular peer dependencies when not installed', async () => {
-      await generateApp(appTree, 'my-app');
-
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions[19].angularDevkitVersion
-      );
-      expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions[19].angularDevkitVersion
-      );
-      expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions[19].angularDevkitVersion
-      );
-    });
-
-    it('should set the "index" option of the application builder for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.index).toBe('my-app/src/index.html');
-    });
-
-    it('should use builders from "@angular-devkit/build-angular" for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.executor).toBe(
-        '@angular-devkit/build-angular:application'
-      );
-      expect(project.targets.serve.executor).toBe(
-        '@angular-devkit/build-angular:dev-server'
-      );
-      expect(project.targets['extract-i18n'].executor).toBe(
-        '@angular-devkit/build-angular:extract-i18n'
-      );
-      expect(
-        readJson(appTree, 'package.json').devDependencies[
-          '@angular-devkit/build-angular'
-        ]
-      ).toBeDefined();
     });
 
     it('should add "extract-i18n" target for Angular v20 (removed in v21+)', async () => {
@@ -1481,63 +1375,6 @@ describe('app', () => {
       expect(project.targets['extract-i18n'].executor).toBe(
         '@angular/build:extract-i18n'
       );
-    });
-
-    it('should not set provideBrowserGlobalErrorListeners in app.module.ts for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
-
-      expect(
-        appTree.read('my-app/src/app/app.module.ts', 'utf-8')
-      ).not.toContain('provideBrowserGlobalErrorListeners');
-    });
-
-    it('should not set provideBrowserGlobalErrorListeners in standalone app.config.ts for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', {
-        bundler: 'esbuild',
-        standalone: true,
-      });
-
-      expect(
-        appTree.read('my-app/src/app/app.config.ts', 'utf-8')
-      ).not.toContain('provideBrowserGlobalErrorListeners');
-    });
-
-    it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { strict: true });
-
-      const appTsConfig = readJson(appTree, 'my-app/tsconfig.json');
-      expect(appTsConfig.angularCompilerOptions).toMatchInlineSnapshot(`
-        {
-          "enableI18nLegacyMessageIdFormat": false,
-          "strictInjectionParameters": true,
-          "strictInputAccessModifiers": true,
-          "strictTemplates": true,
-        }
-      `);
     });
 
     it('should set "typeCheckHostBindings" to true when strict is enabled for Angular v20 only', async () => {
@@ -1560,236 +1397,6 @@ describe('app', () => {
           "strictTemplates": true,
           "typeCheckHostBindings": true,
         }
-      `);
-    });
-
-    it('should use platformBrowserDynamic for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'myapp');
-
-      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-        import { AppModule } from './app/app.module';
-
-        platformBrowserDynamic()
-          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
-          .catch((err) => console.error(err));
-        "
-      `);
-    });
-
-    it('should generate components with the "component" type for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'myapp', { standalone: true });
-
-      expect(appTree.exists('myapp/src/app/app.component.ts')).toBe(true);
-      expect(
-        appTree.read('myapp/src/app/app.component.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(appTree.exists('myapp/src/app/app.component.html')).toBe(true);
-      expect(
-        appTree.read('myapp/src/app/app.component.html', 'utf-8')
-      ).toMatchSnapshot();
-      expect(appTree.exists('myapp/src/app/app.component.css')).toBe(true);
-      expect(appTree.exists('myapp/src/app/app.component.spec.ts')).toBe(true);
-      expect(
-        appTree.read('myapp/src/app/app.component.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(appTree.exists('myapp/src/app/nx-welcome.component.ts')).toBe(
-        true
-      );
-      expect(
-        appTree.read('myapp/src/app/nx-welcome.component.ts', 'utf-8')
-      ).toContain('export class NxWelcomeComponent {}');
-      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should generate modules with the "." type separator for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'myapp', { standalone: false });
-
-      expect(appTree.exists('myapp/src/app/app.module.ts')).toBe(true);
-      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-        import { AppModule } from './app/app.module';
-
-        platformBrowserDynamic()
-          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
-          .catch((err) => console.error(err));
-        "
-      `);
-    });
-
-    it('should set esModuleInterop when using the application builder for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { skipFormat: true });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBe(true);
-    });
-
-    it('should not set esModuleInterop when using the browser builder for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', {
-        bundler: 'webpack',
-        skipFormat: true,
-      });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBeUndefined();
-    });
-
-    it('should set "files" compiler option and not include all source files in tsconfig.app.json and generate a tsconfig.editor.json for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { skipFormat: true });
-
-      expect(appTree.read('my-app/tsconfig.app.json', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "{
-          "extends": "./tsconfig.json",
-          "compilerOptions": {
-            "outDir": "../dist/out-tsc",
-            "types": []
-          },
-          "files": [
-            "src/main.ts"
-          ],
-          "include": [
-            "src/**/*.d.ts"
-          ],
-          "exclude": [
-            "src/**/*.spec.ts",
-            "src/**/*.test.ts",
-            "jest.config.ts",
-            "jest.config.cts",
-            "src/test-setup.ts"
-          ]
-        }
-        "
-      `);
-      expect(appTree.read('my-app/tsconfig.editor.json', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "{
-          "extends": "./tsconfig.json",
-          "include": [
-            "src/**/*.ts"
-          ],
-          "compilerOptions": {},
-          "exclude": [
-            "src/**/*.spec.ts",
-            "src/**/*.test.ts",
-            "jest.config.ts",
-            "jest.config.cts",
-            "src/test-setup.ts"
-          ]
-        }
-        "
-      `);
-    });
-
-    it('should not set app component title to protected and should have a test case for the title property for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { skipFormat: true });
-
-      expect(appTree.read('my-app/src/app/app.component.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Component } from '@angular/core';
-
-        @Component({
-          selector: 'app-root',
-          standalone: false,
-          templateUrl: './app.component.html',
-          styleUrl: './app.component.css',
-        })
-        export class AppComponent {
-          title = 'my-app';
-        }
-        "
-      `);
-      expect(appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { TestBed } from '@angular/core/testing';
-        import { AppComponent } from './app.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-        import { RouterModule } from '@angular/router';
-
-        describe('AppComponent', () => {
-          beforeEach(async () => {
-            await TestBed.configureTestingModule({
-              imports: [RouterModule.forRoot([])],
-              declarations: [AppComponent, NxWelcomeComponent]
-            }).compileComponents();
-          });
-
-          it('should render title', () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            fixture.detectChanges();
-            const compiled = fixture.nativeElement as HTMLElement;
-            expect(compiled.querySelector('h1')?.textContent).toContain(
-              'Welcome my-app'
-            );
-          });
-
-          it(\`should have as title 'my-app'\`, () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            const app = fixture.componentInstance;
-            expect(app.title).toEqual('my-app');
-          });
-        });
-        "
       `);
     });
 
@@ -1874,20 +1481,6 @@ describe('app', () => {
       );
       expect(devDependencies['jsdom']).toBe(
         backwardCompatibleVersions[20].jsdomVersion
-      );
-    });
-
-    it('should install vitest v3 when using vitest-analog with Angular v19', async () => {
-      await generateApp(appTree, 'my-app', {
-        unitTestRunner: UnitTestRunner.VitestAnalog,
-      });
-
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['vitest']).toBe(
-        backwardCompatibleVersions[19].vitestVersion
-      );
-      expect(devDependencies['jsdom']).toBe(
-        backwardCompatibleVersions[19].jsdomVersion
       );
     });
 

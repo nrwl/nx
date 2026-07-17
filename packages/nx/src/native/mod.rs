@@ -26,3 +26,4 @@ pub mod telemetry;
 pub mod tui;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod watch;
+pub mod worktree;

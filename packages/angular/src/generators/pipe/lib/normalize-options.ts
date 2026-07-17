@@ -1,16 +1,14 @@
 import type { Tree } from '@nx/devkit';
 import { names } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import { validateClassName } from '../../utils/validations';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  options.typeSeparator ??= angularMajorVersion < 20 ? '.' : '-';
+  options.typeSeparator ??= '-';
 
   const {
     artifactName: name,

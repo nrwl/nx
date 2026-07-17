@@ -3,7 +3,6 @@ import {
   _outputsHashesMatch,
   _recordOutputsHash,
   processFileChangesInOutputs,
-  recordedHash,
 } from './outputs-tracking';
 
 describe('outputs tracking', () => {
@@ -23,7 +22,7 @@ describe('outputs tracking', () => {
       [{ path: 'dist/app/app1', type: EventType.update }],
       now
     );
-    expect(recordedHash('dist/app/app1')).toBeUndefined();
+    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(false);
   });
 
   it('should invalidate output when it is a child', () => {
@@ -32,7 +31,7 @@ describe('outputs tracking', () => {
       [{ path: 'dist/app/app1/child', type: EventType.update }],
       now
     );
-    expect(recordedHash('dist/app/app1')).toBeUndefined();
+    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(false);
   });
 
   it('should invalidate output when it is a parent', () => {
@@ -41,7 +40,7 @@ describe('outputs tracking', () => {
       [{ path: 'dist/app', type: EventType.update }],
       now
     );
-    expect(recordedHash('dist/app/app1')).toBeUndefined();
+    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(false);
   });
 
   it('should not invalidate anything when no match', () => {
@@ -50,6 +49,6 @@ describe('outputs tracking', () => {
       [{ path: 'dist/app2', type: EventType.update }],
       now
     );
-    expect(recordedHash('dist/app/app1')).toEqual('123');
+    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(true);
   });
 });

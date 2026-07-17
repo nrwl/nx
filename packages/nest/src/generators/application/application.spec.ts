@@ -1,11 +1,25 @@
+// Pin the detected package manager so inferred lock-file outputs (e.g.
+// prune-lockfile) and package-manager commands are deterministic regardless of
+// which package manager runs the tests.
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    detectPackageManager: jest.fn(() => 'npm'),
+    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
+
 import {
+  getProjects,
   readJson,
   readProjectConfiguration,
   updateJson,
   writeJson,
   type Tree,
 } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 
@@ -24,7 +38,7 @@ describe('application generator', () => {
       addPlugin: true,
     });
 
-    const projectConfigurations = devkit.getProjects(tree);
+    const projectConfigurations = getProjects(tree);
     const project = projectConfigurations.get(appDirectory);
 
     expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeTruthy();
@@ -40,18 +54,18 @@ describe('application generator', () => {
           "build": {
             "configurations": {
               "development": {
-                "args": [
-                  "--node-env=development",
-                ],
+                "env": {
+                  "NODE_ENV": "development",
+                },
               },
             },
             "executor": "nx:run-commands",
             "options": {
-              "args": [
-                "--node-env=production",
-              ],
               "command": "webpack-cli build",
               "cwd": "my-node-app",
+              "env": {
+                "NODE_ENV": "production",
+              },
             },
           },
           "copy-workspace-modules": {
@@ -149,15 +163,23 @@ describe('application generator', () => {
   });
 
   it('should configure tsconfig correctly', async () => {
+    // pin TS<6 to exercise the 'node10' branch deterministically
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies ??= {};
+      json.devDependencies.typescript = '~5.9.2';
+      return json;
+    });
+
     await applicationGenerator(tree, {
       directory: appDirectory,
       addPlugin: true,
     });
 
-    const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
-    expect(tsConfig.compilerOptions.moduleResolution).toBe('node');
+    // commonjs context: 'node10' is valid on TS<6, deprecated on TS>=6
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('node10');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
       'jest.config.cts',
@@ -166,13 +188,29 @@ describe('application generator', () => {
     ]);
   });
 
+  it('should set moduleResolution to "bundler" when typescript is >=6', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies ??= {};
+      json.devDependencies.typescript = '~6.0.3';
+      return json;
+    });
+
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      addPlugin: true,
+    });
+
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('bundler');
+  });
+
   it('should add strict checks with --strict', async () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
       strict: true,
       addPlugin: true,
     });
-    const tsConfig = devkit.readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
 
     expect(tsConfig.compilerOptions.strictNullChecks).toBeTruthy();
     expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
@@ -184,27 +222,36 @@ describe('application generator', () => {
   });
 
   describe('--skipFormat', () => {
-    it('should format files', async () => {
-      jest.spyOn(devkit, 'formatFiles');
+    let formatFilesSpy: jest.SpyInstance;
 
+    beforeEach(() => {
+      const devkitModule = require('@nx/devkit');
+      formatFilesSpy = jest
+        .spyOn(devkitModule, 'formatFiles')
+        .mockImplementation(() => Promise.resolve());
+    });
+
+    afterAll(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should format files', async () => {
       await applicationGenerator(tree, {
         directory: appDirectory,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
     });
 
     it('should not format files when --skipFormat=true', async () => {
-      jest.spyOn(devkit, 'formatFiles');
-
       await applicationGenerator(tree, {
         directory: appDirectory,
         skipFormat: true,
         addPlugin: true,
       });
 
-      expect(devkit.formatFiles).not.toHaveBeenCalled();
+      expect(formatFilesSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -216,7 +263,7 @@ describe('application generator', () => {
         addPlugin: true,
       });
 
-      const projectConfigurations = devkit.getProjects(tree);
+      const projectConfigurations = getProjects(tree);
 
       expect(projectConfigurations.get(`${appDirectory}-e2e`)).toBeUndefined();
     });
@@ -266,7 +313,7 @@ describe('application generator', () => {
             "@nestjs/common": "^11.0.0",
             "@nestjs/core": "^11.0.0",
             "@nestjs/platform-express": "^11.0.0",
-            "reflect-metadata": "^0.1.13",
+            "reflect-metadata": "^0.2.0",
             "rxjs": "^7.8.0",
             "tslib": "^2.3.0",
           },
@@ -279,18 +326,18 @@ describe('application generator', () => {
               "build": {
                 "configurations": {
                   "development": {
-                    "args": [
-                      "--node-env=development",
-                    ],
+                    "env": {
+                      "NODE_ENV": "development",
+                    },
                   },
                 },
                 "executor": "nx:run-commands",
                 "options": {
-                  "args": [
-                    "--node-env=production",
-                  ],
                   "command": "webpack-cli build",
                   "cwd": "myapp",
+                  "env": {
+                    "NODE_ENV": "production",
+                  },
                 },
               },
               "copy-workspace-modules": {
@@ -484,18 +531,18 @@ describe('application generator', () => {
             "build": {
               "configurations": {
                 "development": {
-                  "args": [
-                    "--node-env=development",
-                  ],
+                  "env": {
+                    "NODE_ENV": "development",
+                  },
                 },
               },
               "executor": "nx:run-commands",
               "options": {
-                "args": [
-                  "--node-env=production",
-                ],
                 "command": "webpack-cli build",
                 "cwd": "myapp",
+                "env": {
+                  "NODE_ENV": "production",
+                },
               },
             },
             "copy-workspace-modules": {

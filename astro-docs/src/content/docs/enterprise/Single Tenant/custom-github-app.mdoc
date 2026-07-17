@@ -38,9 +38,19 @@ Configure a webhook and give it a secret:
 
 ![Step 5](../../../../assets/enterprise/single-tenant/webhook.png)
 
-Make sure you subscribe to the "Organization" events:
+## Configure permissions for the GitHub app
+
+Configure permissions **before** subscribing to events. GitHub only shows event subscriptions for the permissions you've granted, so the "Organization" event won't appear until you've enabled the corresponding organization permission.
+
+See the [GitHub App Permissions](/docs/guides/nx-cloud/source-control-integration/github-app-permissions) reference for the full list of required permissions and a detailed breakdown of what each one is used for.
+
+## Subscribe to webhook events
+
+Once permissions are set, subscribe to the "Organization" events:
 
 ![Step 5.1](../../../../assets/enterprise/single-tenant/webhook_events.png)
+
+## Record the app credentials
 
 Once you create the app, keep a note of the Client ID and App ID:
 
@@ -61,10 +71,6 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' your-key.pem # keep a note of the o
 ```
 
 Save the output of the above, as we'll also use it in a bit.
-
-## Configure permissions for the GitHub app
-
-See the [GitHub App Permissions](/docs/guides/nx-cloud/source-control-integration/github-app-permissions) reference for the full list of required permissions and a detailed breakdown of what each one is used for.
 
 ## Connect your Nx Cloud installation
 

@@ -20,7 +20,15 @@ describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
 
   beforeAll(() => {
-    newProject({ packages: ['@nx/angular', '@nx/next', '@nx/react'] });
+    newProject({
+      packages: [
+        '@nx/angular',
+        '@nx/next',
+        '@nx/react',
+        '@nx/cypress',
+        '@nx/eslint',
+      ],
+    });
   });
 
   afterAll(() => cleanupProject());
@@ -91,7 +99,10 @@ describe('env vars', () => {
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
         );
         expect(run1).toContain('All specs passed!');
-        // tests should not fail because of a config change
+        // tests should not fail because of a config change. The ESM
+        // shape (import / export default) uses `import.meta.url` rather
+        // than `__filename` so it works under both Nx's native TS strip
+        // (ESM) and Cypress's bundled tsx CJS loader.
         updateFile(
           `apps/${myapp}-e2e/cypress.config.ts`,
           `
@@ -100,7 +111,7 @@ import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, {
+    ...nxE2EPreset(import.meta.url, {
       cypressDir: 'src',
       webServerCommands: {
         default: 'nx run ${myapp}:serve',
@@ -156,7 +167,8 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip(
     `should allow CT and e2e in same project for a next project`,
     async () => {
       const appName = uniq('next-cy-app');
@@ -166,6 +178,7 @@ export default defineConfig({
       runCLI(
         `generate @nx/next:component apps/${appName}/components/btn --no-interactive`
       );
+
       runCLI(
         `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
       );
@@ -184,7 +197,8 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);
@@ -194,6 +208,7 @@ export default defineConfig({
       runCLI(
         `generate @nx/angular:component apps/${appName}/src/app/btn/btn --no-interactive`
       );
+
       runCLI(
         `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
       );

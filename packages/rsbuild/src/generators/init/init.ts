@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   type Tree,
   type GeneratorCallback,
@@ -7,21 +8,24 @@ import {
   formatFiles,
   runTasksInSerial,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { InitGeneratorSchema } from './schema';
-import { createNodesV2 } from '../../plugins/plugin';
-import { nxVersion, rsbuildVersion } from '../../utils/versions';
+import { createNodes } from '../../plugins/plugin';
+import { nxVersion } from '../../utils/versions';
+import { getRsbuildVersionsForInstalledMajor } from '../../utils/version-utils';
+import { assertSupportedRsbuildVersion } from '../../utils/assert-supported-rsbuild-version';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
+  const rsbuildVersions = getRsbuildVersionsForInstalledMajor(tree);
+
   return addDependenciesToPackageJson(
     tree,
     {},
     {
       '@nx/rsbuild': nxVersion,
-      '@rsbuild/core': rsbuildVersion,
+      '@rsbuild/core': rsbuildVersions.rsbuildVersion,
     },
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 
@@ -33,6 +37,8 @@ export async function initGeneratorInternal(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
+  assertSupportedRsbuildVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -44,7 +50,7 @@ export async function initGeneratorInternal(
       tree,
       await createProjectGraphAsync(),
       '@nx/rsbuild',
-      createNodesV2,
+      createNodes,
       {
         buildTargetName: ['build', 'rsbuild:build', 'rsbuild-build'],
         devTargetName: ['dev', 'rsbuild:dev', 'rsbuild-dev'],

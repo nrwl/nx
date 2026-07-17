@@ -1,15 +1,17 @@
-import * as webpack from 'webpack';
+import type webpack from 'webpack';
 import { Observable } from 'rxjs';
 
 // TODO(jack): move to dev-server executor
 export function runWebpack(
   config: webpack.Configuration
 ): Observable<webpack.Stats> {
+  // Lazy-loaded: `webpack` is an optional peer, absent during project-graph discovery.
+  const webpackImpl = require('webpack') as typeof import('webpack');
   return new Observable((subscriber) => {
     // Passing `watch` option here will result in a warning due to missing callback.
     // We manually call `.watch` or `.run` later so this option isn't needed here.
     const { watch, ...normalizedConfig } = config;
-    const webpackCompiler = webpack(normalizedConfig);
+    const webpackCompiler = webpackImpl(normalizedConfig);
 
     const callback = (err: Error, stats: webpack.Stats) => {
       if (err) {

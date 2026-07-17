@@ -25,8 +25,36 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index.js",
-  "types": "index.d.ts",
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "typings",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "plugins/with-nx-metro": [
+        "dist/plugins/with-nx-metro.d.ts"
+      ],
+      "plugins/metro-resolver": [
+        "dist/plugins/metro-resolver.d.ts"
+      ],
+      "plugins/jest/svg-mock": [
+        "dist/plugins/jest/svg-mock.d.ts"
+      ],
+      "typings/*.d.ts": [
+        "dist/typings/*.d.ts"
+      ]
+    }
+  },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
@@ -39,8 +67,24 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
+    "expo": ">=53.0.0",
+    "@expo/metro": ">= 55.0.0",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
+  },
+  "peerDependenciesMeta": {
+    "expo": {
+      "optional": true
+    },
+    "@expo/metro": {
+      "optional": true
+    },
+    "metro-config": {
+      "optional": true
+    },
+    "metro-resolver": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "nx": "workspace:*"
@@ -52,10 +96,47 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "generators": "./generators.json",
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./plugins/with-nx-metro": {
+      "@nx/nx-source": "./plugins/with-nx-metro.ts",
+      "types": "./dist/plugins/with-nx-metro.d.ts",
+      "default": "./dist/plugins/with-nx-metro.js"
+    },
+    "./plugins/metro-resolver": {
+      "@nx/nx-source": "./plugins/metro-resolver.ts",
+      "types": "./dist/plugins/metro-resolver.d.ts",
+      "default": "./dist/plugins/metro-resolver.js"
+    },
+    "./plugins/jest/svg-mock": {
+      "@nx/nx-source": "./plugins/jest/svg-mock.ts",
+      "types": "./dist/plugins/jest/svg-mock.d.ts",
+      "default": "./dist/plugins/jest/svg-mock.js"
+    },
+    "./typings/*.d.ts": {
+      "@nx/nx-source": "./typings/*.d.ts",
+      "types": "./dist/typings/*.d.ts",
+      "default": "./dist/typings/*.d.ts"
+    }
   }
 }

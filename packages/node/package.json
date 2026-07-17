@@ -2,6 +2,13 @@
   "name": "@nx/node",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "generators.json"
+  ],
   "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
   "repository": {
     "type": "git",
@@ -17,8 +24,18 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "utils": [
+        "dist/utils.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -28,7 +45,28 @@
   "generators": "./generators.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./utils": {
+      "@nx/nx-source": "./utils.ts",
+      "types": "./dist/utils.d.ts",
+      "default": "./dist/utils.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    }
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -37,11 +75,29 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/docker": "workspace:*",
+    "semver": "catalog:",
     "tcp-port-used": "^1.0.2",
     "kill-port": "^1.6.1"
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "@nx/webpack": "workspace:*"
+  },
+  "peerDependencies": {
+    "express": ">=4.0.0 <6.0.0",
+    "koa": ">=2.0.0 <4.0.0",
+    "fastify": ">=4.0.0 <6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "koa": {
+      "optional": true
+    },
+    "fastify": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

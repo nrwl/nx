@@ -33,7 +33,7 @@ describe('Vite Plugin', () => {
     originalEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
     proj = newProject({
-      packages: ['@nx/react', '@nx/web'],
+      packages: ['@nx/react', '@nx/web', '@nx/vite', '@nx/vitest', '@nx/js'],
     });
   });
 
@@ -142,7 +142,7 @@ export default defineConfig({
   environments: {
     ssr: {
       build: {
-        rollupOptions: {
+        rolldownOptions: {
           input: '${myApp}/src/main.server.tsx'
         }
       }
@@ -291,7 +291,7 @@ export default async function render(_url: string, document: string) {
     beforeAll(() => {
       proj = newProject({
         name: uniq('vite-incr-build'),
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite', '@nx/vitest', '@nx/js'],
       });
       runCLI(
         `generate @nx/react:app ${app} --bundler=vite --unitTestRunner=vitest --no-interactive  --directory=${app}`
@@ -345,15 +345,25 @@ export default App;
     it('should build app from libs source', () => {
       const results = runCLI(`build ${app} --buildLibsFromSource=true`);
       expect(results).toContain('Successfully ran target build for project');
-      // this should be more modules than build from dist
-      expect(results).toContain('38 modules transformed');
-    });
+      // Get the last "N modules transformed" (the app build, not lib builds)
+      const sourceMatches = results.match(/(\d+) modules transformed/g);
+      expect(sourceMatches.length).toBeGreaterThan(0);
+      const sourceModuleCount = parseInt(
+        sourceMatches[sourceMatches.length - 1].match(/(\d+)/)[1]
+      );
 
-    it('should build app from libs dist', () => {
-      const results = runCLI(`build ${app} --buildLibsFromSource=false`);
-      expect(results).toContain('Successfully ran target build for project');
-      // this should be less modules than building from source
-      expect(results).toContain('36 modules transformed');
+      const distResults = runCLI(`build ${app} --buildLibsFromSource=false`);
+      expect(distResults).toContain(
+        'Successfully ran target build for project'
+      );
+      const distMatches = distResults.match(/(\d+) modules transformed/g);
+      expect(distMatches.length).toBeGreaterThan(0);
+      const distModuleCount = parseInt(
+        distMatches[distMatches.length - 1].match(/(\d+)/)[1]
+      );
+
+      // building from source should transform more modules than from dist
+      expect(sourceModuleCount).toBeGreaterThan(distModuleCount);
     });
 
     it('should build app from libs without package.json in lib', () => {
@@ -375,11 +385,65 @@ export default App;
     });
   });
 
+  describe('type-check app importing a workspace lib from source', () => {
+    // Reproduces nx#35017: on TS 6 an app with a narrow rootDir that imports a
+    // workspace lib from source failed the vite build's type-check with TS6059.
+    let app: string;
+
+    beforeAll(() => {
+      proj = newProject({ packages: ['@nx/react', '@nx/vite'] });
+      app = uniq('app');
+      const lib = uniq('lib');
+
+      runCLI(
+        `generate @nx/react:app ${app} --bundler=vite --unitTestRunner=none --no-interactive --directory=${app}`
+      );
+      runCLI(
+        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/from-source" --no-interactive --directory=${lib}`
+      );
+
+      // Narrow the app's rootDir so the from-source lib falls outside it (the
+      // configuration reported in the issue).
+      updateJson(`${app}/tsconfig.app.json`, (json) => {
+        json.compilerOptions ??= {};
+        json.compilerOptions.rootDir = 'src';
+        return json;
+      });
+
+      const libCmp = names(lib).className;
+      updateFile(
+        `${app}/src/app/app.tsx`,
+        `import { ${libCmp} } from '@acme/from-source';
+
+export function App() {
+  return <${libCmp} />;
+}
+
+export default App;
+`
+      );
+    });
+
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should build without a TS6059 rootDir error', () => {
+      const result = runCLI(`build ${app} --buildLibsFromSource=true`);
+
+      expect(result).not.toContain('TS6059');
+      expect(result).toContain('Successfully ran target build for project');
+    });
+  });
+
   describe('should be able to create libs that use vitest', () => {
     describe('using default project configuration', () => {
       const lib = uniq('my-default-lib');
       beforeAll(() => {
-        proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
+        proj = newProject({
+          name: uniq('vite-proj'),
+          packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
+        });
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
@@ -419,7 +483,10 @@ export default App;
     describe('using custom project configuration', () => {
       const lib = uniq('my-custom-lib');
       beforeEach(() => {
-        proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
+        proj = newProject({
+          name: uniq('vite-proj'),
+          packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
+        });
       });
 
       it('should be able to run tests', async () => {
@@ -578,7 +645,7 @@ export default defineConfig({
   describe('ESM-only apps', () => {
     beforeAll(() => {
       newProject({
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite'],
       });
     });
 

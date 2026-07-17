@@ -6,17 +6,19 @@ import {
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { hasWebpackPlugin } from '@nx/react/src/utils/has-webpack-plugin';
+import { hasWebpackPlugin } from '@nx/react/internal';
 
 import {
   nxVersion,
   reactNativeWebVersion,
   reactNativeSvgWebVersion,
   typesReactDomVersion,
+  assertSupportedReactNativeVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
 import {
@@ -39,6 +41,8 @@ export async function webConfigurationGenerator(
   tree: Tree,
   options: WebConfigurationGeneratorSchema
 ) {
+  assertSupportedReactNativeVersion(tree);
+
   const normalizedSchema = normalizeSchema(tree, options);
 
   const tasks: GeneratorCallback[] = [];
@@ -51,7 +55,9 @@ export async function webConfigurationGenerator(
       {
         'react-native-web': reactNativeWebVersion,
         'react-native-svg-web': reactNativeSvgWebVersion,
-      }
+      },
+      undefined,
+      true
     );
     tasks.push(installTask);
   }
@@ -90,7 +96,9 @@ export async function webConfigurationGenerator(
         {},
         {
           '@types/react-dom': typesReactDomVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
   }
@@ -138,13 +146,19 @@ async function addBundlerConfiguration(
     });
     tasks.push(webpackInitTask);
     if (!normalizedSchema.skipPackageJson) {
-      const { ensureDependencies } = await import(
-        '@nx/webpack/src/utils/ensure-dependencies'
-      );
+      const {
+        ensureDependencies,
+      }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
       tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
     }
 
     if (!hasWebpackPlugin(tree)) {
+      // Mirrors warnWebpackExecutorGenerating from @nx/webpack/src/utils/deprecation.
+      // Inlined to avoid a cross-package import where react-native does not
+      // declare a TypeScript project reference to webpack.
+      logger.warn(
+        'Generating targets that use the deprecated `@nx/webpack:webpack` and `@nx/webpack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/webpack:convert-to-inferred` next to migrate these targets to the `@nx/webpack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+      );
       const projectConfiguration = readProjectConfiguration(
         tree,
         normalizedSchema.project

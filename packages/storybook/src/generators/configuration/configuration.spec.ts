@@ -14,7 +14,9 @@ import { libraryGenerator } from '@nx/js';
 import { TsConfig } from '../../utils/utilities';
 import { nxVersion, storybookVersion } from '../../utils/versions';
 import configurationGenerator from './configuration';
-import * as variousProjects from './test-configs/various-projects.json';
+import * as _variousProjects from './test-configs/various-projects.json';
+const variousProjects =
+  'default' in _variousProjects ? _variousProjects.default : _variousProjects;
 
 // nested code imports graph from the repo, which might have inaccurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
@@ -24,8 +26,35 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
 
+// Mock storybookMajorVersion to simulate behavior when parsing version ranges
+// When version is a range like '^10.1.0', semver.major() throws, causing the function
+// to return undefined. This mock preserves the original test behavior.
+const mockStorybookMajorVersion = jest.fn();
+jest.mock('../../utils/utilities', () => ({
+  ...jest.requireActual('../../utils/utilities'),
+  storybookMajorVersion: (...args: any[]) => mockStorybookMajorVersion(...args),
+}));
+
 describe('@nx/storybook:configuration', () => {
+  let envBackup: string | undefined;
+
+  beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
   describe('v10', () => {
+    beforeEach(() => {
+      // Simulate behavior when version is a range ('^10.1.0'):
+      // semver.major() throws on ranges, so storybookMajorVersion returns undefined
+      mockStorybookMajorVersion.mockReturnValue(undefined);
+    });
+
     describe('dependencies', () => {
       let tree: Tree;
 
@@ -38,11 +67,6 @@ describe('@nx/storybook:configuration', () => {
           addPlugin: true,
         });
 
-        jest.resetModules();
-        // force v9
-        jest.doMock('storybook/package.json', () => ({
-          version: storybookVersion,
-        }));
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies ??= {};
           json.devDependencies['storybook'] = storybookVersion;
@@ -61,7 +85,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -414,17 +437,11 @@ describe('@nx/storybook:configuration', () => {
             storybook: storybookVersion,
           },
         });
-
-        jest.resetModules();
-        jest.doMock('storybook/package.json', () => ({
-          version: storybookVersion,
-        }));
       });
 
       it('should generate TypeScript Configuration files by default', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -439,7 +456,6 @@ describe('@nx/storybook:configuration', () => {
       it('should update `tsconfig.lib.json` file', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -457,7 +473,6 @@ describe('@nx/storybook:configuration', () => {
       it('should update `tsconfig.json` file', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
         });
         const tsconfigJson = readJson<TsConfig>(
@@ -481,6 +496,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       it("should update the project's .eslintrc.json if config exists", async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
@@ -496,7 +512,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -520,7 +535,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -537,7 +551,6 @@ describe('@nx/storybook:configuration', () => {
       it('should generate TS config for project by default', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -576,17 +589,37 @@ describe('@nx/storybook:configuration', () => {
           addPlugin: true,
         });
 
-        jest.resetModules();
-
-        // force v9
-        jest.doMock('storybook/package.json', () => ({
-          version: storybookVersion,
-        }));
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies ??= {};
           json.devDependencies['storybook'] = storybookVersion;
           return json;
         });
+      });
+
+      it('should write node10 moduleResolution in ts-node options on TypeScript < 6', async () => {
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+        }));
+        tree.write(
+          'tsconfig.json',
+          JSON.stringify({
+            extends: './tsconfig.base.json',
+            compilerOptions: {},
+            files: [],
+            include: [],
+          })
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          addPlugin: true,
+        });
+
+        const tsconfig = readJson(tree, 'tsconfig.json');
+        expect(tsconfig['ts-node'].compilerOptions.moduleResolution).toEqual(
+          'node10'
+        );
       });
 
       it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
@@ -828,7 +861,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: '@proj/mylib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-vite',
           addPlugin: true,
         });
@@ -845,7 +877,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }
@@ -910,6 +942,11 @@ describe('@nx/storybook:configuration', () => {
     });
   });
   describe('v9', () => {
+    beforeEach(() => {
+      // '9.1.15' is an exact version, semver.major() returns 9
+      mockStorybookMajorVersion.mockReturnValue(9);
+    });
+
     describe('dependencies', () => {
       let tree: Tree;
 
@@ -922,11 +959,6 @@ describe('@nx/storybook:configuration', () => {
           addPlugin: true,
         });
 
-        jest.resetModules();
-        // force v9
-        jest.doMock('storybook/package.json', () => ({
-          version: '9.1.15',
-        }));
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies ??= {};
           json.devDependencies['storybook'] = '9.1.15';
@@ -945,7 +977,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -1298,17 +1329,11 @@ describe('@nx/storybook:configuration', () => {
             storybook: '9.1.15',
           },
         });
-
-        jest.resetModules();
-        jest.doMock('storybook/package.json', () => ({
-          version: '9.1.15',
-        }));
       });
 
       it('should generate TypeScript Configuration files by default', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -1323,7 +1348,6 @@ describe('@nx/storybook:configuration', () => {
       it('should update `tsconfig.lib.json` file', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -1341,7 +1365,6 @@ describe('@nx/storybook:configuration', () => {
       it('should update `tsconfig.json` file', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
         });
         const tsconfigJson = readJson<TsConfig>(
@@ -1365,6 +1388,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       it("should update the project's .eslintrc.json if config exists", async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
@@ -1380,7 +1404,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -1404,7 +1427,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -1421,7 +1443,6 @@ describe('@nx/storybook:configuration', () => {
       it('should generate TS config for project by default', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -1460,12 +1481,6 @@ describe('@nx/storybook:configuration', () => {
           addPlugin: true,
         });
 
-        jest.resetModules();
-
-        // force v9
-        jest.doMock('storybook/package.json', () => ({
-          version: '9.1.15',
-        }));
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies ??= {};
           json.devDependencies['storybook'] = '9.1.15';
@@ -1712,7 +1727,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: '@proj/mylib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-vite',
           addPlugin: true,
         });
@@ -1729,7 +1743,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }

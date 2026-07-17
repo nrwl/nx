@@ -18,20 +18,19 @@ interface Config {
   repositories: Record<string, RepositoryConfig>;
 }
 
+interface PullRequestInfo {
+  repoName: string;
+  title: string;
+  description: string;
+  url: string;
+}
+
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
 const SCRIPT_DIR = __dirname;
 const REPOS_DIR = path.join(os.tmpdir(), 'updating-nx', 'repos');
-const CONFIG_FILE = path.join(
-  SCRIPT_DIR,
-  '..',
-  '..',
-  '..',
-  'tools',
-  'update-repos',
-  'config',
-  'repos.json'
-);
+// Compiled to tools/update-repos/dist/src, so the package root is two levels up.
+const CONFIG_FILE = path.join(SCRIPT_DIR, '..', '..', 'config', 'repos.json');
 
 function log(message: string) {
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -48,17 +47,22 @@ function getErrorMessage(error: unknown): string {
 async function execWithOutput(
   command: string,
   cwd: string,
-  description?: string
+  description?: string,
+  env?: NodeJS.ProcessEnv
 ): Promise<void> {
   if (description) {
     log(`🔄 ${description}`);
   }
-  log(`📝 Running: ${command}`);
+  const finalCommand = command.startsWith('mise ')
+    ? command
+    : `mise exec -- ${command}`;
+  log(`📝 Running: ${finalCommand}`);
 
   return new Promise((resolve, reject) => {
-    const child = spawn('bash', ['-c', command], {
+    const child = spawn('bash', ['-c', finalCommand], {
       cwd,
       stdio: ['inherit', 'pipe', 'pipe'],
+      env: env ? { ...process.env, ...env } : undefined,
     });
 
     child.stdout.on('data', (data) => {
@@ -137,14 +141,14 @@ function getMigrateCommand(packageManager: PackageManager): string {
 function getRunMigrationsCommand(packageManager: PackageManager): string {
   switch (packageManager) {
     case 'pnpm':
-      return 'pnpm exec nx migrate --run-migrations --create-commits';
+      return 'pnpm exec nx migrate --run-migrations --create-commits --agentic';
     case 'yarn':
-      return 'yarn nx migrate --run-migrations --create-commits';
+      return 'yarn nx migrate --run-migrations --create-commits --agentic';
     case 'bun':
-      return 'bun nx migrate --run-migrations --create-commits';
+      return 'bun nx migrate --run-migrations --create-commits --agentic';
     case 'npm':
     default:
-      return 'npx nx migrate --run-migrations --create-commits';
+      return 'npx nx migrate --run-migrations --create-commits --agentic';
   }
 }
 
@@ -259,74 +263,36 @@ async function getNxVersion(
   }
 }
 
-async function createOrUpdatePullRequest(
+function buildPullRequestInfo(
   repoName: string,
-  repoDir: string,
   updateBranch: string,
   fromVersion: string,
   toVersion: string
-): Promise<void> {
-  try {
-    const config: Config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-    const repoConfig = config.repositories[repoName];
-    const baseBranch = repoConfig.branch;
+): PullRequestInfo {
+  const config: Config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+  const repoConfig = config.repositories[repoName];
+  const baseBranch = repoConfig.branch;
 
-    const title = `chore(repo): update nx to ${toVersion}`;
-    const description = `Updating Nx from ${fromVersion} to ${toVersion}`;
+  const title = `chore(repo): update nx to ${toVersion}`;
+  const description = `Updating Nx from ${fromVersion} to ${toVersion}`;
 
-    // Check if an open PR already exists for this branch
-    let openPrExists = false;
-    try {
-      const { stdout } = await execAsync(
-        `gh pr view ${updateBranch} --json state`,
-        {
-          cwd: repoDir,
-        }
-      );
-      const prData = JSON.parse(stdout);
-      if (prData.state === 'OPEN') {
-        openPrExists = true;
-        log(`Open pull request already exists for branch ${updateBranch}`);
-      } else {
-        log(
-          `Pull request exists for branch ${updateBranch} but is ${prData.state.toLowerCase()}, will create new PR`
-        );
-      }
-    } catch {
-      log(`No existing pull request found for branch ${updateBranch}`);
-    }
+  // Build a GitHub "create pull request" URL with the title and body pre-filled.
+  const params = new URLSearchParams({
+    expand: '1',
+    title,
+    body: description,
+  });
+  const url = `https://github.com/${repoConfig.repo}/compare/${baseBranch}...${updateBranch}?${params.toString()}`;
 
-    if (openPrExists) {
-      log(`Updating existing pull request: ${title}`);
+  return { repoName, title, description, url };
+}
 
-      // Update PR title and description
-      const updatePrCommand = `gh pr edit ${updateBranch} --title "${title}" --body "${description}"`;
-      await execAsync(updatePrCommand, { cwd: repoDir });
-
-      log(`Pull request updated successfully with new title and description`);
-    } else {
-      log(`Creating new pull request: ${title}`);
-
-      // Create PR using GitHub CLI
-      const createPrCommand = `gh pr create --title "${title}" --body "${description}" --base ${baseBranch} --head ${updateBranch}`;
-      const { stdout } = await execAsync(createPrCommand, { cwd: repoDir });
-
-      const prUrl = stdout.trim();
-      log(`Pull request created successfully: ${prUrl}`);
-    }
-
-    // Always open PR in browser (for both new and updated PRs)
-    log(`🌐 Opening pull request in browser...`);
-    const openPrCommand = `gh pr view ${updateBranch} --web`;
-    await execAsync(openPrCommand, { cwd: repoDir });
-  } catch (error) {
-    log(
-      `Warning: Failed to create/update pull request for ${repoName}: ${getErrorMessage(
-        error
-      )}`
-    );
-    // Don't throw error here - PR creation/update failure shouldn't fail the entire update
-  }
+function printPullRequestInfo(prInfo: PullRequestInfo): void {
+  console.log('');
+  console.log(`📦 ${prInfo.repoName}`);
+  console.log(`   Title:       ${prInfo.title}`);
+  console.log(`   Description: ${prInfo.description}`);
+  console.log(`   Open PR:     ${prInfo.url}`);
 }
 
 async function checkRequiredTools(): Promise<void> {
@@ -371,7 +337,7 @@ async function setupRepository(
   }
 }
 
-async function updateRepository(repoName: string): Promise<void> {
+async function updateRepository(repoName: string): Promise<PullRequestInfo> {
   const repoDir = path.join(REPOS_DIR, repoName);
 
   log(`Starting update for repository: ${repoName}`);
@@ -417,6 +383,22 @@ async function updateRepository(repoName: string): Promise<void> {
       `Creating update branch '${updateBranch}' from origin/${mainBranch}`
     );
 
+    // Trust mise config if present so correct tool versions are used
+    const miseToml = path.join(repoDir, 'mise.toml');
+    const dotMiseToml = path.join(repoDir, '.mise.toml');
+    if (fs.existsSync(miseToml) || fs.existsSync(dotMiseToml)) {
+      await execWithOutput(
+        'mise trust',
+        repoDir,
+        'Trusting mise configuration'
+      );
+      await execWithOutput(
+        'mise install',
+        repoDir,
+        'Installing mise-managed tools'
+      );
+    }
+
     // Detect package manager
     const detectedPm = detectPackageManager(repoDir);
     log(`🔍 Detected package manager: ${detectedPm}`);
@@ -433,12 +415,13 @@ async function updateRepository(repoName: string): Promise<void> {
     const fromVersion = await getNxVersion(repoDir, packageManager);
     log(`📦 Current Nx version: ${fromVersion}`);
 
-    // Run nx migrate
+    // Run nx migrate with the next version of the migrate CLI itself
     const migrateCmd = getMigrateCommand(packageManager);
     await execWithOutput(
       migrateCmd,
       repoDir,
-      'Running Nx migration to next version'
+      'Running Nx migration to next version',
+      { NX_MIGRATE_CLI_VERSION: 'next' }
     );
 
     // Install updated dependencies to get the new Nx version
@@ -474,7 +457,8 @@ async function updateRepository(repoName: string): Promise<void> {
       await execWithOutput(
         runMigrationsCmd,
         repoDir,
-        'Applying Nx migrations (auto-commits enabled)'
+        'Applying Nx migrations (auto-commits enabled)',
+        { NX_MIGRATE_CLI_VERSION: 'next' }
       );
 
       // Clean up migrations.json after successful migration
@@ -523,20 +507,31 @@ async function updateRepository(repoName: string): Promise<void> {
       'Pushing update branch to remote (force, skipping hooks)'
     );
 
-    // Create or update pull request with correct versions
-    log('🔄 Creating or updating pull request...');
-    await createOrUpdatePullRequest(
+    // Build the pull request URL (PRs are created manually from this URL)
+    const prInfo = buildPullRequestInfo(
       repoName,
-      repoDir,
       updateBranch,
       fromVersion,
       toVersion
     );
 
     log(`✅ Update completed successfully for ${repoName}`);
+    return prInfo;
   } catch (error) {
     throw new Error(`Failed to update ${repoName}: ${getErrorMessage(error)}`);
   }
+}
+
+function printPullRequestSummary(prInfos: PullRequestInfo[]): void {
+  if (prInfos.length === 0) {
+    return;
+  }
+  console.log('');
+  console.log('═══════════════════════════════════════════════');
+  console.log(' Pull request(s) to create');
+  console.log('═══════════════════════════════════════════════');
+  prInfos.forEach(printPullRequestInfo);
+  console.log('');
 }
 
 async function updateAllRepositories(): Promise<void> {
@@ -545,14 +540,29 @@ async function updateAllRepositories(): Promise<void> {
 
   log('Starting concurrent updates for all repositories...');
 
-  const updatePromises = repoNames.map((repoName) =>
-    updateRepository(repoName).catch((error) => {
-      log(`ERROR updating ${repoName}: ${getErrorMessage(error)}`);
-      throw error;
-    })
+  const results = await Promise.allSettled(
+    repoNames.map((repoName) => updateRepository(repoName))
   );
 
-  await Promise.all(updatePromises);
+  const prInfos: PullRequestInfo[] = [];
+  const failures: string[] = [];
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      prInfos.push(result.value);
+    } else {
+      const repoName = repoNames[index];
+      log(`ERROR updating ${repoName}: ${getErrorMessage(result.reason)}`);
+      failures.push(repoName);
+    }
+  });
+
+  // Print the PR URLs for the repos that updated successfully.
+  printPullRequestSummary(prInfos);
+
+  if (failures.length > 0) {
+    throw new Error(`Failed to update: ${failures.join(', ')}`);
+  }
+
   log('All repositories updated successfully!');
 }
 
@@ -579,7 +589,8 @@ async function main(): Promise<void> {
         process.exit(1);
       }
 
-      await updateRepository(repoName);
+      const prInfo = await updateRepository(repoName);
+      printPullRequestSummary([prInfo]);
     }
   } catch (error) {
     log(`ERROR: ${getErrorMessage(error)}`);

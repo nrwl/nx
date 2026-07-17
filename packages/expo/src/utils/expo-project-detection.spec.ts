@@ -1,7 +1,7 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { isExpoProject } from './expo-project-detection';
-import * as nxDevkitConfigUtils from '@nx/devkit/src/utils/config-utils';
+import * as nxDevkitConfigUtils from '@nx/devkit/internal';
 import * as path from 'path';
 
 describe('isExpoProject', () => {

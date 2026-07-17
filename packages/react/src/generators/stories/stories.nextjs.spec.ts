@@ -3,10 +3,9 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-/* eslint-disable @nx/enforce-module-boundaries */
+
 // nx-ignore-next-line
 import { applicationGenerator } from '@nx/next';
-/* eslint-enable @nx/enforce-module-boundaries */
 
 describe('nextjs:stories for applications', () => {
   let tree: Tree;

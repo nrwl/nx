@@ -1,14 +1,18 @@
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
   joinPathFragments,
   offsetFromRoot,
   runTasksInSerial,
   toJS,
   Tree,
+  workspaceRoot,
   writeJson,
 } from '@nx/devkit';
 import { Schema } from './schema';
@@ -25,8 +29,9 @@ import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { assertSupportedNuxtVersion } from '../../utils/assert-supported-nuxt-version';
 import { execSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   getNxCloudAppOnBoardingUrl,
@@ -36,8 +41,8 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
@@ -48,6 +53,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  assertSupportedNuxtVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
@@ -198,7 +205,9 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         {
           '@vue/test-utils': vueTestUtilsVersion,
           '@vitejs/plugin-vue': vitePluginVueVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
 
@@ -238,12 +247,28 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   if (!options.skipFormat) await formatFiles(tree);
 
   tasks.push(() => {
+    const packageManager = detectPackageManager(workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager, workspaceRoot);
+    const appRoot = join(workspaceRoot, options.appProjectRoot);
+    // npm, yarn, and bun resolve binaries from `node_modules/.bin` searching
+    // upward from the cwd, so running in the app dir picks an app-level `nuxi`
+    // first and falls back to the workspace-root install. pnpm's `pnpm exec`
+    // doesn't search upward: in an integrated workspace the app dir only sees
+    // its own `node_modules/.bin` and can't reach the root-installed `nuxi`. So
+    // for pnpm only run in the app dir when it has its own `nuxi` (package-based
+    // setups, where the app copy should win); otherwise run at the workspace
+    // root, where the generator installs it.
+    const runInAppDir =
+      packageManager !== 'pnpm' ||
+      existsSync(join(appRoot, 'node_modules', '.bin', 'nuxi')) ||
+      existsSync(join(appRoot, 'node_modules', '.bin', 'nuxi.cmd'));
     try {
-      execSync(`npx -y nuxi prepare`, {
-        cwd: options.appProjectRoot,
-
-        windowsHide: false,
-      });
+      execSync(
+        `${pmc.exec} nuxi prepare${
+          runInAppDir ? '' : ` "${options.appProjectRoot}"`
+        }`,
+        { cwd: runInAppDir ? appRoot : workspaceRoot, windowsHide: true }
+      );
     } catch (e) {
       console.error(
         `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`

@@ -13,11 +13,6 @@ import {
 
 import { builtinModules } from 'node:module';
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  workspaceRoot: '/root',
-}));
-
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
@@ -83,6 +78,7 @@ describe('TargetProjectLocator', () => {
             '@proj/feature-*': ['libs/features/*'],
             '@proj/*/utils': ['libs/scope/*/utils'],
             '@proj/*-util': ['libs/utils/*'],
+            '@configdir/*': ['${configDir}/src/*'],
           },
         },
       };
@@ -430,6 +426,29 @@ describe('TargetProjectLocator', () => {
       );
 
       expect(proj2deep).toEqual('proj2');
+    });
+
+    it('should resolve `${configDir}` path aliases relative to the importing project (as tsc does)', () => {
+      // importer in a nested project resolves to that project, not the root project
+      const fromNested = targetProjectLocator.findProjectFromImport(
+        '@configdir/foo',
+        'libs/proj/src/index.ts'
+      );
+      expect(fromNested).toEqual('proj');
+
+      // importer in a deeply nested project resolves to the nested project
+      const fromChild = targetProjectLocator.findProjectFromImport(
+        '@configdir/foo',
+        'libs/parent-path/child-path/src/index.ts'
+      );
+      expect(fromChild).toEqual('child-project');
+
+      // importer in the root project resolves to the root project
+      const fromRoot = targetProjectLocator.findProjectFromImport(
+        '@configdir/foo',
+        'index.ts'
+      );
+      expect(fromRoot).toEqual('rootProj');
     });
 
     it('should be able to resolve nested files using tsConfig paths that have similar names', () => {

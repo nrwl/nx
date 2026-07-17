@@ -4,82 +4,40 @@
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/workspace/README.md"],
-      "command": "node ./scripts/copy-readme.js workspace"
+    "build-base": {
+      "dependsOn": [
+        {
+          "projects": ["nx", "devkit"],
+          "target": "build-base"
+        },
+        "build-native",
+        "copy-assets"
+      ]
     },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/workspace",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/files-integrated-repo/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/files-integrated-repo/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/files-package-based-repo/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/files-readme/**",
-            "output": "/"
-          },
-          {
-            "glob": "**/files-packaged-based-repo/**/.gitkeep",
-            "input": "packages/workspace",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/files-root-app/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/*.{js,css,html,svg}",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/workspace",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+    "build": {
+      "dependsOn": ["build-base"],
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js workspace packages/workspace/readme-template.md packages/workspace/README.md",
+      "inputs": ["copyReadme"]
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js workspace nx"
     }
-  }
+  },
+  "implicitDependencies": [
+    "angular",
+    "eslint",
+    "expo",
+    "express",
+    "jest",
+    "js",
+    "nest",
+    "next",
+    "node",
+    "nuxt",
+    "react",
+    "react-native",
+    "vue",
+    "web"
+  ]
 }

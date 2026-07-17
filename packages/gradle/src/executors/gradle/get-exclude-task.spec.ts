@@ -1,244 +1,256 @@
-import { getExcludeTasks, getAllDependsOn } from './get-exclude-task';
+import { getExcludeTasksFromTaskGraph } from './get-exclude-task';
+import { ProjectGraphProjectNode, Target, TaskGraph } from '@nx/devkit';
 
-describe('getExcludeTasks', () => {
-  const nodes: any = {
-    app1: {
-      name: 'app1',
-      type: 'app',
-      data: {
-        root: 'app1',
-        targets: {
-          test: {
-            dependsOn: ['app1:lint', 'app2:build'],
-            options: { taskName: 'testApp1' },
-          },
-          lint: { options: { taskName: 'lintApp1' } },
+function makeTaskGraph(
+  tasks: Record<string, Target>,
+  dependencies: Record<string, string[]> = {},
+  continuousDependencies: Record<string, string[]> = {}
+): TaskGraph {
+  return {
+    roots: Object.keys(tasks),
+    tasks: Object.fromEntries(
+      Object.entries(tasks).map(([id, target]) => [
+        id,
+        {
+          id,
+          target,
+          outputs: [],
+          overrides: {},
+          projectRoot: target.project,
+          parallelism: false,
         },
-      },
-    },
-    app2: {
-      name: 'app2',
-      type: 'app',
-      data: {
-        root: 'app2',
-        targets: {
-          build: { dependsOn: [], options: { taskName: 'buildApp2' } },
-        },
-      },
-    },
-    app3: {
-      name: 'app3',
-      type: 'app',
-      data: {
-        root: 'app3',
-        targets: {
-          deploy: {
-            dependsOn: ['app1:test'],
-            options: { taskName: 'deployApp3' },
-          },
-        },
-      },
-    },
+      ])
+    ),
+    dependencies,
+    continuousDependencies,
   };
+}
 
-  it('should exclude tasks that are not in runningTaskIds and have excludeDependsOn true', () => {
-    const targets = new Set<string>(['app1:test', 'app2:build']);
-    const runningTaskIds = new Set<string>(['app1:test']);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
-    expect(excludes).toEqual(new Set(['lintApp1', 'buildApp2']));
+function makeNodesWithTaskNames(
+  tasksByProject: Record<string, Record<string, string>>
+): Record<string, ProjectGraphProjectNode> {
+  const nodes: Record<string, ProjectGraphProjectNode> = {};
+  for (const [project, targets] of Object.entries(tasksByProject)) {
+    nodes[project] = {
+      name: project,
+      type: 'lib',
+      data: {
+        root: project,
+        targets: Object.fromEntries(
+          Object.entries(targets).map(([target, taskName]) => [
+            target,
+            { options: { taskName } },
+          ])
+        ),
+      },
+    };
+  }
+  return nodes;
+}
+
+describe('getExcludeTasksFromTaskGraph', () => {
+  const nodes = makeNodesWithTaskNames({
+    app1: { test: ':app1:test', lint: ':app1:lint' },
+    app2: { build: ':app2:build' },
+    lib1: { jar: ':lib1:jar' },
+    lib2: { jar: ':lib2:jar' },
   });
 
-  it('should not exclude tasks if direct dependencies are running', () => {
-    const targets = new Set<string>(['app1:test']);
-    const runningTaskIds = new Set<string>([
-      'app1:test',
-      'app1:lint',
-      'app2:build',
-    ]);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
-    expect(excludes).toEqual(new Set());
-  });
-
-  it('should handle targets with no dependencies', () => {
-    const targets = new Set<string>(['app2:build']);
-    const runningTaskIds = new Set<string>(['app2:build']);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
-    expect(excludes).toEqual(new Set());
-  });
-
-  it('should handle missing project or target', () => {
-    const targets = new Set<string>(['nonexistent:test']);
-    const runningTaskIds = new Set<string>();
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
-    expect(excludes).toEqual(new Set());
-  });
-
-  it('should handle dependencies that are also running tasks', () => {
-    const targets = new Set<string>(['app1:test']);
-    const runningTaskIds = new Set<string>(['app1:test', 'app1:lint']);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
-    expect(excludes).toEqual(new Set(['buildApp2']));
-  });
-
-  it('should handle recursive dependencies', () => {
-    // Assuming app3:deploy depends on app1:test, which in turn depends on app1:lint and app2:build
-    const targets = new Set<string>(['app3:deploy']);
-    const runningTaskIds = new Set<string>(['app3:deploy']);
-    const excludes = getExcludeTasks(targets, nodes, runningTaskIds);
-    expect(excludes).toEqual(new Set(['testApp1']));
-  });
-
-  it('should not exclude tasks that are in includeDependsOnTasks', () => {
-    const targets = new Set<string>(['app1:test']);
-    const runningTaskIds = new Set<string>(['app1:test']);
-    const includeDependsOnTasks = new Set<string>(['lintApp1']);
-    const excludes = getExcludeTasks(
-      targets,
-      nodes,
-      runningTaskIds,
-      includeDependsOnTasks
+  it('excludes transitive dependencies that are not running', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'app1:test': { project: 'app1', target: 'test' },
+        'app1:lint': { project: 'app1', target: 'lint' },
+        'app2:build': { project: 'app2', target: 'build' },
+        'lib1:jar': { project: 'lib1', target: 'jar' },
+        'lib2:jar': { project: 'lib2', target: 'jar' },
+      },
+      {
+        'app1:test': ['app1:lint', 'app2:build'],
+        'app2:build': ['lib1:jar'],
+        'lib1:jar': ['lib2:jar'],
+      }
     );
-    // lintApp1 should not be excluded because it's in includeDependsOnTasks
-    expect(excludes).toEqual(new Set(['buildApp2']));
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes
+    );
+    expect(excludes).toEqual(
+      new Set([':app1:lint', ':app2:build', ':lib1:jar', ':lib2:jar'])
+    );
   });
 
-  it('should not exclude any tasks if all are in includeDependsOnTasks', () => {
-    const targets = new Set<string>(['app1:test']);
-    const runningTaskIds = new Set<string>(['app1:test']);
-    const includeDependsOnTasks = new Set<string>(['lintApp1', 'buildApp2']);
-    const excludes = getExcludeTasks(
-      targets,
-      nodes,
-      runningTaskIds,
-      includeDependsOnTasks
+  it('does not exclude running tasks', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'app1:test': { project: 'app1', target: 'test' },
+        'app1:lint': { project: 'app1', target: 'lint' },
+        'app2:build': { project: 'app2', target: 'build' },
+      },
+      {
+        'app1:test': ['app1:lint', 'app2:build'],
+      }
+    );
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test', 'app1:lint', 'app2:build']),
+      taskGraph,
+      nodes
     );
     expect(excludes).toEqual(new Set());
   });
 
-  it('should handle object-format dependsOn entries', () => {
-    const objectNodes: any = {
+  it('skips tasks listed in includeDependsOnTasks', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'app1:test': { project: 'app1', target: 'test' },
+        'app1:lint': { project: 'app1', target: 'lint' },
+        'app2:build': { project: 'app2', target: 'build' },
+      },
+      {
+        'app1:test': ['app1:lint', 'app2:build'],
+      }
+    );
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes,
+      new Set([':app1:lint'])
+    );
+    expect(excludes).toEqual(new Set([':app2:build']));
+  });
+
+  it('ignores dependency ids not present in taskGraph.tasks', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'app1:test': { project: 'app1', target: 'test' },
+      },
+      {
+        'app1:test': ['ghost:task'],
+      }
+    );
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes
+    );
+    expect(excludes).toEqual(new Set());
+  });
+
+  it('returns empty set when no starting ids', () => {
+    const taskGraph = makeTaskGraph({}, {});
+    const excludes = getExcludeTasksFromTaskGraph(
+      [],
+      new Set(),
+      taskGraph,
+      nodes
+    );
+    expect(excludes).toEqual(new Set());
+  });
+
+  it('skips deps with no taskName in the project graph', () => {
+    const nodesWithoutTaskName: Record<string, ProjectGraphProjectNode> = {
       app1: {
         name: 'app1',
         type: 'app',
         data: {
           root: 'app1',
           targets: {
-            build: {
-              dependsOn: [
-                { target: 'compileJava' },
-                { target: 'build', projects: ['app2'] },
-              ],
-              options: { taskName: ':app1:build' },
-            },
-            compileJava: { options: { taskName: ':app1:compileJava' } },
-          },
-        },
-      },
-      app2: {
-        name: 'app2',
-        type: 'app',
-        data: {
-          root: 'app2',
-          targets: {
-            build: { dependsOn: [], options: { taskName: ':app2:build' } },
+            test: { options: { taskName: ':app1:test' } },
+            lint: {},
           },
         },
       },
     };
-    const targets = new Set<string>(['app1:build']);
-    const runningTaskIds = new Set<string>(['app1:build']);
-    const excludes = getExcludeTasks(targets, objectNodes, runningTaskIds);
-    expect(excludes).toEqual(new Set([':app1:compileJava', ':app2:build']));
-  });
-});
-
-describe('getAllDependsOn', () => {
-  const nodes: any = {
-    a: {
-      name: 'a',
-      type: 'lib',
-      data: {
-        root: 'a',
-        targets: { build: { dependsOn: ['b:build', 'c:build'] } },
+    const taskGraph = makeTaskGraph(
+      {
+        'app1:test': { project: 'app1', target: 'test' },
+        'app1:lint': { project: 'app1', target: 'lint' },
       },
-    },
-    b: {
-      name: 'b',
-      type: 'lib',
-      data: { root: 'b', targets: { build: { dependsOn: ['d:build'] } } },
-    },
-    c: {
-      name: 'c',
-      type: 'lib',
-      data: { root: 'c', targets: { build: {} } },
-    },
-    d: {
-      name: 'd',
-      type: 'lib',
-      data: { root: 'd', targets: { build: {} } },
-    },
-    e: {
-      name: 'e',
-      type: 'lib',
-      data: { root: 'e', targets: { build: { dependsOn: ['f:build'] } } },
-    },
-    f: {
-      name: 'f',
-      type: 'lib',
-      data: { root: 'f', targets: { build: { dependsOn: ['e:build'] } } }, // Circular dependency
-    },
-  };
-
-  it('should return all transitive dependencies excluding the starting task', () => {
-    const dependencies = getAllDependsOn(nodes, 'a', 'build');
-    expect(dependencies).toEqual(new Set(['b:build', 'c:build', 'd:build']));
+      {
+        'app1:test': ['app1:lint'],
+      }
+    );
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodesWithoutTaskName
+    );
+    expect(excludes).toEqual(new Set());
   });
 
-  it('should handle no dependencies', () => {
-    const dependencies = getAllDependsOn(nodes, 'c', 'build');
-    expect(dependencies).toEqual(new Set());
-  });
-
-  it('should handle missing project or target', () => {
-    const dependencies = getAllDependsOn(nodes, 'nonexistent', 'build');
-    expect(dependencies).toEqual(new Set());
-  });
-
-  it('should handle circular dependencies gracefully', () => {
-    const dependencies = getAllDependsOn(nodes, 'e', 'build');
-    expect(dependencies).toEqual(new Set(['f:build']));
-  });
-
-  it('should not include the starting task in the result', () => {
-    const dependencies = getAllDependsOn(nodes, 'a', 'build');
-    expect(dependencies).not.toContain('a:build');
-  });
-
-  it('should handle object-format dependsOn entries', () => {
-    const objectNodes: any = {
-      app: {
-        name: 'app',
-        type: 'app',
-        data: {
-          root: 'app',
-          targets: {
-            build: {
-              dependsOn: [
-                { target: 'compileJava' },
-                { target: 'jar', projects: ['lib'] },
-              ],
-            },
-            compileJava: {},
-          },
-        },
+  it('excludes deps reachable only via continuousDependencies', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'app1:test': { project: 'app1', target: 'test' },
+        'app2:build': { project: 'app2', target: 'build' },
       },
-      lib: {
-        name: 'lib',
-        type: 'lib',
-        data: { root: 'lib', targets: { jar: {} } },
+      {
+        'app1:test': [],
       },
-    };
-    const dependencies = getAllDependsOn(objectNodes, 'app', 'build');
-    expect(dependencies).toEqual(new Set(['app:compileJava', 'lib:jar']));
+      {
+        'app1:test': ['app2:build'],
+      }
+    );
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes
+    );
+    expect(excludes).toEqual(new Set([':app2:build']));
+  });
+
+  it('walks transitive continuousDependencies through regular deps', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'app1:test': { project: 'app1', target: 'test' },
+        'app1:lint': { project: 'app1', target: 'lint' },
+        'app2:build': { project: 'app2', target: 'build' },
+        'lib1:jar': { project: 'lib1', target: 'jar' },
+      },
+      {
+        'app1:test': ['app1:lint'],
+        'app2:build': ['lib1:jar'],
+      },
+      {
+        'app1:lint': ['app2:build'],
+      }
+    );
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes
+    );
+    expect(excludes).toEqual(
+      new Set([':app1:lint', ':app2:build', ':lib1:jar'])
+    );
+  });
+
+  it('handles cycles via continuousDependencies safely', () => {
+    const taskGraph = makeTaskGraph(
+      {
+        'app1:test': { project: 'app1', target: 'test' },
+        'app2:build': { project: 'app2', target: 'build' },
+      },
+      {},
+      {
+        'app1:test': ['app2:build'],
+        'app2:build': ['app1:test'],
+      }
+    );
+    const excludes = getExcludeTasksFromTaskGraph(
+      ['app1:test'],
+      new Set(['app1:test']),
+      taskGraph,
+      nodes
+    );
+    expect(excludes).toEqual(new Set([':app2:build']));
   });
 });

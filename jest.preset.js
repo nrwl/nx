@@ -1,12 +1,37 @@
-// Ensure that the preset loads from node_modules rather than our local typescript source
-const nxPreset = require('./node_modules/@nx/jest/preset').default;
+// Resolve via the @nx/jest exports map. A plain Node require (no --conditions)
+// skips the @nx/nx-source condition, so this lands on the built dist/preset.js
+// rather than the local TypeScript source.
+const nxPreset = require('@nx/jest/preset').default;
+const path = require('path');
+
+// SWC resolves bare plugin names by walking node_modules upward from cwd.
+// Tests that chdir into temp dirs would fail resolution since the temp dir
+// has no node_modules. Pre-resolving to an absolute path bypasses this.
+const mutCjsExportsPlugin = path.dirname(
+  require.resolve('@swc-contrib/mut-cjs-exports/package.json')
+);
 
 module.exports = {
   ...nxPreset,
   testTimeout: 35000,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   transform: {
-    '^.+\\.(ts|js|html)$': 'ts-jest',
+    '^.+\\.(html)$': 'ts-jest',
+    '^.+\\.[tj]sx?$': [
+      '@swc/jest',
+      {
+        jsc: {
+          parser: { syntax: 'typescript', dynamicImport: true },
+          transform: {
+            useDefineForClassFields: false,
+          },
+          experimental: {
+            plugins: [[mutCjsExportsPlugin, {}]],
+          },
+        },
+        module: { type: 'commonjs' },
+      },
+    ],
   },
   resolver: '../../scripts/patched-jest-resolver.js',
   moduleFileExtensions: ['ts', 'js', 'html'],
@@ -17,5 +42,9 @@ module.exports = {
   moduleNameMapper: {
     // Mock ora to avoid ESM issues - ora@9+ is ESM-only and breaks Jest
     '^ora$': '<rootDir>/../../scripts/jest-mocks/ora.js',
+    // Handle both `import * as x` and `import x from` styles for CommonJS modules
+    '^chalk$': '<rootDir>/../../scripts/jest-mocks/chalk.js',
+    '^yargs-parser$': '<rootDir>/../../scripts/jest-mocks/yargs-parser.js',
+    '^prettier$': '<rootDir>/../../scripts/jest-mocks/prettier.js',
   },
 };

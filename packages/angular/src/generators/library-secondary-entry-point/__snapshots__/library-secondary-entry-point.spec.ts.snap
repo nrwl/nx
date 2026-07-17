@@ -1,16 +1,11 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`librarySecondaryEntryPoint generator --skipModule should not generate a module 1`] = `
-"export const greeting = 'Hello World!';
-"
-`;
-
-exports[`librarySecondaryEntryPoint generator should format files 1`] = `
+exports[`librarySecondaryEntryPoint generator --skipFormat should format files 1`] = `
 "export * from './lib/testing-module';
 "
 `;
 
-exports[`librarySecondaryEntryPoint generator should format files 2`] = `
+exports[`librarySecondaryEntryPoint generator --skipFormat should format files 2`] = `
 "import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -18,6 +13,11 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
 })
 export class TestingModule {}
+"
+`;
+
+exports[`librarySecondaryEntryPoint generator --skipModule should not generate a module 1`] = `
+"export const greeting = 'Hello World!';
 "
 `;
 

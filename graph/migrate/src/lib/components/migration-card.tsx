@@ -1,18 +1,17 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
-// nx-ignore-next-line
-import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-/* eslint-enable @nx/enforce-module-boundaries */
 
 import {
   ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
   CodeBracketIcon,
   ExclamationCircleIcon,
   ListBulletIcon,
   PlayIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Pill } from '@nx/graph-internal-ui-project-details';
 import {
@@ -34,6 +33,11 @@ import {
   getMigrationType,
   isMigrationRunning,
 } from '../state/automatic/selectors';
+import {
+  isHybridShape,
+  isPromptOnlyShape,
+  type MigrationsJsonMetadata,
+} from '../migration-shape';
 
 export interface MigrationCardHandle {
   expand: () => void;
@@ -84,6 +88,7 @@ export const MigrationCard = forwardRef<
     onFileClick: (file: Omit<FileChange, 'content'>) => void;
     onViewImplementation: () => void;
     onViewDocumentation: () => void;
+    onViewPrompt: () => void;
     isExpanded?: boolean;
   }
 >(function MigrationCard(
@@ -97,6 +102,7 @@ export const MigrationCard = forwardRef<
     onFileClick,
     onViewImplementation,
     onViewDocumentation,
+    onViewPrompt,
     isExpanded: isExpandedProp,
   },
   ref
@@ -126,6 +132,22 @@ export const MigrationCard = forwardRef<
 
   const nextSteps =
     migrationResult?.type === 'successful' ? migrationResult.nextSteps : [];
+
+  const isPromptOnly = isPromptOnlyShape(migration);
+  const isHybrid = isHybridShape(migration);
+  const isPromptBearing = isPromptOnly || isHybrid;
+  const isSuccessful = migrationResult?.type === 'successful';
+  const acknowledgedPrompt =
+    isSuccessful && !!migrationResult.acknowledgedPrompt;
+  // For terminal non-success states the Failed/Skipped/Stopped pill in the
+  // card top-right already conveys the outcome — stay out of the way.
+  const showPromptStatusRow =
+    isPromptBearing && (!migrationResult || isSuccessful);
+  // The prompt-path reminder lives in the next-steps section for every
+  // prompt-bearing phase where running the prompt is (or was) actionable:
+  // prompt-only from the start, hybrid only once the generator succeeded.
+  const showPromptNextStep =
+    showPromptStatusRow && (isPromptOnly || isSuccessful) && !!migration.prompt;
 
   const isSucceeded = useSelector(
     actor,
@@ -198,14 +220,22 @@ export const MigrationCard = forwardRef<
               )} */}
             </div>
             <span className="mb-2 text-sm">{migration.description}</span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               {migration.package && (
                 <Pill
                   text={`${migration.package}: ${migration.version}`}
                   color={'grey'}
                 />
               )}
+              {isPromptBearing && <AIBadge />}
             </div>
+            {showPromptStatusRow && (
+              <PromptStatusRow
+                isHybrid={isHybrid}
+                isSuccessful={isSuccessful}
+                acknowledgedPrompt={acknowledgedPrompt}
+              />
+            )}
           </div>
         </div>
 
@@ -245,9 +275,9 @@ export const MigrationCard = forwardRef<
               <Pill text="Stopped" color="yellow" />
             </div>
           )}
-          {onRunMigration && !isStopped && (
+          {onRunMigration && !isStopped && !isPromptOnly && (
             <span
-              className={`rounded-md p-1 text-sm ring-1 ring-inset transition-colors ${
+              className={`rounded-md p-1 text-sm ring-1 transition-colors ring-inset ${
                 isSucceeded
                   ? 'bg-green-50 text-green-700 ring-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-500 dark:ring-green-900/30 dark:hover:bg-green-900/30'
                   : isFailed
@@ -277,7 +307,7 @@ export const MigrationCard = forwardRef<
           )}
         </div>
       </div>
-      {isSucceeded && nextSteps?.length ? (
+      {(isSucceeded && nextSteps?.length) || showPromptNextStep ? (
         <div className="pt-2">
           <div className="my-2 border-t border-slate-200 dark:border-slate-700/60" />
           <span className="pb-2 text-sm font-bold">
@@ -289,6 +319,18 @@ export const MigrationCard = forwardRef<
                 {convertUrlsToLinks(step)}
               </li>
             ))}
+            {showPromptNextStep && (
+              <li className="text-sm">
+                Run the AI prompt at{' '}
+                <code
+                  className="cursor-pointer text-sky-500 underline-offset-2 hover:underline dark:text-sky-300"
+                  onClick={() => onViewPrompt()}
+                >
+                  {migration.prompt}
+                </code>{' '}
+                to complete this migration.
+              </li>
+            )}
           </ul>
           <p></p>
         </div>
@@ -297,14 +339,14 @@ export const MigrationCard = forwardRef<
       <div className="mt-4 flex justify-end gap-2">
         <button
           onClick={() => onViewImplementation()}
-          className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+          className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
         >
           <CodeBracketIcon className="h-4 w-4" />
           View Source
         </button>
         {isFailed && (
           <button
-            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
             onClick={() => {
               setIsExpanded(!isExpanded);
             }}
@@ -315,7 +357,7 @@ export const MigrationCard = forwardRef<
         )}
         {isSucceeded && hasChanges && (
           <button
-            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
             onClick={() => {
               setIsExpanded(!isExpanded);
             }}
@@ -385,3 +427,57 @@ export const MigrationCard = forwardRef<
     </div>
   );
 });
+
+function AIBadge() {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded bg-sky-300/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-sky-300 uppercase ring-1 ring-sky-300/40 ring-inset"
+      aria-label="AI-assisted migration"
+    >
+      <SparklesIcon className="h-3 w-3" />
+      AI
+    </span>
+  );
+}
+
+function PromptStatusRow({
+  isHybrid,
+  isSuccessful,
+  acknowledgedPrompt,
+}: {
+  isHybrid: boolean;
+  isSuccessful: boolean;
+  acknowledgedPrompt: boolean;
+}) {
+  // Prompt-only is "completed" the moment the metadata records success (the
+  // short-circuit does that); hybrid needs the separate acknowledgment.
+  const isCompleted = isSuccessful && (!isHybrid || acknowledgedPrompt);
+  const showGeneratorComplete = isHybrid && isSuccessful && !isCompleted;
+
+  return (
+    <div className="mt-3 flex items-center gap-3 text-xs">
+      {isCompleted ? (
+        <span className="inline-flex items-center gap-1 text-green-500">
+          <CheckCircleIcon className="h-3.5 w-3.5" />
+          Completed
+        </span>
+      ) : (
+        <>
+          {showGeneratorComplete && (
+            <>
+              <span className="inline-flex items-center gap-1 text-green-500">
+                <CheckCircleIcon className="h-3.5 w-3.5" />
+                Generator complete
+              </span>
+              <span className="text-slate-400/60">·</span>
+            </>
+          )}
+          <span className="inline-flex items-center gap-1 text-sky-300">
+            <ClockIcon className="h-3.5 w-3.5" />
+            AI prompt pending
+          </span>
+        </>
+      )}
+    </div>
+  );
+}

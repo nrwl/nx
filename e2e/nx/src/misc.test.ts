@@ -15,6 +15,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  runCommandAsync,
   runCommandUntil,
   tmpProjPath,
   uniq,
@@ -30,7 +31,17 @@ import { join } from 'path';
 describe('Nx Commands', () => {
   beforeAll(() =>
     newProject({
-      packages: ['@nx/web', '@nx/angular', '@nx/next'],
+      packages: [
+        '@nx/angular',
+        '@nx/eslint',
+        '@nx/jest',
+        '@nx/next',
+        '@nx/playwright',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/web',
+        '@nx/webpack',
+      ],
     })
   );
 
@@ -818,7 +829,7 @@ describe('migrate', () => {
     );
 
     updateFile(
-      './node_modules/nx/src/command-line/migrate/migrate.js',
+      './node_modules/nx/dist/src/command-line/migrate/migrate.js',
       (content) => {
         const start = content.indexOf('// testing-fetch-start');
         const end = content.indexOf('// testing-fetch-end');
@@ -1039,7 +1050,7 @@ describe('migrate', () => {
     );
 
     expect(output).toContain(
-      `Error: Providing a custom commit prefix requires --create-commits to be enabled`
+      `A custom migrate commit prefix requires commits to be enabled`
     );
   });
 
@@ -1347,14 +1358,14 @@ catalogs:
       // Verify catalog definitions in pnpm-workspace.yaml
       const workspaceYaml = readFile('pnpm-workspace.yaml');
       // UPDATED packages (no ^ prefix as migrations provide resolved versions)
-      expect(workspaceYaml).toContain('migrate-parent-package: "2.0.0"');
-      expect(workspaceYaml).toContain('migrate-child-package: "9.0.0"');
-      expect(workspaceYaml).toContain('react: "18.2.0"');
-      expect(workspaceYaml).toContain('react-dom: "18.2.0"');
+      expect(workspaceYaml).toContain('migrate-parent-package: 2.0.0');
+      expect(workspaceYaml).toContain('migrate-child-package: 9.0.0');
+      expect(workspaceYaml).toContain('react: 18.2.0');
+      expect(workspaceYaml).toContain('react-dom: 18.2.0');
       // PRESERVED packages (retain original format with ^ prefix)
-      expect(workspaceYaml).toContain('typescript: "^5.3.0"');
-      expect(workspaceYaml).toContain('eslint: "^8.0.0"');
-      expect(workspaceYaml).toContain('prettier: "^3.0.0"');
+      expect(workspaceYaml).toContain('typescript: ^5.3.0');
+      expect(workspaceYaml).toContain('eslint: ^8.0.0');
+      expect(workspaceYaml).toContain('prettier: ^3.0.0');
 
       // Verify explicit version packages: updated and preserved
       expect(packageJson.dependencies['lodash']).toEqual('4.17.21');
@@ -1426,32 +1437,36 @@ describe('global installation', () => {
   });
 
   describe('inside nx directory', () => {
-    beforeAll(() => {
+    beforeEach(() => {
       newProject({ packages: [] });
     });
 
+    afterEach(() => {
+      cleanupProject();
+    });
+
     it('should invoke Nx commands from local repo', () => {
-      const nxJsContents = readFile('node_modules/nx/bin/nx.js');
-      updateFile('node_modules/nx/bin/nx.js', `console.log('local install');`);
+      const nxJsContents = readFile('node_modules/nx/dist/bin/nx.js');
+      updateFile(
+        'node_modules/nx/dist/bin/nx.js',
+        `console.log('local install');`
+      );
       let output: string;
       expect(() => {
         output = runCommand(`nx show projects`);
       }).not.toThrow();
       expect(output).toContain('local install');
-      updateFile('node_modules/nx/bin/nx.js', nxJsContents);
+      updateFile('node_modules/nx/dist/bin/nx.js', nxJsContents);
     });
 
-    it('should warn if local Nx has higher major version', () => {
+    it('should warn if local Nx has higher major version', async () => {
       const packageJsonContents = readFile('node_modules/nx/package.json');
       updateJson('node_modules/nx/package.json', (json) => {
         json.version = `${major(getPublishedVersion()) + 2}.0.0`;
         return json;
       });
-      let output: string;
-      expect(() => {
-        output = runCommand(`nx show projects`);
-      }).not.toThrow();
-      expect(output).toContain(`It's time to update Nx`);
+      const { stderr } = await runCommandAsync(`nx show projects`);
+      expect(stderr).toContain(`It's time to update Nx`);
       updateFile('node_modules/nx/package.json', packageJsonContents);
     });
 

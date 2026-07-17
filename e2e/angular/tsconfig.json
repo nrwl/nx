@@ -1,13 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "ignoreDeprecations": "6.0"
   },
   "include": [],
   "files": [],
   "references": [
     {
-      "path": "../../packages/workspace"
+      "path": "../../packages/angular"
     },
     {
       "path": "../utils"

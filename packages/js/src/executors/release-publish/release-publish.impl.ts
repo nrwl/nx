@@ -5,6 +5,7 @@ import {
   readJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { statSync } from 'fs';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
@@ -26,6 +27,33 @@ function processEnv(color: boolean) {
     env.FORCE_COLOR = `${color}`;
   }
   return env;
+}
+
+function isAlreadyPublishedPublishError(
+  stdoutData?: any,
+  stderr = '',
+  stdout = ''
+): boolean {
+  const error = stdoutData?.error;
+  const errorMessage = [
+    error?.summary,
+    error?.detail,
+    error?.message,
+    error?.body?.error,
+    stderr,
+    stdout,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return (
+    error?.code === 'EPUBLISHCONFLICT' ||
+    errorMessage.includes(
+      'You cannot publish over the previously published versions'
+    ) ||
+    (error?.code === 'E409' &&
+      errorMessage.includes('this package is already present'))
+  );
 }
 
 export default async function runExecutor(
@@ -193,7 +221,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         env: processEnv(true),
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: false,
+        windowsHide: true,
       });
 
       const resultJson = JSON.parse(result.toString());
@@ -220,7 +248,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
                 env: processEnv(true),
                 cwd: context.root,
                 stdio: 'ignore',
-                windowsHide: false,
+                windowsHide: true,
               });
               console.log(
                 `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
@@ -348,6 +376,49 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
    * to running from the package root directly), then special attention should be paid to the fact that npm/pnpm publish will nest its
    * JSON output under the name of the package in that case (and it would need to be handled below).
    */
+  return runPublish({
+    pm,
+    options,
+    context,
+    packageRoot,
+    packageJson,
+    registry,
+    registryConfigKey,
+    tag,
+    isDryRun,
+    isNpmInstalled,
+    packageTxt,
+  });
+}
+
+interface RunPublishContext {
+  pm: ReturnType<typeof detectPackageManager>;
+  options: PublishExecutorSchema;
+  context: ExecutorContext;
+  packageRoot: string;
+  packageJson: any;
+  registry: string;
+  registryConfigKey: string;
+  tag: string;
+  isDryRun: boolean;
+  isNpmInstalled: boolean;
+  packageTxt: string;
+}
+
+function runPublish(ctx: RunPublishContext): { success: boolean } {
+  const {
+    pm,
+    options,
+    context,
+    packageRoot,
+    packageJson,
+    registry,
+    registryConfigKey,
+    tag,
+    isDryRun,
+    isNpmInstalled,
+    packageTxt,
+  } = ctx;
   const pmCommand = getPackageManagerCommand(pm);
   const publishCommandSegments = [
     pmCommand.publish(packageRoot, registry, registryConfigKey, tag),
@@ -371,7 +442,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       env: processEnv(true),
       cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: false,
+      windowsHide: true,
     });
     // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';
@@ -413,6 +484,23 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       };
     }
 
+    // pnpm 11 dropped the per-file size field from its publish --json output,
+    // so recover the sizes from disk for the tarball contents log.
+    if (Array.isArray(jsonData.files)) {
+      for (const file of jsonData.files as Array<{
+        path?: string;
+        size?: number;
+      }>) {
+        if (typeof file.size !== 'number' && typeof file.path === 'string') {
+          try {
+            file.size = statSync(join(packageRoot, file.path)).size;
+          } catch {
+            // leave the size unknown, logTar omits it
+          }
+        }
+      }
+    }
+
     if (isDryRun) {
       for (const [key, val] of Object.entries(jsonData)) {
         if (typeof val !== 'string') {
@@ -448,7 +536,46 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     try {
       // bun publish does not support outputting JSON, so we cannot perform any further processing
       if (pm === 'bun') {
+        const bunStderr = err.stderr?.toString() || '';
+        const bunStdout = err.stdout?.toString() || '';
+        // bun publish does not yet support npm's OIDC trusted publishing flow. If the failure
+        // looks like an authentication error and npm is available, retry via npm to recover.
+        // Other failures (e.g. version conflict, 403) would produce the same error from npm,
+        // so we surface bun's error directly instead.
+        const looksLikeAuthError =
+          /missing authentication|bunx npm login|unauthorized|\b401\b/i.test(
+            bunStderr + bunStdout
+          );
+        if (isNpmInstalled && looksLikeAuthError) {
+          console.warn(
+            `bun publish failed with an authentication error; falling back to npm publish (bun does not support npm OIDC trusted publishing).`
+          );
+          return runPublish({ ...ctx, pm: 'npm' });
+        }
         console.error(`bun publish error:`);
+        console.error(bunStderr);
+        console.error(bunStdout);
+        return {
+          success: false,
+        };
+      }
+
+      // stdout is not guaranteed to be JSON (e.g. lifecycle script failures).
+      // If parsing fails, print raw stderr/stdout so the underlying error is visible to the user.
+      let stdoutData;
+      try {
+        stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+      } catch {
+        const stderr = err.stderr?.toString() || '';
+        const stdout = err.stdout?.toString() || '';
+        if (isAlreadyPublishedPublishError(undefined, stderr, stdout)) {
+          console.warn(
+            `Skipped ${packageTxt}, as v${packageJson.version} has already been published to ${registry} with tag "${tag}"`
+          );
+          return {
+            success: true,
+          };
+        }
         console.error(err.stderr?.toString() || '');
         console.error(err.stdout?.toString() || '');
         return {
@@ -456,7 +583,20 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         };
       }
 
-      const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+      if (
+        isAlreadyPublishedPublishError(
+          stdoutData,
+          err.stderr?.toString() || '',
+          err.stdout?.toString() || ''
+        )
+      ) {
+        console.warn(
+          `Skipped ${packageTxt}, as v${packageJson.version} has already been published to ${registry} with tag "${tag}"`
+        );
+        return {
+          success: true,
+        };
+      }
 
       console.error(`${pm} publish error:`);
       // npm returns error.summary and error.detail

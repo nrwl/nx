@@ -1,4 +1,4 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2, EslintPluginOptions } from './plugin';
@@ -20,7 +20,7 @@ jest.mock('../utils/resolve-eslint-class', () => ({
 }));
 
 describe('@nx/eslint/plugin', () => {
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let configFiles: string[] = [];
 
@@ -43,6 +43,7 @@ describe('@nx/eslint/plugin', () => {
       },
       workspaceRoot: tempFs.tempDir,
     };
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
@@ -90,7 +91,7 @@ describe('@nx/eslint/plugin', () => {
         'eslint.config.cjs': `module.exports = {};`,
         'project.json': `{}`,
       });
-      // NOTE: It should set ESLINT_USE_FLAT_CONFIG to true because of the use of eslint.config.cjs
+      // NOTE: a flat config (eslint.config.cjs) needs no env var; flat is the default for ESLint v9+
       expect(
         await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' })
       ).toMatchInlineSnapshot(`
@@ -145,6 +146,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -201,6 +205,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -290,6 +297,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -346,6 +356,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -478,6 +491,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -517,6 +533,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "libs/my-lib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -571,6 +590,40 @@ describe('@nx/eslint/plugin', () => {
   });
 
   describe('root eslint config and nested eslint configs', () => {
+    it('should insert projects in input order when one root config governs multiple nested projects', async () => {
+      // Regression coverage for the `Promise.all`-with-shared-mutation race
+      // in `internalCreateNodesV2`: pre-fix, `projects[projectRoot] = project`
+      // was assigned from inside `Promise.all`, so key insertion order
+      // tracked which async branch (`eslint.isPathIgnored`,
+      // `getProjectUsingESLintConfig`) finished first. The fix collects
+      // contributions and assembles `projects` in
+      // `projectRootsByEslintRoots.get(configDir)` order — i.e. input order.
+      //
+      // Inputs are presented in non-alphabetic order so the assertion
+      // proves the plugin preserves input order rather than coincidentally
+      // alphabetizing.
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'libs/c-lib/project.json': `{}`,
+        'libs/c-lib/index.ts': `console.log('c')`,
+        'libs/a-lib/project.json': `{}`,
+        'libs/a-lib/index.ts': `console.log('a')`,
+        'libs/b-lib/project.json': `{}`,
+        'libs/b-lib/index.ts': `console.log('b')`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      // configFiles is built from Object.keys(fileSys) in this test harness,
+      // so the input order seen by the plugin is c-lib, a-lib, b-lib. With
+      // the fix, that is the exact order the plugin emits.
+      expect(Object.keys(result.projects)).toEqual([
+        'libs/c-lib',
+        'libs/a-lib',
+        'libs/b-lib',
+      ]);
+    });
+
     it('should create appropriate nodes for just a package.json and root level eslint config combined with nested eslint configs', async () => {
       createFiles({
         '.eslintrc.json': `{}`,
@@ -621,6 +674,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -661,6 +717,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "libs/my-lib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -719,6 +778,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/myapp",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -781,6 +843,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/myapp/nested/mylib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -864,6 +929,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -921,6 +989,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -931,6 +1002,174 @@ describe('@nx/eslint/plugin', () => {
           },
         }
       `);
+    });
+  });
+
+  describe('tsconfig extends chain inputs', () => {
+    it('should not add tsconfig inputs when the project has no tsconfig.json', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).not.toContainEqual(expect.stringMatching(/tsconfig/i));
+    });
+
+    it('should not add tsconfig inputs when tsconfig.json has no extends', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'apps/my-app/tsconfig.json': `{}`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).not.toContainEqual(expect.stringContaining('tsconfig'));
+    });
+
+    it('should not add tsconfig inputs when extends points inside the project root', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          extends: './tsconfig.lib.json',
+        }),
+        'apps/my-app/tsconfig.lib.json': `{}`,
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).not.toContainEqual(expect.stringContaining('tsconfig'));
+    });
+
+    it('should exclude the root tsconfig from inputs since it is handled by the native selective hasher', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'tsconfig.base.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          extends: '../../tsconfig.base.json',
+        }),
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).not.toContain('{workspaceRoot}/tsconfig.base.json');
+    });
+
+    it('should add the tsconfig file to inputs when extends points outside the project root', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'tsconfig.shared.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          extends: '../../tsconfig.shared.json',
+        }),
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).toContain('{workspaceRoot}/tsconfig.shared.json');
+    });
+
+    it('should add every file in a transitive extends chain that lives outside the project root except the root tsconfig', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'tsconfig.root.json': `{}`,
+        'tsconfig.base.json': JSON.stringify({
+          extends: './tsconfig.root.json',
+        }),
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          extends: '../../tsconfig.base.json',
+        }),
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).not.toContain('{workspaceRoot}/tsconfig.base.json');
+      expect(inputs).toContain('{workspaceRoot}/tsconfig.root.json');
+    });
+
+    it('should add every file when extends is an array', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'tsconfig.a.json': `{}`,
+        'tsconfig.b.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          extends: ['../../tsconfig.a.json', '../../tsconfig.b.json'],
+        }),
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).toContain('{workspaceRoot}/tsconfig.a.json');
+      expect(inputs).toContain('{workspaceRoot}/tsconfig.b.json');
+    });
+
+    it('should drop shareable tsconfig packages resolved from node_modules', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'node_modules/@some/preset/package.json': JSON.stringify({
+          name: '@some/preset',
+        }),
+        'node_modules/@some/preset/tsconfig.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          extends: '@some/preset/tsconfig.json',
+        }),
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).not.toContainEqual(
+        expect.stringContaining('node_modules')
+      );
+      expect(inputs).not.toContainEqual(
+        expect.stringContaining('@some/preset')
+      );
+    });
+
+    it('should not crash on a self-referential extends cycle', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'tsconfig.a.json': JSON.stringify({
+          extends: './tsconfig.b.json',
+        }),
+        'tsconfig.b.json': JSON.stringify({
+          extends: './tsconfig.a.json',
+        }),
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'apps/my-app/tsconfig.json': JSON.stringify({
+          extends: '../../tsconfig.a.json',
+        }),
+      });
+      const result = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const inputs = result.projects['apps/my-app'].targets.lint.inputs;
+      expect(inputs).toContain('{workspaceRoot}/tsconfig.a.json');
+      expect(inputs).toContain('{workspaceRoot}/tsconfig.b.json');
     });
   });
 
@@ -946,7 +1185,7 @@ describe('@nx/eslint/plugin', () => {
   }
 
   async function invokeCreateNodesOnMatchingFiles(
-    context: CreateNodesContextV2,
+    context: CreateNodesContext,
     options?: EslintPluginOptions
   ) {
     const aggregateProjects: Record<string, any> = {};

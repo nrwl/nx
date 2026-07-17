@@ -5,6 +5,11 @@
   "projectType": "application",
   "implicitDependencies": ["node", "nest", "webpack"],
   "targets": {
+    "lint": {
+      "options": {
+        "max-warnings": 8
+      }
+    },
     "e2e-ci--src/webpack.test.ts": {
       "dependsOn": [
         "nx:build-native",

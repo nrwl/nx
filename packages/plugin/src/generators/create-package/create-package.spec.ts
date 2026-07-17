@@ -12,7 +12,7 @@ import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
 import { CreatePackageSchema } from './schema';
 import { setCwd } from '@nx/devkit/internal-testing-utils';
-import { tsLibVersion } from '@nx/js/src/utils/versions';
+import { tsLibVersion } from '@nx/js/internal';
 import { nxVersion } from 'nx/src/utils/versions';
 
 const getSchema: (

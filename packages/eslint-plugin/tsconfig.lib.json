@@ -1,21 +1,27 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/eslint-plugin",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "moduleResolution": "node16",
-    "module": "node16",
+    "composite": true,
     "esModuleInterop": true,
-    "tsBuildInfoFile": "../../dist/packages/eslint-plugin/tsconfig.tsbuildinfo"
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    ".eslintrc.json"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["*.ts", "src/**/*.ts"],
   "references": [
     {
       "path": "../js/tsconfig.lib.json"

@@ -3,8 +3,10 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { eslint9__typescriptESLintVersion } from '@nx/eslint/src/utils/versions';
+import {
+  typescriptESLintVersion as latestTypescriptESLintVersion,
+  useFlatConfig,
+} from '@nx/eslint/internal';
 import { versions } from '../../utils/version-utils';
 import { isBuildableLibraryProject } from './buildable-project';
 
@@ -27,7 +29,7 @@ export function addAngularEsLintDependencies(
 
   if ('typescriptEslintVersion' in compatVersions) {
     devDependencies['@typescript-eslint/utils'] = usesEslintFlatConfig
-      ? eslint9__typescriptESLintVersion
+      ? latestTypescriptESLintVersion
       : compatVersions.typescriptEslintVersion;
   }
 
@@ -37,5 +39,11 @@ export function addAngularEsLintDependencies(
     devDependencies['jsonc-eslint-parser'] = jsoncEslintParserVersionToInstall;
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }

@@ -5,34 +5,9 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/rspack/README.md"],
-      "command": "node ./scripts/copy-readme.js rspack"
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          "packages/rspack/*.md",
-          {
-            "input": "./packages/rspack/src",
-            "glob": "**/!(*.ts)",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/rspack/src",
-            "glob": "**/*.d.ts",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/rspack",
-            "glob": "**.json",
-            "output": ".",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
-          },
-          "LICENSE"
-        ]
-      }
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js rspack packages/rspack/readme-template.md packages/rspack/README.md",
+      "inputs": ["copyReadme"]
     }
   },
   "tags": []

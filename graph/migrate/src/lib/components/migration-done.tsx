@@ -62,7 +62,7 @@ export function MigrationDone({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           onClick={onCancel}
-          className="flex w-full items-center rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+          className="flex w-full items-center rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
         >
           Cancel
         </motion.button>
@@ -79,7 +79,7 @@ export function MigrationDone({
                 ? PrimaryAction.FinishSquashingCommits
                 : PrimaryAction.FinishWithoutSquashingCommits
             }
-            className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
+            className="rounded-l-md border border-blue-700 bg-blue-500 px-6 py-3 text-sm font-medium whitespace-nowrap text-white shadow-xs hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
           >
             {squashCommits
               ? PrimaryAction.FinishSquashingCommits
@@ -93,7 +93,7 @@ export function MigrationDone({
               transition={{ delay: 0.8 }}
               type="button"
               onClick={() => setIsOpen((prev) => !prev)}
-              className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
+              className="flex items-center rounded-r-md border border-l-1 border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-xs hover:bg-blue-700 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
             >
               <ChevronDownIcon className="h-4 w-4" />
             </motion.button>

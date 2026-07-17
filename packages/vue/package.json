@@ -15,8 +15,23 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "tailwind": [
+        "dist/tailwind.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -26,7 +41,24 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./tailwind": {
+      "@nx/nx-source": "./tailwind.ts",
+      "types": "./dist/tailwind.d.ts",
+      "default": "./dist/tailwind.js"
+    }
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -36,7 +68,6 @@
     "@nx/vitest": "workspace:*",
     "@nx/web": "workspace:*",
     "picomatch": "catalog:",
-    "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {
@@ -45,5 +76,40 @@
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {}
+  "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/playwright": "workspace:*",
+    "@nx/rsbuild": "workspace:*",
+    "@nx/storybook": "workspace:*",
+    "vue": "^3.0.0",
+    "vue-router": "^4.0.0",
+    "vue-tsc": "^2.0.0",
+    "@vitejs/plugin-vue": "^5.0.0 || ^6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
+    "@nx/rsbuild": {
+      "optional": true
+    },
+    "@nx/storybook": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    },
+    "vue-router": {
+      "optional": true
+    },
+    "vue-tsc": {
+      "optional": true
+    },
+    "@vitejs/plugin-vue": {
+      "optional": true
+    }
+  }
 }

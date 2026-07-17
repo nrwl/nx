@@ -1,14 +1,15 @@
 ---
-title: Webpack Plugin for Nx
-description: The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.
+title: Nx with Webpack
+description: Use Webpack with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: Introduction
+weight: 2
 filter: 'type:References'
 ---
 
-The Nx plugin for [webpack](https://webpack.js.org/).
+[Webpack](https://webpack.js.org/) is a static module bundler for modern JavaScript applications. In a Webpack monorepo, Nx brings smart task running and caching to every project.
 
-[Webpack](https://webpack.js.org/) is a static module bundler for modern JavaScript applications. The `@nx/webpack` plugin provides executors that allow you to build and serve your projects using webpack, plus an executor for SSR.
+The `@nx/webpack` plugin provides executors that allow you to build and serve your projects using webpack, plus an executor for SSR.
 
 You can [customize your webpack configuration](/docs/technologies/build-tools/webpack/guides/webpack-config-setup) for your projects. Nx also provides [a number of webpack plugins](/docs/technologies/build-tools/webpack/guides/webpack-plugins) for supporting Nx and other frameworks.
 
@@ -16,9 +17,11 @@ You can [customize your webpack configuration](/docs/technologies/build-tools/we
 
 The `@nx/webpack` plugin supports the following package versions.
 
-| Package   | Supported Versions |
-| --------- | ------------------ |
-| `webpack` | >=5.0.0            |
+| Package              | Supported Versions             |
+| -------------------- | ------------------------------ |
+| `webpack`            | ^5.0.0                         |
+| `webpack-dev-server` | ^5.0.0                         |
+| `webpack-cli`        | ^5.0.0 \|\| ^6.0.0 \|\| ^7.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -109,3 +112,9 @@ To generate a Web application using Webpack, run the following:
 ```bash {% frame="none" %}
 nx g @nx/web:app apps/my-app --bundler=webpack
 ```
+
+## Set up CI for your Webpack monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

@@ -28,7 +28,20 @@ describe('@nx/react-native (legacy)', () => {
     originalEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
 
-    proj = newProject({ packages: ['@nx/react-native', '@nx/react'] });
+    proj = newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/jest',
+        '@nx/playwright',
+        '@nx/react',
+        '@nx/react-native',
+        '@nx/rollup',
+        '@nx/storybook',
+        '@nx/vite',
+        '@nx/web',
+        '@nx/webpack',
+      ],
+    });
     // we create empty preset above which skips creation of `production` named input
     updateJson('nx.json', (nxJson) => {
       nxJson.namedInputs = {
@@ -265,9 +278,7 @@ describe('@nx/react-native (legacy)', () => {
   it('should tsc app', async () => {
     expect(() => {
       const pmc = getPackageManagerCommand();
-      runCommand(
-        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
-      );
+      runCommand(`${pmc.exec} tsc -p apps/${appName}/tsconfig.app.json`);
       checkFilesExist(
         `dist/out-tsc/apps/${appName}/src/main.js`,
         `dist/out-tsc/apps/${appName}/src/main.d.ts`,

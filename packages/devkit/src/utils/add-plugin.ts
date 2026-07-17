@@ -1,10 +1,10 @@
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
-import * as yargs from 'yargs-parser';
+import yargs from 'yargs-parser';
 
 import {
-  CreateNodesV2,
+  CreateNodes,
   ProjectConfiguration,
   ProjectGraph,
   readJson,
@@ -28,7 +28,7 @@ export async function addPlugin<PluginOptions>(
   tree: Tree,
   graph: ProjectGraph,
   pluginName: string,
-  createNodesTuple: CreateNodesV2<PluginOptions>,
+  createNodesTuple: CreateNodes<PluginOptions>,
   options: Partial<
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,
@@ -42,7 +42,7 @@ export async function addPlugin<PluginOptions>(
       new LoadedNxPlugin(
         {
           name: pluginName,
-          createNodesV2: createNodesTuple,
+          createNodes: createNodesTuple,
         },
         {
           plugin: pluginName,
@@ -63,7 +63,7 @@ export async function addPluginV1<PluginOptions>(
   tree: Tree,
   graph: ProjectGraph,
   pluginName: string,
-  createNodesTuple: CreateNodesV2<PluginOptions>,
+  createNodesTuple: CreateNodes<PluginOptions>,
   options: Partial<
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,
@@ -124,7 +124,10 @@ async function _addPluginInternal<PluginOptions>(
       global.NX_GRAPH_CREATION = true;
       try {
         projConfigs = await retrieveProjectConfigurations(
-          [pluginFactory(pluginOptions)],
+          {
+            specifiedPlugins: [pluginFactory(pluginOptions)],
+            defaultPlugins: [],
+          },
           tree.root,
           nxJson
         );
@@ -169,7 +172,10 @@ async function _addPluginInternal<PluginOptions>(
     global.NX_GRAPH_CREATION = true;
     try {
       projConfigs = await retrieveProjectConfigurations(
-        [pluginFactory(pluginOptions)],
+        {
+          specifiedPlugins: [pluginFactory(pluginOptions)],
+          defaultPlugins: [],
+        },
         tree.root,
         nxJson
       );

@@ -148,10 +148,11 @@ If you create an env file called `nx-cloud.env` at the root of the workspace, th
 
 ## Disabling connections to Nx Cloud
 
-If your organization has a security reason to disable Nx Cloud, you can cause all methods of connection to fail by adding the `neverConnectToCloud` property to `nx.json`.
+If your organization has a security reason to never use Nx Cloud, you can cause all methods of setting up Nx Cloud to fail by adding the `neverConnectToCloud` property to `nx.json`.
 
-This does not disable the prompts themselves, as the `nx-cloud` package handles this property to provide maximum compatibility with Nx.
+This **does not prevent using Nx Cloud if already connected** nor disables the prompts themselves, as the `nx-cloud` package handles this property to provide maximum compatibility with Nx.
 
+To prevent Nx Cloud from being used when running commands, set the `NX_NO_CLOUD=true` environment variable or use the `--no-cloud` arg instead.
 A side effect of this is that the `nx-cloud` or `@nrwl/nx-cloud` package may still be installed in your workspace. You can safely remove this, and its presence will send no data (telemetry or otherwise) to Nx Cloud.
 
 You must be on version `16.0.4` or later of `nx-cloud` or `@nrwl/nx-cloud` for this value to be respected.

@@ -1,4 +1,8 @@
 import {
+  processTargetOutputs,
+  toProjectRelativePath,
+} from '@nx/devkit/internal';
+import {
   parseTargetString,
   readJson,
   readTargetOptions,
@@ -7,10 +11,6 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import {
-  processTargetOutputs,
-  toProjectRelativePath,
-} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import { basename, resolve } from 'path';
 import * as ts from 'typescript';

@@ -1,6 +1,6 @@
-import * as enquirer from 'enquirer';
-import * as yargs from 'yargs';
-import * as chalk from 'chalk';
+import enquirer from 'enquirer';
+import yargs from 'yargs';
+import chalk from 'chalk';
 
 import {
   CreateWorkspaceOptions,
@@ -48,6 +48,7 @@ import {
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
 import { existsSync } from 'fs';
+import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
 import { isGhCliAvailable } from '../src/utils/git/git';
 import {
@@ -81,6 +82,8 @@ let chosenPreset: string;
 let useCloud: boolean;
 // For stats
 let packageManager: string;
+// Analytics opt-in answer for the completion stat.
+let analyticsPrompt: 'yes' | 'no' | 'unset' = 'unset';
 
 type AngularUnitTestRunner =
   | 'none'
@@ -183,7 +186,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('preset', {
             // This describe is hard to auto-fix because of the loop in the code.
-            // eslint-disable-next-line @nx/workspace/valid-command-object
+
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
@@ -289,6 +292,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('template', {
             describe: chalk.dim`GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template`,
             type: 'string',
+          })
+          .option('trustThirdPartyPreset', {
+            describe: chalk.dim`Skip the confirmation prompt when installing a third-party preset. Use this when you trust the preset publisher.`,
+            type: 'boolean',
+            default: false,
           }),
         withNxCloud,
         withUseGitHub,
@@ -317,15 +325,15 @@ if (isAiAgent()) {
   commandsObject
     .example(chalk.green('AI AGENTS (RECOMMENDED):'), '')
     .example(
-      '  npx create-nx-workspace@latest myorg --template=nrwl/empty-template --nxCloud=yes --interactive=false',
+      '  npx create-nx-workspace@latest myorg --template=empty --nxCloud=yes --interactive=false',
       ''
     )
     .example('', '')
     .example(chalk.green('AVAILABLE TEMPLATES:'), '')
-    .example('  --template=nrwl/empty-template       Empty monorepo', '')
-    .example('  --template=nrwl/react-template       React fullstack', '')
-    .example('  --template=nrwl/angular-template     Angular fullstack', '')
-    .example('  --template=nrwl/typescript-template  NPM packages', '')
+    .example('  --template=empty                     Empty monorepo', '')
+    .example('  --template=react                     React fullstack', '')
+    .example('  --template=angular                   Angular fullstack', '')
+    .example('  --template=typescript                NPM packages', '')
     .epilogue(
       `${chalk.cyan('AI Agent Mode:')}
   Set CLAUDECODE=1 or OPENCODE=1 for JSON output and non-interactive mode.
@@ -421,9 +429,11 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       setupCloudPrompt:
         messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
         messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      analyticsPrompt,
       nxCloudArg: parsedArgs.nxCloud ?? '',
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
+      pushFailReason: workspaceInfo.pushFailReason ?? '',
       template: chosenTemplate ?? '',
       preset: chosenPreset ?? '',
       connectUrl: workspaceInfo.connectUrl ?? '',
@@ -449,8 +459,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 }
 
 async function handleError(error: unknown): Promise<void> {
-  const { version } = require('../package.json');
-
   // Record error stat for telemetry
   const errorCode = error instanceof CnwError ? error.code : 'UNKNOWN';
   const errorMessage = error instanceof Error ? error.message : String(error);
@@ -600,10 +608,6 @@ async function normalizeArgsMiddleware(
         );
       }
 
-      // Always enable Nx Cloud for AI agents - ignore --nxCloud=skip since the AI
-      // may pass it without asking the user. Nx Cloud is required for the full experience.
-      argv.nxCloud = 'yes';
-
       // Skip GitHub push prompts in AI mode - we'll provide instructions in the success output
       argv.skipGitHubPush = true;
     } else {
@@ -669,7 +673,8 @@ async function normalizeArgsMiddleware(
               : getCompletionMessageKeyForVariant();
         }
 
-        const analytics = await determineAnalytics(argv);
+        analyticsPrompt = await determineAnalytics(argv);
+        const analytics = analyticsPrompt === 'yes';
         packageManager = argv.packageManager ?? detectInvokedPackageManager();
         Object.assign(argv, {
           nxCloud,
@@ -764,7 +769,8 @@ async function normalizeArgsMiddleware(
               : getCompletionMessageKeyForVariant();
         }
 
-        const analytics = await determineAnalytics(argv);
+        analyticsPrompt = await determineAnalytics(argv);
+        const analytics = analyticsPrompt === 'yes';
 
         Object.assign(argv, {
           nxCloud,
@@ -821,9 +827,13 @@ function invariant(
   }
 }
 
+/** Workspace names must start with a letter. */
+export function isValidWorkspaceName(name: string): boolean {
+  return /^[a-zA-Z]/.test(name);
+}
+
 export function validateWorkspaceName(name: string): void {
-  const pattern = /^[a-zA-Z]/;
-  if (!pattern.test(name)) {
+  if (!isValidWorkspaceName(name)) {
     throw new CnwError(
       'INVALID_WORKSPACE_NAME',
       `The workspace name "${name}" is invalid. Workspace names must start with a letter. Examples of valid names: myapp, MyApp, my-app, my_app`
@@ -831,18 +841,92 @@ export function validateWorkspaceName(name: string): void {
   }
 }
 
-async function determineFolder(
+/** Returns `true` when the folder name refers to the current directory. */
+function isCurrentDirReference(folderName: string): boolean {
+  return folderName === '.' || folderName === './';
+}
+
+/**
+ * Resolves special folder name patterns (`.`, `./`, absolute paths) into a
+ * workspace name and a `workingDir` override so that downstream functions
+ * create the workspace at the intended location.
+ *
+ * @visibleForTesting
+ *
+ * Returns `{ name, workingDir }` for special inputs, or `null` if the
+ * input is a regular name that needs no special handling.
+ */
+export function resolveSpecialFolderName(
+  folderName: string
+): { name: string; workingDir: string } | null {
+  // User wants to scaffold in the current directory.
+  if (isCurrentDirReference(folderName)) {
+    const cwd = resolve(process.cwd());
+    return { name: basename(cwd), workingDir: dirname(cwd) };
+  }
+
+  // Handle absolute paths like /tmp/acme
+  if (isAbsolute(folderName)) {
+    const parentDir = dirname(folderName);
+    const name = basename(folderName);
+
+    if (!existsSync(parentDir)) {
+      throw new CnwError(
+        'INVALID_PATH',
+        `The parent directory "${parentDir}" does not exist.`
+      );
+    }
+
+    return { name, workingDir: parentDir };
+  }
+
+  return null;
+}
+
+/**
+ * Determines the folder name for the new workspace.
+ *
+ * @visibleForTesting
+ */
+export async function determineFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
-  const folderName: string = parsedArgs._[0]
+  const rawFolderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
     : parsedArgs.name;
 
-  if (folderName) {
+  if (rawFolderName) {
+    // Resolve ".", "./", and absolute paths before validation
+    const resolved = resolveSpecialFolderName(rawFolderName);
+    const folderName = resolved?.name ?? rawFolderName;
+    if (resolved?.workingDir) {
+      parsedArgs.workingDir = resolved.workingDir;
+    }
+
     validateWorkspaceName(folderName);
 
+    // When input is "." or "./", scaffold into the current directory. The
+    // target always "exists" because it IS the cwd, so skip the existsSync
+    // check and use the directory name as the workspace name.
+    if (isCurrentDirReference(rawFolderName)) {
+      // Interactively confirm before scaffolding into the current directory;
+      // non-interactive (CI/AI) proceeds without prompting.
+      if (parsedArgs.interactive && !isCI()) {
+        if (!(await promptCreateInCurrentDir(folderName))) {
+          // Declined - fall back to creating a named subfolder under the cwd.
+          parsedArgs.workingDir = undefined;
+          return promptForFolder(parsedArgs);
+        }
+      }
+      parsedArgs.useCurrentDir = true;
+      return folderName;
+    }
+
     // If directory exists, either re-prompt (interactive) or error (non-interactive)
-    if (existsSync(folderName)) {
+    const targetDir = resolved?.workingDir
+      ? join(resolved.workingDir, folderName)
+      : folderName;
+    if (existsSync(targetDir)) {
       if (parsedArgs.interactive && !isCI()) {
         output.warn({
           title: `Directory ${folderName} already exists.`,
@@ -858,7 +942,31 @@ async function determineFolder(
     return folderName;
   }
 
+  // When non-interactive and no name is provided, default to the current
+  // directory name instead of prompting.
+  if (!parsedArgs.interactive || isCI()) {
+    const cwd = resolve(process.cwd());
+    const folderName = basename(cwd);
+    validateWorkspaceName(folderName);
+    return folderName;
+  }
+
   return promptForFolder(parsedArgs);
+}
+
+async function promptCreateInCurrentDir(dirName: string): Promise<boolean> {
+  const { useCurrentDir } = await enquirer.prompt<{
+    useCurrentDir: 'Yes' | 'No';
+  }>([
+    {
+      name: 'useCurrentDir',
+      message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
+      type: 'autocomplete',
+      choices: [{ name: 'Yes' }, { name: 'No' }],
+      initial: 0,
+    },
+  ]);
+  return useCurrentDir === 'Yes';
 }
 
 async function promptForFolder(
@@ -875,7 +983,7 @@ async function promptForFolder(
         if (!value) {
           return 'Folder name cannot be empty';
         }
-        if (!/^[a-zA-Z]/.test(value)) {
+        if (!isValidWorkspaceName(value)) {
           return 'Workspace name must start with a letter';
         }
         if (existsSync(value)) {
@@ -1231,10 +1339,6 @@ async function determineReactOptions(
             message: 'LESS              [ https://lesscss.org     ]',
           },
           {
-            name: 'tailwind',
-            message: 'tailwind          [ https://tailwindcss.com     ]',
-          },
-          {
             name: 'styled-components',
             message:
               'styled-components [ https://styled-components.com            ]',
@@ -1439,7 +1543,18 @@ async function determineAngularOptions(
     }
   }
 
+  const validAngularBundlers = ['esbuild', 'rspack', 'webpack'] as const;
   if (parsedArgs.bundler) {
+    if (
+      !validAngularBundlers.includes(
+        parsedArgs.bundler as (typeof validAngularBundlers)[number]
+      )
+    ) {
+      throw new CnwError(
+        'INVALID_BUNDLER',
+        `Invalid bundler "${parsedArgs.bundler}" for Angular. Valid options are: ${validAngularBundlers.join(', ')}`
+      );
+    }
     bundler = parsedArgs.bundler;
   } else {
     const reply = await enquirer.prompt<{ bundler: 'esbuild' | 'webpack' }>([

@@ -1,11 +1,11 @@
 import {
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
+import { readTargetDefaultsForTarget } from '@nx/devkit/internal';
 import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions, Schema } from '../schema';
 
 export async function normalizeOptions(
@@ -13,31 +13,24 @@ export async function normalizeOptions(
   options: Schema
 ): Promise<NormalizedGeneratorOptions> {
   const { targets, root } = readProjectConfiguration(tree, options.project);
-  const isUsingApplicationBuilder =
-    targets.build.executor === '@angular-devkit/build-angular:application' ||
-    targets.build.executor === '@angular/build:application' ||
-    targets.build.executor === '@nx/angular:application';
-
-  if (options.serverRouting === undefined && isUsingApplicationBuilder) {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
-    if (angularMajorVersion === 19) {
-      options.serverRouting = await promptWhenInteractive<{
-        serverRouting: boolean;
-      }>(
-        {
-          type: 'confirm',
-          name: 'serverRouting',
-          message:
-            'Would you like to use the Server Routing and App Engine APIs (Developer Preview) for this server application?',
-          initial: false,
-        },
-        { serverRouting: false }
-      ).then(({ serverRouting }) => serverRouting);
-    } else {
-      options.serverRouting = true;
-    }
+  // Resolve the executor via targetDefaults: readProjectConfiguration returns
+  // the raw config, so an inherited executor would otherwise read as undefined.
+  const buildTargetExecutor =
+    targets.build.executor ??
+    readTargetDefaultsForTarget('build', readNxJson(tree)?.targetDefaults)
+      ?.executor;
+  if (!buildTargetExecutor) {
+    throw new Error(
+      `The "build" target of the "${options.project}" project does not specify an executor. Please add an executor to the "build" target.`
+    );
   }
+
+  const isUsingApplicationBuilder =
+    buildTargetExecutor === '@angular-devkit/build-angular:application' ||
+    buildTargetExecutor === '@angular/build:application' ||
+    buildTargetExecutor === '@nx/angular:application';
+  const isUsingWebpackBuilder =
+    buildTargetExecutor === '@nx/angular:webpack-browser';
 
   const isStandaloneApp = isNgStandaloneApp(tree, options.project);
 
@@ -52,8 +45,9 @@ export async function normalizeOptions(
     skipFormat: options.skipFormat ?? false,
     standalone: options.standalone ?? isStandaloneApp,
     hydration: options.hydration ?? true,
-    serverRouting: options.serverRouting,
     isUsingApplicationBuilder,
+    isUsingWebpackBuilder,
+    buildTargetExecutor,
     buildTargetTsConfigPath:
       targets.build.options?.tsConfig ??
       joinPathFragments(root, 'tsconfig.app.json'),

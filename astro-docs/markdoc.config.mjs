@@ -421,26 +421,61 @@ export default defineMarkdocConfig({
       render: component('./src/components/markdoc/LlmCopyPrompt.astro'),
       attributes: {
         title: { type: 'String', required: true },
+        previewLines: { type: 'Number', required: false },
       },
-      children: ['paragraph', 'tag', 'list'],
+      children: ['paragraph', 'tag', 'list', 'heading'],
       transform(node, config) {
         const attributes = node.transformAttributes(config);
-        function extractText(n) {
+        function extractText(n, listContext) {
           if (typeof n === 'string') return n;
           if (n.type === 'text' || n.type === 'softbreak')
             return n.attributes?.content ?? '\n';
+          if (n.type === 'code')
+            return '`' + (n.attributes?.content ?? '') + '`';
+          if (n.type === 'link') {
+            const inner = (n.children || [])
+              .map((c) => extractText(c))
+              .join('');
+            const href = n.attributes?.href;
+            return href ? `${inner} (${href})` : inner;
+          }
           if (n.type === 'inline')
-            return (n.children || []).map(extractText).join('');
+            return (n.children || []).map((c) => extractText(c)).join('');
           if (n.type === 'paragraph')
-            return (n.children || []).map(extractText).join('') + '\n';
-          if (n.type === 'item')
-            return '- ' + (n.children || []).map(extractText).join('');
-          if (n.type === 'list')
-            return (n.children || []).map(extractText).join('\n') + '\n';
-          if (n.children) return n.children.map(extractText).join('');
+            return (
+              (n.children || []).map((c) => extractText(c)).join('') + '\n'
+            );
+          if (n.type === 'heading') {
+            const level = n.attributes?.level ?? 2;
+            return (
+              '#'.repeat(level) +
+              ' ' +
+              (n.children || []).map((c) => extractText(c)).join('') +
+              '\n'
+            );
+          }
+          if (n.type === 'list') {
+            const ordered = n.attributes?.ordered === true;
+            return (
+              (n.children || [])
+                .map((c, i) => extractText(c, { ordered, index: i + 1 }))
+                .join('\n') + '\n'
+            );
+          }
+          if (n.type === 'item') {
+            const prefix =
+              listContext?.ordered === true ? `${listContext.index}. ` : '- ';
+            return (
+              prefix + (n.children || []).map((c) => extractText(c)).join('')
+            );
+          }
+          if (n.children) return n.children.map((c) => extractText(c)).join('');
           return '';
         }
-        const promptText = node.children.map(extractText).join('\n').trim();
+        const promptText = node.children
+          .map((c) => extractText(c))
+          .join('\n')
+          .trim();
         return new Markdoc.Tag(this.render, { ...attributes, promptText }, []);
       },
     },

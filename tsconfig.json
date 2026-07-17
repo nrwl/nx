@@ -131,88 +131,46 @@
       "path": "./tools/documentation/create-embeddings"
     },
     {
-      "path": "./nx-dev/feature-package-schema-viewer"
-    },
-    {
-      "path": "./nx-dev/data-access-documents"
-    },
-    {
-      "path": "./nx-dev/data-access-packages"
-    },
-    {
-      "path": "./nx-dev/data-access-courses"
-    },
-    {
-      "path": "./nx-dev/feature-doc-viewer"
-    },
-    {
-      "path": "./nx-dev/feature-analytics"
-    },
-    {
-      "path": "./nx-dev/feature-feedback"
-    },
-    {
-      "path": "./nx-dev/data-access-menu"
-    },
-    {
-      "path": "./nx-dev/ui-video-courses"
-    },
-    {
-      "path": "./nx-dev/models-document"
-    },
-    {
       "path": "./tools/workspace-plugin"
     },
     {
       "path": "./e2e/lerna-smoke-tests"
     },
     {
-      "path": "./nx-dev/feature-search"
-    },
-    {
-      "path": "./nx-dev/models-package"
-    },
-    {
       "path": "./e2e/workspace-create"
     },
     {
-      "path": "./nx-dev/ui-animations"
+      "path": "./nx-dev/data-access-courses"
     },
     {
-      "path": "./nx-dev/ui-primitives"
+      "path": "./nx-dev/data-access-documents"
     },
     {
-      "path": "./nx-dev/ui-references"
+      "path": "./nx-dev/feature-analytics"
     },
     {
-      "path": "./tools/eslint-rules"
+      "path": "./nx-dev/feature-search"
+    },
+    {
+      "path": "./nx-dev/models-document"
     },
     {
       "path": "./nx-dev/models-menu"
     },
     {
-      "path": "./nx-dev/feature-ai"
+      "path": "./nx-dev/models-package"
     },
     {
-      "path": "./nx-dev/ui-markdoc"
+      "path": "./nx-dev/ui-animations"
     },
     {
-      "path": "./nx-dev/ui-courses"
-    },
-    {
-      "path": "./nx-dev/ui-podcast"
-    },
-    {
-      "path": "./nx-dev/ui-pricing"
-    },
-    {
-      "path": "./graph/client-e2e"
-    },
-    {
-      "path": "./e2e/react-native"
+      "path": "./nx-dev/ui-blog"
     },
     {
       "path": "./nx-dev/ui-common"
+    },
+    {
+      "path": "./nx-dev/ui-courses"
     },
     {
       "path": "./nx-dev/ui-fence"
@@ -221,16 +179,37 @@
       "path": "./nx-dev/ui-icons"
     },
     {
+      "path": "./nx-dev/ui-markdoc"
+    },
+    {
+      "path": "./nx-dev/ui-primitives"
+    },
+    {
+      "path": "./nx-dev/ui-references"
+    },
+    {
       "path": "./nx-dev/ui-theme"
+    },
+    {
+      "path": "./nx-dev/ui-video-courses"
+    },
+    {
+      "path": "./tools/eslint-rules"
+    },
+    {
+      "path": "./nx-dev/feature-ai"
+    },
+    {
+      "path": "./graph/client-e2e"
+    },
+    {
+      "path": "./e2e/react-native"
     },
     {
       "path": "./e2e/playwright"
     },
     {
       "path": "./nx-dev/util-ai"
-    },
-    {
-      "path": "./nx-dev/ui-blog"
     },
     {
       "path": "./e2e/storybook"
@@ -353,8 +332,59 @@
       "path": "./e2e/maven"
     },
     {
-      "path": "./nx-dev/ui-resources"
+      "path": "./e2e/module-federation"
+    },
+    {
+      "path": "./examples/angular-rspack/module-federation/remote"
+    },
+    {
+      "path": "./examples/angular-rspack/module-federation/host"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-csr-i18n"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-csr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-ssg-css"
+    },
+    {
+      "path": "./examples/angular-rspack/zoneless-ssr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-css-assets"
+    },
+    {
+      "path": "./examples/angular-rspack/appshell-css"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-tailwind"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-i18n"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-scss"
+    },
+    {
+      "path": "./examples/angular-rspack/csr-css"
+    },
+    {
+      "path": "./examples/angular-rspack/ssg-css"
+    },
+    {
+      "path": "./examples/angular-rspack/ssr-css"
+    },
+    {
+      "path": "./nx-dev/nx-dev-e2e"
+    },
+    {
+      "path": "./e2e/nx-build"
     }
   ],
-  "extends": "./tsconfig.base.json"
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

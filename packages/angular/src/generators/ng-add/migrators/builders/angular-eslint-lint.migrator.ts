@@ -6,11 +6,9 @@ import type {
 import {
   joinPathFragments,
   offsetFromRoot,
-  readJson,
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { hasRulesRequiringTypeChecking } from '@nx/eslint';
 import { dirname } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';
@@ -114,13 +112,6 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
 
         return pattern;
       });
-
-    if (existEsLintConfigPath) {
-      const eslintConfig = readJson(this.tree, this.newEsLintConfigPath);
-      if (hasRulesRequiringTypeChecking(eslintConfig)) {
-        target.options.hasTypeAwareRules = true;
-      }
-    }
 
     updateProjectConfiguration(this.tree, this.project.name, {
       ...this.projectConfig,

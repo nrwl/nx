@@ -7,6 +7,7 @@
   "title": "Expo Export",
   "description": "Export the JavaScript and assets for your app using Metro/webpack bundler.",
   "type": "object",
+  "x-deprecated": "The `@nx/expo:export` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/expo:convert-to-inferred` to migrate to the `@nx/expo/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "properties": {
     "platform": {
       "description": "Choose the platform to compile for",

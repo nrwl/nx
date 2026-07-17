@@ -2,13 +2,18 @@ import {
   cleanupProject,
   killProcessAndPorts,
   newProject,
+  reservePort,
   runCLI,
   runCommandUntil,
   uniq,
 } from '@nx/e2e-utils';
 
 describe('Web Components Applications with bundler set as webpack', () => {
-  beforeEach(() => newProject({ packages: ['@nx/web'] }));
+  beforeEach(() =>
+    newProject({
+      packages: ['@nx/web', '@nx/webpack', '@nx/jest', '@nx/playwright'],
+    })
+  );
   afterEach(() => cleanupProject());
 
   it('should support https for dev-server (legacy)', async () => {
@@ -22,13 +27,14 @@ describe('Web Components Applications with bundler set as webpack', () => {
       }
     );
 
+    const port = await reservePort();
     const childProcess = await runCommandUntil(
-      `serve ${appName} --port=5000 --ssl`,
+      `serve ${appName} --port=${port} --ssl`,
       (output) => {
-        return output.includes('listening at https://localhost:5000');
+        return output.includes(`listening at https://localhost:${port}`);
       }
     );
 
-    await killProcessAndPorts(childProcess.pid, 5000);
+    await killProcessAndPorts(childProcess.pid, port);
   }, 300_000);
 });

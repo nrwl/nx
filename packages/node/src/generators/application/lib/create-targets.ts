@@ -5,7 +5,7 @@ import {
   TargetConfiguration,
   detectPackageManager,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { NormalizedSchema } from './normalized-schema';
 import { getLockFileName } from '@nx/js';
 
@@ -121,12 +121,12 @@ export function getNestWebpackBuildConfig(
     executor: 'nx:run-commands',
     options: {
       command: 'webpack-cli build',
-      args: ['--node-env=production'],
+      env: { NODE_ENV: 'production' },
       cwd: project.root,
     },
     configurations: {
       development: {
-        args: ['--node-env=development'],
+        env: { NODE_ENV: 'development' },
       },
     },
   };

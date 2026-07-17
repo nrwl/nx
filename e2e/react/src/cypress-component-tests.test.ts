@@ -22,7 +22,7 @@ describe('React Cypress Component Tests', () => {
     process.env.NX_ADD_PLUGINS = 'false';
     projectName = newProject({
       name: uniq('cy-react'),
-      packages: ['@nx/react'],
+      packages: ['@nx/react', '@nx/webpack', '@nx/jest', '@nx/cypress'],
     });
     ensureCypressInstallation();
 
@@ -152,7 +152,8 @@ export default Input;
     delete process.env.NX_ADD_PLUGINS;
   });
 
-  it('should test app', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should test app', () => {
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
@@ -163,7 +164,8 @@ export default Input;
     }
   }, 300_000);
 
-  it('should successfully component test lib being used in app', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should successfully component test lib being used in app', () => {
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
@@ -174,7 +176,8 @@ export default Input;
     }
   }, 300_000);
 
-  it('should successfully component test lib being used in app using babel compiler', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should successfully component test lib being used in app using babel compiler', () => {
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
@@ -192,7 +195,8 @@ export default Input;
     }
   }, 300_000);
 
-  it('should test buildable lib not being used in app', () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should test buildable lib not being used in app', () => {
     createFile(
       `libs/${buildableLibName}/src/lib/input/input.cy.tsx`,
       `
@@ -222,40 +226,10 @@ describe(Input.name, () => {
         'All specs passed!'
       );
     }
-
-    // add tailwind
-    runCLI(`generate @nx/react:setup-tailwind --project=${buildableLibName}`);
-    updateFile(
-      `libs/${buildableLibName}/src/styles.css`,
-      `
-@tailwind components;
-@tailwind base;
-@tailwind utilities;
-`
-    );
-    updateFile(
-      `libs/${buildableLibName}/src/lib/input/input.cy.tsx`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
-    updateFile(
-      `libs/${buildableLibName}/src/lib/input/input.tsx`,
-      (content) => {
-        return `import '../../styles.css';
-${content}`;
-      }
-    );
-
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
-        'All specs passed!'
-      );
-    }
   }, 300_000);
 
-  it('should work with async webpack config', async () => {
+  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
+  it.skip('should work with async webpack config', async () => {
     // TODO: (caleb) for whatever reason the MF webpack config + CT is running, but cypress is not starting up?
     // are they overriding some option on top of each other causing cypress to not see it's running?
     createFile(

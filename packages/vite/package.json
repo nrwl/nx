@@ -2,6 +2,14 @@
   "name": "@nx/vite",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The Nx Plugin for building and testing applications using Vite",
   "repository": {
     "type": "git",
@@ -15,8 +23,63 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "executors": [
+        "dist/executors.d.ts"
+      ],
+      "plugins/nx-copy-assets.plugin": [
+        "dist/plugins/nx-copy-assets.plugin.d.ts"
+      ],
+      "plugins/nx-tsconfig-paths.plugin": [
+        "dist/plugins/nx-tsconfig-paths.plugin.d.ts"
+      ],
+      "plugins/rollup-replace-files.plugin": [
+        "dist/plugins/rollup-replace-files.plugin.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./executors": {
+      "@nx/nx-source": "./executors.ts",
+      "types": "./dist/executors.d.ts",
+      "default": "./dist/executors.js"
+    },
+    "./plugins/nx-copy-assets.plugin": {
+      "@nx/nx-source": "./plugins/nx-copy-assets.plugin.ts",
+      "types": "./dist/plugins/nx-copy-assets.plugin.d.ts",
+      "default": "./dist/plugins/nx-copy-assets.plugin.js"
+    },
+    "./plugins/nx-tsconfig-paths.plugin": {
+      "@nx/nx-source": "./plugins/nx-tsconfig-paths.plugin.ts",
+      "types": "./dist/plugins/nx-tsconfig-paths.plugin.d.ts",
+      "default": "./dist/plugins/nx-tsconfig-paths.plugin.js"
+    },
+    "./plugins/rollup-replace-files.plugin": {
+      "@nx/nx-source": "./plugins/rollup-replace-files.plugin.ts",
+      "types": "./dist/plugins/rollup-replace-files.plugin.d.ts",
+      "default": "./dist/plugins/rollup-replace-files.plugin.js"
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -27,7 +90,8 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -39,34 +103,16 @@
     "tsconfig-paths": "catalog:typescript",
     "semver": "catalog:",
     "tslib": "catalog:typescript",
-    "ajv": "^8.0.0"
+    "ajv": "catalog:"
   },
   "devDependencies": {
+    "@nx/eslint": "workspace:*",
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0",
-    "vitest": "^1.3.1 || ^2.0.0 || ^3.0.0 || ^4.0.0"
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "exports": {
-    ".": "./index.js",
-    "./plugin": "./plugin.js",
-    "./package.json": "./package.json",
-    "./migrations.json": "./migrations.json",
-    "./generators.json": "./generators.json",
-    "./executors.json": "./executors.json",
-    "./executors": "./executors.js",
-    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./src/executors/*/compat": "./src/executors/*/compat.js",
-    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
-    "./src/generators/*/schema": "./src/generators/*/schema.d.ts",
-    "./plugins/nx-copy-assets.plugin": "./plugins/nx-copy-assets.plugin.js",
-    "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
-    "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"
   }
 }

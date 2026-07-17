@@ -8,6 +8,8 @@ const serverMfConfig = require('./module-federation.server.config');
 
 const browserRspackConfig = {
   name: 'browser',
+  // rspack-cli dev mode defaults this on; it breaks module federation.
+  lazyCompilation: false,
   output: {
     path: join(__dirname, '<%= rspackPluginOptions.outputPath %>', 'browser'),
     publicPath: 'auto'

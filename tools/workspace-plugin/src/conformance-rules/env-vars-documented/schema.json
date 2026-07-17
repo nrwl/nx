@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "ignore": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "NX_* env var names that are intentionally not part of the user-facing documented contract (internal, test-only, or deprecated aliases)."
+    }
+  },
+  "additionalProperties": false
+}

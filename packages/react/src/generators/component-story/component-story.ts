@@ -6,8 +6,8 @@ import {
   normalizePath,
   Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
+import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
@@ -150,6 +150,8 @@ export async function componentStoryGenerator(
   host: Tree,
   schema: CreateComponentStoriesFileSchema
 ) {
+  assertSupportedReactVersion(host);
+
   createComponentStoriesFile(host, {
     ...schema,
     interactionTests: schema.interactionTests ?? true,

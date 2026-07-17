@@ -1,4 +1,8 @@
 import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/internal';
+import {
   detectPackageManager,
   ExecutorContext,
   joinPathFragments,
@@ -12,6 +16,7 @@ import {
   normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
+import schema from './schema.json';
 import {
   copyAssets,
   createLockFile,
@@ -21,21 +26,20 @@ import {
 import { existsSync, writeFileSync } from 'fs';
 import { relative, resolve } from 'path';
 import {
-  combineAsyncIterables,
-  createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import {
   createBuildableTsConfig,
   loadViteDynamicImport,
   validateTypes,
 } from '../../utils/executor-utils';
+import { warnViteBuildExecutorDeprecation } from '../../utils/deprecation';
 import { type Plugin } from 'vite';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function* viteBuildExecutor(
   options: Record<string, any> & ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  warnViteBuildExecutorDeprecation();
+
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { mergeConfig, build, resolveConfig, createBuilder } =
@@ -115,8 +119,11 @@ export async function* viteBuildExecutor(
 
   let iterables: AsyncIterable<{ success: boolean; outfile?: string }>[] = [];
   for (const env of Object.values(builder.environments)) {
-    // This is needed to overwrite the resolve build config with executor options in Vite 6
-    if (env.config?.build) {
+    // Overwrite the resolved build config with executor options (e.g. outDir).
+    // Skip when using the builder API (Vite 8+) as the builder already
+    // resolves environment configs correctly and overwriting would clobber
+    // environment-specific options like rollupOptions/rolldownOptions.
+    if (env.config?.build && !options.useEnvironmentsApi) {
       env.config.build = {
         ...env.config.build,
         ...buildConfig.build,
@@ -251,7 +258,6 @@ export async function getBuildExtraArgs(
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
-  const schema = await import('./schema.json');
   const extraArgs = {};
   for (const key of Object.keys(options)) {
     if (!schema.properties[key]) {
@@ -274,6 +280,7 @@ export async function getBuildExtraArgs(
     'minify',
     'terserOptions',
     'rollupOptions',
+    'rolldownOptions',
     'commonjsOptions',
     'dynamicImportVarsOptions',
     'write',

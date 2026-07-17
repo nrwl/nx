@@ -6,7 +6,8 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-  getAvailablePort,
+  updateJson,
+  reservePorts,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import { stripIndents } from 'nx/src/utils/strip-indents';
@@ -14,7 +15,9 @@ import { stripIndents } from 'nx/src/utils/strip-indents';
 describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
-    newProject({ packages: ['@nx/react', '@nx/rspack'] });
+    newProject({
+      packages: ['@nx/react', '@nx/rspack', '@nx/webpack', '@nx/playwright'],
+    });
   });
   afterAll(() => {
     cleanupProject();
@@ -24,11 +27,16 @@ describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
   it('should generate host and remote apps in webpack, convert to rspack and use playwright for e2es', async () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
-    const shellPort = await getAvailablePort();
+    const [shellPort, remote1Port] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote1} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
     );
+
+    updateJson(`${remote1}/project.json`, (project) => {
+      project.targets.serve.options.port = remote1Port;
+      return project;
+    });
 
     runCLI(
       `generate @nx/rspack:convert-webpack ${shell} --skipFormat --no-interactive`
@@ -38,7 +46,7 @@ describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
     );
 
     updateFile(
-      `apps/${shell}-e2e/src/example.spec.ts`,
+      `${shell}-e2e/src/example.spec.ts`,
       stripIndents`
           import { test, expect } from '@playwright/test';
           test('should display welcome message', async ({page}) => {
@@ -56,7 +64,8 @@ describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
     if (runE2ETests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e`,
-        (output) => output.includes('Successfully ran target e2e for project')
+        (output) => output.includes('Successfully ran target e2e for project'),
+        { timeout: 120_000 }
       );
 
       await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));

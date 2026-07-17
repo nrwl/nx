@@ -8,8 +8,24 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import chalk from 'chalk';
 import { isCI } from '../ci/is-ci';
+import { terminalLink } from '../terminal-link';
 import type { BannerVariant, CompletionMessageKey } from './messages';
+
+export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
+
+/**
+ * Clickable Nx Cloud marketing link for cloud prompt footers. Every
+ * create-nx-workspace prompt reports the same content tag, so the link is a
+ * single baked constant embedded directly in the footers. Visible text stays
+ * the clean `NX_CLOUD_URL` while clicks carry UTM attribution; terminals
+ * without OSC 8 support just render the bare URL (CLOUD-4642).
+ */
+export const NX_CLOUD_HYPERLINK = terminalLink(
+  NX_CLOUD_URL,
+  `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
+);
 
 // Flow variant controls both tracking and banner display (CLOUD-4235)
 // Variants: 0 = control, 1 = updated prompt, 2 = no prompt (auto-connect)
@@ -98,12 +114,6 @@ export function getCompletionMessageKeyForVariant(): CompletionMessageKey {
   return 'platform-setup';
 }
 
-export function shouldShowCloudPrompt(): boolean {
-  // CLOUD-4255: Lock to variant 2 behavior (no prompt)
-  // To re-enable A/B testing: return getFlowVariant() !== '2';
-  return false;
-}
-
 // ============================================================================
 // Banner Variant A/B Testing (CLOUD-4235)
 // ============================================================================
@@ -184,8 +194,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'circleci', name: 'Circle CI' },
         { value: 'skip', name: '\nDo it later' },
       ],
-      footer:
-        '\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: https://nx.dev/nx-cloud',
+      footer: `\nSelf-healing CI, remote caching, and task distribution are provided by Nx Cloud: ${NX_CLOUD_HYPERLINK}`,
       fallback: { value: 'skip', key: 'setupNxCloud' },
       completionMessage: 'ci-setup',
     },
@@ -203,27 +212,25 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip' },
       ],
-      footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+      footer: `\nAutomatically fix broken PRs, 70% faster CI: ${NX_CLOUD_HYPERLINK}`,
       fallback: undefined,
       completionMessage: 'platform-setup',
     },
   ],
   /**
-   * Simplified Cloud prompt for template flow
+   * Simplified Cloud prompt for template flow.
    */
   setupNxCloudV2: [
     {
-      code: 'connect-to-cloud',
-      message: 'Connect to Nx Cloud?',
+      code: 'cloud-ci-providers-speed',
+      message: 'Speed up GitHub Actions, GitLab CI, and more with Nx Cloud?',
       initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: "No, don't ask again" },
+        { value: 'never', name: chalk.dim("No, don't ask again") },
       ],
-      footer:
-        '\nAutomatically fix broken PRs, 70% faster CI: https://nx.dev/nx-cloud',
+      footer: `\nFree for small teams. Remote caching and task distribution. 2-minute setup: ${NX_CLOUD_HYPERLINK}`,
       fallback: undefined,
       completionMessage: 'platform-setup',
     },
@@ -250,9 +257,9 @@ export class PromptMessages {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
       } else {
-        this.selectedMessages[key] = Math.floor(
-          Math.random() * messageOptions[key].length
-        );
+        const variant = Number(getFlowVariant());
+        this.selectedMessages[key] =
+          variant < messageOptions[key].length ? variant : 0;
       }
     }
     return messageOptions[key][this.selectedMessages[key]!];
@@ -370,7 +377,7 @@ function shouldRecordStats(): boolean {
     // Use npm to check registry - this works regardless of which package manager invoked us
     const stdout = execSync('npm config get registry', {
       encoding: 'utf-8',
-      windowsHide: false,
+      windowsHide: true,
     });
     const url = new URL(stdout.trim());
 

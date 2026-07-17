@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -19,8 +19,8 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 
@@ -40,6 +40,7 @@ const packageCmd = getPackageManagerCommand().exec;
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
   let schema: Schema = {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
@@ -54,12 +55,22 @@ describe('app', () => {
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
     (detectPackageManager as jest.Mock).mockImplementation((...args) =>
       jest.requireActual('@nx/devkit').detectPackageManager(...args)
     );
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -105,27 +116,37 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         addPlugin: true,
+        // Let the generator format the tree so we assert on the same
+        // prettier-formatted config a user gets, not the raw intermediate the
+        // e2e generator writes with skipFormat.
+        skipFormat: false,
       });
 
-      expect(appTree.read('my-app-e2e/cypress.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-        export default defineConfig({
-            e2e: {
-                ...nxE2EPreset(__filename, {
-                    "cypressDir": "src",
-                    "bundler": "vite",
-                    "webServerCommands": {
-                        "default": "npx nx run my-app:dev",
-                        "production": "npx nx run my-app:preview"
-                    },
-                    "ciWebServerCommand": "npx nx run my-app:preview",
-                    "ciBaseUrl": "http://localhost:4300"
-                }),
-                baseUrl: 'http://localhost:4200'
-            }
-        });"
+      // The web-server commands interpolate the detected package manager's exec
+      // command (`npx`, `pnpm exec`, ...), so normalize it to keep the snapshot
+      // package-manager agnostic.
+      const cypressConfig = appTree
+        .read('my-app-e2e/cypress.config.ts', 'utf-8')
+        .replaceAll(packageCmd, '<pm-exec>');
+      expect(cypressConfig).toMatchInlineSnapshot(`
+        "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+        const { defineConfig } = require('cypress');
+        module.exports = defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                default: '<pm-exec> nx run my-app:dev',
+                production: '<pm-exec> nx run my-app:preview',
+              },
+              ciWebServerCommand: '<pm-exec> nx run my-app:preview',
+              ciBaseUrl: 'http://localhost:4300',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
       `);
     });
 
@@ -148,7 +169,16 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
         addPlugin: true,
       });
-      const snapshot = `
+      // Spot-check the generated playwright config. Avoid inline snapshot
+      // here: `webServer.command` interpolates `packageCmd` at runtime
+      // (`npx`, `pnpm exec`, etc) which varies by package manager, and
+      // Jest's `-u` machinery can't round-trip an inline snapshot whose
+      // expected value is a runtime-built template variable.
+      const playwrightConfig = appTree.read(
+        'my-app-e2e/playwright.config.mts',
+        'utf-8'
+      );
+      expect(playwrightConfig).toMatchInlineSnapshot(`
         "import { defineConfig, devices } from '@playwright/test';
         import { nxE2EPreset } from '@nx/playwright/preset';
         import { workspaceRoot } from '@nx/devkit';
@@ -160,13 +190,20 @@ describe('app', () => {
          * Read environment variables from file.
          * https://github.com/motdotla/dotenv
          */
-        // require('dotenv').config();
+        // import 'dotenv/config';
 
         /**
          * See https://playwright.dev/docs/test-configuration.
+         *
+         * Generated as a .mts file so Node forces ESM regardless of workspace
+         * \`type\`. Playwright routes \`.mts\` through its ESM loader (dynamic import,
+         * bypassing the pirates CJS-compile path), and Nx's native TS strip loads
+         * \`.mts\` directly. Playwright's configLoader auto-discovers
+         * \`playwright.config.mts\` via its extension list
+         * (.ts/.js/.mts/.mjs/.cts/.cjs).
          */
         export default defineConfig({
-          ...nxE2EPreset(__filename, { testDir: './src' }),
+          ...nxE2EPreset(import.meta.dirname, { testDir: './src' }),
           /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
           use: {
             baseURL,
@@ -175,7 +212,7 @@ describe('app', () => {
           },
           /* Run your local dev server before starting the tests */
           webServer: {
-            command: '${packageCmd} nx run my-app:preview',
+            command: 'npx nx run my-app:preview',
             url: 'http://localhost:4300',
             reuseExistingServer: true,
             cwd: workspaceRoot
@@ -195,7 +232,7 @@ describe('app', () => {
               name: "webkit",
               use: { ...devices["Desktop Safari"] },
             },
-            
+
             // Uncomment for mobile browsers support
             /* {
               name: 'Mobile Chrome',
@@ -218,10 +255,7 @@ describe('app', () => {
           ],
         });
         "
-      `;
-      expect(
-        appTree.read('my-app-e2e/playwright.config.ts', 'utf-8')
-      ).toMatchInlineSnapshot(snapshot);
+      `);
     });
 
     it('should use preview vite types to tsconfigs', async () => {
@@ -316,11 +350,7 @@ describe('app', () => {
         'jest.config.cts',
       ]);
 
-      const eslintJson = readJson(appTree, 'my-app/.eslintrc.json');
-      expect(eslintJson.extends).toEqual([
-        'plugin:@nx/react',
-        '../.eslintrc.json',
-      ]);
+      expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
 
       expect(appTree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
@@ -329,7 +359,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -357,6 +387,17 @@ describe('app', () => {
 
       const tsConfig = readJson(appTree, 'my-app/tsconfig.json');
       expect(tsConfig.extends).toEqual('../tsconfig.base.json');
+    });
+
+    it('should use node10 moduleResolution in e2e tsconfig on TypeScript < 6', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+      await applicationGenerator(appTree, schema);
+
+      const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
+      expect(tsconfigE2E.compilerOptions.moduleResolution).toEqual('node10');
     });
   });
 
@@ -461,12 +502,8 @@ describe('app', () => {
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
         },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['plugin:@nx/react', '../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(appTree.exists('my-dir/my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should setup playwright', async () => {
@@ -477,7 +514,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('my-dir/my-app-e2e/playwright.config.ts')
+        appTree.exists('my-dir/my-app-e2e/playwright.config.mts')
       ).toBeTruthy();
       expect(
         appTree.exists('my-dir/my-app-e2e/src/example.spec.ts')
@@ -499,60 +536,10 @@ describe('app', () => {
     ).toContain('Hello there');
   });
 
-  it.each`
-    style
-    ${'styled-components'}
-    ${'styled-jsx'}
-    ${'@emotion/styled'}
-  `(
-    'should generate valid .babelrc JSON config for CSS-in-JS solutions',
-    async ({ style }) => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style,
-      });
-
-      expect(() => {
-        readJson(appTree, `my-app/.babelrc`);
-      }).not.toThrow();
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toMatchSnapshot();
-    }
-  );
-
   describe('--style scss', () => {
     it('should generate scss styles', async () => {
       await applicationGenerator(appTree, { ...schema, style: 'scss' });
       expect(appTree.exists('my-app/src/app/app.module.scss')).toEqual(true);
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toMatchSnapshot();
-    });
-  });
-
-  describe('--style tailwind', () => {
-    it('should generate tailwind setup', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-      expect(appTree.exists('my-app/tailwind.config.js')).toEqual(true);
-      expect(appTree.read('my-app/src/styles.css', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "@tailwind base;
-        @tailwind components;
-        @tailwind utilities;
-        /* You can add global styles to this file, and also import other style files */
-        "
-      `);
-    });
-
-    it('should not generate any styles files', async () => {
-      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
-
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
-
       const content = appTree.read('my-app/src/app/app.tsx').toString();
       expect(content).toMatchSnapshot();
     });
@@ -628,7 +615,7 @@ describe('app', () => {
   it('should setup the eslint builder', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.exists('my-app/.eslintrc.json')).toBeTruthy();
+    expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
   });
 
   describe('--unit-test-runner none', () => {
@@ -661,7 +648,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
       });
 
-      expect(appTree.exists('my-app-e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('my-app-e2e/playwright.config.mts')).toBeTruthy();
       expect(appTree.exists('my-app-e2e/src/example.spec.ts')).toBeTruthy();
     });
   });
@@ -685,6 +672,7 @@ describe('app', () => {
   });
 
   it('should add .eslintrc.json and dependencies', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, { ...schema, linter: 'eslint' });
 
     const packageJson = readJson(appTree, '/package.json');
@@ -817,131 +805,6 @@ describe('app', () => {
     });
   });
 
-  describe('--style styled-components', () => {
-    it('should use styled-components as the styled API library', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-components',
-      });
-
-      expect(
-        appTree.exists('my-app/src/app/app.styled-components')
-      ).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-      expect(appTree.exists('my-app/src/styles.styled-components')).toBeFalsy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toContain('styled-component');
-      expect(content).toContain('<StyledApp>');
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-components',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['styled-components']).toBeDefined();
-    });
-  });
-
-  describe('--style @emotion/styled', () => {
-    it('should use @emotion/styled as the styled API library', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-      });
-
-      expect(appTree.exists('my-app/src/app/app.@emotion/styled')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toContain('@emotion/styled');
-      expect(content).toContain('<StyledApp>');
-    });
-
-    it('should add jsxImportSource to tsconfig.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-      });
-
-      const tsconfigJson = readJson(appTree, 'my-app/tsconfig.json');
-      expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
-        '@emotion/react'
-      );
-    });
-
-    it('should exclude styles', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-        bundler: 'webpack',
-      });
-
-      expect(
-        appTree.read('my-app/webpack.config.js', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should not break if bundler is vite', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-        bundler: 'vite',
-      });
-
-      expect(appTree.read('my-app/vite.config.mts', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: '@emotion/styled',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['@emotion/react']).toBeDefined();
-      expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
-    });
-  });
-
-  describe('--style styled-jsx', () => {
-    it('should use styled-jsx as the styled API library', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-jsx',
-      });
-
-      expect(appTree.exists('my-app/src/app/app.styled-jsx')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-app/src/app/app.tsx').toString();
-      expect(content).toContain('<style jsx>');
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-jsx',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
-    });
-
-    it('should update babel config', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        style: 'styled-jsx',
-      });
-
-      const babelrc = readJson(appTree, 'my-app/.babelrc');
-      expect(babelrc.plugins).toContain('styled-jsx/babel');
-    });
-  });
-
   describe('--routing', () => {
     it('should add routes to the App component', async () => {
       await applicationGenerator(appTree, {
@@ -983,21 +846,20 @@ describe('app', () => {
     it('should update workspace with defaults when --skipprojectsConfigurations=false', async () => {
       await applicationGenerator(appTree, {
         ...schema,
-        style: 'styled-components',
+        style: 'scss',
         skipNxJson: false,
       });
 
       const nxJson = readNxJson(appTree);
       expect(nxJson.generators['@nx/react']).toMatchObject({
         application: {
-          babel: true,
-          style: 'styled-components',
+          style: 'scss',
         },
         component: {
-          style: 'styled-components',
+          style: 'scss',
         },
         library: {
-          style: 'styled-components',
+          style: 'scss',
         },
       });
     });
@@ -1167,6 +1029,42 @@ describe('app', () => {
       expect(packageJson.devDependencies['@react-router/dev']).toBeDefined();
     });
 
+    it('should default to Vite 8 when @react-router/dev supports it', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      const rootPackageJson = readJson(appTree, 'package.json');
+      expect(rootPackageJson.devDependencies['vite']).toMatch(/^\^8\./);
+    });
+
+    it('should force Vite 7 when workspace has @react-router/dev < 7.14.0', async () => {
+      updateJson(appTree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          '@react-router/dev': '7.13.2',
+        };
+        return json;
+      });
+
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      const rootPackageJson = readJson(appTree, 'package.json');
+      expect(rootPackageJson.devDependencies['vite']).toMatch(/^\^7\./);
+    });
+
     it('should be configured to work with jest', async () => {
       await applicationGenerator(appTree, {
         ...schema,
@@ -1186,7 +1084,7 @@ describe('app', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
             "types": [
               "jest",
@@ -1243,7 +1141,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
       });
 
-      expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('e2e/playwright.config.mts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
   });
@@ -1295,28 +1193,21 @@ describe('app', () => {
       );
     });
 
-    it.each`
-      style     | pkg
-      ${'less'} | ${'less'}
-      ${'scss'} | ${'sass'}
-    `(
-      'should add style preprocessor when vite is used',
-      async ({ style, pkg }) => {
-        await applicationGenerator(viteAppTree, {
-          ...schema,
-          style,
-          bundler: 'vite',
-          unitTestRunner: 'vitest',
-          directory: style,
-        });
+    it('should add sass preprocessor when vite is used with scss', async () => {
+      await applicationGenerator(viteAppTree, {
+        ...schema,
+        style: 'scss',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        directory: 'scss',
+      });
 
-        expect(readJson(viteAppTree, 'package.json')).toMatchObject({
-          devDependencies: {
-            [pkg]: expect.any(String),
-          },
-        });
-      }
-    );
+      expect(readJson(viteAppTree, 'package.json')).toMatchObject({
+        devDependencies: {
+          sass: expect.any(String),
+        },
+      });
+    });
   });
 
   it('should add targetDefaults to nxJson when addPlugin=false', async () => {
@@ -1337,7 +1228,22 @@ describe('app', () => {
 
     // ASSERT
     nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults.build).toMatchInlineSnapshot(`
+    const td = nxJson.targetDefaults!;
+    const buildEntry = Array.isArray(td)
+      ? td.find(
+          (e) =>
+            e.target === 'build' &&
+            e.projects === undefined &&
+            e.plugin === undefined
+        )
+      : td.build;
+    const {
+      target: _t,
+      projects: _p,
+      plugin: _pl,
+      ...buildConfig
+    } = (buildEntry as any) ?? {};
+    expect(buildConfig).toMatchInlineSnapshot(`
       {
         "cache": true,
         "dependsOn": [
@@ -1524,7 +1430,7 @@ describe('app', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",
@@ -1797,30 +1703,6 @@ describe('app', () => {
     });
   });
 
-  describe('--bundler=rsbuild', () => {
-    it.each([
-      { style: 'styled-components' },
-      { style: 'styled-jsx' },
-      { style: '@emotion/styled' },
-    ])(
-      `should generate valid rsbuild config files for $style`,
-      async ({ style }) => {
-        await applicationGenerator(appTree, {
-          ...schema,
-          bundler: 'rsbuild',
-          style: style as any,
-        });
-
-        const content = appTree.read('my-app/src/app/app.tsx').toString();
-        expect(content).toMatchSnapshot();
-        const configContents = appTree
-          .read('my-app/rsbuild.config.ts')
-          .toString();
-        expect(configContents).toMatchSnapshot();
-      }
-    );
-  });
-
   describe('react 19 support', () => {
     beforeEach(() => {
       projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
@@ -2086,7 +1968,7 @@ describe('app', () => {
       });
 
       const playwrightConfig = appTree.read(
-        'my-app-e2e/playwright.config.ts',
+        'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
       expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
@@ -2119,7 +2001,7 @@ describe('app', () => {
       });
 
       const playwrightConfig = appTree.read(
-        'my-app-e2e/playwright.config.ts',
+        'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
       expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
@@ -2152,7 +2034,7 @@ describe('app', () => {
       });
 
       const playwrightConfig = appTree.read(
-        'my-app-e2e/playwright.config.ts',
+        'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
       expect(playwrightConfig).toContain("|| 'http://localhost:9000'");

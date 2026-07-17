@@ -17,8 +17,15 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "generators.json"
+  ],
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -28,16 +35,18 @@
   "generators": "./generators.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/node": "workspace:*",
+    "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
-    "express": "^4.21.2"
+    "express": ">=4.0.0 <6.0.0"
   },
   "peerDependenciesMeta": {
     "express": {
@@ -46,5 +55,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json"
+  },
+  "typesVersions": {
+    "*": {}
   }
 }

@@ -4,7 +4,7 @@ import {
   cleanupProject,
   checkFilesDoNotExist,
   checkFilesExist,
-  getAvailablePort,
+  reservePort,
   killProcessAndPorts,
   readFile,
   readJson,
@@ -33,7 +33,10 @@ function runCLI(cmd: string, opts?: { env?: Record<string, string> }) {
 
 describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/react'], preset: 'ts' });
+    newProject({
+      packages: ['@nx/react', '@nx/rspack', '@nx/cypress', '@nx/jest'],
+      preset: 'ts',
+    });
   });
 
   afterAll(() => cleanupProject());
@@ -42,7 +45,7 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
-    const shellPort = await getAvailablePort();
+    const shellPort = await reservePort();
 
     // Generate host with remotes
     runCLI(
@@ -189,7 +192,7 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
-    const shellPort = await getAvailablePort();
+    const shellPort = await reservePort();
 
     // Generate host with one remote
     runCLI(
@@ -223,7 +226,7 @@ describe('React Rspack Module Federation - TS Solution + PM Workspaces', () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
     const lib = uniq('lib');
-    const shellPort = await getAvailablePort();
+    const shellPort = await reservePort();
 
     // Generate a library
     runCLI(

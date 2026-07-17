@@ -1,12 +1,17 @@
-import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
-import { clean, coerce, major } from 'semver';
+import { type Tree } from '@nx/devkit';
+import {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersion,
+} from '@nx/devkit/internal';
+import { join } from 'path';
+import { major } from 'semver';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(join('@nx/cypress', 'package.json')).version;
+export const minSupportedCypressVersion = '13.0.0';
 export const eslintPluginCypressVersion = '^3.5.0';
-export const typesNodeVersion = '20.19.9';
-export const cypressViteDevServerVersion = '^7.0.1';
-export const cypressVersion = '^15.8.0';
+export const typesNodeVersion = '^22.0.0';
+export const cypressViteDevServerVersion = '^7.3.1';
+export const cypressVersion = '^15.17.0';
 export const cypressWebpackVersion = '^5.4.1';
 export const viteVersion = '^6.0.0';
 export const htmlWebpackPluginVersion = '^5.5.0';
@@ -15,6 +20,7 @@ export type CypressVersions = Record<
   keyof Omit<
     typeof import('./versions'),
     | 'nxVersion'
+    | 'minSupportedCypressVersion'
     | 'versions'
     | 'getInstalledCypressVersion'
     | 'getInstalledCypressMajorVersion'
@@ -37,7 +43,7 @@ type CompatVersions = 13 | 14;
 const versionMap: Record<CompatVersions, CypressVersions> = {
   13: {
     eslintPluginCypressVersion: '^3.5.0',
-    typesNodeVersion: '20.19.9',
+    typesNodeVersion: '^22.0.0',
     cypressViteDevServerVersion: '^2.2.1',
     cypressVersion: '^13.13.0',
     cypressWebpackVersion: '^3.8.0',
@@ -46,7 +52,7 @@ const versionMap: Record<CompatVersions, CypressVersions> = {
   },
   14: {
     eslintPluginCypressVersion: '^3.5.0',
-    typesNodeVersion: '20.19.9',
+    typesNodeVersion: '^22.0.0',
     cypressViteDevServerVersion: '^6.0.3',
     cypressVersion: '^14.2.1',
     cypressWebpackVersion: '^4.0.2',
@@ -62,39 +68,18 @@ export function versions(tree: Tree): CypressVersions {
   }
 
   const cypressMajorVersion = major(installedCypressVersion);
-  switch (cypressMajorVersion) {
-    case 15:
-      return latestVersions;
-    case 14:
-      return versionMap[14];
-    case 13:
-      return versionMap[13];
-    default:
-      throw new Error(
-        `You're currently using an unsupported Cypress version: ${installedCypressVersion}. Supported versions are v13, v14, and v15.`
-      );
-  }
+  return versionMap[cypressMajorVersion as CompatVersions] ?? latestVersions;
 }
 
 export function getInstalledCypressVersion(tree?: Tree): string | null {
-  try {
-    let version: string | null;
-
-    if (tree) {
-      version = getCypressVersionFromTree(tree);
-    } else {
-      version = getCypressVersionFromFileSystem();
-    }
-
-    return version;
-  } catch {
-    return null;
+  if (!tree) {
+    return getInstalledPackageVersion('cypress');
   }
+  return getDeclaredPackageVersion(tree, 'cypress');
 }
 
 export function getInstalledCypressMajorVersion(tree?: Tree): number | null {
   const installedCypressVersion = getInstalledCypressVersion(tree);
-
   return installedCypressVersion ? major(installedCypressVersion) : null;
 }
 
@@ -108,31 +93,4 @@ export function assertMinimumCypressVersion(
       `Cypress version of ${minVersion} or higher is not installed. Expected Cypress v${minVersion}+, found Cypress v${version} instead.`
     );
   }
-}
-
-function getCypressVersionFromTree(tree: Tree): string | null {
-  const installedVersion = getDependencyVersionFromPackageJson(tree, 'cypress');
-
-  if (!installedVersion) {
-    return null;
-  }
-
-  if (installedVersion === 'latest' || installedVersion === 'next') {
-    return clean(cypressVersion) ?? coerce(cypressVersion)?.version;
-  }
-
-  return clean(installedVersion) ?? coerce(installedVersion)?.version;
-}
-
-function getCypressVersionFromFileSystem(): string | null {
-  let packageJson: PackageJson | undefined;
-  try {
-    packageJson = <PackageJson>require('cypress/package.json');
-  } catch {}
-
-  if (!packageJson) {
-    return null;
-  }
-
-  return packageJson.version;
 }

@@ -1,7 +1,7 @@
-import { type CreateNodesContextV2 } from '@nx/devkit';
-import { createNodesV2 } from './router-plugin';
+import { type CreateNodesContext } from '@nx/devkit';
+import { createNodes } from './router-plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'path';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
@@ -9,14 +9,14 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 
 describe('@nx/react/react-router-plugin', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd: string;
 
@@ -86,7 +86,7 @@ describe('@nx/react/react-router-plugin', () => {
     });
   });
 
-  function mockConfig(path: string, config, context: CreateNodesContextV2) {
+  function mockConfig(path: string, config, context: CreateNodesContext) {
     jest.mock(join(context.workspaceRoot, path), () => config, {
       virtual: true,
     });

@@ -3,7 +3,7 @@ import {
   type ConformanceViolation,
 } from '@nx/conformance';
 import { readJsonFile, workspaceRoot } from '@nx/devkit';
-import { existsSync } from 'node:fs';
+import { existsSync } from 'fs';
 import { join } from 'node:path';
 import { satisfies } from 'semver';
 

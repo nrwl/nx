@@ -15,12 +15,12 @@ import {
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 import {
   nuxtEslintConfigVersion,
   nuxtEslintConfigLegacyVersion,
 } from './versions';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export async function addLinting(
   host: Tree,
@@ -80,7 +80,13 @@ export async function addLinting(
       }
     }
 
-    const installTask = addDependenciesToPackageJson(host, {}, devDependencies);
+    const installTask = addDependenciesToPackageJson(
+      host,
+      {},
+      devDependencies,
+      undefined,
+      true
+    );
     tasks.push(installTask);
   }
   return runTasksInSerial(...tasks);

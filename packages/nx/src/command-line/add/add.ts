@@ -21,6 +21,7 @@ import {
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
 import { globalSpinner } from '../../utils/spinner';
+import { NxPackageJson } from '../../utils/package-json';
 import { reportNxAddCommand } from '../../analytics';
 
 export function addHandler(options: AddOptions): Promise<number> {
@@ -53,15 +54,23 @@ async function installPackage(
     const pmc = getPackageManagerCommand(pm);
 
     // if we explicitly specify latest in yarn berry, it won't resolve the version
-    const command =
+    let command =
       pm === 'yarn' && gte(pmv, '2.0.0') && version === 'latest'
         ? `${pmc.addDev} ${pkgName}`
         : `${pmc.addDev} ${pkgName}@${version}`;
+
+    // pnpm 11+ fails the install when the plugin's own dependency tree
+    // carries unacknowledged build scripts, and the plugin's generators can
+    // only record allowBuilds decisions after this install. Warn and skip
+    // for this one install, like pnpm 10 did.
+    if (pm === 'pnpm' && gte(pmv, '11.0.0')) {
+      command += ' --config.strictDepBuilds=false';
+    }
     await new Promise<void>((resolve) =>
       exec(
         command,
         {
-          windowsHide: false,
+          windowsHide: true,
         },
         (error, stdout, stderr) => {
           if (error) {
@@ -167,7 +176,7 @@ function parsePackageSpecifier(
 }
 
 export const coreNxPluginVersions = (
-  require('../../../package.json') as typeof import('../../../package.json')
+  require(require.resolve('nx/package.json')) as NxPackageJson
 )['nx-migrations'].packageGroup.reduce(
   (map, entry) => {
     const packageName = typeof entry === 'string' ? entry : entry.package;

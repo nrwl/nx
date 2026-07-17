@@ -47,6 +47,11 @@ interface Schema {
   workspaceGlobs?: string | string[];
   useProjectJson?: boolean;
   aiAgents?: Agent[] | Agent;
+  // Internal: set by create-nx-workspace when scaffolding into the current
+  // directory. Skips the generator's empty-directory guard so it can write into
+  // a non-empty cwd (existing files that collide with generated files are
+  // overwritten).
+  skipEmptyDirCheck?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -82,7 +87,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
           cwd: joinPathFragments(tree.root, options.directory),
           stdio:
             process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
-          windowsHide: false,
+          windowsHide: true,
         });
       }
       installPackagesTask(
@@ -126,6 +131,7 @@ function validateOptions(options: Schema, host: Tree) {
   }
 
   if (
+    !options.skipEmptyDirCheck &&
     host.exists(options.name) &&
     !host.isFile(options.name) &&
     host.children(options.name).length > 0

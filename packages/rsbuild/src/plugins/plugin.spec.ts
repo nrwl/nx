@@ -1,7 +1,7 @@
-import { type CreateNodesContextV2 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { type CreateNodesContext } from '@nx/devkit';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodesV2 } from './plugin';
+import { createNodes } from './plugin';
 
 jest.mock('@rsbuild/core', () => ({
   ...jest.requireActual('@rsbuild/core'),
@@ -11,14 +11,14 @@ jest.mock('@rsbuild/core', () => ({
   }),
 }));
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 
 describe('@nx/rsbuild', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
 
   beforeEach(() => {
@@ -39,6 +39,7 @@ describe('@nx/rsbuild', () => {
       JSON.stringify({ name: 'my-app' })
     );
     tempFs.createFileSync('my-app/rsbuild.config.ts', `export default {};`);
+    tempFs.createFileSync('package-lock.json', '{}');
   });
 
   afterEach(() => {
@@ -144,7 +145,7 @@ describe('@nx/rsbuild', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",
@@ -232,5 +233,63 @@ describe('@nx/rsbuild', () => {
     expect(
       nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
     ).toEqual(['@nx/js:typescript-sync']);
+  });
+
+  describe('build outputs', () => {
+    let projectCounter = 0;
+
+    // Each call uses a fresh project so the plugin's config-file-hash cache
+    // does not return a previous test's inferred targets.
+    const inferBuildOutputs = async (
+      distPathRoot: string | undefined
+    ): Promise<string[]> => {
+      const project = `apps/app-${projectCounter++}`;
+      const configPath = `${project}/rsbuild.config.ts`;
+      tempFs.createFileSync(
+        `${project}/project.json`,
+        JSON.stringify({ name: project })
+      );
+      // Unique content per case so the plugin's file-hash targets cache
+      // does not serve another case's (or an earlier run's) inferred result.
+      tempFs.createFileSync(
+        configPath,
+        `export default {}; // distPath.root=${distPathRoot ?? '(unset)'}`
+      );
+      // `@rsbuild/core` is `require`d lazily inside the plugin, so grab the
+      // same (mocked) module instance from the current registry.
+      const { loadConfig } = require('@rsbuild/core');
+      (loadConfig as jest.Mock).mockResolvedValueOnce({
+        filePath: configPath,
+        content: distPathRoot
+          ? { output: { distPath: { root: distPathRoot } } }
+          : {},
+      });
+
+      const nodes = await createNodesFunction(
+        [configPath],
+        { buildTargetName: 'build' },
+        context
+      );
+
+      return nodes[0][1].projects[project].targets.build.outputs;
+    };
+
+    it('should default to {workspaceRoot}/dist/{projectRoot} when distPath.root is not set', async () => {
+      expect(await inferBuildOutputs(undefined)).toEqual([
+        '{workspaceRoot}/dist/{projectRoot}',
+      ]);
+    });
+
+    it('should use distPath.root as-is for a project-relative path', async () => {
+      expect(await inferBuildOutputs('build')).toEqual(['{projectRoot}/build']);
+    });
+
+    it('should resolve a workspace-relative distPath.root without dropping the leaf directory', async () => {
+      // Regression: the leaf directory must be kept - inferring
+      // `{workspaceRoot}/dist` would capture sibling projects' outputs.
+      expect(await inferBuildOutputs('../../dist/my-app')).toEqual([
+        '{workspaceRoot}/dist/my-app',
+      ]);
+    });
   });
 });

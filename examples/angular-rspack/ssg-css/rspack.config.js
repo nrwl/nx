@@ -1,9 +1,5 @@
 module.exports = () => {
   if (global.NX_GRAPH_CREATION === undefined) {
-    // This is needed to ensure that the `@nx/angular-rspack` package can find the build artefact for `@nx/devkit`
-    // TODO(colum): Remove this once packages in Nx are built to local dist
-    const { patchDevkitRequestPath } = require('../patch-devkit-request-path');
-    const cleanupPatch = patchDevkitRequestPath();
     const { createConfig } = require('@nx/angular-rspack');
     const config = createConfig(
       {
@@ -15,6 +11,7 @@ module.exports = () => {
           polyfills: ['zone.js'],
           ssr: { entry: './src/server.ts' },
           prerender: true,
+          subresourceIntegrity: true,
           assets: [
             {
               glob: '**/*',
@@ -31,7 +28,6 @@ module.exports = () => {
         },
       }
     );
-    cleanupPatch();
     return config;
   }
   return {};

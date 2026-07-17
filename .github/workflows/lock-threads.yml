@@ -17,9 +17,10 @@ jobs:
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@7de207be1d3ce97a9abe6ff1306222982d1ca9f9 # v5.0.1
+      - uses: dessant/lock-threads@6548363a2d763e3a4a3a0dc04ca4a10481d8e536 # v6.0.0
         id: lockthreads
         with:
+          process-only: 'issues, prs'
           github-token: ${{ github.token }}
           issue-inactive-days: "30" # Lock issues after 30 days of being closed
           pr-inactive-days: "5" # Lock closed PRs after 5 days. This ensures that issues that stem from a PR are opened as issues, rather than comments on the recently merged PR.

@@ -1,20 +1,28 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/next",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/next/tsconfig.tsbuildinfo"
+    "composite": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
     "jest.config.ts",
-    "jest.config.cts"
+    "jest.config.cts",
+    "eslint.config.mjs"
   ],
-  "include": ["**/*.ts", "**/*.json"],
+  "include": ["*.ts", "src/**/*.ts", "plugins/**/*.ts", "typings/**/*.d.ts"],
   "references": [
     {
       "path": "../webpack/tsconfig.lib.json"

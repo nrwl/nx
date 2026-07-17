@@ -13,6 +13,7 @@ import {
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
 import type { WebpackPluginOptions } from '../../plugins/plugin';
@@ -66,16 +67,40 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-jest.mock('nx/src/devkit-internals', () => ({
-  ...jest.requireActual('nx/src/devkit-internals'),
-  getExecutorInformation: jest
-    .fn()
-    .mockImplementation((pkg, ...args) =>
-      jest
-        .requireActual('nx/src/devkit-internals')
-        .getExecutorInformation('@nx/webpack', ...args)
-    ),
-}));
+jest.mock('nx/src/devkit-internals', () => {
+  // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
+  const getActual = () =>
+    jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
+  const getActualDevkitInternals = () =>
+    jest.requireActual('nx/src/devkit-internals');
+
+  return new Proxy(
+    {},
+    {
+      get(target, prop) {
+        if (prop === 'getExecutorInformation') {
+          // Read the executor schema from source so this unit test does not
+          // depend on @nx/webpack being built. executors.json points `schema`
+          // at ./dist (only present after copy-assets); readTargetOptions only
+          // consumes `schema`.
+          return jest.fn().mockImplementation((_pkg, executorName) => ({
+            schema: JSON.parse(
+              readFileSync(
+                join(__dirname, '../../executors', executorName, 'schema.json'),
+                'utf-8'
+              )
+            ),
+          }));
+        }
+        if (prop === 'retrieveProjectConfigurations') {
+          return getActual().retrieveProjectConfigurations;
+        }
+        // For all other properties, return from the actual module
+        return getActualDevkitInternals()[prop];
+      },
+    }
+  );
+});
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
   addProjectConfiguration(tree, name, project);

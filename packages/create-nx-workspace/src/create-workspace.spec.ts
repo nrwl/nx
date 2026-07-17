@@ -1,4 +1,31 @@
-import { extractConnectUrl } from './create-workspace';
+import {
+  createWorkspace,
+  extractConnectUrl,
+  resolveTemplateShorthand,
+} from './create-workspace';
+import { mkdtempSync, mkdirSync, rmSync, realpathSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+
+describe('createWorkspace - template flow', () => {
+  it('refuses to overwrite an existing directory unless scaffolding in place', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-cw-')));
+    mkdirSync(join(tmpDir, 'existing'));
+    try {
+      await expect(
+        createWorkspace(undefined, {
+          template: 'nrwl/empty-template',
+          name: 'existing',
+          workingDir: tmpDir,
+          packageManager: 'npm',
+          nxCloud: 'skip',
+        } as any)
+      ).rejects.toMatchObject({ code: 'DIRECTORY_EXISTS' });
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+});
 
 describe('extractConnectUrl', () => {
   test('should extract the correct URL from the given string', () => {
@@ -55,5 +82,37 @@ describe('extractConnectUrl', () => {
     const expectedUrl =
       'https://example.com/connect/abcd1234?query=param#fragment';
     expect(extractConnectUrl(inputString)).toBe(expectedUrl);
+  });
+});
+
+describe('resolveTemplateShorthand', () => {
+  test('should resolve angular shorthand', () => {
+    expect(resolveTemplateShorthand('angular')).toBe('nrwl/angular-template');
+  });
+
+  test('should resolve react shorthand', () => {
+    expect(resolveTemplateShorthand('react')).toBe('nrwl/react-template');
+  });
+
+  test('should resolve typescript shorthand', () => {
+    expect(resolveTemplateShorthand('typescript')).toBe(
+      'nrwl/typescript-template'
+    );
+  });
+
+  test('should resolve empty shorthand', () => {
+    expect(resolveTemplateShorthand('empty')).toBe('nrwl/empty-template');
+  });
+
+  test('should pass through full template names unchanged', () => {
+    expect(resolveTemplateShorthand('nrwl/angular-template')).toBe(
+      'nrwl/angular-template'
+    );
+  });
+
+  test('should pass through unknown values unchanged', () => {
+    expect(resolveTemplateShorthand('nrwl/custom-template')).toBe(
+      'nrwl/custom-template'
+    );
   });
 });

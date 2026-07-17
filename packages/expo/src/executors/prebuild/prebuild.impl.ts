@@ -1,10 +1,12 @@
 import { ExecutorContext, names, workspaceRoot } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
+import { resolveExpoCliPath } from '../../utils/resolve-expo-cli';
 import { join } from 'path';
 
 import { podInstall } from '../../utils/pod-install-task';
 import { ExpoPrebuildOptions } from './schema';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ExpoPrebuildOutput {
   success: boolean;
@@ -16,6 +18,8 @@ export default async function* prebuildExecutor(
   options: ExpoPrebuildOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoPrebuildOutput> {
+  warnExpoExecutorDeprecation('prebuild');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
@@ -49,9 +53,12 @@ export function prebuildAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('@expo/cli/build/bin/cli'),
+      resolveExpoCliPath(),
       ['prebuild', ...createPrebuildOptions(options), '--no-install'],
-      { cwd: join(workspaceRoot, projectRoot), env: process.env }
+      {
+        cwd: join(workspaceRoot, projectRoot),
+        env: process.env,
+      }
     );
 
     // Ensure the child process is killed when the parent exits

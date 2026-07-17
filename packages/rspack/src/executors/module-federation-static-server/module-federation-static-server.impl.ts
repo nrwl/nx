@@ -1,24 +1,23 @@
 import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/internal';
+import {
   logger,
   parseTargetString,
   readTargetOptions,
   Target,
   workspaceRoot,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import {
-  combineAsyncIterables,
-  createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
-import {
+  buildStaticRemotes,
   getModuleFederationConfig,
   getRemotes,
   parseStaticRemotesConfig,
   StaticRemotesConfig,
-} from '@nx/module-federation/src/utils';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+} from '@nx/module-federation/internal';
+import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
 import { fork } from 'child_process';
 import type { Express } from 'express';
 import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
@@ -27,6 +26,7 @@ import { basename, extname, join } from 'path';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
 import type { RspackExecutorSchema } from '../rspack/schema';
 import { ModuleFederationStaticServerSchema } from './schema';
+import { warnRspackMfStaticServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 function getBuildAndServeOptionsFromServeTarget(
   serveTarget: string,
@@ -101,7 +101,6 @@ async function buildHost(
     );
     staticProcess.stdout.on('data', (data) => {
       const ANSII_CODE_REGEX =
-        // eslint-disable-next-line no-control-regex
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
       const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
 
@@ -178,9 +177,8 @@ export function startProxies(
   mappedLocationsOfRemotes: Record<string, string>,
   sslOptions?: { pathToCert: string; pathToKey: string }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { createProxyMiddleware } = require('http-proxy-middleware');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const express = require('express');
   let sslCert: Buffer;
   let sslKey: Buffer;
@@ -197,9 +195,9 @@ export function startProxies(
       );
     }
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const http = require('http');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+
   const https = require('https');
 
   logger.info(`NX Starting static remotes proxies...`);
@@ -250,6 +248,7 @@ export default async function* moduleFederationStaticServer(
   schema: ModuleFederationStaticServerSchema,
   context: ExecutorContext
 ) {
+  warnRspackMfStaticServerExecutorDeprecation();
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
 

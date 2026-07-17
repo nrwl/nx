@@ -88,17 +88,17 @@ Fix generators are only applied for rules whose final status is not `disabled`.
 
 ```yaml
 - name: Enforce all conformance rules
-  run: npx nx-cloud record -- npx nx conformance:check
+  run: npx nx record -- npx nx conformance:check
 ```
 
-Use `npx nx-cloud record --` to capture the logs for `nx conformance:check` in the Nx Cloud dashboard.
+Use `npx nx record --` to capture the logs for `nx conformance:check` in the Nx Cloud dashboard.
 
 {% /tabitem %}
 {% tabitem label="Nx Cloud w/ Enterprise Plan" %}
 
 ```yaml
 - name: Enforce all conformance rules
-  run: npx nx-cloud record -- npx nx-cloud conformance:check
+  run: npx nx record -- npx nx-cloud conformance:check
 ```
 
 Here we are using the `nx-cloud` CLI to run the `conformance:check` command so that we can hook into the power of Conformance rules configured in your Nx Cloud Enterprise organization. Learn more about [conformance rules in Nx Cloud](/docs/enterprise/configure-conformance-rules-in-nx-cloud).
@@ -106,7 +106,7 @@ Here we are using the `nx-cloud` CLI to run the `conformance:check` command so t
 {% /tabitem %}
 {% /tabs %}
 
-If a valid license is not available to the workspace (either locally or via Nx Cloud), the `nx conformance` and `nx conformance:check` commands will fail without checking any rules.
+If a valid license is not available to the workspace (either locally or via Nx Cloud), the `conformance` and `conformance:check` commands will fail without checking any rules.
 
 ## Taking things further with Nx Cloud Enterprise
 
@@ -118,7 +118,7 @@ Simply add an appropriate invocation of the `nx-cloud conformance:check` command
 
 ```yaml
 - name: Enforce all conformance rules
-  run: npx nx-cloud record -- npx nx-cloud conformance:check
+  run: npx nx record -- npx nx-cloud conformance:check
 ```
 
 Learn more about [publishing](/docs/enterprise/publish-conformance-rules-to-nx-cloud) and [configuring conformance rules in Nx Cloud](/docs/enterprise/configure-conformance-rules-in-nx-cloud).

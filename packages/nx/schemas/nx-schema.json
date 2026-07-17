@@ -43,10 +43,20 @@
       }
     },
     "targetDefaults": {
+      "description": "Target defaults — a map keyed by target name, glob (e.g. 'e2e-ci--*'), or executor (e.g. '@nx/js:tsc'). Each value is either a configuration object applied to that target, or an ordered array of filtered entries (used when one target needs different defaults per plugin, projects, or executor). Array entries apply in document order, last match winning.",
       "type": "object",
-      "description": "Target defaults",
       "additionalProperties": {
-        "$ref": "#/definitions/targetDefaultsConfig"
+        "oneOf": [
+          {
+            "$ref": "#/definitions/targetDefaultsConfig"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/targetDefaultArrayEntry"
+            }
+          }
+        ]
       }
     },
     "workspaceLayout": {
@@ -225,7 +235,7 @@
                         }
                       }
                     ],
-                    "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
+                    "description": "By default, we will try and resolve the latest match for the releaseTag.pattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
                   },
                   "requireSemver": {
                     "type": "boolean",
@@ -237,41 +247,10 @@
                     "description": "Controls how docker versions are used relative to semver versions when creating git tags and changelog entries. Set to true to use only the docker version, false to use only the semver version, or 'both' to create tags and changelog entries for both docker and semver versions. By default, this is set to true when docker configuration is present, and false otherwise."
                   },
                   "strictPreid": {
-                    "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
+                    "$ref": "#/definitions/NxReleaseStrictPreidConfiguration"
                   }
                 },
                 "additionalProperties": false
-              },
-              "releaseTagPattern": {
-                "type": "string",
-                "description": "DEPRECATED: Use releaseTag.pattern instead. Will be removed in Nx 23."
-              },
-              "releaseTagPatternCheckAllBranchesWhen": {
-                "oneOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                ],
-                "description": "DEPRECATED: Use releaseTag.checkAllBranchesWhen instead. Will be removed in Nx 23."
-              },
-              "releaseTagPatternRequireSemver": {
-                "type": "boolean",
-                "description": "DEPRECATED: Use releaseTag.requireSemver instead. Will be removed in Nx 23."
-              },
-              "releaseTagPatternPreferDockerVersion": {
-                "type": ["boolean", "string"],
-                "enum": [true, false, "both"],
-                "description": "DEPRECATED: Use releaseTag.preferDockerVersion instead. Will be removed in Nx 23."
-              },
-              "releaseTagPatternStrictPreid": {
-                "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration",
-                "description": "DEPRECATED: Use releaseTag.strictPreid instead. Will be removed in Nx 23."
               },
               "versionPlans": {
                 "oneOf": [
@@ -362,7 +341,7 @@
           "properties": {
             "pattern": {
               "type": "string",
-              "description": "Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing. It supports interpolating the version as {version} and (if releasing independently or forcing project level version control system releases) the project name as {projectName} within the string. The default releaseTagPattern for fixed/unified releases is: \"v{version}\". The default releaseTagPattern for independent releases at the project level is: \"{projectName}@{version}\""
+              "description": "Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing. It supports interpolating the version as {version} and (if releasing independently or forcing project level version control system releases) the project name as {projectName} within the string. The default releaseTag.pattern for fixed/unified releases is: \"v{version}\". The default releaseTag.pattern for independent releases at the project level is: \"{projectName}@{version}\""
             },
             "checkAllBranchesWhen": {
               "oneOf": [
@@ -376,7 +355,7 @@
                   }
                 }
               ],
-              "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
+              "description": "By default, we will try and resolve the latest match for the releaseTag.pattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
             },
             "requireSemver": {
               "type": "boolean",
@@ -388,41 +367,10 @@
               "description": "Controls how docker versions are used relative to semver versions when creating git tags and changelog entries. Set to true to use only the docker version, false to use only the semver version, or 'both' to create tags and changelog entries for both docker and semver versions. By default, this is set to true when docker configuration is present, and false otherwise."
             },
             "strictPreid": {
-              "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration"
+              "$ref": "#/definitions/NxReleaseStrictPreidConfiguration"
             }
           },
           "additionalProperties": false
-        },
-        "releaseTagPattern": {
-          "type": "string",
-          "description": "DEPRECATED: Use releaseTag.pattern instead. Will be removed in Nx 23."
-        },
-        "releaseTagPatternCheckAllBranchesWhen": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ],
-          "description": "DEPRECATED: Use releaseTag.checkAllBranchesWhen instead. Will be removed in Nx 23."
-        },
-        "releaseTagPatternRequireSemver": {
-          "type": "boolean",
-          "description": "DEPRECATED: Use releaseTag.requireSemver instead. Will be removed in Nx 23."
-        },
-        "releaseTagPatternPreferDockerVersion": {
-          "type": ["boolean", "string"],
-          "enum": [true, false, "both"],
-          "description": "DEPRECATED: Use releaseTag.preferDockerVersion instead. Will be removed in Nx 23."
-        },
-        "releaseTagPatternStrictPreid": {
-          "$ref": "#/definitions/NxReleaseReleaseTagPatternStrictPreidConfiguration",
-          "description": "DEPRECATED: Use releaseTag.strictPreid instead. Will be removed in Nx 23."
         },
         "docker": {
           "oneOf": [
@@ -466,6 +414,52 @@
             "type": "string"
           },
           "description": "List of registered task sync generators to disable."
+        }
+      },
+      "additionalProperties": false
+    },
+    "migrate": {
+      "type": "object",
+      "description": "Configuration for the `nx migrate` command",
+      "properties": {
+        "createCommits": {
+          "type": "boolean",
+          "description": "Whether to automatically create a git commit after each migration runs. Equivalent to the `--create-commits` flag. Defaults to `false`."
+        },
+        "commitPrefix": {
+          "type": "string",
+          "description": "Commit message prefix applied to each migration commit when commits are enabled. Equivalent to the `--commit-prefix` flag. Defaults to `\"chore: [nx migration] \"`."
+        },
+        "include": {
+          "type": "string",
+          "enum": ["required", "optional", "all"],
+          "description": "Restricts which packages to migrate, for target packages that support optional updates: `required` (the target package and the related packages it ships with), `optional` (the optional dependency updates those packages recommend), or `all`. Equivalent to the `--include` flag. Defaults to `all`."
+        },
+        "multiMajorMode": {
+          "type": "string",
+          "enum": ["direct", "gradual"],
+          "description": "How to handle a migration that crosses more than one major version. Equivalent to the `--multi-major-mode` flag. The `NX_MULTI_MAJOR_MODE` environment variable takes precedence over this setting."
+        },
+        "useRegistryResolution": {
+          "type": "boolean",
+          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION and the deprecated NX_MIGRATE_SKIP_REGISTRY_FETCH (removed in Nx 24) env vars take precedence over this.",
+          "default": true
+        },
+        "agentic": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "enum": ["claude-code", "codex", "opencode"]
+            }
+          ],
+          "description": "Default for the agentic flow used by `nx migrate --run-migrations`. Equivalent to the `--agentic` flag. `false` never uses the agentic flow, `true` uses it and resolves the installed agent, and an agent id always uses that agent."
+        },
+        "validate": {
+          "type": "boolean",
+          "description": "Whether to run agent-driven validation after generator-only migrations when the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults to `true` when the agentic flow is enabled."
         }
       },
       "additionalProperties": false
@@ -548,9 +542,111 @@
       },
       "required": ["rules"],
       "additionalProperties": false
+    },
+    "owners": {
+      "description": "Configuration for Nx Owners (CODEOWNERS generation). Set to true to enable with all defaults.",
+      "oneOf": [
+        {
+          "type": "boolean",
+          "enum": [true],
+          "description": "Enable owners with all default settings."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "description": "The format to use for the generated owners file. Defaults to 'github'.",
+              "enum": ["github", "gitlab", "bitbucket"],
+              "default": "github"
+            },
+            "outputPath": {
+              "type": "string",
+              "description": "The path to write the generated owners file to. Defaults based on format (e.g. '.github/CODEOWNERS')."
+            },
+            "patterns": {
+              "type": "array",
+              "description": "List of ownership patterns to apply.",
+              "items": {
+                "$ref": "#/definitions/ownersPattern"
+              }
+            },
+            "sections": {
+              "type": "array",
+              "description": "List of ownership sections (GitLab only). Sections allow grouping patterns with approval requirements.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The section label."
+                  },
+                  "defaultOwners": {
+                    "type": "array",
+                    "description": "Default owners for all patterns in this section.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "numberOfRequiredApprovals": {
+                    "type": "number",
+                    "description": "Number of required approvals for this section. Mutually exclusive with 'optional'."
+                  },
+                  "optional": {
+                    "type": "boolean",
+                    "description": "Whether this section is optional. Mutually exclusive with 'numberOfRequiredApprovals'."
+                  },
+                  "patterns": {
+                    "type": "array",
+                    "description": "List of ownership patterns within this section.",
+                    "items": {
+                      "$ref": "#/definitions/ownersPattern"
+                    }
+                  }
+                },
+                "required": ["name"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   },
   "definitions": {
+    "ownersPattern": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "A human-readable description of this ownership pattern."
+        },
+        "projects": {
+          "type": "array",
+          "description": "The projects this pattern applies to. Accepts project names, glob patterns, tag references, or any other valid project filter supported by the --projects flag.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "type": "array",
+          "description": "File glob patterns this ownership pattern applies to (for non-project-based ownership).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owners": {
+          "type": "array",
+          "description": "List of owners (e.g. GitHub usernames or team handles) for the matched projects or files.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["owners"],
+      "additionalProperties": false
+    },
     "inputs": {
       "type": "array",
       "items": {
@@ -670,6 +766,31 @@
             },
             "required": ["dependentTasksOutputFiles"],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "json": {
+                "type": "string",
+                "description": "Path to a JSON file. Must start with {workspaceRoot} or {projectRoot}. Supports globs."
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Allowlist of fields to include in the hash. Supports dot notation for nested paths (e.g. 'compilerOptions.target')."
+              },
+              "excludeFields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Denylist of fields to exclude from the hash. Supports dot notation for nested paths."
+              }
+            },
+            "required": ["json"],
+            "additionalProperties": false
           }
         ]
       }
@@ -739,6 +860,72 @@
       },
       "additionalProperties": false
     },
+    "targetDefaultArrayEntry": {
+      "type": "object",
+      "description": "A filtered target defaults entry. The optional `filter` narrows where the entry applies; the remaining fields are the configuration applied when it matches. An entry with no `filter` is a catch-all baseline for its target key.",
+      "properties": {
+        "filter": {
+          "type": "object",
+          "description": "Narrows where this entry applies. When present, every listed criterion must match the target being resolved.",
+          "properties": {
+            "plugin": {
+              "type": "string",
+              "description": "Restrict to targets originated by a specific plugin (e.g. '@nx/vite')."
+            },
+            "projects": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Restrict the default to matching projects. A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy', 'tag:dotnet']). Uses findMatchingProjects syntax."
+            },
+            "executor": {
+              "type": "string",
+              "description": "Restrict to targets that resolve to a specific executor (e.g. '@nx/jest:jest')."
+            }
+          },
+          "additionalProperties": false
+        },
+        "executor": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/executor"
+        },
+        "command": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/command"
+        },
+        "metadata": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/metadata"
+        },
+        "options": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/options"
+        },
+        "outputs": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/outputs"
+        },
+        "defaultConfiguration": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/defaultConfiguration"
+        },
+        "configurations": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/configurations"
+        },
+        "continuous": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/continuous"
+        },
+        "parallelism": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/parallelism"
+        },
+        "inputs": {
+          "$ref": "#/definitions/inputs"
+        },
+        "dependsOn": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/dependsOn"
+        },
+        "cache": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/cache"
+        },
+        "syncGenerators": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/syncGenerators"
+        }
+      },
+      "additionalProperties": false
+    },
     "targetDefaultsConfig": {
       "type": "object",
       "description": "Target defaults",
@@ -746,6 +933,15 @@
         "executor": {
           "description": "The function that Nx will invoke when you run this target",
           "type": "string"
+        },
+        "command": {
+          "description": "Shorthand for `nx:run-commands` — the shell command to run.",
+          "type": "string"
+        },
+        "metadata": {
+          "description": "Free-form metadata about the target (description, technologies, help text, etc.).",
+          "type": "object",
+          "additionalProperties": true
         },
         "options": {
           "type": "object"
@@ -1045,7 +1241,12 @@
         },
         "adjustSemverBumpsForZeroMajorVersion": {
           "type": "boolean",
-          "description": "Whether to strictly follow SemVer V2 spec for 0.x versions where breaking changes bump the minor version (instead of major), and new features bump the patch version (instead of minor). When enabled: 'major' bumps become 'minor' bumps for 0.x versions, 'minor' bumps become 'patch' bumps for 0.x versions. Versions 1.0.0 and above are unaffected. This is false by default for backward compatibility.",
+          "description": "Whether to strictly follow SemVer V2 spec for 0.x versions where breaking changes bump the minor version (instead of major), and new features bump the patch version (instead of minor). When enabled: 'major' bumps become 'minor' bumps for 0.x versions, 'minor' bumps become 'patch' bumps for 0.x versions. Versions 1.0.0 and above are unaffected. This is true by default. Set to false to treat all bumps the same regardless of major version.",
+          "default": true
+        },
+        "applyPreidToDependents": {
+          "type": "boolean",
+          "description": "Whether to apply the --preid value to the implicit patch bumps given to dependents (and other projects in a fixed release group) when a dependency is versioned. When true, those dependents become prepatch bumps using the same preid (e.g. 1.0.1-rc.0 instead of 1.0.1). This is false by default for backward compatibility.",
           "default": false
         },
         "versionActions": {
@@ -1153,8 +1354,8 @@
         },
         "preserveMatchingDependencyRanges": {
           "type": ["boolean", "array"],
-          "description": "Whether to preserve matching dependency ranges when updating them during versioning. This is false by default. (e.g. The new version will be '1.2.0' and the current version range in dependents is already '^1.0.0'. Therefore, the manifest file is not updated.)",
-          "default": false,
+          "description": "Whether to preserve matching dependency ranges when updating them during versioning. This is true by default. (e.g. The new version will be '1.2.0' and the current version range in dependents is already '^1.0.0'. Therefore, the manifest file is not updated.)",
+          "default": true,
           "items": {
             "type": "string",
             "enum": [
@@ -1167,7 +1368,12 @@
         },
         "adjustSemverBumpsForZeroMajorVersion": {
           "type": "boolean",
-          "description": "Whether to apply the common convention for 0.x versions where breaking changes bump the minor version (instead of major), and new features bump the patch version (instead of minor). When enabled: 'major' bumps become 'minor' bumps for 0.x versions, 'minor' bumps become 'patch' bumps for 0.x versions. Versions 1.0.0 and above are unaffected. This is false by default for backward compatibility.",
+          "description": "Whether to apply the common convention for 0.x versions where breaking changes bump the minor version (instead of major), and new features bump the patch version (instead of minor). When enabled: 'major' bumps become 'minor' bumps for 0.x versions, 'minor' bumps become 'patch' bumps for 0.x versions. Versions 1.0.0 and above are unaffected. This is true by default. Set to false to treat all bumps the same regardless of major version.",
+          "default": true
+        },
+        "applyPreidToDependents": {
+          "type": "boolean",
+          "description": "Whether to apply the --preid value to the implicit patch bumps given to dependents (and other projects in a fixed release group) when a dependency is versioned. When true, those dependents become prepatch bumps using the same preid (e.g. 1.0.1-rc.0 instead of 1.0.1). This is false by default for backward compatibility.",
           "default": false
         },
         "versionActions": {
@@ -1261,9 +1467,9 @@
         }
       }
     },
-    "NxReleaseReleaseTagPatternStrictPreidConfiguration": {
+    "NxReleaseStrictPreidConfiguration": {
       "type": "boolean",
-      "description": "When set to true and multiple tags match your configured \"releaseTagPattern\", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one given to the nx release invocation.\n\nFor example, let's say your \"releaseTagPattern\" is \"{projectName}@{version}\" and you have the following tags for project \"my-lib\", which uses semver:\n- my-lib@1.2.4-beta.1\n- my-lib@1.2.4-alpha.1\n- my-lib@1.2.3\n\nIf \"releaseTagPatternStrictPreid\" is set to true and you run:\n- `nx release --preid beta`, the git tag \"my-lib@1.2.4-beta.1\" will be resolved.\n- `nx release --preid alpha`, the git tag \"my-lib@1.2.4-alpha.1\" will be resolved.\n- `nx release` (no preid), the git tag \"my-lib@1.2.3\" will be resolved.\n\nIf \"releaseTagPatternStrictPreid\" is set to false, the git tag \"my-lib@1.2.4-beta.1\" will always be resolved as the latest tag that matches the pattern, regardless of any preid which gets passed to nx release.\n\nNOTE: This feature was added in a minor version and is therefore set to false by default, but this may change in a future major version."
+      "description": "When set to true and multiple tags match your configured \"releaseTag.pattern\", the git tag matching logic will strictly prefer the tag which contain a semver preid which matches the one given to the nx release invocation.\n\nFor example, let's say your \"releaseTag.pattern\" is \"{projectName}@{version}\" and you have the following tags for project \"my-lib\", which uses semver:\n- my-lib@1.2.4-beta.1\n- my-lib@1.2.4-alpha.1\n- my-lib@1.2.3\n\nIf \"releaseTag.strictPreid\" is set to true and you run:\n- `nx release --preid beta`, the git tag \"my-lib@1.2.4-beta.1\" will be resolved.\n- `nx release --preid alpha`, the git tag \"my-lib@1.2.4-alpha.1\" will be resolved.\n- `nx release` (no preid), the git tag \"my-lib@1.2.3\" will be resolved.\n\nIf \"releaseTag.strictPreid\" is set to false, the git tag \"my-lib@1.2.4-beta.1\" will always be resolved as the latest tag that matches the pattern, regardless of any preid which gets passed to nx release.\n\nThis is true by default. Set to false to always resolve the latest matching tag regardless of preid."
     },
     "ChangelogRenderOptions": {
       "type": "object",

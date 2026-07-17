@@ -1,4 +1,4 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { join } from 'node:path';
@@ -6,7 +6,7 @@ import { createNodesV2 } from './plugin';
 
 describe('@nx/storybook/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let tempFs: TempFs;
 
   beforeEach(async () => {
@@ -21,6 +21,7 @@ describe('@nx/storybook/plugin', () => {
       workspaceRoot: tempFs.tempDir,
     };
     tempFs.createFileSync('package.json', JSON.stringify({ name: 'repo' }));
+    tempFs.createFileSync('package-lock.json', '{}');
     tempFs.createFileSync(
       'my-app/project.json',
       JSON.stringify({ name: 'my-app' })
@@ -119,7 +120,7 @@ describe('@nx/storybook/plugin', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",
@@ -219,7 +220,7 @@ describe('@nx/storybook/plugin', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-ng-app --includeDependentProjects -- npx nx build-deps my-ng-app",
+                    "command": "npx nx watch --projects my-ng-app --includeDependencies -- npx nx build-deps my-ng-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",
@@ -317,7 +318,7 @@ describe('@nx/storybook/plugin', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-react-lib --includeDependentProjects -- npx nx build-deps my-react-lib",
+                    "command": "npx nx watch --projects my-react-lib --includeDependencies -- npx nx build-deps my-react-lib",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",

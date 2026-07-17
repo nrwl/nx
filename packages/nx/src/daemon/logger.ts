@@ -11,11 +11,14 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync } from 'fs';
+import { ProgressTopic } from '../utils/progress-topics';
+import { nxVersion } from '../utils/versions';
+import { EmitLogLevel } from './message-types/streaming-messages';
+import { sendEmitLogMessageToTopic } from './server/client-socket-context';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
 } from './tmp-dir';
-import { nxVersion } from '../utils/versions';
 
 type LogSource = 'Server' | 'Client';
 
@@ -49,6 +52,25 @@ class DaemonLogger {
 
   watcherLog(...s: unknown[]) {
     this.log(`[WATCHER]: ${s.join(' ')}`);
+  }
+
+  /**
+   * Broadcasts a log line to every client currently subscribed to the
+   * given topic. Useful for warnings raised inside daemon-executed code
+   * that we want the user to see in their terminal rather than lose to
+   * the daemon log file.
+   *
+   * Falls back to writing into the daemon log when no clients are
+   * subscribed to the topic.
+   *
+   * Must only be invoked from inside the Nx daemon process.
+   */
+  logToClient(
+    topic: ProgressTopic,
+    message: string,
+    level: EmitLogLevel = 'log'
+  ) {
+    sendEmitLogMessageToTopic(topic, message, level);
   }
 
   private writeToFile(message: string) {

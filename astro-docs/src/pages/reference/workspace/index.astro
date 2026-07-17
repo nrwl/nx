@@ -9,13 +9,64 @@ const doc = await getEntry('nx-reference-packages', 'workspace-overview')!;
 <StarlightPage
   frontmatter={{
     title: doc.data.title,
-    description:doc.data.description,
+    description:
+      'Learn what an Nx workspace is, how to create one, and how to add Nx to an existing npm, pnpm, Yarn, or Bun workspace for cached tasks and faster CI.',
     tableOfContents: false,
-    pagefind: false
+    pagefind: false,
   }}
   headings={[]}
 >
-  <p>{doc.data.description}</p>
+  <p>
+    An Nx workspace is any directory with an
+    <a href="/docs/reference/nx-json"><code>nx.json</code></a> file, which sets the
+    defaults for how Nx runs and caches tasks. A workspace can hold a single project
+    or many. Add Nx to a new or existing workspace to get cached tasks, affected-only
+    builds, and faster CI.
+  </p>
+
+  <h2>New to Nx?</h2>
+  <CardGrid>
+    <LinkCard
+      title="What is Nx?"
+      description="See what Nx is and how it speeds up your builds and CI."
+      href="/docs/getting-started/intro"
+    />
+    <LinkCard
+      title="Crafting your workspace"
+      description="Set up and structure an Nx workspace step by step."
+      href="/docs/getting-started/tutorials/crafting-your-workspace"
+    />
+  </CardGrid>
+
+  <h2>Add Nx to an existing workspace</h2>
+  <p>
+    Already using npm, pnpm, Yarn, or Bun workspaces? Add Nx to make your tasks
+    cacheable and your CI affected-aware.
+  </p>
+  <CardGrid>
+    <LinkCard
+      title="npm workspaces"
+      href="/docs/guides/tips-n-tricks/npm-workspaces"
+    />
+    <LinkCard
+      title="pnpm workspaces"
+      href="/docs/guides/tips-n-tricks/pnpm-workspaces"
+    />
+    <LinkCard
+      title="Yarn workspaces"
+      href="/docs/guides/tips-n-tricks/yarn-workspaces"
+    />
+    <LinkCard
+      title="Bun workspaces"
+      href="/docs/guides/tips-n-tricks/bun-workspaces"
+    />
+  </CardGrid>
+
+  <h2>Package reference</h2>
+  <p>
+    The <code>@nx/workspace</code> package contains generators and executors for
+    creating and managing your workspace.
+  </p>
   {doc.data.features!.length === 0 ? (
     <p class="mt-4">No features available.</p>
   ) : (

@@ -4,6 +4,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   exists,
   newProject,
@@ -21,7 +22,7 @@ import { join } from 'path';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -86,7 +87,7 @@ describe('nx release version plans', () => {
     await runCommandAsync(`git tag -a ${pkg3}@0.0.0 -m "${pkg3}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 
@@ -96,16 +97,17 @@ describe('nx release version plans', () => {
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {
           specifierSource: 'version-plans',
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: true,
@@ -416,16 +418,17 @@ Update packages in both groups with a mix #2
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {
           specifierSource: 'version-plans',
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: true,
@@ -804,7 +807,10 @@ Update packages in both groups with a mix #2
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         projects: [pkg1, pkg2],
-        releaseTagPattern: 'v{version}',
+        releaseTag: { pattern: 'v{version}' },
+        version: {
+          adjustSemverBumpsForZeroMajorVersion: false,
+        },
         changelog: {
           projectChangelogs: true,
         },
@@ -878,16 +884,17 @@ Update packages in both groups with a mix #2
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {
           specifierSource: 'version-plans',
+          adjustSemverBumpsForZeroMajorVersion: false,
         },
         changelog: {
           projectChangelogs: true,

@@ -1,0 +1,18 @@
+{
+  "outDir": "packages/detox/dist",
+  "assets": [
+    {
+      "glob": "**/files/**"
+    },
+    {
+      "glob": "src/**/schema.json"
+    },
+    {
+      "glob": "src/**/schema.d.ts"
+    },
+    {
+      "glob": "src/migrations/**/*.md"
+    },
+    "LICENSE"
+  ]
+}

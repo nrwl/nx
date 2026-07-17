@@ -3,7 +3,7 @@
  * we duplicate the helper functions from @nx/workspace in this file.
  */
 
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { EOL } from 'os';
 import { isCI } from './ci/is-ci';
 

@@ -1,4 +1,4 @@
-import { Tree, writeJson, readJson } from '@nx/devkit';
+import { Tree, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './convert-jest-config-to-cjs';
 
@@ -7,10 +7,6 @@ describe('convert-jest-config-to-cjs', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    // Register @nx/jest/plugin in nx.json - required for migration to run
-    const nxJson = readJson(tree, 'nx.json');
-    nxJson.plugins = ['@nx/jest/plugin'];
-    writeJson(tree, 'nx.json', nxJson);
   });
 
   describe('export default conversion', () => {
@@ -178,6 +174,178 @@ export default {
         module.exports = {
           displayName: 'app1',
         };
+        "
+      `);
+    });
+  });
+
+  describe('type-only imports', () => {
+    it('should leave `import type { X } from "mod"` untouched', async () => {
+      tree.write(
+        'apps/app1/jest.config.ts',
+        `import type { Config } from 'jest';
+
+const config: Config = {
+  displayName: 'app1',
+};
+
+export default config;`
+      );
+      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
+
+      await migration(tree);
+
+      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "import type { Config } from 'jest';
+
+        const config: Config = {
+          displayName: 'app1',
+        };
+
+        module.exports = config;
+        "
+      `);
+    });
+
+    it('should leave `import type Default from "mod"` untouched', async () => {
+      tree.write(
+        'apps/app1/jest.config.ts',
+        `import type Config from 'jest';
+
+const config: Config = { displayName: 'app1' };
+
+export default config;`
+      );
+      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
+
+      await migration(tree);
+
+      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "import type Config from 'jest';
+
+        const config: Config = { displayName: 'app1' };
+
+        module.exports = config;
+        "
+      `);
+    });
+
+    it('should leave `import type * as T from "mod"` untouched', async () => {
+      tree.write(
+        'apps/app1/jest.config.ts',
+        `import type * as Jest from 'jest';
+
+const config: Jest.Config = { displayName: 'app1' };
+
+export default config;`
+      );
+      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
+
+      await migration(tree);
+
+      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "import type * as Jest from 'jest';
+
+        const config: Jest.Config = { displayName: 'app1' };
+
+        module.exports = config;
+        "
+      `);
+    });
+
+    it('should split inline type specifiers into a type-only import and a require for value specifiers', async () => {
+      tree.write(
+        'apps/app1/jest.config.ts',
+        `import { type Config, readConfig } from 'some-pkg';
+
+const config: Config = readConfig();
+export default config;`
+      );
+      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
+
+      await migration(tree);
+
+      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "import type { Config } from 'some-pkg';
+        const { readConfig } = require('some-pkg');
+
+        const config: Config = readConfig();
+        module.exports = config;
+        "
+      `);
+    });
+
+    it('should drop an inline type specifier entirely when it is the only named import', async () => {
+      tree.write(
+        'apps/app1/jest.config.ts',
+        `import { type Config } from 'jest';
+
+const config: Config = { displayName: 'app1' };
+export default config;`
+      );
+      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
+
+      await migration(tree);
+
+      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "import type { Config } from 'jest';
+
+        const config: Config = { displayName: 'app1' };
+        module.exports = config;
+        "
+      `);
+    });
+
+    it('should split a default + inline type specifiers into three parts', async () => {
+      tree.write(
+        'apps/app1/jest.config.ts',
+        `import setup, { type Config, helper } from 'some-pkg';
+
+setup();
+const config: Config = helper();
+export default config;`
+      );
+      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
+
+      await migration(tree);
+
+      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "import type { Config } from 'some-pkg';
+        const setup = require('some-pkg').default ?? require('some-pkg');
+        const { helper } = require('some-pkg');
+
+        setup();
+        const config: Config = helper();
+        module.exports = config;
+        "
+      `);
+    });
+
+    it('should preserve renamed inline type specifiers', async () => {
+      tree.write(
+        'apps/app1/jest.config.ts',
+        `import { type Config as JestConfig, run } from 'some-pkg';
+
+const config: JestConfig = run();
+export default config;`
+      );
+      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
+
+      await migration(tree);
+
+      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "import type { Config as JestConfig } from 'some-pkg';
+        const { run } = require('some-pkg');
+
+        const config: JestConfig = run();
+        module.exports = config;
         "
       `);
     });
@@ -451,40 +619,22 @@ export default {
     });
   });
 
-  describe('plugin registration guard', () => {
-    it('should NOT run migration when @nx/jest/plugin is not registered', async () => {
-      // Remove the plugin from nx.json
-      const nxJson = readJson(tree, 'nx.json');
-      nxJson.plugins = [];
-      writeJson(tree, 'nx.json', nxJson);
-
-      const originalContent = `export default {
-  displayName: 'app1',
-};`;
-      tree.write('apps/app1/jest.config.ts', originalContent);
-      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
-
-      await migration(tree);
-
-      // File should remain unchanged
-      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toMatchInlineSnapshot(`
-        "export default {
-          displayName: 'app1',
-        };"
-      `);
-    });
-
-    it('should run migration when @nx/jest/plugin is registered as object', async () => {
-      // Register plugin as object format
-      const nxJson = readJson(tree, 'nx.json');
-      nxJson.plugins = [{ plugin: '@nx/jest/plugin', options: {} }];
-      writeJson(tree, 'nx.json', nxJson);
-
+  describe('executor-based setups', () => {
+    it('should convert jest.config.ts even when @nx/jest/plugin is not registered', async () => {
+      // Simulate an executor-based workspace: no @nx/jest/plugin in nx.json.
       tree.write(
         'apps/app1/jest.config.ts',
-        `export default {
+        `import { readFileSync } from 'fs';
+
+const swcJestConfig = JSON.parse(
+  readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8')
+);
+
+export default {
   displayName: 'app1',
+  transform: {
+    '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
+  },
 };`
       );
       writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
@@ -493,98 +643,23 @@ export default {
 
       const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
       expect(content).toMatchInlineSnapshot(`
-        "module.exports = {
+        "const { readFileSync } = require('fs');
+
+        const swcJestConfig = JSON.parse(readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8'));
+
+        module.exports = {
           displayName: 'app1',
+          transform: {
+            '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
         };
         "
       `);
     });
 
-    it('should NOT run migration when nx.json does not exist', async () => {
+    it('should convert jest.config.ts when nx.json does not exist', async () => {
       tree.delete('nx.json');
 
-      const originalContent = `export default {
-  displayName: 'app1',
-};`;
-      tree.write('apps/app1/jest.config.ts', originalContent);
-      writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
-
-      await migration(tree);
-
-      // File should remain unchanged
-      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(content).toMatchInlineSnapshot(`
-        "export default {
-          displayName: 'app1',
-        };"
-      `);
-    });
-
-    it('should NOT convert files excluded from plugin via exclude pattern', async () => {
-      // Register plugin with exclude pattern
-      const nxJson = readJson(tree, 'nx.json');
-      nxJson.plugins = [
-        {
-          plugin: '@nx/jest/plugin',
-          exclude: ['apps/excluded/**/*'],
-        },
-      ];
-      writeJson(tree, 'nx.json', nxJson);
-
-      const originalContent = `export default {
-  displayName: 'excluded-app',
-};`;
-      tree.write('apps/excluded/jest.config.ts', originalContent);
-      writeJson(tree, 'apps/excluded/package.json', { type: 'commonjs' });
-
-      // Also create a non-excluded file to ensure it still gets converted
-      tree.write(
-        'apps/included/jest.config.ts',
-        `export default {
-  displayName: 'included-app',
-};`
-      );
-      writeJson(tree, 'apps/included/package.json', { type: 'commonjs' });
-
-      await migration(tree);
-
-      // Excluded file should remain unchanged
-      const excludedContent = tree.read(
-        'apps/excluded/jest.config.ts',
-        'utf-8'
-      );
-      expect(excludedContent).toMatchInlineSnapshot(`
-        "export default {
-          displayName: 'excluded-app',
-        };
-        "
-      `);
-
-      // Included file should be converted
-      const includedContent = tree.read(
-        'apps/included/jest.config.ts',
-        'utf-8'
-      );
-      expect(includedContent).toMatchInlineSnapshot(`
-        "module.exports = {
-          displayName: 'included-app',
-        };
-        "
-      `);
-    });
-
-    it('should only convert files matching include pattern', async () => {
-      // Register plugin with include pattern
-      const nxJson = readJson(tree, 'nx.json');
-      nxJson.plugins = [
-        {
-          plugin: '@nx/jest/plugin',
-          include: ['libs/**/*'],
-        },
-      ];
-      writeJson(tree, 'nx.json', nxJson);
-
-      // Create file outside include pattern
       tree.write(
         'apps/app1/jest.config.ts',
         `export default {
@@ -593,31 +668,12 @@ export default {
       );
       writeJson(tree, 'apps/app1/package.json', { type: 'commonjs' });
 
-      // Create file inside include pattern
-      tree.write(
-        'libs/lib1/jest.config.ts',
-        `export default {
-  displayName: 'lib1',
-};`
-      );
-      writeJson(tree, 'libs/lib1/package.json', { type: 'commonjs' });
-
       await migration(tree);
 
-      // File outside include pattern should remain unchanged
-      const appContent = tree.read('apps/app1/jest.config.ts', 'utf-8');
-      expect(appContent).toMatchInlineSnapshot(`
-        "export default {
-          displayName: 'app1',
-        };
-        "
-      `);
-
-      // File inside include pattern should be converted
-      const libContent = tree.read('libs/lib1/jest.config.ts', 'utf-8');
-      expect(libContent).toMatchInlineSnapshot(`
+      const content = tree.read('apps/app1/jest.config.ts', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
         "module.exports = {
-          displayName: 'lib1',
+          displayName: 'app1',
         };
         "
       `);

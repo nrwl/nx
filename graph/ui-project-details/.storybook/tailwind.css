@@ -1,3 +1,28 @@
-@tailwind components;
-@tailwind base;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@plugin '@tailwindcss/typography';
+@plugin '@tailwindcss/forms' {
+  strategy: class;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../src';
+@source '../../ui-common/src';
+@source '../../ui-icons/src';
+@source '../../shared/src';
+@source '../../../node_modules/@nx/graph';
+
+@source not '../../**/*.spec.*';
+@source not '../../**/eslint.config.*';
+
+/* v3 compat: default border color was gray-200, v4 is currentColor. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}

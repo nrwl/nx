@@ -6,6 +6,7 @@
   "title": "Next Build",
   "description": "Build a Next.js app.",
   "type": "object",
+  "x-deprecated": "The `@nx/next:build` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/next:convert-to-inferred` to migrate to the `@nx/next/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "properties": {
     "outputPath": {
       "type": "string",

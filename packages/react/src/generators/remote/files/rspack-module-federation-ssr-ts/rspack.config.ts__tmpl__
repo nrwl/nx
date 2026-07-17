@@ -1,6 +1,6 @@
 import { NxAppRspackPlugin } from '@nx/rspack/app-plugin.js';
 import { NxReactRspackPlugin } from '@nx/rspack/react-plugin.js';
-import { NxModuleFederationPlugin, NxModuleFederationSSRDevServerPlugin } from '@nx/module-federation/rspack.js';
+import { NxModuleFederationPlugin, NxModuleFederationSSRDevServerPlugin } from '@nx/module-federation/rspack';
 import { join } from 'path';
 
 import browserMfConfig from './module-federation.config';
@@ -8,6 +8,8 @@ import serverMfConfig from './module-federation.server.config';
 
 const browserRspackConfig = {
   name: 'browser',
+  // rspack-cli dev mode defaults this on; it breaks module federation.
+  lazyCompilation: false,
   output: {
     path: join(__dirname, '<%= rspackPluginOptions.outputPath %>', 'browser'),
     publicPath: 'auto'

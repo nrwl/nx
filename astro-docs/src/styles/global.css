@@ -4,7 +4,13 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
-@source '../../node_modules/@nx/nx-dev-*';
+@source '../../node_modules/@nx/nx-dev-feature-analytics/src';
+@source '../../node_modules/@nx/nx-dev-ui-markdoc/src';
+@source '../../node_modules/@nx/nx-dev-ui-common/src';
+
+@source not "../../e2e";
+@source not "../../**/eslint.config.*";
+@source not "../../node_modules/@nx/nx-dev-ui-markdoc/src/**/*.{spec,test}.*";
 
 /* Custom styles for Nx documentation */
 
@@ -392,12 +398,14 @@ pre {
     gap: 2px;
   }
 
-  .nx-tab-bar [role='tab'] {
+  .nx-tab-bar [role='tab'],
+  .nx-tab-bar .nx-tab-link {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     width: 100%;
     text-align: left;
+    text-decoration: none;
     padding: 0.5rem 0.75rem;
     border: none;
     border-left: 2px solid transparent;
@@ -414,12 +422,14 @@ pre {
     line-height: 1.4;
   }
 
-  .nx-tab-bar [role='tab']:hover {
+  .nx-tab-bar [role='tab']:hover,
+  .nx-tab-bar .nx-tab-link:hover {
     background-color: var(--sl-color-gray-6);
     color: var(--sl-color-gray-1);
   }
 
-  .nx-tab-bar [role='tab'][aria-selected='true'] {
+  .nx-tab-bar [role='tab'][aria-selected='true'],
+  .nx-tab-bar .nx-tab-link[aria-current='page'] {
     border-left-color: var(--sl-color-text-accent);
     color: var(--sl-color-text-accent);
     background-color: color-mix(
@@ -436,7 +446,8 @@ pre {
       background-color: var(--sl-color-bg-sidebar);
     }
 
-    .nx-tab-bar [role='tab'] {
+    .nx-tab-bar [role='tab'],
+    .nx-tab-bar .nx-tab-link {
       font-size: var(--text-base);
       padding: 0.4rem 0.75rem;
     }

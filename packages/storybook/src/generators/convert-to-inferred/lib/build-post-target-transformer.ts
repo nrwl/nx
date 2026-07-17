@@ -2,16 +2,15 @@ import { joinPathFragments, TargetConfiguration, Tree } from '@nx/devkit';
 import {
   processTargetOutputs,
   toProjectRelativePath,
-} from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+  AggregatedLog,
+} from '@nx/devkit/internal';
 import { ast, query } from '@phenomnomnominal/tsquery';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import {
   addConfigValuesToConfigFile,
   ensureViteConfigPathIsRelative,
   getConfigFilePath,
-  STORYBOOK_PROP_MAPPINGS,
+  getStorybookPropMappings,
 } from './utils';
-import { getInstalledPackageVersionInfo } from './utils';
 
 type StorybookConfigValues = { docsMode?: boolean; staticDir?: string };
 
@@ -186,10 +185,7 @@ function handlePropertiesFromTargetOptions(
     delete options.staticDir;
   }
 
-  const storybookPropMappings =
-    getInstalledPackageVersionInfo(tree, 'storybook')?.major === 8
-      ? STORYBOOK_PROP_MAPPINGS.v8
-      : STORYBOOK_PROP_MAPPINGS.v7;
+  const storybookPropMappings = getStorybookPropMappings(tree);
   for (const [prevKey, newKey] of Object.entries(storybookPropMappings)) {
     if (prevKey in options) {
       let prevValue = options[prevKey];

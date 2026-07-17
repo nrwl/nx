@@ -5,53 +5,11 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/playwright/README.md"],
-      "commands": ["node ./scripts/copy-readme.js playwright"]
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/playwright",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/playwright",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/playwright",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/playwright",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/playwright",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "packages/playwright",
-            "glob": "PLUGIN.md",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "outputs": ["{projectRoot}/README.md"],
+      "commands": [
+        "node ./scripts/copy-readme.js playwright packages/playwright/readme-template.md packages/playwright/README.md"
+      ],
+      "inputs": ["copyReadme"]
     }
   },
   "tags": []

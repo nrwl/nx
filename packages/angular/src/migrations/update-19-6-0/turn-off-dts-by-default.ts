@@ -1,5 +1,5 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import picomatch = require('picomatch');
 import { ast, query } from '@phenomnomnominal/tsquery';
 

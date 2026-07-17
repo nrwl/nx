@@ -1,10 +1,11 @@
 ---
-title: 'Remote Cache'
-description: 'Learn how to set up remote cache.'
+title: 'Self-hosted remote cache'
+description: 'Set up a self-hosted remote cache server for Nx using the OpenAPI specification, or use Nx Cloud for a fully managed remote cache.'
 filter: 'type:Guides'
 ---
 
-There are several ways to set up remote caching with Nx.
+Remote caching shares build results across your team and CI so you don't repeat work.
+You can use Nx Cloud for a fully managed solution or build your own self-hosted server using the OpenAPI specification below.
 
 {% aside type="note" title="Nx Cloud: Managed Remote Cache" %}
 
@@ -21,49 +22,17 @@ You'll also get access to advanced CI features:
 - [Detection and re-running of flaky tasks](/docs/features/ci-features/flaky-tasks)
 - [Self-healing CI and other AI features](https://nx.dev/ai)
 
-[Get Started](https://cloud.nx.app)
 {% /aside %}
 
-{% aside type="note" title="Nx Enterprise" %}
+{% call_to_action title="Get started with Nx Cloud" url="https://cloud.nx.app/get-started/" icon="nxcloud" description="Fully managed remote cache with Nx Replay" %}
+Get started with Nx Cloud
+{% /call_to_action %}
 
-Recommended for large organizations.
-
-Includes everything from Nx Cloud, plus:
-
-- Work hand-in-hand with the Nx team for continual improvement
-- Run on the Nx Cloud servers in any region or run fully self-contained, on-prem
-- SOC 2 type 1 and 2 compliant and comes with single-tenant, dedicated EU region hosting as well as on-premise
-
-[Reach out for an Enterprise trial](https://nx.dev/enterprise/trial)
-
-{% /aside %}
-
-## Self-hosted cache
-
-Great for proof of concepts and small teams.
-
-{% aside type="caution" title="Bucket-based caches are vulnerable to poisoning and often prohibited in organizations" %}
-
-CREEP (CVE-2025-36852) is a critical vulnerability in bucket-based self-hosted remote caches that allows anyone with PR access to poison production builds. Many organizations are unaware of this security risk. [Learn more](https://nx.dev/blog/creep-vulnerability-build-cache-security)
-
-All packages below (along with other bucket-based remote cache implementations) are listed in the CVE and are not allowed in many organizations.
-
-{% /aside %}
-
-All packages are free but require an activation key. Getting a key is a fully automated, self-service process that happens during package installation.
-
-The following remote cache adapters are available:
-
-- [@nx/s3-cache](/docs/reference/remote-cache-plugins/s3-cache/overview): Cache is self-hosted on an Amazon S3 bucket
-- [@nx/gcs-cache](/docs/reference/remote-cache-plugins/gcs-cache/overview): Cache is self-hosted on Google Cloud storage
-- [@nx/azure-cache](/docs/reference/remote-cache-plugins/azure-cache/overview): Cache is self-hosted on Azure
-- [@nx/shared-fs-cache](/docs/reference/remote-cache-plugins/shared-fs-cache/overview): Cache is self-hosted on a shared file system location
-
-> Why require an activation key? It simply helps us know and support our users. If you prefer not to provide this information, you can also [build your own cache server](#build-your-own-caching-server).
+For single-tenant, dedicated-region, or on-prem hosting, see [Nx Enterprise](https://nx.dev/enterprise).
 
 ## Build your own caching server
 
-Starting in Nx version 20.8, you can build your own caching server using the OpenAPI specification below. This allows you to create a custom remote cache server tailored to your specific needs. The server manages all aspects of the remote cache, including storage, retrieval, and authentication.
+You can build your own caching server using the OpenAPI specification below and tailor it to your needs. The server manages all aspects of the remote cache, including storage, retrieval, and authentication.
 
 Implementation is up to you, but the server must adhere to the OpenAPI specification below to ensure compatibility with Nx caching mechanism. The endpoints transfer tar archives as binary data. Note that while the underlying data format may change in future Nx versions, the OpenAPI specification should remain stable.
 
@@ -72,7 +41,6 @@ You can implement your server in any programming language or framework, as long 
 ### Open API specification
 
 ```json
-// Nx 20.8+
 {
   "openapi": "3.0.0",
   "info": {
@@ -223,7 +191,14 @@ To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` 
 
 You might have used Nx now-deprecated custom task runners API in these scenarios:
 
-- To implement custom self-hosted caching: use one of the implementations listed above
+- To implement custom self-hosted caching, follow the [OpenAPI spec](#open-api-specification), or switch to Nx Cloud
 - To inject custom behavior before and after running tasks: use our new API with dedicated pre and post hooks
 
 To learn more about migrating from custom task runners, [please refer to this detailed guide](/docs/reference/deprecated/custom-tasks-runner).
+
+## Looking for conformance or code owners?
+
+If you previously used Nx Powerpack for conformance rules or code ownership, those features are now part of [Nx Enterprise](/docs/enterprise). See:
+
+- [Conformance](/docs/enterprise/conformance) — write and enforce language-agnostic rules across your workspace
+- [Owners](/docs/enterprise/owners) — define code ownership at the project level and auto-generate CODEOWNERS files

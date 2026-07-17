@@ -1,29 +1,30 @@
 import {
+  getNamedInputs,
+  calculateHashesForCreateNodes,
+  loadConfigFile,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
+  AggregateCreateNodesError,
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
   parseJson,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { query } from '@phenomnomnominal/tsquery';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-
-const pmc = getPackageManagerCommand();
+import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
@@ -34,18 +35,7 @@ export interface StorybookPluginOptions {
   watchDepsTargetName?: string;
 }
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, results);
-}
+type StorybookTargets = Record<string, TargetConfiguration>;
 
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
@@ -56,7 +46,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
+export const createNodes: CreateNodes<StorybookPluginOptions> = [
   storybookConfigGlob,
   async (configFilePaths, options, context) => {
     const normalizedOptions = normalizeOptions(options);
@@ -65,77 +55,107 @@ export const createNodes: CreateNodesV2<StorybookPluginOptions> = [
       workspaceDataDirectory,
       `storybook-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<StorybookTargets>(cachePath);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
 
     try {
-      return await createNodesFromFiles(
-        (configFile, _, context) =>
-          createNodesInternal(
-            configFile,
-            normalizedOptions,
-            context,
-            targetsCache
-          ),
+      const { entries, preErrors } = await filterStorybookConfigs(
         configFilePaths,
-        normalizedOptions,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              pmc,
+              entries[idx].projectRoot,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          normalizedOptions,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
 
 export const createNodesV2 = createNodes;
 
-async function createNodesInternal(
-  configFilePath: string,
-  options: Required<StorybookPluginOptions>,
-  context: CreateNodesContextV2,
-  targetsCache: Record<string, Record<string, TargetConfiguration>>
-) {
+function getProjectRootFromConfigPath(configFilePath: string): string {
   let projectRoot = '';
   if (configFilePath.includes('/.storybook')) {
     projectRoot = dirname(configFilePath).replace('/.storybook', '');
   } else {
     projectRoot = dirname(configFilePath).replace('.storybook', '');
   }
-
   if (projectRoot === '') {
     projectRoot = '.';
   }
+  return projectRoot;
+}
 
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
-
+async function createNodesInternal(
+  configFilePath: string,
+  options: Required<StorybookPluginOptions>,
+  context: CreateNodesContext,
+  targetsCache: PluginCache<StorybookTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  projectRoot: string,
+  hash: string
+) {
   const projectName = buildProjectName(projectRoot, context.workspaceRoot);
 
-  targetsCache[hash] ??= await buildStorybookTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    projectName
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await buildStorybookTargets(
+        configFilePath,
+        projectRoot,
+        options,
+        context,
+        projectName,
+        pmc
+      )
+    );
+  }
 
   const result = {
     projects: {
       [projectRoot]: {
         root: projectRoot,
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };
@@ -147,8 +167,9 @@ async function buildStorybookTargets(
   configFilePath: string,
   projectRoot: string,
   options: StorybookPluginOptions,
-  context: CreateNodesContextV2,
-  projectName: string
+  context: CreateNodesContext,
+  projectName: string,
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const buildOutputs = getOutputs();
 
@@ -327,7 +348,7 @@ function serveStaticTarget(
 
 async function getStorybookFramework(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<string | undefined> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const mainTsJs = readFileSync(resolvedPath, 'utf-8');
@@ -384,7 +405,7 @@ function parseFrameworkName(mainTsJs: string) {
 
 async function getStorybookFullyResolvedFramework(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<string> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const { framework } = await loadConfigFile<StorybookConfig>(resolvedPath);
@@ -401,6 +422,45 @@ function getOutputs(): string[] {
   ];
 
   return outputs;
+}
+
+interface StorybookEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterStorybookConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: StorybookEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<StorybookEntry | null> => {
+      try {
+        const projectRoot = getProjectRootFromConfigPath(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is StorybookEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(

@@ -1,6 +1,7 @@
 import { joinPathFragments, logger, type ExecutorContext } from '@nx/devkit';
+import { loadConfigFile } from '@nx/devkit/internal';
 import { readTsConfig } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import * as esbuild from 'esbuild';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -10,10 +11,10 @@ import type {
   NormalizedEsBuildExecutorOptions,
 } from '../schema';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   options: EsBuildExecutorOptions,
   context: ExecutorContext
-): NormalizedEsBuildExecutorOptions {
+): Promise<NormalizedEsBuildExecutorOptions> {
   const isTsSolutionSetup = isUsingTsSolutionSetup();
   if (isTsSolutionSetup && options.generatePackageJson) {
     throw new Error(
@@ -88,7 +89,10 @@ export function normalizeOptions(
       throw new Error(
         `Path of esbuildConfig does not exist: ${userDefinedConfig}`
       );
-    userDefinedBuildOptions = require(userDefinedConfig);
+    // Use loadConfigFile so TypeScript configs (import type, satisfies, TS
+    // plugin imports) are transpiled instead of require()'d raw.
+    userDefinedBuildOptions =
+      await loadConfigFile<esbuild.BuildOptions>(userDefinedConfig);
   } else if (options.esbuildOptions) {
     userDefinedBuildOptions = options.esbuildOptions;
   }

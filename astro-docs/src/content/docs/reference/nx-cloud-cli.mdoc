@@ -62,6 +62,8 @@ If you have access to multiple instances of the Nx Cloud application (e.g. self-
 
 Revoke a personal access token from your local environment. This will remove the personal access token from the locally initialized configuration file and also invalidate the token from the Nx Cloud application. You will be prompted to remove a single token or all tokens from your local environment.
 
+This command is the same as running `nx logout`.
+
 **Usage:**
 
 ```shell
@@ -101,17 +103,260 @@ npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=ht
 
 When logging into Nx Cloud with a [Personal Access Token](/docs/guides/nx-cloud/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
 
-If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower, this command will also install the latest version of the Nx Cloud npm package and add it into your `package.json`. Only Nx versions 19.7 and higher natively support the `nxCloudId` property in the `nx.json` file; for versions 19.6 and lower, the Nx Cloud npm package will be needed to use that property.
-
 **Usage:**
 
 ```shell
 npx nx-cloud convert-to-nx-cloud-id
 ```
 
+### `nx-cloud onboard`
+
+Connect a workspace to Nx Cloud. This command supports an interactive onboarding wizard for humans and JSON-based subcommands for automation and AI agents.
+
+Authentication is required before using this command. Either run `nx login` first or configure a personal access token with `nx-cloud configure`.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard [subcommand] [options]
+```
+
+- Without flags, this starts the interactive onboarding wizard.
+- With `--no-interactive`, it runs an automation-friendly flow.
+- With `--no-interactive` and explicit workspace creation flags such as `--repo`, `--template`, or `--detect-repo`, it routes to `workspace create`.
+- With `--no-interactive` and no explicit creation flags, it routes to `connect-workspace` and defaults to JSON output.
+
+#### Options
+
+| Option             | Type    | Description                                                          | Default |
+| ------------------ | ------- | -------------------------------------------------------------------- | ------- |
+| `--json`           | boolean | Output JSON for scripting                                            | `false` |
+| `--token`          | string  | Use a specific Nx Cloud access token for this invocation             |         |
+| `--no-interactive` | boolean | Disable interactive prompts                                          | `false` |
+| `--workspace-name` | string  | Alias for `--name`                                                   |         |
+| `--name`           | string  | Workspace or organization name, depending on the selected flow       |         |
+| `--org`            | string  | Organization ID to use                                               |         |
+| `--detect-repo`    | boolean | Auto-detect the current Git repository                               | `false` |
+| `--write-config`   | boolean | Write the returned `nxCloudId` to `nx.json` after workspace creation | `false` |
+
+#### Examples
+
+```shell
+npx nx-cloud onboard
+npx nx-cloud onboard --no-interactive --json
+npx nx-cloud onboard --no-interactive --org=org_123 --detect-repo --write-config
+```
+
+#### Subcommands
+
+##### `nx-cloud onboard status`
+
+Show onboarding status for the authenticated user, including organizations and GitHub connection state.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard status
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard connect-workspace`
+
+One-shot command intended for agents and automated flows. It:
+
+1. Detects the current repository from git remotes.
+2. Selects or creates an organization.
+3. Checks GitHub connection status.
+4. Creates an Nx Cloud workspace from the repository.
+5. Writes `nxCloudId` to `nx.json` when possible.
+
+If GitHub authentication is required, JSON mode returns an `actionRequired` payload instead of failing the command.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard connect-workspace
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+| `--org`  | string  | Organization ID to use    |         |
+| `--name` | string  | Workspace name override   |         |
+
+```shell
+npx nx-cloud onboard connect-workspace --json
+npx nx-cloud onboard connect-workspace --org=org_123 --name=my-workspace
+```
+
+##### `nx-cloud onboard connect github`
+
+Start GitHub device-flow authentication.
+
+- In interactive mode, this prints instructions, attempts to open the browser, and polls until authorization completes.
+- In JSON mode, this returns the device-flow payload and leaves polling to the caller.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard connect github
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard connect github poll`
+
+Poll for completion of a GitHub device-flow authentication started with `connect github`.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard connect github poll --device-code <code>
+```
+
+| Option          | Type    | Description                       | Default |
+| --------------- | ------- | --------------------------------- | ------- |
+| `--device-code` | string  | Device code returned by `connect` |         |
+| `--json`        | boolean | Output JSON for scripting         | `false` |
+
+##### `nx-cloud onboard orgs list`
+
+List organizations available to the authenticated user.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard orgs list
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard orgs create`
+
+Create a new organization.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard orgs create <name>
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard repos list`
+
+List repositories available to an organization.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard repos list --org <org-id>
+```
+
+| Option       | Type    | Description                        | Default |
+| ------------ | ------- | ---------------------------------- | ------- |
+| `--org`      | string  | Organization ID                    |         |
+| `--search`   | string  | Filter repositories by search term |         |
+| `--page`     | number  | Page number to fetch               |         |
+| `--per-page` | number  | Number of repositories per page    |         |
+| `--json`     | boolean | Output JSON for scripting          | `false` |
+
+##### `nx-cloud onboard templates list`
+
+List available Nx Cloud workspace templates.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard templates list
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard vcs status`
+
+Show GitHub App connection status for an organization.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard vcs status --org <org-id>
+```
+
+| Option   | Type    | Description               | Default |
+| -------- | ------- | ------------------------- | ------- |
+| `--org`  | string  | Organization ID           |         |
+| `--json` | boolean | Output JSON for scripting | `false` |
+
+##### `nx-cloud onboard workspace create`
+
+Create a workspace either from an existing repository or from a template.
+
+Use exactly one of:
+
+- `--repo` with `--repo-full-name`
+- `--template`
+- `--detect-repo`
+
+When `--write-config` is provided, the command attempts to add the returned `nxCloudId` to `nx.json`.
+
+**Usage:**
+
+```shell
+npx nx-cloud onboard workspace create --org <org-id> [options]
+```
+
+| Option                  | Type    | Description                                                          | Default |
+| ----------------------- | ------- | -------------------------------------------------------------------- | ------- |
+| `--org`                 | string  | Organization ID                                                      |         |
+| `--name`                | string  | Workspace name                                                       |         |
+| `--workspace-name`      | string  | Alias for `--name`                                                   |         |
+| `--repo`                | string  | Repository ID for an existing repository                             |         |
+| `--repo-full-name`      | string  | Repository full name in `owner/repo` format                          |         |
+| `--default-branch`      | string  | Default branch for an existing repository                            | `main`  |
+| `--template`            | string  | Template ID for template-based workspace creation                    |         |
+| `--github-organization` | string  | GitHub organization for template-based workspace creation            |         |
+| `--repo-name`           | string  | Repository name override for template-based workspace creation       |         |
+| `--private`             | boolean | Mark the created workspace repository as private                     | `true`  |
+| `--installation-id`     | string  | GitHub App installation ID override for existing repositories        |         |
+| `--detect-repo`         | boolean | Auto-detect the current repository and populate repository arguments | `false` |
+| `--write-config`        | boolean | Write the returned `nxCloudId` to `nx.json`                          | `false` |
+| `--json`                | boolean | Output JSON for scripting                                            | `false` |
+
+```shell
+npx nx-cloud onboard workspace create --org=org_123 --repo=repo_456 --repo-full-name=acme/web --name=web
+npx nx-cloud onboard workspace create --org=org_123 --detect-repo --write-config
+npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name=demo
+```
+
+#### Automation notes
+
+- `--json` is supported across all onboarding subcommands intended for scripting.
+- `connect-workspace` is the best entry point for AI agents because it can detect the repository, create an organization when needed, and return actionable JSON when GitHub authorization is required.
+- `connect github --json` starts device flow, and `connect github poll --device-code ... --json` can be used to poll for completion.
+
 ### `nx-cloud start-ci-run`
 
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of command correspond to the same CI run.
+
+This command is the same as running `nx start-ci-run`.
+
+{% aside type="caution" title="Run start-ci-run before any other Nx command" %}
+Run `npx nx-cloud start-ci-run` (or the orchestrator job that runs it) before any other `nx` command, including across separate or downstream pipelines that share the same CI Pipeline Execution (CIPE).
+
+The first `nx` command that contacts Nx Cloud creates the CIPE and locks in its settings for the whole run, including the access token's scope, the distribution configuration, your [assignment rules](/docs/reference/nx-cloud/assignment-rules), and the stop-agents conditions. If another `nx` command reaches Nx Cloud first, the CIPE is created with default settings and your `start-ci-run` flags are ignored for that run. The result is assignment rules or stop conditions that appear to have no effect.
+{% /aside %}
 
 **Usage:**
 
@@ -120,7 +365,7 @@ npx nx-cloud start-ci-run
 ```
 
 {% aside type="caution" title="Do not run start-ci-run locally" %}
-`npx nx-cloud start-ci-run` generates a temporary marker file that can cause a local Nx repo to behave as if it is a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
+`start-ci-run` generates a temporary marker file that can cause a local Nx repo to behave as if it is a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
 To discourage this from happening, this command will run a check to see if it is running in a CI environment. You can bypass this check with `npx nx-cloud start-ci-run --force`.
 
 If you accidentally run this command locally, remove all generated marker files with `npx nx-cloud cleanup`.
@@ -132,8 +377,8 @@ If you accidentally run this command locally, remove all generated marker files 
 | Option                          | Type    | Description                                                                                                                                                                               | Default |
 | ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `--distribute-on`               | string  | Configure the number of agents, [launch templates](/docs/reference/nx-cloud/launch-templates) and [assignment rules](/docs/reference/nx-cloud/assignment-rules) for distributed execution |         |
-| `--assignment-rules`            | string  | Path to the [assignment rules configuration](/docs/reference/nx-cloud/assignment-rules#using-assignment-rules-with-manual-dte) for manual distribution.                                   |         |
-| `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx-cloud complete-ci-run`                                                                                                   | `false` |
+| `--assignment-rules`            | string  | Path to the [assignment rules configuration](/docs/reference/nx-cloud/assignment-rules#using-assignment-rules-when-you-bring-your-own-compute) for manual distribution.                   |         |
+| `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`                                                                                                         | `false` |
 | `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                                       |         |
 | `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands)                    | `true`  |
 | `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                                        | `true`  |
@@ -146,7 +391,7 @@ If you accidentally run this command locally, remove all generated marker files 
 
 ##### `--distribute-on`
 
-By default, `npx nx-cloud start-ci-run` is intended for use with [Nx Agents](/docs/features/ci-features/distribute-task-execution) and expects `--distribute-on` to be configured. It will output a warning if this flag is not set. If you are running a distributed execution with a legacy setup without Nx Agents, you can pass `--distribute-on=manual` to disable this warning.
+By default, `start-ci-run` is intended for use with [Nx Agents](/docs/features/ci-features/distribute-task-execution) and expects `--distribute-on` to be configured. It will output a warning if this flag is not set. If you are running a distributed execution with a legacy setup without Nx Agents, you can pass `--distribute-on=manual` to disable this warning.
 
 This command tells Nx Cloud how many agents to use (and what launch templates to use) to distribute tasks. E.g.,
 `npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"` will distribute CI using 8 agents that are initialized
@@ -334,7 +579,9 @@ nx affected -t build --no-dte
 
 ### `nx-cloud start-agent`
 
-Starts an agent process for [manual distributed task execution](/docs/guides/nx-cloud/manual-dte). The agent waits for Nx Cloud to assign tasks that have been distributed by the main CI job via `start-ci-run`. For automatic agent management, use [Nx Agents](/docs/features/ci-features/distribute-task-execution) instead.
+Starts an agent process when you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute). The agent waits for Nx Cloud to assign tasks that have been distributed by the main CI job via `start-ci-run`. To have Nx Cloud provision and manage the agents for you, see [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+
+This command is the same as running `nx start-agent`.
 
 **Usage:**
 
@@ -356,11 +603,11 @@ Use the `NX_AGENT_NAME` environment variable to assign a name to the agent for i
 NX_AGENT_NAME=agent-1 npx nx-cloud start-agent
 ```
 
-For complete examples across different CI providers, see the [Manual Distributed Task Execution guide](/docs/guides/nx-cloud/manual-dte).
+For complete examples across different CI providers, see the [bring your own compute guide](/docs/guides/nx-cloud/bring-your-own-compute).
 
 ### `nx-cloud stop-all-agents`
 
-Same as `npx nx-cloud complete-ci-run`.
+Same as `nx-cloud complete-ci-run`, `nx stop-all-agents` and `nx complete-ci-run`.
 
 This command tells Nx Cloud to terminate all agents associated with this CI pipeline execution.
 Invoking this command is not needed anymore. New versions of Nx Cloud can track when the main job terminates
@@ -390,6 +637,44 @@ Remove temporary marker files created by `start-ci-run` if accidentally run loca
 
 ```shell
 npx nx-cloud cleanup
+```
+
+### `nx-cloud get sandbox-reports`
+
+Download sandbox reports for tasks that ran on a branch. Reports capture unexpected file reads and writes detected by the Nx Cloud task sandbox and are written to disk as JSON files for inspection or post-processing.
+
+**Usage:**
+
+```shell
+npx nx-cloud get sandbox-reports [options]
+```
+
+#### Options
+
+| Option              | Type    | Description                                                                            | Default                                          |
+| ------------------- | ------- | -------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `--branch`          | string  | Branch to query                                                                        | current git branch                               |
+| `--fallback-branch` | string  | For each task without a report on `--branch`, fall back to this branch's latest report |                                                  |
+| `--since`           | string  | Time window. Units: `h`, `d`, `w`, `y` (e.g. `1h`, `7d`, `4w`, `1y`)                   | `7d`                                             |
+| `--output`, `-o`    | string  | Output directory                                                                       | `./.nx/workspace-data/sandbox-reports/<branch>/` |
+| `--include-clean`   | boolean | Include reports with zero unexpected reads/writes                                      | `false`                                          |
+| `--concurrency`     | number  | Parallel downloads                                                                     | `20`                                             |
+| `--force`           | boolean | Overwrite existing files instead of skipping them                                      | `false`                                          |
+| `--json`            | boolean | Print a machine-readable summary on stdout                                             | `false`                                          |
+| `--help`, `-h`      | boolean | Show command help and exit                                                             |                                                  |
+
+#### Examples
+
+Download reports for a feature branch over the last hour:
+
+```shell
+npx nx-cloud get sandbox-reports --branch 11249 --since 1h
+```
+
+Fall back to `main` for any task that has no report on the feature branch:
+
+```shell
+npx nx-cloud get sandbox-reports --branch my-feature --fallback-branch main
 ```
 
 ## Getting help

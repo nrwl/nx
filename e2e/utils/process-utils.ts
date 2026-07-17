@@ -1,5 +1,5 @@
 import { promisify } from 'util';
-import * as treeKill from 'tree-kill';
+import treeKill = require('tree-kill');
 import { logError, logInfo, logSuccess } from './log-utils';
 import { check as portCheck } from 'tcp-port-used';
 
@@ -12,7 +12,17 @@ export const promisifiedTreeKill: (
 ) => Promise<void> = promisify(treeKill);
 
 export async function killPort(port: number): Promise<boolean> {
-  if (await portCheck(port)) {
+  let inUse: boolean;
+  try {
+    inUse = await portCheck(port);
+  } catch {
+    // tcp-port-used's check() rejects on any connect error other than
+    // ECONNREFUSED. A port whose process was just killed can reset the probe
+    // (ECONNRESET) instead of cleanly refusing it; treat "can't probe" as
+    // freed rather than letting it throw and fail the caller's teardown.
+    return true;
+  }
+  if (inUse) {
     let killPortResult;
     try {
       logInfo(`Attempting to close port ${port}`);
@@ -55,12 +65,4 @@ export async function killProcessAndPorts(
   } catch (err) {
     expect(err).toBeFalsy();
   }
-}
-
-/**
- * Generates a random port number between 1024 and 9999.
- * Ports below 1024 are reserved for system services.
- */
-export function getRandomPort() {
-  return Math.floor(1024 + Math.random() * 8976);
 }

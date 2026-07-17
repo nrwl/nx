@@ -1,0 +1,16 @@
+{
+  "outDir": "packages/gradle/dist",
+  "assets": [
+    { "glob": "**/files/**" },
+    { "glob": "src/**/schema.json" },
+    { "glob": "src/**/schema.d.ts" },
+    { "glob": "src/migrations/**/*.md" },
+    {
+      "glob": "**/*.jar",
+      "input": "packages/gradle/batch-runner",
+      "output": "/batch-runner",
+      "includeIgnoredFiles": true
+    },
+    "LICENSE"
+  ]
+}

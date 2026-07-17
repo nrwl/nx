@@ -1,6 +1,6 @@
 ---
-title: What is Nx?
-description: 'Nx is a build system with smart caching and task orchestration for monorepos. Ship faster without breaking things.'
+title: 'What is Nx? Smart Monorepo Build System & CI'
+description: 'Nx is a build system with smart caching and task orchestration for monorepos and polyrepos. Ship faster and keep CI fast as your codebase scales.'
 sidebar:
   order: 1
   label: Introduction
@@ -24,7 +24,7 @@ Monorepos have many advantages and are especially powerful for AI-assisted devel
 
 **Nx reduces friction across your entire development cycle** with intelligent caching, task orchestration, and deep understanding of your codebase structure.
 
-At its core, Nx:
+Nx:
 
 1. **Runs tasks fast** - [Caches results](/docs/features/cache-task-results) so you never rebuild the same code twice.
 2. **Understands your codebase** - Builds [project and task graphs](/docs/features/explore-graph) showing how everything connects.
@@ -40,7 +40,7 @@ nx run-many -t build test # Run across all projects
 
 {% callout type="deepdive" title="How does Nx run tasks?" %}
 
-At its core, Nx is a fast, intelligent task runner. Take the example of an NPM workspace. This could be a project's `package.json`:
+Nx is a fast, intelligent task runner. Take the example of an NPM workspace. This could be a project's `package.json`:
 
 ```json
 // package.json
@@ -95,28 +95,12 @@ Yes, Nx provides value even for single-project repositories. You get fast task c
 Nx can also connect multiple repositories into a synthetic monorepo, letting you orchestrate large changes across all connected repos.
 {% /callout %}
 
-## Where to Go from here
+## Where to go from here
 
-{% callout type="note" title="Choose Your Path" %}
-**Starting fresh?** → [Create a new workspace](/docs/getting-started/start-new-project)
-
-**Have an existing project?** → [Add Nx to your project](/docs/getting-started/start-with-existing-project)
-
-**Want hands-on learning?** → [Follow a tutorial](/docs/getting-started/tutorials)
-
-**Prefer video?** → [Learn with our video courses](https://nx.dev/courses)
-{% /callout %}
-
-{% cardgrid %}
-
-{% linkcard title="Quickstart" description="Get your first Nx project running in minutes." href="/docs/quickstart" /%}
-
-{% linkcard title="Plugins" description="Find plugins for React, Angular, Node, Gradle, Maven, .NET, and more." href="/docs/plugin-registry" /%}
-
-{% linkcard title="Concepts" description="Improve your understanding of how Nx works under the hood." href="/docs/concepts" /%}
-
-{% linkcard title="Features" description="Explore Nx features like caching, task orchestration, and CI optimization." href="/docs/features" /%}
-
-{% /cardgrid %}
+- **Starting fresh?** → [Create a new workspace](/docs/getting-started/start-new-project)
+- **Want a head start?** → [Start from a template](/docs/templates)
+- **Have an existing project?** → [Add Nx to your project](/docs/getting-started/start-with-existing-project)
+- **New to Nx?** → [Follow the tutorial series](/docs/getting-started/tutorials/crafting-your-workspace) to learn core concepts hands-on
+- **Prefer video?** → [Learn with our video courses](https://nx.dev/courses)
 
 **Stay up to date** with our latest news by [⭐️ starring us on Github](https://github.com/nrwl/nx), [subscribing to our Youtube channel](https://www.youtube.com/@nxdevtools), [joining our Discord](https://go.nx.dev/community), [subscribing to our monthly tech newsletter](https://go.nrwl.io/nx-newsletter) or follow us [on X](https://x.com/nxdevtools), [Bluesky](https://bsky.app/profile/nx.dev) and [LinkedIn](https://www.linkedin.com/company/nxdevtools).

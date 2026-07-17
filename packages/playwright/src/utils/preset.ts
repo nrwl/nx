@@ -1,8 +1,11 @@
 import { workspaceRoot } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getInstalledPackageVersion } from '@nx/devkit/internal';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { defineConfig } from '@playwright/test';
 import { lstatSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
+import { lt } from 'semver';
+import { minPlaywrightVersionForBlobReports } from './versions';
 
 export interface NxPlaywrightOptions {
   /**
@@ -38,8 +41,11 @@ export interface NxPlaywrightOptions {
  *
  * you can easily extend this within your playwright config via spreading the preset
  * @example
+ * // Nx generates `playwright.config.mts` (ESM). Pass `import.meta.dirname`.
+ * // For hand-written CJS configs (`.cts` or `.ts` outside a `type: "module"`
+ * // workspace), pass `__filename` instead.
  * export default defineConfig({
- *   ...nxE2EPreset(__filename, options)
+ *   ...nxE2EPreset(import.meta.dirname, options)
  *   // add your own config here
  * })
  *
@@ -72,6 +78,14 @@ export function nxE2EPreset(
       open: options?.openHtmlReport ?? 'on-failure',
     },
   ]);
+  if (options?.generateBlobReports === true) {
+    const installed = getInstalledPackageVersion('@playwright/test');
+    if (installed && lt(installed, minPlaywrightVersionForBlobReports)) {
+      throw new Error(
+        `The "blob" reporter requires "@playwright/test" version ${minPlaywrightVersionForBlobReports} or greater. You are currently using version ${installed}. Either upgrade "@playwright/test" or set "generateBlobReports" to false.`
+      );
+    }
+  }
   const shouldGenerateBlobReports =
     options?.generateBlobReports ?? !!process.env['CI'];
   if (shouldGenerateBlobReports) {

@@ -10,7 +10,7 @@ import {
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 import { readNxJson } from 'nx/src/config/configuration';
-import { TargetProjectLocator } from '@nx/js/src/internal';
+import { TargetProjectLocator } from '@nx/js/internal';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 export function ensureGlobalProjectGraph(ruleName: string) {

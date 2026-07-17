@@ -28,7 +28,7 @@ export function startLocalRegistry({
   }
   return new Promise<() => void>((resolve, reject) => {
     const childProcess = fork(
-      require.resolve('nx'),
+      require.resolve('nx/bin/nx'),
       [
         ...`run ${localRegistryTarget} --location none --clear ${
           clearStorage ?? true
@@ -58,9 +58,15 @@ export function startLocalRegistry({
         execSync(
           `npm config set //${listenAddress}:${port}/:_authToken "${authToken}" --ws=false`,
           {
-            windowsHide: false,
+            windowsHide: true,
           }
         );
+
+        // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and
+        // they take precedence over any registry configured in ~/.npmrc
+        process.env.pnpm_config_registry = registry;
+        process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] =
+          authToken;
 
         // bun
         process.env.BUN_CONFIG_REGISTRY = registry;
@@ -71,14 +77,16 @@ export function startLocalRegistry({
         process.env.YARN_NPM_REGISTRY_SERVER = registry;
         process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
 
-        console.log('Set npm, bun, and yarn config registry to ' + registry);
+        console.log(
+          'Set npm, pnpm, bun, and yarn config registry to ' + registry
+        );
 
         resolve(() => {
           childProcess.kill();
           execSync(
             `npm config delete //${listenAddress}:${port}/:_authToken --ws=false`,
             {
-              windowsHide: false,
+              windowsHide: true,
             }
           );
         });

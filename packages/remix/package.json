@@ -21,46 +21,91 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "generators": [
+        "dist/generators.d.ts"
+      ],
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "plugins/component-testing": [
+        "dist/plugins/component-testing/index.d.ts"
+      ],
+      "plugins/*": [
+        "dist/plugins/*.d.ts"
+      ]
+    }
+  },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
-    "@nx/workspace": "workspace:*",
+    "@nx/web": "workspace:*",
     "tslib": "catalog:typescript",
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
+    "@nx/eslint": "workspace:*",
     "nx": "workspace:*",
     "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
-    "@remix-run/dev": "^2.17.3"
+    "@remix-run/dev": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@remix-run/dev": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "default": "./index.js",
-      "types": "./index.d.ts"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
-    "./generators": "./generators.js",
-    "./plugin": "./plugin.js",
-    "./plugins/component-testing": "./plugins/component-testing/index.js"
+    "./generators": {
+      "@nx/nx-source": "./generators.ts",
+      "types": "./dist/generators.d.ts",
+      "default": "./dist/generators.js"
+    },
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./plugins/component-testing": {
+      "@nx/nx-source": "./plugins/component-testing/index.ts",
+      "types": "./dist/plugins/component-testing/index.d.ts",
+      "default": "./dist/plugins/component-testing/index.js"
+    },
+    "./plugins/*": {
+      "@nx/nx-source": "./plugins/*.ts",
+      "types": "./dist/plugins/*.d.ts",
+      "default": "./dist/plugins/*.js"
+    }
   }
 }

@@ -7,9 +7,7 @@ import {
 } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import Ajv from 'ajv';
-import { mkdirSync, writeFileSync } from 'fs';
 import * as nxSchema from 'nx/schemas/nx-schema.json';
-import { join } from 'path';
 import { Preset } from '../utils/presets';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 
@@ -95,12 +93,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               workspaces: true,
             });
             await formatFiles(tree);
-            const dir = join(__dirname, 'tmp', `${preset}-${nxCloud}`);
-            mkdirSync(dir, { recursive: true });
-            writeFileSync(
-              join(dir, 'README.md'),
-              tree.read('proj/README.md', 'utf-8')
-            );
             expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
           }
         );
@@ -121,6 +113,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should create nx.json', async () => {
     const ajv = new Ajv();
+    ajv.addKeyword('deprecationMessage');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',
@@ -392,13 +385,43 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       workspaceGlobs: ['apps/*', 'packages/*'],
     });
 
-    const packageJson = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
-    expect(packageJson).toMatchInlineSnapshot(`
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
       "packages:
         - "apps/*"
         - "packages/*"
 
       autoInstallPeers: true
+      onlyBuiltDependencies:
+        - nx
+      "
+    `);
+    expect(tree.exists('proj/.npmrc')).toBeFalsy();
+  });
+
+  it('should configure the pnpm settings in pnpm-workspace.yaml with allowBuilds for pnpm 11+', async () => {
+    tree.write('proj/package.json', JSON.stringify({}));
+    jest.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('11.0.0');
+
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset: Preset.NPM,
+      defaultBase: 'main',
+      packageManager: 'pnpm',
+      isCustomPreset: false,
+      workspaceGlobs: ['apps/*', 'packages/*'],
+    });
+
+    const pnpmWorkspace = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatchInlineSnapshot(`
+      "packages:
+        - "apps/*"
+        - "packages/*"
+
+      autoInstallPeers: true
+      allowBuilds:
+        nx: true
       "
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();

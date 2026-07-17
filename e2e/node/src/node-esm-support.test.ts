@@ -4,6 +4,7 @@ import {
   cleanupProject,
   getPackageManagerCommand,
   newProject,
+  reservePort,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -16,6 +17,19 @@ import {
   detectPackageManager,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
+
+// Starts a built node server app, polls its output until it reports it is
+// listening (up to 30s), then kills it and returns everything it printed.
+// Polling for the "ready" line avoids a fixed `sleep` race that loses on a
+// loaded machine, where node boot + module evaluation can take several seconds.
+function runBuiltApp(appName: string): string {
+  return execSync(
+    `node dist/apps/${appName}/main.js > ${appName}-run.log 2>&1 & PID=$!; ` +
+      `for i in $(seq 1 30); do grep -q "server ready on port" ${appName}-run.log 2>/dev/null && break; sleep 1; done; ` +
+      `kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true; cat ${appName}-run.log`,
+    { cwd: tmpProjPath(), timeout: 60_000 }
+  ).toString();
+}
 
 function configureAsEsm(projectPath: string) {
   // Update project.json to configure build target for ESM
@@ -44,7 +58,7 @@ const selectedPm = detectPackageManager();
 describe('Node.js Framework ESM Support', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/node'],
+      packages: ['@nx/node', '@nx/nest', '@nx/webpack'],
       packageManager: selectedPm === 'npm' ? 'pnpm' : selectedPm,
     });
   });
@@ -55,6 +69,7 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Express Framework with ESM', () => {
     it('should build and run Express app with ESM modules', async () => {
+      const port = await reservePort();
       const expressApp = uniq('express-esm');
       runCLI(
         `generate @nx/node:app apps/${expressApp} --framework=express --linter=eslint --unitTestRunner=jest`
@@ -87,7 +102,7 @@ describe('Node.js Framework ESM Support', () => {
           console.log('Express ESM app starting');
           console.log('fetch type:', typeof fetch);
           
-          const port = process.env.PORT || 3000;
+          const port = process.env.PORT || ${port};
           const server = app.listen(port, () => {
             console.log('Express ESM server ready on port ' + port);
           });
@@ -98,19 +113,14 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${expressApp}`);
       checkFilesExist(`dist/apps/${expressApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${expressApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
-        }
-      ).toString();
+      const result = runBuiltApp(expressApp);
       expect(result).toContain('Express ESM app starting');
       expect(result).toContain('Express ESM server ready on port');
       expect(result).toContain('fetch type: function');
     }, 600000);
 
     it('should serve Express app with ESM modules', async () => {
+      const port = await reservePort();
       const expressApp = uniq('express-esm-serve');
       runCLI(
         `generate @nx/node:app apps/${expressApp} --framework=express --linter=eslint --unitTestRunner=jest`
@@ -139,7 +149,7 @@ describe('Node.js Framework ESM Support', () => {
             res.json({ message: 'Express ESM serve working' });
           });
           
-          const port = process.env.PORT || 3000;
+          const port = process.env.PORT || ${port};
           const server = app.listen(port, () => {
             console.log('Express ESM serve ready on port ' + port);
           });
@@ -161,6 +171,7 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Fastify Framework with ESM', () => {
     it('should build and run Fastify app with ESM modules', async () => {
+      const port = await reservePort();
       const fastifyApp = uniq('fastify-esm');
       runCLI(
         `generate @nx/node:app apps/${fastifyApp} --framework=fastify --linter=eslint --unitTestRunner=jest`
@@ -197,7 +208,7 @@ describe('Node.js Framework ESM Support', () => {
           
           const start = async () => {
             try {
-              const port = +(process.env.PORT || 3000);
+              const port = +(process.env.PORT || ${port});
               await fastify.listen({ port });
               console.log('Fastify ESM server ready on port ' + port);
             } catch (err) {
@@ -212,19 +223,14 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${fastifyApp}`);
       checkFilesExist(`dist/apps/${fastifyApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${fastifyApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
-        }
-      ).toString();
+      const result = runBuiltApp(fastifyApp);
       expect(result).toContain('Fastify ESM app starting');
       expect(result).toContain('Fastify ESM server ready on port');
       expect(result).toContain('fetch type: function');
     }, 600000);
 
     it('should serve Fastify app with ESM modules', async () => {
+      const port = await reservePort();
       const fastifyApp = uniq('fastify-esm-serve');
       runCLI(
         `generate @nx/node:app apps/${fastifyApp} --framework=fastify --linter=eslint --unitTestRunner=jest`
@@ -255,7 +261,7 @@ describe('Node.js Framework ESM Support', () => {
           
           const start = async () => {
             try {
-              const port = +(process.env.PORT || 3000);
+              const port = +(process.env.PORT || ${port});
               await fastify.listen({ port });
               console.log('Fastify ESM serve ready on port ' + port);
             } catch (err) {
@@ -280,6 +286,7 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Koa Framework with ESM', () => {
     it('should build and run Koa app with ESM modules', async () => {
+      const port = await reservePort();
       const koaApp = uniq('koa-esm');
       runCLI(
         `generate @nx/node:app apps/${koaApp} --framework=koa --linter=eslint --unitTestRunner=jest`
@@ -318,7 +325,7 @@ describe('Node.js Framework ESM Support', () => {
           console.log('Koa ESM app starting');
           console.log('fetch type:', typeof fetch);
           
-          const port = +(process.env.PORT || 3000);
+          const port = +(process.env.PORT || ${port});
           const server = app.listen(port, () => {
             console.log('Koa ESM server ready on port ' + port);
           });
@@ -329,19 +336,14 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${koaApp}`);
       checkFilesExist(`dist/apps/${koaApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${koaApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
-        }
-      ).toString();
+      const result = runBuiltApp(koaApp);
       expect(result).toContain('Koa ESM app starting');
       expect(result).toContain('Koa ESM server ready on port');
       expect(result).toContain('fetch type: function');
     }, 600000);
 
     it('should serve Koa app with ESM modules', async () => {
+      const port = await reservePort();
       const koaApp = uniq('koa-esm-serve');
       runCLI(
         `generate @nx/node:app apps/${koaApp} --framework=koa --linter=eslint --unitTestRunner=jest`
@@ -376,7 +378,7 @@ describe('Node.js Framework ESM Support', () => {
           
           app.use(router.routes()).use(router.allowedMethods());
           
-          const port = +(process.env.PORT || 3000);
+          const port = +(process.env.PORT || ${port});
           const server = app.listen(port, () => {
             console.log('Koa ESM serve ready on port ' + port);
           });
@@ -398,6 +400,7 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Nest Framework with ESM', () => {
     it('should build and run Nest app with ESM modules', async () => {
+      const port = await reservePort();
       const nestApp = uniq('nest-esm');
       runCLI(
         `generate @nx/node:app apps/${nestApp} --framework=nest --linter=eslint --unitTestRunner=jest`
@@ -431,7 +434,7 @@ describe('Node.js Framework ESM Support', () => {
             const app = await NestFactory.create(AppModule);
             const globalPrefix = 'api';
             app.setGlobalPrefix(globalPrefix);
-            const port = process.env.PORT || 3000;
+            const port = process.env.PORT || ${port};
             await app.listen(port);
             console.log('Nest ESM server ready on port ' + port);
           }
@@ -454,6 +457,7 @@ describe('Node.js Framework ESM Support', () => {
     }, 600000);
 
     it('should serve Nest app with ESM modules', async () => {
+      const port = await reservePort();
       const nestApp = uniq('nest-esm-serve');
       runCLI(
         `generate @nx/node:app apps/${nestApp} --framework=nest --linter=eslint --unitTestRunner=jest`
@@ -487,7 +491,7 @@ describe('Node.js Framework ESM Support', () => {
             const app = await NestFactory.create(AppModule);
             const globalPrefix = 'api';
             app.setGlobalPrefix(globalPrefix);
-            const port = process.env.PORT || 3000;
+            const port = process.env.PORT || ${port};
             await app.listen(port);
             console.log('Nest ESM serve ready on port ' + port);
           }
@@ -510,6 +514,7 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Mixed Imports across Node.js Frameworks', () => {
     it('should handle CommonJS and ESM packages together', async () => {
+      const port = await reservePort();
       const nodeApp = uniq('node-mixed-imports');
       runCLI(
         `generate @nx/node:app apps/${nodeApp} --framework=express --linter=eslint --unitTestRunner=jest`
@@ -552,7 +557,7 @@ describe('Node.js Framework ESM Support', () => {
           console.log('Mixed imports Node.js app starting');
           console.log('lodash.pick type:', typeof lodash.pick);
           
-          const port = process.env.PORT || 3000;
+          const port = process.env.PORT || ${port};
           const server = app.listen(port, () => {
             console.log('Mixed imports server ready on port ' + port);
           });
@@ -563,13 +568,7 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${nodeApp}`);
       checkFilesExist(`dist/apps/${nodeApp}/main.js`);
 
-      const result = execSync(
-        `node dist/apps/${nodeApp}/main.js & PID=$!; sleep 1; kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true`,
-        {
-          cwd: tmpProjPath(),
-          timeout: 10000,
-        }
-      ).toString();
+      const result = runBuiltApp(nodeApp);
       expect(result).toContain('Mixed imports Node.js app starting');
       expect(result).toContain('Mixed imports server ready on port');
       expect(result).toContain('lodash.pick type: function');

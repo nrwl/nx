@@ -25,7 +25,18 @@ describe('@nx/expo (legacy)', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/expo'] });
+    proj = newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/expo',
+        '@nx/jest',
+        '@nx/playwright',
+        '@nx/react',
+        '@nx/rollup',
+        '@nx/storybook',
+        '@nx/web',
+      ],
+    });
     // we create empty preset above which skips creation of `production` named input
 
     originalEnv = process.env.NX_ADD_PLUGINS;
@@ -200,9 +211,7 @@ describe('@nx/expo (legacy)', () => {
   it('should tsc app', async () => {
     expect(() => {
       const pmc = getPackageManagerCommand();
-      runCommand(
-        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
-      );
+      runCommand(`${pmc.exec} tsc -p apps/${appName}/tsconfig.app.json`);
       checkFilesExist(
         `dist/out-tsc/apps/${appName}/src/app/App.js`,
         `dist/out-tsc/apps/${appName}/src/app/App.d.ts`,

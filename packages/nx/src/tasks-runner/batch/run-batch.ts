@@ -6,7 +6,7 @@ import {
   BatchResults,
 } from './batch-messages';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { combineOptionsForExecutor } from '../../utils/params';
+import { combineOptionsForExecutor, Options } from '../../utils/params';
 import { TaskGraph } from '../../config/task-graph';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
@@ -18,6 +18,10 @@ import {
 } from '../../command-line/run/executor-utils';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { ProjectGraph } from '../../config/project-graph';
+
+// Batch workers are inside an Nx run just like task workers (see
+// bin/run-executor.ts) — mark it so nested tooling can detect Nx.
+process.env.NX_CLI_SET = 'true';
 
 function getBatchExecutor(
   executorName: string,
@@ -62,7 +66,7 @@ async function runTasks(
     const targetConfiguration =
       projectConfiguration.targets[task.target.target];
     input[task.id] = combineOptionsForExecutor(
-      task.overrides,
+      task.overrides as Options,
       task.target.configuration,
       targetConfiguration,
       batchExecutor.schema,

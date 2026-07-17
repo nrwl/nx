@@ -49,7 +49,7 @@ function parseLockFile(lockFileContent: string, lockFileHash: string) {
   }
 
   const { parseSyml } =
-    require('@yarnpkg/parsers') as typeof import('@yarnpkg/parsers');
+    require('../../../utils/yarn-syml') as typeof import('../../../utils/yarn-syml');
 
   const result = parseSyml(lockFileContent);
   cachedParsedLockFile = result;
@@ -369,7 +369,7 @@ export function stringifyYarnLockfile(
   rootLockFileContent: string,
   packageJson: NormalizedPackageJson
 ): string {
-  const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
+  const { parseSyml, stringifySyml } = require('../../../utils/yarn-syml');
   const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
   const isBerry = !!__metadata;
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
@@ -465,11 +465,13 @@ function mapSnapshots(
 
   // yarn classic splits keys when parsing so we need to stich them back together
   const groupedDependencies = groupDependencies(rootDependencies, isBerry);
+  const keyIndex = buildYarnKeyIndex(groupedDependencies);
 
   // collect snapshots and their matching keys
   Object.values(nodes).forEach((node) => {
     const foundOriginalKeys = findOriginalKeys(
       groupedDependencies,
+      keyIndex,
       node,
       workspaceModules
     );
@@ -534,6 +536,7 @@ function mapSnapshots(
       // look for patched versions
       const patch = findPatchedKeys(
         groupedDependencies,
+        keyIndex,
         node,
         resolutions[node.data.packageName]
       );
@@ -638,12 +641,42 @@ function isClassicAlias(
   );
 }
 
+type YarnKeyIndex = Map<string, string[]>;
+
+// Bucket grouped-dependency key expressions by the package names they contain
+// so a node scans only its own name's entries (was O(nodes * allEntries)). A
+// key like "foo@npm:1.0" indexes under "foo"; the inner match checks below are
+// unchanged, so candidates are exactly the entries the old full scan would not
+// have skipped and the result is identical.
+function extractYarnKeyName(key: string): string {
+  const at = key.indexOf('@', 1);
+  return at === -1 ? key : key.slice(0, at);
+}
+function buildYarnKeyIndex(
+  dependencies: Record<string, YarnDependency>
+): YarnKeyIndex {
+  const index: YarnKeyIndex = new Map();
+  for (const keyExpr of Object.keys(dependencies)) {
+    const seen = new Set<string>();
+    for (const k of keyExpr.split(', ')) {
+      const name = extractYarnKeyName(k);
+      if (seen.has(name)) continue;
+      seen.add(name);
+      let bucket = index.get(name);
+      if (!bucket) index.set(name, (bucket = []));
+      bucket.push(keyExpr);
+    }
+  }
+  return index;
+}
+
 function findOriginalKeys(
   dependencies: Record<string, YarnDependency>,
+  keyIndex: YarnKeyIndex,
   node: ProjectGraphExternalNode,
   workspaceModules: Map<string, ProjectGraphProjectNode>
 ): [string[], YarnDependency] {
-  for (const keyExpr of Object.keys(dependencies)) {
+  for (const keyExpr of keyIndex.get(node.data.packageName) ?? []) {
     const snapshot = dependencies[keyExpr];
     const keys = keyExpr.split(', ');
     if (!keys.some((k) => k.startsWith(`${node.data.packageName}@`))) {
@@ -680,10 +713,11 @@ function findOriginalKeys(
 
 function findPatchedKeys(
   dependencies: Record<string, YarnDependency>,
+  keyIndex: YarnKeyIndex,
   node: ProjectGraphExternalNode,
   resolutionVersion: string
 ): [string[], YarnDependency] | void {
-  for (const keyExpr of Object.keys(dependencies)) {
+  for (const keyExpr of keyIndex.get(node.data.packageName) ?? []) {
     const snapshot = dependencies[keyExpr];
     const keys = keyExpr.split(', ');
     if (!keys[0].startsWith(`${node.data.packageName}@patch:`)) {

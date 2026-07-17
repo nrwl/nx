@@ -1,6 +1,7 @@
 import {
   applyChangesToString,
   ChangeType,
+  names,
   parseJson,
   StringChange,
 } from '@nx/devkit';
@@ -826,19 +827,27 @@ function removeImportFromFlatConfigCJS(
 ): string {
   const changes: StringChange[] = [];
   ts.forEachChild(source, (node) => {
-    // we can only combine object binding patterns
     if (
-      ts.isVariableStatement(node) &&
-      ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
-      ts.isIdentifier(node.declarationList.declarations[0].name) &&
-      node.declarationList.declarations[0].name.getText() === variable &&
-      ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
-      node.declarationList.declarations[0].initializer.expression.getText() ===
-        'require' &&
-      ts.isStringLiteral(
-        node.declarationList.declarations[0].initializer.arguments[0]
-      ) &&
-      node.declarationList.declarations[0].initializer.arguments[0].text === imp
+      !ts.isVariableStatement(node) ||
+      !ts.isVariableDeclaration(node.declarationList.declarations[0])
+    ) {
+      return;
+    }
+    const declaration = node.declarationList.declarations[0];
+    // Match both `const x = require(imp)` and a sole-binding
+    // `const { x } = require(imp)`, so an object-binding import is removed too.
+    const name = declaration.name;
+    const bindsVariable =
+      (ts.isIdentifier(name) && name.getText() === variable) ||
+      (ts.isObjectBindingPattern(name) &&
+        name.elements.length === 1 &&
+        name.elements[0].name.getText() === variable);
+    if (
+      bindsVariable &&
+      ts.isCallExpression(declaration.initializer) &&
+      declaration.initializer.expression.getText() === 'require' &&
+      ts.isStringLiteral(declaration.initializer.arguments[0]) &&
+      declaration.initializer.arguments[0].text === imp
     ) {
       changes.push({
         type: ChangeType.Delete,
@@ -912,9 +921,26 @@ function addBlockToFlatConfigExportESM(
   const exportArrayLiteral =
     exportDefaultStatement.expression as ts.ArrayLiteralExpression;
 
-  const updatedArrayElements = options.insertAtTheEnd
-    ? [...exportArrayLiteral.elements, config]
-    : [config, ...exportArrayLiteral.elements];
+  let updatedArrayElements: ts.Expression[];
+  if (options.checkBaseConfig) {
+    const baseConfigIndex = exportArrayLiteral.elements.findIndex(
+      (el) =>
+        ts.isSpreadElement(el) &&
+        ts.isIdentifier(el.expression) &&
+        el.expression.text === 'baseConfig'
+    );
+    if (baseConfigIndex >= 0) {
+      const before = exportArrayLiteral.elements.slice(0, baseConfigIndex);
+      const after = exportArrayLiteral.elements.slice(baseConfigIndex);
+      updatedArrayElements = [...before, config, ...after];
+    } else {
+      updatedArrayElements = [...exportArrayLiteral.elements, config];
+    }
+  } else {
+    updatedArrayElements = options.insertAtTheEnd
+      ? [...exportArrayLiteral.elements, config]
+      : [config, ...exportArrayLiteral.elements];
+  }
 
   const updatedExportDefault = ts.factory.createExportAssignment(
     undefined,
@@ -964,6 +990,33 @@ function addBlockToFlatConfigExportCJS(
     printer
       .printNode(ts.EmitHint.Expression, config, source)
       .replaceAll(/\n/g, '\n    ');
+
+  if (options.checkBaseConfig) {
+    const baseConfigElement = exportsArray.find(
+      (el) =>
+        ts.isSpreadElement(el) &&
+        ts.isIdentifier(el.expression) &&
+        el.expression.text === 'baseConfig'
+    );
+    if (baseConfigElement) {
+      // Match baseConfig's indentation for consistent formatting
+      const baseConfigStart = baseConfigElement.getStart();
+      const lineStart = content.lastIndexOf('\n', baseConfigStart) + 1;
+      const indentation = content.substring(lineStart, baseConfigStart);
+      const configText = printer
+        .printNode(ts.EmitHint.Expression, config, source)
+        .replaceAll(/\n/g, `\n${indentation}`);
+      return applyChangesToString(content, [
+        {
+          type: ChangeType.Insert,
+          index: baseConfigStart,
+          text: `${configText},\n${indentation}`,
+        },
+      ]);
+    }
+    // baseConfig not found — fall through to insertAtTheEnd behavior
+  }
+
   if (options.insertAtTheEnd) {
     const index =
       exportsArray.length > 0
@@ -1604,7 +1657,8 @@ export function generateFlatOverride(
   _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
   },
-  format: 'mjs' | 'cjs'
+  format: 'mjs' | 'cjs',
+  importsMap?: Map<string, string>
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
   const override = mapFilePaths(_override);
 
@@ -1683,7 +1737,7 @@ export function generateFlatOverride(
         } else {
           // Change parser to import statement.
           return format === 'mjs'
-            ? generateESMParserImport(override)
+            ? generateESMParserImport(override, importsMap)
             : generateCJSParserImport(override);
         }
       },
@@ -1795,21 +1849,31 @@ export function generateFlatOverride(
 function generateESMParserImport(
   override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
-  }
+  },
+  importsMap?: Map<string, string>
 ): ts.PropertyAssignment {
+  const parser =
+    override['languageOptions']?.['parserOptions']?.parser ??
+    override['languageOptions']?.parser ??
+    override.parser;
+  // Dynamic `await import()` doesn't expose top-level CJS exports (e.g. `parseForESLint`)
+  // because those are nested under `.default`. Use a hoisted static import instead so the
+  // resolved binding matches the parser's module.exports shape.
+  if (importsMap) {
+    const parserName = importsMap.get(parser) ?? names(parser).propertyName;
+    importsMap.set(parser, parserName);
+    return ts.factory.createPropertyAssignment(
+      'parser',
+      ts.factory.createIdentifier(parserName)
+    );
+  }
   return ts.factory.createPropertyAssignment(
     'parser',
     ts.factory.createAwaitExpression(
       ts.factory.createCallExpression(
         ts.factory.createIdentifier('import'),
         undefined,
-        [
-          ts.factory.createStringLiteral(
-            override['languageOptions']?.['parserOptions']?.parser ??
-              override['languageOptions']?.parser ??
-              override.parser
-          ),
-        ]
+        [ts.factory.createStringLiteral(parser)]
       )
     )
   );
@@ -1858,19 +1922,16 @@ export function mapFilePaths<
   const override: T = {
     ..._override,
   };
+  // Dedupe after mapping — both source-side duplicates and glob-mapping collisions collapse.
+  const normalize = (value: string | string[]): string[] =>
+    Array.from(
+      new Set((Array.isArray(value) ? value : [value]).map(mapFilePath))
+    );
   if (override.files) {
-    override.files = Array.isArray(override.files)
-      ? override.files
-      : [override.files];
-    override.files = override.files.map((file) => mapFilePath(file));
+    override.files = normalize(override.files);
   }
   if (override.excludedFiles) {
-    override.excludedFiles = Array.isArray(override.excludedFiles)
-      ? override.excludedFiles
-      : [override.excludedFiles];
-    override.excludedFiles = override.excludedFiles.map((file) =>
-      mapFilePath(file)
-    );
+    override.excludedFiles = normalize(override.excludedFiles);
   }
   return override;
 }

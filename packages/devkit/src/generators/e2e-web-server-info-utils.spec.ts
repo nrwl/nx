@@ -1,3 +1,18 @@
+// Stub out the real @nx/vite/plugin so findPluginForConfigFile's dynamic
+// `await import('@nx/vite/plugin')` doesn't pull @nx/vite and @nx/js source
+// into this test. Only the createNodesV2 glob is consumed, and the include/
+// exclude assertions depend on the nxJson registration, not the real plugin.
+jest.mock(
+  '@nx/vite/plugin',
+  () => ({
+    createNodesV2: [
+      '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
+      jest.fn(),
+    ],
+  }),
+  { virtual: true }
+);
+
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
@@ -187,6 +202,60 @@ describe('getE2EWebServerInfo', () => {
         "e2eCiWebServerCommand": "npx nx run app:vite:preview",
         "e2eDevServerTarget": "app:vite:serve",
         "e2eWebServerAddress": "http://localhost:4400",
+        "e2eWebServerCommand": "npx nx run app:vite:serve",
+      }
+    `);
+  });
+
+  it('should handle array-shaped targetDefaults', async () => {
+    // ARRANGE
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        serveTargetName: 'vite:serve',
+        previewTargetName: 'vite:preview',
+      },
+    });
+    nxJson.targetDefaults = {
+      'vite:serve': [
+        {
+          options: {
+            port: 4500,
+          },
+        },
+      ],
+    };
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    const e2eWebServerInfo = await getE2EWebServerInfo(
+      tree,
+      'app',
+      {
+        plugin: '@nx/vite/plugin',
+        configFilePath: 'app/vite.config.ts',
+        serveTargetName: 'serveTargetName',
+        serveStaticTargetName: 'previewTargetName',
+      },
+      {
+        defaultServeTargetName: 'serve',
+        defaultServeStaticTargetName: 'preview',
+        defaultE2EWebServerAddress: 'http://localhost:4200',
+        defaultE2ECiBaseUrl: 'http://localhost:4300',
+        defaultE2EPort: 4200,
+      },
+      true
+    );
+
+    // ASSERT
+    expect(e2eWebServerInfo).toMatchInlineSnapshot(`
+      {
+        "e2eCiBaseUrl": "http://localhost:4300",
+        "e2eCiWebServerCommand": "npx nx run app:vite:preview",
+        "e2eDevServerTarget": "app:vite:serve",
+        "e2eWebServerAddress": "http://localhost:4500",
         "e2eWebServerCommand": "npx nx run app:vite:serve",
       }
     `);

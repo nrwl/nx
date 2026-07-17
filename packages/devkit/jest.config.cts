@@ -1,12 +1,10 @@
 /* eslint-disable */
 module.exports = {
-  transform: {
-    '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
-  },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: {},
   displayName: 'cli',
   preset: '../../jest.preset.js',
+  modulePathIgnorePatterns: ['<rootDir>/dist/'],
   moduleNameMapper: {
     // Map Angular schematics to node_modules
     '^@schematics/angular/collection.json$':

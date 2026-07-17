@@ -1,9 +1,9 @@
-use crate::native::project_graph::types::ProjectGraph;
 use crate::native::tasks::hashers::{
-    hash_project_files_with_inputs, hash_workspace_files_with_inputs, resolve_task_output_files,
+    ProjectFileIndicesCache, collect_json_input_files, collect_project_file_paths_cached,
+    collect_workspace_file_paths, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
-use crate::native::tasks::types::HashInstruction;
+use crate::native::tasks::types::{HashInstruction, HashPlans};
 use crate::native::types::FileData;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
@@ -14,7 +14,6 @@ use std::sync::Arc;
 #[napi]
 pub struct HashPlanInspector {
     all_workspace_files: Arc<Vec<FileData>>,
-    project_graph: Arc<ProjectGraph>,
     project_file_map: Arc<HashMap<String, Vec<FileData>>>,
     workspace_root: String,
 }
@@ -26,16 +25,12 @@ impl HashPlanInspector {
         #[napi(ts_arg_type = "ExternalObject<Array<FileData>>")] all_workspace_files: &External<
             Arc<Vec<FileData>>,
         >,
-        #[napi(ts_arg_type = "ExternalObject<ProjectGraph>")] project_graph: &External<
-            Arc<ProjectGraph>,
-        >,
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<FileData>>>")]
         project_file_map: &External<Arc<HashMap<String, Vec<FileData>>>>,
         workspace_root: String,
     ) -> Self {
         Self {
             all_workspace_files: Arc::clone(all_workspace_files),
-            project_graph: Arc::clone(project_graph),
             project_file_map: Arc::clone(project_file_map),
             workspace_root,
         }
@@ -45,22 +40,25 @@ impl HashPlanInspector {
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn inspect(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
     ) -> anyhow::Result<HashMap<String, Vec<String>>> {
+        let project_file_indices_cache = ProjectFileIndicesCache::new();
+        let pool = &hash_plans.pool;
         let results: Vec<(&String, Vec<String>)> = hash_plans
+            .plans
             .iter()
-            .flat_map(|(task_id, instructions)| {
-                instructions
-                    .iter()
-                    .map(move |instruction| (task_id, instruction))
-            })
+            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
             .par_bridge()
-            .map(|(task_id, instruction)| {
+            .map(|(task_id, id)| {
+                let instruction_ref = pool.get(id);
+                let instruction = instruction_ref.value();
                 let strings = match instruction {
                     // File-set instructions: resolve to actual file paths
                     HashInstruction::WorkspaceFileSet(_)
                     | HashInstruction::ProjectFileSet(_, _) => {
-                        let builder = self.resolve_instruction_inputs(instruction)?;
+                        let builder = self
+                            .resolve_instruction_inputs(instruction, &project_file_indices_cache)?;
                         builder
                             .files
                             .into_iter()
@@ -85,22 +83,28 @@ impl HashPlanInspector {
     /// Like `inspect()` but returns structured `HashInputs` objects instead of flat strings.
     /// Each `HashInstruction` is categorized into the appropriate bucket (files, runtime,
     /// environment, depOutputs, external). TsConfiguration is resolved to the root tsconfig
-    /// file path. ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
+    /// file path. JsonFileSet is resolved to the matched JSON file paths (field/excludeField
+    /// filters only affect hashing, not which files are reported as inputs).
+    /// ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
     #[napi(ts_return_type = "Record<string, HashInputs>")]
     pub fn inspect_inputs(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
     ) -> anyhow::Result<HashMap<String, HashInputs>> {
+        let project_file_indices_cache = ProjectFileIndicesCache::new();
+        let pool = &hash_plans.pool;
         let results: Vec<(&String, HashInputsBuilder)> = hash_plans
+            .plans
             .iter()
-            .flat_map(|(task_id, instructions)| {
-                instructions
-                    .iter()
-                    .map(move |instruction| (task_id, instruction))
-            })
+            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
             .par_bridge()
-            .map(|(task_id, instruction)| {
-                let builder = self.resolve_instruction_inputs(instruction)?;
+            .map(|(task_id, id)| {
+                let instruction_ref = pool.get(id);
+                let builder = self.resolve_instruction_inputs(
+                    instruction_ref.value(),
+                    &project_file_indices_cache,
+                )?;
                 Ok::<_, anyhow::Error>((task_id, builder))
             })
             .collect::<anyhow::Result<_>>()?;
@@ -124,26 +128,26 @@ impl HashPlanInspector {
     fn resolve_instruction_inputs(
         &self,
         instruction: &HashInstruction,
+        project_file_indices_cache: &ProjectFileIndicesCache,
     ) -> anyhow::Result<HashInputsBuilder> {
         match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
-                let result = hash_workspace_files_with_inputs(
-                    workspace_file_set,
-                    &self.all_workspace_files,
-                )?;
+                let files =
+                    collect_workspace_file_paths(workspace_file_set, &self.all_workspace_files)?;
                 Ok(HashInputsBuilder {
-                    files: result.files.into_iter().collect(),
+                    files: files.into_iter().collect(),
                     ..Default::default()
                 })
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
-                let result = hash_project_files_with_inputs(
+                let files = collect_project_file_paths_cached(
                     project_name,
                     file_sets,
                     &self.project_file_map,
+                    project_file_indices_cache,
                 )?;
                 Ok(HashInputsBuilder {
-                    files: result.files.into_iter().collect(),
+                    files: files.into_iter().collect(),
                     ..Default::default()
                 })
             }
@@ -154,6 +158,22 @@ impl HashPlanInspector {
                         .unwrap_or_else(|_| dep_outputs.iter().cloned().collect());
                 Ok(HashInputsBuilder {
                     dep_outputs: dep_output_files,
+                    ..Default::default()
+                })
+            }
+            HashInstruction::JsonFileSet(json) => {
+                // Resolve the file paths the JsonFileSet would hash, without
+                // reading or parsing any JSON. Field/excludeField filters are
+                // irrelevant here — the reported inputs are still the files.
+                let matched = collect_json_input_files(
+                    &json.json_path,
+                    json.project_name.as_deref(),
+                    &self.project_file_map,
+                    &self.all_workspace_files,
+                )?;
+                let files: HashSet<String> = matched.into_iter().map(String::from).collect();
+                Ok(HashInputsBuilder {
+                    files,
                     ..Default::default()
                 })
             }

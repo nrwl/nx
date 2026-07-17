@@ -18,12 +18,24 @@ exports[`@nx/vitest root project should create nodes 1`] = `
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -86,12 +98,24 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -120,12 +144,24 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -157,12 +193,24 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -194,12 +242,24 @@ exports[`@nx/vitest root project should create nodes with ci target name 1`] = `
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -262,12 +322,24 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -296,12 +368,24 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -333,12 +417,24 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {
@@ -370,12 +466,24 @@ exports[`@nx/vitest root project should create nodes with ci target name and ci 
                 "default",
                 "^production",
                 {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.spec.json",
+                },
+                {
+                  "dependencies": true,
+                  "fileset": "{projectRoot}/tsconfig.storybook.json",
+                },
+                {
                   "externalDependencies": [
                     "vitest",
                   ],
                 },
                 {
                   "env": "CI",
+                },
+                {
+                  "dependentTasksOutputFiles": "**/*.js",
+                  "transitive": true,
                 },
               ],
               "metadata": {

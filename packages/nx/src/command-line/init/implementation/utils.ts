@@ -1,9 +1,13 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
+import { gte } from 'semver';
 
-import { NxJsonConfiguration } from '../../../config/nx-json';
 import {
-  directoryExists,
+  NxJsonConfiguration,
+  TargetDefaultEntry,
+  TargetDefaults,
+} from '../../../config/nx-json';
+import {
   fileExists,
   readJsonFile,
   writeJsonFile,
@@ -11,9 +15,13 @@ import {
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import {
+  detectPackageManager,
   getPackageManagerCommand,
+  getPackageManagerVersion,
+  PackageManager,
   PackageManagerCommands,
 } from '../../../utils/package-manager';
+import { acknowledgeBuildScripts } from '../../../utils/acknowledge-build-scripts';
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -32,34 +40,38 @@ export function createNxJsonFile(
   let nxJson = {} as Partial<NxJsonConfiguration> & { $schema: string };
   try {
     nxJson = readJsonFile(nxJsonPath);
-    // eslint-disable-next-line no-empty
   } catch {}
 
   nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
-  nxJson.targetDefaults ??= {};
+  const targetDefaults: TargetDefaults = { ...(nxJson.targetDefaults ?? {}) };
 
   if (topologicalTargets.length > 0) {
     for (const scriptName of topologicalTargets) {
-      nxJson.targetDefaults[scriptName] ??= {};
-      nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
+      upsertTargetDefaultEntry(targetDefaults, scriptName, {
+        dependsOn: [`^${scriptName}`],
+      });
     }
   }
   for (const [scriptName, output] of Object.entries(scriptOutputs)) {
     if (!output) {
-      // eslint-disable-next-line no-continue
       continue;
     }
-    nxJson.targetDefaults[scriptName] ??= {};
-    nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
+    upsertTargetDefaultEntry(targetDefaults, scriptName, {
+      outputs: [`{projectRoot}/${output}`],
+    });
   }
 
   for (const target of cacheableOperations) {
-    nxJson.targetDefaults[target] ??= {};
-    nxJson.targetDefaults[target].cache ??= true;
+    const existing = readUnfilteredTargetDefault(targetDefaults, target);
+    if (existing.cache === undefined) {
+      upsertTargetDefaultEntry(targetDefaults, target, { cache: true });
+    }
   }
 
-  if (Object.keys(nxJson.targetDefaults).length === 0) {
+  if (Object.keys(targetDefaults).length === 0) {
     delete nxJson.targetDefaults;
+  } else {
+    nxJson.targetDefaults = targetDefaults;
   }
 
   const defaultBase = deduceDefaultBase();
@@ -68,6 +80,55 @@ export function createNxJsonFile(
     nxJson.defaultBase ??= defaultBase;
   }
   writeJsonFile(nxJsonPath, nxJson);
+}
+
+/**
+ * Locate-by-target upsert against an in-memory `targetDefaults` map. Merges
+ * `patch`'s config into the unfiltered (catch-all) default for `target`,
+ * promoting through the array form when one already exists. Used by `nx init`
+ * code paths that operate on raw JSON before a Tree exists — generators
+ * should use `upsertTargetDefault` from devkit instead.
+ */
+export function upsertTargetDefaultEntry(
+  targetDefaults: TargetDefaults,
+  target: string,
+  patch: Partial<TargetDefaultEntry>
+): void {
+  // Drop locator fields — the key is `target` and `nx init` only writes
+  // unfiltered defaults.
+  const {
+    target: _t,
+    executor: _e,
+    projects: _p,
+    plugin: _pl,
+    ...config
+  } = patch;
+  const existing = targetDefaults[target];
+  if (Array.isArray(existing)) {
+    const idx = existing.findIndex((e) => e.filter === undefined);
+    if (idx >= 0) {
+      const { filter, ...rest } = existing[idx];
+      existing[idx] = { ...rest, ...config };
+    } else {
+      existing.push({ ...config });
+    }
+  } else {
+    targetDefaults[target] = { ...(existing ?? {}), ...config };
+  }
+}
+
+/**
+ * Read the unfiltered (catch-all) config for `target` from a `targetDefaults`
+ * map — the object value, or the filter-less entry of an array value.
+ */
+function readUnfilteredTargetDefault(
+  targetDefaults: TargetDefaults,
+  target: string
+): Partial<TargetDefaultEntry> {
+  const existing = targetDefaults[target];
+  if (existing === undefined) return {};
+  if (!Array.isArray(existing)) return existing;
+  return existing.find((e) => e.filter === undefined) ?? {};
 }
 
 export function createNxJsonFromTurboJson(
@@ -105,23 +166,23 @@ export function createNxJsonFromTurboJson(
 
   // Handle task configurations
   if (turboJson.tasks) {
-    nxJson.targetDefaults = {};
+    const targetDefaults: TargetDefaults = {};
 
     for (const [taskName, taskConfig] of Object.entries(turboJson.tasks)) {
       // Skip project-specific tasks (containing #)
       if (taskName.includes('#')) continue;
 
       const config = taskConfig as any;
-      nxJson.targetDefaults[taskName] = {};
+      const entry: TargetDefaultEntry = { target: taskName };
 
       // Handle dependsOn
       if (config.dependsOn?.length > 0) {
-        nxJson.targetDefaults[taskName].dependsOn = config.dependsOn;
+        entry.dependsOn = config.dependsOn;
       }
 
       // Handle inputs
       if (config.inputs?.length > 0) {
-        nxJson.targetDefaults[taskName].inputs = config.inputs
+        entry.inputs = config.inputs
           .map((input) => {
             if (input === '$TURBO_DEFAULT$') {
               return '{projectRoot}/**/*';
@@ -149,21 +210,28 @@ export function createNxJsonFromTurboJson(
 
       // Handle outputs
       if (config.outputs?.length > 0) {
-        nxJson.targetDefaults[taskName].outputs = config.outputs.map(
-          (output) => {
-            // Don't add projectRoot if it's already there
-            if (output.startsWith('{projectRoot}/')) return output;
-            // Handle negated patterns by adding projectRoot after the !
-            if (output.startsWith('!')) {
-              return `!{projectRoot}/${output.slice(1)}`;
-            }
-            return `{projectRoot}/${output}`;
+        entry.outputs = config.outputs.map((output) => {
+          // Don't add projectRoot if it's already there
+          if (output.startsWith('{projectRoot}/')) return output;
+          // Handle negated patterns by adding projectRoot after the !
+          if (output.startsWith('!')) {
+            return `!{projectRoot}/${output.slice(1)}`;
           }
-        );
+          return `{projectRoot}/${output}`;
+        });
       }
 
       // Handle cache setting - true by default in Turbo
-      nxJson.targetDefaults[taskName].cache = config.cache !== false;
+      entry.cache = config.cache !== false;
+
+      // Each turbo task maps to a unique key, written as the plain object
+      // (unfiltered) value form.
+      const { target, ...taskDefault } = entry;
+      targetDefaults[target] = taskDefault;
+    }
+
+    if (Object.keys(targetDefaults).length > 0) {
+      nxJson.targetDefaults = targetDefaults;
     }
   }
 
@@ -187,6 +255,7 @@ export function createNxJsonFromTurboJson(
 
 export function addDepsToPackageJson(
   repoRoot: string,
+  packageManager: PackageManager,
   additionalPackages?: string[]
 ) {
   const path = joinPathFragments(repoRoot, `package.json`);
@@ -199,6 +268,9 @@ export function addDepsToPackageJson(
     }
   }
   writeJsonFile(path, json);
+  // nx has a postinstall script, which pnpm 11+ refuses to install
+  // unacknowledged.
+  acknowledgeBuildScripts(repoRoot, packageManager, { nx: true });
 }
 
 export function updateGitIgnore(root: string) {
@@ -221,6 +293,13 @@ export function updateGitIgnore(root: string) {
       }
       lines.push('.nx/workspace-data');
     }
+    if (!contents.includes('.nx/migrate-runs')) {
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.nx/migrate-runs');
+    }
 
     writeFileSync(ignorePath, lines.join('\n'), 'utf-8');
   } catch {}
@@ -228,20 +307,88 @@ export function updateGitIgnore(root: string) {
 
 export function runInstall(
   repoRoot: string,
-  pmc: PackageManagerCommands = getPackageManagerCommand()
+  packageManager: PackageManager = detectPackageManager(repoRoot),
+  pmc: PackageManagerCommands = getPackageManagerCommand(packageManager)
 ) {
-  execSync(pmc.install, {
-    stdio: [0, 1, 2],
-    cwd: repoRoot,
-    windowsHide: false,
-  });
+  let command = pmc.install;
+  // Plugins added during init can pull build-script deps whose allowBuilds
+  // entries are only recorded by their init generators after this install;
+  // warn and skip for this one install, like pnpm 10 did.
+  if (packageManager === 'pnpm') {
+    try {
+      if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
+        command += ' --config.strictDepBuilds=false';
+      }
+    } catch {
+      // The version cannot be probed; run the install unmodified.
+    }
+  }
+  try {
+    execSync(command, {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      encoding: 'utf8',
+      cwd: repoRoot,
+      windowsHide: true,
+    });
+  } catch (e) {
+    if ((e as any)?.stderr) process.stderr.write((e as any).stderr);
+    throw e;
+  }
+}
+
+/**
+ * Coerce any thrown value into a non-empty telemetry string. The naive
+ * `error.message || String(error)` yields "" for bare `new Error()`.
+ */
+export function toErrorString(error: unknown): string {
+  if (error == null) return 'Unknown error';
+  if (error instanceof Error) {
+    if (error.message) return error.message;
+    if (error.name && error.name !== 'Error') return error.name;
+    // Drop `stack` — large and contains absolute paths (PII).
+    const keys = Object.getOwnPropertyNames(error).filter((k) => k !== 'stack');
+    const serialized = safeJsonStringify(error, keys);
+    if (serialized && serialized !== '{}') return serialized;
+    return error.name || 'Error';
+  }
+  if (typeof error === 'object') {
+    const serialized = safeJsonStringify(error);
+    if (serialized && serialized !== '{}') return serialized;
+    return Object.prototype.toString.call(error);
+  }
+  return String(error);
+}
+
+export function readErrorStderr(error: unknown): string {
+  const raw = (error as any)?.stderr;
+  if (typeof raw === 'string') return raw;
+  if (raw && typeof (raw as Buffer).toString === 'function') {
+    return (raw as Buffer).toString('utf8');
+  }
+  return '';
+}
+
+export function extractErrorName(error: unknown, stderr: string): string {
+  const nodeCode = (error as any)?.code;
+  if (typeof nodeCode === 'string') return nodeCode;
+  const m = stderr.match(/\b(E[A-Z0-9_]{2,}|ERR_[A-Z0-9_]+)\b/);
+  if (m) return m[1];
+  if (error instanceof Error) return error.name;
+  return typeof error;
+}
+
+function safeJsonStringify(value: unknown, replacer?: string[]): string {
+  try {
+    return JSON.stringify(value, replacer);
+  } catch {
+    return '';
+  }
 }
 
 export async function initCloud(
   installationSource:
     | 'nx-init'
     | 'nx-init-angular'
-    | 'nx-init-cra'
     | 'nx-init-monorepo'
     | 'nx-init-nest'
     | 'nx-init-npm-repo'
@@ -251,6 +398,13 @@ export async function initCloud(
     installationSource,
   });
   await printSuccessMessage(token, installationSource);
+}
+
+export function setNeverConnectToCloud(repoRoot: string): void {
+  const nxJsonPath = join(repoRoot, 'nx.json');
+  const nxJson = readJsonFile(nxJsonPath);
+  nxJson.neverConnectToCloud = true;
+  writeJsonFile(nxJsonPath, nxJson);
 }
 
 export function addVsCodeRecommendedExtensions(
@@ -345,19 +499,4 @@ export function isMonorepo(packageJson: PackageJson) {
   if (existsSync('lerna.json')) return true;
 
   return false;
-}
-
-export function isCRA(packageJson: PackageJson) {
-  const combinedDependencies = {
-    ...packageJson.dependencies,
-    ...packageJson.devDependencies,
-  };
-  return (
-    // Required dependencies for CRA projects
-    combinedDependencies['react'] &&
-    combinedDependencies['react-dom'] &&
-    combinedDependencies['react-scripts'] &&
-    directoryExists('src') &&
-    directoryExists('public')
-  );
 }

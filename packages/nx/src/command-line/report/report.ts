@@ -9,6 +9,7 @@ import {
 } from '../../utils/package-manager';
 import { readJsonFile } from '../../utils/fileutils';
 import {
+  NxPackageJson,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
@@ -39,16 +40,15 @@ import {
   resolveMaxCacheSize,
 } from '../../tasks-runner/cache';
 import { daemonClient } from '../../daemon/client/client';
+import { readNxPackageGroup } from '../../utils/nx-package-group';
 
-const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
-  join(__dirname, '../../../package.json')
+const nxPackageJson = readJsonFile<NxPackageJson>(
+  require.resolve('nx/package.json')
 );
 
 export const packagesWeCareAbout = [
   'lerna',
-  ...nxPackageJson['nx-migrations'].packageGroup.map((x) =>
-    typeof x === 'string' ? x : x.package
-  ),
+  ...readNxPackageGroup(),
   '@nrwl/schematics', // manually added since we don't publish it anymore.
   'typescript',
 ];
@@ -404,7 +404,9 @@ export async function getReportData(): Promise<ReportData> {
     });
   }
 
-  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(nxPackageJson);
+  const outOfSyncPackageGroup = findMisalignedPackagesForPackage(
+    nxPackageJson as PackageJson
+  );
 
   const mismatchedNxVersions = findMismatchedNxVersions(graph);
 
@@ -583,7 +585,6 @@ export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
 
 export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
-  // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
 
   for (const pkg of packagesWeCareAbout) {
     const v = readPackageVersion(pkg);

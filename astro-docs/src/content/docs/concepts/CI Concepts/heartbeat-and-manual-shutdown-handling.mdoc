@@ -16,7 +16,7 @@ we stop receiving these pings, we assume the main job has died, and we will fail
 This is useful not just for worst-case scenarios, but it also keeps your CI config simple:
 
 ```yaml
-- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" # start agents and tell Nx to send the below affected tasks to NxCloud rather than execute in-place
+- run: npx nx start-ci-run --distribute-on="5 linux-medium-js" # start agents and tell Nx to send the below affected tasks to NxCloud rather than execute in-place
 - run: npm ci
 - run: npx nx affected -t build,lint,test
 # That's it - we don't need an extra step to tell NxCloud that we're done running Nx commands.
@@ -31,10 +31,10 @@ In summary, for 99% of cases, you will never have to think about the heartbeat o
 In some specific cases, though, the heartbeat process will not work properly. In that case, you will need to [manage completion yourself](/docs/reference/nx-cloud-cli#requireexplicitcompletion):
 
 ```yaml
-- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --require-explicit-completion # this option disables the heartbeat
+- run: npx nx start-ci-run --distribute-on="5 linux-medium-js" --require-explicit-completion # this option disables the heartbeat
 - run: npm ci
 - run: npx nx affected -t build,lint,test
-- run: npx nx-cloud complete-ci-run # this now tells NxCloud to turn off the agents
+- run: npx nx complete-ci-run # this now tells NxCloud to turn off the agents
   if: always() # IMPORTANT: Always run, even in case of failures
 ```
 
@@ -45,7 +45,7 @@ When you might need to do this:
 We've noticed that some CI providers tend to be more aggressive with background process management when moving between steps. Assume you have the following configuration:
 
 ```yaml
-- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
+- run: npx nx start-ci-run --distribute-on="5 linux-medium-js"
 - run: npm ci
 - run: npx nx affected -t build,lint,test # This is the point where we turn on the heartbeat.
 - run: ./deploy-my-projects.sh
@@ -80,7 +80,7 @@ Workflows involving multiple machines/jobs are the main source of heartbeat-rela
 
 {% /aside %}
 
-The only fix in this scenario is to handle completion yourself and run `npx nx-cloud complete-ci-run` as the last command on your last machine in the pipeline.
+The only fix in this scenario is to handle completion yourself and run `npx nx complete-ci-run` as the last command on your last machine in the pipeline.
 
 ### Heartbeat vs. `--stop-agents-after`
 

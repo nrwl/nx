@@ -14,7 +14,7 @@ use crate::native::{
 use super::action::Action;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
-use super::lifecycle::{BatchInfo, BatchStatus, TuiMode};
+use super::lifecycle::{BatchInfo, BatchStatus, PerformanceSummaryPayload, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_core::TuiCore;
@@ -181,7 +181,7 @@ pub trait TuiApp: Send {
     ///
     /// * `task_id` - The task identifier
     /// * `status` - The new status for the task
-    fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+    fn update_task_status(&mut self, task_id: &str, status: TaskStatus) {
         self.core().update_task_status(task_id, status);
     }
 
@@ -391,6 +391,21 @@ pub trait TuiApp: Send {
             .get_cloud_message()
             .map(|s| s.to_string())
     }
+
+    /// Set a structured Nx Cloud link (display label + href URL) to display.
+    ///
+    /// Default implementation stores the link directly in TuiState.
+    /// Mode-specific implementations override this to also dispatch a UI action
+    /// so the rendered TasksList picks the link up.
+    fn set_cloud_link(&mut self, label: String, url: String) {
+        self.state().lock().set_cloud_link(Some((label, url)));
+    }
+
+    /// Set the run report shown in the exit-countdown popup.
+    ///
+    /// Default implementation is a no-op; mode-specific implementations forward
+    /// it to their countdown popup so it renders above the exit hints.
+    fn set_exit_summary(&mut self, _summary: PerformanceSummaryPayload) {}
 
     /// Set the console messenger for IDE integration
     ///

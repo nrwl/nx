@@ -12,7 +12,7 @@ import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenge
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import * as open from 'open';
+import open from 'open';
 import {
   basename,
   dirname,
@@ -53,10 +53,11 @@ import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
-import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 import { createTaskHasher } from '../../hasher/create-task-hasher';
+import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 
@@ -300,7 +301,7 @@ export async function generateGraph(
       output.warn({
         title: `${
           errors?.length > 1 ? `${errors.length} errors` : `An error`
-        } occured while processing the project graph. Showing partial graph.`,
+        } occurred while processing the project graph. Showing partial graph.`,
       });
     }
   }
@@ -648,8 +649,6 @@ async function startServer(
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
     // by limiting the path to current directory only
-
-    res.setHeader('Access-Control-Allow-Origin', '*');
 
     const sanitizePath = basename(parsedUrl.pathname);
     if (sanitizePath === 'project-graph.json') {
@@ -1489,7 +1488,13 @@ async function createJsonOutput(
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);
-    const hashes = await hasher.hashTasks(tasks, taskGraph);
+    // Match the runtime path: each task is hashed against its own env so
+    // the graph-view hash matches the hash used when the task actually runs.
+    const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
+    for (const task of tasks) {
+      perTaskEnvs[task.id] = getTaskSpecificEnv(task, rawGraph);
+    }
+    const hashes = await hasher.hashTasks(tasks, taskGraph, perTaskEnvs);
     response.tasks = taskGraph;
     response.taskPlans = tasks.reduce((acc, task, index) => {
       acc[task.id] = Object.keys(hashes[index].details.nodes).sort();
@@ -1521,6 +1526,6 @@ function getHelpTextFromTarget(
 
   return execSync(command, {
     cwd: target.options?.cwd ?? workspaceRoot,
-    windowsHide: false,
+    windowsHide: true,
   }).toString();
 }

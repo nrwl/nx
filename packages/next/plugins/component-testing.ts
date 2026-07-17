@@ -2,11 +2,11 @@ import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
 } from '@nx/cypress/plugins/cypress-preset';
-import { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
   createExecutorContext,
+  type CypressExecutorOptions,
   getProjectConfigByPath,
-} from '@nx/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/internal';
 import {
   ExecutorContext,
   parseTargetString,
@@ -16,14 +16,16 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { withReact } from '@nx/react';
+import { suppressReactComposeHelperWarnings } from '@nx/react/internal';
 import {
   AssetGlobPattern,
   composePluginsSync,
   NormalizedWebpackExecutorOptions,
   withNx,
 } from '@nx/webpack';
+import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/internal';
 import { readNxJson } from 'nx/src/config/configuration';
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';
@@ -140,21 +142,27 @@ Able to find CT project, ${!!ctProjectConfig}.`);
       'tsconfig.json'
     ),
   };
-  const configure = composePluginsSync(
-    withNx({
-      target: 'web',
-      styles: [],
-      scripts: [],
-      postcssConfig: ctProjectConfig.root,
-    }),
-    withReact({})
-  );
-  const webpackConfig = configure(
-    {},
-    {
-      options: webpackOptions,
-      context: ctExecutorContext,
-    }
+  // Nx composes these helpers internally for the Cypress CT preset; suppress
+  // their deprecation warning so it fires only for user-authored configs.
+  const webpackConfig = suppressWebpackComposeHelperWarnings(() =>
+    suppressReactComposeHelperWarnings(() => {
+      const configure = composePluginsSync(
+        withNx({
+          target: 'web',
+          styles: [],
+          scripts: [],
+          postcssConfig: ctProjectConfig.root,
+        }),
+        withReact({})
+      );
+      return configure(
+        {},
+        {
+          options: webpackOptions,
+          context: ctExecutorContext,
+        }
+      );
+    })
   );
 
   return {

@@ -1,12 +1,15 @@
 ---
-title: Rollup Plugin for Nx
-description: The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
+title: Nx with Rollup
+description: Use Rollup with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: Introduction
+weight: 2
 filter: 'type:References'
 ---
 
-The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
+[Rollup](https://rollupjs.org/) is a module bundler for JavaScript libraries and applications. In a Rollup monorepo, Nx builds and caches projects across your workspace and rebuilds only what a change affects.
+
+The Nx Plugin for Rollup contains executors and generators that support building applications with Rollup.
 
 ## Requirements
 
@@ -14,7 +17,7 @@ The `@nx/rollup` plugin supports the following package versions.
 
 | Package  | Supported Versions |
 | -------- | ------------------ |
-| `rollup` | ^4.14.0            |
+| `rollup` | ^3.0.0 \|\| ^4.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -45,3 +48,9 @@ nx g @nx/js:lib mylib --bundler=rollup
 ```
 
 This will create a new library configured to use Rollup for building.
+
+## Set up CI for your Rollup monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

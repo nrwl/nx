@@ -90,15 +90,14 @@ export default defineConfig({
 });
 ```
 
-## Automatically configure frontend executors
+## Automatically configure frontend proxies
 
 {% aside type="caution" title="Not recommended for new projects" %}
-We recommend configuring proxies using support from existing tooling. Webpack and Vite both come with proxy support out of the box, as do most modern tools. Using `--frontendProject` is meant for Nx prior to version 18.
+We recommend configuring proxies using support from existing tooling. Webpack and Vite both come with proxy support out of the box, as do most modern tools.
 {% /aside %}
 
-Prior to Nx version 18, projects use [executors](/docs/concepts/executors-and-configurations) to run tasks. If your frontend project is
-using executors, then the Node, Nest and Express app generators have an option to configure proxy API requests. This
-can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
+The Node, Nest and Express app generators have an option to configure proxy API requests. This can be done by passing
+the `--frontendProject` with the project name you wish to enable proxy support for.
 
 ```shell
 nx g @nx/node:app apps/<node-app> --frontendProject my-react-app

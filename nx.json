@@ -7,7 +7,7 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.@(js|cjs|mjs|ts|cts|mts)",
       "!{projectRoot}/.storybook/**/*",
       "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
       "!{projectRoot}/tsconfig.storybook.json",
@@ -18,9 +18,21 @@
       "{workspaceRoot}/.nx/workflows/agents.yaml",
       "{workspaceRoot}/.github/workflows/ci.yml"
     ],
+    "copyReadme": [
+      "{projectRoot}/README.md",
+      "{projectRoot}/readme-template.md",
+      "{workspaceRoot}/scripts/copy-readme.js",
+      "{workspaceRoot}/scripts/readme-fragments/**/*",
+      "{workspaceRoot}/.prettierignore"
+    ],
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
+      "{projectRoot}/src/native/dts-header.d.ts",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/clippy.toml",
+      "{workspaceRoot}/.cargo/config.toml",
       {
         "runtime": "node -p '`${process.platform}_${process.arch}`'"
       },
@@ -33,7 +45,9 @@
     ],
     "e2eInputs": [
       "default",
+      "{workspaceRoot}/scripts/patched-jest-resolver.js",
       "{workspaceRoot}/jest.preset.js",
+      "{workspaceRoot}/e2e/jest.preset.e2e.js",
       "{workspaceRoot}/.verdaccio/config.yml",
       "{workspaceRoot}/scripts/local-registry/**/*",
       "{workspaceRoot}/scripts/nx-release.ts",
@@ -51,12 +65,22 @@
       },
       {
         "env": "NX_E2E_RUN_E2E"
+      },
+      {
+        "dependentTasksOutputFiles": "**/*.d.ts",
+        "transitive": true
+      },
+      {
+        "json": "{workspaceRoot}/tsconfig.json",
+        "fields": ["compilerOptions", "extends", "files", "include"]
       }
     ]
   },
   "release": {
     "projects": ["packages/*", "packages/nx/native-packages/*"],
-    "releaseTagPattern": "{version}",
+    "releaseTag": {
+      "pattern": "{version}"
+    },
     "changelog": {
       "workspaceChangelog": {
         "createRelease": "github",
@@ -75,9 +99,9 @@
         "tag": false
       },
       "currentVersionResolver": "registry",
-      "preserveLocalDependencyProtocols": false,
+      "preserveLocalDependencyProtocols": true,
       "preserveMatchingDependencyRanges": false,
-      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      "manifestRootsToUpdate": ["{projectRoot}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
@@ -90,39 +114,39 @@
         "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
       }
     },
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "dist/packages/{projectName}"
-      }
-    },
     "build": {
-      "dependsOn": [
-        "^build",
-        "typecheck",
-        "legacy-post-build",
-        "build-base",
-        "build-native"
-      ],
+      "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": ["production", "^production"],
       "cache": true
+    },
+    "@nx/esbuild:esbuild": {
+      "cache": true,
+      "dependsOn": ["^build", "typecheck", "build-base"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["extends", "files", "include"]
+        }
+      ]
     },
     "build-native": {
       "inputs": ["native"],
       "cache": true
     },
     "build-base": {
-      "dependsOn": ["^build-base", "build-native"],
+      "dependsOn": ["^build-base", "build-native", "copy-assets"],
       "cache": true
     },
     "test-native": {
-      "inputs": ["native"],
+      "inputs": ["native", "{projectRoot}/**/*.snap"],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
     },
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "options": {
         "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
         "env": {
@@ -131,7 +155,16 @@
       }
     },
     "lint": {
-      "dependsOn": ["build-native", "^build-native"]
+      "dependsOn": ["build-native", "^build-native", "build"],
+      "inputs": [
+        "...",
+        {
+          "dependentTasksOutputFiles": "**/*.{js,json,md}"
+        }
+      ],
+      "options": {
+        "max-warnings": 5
+      }
     },
     "e2e": {
       "cache": true,
@@ -142,7 +175,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-ci": {
@@ -153,7 +186,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-macos-ci": {
@@ -163,7 +196,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ],
       "options": {
         "args": ["--forceExit"]
@@ -173,7 +206,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-base": {
@@ -197,15 +230,10 @@
     },
     "copy-docs": {
       "cache": true
-    },
-    "legacy-post-build": {
-      "dependsOn": ["build-base"],
-      "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{workspaceRoot}/dist/packages/{projectName}"]
     }
   },
   "plugins": [
+    "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
@@ -225,15 +253,17 @@
         "typecheck": true,
         "build": {
           "targetName": "build-base"
-        }
+        },
+        "compiler": "tsgo"
       }
     },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["e2e/**/*"],
+      "include": ["e2e/**/*", "nx-dev/ui-fence/**/*"],
       "options": {
         "typecheck": true,
-        "build": false
+        "build": false,
+        "compiler": "tsgo"
       }
     },
     {
@@ -303,6 +333,17 @@
       "exclude": ["packages/react-native/src/generators/application/files/**/*"]
     },
     {
+      "plugin": "@nx/dotnet",
+      "options": {
+        "build": {
+          "targetName": "build:dotnet"
+        },
+        "test": {
+          "targetName": "test-native"
+        }
+      }
+    },
+    {
       "plugin": "@nx/storybook/plugin",
       "options": {
         "serveStorybookTargetName": "serve:storybook",
@@ -343,7 +384,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 2,
+  "bust": 3237,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -351,21 +392,7 @@
   "conformance": {
     "rules": [
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-description",
-        "projects": ["docs"],
-        "options": {
-          "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
-        }
-      },
-      {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/blog-cover-image",
-        "projects": ["docs"],
-        "options": {
-          "mdGlobPattern": "blog/**/!(sitemap).md"
-        }
-      },
-      {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/project-package-json",
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -399,7 +426,7 @@
         ]
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/migration-groups",
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
@@ -451,13 +478,50 @@
         }
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/codeblock-language"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/codeblock-language"
       },
       {
-        "rule": "./tools/workspace-plugin/src/conformance-rules/relative-image-imports"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/relative-image-imports"
+      },
+      {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/types-versions-exports-sync"
+      },
+      {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/env-vars-documented",
+        "options": {
+          "ignore": [
+            "NX_ANALYTICS_SESSION_ID",
+            "NX_FORKED_TASK_EXECUTOR",
+            "NX_RUN_COMMANDS_DIRECTLY",
+            "NX_DAEMON_PROCESS",
+            "NX_IPC_CHANNEL_ID",
+            "NX_PSEUDO_TERMINAL_EXEC_ARGV",
+            "NX_GENERATE_DOCS_PROCESS",
+            "NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG",
+            "NX_WORKSPACE_ROOT_PATH",
+            "NX_IMPORT_SOURCE",
+            "NX_IMPORT_DESTINATION",
+            "NX_PROJECT_GRAPH_CACHE_DIRECTORY",
+            "NX_CONSOLE",
+            "NX_DEBUG_TELEMETRY",
+            "NX_TUI_INLINE_MODE",
+            "NX_TUI_SKIP_CAPABILITY_CHECK",
+            "NX_SKIP_CHECK_REMOTE",
+            "NX_CLI_SET",
+            "NX_WORKSPACE_ROOT",
+            "NX_TERMINAL_OUTPUT_PATH",
+            "NX_TERMINAL_CAPTURE_STDERR",
+            "NX_VERSION",
+            "NX_STREAM_OUTPUT",
+            "NX_PREFIX_OUTPUT",
+            "NX_INFER_ALL_PACKAGE_JSONS",
+            "NX_AI_FILES_USE_LOCAL",
+            "NX_WINDOWS_PTY_SUPPORT"
+          ]
+        }
       }
     ]
   },

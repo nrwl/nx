@@ -1,10 +1,10 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getAvailablePort,
   killProcessAndPorts,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -22,7 +22,16 @@ describe('Webpack Plugin (legacy)', () => {
     originalAddPluginsEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
     newProject({
-      packages: ['@nx/react'],
+      packages: [
+        '@nx/react',
+        '@nx/webpack',
+        '@nx/cypress',
+        '@nx/playwright',
+        '@nx/jest',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/eslint',
+      ],
     });
     runCLI(
       `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --rootProject --no-interactive --unitTestRunner=jest --linter=eslint`
@@ -51,7 +60,7 @@ describe('Webpack Plugin (legacy)', () => {
 
   it('should run serve-static', async () => {
     let process: ChildProcess;
-    const port = await getAvailablePort();
+    const port = await reservePort();
 
     try {
       process = await runCommandUntil(

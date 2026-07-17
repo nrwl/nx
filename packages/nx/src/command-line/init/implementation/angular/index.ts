@@ -4,6 +4,7 @@ import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
 import { nxVersion } from '../../../../utils/versions';
 import { sortObjectByKeys } from '../../../../utils/object-sort';
 import { output } from '../../../../utils/output';
+import { detectPackageManager } from '../../../../utils/package-manager';
 import {
   getDependencyVersionFromPackageJson,
   type PackageJson,
@@ -12,6 +13,7 @@ import {
   addDepsToPackageJson,
   initCloud,
   runInstall,
+  setNeverConnectToCloud,
   updateGitIgnore,
 } from '../utils';
 import { setupIntegratedWorkspace } from './integrated-workspace';
@@ -19,6 +21,7 @@ import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-version
 import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
+import { MessageOptionKey } from '../../../../utils/ab-testing';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -53,9 +56,14 @@ export async function addNxToAngularCliRepo(options: Options) {
   const cacheableOperations = !options.integrated
     ? await collectCacheableOperations(options)
     : [];
-  const useNxCloud =
-    options.nxCloud ??
-    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
+  const nxCloudChoice: MessageOptionKey =
+    options.nxCloud === true
+      ? 'yes'
+      : options.nxCloud === false
+        ? 'skip'
+        : options.interactive
+          ? await connectExistingRepoToNxCloudPrompt()
+          : 'skip';
 
   output.log({ title: '📦 Installing dependencies' });
   installDependencies();
@@ -63,9 +71,11 @@ export async function addNxToAngularCliRepo(options: Options) {
   output.log({ title: '📝 Setting up workspace' });
   await setupWorkspace(cacheableOperations, options.integrated);
 
-  if (useNxCloud) {
+  if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-angular');
+  } else if (nxCloudChoice === 'never') {
+    setNeverConnectToCloud(repoRoot);
   }
 }
 
@@ -109,9 +119,10 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
 }
 
 function installDependencies(): void {
-  addDepsToPackageJson(repoRoot);
+  const packageManager = detectPackageManager(repoRoot);
+  addDepsToPackageJson(repoRoot, packageManager);
   addPluginDependencies();
-  runInstall(repoRoot);
+  runInstall(repoRoot, packageManager);
 }
 
 function addPluginDependencies(): void {

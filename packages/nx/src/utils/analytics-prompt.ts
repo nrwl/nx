@@ -11,37 +11,36 @@ import { writeFormattedJsonFile } from './write-formatted-json-file';
 import { workspaceRoot } from './workspace-root';
 
 /**
- * Prompts user for analytics preference if not already set in nx.json.
- * Only prompts in interactive terminals, not in CI.
+ * Prompts for analytics preference if not already set in nx.json, persists the
+ * answer so later commands don't re-ask, and returns it for telemetry. Returns
+ * 'unset' when not prompted (CI / non-interactive / no nx.json). `nx init`
+ * passes its own root + interactive flag; the default call (bin/nx.ts) derives
+ * interactive from the TTY.
  */
-export async function ensureAnalyticsPreferenceSet(): Promise<void> {
-  if (isCI()) {
-    return;
-  }
-
-  // Only prompt in interactive terminals
-  const isInteractive = process.stdin.isTTY && process.stdout.isTTY;
-  if (!isInteractive) {
-    return;
+export async function ensureAnalyticsPreferenceSet(
+  root: string = workspaceRoot,
+  interactive: boolean = !!(process.stdin.isTTY && process.stdout.isTTY)
+): Promise<'yes' | 'no' | 'unset'> {
+  if (!interactive || isCI()) {
+    return 'unset';
   }
 
   // Only prompt inside a workspace that has nx.json — avoid creating
   // nx.json in arbitrary directories (e.g. when running cloud commands
   // outside a workspace).
-  const nxJsonPath = join(workspaceRoot, 'nx.json');
-  if (!existsSync(nxJsonPath)) {
-    return;
+  if (!existsSync(join(root, 'nx.json'))) {
+    return 'unset';
   }
 
-  const nxJson = readNxJson(workspaceRoot);
-  // Check if already set (true = enabled, false = disabled)
+  const nxJson = readNxJson(root);
+  // Already chosen (true = enabled, false = disabled) — report it.
   if (typeof nxJson?.analytics === 'boolean') {
-    return;
+    return nxJson.analytics ? 'yes' : 'no';
   }
 
-  const analyticsEnabled = await promptForAnalyticsPreference();
-
-  await saveAnalyticsPreference(analyticsEnabled);
+  const enabled = await promptForAnalyticsPreference();
+  await saveAnalyticsPreference(root, enabled);
+  return enabled ? 'yes' : 'no';
 }
 
 export async function promptForAnalyticsPreference(): Promise<boolean> {
@@ -69,9 +68,12 @@ export async function promptForAnalyticsPreference(): Promise<boolean> {
   }
 }
 
-async function saveAnalyticsPreference(enabled: boolean): Promise<void> {
+async function saveAnalyticsPreference(
+  root: string,
+  enabled: boolean
+): Promise<void> {
   try {
-    const nxJsonPath = join(workspaceRoot, 'nx.json');
+    const nxJsonPath = join(root, 'nx.json');
     const nxJson = readJsonFile(nxJsonPath);
     nxJson.analytics = enabled;
     await writeFormattedJsonFile(nxJsonPath, nxJson);
@@ -111,6 +113,7 @@ export function generateWorkspaceId(cwd?: string): string | null {
     const remoteUrl = execSync('git remote get-url origin', {
       stdio: 'pipe',
       cwd: root,
+      windowsHide: true,
     })
       .toString()
       .trim();
@@ -127,6 +130,7 @@ export function generateWorkspaceId(cwd?: string): string | null {
     const firstCommit = execSync('git rev-list --max-parents=0 HEAD', {
       stdio: 'pipe',
       cwd: root,
+      windowsHide: true,
     })
       .toString()
       .trim()

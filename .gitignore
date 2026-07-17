@@ -25,6 +25,9 @@ jest.debug.config.js
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/tutorials
 /nx-dev/nx-dev/public/images/open-graph
+/nx-dev/nx-dev/public/robots.txt
+/nx-dev/nx-dev/public/sitemap-0.xml
+/nx-dev/nx-dev/public/sitemap.xml
 
 # Banner JSON files are generated during static builds
 /nx-dev/nx-dev/lib/banner.json
@@ -80,6 +83,7 @@ storybook-static
 .kotlin
 
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 CLAUDE.local.md
 
 .cursor/mcp.json
@@ -103,6 +107,7 @@ node_modules/
 *.ntvs*
 *.njsproj
 *.sln
+!/nx.sln
 *.sw?
 .specstory/**
 .cursorindexingignore
@@ -128,6 +133,42 @@ packages/angular-rspack/README.md
 packages/angular-rspack-compiler/README.md
 packages/dotnet/README.md
 packages/maven/README.md
+packages/nx/README.md
+packages/devkit/README.md
+packages/workspace/README.md
+packages/js/README.md
+packages/jest/README.md
+packages/eslint/README.md
+packages/eslint-plugin/README.md
+packages/vitest/README.md
+packages/cypress/README.md
+packages/playwright/README.md
+packages/vite/README.md
+packages/webpack/README.md
+packages/rollup/README.md
+packages/docker/README.md
+packages/gradle/README.md
+packages/rsbuild/README.md
+packages/web/README.md
+packages/node/README.md
+packages/module-federation/README.md
+packages/nest/README.md
+packages/rspack/README.md
+packages/storybook/README.md
+packages/react/README.md
+packages/vue/README.md
+packages/esbuild/README.md
+packages/angular/README.md
+packages/express/README.md
+packages/plugin/README.md
+packages/react-native/README.md
+packages/next/README.md
+packages/remix/README.md
+packages/detox/README.md
+packages/expo/README.md
+packages/nuxt/README.md
+packages/create-nx-workspace/README.md
+packages/create-nx-plugin/README.md
 
 test-output
 test-results
@@ -138,6 +179,14 @@ test-results
 # .NET build output
 /packages/dotnet/analyzer/bin
 /packages/dotnet/analyzer/obj
+/packages/dotnet/analyzer.Tests/bin
+/packages/dotnet/analyzer.Tests/obj
 /*.deb
 .nx/polygraph
 .claude/worktrees
+
+.nx/self-healing
+e2e/**/*.d.ts
+e2e/**/*.d.ts.map
+
+.nx/migrate-runs

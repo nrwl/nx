@@ -1,8 +1,9 @@
 ---
-title: Maven Plugin for Nx
-description: This plugin allows Maven tasks to be run through Nx.
+title: Nx with Maven
+description: Use Maven with Nx to cache and run tasks across your Java monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: 'Introduction'
+weight: 2
 filter: 'type:References'
 ---
 
@@ -10,9 +11,9 @@ filter: 'type:References'
 The `@nx/maven` plugin is currently experimental. Features and APIs may change.
 {% /aside %}
 
-[Apache Maven](https://maven.apache.org/) is a build tool for Java projects that uses a project object model (POM) to manage builds.
+[Apache Maven](https://maven.apache.org/) is a build tool for Java projects that uses a project object model (POM) to manage builds. Nx adds incremental builds, task caching, and the project graph on top of a Maven monorepo, so a multi-module workspace stays fast as it grows.
 
-The `@nx/maven` plugin registers Maven modules as Nx projects so you can [set up Maven with Nx](#setup), [run daily Maven tasks](#local-development), [configure task inference](#configuration), and [run in CI](#ci-considerations).
+The `@nx/maven` plugin registers Maven modules as Nx projects so you can [set up Maven with Nx](#setup), [run daily Maven tasks](#local-development), [configure task inference](#configuration), and [run in CI](#set-up-ci-for-your-maven-monorepo).
 
 You can use Maven with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
@@ -175,31 +176,11 @@ Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
 
 There is no per-project disable for `@nx/maven`. To stop inference entirely, remove `@nx/maven` from the `plugins` array in `nx.json`.
 
-## CI considerations
+## Set up CI for your Maven monorepo
 
-Build and test only what changed using the project graph:
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-```shell
-nx affected -t test package
-```
-
-Connect Nx Cloud to share cache results and speed up Maven builds in CI:
-
-```shell
-nx connect
-```
-
-### Batch mode
-
-Batch mode runs multiple Maven tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
-
-```shell
-NX_BATCH_MODE=true nx run-many -t build test
-```
-
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete configuration guide.
-
-If you use Maven profiles or parallel builds in CI, define them in `.mvn/maven.config` (for example `-Pci` or `-T1C`) so Nx runs the same settings consistently.
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 

@@ -20,6 +20,7 @@ Nx...
 - helps define clear architectural guidelines and promotes best practices to organize and scale your codebase.
 - helps integrate modern tooling by actively working with devtool authors to make sure they work well with Nx and your framework of choice.
 - is adaptable: start small with a single-project setup and grow it to a monorepo when needed.
+- speeds up CI with [Nx Cloud](/docs/getting-started/nx-cloud): remote caching, distributed task execution, and self-healing CI.
 - has an active community of contributors and plugin authors.
 - has been proven in large enterprise-level projects.
 
@@ -42,7 +43,7 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 | Advanced Generators (e.g. Module Federation, Tailwind,...)                                                 | ❌              | ✅            |
 | Integrated Tooling (Jest, Cypress, Playwright etc.)                                                        | ❌              | ✅            |
 | Support for single-project Workspaces                                                                      | ✅              | ✅            |
-| First-Class [Monorepo Support](/docs/getting-started/tutorials/angular-monorepo-tutorial)                  | ❌\*            | ✅            |
+| First-Class [Monorepo Support](/docs/getting-started/tutorials/crafting-your-workspace)                    | ❌\*            | ✅            |
 | [Enforced Module Boundaries](/docs/features/enforce-module-boundaries)                                     | ❌              | ✅            |
 | Interactive [Project Graph](/docs/features/explore-graph)                                                  | ❌              | ✅            |
 | Task Graph                                                                                                 | ❌              | ✅            |
@@ -51,6 +52,7 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 | [Local Caching](/docs/features/cache-task-results)                                                         | ❌\*\*          | ✅            |
 | [Remote Caching](/docs/features/ci-features/remote-cache)                                                  | ❌              | ✅            |
 | [Distributed Task Execution on CI](/docs/features/ci-features/distribute-task-execution)                   | ❌              | ✅            |
+| [Self-Healing CI](/docs/features/ci-features/self-healing-ci)                                              | ❌              | ✅            |
 | Custom Hashers                                                                                             | ❌              | ✅            |
 | [Extensible Plugin System](/docs/extending-nx/intro)                                                       | ❌              | ✅            |
 
@@ -75,41 +77,40 @@ Nx is not just exclusively for monorepos, but can create
 
 ### Generate a new project
 
-You can create a new Nx single-project workspace using the following command:
+You can create a new Nx workspace using the following command:
 
 ```shell
-npx create-nx-workspace myngapp --preset=angular-standalone
+npx create-nx-workspace@latest myngapp --template=nrwl/angular-template
 ```
 
-{% aside type="note" title="Want a monorepo instead?" %}
-You can use the `--preset=angular-monorepo` to start with a monorepo structure. Note, however, that you can start simple and migrate to a monorepo later.
-{% /aside %}
-
-The single-project workspace setup follows a similar structure to what the Angular CLI generates.
+Each project keeps a familiar Angular structure. For example, an application generated with `nx g @nx/angular:app apps/myngapp` looks like this:
 
 ```plaintext
 └─ myngapp
-   ├─ public
-   │  └─ favicon.ico
-   ├─ src
-   │  ├─ app
-   │  │  ├─ app.config.ts
-   │  │  ├─ app.css
-   │  │  ├─ app.html
-   │  │  ├─ app.routes.ts
-   │  │  ├─ app.spec.ts
-   │  │  ├─ app.ts
-   │  │  └─ nx-welcome.ts
-   │  ├─ index.html
-   │  ├─ main.ts
-   │  ├─ styles.css
-   │  └─ test-setup.ts
+   ├─ apps
+   │  └─ myngapp
+   │     ├─ public
+   │     │  └─ favicon.ico
+   │     ├─ src
+   │     │  ├─ app
+   │     │  │  ├─ app.config.ts
+   │     │  │  ├─ app.css
+   │     │  │  ├─ app.html
+   │     │  │  ├─ app.routes.ts
+   │     │  │  ├─ app.spec.ts
+   │     │  │  ├─ app.ts
+   │     │  │  └─ nx-welcome.ts
+   │     │  ├─ index.html
+   │     │  ├─ main.ts
+   │     │  ├─ styles.css
+   │     │  └─ test-setup.ts
+   │     ├─ project.json
+   │     ├─ tsconfig.app.json
+   │     ├─ tsconfig.json
+   │     └─ tsconfig.spec.json
    ├─ nx.json
    ├─ package.json
-   ├─ project.json
-   ├─ tsconfig.app.json
-   ├─ tsconfig.json
-   └─ tsconfig.spec.json
+   └─ tsconfig.base.json
 ```
 
 ### project.json vs angular.json
@@ -134,7 +135,7 @@ Nx comes with slightly different terminology than the Angular CLI for some featu
   ...
   "targets": {
     "build": {
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular/build:application",
       ...
     },
     ...
@@ -197,7 +198,7 @@ What's the difference?
 - Fix migrations that "almost work".
 - Commit a partially migrated state.
 - Change versions of packages to match org requirements.
-- [Opt out of Angular updates when updating Nx versions](/docs/guides/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/docs/technologies/angular/guides/angular-nx-version-matrix)
+- [Opt out of Angular updates when updating Nx versions](/docs/guides/tips-n-tricks/advanced-update#choosing-which-packages-to-migrate) as long as [the Angular version is still supported](/docs/technologies/angular/guides/angular-nx-version-matrix)
 
 `nx migrate` does this by splitting the process into two steps. `nx migrate latest` creates a `migrations.json` file with a list of all the migrations needed by Nx, Angular, and other packages. You can then modify that file before running `nx migrate --run-migrations` to execute those migrations.
 
@@ -211,46 +212,6 @@ The [`nx add` command](/docs/reference/nx-commands#nx-add) is similar to the `ng
 nx add [package]
 ```
 
-The command was introduced in **Nx 17.3.0**. If you're using an older version, you can instead run:
-
-{% tabs %}
-{% tabitem label="npm" %}
-
-```shell
-npm add [package]
-nx g [package]:ng-add
-```
-
-{% /tabitem %}
-
-{% tabitem label="yarn" %}
-
-```shell
-yarn add [package]
-nx g [package]:ng-add
-```
-
-{% /tabitem %}
-
-{% tabitem label="pnpm" %}
-
-```shell
-pnpm add [package]
-nx g [package]:ng-add
-```
-
-{% /tabitem %}
-
-{% tabitem label="bun" %}
-
-```shell
-bun add [package]
-nx g [package]:ng-add
-```
-
-{% /tabitem %}
-{% /tabs %}
-
 Replace `[package]` with the package name you're trying to add.
 
 ### Speed
@@ -262,10 +223,11 @@ Features like
 - only running tasks on [affected projects](/docs/features/ci-features/affected)
 - running [tasks in parallel](/docs/features/run-tasks#run-tasks-for-multiple-projects)
 - applying [computation caching](/docs/features/cache-task-results)
-- offering [remote caching abilities](/docs/features/ci-features/remote-cache) on CI
+- offering [remote caching abilities](/docs/features/ci-features/remote-cache) on CI through Nx Cloud
 - offering [task distribution across machines (Nx Agents)](/docs/features/ci-features/distribute-task-execution)
+- fixing broken CI runs automatically with [self-healing CI](/docs/features/ci-features/self-healing-ci)
 
-And, Nx already uses fast, modern tooling like [ESBuild](/docs/technologies/build-tools/esbuild/introduction), [Vite](/docs/technologies/build-tools/vite/introduction), Vitest and [Rspack](/docs/technologies/build-tools/rspack/introduction) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
+Nx also invests in fast build tooling for Angular beyond the Angular CLI. If you rely on webpack-specific features such as Module Federation, [Angular Rspack](/docs/technologies/angular/angular-rspack/introduction) provides a fast, webpack-compatible build pipeline for Angular.
 
 ### Editor integration
 
@@ -416,4 +378,4 @@ You can also use [`nx import`](/docs/guides/adopting-nx/import-project) to bring
 
 You can learn more about Angular & Nx by following our dedicated tutorials:
 
-- [Tutorial: Building Angular Apps in an Nx Monorepo](/docs/getting-started/tutorials/angular-monorepo-tutorial)
+- [Tutorial: Learn Nx](/docs/getting-started/tutorials/crafting-your-workspace)

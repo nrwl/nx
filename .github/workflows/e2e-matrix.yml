@@ -13,6 +13,10 @@ on:
 
 env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
+  # Pin corepack to the pnpm version from packageManager. Without this, corepack
+  # falls back to "latest" in directories that have no packageManager field
+  # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
+  COREPACK_DEFAULT_TO_LATEST: '0'
 
 permissions: {}
 jobs:
@@ -30,19 +34,14 @@ jobs:
           # - windows-latest Windows fails to build gradle wrapper which always runs when we build nx.
           ## https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
         node_version:
-          # TODO(v23): remove node 20 - EOL April 2026
-          - 20
           - 22
           - 24
+          - 26
         exclude:
-          # run just node v24 on macos and windows
-          - os: macos-latest
-            node_version: 20
+          # macos skips the oldest node to keep the macos matrix slim
           - os: macos-latest
             node_version: 22
           # - os: windows-latest TODO(Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
-          #   node_version: 20
-          # - os: windows-latest TODO (Jack): Windows fails to build gradle wrapper which always runs when we build nx. Re-enable when we fix this.
           #   node_version: 22
 
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
@@ -79,10 +78,14 @@ jobs:
         id: brew-install-python-setuptools
         run: brew install python-setuptools
 
-      - name: Install packages
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+      - name: Install pnpm packages
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        run: pnpm playwright install --with-deps
+
+      - name: Restore .NET packages
+        run: dotnet restore nx.sln
 
       - name: Homebrew cache directory path
         if: ${{ matrix.os == 'macos-latest' }}
@@ -164,10 +167,14 @@ jobs:
           corepack enable
           corepack prepare --activate
 
-      - name: Install packages
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+      - name: Install pnpm packages
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        run: pnpm playwright install --with-deps
+
+      - name: Restore .NET packages
+        run: dotnet restore nx.sln
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -217,9 +224,12 @@ jobs:
           if ! brew list applesimutils &>/dev/null; then
             echo 'Installing applesimutils...'
             HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+            # Homebrew now refuses to load formulae from third-party taps unless trusted
+            brew trust wix/brew
             HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
               echo 'Failed to install applesimutils, retrying with update...'
               brew update
+              brew trust wix/brew
               HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
             }
           else
@@ -327,7 +337,7 @@ jobs:
           NX_NATIVE_LOGGING: 'false'
           NX_E2E_RUN_E2E: 'true'
           NX_CLOUD_NO_TIMEOUTS: 'true'
-          NX_E2E_SKIP_CLEANUP: 'true'
+          NX_E2E_SKIP_GLOBAL_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
@@ -352,7 +362,7 @@ jobs:
           NX_E2E_VERBOSE_LOGGING: 'true'
           NX_NATIVE_LOGGING: 'false'
           NX_E2E_RUN_E2E: 'true'
-          NX_E2E_SKIP_CLEANUP: 'true'
+          NX_E2E_SKIP_GLOBAL_CLEANUP: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: 'npm'
           npm_config_registry: http://localhost:4872
@@ -397,7 +407,7 @@ jobs:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     needs: e2e
-    timeout-minutes: 10
+    timeout-minutes: 15
     outputs:
       message: ${{ steps.process-json.outputs.slack_message }}
       proj_duration: ${{ steps.process-json.outputs.slack_proj_duration }}
@@ -425,8 +435,10 @@ jobs:
           combined=$(jq -sc . outputs/*/matrix.json)
           echo "combined=$combined" >> $GITHUB_OUTPUT
 
-      - name: Process results with TypeScript script
+      - name: Process results and collect failure details
         id: process-json
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo '${{ steps.combine-json.outputs.combined }}' | npx tsx .github/workflows/nightly/process-result.ts
 

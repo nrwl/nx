@@ -225,10 +225,32 @@ export function createPackageJson(
 
   // npm
   if (rootPackageJson.overrides && !options.skipOverrides) {
-    packageJson.overrides = {
+    // npm throws EOVERRIDE when an override key is also a direct dependency
+    // (unless specs match). The pruned dist pins exact versions and already
+    // resolved everything via the lockfile, so drop those redundant overrides.
+    const mergedOverrides = {
       ...rootPackageJson.overrides,
       ...packageJson.overrides,
     };
+    const overrides: typeof mergedOverrides = {};
+    let hasOverrides = false;
+    for (const name in mergedOverrides) {
+      if (
+        packageJson.dependencies?.[name] ||
+        packageJson.devDependencies?.[name] ||
+        packageJson.peerDependencies?.[name] ||
+        packageJson.optionalDependencies?.[name]
+      ) {
+        continue;
+      }
+      overrides[name] = mergedOverrides[name];
+      hasOverrides = true;
+    }
+    if (hasOverrides) {
+      packageJson.overrides = overrides;
+    } else {
+      delete packageJson.overrides;
+    }
   }
 
   // pnpm
@@ -238,6 +260,38 @@ export function createPackageJson(
       ...rootPackageJson.pnpm.overrides,
       ...packageJson.pnpm.overrides,
     };
+  }
+
+  // pnpm install configuration
+  const rootPnpm = rootPackageJson.pnpm;
+  if (rootPnpm) {
+    // string[] fields — copy from root
+    for (const field of [
+      'onlyBuiltDependencies',
+      'neverBuiltDependencies',
+      'ignoredOptionalDependencies',
+    ] as const) {
+      if (rootPnpm[field]) {
+        packageJson.pnpm ??= {};
+        packageJson.pnpm[field] = rootPnpm[field];
+      }
+    }
+
+    // object fields — merge with project-level overrides
+    if (rootPnpm.allowBuilds) {
+      packageJson.pnpm ??= {};
+      packageJson.pnpm.allowBuilds = {
+        ...rootPnpm.allowBuilds,
+        ...packageJson.pnpm.allowBuilds,
+      };
+    }
+    if (rootPnpm.supportedArchitectures) {
+      packageJson.pnpm ??= {};
+      packageJson.pnpm.supportedArchitectures = {
+        ...rootPnpm.supportedArchitectures,
+        ...packageJson.pnpm.supportedArchitectures,
+      };
+    }
   }
 
   // yarn

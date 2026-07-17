@@ -8,6 +8,9 @@ import type { RemoteReleaseClient } from '../../src/command-line/release/utils/r
  */
 export type { ChangelogChange };
 
+// Stripped from breaking change explanations (e.g. bot/session markers).
+const HtmlCommentRegex = /<!--[\s\S]*?-->/g;
+
 /**
  * The ChangelogRenderOptions are specific to each ChangelogRenderer implementation, and are taken
  * from the user's nx.json configuration and passed as is into the ChangelogRenderer function.
@@ -36,7 +39,8 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
   authors?: boolean;
   /**
    * If authors is enabled, controls whether or not to try to map the authors to their GitHub usernames
-   * using https://ungh.cc (from https://github.com/unjs/ungh) and the email addresses found in the commits.
+   * using https://ungh.cc (from https://github.com/unjs/ungh) and, if needed, the GitHub search API via
+   * the gh CLI and the email addresses found in the commits.
    * Defaults to true.
    */
   applyUsernameToAuthors?: boolean;
@@ -501,21 +505,36 @@ export default class DefaultChangelogRenderer {
 
     const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
 
-    // Extract all text after BREAKING CHANGE: until we hit a Co-authored-by section or git metadata
-    let endOfBreakingChange = message.length;
-
-    const coAuthoredBySection = message.indexOf('---------\n\nCo-authored-by:');
-    if (coAuthoredBySection !== -1) {
-      endOfBreakingChange = coAuthoredBySection;
-    } else {
-      // Look for the git metadata delimiter (a line with just ")
-      const gitMetadataMarker = message.indexOf('"\n', startOfBreakingChange);
-      if (gitMetadataMarker !== -1) {
-        endOfBreakingChange = gitMetadataMarker;
+    // A squash-merged PR body can trail the note with template sections,
+    // trailers, and git metadata. Strip comments (they can appear anywhere),
+    // then keep lines until the first boundary.
+    const lines = message
+      .slice(startOfBreakingChange)
+      .replace(HtmlCommentRegex, '')
+      .split('\n');
+    // The rest of the "BREAKING CHANGE:" line is always kept; scan from the next.
+    const explanationLines: string[] = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+      if (this.isBreakingChangeBoundary(lines[i])) {
+        break;
       }
+      explanationLines.push(lines[i]);
     }
 
-    return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
+    return explanationLines.join('\n').trim();
+  }
+
+  private isBreakingChangeBoundary(line: string): boolean {
+    const trimmed = line.trim();
+    return (
+      // Markdown heading (e.g. "## Related issues")
+      /^#{1,6}\s/.test(trimmed) ||
+      // Horizontal rule / separator
+      /^-{3,}$/.test(trimmed) ||
+      /^Co-authored-by:/i.test(trimmed) ||
+      // Git metadata delimiter following the body
+      trimmed === '"'
+    );
   }
 
   protected formatName(name = ''): string {

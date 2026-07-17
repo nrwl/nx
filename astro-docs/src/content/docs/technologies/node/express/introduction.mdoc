@@ -1,13 +1,15 @@
 ---
-title: Express Plugin for Nx
-description: Learn how to use the @nx/express plugin to create and manage Express applications in your Nx workspace, including setup and common guides.
+title: Nx with Express
+description: Nx scales your Express monorepo with caching, distributed task execution, and affected-only builds.
 sidebar:
   label: Introduction
+weight: 2
 filter: 'type:References'
 ---
 
 [Express](https://expressjs.com/) is a mature, minimal, and an open source web framework for making web applications and
-apis.
+apis. Nx scales your Express monorepo, so you can grow your APIs and shared libraries
+without losing fast, reliable builds.
 
 ## Requirements
 
@@ -15,16 +17,16 @@ The `@nx/express` plugin supports the following package versions.
 
 | Package   | Supported Versions |
 | --------- | ------------------ |
-| `express` | ^4.21.2            |
+| `express` | ^4.0.0 \|\| ^5.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 ## Create a new workspace
 
-To create a new workspace with a pre-created Express app, run the following command:
+Start from the [Express template](/docs/templates/express-api) to scaffold a ready-to-run Express API:
 
 ```shell
- npx create-nx-workspace --preset=express
+npx create-nx-workspace@latest my-workspace --template nrwl/express-api-template
 ```
 
 ## Setting up @nx/express
@@ -47,3 +49,9 @@ This will install the correct version of `@nx/express`.
 
 - [Set Up Application Proxies](/docs/technologies/node/guides/application-proxies)
 - [Wait For Tasks To Finish](/docs/technologies/node/guides/wait-for-tasks)
+
+## Set up CI for your Express monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

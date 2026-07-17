@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+import ora from 'ora';
 import { join } from 'path';
 import { CreateWorkspaceOptions } from './create-workspace-options';
 import { execAndWait } from './utils/child-process-utils';
@@ -37,15 +37,21 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
   // See: https://github.com/nrwl/nx/issues/31834
   delete (options as any).skipInstall;
 
+  // workingDir and useCurrentDir are consumed by CNW itself, not passed to `nx new`
+  const { workingDir: _workingDir, useCurrentDir, ...nxNewOptions } = options;
+
   const args = unparse({
-    ...options,
+    ...nxNewOptions,
+    // Scaffolding into the current directory: relax the generator's
+    // empty-directory guard so it can write into a non-empty cwd.
+    ...(useCurrentDir ? { skipEmptyDirCheck: true } : {}),
   }).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
 
   const command = `new ${args}`;
 
-  const workingDir = process.cwd().replace(/\\/g, '/');
+  const workingDir = (options.workingDir ?? process.cwd()).replace(/\\/g, '/');
   let nxWorkspaceRoot = `"${workingDir}"`;
 
   // If path contains spaces there is a problem in Windows for npm@6.

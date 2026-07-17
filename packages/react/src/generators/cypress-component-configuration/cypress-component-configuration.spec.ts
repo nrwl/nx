@@ -1,9 +1,10 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   DependencyType,
   ProjectGraph,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -20,8 +21,8 @@ jest.mock('@nx/devkit', () => ({
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual<any>('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual<any>('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 // nested code imports graph from the repo, which might have innacurate graph version
@@ -29,6 +30,19 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
   ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
   readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
 }));
+
+// TODO(jack): Remove this when Cypress adds Vite 8 support.
+// See: https://github.com/cypress-io/cypress/issues/33078
+function useVite7ForCypressCT(tree: Tree) {
+  updateJson(tree, 'package.json', (json) => {
+    for (const section of ['dependencies', 'devDependencies'] as const) {
+      if (json[section]?.vite) {
+        json[section].vite = '^7.0.0';
+      }
+    }
+    return json;
+  });
+}
 
 describe('React:CypressComponentTestConfiguration', () => {
   let tree: Tree;
@@ -103,6 +117,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -157,6 +172,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -223,6 +239,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -288,6 +305,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -333,6 +351,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       style: 'scss',
     });
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: true,
@@ -373,17 +392,16 @@ describe('React:CypressComponentTestConfiguration', () => {
     });
     await componentGenerator(tree, {
       name: 'some-cmp',
-      path: 'some-lib/src/lib/some-cmp',
+      path: 'some-lib/src/lib/some-cmp.js',
       style: 'scss',
-      js: true,
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
-      path: 'some-lib/src/lib/another-cmp/another-cmp',
+      path: 'some-lib/src/lib/another-cmp/another-cmp.js',
       style: 'scss',
-      js: true,
     });
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: true,
@@ -448,6 +466,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       dependencies: {},
     };
 
+    useVite7ForCypressCT(tree);
     await expect(
       cypressComponentConfigGenerator(tree, {
         project: 'some-lib',
@@ -504,6 +523,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,
@@ -512,9 +532,11 @@ describe('React:CypressComponentTestConfiguration', () => {
 
     const config = tree.read('some-lib/cypress.config.ts', 'utf-8');
     expect(config).toMatchInlineSnapshot(`
-      "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-      import { defineConfig } from 'cypress';
-      export default defineConfig({
+      "const {
+        nxComponentTestingPreset,
+      } = require('@nx/react/plugins/component-testing');
+      const { defineConfig } = require('cypress');
+      module.exports = defineConfig({
         component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
       });
       "
@@ -599,6 +621,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       },
     };
 
+    useVite7ForCypressCT(tree);
     await cypressComponentConfigGenerator(tree, {
       project: 'some-lib',
       generateTests: false,

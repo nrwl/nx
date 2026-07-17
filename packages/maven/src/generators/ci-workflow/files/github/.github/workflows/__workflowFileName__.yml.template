@@ -35,7 +35,7 @@ jobs:
           distribution: 'temurin'
           architecture: x64
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
       # <%- comment %><% } %><% } %><% if (command.command) { %>
       - run: <%= command.command %><% if (command.alwaysRun) { %>

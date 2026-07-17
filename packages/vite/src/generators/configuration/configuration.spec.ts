@@ -21,11 +21,12 @@ import {
   mockWebAppGenerator,
 } from '../../utils/test-utils';
 
-import { libraryGenerator as jsLibraryGenerator } from '@nx/js/src/generators/library/library';
-import { LibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import { LibraryGeneratorSchema } from '@nx/js/internal';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   describe('transform React app to use Vite', () => {
     beforeAll(async () => {
@@ -68,6 +69,16 @@ describe('@nx/vite:configuration', () => {
         'apps/my-test-react-app/tsconfig.json'
       );
       expect(tsconfigJson.compilerOptions.jsx).toBe('react-jsx');
+    });
+
+    it('should remove esModuleInterop from tsconfig compilerOptions for react', () => {
+      // editTsConfig replaces compilerOptions entirely for react, so any
+      // pre-existing esModuleInterop (set by the webpack scaffold) must be gone.
+      const tsconfigJson = readJson(
+        tree,
+        'apps/my-test-react-app/tsconfig.json'
+      );
+      expect(tsconfigJson.compilerOptions.esModuleInterop).toBeUndefined();
     });
 
     it('should create vite.config file at the root of the app', () => {
@@ -273,7 +284,14 @@ describe('@nx/vite:configuration', () => {
     };
 
     beforeEach(() => {
+      envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    });
+
+    afterEach(() => {
+      if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+      else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     });
 
     it('should add build and test targets with vite and vitest', async () => {
@@ -288,6 +306,44 @@ describe('@nx/vite:configuration', () => {
       expect(tree.read('my-lib/vite.config.mts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeTruthy();
+      expect(tree.read('my-lib/eslint.config.mjs', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import baseConfig from '../eslint.config.mjs';
+
+        export default [
+          ...baseConfig,
+          {
+            files: ['**/*.json'],
+            rules: {
+              '@nx/dependency-checks': [
+                'error',
+                {
+                  ignoredFiles: [
+                    '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
+                    '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                  ],
+                },
+              ],
+            },
+            languageOptions: {
+              parser: await import('jsonc-eslint-parser'),
+            },
+          },
+        ];
+        "
+      `);
+    });
+
+    it('should add dependency-checks rule to .eslintrc.json (eslintrc mode)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await jsLibraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',
@@ -337,6 +393,13 @@ describe('@nx/vite:configuration', () => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
       });
+      // detectPackageManager() resolves to pnpm in the test env, so
+      // isWorkspacesEnabled requires pnpm-workspace.yaml to recognise this
+      // tree as using package-manager workspaces.
+      tree.write(
+        'pnpm-workspace.yaml',
+        `packages:\n  - 'packages/*'\n  - 'apps/*'\n`
+      );
       writeJson(tree, 'tsconfig.base.json', {
         compilerOptions: {
           composite: true,
@@ -434,6 +497,143 @@ describe('@nx/vite:configuration', () => {
           "private": true,
           "version": "0.0.1",
         }
+      `);
+    });
+
+    it('should generate a vite config without the deprecated helpers', async () => {
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'packages/my-lib',
+      });
+      writeJson(tree, 'packages/my-lib/tsconfig.lib.json', {});
+      writeJson(tree, 'packages/my-lib/tsconfig.json', {});
+      tree.write('packages/my-lib/src/index.ts', '');
+
+      await viteConfigurationGenerator(tree, {
+        addPlugin: true,
+        uiFramework: 'none',
+        project: 'my-lib',
+        projectType: 'library',
+        includeLib: true,
+        newProject: false,
+      });
+
+      expect(tree.read('packages/my-lib/vite.config.mts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import dts from 'vite-plugin-dts';
+        import * as path from 'path';
+
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+          cacheDir: '../../node_modules/.vite/packages/my-lib',
+          plugins: [
+            dts({
+              entryRoot: 'src',
+              tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
+            }),
+          ],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [],
+          // },
+          // Configuration for building your library.
+          // See: https://vite.dev/guide/build.html#library-mode
+          build: {
+            outDir: './dist',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: 'my-lib',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es' as const],
+            },
+            rolldownOptions: {
+              // External packages that should not be bundled into your library.
+              external: [],
+            },
+          },
+        }));
+        "
+      `);
+    });
+  });
+
+  // TODO(v24): swap to vite-tsconfig-paths in the non-ts-solution branch.
+  describe('legacy non-ts-solution plugin emit', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    });
+
+    it('should still emit the deprecated helpers for non-ts-solution libraries', async () => {
+      mockReactLibNonBuildableJestTestRunnerGenerator(tree);
+
+      await viteConfigurationGenerator(tree, {
+        addPlugin: true,
+        uiFramework: 'react',
+        includeLib: true,
+        project: 'react-lib-nonb-jest',
+      });
+
+      expect(tree.read('libs/react-lib-nonb-jest/vite.config.mts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+        import dts from 'vite-plugin-dts';
+        import * as path from 'path';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+          cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
+          plugins: [
+            react(),
+            nxViteTsPaths(),
+            nxCopyAssetsPlugin(['*.md']),
+            dts({
+              entryRoot: 'src',
+              tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
+              pathsToAliases: false,
+            }),
+          ],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //   plugins: () => [ nxViteTsPaths() ],
+          // },
+          // Configuration for building your library.
+          // See: https://vite.dev/guide/build.html#library-mode
+          build: {
+            outDir: '../../dist/libs/react-lib-nonb-jest',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: 'react-lib-nonb-jest',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es' as const],
+            },
+            rolldownOptions: {
+              // External packages that should not be bundled into your library.
+              external: ['react', 'react-dom', 'react/jsx-runtime'],
+            },
+          },
+        }));
+        "
       `);
     });
   });

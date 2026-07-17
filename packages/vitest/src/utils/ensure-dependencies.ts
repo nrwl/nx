@@ -1,21 +1,24 @@
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
+  getDependencyVersionFromPackageJson,
   logger,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { coerce, major } from 'semver';
 import {
   ajvVersion,
   analogVitestAngular,
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
+  versions,
   vitePluginDtsVersion,
   vitePluginReactSwcVersion,
+  vitePluginReactV4Version,
   vitePluginReactVersion,
 } from './versions';
-import { getVitestDependenciesVersionsToInstall } from './version-utils';
 
 export type EnsureDependenciesOptions = {
   uiFramework: 'angular' | 'react' | 'vue' | 'none';
@@ -55,7 +58,15 @@ export async function ensureDependencies(
     if (schema.compiler === 'swc') {
       devDependencies['@vitejs/plugin-react-swc'] = vitePluginReactSwcVersion;
     } else {
-      devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
+      // @vitejs/plugin-react v6 requires Vite 8+, use v4 for older versions.
+      // getDependencyVersionFromPackageJson resolves pnpm catalog: refs.
+      const viteRange = getDependencyVersionFromPackageJson(tree, 'vite');
+      const coerced = viteRange ? coerce(viteRange) : null;
+      const viteMajor = coerced ? major(coerced) : null;
+      devDependencies['@vitejs/plugin-react'] =
+        viteMajor !== null && viteMajor < 8
+          ? vitePluginReactV4Version
+          : vitePluginReactVersion;
     }
   }
 
@@ -67,8 +78,7 @@ export async function ensureDependencies(
   }
 
   if (useVitestUi) {
-    const { vitestUi } = await getVitestDependenciesVersionsToInstall(tree);
-    devDependencies['@vitest/ui'] = vitestUi;
+    devDependencies['@vitest/ui'] = versions(tree).vitestVersion;
   }
 
   return addDependenciesToPackageJson(

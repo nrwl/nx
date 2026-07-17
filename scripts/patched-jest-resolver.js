@@ -2,6 +2,25 @@
 const path = require('path');
 const fs = require('fs');
 
+// Memoize results of `existsSync(...) && lstatSync(...).isFile()` for
+// resolution probes inside `packages/*`. Each spec file with
+// `jest.mock('@nx/devkit', ...)` (or any cross-package require) makes Jest
+// re-run resolution from scratch, which calls `existsSync` and `lstatSync`
+// on the same workspace files repeatedly. Those probes show up in the
+// sandbox report as "unexpected reads" even though they don't read any
+// file content. The map is process-wide and bounded by the set of
+// workspace package entry points, so memory is trivial.
+const isFileCache = new Map();
+const isWorkspaceFile = (p) => {
+  if (isFileCache.has(p)) return isFileCache.get(p);
+  let result = false;
+  try {
+    result = fs.existsSync(p) && fs.lstatSync(p).isFile();
+  } catch (_) {}
+  isFileCache.set(p, result);
+  return result;
+};
+
 /**
  * Custom resolver which will respect package exports (until Jest supports it natively
  * by resolving https://github.com/facebook/jest/issues/9771)
@@ -12,7 +31,7 @@ const fs = require('fs');
  * - Without this resolver, Jest will fail to resolve these imports correctly
  */
 const enhancedResolver = require('enhanced-resolve').create.sync({
-  conditionNames: ['require', 'node', 'default'],
+  conditionNames: ['@nx/nx-source', 'require', 'node', 'default'],
   extensions: ['.js', '.json', '.node', '.ts', '.tsx'],
 });
 
@@ -49,9 +68,12 @@ module.exports = function (modulePath, options) {
     '@nx/rollup',
     '@nx/eslint',
     '@nx/vite',
+    '@nx/vitest',
     '@nx/jest',
     '@nx/docker',
+    '@nx/dotnet',
     '@nx/js',
+    '@nx/maven',
     '@nx/next',
     '@nx/storybook',
     '@nx/rsbuild',
@@ -66,6 +88,7 @@ module.exports = function (modulePath, options) {
     '@nx/angular',
     '@nx/create-nx-plugin',
     '@nx/create-nx-workspace',
+    '@nx/cypress',
     '@nx/detox',
     '@nx/devkit',
     '@nx/esbuild',
@@ -75,6 +98,7 @@ module.exports = function (modulePath, options) {
     '@nx/node',
     '@nx/nuxt',
     '@nx/playwright',
+    '@nx/plugin',
     '@nx/react',
     '@nx/remix',
     '@nx/webpack',
@@ -101,12 +125,13 @@ module.exports = function (modulePath, options) {
   }
 
   try {
-    // Detect if we're running from e2e directory
-    const isE2E = options.rootDir.includes('/e2e/');
-
-    // For e2e tests, skip workspace resolution and use default resolver
-    if (isE2E) {
-      return options.defaultResolver(modulePath, options);
+    // For nx/* imports, use @nx/nx-source condition to resolve to .ts
+    // source files instead of dist/*.js files.
+    if (modulePath.startsWith('nx/') || modulePath === 'nx') {
+      return options.defaultResolver(modulePath, {
+        ...options,
+        conditions: ['@nx/nx-source', 'require', 'node', 'default'],
+      });
     }
 
     // Find workspace root - avoid filesystem lookups inside node_modules
@@ -146,7 +171,7 @@ module.exports = function (modulePath, options) {
       ];
 
       for (const entry of possibleEntries) {
-        if (fs.existsSync(entry) && fs.lstatSync(entry).isFile()) {
+        if (isWorkspaceFile(entry)) {
           return entry;
         }
       }
@@ -165,10 +190,7 @@ module.exports = function (modulePath, options) {
       ];
 
       for (const possiblePath of possiblePaths) {
-        if (
-          fs.existsSync(possiblePath) &&
-          fs.lstatSync(possiblePath).isFile()
-        ) {
+        if (isWorkspaceFile(possiblePath)) {
           return possiblePath;
         }
       }
@@ -190,42 +212,9 @@ module.exports = function (modulePath, options) {
       ];
 
       for (const possiblePath of possiblePaths) {
-        if (
-          fs.existsSync(possiblePath) &&
-          fs.lstatSync(possiblePath).isFile()
-        ) {
+        if (isWorkspaceFile(possiblePath)) {
           return possiblePath;
         }
-      }
-    }
-
-    // Handle nx/src/* imports (direct nx package imports)
-    const nxSrcMatch = modulePath.match(/^nx\/src\/(.+)$/);
-    if (nxSrcMatch) {
-      const subpath = nxSrcMatch[1];
-      const resolvedPath = path.join(
-        packagesPath,
-        'nx',
-        'src',
-        subpath + '.ts'
-      );
-      if (fs.existsSync(resolvedPath) && fs.lstatSync(resolvedPath).isFile()) {
-        return resolvedPath;
-      }
-    }
-
-    // Handle nx/package.json specifically
-    if (modulePath === 'nx/package.json') {
-      return path.join(packagesPath, 'nx', 'package.json');
-    }
-
-    // Handle other nx/* patterns
-    const nxOtherPatternMatch = modulePath.match(/^nx\/(.+)$/);
-    if (nxOtherPatternMatch) {
-      const subpath = nxOtherPatternMatch[1];
-      const resolvedPath = path.join(packagesPath, 'nx', subpath + '.ts');
-      if (fs.existsSync(resolvedPath)) {
-        return resolvedPath;
       }
     }
 

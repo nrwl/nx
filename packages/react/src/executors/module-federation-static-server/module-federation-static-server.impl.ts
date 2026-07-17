@@ -1,29 +1,28 @@
 import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/internal';
+import {
   logger,
   parseTargetString,
   readTargetOptions,
   Target,
   workspaceRoot,
 } from '@nx/devkit';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import {
-  combineAsyncIterables,
-  createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
-import {
+  buildStaticRemotes,
   getModuleFederationConfig,
   getRemotes,
   parseStaticRemotesConfig,
   StaticRemotesConfig,
-} from '@nx/module-federation/src/utils';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+} from '@nx/module-federation/internal';
+import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
+import { warnReactMfStaticServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 import type { WebpackExecutorOptions } from '@nx/webpack';
 import { fork } from 'child_process';
 import type { Express } from 'express';
 import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
-import * as process from 'node:process';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { basename, extname, join } from 'path';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
@@ -246,6 +245,7 @@ export default async function* moduleFederationStaticServer(
   schema: ModuleFederationStaticServerSchema,
   context: ExecutorContext
 ) {
+  warnReactMfStaticServerExecutorDeprecation();
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
 

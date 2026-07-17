@@ -38,7 +38,7 @@ nx g @nx/storybook:configuration storybook-host --interactionTests=true --uiFram
 This generator will only create the `libs/storybook-host/.storybook` folder. It will also [infer the tasks](/docs/concepts/inferred-tasks): `storybook`, `build-storybook`, and `test-storybook`. This is all we care about. We don't need any stories for this project since we will import the stories from other projects in our workspace. So, if you want, you can delete the contents of the `src/lib` folder.
 
 {% aside type="note" title="Using explicit tasks" %}
-If you're on an Nx version lower than 18 or have opted out of using inferred tasks, the `storybook`, `build-storybook`, and `test-storybook` targets will be explicitly defined in the `libs/storybook-host/project.json` file.
+If you have opted out of using inferred tasks, the `storybook`, `build-storybook`, and `test-storybook` targets will be explicitly defined in the `libs/storybook-host/project.json` file.
 {% /aside %}
 
 ### Import the stories in our library's main.ts
@@ -50,7 +50,7 @@ Here is a sample `libs/storybook-host/.storybook/main.ts` file:
 ```javascript {% meta="{6}" %}
 // libs/storybook-host/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
@@ -63,7 +63,7 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
+      plugins: [tsconfigPaths()],
     }),
 };
 

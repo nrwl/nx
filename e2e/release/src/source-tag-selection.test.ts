@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -11,7 +12,7 @@ import {
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -53,15 +54,15 @@ describe('nx release source tag selection', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 
-  describe('when releaseTagPatternStrictPreid is undefined', () => {
+  describe('when releaseTag.strictPreid is undefined', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
+          releaseTag: { pattern: 'v{version}' },
           version: {
             conventionalCommits: true,
           },
@@ -105,12 +106,11 @@ describe('nx release source tag selection', () => {
     });
   });
 
-  describe('when releaseTagPatternStrictPreid is false', () => {
+  describe('when releaseTag.strictPreid is false', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
-          releaseTagPatternStrictPreid: false,
+          releaseTag: { pattern: 'v{version}', strictPreid: false },
           version: {
             conventionalCommits: true,
           },
@@ -154,12 +154,11 @@ describe('nx release source tag selection', () => {
     });
   });
 
-  describe('when releaseTagPatternStrictPreid is true', () => {
+  describe('when releaseTag.strictPreid is true', () => {
     beforeEach(() => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
-          releaseTagPatternStrictPreid: true,
+          releaseTag: { pattern: 'v{version}', strictPreid: true },
           version: {
             conventionalCommits: true,
           },

@@ -28,6 +28,7 @@ const config: ConfigArray = tseslint.config(
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
   },
   {
+    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     languageOptions: {
       parser: tseslint.parser,
       ecmaVersion: 2020,

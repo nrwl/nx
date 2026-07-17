@@ -18,14 +18,23 @@ jest.mock('fs', () => {
   };
 });
 
+const { readFileSync: realReadFileSync } =
+  jest.requireActual<typeof import('fs')>('fs');
+function loadJsonFixture(path: string) {
+  return JSON.parse(realReadFileSync(path, 'utf-8'));
+}
+
 describe('NPM lock file utility', () => {
   afterEach(() => {
     vol.reset();
   });
 
   describe('next.js generated', () => {
-    const rootLockFile = require(
-      joinPathFragments(__dirname, '__fixtures__/nextjs/package-lock.json')
+    const rootLockFile = loadJsonFixture(
+      joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/package-lock.json.fixture'
+      )
     );
 
     let graph: ProjectGraph;
@@ -78,14 +87,63 @@ describe('NPM lock file utility', () => {
       expect(Object.keys(graph.externalNodes).length).toEqual(1285);
     });
 
-    it('should prune lock file', async () => {
-      const appPackageJson = require(
-        joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json')
+    it('should include overrides in stringified lock file', async () => {
+      const appPackageJson = {
+        name: 'test',
+        version: '0.0.0',
+        dependencies: {
+          next: rootLockFile.packages['node_modules/next'].version,
+        },
+        overrides: {
+          minimatch: '10.2.1',
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(rootLockFile),
+        appPackageJson
       );
-      const appLockFile = require(
+      const parsed = JSON.parse(result);
+
+      // overrides should be at the top level
+      expect(parsed.overrides).toEqual({ minimatch: '10.2.1' });
+      // overrides should also be in the root packages entry
+      expect(parsed.packages[''].overrides).toEqual({ minimatch: '10.2.1' });
+    });
+
+    it('should not include overrides when not present', async () => {
+      const appPackageJson = {
+        name: 'test',
+        version: '0.0.0',
+        dependencies: {
+          next: rootLockFile.packages['node_modules/next'].version,
+        },
+      };
+
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(rootLockFile),
+        appPackageJson
+      );
+      const parsed = JSON.parse(result);
+
+      expect(parsed.overrides).toBeUndefined();
+    });
+
+    it('should prune lock file', async () => {
+      const appPackageJson = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/nextjs/app/package-lock.json'
+          '__fixtures__/nextjs/app/package.json.fixture'
+        )
+      );
+      const appLockFile = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/package-lock.json.fixture'
         )
       );
 
@@ -171,10 +229,10 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse v1', async () => {
-      const rootLockFile = require(
+      const rootLockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/auxiliary-packages/package-lock.json'
+          '__fixtures__/auxiliary-packages/package-lock.json.fixture'
         )
       );
 
@@ -270,10 +328,10 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse v3', async () => {
-      const rootV2LockFile = require(
+      const rootV2LockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/auxiliary-packages/package-lock-v2.json'
+          '__fixtures__/auxiliary-packages/package-lock-v2.json.fixture'
         )
       );
 
@@ -383,16 +441,16 @@ describe('NPM lock file utility', () => {
     }
 
     it('should prune v2', async () => {
-      const rootV2LockFile = require(
+      const rootV2LockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/auxiliary-packages/package-lock-v2.json'
+          '__fixtures__/auxiliary-packages/package-lock-v2.json.fixture'
         )
       );
-      const prunedV2LockFile = require(
+      const prunedV2LockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/auxiliary-packages/package-lock-v2.pruned.json'
+          '__fixtures__/auxiliary-packages/package-lock-v2.pruned.json.fixture'
         )
       );
       const normalizedPackageJson = {
@@ -539,10 +597,10 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse v1', async () => {
-      const rootLockFile = require(
+      const rootLockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/duplicate-package/package-lock-v1.json'
+          '__fixtures__/duplicate-package/package-lock-v1.json.fixture'
         )
       );
 
@@ -591,10 +649,10 @@ describe('NPM lock file utility', () => {
       expect(Object.keys(graph.externalNodes).length).toEqual(369);
     });
     it('should parse v3', async () => {
-      const rootLockFile = require(
+      const rootLockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/duplicate-package/package-lock.json'
+          '__fixtures__/duplicate-package/package-lock.json.fixture'
         )
       );
 
@@ -646,11 +704,17 @@ describe('NPM lock file utility', () => {
 
   describe('optional packages', () => {
     it('should match parsed and pruned graph', async () => {
-      const lockFile = require(
-        joinPathFragments(__dirname, '__fixtures__/optional/package-lock.json')
+      const lockFile = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/optional/package-lock.json.fixture'
+        )
       );
-      const packageJson = require(
-        joinPathFragments(__dirname, '__fixtures__/optional/package.json')
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/optional/package.json.fixture'
+        )
       );
 
       const hash = uniq('mock-hash');
@@ -706,16 +770,19 @@ describe('NPM lock file utility', () => {
     let rootLockFile;
 
     beforeAll(() => {
-      rootLockFile = require(
-        joinPathFragments(__dirname, '__fixtures__/pruning/package-lock.json')
+      rootLockFile = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/package-lock.json.fixture'
+        )
       );
     });
 
     it('should prune single package', () => {
-      const typescriptPackageJson = require(
+      const typescriptPackageJson = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/pruning/typescript/package.json'
+          '__fixtures__/pruning/typescript/package.json.fixture'
         )
       );
 
@@ -770,10 +837,10 @@ describe('NPM lock file utility', () => {
 
       expect(result).toEqual(
         JSON.stringify(
-          require(
+          loadJsonFixture(
             joinPathFragments(
               __dirname,
-              '__fixtures__/pruning/typescript/package-lock.json'
+              '__fixtures__/pruning/typescript/package-lock.json.fixture'
             )
           ),
           null,
@@ -783,10 +850,10 @@ describe('NPM lock file utility', () => {
     });
 
     it('should prune multi packages', () => {
-      const multiPackageJson = require(
+      const multiPackageJson = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/pruning/devkit-yargs/package.json'
+          '__fixtures__/pruning/devkit-yargs/package.json.fixture'
         )
       );
 
@@ -841,10 +908,10 @@ describe('NPM lock file utility', () => {
 
       expect(result).toEqual(
         JSON.stringify(
-          require(
+          loadJsonFixture(
             joinPathFragments(
               __dirname,
-              '__fixtures__/pruning/devkit-yargs/package-lock.json'
+              '__fixtures__/pruning/devkit-yargs/package-lock.json.fixture'
             )
           ),
           null,
@@ -858,19 +925,19 @@ describe('NPM lock file utility', () => {
     let rootLockFile;
 
     beforeAll(() => {
-      rootLockFile = require(
+      rootLockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/npm-hoisting/package-lock.json'
+          '__fixtures__/npm-hoisting/package-lock.json.fixture'
         )
       );
     });
 
     it('should prune correctly', () => {
-      const appPackageJson = require(
+      const appPackageJson = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/npm-hoisting/app/package.json'
+          '__fixtures__/npm-hoisting/app/package.json.fixture'
         )
       );
 
@@ -925,10 +992,10 @@ describe('NPM lock file utility', () => {
 
       expect(result).toEqual(
         JSON.stringify(
-          require(
+          loadJsonFixture(
             joinPathFragments(
               __dirname,
-              '__fixtures__/npm-hoisting/app/package-lock.json'
+              '__fixtures__/npm-hoisting/app/package-lock.json.fixture'
             )
           ),
           null,
@@ -942,10 +1009,10 @@ describe('NPM lock file utility', () => {
     let lockFile;
 
     it('should parse v2 lock file', async () => {
-      lockFile = require(
+      lockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/workspaces/package-lock.json'
+          '__fixtures__/workspaces/package-lock.json.fixture'
         )
       );
 
@@ -958,10 +1025,10 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse v1 lock file', async () => {
-      lockFile = require(
+      lockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/workspaces/package-lock.v1.json'
+          '__fixtures__/workspaces/package-lock.v1.json.fixture'
         )
       );
       const { nodes: externalNodes } = getNpmLockfileNodes(
@@ -976,18 +1043,21 @@ describe('NPM lock file utility', () => {
     let lockFile, lockFileHash;
 
     beforeEach(() => {
-      lockFile = require(
+      lockFile = loadJsonFixture(
         joinPathFragments(
           __dirname,
-          '__fixtures__/mixed-keys/package-lock.json'
+          '__fixtures__/mixed-keys/package-lock.json.fixture'
         )
       );
-      lockFileHash = '__fixtures__/mixed-keys/package-lock.json';
+      lockFileHash = '__fixtures__/mixed-keys/package-lock.json.fixture';
     });
 
     it('should parse and prune packages with mixed keys', () => {
-      const packageJson = require(
-        joinPathFragments(__dirname, '__fixtures__/mixed-keys/package.json')
+      const packageJson = loadJsonFixture(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/mixed-keys/package.json.fixture'
+        )
       );
 
       const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
@@ -1424,16 +1494,210 @@ describe('NPM lock file utility', () => {
       );
       expect(result).toEqual(
         JSON.stringify(
-          require(
+          loadJsonFixture(
             joinPathFragments(
               __dirname,
-              '__fixtures__/mixed-keys/package-lock.json'
+              '__fixtures__/mixed-keys/package-lock.json.fixture'
             )
           ),
           null,
           2
         )
       );
+    });
+  });
+
+  describe('transitive workspace dependencies', () => {
+    function makeGraph(
+      workspaceProjects: Array<{
+        projectName: string;
+        packageName: string;
+        root: string;
+      }>,
+      workspaceDeps: Record<string, string[]>,
+      externalNodes: ProjectGraph['externalNodes'],
+      externalDeps: Record<string, string[]> = {}
+    ): ProjectGraph {
+      const nodes: ProjectGraph['nodes'] = {};
+      const dependencies: ProjectGraph['dependencies'] = {};
+      for (const { projectName, packageName, root } of workspaceProjects) {
+        nodes[projectName] = {
+          name: projectName,
+          type: 'lib',
+          data: {
+            root,
+            metadata: { js: { packageName } },
+          },
+        } as any;
+        dependencies[projectName] = [
+          ...(workspaceDeps[projectName] ?? []).map((target) => ({
+            source: projectName,
+            target,
+            type: 'static' as any,
+          })),
+          ...(externalDeps[projectName] ?? []).map((target) => ({
+            source: projectName,
+            target,
+            type: 'static' as any,
+          })),
+        ];
+      }
+      return { nodes, dependencies, externalNodes };
+    }
+
+    it('should include node_modules and workspace_modules entries for transitive workspace deps', () => {
+      // app -> @myorg/lib-a -> @myorg/lib-b -> lodash
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+            dependencies: { '@myorg/lib-b': 'file:../lib-b' },
+          },
+          'node_modules/@myorg/lib-a': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+          'libs/lib-b': {
+            name: '@myorg/lib-b',
+            version: '0.0.1',
+            dependencies: { lodash: '^4.17.21' },
+          },
+          'node_modules/@myorg/lib-b': {
+            resolved: 'libs/lib-b',
+            link: true,
+          },
+          'node_modules/lodash': {
+            version: '4.17.21',
+            resolved: 'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+            integrity:
+              'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        { '@myorg/lib-a': ['@myorg/lib-b'] },
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        { '@myorg/lib-b': ['npm:lodash'] }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages).toHaveProperty('node_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('node_modules/@myorg/lib-b');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+      expect(result.packages).toHaveProperty('node_modules/lodash');
+      expect(
+        result.packages['workspace_modules/@myorg/lib-a'].dependencies
+      ).toEqual({ '@myorg/lib-b': 'file:../lib-b' });
+    });
+
+    it('should not infinite-loop on circular workspace dependencies', () => {
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+            dependencies: { '@myorg/lib-b': 'file:../lib-b' },
+          },
+          'node_modules/@myorg/lib-a': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+          'libs/lib-b': {
+            name: '@myorg/lib-b',
+            version: '0.0.1',
+            dependencies: { '@myorg/lib-a': 'file:../lib-a' },
+          },
+          'node_modules/@myorg/lib-b': {
+            resolved: 'libs/lib-b',
+            link: true,
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {
+          '@myorg/lib-a': ['@myorg/lib-b'],
+          '@myorg/lib-b': ['@myorg/lib-a'],
+        },
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
     });
   });
 });

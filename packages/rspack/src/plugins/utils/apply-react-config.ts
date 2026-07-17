@@ -1,50 +1,33 @@
-import { Configuration, RspackOptionsNormalized } from '@rspack/core';
-import { logger } from '@nx/devkit';
-import { SvgrOptions } from './models';
+import type {
+  Compiler,
+  Configuration,
+  RspackOptionsNormalized,
+} from '@rspack/core';
 
-// TODO(v23): Remove SVGR support
+type RspackConfigShape = Partial<RspackOptionsNormalized | Configuration>;
+
+/**
+ * Apply rspack/react config for the compose path (e.g. `withReact`):
+ * sync tweaks + push react-refresh into `config.plugins`. Plugins that
+ * participate in rspack's lifecycle should call
+ * `applyReactConfigSync(...)` + `applyReactHotReloadToCompiler(...)`
+ * instead.
+ */
 export function applyReactConfig(
-  options: { svgr?: boolean | SvgrOptions },
-  config: Partial<RspackOptionsNormalized | Configuration> = {}
+  options: Record<string, any> = {},
+  config: RspackConfigShape = {}
 ): void {
   if (global.NX_GRAPH_CREATION) return;
 
-  addHotReload(config);
-
-  if (options.svgr !== false || typeof options.svgr === 'object') {
-    // Log deprecation warning when SVGR is used
-    if (options.svgr === true || typeof options.svgr === 'object') {
-      logger.warn(
-        'SVGR support is deprecated and will be removed in Nx 23. Please consider using alternative SVG handling methods.'
-      );
-    }
-
-    removeSvgLoaderIfPresent(config);
-
-    const defaultSvgrOptions = {
-      svgo: false,
-      titleProp: true,
-      ref: true,
-    };
-
-    const svgrOptions =
-      typeof options.svgr === 'object' ? options.svgr : defaultSvgrOptions;
-
-    config.module.rules.push(
-      {
-        test: /\.svg$/i,
-        type: 'asset',
-        resourceQuery: /url/, // *.svg?url
-      },
-      {
-        test: /\.svg$/i,
-        issuer: /\.[jt]sx?$/,
-        resourceQuery: { not: [/url/] }, // exclude react component if not *.svg?url
-        use: [{ loader: '@svgr/webpack', options: svgrOptions }],
-      }
-    );
+  applyReactConfigSync(config);
+  if (isDevConfig(config)) {
+    const ReactRefreshPlugin = loadReactRefreshPluginClass();
+    config.plugins ??= [];
+    config.plugins.push(new ReactRefreshPlugin({ overlay: false }));
   }
+}
 
+export function applyReactConfigSync(config: RspackConfigShape): void {
   // enable rspack node api
   config.node = {
     __dirname: true,
@@ -52,23 +35,25 @@ export function applyReactConfig(
   };
 }
 
-function removeSvgLoaderIfPresent(
-  config: Partial<RspackOptionsNormalized | Configuration>
-) {
-  const svgLoaderIdx = config.module.rules.findIndex(
-    (rule) => typeof rule === 'object' && rule.test?.toString().includes('svg')
-  );
-  if (svgLoaderIdx === -1) return;
-  config.module.rules.splice(svgLoaderIdx, 1);
+export function applyReactHotReloadToCompiler(compiler: Compiler): void {
+  if (!isDevConfig(compiler.options)) return;
+  const ReactRefreshPlugin = loadReactRefreshPluginClass();
+  new ReactRefreshPlugin({ overlay: false }).apply(compiler);
 }
 
-function addHotReload(
-  config: Partial<RspackOptionsNormalized | Configuration>
-) {
-  const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
-  const isDev =
-    process.env.NODE_ENV === 'development' || config.mode === 'development';
-  if (isDev) {
-    config.plugins.push(new ReactRefreshPlugin({ overlay: false }));
-  }
+function isDevConfig(config: RspackConfigShape): boolean {
+  return (
+    process.env.NODE_ENV === 'development' || config.mode === 'development'
+  );
+}
+
+function loadReactRefreshPluginClass(): new (opts: Record<string, any>) => {
+  apply(compiler: Compiler): void;
+} {
+  // Lazy require — runs only when actually instantiated (CLI executor
+  // path; Jest never reaches this). Works on Node 22.12+ via require(esm).
+  // v1 (CJS) exports the class as default; v2 (ESM) only exports the named
+  // ReactRefreshRspackPlugin.
+  const mod = require('@rspack/plugin-react-refresh');
+  return mod.ReactRefreshRspackPlugin ?? mod.default ?? mod;
 }

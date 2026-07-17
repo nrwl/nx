@@ -2,6 +2,14 @@
   "name": "@nx/jest",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
   "repository": {
     "type": "git",
@@ -20,8 +28,24 @@
     "CLI",
     "Testing"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "preset": [
+        "dist/preset.d.ts"
+      ],
+      "plugins/resolver": [
+        "dist/plugins/resolver.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -32,7 +56,51 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./preset": {
+      "@nx/nx-source": "./preset.ts",
+      "types": "./dist/preset.d.ts",
+      "default": "./dist/preset.js"
+    },
+    "./plugins/resolver": {
+      "@nx/nx-source": "./plugins/resolver.ts",
+      "types": "./dist/plugins/resolver.d.ts",
+      "default": "./dist/plugins/resolver.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    }
+  },
+  "peerDependencies": {
+    "jest": "^29.0.0 || ^30.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "peerDependenciesMeta": {
+    "jest": {
+      "optional": true
+    },
+    "ts-jest": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@jest/reporters": "catalog:jest",
@@ -44,6 +112,7 @@
     "jest-config": "catalog:jest",
     "jest-resolve": "catalog:jest",
     "jest-util": "catalog:jest",
+    "jsonc-parser": "catalog:",
     "minimatch": "catalog:",
     "picocolors": "catalog:",
     "resolve.exports": "2.0.3",

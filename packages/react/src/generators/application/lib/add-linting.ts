@@ -11,10 +11,10 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addSwcDependencies } from '@nx/js/internal';
 import { extraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';
@@ -41,7 +41,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         addPredefinedConfigToFlatLintConfig(
           host,
           options.appProjectRoot,
-          'flat/react'
+          'flat/react',
+          { checkBaseConfig: true }
         );
         // Add an empty rules object to users know how to add/override rules
         addOverrideToLintConfig(host, options.appProjectRoot, {
@@ -62,7 +63,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies
+        extraEslintDependencies.devDependencies,
+        undefined,
+        true
       );
       const addSwcTask = addSwcDependencies(host);
       tasks.push(installTask, addSwcTask);
@@ -83,14 +86,15 @@ async function ignoreReactRouterFilesInEslintConfig(
   }
 
   ensurePackage('@nx/eslint', nxVersion);
-  const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
-    '@nx/eslint/src/generators/utils/eslint-file'
-  );
+  const {
+    addIgnoresToLintConfig,
+    isEslintConfigSupported,
+    useFlatConfig,
+  }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } = await import('@nx/eslint/src/utils/flat-config');
   const isUsingFlatConfig = useFlatConfig(tree);
   if (!projectRoot && !isUsingFlatConfig) {
     // root eslintrc files ignore all files and the root eslintrc files add

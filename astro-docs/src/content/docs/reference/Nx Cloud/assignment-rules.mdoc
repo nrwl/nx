@@ -1,12 +1,16 @@
 ---
 title: Assignment Rules
-description: Control which tasks run on which agents using assignment rules with Nx Agents or manual DTE
+description: Control which tasks run on which agents using assignment rules with Nx Agents
 filter: 'type:References'
 ---
 
 Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents to suite the individual needs of your tasks. Ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents and with a specified parallelism. Lighter tasks like `lint` and `test` can run on smaller agents.
 
-Assignment rules are defined in `yaml` files within your workspace's `.nx/workflows` directory. You can use assignment rules with [Manual Distributed Task Execution (DTE)](/docs/guides/nx-cloud/manual-dte) or with [dynamic Nx Agents](/docs/features/ci-features/dynamic-agents). Note that additional configuration is required when using Manual DTE.
+Assignment rules are defined in `yaml` files within your workspace's `.nx/workflows` directory. You can use assignment rules with [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+
+{% aside type="caution" title="Run start-ci-run first" %}
+Assignment rules only apply if `npx nx-cloud start-ci-run` runs before any other `nx` command. See [`start-ci-run`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run).
+{% /aside %}
 
 ## How to define an assignment rule
 
@@ -40,7 +44,7 @@ assignment-rules:
 ```
 
 {% /tabitem %}
-{% tabitem label="Assignment rules with manual DTE" %}
+{% tabitem label="Assignment rules when you bring your own compute" %}
 
 ```yaml
 // .nx/workflows/assignment-rules.yaml
@@ -73,9 +77,9 @@ You can mix and match any of the criteria in an assignment rule provided that yo
 - There is at least one [agent type](/docs/reference/nx-cloud/launch-templates) specified in the `run-on` field. If no parallelism is specified, the parallelism of the executed command will be used instead. If that is not specified, then the parallelism will default to `1`
 - For assignment rules with Nx Agents, every changeset in your `distribute-on` field must include at **least one agent** that matches each agent type specified in the `run-on` field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
 
-{% aside type="note" title="If you are using Manual DTE, you must define your own agent types" %}
+{% aside type="note" title="If you bring your own compute, you must define your own agent types" %}
 You must define your own agent types and attach them to your agents using the `NX_AGENT_LAUNCH_TEMPLATE` environment variable. Ensure that for each `run-on` field in your assignment rules, you have corresponding agents in your agent pool that have the same agent type.
-See below for an [example](#using-assignment-rules-with-manual-dte) of how to define your own agent types when using Manual DTE.
+See below for an [example](#using-assignment-rules-when-you-bring-your-own-compute) of how to define your own agent types.
 {% /aside %}
 
 ### Assignment rule property reference
@@ -296,7 +300,11 @@ assignment-rules:
         parallelism: 5
 ```
 
-## Using assignment rules with manual DTE
+## Using assignment rules when you bring your own compute
+
+{% aside type="note" title="Enterprise Feature" %}
+Bringing your own compute requires the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute). [Nx Agents](/docs/features/ci-features/distribute-task-execution) distributes your tasks on all plans.
+{% /aside %}
 
 A typical `assignment-rules.yaml` file might look like this:
 
@@ -332,7 +340,7 @@ You can choose to name your agent types anything you want, but they must be set 
 You can then reference your assignment rules file within your `start-ci-run` command:
 
 ```shell
-npx nx-cloud start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml"
+npx nx start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml"
 ```
 
 The following is an example of what this looks like within a Github Actions pipeline:
@@ -347,7 +355,7 @@ jobs:
     steps:
       - ... # setup steps for your main job
 
-      - run: npx nx-cloud start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml" --stop-agents-after="e2e-ci"
+      - run: npx nx start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/assignment-rules.yaml" --stop-agents-after="e2e-ci"
 
       - ... # Nx commands you want to distribute
 
@@ -360,11 +368,11 @@ jobs:
         agent: [1, 2, 3]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - ... # other setup steps you may need
@@ -373,7 +381,7 @@ jobs:
         run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
-        run: npx nx-cloud start-agent
+        run: npx nx start-agent
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-medium' # This value needs to match one of the 'run-on' values defined in the assignment rules
@@ -388,11 +396,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - ... # other setup steps you may need
@@ -401,7 +409,7 @@ jobs:
         run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
-        run: npx nx-cloud start-agent
+        run: npx nx start-agent
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-large' # This value needs to match one of the 'run-on' values defined in the assignment rules
@@ -450,7 +458,7 @@ jobs:
     ...
     steps:
       ...
-      - run: npx nx-cloud start-ci-run --distribute-on=".nx/workflows/distribution-config.yaml" --stop-agents-after="e2e-ci"
+      - run: npx nx start-ci-run --distribute-on=".nx/workflows/distribution-config.yaml" --stop-agents-after="e2e-ci"
       - ..
 ```
 

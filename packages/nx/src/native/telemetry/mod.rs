@@ -193,6 +193,24 @@ pub struct EventDimensions {
     pub task_count: String,
     pub project_count: String,
     pub cached_task_count: String,
+    pub cli_source: String,
+    pub interactive: String,
+    pub exclude_applied_migrations: String,
+    pub include: String,
+    pub include_source: String,
+    pub multi_major_choice: String,
+    pub fetch_method: String,
+    pub fetch_fallback_reason: String,
+    pub create_commits: String,
+    pub agentic_outcome: String,
+    pub agent_used: String,
+    pub error_name: String,
+    pub error_location: String,
+    pub migration_name: String,
+    pub prompt_choice: String,
+    pub majors_crossed: String,
+    pub migration_count: String,
+    pub applied_count: String,
 }
 
 /// Returns the canonical event dimension names.
@@ -207,6 +225,24 @@ pub fn get_event_dimensions() -> EventDimensions {
         task_count: event_dimension::TASK_COUNT.to_string(),
         project_count: event_dimension::PROJECT_COUNT.to_string(),
         cached_task_count: event_dimension::CACHED_TASK_COUNT.to_string(),
+        cli_source: event_dimension::CLI_SOURCE.to_string(),
+        interactive: event_dimension::INTERACTIVE.to_string(),
+        exclude_applied_migrations: event_dimension::EXCLUDE_APPLIED_MIGRATIONS.to_string(),
+        include: event_dimension::INCLUDE.to_string(),
+        include_source: event_dimension::INCLUDE_SOURCE.to_string(),
+        multi_major_choice: event_dimension::MULTI_MAJOR_CHOICE.to_string(),
+        fetch_method: event_dimension::FETCH_METHOD.to_string(),
+        fetch_fallback_reason: event_dimension::FETCH_FALLBACK_REASON.to_string(),
+        create_commits: event_dimension::CREATE_COMMITS.to_string(),
+        agentic_outcome: event_dimension::AGENTIC_OUTCOME.to_string(),
+        agent_used: event_dimension::AGENT_USED.to_string(),
+        error_name: event_dimension::ERROR_NAME.to_string(),
+        error_location: event_dimension::ERROR_LOCATION.to_string(),
+        migration_name: event_dimension::MIGRATION_NAME.to_string(),
+        prompt_choice: event_dimension::PROMPT_CHOICE.to_string(),
+        majors_crossed: event_dimension::MAJORS_CROSSED.to_string(),
+        migration_count: event_dimension::MIGRATION_COUNT.to_string(),
+        applied_count: event_dimension::APPLIED_COUNT.to_string(),
     }
 }
 
@@ -259,4 +295,62 @@ fn get_or_create_session_id(connection: &External<Arc<Mutex<NxDbConnection>>>) -
     persist_session_to_db(&mut conn, &session_id);
 
     Ok(session_id)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::native::db::initialize::initialize_db;
+
+    use super::*;
+
+    #[test]
+    fn session_query_works_on_fresh_db() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let db_path = temp_dir.path().join("test.db");
+        let conn = initialize_db(&db_path).unwrap();
+
+        // The same query telemetry uses to find an active session.
+        // If the metadata table is missing, this will fail with "no such table".
+        let result: Option<String> = conn
+            .query_row(
+                &format!(
+                    "SELECT m1.value FROM metadata m1, metadata m2 \
+                     WHERE m1.key = 'SESSION_ID' AND m2.key = 'SESSION_LAST_ACTIVITY' \
+                     AND (strftime('%s', 'now') - strftime('%s', m2.value)) < {}",
+                    SESSION_TIMEOUT_SECS as i64
+                ),
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .expect("Session query should succeed on a freshly initialized database");
+
+        // No session yet, so result should be None
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn persist_and_retrieve_session() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let db_path = temp_dir.path().join("test.db");
+        let mut conn = initialize_db(&db_path).unwrap();
+
+        let session_id = "test-session-123";
+        persist_session_to_db(&mut conn, session_id);
+
+        // Now the session query should return the persisted session
+        let result: Option<String> = conn
+            .query_row(
+                &format!(
+                    "SELECT m1.value FROM metadata m1, metadata m2 \
+                     WHERE m1.key = 'SESSION_ID' AND m2.key = 'SESSION_LAST_ACTIVITY' \
+                     AND (strftime('%s', 'now') - strftime('%s', m2.value)) < {}",
+                    SESSION_TIMEOUT_SECS as i64
+                ),
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .expect("Session query should succeed");
+
+        assert_eq!(result, Some(session_id.to_string()));
+    }
 }

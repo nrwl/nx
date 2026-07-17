@@ -62,16 +62,36 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-jest.mock('nx/src/devkit-internals', () => ({
-  ...jest.requireActual('nx/src/devkit-internals'),
-  getExecutorInformation: jest
-    .fn()
-    .mockImplementation((pkg, ...args) =>
-      jest
-        .requireActual('nx/src/devkit-internals')
-        .getExecutorInformation('@nx/webpack', ...args)
-    ),
-}));
+jest.mock('nx/src/devkit-internals', () => {
+  // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
+  const getActual = () =>
+    jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
+  const getActualDevkitInternals = () =>
+    jest.requireActual('nx/src/devkit-internals');
+
+  return new Proxy(
+    {},
+    {
+      get(target, prop) {
+        if (prop === 'getExecutorInformation') {
+          return jest
+            .fn()
+            .mockImplementation((pkg, ...args) =>
+              getActualDevkitInternals().getExecutorInformation(
+                '@nx/webpack',
+                ...args
+              )
+            );
+        }
+        if (prop === 'retrieveProjectConfigurations') {
+          return getActual().retrieveProjectConfigurations;
+        }
+        // For all other properties, return from the actual module
+        return getActualDevkitInternals()[prop];
+      },
+    }
+  );
+});
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
   addProjectConfiguration(tree, name, project);
@@ -391,6 +411,7 @@ describe('convert-to-inferred', () => {
     });
     expect(projectConfig.targets['test-android']).toEqual({
       command: 'nx run demo-e2e:test',
+      dependsOn: ['demo-e2e:build-android'],
       options: {
         args: [
           '--args="-c android.emu.debug"',
@@ -410,6 +431,7 @@ describe('convert-to-inferred', () => {
     });
     expect(projectConfig.targets['test-ios']).toEqual({
       command: 'nx run demo-e2e:test',
+      dependsOn: ['demo-e2e:build-ios'],
       options: {
         args: [
           '--args="-c ios.sim.debug"',

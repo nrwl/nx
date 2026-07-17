@@ -28,8 +28,19 @@
         }
       },
       "build": {
+        "inputs": [
+          "production",
+          "^production",
+          {
+            "dependentTasksOutputFiles": "**/*.js",
+            "transitive": true
+          },
+          "{workspaceRoot}/examples/angular-rspack/tsconfig.base.json",
+          "{workspaceRoot}/LICENSE",
+          "{workspaceRoot}/tsconfig.json"
+        ],
         "outputs": [
-          "{projectRoot}/dist/browser"
+          "{projectRoot}/dist"
         ],
         "dependsOn": [
           "^build"

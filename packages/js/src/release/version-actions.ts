@@ -1,3 +1,4 @@
+import { getCatalogManager } from '@nx/devkit/internal';
 import {
   detectPackageManager,
   PackageManager,
@@ -7,7 +8,6 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
-import { getCatalogManager } from '@nx/devkit/src/utils/catalog';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
@@ -106,7 +106,7 @@ export default class JsVersionActions extends VersionActions {
         exec(
           `npm view ${packageName} version --"${registryConfigKey}=${registry}" --tag=${tag}`,
           {
-            windowsHide: false,
+            windowsHide: true,
           },
           (error, stdout, stderr) => {
             if (error) {

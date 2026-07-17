@@ -1,3 +1,4 @@
+import { E2EWebServerDetails } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -15,7 +16,6 @@ import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
-import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(
@@ -99,9 +99,9 @@ export async function addE2e(
         );
   } else if (options.bundler === 'rsbuild') {
     ensurePackage('@nx/rsbuild', nxVersion);
-    const { getRsbuildE2EWebServerInfo } = await import(
-      '@nx/rsbuild/config-utils'
-    );
+    const {
+      getRsbuildE2EWebServerInfo,
+    }: typeof import('@nx/rsbuild/config-utils') = require('@nx/rsbuild/config-utils');
 
     e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
       tree,

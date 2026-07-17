@@ -17,27 +17,47 @@ export function nxViteBuildCoordinationPlugin(
   let unregisterFileWatcher: UnregisterCallback | undefined;
 
   async function buildChangedProjects() {
-    await new Promise<void>((res) => {
-      activeBuildProcess = exec(options.buildCommand, {
-        windowsHide: false,
-      });
-      activeBuildProcess.stdout.pipe(process.stdout);
-      activeBuildProcess.stderr.pipe(process.stderr);
-      activeBuildProcess.on('exit', () => {
-        res();
-      });
-      activeBuildProcess.on('error', () => {
-        res();
-      });
+    const buildProcess = exec(options.buildCommand, {
+      windowsHide: true,
     });
-    activeBuildProcess = undefined;
+    activeBuildProcess = buildProcess;
+    try {
+      await new Promise<void>((res, rej) => {
+        buildProcess.stdout.pipe(process.stdout);
+        buildProcess.stderr.pipe(process.stderr);
+        buildProcess.on('exit', (code, signal) => {
+          // A build killed by the file watcher (new changes arrived) is not a failure.
+          if (buildProcess.killed || signal || code === 0) {
+            res();
+          } else {
+            rej(new Error(`Build failed with exit code ${code}`));
+          }
+        });
+        buildProcess.on('error', (error) => {
+          rej(error);
+        });
+      });
+    } finally {
+      if (activeBuildProcess === buildProcess) {
+        activeBuildProcess = undefined;
+      }
+    }
   }
 
   function createFileWatcher() {
-    const runner = new BatchFunctionRunner(() => buildChangedProjects());
+    // Failed rebuilds in watch mode should not crash the dev server. Log and
+    // keep watching so the next file change can rebuild.
+    const runner = new BatchFunctionRunner(() =>
+      buildChangedProjects().catch((error: Error) => {
+        output.error({
+          title: 'Failed to rebuild projects. Fix the errors and save again.',
+          bodyLines: error?.message ? [error.message] : undefined,
+        });
+      })
+    );
     return daemonClient.registerFileWatcher(
       { watchProjects: 'all' },
-      (err, { changedProjects, changedFiles }) => {
+      (err, data) => {
         if (err === 'reconnecting') {
           // Silent - daemon restarts automatically on lockfile changes
           return;
@@ -60,7 +80,10 @@ export function nxViteBuildCoordinationPlugin(
           activeBuildProcess = undefined;
         }
 
-        runner.enqueue(changedProjects, changedFiles);
+        if (data) {
+          const { changedProjects, changedFiles } = data;
+          runner.enqueue(changedProjects, changedFiles);
+        }
       }
     );
   }

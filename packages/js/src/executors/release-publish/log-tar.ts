@@ -1,6 +1,6 @@
 // Adapted from https://github.com/npm/cli/blob/c736b622b8504b07f5a19f631ade42dd40063269/lib/utils/tar.js
-import * as chalk from 'chalk';
-import * as columnify from 'columnify';
+import chalk from 'chalk';
+import columnify from 'columnify';
 import { formatBytes } from './format-bytes';
 
 export const logTar = (tarball, opts = {}) => {
@@ -14,9 +14,13 @@ export const logTar = (tarball, opts = {}) => {
   if (tarball.files.length) {
     console.log('');
     const columnData = columnify(
-      tarball.files
+      // Sort for a stable listing: pnpm 11 orders files differently than
+      // npm and pnpm 10.
+      [...tarball.files]
+        .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
         .map((f) => {
-          const bytes = formatBytes(f.size, false);
+          const bytes =
+            typeof f.size === 'number' ? formatBytes(f.size, false) : '';
           return /^node_modules\//.test(f.path)
             ? null
             : { path: f.path, size: `${bytes}` };

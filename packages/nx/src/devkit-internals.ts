@@ -11,11 +11,11 @@ export {
 export { readNxJson as readNxJsonFromDisk } from './config/nx-json';
 export { calculateDefaultProjectName } from './config/calculate-default-project-name';
 export { retrieveProjectConfigurationsWithAngularProjects } from './project-graph/utils/retrieve-workspace-files';
-export { mergeTargetConfigurations } from './project-graph/utils/project-configuration-utils';
-export {
-  readProjectConfigurationsFromRootMap,
-  findMatchingConfigFiles,
-} from './project-graph/utils/project-configuration-utils';
+export { mergeTargetConfigurations } from './project-graph/utils/project-configuration/target-merging';
+export { readProjectConfigurationsFromRootMap } from './project-graph/utils/project-configuration/project-nodes-manager';
+export { findMatchingConfigFiles } from './project-graph/utils/project-configuration-utils';
+export { findMatchingProjects } from './utils/find-matching-projects';
+export { readTargetDefaultsForTarget } from './project-graph/utils/project-configuration/target-defaults';
 export { getIgnoreObjectForTree } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
@@ -40,11 +40,33 @@ export {
 export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';
 export { LoadedNxPlugin } from './project-graph/plugins/loaded-nx-plugin';
 export * from './project-graph/error-types';
-export { registerTsProject } from './plugins/js/utils/register';
+export {
+  registerTsProject,
+  loadTsFile,
+  forceRegisterEsmLoader,
+  requireWithTsconfigFallback,
+} from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export { isCI } from './utils/is-ci';
 export { isUsingPrettierInTree } from './utils/is-using-prettier';
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';
+export { handleImport } from './utils/handle-import';
 export { PluginCache, safeWriteFileCache } from './utils/plugin-cache-utils';
+export { emitPluginWorkerLog } from './project-graph/plugins/isolation/worker-streaming';
+export {
+  resolveImplementation,
+  resolveSchema,
+  ImplementationResolutionError,
+  SchemaResolutionError,
+} from './config/schema-utils';
+export {
+  resolvePrompt,
+  PromptResolutionError,
+} from './command-line/migrate/prompt-files';
+export {
+  getCatalogManager,
+  getCatalogDependenciesFromPackageJson,
+} from './utils/catalog';
+export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';

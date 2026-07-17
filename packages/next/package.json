@@ -17,8 +17,42 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
-  "typings": "./index.d.ts",
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "typings",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "babel": [
+        "dist/babel.d.ts"
+      ],
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "tailwind": [
+        "dist/tailwind.d.ts"
+      ],
+      "plugins/*": [
+        "dist/plugins/*.d.ts"
+      ],
+      "typings/*.d.ts": [
+        "dist/typings/*.d.ts"
+      ],
+      "src/utils/deprecation": [
+        "dist/src/utils/deprecation.d.ts"
+      ],
+      "src/utils/config": [
+        "dist/src/utils/config.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -29,7 +63,8 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "peerDependencies": {
     "next": ">=14.0.0 <17.0.0"
@@ -37,9 +72,9 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@babel/plugin-proposal-decorators": "^7.22.7",
-    "@svgr/webpack": "^8.1.0",
+    "@svgr/webpack": "catalog:",
     "copy-webpack-plugin": "^14.0.0",
-    "ignore": "^5.0.4",
+    "ignore": "^7.0.5",
     "semver": "catalog:",
     "tslib": "catalog:typescript",
     "webpack-merge": "^5.8.0",
@@ -57,5 +92,51 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./babel": {
+      "@nx/nx-source": "./babel.ts",
+      "types": "./dist/babel.d.ts",
+      "default": "./dist/babel.js"
+    },
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./tailwind": {
+      "@nx/nx-source": "./tailwind.ts",
+      "types": "./dist/tailwind.d.ts",
+      "default": "./dist/tailwind.js"
+    },
+    "./plugins/*": {
+      "@nx/nx-source": "./plugins/*.ts",
+      "types": "./dist/plugins/*.d.ts",
+      "default": "./dist/plugins/*.js"
+    },
+    "./typings/*.d.ts": {
+      "@nx/nx-source": "./typings/*.d.ts",
+      "types": "./dist/typings/*.d.ts",
+      "default": "./dist/typings/*.d.ts"
+    },
+    "./src/utils/deprecation": {
+      "@nx/nx-source": "./src/utils/deprecation.ts",
+      "types": "./dist/src/utils/deprecation.d.ts",
+      "default": "./dist/src/utils/deprecation.js"
+    },
+    "./src/utils/config": {
+      "@nx/nx-source": "./src/utils/config.ts",
+      "types": "./dist/src/utils/config.d.ts",
+      "default": "./dist/src/utils/config.js"
+    }
   }
 }

@@ -1,4 +1,8 @@
 import {
+  addBuildTargetDefaults,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
+import {
   ensurePackage,
   formatFiles,
   joinPathFragments,
@@ -13,10 +17,10 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { getImportPath } from '../../utils/get-import-path';
 import {
   getUpdatedPackageJsonContent,
@@ -41,6 +45,8 @@ export async function setupBuildGenerator(
   tree: Tree,
   options: SetupBuildGeneratorSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedTypescriptVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, options.project);
   options.buildTarget ??= 'build';
@@ -353,8 +359,10 @@ function mergeTargetDefaults(
 
   return mergeTargetConfigurations(
     projectTarget,
-    (projectTarget.executor
-      ? nxJson.targetDefaults?.[projectTarget.executor]
-      : undefined) ?? nxJson.targetDefaults?.[buildTarget]
+    readTargetDefaultsForTarget(
+      buildTarget,
+      nxJson.targetDefaults,
+      projectTarget.executor
+    )
   );
 }

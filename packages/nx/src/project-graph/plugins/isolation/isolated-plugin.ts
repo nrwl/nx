@@ -1,20 +1,27 @@
 import { ChildProcess, spawn } from 'child_process';
-import { Socket, connect } from 'net';
+import { Socket } from 'net';
 import { Readable, Writable } from 'stream';
 import path = require('path');
 
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import { serverLogger } from '../../../daemon/logger';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
-import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
+import {
+  consumeMessagesFromSocket,
+  parseMessage,
+} from '../../../utils/consume-messages-from-socket';
+import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
+import { ProgressTopics } from '../../../utils/progress-topics';
+import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
-  CreateNodesContextV2,
+  CreateNodesContext,
   CreateNodesResult,
   PostTasksExecutionContext,
   PreTasksExecutionContext,
@@ -25,9 +32,14 @@ import type {
   MessageResult,
   PluginWorkerLoadResult,
   PluginWorkerMessage,
+  PluginWorkerNotification,
   PluginWorkerResult,
 } from './messaging';
-import { isPluginWorkerResult, sendMessageOverSocket } from './messaging';
+import {
+  isPluginWorkerNotification,
+  isPluginWorkerResult,
+  sendMessageOverSocket,
+} from './messaging';
 import {
   Hook,
   Phase,
@@ -63,7 +75,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     filePattern: string,
     fn: (
       matchedFiles: string[],
-      context: CreateNodesContextV2
+      context: CreateNodesContext
     ) => Promise<
       Array<readonly [plugin: string, file: string, result: CreateNodesResult]>
     >,
@@ -196,14 +208,23 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     if (!this._connectPromise) {
       logger.verbose(`[plugin-client] restarting worker for "${this.name}"`);
-      this._connectPromise = this.spawnAndConnect();
+      this._connectPromise = this.spawnAndConnect().catch((err) => {
+        // Clear the cached promise so subsequent calls can retry
+        // instead of re-awaiting a permanently-rejected promise.
+        this._connectPromise = null;
+        throw err;
+      });
     }
 
     await this._connectPromise;
   }
 
   private handleSocketData = (raw: string) => {
-    const message = JSON.parse(raw);
+    const message = parseMessage<any>(raw);
+    if (isPluginWorkerNotification(message)) {
+      handlePluginWorkerNotification(message);
+      return;
+    }
     if (!isPluginWorkerResult(message)) {
       return;
     }
@@ -280,7 +301,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
     this.lifecycle = new PluginLifecycleManager(registeredHooks);
 
-    const shutdown = () => this.shutdownIfInactive();
+    const shutdown = (hookName: Hook) => this.shutdownIfInactive(hookName);
     const wrap = <TArgs extends unknown[], TReturn>(
       hook: Hook,
       hookFn: (...args: TArgs) => Promise<TReturn>
@@ -291,7 +312,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
           await this.ensureAlive();
           return hookFn(...args);
         },
-        shutdown
+        () => shutdown(hook)
       );
 
     if (loadResult.createNodesPattern) {
@@ -425,7 +446,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     });
   }
 
-  private shutdownIfInactive(): void {
+  private shutdownIfInactive(hookName: Hook): void {
     if (this.pendingCount > 0) {
       logger.verbose(
         `[isolated-plugin] worker for "${this.name}" has ${this.pendingCount} pending request(s), not shutting down yet`
@@ -433,14 +454,24 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       return;
     }
     logger.verbose(
-      `[isolated-plugin] shutting down worker for "${this.name}" after last hook`
+      `[isolated-plugin] shutting down worker for "${this.name}" after ${hookName}`
     );
     this.shutdown();
   }
 
+  async setWorkerEnv(env: Record<string, string>): Promise<void> {
+    if (!this._alive) {
+      return;
+    }
+    const result = await this.sendRequest('setWorkerEnv', env);
+    if (result.success === false) {
+      throw result.error;
+    }
+  }
+
   notifyPhaseAborted(phase: Phase, lastCompletedHook: Hook): void {
     if (this.lifecycle?.notifyPhaseAborted(phase, lastCompletedHook)) {
-      this.shutdownIfInactive();
+      this.shutdownIfInactive(lastCompletedHook);
     }
   }
 
@@ -474,10 +505,12 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     if (!this.worker?.pid) return;
     (async () => {
       try {
-        const { isOnDaemon } = await import('../../../daemon/is-on-daemon');
+        const { isOnDaemon } = await require(
+          require.resolve('../../../daemon/is-on-daemon')
+        );
         if (!isOnDaemon()) {
-          const { getProcessMetricsService } = await import(
-            '../../../tasks-runner/process-metrics-service'
+          const { getProcessMetricsService } = await require(
+            require.resolve('../../../tasks-runner/process-metrics-service')
           );
           getProcessMetricsService().registerMainCliSubprocess(
             this.worker.pid,
@@ -499,7 +532,10 @@ async function startPluginWorker(name: string) {
   performance.mark(`start-plugin-worker:${name}`);
 
   const isWorkerTypescript = path.extname(__filename) === '.ts';
-  const workerPath = path.join(__dirname, 'plugin-worker');
+  const workerPath = path.join(
+    __dirname,
+    isWorkerTypescript ? 'plugin-worker.ts' : 'plugin-worker.js'
+  );
 
   const env: Record<string, string> = {
     ...process.env,
@@ -509,6 +545,10 @@ async function startPluginWorker(name: string) {
             __dirname,
             '../../../../tsconfig.lib.json'
           ),
+          TS_NODE_COMPILER_OPTIONS: JSON.stringify({
+            moduleResolution: 'node',
+            module: 'commonjs',
+          }),
         }
       : {}),
   };
@@ -520,6 +560,9 @@ async function startPluginWorker(name: string) {
   const worker = spawn(
     process.execPath,
     [
+      // Spawn the worker with the same resolve conditions Nx uses for plugin
+      // entries so the plugin's transitive workspace imports resolve to source.
+      ...getPluginResolveConditionNodeArgs(),
       ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
       workerPath,
       ipcPath,
@@ -552,49 +595,55 @@ async function startPluginWorker(name: string) {
 
   worker.unref();
 
-  let attempts = 0;
-  return new Promise<{ worker: ChildProcess; socket: Socket }>(
-    (resolve, reject) => {
-      const id = setInterval(async () => {
-        const socket = await isServerAvailable(ipcPath);
-        if (socket) {
-          socket.unref();
-          clearInterval(id);
-          logger.verbose(
-            `[isolated-plugin] connected to worker for "${name}" (pid: ${worker.pid}) after ${attempts} attempt(s)`
-          );
-          resolve({ worker, socket });
-        } else if (attempts > 10000) {
-          clearInterval(id);
-          reject(new Error(`Failed to start plugin worker for plugin ${name}`));
-        } else {
-          attempts++;
-        }
-      }, 10);
-    }
-  ).finally(() => {
+  try {
+    const socket = await connectToWorker(worker, ipcPath, name);
+    return { worker, socket };
+  } finally {
     performance.mark(`start-plugin-worker-end:${name}`);
     performance.measure(
       `start-plugin-worker:${name}`,
       `start-plugin-worker:${name}`,
       `start-plugin-worker-end:${name}`
     );
-  });
+  }
 }
 
-function isServerAvailable(ipcPath: string): Promise<Socket | false> {
-  return new Promise((resolve) => {
-    try {
-      const socket = connect(ipcPath, () => {
-        resolve(socket);
-      });
-      socket.once('error', () => {
-        resolve(false);
-      });
-    } catch {
-      resolve(false);
+async function connectToWorker(
+  worker: ChildProcess,
+  ipcPath: string,
+  name: string
+): Promise<Socket> {
+  const abortController = new AbortController();
+  let earlyExitError: Error | null = null;
+
+  // If the worker exits before we connect, abort polling immediately
+  // rather than burning through attempts against a dead socket.
+  worker.once('exit', (code) => {
+    if (!abortController.signal.aborted) {
+      earlyExitError = new Error(
+        `Plugin worker for "${name}" exited with code ${code} before the connection was established.`
+      );
+      abortController.abort();
     }
   });
+
+  const socket = await waitForSocketConnection(ipcPath, {
+    signal: abortController.signal,
+  });
+
+  if (socket) {
+    abortController.abort();
+    socket.unref();
+    logger.verbose(
+      `[isolated-plugin] connected to worker for "${name}" (pid: ${worker.pid})`
+    );
+    return socket;
+  }
+
+  if (earlyExitError) {
+    throw earlyExitError;
+  }
+  throw new Error(`Failed to start plugin worker for plugin ${name}`);
 }
 
 function getTypeName(u: unknown): string {
@@ -661,4 +710,23 @@ type Falsy = false | 0 | '' | null | undefined | 0n;
 
 function hooks(...array: Array<Hook | Falsy>): Array<Hook> {
   return array.filter((v): v is Hook => !!v);
+}
+
+// When the host process is the daemon, broadcast the log notification
+// to every client subscribed to the graph-construction topic so the
+// line surfaces in their terminal. When the host is the direct CLI
+// there is no client to notify, so the log line goes straight to
+// stdout/stderr.
+function handlePluginWorkerNotification(
+  notification: PluginWorkerNotification
+): void {
+  if ((global as any).NX_DAEMON) {
+    serverLogger.logToClient(
+      ProgressTopics.GraphConstruction,
+      notification.message,
+      notification.level
+    );
+    return;
+  }
+  console[notification.level](notification.message);
 }

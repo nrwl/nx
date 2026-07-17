@@ -1,5 +1,5 @@
 import { Tree, joinPathFragments } from '@nx/devkit';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { loadConfigFile } from '@nx/devkit/internal';
 
 export interface ExpoProjectDetectionResult {
   isExpo: boolean;

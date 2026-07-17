@@ -1,10 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/vite/spec",
-    "module": "commonjs",
+    "outDir": "out-tsc/spec",
+    "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",
@@ -17,6 +18,8 @@
     "**/*.test.jsx",
     "**/*.d.ts",
     "jest.config.ts",
+    "src/utils/test-utils.ts",
+    "src/utils/test-files/*.json",
     "*.json"
   ],
   "references": [

@@ -5,49 +5,10 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/express/README.md"],
-      "command": "node ./scripts/copy-readme.js express"
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/express",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/express",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/express",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/express",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/express",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js express packages/express/readme-template.md packages/express/README.md",
+      "inputs": ["copyReadme"]
     }
   },
-  "implicitDependencies": ["node"]
+  "implicitDependencies": ["node", "eslint"]
 }

@@ -13,9 +13,11 @@ import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
+import { assertAndPinRemixTypescript } from '../../utils/assert-and-pin-remix-typescript';
 import { updateDependencies } from '../utils/update-dependencies';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -32,7 +34,11 @@ export async function remixLibraryGeneratorInternal(
   tree: Tree,
   schema: NxRemixGeneratorSchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(assertAndPinRemixTypescript(tree));
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
   const installTask = updateDependencies(tree);

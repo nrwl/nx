@@ -39,30 +39,6 @@ describe('convert-to-application-executor generator', () => {
     }
   );
 
-  it.each`
-    executor                                           | expected
-    ${'@angular-devkit/build-angular:browser'}         | ${'@angular-devkit/build-angular:application'}
-    ${'@angular-devkit/build-angular:browser-esbuild'} | ${'@angular-devkit/build-angular:application'}
-  `(
-    'should replace "$executor" with "$expected" when using an Angular version lower than 20',
-    async ({ executor, expected }) => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '19.0.0';
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        root: 'app1',
-        projectType: 'application',
-        targets: { build: { executor } },
-      });
-
-      await convertToApplicationExecutor(tree, {});
-
-      const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.executor).toBe(expected);
-    }
-  );
-
   it('should not convert the target when using a custom webpack config', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'app1',

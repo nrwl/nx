@@ -26,56 +26,56 @@ fn special_char_with_no_group(input: &str) -> IResult<&str, &str, VerboseError<&
     })(input)
 }
 
-fn simple_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn simple_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "simple_group",
         map(preceded(tag("("), group), GlobGroup::NonSpecialGroup),
     )(input)
 }
 
-fn zero_or_more_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn zero_or_more_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "zero_or_more_group",
         map(preceded(tag("*("), group), GlobGroup::ZeroOrMore),
     )(input)
 }
 
-fn zero_or_one_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn zero_or_one_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "zero_or_one_group",
         map(preceded(tag("?("), group), GlobGroup::ZeroOrOne),
     )(input)
 }
 
-fn one_or_more_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn one_or_more_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "one_or_more_group",
         map(preceded(tag("+("), group), GlobGroup::OneOrMore),
     )(input)
 }
 
-fn brace_group_with_empty_item(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn brace_group_with_empty_item(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "brace_group_with_empty_item",
         map(preceded(tag("{,"), brace_group), GlobGroup::ZeroOrOne),
     )(input)
 }
 
-fn exact_one_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn exact_one_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "exact_one_group",
         map(preceded(tag("@("), group), GlobGroup::ExactOne),
     )(input)
 }
 
-fn negated_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn negated_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "negated_group",
         map(preceded(tag("!("), group), GlobGroup::Negated),
     )(input)
 }
 
-fn negated_file_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn negated_file_group(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context("negated_file_group", |input| {
         let (input, result) = preceded(tag("!("), group)(input)?;
         let (input, _) = tag(".")(input)?;
@@ -83,7 +83,7 @@ fn negated_file_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str
     })(input)
 }
 
-fn negated_wildcard(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn negated_wildcard(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context("negated_wildcard", |input| {
         let (input, result) = preceded(tag("!("), group)(input)?;
         let (input, _) = tag("*")(input)?;
@@ -91,7 +91,7 @@ fn negated_wildcard(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>>
     })(input)
 }
 
-fn non_special_character(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+fn non_special_character(input: &str) -> IResult<&str, GlobGroup<'_>, VerboseError<&str>> {
     context(
         "non_special_character",
         map(
@@ -105,21 +105,21 @@ fn non_special_character(input: &str) -> IResult<&str, GlobGroup, VerboseError<&
     )(input)
 }
 
-fn group(input: &str) -> IResult<&str, Cow<str>, VerboseError<&str>> {
+fn group(input: &str) -> IResult<&str, Cow<'_, str>, VerboseError<&str>> {
     context(
         "group",
         map_parser(terminated(take_until(")"), tag(")")), separated_group_items),
     )(input)
 }
 
-fn brace_group(input: &str) -> IResult<&str, Cow<str>, VerboseError<&str>> {
+fn brace_group(input: &str) -> IResult<&str, Cow<'_, str>, VerboseError<&str>> {
     context(
         "brace_group",
         map_parser(terminated(take_until("}"), tag("}")), separated_group_items),
     )(input)
 }
 
-fn separated_group_items(input: &str) -> IResult<&str, Cow<str>, VerboseError<&str>> {
+fn separated_group_items(input: &str) -> IResult<&str, Cow<'_, str>, VerboseError<&str>> {
     map(
         separated_list0(
             alt((tag("|"), tag(","))),
@@ -135,7 +135,7 @@ fn separated_group_items(input: &str) -> IResult<&str, Cow<str>, VerboseError<&s
     )(input)
 }
 
-fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup>, VerboseError<&str>> {
+fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup<'_>>, VerboseError<&str>> {
     context(
         "parse_segment",
         many_till(
@@ -166,7 +166,7 @@ fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup>, VerboseError<&str
     .map(|(i, (groups, _))| (i, groups))
 }
 
-fn separated_segments(input: &str) -> IResult<&str, Vec<Vec<GlobGroup>>, VerboseError<&str>> {
+fn separated_segments(input: &str) -> IResult<&str, Vec<Vec<GlobGroup<'_>>>, VerboseError<&str>> {
     separated_list0(tag("/"), map_parser(take_till(|c| c == '/'), parse_segment))(input)
 }
 
@@ -183,7 +183,7 @@ fn negated_glob(input: &str) -> (&str, bool) {
     }
 }
 
-pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup>>)> {
+pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup<'_>>>)> {
     let (input, negated) = negated_glob(input);
     let result = separated_segments(input).finish();
     if let Ok((_, result)) = result {

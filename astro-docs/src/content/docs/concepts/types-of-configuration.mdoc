@@ -34,7 +34,7 @@ In a repository with many different projects and many different tools, there wil
 If you need to track down the value of a specific configuration property (say `runInBand` for `jest` on the `/apps/my-app` project) you need to look in the following locations. The configuration settings are merged with priority being given to the file higher up in the list.
 
 1. In `/apps/my-app/project.json`, the `options` listed under the `test` target that uses the `@nx/jest:jest` executor.
-2. In `/nx.json`, the `targetDefaults` listed for the `test` target.
+2. In `/nx.json`, the `targetDefaults` entries matching the `test` target.
 3. One of the `test` target options references `/apps/my-app/jest.config.ts`
 4. Which extends `/jest.config.ts`
 
@@ -48,7 +48,20 @@ repo/
 └── nx.json
 ```
 
+{% aside type="tip" title="Let Nx resolve it for you" %}
+Instead of tracing these files by hand, run `nx show target` to print the fully merged configuration for a target — for example `nx show target my-app:test`. Add `--verbose` to also see where each value came from (which file or plugin contributed it):
+
+```shell
+nx show target my-app:test --verbose
+```
+
+{% /aside %}
+
 ## More information
+
+{% aside type="tip" title="Learn by doing" %}
+Try the [Configuring Tasks](/docs/getting-started/tutorials/configuring-tasks) tutorial to apply these concepts in your own workspace.
+{% /aside %}
 
 - [Nx Configuration](/docs/reference/nx-json)
 - [Project Configuration](/docs/reference/project-configuration)

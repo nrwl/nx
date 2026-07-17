@@ -1,5 +1,4 @@
 import { handleErrors } from '../../utils/handle-errors';
-import * as migrationsJson from '../../../migrations.json';
 import { executeMigrations } from '../migrate/migrate';
 import { output } from '../../utils/output';
 
@@ -8,6 +7,9 @@ export async function repair(
   extraMigrations = [] as any[]
 ) {
   return handleErrors(args.verbose, async () => {
+    const migrationsJson: { generators: Record<string, string>[] } = require(
+      require.resolve('nx/migrations.json')
+    );
     const nxMigrations = Object.entries(migrationsJson.generators).reduce(
       (agg, [name, migration]) => {
         const skip = migration['x-repair-skip'];

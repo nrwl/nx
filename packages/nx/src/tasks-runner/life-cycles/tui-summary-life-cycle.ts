@@ -74,6 +74,10 @@ export function getTuiTerminalSummaryLifeCycle({
   };
 
   lifeCycle.appendTaskOutput = (taskId, output) => {
+    // Task already completed and output was finalized by endTasks — discard late-arriving data
+    if (!taskOutputChunks[taskId]) {
+      return;
+    }
     taskOutputChunks[taskId].push(output);
   };
 
@@ -93,6 +97,11 @@ export function getTuiTerminalSummaryLifeCycle({
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
     if (taskStatus === NativeTaskStatus.Stopped) {
       displayStoppedTasks.add(taskId);
+      inProgressTasks.delete(taskId);
+    } else if (taskStatus === NativeTaskStatus.Skipped) {
+      // Skipped tasks don't get an endTasks() call; clear them here so the run
+      // summary doesn't treat them as still-in-progress and report Cancelled.
+      tasksToTaskStatus[taskId] = 'skipped';
       inProgressTasks.delete(taskId);
     }
   };
@@ -176,10 +185,13 @@ export function getTuiTerminalSummaryLifeCycle({
     failure: boolean;
     cancelled: boolean;
   }) => {
-    // Prints task outputs in the order they were completed
-    // above the summary, since run-one should print all task results.
+    // Print task outputs in completion order above the summary.
     for (const taskId of taskIdsInTheOrderTheyStart) {
       const taskStatus = tasksToTaskStatus[taskId];
+      // Skipped tasks never ran; don't print a misleading `> nx run` header.
+      if (taskStatus === 'skipped') {
+        continue;
+      }
       const terminalOutput = getTerminalOutput(taskId);
       output.logCommandOutput(taskId, taskStatus, terminalOutput);
     }

@@ -84,7 +84,7 @@ impl NxGlobSet {
 
 fn potential_glob_split(
     glob: &str,
-) -> itertools::Either<std::str::Split<char>, std::iter::Once<&str>> {
+) -> itertools::Either<std::str::Split<'_, char>, std::iter::Once<&str>> {
     use itertools::Either::*;
     if glob.starts_with('{') && glob.ends_with('}') {
         Left(glob.trim_matches('{').trim_end_matches('}').split(','))

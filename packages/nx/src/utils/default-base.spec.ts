@@ -1,3 +1,4 @@
+jest.mock('child_process');
 import * as cp from 'child_process';
 import { deduceDefaultBase } from './default-base';
 

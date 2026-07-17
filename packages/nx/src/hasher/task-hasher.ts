@@ -12,6 +12,7 @@ import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
+import { getTaskIOService } from '../tasks-runner/task-io-service';
 
 // Re-export HashInputs from native module for public API
 export { HashInputs };
@@ -61,41 +62,87 @@ export interface TaskHasher {
   ): Promise<Hash>;
 
   /**
-   *  @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
-   * @param tasks
+   * @deprecated pass `perTaskEnvs` keyed by `task.id` instead — hashing
+   * every task against one shared env produces the wrong cache key when
+   * tasks have per-project/target `.env` files or custom hashers that
+   * read env. Will be removed in v22.
    */
-  hashTasks(tasks: Task[]): Promise<Hash[]>;
-
-  /**
-   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
-   */
-  hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
-
   hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
     cwd?: string
   ): Promise<Hash[]>;
-}
 
-export interface TaskHasherImpl {
+  /**
+   * Hash `tasks`. `perTaskEnvs` must contain an entry keyed by `task.id`
+   * for every task in `tasks` — task-specific env (per-project/target
+   * `.env` files, custom-hasher env reads) participates in the hash, so
+   * a shared env across tasks would compute the wrong cache key when
+   * tasks actually differ.
+   */
   hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string
+  ): Promise<Hash[]>;
+}
+
+export interface TaskHasherImpl {
+  /**
+   * Hash `tasks` where each task is keyed in `perTaskEnvs` by `task.id`.
+   * Every task must have an entry — callers who want to hash against a
+   * single shared env should construct `{ [task.id]: env }` for every
+   * task.
+   */
+  hashTasks(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<PartialHash[]>;
 
   hashTask(
     task: Task,
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<PartialHash>;
 }
 
 export type Hasher = TaskHasher;
+
+/**
+ * Normalize the legacy single-env `hashTasks(tasks, taskGraph, env)`
+ * signature to the per-task-env shape. External plugins still call the
+ * legacy shape, so `InProcessTaskHasher` and `DaemonBasedTaskHasher`
+ * detect at runtime and broadcast the shared env across every task.
+ *
+ * Detection is by value shape: `NodeJS.ProcessEnv` values are strings
+ * (or undefined), `perTaskEnvs` values are objects.
+ */
+function normalizePerTaskEnvs(
+  tasks: Task[],
+  arg: NodeJS.ProcessEnv | Record<string, NodeJS.ProcessEnv>
+): Record<string, NodeJS.ProcessEnv> {
+  for (const value of Object.values(arg)) {
+    if (value === undefined) continue;
+    if (typeof value === 'object') {
+      return arg as Record<string, NodeJS.ProcessEnv>;
+    }
+    // First defined value is a string — legacy env; broadcast it.
+    const env = arg as NodeJS.ProcessEnv;
+    const perTaskEnvs: Record<string, NodeJS.ProcessEnv> = {};
+    for (const task of tasks) perTaskEnvs[task.id] = env;
+    return perTaskEnvs;
+  }
+  // Empty or all-undefined: treat as perTaskEnvs — safe because the
+  // Rust-side check will surface a clear error if entries are missing.
+  return arg as Record<string, NodeJS.ProcessEnv>;
+}
 
 export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
@@ -105,15 +152,17 @@ export class DaemonBasedTaskHasher implements TaskHasher {
 
   async hashTasks(
     tasks: Task[],
-    taskGraph?: TaskGraph,
-    env?: NodeJS.ProcessEnv
+    taskGraph: TaskGraph,
+    envOrPerTaskEnvs: NodeJS.ProcessEnv | Record<string, NodeJS.ProcessEnv>
   ): Promise<Hash[]> {
+    const collectInputs = getTaskIOService().hasTaskInputSubscribers();
     return this.daemonClient.hashTasks(
       this.runnerOptions,
       tasks,
       taskGraph,
-      env ?? process.env,
-      process.cwd()
+      normalizePerTaskEnvs(tasks, envOrPerTaskEnvs),
+      process.cwd(),
+      collectInputs
     );
   }
 
@@ -123,13 +172,9 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     env?: NodeJS.ProcessEnv
   ): Promise<Hash> {
     return (
-      await this.daemonClient.hashTasks(
-        this.runnerOptions,
-        [task],
-        taskGraph,
-        env ?? process.env,
-        process.cwd()
-      )
+      await this.hashTasks([task], taskGraph!, {
+        [task.id]: env ?? process.env,
+      })
     )[0];
   }
 }
@@ -156,15 +201,17 @@ export class InProcessTaskHasher implements TaskHasher {
 
   async hashTasks(
     tasks: Task[],
-    taskGraph?: TaskGraph,
-    env?: NodeJS.ProcessEnv,
-    cwd?: string
+    taskGraph: TaskGraph,
+    envOrPerTaskEnvs: NodeJS.ProcessEnv | Record<string, NodeJS.ProcessEnv>,
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<Hash[]> {
     const hashes = await this.taskHasher.hashTasks(
       tasks,
       taskGraph,
-      env ?? process.env,
-      cwd ?? process.cwd()
+      normalizePerTaskEnvs(tasks, envOrPerTaskEnvs),
+      cwd ?? process.cwd(),
+      collectInputs
     );
     return tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
@@ -175,13 +222,15 @@ export class InProcessTaskHasher implements TaskHasher {
     task: Task,
     taskGraph?: TaskGraph,
     env?: NodeJS.ProcessEnv,
-    cwd?: string
+    cwd?: string,
+    collectInputs?: boolean
   ): Promise<Hash> {
     const res = await this.taskHasher.hashTask(
       task,
-      taskGraph,
+      taskGraph!,
       env ?? process.env,
-      cwd ?? process.cwd()
+      cwd ?? process.cwd(),
+      collectInputs
     );
     return this.createHashDetails(task, res);
   }
@@ -256,10 +305,8 @@ export function getTargetInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
   const targetData = projectNode.data.targets[target];
-  const targetDefaults = (nxJson.targetDefaults || {})[target];
-
   const inputs = splitInputsIntoSelfAndDependencies(
-    targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
+    targetData.inputs || DEFAULT_INPUTS,
     namedInputs
   );
 
@@ -293,10 +340,13 @@ export function getInputs(
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
-  const targetDefaults = (nxJson.targetDefaults || {})[task.target.target];
+  // See `getTargetInputs` — graph construction already merged any
+  // matching target-default's `inputs` onto `targetData.inputs`, so a
+  // separate `targetDefaults` lookup here would either repeat that
+  // work or drift from it.
   const { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets } =
     splitInputsIntoSelfAndDependencies(
-      targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
+      targetData.inputs || (DEFAULT_INPUTS as any),
       namedInputs
     );
   return { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets };
@@ -414,7 +464,8 @@ export function expandSingleProjectInputs(
         (d as any).runtime ||
         (d as any).externalDependencies ||
         (d as any).dependentTasksOutputFiles ||
-        (d as any).workingDirectory
+        (d as any).workingDirectory ||
+        (d as any).json
       ) {
         expanded.push(d);
       } else {

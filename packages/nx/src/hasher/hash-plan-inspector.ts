@@ -49,7 +49,6 @@ export class HashPlanInspector {
     );
     this.inspector = new NativeHashPlanInspector(
       externalReferences.allWorkspaceFiles,
-      this.projectGraphRef,
       externalReferences.projectFiles,
       this.workspaceRootPath
     );
@@ -62,7 +61,7 @@ export class HashPlanInspector {
     projectNames: string[],
     targets: string[],
     configuration?: string,
-    overrides: Object = {},
+    overrides: Record<string, unknown> = {},
     extraTargetDependencies: TargetDependencies = {},
     excludeTaskDependencies: boolean = false
   ) {

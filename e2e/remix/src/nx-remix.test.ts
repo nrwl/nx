@@ -14,7 +14,13 @@ describe('Remix E2E Tests', () => {
   describe('--integrated (npm)', () => {
     beforeAll(() => {
       newProject({
-        packages: ['@nx/remix', '@nx/react'],
+        packages: [
+          '@nx/remix',
+          '@nx/react',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/eslint',
+        ],
         packageManager: 'npm',
       });
     });
@@ -31,12 +37,20 @@ describe('Remix E2E Tests', () => {
       );
 
       await runCommandAsync('npm install');
-    }, 120000);
+    }, 600_000);
   });
   describe('--integrated (yarn)', () => {
     beforeAll(async () => {
       newProject({
-        packages: ['@nx/remix', '@nx/react', '@nx/js'],
+        packages: [
+          '@nx/remix',
+          '@nx/react',
+          '@nx/js',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/jest',
+          '@nx/eslint',
+        ],
         packageManager: 'yarn',
       });
     });
@@ -57,7 +71,7 @@ describe('Remix E2E Tests', () => {
 
       const testResult = runCLI(`test ${plugin}`);
       expect(testResult).toContain('Successfully ran target test');
-    }, 120000);
+    }, 600_000);
 
     describe('--directory', () => {
       it('should create src in the specified directory', async () => {

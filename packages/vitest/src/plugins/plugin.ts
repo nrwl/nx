@@ -1,27 +1,31 @@
 import {
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  normalizePath,
   ProjectConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { getLockFileName } from '@nx/js';
+import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
+import {
+  walkTsconfigExtendsChain,
+  type RawTsconfigJsonCache,
+} from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative } from 'node:path';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-
-const pmc = getPackageManagerCommand();
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -46,19 +50,6 @@ type VitestTargets = Pick<
   'targets' | 'metadata' | 'projectType'
 >;
 
-function readTargetsCache(cachePath: string): Record<string, VitestTargets> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(
-  cachePath,
-  results?: Record<string, VitestTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
  */
@@ -68,16 +59,19 @@ export const createDependencies: CreateDependencies = () => {
 
 const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodes: CreateNodesV2<VitestPluginOptions> = [
+export const createNodes: CreateNodes<VitestPluginOptions> = [
   vitestConfigGlob,
   async (configFilePaths, options, context) => {
+    const pmc = getPackageManagerCommand(
+      detectPackageManager(context.workspaceRoot)
+    );
     const optionsHash = hashObject(options);
     const normalizedOptions = normalizeOptions(options);
     const cachePath = join(
       workspaceDataDirectory,
       `vitest-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<VitestTargets | null>(cachePath);
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
       configFilePaths.reduce(
@@ -101,11 +95,18 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
     const lockfile = getLockFileName(
       detectPackageManager(context.workspaceRoot)
     );
+    const tsconfigChainsByProjectRoot = collectTsconfigInputsByProjectRoot(
+      projectRoots,
+      context.workspaceRoot
+    );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       normalizedOptions,
       context,
-      projectRoots.map((r) => [lockfile])
+      projectRoots.map((root) => [
+        lockfile,
+        ...(tsconfigChainsByProjectRoot.get(root) ?? []),
+      ])
     );
 
     try {
@@ -118,13 +119,26 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
           // Adding the config file path to the hash ensures that the final hash value is different
           // for different config files.
           const hash = hashes[idx] + configFile;
-          const { projectType, metadata, targets } = (targetsCache[hash] ??=
-            await buildVitestTargets(
+          if (!targetsCache.has(hash)) {
+            const result = await buildVitestTargets(
               configFile,
               projectRoot,
               normalizedOptions,
-              context
-            ));
+              context,
+              pmc,
+              tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+            );
+            // Cache the result even when it's null (a root orchestrator config)
+            // so the config isn't re-resolved on every project-graph build.
+            targetsCache.set(hash, result);
+          }
+          const cached = targetsCache.get(hash);
+          // `buildVitestTargets` returns null for a root orchestrator config
+          // that must not become a project; register no node for it.
+          if (!cached) {
+            return { projects: {} };
+          }
+          const { projectType, metadata, targets } = cached;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
@@ -144,7 +158,7 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -155,8 +169,10 @@ async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitestPluginOptions,
-  context: CreateNodesContextV2
-): Promise<VitestTargets> {
+  context: CreateNodesContext,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  tsconfigInputs: string[]
+): Promise<VitestTargets | null> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath
@@ -206,12 +222,18 @@ async function buildVitestTargets(
     'build'
   );
 
-  // If this is a root workspace config file with projects property, don't infer targets.
-  // The root config is just an orchestrator - the actual tests live in the individual project configs.
+  // A root config that aggregates project configs via `test.projects` is just an
+  // orchestrator; the actual tests live in the individual project configs. Skip it
+  // entirely so it does not register a project rooted at the workspace root (which
+  // would, for example, make `nx format` treat the whole workspace as one project).
   const isWorkspaceRoot = projectRoot === '.';
-  const hasProjectsProperty = Array.isArray(viteBuildConfig?.test?.projects);
+  // TODO(jack): Remove this cast when @nx/vitest switches to moduleResolution:
+  // "nodenext". Vite 8's rolldown types break vitest's test augmentation.
+  const hasProjectsProperty = Array.isArray(
+    (viteBuildConfig as any)?.test?.projects
+  );
   if (isWorkspaceRoot && hasProjectsProperty) {
-    return { targets: {}, metadata: {}, projectType: 'library' };
+    return null;
   }
 
   let metadata: ProjectConfiguration['metadata'] = {};
@@ -228,11 +250,16 @@ async function buildVitestTargets(
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
+    const isTypecheckEnabled = !!(viteBuildConfig as any)?.test?.typecheck
+      ?.enabled;
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
       projectRoot,
-      options.testMode
+      options.testMode,
+      pmc,
+      isTypecheckEnabled,
+      tsconfigInputs
     );
 
     if (options.ciTargetName) {
@@ -332,21 +359,48 @@ async function testTarget(
   },
   outputs: string[],
   projectRoot: string,
-  testMode: 'watch' | 'run' = 'watch'
+  testMode: 'watch' | 'run' = 'watch',
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  isTypecheckEnabled: boolean,
+  tsconfigInputs: string[]
 ) {
   const command = testMode === 'run' ? 'vitest run' : 'vitest';
+  const depOutputsGlob = isTypecheckEnabled ? '**/*.{js,d.ts}' : '**/*.js';
   return {
     command,
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
+      // Vitest runs on Vite, which transforms a dependency's sources and
+      // resolves their TypeScript project references. When a dependency's root
+      // tsconfig references its tsconfig.spec.json / tsconfig.storybook.json,
+      // those files are read during resolution, yet the `production` named
+      // input excludes them (so `^production` does not cover them). When
+      // `production` is in use, declare them explicitly so the dependency's
+      // spec/storybook tsconfigs are tracked as inputs.
       ...('production' in namedInputs
-        ? ['default', '^production']
+        ? [
+            'default',
+            '^production',
+            {
+              fileset: '{projectRoot}/tsconfig.spec.json',
+              dependencies: true as const,
+            },
+            {
+              fileset: '{projectRoot}/tsconfig.storybook.json',
+              dependencies: true as const,
+            },
+          ]
         : ['default', '^default']),
+      ...tsconfigInputs.map((f) => ({
+        json: `{workspaceRoot}/${f}`,
+        fields: ['compilerOptions'],
+      })),
       {
         externalDependencies: ['vitest'],
       },
       { env: 'CI' },
+      { dependentTasksOutputFiles: depOutputsGlob, transitive: true },
     ],
     outputs,
     metadata: {
@@ -405,9 +459,9 @@ function normalizeOutputPath(
       return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
@@ -420,9 +474,115 @@ function normalizeOptions(options: VitestPluginOptions): VitestPluginOptions {
   return options;
 }
 
+/**
+ * Collects tsconfig files that Vite's esbuild-based config bundler reads
+ * but are outside the project root (and thus not covered by `default`).
+ *
+ * Vite < 8 uses esbuild's Build API to bundle config files. esbuild walks
+ * UP from the entry point, reading and parsing every `tsconfig.json` in
+ * every ancestor directory plus their `extends` chains. Vite >= 8 uses
+ * rolldown with `tsconfig: false`, but pnpm can resolve different Vite
+ * versions per project, so we always collect — the walk is cheap (cached
+ * JSON reads) and over-declaring inputs for Vite 8 projects is harmless.
+ *
+ * Files already handled elsewhere are excluded:
+ * - Inside the project root → covered by `default` (`{projectRoot}/**\/*`)
+ * - The root tsconfig (tsconfig.base.json or tsconfig.json) → covered by
+ *   the native TsConfiguration hash instruction
+ * - Inside node_modules → invalidated via lockfile
+ * - Outside the workspace → cannot be expressed as inputs
+ */
+function collectTsconfigInputsByProjectRoot(
+  projectRoots: string[],
+  workspaceRoot: string
+): Map<string, string[]> {
+  const jsonCache: RawTsconfigJsonCache = new Map();
+  const result = new Map<string, string[]>();
+
+  const rootTsConfigName = getRootTsConfigFileName();
+
+  for (const projectRoot of projectRoots) {
+    if (projectRoot === '.') continue;
+
+    const outside: string[] = [];
+    const seen = new Set<string>();
+    const projectPrefix = `${projectRoot}/`;
+
+    const collect = (absolutePath: string) => {
+      const wsRelative = relative(workspaceRoot, absolutePath)
+        .split(sep)
+        .join('/');
+      if (seen.has(wsRelative)) return;
+      seen.add(wsRelative);
+      if (wsRelative.startsWith('../') || wsRelative === '..') return;
+      if (
+        wsRelative.startsWith('node_modules/') ||
+        wsRelative.includes('/node_modules/')
+      )
+        return;
+      if (wsRelative === projectRoot || wsRelative.startsWith(projectPrefix))
+        return;
+      if (wsRelative === rootTsConfigName) return;
+      outside.push(wsRelative);
+    };
+
+    // 1. Walk the project tsconfig's extends chain
+    const projectTsconfig = join(workspaceRoot, projectRoot, 'tsconfig.json');
+    if (existsSync(projectTsconfig)) {
+      walkTsconfigExtendsChain(
+        projectTsconfig,
+        (absPath) => {
+          collect(absPath);
+          return 'continue';
+        },
+        { jsonCache }
+      );
+    }
+
+    // 2. Walk UP ancestor directories (esbuild reads every tsconfig.json
+    //    between the entry point and the filesystem root)
+    let dir = dirname(projectRoot);
+    while (dir && dir !== '.') {
+      const ancestorTsconfig = join(workspaceRoot, dir, 'tsconfig.json');
+      if (existsSync(ancestorTsconfig)) {
+        walkTsconfigExtendsChain(
+          ancestorTsconfig,
+          (absPath) => {
+            collect(absPath);
+            return 'continue';
+          },
+          { jsonCache }
+        );
+      }
+      const parent = dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+
+    // 3. Check the workspace root itself (dirname loop above stops at '.')
+    const rootTsconfig = join(workspaceRoot, 'tsconfig.json');
+    if (existsSync(rootTsconfig)) {
+      walkTsconfigExtendsChain(
+        rootTsconfig,
+        (absPath) => {
+          collect(absPath);
+          return 'continue';
+        },
+        { jsonCache }
+      );
+    }
+
+    if (outside.length > 0) {
+      result.set(projectRoot, outside);
+    }
+  }
+
+  return result;
+}
+
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
@@ -450,9 +610,13 @@ async function getTestPathsRelativeToProjectRoot(
   });
   const relevantTestSpecifications =
     await vitest.getRelevantTestSpecifications();
+  // Sort to keep atomized target name insertion order stable.
+  // vitest.getRelevantTestSpecifications uses tinyglobby internally,
+  // which does not sort its filesystem traversal output.
   return relevantTestSpecifications
     .filter((ts) =>
       fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
-    .map((ts) => relative(projectRoot, ts.moduleId));
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)))
+    .sort();
 }

@@ -21,9 +21,49 @@ export default defineConfig({
       import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
       export default defineConfig({
           e2e: nxE2EPreset(__filename),
-          component: nxComponentTestingPreset(__filename)
+          component: nxComponentTestingPreset(import.meta.url)
       });"
     `);
+  });
+
+  it('should disable justInTimeCompile for webpack on Cypress 14+', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    expect(actual).toContain('...nxComponentTestingPreset(import.meta.url)');
+    expect(actual).toContain('justInTimeCompile: false');
+  });
+
+  it('should not disable justInTimeCompile for the vite bundler', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'vite' },
+      '@nx/react/plugins/component-testing',
+      15
+    );
+    expect(actual).not.toContain('justInTimeCompile');
+  });
+
+  it('should not disable justInTimeCompile on Cypress < 14', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({});
+`,
+      { bundler: 'webpack' },
+      '@nx/react/plugins/component-testing',
+      13
+    );
+    expect(actual).not.toContain('justInTimeCompile');
   });
 
   it('should add e2e config to existing CT config', async () => {
@@ -47,7 +87,7 @@ export default defineConfig({
       export default defineConfig({
           component: nxComponentTestingPreset(__filename),
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.url, {
                   "cypressDir": "cypress"
               })
           }
@@ -139,7 +179,7 @@ export default defineConfig({
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       export default defineConfig({
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.url, {
                   "cypressDir": "cypress"
               }),
               baseUrl: 'https://example.com'
@@ -172,7 +212,7 @@ export default defineConfig({
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       export default defineConfig({
           e2e: {
-              ...nxE2EPreset(__filename, {
+              ...nxE2EPreset(import.meta.url, {
                   "cypressDir": "cypress",
                   "webServerCommands": {
                       "default": "my-app:serve",
@@ -252,6 +292,69 @@ Cypress.Commands.add('mount', customMount);
       Cypress.Commands.add('mount', customMount);
       "
     `);
+  });
+
+  it('should prepend a CJS require when the config uses module.exports', async () => {
+    const actual = await addDefaultCTConfig(
+      `const { defineConfig } = require('cypress');
+module.exports = defineConfig({});
+`,
+      {},
+      '@nx/angular/plugins/component-testing'
+    );
+    expect(actual).toMatchInlineSnapshot(`
+      "const { nxComponentTestingPreset } = require('@nx/angular/plugins/component-testing');
+      const { defineConfig } = require('cypress');
+      module.exports = defineConfig({
+          component: nxComponentTestingPreset(__filename)
+      });"
+    `);
+  });
+
+  it('should prepend an ESM import when the config uses export default', async () => {
+    const actual = await addDefaultCTConfig(
+      `import { defineConfig } from 'cypress';
+export default defineConfig({});
+`,
+      {},
+      '@nx/react/plugins/component-testing'
+    );
+    expect(actual).toMatchInlineSnapshot(`
+      "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+      import { defineConfig } from 'cypress';
+      export default defineConfig({
+          component: nxComponentTestingPreset(import.meta.url)
+      });"
+    `);
+  });
+
+  it('should pass presetImportPath through verbatim', async () => {
+    // No auto-suffixing: @nx/react and @nx/angular only export the bare
+    // `./plugins/component-testing` subpath; appending `.js` would break
+    // strict ESM resolution with ERR_PACKAGE_PATH_NOT_EXPORTED.
+    const actual = await addDefaultCTConfig(
+      `const { defineConfig } = require('cypress');
+module.exports = defineConfig({});
+`,
+      {},
+      '@nx/next/plugins/component-testing'
+    );
+    expect(actual).toMatch(
+      /^const \{ nxComponentTestingPreset \} = require\('@nx\/next\/plugins\/component-testing'\);/
+    );
+    expect(actual).not.toMatch(/component-testing\.js/);
+  });
+
+  it('should not prepend any import when presetImportPath is omitted', async () => {
+    const actual = await addDefaultCTConfig(
+      `const { defineConfig } = require('cypress');
+module.exports = defineConfig({});
+`,
+      {}
+    );
+    expect(actual).not.toMatch(
+      /nxComponentTestingPreset.*require|import.*nxComponentTestingPreset/
+    );
   });
 });
 

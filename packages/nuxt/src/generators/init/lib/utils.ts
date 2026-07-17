@@ -20,7 +20,7 @@ export async function updateDependencies(host: Tree, schema: InitSchema) {
       '@nx/vite': nxVersion,
     },
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 

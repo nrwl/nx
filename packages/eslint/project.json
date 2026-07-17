@@ -3,51 +3,13 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/eslint",
   "projectType": "library",
+  "implicitDependencies": ["eslint-plugin"],
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/eslint/README.md"],
-      "command": "node ./scripts/copy-readme.js eslint"
-    },
-    "legacy-post-build": {
-      "executor": "@nx/workspace-plugin:legacy-post-build",
-      "options": {
-        "tsConfig": "./tsconfig.lib.json",
-        "assets": [
-          {
-            "input": "packages/eslint",
-            "glob": "**/files/**",
-            "output": "/"
-          },
-          {
-            "input": "packages/eslint",
-            "glob": "**/files/**/.gitkeep",
-            "output": "/"
-          },
-          {
-            "input": "packages/eslint",
-            "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
-            "output": "/"
-          },
-          {
-            "input": "packages/eslint",
-            "glob": "**/*.js",
-            "ignore": ["**/jest.config.js"],
-            "output": "/"
-          },
-          {
-            "input": "packages/eslint",
-            "glob": "**/*.d.ts",
-            "output": "/"
-          },
-          {
-            "input": "",
-            "glob": "LICENSE",
-            "output": "/"
-          }
-        ]
-      }
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js eslint packages/eslint/readme-template.md packages/eslint/README.md",
+      "inputs": ["copyReadme"],
+      "dependsOn": ["^build", "build-base"]
     }
-  },
-  "implicitDependencies": ["eslint-plugin"]
+  }
 }

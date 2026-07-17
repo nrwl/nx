@@ -1,6 +1,6 @@
 import { names } from '@nx/devkit';
 import type { Tree } from '@nx/devkit';
-import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import type { AggregatedLog } from '@nx/devkit/internal';
 
 export function processRunOptions(
   _tree: Tree,
