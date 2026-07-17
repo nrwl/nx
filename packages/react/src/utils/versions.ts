@@ -53,8 +53,8 @@ export const typesExpressVersion = '^4.17.21';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
-export const moduleFederationNodeVersion = '^2.7.21';
-export const moduleFederationEnhancedVersion = '^2.1.0';
+export const moduleFederationNodeVersion = '^2.7.47';
+export const moduleFederationEnhancedVersion = '^2.8.0';
 
 // style preprocessors
 export const sassVersion = '^1.97.2';

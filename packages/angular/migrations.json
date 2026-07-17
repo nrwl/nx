@@ -1565,7 +1565,7 @@
           "alwaysAddToPackageJson": false
         },
         "@module-federation/node": {
-          "version": "^2.7.21",
+          "version": "^2.7.47",
           "alwaysAddToPackageJson": false
         }
       }
@@ -1981,11 +1981,11 @@
       },
       "packages": {
         "@module-federation/enhanced": {
-          "version": "^2.1.0",
+          "version": "^2.8.0",
           "alwaysAddToPackageJson": false
         },
         "@module-federation/node": {
-          "version": "^2.7.21",
+          "version": "^2.7.47",
           "alwaysAddToPackageJson": false
         }
       }
