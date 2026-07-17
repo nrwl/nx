@@ -9,8 +9,10 @@
 # what the repo actually uses. java + dotnet are required because nx dogfoods the
 # @nx/dotnet and @nx/gradle plugins in its own project graph.
 #
-# Build from the repo root so mise.toml is in the build context:
-#   docker build -t nx-review-sandbox:latest -f tools/review-sandbox/Dockerfile .
+# Build from a MINIMAL context (only mise.toml) — not the repo root, which would ship the
+# whole monorepo (node_modules/.git/dist) to the daemon:
+#   mkdir -p tmp/review-sandbox-ctx && cp mise.toml tmp/review-sandbox-ctx/
+#   docker build -t nx-review-sandbox:latest -f tools/review-sandbox/Dockerfile tmp/review-sandbox-ctx
 FROM debian:bookworm-slim
 
 # System libraries mise-managed tools do NOT provide:
