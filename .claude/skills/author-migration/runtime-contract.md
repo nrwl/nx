@@ -4,7 +4,7 @@ How `nx migrate` actually consumes each key. Source of truth: `packages/nx/src/c
 
 ## Migration entries (`generators` section)
 
-New entries always go under `generators`. Entries under `schematics` run through the Angular Devkit adapter; the fetcher folds them into one map, so the section, not any key, selects the runner.
+New entries always go under `generators`. Entries under `schematics` run through the Angular Devkit adapter: at run time the installed package's migrations.json is re-read unmerged and the section holding the entry selects the runner. (The fetch phase folds both sections into one map, but that only feeds gating, not runner selection.)
 
 | Key                          | Runtime behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -24,7 +24,7 @@ Do not author: `cli` (dead since the runner-by-section change; schema marks it "
 - `string[]` is shorthand for `nextSteps`.
 - `nextSteps`: shown in the end-of-run summary and failure recaps; persisted by Nx Console. The channel for anything a human must do.
 - `agentContext`: injected into the agent prompt as `<advisory_context>` during agentic runs; silently dropped otherwise. Human-relevant content must therefore be duplicated into `nextSteps`.
-- Anything else (including a `GeneratorCallback`) is silently discarded. Installs are handled by the runner diffing package.json around each migration; never return install tasks and never call `installPackagesTask`.
+- Anything else (including a `GeneratorCallback`) is silently discarded. The runner installs by diffing package.json: once after the whole run in the default flow, per migration under `--create-commits` and agentic runs. Never return install tasks and never call `installPackagesTask`.
 
 ## Execution model
 
