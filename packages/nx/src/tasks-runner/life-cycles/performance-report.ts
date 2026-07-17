@@ -24,10 +24,11 @@ const NX_DISTRIBUTE_CTA = 'Distribute across machines with Nx Agents';
 /**
  * A recommendation built from structured parts so the link text comes from the
  * link definition (not a substring scanned out of the assembled report). A part
- * is either literal text or a {@link RecLink}; the renderers below project the
- * same parts to the terminal string, the payload string, and the popup links.
+ * is literal text, a {@link RecLink}, or a {@link RecTaskRows}; the renderers
+ * below project the same parts to the terminal string, the payload string, the
+ * Markdown string, and the popup links.
  */
-type RecPart = string | RecLink;
+type RecPart = string | RecLink | RecTaskRows;
 export type Recommendation = RecPart[];
 
 /**
@@ -43,12 +44,25 @@ interface RecLink {
   href: string;
 }
 
+/**
+ * The critical path's longest tasks as data, so each renderer formats them natively:
+ * the terminal and payload as space-aligned columns, Markdown as a nested list
+ * (HTML collapses space runs, so aligned columns don't survive rendering there).
+ */
+interface RecTaskRows {
+  tasks: Array<{ id: string; duration: number }>;
+}
+
 function phraseLink(phrase: string, taggedUrl: string): RecLink {
   return { visible: phrase, href: taggedUrl };
 }
 
 function isRecLink(part: RecPart): part is RecLink {
-  return typeof part !== 'string';
+  return typeof part !== 'string' && 'href' in part;
+}
+
+function isRecTaskRows(part: RecPart): part is RecTaskRows {
+  return typeof part !== 'string' && 'tasks' in part;
 }
 
 /**
@@ -56,7 +70,22 @@ function isRecLink(part: RecPart): part is RecLink {
  * Links are URL-less (the popup re-links them from {@link PerformanceSummaryPayload.links}).
  */
 export function recommendationToPayloadString(rec: Recommendation): string {
-  return rec.map((part) => (!isRecLink(part) ? part : part.visible)).join('');
+  return rec
+    .map((part) => {
+      if (typeof part === 'string') {
+        return part;
+      }
+      if (isRecLink(part)) {
+        return part.visible;
+      }
+      return taskRowsToText(part);
+    })
+    .join('');
+}
+
+/** Task rows as the text block the terminal and payload embed: newline-led, space-aligned columns. */
+function taskRowsToText(part: RecTaskRows): string {
+  return ['', ...formatTopTaskRows(part.tasks)].join('\n');
 }
 
 /**
@@ -71,8 +100,11 @@ function recommendationToTerminalString(
 ): string {
   return rec
     .map((part) => {
-      if (!isRecLink(part)) {
+      if (typeof part === 'string') {
         return part;
+      }
+      if (isRecTaskRows(part)) {
+        return taskRowsToText(part);
       }
       return hyperlinks
         ? terminalLink(part.visible, part.href)
@@ -252,10 +284,8 @@ const RECOMMENDATIONS: RecommendationCandidate[] = [
     // only multi-line rec). Nothing ran (fully cached) → it doesn't apply.
     isApplicable: (c) => criticalPathBound(c) && c.criticalPathTop.length > 0,
     build: (c) => [
-      [
-        `Speed up or split the longest tasks on the critical path:`,
-        ...formatTopTaskRows(c.criticalPathTop),
-      ].join('\n'),
+      `Speed up or split the longest tasks on the critical path:`,
+      { tasks: c.criticalPathTop },
     ],
   },
 ];
@@ -362,20 +392,24 @@ export function formatReport(s: PerformanceSummary): string {
 
 /**
  * A recommendation as Markdown: every link becomes `[phrase](href)` (no OSC 8, unlike the
- * terminal renderer) — the whole sentence reads as prose and is the link text. The
- * critical-path rec embeds newline-separated, space-aligned task rows; collapse them to
- * `<br>`-joined lines so they render inside the list item.
+ * terminal renderer) — the whole sentence reads as prose and is the link text. Task rows
+ * become a nested list under the recommendation's bullet (space-aligned columns don't
+ * survive HTML's whitespace collapsing).
  */
 function recommendationToMarkdownString(rec: Recommendation): string {
   return rec
-    .map((part) =>
-      !isRecLink(part) ? part : `[${part.visible}](${part.href})`
-    )
-    .join('')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .join('<br>');
+    .map((part) => {
+      if (typeof part === 'string') {
+        return part;
+      }
+      if (isRecLink(part)) {
+        return `[${part.visible}](${part.href})`;
+      }
+      return part.tasks
+        .map((t) => `\n  - \`${t.id}\` — ${formatDuration(t.duration)}`)
+        .join('');
+    })
+    .join('');
 }
 
 /**
