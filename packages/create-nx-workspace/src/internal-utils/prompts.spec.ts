@@ -4,10 +4,6 @@ jest.mock('../utils/ci/is-ci', () => ({
   isCI: jest.fn(() => false),
 }));
 
-jest.mock('../utils/git/git', () => ({
-  isGitAvailable: jest.fn(() => true),
-}));
-
 jest.mock('../utils/ai/ai-output', () => ({
   isAiAgent: jest.fn(() => false),
   detectAiAgentName: jest.fn(() => null),
@@ -16,6 +12,10 @@ jest.mock('../utils/ai/ai-output', () => ({
 jest.mock('enquirer', () => ({
   __esModule: true,
   default: { prompt: jest.fn() },
+}));
+
+jest.mock('../utils/output', () => ({
+  output: { warn: jest.fn(), log: jest.fn() },
 }));
 
 describe('determineTemplate', () => {
@@ -109,5 +109,22 @@ describe('confirmThirdPartyPreset', () => {
       confirmThirdPartyPreset('@my-org/nx-plugin', true)
     ).resolves.toBe(true);
     expect(enquirer.prompt).not.toHaveBeenCalled();
+  });
+
+  it('skips prompt and warning when trusted flag is set', async () => {
+    const { output } = require('../utils/output');
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', true, true)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+    expect(output.warn).not.toHaveBeenCalled();
+  });
+
+  it('still prompts when trusted flag is false', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({ confirm: 'Yes' });
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', true, false)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
   });
 });

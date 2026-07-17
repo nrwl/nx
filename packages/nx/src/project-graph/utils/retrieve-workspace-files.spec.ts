@@ -7,9 +7,9 @@ import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
 import {
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
 } from '../plugins';
 
 describe('retrieve-workspace-files', () => {
@@ -140,13 +140,13 @@ function createTestPlugin(name: string, pattern: string): LoadedNxPlugin {
   return new LoadedNxPlugin(
     {
       name,
-      createNodesV2: [
+      createNodes: [
         pattern,
         async (
-          projectFiles: string[],
+          projectFiles: readonly string[],
           _,
-          context: CreateNodesContextV2
-        ): Promise<CreateNodesResultV2> => {
+          context: CreateNodesContext
+        ): Promise<CreateNodesResultArray> => {
           return await createNodesFromFiles(
             async (configFile, options, context) => {
               const fullPath = join(context.workspaceRoot, configFile);

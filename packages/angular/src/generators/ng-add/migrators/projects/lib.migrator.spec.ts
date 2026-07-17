@@ -9,7 +9,6 @@ import {
   readProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { normalizeTargetDefaults } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { MigrationProjectConfiguration } from '../../utilities';
 import { LibMigrator } from './lib.migrator';
@@ -1330,9 +1329,7 @@ describe('lib migrator', () => {
 
       const { targetDefaults } = readNxJson(tree);
       expect(
-        normalizeTargetDefaults(targetDefaults)
-          .filter((entry) => entry.cache && entry.target)
-          .map((entry) => entry.target)
+        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
       ).toStrictEqual([
         'build',
         'lint',
@@ -1360,9 +1357,7 @@ describe('lib migrator', () => {
 
       const { targetDefaults } = readNxJson(tree);
       expect(
-        normalizeTargetDefaults(targetDefaults)
-          .filter((entry) => entry.cache && entry.target)
-          .map((entry) => entry.target)
+        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
       ).toStrictEqual(['build', 'lint', 'myCustomTest']);
     });
   });

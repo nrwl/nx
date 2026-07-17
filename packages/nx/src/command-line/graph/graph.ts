@@ -301,7 +301,7 @@ export async function generateGraph(
       output.warn({
         title: `${
           errors?.length > 1 ? `${errors.length} errors` : `An error`
-        } occured while processing the project graph. Showing partial graph.`,
+        } occurred while processing the project graph. Showing partial graph.`,
       });
     }
   }

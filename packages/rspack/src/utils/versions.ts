@@ -1,4 +1,5 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+export const nxVersion = require(join('@nx/rspack', 'package.json')).version;
 
 export const minSupportedRspackVersion = '1.0.0';
 
@@ -7,10 +8,9 @@ export const sassLoaderVersion = '^16.0.7';
 export const sassEmbeddedVersion = '^1.97.2';
 export const reactRefreshVersion = '~0.14.0';
 
-// Supported `@rspack/core` majors. Currently v1 only — v2 ships as pure
-// ESM, which @nx/rspack (CommonJS) cannot consume without a deeper
-// refactor; tracked separately.
-export const supportedRspackMajorVersions = [1] as const;
+// Supported `@rspack/core` majors. v2 is the latest; v1 stays in the
+// window for backward compatibility per the multi-version policy.
+export const supportedRspackMajorVersions = [2, 1] as const;
 export type SupportedRspackMajorVersion =
   (typeof supportedRspackMajorVersions)[number];
 
@@ -21,16 +21,21 @@ type RspackVersionMap = {
 };
 
 export const latestRspackVersions: RspackVersionMap = {
-  rspackCoreVersion: '1.6.8',
-  rspackDevServerVersion: '^1.1.4',
-  rspackPluginReactRefreshVersion: '^1.0.0',
+  rspackCoreVersion: '2.0.4',
+  rspackDevServerVersion: '^2.0.1',
+  rspackPluginReactRefreshVersion: '^2.0.0',
 };
 
 export const backwardCompatibleRspackVersions: Record<
   SupportedRspackMajorVersion,
   RspackVersionMap
 > = {
-  1: latestRspackVersions,
+  2: latestRspackVersions,
+  1: {
+    rspackCoreVersion: '1.6.8',
+    rspackDevServerVersion: '^1.1.4',
+    rspackPluginReactRefreshVersion: '^1.0.0',
+  },
 };
 
 /**

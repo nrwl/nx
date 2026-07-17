@@ -5,7 +5,10 @@ import {
   TargetConfiguration,
   TargetMetadata,
 } from '../../../config/workspace-json-project-json';
-import { recordSourceMapKeysByIndex } from './source-maps';
+import {
+  recordSourceMapKeysByIndex,
+  recordTargetIdentitySourceMapInfo,
+} from './source-maps';
 
 import type { SourceInformation } from './source-maps';
 import {
@@ -369,6 +372,10 @@ function mergeConfigurations<T extends Object>(
  * @param projectConfigSourceMap The source map to be filled with metadata about where each property came from
  * @param sourceInformation The metadata about where the new target was defined
  * @param targetIdentifier The identifier for the target to merge, used for source map
+ * @param deferSpreadsWithoutBase Whether a `'...'` spread with no base value is preserved
+ * for a later merge layer to resolve (default), or expanded against the empty base and
+ * dropped. Pass `false` only for a final merge whose result is consumed directly rather
+ * than merged onto a lower-priority base.
  * @returns A merged target configuration
  */
 export function mergeTargetConfigurations(
@@ -377,7 +384,7 @@ export function mergeTargetConfigurations(
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
   targetIdentifier?: string,
-  deferSpreadsWithoutBase?: boolean
+  deferSpreadsWithoutBase: boolean = true
 ): TargetConfiguration {
   const {
     configurations: defaultConfigurations,
@@ -527,9 +534,17 @@ export function mergeTargetConfigurations(
     }
   }
 
-  // Update source map once after loop
+  // Update source map once after loop. Real plugins win last, but a target
+  // default — which only stamps fields onto an existing target and never
+  // authors its existence — must not steal the node key from the plugin that
+  // introduced the target. An incompatible replace clears these keys above, so
+  // a replacing real plugin still re-owns the node.
   if (projectConfigSourceMap) {
-    projectConfigSourceMap[targetIdentifier] = sourceInformation;
+    recordTargetIdentitySourceMapInfo(
+      projectConfigSourceMap,
+      targetIdentifier,
+      sourceInformation
+    );
   }
 
   // merge options if there are any

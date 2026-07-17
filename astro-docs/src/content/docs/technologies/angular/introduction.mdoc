@@ -1,6 +1,6 @@
 ---
-title: Angular Plugin for Nx
-description: Use @nx/angular to create, run, and maintain Angular applications and libraries in an Nx workspace.
+title: Nx with Angular
+description: Nx scales your Angular monorepo with caching, distributed task execution, and affected-only builds.
 keywords: [angular]
 sidebar:
   label: Introduction
@@ -9,9 +9,28 @@ weight: 2
 filter: 'type:References'
 ---
 
-[Angular](https://angular.dev) is a framework for building web applications. Nx has first party support for Angular projects. If you're familiar with the Angular CLI, `ng`, then Nx CLI will feel very familiar.
-The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx. With Nx, each project has its own configuration instead of a single `angular.json` file, making it more scalable for monorepos.
+[Angular](https://angular.dev) is a framework for building web applications, and Nx is the platform for scaling your Angular monorepo. Nx has first party support for Angular projects, so if you're familiar with the Angular CLI, `ng`, then the Nx CLI will feel very familiar.
+The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx. With Nx, each project has its own configuration instead of a single `angular.json` file, making it more scalable for Angular monorepos.
 You can use Angular with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
+
+## Why Nx instead of the Angular CLI?
+
+Nx does everything the Angular CLI does, and adds monorepo support, enforced module boundaries, task caching, and CI acceleration through [Nx Cloud](/docs/getting-started/nx-cloud).
+
+| Feature                                                                | Angular CLI | Nx            |
+| ---------------------------------------------------------------------- | ----------- | ------------- |
+| Generate apps, components, services                                    | ✅          | ✅            |
+| Build, serve, and test projects                                        | ✅          | ✅            |
+| Automated updates with migrations                                      | ✅          | ✅ (Enhanced) |
+| First-class monorepo support                                           | ❌          | ✅            |
+| [Enforced module boundaries](/docs/features/enforce-module-boundaries) | ❌          | ✅            |
+| Interactive project graph                                              | ❌          | ✅            |
+| Build and test only what is affected                                   | ❌          | ✅            |
+| Local and remote caching                                               | ❌          | ✅            |
+| Distributed task execution on CI                                       | ❌          | ✅            |
+| Self-healing CI                                                        | ❌          | ✅            |
+
+For a detailed comparison and migration notes, see [Nx and the Angular CLI](/docs/technologies/angular/guides/nx-and-angular).
 
 ## Requirements
 
@@ -19,7 +38,7 @@ The `@nx/angular` plugin supports the following package versions.
 
 | Package         | Supported Versions |
 | --------------- | ------------------ |
-| `@angular/core` | >= 19.0.0 < 22.0.0 |
+| `@angular/core` | >= 20.0.0 < 23.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -46,14 +65,36 @@ nx show project <your-app-name>
 
 Look for `build`, `serve`, `test`, `lint`, or `e2e` targets generated from `angular.json`.
 
-### Create a new workspace
+### Create an Angular monorepo
+
+Create a new workspace with an Angular application already set up:
 
 ```shell
-npx create-nx-workspace my-org --template=nrwl/angular-template
+npx create-nx-workspace@latest my-org --template=nrwl/angular-template
 ```
 
-{% aside type="tip" title="Angular Tutorial" %}
-For a guided walkthrough, follow the [Learn Nx Tutorial](/docs/getting-started/tutorials/crafting-your-workspace).
+This scaffolds an Nx monorepo with an Angular app and Nx preconfigured for caching, task running, and CI. You grow the monorepo by generating more [applications](#generate-an-angular-application) and [libraries](#generate-an-angular-library), organized by application and by domain:
+
+{% filetree %}
+
+- my-org/
+  - apps/
+    - store/
+    - store-e2e/
+  - libs/
+    - products/
+      - feature-product-list/
+      - data-access/
+    - shared/
+      - ui/
+  - nx.json
+  - package.json
+  - tsconfig.base.json
+
+{% /filetree %}
+
+{% aside type="tip" title="Learn Nx" %}
+For a guided, step-by-step walkthrough of building a monorepo with Nx, follow the [Learn Nx tutorial](/docs/getting-started/tutorials/crafting-your-workspace).
 {% /aside %}
 
 ## Local development
@@ -100,7 +141,7 @@ If you need libraries that build or publish, generate them with build output ena
 See [Set up incremental builds for Angular libraries](/docs/technologies/angular/guides/setup-incremental-builds-angular) for details.
 
 ```shell
-nx g @nx/angular:lib libs/my-lib
+nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib
 ```
 
 ### Set up Module Federation
@@ -123,27 +164,32 @@ nx g @nx/angular:remote apps/login --host=shell
 
 Pass `--dynamic` for [dynamic federation](/docs/technologies/angular/guides/dynamic-module-federation-with-angular) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](/docs/technologies/angular/guides/module-federation-with-ssr).
 
-## CI considerations
+## Structure your Angular monorepo
 
-Run only what changed using the project graph:
+Split each application into small, focused libraries grouped by domain (for example `products`, `checkout`, `shared/ui`). Tag those libraries and [enforce module boundaries](/docs/features/enforce-module-boundaries) to control which libraries can depend on each other. This keeps a growing monorepo maintainable and makes `nx affected` precise.
+
+To decide how to split projects, see [folder structure](/docs/concepts/decisions/folder-structure) and [project size](/docs/concepts/decisions/project-size). For a worked example of organizing Angular apps into feature, UI, data-access, and utility libraries, see [Architecting Angular Applications](/blog/architecting-angular-applications).
+
+## Set up CI for your Angular monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches. Connecting your workspace to Nx Cloud adds:
+
+- [Remote caching](/docs/features/ci-features/remote-cache) to share build and test results across your team and CI machines
+- [Nx Agents](/docs/features/ci-features/distribute-task-execution) to distribute your Angular builds, tests, and lint tasks across machines
+- [Self-healing CI](/docs/features/ci-features/self-healing-ci) to propose fixes for failed tasks directly in your editor or PR
+
+Connect your workspace:
 
 ```shell
-nx affected -t build test lint e2e
+npx nx connect
 ```
 
-Enable remote caching for faster CI runs:
-
-```shell
-nx connect
-```
-
-If you use Angular CLI configurations, define a `ci` configuration in `angular.json` and run tasks with `--configuration=ci` for CI-specific settings.
-
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a sample CI setup.
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 
 {% cardgrid %}
+{% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Nx Agents, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
 {% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/technologies/angular/migration/angular" /%}
 {% linkcard title="Dynamic Module Federation" description="Load Angular remotes at runtime with dynamic federation." href="/docs/technologies/angular/guides/dynamic-module-federation-with-angular" /%}

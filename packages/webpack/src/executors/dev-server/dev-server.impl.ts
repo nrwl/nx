@@ -1,5 +1,4 @@
 import { eachValueFrom } from '@nx/devkit/internal';
-import webpack from 'webpack';
 import {
   ExecutorContext,
   parseTargetString,
@@ -7,7 +6,6 @@ import {
 } from '@nx/devkit';
 
 import { map, tap } from 'rxjs/operators';
-import WebpackDevServer from 'webpack-dev-server';
 
 import { getDevServerOptions } from './lib/get-dev-server-config';
 import {
@@ -113,6 +111,11 @@ export async function* devServerExecutor(
       config.devServer ??= devServer;
     }
   }
+
+  // Lazy-loaded: optional peers absent during project-graph discovery.
+  const webpack = require('webpack') as typeof import('webpack');
+  const WebpackDevServer =
+    require('webpack-dev-server') as typeof import('webpack-dev-server');
 
   return yield* eachValueFrom(
     runWebpackDevServer(config, webpack, WebpackDevServer).pipe(

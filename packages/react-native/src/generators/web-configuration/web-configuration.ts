@@ -11,13 +11,14 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { hasWebpackPlugin } from '@nx/react/src/utils/has-webpack-plugin';
+import { hasWebpackPlugin } from '@nx/react/internal';
 
 import {
   nxVersion,
   reactNativeWebVersion,
   reactNativeSvgWebVersion,
   typesReactDomVersion,
+  assertSupportedReactNativeVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
 import {
@@ -40,6 +41,8 @@ export async function webConfigurationGenerator(
   tree: Tree,
   options: WebConfigurationGeneratorSchema
 ) {
+  assertSupportedReactNativeVersion(tree);
+
   const normalizedSchema = normalizeSchema(tree, options);
 
   const tasks: GeneratorCallback[] = [];
@@ -52,7 +55,9 @@ export async function webConfigurationGenerator(
       {
         'react-native-web': reactNativeWebVersion,
         'react-native-svg-web': reactNativeSvgWebVersion,
-      }
+      },
+      undefined,
+      true
     );
     tasks.push(installTask);
   }
@@ -91,7 +96,9 @@ export async function webConfigurationGenerator(
         {},
         {
           '@types/react-dom': typesReactDomVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
   }
@@ -139,9 +146,9 @@ async function addBundlerConfiguration(
     });
     tasks.push(webpackInitTask);
     if (!normalizedSchema.skipPackageJson) {
-      const { ensureDependencies } = await import(
-        '@nx/webpack/src/utils/ensure-dependencies'
-      );
+      const {
+        ensureDependencies,
+      }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
       tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
     }
 

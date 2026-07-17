@@ -23,6 +23,8 @@ When working on Nx documentation, all documentation content lives in the `astro-
 
 **MANDATORY**: After editing any file in `astro-docs/src/content/`, run the `nx-docs-style-check` skill. No exceptions.
 
+**MANDATORY**: All documentation content must follow `astro-docs/STYLE_GUIDE.md`. vale only enforces its mechanical rules, so check the structural and voice rules yourself.
+
 ### Quick Reference
 
 - Documentation content: `astro-docs/src/content/docs/`

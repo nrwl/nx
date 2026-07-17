@@ -1,7 +1,7 @@
 import {
   addPlugin,
   upsertTargetDefault,
-  normalizeTargetDefaults,
+  findTargetDefault,
 } from '@nx/devkit/internal';
 import {
   type Tree,
@@ -25,6 +25,7 @@ import {
 import { createNodesV2 } from '../../plugins/plugin';
 import { getInstalledViteMajorVersion } from '../../utils/version-utils';
 import { ignoreVitestTempFiles } from '../../utils/ignore-vitest-temp-files';
+import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 
 export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
   // Determine which vite version to install:
@@ -51,7 +52,7 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
       vite: viteVersionToUse,
     },
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 
@@ -73,13 +74,9 @@ export function updateNxJsonSettings(tree: Tree) {
   );
 
   if (!hasPlugin) {
-    const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-      (e) =>
-        e.executor === '@nx/vitest:test' &&
-        e.target === undefined &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+    const existing = findTargetDefault(nxJson.targetDefaults, {
+      executor: '@nx/vitest:test',
+    });
     upsertTargetDefault(tree, nxJson, {
       executor: '@nx/vitest:test',
       cache: existing?.cache ?? true,
@@ -94,6 +91,8 @@ export function updateNxJsonSettings(tree: Tree) {
 }
 
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
+  assertSupportedVitestVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

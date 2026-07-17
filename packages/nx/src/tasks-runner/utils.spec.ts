@@ -154,7 +154,7 @@ describe('utils', () => {
       ).toEqual(['dist']);
     });
 
-    it('should throw when {projectRoot} is used not at the beginning and the value is .', () => {
+    it('should interpolate {projectRoot} = . used not at the beginning by normalizing the path', () => {
       const data = {
         name: 'myapp',
         type: 'app',
@@ -162,19 +162,42 @@ describe('utils', () => {
           root: '.',
           targets: {
             build: {
-              outputs: ['test/{projectRoot}'],
+              outputs: ['{workspaceRoot}/test/{projectRoot}'],
             },
           },
           files: [],
         },
       };
-      expect(() =>
+      expect(
         getOutputsForTargetAndConfiguration(
           task.target,
           task.overrides,
           data as any
         )
-      ).toThrow();
+      ).toEqual(['test']);
+    });
+
+    it('should interpolate {projectRoot} = . used in the middle by normalizing the path', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: '.',
+          targets: {
+            build: {
+              outputs: ['{workspaceRoot}/dist/{projectRoot}/sub'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual(['dist/sub']);
     });
 
     it('should support interpolation based on options', () => {
@@ -1010,6 +1033,23 @@ describe('expandInitiatingTasksThroughNoop', () => {
       projectGraph
     );
     expect([...result].sort()).toEqual(['app:serve', 'app:test']);
+  });
+
+  it('throws a descriptive error when a task references a project missing from the graph', () => {
+    // e.g. a DTE agent whose local graph diverged from the coordinator's
+    const projectGraph = mkProjectGraph({
+      app: { build: { executor: 'nx:run-commands' } },
+    });
+    const taskGraph = mkTaskGraph(['other:build']);
+    expect(() =>
+      expandInitiatingTasksThroughNoop(
+        [taskGraph.tasks['other:build']],
+        taskGraph,
+        projectGraph
+      )
+    ).toThrow(
+      'Task "other:build" references project "other", which does not exist in the project graph.'
+    );
   });
 });
 

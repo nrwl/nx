@@ -199,8 +199,21 @@ function resolveTaskGraphDependencies(
       {}
     );
 
-    const rootId = createTaskId(projectName, targetName, configuration);
-    const directDeps = taskGraph.dependencies[rootId] ?? [];
+    // `createTaskGraph` resolves the target's `defaultConfiguration`, so the real
+    // root task id may carry a `:config` suffix that `createTaskId` with the raw
+    // configuration would omit. Find the root task by (project, target) instead.
+    const rootTask = Object.values(taskGraph.tasks).find(
+      (task) =>
+        task.target.project === projectName && task.target.target === targetName
+    );
+    const rootId =
+      rootTask?.id ?? createTaskId(projectName, targetName, configuration);
+    // Continuous dependencies (e.g. dev servers) live in a separate map but are
+    // direct dependencies just like the entries in `dependencies`.
+    const directDeps = [
+      ...(taskGraph.dependencies[rootId] ?? []),
+      ...(taskGraph.continuousDependencies[rootId] ?? []),
+    ];
     const directDepSet = new Set<string>(directDeps);
 
     const depSourceIndices = directDeps.map((depTaskId) => {

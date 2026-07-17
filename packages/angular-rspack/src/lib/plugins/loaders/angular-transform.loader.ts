@@ -28,9 +28,17 @@ export default function loader(
   ) {
     callback(null, content);
   } else {
-    const { typescriptFileCache } = (this._compilation as NgRspackCompilation)[
-      NG_RSPACK_SYMBOL_NAME
-    ]();
+    const { typescriptFileCache, angularCompilationFailed } = (
+      this._compilation as NgRspackCompilation
+    )[NG_RSPACK_SYMBOL_NAME]();
+
+    if (angularCompilationFailed) {
+      // The Angular compilation failure is already reported as a compilation
+      // error. Emit empty modules instead of raw TS sources that would only
+      // bury it under parser errors.
+      callback(null, '');
+      return;
+    }
 
     const request = this.resourcePath.replace(/^[A-Z]:/, '');
     const normalizedRequest = normalize(request);

@@ -5,9 +5,9 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "command": "node ./scripts/copy-readme.js docker",
+      "command": "node ./scripts/copy-readme.js docker packages/docker/readme-template.md packages/docker/README.md",
       "inputs": ["copyReadme"],
-      "outputs": ["{workspaceRoot}/dist/packages/docker/README.md"]
+      "outputs": ["{projectRoot}/README.md"]
     }
   }
 }

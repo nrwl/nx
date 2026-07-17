@@ -18,9 +18,9 @@ export async function initWebpack(
   });
   tasks.push(webpackInitTask);
   if (!options.skipPackageJson) {
-    const { ensureDependencies } = await import(
-      '@nx/webpack/src/utils/ensure-dependencies'
-    );
+    const {
+      ensureDependencies,
+    }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
     tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
   }
 }

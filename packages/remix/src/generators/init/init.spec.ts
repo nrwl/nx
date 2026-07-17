@@ -1,7 +1,7 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { readJson } from '@nx/devkit';
+import { addDependenciesToPackageJson, readJson } from '@nx/devkit';
 import initGenerator from './init';
 import { remixInitGeneratorInternal } from './init';
 
@@ -25,6 +25,7 @@ describe('Remix Init Generator', () => {
       {
         "@nx/web": "0.0.1",
         "@remix-run/dev": "^2.17.3",
+        "typescript": "~5.9.2",
       }
     `);
 
@@ -79,8 +80,18 @@ describe('Remix Init Generator', () => {
         {
           "@nx/web": "0.0.1",
           "@remix-run/dev": "^2.17.3",
+          "typescript": "~5.9.2",
         }
       `);
     });
+  });
+
+  it('should throw when the workspace declares TypeScript 6', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addDependenciesToPackageJson(tree, {}, { typescript: '~6.0.3' });
+
+    await expect(remixInitGeneratorInternal(tree, {})).rejects.toThrow(
+      /Remix does not support TypeScript 6/
+    );
   });
 });

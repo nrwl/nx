@@ -22,9 +22,20 @@ describe('@nx/expo', () => {
   let libName: string;
 
   beforeAll(() => {
-    newProject({ packages: ['@nx/expo'] });
+    newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/expo',
+        '@nx/jest',
+        '@nx/react',
+        '@nx/rollup',
+        '@nx/storybook',
+      ],
+    });
     appName = uniq('app');
     libName = uniq('lib');
+    // Uses `--e2eTestRunner=cypress`, whose fresh config @nx/cypress now
+    // generates via base-setup templating (no tsquery).
     runCLI(
       `generate @nx/expo:app ${appName} --no-interactive --unitTestRunner=jest --e2eTestRunner=cypress --linter=eslint`
     );

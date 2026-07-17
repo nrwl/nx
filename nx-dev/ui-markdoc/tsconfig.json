@@ -16,7 +16,8 @@
     "noUncheckedIndexedAccess": false,
     "exactOptionalPropertyTypes": false,
     "skipLibCheck": true,
-    "noEmitOnError": false
+    "noEmitOnError": false,
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],

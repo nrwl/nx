@@ -48,6 +48,9 @@ export function startStaticRemotesFileServer(
       `-p=${staticRemotesPort}`,
       `-a=localhost`,
       `--cors`,
+      // disable http caching so a rebuilt static remote is not served stale
+      // from the browser cache (see #27005, which fixed this for the executor)
+      `-c-1`,
     ],
     {
       stdio: 'pipe',

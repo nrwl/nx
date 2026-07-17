@@ -1,12 +1,21 @@
+import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
 import {
+  getTranspiler,
   getTsNodeCompilerOptions,
   isCjsSyntaxError,
   isNativeTypeStripError,
   isRequireInEsmScopeError,
   isTsEsmNamedExportLinkageError,
   isTsEsmSyntaxError,
+  NODENEXT_ESM_RESOLVER_SOURCE,
+  nodeNextEsmResolveHook,
 } from './register';
+
+// Avoid a real swc registration side effect when exercising getTranspiler.
+jest.mock('@swc-node/register/register', () => ({
+  register: () => () => {},
+}));
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
@@ -39,6 +48,99 @@ describe('getTsNodeCompilerOptions', () => {
         lib: ['lib.es2022.d.ts'],
       }).lib
     ).toEqual(['es2022']);
+  });
+});
+
+describe('isNativeStripPreferred', () => {
+  const originalEnv = { ...process.env };
+  const featuresDescriptor = Object.getOwnPropertyDescriptor(
+    process.features,
+    'typescript'
+  );
+
+  function setNativeTypescriptSupport(value: 'strip' | 'transform' | false) {
+    Object.defineProperty(process.features, 'typescript', {
+      value,
+      configurable: true,
+    });
+  }
+
+  function loadIsNativeStripPreferred(): boolean {
+    let result: boolean;
+    jest.isolateModules(() => {
+      result = require('./register').isNativeStripPreferred();
+    });
+    return result;
+  }
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+    if (featuresDescriptor) {
+      Object.defineProperty(process.features, 'typescript', featuresDescriptor);
+    } else {
+      delete (process.features as { typescript?: unknown }).typescript;
+    }
+  });
+
+  it('prefers native strip when the runtime supports it', () => {
+    setNativeTypescriptSupport('strip');
+    delete process.env.NX_PREFER_TS_NODE;
+    delete process.env.NX_PREFER_NODE_STRIP_TYPES;
+    expect(loadIsNativeStripPreferred()).toBe(true);
+  });
+
+  it('does not prefer native strip when the runtime lacks support', () => {
+    setNativeTypescriptSupport(false);
+    delete process.env.NX_PREFER_TS_NODE;
+    delete process.env.NX_PREFER_NODE_STRIP_TYPES;
+    expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+
+  it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', () => {
+    setNativeTypescriptSupport('strip');
+    process.env.NX_PREFER_NODE_STRIP_TYPES = 'false';
+    expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+
+  it('does not prefer native strip when NX_PREFER_TS_NODE is true', () => {
+    setNativeTypescriptSupport('strip');
+    process.env.NX_PREFER_TS_NODE = 'true';
+    delete process.env.NX_PREFER_NODE_STRIP_TYPES;
+    expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+});
+
+describe('getTranspiler', () => {
+  // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
+  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
+    jest.isolateModules(() => {
+      jest.doMock('typescript', () => ({
+        ...jest.requireActual('typescript'),
+        versionMajorMinor: '6.0',
+      }));
+      const { getTranspiler: fresh } =
+        require('./register') as typeof import('./register');
+      const opts: CompilerOptions = {};
+      fresh(opts);
+      expect(opts.ignoreDeprecations).toEqual('6.0');
+    });
+    jest.unmock('typescript');
+  });
+
+  // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
+  it('leaves ignoreDeprecations unset on TypeScript < 6', () => {
+    jest.isolateModules(() => {
+      jest.doMock('typescript', () => ({
+        ...jest.requireActual('typescript'),
+        versionMajorMinor: '5.9',
+      }));
+      const { getTranspiler: fresh } =
+        require('./register') as typeof import('./register');
+      const opts: CompilerOptions = {};
+      fresh(opts);
+      expect(opts.ignoreDeprecations).toBeUndefined();
+    });
+    jest.unmock('typescript');
   });
 });
 
@@ -204,5 +306,170 @@ describe('isTsEsmNamedExportLinkageError', () => {
       false
     );
     expect(isTsEsmNamedExportLinkageError(null, '/x.ts')).toBe(false);
+  });
+});
+
+describe('NodeNext ESM resolve hook (NODENEXT_ESM_RESOLVER_SOURCE)', () => {
+  type ResolveHook = (
+    specifier: string,
+    context: { parentURL?: string },
+    nextResolve: (specifier: string, context?: unknown) => Promise<any>
+  ) => Promise<{ url: string }>;
+
+  let resolve: ResolveHook;
+
+  beforeAll(() => {
+    // Exercise the exact shipped hook source. It's authored as an ESM module
+    // (registered as a `data:` module at runtime), so evaluate it as CommonJS
+    // here - Jest's VM can't honor a `data:` dynamic import without
+    // --experimental-vm-modules.
+    const cjs =
+      NODENEXT_ESM_RESOLVER_SOURCE.replace(
+        'export async function resolve',
+        'async function resolve'
+      ) + '\nmodule.exports = { resolve };';
+    const mod: { exports: { resolve?: ResolveHook } } = { exports: {} };
+    new Function('module', 'exports', cjs)(mod, mod.exports);
+    resolve = mod.exports.resolve!;
+  });
+
+  const TS_PARENT = 'file:///ws/src/index.ts';
+
+  // Mimics Node's default resolver: resolves specifiers in `existing`, throws
+  // ERR_MODULE_NOT_FOUND otherwise. Records every specifier it was asked for.
+  function makeNextResolve(existing: string[]) {
+    const set = new Set(existing);
+    const calls: string[] = [];
+    const nextResolve = async (specifier: string) => {
+      calls.push(specifier);
+      if (set.has(specifier)) {
+        return { url: `file:///resolved/${specifier}`, shortCircuit: true };
+      }
+      throw Object.assign(new Error(`Cannot find module '${specifier}'`), {
+        code: 'ERR_MODULE_NOT_FOUND',
+      });
+    };
+    return { nextResolve, calls };
+  }
+
+  it('rewrites a NodeNext .js specifier to .ts from a TypeScript parent', async () => {
+    const { nextResolve, calls } = makeNextResolve(['./nodes.ts']);
+    const result = await resolve(
+      './nodes.js',
+      { parentURL: TS_PARENT },
+      nextResolve
+    );
+    expect(result.url).toBe('file:///resolved/./nodes.ts');
+    // Tried the original first, then the .ts fallback.
+    expect(calls).toEqual(['./nodes.js', './nodes.ts']);
+  });
+
+  it('rewrites .mjs -> .mts and .cjs -> .cts', async () => {
+    const mjs = makeNextResolve(['./a.mts']);
+    expect(
+      (await resolve('./a.mjs', { parentURL: TS_PARENT }, mjs.nextResolve)).url
+    ).toBe('file:///resolved/./a.mts');
+
+    const cjs = makeNextResolve(['./b.cts']);
+    expect(
+      (await resolve('./b.cjs', { parentURL: TS_PARENT }, cjs.nextResolve)).url
+    ).toBe('file:///resolved/./b.cts');
+  });
+
+  it('does not hijack when the real .js file resolves', async () => {
+    const { nextResolve, calls } = makeNextResolve(['./nodes.js']);
+    const result = await resolve(
+      './nodes.js',
+      { parentURL: TS_PARENT },
+      nextResolve
+    );
+    expect(result.url).toBe('file:///resolved/./nodes.js');
+    // No .ts fallback attempt when the .js resolves.
+    expect(calls).toEqual(['./nodes.js']);
+  });
+
+  it('does not rewrite when the parent is not a TypeScript file', async () => {
+    const { nextResolve, calls } = makeNextResolve(['./nodes.ts']);
+    await expect(
+      resolve(
+        './nodes.js',
+        { parentURL: 'file:///ws/src/index.js' },
+        nextResolve
+      )
+    ).rejects.toMatchObject({ code: 'ERR_MODULE_NOT_FOUND' });
+    expect(calls).toEqual(['./nodes.js']);
+  });
+
+  it('ignores bare (non-relative) specifiers', async () => {
+    const { nextResolve, calls } = makeNextResolve(['pkg/nodes.ts']);
+    await expect(
+      resolve('pkg/nodes.js', { parentURL: TS_PARENT }, nextResolve)
+    ).rejects.toMatchObject({ code: 'ERR_MODULE_NOT_FOUND' });
+    expect(calls).toEqual(['pkg/nodes.js']);
+  });
+
+  it('only rewrites .js/.mjs/.cjs, leaving other extensions untouched', async () => {
+    const { nextResolve, calls } = makeNextResolve(['./data.ts']);
+    await expect(
+      resolve('./data.json', { parentURL: TS_PARENT }, nextResolve)
+    ).rejects.toMatchObject({ code: 'ERR_MODULE_NOT_FOUND' });
+    expect(calls).toEqual(['./data.json']);
+  });
+
+  it('rethrows non-MODULE_NOT_FOUND errors untouched', async () => {
+    const boom = Object.assign(new SyntaxError('boom'), { code: 'ERR_OTHER' });
+    const nextResolve = async () => {
+      throw boom;
+    };
+    await expect(
+      resolve('./nodes.js', { parentURL: TS_PARENT }, nextResolve)
+    ).rejects.toBe(boom);
+  });
+});
+
+// The rewrite logic is exhaustively covered above against the shipped source;
+// these cases only verify the synchronous transcription used by
+// `module.registerHooks()` - `nextResolve` returns/throws synchronously here
+// rather than resolving/rejecting a promise.
+describe('NodeNext ESM resolve hook (nodeNextEsmResolveHook, sync)', () => {
+  const TS_PARENT = 'file:///ws/src/index.ts';
+
+  function makeNextResolve(existing: string[]) {
+    const set = new Set(existing);
+    const nextResolve = (specifier: string) => {
+      if (set.has(specifier)) return { url: `file:///resolved/${specifier}` };
+      throw Object.assign(new Error(`Cannot find module '${specifier}'`), {
+        code: 'ERR_MODULE_NOT_FOUND',
+      });
+    };
+    return nextResolve;
+  }
+
+  it('returns the .ts fallback when the .js specifier is missing', () => {
+    const result = nodeNextEsmResolveHook(
+      './nodes.js',
+      { parentURL: TS_PARENT },
+      makeNextResolve(['./nodes.ts'])
+    );
+    expect(result.url).toBe('file:///resolved/./nodes.ts');
+  });
+
+  it('returns the real .js without a fallback attempt when it resolves', () => {
+    const result = nodeNextEsmResolveHook(
+      './nodes.js',
+      { parentURL: TS_PARENT },
+      makeNextResolve(['./nodes.js'])
+    );
+    expect(result.url).toBe('file:///resolved/./nodes.js');
+  });
+
+  it('rethrows synchronously when no fallback resolves', () => {
+    expect(() =>
+      nodeNextEsmResolveHook(
+        './nodes.js',
+        { parentURL: TS_PARENT },
+        makeNextResolve([])
+      )
+    ).toThrow(expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }));
   });
 });

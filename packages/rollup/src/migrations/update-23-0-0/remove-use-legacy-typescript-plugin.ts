@@ -90,6 +90,11 @@ export default async function (tree: Tree) {
     for (const [targetOrExecutor, targetDefault] of Object.entries(
       nxJson.targetDefaults
     )) {
+      // This migration predates the filtered array value form, so values are
+      // always plain objects here; skip arrays defensively to stay type-safe.
+      if (Array.isArray(targetDefault)) {
+        continue;
+      }
       if (
         !ROLLUP_EXECUTORS.includes(targetOrExecutor) &&
         !ROLLUP_EXECUTORS.includes((targetDefault as any).executor)

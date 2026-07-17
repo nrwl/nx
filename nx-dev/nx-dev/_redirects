@@ -74,7 +74,7 @@
 /ci/distributed-builds /docs/concepts/ci-concepts/parallelization-distribution 301
 /ci/setup-incremental-builds-angular /recipes/angular/setup-incremental-builds-angular 301
 /guides/turbo-and-nx /docs/guides/adopting-nx/from-turborepo 301
-/guides/why-monorepos /docs/concepts/decisions/why-monorepos 301
+/guides/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
 /guides/adding-assets-react /recipes/react/adding-assets 301
 /guides/environment-variables /docs/reference/environment-variables 301
 /guides/performance-profiling /docs/troubleshooting/performance-profiling 301
@@ -490,7 +490,7 @@
 /blog/2023-04-19-nx-cloud-3 /blog/nx-cloud-3-0-faster-more-efficient-modernized 301
 
 # --- decisionsSection ---
-/concepts/more-concepts/why-monorepos /docs/concepts/decisions/why-monorepos 301
+/concepts/more-concepts/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
 /concepts/more-concepts/dependency-management /docs/concepts/decisions/dependency-management 301
 /concepts/more-concepts/code-sharing /docs/concepts/decisions/code-ownership 301
 /concepts/more-concepts/applications-and-libraries /docs/concepts/decisions/project-size 301
@@ -518,13 +518,13 @@
 /recipes/installation/activate-powerpack /docs/enterprise/activate-license 301
 
 # --- manualDTEUpdate ---
-/ci/recipes/enterprise/dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/github-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/circle-ci-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/azure-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/bitbucket-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/gitlab-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/jenkins-dte /docs/guides/nx-cloud/manual-dte 301
+/ci/recipes/enterprise/dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/github-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/circle-ci-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/azure-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/bitbucket-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/gitlab-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/jenkins-dte /docs/guides/nx-cloud/bring-your-own-compute 301
 /showcase/benchmarks/dte /docs/reference/benchmarks/nx-agents 301
 
 # --- cliAndCloudLinkFixes ---
@@ -950,7 +950,7 @@
 /extending-nx /docs/extending-nx 301
 /extending-nx/* /docs/extending-nx/:splat 301
 /features/enhance-AI /docs/features/enhance-ai 301
-/features/maintain-ts-monorepos /docs/features/maintain-typescript-monorepos 301
+/features/maintain-ts-monorepos /docs/technologies/typescript/introduction 301
 /features /docs/features 301
 /features/* /docs/features/:splat 301
 /nx-enterprise /docs/enterprise 301
@@ -1314,8 +1314,8 @@
 /ci/recipes/set-up /docs/guides/nx-cloud/setup-ci 301
 /ci/recipes/set-up/* /docs/guides/nx-cloud/setup-ci 301
 /ci/recipes/security /docs/guides/nx-cloud 301
-/ci/recipes/dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/dte/* /docs/guides/nx-cloud/manual-dte 301
+/ci/recipes/dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/dte/* /docs/guides/nx-cloud/bring-your-own-compute 301
 /ci/recipes/other /docs/guides/nx-cloud/setup-ci 301
 /see-also /docs/getting-started/intro 301
 /see-also/sitemap /docs/getting-started/intro 301

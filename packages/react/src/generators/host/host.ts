@@ -1,4 +1,5 @@
 import { ensureRootProjectName } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
@@ -34,11 +35,14 @@ import {
 } from '../../utils/versions';
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 import { normalizeHostName } from './lib/normalize-host-name';
+import { warnReactHostGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(host);
+  warnReactHostGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeHostName(host, schema.directory, schema.name);
   const options: NormalizedSchema = {
@@ -176,7 +180,9 @@ export async function hostGenerator(
     {
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
-    }
+    },
+    undefined,
+    true
   );
   tasks.push(installTask);
 

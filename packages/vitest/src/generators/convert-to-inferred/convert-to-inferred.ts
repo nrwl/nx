@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import { createNodesV2, VitestPluginOptions } from '../../plugins/plugin';
 import { testPostTargetTransformer } from './lib/test-post-target-transformer';
+import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 
 interface Schema {
   project?: string;
@@ -12,6 +13,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedVitestVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
 
   const migratedProjects =

@@ -35,5 +35,11 @@ export function ensureDependencies(
     devDependencies['sass'] = sassVersion;
   }
 
-  return addDependenciesToPackageJson(tree, dependencies, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    devDependencies,
+    undefined,
+    true
+  );
 }

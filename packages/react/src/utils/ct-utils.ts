@@ -29,7 +29,9 @@ export async function configureCypressCT(
   const projectConfig = readProjectConfiguration(tree, options.project);
   // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
   if (options.buildTarget === undefined) {
-    const { findBuildConfig } = await import('@nx/cypress/internal');
+    const {
+      findBuildConfig,
+    }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
 
     found = await findBuildConfig(tree, {
       project: options.project,
@@ -55,9 +57,11 @@ export async function configureCypressCT(
     }
   }
 
-  const { addDefaultCTConfig, getProjectCypressConfigPath } = await import(
-    '@nx/cypress/internal'
-  );
+  const {
+    addDefaultCTConfig,
+    getProjectCypressConfigPath,
+    getInstalledCypressMajorVersion,
+  }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
 
   const ctConfigOptions: NxComponentTestingOptions = {
     bundler: options.bundler ?? (await getActualBundler(tree, options, found)),
@@ -83,7 +87,8 @@ export async function configureCypressCT(
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigFilePath, 'utf-8'),
     ctConfigOptions,
-    '@nx/react/plugins/component-testing'
+    '@nx/react/plugins/component-testing',
+    getInstalledCypressMajorVersion(tree)
   );
   tree.write(cypressConfigFilePath, updatedCyConfig);
 

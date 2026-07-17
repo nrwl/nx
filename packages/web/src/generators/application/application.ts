@@ -343,7 +343,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
     // Add out-tsc ignore pattern when using TS solution setup
     if (options.isUsingTsSolutionConfig) {
-      const { addIgnoresToLintConfig } = await import('@nx/eslint/internal');
+      // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
+      // exposes the temp install via `Module._initPaths`, which ESM ignores.
+      const {
+        addIgnoresToLintConfig,
+      }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
       addIgnoresToLintConfig(host, options.appProjectRoot, ['**/out-tsc']);
     }
   }
@@ -390,7 +394,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       nxVersion
     );
     ensurePackage('@nx/vitest', nxVersion);
-    const { configurationGenerator } = await import('@nx/vitest/generators');
+    // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,

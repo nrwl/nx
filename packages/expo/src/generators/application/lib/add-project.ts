@@ -54,12 +54,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       packageJson.nx.tags = options.parsedTags;
     }
   } else {
-    addProjectConfiguration(
-      host,
-      options.projectName,
-      projectConfiguration,
-      options.standaloneConfig
-    );
+    addProjectConfiguration(host, options.projectName, projectConfiguration);
   }
 
   if (!options.useProjectJson || options.isTsSolutionSetup) {

@@ -1,4 +1,3 @@
-use arboard::Clipboard;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
@@ -6,7 +5,6 @@ use parking_lot::Mutex;
 use ratatui::layout::{Constraint, Direction, Layout, Size};
 use ratatui::style::Modifier;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -16,6 +14,7 @@ use tracing::debug;
 /// Duration before status messages are automatically cleared
 const STATUS_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_secs(3);
 
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::utils::{
     calculate_actual_duration_ms, format_duration_with_estimate, get_task_status_style,
 };
@@ -25,11 +24,12 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::clipboard::copy_to_clipboard;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchStatus, RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
@@ -352,6 +352,12 @@ impl TuiApp for InlineApp {
         &mut self.core
     }
 
+    fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
+        // Inline doesn't render the report, but record it in shared state so a later
+        // switch to full-screen can pull it up with `p`.
+        self.core.state().lock().set_exit_summary(summary);
+    }
+
     // === Event Handling ===
 
     fn handle_event(
@@ -365,6 +371,13 @@ impl TuiApp for InlineApp {
                 return Ok(false);
             }
             tui::Event::Key(key) => {
+                // A key press is user interaction. Inline mode otherwise records none,
+                // so the run-end auto-exit decision would treat an active inline user
+                // as idle and quit on them. This also clears any pending auto-exit (see
+                // mark_user_interacted); the explicit q / Ctrl-C handlers below re-quit
+                // when the user actually confirms.
+                self.core.mark_user_interacted();
+
                 // If countdown popup is visible, handle countdown-specific keys
                 if self.countdown_popup.is_visible() {
                     match key.code {
@@ -478,12 +491,10 @@ impl TuiApp for InlineApp {
                                 // Unformatted output (no ANSI escape codes)
                                 let output = screen.all_contents();
                                 drop(state); // Release lock before clipboard operations
-                                if let Ok(mut clipboard) = Clipboard::new() {
-                                    if clipboard.set_text(output).is_ok() {
-                                        // Show status message in bottom chrome
-                                        self.status_message =
-                                            Some((String::from("Output copied"), Instant::now()));
-                                    }
+                                if copy_to_clipboard(&output) {
+                                    // Show status message in bottom chrome
+                                    self.status_message =
+                                        Some((String::from("Output copied"), Instant::now()));
                                 }
                             }
                         }
@@ -768,20 +779,19 @@ impl InlineApp {
                     use crate::native::tui::theme::THEME;
                     use ratatui::style::Style;
                     use ratatui::text::Line;
-                    use ratatui::widgets::Paragraph;
 
                     let height = lines_to_render as u16;
 
                     // Call insert_before on the dereferenced Terminal
                     // This only works with inline viewport
                     if let Ok(()) = tui.insert_before(height, |buf| {
-                        // Convert batched scrollback lines to ratatui Lines
-                        let lines: Vec<Line> =
-                            batch.iter().map(|line| Line::from(line.as_str())).collect();
+                        // Convert batched scrollback lines to owned ratatui Lines
+                        let lines: Vec<Line<'static>> =
+                            batch.iter().map(|line| Line::from(line.clone())).collect();
 
                         // Create a paragraph with the buffered scrollback content
                         let paragraph =
-                            Paragraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
+                            NxParagraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
 
                         // Render using the Widget trait
                         use ratatui::widgets::Widget;
@@ -980,7 +990,7 @@ impl InlineApp {
             Span::styled(task_name.clone(), status_style),
         ];
 
-        f.render_widget(Paragraph::new(Line::from(left_spans)), chunks[0]);
+        f.render_widget(NxParagraph::new(Line::from(left_spans)), chunks[0]);
 
         // Build right side: status msg + esc hint + interactive hint (if space) + cloud message (if space) + duration
         let mut right_spans = Vec::new();
@@ -1019,7 +1029,7 @@ impl InlineApp {
                 ));
             }
         }
-        f.render_widget(Paragraph::new(Line::from(right_spans)), chunks[1]);
+        f.render_widget(NxParagraph::new(Line::from(right_spans)), chunks[1]);
     }
 
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
@@ -1044,9 +1054,9 @@ impl InlineApp {
         use crate::native::tui::theme::THEME;
         use ratatui::layout::Alignment;
         use ratatui::style::Style;
-        use ratatui::widgets::{Block, Borders, Paragraph};
+        use ratatui::widgets::{Block, Borders};
 
-        let message = Paragraph::new(" Waiting for tasks to start... ")
+        let message = NxParagraph::new(" Waiting for tasks to start... ")
             .style(Style::default().fg(THEME.secondary_fg))
             .alignment(Alignment::Center)
             .block(Block::default().borders(Borders::NONE));
@@ -1254,6 +1264,27 @@ mod tests {
         // Should dispatch SwitchMode(FullScreen) action
         let action = rx.try_recv().unwrap();
         assert!(matches!(action, Action::SwitchMode(TuiMode::FullScreen)));
+    }
+
+    #[test]
+    fn test_keypress_records_interaction_and_cancels_auto_exit() {
+        // Regression: inline mode recorded no interaction, so the run-end auto-exit
+        // decision treated an active inline user as idle and quit on them. A key press
+        // must mark interaction and clear any already-pending auto-exit countdown.
+        let mut app = create_test_inline_app();
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+
+        // Simulate an auto-exit countdown already scheduled, with no interaction yet.
+        app.core().schedule_quit(std::time::Duration::from_secs(3));
+        assert!(!app.core().state().lock().has_user_interacted());
+
+        // A plain navigation key (not q / Ctrl-C) is interaction.
+        let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('j'), KeyModifiers::NONE));
+        app.handle_event(event, &tx).unwrap();
+
+        assert!(app.core().state().lock().has_user_interacted());
+        assert!(!app.should_quit()); // the pending auto-exit was cancelled
     }
 
     #[test]
@@ -1560,6 +1591,39 @@ mod tests {
             // Should not quit
             assert!(!app.should_quit());
         }
+    }
+
+    #[test]
+    fn test_inline_records_exit_summary_in_shared_state() {
+        // Regression: report was lost when a run ended in inline; it must survive in
+        // shared state for a full-screen switch to re-hydrate from.
+        let task_graph = TaskGraph {
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        let state = Arc::new(Mutex::new(TuiState::new(
+            vec![create_test_task("app1")],
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        )));
+
+        let mut app = InlineApp::with_state(state.clone(), None).unwrap();
+        app.set_exit_summary(PerformanceSummaryPayload::default());
+
+        assert!(!app.countdown_popup.has_summary());
+        assert!(state.lock().exit_summary().is_some());
     }
 
     #[test]

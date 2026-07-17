@@ -15,7 +15,9 @@ import { stripIndents } from 'nx/src/utils/strip-indents';
 describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
-    newProject({ packages: ['@nx/react', '@nx/rspack'] });
+    newProject({
+      packages: ['@nx/react', '@nx/rspack', '@nx/webpack', '@nx/playwright'],
+    });
   });
   afterAll(() => {
     cleanupProject();

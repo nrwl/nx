@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/src/generators/application/schema';
+import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/internal';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
 
 export async function normalizeOptions(
@@ -49,7 +49,6 @@ export function toNodeApplicationGeneratorOptions(
     linter: options.linter,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
-    standaloneConfig: options.standaloneConfig,
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,

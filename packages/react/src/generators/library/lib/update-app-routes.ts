@@ -45,7 +45,9 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
     {
       'react-router-dom': reactRouterDomVersion,
     },
-    {}
+    {},
+    undefined,
+    true
   );
 
   // addBrowserRouterToMain

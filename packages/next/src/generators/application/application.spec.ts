@@ -15,9 +15,17 @@ import { join } from 'path';
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should add a .gitkeep file to the public directory', async () => {
@@ -80,6 +88,7 @@ describe('app', () => {
         '**/*.jsx',
         `../${name}/.next/types/**/*.ts`,
         `../dist/${name}/.next/types/**/*.ts`,
+        'index.d.ts',
         'next-env.d.ts',
       ]);
       expect(tree.exists(`${name}/src/pages/styles.css`)).toBeFalsy();
@@ -89,6 +98,19 @@ describe('app', () => {
       expect(tree.exists(`${name}/src/app/api/hello/route.ts`)).toBeTruthy();
       expect(tree.exists(`${name}/src/app/page.module.css`)).toBeTruthy();
       expect(tree.exists(`${name}/public/favicon.ico`)).toBeTruthy();
+    });
+
+    it('should include the @nx/next style reference in the generated index.d.ts', async () => {
+      const name = uniq();
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+      });
+
+      const content = tree.read(`${name}/index.d.ts`, 'utf-8');
+      expect(content).toContain(
+        '/// <reference types="@nx/next/typings/style.d.ts" />'
+      );
     });
 
     it('should add layout types correctly for standalone apps', async () => {
@@ -108,6 +130,7 @@ describe('app', () => {
         'src/**/*.jsx',
         '.next/types/**/*.ts',
         `dist/${name}/.next/types/**/*.ts`,
+        'index.d.ts',
         'next-env.d.ts',
       ]);
     });
@@ -243,9 +266,12 @@ describe('app', () => {
   it('should set up the nx next build builder', async () => {
     const name = uniq();
 
+    // addPlugin: false -> legacy @nx/next:build executor, which relies on
+    // withNx to redirect the build output to --outputPath.
     await applicationGenerator(tree, {
       directory: name,
       style: 'css',
+      addPlugin: false,
     });
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
@@ -260,7 +286,7 @@ describe('app', () => {
        **/
       const nextConfig = {
         // Use this to set Nx-specific options
-        // See: https://nx.dev/recipes/next/next-config-setup
+        // See: https://nx.dev/docs/technologies/react/next/Guides/next-config-setup
         nx: {},
       };
 
@@ -270,6 +296,30 @@ describe('app', () => {
       ];
 
       module.exports = composePlugins(...plugins)(nextConfig);
+      "
+    `);
+  });
+
+  it('should generate a plain next.config.js for the inferred plugin', async () => {
+    const name = uniq();
+
+    await applicationGenerator(tree, {
+      directory: name,
+      style: 'css',
+      addPlugin: true,
+    });
+
+    expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "//@ts-check
+
+      /** @type {import('next').NextConfig} */
+      const nextConfig = {
+        // Next.js options go here
+        // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
+      };
+
+      module.exports = nextConfig;
       "
     `);
   });
@@ -407,13 +457,13 @@ describe('app', () => {
         const packageJson = readJson(tree, '/package.json');
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '^15.2.4',
-            '@next/eslint-plugin-next': '^15.2.4',
+            'eslint-config-next': '^15.5.18',
+            '@next/eslint-plugin-next': '^15.5.18',
           },
         });
       });
 
-      it('should install eslint-config-next@14 when an existing Next.js 14 project is detected', async () => {
+      it('should install eslint-config-next@15 when an existing Next.js 14 project is detected', async () => {
         tree.write(
           '/package.json',
           JSON.stringify({
@@ -432,15 +482,18 @@ describe('app', () => {
         });
 
         const packageJson = readJson(tree, '/package.json');
+        // Next.js 14 projects get eslint-config-next@15; config 14 only
+        // supports ESLint v8, which is no longer supported.
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '~14.2.26',
-            '@next/eslint-plugin-next': '~14.2.26',
+            'eslint-config-next': '^15.5.18',
+            '@next/eslint-plugin-next': '^15.5.18',
           },
         });
       });
 
       it('should add .eslintrc.json and dependencies', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await applicationGenerator(tree, {
           directory: 'myapp',
           style: 'css',
@@ -504,6 +557,7 @@ describe('app', () => {
 
     describe('root level', () => {
       it('should adjust eslint config for root level projects', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         const name = uniq();
 
         await applicationGenerator(tree, {
@@ -599,6 +653,7 @@ describe('app', () => {
           'src/**/*.jsx',
           '.next/types/**/*.ts',
           `dist/${name}/.next/types/**/*.ts`,
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
@@ -623,6 +678,7 @@ describe('app', () => {
           'app/**/*.jsx',
           '.next/types/**/*.ts',
           `dist/${name}/.next/types/**/*.ts`,
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
@@ -644,12 +700,14 @@ describe('app', () => {
           'pages/**/*.tsx',
           'pages/**/*.js',
           'pages/**/*.jsx',
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
     });
 
     it('should not ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
         directory: 'myapp',
         style: 'css',
@@ -813,6 +871,7 @@ describe('app', () => {
             "src/**/*.jsx",
             "../myapp/.next/types/**/*.ts",
             "../dist/myapp/.next/types/**/*.ts",
+            "index.d.ts",
             "next-env.d.ts",
           ],
         }
@@ -855,6 +914,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "outDir": "out-tsc/cypress",
+            "rootDir": ".",
             "sourceMap": false,
             "types": [
               "cypress",
@@ -956,6 +1016,7 @@ describe('app', () => {
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
         directory: 'myapp',
         style: 'css',

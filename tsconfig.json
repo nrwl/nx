@@ -332,6 +332,9 @@
       "path": "./e2e/maven"
     },
     {
+      "path": "./e2e/module-federation"
+    },
+    {
       "path": "./examples/angular-rspack/module-federation/remote"
     },
     {
@@ -380,5 +383,8 @@
       "path": "./e2e/nx-build"
     }
   ],
-  "extends": "./tsconfig.base.json"
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

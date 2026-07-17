@@ -65,7 +65,9 @@ export async function cypressComponentConfiguration(
   }
 
   if (isZoneless) {
-    const { getInstalledCypressVersion } = await import('@nx/cypress/internal');
+    const {
+      getInstalledCypressVersion,
+    }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
     const installedCypressVersion = getInstalledCypressVersion(tree);
     // Zoneless support was introduced in Cypress 15.8.0
     // If Cypress is not yet installed, we'll install the latest version, which will have zoneless support
@@ -232,9 +234,11 @@ async function configureCypressCT(
     ctConfigOptions.buildTarget = found.target;
   }
 
-  const { addDefaultCTConfig, getProjectCypressConfigPath } = <
-    typeof import('@nx/cypress/internal')
-  >require('@nx/cypress/internal');
+  const {
+    addDefaultCTConfig,
+    getProjectCypressConfigPath,
+    getInstalledCypressMajorVersion,
+  } = <typeof import('@nx/cypress/internal')>require('@nx/cypress/internal');
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
     projectConfig.root
@@ -242,7 +246,8 @@ async function configureCypressCT(
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigPath, 'utf-8'),
     ctConfigOptions,
-    '@nx/angular/plugins/component-testing'
+    '@nx/angular/plugins/component-testing',
+    getInstalledCypressMajorVersion(tree)
   );
   tree.write(cypressConfigPath, updatedCyConfig);
 }

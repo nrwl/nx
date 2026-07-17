@@ -32,6 +32,7 @@ const mockedLogger = { warn: jest.fn() };
 describe('e2e migrator', () => {
   let tree: Tree;
   let migrator: E2eMigrator;
+  let envBackup: string | undefined;
   let mockedInstalledCypressVersion =
     getInstalledCypressMajorVersion as jest.Mock<
       ReturnType<typeof getInstalledCypressMajorVersion>
@@ -66,6 +67,8 @@ describe('e2e migrator', () => {
   }
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // when this migrator is invoked, some of the workspace migration has
@@ -75,6 +78,14 @@ describe('e2e migrator', () => {
     mockedInstalledCypressVersion.mockReturnValue(15);
 
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('validation', () => {
@@ -348,6 +359,8 @@ describe('e2e migrator', () => {
       });
 
       it('should add a lint target when the application is using it', async () => {
+        // migrating an eslintrc-era Angular CLI project, so keep eslintrc output
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         tree.write(joinPathFragments(root, 'e2e/protractor.conf.js'), '');
         const project = addProject('app1', {
           root,

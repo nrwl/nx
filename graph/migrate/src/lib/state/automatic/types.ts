@@ -1,7 +1,6 @@
 // nx-ignore-next-line
-import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-// nx-ignore-next-line
 import { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
+import { MigrationsJsonMetadata } from '../../migration-shape';
 
 export type AutomaticMigrationState = {
   migrations?: MigrationDetailsWithId[];

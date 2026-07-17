@@ -12,7 +12,7 @@ describe('Vue (TS solution)', () => {
 
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/vue'],
+      packages: ['@nx/vue', '@nx/vite', '@nx/vitest', '@nx/playwright'],
       preset: 'ts',
     });
   });

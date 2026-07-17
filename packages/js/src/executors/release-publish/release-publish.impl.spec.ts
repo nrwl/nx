@@ -40,6 +40,7 @@ describe('release-publish executor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockDetectPackageManager.mockReturnValue('npm');
     jest.spyOn(console, 'log').mockImplementation();
     jest.spyOn(console, 'warn').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
@@ -88,6 +89,98 @@ describe('release-publish executor', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  describe('already published error handling', () => {
+    function mockNpmViewNotFound() {
+      mockExecSync.mockImplementationOnce(() => {
+        const error: any = new Error('npm view failed');
+        error.stdout = Buffer.from(
+          JSON.stringify({
+            error: {
+              code: 'E404',
+              summary: 'Not found',
+            },
+          })
+        );
+        error.stderr = Buffer.from('npm ERR! 404 Not Found');
+        throw error;
+      });
+    }
+
+    it('should skip publishing when pnpm reports that the version was previously published', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockNpmViewNotFound();
+      mockExecSync.mockImplementationOnce(() => {
+        const error: any = new Error('pnpm publish failed');
+        error.stdout = Buffer.from(
+          JSON.stringify({
+            error: {
+              code: 'E403',
+              message:
+                'You cannot publish over the previously published versions: 1.0.0.',
+            },
+          })
+        );
+        error.stderr = Buffer.from('');
+        throw error;
+      });
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('has already been published')
+      );
+      expect(console.error).not.toHaveBeenCalledWith('pnpm publish error:');
+    });
+
+    it('should skip publishing when raw publish output says the version was previously published', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockNpmViewNotFound();
+      mockExecSync.mockImplementationOnce(() => {
+        const error: any = new Error('pnpm publish failed');
+        error.stdout = Buffer.from('not json');
+        error.stderr = Buffer.from(
+          'ERR_PNPM_PUBLISH_CONFLICT 403 Forbidden - You cannot publish over the previously published versions: 1.0.0.'
+        );
+        throw error;
+      });
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('has already been published')
+      );
+      expect(console.error).not.toHaveBeenCalledWith('pnpm publish error:');
+    });
+
+    it('should fail when pnpm publish returns a generic 403 error', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockNpmViewNotFound();
+      mockExecSync.mockImplementationOnce(() => {
+        const error: any = new Error('pnpm publish failed');
+        error.stdout = Buffer.from(
+          JSON.stringify({
+            error: {
+              code: 'E403',
+              message: '403 Forbidden - You do not have permission to publish',
+            },
+          })
+        );
+        error.stderr = Buffer.from('');
+        throw error;
+      });
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(false);
+      expect(console.error).toHaveBeenCalledWith('pnpm publish error:');
+      expect(console.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('has already been published')
+      );
+    });
   });
 
   describe('nxReleaseVersionData skip behavior', () => {

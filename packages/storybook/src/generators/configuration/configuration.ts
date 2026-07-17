@@ -13,6 +13,7 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
 import { warnStorybookExecutorGenerating } from '../../utils/deprecation';
+import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 
 import {
   addAngularStorybookTarget,
@@ -36,13 +37,11 @@ import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   getStorybookVersionToInstall,
-  pleaseUpgrade,
   storybookMajorVersion,
 } from '../../utils/utilities';
 import {
   coreJsVersion,
   nxVersion,
-  storybookVersion,
   tsLibVersion,
   tsNodeVersion,
 } from '../../utils/versions';
@@ -61,10 +60,10 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
+  assertSupportedStorybookVersion(tree);
+
   const storybookMajor = storybookMajorVersion(tree);
-  if (storybookMajor > 0 && storybookMajor === 7) {
-    throw new Error(pleaseUpgrade());
-  } else if (storybookMajor === 8) {
+  if (storybookMajor === 8) {
     logger.warn(
       `Support for Storybook 8 is deprecated. Please upgrade to Storybook 9. See https://nx.dev/nx-api/storybook/generators/migrate-9 for more details.`
     );
@@ -225,7 +224,7 @@ export async function configurationGeneratorInternal(
     devDeps['@nx/vite'] = nxVersion;
   }
 
-  tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));
+  tasks.push(addDependenciesToPackageJson(tree, {}, devDeps, undefined, true));
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

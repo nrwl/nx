@@ -9,7 +9,7 @@ import {
 } from './project-configuration/project-nodes-manager';
 import { validateAndNormalizeProjectRootMap } from './project-configuration/target-normalization';
 
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
@@ -34,6 +34,10 @@ import { CreateNodesResult } from '../plugins/public-api';
 import type {
   ConfigurationSourceMaps,
   SourceInformation,
+} from './project-configuration/source-maps';
+import {
+  targetSourceMapKey,
+  TARGET_DEFAULTS_PLUGIN_NAME,
 } from './project-configuration/source-maps';
 
 import { createTargetDefaultsResults } from './project-configuration/target-defaults';
@@ -153,11 +157,10 @@ export async function createProjectConfigurationsWithPlugins(
       name: pluginName,
     },
   ] of allCreateNodesPlugins.entries()) {
-    const [pattern, createNodes] = createNodesTuple;
+    const [, createNodes] = createNodesTuple;
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
       allProjectFiles[index],
-      pattern,
       include,
       exclude
     );
@@ -364,9 +367,7 @@ export function mergeCreateNodesResults(
       intermediateDefaultRootMap,
       project,
       defaultConfigurationSourceMaps,
-      sourceInfo,
-      false,
-      true
+      sourceInfo
     );
   };
 
@@ -431,12 +432,10 @@ export function mergeCreateNodesResults(
     }
   }
 
-  // The intermediate apply may have rebuilt dependsOn / inputs arrays
-  // via spread merges, leaving sentinels inserted against the
-  // intermediate rootMap pointing at now-orphaned arrays. Re-walking
-  // the final merged targets rebinds each encountered sentinel's
-  // `parent` to the current array (see
-  // ProjectNameInNodePropsManager#processInputs / processDependsOn).
+  // The intermediate apply may have rebuilt dependsOn / inputs arrays via
+  // spread merges, introducing name-ref strings that weren't visible in any
+  // single plugin result. Re-walking the final merged targets sentinelizes
+  // them so the final substitution sweep resolves them too.
   nodesManager.registerNameRefs(intermediateDefaultRootMap);
 
   // Overlay default-plugin attribution onto the main source maps using
@@ -450,11 +449,37 @@ export function mergeCreateNodesResults(
   //    above. The stale default-plugin entry in
   //    `defaultConfigurationSourceMaps` must NOT clobber the base
   //    attribution that the specified plugin / TD already recorded.
+  const mainRootMap = nodesManager.getRootMap();
   for (const root in defaultConfigurationSourceMaps) {
     const existing = (configurationSourceMaps[root] ??= {});
     const incoming = defaultConfigurationSourceMaps[root];
+
+    // A default plugin's targets are synthesized into the main rootmap by
+    // target defaults *before* the default layer is applied, so target
+    // defaults wrote the main source map's entry for the target node and its
+    // identity fields first — even though it never authored them (it only
+    // stamps them as a merge guard and cannot bring a target into existence).
+    // The identity fields are the executor/command plus, for run-commands, the
+    // `options.command`/`options.commands` the synthetic copies from the winner
+    // to stay compatible (#36067). For those keys, the real default plugin's
+    // attribution must override the target-defaults stamp.
+    const identityKeys = new Set<string>();
+    for (const targetName in mainRootMap[root]?.targets ?? {}) {
+      const base = targetSourceMapKey(targetName);
+      identityKeys.add(base);
+      identityKeys.add(`${base}.executor`);
+      identityKeys.add(`${base}.command`);
+      identityKeys.add(`${base}.options.command`);
+      identityKeys.add(`${base}.options.commands`);
+    }
+
     for (const key in incoming) {
       if (existing[key] === undefined) {
+        existing[key] = incoming[key];
+      } else if (
+        identityKeys.has(key) &&
+        existing[key][1] === TARGET_DEFAULTS_PLUGIN_NAME
+      ) {
         existing[key] = incoming[key];
       }
     }
@@ -497,36 +522,9 @@ export function mergeCreateNodesResults(
 }
 
 /**
- * Fast matcher for patterns without negations - uses short-circuit evaluation.
- */
-function matchesSimplePatterns(file: string, patterns: string[]): boolean {
-  return patterns.some((pattern) => minimatch(file, pattern, { dot: true }));
-}
-
-/**
- * Full matcher for patterns with negations - processes all patterns sequentially.
- * Patterns starting with '!' are negation patterns that remove files from the match set.
- * Patterns are processed in order, with later patterns overriding earlier ones.
- */
-function matchesNegationPatterns(file: string, patterns: string[]): boolean {
-  // If first pattern is negation, start by matching everything
-  let isMatch = patterns[0].startsWith('!');
-
-  for (const pattern of patterns) {
-    const isNegation = pattern.startsWith('!');
-    const actualPattern = isNegation ? pattern.substring(1) : pattern;
-
-    if (minimatch(file, actualPattern, { dot: true })) {
-      // Last matching pattern wins
-      isMatch = !isNegation;
-    }
-  }
-
-  return isMatch;
-}
-
-/**
- * Creates a matcher function for the given patterns.
+ * Creates a matcher function for the given patterns. Globs are compiled once
+ * here so matching a file list only runs the pre-parsed regex per file, instead
+ * of recompiling every pattern on each call.
  * @param patterns Array of glob patterns (can include negation patterns starting with '!')
  * @param emptyValue Value to return when patterns array is empty
  * @returns A function that checks if a file matches the patterns
@@ -541,37 +539,44 @@ function createMatcher(
 
   const hasNegationPattern = patterns.some((p) => p.startsWith('!'));
 
-  return hasNegationPattern
-    ? (file: string) => matchesNegationPatterns(file, patterns)
-    : (file: string) => matchesSimplePatterns(file, patterns);
+  if (hasNegationPattern) {
+    // Patterns are processed in order, with later matches overriding earlier
+    // ones; a leading negation starts from "matches everything".
+    const compiled = patterns.map((pattern) => {
+      const isNegation = pattern.startsWith('!');
+      return {
+        isNegation,
+        matcher: new Minimatch(isNegation ? pattern.substring(1) : pattern, {
+          dot: true,
+        }),
+      };
+    });
+    const initialMatch = patterns[0].startsWith('!');
+    return (file: string) => {
+      let isMatch = initialMatch;
+      for (const { isNegation, matcher } of compiled) {
+        if (matcher.match(file)) {
+          isMatch = !isNegation;
+        }
+      }
+      return isMatch;
+    };
+  }
+
+  const compiled = patterns.map((p) => new Minimatch(p, { dot: true }));
+  return (file: string) => compiled.some((m) => m.match(file));
 }
 
 export function findMatchingConfigFiles(
   projectFiles: string[],
-  pattern: string,
   include: string[],
   exclude: string[]
 ): string[] {
-  const matchingConfigFiles: string[] = [];
-
-  // Create matchers once, outside the loop
+  // projectFiles already comes from multiGlobWithWorkspaceContext for the
+  // plugin's createNodes pattern, so only include/exclude filters remain here.
   // Empty include means include everything, empty exclude means exclude nothing
   const includes = createMatcher(include, true);
   const excludes = createMatcher(exclude, false);
 
-  for (const file of projectFiles) {
-    if (minimatch(file, pattern, { dot: true })) {
-      if (!includes(file)) {
-        continue;
-      }
-
-      if (excludes(file)) {
-        continue;
-      }
-
-      matchingConfigFiles.push(file);
-    }
-  }
-
-  return matchingConfigFiles;
+  return projectFiles.filter((file) => includes(file) && !excludes(file));
 }

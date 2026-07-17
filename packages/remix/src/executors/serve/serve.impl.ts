@@ -1,6 +1,6 @@
 import { workspaceRoot, type ExecutorContext } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/internal';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import { waitForPortOpen } from '@nx/web/internal';
 import { fork } from 'node:child_process';
 import { join } from 'node:path';
 import { type RemixServeSchema } from './schema';

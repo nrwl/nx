@@ -21,7 +21,7 @@ env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 22.16.0
+  NODE_VERSION: 26.3.0
   PNPM_VERSION: 11.2.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
@@ -190,9 +190,9 @@ jobs:
                 dotnet --version
 
                 # Node.js musl build from unofficial-builds.nodejs.org
-                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v\${NODE_VERSION}/node-v\${NODE_VERSION}-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
-                mv node-v22.16.0-linux-x64-musl /usr/local/node
+                mv node-v\${NODE_VERSION}-linux-x64-musl /usr/local/node
                 export PATH=\"/usr/local/node/bin:\$PATH\"
                 node --version
 
@@ -290,9 +290,9 @@ jobs:
                 # Node.js musl build from unofficial-builds.nodejs.org. Container is x64;
                 # rust cross-compiles to aarch64-unknown-linux-musl, so the host node binary
                 # is x64-musl regardless of the build target.
-                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v\${NODE_VERSION}/node-v\${NODE_VERSION}-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
-                mv node-v22.16.0-linux-x64-musl /usr/local/node
+                mv node-v\${NODE_VERSION}-linux-x64-musl /usr/local/node
                 export PATH=\"/usr/local/node/bin:\$PATH\"
                 node --version
 
@@ -321,7 +321,7 @@ jobs:
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
               pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@22.16.0
+    name: stable - ${{ matrix.settings.target }} - node@26.3.0
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -433,9 +433,8 @@ jobs:
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
-          NX_PREFER_TS_NODE: true
           PLAYWRIGHT_BROWSERS_PATH: 0
-          NODE_VERSION: 22.16.0
+          NODE_VERSION: 26.3.0
           NX_GRADLE_DISABLE: 'true'
           NX_DOTNET_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
@@ -443,7 +442,7 @@ jobs:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS
           shell: bash
           run: |
             env
@@ -620,7 +619,8 @@ jobs:
           pnpm build:wasm
       - name: Publish
         env:
-          VERSION: ${{ needs.resolve-required-data.outputs.version }}
+          # Not named `VERSION` to avoid MSBuild adopting it as $(Version).
+          NX_PUBLISH_VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
         run: |
@@ -628,15 +628,15 @@ jobs:
           # Create and check out the publish branch
           git checkout -b $PUBLISH_BRANCH
           echo ""
-          echo "Version set to: $VERSION"
+          echo "Version set to: $NX_PUBLISH_VERSION"
           echo "DRY_RUN set to: $DRY_RUN"
           echo ""
-          pnpm nx-release --local=false $VERSION $DRY_RUN
+          pnpm nx-release --local=false $NX_PUBLISH_VERSION $DRY_RUN
 
       - name: (Stable Release Only) Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
-        run: npx ts-node -P ./scripts/tsconfig.scripts.json  ./scripts/release-docs.ts
+        run: npx tsx ./scripts/release-docs.ts
 
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr

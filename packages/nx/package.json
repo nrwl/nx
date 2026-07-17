@@ -54,7 +54,7 @@
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@zkochan/js-yaml": "catalog:",
-    "axios": "1.16.0",
+    "axios": "1.16.1",
     "picocolors": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
@@ -80,6 +80,7 @@
     "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
+    "which": "catalog:",
     "yaml": "^2.8.3",
     "yargs": "catalog:",
     "yargs-parser": "catalog:"
@@ -158,7 +159,8 @@
         "package": "@nrwl/nx-cloud",
         "version": "latest"
       }
-    ]
+    ],
+    "supportsOptionalMigrations": true
   },
   "generators": "./generators.json",
   "executors": "./executors.json",

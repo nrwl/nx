@@ -51,6 +51,13 @@ const SHELL_SCRIPT_CONTENTS = [
   `node ${path.posix.join('$path_to_root', nxWrapperPath(path.posix))} "$@"`,
 ].join('\n');
 
+// cmd.exe can't run the bash './nx' wrapper; use the generated nx.bat on Windows.
+export function getDotNxWrapperVersionCommand(
+  platform: NodeJS.Platform = process.platform
+): string {
+  return platform === 'win32' ? '.\\nx.bat --version' : './nx --version';
+}
+
 export function generateDotNxSetup(version?: string) {
   const host = new FsTree(process.cwd(), false, '.nx setup');
   writeMinimalNxJson(host, version);
@@ -67,7 +74,7 @@ export function generateDotNxSetup(version?: string) {
   // This is needed when using a global nx with dot-nx, otherwise running any nx command using global command will fail due to missing modules.
   // Pipe stderr so failures surface in telemetry instead of bare "Command failed: ./nx --version".
   try {
-    execSync('./nx --version', {
+    execSync(getDotNxWrapperVersionCommand(), {
       stdio: ['ignore', 'ignore', 'pipe'],
       encoding: 'utf8',
       windowsHide: true,
@@ -104,6 +111,7 @@ export function updateGitIgnore(host: Tree) {
     '.nx/cache',
     '.nx/workspace-data',
     '.nx/self-healing',
+    '.nx/migrate-runs',
   ].forEach((file) => {
     if (!contents.includes(file)) {
       contents = [contents, file].join('\n');

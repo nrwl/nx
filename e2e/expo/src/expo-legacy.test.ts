@@ -25,7 +25,18 @@ describe('@nx/expo (legacy)', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/expo'] });
+    proj = newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/expo',
+        '@nx/jest',
+        '@nx/playwright',
+        '@nx/react',
+        '@nx/rollup',
+        '@nx/storybook',
+        '@nx/web',
+      ],
+    });
     // we create empty preset above which skips creation of `production` named input
 
     originalEnv = process.env.NX_ADD_PLUGINS;

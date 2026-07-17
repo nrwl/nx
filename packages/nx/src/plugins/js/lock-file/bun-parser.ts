@@ -155,6 +155,10 @@ const specParseCache = new Map<
   string,
   { name: string; version: string; protocol: string }
 >();
+// Memoizes (packageName, versionSpec) -> resolved version for the current
+// lockfile. The same name/range pairs repeat across many dependency lists, so
+// the semver resolution is done once per distinct pair instead of per edge.
+const resolvedVersionCache = new Map<string, string | null>();
 
 // Structured error types for better error handling
 export class BunLockfileParseError extends Error {
@@ -221,6 +225,7 @@ export function clearCache(): void {
   keyMap.clear();
   packageVersions.clear();
   specParseCache.clear();
+  resolvedVersionCache.clear();
 }
 
 // ===== UTILITY FUNCTIONS =====
@@ -1181,48 +1186,44 @@ function createHoistedNodes(
  * O(1) lookup using pre-computed index
  */
 function isNestedPackageKey(packageKey: string, index: PackageIndex): boolean {
-  // If the key doesn't contain '/', it's a direct package entry
-  if (!packageKey.includes('/')) {
+  // If the key doesn't contain '/', it's a direct package entry.
+  // Work off slash indices instead of split('/')+slice+join to avoid an
+  // array allocation per key (this runs for every package entry, twice).
+  const lastSlash = packageKey.lastIndexOf('/');
+  if (lastSlash === -1) {
     return false;
   }
 
-  // Check if this looks like a workspace-specific or nested entry
-  const parts = packageKey.split('/');
+  // prefix = everything before the last '/'
+  const prefix = packageKey.substring(0, lastSlash);
 
-  // For multi-part keys, check if the prefix is a workspace path or package name
-  if (parts.length >= 2) {
-    const prefix = parts.slice(0, -1).join('/');
-
-    // O(1) check against known workspace paths
-    if (index.workspacePaths.has(prefix)) {
-      return true;
-    }
-
-    // O(1) check against workspace package names (scoped packages)
-    if (index.workspaceNames.has(prefix)) {
-      return true;
-    }
-
-    // Check for scoped workspace packages (e.g., "@quz/pkg1/lodash")
-    // The prefix must contain '/' to be a scoped package (e.g., "@scope/pkg")
-    // A prefix like just "@scope" without '/' is not a scoped package
-    if (prefix.startsWith('@') && prefix.includes('/')) {
-      return true;
-    }
-
-    // If the key looks like a simple scoped package (e.g., "@custom/lodash")
-    // where parts.length === 2 and first part starts with '@', it's likely
-    // a scoped package alias, not a nested dependency
-    if (parts.length === 2 && parts[0].startsWith('@')) {
-      return false;
-    }
-
-    // This could be dependency nesting (e.g., "is-even/is-odd")
-    // These should be filtered out as they're not direct packages
+  // O(1) check against known workspace paths
+  if (index.workspacePaths.has(prefix)) {
     return true;
   }
 
-  return false;
+  // O(1) check against workspace package names (scoped packages)
+  if (index.workspaceNames.has(prefix)) {
+    return true;
+  }
+
+  // Check for scoped workspace packages (e.g., "@quz/pkg1/lodash")
+  // The prefix must contain '/' to be a scoped package (e.g., "@scope/pkg")
+  // A prefix like just "@scope" without '/' is not a scoped package
+  if (prefix.startsWith('@') && prefix.includes('/')) {
+    return true;
+  }
+
+  // If the key looks like a simple scoped package (e.g., "@custom/lodash")
+  // with a single '/' where the first segment starts with '@', it's likely
+  // a scoped package alias, not a nested dependency
+  if (packageKey.indexOf('/') === lastSlash && packageKey.startsWith('@')) {
+    return false;
+  }
+
+  // This could be dependency nesting (e.g., "is-even/is-odd")
+  // These should be filtered out as they're not direct packages
+  return true;
 }
 
 /**
@@ -1305,6 +1306,30 @@ function getHoistedVersion(
  * O(1) lookup using pre-computed index instead of O(n) scan through all packages
  */
 function findResolvedVersion(
+  packageName: string,
+  versionSpec: string,
+  index: PackageIndex,
+  manifests?: BunLockFile['manifests']
+): string | null {
+  // Resolution depends only on (packageName, versionSpec) for a given lockfile
+  // (index and manifests are constant per parse), so memoize across edges.
+  const cacheKey = `${packageName}\n${versionSpec}`;
+  const cached = resolvedVersionCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const resolved = computeResolvedVersion(
+    packageName,
+    versionSpec,
+    index,
+    manifests
+  );
+  resolvedVersionCache.set(cacheKey, resolved);
+  return resolved;
+}
+
+function computeResolvedVersion(
   packageName: string,
   versionSpec: string,
   index: PackageIndex,
@@ -1417,19 +1442,27 @@ function findBestVersionMatch(
     return semverVersions[0].version;
   }
 
-  // Return the highest satisfying version (similar to npm behavior)
-  // Sort versions in descending order and return the first one
-  const sortedVersions = satisfyingVersions.sort((a, b) => {
+  // Return the highest satisfying version (similar to npm behavior).
+  // Single-pass max instead of a full sort: only the top element is used, and
+  // the numeric-collation comparator is expensive, so O(n) comparisons beat
+  // O(n log n). Keeps the first element on ties, matching the previous stable
+  // descending sort followed by [0].
+  let best = satisfyingVersions[0];
+  for (let i = 1; i < satisfyingVersions.length; i++) {
+    const candidate = satisfyingVersions[i];
+    let cmp: number;
     try {
-      return b.version.localeCompare(a.version, undefined, {
+      cmp = candidate.version.localeCompare(best.version, undefined, {
         numeric: true,
         sensitivity: 'base',
       });
     } catch {
-      // Fallback to string comparison
-      return b.version.localeCompare(a.version);
+      cmp = candidate.version.localeCompare(best.version);
     }
-  });
+    if (cmp > 0) {
+      best = candidate;
+    }
+  }
 
-  return sortedVersions[0].version;
+  return best.version;
 }

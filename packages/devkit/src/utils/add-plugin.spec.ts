@@ -2,7 +2,7 @@ import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/cr
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { CreateNodesV2 } from 'nx/src/project-graph/plugins';
+import { CreateNodes } from 'nx/src/project-graph/plugins';
 import { ProjectGraph } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
@@ -10,7 +10,7 @@ import { addPlugin, generateCombinations } from './add-plugin';
 
 describe('addPlugin', () => {
   let tree: Tree;
-  let createNodes: CreateNodesV2<{ targetName: string }>;
+  let createNodes: CreateNodes<{ targetName: string }>;
   let graph: ProjectGraph;
   let fs: TempFs;
 

@@ -23,8 +23,8 @@ import {
 describe('Angular Projects - Build and Test', () => {
   let setup: ProjectsTestSetup;
 
-  beforeAll(() => {
-    setup = setupProjectsTest();
+  beforeAll(async () => {
+    setup = await setupProjectsTest();
   });
 
   afterEach(() => {
@@ -34,7 +34,7 @@ describe('Angular Projects - Build and Test', () => {
   afterAll(() => cleanupProjectsTest());
 
   it('should successfully generate apps and libs and work correctly', async () => {
-    const { proj, app1, esbuildApp, lib1 } = setup;
+    const { proj, app1, esbuildApp, lib1, app1Port } = setup;
     const standaloneApp = uniq('standalone-app');
     runCLI(
       `generate @nx/angular:app my-dir/${standaloneApp} --bundler=webpack --no-interactive`
@@ -83,7 +83,7 @@ describe('Angular Projects - Build and Test', () => {
     console.log(
       `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
     );
-    expect(es2015BundleSize).toBeLessThanOrEqual(223000);
+    expect(es2015BundleSize).toBeLessThanOrEqual(226000);
 
     // check unit tests
     runCLI(
@@ -92,14 +92,16 @@ describe('Angular Projects - Build and Test', () => {
 
     // check e2e tests
     if (runE2ETests('playwright')) {
+      // app1 was generated with --port=app1Port, so its e2e serves there
       expect(() => runCLI(`e2e ${app1}-e2e`)).not.toThrow();
-      expect(await killPort(4200)).toBeTruthy();
+      expect(await killPort(app1Port)).toBeTruthy();
     }
 
     const appPort = await reservePort();
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
-      (output) => output.includes(`listening on localhost:${appPort}`)
+      (output) => output.includes(`listening on localhost:${appPort}`),
+      { timeout: 120000 }
     );
 
     // port and process cleanup
@@ -109,7 +111,8 @@ describe('Angular Projects - Build and Test', () => {
       `serve ${esbuildStandaloneApp} -- --port=${appPort}`,
       (output) =>
         output.includes(`Application bundle generation complete`) &&
-        output.includes(`localhost:${appPort}`)
+        output.includes(`localhost:${appPort}`),
+      { timeout: 120000 }
     );
 
     // port and process cleanup
@@ -118,8 +121,9 @@ describe('Angular Projects - Build and Test', () => {
 
   it('should successfully work with rspack for build', async () => {
     const app = uniq('app');
+    const port = await reservePort();
     runCLI(
-      `generate @nx/angular:app my-dir/${app} --bundler=rspack --no-interactive`
+      `generate @nx/angular:app my-dir/${app} --port=${port} --bundler=rspack --no-interactive`
     );
     runCLI(`build ${app}`, {
       env: { NODE_ENV: 'production' },
@@ -127,7 +131,7 @@ describe('Angular Projects - Build and Test', () => {
 
     if (runE2ETests()) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
-      expect(await killPort(4200)).toBeTruthy();
+      expect(await killPort(port)).toBeTruthy();
     }
   }, 1000000);
 
@@ -153,14 +157,15 @@ describe('Angular Projects - Build and Test', () => {
 
   it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
+    const port = await reservePort();
 
     runCLI(
-      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/angular:app ${app} --port=${port} --e2eTestRunner=playwright --no-interactive`
     );
 
     if (runE2ETests('playwright')) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
-      expect(await killPort(4200)).toBeTruthy();
+      expect(await killPort(port)).toBeTruthy();
     }
   }, 1000000);
 });

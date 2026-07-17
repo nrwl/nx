@@ -25,7 +25,7 @@ const packagesToVerify = [
   {
     name: 'react',
     sourceFile: 'index.ts',
-    outputFile: 'dist/packages/react/index.js',
+    outputFile: 'packages/react/dist/index.js',
   },
   {
     name: 'playwright',
@@ -48,9 +48,127 @@ const packagesToVerify = [
     outputFile: 'packages/vitest/dist/index.js',
   },
   {
+    name: 'webpack',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/webpack/dist/index.js',
+  },
+  {
+    name: 'rollup',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/rollup/dist/index.js',
+  },
+  {
+    name: 'docker',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/docker/dist/index.js',
+  },
+  {
+    name: 'gradle',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/gradle/dist/index.js',
+  },
+  {
+    name: 'rsbuild',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/rsbuild/dist/index.js',
+  },
+  {
+    name: 'web',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/web/dist/index.js',
+  },
+  {
+    name: 'node',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/node/dist/index.js',
+  },
+  {
+    name: 'nest',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/nest/dist/index.js',
+  },
+  {
+    name: 'module-federation',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/module-federation/dist/index.js',
+  },
+  {
+    name: 'rspack',
+    sourceFile: 'src/index.ts',
+    outputFile: 'packages/rspack/dist/src/index.js',
+  },
+  {
+    name: 'storybook',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/storybook/dist/index.js',
+  },
+  {
     name: 'create-nx-workspace',
     sourceFile: 'index.ts',
-    outputFile: 'dist/packages/create-nx-workspace/index.js',
+    outputFile: 'packages/create-nx-workspace/dist/index.js',
+  },
+  {
+    name: 'esbuild',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/esbuild/dist/index.js',
+  },
+  {
+    name: 'express',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/express/dist/index.js',
+  },
+  {
+    name: 'vue',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/vue/dist/index.js',
+  },
+  {
+    name: 'plugin',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/plugin/dist/index.js',
+  },
+  {
+    name: 'react-native',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/react-native/dist/index.js',
+  },
+  {
+    name: 'next',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/next/dist/index.js',
+  },
+  {
+    name: 'remix',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/remix/dist/index.js',
+  },
+  {
+    name: 'detox',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/detox/dist/index.js',
+  },
+  {
+    name: 'expo',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/expo/dist/index.js',
+  },
+  {
+    name: 'nuxt',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/nuxt/dist/index.js',
+  },
+  {
+    name: 'create-nx-plugin',
+    sourceFile: 'bin/create-nx-plugin.ts',
+    outputFile: 'packages/create-nx-plugin/dist/bin/create-nx-plugin.js',
+  },
+  {
+    // angular publishes via ng-packagr, but internal.ts is a build-base (tsc)
+    // entry that compiles straight to dist/internal.js, so an appended source
+    // marker survives verbatim (the fesm bundle would mangle it).
+    name: 'angular',
+    sourceFile: 'internal.ts',
+    outputFile: 'packages/angular/dist/internal.js',
   },
 ];
 
@@ -98,10 +216,22 @@ describe('Nx Build Verification', () => {
         cwd: repoDir,
       });
 
-      // Build all publishable packages (same as what nx-release builds)
-      runCommand('pnpm nx run-many -t build --projects tag:npm:public', {
+      // The dotnet analyzer builds with `--no-restore`; restore nx.sln first to
+      // generate obj/project.assets.json (else NETSDK1004). Plain dotnet restore
+      // avoids the nx graph overhead for this one setup step.
+      runCommand('dotnet restore', {
         cwd: repoDir,
+        failOnError: true,
       });
+
+      // Build all publishable packages (same as what nx-release builds)
+      runCommand(
+        'pnpm nx run-many -t build --projects tag:npm:public --parallel=6',
+        {
+          cwd: repoDir,
+          failOnError: true,
+        }
+      );
     },
     20 * 60 * 1000
   );
@@ -157,9 +287,13 @@ describe('Nx Build Verification', () => {
       }
 
       // Single rebuild of all packages
-      runCommand('pnpm nx run-many -t build --projects tag:npm:public', {
-        cwd: repoDir,
-      });
+      runCommand(
+        'pnpm nx run-many -t build --projects tag:npm:public --parallel=6',
+        {
+          cwd: repoDir,
+          failOnError: true,
+        }
+      );
 
       // Verify all outputs contain their markers
       for (const { name } of packagesToVerify) {

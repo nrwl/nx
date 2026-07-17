@@ -14,6 +14,7 @@ import {
   installPackageToTmp,
   PackageJson,
   readModulePackageJson,
+  readNxMigrateConfig,
   readTargetsFromPackageJson,
 } from './package-json';
 import * as pacakgeManager from './package-manager';
@@ -34,6 +35,7 @@ describe('buildTargetFromScript', () => {
 describe('installPackageToTmp', () => {
   afterEach(() => {
     jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should always disable lifecycle scripts via environment variables', () => {
@@ -45,7 +47,6 @@ describe('installPackageToTmp', () => {
       dir: tempDir,
       cleanup,
     });
-    jest.spyOn(pacakgeManager, 'detectPackageManager').mockReturnValue('yarn');
     jest
       .spyOn(pacakgeManager, 'getPackageManagerVersion')
       .mockReturnValue('4.0.0');
@@ -58,7 +59,7 @@ describe('installPackageToTmp', () => {
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
-    installPackageToTmp('nx', 'latest');
+    installPackageToTmp('nx', 'latest', 'yarn');
 
     expect(execSyncSpy).toHaveBeenCalledTimes(2);
     for (const [, options] of execSyncSpy.mock.calls) {
@@ -70,6 +71,96 @@ describe('installPackageToTmp', () => {
         })
       );
     }
+
+    cleanup();
+  });
+
+  it('should use the workspace `addDev` verbatim for pnpm (preserves `-w` when pnpm-workspace.yaml is present)', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = jest.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('9.0.0');
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'pnpm add -Dw',
+      ignoreScriptsFlag: '--ignore-scripts',
+    } as any);
+    const execSyncSpy = jest
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    installPackageToTmp('nx', 'latest', 'pnpm');
+
+    expect(execSyncSpy).toHaveBeenCalledTimes(1);
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      'pnpm add -Dw nx@latest --config.auto-install-peers=false --ignore-scripts'
+    );
+
+    cleanup();
+  });
+
+  it('should omit peer dependencies so peers resolve from the workspace, not the temp dir', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = jest.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('10.0.0');
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'npm install -D',
+      ignoreScriptsFlag: '--ignore-scripts',
+    } as any);
+    const execSyncSpy = jest
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    // npm: peers are omitted via `--omit=peer`
+    installPackageToTmp('@nx/cypress', '1.0.0', 'npm');
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      'npm install -D @nx/cypress@1.0.0 --omit=peer --ignore-scripts'
+    );
+
+    // bun: also accepts `--omit=peer`
+    execSyncSpy.mockClear();
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'bun add -D',
+      ignoreScriptsFlag: undefined,
+    } as any);
+    installPackageToTmp('@nx/cypress', '1.0.0', 'bun');
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      'bun add -D @nx/cypress@1.0.0 --omit=peer'
+    );
+
+    // pnpm: peers are omitted by disabling auto-install
+    execSyncSpy.mockClear();
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'pnpm add -Dw',
+      ignoreScriptsFlag: '--ignore-scripts',
+    } as any);
+    installPackageToTmp('@nx/cypress', '1.0.0', 'pnpm');
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      'pnpm add -Dw @nx/cypress@1.0.0 --config.auto-install-peers=false --ignore-scripts'
+    );
+
+    // yarn: Berry does not auto-install peers, so no flag is added
+    execSyncSpy.mockClear();
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'yarn add -D',
+      ignoreScriptsFlag: undefined,
+    } as any);
+    installPackageToTmp('@nx/cypress', '1.0.0', 'yarn');
+    expect(execSyncSpy.mock.calls[0][0]).toBe('yarn add -D @nx/cypress@1.0.0');
 
     cleanup();
   });
@@ -153,16 +244,17 @@ describe('readTargetsFromPackageJson', () => {
     `);
 
     const nxJson3 = {
-      targetDefaults: [
-        {
-          target: 'nx-release-publish',
-          executor: '@nx/js:release-publish',
-          dependsOn: ['build'],
-          options: {
-            dryRun: true,
+      targetDefaults: {
+        'nx-release-publish': [
+          {
+            filter: { executor: '@nx/js:release-publish' },
+            dependsOn: ['build'],
+            options: {
+              dryRun: true,
+            },
           },
-        },
-      ],
+        ],
+      },
     };
     const result3 = readTargetsFromPackageJson(
       packageJson,
@@ -324,6 +416,34 @@ describe('readTargetsFromPackageJson', () => {
         ],
       }
     `);
+  });
+
+  it('should preserve unresolved spread tokens when extending script based targets', () => {
+    // https://github.com/nrwl/nx/issues/36235 — the script-derived target has
+    // no `inputs`, so the `'...'` cannot resolve here. It must survive into
+    // the plugin result so the graph pipeline can expand it against
+    // targetDefaults / specified plugin values.
+    const result = readTargetsFromPackageJson(
+      {
+        name: 'my-other-app',
+        version: '',
+        scripts: {
+          build: 'echo 1',
+        },
+        nx: {
+          targets: {
+            build: {
+              inputs: ['...', '{projectRoot}/package.json'],
+            },
+          },
+        },
+      },
+      {},
+      workspaceRoot,
+      '/root',
+      packageManagerCommand
+    );
+    expect(result.build.inputs).toEqual(['...', '{projectRoot}/package.json']);
   });
 
   it('should override scripts if provided an executor', () => {
@@ -851,5 +971,54 @@ catalogs:
       expect(reactVersion).toBe('^18.2.0');
       expect(lodashVersion).toBe('^4.17.21');
     });
+  });
+});
+
+describe('readNxMigrateConfig', () => {
+  it('should carry supportsOptionalMigrations from the nx-migrations config', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: true,
+      },
+    });
+
+    expect(config).toMatchObject({
+      migrations: './migrations.json',
+      supportsOptionalMigrations: true,
+    });
+  });
+
+  it('should carry supportsOptionalMigrations from the ng-update config', () => {
+    const config = readNxMigrateConfig({
+      'ng-update': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: true,
+      },
+    });
+
+    expect(config).toMatchObject({
+      migrations: './migrations.json',
+      supportsOptionalMigrations: true,
+    });
+  });
+
+  it('should not set supportsOptionalMigrations when the config omits it', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': { migrations: './migrations.json' },
+    });
+
+    expect(config.supportsOptionalMigrations).toBeUndefined();
+  });
+
+  it('should not set supportsOptionalMigrations when the config sets it to false', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: false,
+      },
+    });
+
+    expect(config.supportsOptionalMigrations).toBeUndefined();
   });
 });

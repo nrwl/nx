@@ -140,6 +140,10 @@ function migrateTargetDefaults(tree: Tree): boolean {
   for (const [targetOrExecutor, targetConfig] of Object.entries(
     nxJson.targetDefaults
   )) {
+    if (Array.isArray(targetConfig)) {
+      // This migration predates the filtered array value form; values are plain objects here.
+      continue;
+    }
     if (targetOrExecutor === '@nx/vite:test') {
       nxJson.targetDefaults['@nx/vitest:test'] ??= {};
       Object.assign(nxJson.targetDefaults['@nx/vitest:test'], targetConfig);

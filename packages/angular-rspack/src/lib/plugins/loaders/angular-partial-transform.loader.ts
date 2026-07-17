@@ -9,9 +9,18 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
   ) {
     callback(null, content);
   } else {
-    const { javascriptTransformer, typescriptFileCache } = (
-      this._compilation as NgRspackCompilation
-    )[NG_RSPACK_SYMBOL_NAME]();
+    const {
+      javascriptTransformer,
+      typescriptFileCache,
+      angularCompilationFailed,
+    } = (this._compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME]();
+
+    if (angularCompilationFailed) {
+      // The build is already failing with the Angular compilation error,
+      // so skip transforming and pass the original content through.
+      callback(null, content);
+      return;
+    }
 
     const request = this.resourcePath;
     if (
@@ -36,12 +45,17 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
       return;
     }
 
-    javascriptTransformer
-      .transformFile(request, false, false)
-      .then((contents) => {
+    javascriptTransformer.transformFile(request, false, false).then(
+      (contents) => {
         const transformedCode = Buffer.from(contents).toString('utf8');
         typescriptFileCache.set(request, transformedCode);
         callback(null, transformedCode);
-      });
+      },
+      (error) => {
+        // Fail the module instead of leaving the loader callback pending,
+        // which would hang the build.
+        callback(error instanceof Error ? error : new Error(String(error)));
+      }
+    );
   }
 }

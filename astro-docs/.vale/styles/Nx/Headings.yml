@@ -67,6 +67,8 @@ exceptions:
   - Expo
   - React Native
   - Module Federation
+  - TanStack
+  - TanStack Router
   - IntelliJ
   - VS Code
   - VSCode
@@ -74,6 +76,10 @@ exceptions:
   - Turborepo
   - Lerna
   - Bazel
+  - Depot
+  - Blacksmith
+  - Buildkite
+  - Develocity
   - JSON
   - YAML
   - TOML

@@ -5,6 +5,7 @@ import { fork } from 'node:child_process';
 import { join } from 'path';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { createWriteStream } from 'fs';
+import { childBuildEnv } from '../../utils/is-serve-mode';
 
 export async function buildStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,
@@ -44,11 +45,7 @@ export async function buildStaticRemotes(
       {
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-        env: {
-          ...process.env,
-          // Ensure that webpack serve env var is not passed to static remotes
-          WEBPACK_SERVE: 'false',
-        },
+        env: childBuildEnv(),
       }
     );
 

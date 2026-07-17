@@ -355,33 +355,26 @@ module.exports = {
 
 ### NxReactWebpackPlugin
 
-#### Options
-
-##### svgr
-
-Type: `boolean`
-
-Enables or disables [React SVGR](https://react-svgr.com/). Default is `true`.
-
-**Deprecated:** Add SVGR support in your Webpack configuration without relying on Nx. This option will be removed in Nx 22. See https://react-svgr.com/docs/webpack/
+This plugin adds React support, such as Fast Refresh, to your Webpack configuration.
 
 #### Example
 
 ```js
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-const { join } = require('path');
 
 module.exports = {
   // ...
-  plugins: [
-    new NxReactWebpackPlugin({
-      svgr: false,
-    }),
-  ],
+  plugins: [new NxReactWebpackPlugin()],
 };
 ```
 
 ## Nx-enhanced plugins
+
+{% aside type="caution" title="The compose helpers are deprecated" %}
+The `composePlugins`, `withNx`, `withWeb`, and `withReact` helpers below are deprecated and will be removed in Nx v24. They produce a non-standard config function that only runs under the `@nx/webpack:webpack` executor. They still work in v23, but using them logs a deprecation warning.
+
+Prefer a standard webpack config built around [`NxAppWebpackPlugin`](#nxappwebpackplugin) under the inferred `@nx/webpack/plugin`. Run `nx g @nx/webpack:convert-to-inferred` to migrate existing projects.
+{% /aside %}
 
 The Nx-enhanced plugins work with `@nx/webpack:webpack` executor and receive the target options and context from the
 executor. These are used when using [Module Federation](/docs/technologies/module-federation/concepts/module-federation-and-nx).
@@ -536,18 +529,12 @@ module.exports = composePlugins(
 
 ### withReact
 
-The `withReact` plugin adds support for React JSX, [SVGR](https://react-svgr.com/),
+The `withReact` plugin adds support for React JSX
 and [Fast Refresh](https://github.com/pmmmwh/react-refresh-webpack-plugin)
 
 #### Options
 
-The options are the same as [`withWeb`](#withweb) plus the following.
-
-##### svgr
-
-Type: `undefined|false`
-
-SVGR allows SVG files to be imported as React components. Set this to `false` to disable this behavior.
+The options are the same as [`withWeb`](#withweb).
 
 #### Example
 
@@ -559,7 +546,6 @@ module.exports = composePlugins(
   withNx(), // always pass withNx() first
   withReact({
     styles: ['my-app/src/styles.css'],
-    svgr: false,
     postcssConfig: 'my-app/postcss',
   }),
   (config) => {

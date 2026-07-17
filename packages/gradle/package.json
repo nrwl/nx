@@ -2,6 +2,14 @@
   "name": "@nx/gradle",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
   "repository": {
     "type": "git",
@@ -15,9 +23,21 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index.js",
-  "type": "commonjs",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "plugin-v1": [
+        "dist/plugin-v1.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -26,18 +46,33 @@
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
   "exports": {
-    ".": "./index.js",
-    "./plugin-v1": "./plugin-v1.js",
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./plugin-v1": {
+      "@nx/nx-source": "./plugin-v1.ts",
+      "types": "./dist/plugin-v1.d.ts",
+      "default": "./dist/plugin-v1.js"
+    },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
-    "./generators.json": "./generators.json"
+    "./generators.json": "./generators.json",
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    }
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",

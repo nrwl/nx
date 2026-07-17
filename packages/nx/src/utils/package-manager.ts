@@ -16,7 +16,7 @@ import {
 } from 'yaml';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { getCatalogManager } from './catalog';
+import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
 import {
   readFileIfExisting,
   readJsonFile,
@@ -400,6 +400,33 @@ export function modifyYarnRcToFitNewDirectory(contents: string): string {
   return lines.join('\n');
 }
 
+/**
+ * We copy pnpm-workspace.yaml to the temporary directory so the workspace's
+ * registry, auth and release-age settings still apply, and so `pnpm add -w`
+ * recognizes the directory as a workspace root. `patchedDependencies` (relative
+ * patch paths) only resolves in the real workspace, so it is dropped. The
+ * `packages` field is always set to a self-reference (`['.']`) - the temp dir is
+ * a single-package workspace - whether or not the source had one, since pnpm
+ * <10.5 (and corepack's bundled default pnpm) reject a workspace manifest whose
+ * `packages` field is missing or empty.
+ *
+ * Exported for testing - not meant to be used outside of this file.
+ *
+ * @param contents The string contents of the pnpm-workspace.yaml file
+ * @returns Updated string contents of the pnpm-workspace.yaml file
+ */
+export function modifyPnpmWorkspaceYamlToFitNewDirectory(
+  contents: string
+): string {
+  const doc = parseDocument(contents);
+  // Set unconditionally so an empty/comments-only source (null doc.contents)
+  // still gets a packages field; doc.set creates the root map.
+  doc.set('packages', ['.']);
+  // Relative patch paths don't resolve in the temp dir.
+  doc.delete('patchedDependencies');
+  return doc.toString();
+}
+
 export function copyPackageManagerConfigurationFiles(
   root: string,
   destination: string
@@ -409,6 +436,7 @@ export function copyPackageManagerConfigurationFiles(
     '.yarnrc',
     '.yarnrc.yml',
     'bunfig.toml',
+    'pnpm-workspace.yaml',
   ]) {
     // f is an absolute path, including the {workspaceRoot}.
     const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);
@@ -436,6 +464,13 @@ export function copyPackageManagerConfigurationFiles(
         }
         case 'bunfig.toml': {
           copyFileSync(f, destinationPath);
+          break;
+        }
+        case 'pnpm-workspace.yaml': {
+          const updated = modifyPnpmWorkspaceYamlToFitNewDirectory(
+            readFileIfExisting(f)
+          );
+          writeFileSync(destinationPath, updated);
           break;
         }
       }
@@ -487,20 +522,10 @@ export async function resolvePackageVersionUsingRegistry(
   version: string
 ): Promise<string> {
   try {
-    let resolvedVersion = version;
-    const manager = getCatalogManager(workspaceRoot);
-    if (manager?.isCatalogReference(version)) {
-      resolvedVersion = manager.resolveCatalogReference(
-        workspaceRoot,
-        packageName,
-        version
-      );
-      if (!resolvedVersion) {
-        throw new Error(
-          `Unable to resolve catalog reference ${packageName}@${version}.`
-        );
-      }
-    }
+    const resolvedVersion = resolveCatalogReferenceIfNeeded(
+      packageName,
+      version
+    );
 
     const result = await packageRegistryView(
       packageName,
@@ -582,10 +607,14 @@ export async function resolvePackageVersionUsingInstallation(
 export async function packageRegistryView(
   pkg: string,
   version: string,
-  args: string
+  args: string,
+  // `forceNpm` runs the view through npm even in a pnpm workspace: npm projects
+  // a field across every matched version, whereas `pnpm view <pkg>@<range>`
+  // collapses to the single highest match (breaks per-version field queries).
+  options?: { forceNpm?: boolean }
 ): Promise<string> {
   let pm = detectPackageManager();
-  if (pm === 'yarn' || pm === 'bun') {
+  if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
      * which makes it's usage unreliable
@@ -599,8 +628,19 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
-  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`, {
+  // An empty version means we want the full packument; omit the trailing `@`.
+  // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
+  // redirections.
+  const spec = version ? `${pkg}@${version}` : pkg;
+  // npm enforces `devEngines.packageManager` on every command, even a read-only
+  // `view`; in a yarn/bun workspace we run npm, so a non-npm pin with
+  // `onFail: error` aborts the lookup. force downgrades that to a warning.
+  // Scoped to npm so a `pnpm view` spawn is left untouched.
+  const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
+    ...(pm === 'npm'
+      ? { env: { ...process.env, npm_config_force: 'true' } }
+      : {}),
   });
   return stdout.toString().trim();
 }
@@ -622,6 +662,9 @@ export async function packageRegistryPack(
   const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
     cwd,
     windowsHide: true,
+    // npm enforces `devEngines.packageManager` even on `pack`; force keeps the
+    // download working in workspaces that pin a non-npm manager (onFail: error).
+    env: { ...process.env, npm_config_force: 'true' },
   });
 
   const tarballPath = stdout.trim();

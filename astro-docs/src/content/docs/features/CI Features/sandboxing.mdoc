@@ -1,24 +1,27 @@
 ---
 title: 'Task Sandboxing'
-description: 'Hermetic task execution with IO tracing to catch undeclared dependencies and ensure correct caching.'
-keywords: [sandboxing, CI, hermeticity, IO tracing, caching]
+description: 'Confine each task to its declared inputs and outputs to catch undeclared dependencies and keep caching correct.'
+keywords: [sandboxing, CI, hermeticity, inputs, outputs, caching]
 sidebar:
-  label: Sandboxing
+  label: Task sandboxing
   order: 15
   badge: new!
 filter: 'type:Features'
 ---
 
-Task sandboxing monitors file system access during task execution and flags any reads or writes
-that fall outside the declared `inputs` and `outputs` in your
+Task sandboxing confines each task to the files it declares as `inputs` and `outputs` in your
 [project configuration](/docs/reference/project-configuration)
 (whether explicit or [inferred](/docs/concepts/inferred-tasks)).
-It doesn't block access to the rest of the file system, but undeclared dependencies have direct
-implications on [caching](/docs/features/cache-task-results) correctness, from false cache hits
-serving stale results to missing output files after a cache restore.
+Reading a file the task didn't declare, or writing outside its declared outputs, is a sandbox
+violation.
+Undeclared dependencies have direct implications on [caching](/docs/features/cache-task-results)
+correctness, from false cache hits serving stale results to missing output files after a cache
+restore.
 
-{% aside type="note" title="Enterprise Feature" %}
-Sandboxing is currently available on the [Nx Enterprise plan](https://nx.dev/enterprise). We're working on rolling it out to other Nx Cloud plans starting June 1st. If you'd like to use it sooner, [reach out to learn more](https://nx.dev/enterprise).
+{% aside type="note" title="Nx Cloud add-on" %}
+Sandboxing is an Nx Cloud add-on that runs on a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Request the
+cluster, then enable sandboxing under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
 {% /aside %}
 
 {% aside type="caution" title="Nx 22.6+ Required" %}
@@ -101,14 +104,10 @@ Include both directories in `outputs` so they can be replayed from cache:
 
 ## How sandboxing works
 
-Sandboxing runs each task in a monitored environment where all file system reads and writes are
-tracked.
-When a task accesses a file outside its declared inputs or writes to a path outside its declared
-outputs, Nx Cloud flags it.
-
+Sandboxing runs each task in an isolated environment scoped to its declared `inputs` and `outputs`.
 You get an audit trail of every file each task touched during execution, warnings when tasks have
-undeclared dependencies, and confidence that your cache configuration is correct rather than just
-"working so far."
+undeclared dependencies, and confidence that your cache configuration is correct rather than only
+appearing to work.
 
 In **Warning** mode (recommended when getting started), violations are reported in the Nx Cloud UI
 but tasks continue to completion.
@@ -138,7 +137,7 @@ Files flagged as "unexpected read" or "unexpected write" are the ones not covere
 
 ![Sandbox analysis tab showing process tree with unexpected reads and writes highlighted](../../../../assets/features/sandboxing-analysis.png)
 
-To export the raw trace data for further analysis, click **View raw sandbox report** to download
+To export the raw report data for further analysis, click **View raw sandbox report** to download
 the JSON report.
 
 ![View raw sandbox report button](../../../../assets/features/sandboxing-raw-report.png)
@@ -146,6 +145,21 @@ the JSON report.
 Once you have identified the violating tasks, follow
 [Fix sandbox violations](/docs/guides/nx-cloud/fix-sandbox-violations)
 to download every report on a branch, classify each violation, and update your project configuration in a structured loop.
+
+## Sandbox violations dashboard
+
+For an organization-wide view, open **Analytics > Sandbox violations** for your workspace.
+It summarizes the most recent report for each task over a time window (the last 7 days by default)
+with two tiles, **Tasks with violations** and **Clean tasks**, and a table of every task showing its
+count of unexpected reads and writes and when it was last seen.
+Filter by branch or task to narrow it down.
+
+The **How to fix these violations** panel offers two paths.
+**Fix with AI** copies a ready-made prompt for your coding agent that downloads the reports, edits
+the task config, and validates before stopping.
+The manual path gives you the equivalent command sequence.
+Either way, [Fix sandbox violations](/docs/guides/nx-cloud/fix-sandbox-violations) walks through the
+full loop.
 
 ## Inspecting inputs and outputs
 
@@ -225,11 +239,18 @@ and reports discrepancies.
 
 ## Enabling sandboxing
 
-Sandboxing is available for [Nx Enterprise](https://nx.dev/enterprise) customers on
-[single-tenant](/docs/enterprise/single-tenant/overview) deployments using
+Sandboxing requires a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster) and runs on
 [Nx Agents](/docs/features/ci-features/distribute-task-execution).
-It is not supported with [manual distributed task execution](/docs/guides/nx-cloud/manual-dte).
-Contact your Nx Enterprise representative to enable sandboxing for your deployment.
+It is not supported when you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute).
+
+1. Request a dedicated compute cluster under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons), if you don't already have one.
+2. Enable **Sandboxing** on the same page. If the cluster is still being provisioned, sandboxing is
+   queued and activates automatically once the cluster is ready.
+
+Nx Enterprise [single-tenant](/docs/enterprise/single-tenant/overview) customers already run on a
+dedicated environment.
+Contact your Nx representative to turn on sandboxing for your deployment.
 
 ### Excluding paths
 
@@ -259,22 +280,15 @@ Patterns use glob syntax relative to the workspace root.
 
 ## Cloud settings
 
-Enterprise customers with sandboxing enabled can configure the enforcement mode in the Nx Cloud
-workspace settings under **Settings > General**.
+Once sandboxing is enabled, configure the enforcement mode in the Nx Cloud workspace settings under
+**Settings > General**.
 
 ![Nx Cloud settings sidebar showing General settings](../../../../assets/features/sandboxing-settings-sidebar.png)
 
 Three enforcement modes are available:
 
-- **Strict** — tasks that violate sandbox isolation fail immediately.
-- **Warning** — tasks complete but violations are reported in the Nx Cloud UI.
-- **Off** — sandboxing is disabled.
+- **Strict** - tasks that violate sandbox isolation fail immediately.
+- **Warning** - tasks complete but violations are reported in the Nx Cloud UI.
+- **Off** - sandboxing is disabled.
 
 ![Sandboxing enforcement mode setting with Strict, Warning, and Off options](../../../../assets/features/sandboxing-settings.png)
-
-## Learn more
-
-- [Cache task results](/docs/features/cache-task-results)
-- [Remote cache](/docs/features/ci-features/remote-cache)
-- [Project configuration reference](/docs/reference/project-configuration)
-- [Nx Enterprise](https://nx.dev/enterprise)

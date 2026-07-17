@@ -1,4 +1,5 @@
-import { ConformanceViolation, createConformanceRule } from '@nx/conformance';
+import { createConformanceRule } from '@nx/conformance';
+import type { ConformanceViolation } from '@nx/conformance';
 import { workspaceRoot } from '@nx/devkit';
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve, relative, isAbsolute } from 'node:path';

@@ -1,13 +1,13 @@
 ---
-title: Expo Plugin for Nx
-description: Learn how to use the @nx/expo plugin to manage Expo applications and libraries within an Nx workspace, including setup, configuration, and task inference.
+title: Nx with Expo
+description: Nx scales your Expo monorepo with caching, distributed task execution, and affected-only builds.
 sidebar:
   label: 'Introduction'
 weight: 2
 filter: 'type:References'
 ---
 
-Expo is an open-source framework for apps that run natively on Android, iOS, and the web. Expo brings together the best of mobile and the web and enables many important features for building and scaling an app.
+Expo is an open-source framework for apps that run natively on Android, iOS, and the web. In an Expo monorepo, Nx lets you share code across native and web targets while keeping builds and tests fast. Expo brings together the best of mobile and the web and enables many important features for building and scaling an app.
 
 Expo is a set of tools built on top of React Native. The Nx Plugin for Expo contains generators for managing Expo applications and libraries within an Nx workspace.
 
@@ -15,10 +15,10 @@ Expo is a set of tools built on top of React Native. The Nx Plugin for Expo cont
 
 The `@nx/expo` plugin supports the following package versions.
 
-| Package        | Supported Versions   |
-| -------------- | -------------------- |
-| `metro-config` | >= 0.82.0            |
-| `expo`         | ~53.0.0 \|\| ~54.0.0 |
+| Package        | Supported Versions                |
+| -------------- | --------------------------------- |
+| `metro-config` | >= 0.82.0                         |
+| `expo`         | ^53.0.0 \|\| ^54.0.0 \|\| ^55.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -362,3 +362,9 @@ Below table is a map between expo commands and Nx commands:
 
 - [Using Detox](/docs/technologies/test-tools/detox/introduction)
 - [Using Jest](/docs/technologies/test-tools/jest/introduction)
+
+## Set up CI for your Expo monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

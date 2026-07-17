@@ -4,9 +4,24 @@ import {
   determineFolder,
 } from './create-nx-workspace';
 import { CnwError } from '../src/utils/error-utils';
-import { mkdtempSync, mkdirSync, rmSync, realpathSync } from 'fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  rmSync,
+  realpathSync,
+  writeFileSync,
+} from 'fs';
 import { join, basename, dirname } from 'path';
 import { tmpdir } from 'os';
+
+jest.mock('enquirer', () => ({
+  __esModule: true,
+  default: { prompt: jest.fn() },
+}));
+
+jest.mock('../src/utils/ci/is-ci', () => ({
+  isCI: jest.fn(() => false),
+}));
 
 describe('validateWorkspaceName', () => {
   it('should allow names starting with a letter', () => {
@@ -49,6 +64,7 @@ describe('determineFolder', () => {
 
   beforeEach(() => {
     originalCwd = process.cwd();
+    (require('enquirer').default.prompt as jest.Mock).mockReset();
   });
 
   afterEach(() => {
@@ -79,6 +95,23 @@ describe('determineFolder', () => {
 
     expect(result).toBe(basename(tmpDir));
     expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
+    expect(parsedArgs.useCurrentDir).toBe(true);
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('should scaffold "." in place even when the cwd is not empty', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    writeFileSync(join(tmpDir, 'package.json'), '{}');
+    mkdirSync(join(tmpDir, 'src'));
+    process.chdir(tmpDir);
+
+    const parsedArgs = makeParsedArgs({ positional: '.', interactive: false });
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe(basename(tmpDir));
+    expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
+    expect(parsedArgs.useCurrentDir).toBe(true);
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -92,18 +125,6 @@ describe('determineFolder', () => {
 
     expect(result).toBe(basename(tmpDir));
     expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
-
-    rmSync(tmpDir, { recursive: true });
-  });
-
-  it('should return directory basename for "." in interactive mode', async () => {
-    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-    process.chdir(tmpDir);
-
-    const parsedArgs = makeParsedArgs({ positional: '.', interactive: true });
-    const result = await determineFolder(parsedArgs);
-
-    expect(result).toBe(basename(tmpDir));
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -166,35 +187,11 @@ describe('resolveSpecialFolderName', () => {
   });
 
   describe('"." and "./"', () => {
-    it('should throw DIRECTORY_EXISTS when cwd is non-empty', () => {
-      // cwd is the repo root, which is definitely non-empty
-      try {
-        resolveSpecialFolderName('.');
-        fail('Expected CnwError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(CnwError);
-        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
-        expect((e as CnwError).message).toContain('nx init');
-      }
-    });
-
-    it('should throw DIRECTORY_EXISTS for "./" in non-empty directory', () => {
-      try {
-        resolveSpecialFolderName('./');
-        fail('Expected CnwError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(CnwError);
-        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
-      }
-    });
-
-    it('should resolve "." to basename and parent workingDir when cwd is empty', () => {
+    it('should resolve "." to basename and parent workingDir', () => {
       const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
       process.chdir(tmpDir);
 
-      const result = resolveSpecialFolderName('.');
-
-      expect(result).toEqual({
+      expect(resolveSpecialFolderName('.')).toEqual({
         name: basename(tmpDir),
         workingDir: dirname(tmpDir),
       });
@@ -202,13 +199,25 @@ describe('resolveSpecialFolderName', () => {
       rmSync(tmpDir, { recursive: true });
     });
 
-    it('should resolve "./" to basename and parent workingDir when cwd is empty', () => {
+    it('should resolve "./" to basename and parent workingDir', () => {
       const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
       process.chdir(tmpDir);
 
-      const result = resolveSpecialFolderName('./');
+      expect(resolveSpecialFolderName('./')).toEqual({
+        name: basename(tmpDir),
+        workingDir: dirname(tmpDir),
+      });
 
-      expect(result).toEqual({
+      rmSync(tmpDir, { recursive: true });
+    });
+
+    it('should resolve "." regardless of the cwd contents', () => {
+      const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+      writeFileSync(join(tmpDir, 'package.json'), '{}');
+      mkdirSync(join(tmpDir, 'src'));
+      process.chdir(tmpDir);
+
+      expect(resolveSpecialFolderName('.')).toEqual({
         name: basename(tmpDir),
         workingDir: dirname(tmpDir),
       });
@@ -251,5 +260,68 @@ describe('resolveSpecialFolderName', () => {
 
       rmSync(tmpDir, { recursive: true });
     });
+  });
+});
+
+describe('determineFolder - explicit "." confirmation', () => {
+  const enquirer = require('enquirer').default;
+  const { isCI } = require('../src/utils/ci/is-ci');
+  let originalCwd: string;
+
+  beforeEach(() => {
+    originalCwd = process.cwd();
+    (enquirer.prompt as jest.Mock).mockReset();
+    (isCI as jest.Mock).mockReset().mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+  });
+
+  function dotArgs() {
+    return {
+      _: ['.'],
+      $0: 'create-nx-workspace',
+      name: '',
+      interactive: true,
+    } as any;
+  }
+
+  it('scaffolds in place when the user confirms', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({
+      useCurrentDir: 'Yes',
+    });
+
+    const parsedArgs = dotArgs();
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe(basename(tmpDir));
+    expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
+    expect(parsedArgs.useCurrentDir).toBe(true);
+    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('falls back to a named subfolder when the user declines', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+    (enquirer.prompt as jest.Mock)
+      .mockResolvedValueOnce({ useCurrentDir: 'No' })
+      .mockResolvedValueOnce({ folderName: 'myorg' });
+
+    const parsedArgs = dotArgs();
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe('myorg');
+    // Declined in-place -> not a current-dir scaffold, and workingDir cleared
+    // so the subfolder lands under the cwd.
+    expect(parsedArgs.useCurrentDir).toBeFalsy();
+    expect(parsedArgs.workingDir).toBeUndefined();
+    expect(enquirer.prompt).toHaveBeenCalledTimes(2);
+
+    rmSync(tmpDir, { recursive: true });
   });
 });

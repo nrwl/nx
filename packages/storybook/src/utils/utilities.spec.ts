@@ -202,7 +202,7 @@ describe('testing utilities', () => {
 
   describe('Test pure utility functions', () => {
     describe('getStorybookVersionToInstall', () => {
-      it('should handle version ranges like ^10.0.0', () => {
+      it('should return the v10 install constant when v10 is installed', () => {
         const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         tree.write(
           'package.json',
@@ -213,11 +213,10 @@ describe('testing utilities', () => {
           })
         );
         const version = getStorybookVersionToInstall(tree);
-        // Should return the range as-is since version 10 >= 7
-        expect(version).toBe('^10.0.0');
+        expect(version).toBe('^10.5.0');
       });
 
-      it('should handle version ranges like ~8.5.3', () => {
+      it('should return the v8 install constant when v8 is installed', () => {
         const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         tree.write(
           'package.json',
@@ -228,11 +227,10 @@ describe('testing utilities', () => {
           })
         );
         const version = getStorybookVersionToInstall(tree);
-        // Should return the range as-is since version 8 >= 7
-        expect(version).toBe('~8.5.3');
+        expect(version).toBe('^8.6.11');
       });
 
-      it('should handle exact versions like 7.0.0', () => {
+      it('should fall through to the latest install constant when an unsupported version is installed', () => {
         const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         tree.write(
           'package.json',
@@ -243,26 +241,11 @@ describe('testing utilities', () => {
           })
         );
         const version = getStorybookVersionToInstall(tree);
-        // Should return the version as-is since version 7 >= 7
-        expect(version).toBe('7.0.0');
+        // v7 is below the floor; no version map entry — fall through to latest.
+        expect(version).toBe('^10.5.0');
       });
 
-      it('should not use installed version if major version is less than 7', () => {
-        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        tree.write(
-          'package.json',
-          JSON.stringify({
-            devDependencies: {
-              storybook: '^6.5.0',
-            },
-          })
-        );
-        const version = getStorybookVersionToInstall(tree);
-        // Should return default storybookVersion from versions.ts, not the installed version
-        expect(version).not.toBe('^6.5.0');
-      });
-
-      it('should handle dependencies in addition to devDependencies', () => {
+      it('should return the v9 install constant when v9 is installed via dependencies', () => {
         const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
         tree.write(
           'package.json',
@@ -273,8 +256,7 @@ describe('testing utilities', () => {
           })
         );
         const version = getStorybookVersionToInstall(tree);
-        // Should return the range as-is since version 9 >= 7
-        expect(version).toBe('^9.0.0');
+        expect(version).toBe('^9.0.5');
       });
     });
 

@@ -63,7 +63,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies
+        extraEslintDependencies.devDependencies,
+        undefined,
+        true
       );
       const addSwcTask = addSwcDependencies(host);
       tasks.push(installTask, addSwcTask);
@@ -84,14 +86,15 @@ async function ignoreReactRouterFilesInEslintConfig(
   }
 
   ensurePackage('@nx/eslint', nxVersion);
-  const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
-    '@nx/eslint/internal'
-  );
+  const {
+    addIgnoresToLintConfig,
+    isEslintConfigSupported,
+    useFlatConfig,
+  }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } = await import('@nx/eslint/internal');
   const isUsingFlatConfig = useFlatConfig(tree);
   if (!projectRoot && !isUsingFlatConfig) {
     // root eslintrc files ignore all files and the root eslintrc files add

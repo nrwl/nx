@@ -3,7 +3,7 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                    "
-" NX    Running Test "
+" NX    Test Tasks   "
 " │                  "
 ">│⠋    app1:test    "
 " │·    Waiting for t"
@@ -16,4 +16,4 @@ expression: terminal.backend()
 "                    "
 "                    "
 "                    "
-"    quit: q  help: ?"
+"                    "
