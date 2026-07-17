@@ -740,19 +740,12 @@ async function globTestPathsRelativeToProjectRoot(
     }
   }
 
-  // The workspace context returns workspace-relative paths; keep only files
-  // under the project root (matching the runtime path, which filters to files
-  // under the root) and re-relativize them to it.
-  const projectPrefix =
-    projectRoot === '.' ? '' : `${normalizePath(projectRoot)}/`;
+  // The workspace context returns workspace-relative paths, so re-relativize
+  // them to the project root. An `include` pattern can escape the project root
+  // (`../lib2/**`), so drop what lands outside it, matching the runtime path.
   return [...matches]
-    .filter(
-      (file) =>
-        !file.startsWith('..') &&
-        !isAbsolute(file) &&
-        file.startsWith(projectPrefix)
-    )
-    .map((file) => normalizePath(file.slice(projectPrefix.length)))
+    .map((file) => normalizePath(relative(projectRoot, file)))
+    .filter((file) => !file.startsWith('../'))
     .sort();
 }
 

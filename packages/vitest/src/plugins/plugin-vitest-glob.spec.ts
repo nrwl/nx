@@ -120,6 +120,25 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
     ).resolves.toEqual(['test-ci--src/a.spec.ts']);
   });
 
+  it('should drop files an include pattern reaches outside the project root', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+      'libs/lib2/package.json': '{"name":"lib2"}',
+      'libs/lib2/src/other.spec.ts': '',
+    });
+    // An escaping pattern resolves to a real workspace path (`libs/lib2/**`),
+    // so the glob matches lib2's spec; only the project-root filter drops it.
+    mockResolvedTestConfig({
+      include: ['src/**/*.spec.ts', '../lib2/**/*.spec.ts'],
+    });
+
+    await expect(
+      getAtomizedTargets('libs/lib1/vitest.config.ts')
+    ).resolves.toEqual(['test-ci--src/a.spec.ts']);
+  });
+
   it('should honor config include/exclude, with `**` matching zero segments', async () => {
     await temp.createFiles({
       'libs/lib1/vitest.config.ts': '',

@@ -568,23 +568,63 @@ describe('@nx/vitest', () => {
       expect(globWithWorkspaceContext).toHaveBeenCalled();
     });
 
-    it('should fall back to Vitest when a vitest.workspace.* sibling file exists', async () => {
-      // Vitest 3 auto-loads this file to define sub-projects even though the
-      // resolved config object below declares none.
-      (existsSync as jest.Mock).mockImplementation(
-        (path: string) =>
-          path.endsWith('package.json') ||
-          path.endsWith('project.json') ||
-          path.endsWith('vitest.workspace.ts')
-      );
+    it.each([
+      'vitest.workspace.ts',
+      'vitest.projects.ts',
+      'vitest.workspace.mjs',
+    ])(
+      'should fall back to Vitest when a %s sibling file exists',
+      async (workspaceFile) => {
+        // Vitest 3 auto-loads these files to define sub-projects even though
+        // the resolved config object declares none.
+        (existsSync as jest.Mock).mockImplementation(
+          (path: string) =>
+            path.endsWith('package.json') ||
+            path.endsWith('project.json') ||
+            path.endsWith(workspaceFile)
+        );
+
+        const nodes = await createNodesFunction(
+          ['vitest.config.ts'],
+          { testTargetName: 'test', ciTargetName: 'test-ci' },
+          context
+        );
+
+        const targets = nodes[0][1].projects!['.'].targets!;
+        expect(targets['test-ci--src/test-1.ts']).toBeDefined();
+        expect(globWithWorkspaceContext).not.toHaveBeenCalled();
+      }
+    );
+
+    it('should fall back to Vitest when a non-root config sets test.projects', async () => {
+      // A root config with `test.projects` skips the project entirely, so the
+      // fallback for it is only reachable from a nested config.
+      (existsSync as jest.Mock).mockReturnValue(false);
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'libs/lib1/vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: { projects: ['packages/*'] },
+        }),
+      });
+      // `jest.resetModules()` between tests hands the plugin's dynamic
+      // `import('vitest/node')` a fresh mock, so reach for the current one.
+      const { createVitest } =
+        jest.requireMock<typeof import('vitest/node')>('vitest/node');
+      (createVitest as jest.Mock).mockImplementationOnce(() => ({
+        getRelevantTestSpecifications: jest
+          .fn()
+          .mockResolvedValue([{ moduleId: 'libs/lib1/src/test-1.ts' }]),
+      }));
 
       const nodes = await createNodesFunction(
-        ['vitest.config.ts'],
+        ['libs/lib1/vitest.config.ts'],
         { testTargetName: 'test', ciTargetName: 'test-ci' },
         context
       );
 
-      const targets = nodes[0][1].projects!['.'].targets!;
+      const targets = nodes[0][1].projects!['libs/lib1'].targets!;
       expect(targets['test-ci--src/test-1.ts']).toBeDefined();
       expect(globWithWorkspaceContext).not.toHaveBeenCalled();
     });
