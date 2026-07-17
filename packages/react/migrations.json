@@ -258,6 +258,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.2.0-react-router-dom": {
+      "version": "23.2.0-beta.0",
+      "requires": {
+        "react-router-dom": ">=6.0.0 <7.0.0"
+      },
+      "packages": {
+        "react-router-dom": {
+          "version": "6.30.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

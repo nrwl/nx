@@ -62,7 +62,7 @@ catalog:
   tinyglobby: '^0.2.12'
   tmp: '~0.2.7'
   tree-kill: '^1.2.2'
-  verdaccio: '^6.3.2'
+  verdaccio: '^6.8.0'
   webpack: '5.105.2'
   webpack-dev-server: '5.2.4'
   which: '^3.0.1'

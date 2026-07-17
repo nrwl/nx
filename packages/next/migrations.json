@@ -80,6 +80,22 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.2.0": {
+      "version": "23.2.0-beta.0",
+      "requires": {
+        "next": ">=16.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~16.2.10",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "^16.2.10",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

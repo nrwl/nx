@@ -155,7 +155,7 @@
   },
   "peerDependencies": {
     "@swc/cli": ">=0.6.0 <0.9.0",
-    "verdaccio": "^6.0.5"
+    "verdaccio": "^6.8.0"
   },
   "peerDependenciesMeta": {
     "@swc/cli": {
