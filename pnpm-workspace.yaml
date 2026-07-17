@@ -6,9 +6,7 @@ packages:
   - 'nx-dev/*'
   - 'tools/*'
   - 'astro-docs'
-  - 'examples/*/*'
-  - 'examples/angular-rspack/module-federation/host'
-  - 'examples/angular-rspack/module-federation/remote'
+  # examples/ contains standalone pnpm workspaces with their own lockfiles
   - 'packages/nx/native-packages/*'
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
