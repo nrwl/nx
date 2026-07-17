@@ -31,6 +31,42 @@ const storybookConfigs = storybook.configs['flat/recommended'].map((config) => {
   return { ...config, rules: ownRules };
 });
 
+// Patterns shared between the base rule and the allowDirectNxImports
+// escape hatch below.
+const restrictedImportPatterns = [
+  {
+    group: ['nx/src/plugins/js*'],
+    message:
+      "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead",
+  },
+  {
+    group: ['**/native-bindings', '**/native-bindings.js', ''],
+    message:
+      'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
+  },
+];
+
+// Published packages must not import 'nx' directly — '@nx/devkit' (or
+// '@nx/devkit/internal' for first-party-only utilities) is the compatibility
+// boundary between plugin majors and nx majors. See packages/devkit/CLAUDE.md.
+// packages/nx and packages/devkit redefine this rule in their own configs.
+const directNxImportPattern = {
+  group: ['nx', 'nx/**'],
+  message:
+    "Import from '@nx/devkit' or '@nx/devkit/internal' instead of 'nx' — devkit is the version-compatibility boundary (see packages/devkit/CLAUDE.md).",
+};
+
+// Escape hatch for non-published projects (e2e suites, the graph client)
+// that legitimately reach into nx internals. Append AFTER baseConfig.
+export const allowDirectNxImports = {
+  rules: {
+    '@typescript-eslint/no-restricted-imports': [
+      'error',
+      { patterns: restrictedImportPatterns },
+    ],
+  },
+};
+
 // Shared base consumed by every subproject via the named export below.
 // IMPORTANT: subprojects import `{ baseConfig }`, not the default, so they
 // don't inherit the root's "ignore everything" safety net.
@@ -66,20 +102,7 @@ export const baseConfig = [
       ],
       '@typescript-eslint/no-restricted-imports': [
         'error',
-        {
-          patterns: [
-            {
-              group: ['nx/src/plugins/js*'],
-              message:
-                "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead",
-            },
-            {
-              group: ['**/native-bindings', '**/native-bindings.js', ''],
-              message:
-                'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
-            },
-          ],
-        },
+        { patterns: [...restrictedImportPatterns, directNxImportPattern] },
       ],
     },
   },
