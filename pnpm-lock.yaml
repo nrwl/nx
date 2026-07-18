@@ -2638,9 +2638,6 @@ importers:
       '@typescript-eslint/utils':
         specifier: catalog:eslint
         version: 8.59.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3)
-      chalk:
-        specifier: 'catalog:'
-        version: 4.1.2
       confusing-browser-globals:
         specifier: ^1.0.9
         version: 1.0.11
@@ -2653,6 +2650,9 @@ importers:
       jsonc-eslint-parser:
         specifier: ^2.1.0
         version: 2.4.0
+      picocolors:
+        specifier: 'catalog:'
+        version: 1.1.1
       semver:
         specifier: 'catalog:'
         version: 7.8.4
