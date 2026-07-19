@@ -391,7 +391,7 @@
 /recipes/database/postgres-fastify /docs/getting-started/intro 301
 /recipes/database/serverless-fastify-planetscale /docs/getting-started/intro 301
 /recipes/example-repos/* /showcase/example-repos/:splat 301
-/recipes/environment-variables/define-environment-variables /docs/guides/tips-n-tricks/define-environment-variables 301
+/recipes/environment-variables/define-environment-variables /docs/reference/environment-variables#loading-environment-variables 301
 /recipes/other/eslint /docs/technologies/eslint 301
 /recipes/other/browser-support /docs/guides/tips-n-tricks/browser-support 301
 /recipes/other/include-assets-in-build /docs/guides/tips-n-tricks/include-assets-in-build 301
