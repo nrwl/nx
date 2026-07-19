@@ -61,18 +61,28 @@ export interface PackageManagerCommands {
  */
 export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
-  return (
-    nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
-      ? 'bun'
-      : existsSync(join(dir, 'yarn.lock'))
-        ? 'yarn'
-        : existsSync(join(dir, 'pnpm-lock.yaml'))
-          ? 'pnpm'
-          : existsSync(join(dir, 'package-lock.json'))
-            ? 'npm'
-            : detectInvokedPackageManager())
-  );
+  if (nxJson.cli?.packageManager) {
+    return nxJson.cli.packageManager;
+  }
+
+  const dirsToCheck =
+    dir && dir !== workspaceRoot ? [dir, workspaceRoot] : [workspaceRoot];
+  for (const d of dirsToCheck) {
+    if (existsSync(join(d, 'bun.lockb')) || existsSync(join(d, 'bun.lock'))) {
+      return 'bun';
+    }
+    if (existsSync(join(d, 'yarn.lock'))) {
+      return 'yarn';
+    }
+    if (existsSync(join(d, 'pnpm-lock.yaml'))) {
+      return 'pnpm';
+    }
+    if (existsSync(join(d, 'package-lock.json'))) {
+      return 'npm';
+    }
+  }
+
+  return detectInvokedPackageManager();
 }
 
 /**
