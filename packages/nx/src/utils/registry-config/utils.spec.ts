@@ -95,9 +95,11 @@ describe('expandPnpmEnvVars', () => {
     );
   });
 
-  it('leaves an unresolvable reference verbatim instead of throwing', () => {
-    // pnpm aborts here; nx is only building an env overlay.
-    expect(expandPnpmEnvVars('${MISSING}', {})).toBe('${MISSING}');
+  it('drops an unresolvable reference instead of keeping it verbatim', () => {
+    // pnpm's reader has substituted an empty string here since 11.2.0; keeping
+    // the reference would hand npm a literal ${MISSING} to send as a credential.
+    expect(expandPnpmEnvVars('${MISSING}', {})).toBe('');
+    expect(expandPnpmEnvVars('pre-${MISSING}-post', {})).toBe('pre--post');
   });
 
   it('leaves an escaped \\${VAR} unexpanded', () => {
