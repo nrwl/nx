@@ -890,6 +890,32 @@ describe('exit summary payload (TUI countdown)', () => {
       ).toBe(true);
     }));
 
+  it('embeds the critical-path task rows as aligned columns in the payload string', () => {
+    // The popup renders the payload string verbatim, so its task rows are a real output
+    // format — pinned here because the terminal snapshot covers only the terminal path
+    // and the Markdown assertions cover only the nested-list path. The same chain as the
+    // formatReport snapshot: `c` is filtered out for being under the 20% threshold.
+    const a = makeTask('a', { start: 0, end: 10000 });
+    const b = makeTask('b', { start: 10000, end: 40000 });
+    const c = makeTask('c', { start: 40000, end: 45000 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 2, {
+      statuses: { a: 'success', b: 'success', c: 'success' },
+      remoteCacheEnabled: false,
+      isCI: true,
+    })!;
+
+    const speedUp = buildExitSummaryPayload(s).recommendations.find((r) =>
+      r.startsWith('Speed up or split')
+    );
+    // Newline-led, two-space indent, four-space gutter, right-aligned durations — the
+    // columns the terminal report prints, carried into the payload byte for byte.
+    expect(speedUp).toBe(
+      'Speed up or split the longest tasks on the critical path:\n' +
+        '  b    30.0s\n' +
+        '  a    10.0s'
+    );
+  });
+
   it('clears the active lifecycle once consumed, so a later flush gets nothing', () =>
     withEnvironmentVariables(envFor({}), () => {
       const a = makeTask('a', { start: 0, end: 1000 });
