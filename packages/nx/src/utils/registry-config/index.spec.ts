@@ -17,6 +17,7 @@ jest.mock('../logger', () => ({
     info: jest.fn(),
     log: jest.fn(),
     debug: jest.fn(),
+    verbose: jest.fn(),
   },
 }));
 
@@ -120,6 +121,17 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     expect(logger.warn).toHaveBeenCalledTimes(1);
   });
 
+  it('warns once (not per package) when the pnpm version is unknown', () => {
+    const { logger } = require('../logger');
+    (logger.warn as jest.Mock).mockClear();
+    jest.isolateModules(() => {
+      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
+      fresh('is-even', ROOT, 'pnpm', null);
+      fresh('is-odd', ROOT, 'pnpm', null);
+    });
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+  });
+
   it('routes yarn 1.x to the classic resolver', () => {
     files[`${ROOT}/.yarnrc`] = 'registry "https://reg-a.example.com/"\n';
     expect(getNpmSpawnRegistryEnv('is-even', ROOT, 'yarn', '1.22.22')).toEqual({
@@ -141,9 +153,13 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   });
 
   it('degrades to no bridging when a resolver throws (root is not a string)', () => {
+    const { logger } = require('../logger');
+    (logger.verbose as jest.Mock).mockClear();
     expect(
       getNpmSpawnRegistryEnv('is-even', undefined as any, 'pnpm', '11.5.0')
     ).toEqual({});
+    // Falling open is silent on stdout, so the cause has to stay recoverable.
+    expect(logger.verbose).toHaveBeenCalledTimes(1);
   });
 
   it('points the default registry at a bridged scoped registry for an underscore scope', () => {
