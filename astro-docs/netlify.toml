@@ -224,6 +224,12 @@ to = "https://trypolygraph.com"
 status = 301
 force = true
 
+# DOC-556: this page never existed under /docs. The deprecated nx.json `affected`
+# block is now documented on the nx.json reference page.
+[[redirects]]
+from = "/docs/reference/deprecated/affected-config"
+to = "/docs/reference/nx-json#default-base"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
