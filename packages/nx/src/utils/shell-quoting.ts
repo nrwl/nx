@@ -39,3 +39,28 @@ export function isAlreadyQuoted(str: string): boolean {
       (str[0] === '"' && str[str.length - 1] === '"'))
   );
 }
+
+/**
+ * Quote a string so it survives being interpolated into a shell command line
+ * as a single argument. Strings without shell metacharacters pass through
+ * unquoted.
+ *
+ * On POSIX shells quoting preserves the content exactly: the argument is
+ * wrapped in single quotes (which suppress all interpolation), escaping
+ * embedded single quotes. On Windows it is wrapped in double quotes
+ * following the MSVCRT argv parsing rules (backslashes are only special
+ * when they precede a double quote); cmd.exe-level metacharacters (`%`, `^`)
+ * are not escaped.
+ */
+export function quoteShellArg(arg: string): string {
+  if (arg === '') {
+    // an unquoted empty string would vanish when joined into a command line
+    return process.platform === 'win32' ? '""' : "''";
+  }
+  if (!needsShellQuoting(arg)) {
+    return arg;
+  }
+  return process.platform === 'win32'
+    ? `"${arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1')}"`
+    : `'${arg.replace(/'/g, `'\\''`)}'`;
+}
