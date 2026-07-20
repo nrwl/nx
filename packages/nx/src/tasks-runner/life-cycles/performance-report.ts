@@ -30,6 +30,14 @@ const NX_DISTRIBUTE_CTA = 'Distribute across machines with Nx Agents';
  * is literal text, a {@link RecLink}, or a {@link RecTaskRows}; the renderers
  * below project the same parts to the terminal string, the payload string, the
  * Markdown string, and the popup links.
+ *
+ * String parts must be single-line. Multi-line content needs its own structured part
+ * (as {@link RecTaskRows} is) so each renderer can lay it out natively. This is a
+ * convention, not a type: `string` is already a handled member, so a multi-line one
+ * compiles fine and then breaks the Markdown nested list, and `unhandledRecPart` can't
+ * see it. The Markdown renderer used to collapse newlines from any part with
+ * `.split('\n')...join('<br>')`, which made this moot; that ran at the wrong layer and
+ * was removed once task rows became data, which is what made the rule load-bearing.
  */
 type RecPart = string | RecLink | RecTaskRows;
 export type Recommendation = RecPart[];

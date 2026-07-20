@@ -891,10 +891,14 @@ describe('exit summary payload (TUI countdown)', () => {
     }));
 
   it('embeds the critical-path task rows as aligned columns in the payload string', () => {
-    // The popup renders the payload string verbatim, so its task rows are a real output
-    // format — pinned here because the terminal snapshot covers only the terminal path
-    // and the Markdown assertions cover only the nested-list path. The same chain as the
-    // formatReport snapshot: `c` is filtered out for being under the 20% threshold.
+    // The embedded newline is a contract, not just formatting: the Rust popup partitions
+    // recommendations by `r.contains('\n')` — newline-free ones render under
+    // "Recommendations:", newline-bearing ones route to the longest-tasks block drawn last
+    // (see countdown_popup.rs) — and formatReport picks its layout the same way. Flattening
+    // these rows onto one line would silently misroute the recommendation, so the exact
+    // bytes are pinned here; the terminal snapshot and the Markdown assertions each cover
+    // only their own path. Same chain as the formatReport snapshot: `c` is filtered out for
+    // being under the 20% threshold.
     const a = makeTask('a', { start: 0, end: 10000 });
     const b = makeTask('b', { start: 10000, end: 40000 });
     const c = makeTask('c', { start: 40000, end: 45000 });
@@ -907,8 +911,11 @@ describe('exit summary payload (TUI countdown)', () => {
     const speedUp = buildExitSummaryPayload(s).recommendations.find((r) =>
       r.startsWith('Speed up or split')
     );
-    // Newline-led, two-space indent, four-space gutter, right-aligned durations — the
-    // columns the terminal report prints, carried into the payload byte for byte.
+    // Newline-led, two-space indent, four-space gutter, right-aligned durations: this is
+    // `formatTopTaskRows`' return value verbatim, which the payload and the terminal share.
+    // It is NOT what the terminal prints — `renderRec` adds six more spaces of continuation
+    // indent, so the formatReport snapshot below shows eight. Don't reconcile the two by
+    // padding here: the popup re-indents these rows itself, relative to this two-space form.
     expect(speedUp).toBe(
       'Speed up or split the longest tasks on the critical path:\n' +
         '  b    30.0s\n' +
