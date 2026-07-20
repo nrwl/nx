@@ -347,7 +347,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
-  it('leaves a project .npmrc auth token to npm (native)', () => {
+  it('bridges no auth for an unscoped fetch without always-auth', () => {
+    // yarn stays anonymous here, so nothing is bridged whether or not npm reads
+    // the file itself; the native-file guard is covered separately below.
     files[`${ROOT}/.npmrc`] = [
       'registry=https://reg-b.example.com/',
       '//reg-b.example.com/:_authToken=project-token',
