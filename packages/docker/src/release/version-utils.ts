@@ -57,6 +57,18 @@ export async function handleDockerVersion(
     }
   }
 
+  if (
+    !nxDockerImageRefEnvOverride &&
+    (!newVersion || newVersion.trim().length === 0)
+  ) {
+    return {
+      newVersion: null,
+      logs: [
+        `No docker version resolved for ${projectGraphNode.name}; skipping image tagging.`,
+      ],
+    };
+  }
+
   const logs = updateProjectVersion(
     newVersion,
     nxDockerImageRefEnvOverride,
