@@ -62,6 +62,22 @@ where
         .map(|s| s[1..].to_string())
         .collect::<Vec<_>>();
 
+    // Fast path: when there are no negated globs, delegate to
+    // `get_files_for_outputs`, which partitions globs by their anchored root
+    // and walks only those subtrees (instead of the entire workspace). On
+    // workspaces with many tracked files this avoids a costly full-tree walk
+    // per `NxCache.put` / `copyFilesFromCache` call (see https://github.com/nrwl/nx/pull/35464).
+    //
+    // Negated globs still take the slower workspace-rooted walk so that
+    // ignore semantics (`!path/to/exclude`) are preserved exactly.
+    if negated_globs.is_empty() {
+        trace!(
+            "No negated globs; delegating to get_files_for_outputs for {} entries",
+            regular_globs.len()
+        );
+        return get_files_for_outputs(directory.as_path(), regular_globs);
+    }
+
     let regular_globs = regular_globs
         .into_iter()
         .map(|s| {
@@ -322,6 +338,55 @@ mod test {
                 "packages/nx/src/native/nx.darwin-arm64.node",
                 "test.txt"
             ]
+        );
+    }
+
+    #[test]
+    fn should_not_walk_outside_glob_anchored_root() {
+        // Regression test: when a glob is anchored to a deep subdirectory
+        // (e.g. `dist/app/**/*`) the previous implementation walked the entire
+        // workspace, paying O(workspace size) per call. After delegating the
+        // non-negated path to `get_files_for_outputs`, we should only walk
+        // the anchored subtree, so files that live outside that subtree must
+        // never be returned and the result must match what
+        // `get_files_for_outputs` produces for the same inputs.
+        let temp = TempDir::new().unwrap();
+
+        // Files inside the glob's anchored root
+        temp.child("dist/app/index.js").write_str("a").unwrap();
+        temp.child("dist/app/nested/chunk.js")
+            .write_str("b")
+            .unwrap();
+
+        // Decoy files outside the glob's anchored root that the old
+        // workspace-wide walker would still visit (cost) but that must
+        // never appear in the result.
+        temp.child("src/main.ts").write_str("src").unwrap();
+        temp.child("dist/other-app/index.js")
+            .write_str("other")
+            .unwrap();
+        for i in 0..50 {
+            temp.child(format!("noise/file-{i}.txt"))
+                .write_str("noise")
+                .unwrap();
+        }
+
+        let entries = vec!["dist/app/**/*.js".to_string()];
+
+        let mut expanded = expand_outputs(temp.display().to_string(), entries.clone()).unwrap();
+        expanded.sort();
+
+        let mut via_get_files = get_files_for_outputs(temp.path(), entries).unwrap();
+        via_get_files.sort();
+
+        // expand_outputs and get_files_for_outputs must agree on this input.
+        assert_eq!(expanded, via_get_files);
+
+        // Sanity: the resolved set is exactly the files under the anchored
+        // root, with nothing from `src/`, `dist/other-app/`, or `noise/`.
+        assert_eq!(
+            expanded,
+            vec!["dist/app/index.js", "dist/app/nested/chunk.js"]
         );
     }
 
