@@ -202,6 +202,50 @@ describe('getPnpmSpawnRegistryEnv', () => {
       }
     });
 
+    it('honors pnpm ${VAR:-default} syntax in auth.ini values', () => {
+      // pnpm reads auth.ini with its own env grammar, which npm's does not
+      // share: npm would treat the whole token as one unknown variable name.
+      delete process.env.NX_TEST_UNSET_REGISTRY;
+      writeAuthIni(
+        'registry=${NX_TEST_UNSET_REGISTRY:-https://reg-d.example.com/}'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-d.example.com/',
+      });
+    });
+
+    it('drops an auth.ini value whose ${VAR} cannot be resolved', () => {
+      // Bridging the reference verbatim would send a literal ${VAR} as the
+      // credential; pnpm substitutes an empty string here.
+      delete process.env.NX_TEST_UNSET_TOKEN;
+      writeAuthIni(
+        [
+          'registry=https://reg-g.example.com/',
+          '//reg-g.example.com/:_authToken=${NX_TEST_UNSET_TOKEN}',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-g.example.com/',
+        'npm_config_//reg-g.example.com/:_authToken': '',
+      });
+    });
+
+    it('treats a registry that expanded to nothing as unset', () => {
+      // An empty npm_config_registry sends npm to the public registry instead
+      // of failing, so the key must not be emitted at all.
+      delete process.env.NX_TEST_UNSET_REGISTRY;
+      writeAuthIni('registry=${NX_TEST_UNSET_REGISTRY}');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
+    it('treats a cafile that expanded to nothing as unset', () => {
+      // An empty cafile would otherwise resolve to the workspace root, handing
+      // npm a directory where it expects a certificate file.
+      delete process.env.NX_TEST_UNSET_CA;
+      writeAuthIni('cafile=${NX_TEST_UNSET_CA}');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
     it('re-keys a bare auth.ini _authToken onto the default registry', () => {
       writeAuthIni('_authToken=bare-secret');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
@@ -209,26 +253,36 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('re-keys a bare auth.ini _auth onto the configured default registry', () => {
-      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
-      writeAuthIni('_auth=YmFzZTY0');
+    it('re-keys a bare auth.ini _auth onto the registry auth.ini declares', () => {
+      writeAuthIni(
+        ['registry=https://reg-a.example.com/', '_auth=YmFzZTY0'].join('\n')
+      );
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
         'npm_config_//reg-a.example.com/:_auth': 'YmFzZTY0',
       });
     });
 
-    it('re-keys a bare auth.ini token onto a workspace .npmrc registry', () => {
-      // The .npmrc registry is left for npm to read natively, so it never lands
-      // in the env; the dart must still follow it instead of defaulting to the
-      // public registry, which would leak the credential.
+    it('does not let a workspace .npmrc registry claim a bare auth.ini token', () => {
+      // pnpm pins an unscoped credential to the registry of the file that
+      // declares it, so a workspace-local registry cannot pull a user-level
+      // token to a host of its choosing (CVE-2026-50017).
       writeFileSync(
         join(root, '.npmrc'),
         'registry=https://reg-b.example.com/'
       );
       writeAuthIni('_authToken=ini-token');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-        'npm_config_//reg-b.example.com/:_authToken': 'ini-token',
+        'npm_config_//registry.npmjs.org/:_authToken': 'ini-token',
+      });
+    });
+
+    it('does not let a yaml registry claim a bare auth.ini token', () => {
+      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+      writeAuthIni('_authToken=ini-token');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//registry.npmjs.org/:_authToken': 'ini-token',
       });
     });
 
@@ -326,14 +380,43 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('bridges flat ca/cert/key from auth.ini (npm has no inline scoped form)', () => {
-      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
-      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM', 'ca=CAPEM'].join('\n'));
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          'cert=CERTPEM',
+          'key=KEYPEM',
+          'ca=CAPEM',
+        ].join('\n')
+      );
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
         npm_config_cert: 'CERTPEM',
         npm_config_key: 'KEYPEM',
         npm_config_ca: 'CAPEM',
       });
+    });
+
+    it('drops auth.ini cert/key when another registry will be contacted', () => {
+      // npm_config_cert/key present the client certificate to every host it
+      // contacts, and pnpm pins them to the declaring file's registry. The trust
+      // anchor in `ca` is not source-scoped, so it still bridges.
+      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM', 'ca=CAPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_ca: 'CAPEM',
+      });
+    });
+
+    it('drops auth.ini cert/key when the workspace .npmrc redirects the request', () => {
+      // The .npmrc registry never lands in the env (npm reads it natively), so
+      // the comparison has to read the file to see the redirection.
+      writeFileSync(
+        join(root, '.npmrc'),
+        'registry=https://reg-b.example.com/'
+      );
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
     });
 
     it('expands a ~/ auth.ini cafile against the home dir', () => {
