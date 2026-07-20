@@ -50,12 +50,21 @@ export interface Timespan {
   nonParallel: number;
 }
 
+/**
+ * A task and how long it ran (ms). The unit the report's task lists are built from —
+ * shared with the renderers so the producer and the formatters can't drift.
+ */
+export interface TaskDurationRow {
+  id: string;
+  duration: number;
+}
+
 export interface PerformanceSummary {
   runDuration: number;
   criticalPathDuration: number;
   criticalPathTaskCount: number;
   /** Longest critical-path tasks that ran (desc, capped at a few), cache hits excluded; empty when the path was fully cached. */
-  criticalPathTop: Array<{ id: string; duration: number }>;
+  criticalPathTop: TaskDurationRow[];
   /** Ids of tasks that failed (slowest first), for the GitHub Actions summary's failed-tasks list. Continuous tasks and tasks without a complete window are excluded. */
   failedTasks: string[];
   /** runDuration − criticalPathDuration. */
@@ -272,7 +281,7 @@ export class PerformanceAnalysis {
     criticalPathTasks: string[],
     durations: Map<string, number>,
     criticalPathDuration: number
-  ): Array<{ id: string; duration: number }> {
+  ): TaskDurationRow[] {
     return (
       criticalPathTasks
         .filter((id) => {
@@ -311,7 +320,7 @@ export class PerformanceAnalysis {
    * orders the list but isn't shown — for a failure, which task failed is what matters.
    */
   private computeFailedTasks(): string[] {
-    const rows: Array<{ id: string; duration: number }> = [];
+    const rows: TaskDurationRow[] = [];
     for (const [id, timing] of this.timings) {
       if (
         timing.continuous ||
