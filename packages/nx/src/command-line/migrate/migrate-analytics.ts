@@ -276,21 +276,82 @@ export function reportMigrateRunError(opts: {
   });
 }
 
-/**
- * A single-migration invocation of the standalone worker, emitted once the
- * migration id resolves. The run can still stop after this (agentic
- * resolution, a --create-commits request outside a git repo, the
- * default-branch confirmation, a prompt-only migration surfaced without an
- * agent). The migration's type rides the prompt-choice dimension.
- */
-export function reportMigrateSingleMigrationInvocation(opts: {
-  migrationType: 'generator' | 'prompt' | 'hybrid';
+export function reportMigrateOrchestratorInit(opts: {
+  migrationCount: number;
+  createCommits: boolean;
 }): void {
   safeReport(() => {
     if (!customDimensions) return;
-    reportEvent('migrate_single_migration_invocation', {
-      [customDimensions.promptChoice]: opts.migrationType,
+    reportEvent('migrate_orchestrator_init', {
+      [customDimensions.createCommits]: opts.createCommits,
+      [customDimensions.migrationCount]: opts.migrationCount,
     });
+  });
+}
+
+/**
+ * One event per orchestrator dispense. The `action` (dispense case) and step
+ * `kind` are closed enums carried on reused dimensions, read conditioned on the
+ * event name (the same multiplexing pattern as {@link reportMigratePrompt});
+ * `attempt` rides the migration-count dimension.
+ */
+export function reportMigrateOrchestratorDispense(opts: {
+  action: string;
+  stepKind: string;
+  attempt: number;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_dispense', {
+      [customDimensions.promptChoice]: opts.action,
+      [customDimensions.migrationName]: opts.stepKind,
+      [customDimensions.migrationCount]: opts.attempt,
+    });
+  });
+}
+
+/**
+ * Terminal funnel event. The two step tallies and the total dispense count
+ * ride reused numeric dimensions, read conditioned on the event name.
+ */
+export function reportMigrateOrchestratorComplete(opts: {
+  completed: number;
+  skipped: number;
+  dispenseCount: number;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_complete', {
+      [customDimensions.appliedCount]: opts.completed,
+      [customDimensions.taskCount]: opts.skipped,
+      [customDimensions.migrationCount]: opts.dispenseCount,
+    });
+  });
+}
+
+/**
+ * A single-migration invocation of the worker, emitted once the migration id
+ * resolves (the run can still stop after this: agentic resolution, a
+ * --create-commits request outside a git repo, the default-branch
+ * confirmation, a prompt-only migration surfaced without an agent). Whether
+ * it was recorded into an orchestrated run (via `--run-id`)
+ * or ran standalone is encoded in the event name; the migration's type rides
+ * the prompt-choice dimension.
+ */
+export function reportMigrateSingleMigrationInvocation(opts: {
+  migrationType: 'generator' | 'prompt' | 'hybrid';
+  orchestrated: boolean;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent(
+      `migrate_single_migration_${
+        opts.orchestrated ? 'recorded' : 'standalone'
+      }`,
+      {
+        [customDimensions.promptChoice]: opts.migrationType,
+      }
+    );
   });
 }
 

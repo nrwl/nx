@@ -2,13 +2,18 @@ import { existsSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { readNxJson } from '../../../config/configuration';
 import type { FileChange } from '../../../generators/tree';
-import { getGitCurrentBranch, isGitRepository } from '../../../utils/git-utils';
+import {
+  getGitCurrentBranch,
+  getLatestCommitSha,
+  isGitRepository,
+} from '../../../utils/git-utils';
 import { getBaseRef } from '../../../utils/command-line-utils';
 import { readJsonFile } from '../../../utils/fileutils';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
 import { readModulePackageJson } from '../../../utils/package-json';
+import { isInsideAgent } from '../agentic/inception';
 import {
   escapeXmlAttr,
   printDroppedAgentContextForOuterAgent,
@@ -52,16 +57,37 @@ import {
   type PlannedMigration,
 } from '../migration-shape';
 import { canPrompt } from '../safe-prompt';
-import { pmExecPrefix } from './util';
+import {
+  findActiveRun,
+  NewerRunStateFormatError,
+  readRunState,
+  runDir,
+  type MigrateCommitLedgerEntry,
+  type MigrateRunState,
+  type MigrateStep,
+  type MigrateStepOutcome,
+} from './run-state';
+import { RUN_ID_SAFE } from './run-id';
+import {
+  applyStepEvent,
+  commitResultToLedgerEntry,
+  latestRound,
+  stepsToPendingMigrations,
+  uncoveredFailedStepIds,
+  type StepEvent,
+} from './state-machine';
+import { updateRunState } from './state-lock';
+import { nowIso, pmExecPrefix, summarizeError, warnCommitFailed } from './util';
 
 // The `ng update <pkg> --migrate-only --name=<migration>` analog: run exactly
-// one migration from the migrations file, standalone (no durable run state;
-// an enabled agentic flow still writes its per-run scratch under
-// `.nx/migrate-runs/<version>/` and creates commits by default).
+// one migration from the migrations file, either standalone or recorded into
+// an existing orchestrated run via `--run-id`. Standalone runs keep no durable
+// run state, though an enabled agentic flow still writes its per-run scratch
+// under `.nx/migrate-runs/<version>/` and creates commits by default.
 
 export interface RunSingleMigrationWorkerInput {
   root: string;
-  options: { runMigration: string };
+  options: { runMigration: string; runId?: string };
   /** The raw `--agentic` value; resolved here against the environment. */
   agentic: AgenticArg;
   validate: boolean | undefined;
@@ -79,7 +105,14 @@ export async function runSingleMigrationWorker(
   const { root, options, commitPrefix, interactive, skipInstall, isVerbose } =
     input;
 
-  const { migrations, source } = readMigrationsSource(root);
+  // The worker is a second CLI entry point: the run id reaches runDir() (where
+  // join resolves '..'), so validate it up front exactly as the orchestrator
+  // does before it trusts a run id.
+  if (options.runId !== undefined && !RUN_ID_SAFE.test(options.runId)) {
+    throw new Error(`Invalid run id '${options.runId}'.`);
+  }
+
+  const { migrations, source } = readMigrationsSource(root, options.runId);
   const migration = resolveMigration(migrations, options.runMigration, source);
 
   reportMigrateSingleMigrationInvocation({
@@ -88,7 +121,15 @@ export async function runSingleMigrationWorker(
       : isHybridMigration(migration)
         ? 'hybrid'
         : 'generator',
+    orchestrated: !!options.runId,
   });
+
+  if (options.runId) {
+    // A recorded run takes its commit config from run.json and is driven by
+    // the outer agent, so the standalone resolution below doesn't apply.
+    await runRecorded(root, options.runId, migration, skipInstall, isVerbose);
+    return;
+  }
 
   let agentic: ResolvedAgentic;
   try {
@@ -155,10 +196,41 @@ export async function runSingleMigrationWorker(
   });
 }
 
-function readMigrationsSource(root: string): {
-  migrations: PlannedMigration[];
-  source: string;
-} {
+function readMigrationsSource(
+  root: string,
+  runId: string | undefined
+): { migrations: PlannedMigration[]; source: string } {
+  if (runId) {
+    const dir = runDir(root, runId);
+    // A missing run dir would surface a raw ENOENT from readRunState's
+    // readFileSync; report it the way the orchestrator does instead.
+    if (!existsSync(dir)) {
+      throw new Error(
+        `No migrate run '${runId}' was found under .nx/migrate-runs. Start one with \`${pmExecPrefix(
+          root
+        )} nx migrate --run-migrations\` before recording into it.`
+      );
+    }
+    // Version refusal (NewerRunStateFormatError) propagates.
+    const state = readRunState(dir);
+    const round = latestRound(state);
+    if (!round) {
+      throw new Error(
+        `The migrate run '${runId}' has no recorded plan, so there is no migration to run.`
+      );
+    }
+    const planPath = join(dir, round.planSnapshot);
+    if (!existsSync(planPath)) {
+      throw new Error(
+        `The plan snapshot '${round.planSnapshot}' for migrate run '${runId}' doesn't exist, can't run the migration.`
+      );
+    }
+    return {
+      migrations: readPlanMigrations(planPath),
+      source: round.planSnapshot,
+    };
+  }
+
   const migrationsPath = join(root, 'migrations.json');
   if (!existsSync(migrationsPath)) {
     throw new Error(
@@ -225,6 +297,29 @@ async function runStandalone(
   opts: StandaloneRunOptions
 ): Promise<void> {
   const { agentic, createCommits, commitPrefix, skipInstall, isVerbose } = opts;
+
+  // Standalone never writes run state. Warn (don't block) when an orchestrated
+  // run is active so the user knows this execution won't be recorded into it.
+  // A newer-nx run dir must not hard-block this stateless path (the fail-closed
+  // refusal in run-state.ts targets run-starting callers); tolerate it and skip
+  // the warning.
+  let active: ReturnType<typeof findActiveRun>;
+  try {
+    active = findActiveRun(root);
+  } catch (e) {
+    if (!(e instanceof NewerRunStateFormatError)) {
+      throw e;
+    }
+    active = null;
+  }
+  if (active) {
+    output.warn({
+      title: `This migration won't be recorded into the active migrate run '${active.runId}'.`,
+      bodyLines: [
+        `Pass --run-id=${active.runId} to record it into that run instead.`,
+      ],
+    });
+  }
 
   if (isPromptOnlyMigration(migration)) {
     // Without an agent to apply it, a prompt-only migration is only surfaced;
@@ -426,6 +521,249 @@ async function runStandalone(
       resolvedCollection
     );
   }
+}
+
+async function runRecorded(
+  root: string,
+  runId: string,
+  migration: PlannedMigration,
+  skipInstall: boolean,
+  isVerbose: boolean
+): Promise<void> {
+  const dir = runDir(root, runId);
+  // Version refusal (NewerRunStateFormatError) propagates.
+  let state = readRunState(dir);
+
+  // A recorded run never resolves the agentic flow (the outer agent drives
+  // it); prompts are emitted for that agent or printed for a user hand-running
+  // the dispensed command.
+  const agenticKind: ResolvedAgentic['kind'] = isInsideAgent()
+    ? 'inside-agent'
+    : 'disabled';
+
+  const migrationId = `${migration.package}:${migration.name}`;
+  // The plan was read from the latest round's snapshot, so only that round's
+  // step may match; a same-id step from an older round must not.
+  const latest = latestRound(state);
+  const step = state.steps.find(
+    (s) =>
+      s.kind === 'migration' &&
+      s.migrationId === migrationId &&
+      s.roundIndex === latest?.index
+  );
+  if (!step) {
+    throw new Error(
+      `The migrate run '${runId}' has no step for migration '${migrationId}'.`
+    );
+  }
+
+  // Validated against the fresh disk state: a second worker racing the same
+  // dispensed step reads 'running' here and aborts before the engine runs.
+  state = transition(dir, {
+    type: 'start',
+    stepId: step.id,
+    pid: process.pid,
+    startedAt: nowIso(),
+  });
+
+  // A prior attempt's generator half already ran and committed, so a plain
+  // retry must not reapply it against a tree that already holds its changes.
+  // Read from the state the start transition returned: a delayed invocation
+  // may have claimed a later attempt whose flag its entry snapshot predates.
+  const startedStep = state.steps.find((s) => s.id === step.id);
+  const generatorAlreadyCompleted =
+    isHybridMigration(migration) && startedStep.generatorCompleted === true;
+
+  let outcome: MigrateStepOutcome | undefined;
+  try {
+    if (isPromptOnlyMigration(migration) || generatorAlreadyCompleted) {
+      emitOrPrintPrompt(root, migration, agenticKind);
+    } else {
+      const installer = new ChangedDepInstaller(
+        root,
+        skipInstall,
+        `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+      );
+      // Read once; the run and the hybrid documentation resolution share it.
+      const resolvedCollection = readMigrationCollection(
+        migration.package,
+        root
+      );
+      const { changes, nextSteps, agentContext, logs, madeChanges } =
+        await runNxOrAngularMigration(
+          root,
+          migration,
+          isVerbose,
+          isHybridMigration(migration),
+          resolvedCollection
+        );
+
+      if (!isHybridMigration(migration)) {
+        forwardDroppedAgentContext(migration, agentContext, agenticKind);
+      }
+
+      // Commits follow the run config, not CLI flags, and only when the
+      // generator changed something: a no-op step must not create a commit (nor
+      // a ledger entry) that absorbs prior pending diffs under its name.
+      if (state.createCommits && madeChanges) {
+        // Computed before the commit so the ledger entry and the commit body
+        // name the same absorbed steps.
+        const absorbedStepIds = uncoveredFailedStepIds(state).filter(
+          (id) => id !== step.id
+        );
+        let result: Awaited<ReturnType<typeof commitMigrationIfRequested>>;
+        try {
+          result = await commitMigrationIfRequested(
+            root,
+            migration,
+            true,
+            state.commitPrefix,
+            () => installer.installDepsIfChanged(),
+            stepsToPendingMigrations(state, absorbedStepIds)
+          );
+        } catch (commitError) {
+          // A post-migration install failure leaves the diff uncommitted;
+          // record the debt so only a landed entry can cover it.
+          state = appendCommit(dir, {
+            kind: 'failed',
+            stepIds: [step.id],
+            issueIds: [],
+          });
+          throw commitError;
+        }
+        state = recordCommitInLedger(
+          dir,
+          state,
+          step,
+          migration,
+          result,
+          absorbedStepIds
+        );
+      } else {
+        await installer.installDepsIfChanged();
+      }
+
+      if (installer.skippedInstall) {
+        logSkippedPostMigrationInstall(root);
+      }
+
+      printNextSteps(migration, nextSteps);
+
+      if (isHybridMigration(migration)) {
+        emitOrPrintPrompt(
+          root,
+          migration,
+          agenticKind,
+          {
+            logs,
+            changes,
+            agentContext,
+          },
+          resolvedCollection
+        );
+      } else {
+        outcome = buildOutcome(changes, nextSteps, migration.description, root);
+      }
+    }
+  } catch (e) {
+    // The failed-step dispense surfaces this so the agent can decide
+    // retry-vs-skip; carry the error's first line, not a full stack.
+    transition(dir, {
+      type: 'fail',
+      stepId: step.id,
+      finishedAt: nowIso(),
+      outcome: { summary: summarizeError(e) },
+    });
+    throw e;
+  }
+
+  // A prompt half (prompt-only, or the prompt phase of a hybrid) is applied by
+  // a separate actor, so the step parks in awaiting-prompt-outcome and this
+  // process exits successfully. A hybrid records that its generator half is
+  // done so a later retry skips it.
+  if (isPromptOnlyMigration(migration) || isHybridMigration(migration)) {
+    transition(dir, {
+      type: 'awaitPromptOutcome',
+      stepId: step.id,
+      finishedAt: nowIso(),
+      ...(isHybridMigration(migration) ? { generatorCompleted: true } : {}),
+    });
+    return;
+  }
+
+  transition(dir, {
+    type: 'succeed',
+    stepId: step.id,
+    finishedAt: nowIso(),
+    ...(outcome ? { outcome } : {}),
+  });
+}
+
+// Applies a step event to the freshest on-disk state under the lock, writes it,
+// and returns it. Reading fresh is what makes a racing worker's 'start' see the
+// step already 'running' and abort. An illegal transition (e.g. a step that was
+// never dispensed) fails with the state machine's own reason.
+function transition(dir: string, event: StepEvent): MigrateRunState {
+  return updateRunState(dir, (fresh) => {
+    const result = applyStepEvent(fresh, event);
+    if (result.kind === 'error') {
+      throw new Error(
+        `Cannot record this migration into the run: ${result.reason}`
+      );
+    }
+    return result.state;
+  });
+}
+
+function recordCommitInLedger(
+  dir: string,
+  state: MigrateRunState,
+  step: MigrateStep,
+  migration: PlannedMigration,
+  result: Awaited<ReturnType<typeof commitMigrationIfRequested>>,
+  absorbedStepIds: string[]
+): MigrateRunState {
+  if (result.status === 'failed') {
+    warnCommitFailed(migration.name);
+  }
+  const entry = commitResultToLedgerEntry(result, step.id, absorbedStepIds);
+  return entry ? appendCommit(dir, entry) : state;
+}
+
+// Appends a ledger entry to the freshest on-disk state under the lock. The git
+// commit itself already ran outside the lock; only this pure append is locked.
+function appendCommit(
+  dir: string,
+  entry: MigrateCommitLedgerEntry
+): MigrateRunState {
+  return updateRunState(dir, (fresh) => ({
+    ...fresh,
+    commits: [...fresh.commits, entry],
+  }));
+}
+
+function buildOutcome(
+  changes: FileChange[],
+  nextSteps: string[],
+  description: string | undefined,
+  root: string
+): MigrateStepOutcome {
+  const outcome: MigrateStepOutcome = {};
+  if (changes.length > 0) {
+    outcome.fileChanges = changes.map((c) => c.path);
+  }
+  // Non-git repos have no HEAD; omit rather than record a placeholder.
+  const gitRefAfter = getLatestCommitSha(root);
+  if (gitRefAfter) {
+    outcome.gitRefAfter = gitRefAfter;
+  }
+  if (nextSteps.length > 0) {
+    outcome.nextSteps = nextSteps;
+  }
+  if (description) {
+    outcome.summary = description;
+  }
+  return outcome;
 }
 
 // Mirrors the classic loop's agentic preflight for a single-entry plan: ensure

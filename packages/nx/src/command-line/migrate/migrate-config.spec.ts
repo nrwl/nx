@@ -269,6 +269,29 @@ describe('applyNxJsonMigrateDefaults', () => {
     });
   });
 
+  describe('orchestrator reconcile phase (bare --run-id)', () => {
+    const base = { runId: 'run-1' };
+
+    it('fills the commit options from config but never the generate-only options', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        agentic: 'claude-code',
+        validate: false,
+        include: 'required',
+        multiMajorMode: 'gradual',
+      };
+      const result = applyNxJsonMigrateDefaults(base, config, noEnv);
+      expect(result.createCommits).toBe(true);
+      expect(result.commitPrefix).toBe('chore: migrate ');
+      expect(result.agentic).toBeUndefined();
+      expect(result.validate).toBeUndefined();
+      expect(result.include).toBeUndefined();
+      expect(result.includeFromConfig).toBeUndefined();
+      expect(result.multiMajorMode).toBeUndefined();
+    });
+  });
+
   describe('generate-migrations phase', () => {
     const base = { packageAndVersion: 'nx@latest' };
 

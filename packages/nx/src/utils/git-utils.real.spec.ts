@@ -9,7 +9,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { cloneFromUpstream } from './git-utils';
+import { cloneFromUpstream, getPathCommitExposure } from './git-utils';
 
 function runGit(args: string[], cwd: string) {
   execFileSync('git', args, { cwd, stdio: 'ignore', windowsHide: true });
@@ -66,4 +66,62 @@ describe('GitRepository', () => {
       }
     }
   );
+});
+
+describe('getPathCommitExposure', () => {
+  let repo: string;
+
+  beforeEach(() => {
+    repo = mkdtempSync(join(tmpdir(), 'nx-exposure-'));
+    runGit(['init'], repo);
+  });
+
+  afterEach(() => {
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('reports ignored for a directory-only rule even when the directory does not exist yet', () => {
+    // A trailing-slash entry matches only directories; git cannot tell an
+    // absent path is one unless the query says so. This is the case a bare
+    // check-ignore query misclassifies.
+    writeFileSync(join(repo, '.gitignore'), '.nx/migrate-runs/\n');
+
+    expect(getPathCommitExposure('.nx/migrate-runs', repo)).toBe('ignored');
+  });
+
+  it('reports ignored for a bare rule when the directory does not exist yet', () => {
+    writeFileSync(join(repo, '.gitignore'), '.nx/migrate-runs\n');
+
+    expect(getPathCommitExposure('.nx/migrate-runs', repo)).toBe('ignored');
+  });
+
+  it('reports ignored when the directory holds only untracked files', () => {
+    writeFileSync(join(repo, '.gitignore'), '.nx/migrate-runs\n');
+    mkdirSync(join(repo, '.nx/migrate-runs/run-1'), { recursive: true });
+    writeFileSync(join(repo, '.nx/migrate-runs/run-1/run.json'), '{}');
+
+    expect(getPathCommitExposure('.nx/migrate-runs', repo)).toBe('ignored');
+  });
+
+  it('reports tracked when files under the directory are in the index, despite a matching ignore rule', () => {
+    writeFileSync(join(repo, '.gitignore'), '.nx/migrate-runs\n');
+    mkdirSync(join(repo, '.nx/migrate-runs/run-1'), { recursive: true });
+    writeFileSync(join(repo, '.nx/migrate-runs/run-1/run.json'), '{}');
+    runGit(['add', '-f', '.nx/migrate-runs/run-1/run.json'], repo);
+
+    expect(getPathCommitExposure('.nx/migrate-runs', repo)).toBe('tracked');
+  });
+
+  it('reports unignored when no rule covers the directory', () => {
+    expect(getPathCommitExposure('.nx/migrate-runs', repo)).toBe('unignored');
+  });
+
+  it('reports unknown outside a git repository', () => {
+    const plain = mkdtempSync(join(tmpdir(), 'nx-exposure-plain-'));
+    try {
+      expect(getPathCommitExposure('.nx/migrate-runs', plain)).toBe('unknown');
+    } finally {
+      rmSync(plain, { recursive: true, force: true });
+    }
+  });
 });

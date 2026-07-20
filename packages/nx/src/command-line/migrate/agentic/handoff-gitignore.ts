@@ -62,6 +62,8 @@ export async function applyAgenticHandoffGitignoreFallback({
   effectiveCreateCommits,
   commitPrefix,
   root,
+  applyWhenPlanned = false,
+  commitStandalone = true,
 }: {
   migrations: ReadonlyArray<{ package: string; name: string }>;
   /**
@@ -75,13 +77,32 @@ export async function applyAgenticHandoffGitignoreFallback({
   effectiveCreateCommits: boolean;
   commitPrefix: string;
   root: string;
+  /**
+   * Apply the entry even when the hoisted migration is in the plan. The
+   * classic loop can defer to that migration because its run scratch appears
+   * only after migration 1 has run; the orchestrator creates its run dir at
+   * init, before any migration, so it needs the entry immediately. A planned
+   * migration also means the missing entry is not a conscious removal, so the
+   * v23 cutoff does not apply.
+   */
+  applyWhenPlanned?: boolean;
+  /**
+   * Commit the applied entry as its own preflight commit (the default). The
+   * orchestrator suppresses this: it applies the fallback before its init
+   * checkpoint so the checkpoint's `git add -A` cannot sweep in older
+   * scratch, and in that ordering a standalone commit here would carry the
+   * user's pre-existing changes along with the entry. The checkpoint that
+   * follows captures both instead.
+   */
+  commitStandalone?: boolean;
 }): Promise<void> {
   if (migrations.some(isHandoffGitignoreMigration)) {
-    // The queue runs it itself: hoisted to the front by the sort comparator
-    // in a full run, or as the single requested migration in a worker run.
-    return;
-  }
-  if (major(installedNxVersion) >= 23) {
+    if (!applyWhenPlanned) {
+      // The queue runs it itself: hoisted to the front by the sort comparator
+      // in a full run, or as the single requested migration in a worker run.
+      return;
+    }
+  } else if (major(installedNxVersion) >= 23) {
     // User is past v23. Respect their `.gitignore` state — if the entry
     // is missing, that's a conscious removal.
     return;
@@ -102,7 +123,7 @@ export async function applyAgenticHandoffGitignoreFallback({
     )
   );
 
-  if (!effectiveCreateCommits) return;
+  if (!effectiveCreateCommits || !commitStandalone) return;
   if (!hasUncommittedChanges(root)) return;
 
   try {

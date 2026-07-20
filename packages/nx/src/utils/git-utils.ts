@@ -398,10 +398,13 @@ export function getGitCurrentBranch(directory?: string): string | null {
   }
 }
 
-// Sync companion to `GitRepository.hasUncommittedChanges` for callers that
-// can't drop into the async class (e.g. the migrate orchestrator, which
-// branches on this before spawning subprocesses synchronously).
-export function hasUncommittedChanges(directory?: string): boolean {
+export type WorkingTreeStatus = 'dirty' | 'clean' | 'unknown';
+
+// Tri-state working-tree probe: 'unknown' means the probe itself failed (git
+// missing, spawn failure, permissions), not that the tree is clean. Callers
+// that gate destructive actions on tree cleanliness must treat 'unknown' as
+// unsafe rather than clean.
+export function getWorkingTreeStatus(directory?: string): WorkingTreeStatus {
   try {
     const out = execSync('git status --porcelain', {
       encoding: 'utf8',
@@ -409,9 +412,66 @@ export function hasUncommittedChanges(directory?: string): boolean {
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
     });
-    return out.trim() !== '';
+    return out.trim() === '' ? 'clean' : 'dirty';
   } catch {
-    return false;
+    return 'unknown';
+  }
+}
+
+// Sync companion to `GitRepository.hasUncommittedChanges` for callers that
+// can't drop into the async class. A failed probe reads as false; callers for
+// whom that tolerance is unsafe use `getWorkingTreeStatus` instead.
+export function hasUncommittedChanges(directory?: string): boolean {
+  return getWorkingTreeStatus(directory) === 'dirty';
+}
+
+export type PathCommitExposure =
+  | 'ignored'
+  | 'tracked'
+  | 'unignored'
+  | 'unknown';
+
+// Classifies whether `git add -A` commits made in `directory` can sweep in
+// the directory at `dirPath`. Tracked files stay committable no matter what
+// the ignore rules say (ignore rules never apply to tracked files), so
+// `git ls-files` decides 'tracked' first; `git check-ignore` then splits the
+// untracked remainder into 'ignored' (covered) vs 'unignored' (no
+// coverage). 'unknown' means the probe itself failed (not a git repository,
+// git missing); callers gating destructive behavior on the result must
+// treat it as unsafe.
+export function getPathCommitExposure(
+  dirPath: string,
+  directory?: string
+): PathCommitExposure {
+  try {
+    const tracked = execSync(`git ls-files -- ${dirPath}`, {
+      encoding: 'utf8',
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    if (tracked.trim() !== '') {
+      return 'tracked';
+    }
+  } catch {
+    return 'unknown';
+  }
+  // Query with a trailing slash so git treats the path as a directory even
+  // when it does not exist on disk yet: a directory-only ignore rule (a
+  // trailing-slash .gitignore entry) does not match a bare query for an
+  // absent path, which would misreport covered workspaces as unignored.
+  const asDir = dirPath.endsWith('/') ? dirPath : `${dirPath}/`;
+  try {
+    execSync(`git check-ignore -q ${asDir}`, {
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    return 'ignored';
+  } catch (e) {
+    // check-ignore exits 1 for "not ignored"; anything else is a probe
+    // failure.
+    return (e as { status?: number })?.status === 1 ? 'unignored' : 'unknown';
   }
 }
 
@@ -572,5 +632,35 @@ export function getLatestCommitSha(directory?: string): string | null {
     }).trim();
   } catch {
     return null;
+  }
+}
+
+/**
+ * Whether `ancestor` is reachable from `descendant`, i.e. resetting to
+ * `descendant` keeps `ancestor` in history. Returns false when the answer
+ * cannot be established (invalid input, not a repository, unknown commits),
+ * so callers treat an unverifiable commit as not preserved.
+ */
+export function isAncestorCommit(
+  ancestor: string,
+  descendant: string,
+  directory?: string
+): boolean {
+  // Both values are recorded `git rev-parse` outputs (40 hex chars, or 64 in
+  // a sha256 repository); anything else must not reach the interpolated
+  // command line.
+  const sha = /^[0-9a-f]{4,64}$/i;
+  if (!sha.test(ancestor) || !sha.test(descendant)) {
+    return false;
+  }
+  try {
+    execSync(`git merge-base --is-ancestor ${ancestor} ${descendant}`, {
+      stdio: 'pipe',
+      windowsHide: true,
+      cwd: directory,
+    });
+    return true;
+  } catch {
+    return false;
   }
 }

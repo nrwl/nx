@@ -179,8 +179,15 @@ import {
   runInstall,
   runNxOrAngularMigration,
 } from './execute-migration';
-import { runSingleMigrationWorker } from './run';
+import {
+  runSingleMigrationWorker,
+  runOrchestratorInit,
+  runOrchestratorReconcile,
+  type StepAction,
+} from './run';
+import { isStepAction, STEP_ACTIONS } from './step-actions';
 import { sortMigrations } from './sort-migrations';
+import { isInsideAgent } from './agentic/inception';
 import {
   assertWorkspaceNxSupportsNewMigrateFlags,
   resolveNewMigrateFlagsRunTarget,
@@ -1220,19 +1227,53 @@ type RunMigrations = {
 type RunSingleMigration = {
   type: 'runSingleMigration';
   runMigration: string;
+  runId?: string;
   agentic: AgenticArg;
   validate?: boolean;
   interactive?: boolean;
 };
 
+type OrchestratorReconcile = {
+  type: 'orchestratorReconcile';
+  runId: string;
+  stepAction?: StepAction;
+};
+
 export async function parseMigrationsOptions(
   options: MigrateArgs,
   fetch?: MigratorOptions['fetch']
-): Promise<GenerateMigrations | RunMigrations | RunSingleMigration> {
+): Promise<
+  | GenerateMigrations
+  | RunMigrations
+  | RunSingleMigration
+  | OrchestratorReconcile
+> {
+  // A run recorded or reconciled via `--run-id` is driven by the outer agent;
+  // spawning another agent from it would double-drive the run. Only the
+  // explicit "on" values conflict; the nx.json default is ignored for
+  // `--run-id` invocations instead.
+  if (
+    options.runId !== undefined &&
+    options.agentic !== undefined &&
+    options.agentic !== false
+  ) {
+    throw new Error(`Error: '--agentic' cannot be combined with '--run-id'.`);
+  }
+
   if (options.runMigration !== undefined) {
     if (options.runMigration === '') {
       throw new Error(
         `Error: '--run-migration' requires a migration id, e.g. '--run-migration=@nx/js:my-migration'.`
+      );
+    }
+    if (options.runId === '') {
+      throw new Error(
+        `Error: '--run-id' requires the id of the migrate run to record into.`
+      );
+    }
+    if (options.stepAction !== undefined) {
+      throw new Error(
+        `Error: '--step-action' cannot be combined with '--run-migration'. It applies to an orchestrated reconcile ('--run-id' without '--run-migration').`
       );
     }
     if (options.runMigrations !== undefined) {
@@ -1261,10 +1302,46 @@ export async function parseMigrationsOptions(
     return {
       type: 'runSingleMigration',
       runMigration: options.runMigration,
+      runId: options.runId,
       agentic: options.agentic,
       validate: options.validate,
       interactive: options.interactive,
     };
+  }
+
+  if (options.runId !== undefined) {
+    // Empty '--run-id' is an error on every path.
+    if (options.runId === '') {
+      throw new Error(
+        `Error: '--run-id' requires the id of the migrate run to record into.`
+      );
+    }
+    // With the orchestrator gate on, a bare '--run-id' reconciles the run.
+    if (process.env.NX_MIGRATE_ORCHESTRATOR === 'true') {
+      // yargs' choices already reject bad CLI values; this guards programmatic
+      // callers, where silently dropping the action would reconcile without it.
+      if (
+        options.stepAction !== undefined &&
+        !isStepAction(options.stepAction)
+      ) {
+        throw new Error(
+          `Error: '--step-action' must be one of ${STEP_ACTIONS.join(', ')}.`
+        );
+      }
+      return {
+        type: 'orchestratorReconcile',
+        runId: options.runId as string,
+        ...(options.stepAction !== undefined
+          ? { stepAction: options.stepAction }
+          : {}),
+      };
+    }
+    // Gate off: only the single-migration worker consumes '--run-id'.
+    throw new Error(`Error: '--run-id' requires '--run-migration'.`);
+  }
+
+  if (options.stepAction !== undefined) {
+    throw new Error(`Error: '--step-action' requires '--run-id'.`);
   }
 
   if (options.runMigrations === '') {
@@ -3084,6 +3161,42 @@ async function runMigrations(
   const migrationsJson = readJsonFile(join(root, opts.runMigrations));
   const migrations: PlannedMigration[] = migrationsJson.migrations;
 
+  // An outer agent drives the loop, so hand off to the orchestrator instead of
+  // the classic loop: init either starts a fresh run or resumes an already-
+  // active one. `--run-id` reconciles are dispatched separately and never
+  // reach here.
+  if (process.env.NX_MIGRATE_ORCHESTRATOR === 'true' && isInsideAgent()) {
+    // Orchestrated runs are agent-driven, so commits default on exactly as they
+    // do under `--agentic=enabled`; the orchestrator replaces `resolveAgentic`.
+    const {
+      effective: effectiveCreateCommits,
+      warning: createCommitsWarning,
+      error: createCommitsError,
+    } = resolveCreateCommits({
+      createCommits: shouldCreateCommits,
+      agenticKind: 'enabled',
+      isGitRepo: isGitRepository(root),
+      commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
+    });
+    if (createCommitsError) {
+      throw new Error(createCommitsError);
+    }
+    if (createCommitsWarning) {
+      output.warn({ title: createCommitsWarning });
+    }
+    const { packageJson: orchestratorNxPackageJson } = readModulePackageJson(
+      'nx',
+      getNxRequirePaths(root)
+    );
+    return await runOrchestratorInit({
+      root,
+      migrationsJson,
+      createCommits: effectiveCreateCommits,
+      commitPrefix,
+      installedNxVersion: orchestratorNxPackageJson.version,
+    });
+  }
+
   reportMigrateRunStart({
     createCommits: shouldCreateCommits ?? false,
     migrationCount: migrations.length,
@@ -3294,14 +3407,16 @@ async function runMigrations(
   });
 }
 
-// A single-migration invocation (--run-migration) drives an existing plan
-// rather than generating or running the whole migrations file. Its commit
-// config resolves downstream, so the top-level commit-prefix assert and the
-// error-funnel selection both key off this.
-export function isSingleMigrationInvocation(args: {
-  [k: string]: any;
-}): boolean {
-  return args['runMigration'] !== undefined;
+// A run-phase invocation drives an existing plan (a single migration, a
+// recorded run, or a reconcile) rather than generating or running the whole
+// migrations file. Their commit config resolves downstream, so the top-level
+// commit-prefix assert and the error-funnel selection both key off this.
+export function isRunPhaseInvocation(args: { [k: string]: any }): boolean {
+  return (
+    args['runMigration'] !== undefined ||
+    args['runId'] !== undefined ||
+    args['stepAction'] !== undefined
+  );
 }
 
 export async function migrate(
@@ -3313,30 +3428,31 @@ export async function migrate(
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const mergedArgs = applyNxJsonMigrateDefaults(args, readNxJson().migrate);
-    // A single-migration invocation (--run-migration) resolves its commit
-    // config downstream via resolveCreateCommits, so the commit-prefix assert
-    // must not fire for it.
-    const singleMigration = isSingleMigrationInvocation(mergedArgs);
-    if (!singleMigration) {
+    // Run-phase invocations (--run-migration/--run-id/--step-action) resolve
+    // their commit config downstream (run.json for recorded runs,
+    // resolveCreateCommits for standalone), so the commit-prefix assert must not
+    // fire for them; otherwise an nx.json prefix the whole-file run legitimately
+    // uses would wedge every dispensed command.
+    const runPhase = isRunPhaseInvocation(mergedArgs);
+    if (!runPhase) {
       assertCommitPrefixHasCommits(mergedArgs);
     }
     // One fetcher (registry-first, install fallback) shared by the `--include`
     // eligibility gate and the migration cascade so package metadata is fetched
     // at most once per package/version.
     const fetch = createFetcher(getPackageManagerCommand());
-    // A parse failure on a single-migration invocation belongs in the run
-    // funnel, not the generate funnel. `--run-migrations` without a value
-    // parses as ''; undefined here (and no single-migration flag) means the
-    // generate phase.
+    // A parse failure on a run-phase invocation belongs in the run funnel,
+    // not the generate funnel. `--run-migrations` without a value parses as
+    // ''; undefined here (and no run-phase flag) means the generate phase.
     const isGenerateInvocation =
-      mergedArgs['runMigrations'] === undefined && !singleMigration;
+      mergedArgs['runMigrations'] === undefined && !runPhase;
     let opts: Awaited<ReturnType<typeof parseMigrationsOptions>>;
     try {
       opts = await parseMigrationsOptions(mergedArgs, fetch);
     } catch (e) {
       if (isGenerateInvocation) {
         reportMigrateGenerateError('resolve_version', e);
-      } else if (singleMigration) {
+      } else if (runPhase) {
         reportMigrateRunError({ code: 'other', error: e });
       }
       throw e;
@@ -3363,6 +3479,8 @@ export async function migrate(
           reportMigrateRunError({ code: 'other', error: e });
           throw e;
         }
+      case 'orchestratorReconcile':
+        return await runOrchestratorReconcileFromCli(root, opts, rawArgs);
       case 'runMigrations':
         try {
           return await runMigrations(
@@ -3621,6 +3739,32 @@ function readNxVersionFromNodeModules(
   return undefined;
 }
 
+// Mirrors the local-nx hand-off of the other run paths so a reconcile always
+// executes against the workspace-local nx that owns the run state, never the
+// temp installation. Reconciles only read state and commit, so no install.
+async function runOrchestratorReconcileFromCli(
+  root: string,
+  opts: OrchestratorReconcile,
+  args: string[]
+): Promise<number | void> {
+  if (!__dirname.startsWith(workspaceRoot)) {
+    // The workspace-local nx we are about to hand off to must be new enough to
+    // understand the new flags we forward to it.
+    assertWorkspaceNxSupportsNewMigrateFlags({
+      argv: args,
+      readLocalNxVersion: () => readLocalNxVersion(root),
+    });
+
+    return handOffToLocalNx(args);
+  }
+
+  return runOrchestratorReconcile({
+    root,
+    runId: opts.runId,
+    stepAction: opts.stepAction,
+  });
+}
+
 // Mirrors `runMigrations`' pre-install + local-nx hand-off before dispatching
 // to the single-migration worker, so `nx migrate --run-migration` behaves the
 // same when invoked from a temp `nx@latest` installation.
@@ -3659,10 +3803,11 @@ async function runSingleMigrationFromCli(
   }
 
   // The worker resolves the agentic flow, the effective commit config, and
-  // the default-branch confirmation itself; hand it the raw flags.
+  // the default-branch confirmation itself; hand it the raw flags. Recorded
+  // runs (--run-id) take their commit config from run.json instead.
   await runSingleMigrationWorker({
     root,
-    options: { runMigration: opts.runMigration },
+    options: { runMigration: opts.runMigration, runId: opts.runId },
     agentic: opts.agentic,
     validate: opts.validate,
     createCommits: mergedArgs['createCommits'] as boolean | undefined,

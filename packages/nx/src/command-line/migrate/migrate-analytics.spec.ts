@@ -87,7 +87,11 @@ describe('GA4 event name length cap', () => {
       'migrate_generate_complete',
       'migrate_run_start',
       'migrate_run_complete',
-      'migrate_single_migration_invocation',
+      'migrate_orchestrator_init',
+      'migrate_orchestrator_dispense',
+      'migrate_orchestrator_complete',
+      'migrate_single_migration_recorded',
+      'migrate_single_migration_standalone',
       ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
       ...Object.keys(GENERATE_ERROR_CODES).map(
         (c) => `migrate_generate_error_${c}`
@@ -442,11 +446,61 @@ describe('migrate-analytics events', () => {
     });
   });
 
-  describe('single-migration events', () => {
-    it('reports the migration type on a standalone invocation', () => {
+  describe('orchestrator events', () => {
+    it('reports the migration count and commit flag on init', () => {
       const a = load();
-      a.reportMigrateSingleMigrationInvocation({ migrationType: 'prompt' });
-      expect(paramsFor('migrate_single_migration_invocation')).toEqual({
+      a.reportMigrateOrchestratorInit({
+        migrationCount: 4,
+        createCommits: true,
+      });
+      expect(paramsFor('migrate_orchestrator_init')).toEqual({
+        createCommits: true,
+        migrationCount: 4,
+      });
+    });
+
+    it('reports the dispense action, step kind and attempt', () => {
+      const a = load();
+      a.reportMigrateOrchestratorDispense({
+        action: 'next-step',
+        stepKind: 'migration',
+        attempt: 2,
+      });
+      expect(paramsFor('migrate_orchestrator_dispense')).toEqual({
+        promptChoice: 'next-step',
+        migrationName: 'migration',
+        migrationCount: 2,
+      });
+    });
+
+    it('reports the terminal tallies and total dispense count on complete', () => {
+      const a = load();
+      a.reportMigrateOrchestratorComplete({
+        completed: 3,
+        skipped: 1,
+        dispenseCount: 9,
+      });
+      expect(paramsFor('migrate_orchestrator_complete')).toEqual({
+        appliedCount: 3,
+        taskCount: 1,
+        migrationCount: 9,
+      });
+    });
+
+    it('encodes recorded vs standalone in the single-migration event name', () => {
+      const a = load();
+      a.reportMigrateSingleMigrationInvocation({
+        migrationType: 'hybrid',
+        orchestrated: true,
+      });
+      a.reportMigrateSingleMigrationInvocation({
+        migrationType: 'prompt',
+        orchestrated: false,
+      });
+      expect(paramsFor('migrate_single_migration_recorded')).toEqual({
+        promptChoice: 'hybrid',
+      });
+      expect(paramsFor('migrate_single_migration_standalone')).toEqual({
         promptChoice: 'prompt',
       });
     });

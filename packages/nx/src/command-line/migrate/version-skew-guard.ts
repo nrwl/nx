@@ -3,16 +3,23 @@ import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import { normalizeVersion } from './version-utils';
 
-// The first stable release shipping --run-migration. Deliberately the final
-// release rather than its first prerelease: 23.2.0 prereleases published
-// before the feature landed do not carry it, so a prerelease floor would
-// wrongly accept them. Permanent; never bumped at release time.
+// The first stable release shipping --run-migration/--run-id. Deliberately
+// the final release rather than its first prerelease: 23.2.0 prereleases
+// published before the feature landed do not carry it, so a prerelease floor
+// would wrongly accept them. Permanent; never bumped at release time.
 export const NEW_MIGRATE_FLAGS_FLOOR = '23.2.0';
 
 // yargs accepts both `--run-migration` and `--runMigration`, and the raw argv is
 // forwarded verbatim across both migrate hops, so detection must catch every
 // spelling of the new flags.
-export const NEW_MIGRATE_FLAGS = ['--run-migration', '--runMigration'] as const;
+export const NEW_MIGRATE_FLAGS = [
+  '--run-migration',
+  '--runMigration',
+  '--run-id',
+  '--runId',
+  '--step-action',
+  '--stepAction',
+] as const;
 
 /**
  * The first new migrate flag present in `argv`, or undefined when none is. A

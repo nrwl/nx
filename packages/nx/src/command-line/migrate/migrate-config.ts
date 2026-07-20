@@ -17,11 +17,13 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
  * args object; the input is not mutated.
  *
  * Phase-aware: generate-only options (`include`, `multiMajorMode`) are applied
- * only in the generate phase; the run-phase options (`agentic`, `validate`,
- * `createCommits`, `commitPrefix`) when running the whole migrations file or a
- * single migration (`--run-migration`). This mirrors where each option is
- * consumed and avoids tripping the "cannot be combined with --run-migrations"
- * guards in `parseMigrationsOptions`.
+ * only in the generate phase. The commit options (`createCommits`,
+ * `commitPrefix`) apply when running the whole migrations file, a single
+ * migration (`--run-migration`), or an orchestrated reconcile (a bare
+ * `--run-id`); `agentic`/`validate` apply to those run phases except `--run-id`
+ * invocations (a recorded run is driven by the outer agent). This mirrors
+ * where each option is consumed and avoids tripping the "cannot be combined
+ * with --run-migrations" guards in `parseMigrationsOptions`.
  *
  * `include` is carried as `includeFromConfig` rather than `include` so it is never
  * mistaken for an explicit `--include`: `resolveInclude` applies it only when the
@@ -41,7 +43,10 @@ export function applyNxJsonMigrateDefaults(
   // `--run-migrations` with no value is normalized to '' by yargs, so a defined
   // (even empty-string) value means we're in the run-migrations phase.
   const isRunMigrations = merged.runMigrations !== undefined;
-  const isSingleMigration = merged.runMigration !== undefined;
+  // A bare `--run-id` (orchestrated reconcile) must never take the
+  // generate-options overlay, which would leak `include` etc. from nx.json.
+  const isSingleMigration =
+    merged.runMigration !== undefined || merged.runId !== undefined;
 
   if (isRunMigrations || isSingleMigration) {
     if (
@@ -62,13 +67,21 @@ export function applyNxJsonMigrateDefaults(
       assertType(migrateConfig.commitPrefix, 'string', 'commitPrefix');
       merged.commitPrefix = migrateConfig.commitPrefix;
     }
-    if (merged.agentic === undefined && migrateConfig.agentic !== undefined) {
-      assertValidAgentic(migrateConfig.agentic);
-      merged.agentic = coerceAgenticArg(migrateConfig.agentic) as AgenticArg;
-    }
-    if (merged.validate === undefined && migrateConfig.validate !== undefined) {
-      assertType(migrateConfig.validate, 'boolean', 'validate');
-      merged.validate = migrateConfig.validate;
+    // A `--run-id` invocation (recorded step or reconcile) is driven by the
+    // outer agent; the agentic defaults don't apply to it, and overlaying
+    // `agentic` would trip the `--agentic`/`--run-id` parse conflict.
+    if (merged.runId === undefined) {
+      if (merged.agentic === undefined && migrateConfig.agentic !== undefined) {
+        assertValidAgentic(migrateConfig.agentic);
+        merged.agentic = coerceAgenticArg(migrateConfig.agentic) as AgenticArg;
+      }
+      if (
+        merged.validate === undefined &&
+        migrateConfig.validate !== undefined
+      ) {
+        assertType(migrateConfig.validate, 'boolean', 'validate');
+        merged.validate = migrateConfig.validate;
+      }
     }
   }
 

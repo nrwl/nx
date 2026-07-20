@@ -4,6 +4,7 @@ import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { AGENT_IDS, coerceAgenticArg } from './agentic/cli-args';
 import type { AgenticArg } from './agentic/select';
+import { STEP_ACTIONS, type StepAction } from './step-actions';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -50,6 +51,8 @@ export interface MigrateArgs {
   packageAndVersion?: string;
   runMigrations?: string;
   runMigration?: string;
+  runId?: string;
+  stepAction?: StepAction;
   include?: MigrateInclude;
   /**
    * nx.json `migrate.include` default. Consumed by `resolveInclude` only when the
@@ -106,6 +109,18 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         "Run a single migration from the migrations file by id. The id is '<package>:<name>'; a bare '<name>' is accepted when it matches exactly one migration.",
       type: 'string',
+    })
+    .option('runId', {
+      describe:
+        'Record the execution into the orchestrated migrate run with this id.',
+      type: 'string',
+    })
+    .option('stepAction', {
+      // Decision relay for an orchestrated reconcile (`--run-id` without
+      // `--run-migration`); resolves the single failed or died step.
+      choices: STEP_ACTIONS,
+      type: 'string',
+      hidden: true,
     })
     .option('ifExists', {
       describe: `Run migrations only if the migrations file exists, if not continues successfully.`,
