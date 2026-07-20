@@ -38,7 +38,14 @@ export function getNpmSpawnRegistryEnv(
     );
     reconcileScopedRegistryKey(env, packageName);
     return env;
-  } catch {
+  } catch (e) {
+    // Falling open to npm's own resolution keeps the command running, but it can
+    // silently reach a different registry than the workspace configures, so
+    // leave the cause recoverable.
+    logger.verbose(
+      `Failed to resolve the ${packageManager} registry configuration; falling back to npm's own resolution.`,
+      e
+    );
     return {};
   }
 }
@@ -54,14 +61,21 @@ function resolveSpawnRegistryEnv(
       // npm resolves its own config; the spawned npm IS the package manager.
       return {};
     case 'pnpm':
+      if (!packageManagerVersion) {
+        // Which surfaces pnpm honors depends on its version, so without one
+        // there is nothing to reproduce.
+        warnUnknownVersion(
+          'pnpm',
+          'a registry configured only in pnpm-workspace.yaml'
+        );
+        return {};
+      }
       return getPnpmSpawnRegistryEnv(packageName, root, packageManagerVersion);
     case 'yarn':
       if (!packageManagerVersion) {
         // Without the version we cannot tell classic from berry, so we cannot
-        // reproduce yarn's registry resolution; npm falls back to its own
-        // config (the pre-existing behavior). Warn once so a silent revert to
-        // npm's default registry is diagnosable.
-        warnUnknownYarnVersion();
+        // reproduce yarn's registry resolution.
+        warnUnknownVersion('yarn', 'a registry configured only in .yarnrc.yml');
         return {};
       }
       return major(packageManagerVersion) >= 2
@@ -103,13 +117,18 @@ function reconcileScopedRegistryKey(
   }
 }
 
-let warnedUnknownYarnVersion = false;
-function warnUnknownYarnVersion(): void {
-  if (warnedUnknownYarnVersion) {
+// Warn once per package manager so a silent revert to npm's default registry is
+// diagnosable without repeating the message for every package fetched.
+const warnedUnknownVersions = new Set<PackageManager>();
+function warnUnknownVersion(
+  packageManager: PackageManager,
+  example: string
+): void {
+  if (warnedUnknownVersions.has(packageManager)) {
     return;
   }
-  warnedUnknownYarnVersion = true;
+  warnedUnknownVersions.add(packageManager);
   logger.warn(
-    `Could not determine the yarn version; skipping yarn registry configuration when fetching packages. They will be fetched using npm's own registry resolution, which may differ from yarn's (for example, a custom registry configured only in .yarnrc.yml).`
+    `Could not determine the ${packageManager} version; skipping ${packageManager} registry configuration when fetching packages. They will be fetched using npm's own registry resolution, which may differ from ${packageManager}'s (for example, ${example}).`
   );
 }
