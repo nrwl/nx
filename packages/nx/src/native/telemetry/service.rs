@@ -14,6 +14,7 @@ pub type ParameterMap = HashMap<String, String>;
 pub(crate) struct EventData {
     pub name: String,
     pub parameters: ParameterMap,
+    pub debug_mode: bool,
 }
 
 /// Page view data to be tracked
@@ -22,6 +23,7 @@ pub(crate) struct PageViewData {
     pub title: String,
     pub location: Option<String>,
     pub parameters: ParameterMap,
+    pub debug_mode: bool,
 }
 
 /// Configuration for initializing the telemetry service.
@@ -103,7 +105,7 @@ impl TelemetryService {
             "Google%20Chrome;111.0.5563.64|Not(A%3ABrand;8.0.0.0|Chromium;111.0.5563.64"
                 .to_string(),
         );
-        if std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true" {
+        if read_debug_mode() {
             common_request_parameters
                 .insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
         }
@@ -201,6 +203,7 @@ impl TelemetryService {
         let event = EventData {
             name: event_name,
             parameters: parameters.unwrap_or_default(),
+            debug_mode: read_debug_mode(),
         };
 
         if let Some(tx) = self.event_tx.lock().as_ref() {
@@ -221,6 +224,7 @@ impl TelemetryService {
             title: page_title,
             location: page_location,
             parameters: parameters.unwrap_or_default(),
+            debug_mode: read_debug_mode(),
         };
 
         if let Some(tx) = self.page_view_tx.lock().as_ref() {
@@ -300,8 +304,54 @@ fn enqueue_page_view(
     queue.push(sanitize_params(params));
 }
 
+/// Read on the MAIN thread only (track_* napi calls and service init) — the
+/// background thread must not touch env vars (see the SAFETY note in
+/// persist_session_refreshes). Read per event rather than captured at init so
+/// a long-lived daemon honors NX_DEBUG_TELEMETRY reflected from a client env
+/// (applyDaemonEnvFromClient).
+fn read_debug_mode() -> bool {
+    std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true"
+}
+
+/// Keep the _dbg request param in step with the debug flag carried on each
+/// queued item, so a daemon whose env was refreshed mid-life routes to GA
+/// DebugView (or stops doing so) without a restart.
+fn set_debug_view(common_params: &mut ParameterMap, debug_mode: bool) {
+    if debug_mode {
+        common_params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+    } else {
+        common_params.remove(request_param::DEBUG_VIEW);
+    }
+}
+
+/// Sampled events (perf spans) arrive stamped with a sample_rate parameter
+/// (see perf-logging.ts); events without it always pass. A stamped event is
+/// reported only when the current session falls inside that fraction: the
+/// first 8 hex chars of the session UUID map uniformly onto [0,1). The
+/// decision is per-session — a sampled-in session keeps every span, and the
+/// live (possibly refreshed) session id always governs — and deterministic
+/// across the CLI, daemon, and plugin workers sharing the session.
+/// Debug mode (NX_DEBUG_TELEMETRY) bypasses sampling entirely so events can
+/// be verified in GA DebugView.
+fn is_sampled_in(debug_mode: bool, session_id: &str, parameters: &ParameterMap) -> bool {
+    if debug_mode {
+        return true;
+    }
+    let Some(rate) = parameters
+        .get(event_dimension::SAMPLE_RATE)
+        .and_then(|r| r.parse::<f64>().ok())
+    else {
+        return true;
+    };
+    session_id
+        .get(..8)
+        .and_then(|prefix| u32::from_str_radix(prefix, 16).ok())
+        .is_some_and(|v| (v as f64 / 4294967296.0) < rate)
+}
+
 /// Drain all pending events and page views from channels into queues
 fn drain_channels(
+    session_id: &str,
     event_rx: &Receiver<EventData>,
     page_view_rx: &Receiver<PageViewData>,
     user_params: &ParameterMap,
@@ -310,6 +360,9 @@ fn drain_channels(
     page_view_queue: &mut Vec<ParameterMap>,
 ) {
     while let Ok(event) = event_rx.try_recv() {
+        if !is_sampled_in(event.debug_mode, session_id, &event.parameters) {
+            continue;
+        }
         enqueue_event(
             event,
             user_params,
@@ -372,6 +425,7 @@ fn background_sender(
                 match msg {
                     Ok(page_view) => {
                         session.touch(&mut common_params);
+                        set_debug_view(&mut common_params, page_view.debug_mode);
                         tracing::trace!("Queuing page view: {}", page_view.title);
                         current_page_title = Some(page_view.title.clone());
                         enqueue_page_view(page_view, &user_params, &mut page_view_queue);
@@ -383,8 +437,13 @@ fn background_sender(
                 match msg {
                     Ok(event) => {
                         session.touch(&mut common_params);
-                        tracing::trace!("Queuing event: {}", event.name);
-                        enqueue_event(event, &user_params, current_page_title.as_deref(), &mut event_queue);
+                        set_debug_view(&mut common_params, event.debug_mode);
+                        if is_sampled_in(event.debug_mode, &session.session_id, &event.parameters) {
+                            tracing::trace!("Queuing event: {}", event.name);
+                            enqueue_event(event, &user_params, current_page_title.as_deref(), &mut event_queue);
+                        } else {
+                            tracing::trace!("Dropping sampled-out event: {}", event.name);
+                        }
                     }
                     Err(_) => break,
                 }
@@ -392,7 +451,7 @@ fn background_sender(
             recv(flush_rx) -> msg => {
                 match msg {
                     Ok(reply) => {
-                        drain_channels(&event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
+                        drain_channels(&session.session_id, &event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
                         let result = rt.block_on(send_batches(
                             &client,
                             &common_params,
@@ -406,7 +465,7 @@ fn background_sender(
                 }
             }
             default(timeout) => {
-                drain_channels(&event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
+                drain_channels(&session.session_id, &event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
                 let _ = rt.block_on(send_batches(
                     &client,
                     &common_params,
@@ -669,4 +728,76 @@ fn sanitize_params(mut params: ParameterMap) -> ParameterMap {
     }
 
     sanitized
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn params_with_rate(rate: &str) -> ParameterMap {
+        HashMap::from([(event_dimension::SAMPLE_RATE.to_string(), rate.to_string())])
+    }
+
+    #[test]
+    fn events_without_sample_rate_always_pass() {
+        assert!(is_sampled_in(
+            false,
+            "ffffffff-0000-4000-8000-000000000000",
+            &HashMap::new()
+        ));
+    }
+
+    #[test]
+    fn sessions_below_the_rate_threshold_are_sampled_in() {
+        // 0x00000000 / 2^32 = 0 and 0x19999999 / 2^32 ≈ 0.0999999998
+        assert!(is_sampled_in(
+            false,
+            "00000000-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+        assert!(is_sampled_in(
+            false,
+            "19999999-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+    }
+
+    #[test]
+    fn sessions_at_or_above_the_rate_threshold_are_sampled_out() {
+        // 0x1999999a / 2^32 ≈ 0.1000000001
+        assert!(!is_sampled_in(
+            false,
+            "1999999a-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+        assert!(!is_sampled_in(
+            false,
+            "ffffffff-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+    }
+
+    #[test]
+    fn malformed_session_ids_are_sampled_out() {
+        assert!(!is_sampled_in(false, "zzz", &params_with_rate("0.1")));
+        assert!(!is_sampled_in(false, "", &params_with_rate("0.1")));
+    }
+
+    #[test]
+    fn debug_mode_bypasses_sampling() {
+        assert!(is_sampled_in(
+            true,
+            "ffffffff-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+    }
+
+    #[test]
+    fn unparseable_rates_pass() {
+        assert!(is_sampled_in(
+            false,
+            "ffffffff-0000-4000-8000-000000000000",
+            &params_with_rate("not-a-number")
+        ));
+    }
 }

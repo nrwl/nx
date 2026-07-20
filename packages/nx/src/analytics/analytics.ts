@@ -53,6 +53,19 @@ export type EventParameters = Partial<
 
 let _telemetryInitialized = false;
 
+/**
+ * Fraction of telemetry sessions whose project graph perf spans are reported.
+ * These spans fire on every graph computation (including daemon watch-driven
+ * recomputes), so at 100% they dominate analytics event volume. Events are
+ * sent unconditionally by default; stamping this rate on an event (as the
+ * sampleRate dimension) opts it into sampling — the native sender drops it
+ * unless the live session id falls inside the rate (see is_sampled_in in
+ * native/telemetry/service.rs), so a sampled-in session keeps every span.
+ * Counts in GA must be multiplied by 1/rate; durations and percentiles need
+ * no correction.
+ */
+export const PERF_SPAN_SAMPLE_RATE = 0.1;
+
 export async function startAnalytics() {
   // Analytics not supported on WASM
   if (IS_WASM) {
