@@ -1,8 +1,13 @@
 ---
 import Default from '@astrojs/starlight/components/PageTitle.astro';
+import KnowledgeBaseBackLink from '../kb/KnowledgeBaseBackLink.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
+
+const path = Astro.url.pathname.replace(/\/$/, '');
+const showKnowledgeBaseBackLink = path.startsWith('/docs/kb/');
 ---
 
+{showKnowledgeBaseBackLink && <KnowledgeBaseBackLink />}
 <Breadcrumbs />
 
 <Default><slot /></Default>

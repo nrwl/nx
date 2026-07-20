@@ -1,0 +1,163 @@
+---
+title: 'pnpm Workspaces: Setup, Commands, and Best Practices'
+description: 'Learn pnpm workspaces: pnpm-workspace.yaml setup, the workspace: protocol, running scripts with --filter, catalogs, and best practices that scale.'
+filter: 'type:Guides'
+topics:
+  - 'Recipes'
+---
+
+pnpm workspaces let you develop multiple packages in a single repository (or a monorepo). You declare package locations in `pnpm-workspace.yaml`, link local packages with the `workspace:` protocol, and pnpm installs everything into one content-addressable store, so each package gets a strict `node_modules` without duplicating dependencies on disk.
+
+For the full configuration reference, see the [pnpm workspaces documentation](https://pnpm.io/workspaces).
+
+## Set up a pnpm workspace
+
+### 1. Create pnpm-workspace.yaml
+
+A pnpm workspace is any repository with a `pnpm-workspace.yaml` file at its root. Add it next to a root `package.json` marked `"private": true` so the root is never published by accident. The `packages` field lists the directories that hold `package.json` files:
+
+```yaml
+# pnpm-workspace.yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+### 2. Add packages
+
+Every directory matched by those globs that contains a `package.json` becomes a workspace package. A common layout separates applications from shared packages:
+
+{% filetree %}
+
+- my-workspace/
+  - apps/
+    - web/
+      - package.json
+  - packages/
+    - shared-ui/
+      - package.json
+  - package.json
+  - pnpm-workspace.yaml
+
+{% /filetree %}
+
+### 3. Link packages with the workspace: protocol
+
+To depend on another package in the workspace, reference it with the `workspace:` protocol so pnpm always resolves it to the local package:
+
+```jsonc
+// apps/web/package.json
+{
+  "name": "web",
+  "dependencies": {
+    "react": "^19.0.0",
+    "@my-workspace/shared-ui": "workspace:*",
+  },
+}
+```
+
+The suffix controls what `pnpm publish` writes into the published `package.json`. With the workspace at version `1.5.0`, `workspace:*` becomes the exact version `1.5.0`, `workspace:^` becomes `^1.5.0`, and `workspace:~` becomes `~1.5.0`. During local development all of them use the local package.
+
+Run `pnpm install` once at the root to install every package's dependencies and link the internal ones.
+
+## Run scripts across packages with --filter
+
+`pnpm -r run build` runs the `build` script in every package. The `--filter` flag narrows that to a subset, and it understands the workspace's dependency relationships:
+
+```shell
+pnpm --filter web run build            # a single package
+pnpm --filter "web..." run build       # web and everything it depends on
+pnpm --filter "...shared-ui" run test  # shared-ui and everything that depends on it
+```
+
+Filters also select packages by what changed in git. In CI, test only the packages a PR touches plus their dependents:
+
+```shell
+pnpm --filter "...[origin/main]" run test
+```
+
+`[origin/main]` selects packages with changes since that ref, and the leading `...` adds their dependents.
+
+## Share dependency versions with pnpm catalogs
+
+Catalogs (pnpm 9.5+) define a dependency version once in `pnpm-workspace.yaml` and reference it everywhere, so packages can't drift onto different versions of the same dependency:
+
+```yaml
+# pnpm-workspace.yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+catalog:
+  react: ^19.0.0
+  react-dom: ^19.0.0
+```
+
+```jsonc
+// apps/web/package.json
+{
+  "name": "web",
+  "dependencies": {
+    "react": "catalog:",
+  },
+}
+```
+
+Upgrading React across the whole repository is now a one-line change, and version bumps stop producing merge conflicts in every `package.json`.
+
+## Do pnpm workspaces replace a monorepo tool?
+
+No. pnpm workspaces handle installing and linking packages, and that's where they stop. There's no task graph and no caching, and git-based `--filter` compares changed files rather than task inputs, so CI still reruns tasks a change couldn't have affected.
+
+When task time becomes the bottleneck, add Nx on top without changing how pnpm works:
+
+```shell
+npx nx@latest init
+```
+
+Your existing `package.json` scripts keep working and pnpm keeps managing installs.
+
+### Run tasks before and after Nx
+
+Before Nx, pnpm runs a script across packages, but it runs every task every time and has no notion of which packages a change affects:
+
+```shell
+pnpm -r run build           # every package
+pnpm --filter web run build # a single package
+```
+
+After `nx init`, run the same scripts through Nx:
+
+```shell
+nx run-many -t build   # every project
+nx build web           # a single project
+nx affected -t build   # only projects touched by your changes
+```
+
+The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results), and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
+
+### Configure caching and dev servers
+
+`nx init` writes an `nx.json` with `targetDefaults` that control how targets behave:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+    },
+    "dev": {
+      "continuous": true,
+    },
+  },
+}
+```
+
+`cache: true` makes a target cacheable: Nx hashes each project's inputs (source files, dependencies, and config) and restores its outputs from the cache when nothing has changed. Nothing is cached unless you opt in, so you stay in control. `dependsOn: ["^build"]` builds a project's dependencies first. `continuous: true` marks tasks that don't exit, like dev servers and watchers, so tasks that depend on them don't wait for them to complete.
+
+### Speed up CI with Nx Cloud
+
+Nx Cloud adds more ways to speed up CI for a pnpm workspace: [remote caching](/docs/features/ci-features/remote-cache) shares the cache across CI runs and teammates, [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute tasks across machines, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes fixes when tasks fail. For the full walkthrough, see [Adding Nx to an existing monorepo](/docs/guides/adopting-nx/adding-to-monorepo) and [CI setup](/docs/getting-started/setup-ci), or the [From pnpm Workspaces to Distributed CI](https://nx.dev/courses/pnpm-nx-next/lessons-00-overview) course.
+
+Working with a different package manager? See [npm workspaces](/docs/kb/npm-workspaces), [Yarn workspaces](/docs/kb/yarn-workspaces), or [Bun workspaces](/docs/kb/bun-workspaces). New to monorepos? Start with [what a monorepo is and why teams use one](/docs/kb/what-is-a-monorepo).

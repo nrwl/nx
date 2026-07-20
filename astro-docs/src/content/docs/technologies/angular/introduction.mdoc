@@ -30,7 +30,7 @@ Nx does everything the Angular CLI does, and adds monorepo support, enforced mod
 | Distributed task execution on CI                                       | ❌          | ✅            |
 | Self-healing CI                                                        | ❌          | ✅            |
 
-For a detailed comparison and migration notes, see [Nx and the Angular CLI](/docs/technologies/angular/guides/nx-and-angular).
+For a detailed comparison and migration notes, see [Nx and the Angular CLI](/docs/kb/nx-and-angular).
 
 ## Requirements
 
@@ -42,14 +42,14 @@ The `@nx/angular` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
-For older Nx versions, see the full [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix).
+For older Nx versions, see the full [Nx and Angular versions matrix](/docs/kb/angular-nx-version-matrix).
 
 ## Setup
 
 ### Add to an existing workspace
 
 {% aside type="note" title="Keep Nx package versions in sync" %}
-Install the `@nx/angular` version that matches your `nx` version to avoid hard-to-debug errors. See [Keep Nx versions in sync](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Install the `@nx/angular` version that matches your `nx` version to avoid hard-to-debug errors. See [Keep Nx versions in sync](/docs/kb/keep-nx-versions-in-sync).
 Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
@@ -138,7 +138,7 @@ nx lint my-lib
 ### Buildable and publishable libraries
 
 If you need libraries that build or publish, generate them with build output enabled and an import path. This creates build targets you can cache and run in CI.
-See [Set up incremental builds for Angular libraries](/docs/technologies/angular/guides/setup-incremental-builds-angular) for details.
+See [Set up incremental builds for Angular libraries](/docs/kb/setup-incremental-builds-angular) for details.
 
 ```shell
 nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib
@@ -146,7 +146,7 @@ nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib
 
 ### Set up Module Federation
 
-Nx includes generators for scaffolding [Module Federation](/docs/technologies/module-federation/concepts/module-federation-and-nx) architectures with Angular. Generate a host application and its remotes in one command:
+Nx includes generators for scaffolding [Module Federation](/docs/kb/module-federation-and-nx) architectures with Angular. Generate a host application and its remotes in one command:
 
 ```shell
 nx g @nx/angular:host apps/shell --remotes=products,checkout
@@ -162,13 +162,13 @@ nx g @nx/angular:remote apps/login --host=shell
 
 > See all options in the [Angular remote generators reference](/docs/technologies/angular/generators#remote).
 
-Pass `--dynamic` for [dynamic federation](/docs/technologies/angular/guides/dynamic-module-federation-with-angular) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](/docs/technologies/angular/guides/module-federation-with-ssr).
+Pass `--dynamic` for [dynamic federation](/docs/kb/dynamic-module-federation-with-angular) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](/docs/kb/angular-module-federation-with-ssr).
 
 ## Structure your Angular monorepo
 
 Split each application into small, focused libraries grouped by domain (for example `products`, `checkout`, `shared/ui`). Tag those libraries and [enforce module boundaries](/docs/features/enforce-module-boundaries) to control which libraries can depend on each other. This keeps a growing monorepo maintainable and makes `nx affected` precise.
 
-To decide how to split projects, see [folder structure](/docs/concepts/decisions/folder-structure) and [project size](/docs/concepts/decisions/project-size). For a worked example of organizing Angular apps into feature, UI, data-access, and utility libraries, see [Architecting Angular Applications](/blog/architecting-angular-applications).
+To decide how to split projects, see [folder structure](/docs/kb/folder-structure) and [project size](/docs/kb/project-size). For a worked example of organizing Angular apps into feature, UI, data-access, and utility libraries, see [Architecting Angular Applications](/blog/architecting-angular-applications).
 
 ## Set up CI for your Angular monorepo
 
@@ -191,9 +191,9 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 {% cardgrid %}
 {% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Nx Agents, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
-{% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/technologies/angular/migration/angular" /%}
-{% linkcard title="Dynamic Module Federation" description="Load Angular remotes at runtime with dynamic federation." href="/docs/technologies/angular/guides/dynamic-module-federation-with-angular" /%}
-{% linkcard title="Tailwind CSS with Angular" description="Add Tailwind CSS to Angular apps and libraries." href="/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects" /%}
+{% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/kb/migrate-angular-cli-to-nx" /%}
+{% linkcard title="Dynamic Module Federation" description="Load Angular remotes at runtime with dynamic federation." href="/docs/kb/dynamic-module-federation-with-angular" /%}
+{% linkcard title="Tailwind CSS with Angular" description="Add Tailwind CSS to Angular apps and libraries." href="/docs/kb/using-tailwind-css-with-angular-projects" /%}
 {% linkcard title="Angular Generators Reference" description="All @nx/angular generators." href="/docs/technologies/angular/generators" /%}
 {% linkcard title="Angular Executors Reference" description="All @nx/angular executors." href="/docs/technologies/angular/executors" /%}
 {% /cardgrid %}
