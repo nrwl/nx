@@ -155,6 +155,7 @@ export function resolveCreateCommits(args: {
   agenticKind: ResolvedAgentic['kind'];
   isGitRepo: boolean;
   commitPrefixIsCustom?: boolean;
+  orchestrated?: boolean;
 }): {
   effective: boolean;
   agenticHasDiffContext: boolean;
@@ -162,6 +163,9 @@ export function resolveCreateCommits(args: {
   error?: string;
 } {
   const { createCommits, agenticKind, isGitRepo, commitPrefixIsCustom } = args;
+  // The orchestrator forces the agentic defaults without the `--agentic` flag,
+  // so its warnings must not name a flag the user never passed.
+  const orchestrated = args.orchestrated === true;
 
   if (createCommits === true && !isGitRepo) {
     return {
@@ -178,7 +182,9 @@ export function resolveCreateCommits(args: {
         effective: false,
         agenticHasDiffContext: false,
         warning:
-          "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review." +
+          (orchestrated
+            ? "--no-create-commits was passed, but orchestrated migrate runs create per-migration commits by default. Without them, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review."
+            : "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review.") +
           (commitPrefixIsCustom
             ? ' Note: the custom --commit-prefix value will have no effect because commits are disabled.'
             : ''),
@@ -191,7 +197,9 @@ export function resolveCreateCommits(args: {
         effective: false,
         agenticHasDiffContext: false,
         warning:
-          '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.' +
+          (orchestrated
+            ? 'Orchestrated migrate runs create per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.'
+            : '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.') +
           (commitPrefixIsCustom
             ? ' The custom --commit-prefix value will have no effect.'
             : ''),

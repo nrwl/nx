@@ -54,7 +54,7 @@ import {
   isHybridMigration,
   isNpmPeerDepsError,
   isPromptOnlyMigration,
-  isSingleMigrationInvocation,
+  isRunPhaseInvocation,
   Migrator,
   normalizeVersion,
   parseMigrationReturn,
@@ -2924,6 +2924,19 @@ module.exports = {
       expect(r).toEqual({
         type: 'runSingleMigration',
         runMigration: '@nx/js:my-migration',
+        runId: undefined,
+      });
+    });
+
+    it('should carry the run id for a recorded single migration', async () => {
+      const r = await parseMigrationsOptions({
+        runMigration: '@nx/js:my-migration',
+        runId: 'run-1',
+      });
+      expect(r).toMatchObject({
+        type: 'runSingleMigration',
+        runMigration: '@nx/js:my-migration',
+        runId: 'run-1',
       });
     });
 
@@ -2931,6 +2944,82 @@ module.exports = {
       await expect(() =>
         parseMigrationsOptions({ runMigration: '' })
       ).rejects.toThrow(/'--run-migration' requires a migration id/);
+    });
+
+    it('should reject an empty --run-id', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', runId: '' })
+      ).rejects.toThrow(/'--run-id' requires the id of the migrate run/);
+    });
+
+    it('should reject a bare --run-id when the orchestrator gate is off', async () => {
+      const prev = process.env.NX_MIGRATE_ORCHESTRATOR;
+      delete process.env.NX_MIGRATE_ORCHESTRATOR;
+      try {
+        await expect(() =>
+          parseMigrationsOptions({ runId: 'run-1' })
+        ).rejects.toThrow(/'--run-id' requires '--run-migration'/);
+      } finally {
+        if (prev === undefined) delete process.env.NX_MIGRATE_ORCHESTRATOR;
+        else process.env.NX_MIGRATE_ORCHESTRATOR = prev;
+      }
+    });
+
+    describe('orchestrator reconcile (gate on)', () => {
+      let prevGate: string | undefined;
+      beforeEach(() => {
+        prevGate = process.env.NX_MIGRATE_ORCHESTRATOR;
+        process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
+      });
+      afterEach(() => {
+        if (prevGate === undefined) delete process.env.NX_MIGRATE_ORCHESTRATOR;
+        else process.env.NX_MIGRATE_ORCHESTRATOR = prevGate;
+      });
+
+      it('discriminates a reconcile from a bare --run-id', async () => {
+        expect(await parseMigrationsOptions({ runId: 'run-1' })).toEqual({
+          type: 'orchestratorReconcile',
+          runId: 'run-1',
+        });
+      });
+
+      it('carries a --step-action decision on a reconcile', async () => {
+        expect(
+          await parseMigrationsOptions({ runId: 'run-1', stepAction: 'retry' })
+        ).toEqual({
+          type: 'orchestratorReconcile',
+          runId: 'run-1',
+          stepAction: 'retry',
+        });
+      });
+
+      it('rejects an unrecognized --step-action value instead of forwarding it unchecked', async () => {
+        await expect(() =>
+          parseMigrationsOptions({ runId: 'run-1', stepAction: 'bogus' })
+        ).rejects.toThrow(
+          /'--step-action' must be one of retry, skip, retry-clean, adopt/
+        );
+      });
+
+      it('still rejects an empty --run-id', async () => {
+        await expect(() =>
+          parseMigrationsOptions({ runId: '' })
+        ).rejects.toThrow(/'--run-id' requires the id of the migrate run/);
+      });
+    });
+
+    it('should reject --step-action without --run-id', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ stepAction: 'retry' })
+      ).rejects.toThrow(/'--step-action' requires '--run-id'/);
+    });
+
+    it('should reject --step-action combined with --run-migration', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', stepAction: 'retry' })
+      ).rejects.toThrow(
+        /'--step-action' cannot be combined with '--run-migration'/
+      );
     });
 
     it('should reject --run-migration combined with --run-migrations', async () => {
@@ -2966,6 +3055,28 @@ module.exports = {
       });
     });
 
+    it('should reject --agentic combined with --run-id', async () => {
+      // A recorded run is driven by the outer agent; only the explicit "on"
+      // values conflict, on both the recorded and the bare reconcile shape.
+      await expect(() =>
+        parseMigrationsOptions({
+          runMigration: 'a',
+          runId: 'r1',
+          agentic: true,
+        })
+      ).rejects.toThrow(/'--agentic' cannot be combined with '--run-id'/);
+      await expect(() =>
+        parseMigrationsOptions({ runId: 'r1', agentic: 'claude-code' })
+      ).rejects.toThrow(/'--agentic' cannot be combined with '--run-id'/);
+      await expect(
+        parseMigrationsOptions({
+          runMigration: 'a',
+          runId: 'r1',
+          agentic: false,
+        })
+      ).resolves.toMatchObject({ type: 'runSingleMigration', runId: 'r1' });
+    });
+
     it('should reject --run-migration combined with --if-exists', async () => {
       await expect(() =>
         parseMigrationsOptions({ runMigration: 'a', ifExists: true })
@@ -2990,19 +3101,19 @@ module.exports = {
       });
     });
 
-    it('classifies --run-migration as a single-migration invocation and everything else as not', () => {
-      expect(isSingleMigrationInvocation({ runMigration: '@nx/js:x' })).toBe(
-        true
-      );
+    it('classifies the run flags as run-phase and everything else as not', () => {
+      expect(isRunPhaseInvocation({ runMigration: '@nx/js:x' })).toBe(true);
+      expect(isRunPhaseInvocation({ runId: 'run-1' })).toBe(true);
+      expect(isRunPhaseInvocation({ stepAction: 'retry' })).toBe(true);
       // Variables rather than fresh literals: the Pick parameter drops
       // MigrateArgs's index signature, so excess-property checking would
       // reject these near-miss keys inline.
       const runMigrationsArgs: MigrateArgs = { runMigrations: '' };
-      expect(isSingleMigrationInvocation(runMigrationsArgs)).toBe(false);
+      expect(isRunPhaseInvocation(runMigrationsArgs)).toBe(false);
       const packageAndVersionArgs: MigrateArgs = {
         packageAndVersion: 'nx@latest',
       };
-      expect(isSingleMigrationInvocation(packageAndVersionArgs)).toBe(false);
+      expect(isRunPhaseInvocation(packageAndVersionArgs)).toBe(false);
     });
 
     it('should default to nx@latest when no packageAndVersion is provided', async () => {
@@ -5769,6 +5880,32 @@ module.exports = {
         expect(result.effective).toBe(false);
         expect(result.agenticHasDiffContext).toBe(false);
         expect(result.warning).toMatch(/--no-create-commits/);
+      });
+
+      it('words the explicit --no-create-commits warning without naming --agentic on the orchestrated path', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+          isGitRepo: true,
+          orchestrated: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.warning).toMatch(/orchestrated migrate runs/);
+        expect(result.warning).toMatch(/--no-create-commits/);
+        expect(result.warning).not.toMatch(/--agentic/);
+      });
+
+      it('words the no-git warning without naming --agentic on the orchestrated path', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          orchestrated: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.warning).toMatch(/Orchestrated migrate runs/);
+        expect(result.warning).toMatch(/not a git repository/);
+        expect(result.warning).not.toMatch(/--agentic/);
       });
 
       it('errors when --create-commits is explicit without a git repo', () => {

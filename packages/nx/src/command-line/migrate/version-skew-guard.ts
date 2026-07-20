@@ -3,20 +3,27 @@ import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import { normalizeVersion } from './version-utils';
 
-// The first stable release shipping --run-migration. Deliberately the final
-// release rather than its first prerelease: 23.2.0 prereleases published
-// before the feature landed do not carry it, so a prerelease floor would
-// wrongly accept them. The cost is that a later 23.2.0 prerelease that does
-// carry the feature is refused too, which fails toward refusal. Permanent;
-// never bumped at release time, but it must name the release that actually
-// ships the feature: if that slips past 23.2.0, versions in the gap pass
-// this floor and route to a temp CLI that drops the new flags and runs the
-// plan phase instead.
+// The first stable release shipping --run-migration/--run-id. Deliberately
+// the final release rather than its first prerelease: 23.2.0 prereleases
+// published before the feature landed do not carry it, so a prerelease floor
+// would wrongly accept them. The cost is that a later 23.2.0 prerelease that
+// does carry the feature is refused too, which fails toward refusal.
+// Permanent; never bumped at release time, but it must name the release that
+// actually ships the feature: if that slips past 23.2.0, versions in the gap
+// pass this floor and route to a temp CLI that drops the new flags and runs
+// the plan phase instead.
 export const NEW_MIGRATE_FLAGS_FLOOR = '23.2.0';
 
-// yargs accepts both spellings and the raw argv is forwarded across both
-// migrate hops, so detection must catch each one.
-export const NEW_MIGRATE_FLAGS = ['--run-migration', '--runMigration'] as const;
+// yargs accepts both spellings of each flag and the raw argv is forwarded
+// across both migrate hops, so detection must catch every one.
+export const NEW_MIGRATE_FLAGS = [
+  '--run-migration',
+  '--runMigration',
+  '--run-id',
+  '--runId',
+  '--step-action',
+  '--stepAction',
+] as const;
 
 /**
  * Matches an exact token or `<flag>=<value>`. The `=` matters: a bare

@@ -11,6 +11,7 @@ import { randomBytes } from 'crypto';
 import { join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import { nxVersion } from '../../../utils/versions';
+import { RUN_ID_SAFE } from './run-id';
 
 export const CURRENT_RUN_STATE_FORMAT_VERSION = 1;
 
@@ -399,9 +400,9 @@ export function readRunState(runDirPath: string): MigrateRunState {
     );
   }
   // Version refusal must precede shape validation: a newer format may change a
-  // field's type on purpose, and classifying that as corruption would let
-  // callers that swallow corruption (readRunDirState) treat the run as absent
-  // and start a competing one.
+  // field's type on purpose, and classifying that as corruption would surface
+  // it as a corrupt run to fix or remove, when the real remediation is
+  // re-running with the newer Nx that owns it.
   if (
     typeof parsed.formatVersion === 'number' &&
     parsed.formatVersion > CURRENT_RUN_STATE_FORMAT_VERSION
@@ -444,11 +445,15 @@ export function writeRunState(
   renameSync(tmpPath, filePath);
 }
 
+// ENOENT is the ordinary "no runs yet" answer. Any other failure (EACCES,
+// ENOTDIR) hides runs that may exist, so it propagates rather than reading
+// as an empty directory.
 function readDirEntries(dir: string): Dirent[] {
   try {
     return readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return [];
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') return [];
+    throw e;
   }
 }
 
@@ -465,24 +470,61 @@ function readRunDirState(candidateDir: string): MigrateRunState | null {
   }
 }
 
+export interface UninterpretableRunDir {
+  dirName: string;
+  reason: string;
+}
+
 /**
+ * Scans for the newest active run. A dir that holds a run.json but can't be
+ * trusted (unreadable or corrupt content, or a name that fails
+ * {@link RUN_ID_SAFE}) is returned as `uninterpretable` instead of being
+ * silently skipped: it could be an active run, and treating it as absent
+ * would let a run-starting caller create a competing run that re-applies
+ * migrations the first run already applied.
+ *
  * Throws {@link NewerRunStateFormatError} when any run dir holds a
  * newer-format run.json: whether that run is active can't be determined
- * here, and silently ignoring it could start a competing run.
+ * here, and its remediation (a newer Nx) differs from the uninterpretable
+ * one (fix or remove).
  */
-export function findActiveRun(
-  root: string
-): { runId: string; state: MigrateRunState } | null {
+export function findActiveRun(root: string): {
+  active: { runId: string; state: MigrateRunState } | null;
+  uninterpretable: UninterpretableRunDir[];
+} {
   let newest: { runId: string; state: MigrateRunState } | null = null;
+  const uninterpretable: UninterpretableRunDir[] = [];
   for (const entry of readDirEntries(migrateRunsDir(root))) {
     if (!entry.isDirectory()) continue;
-    const state = readRunDirState(join(migrateRunsDir(root), entry.name));
-    if (!state || state.status !== 'active') continue;
+    const dir = join(migrateRunsDir(root), entry.name);
+    // Dirs without a run.json are legacy per-version runner dirs, not runs.
+    if (!existsSync(join(dir, RUN_STATE_FILE_NAME))) continue;
+    // Run ids are joined into paths and interpolated into dispensed commands,
+    // so a dir whose name fails the gate is never trusted as a resumable run.
+    if (!RUN_ID_SAFE.test(entry.name)) {
+      uninterpretable.push({
+        dirName: entry.name,
+        reason: 'its name is not a valid run id',
+      });
+      continue;
+    }
+    let state: MigrateRunState;
+    try {
+      state = readRunState(dir);
+    } catch (e) {
+      if (e instanceof NewerRunStateFormatError) throw e;
+      uninterpretable.push({
+        dirName: entry.name,
+        reason: e instanceof Error ? e.message : String(e),
+      });
+      continue;
+    }
+    if (state.status !== 'active') continue;
     if (!newest || state.createdAt > newest.state.createdAt) {
       newest = { runId: entry.name, state };
     }
   }
-  return newest;
+  return { active: newest, uninterpretable };
 }
 
 /**

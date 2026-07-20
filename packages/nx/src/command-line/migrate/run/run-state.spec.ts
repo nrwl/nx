@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { nxVersion } from '../../../utils/versions';
 import {
   CURRENT_RUN_STATE_FORMAT_VERSION,
@@ -366,11 +366,14 @@ describe('run-state', () => {
   });
 
   describe('findActiveRun', () => {
-    it('returns null when there are no runs', () => {
-      expect(findActiveRun(root)).toBeNull();
+    it('returns no active run when there are no runs', () => {
+      expect(findActiveRun(root)).toEqual({
+        active: null,
+        uninterpretable: [],
+      });
     });
 
-    it('picks the newest active run, ignoring run-json-less and corrupt dirs', () => {
+    it('picks the newest active run, ignoring run-json-less dirs and reporting corrupt ones', () => {
       writeRun(
         root,
         'older',
@@ -400,14 +403,56 @@ describe('run-state', () => {
       );
       // legacy per-version runner dir: no run.json, must be ignored
       mkdirSync(join(migrateRunsDir(root), 'legacy'), { recursive: true });
-      // corrupt run.json: must be ignored, not crash the scan
+      // corrupt run.json: must not crash the scan or win, but must be reported
       mkdirSync(join(migrateRunsDir(root), 'corrupt'), { recursive: true });
       writeFileSync(join(migrateRunsDir(root), 'corrupt', 'run.json'), 'nope');
 
       const result = findActiveRun(root);
 
-      expect(result?.runId).toBe('newer');
-      expect(result?.state.status).toBe('active');
+      expect(result.active?.runId).toBe('newer');
+      expect(result.active?.state.status).toBe('active');
+      expect(result.uninterpretable).toEqual([
+        { dirName: 'corrupt', reason: expect.stringContaining('JSON') },
+      ]);
+    });
+
+    it('reports a run dir whose run.json cannot be read instead of treating it as absent', () => {
+      // run.json as a directory makes readFileSync fail with a raw fs error
+      // (EISDIR), the same failure class as EACCES on a file.
+      mkdirSync(join(migrateRunsDir(root), 'unreadable', 'run.json'), {
+        recursive: true,
+      });
+
+      const result = findActiveRun(root);
+
+      expect(result.active).toBeNull();
+      expect(result.uninterpretable).toEqual([
+        { dirName: 'unreadable', reason: expect.stringContaining('EISDIR') },
+      ]);
+    });
+
+    it('reports an active run dir whose name is not a safe run id instead of resuming it', () => {
+      writeRun(
+        root,
+        'evil;rm -rf',
+        buildState({ runId: 'evil;rm -rf', status: 'active' })
+      );
+      // an unsafe name without a run.json is junk, not a run: stays silent
+      mkdirSync(join(migrateRunsDir(root), 'also;unsafe'), { recursive: true });
+
+      const result = findActiveRun(root);
+
+      expect(result.active).toBeNull();
+      expect(result.uninterpretable).toEqual([
+        { dirName: 'evil;rm -rf', reason: 'its name is not a valid run id' },
+      ]);
+    });
+
+    it('throws when the migrate-runs dir itself cannot be scanned', () => {
+      mkdirSync(dirname(migrateRunsDir(root)), { recursive: true });
+      writeFileSync(migrateRunsDir(root), 'not a directory');
+
+      expect(() => findActiveRun(root)).toThrow(/ENOTDIR/);
     });
 
     it('propagates a newer-format run instead of treating it as absent', () => {
