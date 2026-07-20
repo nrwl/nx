@@ -930,7 +930,7 @@ describe('@nx/playwright/plugin', () => {
     `);
   });
 
-  it('should infer a wait-for-webserver task and wire the atomized CI tasks to it when the webServer defines a port', async () => {
+  it('should infer a wait-for-webserver task and wire the e2e and atomized CI tasks to it when the webServer defines a port', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
       webServer: {
@@ -955,7 +955,7 @@ describe('@nx/playwright/plugin', () => {
     const project = results[0][1].projects['.'];
     const { targets } = project;
 
-    expect(targets['e2e-ci--wait-for-webserver']).toEqual({
+    expect(targets['e2e--wait-for-webserver']).toEqual({
       executor: '@nx/playwright:wait-for-webserver',
       cache: false,
       options: { servers: [{ port: 4200 }] },
@@ -963,25 +963,27 @@ describe('@nx/playwright/plugin', () => {
       metadata: {
         technologies: ['playwright'],
         description:
-          'Waits for the E2E web server(s) to be ready before the Playwright CI test tasks run.',
+          'Waits for the E2E web server(s) to be ready before the Playwright test tasks run.',
       },
     });
     // atomized CI tasks keep the continuous serve dependency (to keep it alive)
     // and add the discrete readiness gate as a barrier.
     expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
       { projects: ['app1'], target: 'serve' },
-      { target: 'e2e-ci--wait-for-webserver' },
+      { target: 'e2e--wait-for-webserver' },
     ]);
     expect(targets['e2e-ci--tests/run-me-2.spec.ts'].dependsOn).toEqual([
       { projects: ['app1'], target: 'serve' },
-      { target: 'e2e-ci--wait-for-webserver' },
+      { target: 'e2e--wait-for-webserver' },
     ]);
-    // the non-CI e2e target is unchanged: it only depends on the serve task.
+    // the non-CI e2e task shares the same readiness gate as a barrier on top of
+    // the continuous serve dependency.
     expect(targets['e2e'].dependsOn).toEqual([
       { projects: ['app1'], target: 'serve' },
+      { target: 'e2e--wait-for-webserver' },
     ]);
     expect(project.metadata.targetGroups['E2E (CI)']).toContain(
-      'e2e-ci--wait-for-webserver'
+      'e2e--wait-for-webserver'
     );
   });
 
@@ -1006,12 +1008,12 @@ describe('@nx/playwright/plugin', () => {
     );
     const { targets } = results[0][1].projects['.'];
 
-    expect(targets['e2e-ci--wait-for-webserver'].options).toEqual({
+    expect(targets['e2e--wait-for-webserver'].options).toEqual({
       servers: [{ url: 'http://localhost:4200' }],
     });
     expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
       { projects: ['app1'], target: 'serve' },
-      { target: 'e2e-ci--wait-for-webserver' },
+      { target: 'e2e--wait-for-webserver' },
     ]);
   });
 
@@ -1036,13 +1038,16 @@ describe('@nx/playwright/plugin', () => {
     const project = results[0][1].projects['.'];
     const { targets } = project;
 
-    expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
-    // falls back to depending on the serve task only, as before.
+    expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+    // both tasks fall back to depending on the serve task only, as before.
     expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
       { projects: ['app1'], target: 'serve' },
     ]);
+    expect(targets['e2e'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+    ]);
     expect(project.metadata.targetGroups['E2E (CI)']).not.toContain(
-      'e2e-ci--wait-for-webserver'
+      'e2e--wait-for-webserver'
     );
   });
 
@@ -1068,7 +1073,7 @@ describe('@nx/playwright/plugin', () => {
     );
     const { targets } = results[0][1].projects['.'];
 
-    expect(targets['e2e-ci--wait-for-webserver'].options).toEqual({
+    expect(targets['e2e--wait-for-webserver'].options).toEqual({
       servers: [{ port: 4200 }],
       timeout: 120000,
     });
@@ -1104,7 +1109,7 @@ describe('@nx/playwright/plugin', () => {
     );
     const { targets } = results[0][1].projects['.'];
 
-    expect(targets['e2e-ci--wait-for-webserver'].options.timeout).toBe(120000);
+    expect(targets['e2e--wait-for-webserver'].options.timeout).toBe(120000);
   });
 
   it('should let the webServerTimeout plugin option override the configured webServer.timeout', async () => {
@@ -1130,7 +1135,7 @@ describe('@nx/playwright/plugin', () => {
     );
     const { targets } = results[0][1].projects['.'];
 
-    expect(targets['e2e-ci--wait-for-webserver'].options).toEqual({
+    expect(targets['e2e--wait-for-webserver'].options).toEqual({
       servers: [{ port: 4200 }],
       timeout: 300000,
     });
@@ -1158,7 +1163,7 @@ describe('@nx/playwright/plugin', () => {
     );
     const { targets } = results[0][1].projects['.'];
 
-    expect(targets['e2e-ci--wait-for-webserver'].options.servers).toEqual([
+    expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
       { url: 'https://localhost:4200', ignoreHTTPSErrors: true },
     ]);
   });
