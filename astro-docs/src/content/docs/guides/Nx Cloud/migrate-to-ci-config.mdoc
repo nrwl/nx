@@ -1,0 +1,107 @@
+---
+title: 'Migrate from start-ci-run to start-nx-agents'
+description: 'Move your start-ci-run CLI flags into a .nx/ci-config.yaml file and switch to start-nx-agents'
+filter: 'type:Guides'
+---
+
+`nx-cloud start-nx-agents` reads its CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file instead of from `start-ci-run` CLI flags.
+This guide moves an existing `start-ci-run` setup to the config file.
+
+## Why migrate
+
+The config file offers two advantages over CLI flags.
+
+### One place to control every pipeline
+
+With `start-ci-run`, distribution, stop conditions, assignment rules, and self-healing are spread across flags on one or more commands, often duplicated between jobs and providers.
+`.nx/ci-config.yaml` holds all of it in a single file, versioned with your workspace, so you change pipeline behavior in one place and review it in one diff.
+
+### Configuration that does not depend on command order
+
+Every Nx Cloud command reads `.nx/ci-config.yaml` when it runs, so your configuration applies to the CI Pipeline Execution no matter which command starts it.
+`start-nx-agents` provisions the agents your job needs. It is not a special command that has to run first to lock in the configuration.
+With `start-ci-run`, configuration instead came from that command's flags, so it had to run before any other `nx` command for its settings to apply.
+
+{% aside type="caution" title="The two commands cannot be combined" %}
+`start-ci-run` does not read `.nx/ci-config.yaml`. Once the file exists, `start-ci-run` exits with an error and points you to `start-nx-agents`.
+This is a switch, not an addition: move your flags into the file and change the command in the same step. Do not leave both in place.
+{% /aside %}
+
+## Before you start
+
+Find the `start-ci-run` line in your CI workflow. It usually sits near the top of the main job, before dependencies are installed. For example:
+
+```yaml
+# .github/workflows/ci.yml
+- run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+```
+
+## Step 1: Create the config file
+
+Create `.nx/ci-config.yaml` at the root of your workspace and move each flag's value into its matching key.
+The example above becomes:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-medium-js
+lifecycle:
+  stop-after:
+    - build
+```
+
+Use this table to translate each flag. For the full schema, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+
+| `start-ci-run` flag             | `.nx/ci-config.yaml`             |
+| ------------------------------- | -------------------------------- |
+| `--distribute-on`               | `dte.distribute-on`              |
+| `--assignment-rules`            | `dte.assignment-rules`           |
+| `--use-dte-by-default`          | `dte.enabled-by-default`         |
+| `--stop-agents-after`           | `lifecycle.stop-after`           |
+| `--stop-agents-on-failure`      | `lifecycle.fail-after`           |
+| `--require-explicit-completion` | `lifecycle.heartbeat` (inverted) |
+| `--with-env-vars`               | `nx-agents.with-env-vars`        |
+| `--fix-tasks`                   | `ai.fix-tasks-patterns`          |
+| `--auto-apply-fixes`            | `ai.auto-apply-patterns`         |
+
+Three flags need a closer look as you translate them:
+
+- `--stop-agents-after` takes a comma-separated list. In the file it becomes a YAML array under `lifecycle.stop-after`, with one target per line.
+- `--stop-agents-on-failure` is a boolean. `true` becomes `fail-after: 1`, and `false` becomes `fail-after: 0`. The file also accepts higher counts, so `fail-after: 3` stops after three failures, which the flag could not express.
+- `--require-explicit-completion` maps to `lifecycle.heartbeat` inverted. If you passed the flag, set `heartbeat: false`. If you did not, leave `heartbeat` at its default of `true`.
+
+`--force` has no counterpart. It is a guard against running `start-ci-run` locally, and `start-nx-agents` does not need it.
+
+## Step 2: Swap the command
+
+Replace the `start-ci-run` invocation with `start-nx-agents`. The command takes no flags, since the configuration now lives in the file.
+
+```yaml
+# .github/workflows/ci.yml
+- run: npx nx-cloud start-nx-agents
+```
+
+## Step 3: Verify
+
+Commit both changes together and run the pipeline. Confirm that:
+
+- The run starts without the "a CI configuration file was detected" error, which means no `start-ci-run` invocation remains.
+- Tasks distribute across the number of agents you set in `dte.distribute-on`.
+- The run stops after the targets you listed in `lifecycle.stop-after`.
+
+## Per-environment overrides
+
+`start-ci-run` applied the same flags to every pipeline. The config file adds a capability the flags did not have: [`overrides`](/docs/reference/nx-cloud/ci-config#overrides), keyed by `NX_CLOUD_ENV`, let you change configuration per environment.
+
+```yaml
+# .nx/ci-config.yaml
+lifecycle:
+  fail-after: 1
+
+overrides:
+  main:
+    lifecycle:
+      fail-after: 0
+```
+
+Here every pipeline stops on the first failure, except when `NX_CLOUD_ENV` is `main`, where the run finishes so you see every failure at once.

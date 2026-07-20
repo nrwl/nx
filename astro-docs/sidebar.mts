@@ -857,6 +857,10 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
+          {
+            label: 'Migrate to start-nx-agents',
+            link: 'guides/nx-cloud/migrate-to-ci-config',
+          },
           { label: 'Access tokens', link: 'guides/nx-cloud/access-tokens' },
           {
             label: 'Personal access tokens',

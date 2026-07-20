@@ -348,9 +348,9 @@ npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name
 
 ### `nx-cloud start-nx-agents`
 
-At the beginning of your main job, invoke `npx nx-cloud start-nx-agents`. This tells Nx Cloud that the following commands belong to the same CI run, and starts the [Nx Agents](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
+Invoke `npx nx-cloud start-nx-agents` at the beginning of your main job to provision the [Nx Agents](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
 
-`start-nx-agents` reads its configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file rather than from CLI flags.
+Nx Cloud reads your CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. Every Nx Cloud command reads that file, so your configuration applies to the run whichever command starts it. `start-nx-agents` takes no configuration flags.
 
 **Usage:**
 
@@ -376,7 +376,7 @@ Pick one path for your workspace: the config file with `start-nx-agents`, or CLI
 
 #### Migrating from start-ci-run flags
 
-Every `start-ci-run` flag has a `.nx/ci-config.yaml` counterpart. For the full schema, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+Every `start-ci-run` flag has a `.nx/ci-config.yaml` counterpart. For a step-by-step walkthrough, see [Migrate from start-ci-run to start-nx-agents](/docs/guides/nx-cloud/migrate-to-ci-config). For the full schema, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
 | `start-ci-run` flag             | `.nx/ci-config.yaml`                                                                                                              |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |

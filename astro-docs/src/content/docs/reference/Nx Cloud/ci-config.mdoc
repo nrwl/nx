@@ -4,8 +4,9 @@ description: 'Configure Nx Cloud CI Pipeline Executions with the .nx/ci-config.y
 filter: 'type:References'
 ---
 
-`nx-cloud start-nx-agents` reads its configuration from a `.nx/ci-config.yaml` file at the root of your workspace.
+Nx Cloud reads CI configuration from a `.nx/ci-config.yaml` file at the root of your workspace.
 The file controls how a CI Pipeline Execution runs: task distribution, agent lifecycle, self-healing, and the environment forwarded to agents.
+Every Nx Cloud command reads the file, so the configuration applies to the run whichever command starts it. To provision Nx Agents, run [`nx-cloud start-nx-agents`](/docs/reference/nx-cloud-cli#nx-cloud-start-nx-agents).
 
 ```yaml
 # .nx/ci-config.yaml
