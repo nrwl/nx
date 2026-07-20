@@ -179,6 +179,11 @@ import {
 } from './execute-migration';
 import { runSingleMigrationWorker } from './run';
 import { sortMigrations } from './sort-migrations';
+import {
+  assertWorkspaceNxSupportsNewMigrateFlags,
+  resolveNewMigrateFlagsRunTarget,
+} from './version-skew-guard';
+import { nxVersion as ownNxVersion } from '../../utils/versions';
 
 export * from './execute-migration';
 export { normalizeVersion };
@@ -3154,6 +3159,8 @@ export async function executeMigrations(
 
 // Forwards this invocation's raw argv to the workspace-local nx, used from
 // each run path's temp-installation check (`!__dirname.startsWith(workspaceRoot)`).
+// `runNxSync` resolves nx through the workspace's package manager at spawn
+// time, so the child runs the bytes the preceding pre-install put in place.
 // Returns the child's exit code when it is non-zero, undefined otherwise; the
 // caller returns this value directly to stop and let the local nx take over.
 function handOffToLocalNx(args: string[]): number | undefined {
@@ -3524,6 +3531,230 @@ export async function migrate(
   });
 }
 
+// The subset of the PnP manifest API read below. The manifest is evaluated
+// from disk, so the runtime tolerance (optional calls, fall-through on a
+// malformed shape) stays regardless of these types.
+interface PnpManifest {
+  resolveRequest(specifier: string, issuer: string): string | null | undefined;
+  findPackageLocator?(path: string): { name: string; reference: string } | null;
+}
+
+// Evaluated manifest code can throw any value, including ones String()
+// rejects (a null-prototype object, caught by the Object.prototype.toString
+// fallback below) and ones even Object.prototype.toString rejects (a revoked
+// proxy); interpolating those in a catch would throw again and escape the
+// catch.
+function stringifyCaught(e: unknown): string {
+  try {
+    return String(e);
+  } catch {
+    try {
+      return Object.prototype.toString.call(e);
+    } catch {
+      return '<unprintable value>';
+    }
+  }
+}
+
+// The workspace-local nx version, or undefined when it cannot be resolved from
+// the workspace root. Guard B treats that as "do not block"; guard A refuses
+// when the temp CLI side cannot take the flags either.
+// A resolver-based lookup is unusable here: `require.resolve('nx', { paths })`
+// from a package named `nx` (the temp CLI) hits Node's package self-reference,
+// which resolves the running package and ignores `paths`, and resolvers also
+// honor NODE_PATH, which points at the temp installation itself when this
+// runs there.
+export function readLocalNxVersion(root: string): string | undefined {
+  // A PnP manifest is consulted only when yarn drives the hand-off:
+  // `getRunNxBaseCommand` builds the hand-off command through this same
+  // detectPackageManager call, and yarn is the one package manager that
+  // executes the manifest's nx. The mirror alone cannot see a switch off
+  // yarn, because yarn.lock survives one and outranks all but bun's
+  // lockfiles in the detection order, while .pnp.cjs lingers only on a
+  // switch to another package manager (yarn removes it when moving to
+  // node_modules linking); a rival lockfile beside the manifest is
+  // therefore read as evidence of such a switch. Evidence, not proof:
+  // a lockfile can be written without an install (`pnpm install
+  // --lockfile-only`), so on a scan miss the manifest still answers
+  // rather than failing the guards, and a rival install over a still-live
+  // PnP workspace is read over the PnP nx the yarn spawn executes,
+  // because preferring the manifest would judge the dead install a
+  // completed switch leaves behind and refuse persistently. The remaining
+  // misread is yarn classic driving a workspace with a leftover Berry
+  // manifest and no other lockfile; telling the two yarns apart from disk
+  // is not worth the fragility, and a runtime probe (`yarn node`
+  // resolving nx's manifest) was rejected: its stdout is forgeable
+  // through an inherited NODE_OPTIONS preload, and a hung descendant
+  // holding the output pipe outlives a subprocess timeout on this
+  // synchronous path.
+  const pnpManifest = ['.pnp.cjs', '.pnp.js']
+    .map((f) => join(root, f))
+    .find((f) => existsSync(f));
+  if (pnpManifest) {
+    const competingLockfile = [
+      'package-lock.json',
+      'npm-shrinkwrap.json',
+      'pnpm-lock.yaml',
+      'bun.lockb',
+      'bun.lock',
+    ].some((f) => existsSync(join(root, f)));
+    if (competingLockfile) {
+      const version = scanNodeModulesForNxVersion(root);
+      if (version) {
+        return version;
+      }
+    }
+    try {
+      if (detectPackageManager(root) === 'yarn') {
+        // Compiled manually rather than required: a require would serve the
+        // stale cached copy the runtime loaded at startup. new Function does
+        // not strip a leading shebang like the CJS loader, so drop it here.
+        const manifestModule: { exports: Partial<PnpManifest> } = {
+          exports: {},
+        };
+        new Function(
+          'module',
+          'exports',
+          'require',
+          '__dirname',
+          '__filename',
+          readFileSync(pnpManifest, 'utf-8').replace(/^#!.*/, '')
+        )(manifestModule, manifestModule.exports, require, root, pnpManifest);
+        const packageJsonPath = manifestModule.exports.resolveRequest(
+          'nx/package.json',
+          join(root, 'package.json')
+        );
+        if (packageJsonPath) {
+          // Yarn drives the spawn and executes the manifest's nx regardless
+          // of any node_modules, so a resolving manifest names the install
+          // the hand-off's spawn runs. Ancestor installs belong to other
+          // projects and never apply here; every branch below returns.
+          try {
+            const { version } = readJsonFile<{ version?: unknown }>(
+              packageJsonPath
+            );
+            if (typeof version === 'string') {
+              logger.verbose(
+                `Read the workspace's nx version ${version} from '${packageJsonPath}'.`
+              );
+              return version;
+            }
+            // A manifest target without a usable version cannot answer the
+            // guards.
+            logger.verbose(
+              `'${packageJsonPath}' does not declare a usable version.`
+            );
+            return undefined;
+          } catch (readError) {
+            // A zip-served path (installs with scripts disabled keep nx
+            // zipped) is unreadable without the PnP runtime's zip fs; the
+            // manifest's own locator still names the version (e.g.
+            // 'virtual:<hash>#npm:23.1.0').
+            // Contained locally: a locator that is missing, throws, or names
+            // no version must yield undefined here, never escape to the
+            // ancestor walk below.
+            let version: string | undefined;
+            try {
+              const reference =
+                manifestModule.exports.findPackageLocator?.(
+                  packageJsonPath
+                )?.reference;
+              version =
+                typeof reference === 'string'
+                  ? reference.match(/npm:([^#:]+)/)?.[1]
+                  : undefined;
+            } catch (locatorError) {
+              logger.verbose(
+                `Could not read the nx locator from the PnP manifest '${pnpManifest}': ${stringifyCaught(
+                  locatorError
+                )}`
+              );
+            }
+            if (version && valid(version)) {
+              logger.verbose(
+                `Read the workspace's nx version ${version} from the locator in the PnP manifest '${pnpManifest}'.`
+              );
+              return version;
+            }
+            logger.verbose(
+              `Could not read the workspace's nx version through the PnP manifest '${pnpManifest}': ${stringifyCaught(
+                readError
+              )}`
+            );
+            return undefined;
+          }
+        }
+      }
+    } catch (e) {
+      // Fall through to the full scan: a package-manager detection that
+      // throws, or a manifest that cannot be evaluated, cannot name the
+      // spawn's nx.
+      logger.verbose(
+        `Could not read the workspace's nx version through the PnP manifest '${pnpManifest}': ${stringifyCaught(
+          e
+        )}`
+      );
+    }
+  }
+
+  return scanNodeModulesForNxVersion(root);
+}
+
+// The workspace's own install locations first (.nx/installation, root), then
+// ancestor directories up to the filesystem root: package-manager executable
+// lookup ascends (npx and bun unconditionally, pnpm and yarn when the
+// workspace is a member of an outer workspace), and hoisted layouts install
+// nx above the workspace root. An unrelated ancestor install the hand-off's
+// spawn would not run can be read here; the guards then judge that version
+// instead of failing open. A hand-off issued anyway may not fail visibly:
+// yarn reports "command not found", but pnpm exec falls back to an nx on
+// PATH, so the version read here is the readable answer, not necessarily
+// the executed one.
+function scanNodeModulesForNxVersion(root: string): string | undefined {
+  const searchPaths = [...getNxRequirePaths(root)];
+  for (let dir = dirname(root); ; dir = dirname(dir)) {
+    searchPaths.push(dir);
+    if (dir === dirname(dir)) {
+      break;
+    }
+  }
+  return readNxVersionFromNodeModules(searchPaths);
+}
+
+function readNxVersionFromNodeModules(
+  searchPaths: string[]
+): string | undefined {
+  for (const searchPath of searchPaths) {
+    const packageJsonPath = join(
+      searchPath,
+      'node_modules',
+      'nx',
+      'package.json'
+    );
+    try {
+      if (existsSync(packageJsonPath)) {
+        const { version } = readJsonFile<{ version?: unknown }>(
+          packageJsonPath
+        );
+        if (typeof version === 'string') {
+          logger.verbose(
+            `Resolved nx version ${version} from '${packageJsonPath}'.`
+          );
+          return version;
+        }
+        logger.verbose(
+          `'${packageJsonPath}' does not declare a usable version; continuing the search.`
+        );
+      }
+    } catch (e) {
+      logger.verbose(
+        `Could not read the workspace's installed nx version from '${packageJsonPath}': ${e}`
+      );
+    }
+  }
+  return undefined;
+}
+
 // Mirrors `runMigrations`' pre-install + local-nx hand-off before dispatching
 // to the single-migration worker, so `nx migrate --run-migration` behaves the
 // same when invoked from a temp `nx@latest` installation.
@@ -3543,6 +3774,19 @@ async function runSingleMigrationFromCli(
   }
 
   if (!__dirname.startsWith(workspaceRoot)) {
+    // The workspace-local nx we are about to hand off to must be new enough to
+    // understand the new flags we forward to it. The guard must stay after the
+    // pre-install above: it reads the version the install may just have
+    // updated, so checking earlier would falsely refuse a workspace whose
+    // package.json bump had not been installed yet.
+    assertWorkspaceNxSupportsNewMigrateFlags({
+      argv: args,
+      // Read from the workspace root, not `root`: the migrate flow's `root`
+      // is the invocation directory, which may sit below the workspace, and
+      // the hand-off resolves nx at the workspace root.
+      readLocalNxVersion: () => readLocalNxVersion(workspaceRoot),
+    });
+
     // Running from a temp installation with nx latest; switch to the local
     // installation.
     return handOffToLocalNx(args);
@@ -3604,6 +3848,16 @@ async function runSingleMigrationFromCli(
 
 export async function runMigration() {
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
+    // Spawning `nx _migrate` re-resolves the workspace's nx, which is
+    // normally the installation already running this code: bin/nx.ts
+    // delegated the outer `migrate` command to it, while `_migrate` skips
+    // that delegation and runs in whatever the spawn's lookup produces. A
+    // new-flag invocation reaching this fallback therefore lands on an nx
+    // that parsed the flags, so no capability check is needed here. The
+    // known exceptions are lookups that diverge from the running install:
+    // a `.nx/installation` beside a root package.json, and a spawn that
+    // misses the workspace install and falls back to an nx on PATH (pnpm
+    // exec does), both pre-existing properties of the spawn machinery.
     const runLocalMigrate = () =>
       runOrReturnExitCode(() =>
         runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
@@ -3615,6 +3869,27 @@ export async function runMigration() {
       process.env.NX_USE_LOCAL !== 'true' &&
       process.env.NX_MIGRATE_USE_LOCAL === undefined
     ) {
+      // Decide where a new-flag invocation runs before installing the temp
+      // CLI (the version spec mirrors nxCliPath's).
+      const cliVersionSpec = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
+      const target = await resolveNewMigrateFlagsRunTarget({
+        argv: process.argv.slice(3),
+        cliVersionSpec,
+        fromEnvOverride: !!process.env.NX_MIGRATE_CLI_VERSION,
+        ownNxVersion,
+        resolveVersion: (spec) =>
+          // A probe must not prompt, write pnpm excludes, or install; a
+          // minimum-release-age violation surfaces as a rejection and
+          // routes local.
+          resolvePackageVersionRespectingMinReleaseAge('nx', spec, {
+            applySideEffects: false,
+          }),
+        readLocalNxVersion: () => readLocalNxVersion(workspaceRoot),
+      });
+      if (target === 'local-nx') {
+        return runLocalMigrate();
+      }
+
       const p = await nxCliPath();
       if (p === null) {
         return runLocalMigrate();

@@ -37,6 +37,7 @@ jest.mock('./resolve-package-version', () => ({
     ),
 }));
 import { resolveCatalogSpecifiers } from '../../utils/catalog';
+import * as configModule from '../../config/configuration';
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
@@ -55,6 +56,7 @@ import {
   normalizeVersion,
   parseMigrationReturn,
   parseMigrationsOptions,
+  readLocalNxVersion,
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
   resolveCreateCommits,
@@ -76,6 +78,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -2075,6 +2078,734 @@ describe('Migration', () => {
           'Something else went wrong',
         ].join('\n')
       );
+    });
+  });
+
+  describe('readLocalNxVersion', () => {
+    let root: string;
+
+    beforeEach(() => {
+      root = realpathSync(mkdtempSync(join(tmpdir(), 'nx-local-version-')));
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    it('resolves the version installed in the given workspace, not the running nx package', () => {
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({
+          name: 'nx',
+          version: '22.3.4',
+          exports: { './package.json': './package.json' },
+        })
+      );
+
+      expect(readLocalNxVersion(root)).toBe('22.3.4');
+    });
+
+    it('returns undefined when the workspace has no nx installed', () => {
+      expect(readLocalNxVersion(root)).toBeUndefined();
+    });
+
+    it('resolves the installed nx when the workspace root package itself is named nx', () => {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({
+          name: 'nx',
+          version: '1.0.0',
+          exports: { './package.json': './package.json' },
+        })
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({
+          name: 'nx',
+          version: '22.3.4',
+          exports: { './package.json': './package.json' },
+        })
+      );
+
+      expect(readLocalNxVersion(root)).toBe('22.3.4');
+    });
+
+    it('resolves through the PnP manifest, without requiring an active PnP runtime', () => {
+      // The empty yarn.lock is what makes detectPackageManager answer yarn,
+      // which the manifest consult requires (same in the fixtures below).
+      writeFileSync(join(root, 'yarn.lock'), '');
+      mkdirSync(join(root, 'pkg'), { recursive: true });
+      writeFileSync(
+        join(root, 'pkg', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '21.0.0' })
+      );
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pkg', 'package.json') };`
+      );
+
+      expect(readLocalNxVersion(root)).toBe('21.0.0');
+    });
+
+    it('observes a rewritten PnP manifest, as left behind by an install', () => {
+      writeFileSync(join(root, 'yarn.lock'), '');
+      for (const [dir, version] of [
+        ['pkg1', '21.0.0'],
+        ['pkg2', '23.2.0'],
+      ]) {
+        mkdirSync(join(root, dir), { recursive: true });
+        writeFileSync(
+          join(root, dir, 'package.json'),
+          JSON.stringify({ name: 'nx', version })
+        );
+      }
+      const manifestFor = (dir: string) =>
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, '${dir}', 'package.json') };`;
+      writeFileSync(join(root, '.pnp.cjs'), manifestFor('pkg1'));
+
+      expect(readLocalNxVersion(root)).toBe('21.0.0');
+      writeFileSync(join(root, '.pnp.cjs'), manifestFor('pkg2'));
+      expect(readLocalNxVersion(root)).toBe('23.2.0');
+    });
+
+    it('falls back to the node_modules scan when the PnP manifest cannot be evaluated', () => {
+      const ws = join(root, 'ws');
+      mkdirSync(ws, { recursive: true });
+      writeFileSync(join(ws, 'yarn.lock'), '');
+      writeFileSync(join(ws, '.pnp.cjs'), `this is not javascript {{{`);
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '23.4.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBe('23.4.0');
+    });
+
+    it('reads the version from the PnP locator when the resolved file sits inside a zip archive', () => {
+      writeFileSync(join(root, 'yarn.lock'), '');
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node
+module.exports = {
+  resolveRequest: () =>
+    require('path').join(
+      __dirname,
+      'cache',
+      'nx.zip',
+      'node_modules',
+      'nx',
+      'package.json'
+    ),
+  findPackageLocator: () => ({
+    name: 'nx',
+    reference: 'virtual:abc123#npm:21.5.0',
+  }),
+};`
+      );
+
+      expect(readLocalNxVersion(root)).toBe('21.5.0');
+    });
+
+    it('prefers a readable node_modules install over a zip-served manifest after a move off yarn', () => {
+      // A real move off yarn keeps yarn.lock (npm even rewrites it in place);
+      // the other manager's lockfile is what marks the manifest as leftover.
+      writeFileSync(join(root, 'package-lock.json'), '{}');
+      writeFileSync(join(root, 'yarn.lock'), '');
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node
+module.exports = {
+  resolveRequest: () =>
+    require('path').join(
+      __dirname,
+      'cache',
+      'nx.zip',
+      'node_modules',
+      'nx',
+      'package.json'
+    ),
+  findPackageLocator: () => ({
+    name: 'nx',
+    reference: 'virtual:abc123#npm:21.5.0',
+  }),
+};`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '23.4.0' })
+      );
+
+      expect(readLocalNxVersion(root)).toBe('23.4.0');
+    });
+
+    it('keeps the locator answer over a stray root install while yarn still drives the zip-served workspace', () => {
+      writeFileSync(join(root, 'yarn.lock'), '');
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node
+module.exports = {
+  resolveRequest: () =>
+    require('path').join(
+      __dirname,
+      'cache',
+      'nx.zip',
+      'node_modules',
+      'nx',
+      'package.json'
+    ),
+  findPackageLocator: () => ({
+    name: 'nx',
+    reference: 'virtual:abc123#npm:21.5.0',
+  }),
+};`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '23.4.0' })
+      );
+
+      expect(readLocalNxVersion(root)).toBe('21.5.0');
+    });
+
+    it("prefers the workspace's own install over a readable manifest-resolved nx, as left behind by a switch away from PnP", () => {
+      writeFileSync(join(root, 'package-lock.json'), '{}');
+      writeFileSync(join(root, 'yarn.lock'), '');
+      mkdirSync(join(root, '.yarn', 'unplugged', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, '.yarn', 'unplugged', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '21.0.0' })
+      );
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, '.yarn', 'unplugged', 'nx', 'package.json') };`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '23.4.0' })
+      );
+
+      expect(readLocalNxVersion(root)).toBe('23.4.0');
+    });
+
+    it('does not consult a leftover manifest once the workspace moved off yarn', () => {
+      const ws = join(root, 'ws');
+      mkdirSync(join(ws, 'pnp-nx'), { recursive: true });
+      writeFileSync(join(ws, 'package-lock.json'), '{}');
+      writeFileSync(join(ws, 'yarn.lock'), '');
+      writeFileSync(
+        join(ws, 'pnp-nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+      writeFileSync(
+        join(ws, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pnp-nx', 'package.json') };`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '21.0.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBe('21.0.0');
+    });
+
+    it('does not let a stray root install shadow a live yarn PnP install', () => {
+      writeFileSync(join(root, 'yarn.lock'), '');
+      mkdirSync(join(root, 'pnp-nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'pnp-nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '21.0.0' })
+      );
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pnp-nx', 'package.json') };`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(root)).toBe('21.0.0');
+    });
+
+    it('does not let a leftover .nx installation shadow a live PnP install', () => {
+      writeFileSync(join(root, 'yarn.lock'), '');
+      mkdirSync(join(root, '.nx', 'installation', 'node_modules', 'nx'), {
+        recursive: true,
+      });
+      writeFileSync(
+        join(root, '.nx', 'installation', 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+      mkdirSync(join(root, 'pnp-nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'pnp-nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '21.0.0' })
+      );
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pnp-nx', 'package.json') };`
+      );
+
+      expect(readLocalNxVersion(root)).toBe('21.0.0');
+    });
+
+    it('still answers from the manifest when a competing lockfile was written without an install', () => {
+      // `pnpm install --lockfile-only` writes pnpm-lock.yaml into a live PnP
+      // workspace without touching yarn.lock, .pnp.cjs, or the installation.
+      writeFileSync(join(root, 'yarn.lock'), '');
+      writeFileSync(join(root, 'pnpm-lock.yaml'), '');
+      mkdirSync(join(root, 'pkg'), { recursive: true });
+      writeFileSync(
+        join(root, 'pkg', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '21.0.0' })
+      );
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pkg', 'package.json') };`
+      );
+
+      expect(readLocalNxVersion(root)).toBe('21.0.0');
+    });
+
+    it.each(['bun.lock', 'bun.lockb'])(
+      'recognizes %s as competing when nx.json pins yarn',
+      (bunLockfile) => {
+        // Only an nx.json pin makes this observable: without it, bun's
+        // lockfiles outrank yarn.lock in detection and the manifest is
+        // skipped anyway.
+        const spy = jest
+          .spyOn(configModule, 'readNxJson')
+          .mockReturnValue({ cli: { packageManager: 'yarn' } });
+        try {
+          writeFileSync(join(root, 'yarn.lock'), '');
+          writeFileSync(join(root, bunLockfile), '');
+          mkdirSync(join(root, 'pkg'), { recursive: true });
+          writeFileSync(
+            join(root, 'pkg', 'package.json'),
+            JSON.stringify({ name: 'nx', version: '21.0.0' })
+          );
+          writeFileSync(
+            join(root, '.pnp.cjs'),
+            `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pkg', 'package.json') };`
+          );
+          mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+          writeFileSync(
+            join(root, 'node_modules', 'nx', 'package.json'),
+            JSON.stringify({ name: 'nx', version: '24.0.0' })
+          );
+
+          expect(readLocalNxVersion(root)).toBe('24.0.0');
+        } finally {
+          spy.mockRestore();
+        }
+      }
+    );
+
+    it('recognizes npm-shrinkwrap.json as a move off yarn', () => {
+      writeFileSync(join(root, 'yarn.lock'), '');
+      writeFileSync(join(root, 'npm-shrinkwrap.json'), '{}');
+      mkdirSync(join(root, '.yarn', 'unplugged', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, '.yarn', 'unplugged', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '21.0.0' })
+      );
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, '.yarn', 'unplugged', 'nx', 'package.json') };`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '23.4.0' })
+      );
+
+      expect(readLocalNxVersion(root)).toBe('23.4.0');
+    });
+
+    it('does not consult a manifest when the detected package manager is not yarn', () => {
+      // No lockfile on disk: detection falls back to the invoking package
+      // manager, the same answer the hand-off's spawn selector produces.
+      const userAgent = process.env.npm_config_user_agent;
+      process.env.npm_config_user_agent = 'pnpm/9.15.0 npm/? node/v20.0.0';
+      try {
+        mkdirSync(join(root, 'pkg'), { recursive: true });
+        writeFileSync(
+          join(root, 'pkg', 'package.json'),
+          JSON.stringify({ name: 'nx', version: '24.0.0' })
+        );
+        writeFileSync(
+          join(root, '.pnp.cjs'),
+          `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pkg', 'package.json') };`
+        );
+        mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+        writeFileSync(
+          join(root, 'node_modules', 'nx', 'package.json'),
+          JSON.stringify({ name: 'nx', version: '23.4.0' })
+        );
+
+        expect(readLocalNxVersion(root)).toBe('23.4.0');
+      } finally {
+        if (userAgent === undefined) {
+          delete process.env.npm_config_user_agent;
+        } else {
+          process.env.npm_config_user_agent = userAgent;
+        }
+      }
+    });
+
+    it('falls back to the node_modules scan when the package-manager detection throws', () => {
+      writeFileSync(join(root, 'yarn.lock'), '');
+      mkdirSync(join(root, '.yarn', 'unplugged', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, '.yarn', 'unplugged', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '21.0.0' })
+      );
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, '.yarn', 'unplugged', 'nx', 'package.json') };`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '23.4.0' })
+      );
+      // detectPackageManager reads nx.json, which throws on a malformed file.
+      const spy = jest
+        .spyOn(configModule, 'readNxJson')
+        .mockImplementation(() => {
+          throw new Error('Cannot parse nx.json');
+        });
+      try {
+        expect(readLocalNxVersion(root)).toBe('23.4.0');
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    it('returns undefined when the PnP-resolved package.json declares a non-string version', () => {
+      writeFileSync(join(root, 'yarn.lock'), '');
+      mkdirSync(join(root, 'pkg'), { recursive: true });
+      writeFileSync(
+        join(root, 'pkg', 'package.json'),
+        JSON.stringify({ name: 'nx', version: { major: 24 } })
+      );
+      writeFileSync(
+        join(root, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pkg', 'package.json') };`
+      );
+
+      expect(readLocalNxVersion(root)).toBeUndefined();
+    });
+
+    it('skips an install whose package.json declares a non-string version', () => {
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: { major: 24 } })
+      );
+
+      expect(readLocalNxVersion(root)).toBeUndefined();
+    });
+
+    it("returns undefined rather than the workspace's own install when the PnP-resolved package.json has no version", () => {
+      const ws = join(root, 'ws');
+      mkdirSync(join(ws, 'pkg'), { recursive: true });
+      writeFileSync(join(ws, 'yarn.lock'), '');
+      writeFileSync(
+        join(ws, 'pkg', 'package.json'),
+        JSON.stringify({ name: 'nx' })
+      );
+      writeFileSync(
+        join(ws, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'pkg', 'package.json') };`
+      );
+      mkdirSync(join(ws, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(ws, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBeUndefined();
+    });
+
+    it('does not let an ancestor install shadow the PnP locator when the manifest resolves nx', () => {
+      const ws = join(root, 'ws');
+      mkdirSync(ws, { recursive: true });
+      writeFileSync(join(ws, 'yarn.lock'), '');
+      writeFileSync(
+        join(ws, '.pnp.cjs'),
+        `#!/usr/bin/env node
+module.exports = {
+  resolveRequest: () =>
+    require('path').join(
+      __dirname,
+      'cache',
+      'nx.zip',
+      'node_modules',
+      'nx',
+      'package.json'
+    ),
+  findPackageLocator: () => ({
+    name: 'nx',
+    reference: 'virtual:abc123#npm:21.5.0',
+  }),
+};`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBe('21.5.0');
+    });
+
+    it('returns undefined rather than an ancestor version when a resolving manifest is unreadable and has no usable locator', () => {
+      const ws = join(root, 'ws');
+      mkdirSync(ws, { recursive: true });
+      writeFileSync(join(ws, 'yarn.lock'), '');
+      writeFileSync(
+        join(ws, '.pnp.cjs'),
+        `#!/usr/bin/env node\nmodule.exports = { resolveRequest: () => require('path').join(__dirname, 'cache', 'nx.zip', 'node_modules', 'nx', 'package.json') };`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBeUndefined();
+    });
+
+    it('returns undefined rather than an ancestor version when the manifest locator throws', () => {
+      const ws = join(root, 'ws');
+      mkdirSync(ws, { recursive: true });
+      writeFileSync(join(ws, 'yarn.lock'), '');
+      writeFileSync(
+        join(ws, '.pnp.cjs'),
+        `#!/usr/bin/env node
+module.exports = {
+  resolveRequest: () =>
+    require('path').join(
+      __dirname,
+      'cache',
+      'nx.zip',
+      'node_modules',
+      'nx',
+      'package.json'
+    ),
+  findPackageLocator: () => {
+    throw new Error('locator failed');
+  },
+};`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBeUndefined();
+    });
+
+    it('returns undefined rather than an ancestor version when the manifest locator throws a value that cannot be stringified', () => {
+      const verboseSpy = jest.spyOn(logger, 'verbose').mockImplementation();
+      try {
+        const ws = join(root, 'ws');
+        mkdirSync(ws, { recursive: true });
+        writeFileSync(join(ws, 'yarn.lock'), '');
+        writeFileSync(
+          join(ws, '.pnp.cjs'),
+          `#!/usr/bin/env node
+module.exports = {
+  resolveRequest: () =>
+    require('path').join(
+      __dirname,
+      'cache',
+      'nx.zip',
+      'node_modules',
+      'nx',
+      'package.json'
+    ),
+  findPackageLocator: () => {
+    throw Object.create(null);
+  },
+};`
+        );
+        mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+        writeFileSync(
+          join(root, 'node_modules', 'nx', 'package.json'),
+          JSON.stringify({ name: 'nx', version: '24.0.0' })
+        );
+
+        expect(readLocalNxVersion(ws)).toBeUndefined();
+        // A null-prototype object defeats String() but not the
+        // Object.prototype.toString rung.
+        expect(verboseSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[object Object]')
+        );
+      } finally {
+        verboseSpy.mockRestore();
+      }
+    });
+
+    it('returns undefined rather than an ancestor version when the manifest locator throws a revoked proxy', () => {
+      const ws = join(root, 'ws');
+      mkdirSync(ws, { recursive: true });
+      writeFileSync(join(ws, 'yarn.lock'), '');
+      writeFileSync(
+        join(ws, '.pnp.cjs'),
+        `#!/usr/bin/env node
+module.exports = {
+  resolveRequest: () =>
+    require('path').join(
+      __dirname,
+      'cache',
+      'nx.zip',
+      'node_modules',
+      'nx',
+      'package.json'
+    ),
+  findPackageLocator: () => {
+    const { proxy, revoke } = Proxy.revocable({}, {});
+    revoke();
+    throw proxy;
+  },
+};`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBeUndefined();
+    });
+
+    it('returns undefined rather than an ancestor version when the resolved path cannot be read or printed', () => {
+      const ws = join(root, 'ws');
+      mkdirSync(ws, { recursive: true });
+      writeFileSync(join(ws, 'yarn.lock'), '');
+      // readFileSync accepts a Buffer path, so the read succeeds (pointed at
+      // the non-JSON manifest itself), the JSON parse throws, and the error
+      // rewrite coerces the path through its own toString, which throws an
+      // unprintable value.
+      writeFileSync(
+        join(ws, '.pnp.cjs'),
+        `#!/usr/bin/env node
+module.exports = {
+  resolveRequest: () => {
+    const p = Buffer.from(__filename);
+    p.toString = () => {
+      throw Object.create(null);
+    };
+    return p;
+  },
+};`
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBeUndefined();
+    });
+
+    it('walks ancestor directories to find an nx hoisted above an npm workspace root', () => {
+      const inner = join(root, 'apps', 'inner');
+      mkdirSync(inner, { recursive: true });
+      writeFileSync(join(inner, 'package-lock.json'), '{}');
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(inner)).toBe('24.0.0');
+    });
+
+    it('walks ancestor directories to find an nx installed at an outer pnpm workspace root', () => {
+      const inner = join(root, 'apps', 'inner');
+      mkdirSync(inner, { recursive: true });
+      writeFileSync(
+        join(root, 'pnpm-workspace.yaml'),
+        `packages:\n  - 'apps/inner'\n`
+      );
+      writeFileSync(join(inner, 'pnpm-lock.yaml'), '');
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '24.0.0' })
+      );
+
+      expect(readLocalNxVersion(inner)).toBe('24.0.0');
+    });
+
+    it('skips a versionless nx manifest and keeps scanning the remaining install locations', () => {
+      const ws = join(root, 'ws');
+      mkdirSync(join(ws, '.nx', 'installation', 'node_modules', 'nx'), {
+        recursive: true,
+      });
+      writeFileSync(
+        join(ws, '.nx', 'installation', 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx' })
+      );
+      mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(root, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '23.4.0' })
+      );
+
+      expect(readLocalNxVersion(ws)).toBe('23.4.0');
+    });
+
+    it('logs the location that supplied the version', () => {
+      const verboseSpy = jest.spyOn(logger, 'verbose').mockImplementation();
+      try {
+        mkdirSync(join(root, 'node_modules', 'nx'), { recursive: true });
+        writeFileSync(
+          join(root, 'node_modules', 'nx', 'package.json'),
+          JSON.stringify({ name: 'nx', version: '22.3.4' })
+        );
+
+        expect(readLocalNxVersion(root)).toBe('22.3.4');
+        expect(verboseSpy).toHaveBeenCalledWith(
+          expect.stringContaining(
+            join(root, 'node_modules', 'nx', 'package.json')
+          )
+        );
+      } finally {
+        verboseSpy.mockRestore();
+      }
+    });
+
+    it('follows a symlinked node_modules to the installed nx', () => {
+      const sibling = `${root}-linked`;
+      mkdirSync(join(sibling, 'node_modules', 'nx'), { recursive: true });
+      writeFileSync(
+        join(sibling, 'node_modules', 'nx', 'package.json'),
+        JSON.stringify({ name: 'nx', version: '9.9.9' })
+      );
+      symlinkSync(
+        join(sibling, 'node_modules'),
+        join(root, 'node_modules'),
+        'junction'
+      );
+
+      try {
+        expect(readLocalNxVersion(root)).toBe('9.9.9');
+      } finally {
+        rmSync(sibling, { recursive: true, force: true });
+      }
     });
   });
 
