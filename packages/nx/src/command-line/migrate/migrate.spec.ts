@@ -50,6 +50,7 @@ import {
   isHybridMigration,
   isNpmPeerDepsError,
   isPromptOnlyMigration,
+  isSingleMigrationInvocation,
   Migrator,
   normalizeVersion,
   parseMigrationReturn,
@@ -2180,6 +2181,87 @@ describe('Migration', () => {
         type: 'runMigrations',
         interactive: false,
       });
+    });
+
+    it('should discriminate a single migration when --run-migration is set', async () => {
+      const r = await parseMigrationsOptions({
+        runMigration: '@nx/js:my-migration',
+      });
+      expect(r).toEqual({
+        type: 'runSingleMigration',
+        runMigration: '@nx/js:my-migration',
+      });
+    });
+
+    it('should reject an empty --run-migration', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: '' })
+      ).rejects.toThrow(/'--run-migration' requires a migration id/);
+    });
+
+    it('should reject --run-migration combined with --run-migrations', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', runMigrations: '' })
+      ).rejects.toThrow(/cannot be combined with '--run-migrations'/);
+    });
+
+    it('should reject --run-migration combined with --include', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', include: 'required' })
+      ).rejects.toThrow(/cannot be combined with '--include'/);
+    });
+
+    it('should reject --run-migration combined with --multi-major-mode', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', multiMajorMode: 'direct' })
+      ).rejects.toThrow(/cannot be combined with '--multi-major-mode'/);
+    });
+
+    it('should reject --run-migration combined with --agentic', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', agentic: true })
+      ).rejects.toThrow(/cannot be combined with '--agentic'/);
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', agentic: 'claude-code' })
+      ).rejects.toThrow(/cannot be combined with '--agentic'/);
+    });
+
+    it('should reject --run-migration combined with --validate', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', validate: true })
+      ).rejects.toThrow(/cannot be combined with '--validate'/);
+    });
+
+    it('should reject --run-migration combined with --if-exists', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', ifExists: true })
+      ).rejects.toThrow(/cannot be combined with '--if-exists'/);
+    });
+
+    it('should accept explicit "off" values of the whole-file flags with --run-migration', async () => {
+      // --no-agentic / --no-validate and the --if-exists yargs default (false)
+      // match what the single-migration path does anyway.
+      await expect(
+        parseMigrationsOptions({
+          runMigration: 'a',
+          agentic: false,
+          validate: false,
+          ifExists: false,
+        })
+      ).resolves.toEqual({
+        type: 'runSingleMigration',
+        runMigration: 'a',
+      });
+    });
+
+    it('classifies --run-migration as a single-migration invocation and everything else as not', () => {
+      expect(isSingleMigrationInvocation({ runMigration: '@nx/js:x' })).toBe(
+        true
+      );
+      expect(isSingleMigrationInvocation({ runMigrations: '' })).toBe(false);
+      expect(
+        isSingleMigrationInvocation({ packageAndVersion: 'nx@latest' })
+      ).toBe(false);
     });
 
     it('should default to nx@latest when no packageAndVersion is provided', async () => {

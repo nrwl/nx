@@ -31,6 +31,11 @@ export type CommitResult =
  * `git add -A` here captured their working-tree state too). Each entry is
  * rendered as `<package>: <name>` for unambiguous attribution across
  * packages.
+ *
+ * `failureGuidance` closes the failed-commit message with what happens to the
+ * uncommitted diff. The default describes the classic loop's absorb-and-recap
+ * behavior; a caller with no later commit or recap to absorb the diff (the
+ * standalone single-migration worker) passes its own guidance instead.
  */
 export async function commitMigrationIfRequested(
   root: string,
@@ -38,7 +43,8 @@ export async function commitMigrationIfRequested(
   shouldCreateCommits: boolean,
   commitPrefix: string,
   installDepsIfChanged: () => Promise<void>,
-  pendingMigrations: ReadonlyArray<{ package: string; name: string }> = []
+  pendingMigrations: ReadonlyArray<{ package: string; name: string }> = [],
+  failureGuidance = 'The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.'
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
   await installDepsIfChanged();
@@ -67,7 +73,7 @@ export async function commitMigrationIfRequested(
     const reason = err instanceof Error ? err.message : String(err);
     logger.info(
       pc.red(
-        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.`
+        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. ${failureGuidance}`
       )
     );
     return { status: 'failed', reason };

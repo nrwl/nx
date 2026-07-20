@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { spawn } from 'child_process';
-import { dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import { lt } from 'semver';
 import { handleImport } from '../../utils/handle-import';
 import { MigrationsJson } from '../../config/misc-interfaces';
@@ -26,6 +26,7 @@ import {
 import { output } from '../../utils/output';
 import { existsSync } from 'fs';
 import { getNxRequirePaths } from '../../utils/installation-directory';
+import { needsShellQuoting } from '../../utils/shell-quoting';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
@@ -78,7 +79,8 @@ export function readPackageMigrationConfig(
 
 export function runInstall(
   nxWorkspaceRoot?: string,
-  phase: MigrationInstallPhase = 'pre-migration'
+  phase: MigrationInstallPhase = 'pre-migration',
+  rerunCommand?: string
 ): Promise<void> {
   const cwd = nxWorkspaceRoot ?? process.cwd();
   const packageManager = detectPackageManager(cwd);
@@ -124,7 +126,7 @@ export function runInstall(
           // (CLI migrate, `nx repair`, single-migration runner, etc.) surfaces
           // it consistently. Top-level callers catch `NpmPeerDepsInstallError`
           // and return a non-zero exit code without re-logging.
-          logNpmPeerDepsError(phase);
+          logNpmPeerDepsError(phase, rerunCommand);
           reject(new NpmPeerDepsInstallError());
           return;
         }
@@ -163,7 +165,24 @@ export function isNpmPeerDepsError(stderr: string): boolean {
   );
 }
 
-export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
+// The single-migration rerun command lands in copyable guidance (see
+// `logNpmPeerDepsError` below), so quote ids a shell would split or expand.
+// Single quotes are literal in POSIX shells and PowerShell alike, whereas
+// double quotes leave $-expansion active in both. A literal single quote uses
+// the POSIX '\'' sequence; that is the one character whose escape PowerShell
+// disagrees on (it wants ''). cmd.exe is knowingly not covered: it does not
+// group on single quotes, and no quoting suppresses its %VAR% expansion.
+export function formatSingleMigrationRerunCommand(migrationId: string): string {
+  const id = needsShellQuoting(migrationId)
+    ? `'${migrationId.replace(/'/g, String.raw`'\''`)}'`
+    : migrationId;
+  return `nx migrate --run-migration=${id}`;
+}
+
+export function logNpmPeerDepsError(
+  phase: MigrationInstallPhase,
+  rerunCommand = 'nx migrate --run-migrations'
+): void {
   const peerDepsResolutionSteps = [
     'Recommended approaches (in order of preference):',
     '',
@@ -177,7 +196,7 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
   ];
   const manualInstallHint = [
     'If you installed the dependencies manually, pass "--skip-install" to avoid re-installing them:',
-    '   nx migrate --run-migrations --skip-install',
+    `   ${rerunCommand} --skip-install`,
   ];
 
   if (phase === 'pre-migration') {
@@ -187,8 +206,8 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
       bodyLines: [
         ...peerDepsResolutionSteps,
         '',
-        'Once the conflicts are resolved, re-run the migrations:',
-        '   nx migrate --run-migrations',
+        'Once the conflicts are resolved, re-run the migration command:',
+        `   ${rerunCommand}`,
         '',
         ...manualInstallHint,
       ],
@@ -201,13 +220,22 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
         ...peerDepsResolutionSteps,
         '',
         'Once the conflicts are resolved, run "npm install" to install the updated dependencies.',
-        'If the migration was interrupted before completing, re-run the remaining migrations:',
-        '   nx migrate --run-migrations',
+        'If the migration run was interrupted before completing, re-run it:',
+        `   ${rerunCommand}`,
         '',
         ...manualInstallHint,
       ],
     });
   }
+}
+
+export function logSkippedPostMigrationInstall(root: string): void {
+  const packageManager = detectPackageManager(root);
+  const installCommand = getPackageManagerCommand(packageManager, root).install;
+  output.warn({
+    title: 'Migrations updated your dependencies, but the install was skipped',
+    bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
+  });
 }
 
 export class ChangedDepInstaller {
@@ -216,7 +244,8 @@ export class ChangedDepInstaller {
 
   constructor(
     private readonly root: string,
-    private readonly shouldSkipInstall = false
+    private readonly shouldSkipInstall = false,
+    private readonly rerunCommand?: string
   ) {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
@@ -231,7 +260,7 @@ export class ChangedDepInstaller {
       if (this.shouldSkipInstall) {
         this._skippedInstall = true;
       } else {
-        await runInstall(this.root, 'post-migration');
+        await runInstall(this.root, 'post-migration', this.rerunCommand);
       }
     }
     this.initialDeps = currentDeps;
@@ -412,6 +441,28 @@ export function readMigrationCollection(packageName: string, root: string) {
     collection,
     collectionPath,
   };
+}
+
+// Resolves a `documentation` path (relative to the package's migrations dir) to
+// a workspace-relative path, or the absolute path when it resolves outside the
+// workspace (unusual hoisted/symlinked layouts). The agent runs with cwd =
+// workspace root, so the workspace-relative form is preferred. Returns
+// undefined when the file can't be resolved.
+export function resolveDocumentationFileToWorkspacePath(
+  root: string,
+  migrationsDir: string,
+  documentation: string
+): string | undefined {
+  let documentationFile: string;
+  try {
+    documentationFile = require.resolve(documentation, {
+      paths: [migrationsDir],
+    });
+  } catch {
+    return undefined;
+  }
+  const relativePath = relative(root, documentationFile);
+  return relativePath.startsWith('..') ? documentationFile : relativePath;
 }
 
 export function getImplementationPath(

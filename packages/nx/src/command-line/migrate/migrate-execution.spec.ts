@@ -41,9 +41,11 @@ import {
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import type { MigrationsJson } from '../../config/misc-interfaces';
+import { output } from '../../utils/output';
 import {
   ChangedDepInstaller,
   executeMigrations,
+  formatSingleMigrationRerunCommand,
   getImplementationPath,
   parseMigrationReturn,
   readMigrationCollection,
@@ -545,6 +547,60 @@ describe('ChangedDepInstaller', () => {
 
       await expect(promise).rejects.toThrow(/^Command failed:/);
     });
+
+    it('surfaces the configured rerun command in the peer-deps guidance', async () => {
+      const errorSpy = jest.spyOn(output, 'error').mockImplementation(() => {});
+      try {
+        writePackageJson();
+        const installer = new ChangedDepInstaller(
+          tmpRoot,
+          false,
+          'nx migrate --run-migration=@nx/js:x'
+        );
+        writePackageJson({ dependencies: { foo: '2.0.0' } });
+        const child = new FakeChildProcess(true);
+        mockSpawn.mockReturnValue(child);
+
+        const promise = installer.installDepsIfChanged();
+        child.stderr!.emit('data', Buffer.from('npm ERR! code ERESOLVE'));
+        child.emit('close', 1);
+
+        await expect(promise).rejects.toMatchObject({
+          name: 'NpmPeerDepsInstallError',
+        });
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        const bodyLines = (
+          errorSpy.mock.calls[0][0] as { bodyLines: string[] }
+        ).bodyLines.join('\n');
+        expect(bodyLines).toContain('   nx migrate --run-migration=@nx/js:x');
+        expect(bodyLines).toContain(
+          '   nx migrate --run-migration=@nx/js:x --skip-install'
+        );
+        expect(bodyLines).not.toContain('nx migrate --run-migrations');
+      } finally {
+        errorSpy.mockRestore();
+      }
+    });
+  });
+});
+
+describe('formatSingleMigrationRerunCommand', () => {
+  it('passes a plain id through unquoted', () => {
+    expect(formatSingleMigrationRerunCommand('@nx/js:my-migration')).toBe(
+      'nx migrate --run-migration=@nx/js:my-migration'
+    );
+  });
+
+  it('single-quotes an id the shell would split or expand, keeping it literal', () => {
+    expect(formatSingleMigrationRerunCommand('@nx/js:rename files')).toBe(
+      "nx migrate --run-migration='@nx/js:rename files'"
+    );
+    expect(formatSingleMigrationRerunCommand('@nx/js:use-$(cmd)')).toBe(
+      "nx migrate --run-migration='@nx/js:use-$(cmd)'"
+    );
+    expect(formatSingleMigrationRerunCommand("@nx/js:it's")).toBe(
+      String.raw`nx migrate --run-migration='@nx/js:it'\''s'`
+    );
   });
 });
 
