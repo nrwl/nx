@@ -4,6 +4,9 @@ jest.mock('os', () => ({
   ...jest.requireActual('os'),
   homedir: jest.fn(() => jest.requireActual('os').homedir()),
 }));
+jest.mock('../logger', () => ({
+  logger: { warn: jest.fn(), verbose: jest.fn() },
+}));
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { homedir, tmpdir } from 'os';
@@ -275,6 +278,42 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
         'npm_config_//registry.npmjs.org/:_authToken': 'ini-token',
       });
+    });
+
+    it('warns once when a bare auth.ini credential cannot reach the contacted registry', () => {
+      // The pin leaves the request unauthenticated, so npm reports a bare 401
+      // with nothing tying it back to auth.ini.
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeFileSync(
+        join(root, '.npmrc'),
+        'registry=https://reg-b.example.com/'
+      );
+      writeAuthIni('_authToken=ini-token');
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+        fresh('is-odd', root, '11.5.0');
+      });
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+        'https://reg-b.example.com/'
+      );
+    });
+
+    it('stays quiet when the bare auth.ini credential reaches its registry', () => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeAuthIni(
+        ['registry=https://reg-a.example.com/', '_authToken=ini-token'].join(
+          '\n'
+        )
+      );
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+      });
+      expect(logger.warn).not.toHaveBeenCalled();
     });
 
     it('does not let a yaml registry claim a bare auth.ini token', () => {
