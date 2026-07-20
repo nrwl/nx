@@ -7,7 +7,7 @@ argument-hint: '<PR_NUMBER> [--verify-repros]'
 
 # Deep PR Review (review-pr)
 
-Wraps `/pr-review-toolkit:review-pr` for a remote PR in `nrwl/nx`. The toolkit reviews local changes, so this skill checks the PR out **inside an isolated gVisor sandbox container**, invokes the toolkit against that container, then collects the output into a draft suitable for posting on GitHub.
+Runs the `pr-review-toolkit` review agents against a remote PR in `nrwl/nx`. Those agents normally review local working-tree changes; this skill instead checks the PR out **inside an isolated gVisor sandbox container**, dispatches the agents with the PR's scope passed to them explicitly (Step 5 — not through the toolkit's own `/pr-review-toolkit:review-pr` command, which would find nothing), and collects the output into a draft suitable for posting on GitHub.
 
 **Drafts only.** This skill never posts to GitHub. The draft is reading material for the reviewer; if they want any of it on the PR, they post it themselves (or ask in the session, e.g. via `gh pr review --body-file`).
 
@@ -136,13 +136,18 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    - The `## Review draft` section (the most recent review). This becomes "the prior review."
    - The full `## Prior reviews` section (older reviews, if any). All of them — no cap on history.
 
-2. Compute the incremental diff inside the container (the `diff` verb fetches `$PRIOR_SHA` on demand), writing it to a host file the agents can `Read`:
+2. Compute the incremental diff inside the container, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
 
    ```bash
-   docker exec "$CONTAINER" bash -lc 'cd /work/nx && git fetch -q --depth 1 origin '"$PRIOR_SHA"' 2>/dev/null; git diff '"$PRIOR_SHA"'..'"<HEAD_REF_OID>" > /tmp/pr-<NUMBER>-incremental.diff
+   if docker exec "$CONTAINER" bash -lc 'cd /work/nx && git fetch -q --depth 1 origin '"$PRIOR_SHA"; then
+     docker exec "$CONTAINER" bash -lc 'cd /work/nx && git diff '"$PRIOR_SHA"'..'"<HEAD_REF_OID>" \
+       > /tmp/pr-<NUMBER>-incremental.diff
+   else
+     echo "PRIOR_SHA <PRIOR_SHA> no longer on the remote — force-pushed; reviewing fresh"
+   fi
    ```
 
-   (If `$PRIOR_SHA` no longer exists on the remote — author force-pushed and orphaned it — the fetch inside `diff` is a no-op and the diff comes back empty; treat as a fresh review.)
+   A failed fetch means the author force-pushed and orphaned `$PRIOR_SHA`. Treat that as a **fresh review**: skip the incremental diff, skip the re-review context file, and note the force-push in the draft. Do not fall through with an empty incremental diff — an empty diff reads as "nothing changed since the last review" when in fact the entire branch was rewritten.
 
 3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code):
 
@@ -317,17 +322,63 @@ these is advisory at most and not worth writing up:
 <COPY THE FULL "Nx-specific calibration" LIST FROM THIS SKILL, VERBATIM>
 ```
 
-Substitute the real container name for `<CONTAINER>` when writing the file. Then invoke the toolkit:
+Substitute the real container name for `<CONTAINER>` when writing the file.
+
+### Dispatch the review agents directly — NOT via the toolkit command
+
+**Do not invoke `/pr-review-toolkit:review-pr`.** That command discovers its own review scope from host git state (`git status`, `git diff --name-only`). With the PR checked out in the container and nothing on the host working tree, that scope comes back **empty** — and its agents are instructed to "confirm the code meets standards" when they find no issues. The result is a confident clean review of nothing, indistinguishable from a genuine pass. The command takes no scope parameter (its frontmatter accepts only `argument-hint`), so this cannot be fixed by passing it arguments.
+
+Dispatch the toolkit's agents yourself instead, with the scope passed explicitly. Get the changed-file list first:
+
+```bash
+gh pr diff <NUMBER> --repo nrwl/nx --name-only > /tmp/pr-<NUMBER>.files
+```
+
+Then dispatch each agent with this prompt shape:
 
 ```
-Skill(skill="pr-review-toolkit:review-pr", args="code errors tests comments types")
+Agent(
+  subagent_type="pr-review-toolkit:<AGENT>",
+  description="<AGENT> review of PR <NUMBER>",
+  prompt="""
+Review PR <NUMBER> in nrwl/nx.
+
+SCOPE — review exactly these changes. Do NOT run `git status` or `git diff` to discover scope:
+the host working tree is clean and unrelated to this PR, so host git reports no changes. If you
+find yourself with an empty file list, you have the wrong scope — re-read the inputs below.
+
+- DIFF: /tmp/pr-<NUMBER>.diff  (host file — the complete PR diff; read it with `Read`)
+- CHANGED FILES: <PASTE the contents of /tmp/pr-<NUMBER>.files>
+- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this gVisor container)
+- BASE_REF: <BASE_REF_NAME>
+
+Read /tmp/pr-<NUMBER>.review-charter.md (host file) first — it carries the severity policy, the
+maintainer calibrations, and the mandatory sandbox reading protocol. The PR source is NOT on the
+host: reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`, and
+never run PR code on the host.
+<IF /tmp/pr-<NUMBER>.review-context.md EXISTS, ADD:>
+Also read /tmp/pr-<NUMBER>.review-context.md — the prior review of this PR. Focus on what changed since.
+"""
+)
 ```
 
-The `simplify` aspect is deliberately omitted — code-simplifier's output is nice-to-have polish by definition, all of which the trim below would discard. The toolkit dispatches the applicable review agents (code-reviewer, comment-analyzer, pr-test-analyzer, silent-failure-hunter, type-design-analyzer) and aggregates results into Critical / Important / Strengths.
+Dispatch these in parallel:
 
-Instruct the toolkit to read `/tmp/pr-<NUMBER>.review-charter.md` first — and `/tmp/pr-<NUMBER>.review-context.md` too if it exists (from Step 4), so its agents are aware of the prior review and focus on what's new. The charter's reading protocol is mandatory: the toolkit's agents must reach the PR source only through `docker exec nx-review-pr-<NUMBER> …`, never on the host.
+- `pr-review-toolkit:code-reviewer` — general quality and guideline compliance
+- `pr-review-toolkit:silent-failure-hunter` — error handling and swallowed failures
+- `pr-review-toolkit:pr-test-analyzer` — test coverage of the change
+- `pr-review-toolkit:comment-analyzer` — comment and doc accuracy
+- `pr-review-toolkit:type-design-analyzer` — only when the diff adds or changes types
 
-Capture the toolkit's full output as `$RAW_REVIEW_BODY`.
+`code-simplifier` is deliberately omitted — its output is nice-to-have polish by definition, all of which the trim below would discard.
+
+### Verify each agent actually reviewed something
+
+An agent that reports **no findings AND cites no file from the changed-file list** did not review the PR — it almost certainly fell back to empty host git scope. Re-dispatch it once with the changed-file list restated inline. If it comes back empty a second time, record that agent as **failed** in the draft (and in `## Failures` per Step 8) rather than counting it as a pass.
+
+A silent "looks good" from an agent that read nothing is the one outcome this step must never produce: it turns a missing review into an apparent endorsement.
+
+Aggregate the surviving agents' output into Critical / Important / Strengths yourself. That aggregate is `$RAW_REVIEW_BODY`.
 
 ### Trim to critical + important
 
@@ -362,7 +413,9 @@ Inputs:
 - PR_NUMBER: <NUMBER>
 - CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this gVisor container)
 - DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
 - BASE_REF: <BASE_REF_NAME>
+- NX_REPO_PATH: <NX_REPO_PATH>  (host clone of nrwl/nx — for reading the BASE state of a file)
 
 Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find /work/nx/…`, and never run PR code on the host (`docker exec nx-review-pr-<NUMBER> bash -lc '…'` if you must run something). Follow your standard workflow and return the structured report.
 """
@@ -390,7 +443,9 @@ Inputs:
 - PR_NUMBER: <NUMBER>
 - CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this gVisor container)
 - DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
 - BASE_REF: <BASE_REF_NAME>
+- NX_REPO_PATH: <NX_REPO_PATH>  (host clone of nrwl/nx — for reading the BASE state of a file)
 
 Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find /work/nx/…`, and never run PR code on the host (`docker exec nx-review-pr-<NUMBER> bash -lc '…'` if you must run something). Follow your standard workflow and return the structured report.
 """
@@ -418,7 +473,9 @@ Inputs:
 - PR_NUMBER: <NUMBER>
 - CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this gVisor container)
 - DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
 - BASE_REF: <BASE_REF_NAME>
+- NX_REPO_PATH: <NX_REPO_PATH>  (host clone of nrwl/nx — for reading the BASE state of a file)
 
 Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find /work/nx/…`, and never run PR code on the host (`docker exec nx-review-pr-<NUMBER> bash -lc '…'` if you must run something). Follow your standard workflow and return the structured report.
 """
@@ -440,11 +497,18 @@ The verifier runs in the **same** container as the review — one sandbox per PR
 ```bash
 docker exec "$CONTAINER" bash -lc '
   export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"
+  set -e
   cd /work/nx
   git fetch -q --depth 1 origin <BASE_REF_NAME>
-  git worktree add --detach /work/base FETCH_HEAD 2>/dev/null || git -C /work/base checkout -q FETCH_HEAD
+  if test -d /work/base; then
+    git -C /work/base checkout -q --detach FETCH_HEAD   # already added on a prior pass
+  else
+    git worktree add --detach /work/base FETCH_HEAD
+  fi
 '
 ```
+
+Branch on whether `/work/base` exists rather than on `worktree add` failing — a `… 2>/dev/null || checkout` fallback would swallow a real error (bad ref, out of disk) and then run `checkout` against a directory that isn't there, reporting the second failure instead of the first. With `set -e` and no output suppression, a genuine failure surfaces here instead of resurfacing later as a confusing baseline result.
 
 The verifier then runs HEAD-side steps in `/work/nx` and base-side steps in `/work/base`, both via `docker exec "$CONTAINER" bash -lc 'cd <dir> && …'`. **Every reproduction step runs through the sandbox; nothing runs on the host** (this is the "issue reproduction must happen in the VM" requirement).
 
