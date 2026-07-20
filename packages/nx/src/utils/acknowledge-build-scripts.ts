@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { Document, parseDocument, YAMLMap } from 'yaml';
+import { parseDocument, YAMLMap } from 'yaml';
 import { gte } from 'semver';
 import type { Tree } from '../generators/tree';
 import type { PackageManager } from './package-manager';
@@ -57,26 +57,27 @@ function acknowledgePnpmBuildScripts(
   // A file that doesn't parse cleanly or whose root isn't a mapping is
   // malformed for pnpm; leave it alone rather than crashing or replacing the
   // user's content. pnpm's own error on the file is the actionable signal.
+  // Empty and comment-only files have no contents at all; setIn creates the
+  // mapping for them while keeping whatever comments they carry.
   if (
     parsed.errors.length > 0 ||
     (parsed.contents != null && !(parsed.contents instanceof YAMLMap))
   ) {
     return;
   }
-  const doc = parsed.contents instanceof YAMLMap ? parsed : new Document({});
 
   let changed = false;
   for (const [pkg, allowed] of Object.entries(entries)) {
     // Only a real boolean is a user decision. pnpm's non-strict installs stub
     // undecided packages with a placeholder string ("set this to true or
     // false"), which would fail the next strict install if left in place.
-    if (typeof doc.getIn(['allowBuilds', pkg]) !== 'boolean') {
-      doc.setIn(['allowBuilds', pkg], allowed);
+    if (typeof parsed.getIn(['allowBuilds', pkg]) !== 'boolean') {
+      parsed.setIn(['allowBuilds', pkg], allowed);
       changed = true;
     }
   }
   if (changed) {
-    host.write(PNPM_WORKSPACE_FILE, doc.toString());
+    host.write(PNPM_WORKSPACE_FILE, parsed.toString());
   }
 }
 
