@@ -39,6 +39,8 @@ import {
  * so only a bare `false` (yaml/lockfile boolean) disables TLS; a quoted
  * `"false"` stays the truthy string 'false' and keeps verification on. A
  * `cafile` value is tilde-expanded (`~/`) then resolved against the cwd.
+ * `always-auth` is not one of these: it is read off the npm registry's own
+ * config (npmrc chain plus the `yarn_`/`npm_config_` env prefixes), not .yarnrc.
  *
  * npm natively reads the project, home, and <globalPrefix>/etc .npmrc plus env
  * vars identically, so bridging is only needed when a yarn-only surface wins
@@ -124,7 +126,7 @@ export function getYarnClassicSpawnRegistryEnv(
   );
   // yarn tilde-expands paths against userHomeDir.default (the primary home).
   resolveOptions(env, npmrcChain, yarnrcChain, root, primary.dir);
-  resolveAuth(env, npmrcChain, yarnrcChain, scope, authRegistry);
+  resolveAuth(env, npmrcChain, scope, authRegistry);
   return env;
 }
 
@@ -140,7 +142,6 @@ export function getYarnClassicSpawnRegistryEnv(
 function resolveAuth(
   env: NpmConfigEnv,
   npmrcChain: RcFile[],
-  yarnrcChain: RcFile[],
   scope: string | null,
   authRegistry: string
 ): void {
@@ -169,7 +170,7 @@ function resolveAuth(
     }
     // yarn authenticates a scoped fetch unconditionally; an unscoped one only
     // when always-auth is set. Skip the bridge where yarn would send nothing.
-    if (!scope && !alwaysAuthFor(key, npmrcChain, yarnrcChain)) {
+    if (!scope && !alwaysAuthFor(key, npmrcChain)) {
       continue;
     }
     if (key.startsWith('//')) {
@@ -193,38 +194,32 @@ function resolveAuth(
 }
 
 // yarn's getRegistryOrGlobalOption(registry, 'always-auth'): a registry-scoped
-// `//host/:always-auth` wins, else the global `always-auth`. Read across the
-// .yarnrc chain (precedence) then the .npmrc chain like every other yarn option,
-// then Boolean()-coerced.
-function alwaysAuthFor(
-  authKey: string,
-  npmrcChain: RcFile[],
-  yarnrcChain: RcFile[]
-): boolean {
+// `//host/:always-auth` wins, else the global `always-auth`, then Boolean()-
+// coerced. Both come from NpmRegistry's own config, which .yarnrc never feeds:
+// loadConfig reads the npmrc chain only. Unlike resolveOption this returns the
+// value regardless of whether npm reads it natively, since it drives the auth
+// gate rather than a bridge.
+function alwaysAuthFor(authKey: string, npmrcChain: RcFile[]): boolean {
   const registryScoped = authKey.startsWith('//')
-    ? readOption(
-        npmrcChain,
-        yarnrcChain,
-        `${authKey.replace(/:[^:]+$/, '')}:always-auth`
-      )
+    ? firstDefined(npmrcChain, `${authKey.replace(/:[^:]+$/, '')}:always-auth`)
+        ?.value
     : undefined;
-  return Boolean(
-    registryScoped || readOption(npmrcChain, yarnrcChain, 'always-auth')
-  );
+  // BaseRegistry.init merges the `yarn_` env prefix and loadConfig then merges
+  // `npm_config_` over it, before any file is read; loadConfig's Object.assign
+  // keeps the config it already has, so an env value beats every npmrc.
+  const globalFromEnv =
+    readEnvVar(process.env, 'npm_config_always_auth') ??
+    readEnvVar(process.env, 'yarn_always_auth');
+  const global =
+    globalFromEnv !== undefined
+      ? normalizeYarnConfigValue(globalFromEnv)
+      : firstDefined(npmrcChain, 'always-auth')?.value;
+  return Boolean(registryScoped || global);
 }
 
-// Resolves an option value the way yarn's getOption sees it (.yarnrc wins over
-// the .npmrc chain). Unlike resolveOption it returns the value regardless of
-// whether npm reads it natively, since it drives the auth gate, not a bridge.
-function readOption(
-  npmrcChain: RcFile[],
-  yarnrcChain: RcFile[],
-  key: string
-): YarnValue | undefined {
-  return (
-    firstDefined(yarnrcChain, key)?.value ??
-    firstDefined(npmrcChain, key)?.value
-  );
+/** yarn's BaseRegistry.normalizeConfigOption: only the bare booleans coerce. */
+function normalizeYarnConfigValue(value: string): YarnValue {
+  return value === 'true' ? true : value === 'false' ? false : value;
 }
 
 const BARE_AUTH_KEYS = new Set([
@@ -508,11 +503,7 @@ function toYarnValueMap(
   // so option semantics line up with the .yarnrc side.
   const result = new Map<string, YarnValue>();
   for (const [key, value] of map) {
-    const expanded = expandEnvVars(value);
-    result.set(
-      key,
-      expanded === 'true' ? true : expanded === 'false' ? false : expanded
-    );
+    result.set(key, normalizeYarnConfigValue(expandEnvVars(value)));
   }
   return result;
 }
