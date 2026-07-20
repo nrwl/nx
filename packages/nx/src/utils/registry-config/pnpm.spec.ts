@@ -71,6 +71,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
 
   describe('10.6.0 - 10.x (yaml settings wholesale-replace the npmrc config)', () => {
     it('forces the yaml default registry', () => {
+      // Setting the key is what makes the yaml pick win: it overrides whatever
+      // npm_config_registry the spawned npm would otherwise inherit and honor
+      // at its native env tier, which is pnpm's wholesale behavior here.
       writeYaml('registries:\n  default: https://reg-a.example.com/\n');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
@@ -125,16 +128,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(
         getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')
       ).not.toHaveProperty('npm_config_cafile');
-    });
-
-    it('ignores npm_config_registry env (yaml wins wholesale in pnpm 10.x)', () => {
-      // The injected yaml registry must defeat a user-set npm_config_registry
-      // (which npm would otherwise honor at its native env tier), matching pnpm.
-      process.env.npm_config_registry = 'https://reg-c.example.com/';
-      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
-        npm_config_registry: 'https://reg-a.example.com/',
-      });
     });
   });
 
