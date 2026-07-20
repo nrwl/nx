@@ -84,12 +84,15 @@ Start a long-lived, locked-down sandbox container and check the PR out **inside 
 CONTAINER="nx-review-pr-<NUMBER>"
 docker rm -f "$CONTAINER" 2>/dev/null                        # self-heal a leftover from a prior run
 
-# Clear host artifacts from any earlier run of this PR BEFORE anything writes.
-# Several later steps gate on these files merely existing, so a leftover from a
-# previous review silently changes this run's behaviour (see Step 4).
-rm -f /tmp/pr-<NUMBER>.diff /tmp/pr-<NUMBER>.files /tmp/pr-<NUMBER>.json \
+# Clear host artifacts left by any EARLIER run of this PR. Several later steps
+# gate on these files merely existing, so a leftover silently changes this run's
+# behaviour (see Step 4) — and a stale /tmp/repro-<NUMBER>.cmd would be executed
+# in the sandbox and its result attributed to this review.
+# NOTE: /tmp/pr-<NUMBER>.json is deliberately NOT cleared here — Step 2 wrote it
+# one step ago and Step 8 still needs it for the draft frontmatter.
+rm -f /tmp/pr-<NUMBER>.diff /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.files \
       /tmp/pr-<NUMBER>.review-charter.md /tmp/pr-<NUMBER>.review-context.md \
-      /tmp/pr-<NUMBER>-incremental.diff
+      /tmp/pr-<NUMBER>-incremental.diff /tmp/pr-<NUMBER>.evidence /tmp/repro-<NUMBER>.cmd
 
 docker run -d --name "$CONTAINER" $RUNTIME_FLAG \
   --cap-drop ALL --security-opt no-new-privileges \
@@ -157,7 +160,7 @@ Write-then-verify-then-move, rather than redirecting straight onto the final pat
 
 If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, this is a **re-review** triggered by new commits. Build context for the toolkit so it can be conversational instead of starting fresh.
 
-(If the existing draft's `verdict` is `failed`, the prior attempt produced no usable review — skip this step and review fresh. The file's history is still preserved by Step 8.)
+(If the existing draft's `verdict` is `failed` **and its `## Review draft` body is empty or has no findings**, the prior attempt produced nothing usable — skip this step and review fresh. Do NOT discard it merely because the token says `failed`: since Step 7 now sets `failed` when any single agent fails its EVIDENCE check, a `failed` draft routinely still contains eight agents' worth of real findings, and throwing that away loses the reconciliation this step exists for. The file's history is preserved by Step 8 either way.)
 
 1. Read the existing triage file. Extract:
    - The frontmatter `head_sha` (call it `$PRIOR_SHA`).
@@ -245,12 +248,16 @@ Pick the 2-3 most-touched _distinctive_ files — skip monorepo hot files (`pack
 
 **4. Target-state check.** For small PRs (< 50 lines changed OR touches only `package.json` / `versions.ts` / `migrations.json`), peek at master to see if the target state is already there.
 
-Refresh the remote-tracking ref first, then read each changed file on master:
+Confirm `NX_REPO_PATH` really is an nrwl/nx clone before trusting it — its default is `git rev-parse --show-toplevel`, so invoking the skill from some other repo would silently point this signal at that repo's master. Then refresh the remote-tracking ref and read each changed file:
 
 ```bash
+git -C "$NX_REPO_PATH" remote get-url origin 2>/dev/null | grep -q 'nrwl/nx' \
+  || { echo "NX_REPO_PATH is not an nrwl/nx clone — skip signal 4"; }
 git -C "$NX_REPO_PATH" fetch -q origin <BASE_REF_NAME>
 git -C "$NX_REPO_PATH" show origin/<BASE_REF_NAME>:<path>
 ```
+
+(If the container already exists at this point, prefer `/work/base` and skip the host clone entirely — it needs neither the origin check nor the fetch.)
 
 Compare key lines against what the PR is trying to set. Example: if the PR changes `"@foo/bar": "^1.0.0"` → `"^2.0.0"` but master already has `"^2.3.3"`, flag it. The fetch is not optional — this signal can recommend _closing someone's PR_, and a local clone that is weeks stale would answer "is the target state already on master?" from the wrong tree. (If the container already exists at this point, `/work/base` is equivalent and needs no fetch.)
 
@@ -359,7 +366,7 @@ these is advisory at most and not worth writing up:
 <COPY THE FULL "Nx-specific calibration" LIST FROM THIS SKILL, VERBATIM>
 ```
 
-Substitute the real PR number for every `<NUMBER>` when writing the file — there are six occurrences, all inside `docker exec nx-review-pr-<NUMBER>` commands, and each one that survives as a literal produces a charter whose every read fails. (There is deliberately no `<CONTAINER>` token to replace; the container name is spelled out so a half-done substitution is visible rather than silent.)
+Substitute the real PR number for **every** `<NUMBER>` in the template — do not work from a count, and do not assume they are all inside `docker exec` commands. They are not: one is the container-name sentence and one is `/tmp/pr-<NUMBER>.diff`, the primary review surface. Leaving that last one literal points every agent at a nonexistent file, so no agent can produce a verifiable EVIDENCE line and the whole run degrades to all-agents-failed. (There is deliberately no `<CONTAINER>` token; the container name is spelled out so a half-done substitution is visible rather than silent.)
 
 ### Dispatch the review agents directly — NOT via the toolkit command
 
@@ -368,8 +375,16 @@ Substitute the real PR number for every `<NUMBER>` when writing the file — the
 Dispatch the toolkit's agents yourself instead, with the scope passed explicitly. Get the changed-file list first:
 
 ```bash
-gh pr diff <NUMBER> --repo nrwl/nx --name-only > /tmp/pr-<NUMBER>.files
+gh pr diff <NUMBER> --repo nrwl/nx --name-only > /tmp/pr-<NUMBER>.files.tmp \
+  || { echo "FATAL: gh pr diff --name-only failed"; exit 1; }
+test -s /tmp/pr-<NUMBER>.files.tmp || { echo "FATAL: empty changed-file list"; exit 1; }
+mv /tmp/pr-<NUMBER>.files.tmp /tmp/pr-<NUMBER>.files
 ```
+
+Same write-verify-move as the diff, and for the mirror-image reason: an empty `.files` with a
+populated diff hands every agent a `CHANGED FILES:` heading followed by nothing. Abort if
+`wc -l < /tmp/pr-<NUMBER>.files` does not equal the `changedFiles` count parsed in Step 2 — that
+mismatch means one of the two `gh` calls silently returned a partial answer.
 
 Then dispatch each agent with this prompt shape:
 
@@ -394,15 +409,17 @@ maintainer calibrations, and the mandatory sandbox reading protocol. The PR sour
 host: reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`, and
 never run PR code on the host.
 
-REQUIRED — open your report with exactly these two lines:
+REQUIRED — open your report with exactly these three lines:
 
   REVIEWED: <how many changed files you actually opened>
-  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
+  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign,
+                  and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
 
-The EVIDENCE line is checked with `grep -F` against the diff. Quoting a filename is not
-sufficient — filenames appear in this prompt, diff content does not. A report whose EVIDENCE
-line does not verify is discarded and the agent is recorded as failed, including a report that
-found no issues.
+The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT. The line NUMBER is the
+proof: it is in no prompt and in no prior-review text, so only opening the diff yields it. A filename
+or a `diff --git` header is derivable from this prompt and proves nothing. A report that does not
+verify is discarded and the agent recorded as failed — including a report that found no issues.
 <ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
 Also read /tmp/pr-<NUMBER>.review-context.md — the prior review of this PR. Focus on what changed since.
 """
@@ -421,26 +438,49 @@ Dispatch these in parallel:
 
 ### Verify each agent actually reviewed something
 
-A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. Every agent — the toolkit five here, **and** the four in Steps 5a–5a.5 — must prove it opened the artifact.
+A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. Every agent — the toolkit agents here (four, or five when `type-design-analyzer` applies), **and** the four in Steps 5a–5a.5 — must prove it opened the artifact.
 
-**Demand evidence the prompt cannot supply.** A filename is not evidence: the changed-file list is pasted into every agent's prompt, so an agent that read nothing can cite one from its own context. Require instead a **verbatim line quoted out of `/tmp/pr-<NUMBER>.diff`**, which appears nowhere in the prompt. Every agent's report must open with:
+**Demand a line number, not just a line.** A filename is not evidence: the changed-file list is pasted into every agent's prompt, so an agent that read nothing can cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `/tmp/pr-<NUMBER>.diff` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
 
 ```
 REVIEWED: <N> changed files
-EVIDENCE: <one verbatim line copied from the diff, 20+ chars, not a header or `---` marker>
+EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff, e.g. 214>
+EVIDENCE_TEXT: <that exact line, verbatim — must begin with `+` or `-`, 20+ chars after the sign,
+               and not a `diff --git` / `index` / `---` / `+++` / `@@` line>
 ```
 
-Check it mechanically — this is a host file, so `grep` is a legitimate host command:
+**Verify by reading the diff yourself at that number — never interpolate the agent's text into a shell command.** The line is PR-authored content and may contain `$(…)`, backticks, or quotes that would execute on the host or mangle the match. Write `EVIDENCE_TEXT` to `/tmp/pr-<NUMBER>.evidence` with the **`Write` tool** (no shell), and compare files:
 
 ```bash
-grep -Fq "<the agent's EVIDENCE line>" /tmp/pr-<NUMBER>.diff && echo VERIFIED || echo FAILED
+case "$LINE" in ''|*[!0-9]*) echo FAILED ;; esac          # EVIDENCE_LINE must be pure digits
+sed -n "${LINE}p" /tmp/pr-<NUMBER>.diff > /tmp/pr-<NUMBER>.diffline
+grep -qE '^[+-]' /tmp/pr-<NUMBER>.diffline || echo FAILED                  # a content line
+grep -qE '^(diff --git|index |\+\+\+ |--- )' /tmp/pr-<NUMBER>.diffline && echo FAILED  # not a header
+test -s /tmp/pr-<NUMBER>.evidence || echo FAILED                          # empty never passes
+diff -q /tmp/pr-<NUMBER>.diffline /tmp/pr-<NUMBER>.evidence >/dev/null && echo VERIFIED || echo FAILED
 ```
+
+Each element defeats a specific forgery route that real reviews of this skill actually hit:
+
+- **The line number is the core.** It is in no prompt and in no prior-review prose, so it cannot be lifted from context. An agent whose container reads silently returned nothing cannot produce a valid one — which is exactly the population this check exists to catch, and the only defense that closes the re-review context-file leak.
+- **`sed -n "${LINE}p"` after an integer check** — not the agent's string inside `grep "<...>"` — keeps PR-authored bytes out of any host shell (no `$(…)` execution, no quote-mangling of honest shell-heavy lines). Compare with `diff -q` of two files for the same reason.
+- **`test -s`**: an empty pattern would otherwise match anything; a check for absence must not be default-open on absence.
+- **`^[+-]` plus the header exclusion**: a `diff --git`/`@@`/`+++` line is derivable from the file list, so only a real content line counts.
 
 **This applies to endorsements too, and especially to them.** `APPROACH_SOUND`, `PERFORMANCE_SOUND`, `SECURITY_SOUND`, and a `NOT_ATTEMPTED` reproduction all assert _"I checked and found nothing"_ — a claim an agent that read nothing produces just as fluently, and which Steps 5a–5a.3 fold into **Strengths** as an affirmative statement that the dimension was audited. An endorsement must cost more evidence than a finding, not less. A `*_SOUND` verdict with no verified EVIDENCE line is recorded **failed**, never as a strength.
 
-**If EVIDENCE fails to verify, re-dispatch once — with different input.** Restating the changed-file list is a no-op; the agent already had it. The retry must paste **the first ~100 lines of the diff itself** inline into the prompt, so the agent cannot avoid having content. If the second attempt also fails to produce a verifiable EVIDENCE line, record that agent as **failed** in the draft and in `## Failures` (Step 8).
+**If EVIDENCE fails to verify, re-dispatch once — but never paste the answer.** Restating the changed-file list is a no-op; the agent already had it. Pasting diff content into the retry prompt is worse than a no-op: it makes the retry's own check unfalsifiable, because the premise the whole mechanism rests on — _the diff content is not in the prompt_ — becomes false exactly for the agent under suspicion. A retry that hands over the evidence launders a failed agent into a pass, and since `verdict: failed` only fires after two failures, it also means that verdict can essentially never fire.
 
-**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit.
+Instead, keep the evidence out of reach and make the demand more specific:
+
+> Your previous EVIDENCE did not verify. Re-read `/tmp/pr-<NUMBER>.diff` and give the EVIDENCE_LINE /
+> EVIDENCE_TEXT pair for a `+` or `-` line in the **second half** of the file (line number > <N/2>).
+
+Verify exactly as above, additionally rejecting any EVIDENCE_LINE ≤ <N/2>. The line-number requirement already means an agent whose tools return nothing cannot pass; restricting to the far half stops it from replaying a number it happened to keep from the first attempt.
+
+If the second attempt also fails, record that agent as **failed** in the draft and in `## Failures` (Step 8).
+
+**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit. An agent that was **never dispatched** (e.g. `type-design-analyzer` on a diff that adds no types) is _not_ a failed agent — note it as not-applicable and move on.
 
 Aggregate the surviving agents' output into Critical / Important / Strengths yourself. That aggregate is `$RAW_REVIEW_BODY`.
 
@@ -484,12 +524,13 @@ Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the m
 
 You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
 
-REQUIRED — open your report with exactly these two lines:
+REQUIRED — open your report with exactly these three lines:
 
   REVIEWED: <how many changed files you actually opened>
-  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
+  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign, and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
 
-The EVIDENCE line is checked with `grep -F` against the diff. Quoting a filename is not sufficient — filenames appear in this prompt, diff content does not. This applies to an endorsement verdict exactly as it applies to a finding: a `*_SOUND` report whose EVIDENCE line does not verify is recorded as failed, not folded into Strengths.
+The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT; the line NUMBER is the proof, since it appears in no prompt. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
 
 Follow your standard workflow and return the structured report.
 """
@@ -524,12 +565,13 @@ Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the m
 
 You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
 
-REQUIRED — open your report with exactly these two lines:
+REQUIRED — open your report with exactly these three lines:
 
   REVIEWED: <how many changed files you actually opened>
-  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
+  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign, and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
 
-The EVIDENCE line is checked with `grep -F` against the diff. Quoting a filename is not sufficient — filenames appear in this prompt, diff content does not. This applies to an endorsement verdict exactly as it applies to a finding: a `*_SOUND` report whose EVIDENCE line does not verify is recorded as failed, not folded into Strengths.
+The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT; the line NUMBER is the proof, since it appears in no prompt. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
 
 Follow your standard workflow and return the structured report.
 """
@@ -564,12 +606,13 @@ Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the m
 
 You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
 
-REQUIRED — open your report with exactly these two lines:
+REQUIRED — open your report with exactly these three lines:
 
   REVIEWED: <how many changed files you actually opened>
-  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
+  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign, and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
 
-The EVIDENCE line is checked with `grep -F` against the diff. Quoting a filename is not sufficient — filenames appear in this prompt, diff content does not. This applies to an endorsement verdict exactly as it applies to a finding: a `*_SOUND` report whose EVIDENCE line does not verify is recorded as failed, not folded into Strengths.
+The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT; the line NUMBER is the proof, since it appears in no prompt. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
 
 Follow your standard workflow and return the structured report.
 """
@@ -640,29 +683,44 @@ docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/
 
 Use `<dir>` = `/work/nx` for HEAD-side steps (e.g. `npm install`, `nx build`) and `/work/base` for the base baseline. Do NOT `git checkout` a different ref in `/work/nx` — the review agents are reading it; use the `/work/base` worktree for the base state instead.
 
-NEVER paste a command taken from issue text directly into that `bash -lc '…'` string. The outer
-`docker exec` line is parsed by the HOST shell first, so a single quote in issue-supplied text closes
-the quoting and everything after it executes on the host — outside the sandbox entirely. Write the
-extracted command to a file and feed it in over stdin instead, so no attacker-supplied byte is ever
-parsed by a host shell:
+NEVER put a command taken from issue text into ANY host shell command — not inside `bash -lc '…'`,
+and not inside a `printf "…"` either. Issue text is attacker-controlled: anyone can file an issue.
+The outer `docker exec` line is parsed by the HOST shell first, so a `'` breaks out of single quotes
+and `$(…)`, backticks, or `${…}` execute inside double quotes — with no quote character needed at all.
+Either way the payload runs on the host, outside the sandbox entirely.
+
+FIRST, reject the command outright if it contains any of `'` `"` `;` `&` `|` `$` backtick or a
+newline, and report it as MANUAL_ONLY. A legitimate `nx run` / `pnpm` / `vitest` invocation needs
+none of them. This filter is the primary defense, not a backstop.
+
+THEN write the surviving command to a file **with the `Write` tool** — not with `printf`/`echo`,
+which puts the text back through a host shell — and feed it over stdin:
 
 ```
 
-printf '%s\n' "<REPRO_CMD>" > /tmp/repro-<NUMBER>.cmd
-docker exec -i nx-review-pr-<NUMBER> bash -l < /tmp/repro-<NUMBER>.cmd
+Write(file_path="/tmp/repro-<NUMBER>.cmd", content=<REPRO_CMD>)
+
+docker exec -i nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd <dir> && bash -s' < /tmp/repro-<NUMBER>.cmd
 
 ```
+
+`<dir>` is `/work/base` for the baseline run and `/work/nx` for the HEAD run. Both the `cd` and the
+PATH export are required: a bare `bash -l` lands in the image's default working directory with no
+mise shims, so `nx`/`pnpm` are not found and BOTH runs fail identically — which the verifier would
+then report as `FIX_DID_NOT_WORK` on a PR that may be perfectly correct.
 
 Follow your standard workflow (Level 0 always, Level 1 when applicable, Level 2 only when RUN_LEVEL_2=true AND classification is EXTERNAL_REPO or GENERATED_WORKSPACE). Return the structured report.
 
-REQUIRED — open your report with exactly these two lines:
+REQUIRED — open your report with exactly these three lines:
 
   REVIEWED: <how many changed files you actually opened>
-  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
+  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign,
+                  and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
 
-The EVIDENCE line is checked with `grep -F` against the diff. This applies to a NOT_ATTEMPTED
-reproduction exactly as it applies to a confirmed one — "there was nothing runnable here" is a claim
-about the diff, and it needs the same proof you opened it.
+The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT; the line NUMBER is the
+proof. This applies to a NOT_ATTEMPTED reproduction exactly as to a confirmed one — "there was
+nothing runnable here" is a claim about the diff, and needs the same proof you opened it.
 """
 )
 ```

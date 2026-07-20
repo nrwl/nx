@@ -34,14 +34,16 @@ docker exec "$CONTAINER" sed -n '<a>,<b>p' /work/nx/<path>        # read a line 
 
 ### Required output preamble
 
-Open every report with exactly these two lines:
+Open every report with exactly these three lines:
 
 ```
 REVIEWED: <how many changed files you actually opened>
-EVIDENCE: <one verbatim line copied out of $DIFF, 20+ chars, not a `---`/`+++`/`@@` marker>
+EVIDENCE_LINE: <the line number in $DIFF of the line you quote below>
+EVIDENCE_TEXT: <that exact line, verbatim — begins with `+` or `-`, 20+ chars after the sign, and
+               NOT a `diff --git` / `index` / `---` / `+++` / `@@` line>
 ```
 
-The caller checks `EVIDENCE` with `grep -F` against the diff. A filename is **not** acceptable evidence — filenames are handed to you in your prompt, diff content is not, so quoting one proves nothing about whether you opened anything.
+The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT. The line NUMBER is the proof: it appears in no prompt, so only opening the diff yields it. A filename or a `diff --git` header is **not** acceptable — both are derivable from the changed-file list in your prompt.
 
 This applies to an endorsement exactly as it applies to a finding, and matters more there. Your `*_SOUND` verdict is folded into the review as an affirmative statement that this dimension was audited. If your tools silently returned nothing (they see only the host, where the PR does not exist), "I found no problems" and "I looked at no code" produce identical text — the EVIDENCE line is what separates them. A `*_SOUND` verdict whose EVIDENCE does not verify is recorded as **failed**, not as a strength.
 
