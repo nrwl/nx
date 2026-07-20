@@ -1,6 +1,7 @@
-// Wiring tests for the version-skew-guard call sites in migrate.ts; the guards'
-// own behavior lives in version-skew-guard.spec.ts. Kept in its own file so the
-// module mocks below don't leak into the other migrate specs.
+// Wiring tests for the three version-skew-guard call sites in migrate.ts;
+// the guards' own behavior lives in version-skew-guard.spec.ts. Kept in its
+// own file so the module mocks below don't leak into the other migrate
+// specs.
 
 const mockResolveRunTarget = jest.fn();
 const mockAssertWorkspaceNx = jest.fn();
@@ -40,6 +41,8 @@ jest.mock('./resolve-package-version', () => ({
 
 jest.mock('./run', () => ({
   runSingleMigrationWorker: jest.fn(),
+  runOrchestratorInit: jest.fn(),
+  runOrchestratorReconcile: jest.fn(),
 }));
 
 jest.mock('../../daemon/client/client', () => ({
@@ -82,6 +85,7 @@ function restoreEnv(name: string, value: string | undefined) {
 describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () => {
   const originalArgv = process.argv;
   const originalSkipInstall = process.env.NX_MIGRATE_SKIP_INSTALL;
+  const originalOrchestratorEnv = process.env.NX_MIGRATE_ORCHESTRATOR;
 
   beforeEach(() => {
     mockAssertWorkspaceNx.mockReset().mockReturnValue(undefined);
@@ -91,8 +95,8 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     jest.spyOn(output, 'log').mockImplementation(() => {});
     jest.spyOn(output, 'warn').mockImplementation(() => {});
     jest.spyOn(output, 'error').mockImplementation(() => {});
-    // Force the temp-installation branch: __dirname (under the repo) must not
-    // start with workspaceRoot.
+    // Force both wrapper functions into the temp-installation branch:
+    // __dirname (under the repo) must not start with workspaceRoot.
     setWorkspaceRoot('/__guard-wiring-spec-unrelated-root__');
   });
 
@@ -101,6 +105,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     setWorkspaceRoot(originalWorkspaceRoot);
     process.argv = originalArgv;
     restoreEnv('NX_MIGRATE_SKIP_INSTALL', originalSkipInstall);
+    restoreEnv('NX_MIGRATE_ORCHESTRATOR', originalOrchestratorEnv);
   });
 
   describe('runSingleMigrationFromCli', () => {
@@ -178,6 +183,39 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
         { runMigration: '@nx/js:gen', skipInstall: true },
         ['--run-migration=@nx/js:gen']
       );
+
+      expect(exitCode).toBe(1);
+      expect(mockRunNxSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('runOrchestratorReconcileFromCli', () => {
+    beforeEach(() => {
+      process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
+    });
+
+    it('runs the guard with the raw argv before handing off to the local nx', async () => {
+      const argv = ['--run-id=abc123'];
+      const exitCode = await migrate(ROOT, { runId: 'abc123' }, argv);
+
+      expect(exitCode).toBe(0);
+      expect(mockAssertWorkspaceNx).toHaveBeenCalledWith(
+        expect.objectContaining({ argv })
+      );
+      expect(mockRunNxSync).toHaveBeenCalledTimes(1);
+      expect(mockAssertWorkspaceNx.mock.invocationCallOrder[0]).toBeLessThan(
+        mockRunNxSync.mock.invocationCallOrder[0]
+      );
+    });
+
+    it('never hands off to the local nx when the guard refuses', async () => {
+      mockAssertWorkspaceNx.mockImplementation(() => {
+        throw new Error('workspace nx too old');
+      });
+
+      const exitCode = await migrate(ROOT, { runId: 'abc123' }, [
+        '--run-id=abc123',
+      ]);
 
       expect(exitCode).toBe(1);
       expect(mockRunNxSync).not.toHaveBeenCalled();

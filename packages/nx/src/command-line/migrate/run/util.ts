@@ -1,13 +1,77 @@
 // Internal to run/: deliberately not re-exported from ./index.
 
+import { createHash } from 'crypto';
 import { output } from '../../../utils/output';
 import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '../../../utils/package-manager';
+import {
+  getStringifiedPackageJsonDeps,
+  logSkippedPostMigrationInstall,
+  runInstall,
+} from '../execute-migration';
+import type { MigrateStep } from './run-state';
 
 export function nowIso(): string {
   return new Date().toISOString();
+}
+
+// Dispensed commands use POSIX env-prefix syntax, invalid in both cmd.exe and
+// PowerShell. Until Windows support lands, refuse up front rather than working
+// on a run whose dispensed commands cannot execute. The remediation differs
+// per entry point: init can fall back to the standard flow, but an existing
+// run can only be continued off-Windows or abandoned (the standard flow cannot
+// resume it, and a restart would re-apply finished migrations).
+export function assertPlatformSupported(remediation: string): void {
+  if (process.platform === 'win32') {
+    throw new Error(
+      `The orchestrated migrate flow is not supported on Windows yet. ${remediation}`
+    );
+  }
+}
+
+export const EXISTING_RUN_WINDOWS_REMEDIATION =
+  'This run cannot be continued on Windows. Continue it from a non-Windows environment, or delete its directory under .nx/migrate-runs to abandon it; migrations it already applied remain applied.';
+
+// Fingerprints the workspace dependencies so a step can persist what they
+// looked like before it ran and a later attempt can still tell whether the
+// migration changed them. Hashed rather than stored verbatim to keep run.json
+// small; the value is only ever compared for equality.
+export function depsHash(root: string): string {
+  return createHash('sha256')
+    .update(getStringifiedPackageJsonDeps(root))
+    .digest('hex');
+}
+
+/**
+ * Installs when the workspace dependencies differ from what the step's first
+ * dispense recorded, so a prompt applied by another actor, or a retry that
+ * only has the commit left to do, still installs what the changes need.
+ * Comparing against the persisted baseline is what makes that possible: by the
+ * time either runs, the edits are already on disk, so a snapshot taken here
+ * would see them as the starting point and never detect a change.
+ *
+ * A step with no baseline (a structural step, or a run created before the
+ * field existed) has nothing to compare against and installs nothing.
+ */
+export async function installDepsChangedSinceDispense(
+  root: string,
+  step: MigrateStep,
+  skipInstall: boolean,
+  rerunCommand?: string
+): Promise<void> {
+  if (
+    step.depsHashAtDispense === undefined ||
+    depsHash(root) === step.depsHashAtDispense
+  ) {
+    return;
+  }
+  if (skipInstall) {
+    logSkippedPostMigrationInstall(root);
+    return;
+  }
+  await runInstall(root, 'post-migration', rerunCommand);
 }
 
 // ESRCH means the process is gone; EPERM means it exists but isn't ours (alive).

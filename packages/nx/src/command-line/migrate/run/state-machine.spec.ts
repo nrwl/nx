@@ -174,24 +174,41 @@ describe('applyStepEvent', () => {
     });
   });
 
-  describe('awaitPromptOutcome generatorCompleted', () => {
-    it('records generatorCompleted when the event carries it', () => {
+  describe('markGeneratorCompleted', () => {
+    it('records the marker on a running step, leaving it running', () => {
       const state = stateWithStep({ status: 'running' });
 
       const result = applyStepEvent(state, {
-        type: 'awaitPromptOutcome',
+        type: 'markGeneratorCompleted',
         stepId: 'step-1',
-        finishedAt: '2026-01-01T00:02:00.000Z',
-        generatorCompleted: true,
       });
 
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
         expect(result.state.steps[0].generatorCompleted).toBe(true);
+        // The worker still has its commit to attempt; the step only leaves
+        // 'running' when that resolves.
+        expect(result.state.steps[0].status).toBe('running');
       }
     });
 
-    it('leaves generatorCompleted unset when the event omits it', () => {
+    it.each(['pending', 'dispensed', 'awaiting-prompt-outcome'] as const)(
+      'rejects from %s, leaving the input unchanged',
+      (status) => {
+        const state = stateWithStep({ status });
+        const before = snapshot(state);
+
+        const result = applyStepEvent(state, {
+          type: 'markGeneratorCompleted',
+          stepId: 'step-1',
+        });
+
+        expect(result.kind).toBe('error');
+        expect(state).toEqual(before);
+      }
+    );
+
+    it('leaves generatorCompleted unset when the step parks for a prompt without it', () => {
       const state = stateWithStep({ status: 'running' });
 
       const result = applyStepEvent(state, {
@@ -352,6 +369,33 @@ describe('applyStepEvent', () => {
       }
     });
 
+    it('keeps the dependency baseline across a rearm and drops the tree state', () => {
+      const state = stateWithStep({
+        status: 'failed',
+        gitRefBefore: 'sha-1',
+        treeCleanAtDispense: true,
+        depsHashAtDispense: 'deps-1',
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        action: 'retry',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        const step = result.state.steps[0];
+        // The retry has to compare against the dependencies the first attempt
+        // started from, not against the ones that attempt wrote.
+        expect(step.depsHashAtDispense).toBe('deps-1');
+        // Both of these describe one attempt's starting point and are
+        // re-captured at the next dispense.
+        expect(step.treeCleanAtDispense).toBeUndefined();
+        expect(step.gitRefBefore).toBeUndefined();
+      }
+    });
+
     it('retry-clean preserves generatorCompleted: the reset target postdates the generator commit', () => {
       const state = stateWithStep({
         status: 'died',
@@ -375,11 +419,18 @@ describe('applyStepEvent', () => {
       // marker has to survive the full failure cycle, not just one rearm.
       let state = stateWithStep({ status: 'running' });
 
+      const marked = applyStepEvent(state, {
+        type: 'markGeneratorCompleted',
+        stepId: 'step-1',
+      });
+      expect(marked.kind).toBe('ok');
+      if (marked.kind !== 'ok') return;
+      state = marked.state;
+
       const park = applyStepEvent(state, {
         type: 'awaitPromptOutcome',
         stepId: 'step-1',
         finishedAt: '2026-01-01T00:00:00.000Z',
-        generatorCompleted: true,
       });
       expect(park.kind).toBe('ok');
       if (park.kind !== 'ok') return;

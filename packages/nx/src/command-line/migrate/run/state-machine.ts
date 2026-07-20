@@ -32,20 +32,21 @@ export type StepEvent =
       type: 'awaitPromptOutcome';
       stepId: string;
       finishedAt: string;
-      // Set when the hybrid generator half ran before parking for the prompt.
-      generatorCompleted?: boolean;
     }
   | {
       type: 'foldPromptOutcome';
       stepId: string;
       promptOutcome: MigrateStepPromptOutcome;
     }
+  // Emitted between the generator half and the commit attempt, so a retry
+  // after a failed commit or install does not reapply the generator.
+  | { type: 'markGeneratorCompleted'; stepId: string }
   | { type: 'markDied'; stepId: string }
   | { type: 'stepAction'; stepId: string; action: StepAction };
 
 // A string discriminant, not a boolean `ok`: this repo compiles without
-// strictNullChecks, where a boolean discriminant does not narrow and every
-// consumer would need a cast.
+// strictNullChecks, where `if (result.ok)` does not narrow a boolean
+// discriminant and every consumer would need `=== true` comparisons.
 export type ApplyStepEventResult =
   | { kind: 'ok'; state: MigrateRunState }
   | { kind: 'error'; reason: string };
@@ -116,8 +117,11 @@ export function applyStepEvent(
         ...step,
         status: 'awaiting-prompt-outcome',
         finishedAt: event.finishedAt,
-        ...(event.generatorCompleted ? { generatorCompleted: true } : {}),
       });
+
+    case 'markGeneratorCompleted':
+      if (step.status !== 'running') return illegal(step, event.type);
+      return commit(state, index, { ...step, generatorCompleted: true });
 
     case 'foldPromptOutcome':
       if (step.status !== 'awaiting-prompt-outcome')
@@ -173,12 +177,16 @@ function applyStepAction(
 }
 
 // Re-arms a step for a fresh attempt. Drops every field the previous attempt
-// wrote (pid, timestamps, git ref, outcomes) so a later success can't carry a
-// stale failure outcome; dispenseCount stays cumulative across attempts.
+// wrote (pid, timestamps, git ref, tree state, outcomes) so a later success
+// can't carry a stale failure outcome; dispenseCount stays cumulative across
+// attempts.
 // The generator-completed marker survives every rearm: with commits on, any
 // retry-clean reset target postdates the generator commit; with commits off
 // the orchestrator never offers a reset. Either way the generator's changes
-// are still in the tree, so re-running it would apply them twice.
+// are still in the tree, so re-running it would apply them twice. The
+// dependency baseline survives for the same reason: the retry must compare
+// against the state before the first attempt edited package.json, not against
+// what that attempt left behind.
 function rearm(step: MigrateStep): MigrateStep {
   return {
     id: step.id,
@@ -190,6 +198,9 @@ function rearm(step: MigrateStep): MigrateStep {
     status: 'pending',
     attempt: step.attempt + 1,
     dispenseCount: step.dispenseCount,
+    ...(step.depsHashAtDispense !== undefined
+      ? { depsHashAtDispense: step.depsHashAtDispense }
+      : {}),
     ...(step.generatorCompleted ? { generatorCompleted: true } : {}),
   };
 }

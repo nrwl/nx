@@ -30,20 +30,26 @@ describe('findNewMigrateFlag', () => {
     ).toBeUndefined();
   });
 
+  it('includes the step-action flag spellings', () => {
+    expect(NEW_MIGRATE_FLAGS).toContain('--step-action');
+    expect(NEW_MIGRATE_FLAGS).toContain('--stepAction');
+    expect(findNewMigrateFlag(['--step-action=retry'])).toBe('--step-action');
+  });
+
   it('returns the first matching flag among several args', () => {
     expect(
-      findNewMigrateFlag(['--verbose', '--runMigration=x', '--run-migration=x'])
-    ).toBe('--runMigration');
+      findNewMigrateFlag(['--verbose', '--run-id=abc', '--run-migration=x'])
+    ).toBe('--run-id');
   });
 
   it('ignores everything after the -- separator', () => {
-    expect(findNewMigrateFlag(['--', '--run-migration=x'])).toBeUndefined();
+    expect(findNewMigrateFlag(['--', '--run-id=abc'])).toBeUndefined();
     expect(
       findNewMigrateFlag(['--verbose', '--', '--run-migration=x'])
     ).toBeUndefined();
     expect(
-      findNewMigrateFlag(['--runMigration=x', '--', '--run-migration=x'])
-    ).toBe('--runMigration');
+      findNewMigrateFlag(['--run-id=abc', '--', '--run-migration=x'])
+    ).toBe('--run-id');
   });
 });
 
