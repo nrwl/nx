@@ -2,7 +2,7 @@
 
 Replace `<...>` placeholders. Version values follow the target-train rule from SKILL.md section 2. Paths are dist-prefixed because they resolve against the installed package. The examples below use `./dist/src/migrations/...`, the shape for packages whose `tsconfig.lib.json` has `rootDir: "."` (the dominant shape); packages that set `rootDir: "src"` publish without the `src` segment (`./dist/migrations/...`, e.g. dotnet and maven). Copy the shape from a sibling entry, or for a package's first entry derive it from `rootDir` and confirm the path exists under the built `dist/`; path validation strips `dist/` and resolves the source file, so a wrong dist shape passes it.
 
-## Codemod
+## Generator-only
 
 ```json
 "update-23-2-0-remove-foo-option": {
@@ -13,7 +13,7 @@ Replace `<...>` placeholders. Version values follow the target-train rule from S
 }
 ```
 
-Add `requires` when the codemod only applies past an upstream major:
+Add `requires` when the migration only applies past an upstream major:
 
 ```json
 "requires": { "bar": ">=4.0.0" }
@@ -25,7 +25,7 @@ Add `requires` when the codemod only applies past an upstream major:
 "update-23-2-0-migrate-bar-config-format": {
   "version": "23.2.0-beta.3",
   "requires": { "bar": ">=4.0.0" },
-  "description": "AI-assisted migration: rewrites bar config files to the v4 format, whose options do not map 1:1, so it is driven by an AI prompt rather than a deterministic codemod",
+  "description": "AI-assisted migration: rewrites bar config files to the v4 format, whose options do not map 1:1, so it is driven by an AI prompt rather than a deterministic generator",
   "prompt": "./dist/src/migrations/update-23-2-0/migrate-bar-config-format.md"
 }
 ```
@@ -38,7 +38,7 @@ One entry, both keys. The prompt filename must differ from the implementation ba
 "update-23-2-0-convert-bar-config": {
   "version": "23.2.0-beta.3",
   "requires": { "bar": ">=4.0.0" },
-  "description": "Converts bar configuration to the v4 format; mechanically safe conversions are applied by a codemod and the remainder is completed by an AI prompt",
+  "description": "Converts bar configuration to the v4 format; mechanically safe conversions are applied by a generator and the remainder is completed by an AI prompt",
   "implementation": "./dist/src/migrations/update-23-2-0/convert-bar-config",
   "prompt": "./dist/src/migrations/update-23-2-0/finish-bar-config-conversion.md",
   "documentation": "./dist/src/migrations/update-23-2-0/convert-bar-config.md"

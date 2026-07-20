@@ -1,6 +1,6 @@
 # documentation .md template
 
-For the colocated doc of a codemod. Read by humans on nx.dev (the docs site inlines the .md that shares the implementation's basename) and passed to agents as reference material via the `documentation` key. Exemplar: `packages/nx/src/migrations/update-21-0-0/remove-legacy-cache.md`.
+For the colocated doc of a migration generator. Read by humans on nx.dev (the docs site inlines the .md that shares the implementation's basename) and passed to agents as reference material via the `documentation` key. Exemplar: `packages/nx/src/migrations/update-21-0-0/remove-legacy-cache.md`.
 
 Headings start at h4: the docs site nests the content under an h3 entry heading, so h1-h3 would break the page hierarchy.
 
