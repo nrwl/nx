@@ -900,6 +900,9 @@ describe('package-manager', () => {
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'bun' } });
       jest.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === join(workspaceRoot, 'package.json')
+      );
       const overlaySpy = jest
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
         .mockReturnValue({
@@ -919,6 +922,22 @@ describe('package-manager', () => {
       expect(overlaySpy.mock.calls[0][1]).toBe(workspaceRoot);
       expect(overlaySpy.mock.calls[0][2]).toBe('bun');
       expect(overlaySpy.mock.calls[0][3]).toBe('1.2.0');
+    });
+
+    it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
+      // A non-JS workspace has no root package.json; its .npmrc and package
+      // manager files live under .nx/installation.
+      (existsSync as jest.Mock).mockReturnValue(false);
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({});
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const installationPath = join(workspaceRoot, '.nx', 'installation');
+      const [, options] = execMock.mock.calls[0];
+      expect(options.cwd).toBe(installationPath);
+      expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
     });
   });
 
@@ -972,6 +991,9 @@ describe('package-manager', () => {
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'bun' } });
       jest.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === join(workspaceRoot, 'package.json')
+      );
       const overlaySpy = jest
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
         .mockReturnValue({
@@ -992,6 +1014,23 @@ describe('package-manager', () => {
       expect(overlaySpy.mock.calls[0][1]).toBe(workspaceRoot);
       expect(overlaySpy.mock.calls[0][2]).toBe('bun');
       expect(overlaySpy.mock.calls[0][3]).toBe('1.2.0');
+    });
+
+    it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
+      // Packing used to run from a temp dir seeded with .nx/installation's
+      // config; running from the workspace root instead must keep resolving
+      // against that directory, or a non-JS workspace loses its registry auth.
+      (existsSync as jest.Mock).mockReturnValue(false);
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({});
+
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+
+      const installationPath = join(workspaceRoot, '.nx', 'installation');
+      const [, options] = execMock.mock.calls[0];
+      expect(options.cwd).toBe(installationPath);
+      expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
     });
   });
 });

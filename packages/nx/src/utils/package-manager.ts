@@ -498,6 +498,18 @@ export function copyPackageManagerConfigurationFiles(
 }
 
 /**
+ * Root whose package manager configuration (.npmrc, pnpm-workspace.yaml,
+ * .yarnrc(.yml), bunfig.toml) governs registry, auth and TLS resolution. A
+ * non-JS workspace has no root package.json and keeps its package manager
+ * files under the Nx installation directory instead.
+ */
+function getPackageManagerConfigRoot(): string {
+  return existsSync(join(workspaceRoot, 'package.json'))
+    ? workspaceRoot
+    : getNxInstallationPath(workspaceRoot);
+}
+
+/**
  * Creates a temporary directory where you can run package manager commands safely.
  *
  * For cases where you'd want to install packages that require an `.npmrc` set up,
@@ -514,11 +526,7 @@ export function createTempNpmDirectory(skipCopy = false) {
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
   if (!skipCopy) {
-    const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
-    copyPackageManagerConfigurationFiles(
-      isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
-      dir
-    );
+    copyPackageManagerConfigurationFiles(getPackageManagerConfigRoot(), dir);
   }
 
   const cleanup = async () => {
@@ -656,6 +664,7 @@ export async function packageRegistryView(
   // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
   // redirections.
   const spec = version ? `${pkg}@${version}` : pkg;
+  const configRoot = getPackageManagerConfigRoot();
   // cwd anchors the project .npmrc / pnpm-workspace.yaml discovery to the
   // workspace; the env overlay reproduces registry config npm cannot read
   // itself (pnpm >= 11 ignores npm_config_* and resolves natively instead).
@@ -664,14 +673,14 @@ export async function packageRegistryView(
   // `onFail: error`) to a warning; scoped to npm so a `pnpm view` is untouched.
   const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
-    cwd: workspaceRoot,
+    cwd: configRoot,
     env: {
       ...process.env,
       ...getNpmSpawnRegistryEnv(
         pkg,
-        workspaceRoot,
+        configRoot,
         workspacePm,
-        getPackageManagerVersionSafe(workspacePm, workspaceRoot)
+        getPackageManagerVersionSafe(workspacePm, configRoot)
       ),
       ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
     },
@@ -679,6 +688,16 @@ export async function packageRegistryView(
   return stdout.toString().trim();
 }
 
+/**
+ * Only `npm pack` supports downloading a tarball of a specified remote
+ * package. `yarn` packs the active workspace, `pnpm pack` only packs
+ * the local project, and `bun` doesn't support pack.
+ *
+ * @param packDestination Directory passed to npm's `--pack-destination`, where
+ * the `.tgz` is written. The command itself runs from the workspace's package
+ * manager config root (so npm reads its .npmrc), not from this directory.
+ * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+ */
 export async function packageRegistryPack(
   packDestination: string,
   pkg: string,
@@ -692,20 +711,11 @@ export async function packageRegistryPack(
     bypassMinReleaseAge?: boolean;
   }
 ): Promise<{ tarballPath: string }> {
-  /**
-   * Only `npm pack` supports downloading a tarball of a specified remote
-   * package. `yarn` packs the active workspace, `pnpm pack` only packs
-   * the local project, and `bun` doesn't support pack.
-   *
-   * @param packDestination Directory passed to npm's `--pack-destination`, where
-   * the `.tgz` is written. The command itself runs from the workspace root (so
-   * npm reads the workspace .npmrc), not from this directory.
-   * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
-   */
   const pm = 'npm';
 
   const workspacePm = detectPackageManager();
-  // Run from the workspace root (not the temp dir) so npm reads the workspace
+  const configRoot = getPackageManagerConfigRoot();
+  // Run from the config root (not the temp dir) so npm reads the workspace
   // .npmrc natively, the registry/auth an npm workspace configures there (which
   // packageRegistryView already picks up); --pack-destination keeps the
   // tarball in the temp dir. For non-npm package managers the env overlay
@@ -714,15 +724,15 @@ export async function packageRegistryPack(
   const { stdout } = await execAsync(
     `${pm} pack "${pkg}@${version}" --pack-destination "${packDestination}"`,
     {
-      cwd: workspaceRoot,
+      cwd: configRoot,
       windowsHide: true,
       env: {
         ...process.env,
         ...getNpmSpawnRegistryEnv(
           pkg,
-          workspaceRoot,
+          configRoot,
           workspacePm,
-          getPackageManagerVersionSafe(workspacePm, workspaceRoot)
+          getPackageManagerVersionSafe(workspacePm, configRoot)
         ),
         // downgrade npm's devEngines.packageManager enforcement (onFail: error)
         // to a warning so pack still runs in a non-npm workspace
