@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces only critical and important findings (plus strengths; nice-to-have suggestions are dropped), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker image inspect *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -455,7 +455,15 @@ EVIDENCE_TEXT: <that exact line, verbatim — must begin with `+` or `-`, 20+ ch
                and not a `diff --git` / `index` / `---` / `+++` / `@@` line>
 ```
 
-**Verify by reading the diff yourself at that number.** Write `EVIDENCE_TEXT` to `/tmp/pr-<NUMBER>.evidence` with the **`Write` tool** (no shell). Then run this as a **single block that emits exactly one token** — do not paraphrase it into separate `echo FAILED` lines:
+**Verify by reading the diff yourself at that number.** BOTH `EVIDENCE_LINE` and `EVIDENCE_TEXT` are agent-authored and untrusted — get them into shell variables **only via the `Write` tool + `$(cat …)`, never a bare `LINE=<paste>`**. A bare assignment of the agent's line number is itself host RCE before any gate runs: `LINE=1e touch /tmp/x #` is bash assignment-prefix syntax — it sets `LINE=1e` and _runs_ `touch /tmp/x`. So write both fields to files with the **`Write` tool** (no shell parses their bytes), then read them back with `$(cat …)`:
+
+```bash
+# Write /tmp/pr-<NUMBER>.line  = EVIDENCE_LINE   with the Write tool
+# Write /tmp/pr-<NUMBER>.evidence = EVIDENCE_TEXT with the Write tool
+LINE=$(cat /tmp/pr-<NUMBER>.line 2>/dev/null)     # $(cat) never re-parses the bytes it reads
+```
+
+Then run this as a **single block that emits exactly one token** — do not paraphrase it into separate `echo FAILED` lines:
 
 ```bash
 verdict=FAILED
@@ -481,8 +489,9 @@ Each element defeats a specific failure that real reviews of this skill actually
 - **The `case` must GATE, not just warn.** A bare `case … ) echo FAILED ;; esac` prints and falls through to `sed`, which is the dangerous part: **GNU sed executes shell commands via its `e` command**, so `EVIDENCE_LINE` = `1e touch /tmp/x #` runs `touch` on the host — verified as real code execution inside the Linux container. `EVIDENCE_LINE` is agent-authored, so a non-numeric value reaching `sed` is host RCE, defeating the whole sandbox. Keeping `sed` inside the numeric `*)` branch is what closes it (pure digits can't carry an `e` command). This is the third time this mechanism reintroduced host execution; the integer gate is not optional.
 - **Compare with `$(cat …)` and `[ = ]`, not `diff -q` of the raw files.** `sed` terminates its line with `\n`; the `Write`d evidence file usually does not, so a byte-exact `diff -q` FAILS an honest agent on the trailing newline — and Step 7 then flips the whole review to `failed`. `$(…)` strips trailing newlines from both sides. The contents go through `cat` and a quoted `[ = ]`, never re-parsed by the shell, so no agent byte executes.
 - **The line number is the core proof.** It is in no prompt and in no prior-review prose, so an agent whose container reads silently returned nothing cannot produce a valid one — the only defense that closes the re-review context-file leak. Headers and filenames are derivable from the prompt, which is why the `^[+-]` and header-exclusion checks must actually gate.
-- **`test -s`**: an empty pattern would otherwise match anything; a check for absence must not be default-open on absence.
-- **`^[+-]` plus the header exclusion**: a `diff --git`/`@@`/`+++` line is derivable from the file list, so only a real content line counts.
+- **`[ -n "$ev" ]`** (the empty-evidence check): an empty pattern would otherwise match anything; a check for absence must not be default-open on absence.
+- **`^[+-]` and the header exclusion together**: a `@@` hunk line is caught by `^[+-]` (it starts with `@`); `diff --git`/`index`/`+++`/`---` lines are caught by the header exclusion. Both are derivable from the file list, so only a real content line counts.
+- **Both agent fields reach the shell only through `Write` + `$(cat)`**: `EVIDENCE_LINE` and `EVIDENCE_TEXT` are untrusted, and a bare `LINE=<paste>` executes the value via bash assignment-prefix syntax _before_ the `case` gate. Round-tripping through a file keeps every agent byte out of any shell word.
 
 **This applies to endorsements too, and especially to them.** `APPROACH_SOUND`, `PERFORMANCE_SOUND`, `SECURITY_SOUND`, and a `NOT_ATTEMPTED` reproduction all assert _"I checked and found nothing"_ — a claim an agent that read nothing produces just as fluently, and which Steps 5a–5a.3 fold into **Strengths** as an affirmative statement that the dimension was audited. An endorsement must cost more evidence than a finding, not less. A `*_SOUND` verdict with no verified EVIDENCE line is recorded **failed**, never as a strength.
 
@@ -493,7 +502,7 @@ Instead, keep the evidence out of reach and make the demand more specific:
 > Your previous EVIDENCE did not verify. Re-read `/tmp/pr-<NUMBER>.diff` and give the EVIDENCE_LINE /
 > EVIDENCE_TEXT pair for a `+` or `-` line in the **second half** of the file (line number > <N/2>).
 
-Verify exactly as above (same single-`verdict` block), adding one guard before the `case`: reject when `EVIDENCE_LINE ≤ <N/2>`. The line-number requirement already means an agent whose tools return nothing cannot pass; restricting to the far half stops it from replaying a number it happened to keep from the first attempt.
+Verify exactly as above (same single-`verdict` block). Add the far-half check as an extra clause **inside** the numeric `*)` branch's `if` — e.g. `&& [ "$LINE" -gt <N/2> ]` — where `$LINE` is already known to be pure digits. Do NOT put it before the `case`: there `$LINE` is unvalidated, so a `[ "$LINE" -gt … ]` on non-numeric input errors, and a standalone reject reintroduces the non-aggregating pattern the block exists to avoid. The line-number requirement already means an agent whose tools return nothing cannot pass; the far-half clause just stops it from replaying a number it kept from the first attempt.
 
 If the second attempt also fails, record that agent as **failed** in the draft and in `## Failures` (Step 8).
 
