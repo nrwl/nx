@@ -9,6 +9,7 @@ import {
   parseVersionFromPackageManagerField,
 } from './package-manager';
 import { readJsonFile } from './fileutils';
+import { parseJson } from './json';
 
 const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
@@ -104,7 +105,7 @@ function createHost(treeOrRoot: Tree | string): Host {
     exists: (p) => treeOrRoot.exists(p),
     read: (p) => treeOrRoot.read(p, 'utf-8'),
     write: (p, c) => treeOrRoot.write(p, c),
-    readJson: (p) => JSON.parse(treeOrRoot.read(p, 'utf-8')),
+    readJson: (p) => parseJson(treeOrRoot.read(p, 'utf-8')),
   };
 }
 

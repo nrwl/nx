@@ -138,6 +138,23 @@ describe('acknowledgeBuildScripts', () => {
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
   });
 
+  it('should read a package.json that JSON.parse rejects', () => {
+    // Nx reads JSON with a jsonc parser everywhere else, so a trailing comma
+    // must not make this the one place that refuses the workspace.
+    tree.write(
+      'package.json',
+      '{\n  "name": "proj",\n  "packageManager": "pnpm@11.2.2",\n}\n'
+    );
+
+    acknowledgeBuildScripts(tree, 'pnpm', { cypress: true });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        cypress: true
+      "
+    `);
+  });
+
   it('should probe the pnpm version when the packageManager pin is not exact', () => {
     tree.write(
       'package.json',
