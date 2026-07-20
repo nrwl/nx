@@ -194,6 +194,42 @@ async function buildPlaywrightTargets(
   const testOutput = getTestOutput(playwrightConfig);
   const reporterOutputs = getReporterOutputs(playwrightConfig);
   const webserverCommandTasks = getWebserverCommandTasks(playwrightConfig);
+
+  // When an inferred web server exposes a port/url, add a task that waits for
+  // it to accept connections. Playwright's `reuseExistingServer` probe
+  // otherwise races the server boot, misses, and spawns its own nested server
+  // command whose I/O then leaks into the task. Both the `e2e` task and the
+  // atomized CI tasks depend on it.
+  const webserverReadinessTasks = webserverCommandTasks.filter(
+    (task) => task.port != null || task.url != null
+  );
+  const webserverReadinessServers = webserverReadinessTasks.map((task) => {
+    const server: {
+      port?: number;
+      url?: string;
+      ignoreHTTPSErrors?: boolean;
+    } = task.port != null ? { port: task.port } : { url: task.url };
+    if (task.ignoreHTTPSErrors) {
+      server.ignoreHTTPSErrors = true;
+    }
+    return server;
+  });
+  const webserverReadyTargetName =
+    webserverReadinessServers.length > 0
+      ? `${options.targetName}--wait-for-webserver`
+      : undefined;
+  // Honor Playwright's own `webServer.timeout` (the budget it waits for a
+  // server it starts) so a slow server is not cut short. The plugin option
+  // overrides it; use the longest configured timeout across servers.
+  const configuredTimeouts = webserverReadinessTasks
+    .map((task) => task.timeout)
+    .filter((timeout): timeout is number => timeout != null);
+  const webserverReadinessTimeout =
+    options.webServerTimeout ??
+    (configuredTimeouts.length > 0
+      ? Math.max(...configuredTimeouts)
+      : undefined);
+
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
     options: {
@@ -214,7 +250,12 @@ async function buildPlaywrightTargets(
   };
 
   if (webserverCommandTasks.length) {
-    baseTargetConfig.dependsOn = getDependsOn(webserverCommandTasks);
+    baseTargetConfig.dependsOn = webserverReadyTargetName
+      ? [
+          ...getDependsOn(webserverCommandTasks),
+          { target: webserverReadyTargetName },
+        ]
+      : getDependsOn(webserverCommandTasks);
   } else {
     baseTargetConfig.parallelism = false;
   }
@@ -236,6 +277,25 @@ async function buildPlaywrightTargets(
       projectRoot
     ),
   };
+
+  if (webserverReadyTargetName) {
+    targets[webserverReadyTargetName] = {
+      executor: '@nx/playwright:wait-for-webserver',
+      cache: false,
+      options: {
+        servers: webserverReadinessServers,
+        ...(webserverReadinessTimeout != null
+          ? { timeout: webserverReadinessTimeout }
+          : {}),
+      },
+      dependsOn: getDependsOn(webserverCommandTasks),
+      metadata: {
+        technologies: ['playwright'],
+        description:
+          'Waits for the E2E web server(s) to be ready before the Playwright test tasks run.',
+      },
+    };
+  }
 
   if (options.ciTargetName) {
     // ensure the blob reporter output is the directory containing the blob
@@ -277,47 +337,6 @@ async function buildPlaywrightTargets(
 
     const dependsOn: TargetDependencyConfig[] = [];
 
-    // When the inferred web server task(s) expose a port/url, add a task that
-    // waits for the server to accept connections. Playwright's
-    // `reuseExistingServer` probe otherwise races the server boot on the first
-    // CI task per agent and spawns its own nested server command, whose I/O
-    // then leaks into that task.
-    const readinessTasks = webserverCommandTasks.filter(
-      (task) => task.port != null || task.url != null
-    );
-    const webserverReadinessServers = readinessTasks.map((task) => {
-      const server: {
-        port?: number;
-        url?: string;
-        ignoreHTTPSErrors?: boolean;
-      } = task.port != null ? { port: task.port } : { url: task.url };
-      if (task.ignoreHTTPSErrors) {
-        server.ignoreHTTPSErrors = true;
-      }
-      return server;
-    });
-    const webserverReadyTargetName =
-      webserverReadinessServers.length > 0
-        ? `${options.ciTargetName}--wait-for-webserver`
-        : undefined;
-    // Honor Playwright's own `webServer.timeout` (the budget it waits for a
-    // server it starts) so a slow server is not cut short. The plugin option
-    // overrides it; use the longest configured timeout across servers.
-    const configuredTimeouts = readinessTasks
-      .map((task) => task.timeout)
-      .filter((timeout): timeout is number => timeout != null);
-    const webserverReadinessTimeout =
-      options.webServerTimeout ??
-      (configuredTimeouts.length > 0
-        ? Math.max(...configuredTimeouts)
-        : undefined);
-    const ciDependsOn = webserverReadyTargetName
-      ? [
-          ...getDependsOn(webserverCommandTasks),
-          { target: webserverReadyTargetName },
-        ]
-      : undefined;
-
     const testFiles = await getAllTestFiles({
       context,
       path: testDir,
@@ -353,7 +372,6 @@ async function buildPlaywrightTargets(
       ciTargetGroup.push(targetName);
       targets[targetName] = {
         ...ciBaseTargetConfig,
-        ...(ciDependsOn ? { dependsOn: ciDependsOn } : {}),
         options: {
           ...ciBaseTargetConfig.options,
           env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),
@@ -390,25 +408,6 @@ async function buildPlaywrightTargets(
         params: 'forward',
         options: 'forward',
       });
-    }
-
-    if (webserverReadyTargetName) {
-      targets[webserverReadyTargetName] = {
-        executor: '@nx/playwright:wait-for-webserver',
-        cache: false,
-        options: {
-          servers: webserverReadinessServers,
-          ...(webserverReadinessTimeout != null
-            ? { timeout: webserverReadinessTimeout }
-            : {}),
-        },
-        dependsOn: getDependsOn(webserverCommandTasks),
-        metadata: {
-          technologies: ['playwright'],
-          description:
-            'Waits for the E2E web server(s) to be ready before the Playwright CI test tasks run.',
-        },
-      };
     }
 
     targets[options.ciTargetName] ??= {};
