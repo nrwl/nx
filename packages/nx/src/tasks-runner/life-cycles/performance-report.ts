@@ -25,19 +25,14 @@ const NX_REMOTE_CACHE_CTA =
 const NX_DISTRIBUTE_CTA = 'Distribute across machines with Nx Agents';
 
 /**
- * A recommendation built from structured parts so the link text comes from the
- * link definition (not a substring scanned out of the assembled report). A part
- * is literal text, a {@link RecLink}, or a {@link RecTaskRows}; the renderers
- * below project the same parts to the terminal string, the payload string, the
- * Markdown string, and the popup links.
+ * A recommendation built from structured parts so the link text comes from the link
+ * definition (not a substring scanned out of the assembled report). A part is literal
+ * text, a {@link RecLink}, or a {@link RecTaskRows}, projected to each output string by
+ * {@link renderRecommendation}.
  *
- * String parts must be single-line. Multi-line content needs its own structured part
- * (as {@link RecTaskRows} is) so each renderer can lay it out natively. This is a
- * convention, not a type: `string` is already a handled member, so a multi-line one
- * compiles fine and then breaks the Markdown nested list, and `unhandledRecPart` can't
- * see it. The Markdown renderer used to collapse newlines from any part with
- * `.split('\n')...join('<br>')`, which made this moot; that ran at the wrong layer and
- * was removed once task rows became data, which is what made the rule load-bearing.
+ * String parts must be single-line — multi-line content needs its own structured part (as
+ * {@link RecTaskRows} is). TS can't enforce this: `string` is already a handled member, so
+ * a multi-line one compiles and then breaks the Markdown nested list.
  */
 type RecPart = string | RecLink | RecTaskRows;
 export type Recommendation = RecPart[];
@@ -49,9 +44,7 @@ export type Recommendation = RecPart[];
  * re-links the phrase from {@link PerformanceSummaryPayload.links}.
  */
 interface RecLink {
-  /** Visible label: the sentence that links. */
   visible: string;
-  /** OSC 8 click target / appended URL: the utm-tagged URL. */
   href: string;
 }
 
@@ -66,11 +59,10 @@ function phraseLink(phrase: string, taggedUrl: string): RecLink {
   return { visible: phrase, href: taggedUrl };
 }
 
-// Both predicates test for what the part *is*, never for what it isn't: a new `RecPart`
-// member matches neither and falls through to the renderers' exhaustive branches. A
-// `!isRecTaskRows` catch-all would instead silently classify it as a link, and TS can't
-// catch that — it never checks a type predicate's body, so `.filter(isRecLink)` in
-// `recommendationLinks` would ship `{text: undefined, href: undefined}` to the popup.
+// Discriminate positively — test for what each part *is*. A `!isRecTaskRows` catch-all
+// would misclassify a future `RecPart` member as a link; TS can't catch that (it never
+// checks a predicate body), so `recommendationLinks`' `.filter(isRecLink)` would ship
+// `{text: undefined, href: undefined}` to the popup.
 function isRecLink(part: RecPart): part is RecLink {
   return typeof part !== 'string' && 'href' in part;
 }
@@ -91,24 +83,43 @@ function unhandledRecPart(part: never): never {
 }
 
 /**
- * The recommendation string the napi payload ships and the Rust popup matches against.
- * Links are URL-less (the popup re-links them from {@link PerformanceSummaryPayload.links}).
+ * Project a recommendation to a string, formatting each non-text part with the caller's
+ * renderers. The literal-text branch and the {@link unhandledRecPart} exhaustiveness guard
+ * live here, so the payload, terminal, and Markdown targets share one dispatch — and one
+ * place that has to learn about a new {@link RecPart} member.
  */
-export function recommendationToPayloadString(rec: Recommendation): string {
+function renderRecommendation(
+  rec: Recommendation,
+  render: {
+    link: (link: RecLink) => string;
+    taskRows: (rows: RecTaskRows) => string;
+  }
+): string {
   return rec
     .map((part) => {
       if (typeof part === 'string') {
         return part;
       }
       if (isRecTaskRows(part)) {
-        return taskRowsToText(part);
+        return render.taskRows(part);
       }
       if (isRecLink(part)) {
-        return part.visible;
+        return render.link(part);
       }
       return unhandledRecPart(part);
     })
     .join('');
+}
+
+/**
+ * The recommendation string the napi payload ships and the Rust popup matches against.
+ * Links are URL-less (the popup re-links them from {@link PerformanceSummaryPayload.links}).
+ */
+export function recommendationToPayloadString(rec: Recommendation): string {
+  return renderRecommendation(rec, {
+    link: (link) => link.visible,
+    taskRows: taskRowsToText,
+  });
 }
 
 /** Task rows as the text block the terminal and payload embed: newline-led, space-aligned columns. */
@@ -126,22 +137,13 @@ function recommendationToTerminalString(
   rec: Recommendation,
   hyperlinks: boolean
 ): string {
-  return rec
-    .map((part) => {
-      if (typeof part === 'string') {
-        return part;
-      }
-      if (isRecTaskRows(part)) {
-        return taskRowsToText(part);
-      }
-      if (isRecLink(part)) {
-        return hyperlinks
-          ? terminalLink(part.visible, part.href)
-          : `${part.visible} → ${part.href}`;
-      }
-      return unhandledRecPart(part);
-    })
-    .join('');
+  return renderRecommendation(rec, {
+    link: (link) =>
+      hyperlinks
+        ? terminalLink(link.visible, link.href)
+        : `${link.visible} → ${link.href}`,
+    taskRows: taskRowsToText,
+  });
 }
 
 /** The popup links (phrase + href) for every link in a recommendation list, for OSC 8 re-linking. */
@@ -427,22 +429,13 @@ export function formatReport(s: PerformanceSummary): string {
  * survive HTML's whitespace collapsing).
  */
 function recommendationToMarkdownString(rec: Recommendation): string {
-  return rec
-    .map((part) => {
-      if (typeof part === 'string') {
-        return part;
-      }
-      if (isRecTaskRows(part)) {
-        return part
-          .map((t) => `\n  - \`${t.id}\` — ${formatDuration(t.duration)}`)
-          .join('');
-      }
-      if (isRecLink(part)) {
-        return `[${part.visible}](${part.href})`;
-      }
-      return unhandledRecPart(part);
-    })
-    .join('');
+  return renderRecommendation(rec, {
+    link: (link) => `[${link.visible}](${link.href})`,
+    taskRows: (rows) =>
+      rows
+        .map((t) => `\n  - \`${t.id}\` — ${formatDuration(t.duration)}`)
+        .join(''),
+  });
 }
 
 /**
