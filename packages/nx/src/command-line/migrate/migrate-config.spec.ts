@@ -227,6 +227,44 @@ describe('applyNxJsonMigrateDefaults', () => {
     });
   });
 
+  describe('single-migration phase', () => {
+    const base = { runMigration: '@nx/js:some-migration' };
+
+    it('fills the commit options from config but not run-loop or generate-only options', () => {
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'chore: migrate ',
+        agentic: 'claude-code',
+        validate: false,
+        include: 'required',
+        multiMajorMode: 'gradual',
+      };
+      const result = applyNxJsonMigrateDefaults(base, config, noEnv);
+      expect(result.createCommits).toBe(true);
+      expect(result.commitPrefix).toBe('chore: migrate ');
+      expect(result.agentic).toBeUndefined();
+      expect(result.validate).toBeUndefined();
+      expect(result.include).toBeUndefined();
+      expect(result.includeFromConfig).toBeUndefined();
+      expect(result.multiMajorMode).toBeUndefined();
+    });
+
+    it('lets the CLI commit flags win over config', () => {
+      const args = {
+        ...base,
+        createCommits: false,
+        commitPrefix: 'cli prefix ',
+      };
+      const config: NxMigrateConfiguration = {
+        createCommits: true,
+        commitPrefix: 'config prefix ',
+      };
+      const result = applyNxJsonMigrateDefaults(args, config, noEnv);
+      expect(result.createCommits).toBe(false);
+      expect(result.commitPrefix).toBe('cli prefix ');
+    });
+  });
+
   describe('generate-migrations phase', () => {
     const base = { packageAndVersion: 'nx@latest' };
 

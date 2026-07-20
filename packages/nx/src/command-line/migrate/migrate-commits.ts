@@ -23,14 +23,13 @@ export type CommitResult =
   | { status: 'disabled' };
 
 /**
- * Creates a per-migration commit when `shouldCreateCommits` is true.
+ * `pendingMigrations` are listed in the commit body so a `git log -p` reader
+ * can see which earlier migrations' diffs this commit absorbed (their own
+ * commits failed and `git add -A` picked their working-tree state up too).
  *
- * When `pendingMigrations` is non-empty, the commit message body lists
- * those entries so a reader of `git log -p` can see which prior migrations'
- * diffs were absorbed into this commit (because their own commits failed and
- * `git add -A` here captured their working-tree state too). Each entry is
- * rendered as `<package>: <name>` for unambiguous attribution across
- * packages.
+ * The default `failureGuidance` describes the classic loop's absorb-and-recap
+ * behavior; a caller with no later commit or recap to absorb the diff (the
+ * standalone single-migration worker) passes its own.
  */
 export async function commitMigrationIfRequested(
   root: string,
@@ -38,7 +37,8 @@ export async function commitMigrationIfRequested(
   shouldCreateCommits: boolean,
   commitPrefix: string,
   installDepsIfChanged: () => Promise<void>,
-  pendingMigrations: ReadonlyArray<{ package: string; name: string }> = []
+  pendingMigrations: ReadonlyArray<{ package: string; name: string }> = [],
+  failureGuidance = 'The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.'
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
   await installDepsIfChanged();
@@ -67,7 +67,7 @@ export async function commitMigrationIfRequested(
     const reason = err instanceof Error ? err.message : String(err);
     logger.info(
       pc.red(
-        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.`
+        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. ${failureGuidance}`
       )
     );
     return { status: 'failed', reason };

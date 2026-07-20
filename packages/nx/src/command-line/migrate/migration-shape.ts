@@ -1,13 +1,22 @@
-// `factory` is the legacy Angular schematics field; treat it equivalently to
-// `implementation` when deciding whether a migration has a deterministic half.
+// `factory` is the legacy Angular schematics field; it counts as a
+// deterministic half exactly like `implementation`.
 //
-// Structurally typed so consumers in adjacent modules (migrate-output,
-// inside-agent rendering) can call the predicates without importing the heavy
-// `ExecutableMigration` type — a circular import we explicitly avoid.
+// The predicates stay structurally typed so this module never imports
+// migrate.ts's types: migrate.ts imports this module, so an import back
+// would close a cycle, and no lint rule guards this boundary.
 interface MigrationShape {
   prompt?: string;
   implementation?: string;
   factory?: string;
+}
+
+/** A migration entry as written into the plan (migrations.json). */
+export interface PlannedMigration extends MigrationShape {
+  package: string;
+  name: string;
+  version: string;
+  description?: string;
+  documentation?: string;
 }
 
 function hasDeterministicImplementation(m: MigrationShape): boolean {
