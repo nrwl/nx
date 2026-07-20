@@ -6,6 +6,7 @@ import {
   readPnpmYamlConfig,
 } from '../package-manager-config/pnpm-config';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
+import { logger } from '../logger';
 import {
   expandEnvVars,
   expandPnpmEnvVars,
@@ -56,6 +57,13 @@ function resolvePnpmPath(value: string, root: string): string {
  */
 
 const DEFAULT_REGISTRY = 'https://registry.npmjs.org/';
+/** Credential keys pnpm accepts without a nerf-dart prefix. */
+const BARE_AUTH_KEYS = [
+  '_authToken',
+  '_auth',
+  'username',
+  '_password',
+] as const;
 
 interface PnpmWorkspaceSettings {
   registries?: Record<string, string>;
@@ -204,19 +212,24 @@ function bridgeAuthIni(
   // A workspace .npmrc bare key is not a source here either; npm reads that file
   // itself and rejects bare auth in it (ERR_INVALID_AUTH).
   const credentialDart = nerfDart(authIniRegistry ?? DEFAULT_REGISTRY);
+  const bareKeys = BARE_AUTH_KEYS.filter((key) => authIni.has(key));
   if (credentialDart) {
-    for (const bareKey of [
-      '_authToken',
-      '_auth',
-      'username',
-      '_password',
-    ] as const) {
-      const raw = authIni.get(bareKey);
+    for (const bareKey of bareKeys) {
       const dartKey = `npm_config_${credentialDart}:${bareKey}`;
-      if (raw !== undefined && env[dartKey] === undefined) {
-        env[dartKey] = raw;
+      if (env[dartKey] === undefined) {
+        env[dartKey] = authIni.get(bareKey);
       }
     }
+  }
+
+  const contacted = contactedRegistry(env, projectNpmrc, scope);
+  const contactedDart = nerfDart(contacted);
+  // The pin is what keeps the credential off a registry auth.ini never named, so
+  // the request goes out unauthenticated and npm reports a bare 401. Name the
+  // reason and the fix, which is the same one pnpm gives: it warns on every
+  // unscoped credential it rescopes and has deprecated the unscoped form.
+  if (bareKeys.length > 0 && credentialDart !== contactedDart) {
+    warnUnscopedCredential(contacted);
   }
 
   // Flat TLS/proxy keys are part of pnpm's auth-config inheritance set
@@ -240,10 +253,7 @@ function bridgeAuthIni(
   // //host/:certfile / :keyfile keys take paths, not PEM) and npm_config_cert
   // presents the certificate to every host npm contacts. Bridge them only when
   // the registry npm will contact is the one they are pinned to.
-  if (
-    credentialDart &&
-    credentialDart === contactedRegistryDart(env, projectNpmrc, scope)
-  ) {
+  if (credentialDart && credentialDart === contactedDart) {
     for (const key of ['cert', 'key'] as const) {
       if (unbridged(key)) {
         env[`npm_config_${key}`] = authIni.get(key);
@@ -267,19 +277,19 @@ function bridgeAuthIni(
 }
 
 /**
- * Nerf-dart of the registry the spawned npm will contact, as far as this process
- * can see: the registry bridged into the env overlay, else the one the workspace
- * .npmrc declares, else npm's default. npm reads that .npmrc natively, so its
- * value is expanded with npm's grammar rather than pnpm's. A registry declared
- * only in a user-level ~/.npmrc is not visible here, which leaves the comparison
- * covering the workspace-controlled sources, the ones that can redirect the
- * request to a host the user never configured.
+ * The registry the spawned npm will contact, as far as this process can see: the
+ * registry bridged into the env overlay, else the one the workspace .npmrc
+ * declares, else npm's default. npm reads that .npmrc natively, so its value is
+ * expanded with npm's grammar rather than pnpm's. A registry declared only in a
+ * user-level ~/.npmrc is not visible here, which leaves the comparison covering
+ * the workspace-controlled sources, the ones that can redirect the request to a
+ * host the user never configured.
  */
-function contactedRegistryDart(
+function contactedRegistry(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
   scope: string | null
-): string | null {
+): string {
   const declaredFor = (key: string): string | undefined => {
     const fromNpmrc = projectNpmrc.get(key);
     return (
@@ -287,10 +297,21 @@ function contactedRegistryDart(
       (fromNpmrc !== undefined ? expandEnvVars(fromNpmrc) : undefined)
     );
   };
-  return nerfDart(
+  return (
     (scope ? declaredFor(`${scope}:registry`) : undefined) ??
-      declaredFor('registry') ??
-      DEFAULT_REGISTRY
+    declaredFor('registry') ??
+    DEFAULT_REGISTRY
+  );
+}
+
+let warnedUnscopedCredential = false;
+function warnUnscopedCredential(registry: string): void {
+  if (warnedUnscopedCredential) {
+    return;
+  }
+  warnedUnscopedCredential = true;
+  logger.warn(
+    `A credential in pnpm's auth.ini is not scoped to a registry, so it was not sent to ${registry} when fetching packages. pnpm pins an unscoped credential to the registry that same file declares, and has deprecated the unscoped form; scope it (for example "//registry.example.com/:_authToken=...") to use it with this registry.`
   );
 }
 
