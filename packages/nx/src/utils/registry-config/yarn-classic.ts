@@ -496,9 +496,9 @@ function toYarnValueMap(
   if (!map) {
     return null;
   }
-  // yarn classic env-replaces ${VAR} in .npmrc values via normalizeConfig; a
-  // spawned npm does not expand env-sourced config, so expand here before any
-  // bridged auth/registry value reaches npm.
+  // yarn classic env-replaces ${VAR} in .npmrc values via normalizeConfig, so
+  // resolve them here rather than leaving the spawned npm to apply its own
+  // grammar to whatever we bridge.
   // npm's ini parser yields strings; coerce the booleans npm itself recognizes
   // so option semantics line up with the .yarnrc side.
   const result = new Map<string, YarnValue>();

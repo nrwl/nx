@@ -115,6 +115,24 @@ export function ancestorDirectories(root: string): string[] {
   return dirs;
 }
 
+const ENV_EXPR = /(?<!\\)(\\*)\$\{([^${}]+)\}/g;
+
+function replaceEnvExpr(
+  value: string,
+  resolve: (name: string) => string | undefined
+): string {
+  return value.replace(ENV_EXPR, (orig: string, esc: string, name: string) => {
+    // An odd run of backslashes escapes the reference. Leave the whole match
+    // verbatim: npm applies the same escape rule to the env values we hand it,
+    // so it consumes the backslashes and lands on the literal the workspace
+    // package manager resolved. Consuming them here would expand it twice.
+    if (esc.length % 2) {
+      return orig;
+    }
+    return esc.slice(esc.length / 2) + (resolve(name) ?? `$\{${name}}`);
+  });
+}
+
 /**
  * Expands `${VAR}` references from the environment the way npm/bun ini readers
  * do. Unknown variables are left verbatim.
@@ -123,7 +141,34 @@ export function expandEnvVars(
   value: string,
   env: NodeJS.ProcessEnv = process.env
 ): string {
-  return value.replace(/\$\{([^}]+)\}/g, (match, name) => env[name] ?? match);
+  return replaceEnvExpr(value, (name) => env[name]);
+}
+
+const PNPM_ENV_DEFAULT = /([^:-]+)(:?)-(.+)/;
+
+/**
+ * Expands `${VAR}` the way pnpm's @pnpm/config.env-replace does, which also
+ * honors a `${VAR-default}` fallback and its `${VAR:-default}` form (that one
+ * falls back for an empty value too, not just an unset one). pnpm aborts on a
+ * reference it cannot resolve; leave it verbatim instead, so a broken entry
+ * elsewhere in the file does not take down the whole command.
+ */
+export function expandPnpmEnvVars(
+  value: string,
+  env: NodeJS.ProcessEnv = process.env
+): string {
+  return replaceEnvExpr(value, (name) => {
+    const matched = name.match(PNPM_ENV_DEFAULT);
+    if (!matched) {
+      return env[name];
+    }
+    const [, variableName, colon, fallback] = matched;
+    const resolved = env[variableName];
+    if (resolved === undefined) {
+      return fallback;
+    }
+    return !resolved && colon ? fallback : resolved;
+  });
 }
 
 /** Case-tolerant read of an environment variable (exact, lower, upper). */

@@ -1,4 +1,10 @@
-import { expandEnvVars, getPackageScope, nerfDart, readEnvVar } from './utils';
+import {
+  expandEnvVars,
+  expandPnpmEnvVars,
+  getPackageScope,
+  nerfDart,
+  readEnvVar,
+} from './utils';
 
 describe('getPackageScope', () => {
   it.each([
@@ -47,6 +53,57 @@ describe('expandEnvVars', () => {
     // npm's ${VAR} substitution has no `:-default` form, so the whole token is
     // one unknown var name and stays verbatim (unlike berry's nested defaults).
     expect(expandEnvVars('${TOKEN:-fallback}', {})).toBe('${TOKEN:-fallback}');
+  });
+
+  it('leaves an escaped \\${VAR} unexpanded', () => {
+    // npm applies the same escape rule to the values we hand it, so the
+    // backslashes stay and npm consumes them.
+    expect(expandEnvVars('\\${TOKEN}', { TOKEN: 'secret' })).toBe('\\${TOKEN}');
+  });
+
+  it('expands after an escaped backslash and consumes half the run', () => {
+    expect(expandEnvVars('\\\\${TOKEN}', { TOKEN: 'secret' })).toBe('\\secret');
+  });
+
+  it('stops a name at a nested ${ rather than spanning it', () => {
+    // Verified against npm's and pnpm's own env-replace: the outer `${A` never
+    // forms a reference, and the inner one expands in place.
+    expect(expandEnvVars('${A${B}', { B: 'x' })).toBe('${Ax');
+  });
+});
+
+describe('expandPnpmEnvVars', () => {
+  it('expands a plain ${VAR} reference', () => {
+    expect(expandPnpmEnvVars('${TOKEN}', { TOKEN: 'secret' })).toBe('secret');
+  });
+
+  it('honors a ${VAR-default} fallback when the variable is unset', () => {
+    expect(expandPnpmEnvVars('${TOKEN-fallback}', {})).toBe('fallback');
+  });
+
+  it('keeps a set value over a ${VAR-default} fallback', () => {
+    expect(expandPnpmEnvVars('${TOKEN-fallback}', { TOKEN: 'secret' })).toBe(
+      'secret'
+    );
+  });
+
+  it('keeps an empty value for ${VAR-default} but not for ${VAR:-default}', () => {
+    // Only the colon form treats an empty value as absent.
+    expect(expandPnpmEnvVars('${TOKEN-fallback}', { TOKEN: '' })).toBe('');
+    expect(expandPnpmEnvVars('${TOKEN:-fallback}', { TOKEN: '' })).toBe(
+      'fallback'
+    );
+  });
+
+  it('leaves an unresolvable reference verbatim instead of throwing', () => {
+    // pnpm aborts here; nx is only building an env overlay.
+    expect(expandPnpmEnvVars('${MISSING}', {})).toBe('${MISSING}');
+  });
+
+  it('leaves an escaped \\${VAR} unexpanded', () => {
+    expect(expandPnpmEnvVars('\\${TOKEN}', { TOKEN: 'secret' })).toBe(
+      '\\${TOKEN}'
+    );
   });
 });
 
