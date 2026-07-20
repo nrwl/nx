@@ -171,8 +171,9 @@ export function flushPerformanceReport(): void {
     // restore_terminal cooks the terminal back post-TUI, so console.log's plain \n
     // renders fine; it also supplies the single trailing newline formatReport omits.
     console.log(formatReport(summary));
-    // In GitHub Actions, also append the report (plus a per-task table) to the job
-    // summary page. Independent of the console.log above so neither masks the other.
+    // In GitHub Actions, also append the report to the job summary page — the same stats
+    // as above, led by the run's outcome (a failed-tasks list, or a success line).
+    // Independent of the console.log above so neither masks the other.
     writePerformanceReportToGitHubActions(summary);
   } catch (e) {
     // Best-effort report; never let it affect the run's exit behavior. Surface the
@@ -186,8 +187,8 @@ export function flushPerformanceReport(): void {
 /**
  * Append the performance report to the GitHub Actions job summary page when running in
  * Actions (`$GITHUB_STEP_SUMMARY` is set there and nowhere else). No-op otherwise. The
- * per-task table is computed lazily so non-CI runs don't pay for it. Best-effort: a
- * write failure must never affect the run.
+ * Markdown is rendered below the guard, so non-CI runs don't pay to format a report
+ * nothing reads. Best-effort: a write failure must never affect the run.
  *
  * Skipped for a nested run (one nx command invoked by another nx task's command), so only
  * the outermost run writes to the summary. Nx sets `NX_TASK_TARGET_PROJECT` on every task's
