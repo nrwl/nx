@@ -1,13 +1,13 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated gVisor sandbox container (never into the host working tree), runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces only critical and important findings (plus strengths; nice-to-have suggestions are dropped), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker image inspect *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces only critical and important findings (plus strengths; nice-to-have suggestions are dropped), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker image inspect *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
 # Deep PR Review (review-pr)
 
-Runs the `pr-review-toolkit` review agents against a remote PR in `nrwl/nx`. Those agents normally review local working-tree changes; this skill instead checks the PR out **inside an isolated gVisor sandbox container**, dispatches the agents with the PR's scope passed to them explicitly (Step 5 — not through the toolkit's own `/pr-review-toolkit:review-pr` command, which would find nothing), and collects the output into a draft suitable for posting on GitHub.
+Runs the `pr-review-toolkit` review agents against a remote PR in `nrwl/nx`. Those agents normally review local working-tree changes; this skill instead checks the PR out **inside an isolated sandbox container** (gVisor on Linux, the Docker VM on macOS), dispatches the agents with the PR's scope passed to them explicitly (Step 5 — not through the toolkit's own `/pr-review-toolkit:review-pr` command, which would find nothing), and collects the output into a draft suitable for posting on GitHub.
 
 **Drafts only.** This skill never posts to GitHub. The draft is reading material for the reviewer; if they want any of it on the PR, they post it themselves (or ask in the session, e.g. via `gh pr review --body-file`).
 
@@ -16,7 +16,7 @@ Runs the `pr-review-toolkit` review agents against a remote PR in `nrwl/nx`. Tho
 A PR is untrusted code. The dividing line is **execution, not reading**: the host may freely _read_ public PR/issue information, but must never _run_ PR-authored code (install scripts, builds, tests, the linked-issue reproduction). This skill enforces that with a strict split:
 
 - **Host (Claude + its credentials):** reads GitHub metadata and the diff (`gh pr view` / `gh pr diff` / `gh issue view`), orchestrates the agents, and reads the checked-out code **only through `docker exec … cat/grep/find`**. Claude's auth token never enters the container.
-- **Sandbox container (gVisor, `--runtime=runsc`):** holds the PR checkout and is the **only** place any PR code executes — dependency installs, builds, tests, and the issue reproduction all run via `docker exec` inside it.
+- **Sandbox container** (gVisor via `--runtime=runsc` on Linux; the Docker VM on macOS, where `RUNTIME_FLAG` is empty): holds the PR checkout and is the **only** place any PR code executes — dependency installs, builds, tests, and the issue reproduction all run via `docker exec` inside it. Say which one is actually in effect when describing the boundary; asserting gVisor on macOS tells every downstream agent it has a guarantee it does not have.
 
 Consequences that the rest of this skill depends on:
 
@@ -34,7 +34,7 @@ Consequences that the rest of this skill depends on:
 - `RUNTIME_FLAG` — container isolation runtime. Default: `--runtime=runsc` on Linux (gVisor); **empty on macOS** (the Docker VM is the sandbox). Detect once with `uname -s`.
 - `CONTAINER` — the per-PR sandbox container name. Default: `nx-review-pr-<NUMBER>`.
 - `TRIAGE_DIR` — where drafts live. Default: `~/.nx-pr-reviews` (outside the repo — so `git clean` never touches drafts and re-review history survives — and outside `~/.claude`, so the skill never writes into Claude Code's own config dir)
-- `NX_REPO_PATH` — path to the local clone of nrwl/nx this skill ships inside. Default: `git rev-parse --show-toplevel`. Used only for host-side git plumbing (never for the PR checkout).
+- `NX_REPO_PATH` — path to the local clone of nrwl/nx this skill ships inside. Default: `git rev-parse --show-toplevel`. Used **only** by the Step 4.5 close-signal checks, which may run before the container exists, and always with a fresh `git fetch` first. It is never used for the PR checkout and is never passed to an agent — agents read base state from `/work/base` in the container, which is fetched fresh every run and cannot be stale.
 
 ## Step 1: Pre-flight
 
@@ -43,15 +43,23 @@ gh auth status
 mkdir -p "$TRIAGE_DIR"
 
 # Sandbox prerequisites (same checks as setup-review-sandbox)
-uname -s                                                              # Linux → use runsc; Darwin → RUNTIME_FLAG empty
+uname -s                                                              # Linux → runsc REQUIRED; Darwin → Docker VM is the sandbox
 docker info >/dev/null 2>&1 && echo "docker OK" || echo "docker MISSING"
-docker info --format '{{range $k,$v := .Runtimes}}{{$k}} {{end}}' | grep -q runsc && echo "runsc OK" || echo "runsc MISSING (Linux only)"
+docker info --format '{{range $k,$v := .Runtimes}}{{$k}} {{end}}' | grep -q runsc && echo "runsc OK" || echo "runsc ABSENT"
 docker image inspect "$SANDBOX_IMAGE" >/dev/null 2>&1 && echo "image OK" || echo "image MISSING"
 ```
 
-Set `RUNTIME_FLAG=--runtime=runsc` on Linux, `RUNTIME_FLAG=` (empty) on macOS.
+**Set `RUNTIME_FLAG` explicitly, and fail closed.** Treat it as unset (`RUNTIME_FLAG=UNSET`) until `uname -s` has actually returned, then assign exactly once:
 
-Fail fast with a clear message if: `gh` isn't authed; Docker is down; on Linux `runsc` is missing; or the image is missing. For the last three, point the user at the **`setup-review-sandbox`** skill (it installs Docker + gVisor + builds the image) — do not try to build it here.
+- `Linux` + `runsc OK` → `RUNTIME_FLAG=--runtime=runsc`
+- `Linux` + `runsc ABSENT` → **abort.** Do not fall back to `runc`; point the user at `setup-review-sandbox`.
+- `Darwin` → `RUNTIME_FLAG=` (empty — the Docker VM is the isolation boundary)
+
+Never run `docker run` while `RUNTIME_FLAG` is still `UNSET`. This matters because an _unset_ variable expands to nothing, which is byte-identical to the correct macOS value — so a skipped or blocked `uname` would silently start the container under `runc` on Linux, running untrusted PR code with no gVisor and no error anywhere. The failure mode of this variable is "no isolation, reported as success", so it gets an explicit sentinel rather than a default.
+
+Fail fast with a clear message if: `gh` isn't authed; Docker is down; on Linux `runsc` is absent; or the image is missing. For the last three, point the user at the **`setup-review-sandbox`** skill (it installs Docker + gVisor + builds the image) — do not try to build it here.
+
+(If `docker info` succeeds but `docker image inspect` reports MISSING, re-run the inspect once before believing it — a daemon that is still warming up can report a present image as missing, and rebuilding a ~5 GB image on a false negative is expensive.)
 
 ## Step 2: Fetch the PR metadata
 
@@ -70,18 +78,27 @@ Parse out:
 
 ## Step 3: Check the PR out inside the sandbox container
 
-Start a long-lived, locked-down gVisor container and check the PR out **inside it** — the fetch and everything after run in the container; nothing lands on the host working tree. `$RUNTIME_FLAG` is `--runtime=runsc` on Linux and empty on macOS (set in Step 1); leave it unquoted so an empty value expands to nothing.
+Start a long-lived, locked-down sandbox container and check the PR out **inside it** — the fetch and everything after run in the container; nothing lands on the host working tree. `$RUNTIME_FLAG` is `--runtime=runsc` on Linux and empty on macOS (set in Step 1); leave it unquoted so an empty value expands to nothing.
 
 ```bash
 CONTAINER="nx-review-pr-<NUMBER>"
 docker rm -f "$CONTAINER" 2>/dev/null                        # self-heal a leftover from a prior run
+
+# Clear host artifacts from any earlier run of this PR BEFORE anything writes.
+# Several later steps gate on these files merely existing, so a leftover from a
+# previous review silently changes this run's behaviour (see Step 4).
+rm -f /tmp/pr-<NUMBER>.diff /tmp/pr-<NUMBER>.files /tmp/pr-<NUMBER>.json \
+      /tmp/pr-<NUMBER>.review-charter.md /tmp/pr-<NUMBER>.review-context.md \
+      /tmp/pr-<NUMBER>-incremental.diff
 
 docker run -d --name "$CONTAINER" $RUNTIME_FLAG \
   --cap-drop ALL --security-opt no-new-privileges \
   --memory 6g --cpus 4 --pids-limit 2048 \
   "$SANDBOX_IMAGE" sleep infinity
 
-# Shallow-fetch just this PR's head into /work/nx (fast; full history not needed for review).
+# Shallow-fetch this PR's head into /work/nx AND the base ref into /work/base.
+# Both checkouts are created here, up front, so every downstream agent can rely
+# on them existing (the analyzers read base state from /work/base).
 docker exec "$CONTAINER" bash -lc '
   export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"
   set -e
@@ -89,16 +106,21 @@ docker exec "$CONTAINER" bash -lc '
   git init -q && git remote add origin https://github.com/nrwl/nx
   git fetch -q --depth 1 origin pull/<NUMBER>/head
   git checkout -q FETCH_HEAD
+  git fetch -q --depth 1 origin <BASE_REF_NAME>
+  git worktree add --detach /work/base "origin/<BASE_REF_NAME>"
   git rev-parse HEAD          # HEAD_SHA
 '
 ```
+
+Use `origin/<BASE_REF_NAME>` here, **not** `FETCH_HEAD`. `FETCH_HEAD` is a per-worktree pseudoref written into the main worktree's git dir, so it is invisible from a linked worktree — any later command that re-points `/work/base` via `FETCH_HEAD` fails, and git compounds it by reinterpreting the unresolvable token as a pathspec (`--detach does not take a path argument`), which points nowhere near the real cause. Remote-tracking refs live in the common git dir and resolve from every worktree.
 
 Notes:
 
 - **No `-v` host mounts** — the checkout must live only in the container. All caps dropped, no privilege escalation, resources bounded.
 - **Efficiency:** the gh-only close-without-merge signals (Step 4.5, signals 1–4 and 6–8) need no container. For a **first** review, you may run those cheap signals first and only start the container if no strong close signal fired — a superseded/unnecessary PR then costs no sandbox. For a **re-review**, Step 4's incremental diff needs the container, so start it before Step 4. Either way, once created it must be torn down in Step 9.
 - The image carries the repo toolchain (node/java/dotnet/rust/bun via mise) baked from `mise.toml`, and `mise` auto-installs the PR's _pinned_ toolchain on first exec, so in-container execution (repro, builds) works without host help.
-- The `--depth 1` PR-head fetch gives the full working tree at HEAD — enough for reading every changed and surrounding file. The reproduce-verifier adds the base ref as a second worktree at `/work/base` in this same container (Step 5a.5) — one container per PR holds everything.
+- The `--depth 1` PR-head fetch gives the full working tree at HEAD — enough for reading every changed and surrounding file. This step also adds the base ref as a second worktree at `/work/base` in the same container, before any agent is dispatched — one container per PR holds everything. The agents never create, move, or re-point either checkout; they only read them (only the reproduce-verifier also runs things).
+- **Read base state from `/work/base`, not from a host clone.** It is fetched fresh from the remote on every run, so it is always the PR's actual base. A maintainer's local clone can be weeks stale, which would silently answer "was this behavior already there?" against the wrong tree — the question calibration 7 exists to settle.
 
 ### The sandbox reading protocol (used by every agent below)
 
@@ -120,8 +142,14 @@ docker exec "$CONTAINER" bash -lc 'export PATH="/root/.local/bin:/root/.local/sh
 The **diff** — the primary review surface — is fetched host-side (it's public PR info) and written to a host file the agents can `Read` directly:
 
 ```bash
-gh pr diff <NUMBER> --repo nrwl/nx > /tmp/pr-<NUMBER>.diff
+gh pr diff <NUMBER> --repo nrwl/nx > /tmp/pr-<NUMBER>.diff.tmp \
+  || { echo "FATAL: gh pr diff failed"; exit 1; }
+test -s /tmp/pr-<NUMBER>.diff.tmp \
+  || { echo "FATAL: empty diff for a PR reporting <CHANGED_FILES> changed files"; exit 1; }
+mv /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.diff
 ```
+
+Write-then-verify-then-move, rather than redirecting straight onto the final path. A bare `>` truncates the target _before_ `gh` runs, so a token expiry or a transient 5xx leaves a 0-byte file that every agent is then told is "the complete PR diff" — and because the changed-file list is fetched by a _separate_ `gh` call, agents can end up with a populated file list and an empty diff, which is exactly the shape the Step 5 verification is least able to catch. Cross-check `wc -l < /tmp/pr-<NUMBER>.files` against the `changedFiles` count already parsed in Step 2 before dispatching anyone.
 
 **Hard rule for every agent:** never execute PR code on the host. Any command that _runs_ the checkout — `npm`/`pnpm install`, `nx …`, a build, a test, the linked-issue reproduction — goes through `docker exec "$CONTAINER" bash -lc '…'`, never bare on the host.
 
@@ -147,7 +175,9 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    fi
    ```
 
-   A failed fetch means the author force-pushed and orphaned `$PRIOR_SHA`. Treat that as a **fresh review**: skip the incremental diff, skip the re-review context file, and note the force-push in the draft. Do not fall through with an empty incremental diff — an empty diff reads as "nothing changed since the last review" when in fact the entire branch was rewritten.
+   A failed fetch means the author force-pushed and orphaned `$PRIOR_SHA`. Treat that as a **fresh review**: set `HAS_PRIOR_CONTEXT=false`, skip the incremental diff, skip step 3 below entirely, and note the force-push in the draft. Do not fall through with an empty incremental diff — an empty diff reads as "nothing changed since the last review" when in fact the entire branch was rewritten.
+
+   Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 also clears these paths up front, so the two defenses are independent.)
 
 3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code):
 
@@ -215,7 +245,14 @@ Pick the 2-3 most-touched _distinctive_ files — skip monorepo hot files (`pack
 
 **4. Target-state check.** For small PRs (< 50 lines changed OR touches only `package.json` / `versions.ts` / `migrations.json`), peek at master to see if the target state is already there.
 
-Read each changed file on master (`git -C $NX_REPO_PATH show origin/master:<path>`) and compare key lines against what the PR is trying to set. Example: if the PR changes `"@foo/bar": "^1.0.0"` → `"^2.0.0"` but master already has `"^2.3.3"`, flag it.
+Refresh the remote-tracking ref first, then read each changed file on master:
+
+```bash
+git -C "$NX_REPO_PATH" fetch -q origin <BASE_REF_NAME>
+git -C "$NX_REPO_PATH" show origin/<BASE_REF_NAME>:<path>
+```
+
+Compare key lines against what the PR is trying to set. Example: if the PR changes `"@foo/bar": "^1.0.0"` → `"^2.0.0"` but master already has `"^2.3.3"`, flag it. The fetch is not optional — this signal can recommend _closing someone's PR_, and a local clone that is weeks stale would answer "is the target state already on master?" from the wrong tree. (If the container already exists at this point, `/work/base` is equivalent and needs no fetch.)
 
 For larger PRs, skip this — the toolkit will catch subtler issues.
 
@@ -295,7 +332,7 @@ First, write a review charter at `/tmp/pr-<NUMBER>.review-charter.md` (host-side
 
 ## Where the code is (READ THIS FIRST)
 
-The PR is checked out at `/work/nx` **inside a gVisor sandbox container named `nx-review-pr-<NUMBER>`**,
+The PR is checked out at `/work/nx` **inside a sandbox container named `nx-review-pr-<NUMBER>`** (base ref at `/work/base`),
 NOT on the host filesystem. Your native Read/Grep/Glob tools will NOT find the PR source. Reach it
 only with `docker exec` against that container:
 
@@ -322,11 +359,11 @@ these is advisory at most and not worth writing up:
 <COPY THE FULL "Nx-specific calibration" LIST FROM THIS SKILL, VERBATIM>
 ```
 
-Substitute the real container name for `<CONTAINER>` when writing the file.
+Substitute the real PR number for every `<NUMBER>` when writing the file — there are six occurrences, all inside `docker exec nx-review-pr-<NUMBER>` commands, and each one that survives as a literal produces a charter whose every read fails. (There is deliberately no `<CONTAINER>` token to replace; the container name is spelled out so a half-done substitution is visible rather than silent.)
 
 ### Dispatch the review agents directly — NOT via the toolkit command
 
-**Do not invoke `/pr-review-toolkit:review-pr`.** That command discovers its own review scope from host git state (`git status`, `git diff --name-only`). With the PR checked out in the container and nothing on the host working tree, that scope comes back **empty** — and its agents are instructed to "confirm the code meets standards" when they find no issues. The result is a confident clean review of nothing, indistinguishable from a genuine pass. The command takes no scope parameter (its frontmatter accepts only `argument-hint`), so this cannot be fixed by passing it arguments.
+**Do not invoke `/pr-review-toolkit:review-pr`.** That command discovers its own review scope from host git state (`git status`, `git diff --name-only`). With the PR checked out in the container and nothing on the host working tree, that scope comes back **empty** — and its agents are instructed to "confirm the code meets standards" when they find no issues. The result is a confident clean review of nothing, indistinguishable from a genuine pass. Its one argument selects which review _aspects_ to run (`code` / `tests` / `comments` / `errors` / `types` / `simplify`), not which files to review, so no argument can repoint it at the container.
 
 Dispatch the toolkit's agents yourself instead, with the scope passed explicitly. Get the changed-file list first:
 
@@ -349,14 +386,24 @@ find yourself with an empty file list, you have the wrong scope — re-read the 
 
 - DIFF: /tmp/pr-<NUMBER>.diff  (host file — the complete PR diff; read it with `Read`)
 - CHANGED FILES: <PASTE the contents of /tmp/pr-<NUMBER>.files>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this gVisor container)
+- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
 - BASE_REF: <BASE_REF_NAME>
 
 Read /tmp/pr-<NUMBER>.review-charter.md (host file) first — it carries the severity policy, the
 maintainer calibrations, and the mandatory sandbox reading protocol. The PR source is NOT on the
 host: reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`, and
 never run PR code on the host.
-<IF /tmp/pr-<NUMBER>.review-context.md EXISTS, ADD:>
+
+REQUIRED — open your report with exactly these two lines:
+
+  REVIEWED: <how many changed files you actually opened>
+  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+
+The EVIDENCE line is checked with `grep -F` against the diff. Quoting a filename is not
+sufficient — filenames appear in this prompt, diff content does not. A report whose EVIDENCE
+line does not verify is discarded and the agent is recorded as failed, including a report that
+found no issues.
+<ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
 Also read /tmp/pr-<NUMBER>.review-context.md — the prior review of this PR. Focus on what changed since.
 """
 )
@@ -374,9 +421,26 @@ Dispatch these in parallel:
 
 ### Verify each agent actually reviewed something
 
-An agent that reports **no findings AND cites no file from the changed-file list** did not review the PR — it almost certainly fell back to empty host git scope. Re-dispatch it once with the changed-file list restated inline. If it comes back empty a second time, record that agent as **failed** in the draft (and in `## Failures` per Step 8) rather than counting it as a pass.
+A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. Every agent — the toolkit five here, **and** the four in Steps 5a–5a.5 — must prove it opened the artifact.
 
-A silent "looks good" from an agent that read nothing is the one outcome this step must never produce: it turns a missing review into an apparent endorsement.
+**Demand evidence the prompt cannot supply.** A filename is not evidence: the changed-file list is pasted into every agent's prompt, so an agent that read nothing can cite one from its own context. Require instead a **verbatim line quoted out of `/tmp/pr-<NUMBER>.diff`**, which appears nowhere in the prompt. Every agent's report must open with:
+
+```
+REVIEWED: <N> changed files
+EVIDENCE: <one verbatim line copied from the diff, 20+ chars, not a header or `---` marker>
+```
+
+Check it mechanically — this is a host file, so `grep` is a legitimate host command:
+
+```bash
+grep -Fq "<the agent's EVIDENCE line>" /tmp/pr-<NUMBER>.diff && echo VERIFIED || echo FAILED
+```
+
+**This applies to endorsements too, and especially to them.** `APPROACH_SOUND`, `PERFORMANCE_SOUND`, `SECURITY_SOUND`, and a `NOT_ATTEMPTED` reproduction all assert _"I checked and found nothing"_ — a claim an agent that read nothing produces just as fluently, and which Steps 5a–5a.3 fold into **Strengths** as an affirmative statement that the dimension was audited. An endorsement must cost more evidence than a finding, not less. A `*_SOUND` verdict with no verified EVIDENCE line is recorded **failed**, never as a strength.
+
+**If EVIDENCE fails to verify, re-dispatch once — with different input.** Restating the changed-file list is a no-op; the agent already had it. The retry must paste **the first ~100 lines of the diff itself** inline into the prompt, so the agent cannot avoid having content. If the second attempt also fails to produce a verifiable EVIDENCE line, record that agent as **failed** in the draft and in `## Failures` (Step 8).
+
+**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit.
 
 Aggregate the surviving agents' output into Critical / Important / Strengths yourself. That aggregate is `$RAW_REVIEW_BODY`.
 
@@ -411,13 +475,23 @@ Evaluate whether PR <NUMBER> in nrwl/nx takes the right approach to the problem 
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this gVisor container)
+- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
 - DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
-- BASE_REF: <BASE_REF_NAME>
-- NX_REPO_PATH: <NX_REPO_PATH>  (host clone of nrwl/nx — for reading the BASE state of a file)
+- BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
-Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find /work/nx/…`, and never run PR code on the host (`docker exec nx-review-pr-<NUMBER> bash -lc '…'` if you must run something). Follow your standard workflow and return the structured report.
+Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
+
+You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
+
+REQUIRED — open your report with exactly these two lines:
+
+  REVIEWED: <how many changed files you actually opened>
+  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+
+The EVIDENCE line is checked with `grep -F` against the diff. Quoting a filename is not sufficient — filenames appear in this prompt, diff content does not. This applies to an endorsement verdict exactly as it applies to a finding: a `*_SOUND` report whose EVIDENCE line does not verify is recorded as failed, not folded into Strengths.
+
+Follow your standard workflow and return the structured report.
 """
 )
 ```
@@ -441,13 +515,23 @@ Analyze the runtime performance of PR <NUMBER> in nrwl/nx: CPU/memory footprint 
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this gVisor container)
+- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
 - DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
-- BASE_REF: <BASE_REF_NAME>
-- NX_REPO_PATH: <NX_REPO_PATH>  (host clone of nrwl/nx — for reading the BASE state of a file)
+- BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
-Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find /work/nx/…`, and never run PR code on the host (`docker exec nx-review-pr-<NUMBER> bash -lc '…'` if you must run something). Follow your standard workflow and return the structured report.
+Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
+
+You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
+
+REQUIRED — open your report with exactly these two lines:
+
+  REVIEWED: <how many changed files you actually opened>
+  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+
+The EVIDENCE line is checked with `grep -F` against the diff. Quoting a filename is not sufficient — filenames appear in this prompt, diff content does not. This applies to an endorsement verdict exactly as it applies to a finding: a `*_SOUND` report whose EVIDENCE line does not verify is recorded as failed, not folded into Strengths.
+
+Follow your standard workflow and return the structured report.
 """
 )
 ```
@@ -471,13 +555,23 @@ Analyze PR <NUMBER> in nrwl/nx for injection-class vulnerabilities and data expo
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this gVisor container)
+- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
 - DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
-- BASE_REF: <BASE_REF_NAME>
-- NX_REPO_PATH: <NX_REPO_PATH>  (host clone of nrwl/nx — for reading the BASE state of a file)
+- BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
-Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find /work/nx/…`, and never run PR code on the host (`docker exec nx-review-pr-<NUMBER> bash -lc '…'` if you must run something). Follow your standard workflow and return the structured report.
+Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
+
+You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
+
+REQUIRED — open your report with exactly these two lines:
+
+  REVIEWED: <how many changed files you actually opened>
+  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+
+The EVIDENCE line is checked with `grep -F` against the diff. Quoting a filename is not sufficient — filenames appear in this prompt, diff content does not. This applies to an endorsement verdict exactly as it applies to a finding: a `*_SOUND` report whose EVIDENCE line does not verify is recorded as failed, not folded into Strengths.
+
+Follow your standard workflow and return the structured report.
 """
 )
 ```
@@ -492,23 +586,20 @@ Capture the output as `$SECURITY_REPORT` and fold it into the review body as `##
 
 In parallel with Step 5, dispatch the `reproduce-verifier` agent to ground the review in the reported bug.
 
-The verifier runs in the **same** container as the review — one sandbox per PR holds everything. For its Level 1 base-vs-HEAD baseline it needs the base state too, so add it as a second git worktree at `/work/base`. This never rewrites `/work/nx`, so the read-only review agents keep reading HEAD undisturbed while the verifier works against `/work/base`:
+The verifier runs in the **same** container as the review — one sandbox per PR holds everything. Both checkouts it needs already exist from Step 3: HEAD at `/work/nx` and the base ref at `/work/base`. The verifier works against `/work/base` for its baseline and never rewrites `/work/nx`, so the read-only review agents keep reading HEAD undisturbed.
+
+**Confirm both checkouts are at the refs you think before dispatching** — a verifier pointed at a stale or missing `/work/base` reports a baseline verdict for the wrong tree, and `BASELINE_PASSES`/`BASELINE_FAILS` both feed the verdict:
 
 ```bash
 docker exec "$CONTAINER" bash -lc '
-  export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"
   set -e
-  cd /work/nx
-  git fetch -q --depth 1 origin <BASE_REF_NAME>
-  if test -d /work/base; then
-    git -C /work/base checkout -q --detach FETCH_HEAD   # already added on a prior pass
-  else
-    git worktree add --detach /work/base FETCH_HEAD
-  fi
+  test -d /work/base
+  echo "HEAD: $(git -C /work/nx rev-parse HEAD)"
+  echo "BASE: $(git -C /work/base rev-parse HEAD)"
 '
 ```
 
-Branch on whether `/work/base` exists rather than on `worktree add` failing — a `… 2>/dev/null || checkout` fallback would swallow a real error (bad ref, out of disk) and then run `checkout` against a directory that isn't there, reporting the second failure instead of the first. With `set -e` and no output suppression, a genuine failure surfaces here instead of resurfacing later as a confusing baseline result.
+If this exits non-zero, **do not dispatch the verifier** — record the failure and treat Level 1 as unavailable. Nothing downstream re-checks this, so an unnoticed failure here surfaces later as a confident baseline result derived from the wrong commit.
 
 The verifier then runs HEAD-side steps in `/work/nx` and base-side steps in `/work/base`, both via `docker exec "$CONTAINER" bash -lc 'cd <dir> && …'`. **Every reproduction step runs through the sandbox; nothing runs on the host** (this is the "issue reproduction must happen in the VM" requirement).
 
@@ -528,10 +619,16 @@ Verify that PR <NUMBER> in nrwl/nx actually fixes the issues it claims to close.
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (one gVisor container; HEAD at /work/nx, base worktree at /work/base)
+- CONTAINER: nx-review-pr-<NUMBER>  (one sandbox container; HEAD at /work/nx, base worktree at /work/base)
+- DIFF: /tmp/pr-<NUMBER>.diff  (host file — the complete PR diff; read it with Read)
 - HEAD_SHA: <HEAD_REF_OID>
 - BASE_REF: <BASE_REF_NAME>
 - RUN_LEVEL_2: <true|false — see gate above>
+
+Use the DIFF file for all "does the diff address the bug?" reasoning. Do NOT reconstruct the diff
+yourself with `git diff` inside the container: both checkouts are `--depth 1`, so `BASE...HEAD`
+fails outright ("no merge base") and `BASE..HEAD` silently returns every file changed by unrelated
+commits between the fork point and the base ref — a much larger, wrong file set that looks plausible.
 
 The checkout is inside the sandbox container, not on the host. Run EVERY reproduction step — installs, builds, the repro command — through the sandbox, never on the host, via:
 
@@ -541,7 +638,31 @@ docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/
 
 ```
 
-Use `<dir>` = `/work/nx` for HEAD-side steps (e.g. `npm install`, `nx build`) and `/work/base` for the base baseline. Do NOT `git checkout` a different ref in `/work/nx` — the review agents are reading it; use the `/work/base` worktree for the base state instead. Follow your standard workflow (Level 0 always, Level 1 when applicable, Level 2 only when RUN_LEVEL_2=true AND classification is EXTERNAL_REPO or GENERATED_WORKSPACE). Return the structured report.
+Use `<dir>` = `/work/nx` for HEAD-side steps (e.g. `npm install`, `nx build`) and `/work/base` for the base baseline. Do NOT `git checkout` a different ref in `/work/nx` — the review agents are reading it; use the `/work/base` worktree for the base state instead.
+
+NEVER paste a command taken from issue text directly into that `bash -lc '…'` string. The outer
+`docker exec` line is parsed by the HOST shell first, so a single quote in issue-supplied text closes
+the quoting and everything after it executes on the host — outside the sandbox entirely. Write the
+extracted command to a file and feed it in over stdin instead, so no attacker-supplied byte is ever
+parsed by a host shell:
+
+```
+
+printf '%s\n' "<REPRO_CMD>" > /tmp/repro-<NUMBER>.cmd
+docker exec -i nx-review-pr-<NUMBER> bash -l < /tmp/repro-<NUMBER>.cmd
+
+```
+
+Follow your standard workflow (Level 0 always, Level 1 when applicable, Level 2 only when RUN_LEVEL_2=true AND classification is EXTERNAL_REPO or GENERATED_WORKSPACE). Return the structured report.
+
+REQUIRED — open your report with exactly these two lines:
+
+  REVIEWED: <how many changed files you actually opened>
+  EVIDENCE: <one verbatim line copied out of /tmp/pr-<NUMBER>.diff, 20+ chars, not a `---`/`+++`/`@@` marker>
+
+The EVIDENCE line is checked with `grep -F` against the diff. This applies to a NOT_ATTEMPTED
+reproduction exactly as it applies to a confirmed one — "there was nothing runnable here" is a claim
+about the diff, and it needs the same proof you opened it.
 """
 )
 ```
@@ -601,6 +722,7 @@ The reconciled (or fresh) text becomes `$REVIEW_BODY`.
 
 Check in this order (first match wins):
 
+- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found.
 - Close-without-merge check emitted "Likely superseded" with strong evidence (see Step 4.5) → `verdict: superseded`
 - Close-without-merge check emitted "Likely unnecessary" with strong evidence (see Step 4.5) → `verdict: unnecessary`
 - Has any **Still concerning** or **New concerns** items rated critical → `verdict: needs-changes`

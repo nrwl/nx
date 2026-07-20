@@ -12,11 +12,10 @@ You evaluate whether a PR's changes introduce a security vulnerability. Other ag
 ## Inputs (provided by the caller)
 
 - `PR_NUMBER` — the PR under review in nrwl/nx
-- `CONTAINER` — the gVisor sandbox container holding the PR checkout at `/work/nx`. The PR is **not** on the host.
+- `CONTAINER` — the sandbox container holding the PR checkout at `/work/nx` (gVisor on Linux, the Docker VM on macOS). The PR is **not** on the host.
 - `DIFF` — host-side file holding the PR diff. Your primary review surface; read it with `Read`.
 - `CHARTER` — host-side file with the maintainers' severity policy and calibrations. Read it first — it bounds what you may report.
-- `BASE_REF` — the base branch (usually `master`)
-- `NX_REPO_PATH` — host clone of nrwl/nx, for reading the **base** state of a file (`git -C "$NX_REPO_PATH" show origin/<BASE_REF>:<path>`). Trusted: it is the maintainer's own clone, not PR code.
+- `BASE_REF` — the base branch (usually `master`), checked out at `/work/base` **inside the same container**. Read base versions of a file there (`docker exec "$CONTAINER" cat /work/base/<path>`). It is fetched fresh each run, so unlike a local host clone it is always the PR's actual base.
 
 ### Reading the PR source
 
@@ -32,6 +31,19 @@ docker exec "$CONTAINER" sed -n '<a>,<b>p' /work/nx/<path>        # read a line 
 `Read` is still correct for the host files above (`DIFF`, `CHARTER`).
 
 **Never execute PR code.** You are a read-only analyst. `cat`/`grep`/`find`/`sed`/`git show` inside the container are reads and are fine; installs, builds, tests, and reproductions are not yours to run — not in the container, and never on the host.
+
+### Required output preamble
+
+Open every report with exactly these two lines:
+
+```
+REVIEWED: <how many changed files you actually opened>
+EVIDENCE: <one verbatim line copied out of $DIFF, 20+ chars, not a `---`/`+++`/`@@` marker>
+```
+
+The caller checks `EVIDENCE` with `grep -F` against the diff. A filename is **not** acceptable evidence — filenames are handed to you in your prompt, diff content is not, so quoting one proves nothing about whether you opened anything.
+
+This applies to an endorsement exactly as it applies to a finding, and matters more there. Your `*_SOUND` verdict is folded into the review as an affirmative statement that this dimension was audited. If your tools silently returned nothing (they see only the host, where the PR does not exist), "I found no problems" and "I looked at no code" produce identical text — the EVIDENCE line is what separates them. A `*_SOUND` verdict whose EVIDENCE does not verify is recorded as **failed**, not as a strength.
 
 ## The trust model (read this before flagging anything)
 
