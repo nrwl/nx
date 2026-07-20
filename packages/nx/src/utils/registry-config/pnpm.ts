@@ -7,7 +7,7 @@ import {
 } from '../package-manager-config/pnpm-config';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
-  expandEnvVars,
+  expandPnpmEnvVars,
   getPackageScope,
   nerfDart,
   setCafile,
@@ -149,11 +149,11 @@ function bridgeAuthIni(
   // parseField decides a Boolean-typed setting from the literal value, before it
   // expands any `${VAR}`, so strict-ssl has to be read pre-expansion.
   const rawStrictSsl = authIni.get('strict-ssl');
-  // pnpm's @pnpm/npm-conf runs envReplace on every auth.ini value; a spawned npm
-  // does not expand env-sourced config, so expand `${VAR}` references here before
-  // bridging (e.g. `//host/:_authToken=${NPM_TOKEN}` must carry the real token).
+  // pnpm's @pnpm/npm-conf runs envReplace on every auth.ini value. npm expands
+  // env-tier values too, but only with its own grammar, so expand here to get
+  // pnpm's (`${VAR:-default}` resolves, `${VAR?}` does not).
   for (const [key, value] of authIni) {
-    authIni.set(key, expandEnvVars(value));
+    authIni.set(key, expandPnpmEnvVars(value));
   }
   const projectNpmrc = readNpmrcMap(join(root, '.npmrc')) ?? new Map();
 
@@ -193,7 +193,7 @@ function bridgeAuthIni(
   const defaultRegistryDart = nerfDart(
     env['npm_config_registry'] ??
       (projectRegistry !== undefined
-        ? expandEnvVars(projectRegistry)
+        ? expandPnpmEnvVars(projectRegistry)
         : 'https://registry.npmjs.org/')
   );
   if (defaultRegistryDart) {
