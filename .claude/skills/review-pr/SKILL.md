@@ -360,6 +360,25 @@ only with `docker exec` against that container:
   `docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && <cmd>'`.
   Running it bare on the host is a protocol violation.
 
+## Review methodology (mandatory)
+
+- **Execute changed shell; do not just read it.** If the diff adds or modifies an executable
+  block with control flow — a gate, a loop, a verification snippet, anything an agent following
+  the skill would run — you MUST extract that block's _literal bytes_ from the file (via
+  `docker exec … sed -n '<a>,<b>p' /work/nx/<path>`, NOT from the diff and NOT a paraphrase) and
+  run it against an adversarial matrix: honest inputs, forgery/negative inputs, and injection
+  payloads. Report the observed outputs. Reasoning about embedded shell as prose is not enough —
+  nearly every historical defect in this pipeline was a shell-correctness bug that surfaced only
+  when the block was actually run. Test the _exact shipped bytes_: a clean-room reimplementation
+  can pass while the shipped snippet is broken (e.g. a `case` arm that `echo`s FAILED but does not
+  `exit` still falls through to the next command).
+- **Trace the whole source→sink path, then sweep same-class siblings.** When an untrusted value
+  reaches a dangerous sink, do NOT stop at the sink. Walk every hop the value takes — _including
+  how it is assigned or read into a variable_ (a bare `VAR=<untrusted>` is itself a sink; see the
+  security agent's exec-primitive list) — and check each hop. Then enumerate every other place in
+  this same change where the same class of defect could occur. A fix that closes a hole at the
+  sink routinely leaves the identical class open one hop upstream.
+
 ## What to report
 
 Report only **critical** and **important** findings, plus **strengths**. Do not
@@ -504,6 +523,8 @@ If the second attempt also fails, record that agent as **failed** in the draft a
 **A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit. An agent that was **never dispatched** (e.g. `type-design-analyzer` on a diff that adds no types) is _not_ a failed agent — note it as not-applicable and move on.
 
 Aggregate the surviving agents' output into Critical / Important / Strengths yourself. That aggregate is `$RAW_REVIEW_BODY`.
+
+**Backstop — run the changed shell yourself.** If the diff added or modified an executable block with control flow, do not rely solely on the agents' reports: independently extract that block's _literal bytes_ from the container (`docker exec "$CONTAINER" sed -n '<a>,<b>p' /work/nx/<path>`), substitute only the path placeholders, and run it against the same adversarial matrix (honest + forgery + injection). Confirm the observed outputs before finalizing. Every time this pipeline converged, it was because the changed block was actually run, not read — so the orchestrator runs it too, as a check on the agents rather than a substitute for them.
 
 ### Trim to critical + important
 
