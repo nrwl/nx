@@ -7,6 +7,7 @@ import {
 } from '../package-manager-config/pnpm-config';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
+  expandEnvVars,
   expandPnpmEnvVars,
   getPackageScope,
   nerfDart,
@@ -189,11 +190,13 @@ function bridgeAuthIni(
   // in env: aiming at npmjs there would send a private credential to the public
   // registry. A workspace .npmrc bare key is not a source here; npm reads that
   // file itself and rejects bare auth in it (ERR_INVALID_AUTH).
+  // The dart is looked up by the spawned npm, so expand the .npmrc value with
+  // npm's grammar: the key has to match the registry npm itself resolves.
   const projectRegistry = projectNpmrc.get('registry');
   const defaultRegistryDart = nerfDart(
     env['npm_config_registry'] ??
       (projectRegistry !== undefined
-        ? expandPnpmEnvVars(projectRegistry)
+        ? expandEnvVars(projectRegistry)
         : 'https://registry.npmjs.org/')
   );
   if (defaultRegistryDart) {

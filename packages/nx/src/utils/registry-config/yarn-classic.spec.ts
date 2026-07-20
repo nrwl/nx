@@ -369,8 +369,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('expands ${VAR} in a yarn-only ancestor .npmrc auth token before bridging', () => {
-    // yarn classic env-replaces .npmrc values; npm does not expand env-sourced
-    // config, so the bridged token must already be the resolved secret.
+    // yarn classic env-replaces .npmrc values, so the bridged token carries the
+    // secret yarn resolved rather than whatever npm's own grammar would make of
+    // the reference.
     process.env.NX_TEST_YARN_TOKEN = 'real-token';
     try {
       files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-b.example.com/';
