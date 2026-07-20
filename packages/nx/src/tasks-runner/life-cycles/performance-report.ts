@@ -72,21 +72,11 @@ function isRecTaskRows(part: RecPart): part is RecTaskRows {
 }
 
 /**
- * The renderers' final branch. Every {@link RecPart} member is handled positively above it,
- * so `part` is `never` here — adding a member without teaching the renderer about it turns
- * this into a compile error instead of a part silently rendering as the wrong kind.
- */
-function unhandledRecPart(part: never): never {
-  throw new Error(
-    `Unhandled recommendation part: ${JSON.stringify(part)}. Every RecPart member needs a branch in each renderer.`
-  );
-}
-
-/**
  * Project a recommendation to a string, formatting each non-text part with the caller's
- * renderers. The literal-text branch and the {@link unhandledRecPart} exhaustiveness guard
- * live here, so the payload, terminal, and Markdown targets share one dispatch — and one
- * place that has to learn about a new {@link RecPart} member.
+ * renderers. The three output targets (payload, terminal, Markdown) share this one dispatch.
+ * After the string and task-rows branches a part is a {@link RecLink}, so `render.link`
+ * takes it directly — and a new {@link RecPart} member that is neither would fail to satisfy
+ * that `RecLink` parameter, turning "forgot to handle it" into a compile error right here.
  */
 function renderRecommendation(
   rec: Recommendation,
@@ -103,10 +93,7 @@ function renderRecommendation(
       if (isRecTaskRows(part)) {
         return render.taskRows(part);
       }
-      if (isRecLink(part)) {
-        return render.link(part);
-      }
-      return unhandledRecPart(part);
+      return render.link(part);
     })
     .join('');
 }
