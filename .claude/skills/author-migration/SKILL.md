@@ -42,6 +42,8 @@ Never author: executor-to-inferred conversions (that is the user-invoked `conver
 
 A break qualifies for an entry only when it survives plugin-side compat and reaches users' own files. If the plugin absorbs it for every shape it emits or manages, classify it Nothing and name the absorbing code in the coverage mapping. If it reaches configuration users wrote in an Nx-scaffolded or Nx-documented surface that the plugin passes through, author the migration (the rspack v2 codemod rewrites user-file options like `libraryTarget`, a plugin-managed default users override explicitly). If it is only expressible in layouts no Nx surface produces (a construct the generated config shape turns into a no-op), classify it Nothing: the upstream migration guide owns it, and a speculative prompt migration for such shapes is over-production, not coverage. This decides whether an entry exists at all; once one does, the codemod still covers every hand-written shape of the construct it edits (section 4).
 
+When a change could be handled by a codemod or a prompt, the codemod wins: deterministic transforms are faster, produce the same output for the same input, and are the only part guaranteed to run for every user (prompts execute only under the agentic flow; in plain runs they surface as next steps that may never happen). Enumerate the scenarios and edge cases the change can hit, then partition: everything transformable with guaranteed correctness goes in the implementation; only the remainder goes to a prompt. Prompt-only is a last resort, for changes with no safely-automatable subset at all; if any subset is mechanical, ship a hybrid whose .ts does the safe part and hands off the rest per the contract in section 4. The justification for a prompt-only classification in the `## Migration coverage` mapping below must say why a codemod cannot guarantee correctness, not why it is harder to write.
+
 Record the mapping in the PR description under a `## Migration coverage` heading: one line per upstream item, its treatment, and a one-clause justification for anything classified Nothing or prompt-only.
 
 ## 2. Version and gating
@@ -50,9 +52,13 @@ Record the mapping in the PR description under a `## Migration coverage` heading
 
 The version field is a gate, not a label: an entry runs when `installed < version <= target` with semver prerelease ordering (see [runtime-contract.md](runtime-contract.md)).
 
-- Set it to the exact next prerelease of the active train: latest tag + 1 (`git tag --sort=-creatordate | head -5`, or `npm view nx dist-tags`). Example: latest tag `23.1.0-beta.8` -> write `23.1.0-beta.9`.
-- Never a bare final version (prerelease users would skip it) and never a backdated prerelease (users past that prerelease silently skip it). Always latest tag + 1, even when batching related migrations.
-- If the latest tag is a stable that is newer than the `next` dist-tag, the train rolled over: use `<next-minor-or-major>-beta.0`.
+- The target train is the developer's decision, made once per authoring task and covering every entry and `packageJsonUpdates` group in the change: the work may target a train other than the active one. When the task does not state a target, ask the developer, presenting options computed from `npm view nx dist-tags` and `git tag --sort=-creatordate | head -5`:
+  - `next` resolves higher than `latest` (no stable above it): offer that train's exact next prerelease, latest tag + 1 (latest tag `23.1.0-beta.8` -> `23.1.0-beta.9`). Recommend this default.
+  - `next` resolves lower than `latest` (the train rolled over, no new prerelease cut yet): offer the next minor at beta.0 (`latest` `23.2.0` -> `23.3.0-beta.0`).
+  - `next` is not a major bump over `latest` (e.g. latest `22.4.1`, next `22.5.0-beta.3`): additionally offer the next major at beta.0 (`23.0.0-beta.0`) for breaking work aimed at the upcoming major; the option must say that the branch, not the version field, chooses the ship vehicle, so this waits for the train switch.
+  - Free-text entry covers trains none of the computed options match.
+- Non-interactive runs have no one to ask: use the computed default and flag the choice in the PR notes.
+- Never a bare final version (prerelease users would skip it) and never a backdated prerelease (users past that prerelease silently skip it). All entries in the change use the chosen train's exact next prerelease, even when batching related migrations.
 - The version field does not choose which release ships the code; the branch does. A breaking migration must wait for the train switch before merging (the SVGR removal was fully reverted for landing on the wrong train).
 - Fixing a shipped migration: amend the implementation in place AND bump the entry version to the current next prerelease so workspaces that already ran the broken version re-run it.
 
@@ -181,7 +187,7 @@ Before release, validate against a real repository:
 - [ ] Entry key `update-<ver>-<slug>` and its version part matches the `version` field exactly.
 - [ ] `implementation` path shape matches the package's build layout: copied from a sibling entry, or for a package's first entry derived from `tsconfig.lib.json` (`rootDir: "."` -> `./dist/src/migrations/...`; `rootDir: "src"` -> `./dist/migrations/...`) and confirmed to exist under the built `dist/`. It points at THIS migration's file (open the file and confirm; validation strips `dist/` and resolves the source .ts, so it catches neither a wrong dist shape nor a wrong-but-existing file).
 - [ ] `implementation` used, not `factory`; no `cli`, no `schema`.
-- [ ] Version is latest tag + 1 on the active train; `requires` reviewed against landing versions (no upper bound on the entry's own gate), against alternative package names (umbrella vs scoped: no single-name gate), and for fit (gate present only when the migration's behavior depends on that package's version).
+- [ ] Version is the exact next prerelease of the target train the developer chose (asked once when the task did not state it); `requires` reviewed against landing versions (no upper bound on the entry's own gate), against alternative package names (umbrella vs scoped: no single-name gate), and for fit (gate present only when the migration's behavior depends on that package's version).
 - [ ] No orphans: every file under the touched `update-<ver>/` directory is referenced by an entry, and every new entry's files exist.
 - [ ] Spec includes a negative test (plus a malformed-input test when the migration parses files); hybrid specs assert the return object; `formatFiles` called.
 - [ ] Detection covers the full expression surface: `@nx/*` wrapper executors, referenced-target indirection, config-file signals, both `targetDefaults` shapes.
