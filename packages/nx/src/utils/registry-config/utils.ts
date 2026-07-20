@@ -149,9 +149,10 @@ const PNPM_ENV_DEFAULT = /([^:-]+)(:?)-(.+)/;
 /**
  * Expands `${VAR}` the way pnpm's @pnpm/config.env-replace does, which also
  * honors a `${VAR-default}` fallback and its `${VAR:-default}` form (that one
- * falls back for an empty value too, not just an unset one). pnpm aborts on a
- * reference it cannot resolve; leave it verbatim instead, so a broken entry
- * elsewhere in the file does not take down the whole command.
+ * falls back for an empty value too, not just an unset one). A reference that
+ * resolves to nothing becomes an empty string, matching the envReplaceLossy
+ * reader pnpm has used since 11.2.0; keeping it verbatim would put a literal
+ * `${VAR}` on the wire as if it were a credential.
  */
 export function expandPnpmEnvVars(
   value: string,
@@ -160,7 +161,7 @@ export function expandPnpmEnvVars(
   return replaceEnvExpr(value, (name) => {
     const matched = name.match(PNPM_ENV_DEFAULT);
     if (!matched) {
-      return env[name];
+      return env[name] ?? '';
     }
     const [, variableName, colon, fallback] = matched;
     const resolved = env[variableName];
