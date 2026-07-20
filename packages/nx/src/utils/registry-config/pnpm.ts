@@ -146,6 +146,9 @@ function bridgeAuthIni(
   if (!authIni) {
     return;
   }
+  // parseField decides a Boolean-typed setting from the literal value, before it
+  // expands any `${VAR}`, so strict-ssl has to be read pre-expansion.
+  const rawStrictSsl = authIni.get('strict-ssl');
   // pnpm's @pnpm/npm-conf runs envReplace on every auth.ini value; a spawned npm
   // does not expand env-sourced config, so expand `${VAR}` references here before
   // bridging (e.g. `//host/:_authToken=${NPM_TOKEN}` must carry the real token).
@@ -228,7 +231,11 @@ function bridgeAuthIni(
     }
   }
   if (unbridged('strict-ssl')) {
-    setStrictSsl(env, npmConfigBoolean(authIni.get('strict-ssl')));
+    // strict-ssl is typed Boolean-only, so parseField turns just 'true'/'false'
+    // (plus '' -> true and the null/undefined literals) into non-strings and
+    // leaves everything else a truthy string: '0', 'no' and 'off' all keep TLS
+    // verification on in pnpm. Only an explicit 'false' turns it off.
+    setStrictSsl(env, rawStrictSsl === 'false' ? false : true);
   }
   setProxies(env, {
     httpProxy: unbridged('proxy') ? authIni.get('proxy') : undefined,
@@ -237,18 +244,6 @@ function bridgeAuthIni(
       : undefined,
     noProxy: unbridged('no-proxy') ? authIni.get('no-proxy') : undefined,
   });
-}
-
-/**
- * npm/nopt Boolean coercion (validateBoolean): a numeric string is false only
- * when it is zero, otherwise only 'null'/'false' are false. pnpm reads auth.ini
- * strict-ssl through this coercion, so '0'/'' disable TLS but 'no'/'off' do not.
- */
-function npmConfigBoolean(value: string): boolean {
-  if (!isNaN(Number(value))) {
-    return Boolean(Number(value));
-  }
-  return value !== 'null' && value !== 'false';
 }
 
 /**

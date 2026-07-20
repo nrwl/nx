@@ -306,11 +306,30 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('coerces auth.ini strict-ssl the way npm/nopt does (numeric zero is false)', () => {
-      writeAuthIni('strict-ssl=0');
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-        npm_config_strict_ssl: 'false',
-      });
+    it.each(['0', 'no', 'off', '', 'null'])(
+      'keeps TLS verification on for an auth.ini strict-ssl of %p',
+      (value) => {
+        // parseField types strict-ssl Boolean-only, so none of these parse to
+        // false in pnpm; bridging them as false would silently disable TLS.
+        writeAuthIni(`strict-ssl=${value}`);
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_strict_ssl: 'true',
+        });
+      }
+    );
+
+    it('keeps TLS verification on for an auth.ini strict-ssl read from an env var', () => {
+      // parseField expands ${VAR} only after the true/false check, so an
+      // expanded 'false' stays a truthy string in pnpm.
+      process.env.NX_TEST_STRICT_SSL = 'false';
+      try {
+        writeAuthIni('strict-ssl=${NX_TEST_STRICT_SSL}');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_strict_ssl: 'true',
+        });
+      } finally {
+        delete process.env.NX_TEST_STRICT_SSL;
+      }
     });
 
     it('bridges flat ca/cert/key from auth.ini (npm has no inline scoped form)', () => {
