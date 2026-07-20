@@ -46,8 +46,10 @@ mkdir -p "$TRIAGE_DIR"
 uname -s                                                              # Linux → runsc REQUIRED; Darwin → Docker VM is the sandbox
 docker info >/dev/null 2>&1 && echo "docker OK" || echo "docker MISSING"
 docker info --format '{{range $k,$v := .Runtimes}}{{$k}} {{end}}' | grep -q runsc && echo "runsc OK" || echo "runsc ABSENT"
-docker image inspect "$SANDBOX_IMAGE" >/dev/null 2>&1 && echo "image OK" || echo "image MISSING"
+test -n "$(docker images -q "$SANDBOX_IMAGE" 2>/dev/null)" && echo "image OK" || echo "image MISSING"
 ```
+
+Use `docker images -q` (empty output ⇒ absent), **not** `docker image inspect`, to probe for the image. On Docker Desktop with Resource Saver, `docker image inspect` returns "No such image" for several seconds after the VM wakes even though the image is present — observed failing 5+ calls in a row while `docker images` and `docker run` both succeed. Probing with `inspect` there would send you to rebuild a ~5 GB image that already exists.
 
 **Set `RUNTIME_FLAG` explicitly, and fail closed.** Treat it as unset (`RUNTIME_FLAG=UNSET`) until `uname -s` has actually returned, then assign exactly once:
 
@@ -59,7 +61,7 @@ Never run `docker run` while `RUNTIME_FLAG` is still `UNSET`. This matters becau
 
 Fail fast with a clear message if: `gh` isn't authed; Docker is down; on Linux `runsc` is absent; or the image is missing. For the last three, point the user at the **`setup-review-sandbox`** skill (it installs Docker + gVisor + builds the image) — do not try to build it here.
 
-(If `docker info` succeeds but `docker image inspect` reports MISSING, re-run the inspect once before believing it — a daemon that is still warming up can report a present image as missing, and rebuilding a ~5 GB image on a false negative is expensive.)
+(If `docker images -q` still comes back empty right after the daemon wakes, give it a few seconds and re-probe once before concluding the image is gone — the daemon can lag briefly on wake. Only treat a persistently empty result as truly MISSING.)
 
 ## Step 2: Fetch the PR metadata
 
@@ -251,11 +253,15 @@ Pick the 2-3 most-touched _distinctive_ files — skip monorepo hot files (`pack
 Confirm `NX_REPO_PATH` really is an nrwl/nx clone before trusting it — its default is `git rev-parse --show-toplevel`, so invoking the skill from some other repo would silently point this signal at that repo's master. Then refresh the remote-tracking ref and read each changed file:
 
 ```bash
-git -C "$NX_REPO_PATH" remote get-url origin 2>/dev/null | grep -q 'nrwl/nx' \
-  || { echo "NX_REPO_PATH is not an nrwl/nx clone — skip signal 4"; }
-git -C "$NX_REPO_PATH" fetch -q origin <BASE_REF_NAME>
-git -C "$NX_REPO_PATH" show origin/<BASE_REF_NAME>:<path>
+if git -C "$NX_REPO_PATH" remote get-url origin 2>/dev/null | grep -q 'nrwl/nx'; then
+  git -C "$NX_REPO_PATH" fetch -q origin <BASE_REF_NAME>
+  git -C "$NX_REPO_PATH" show origin/<BASE_REF_NAME>:<path>
+else
+  echo "NX_REPO_PATH is not an nrwl/nx clone — skipping signal 4 (would read the wrong repo's master)"
+fi
 ```
+
+The `if`/`else` must actually gate the `fetch`+`show`. A `… || { echo "skip"; }` form prints the warning and then runs them anyway — and signal 4 can recommend **closing a contributor's PR**, so reading the target state from the wrong repo's master is a confident wrong closure. (Verified: the `||`-only form reaches both commands.)
 
 (If the container already exists at this point, prefer `/work/base` and skip the host clone entirely — it needs neither the origin check nor the fetch.)
 
@@ -449,21 +455,32 @@ EVIDENCE_TEXT: <that exact line, verbatim — must begin with `+` or `-`, 20+ ch
                and not a `diff --git` / `index` / `---` / `+++` / `@@` line>
 ```
 
-**Verify by reading the diff yourself at that number — never interpolate the agent's text into a shell command.** The line is PR-authored content and may contain `$(…)`, backticks, or quotes that would execute on the host or mangle the match. Write `EVIDENCE_TEXT` to `/tmp/pr-<NUMBER>.evidence` with the **`Write` tool** (no shell), and compare files:
+**Verify by reading the diff yourself at that number.** Write `EVIDENCE_TEXT` to `/tmp/pr-<NUMBER>.evidence` with the **`Write` tool** (no shell). Then run this as a **single block that emits exactly one token** — do not paraphrase it into separate `echo FAILED` lines:
 
 ```bash
-case "$LINE" in ''|*[!0-9]*) echo FAILED ;; esac          # EVIDENCE_LINE must be pure digits
-sed -n "${LINE}p" /tmp/pr-<NUMBER>.diff > /tmp/pr-<NUMBER>.diffline
-grep -qE '^[+-]' /tmp/pr-<NUMBER>.diffline || echo FAILED                  # a content line
-grep -qE '^(diff --git|index |\+\+\+ |--- )' /tmp/pr-<NUMBER>.diffline && echo FAILED  # not a header
-test -s /tmp/pr-<NUMBER>.evidence || echo FAILED                          # empty never passes
-diff -q /tmp/pr-<NUMBER>.diffline /tmp/pr-<NUMBER>.evidence >/dev/null && echo VERIFIED || echo FAILED
+verdict=FAILED
+case "$LINE" in
+  ''|*[!0-9]*) ;;                                  # non-numeric → stays FAILED; sed must NOT run (see below)
+  *)
+    sed -n "${LINE}p" /tmp/pr-<NUMBER>.diff > /tmp/pr-<NUMBER>.diffline
+    line=$(cat /tmp/pr-<NUMBER>.diffline)          # $(…) strips the trailing newline sed adds
+    ev=$(cat /tmp/pr-<NUMBER>.evidence 2>/dev/null)
+    if   printf '%s' "$line" | grep -qE '^[+-]' \
+      && ! printf '%s' "$line" | grep -qE '^(diff --git|index |\+\+\+ |--- )' \
+      && [ -n "$ev" ] && [ "$line" = "$ev" ]; then
+      verdict=VERIFIED
+    fi
+    ;;
+esac
+echo "$verdict"      # the ONLY verdict — VERIFIED iff every check passed
 ```
 
-Each element defeats a specific forgery route that real reviews of this skill actually hit:
+Each element defeats a specific failure that real reviews of this skill actually hit — and every one was a bug in an earlier version of this very block:
 
-- **The line number is the core.** It is in no prompt and in no prior-review prose, so it cannot be lifted from context. An agent whose container reads silently returned nothing cannot produce a valid one — which is exactly the population this check exists to catch, and the only defense that closes the re-review context-file leak.
-- **`sed -n "${LINE}p"` after an integer check** — not the agent's string inside `grep "<...>"` — keeps PR-authored bytes out of any host shell (no `$(…)` execution, no quote-mangling of honest shell-heavy lines). Compare with `diff -q` of two files for the same reason.
+- **One `verdict` variable, set only on the all-pass path.** Do NOT write the checks as independent `echo FAILED` / `echo VERIFIED` lines. If they don't aggregate, an agent that forges `EVIDENCE_LINE: 1` + the `diff --git` header (line 1 of every diff, and the first filename is in the prompt) makes the header-exclusion print FAILED while the final compare prints VERIFIED — a read-nothing pass. Verified: the non-aggregating form emits `FAILED FAILED VERIFIED`.
+- **The `case` must GATE, not just warn.** A bare `case … ) echo FAILED ;; esac` prints and falls through to `sed`, which is the dangerous part: **GNU sed executes shell commands via its `e` command**, so `EVIDENCE_LINE` = `1e touch /tmp/x #` runs `touch` on the host — verified as real code execution inside the Linux container. `EVIDENCE_LINE` is agent-authored, so a non-numeric value reaching `sed` is host RCE, defeating the whole sandbox. Keeping `sed` inside the numeric `*)` branch is what closes it (pure digits can't carry an `e` command). This is the third time this mechanism reintroduced host execution; the integer gate is not optional.
+- **Compare with `$(cat …)` and `[ = ]`, not `diff -q` of the raw files.** `sed` terminates its line with `\n`; the `Write`d evidence file usually does not, so a byte-exact `diff -q` FAILS an honest agent on the trailing newline — and Step 7 then flips the whole review to `failed`. `$(…)` strips trailing newlines from both sides. The contents go through `cat` and a quoted `[ = ]`, never re-parsed by the shell, so no agent byte executes.
+- **The line number is the core proof.** It is in no prompt and in no prior-review prose, so an agent whose container reads silently returned nothing cannot produce a valid one — the only defense that closes the re-review context-file leak. Headers and filenames are derivable from the prompt, which is why the `^[+-]` and header-exclusion checks must actually gate.
 - **`test -s`**: an empty pattern would otherwise match anything; a check for absence must not be default-open on absence.
 - **`^[+-]` plus the header exclusion**: a `diff --git`/`@@`/`+++` line is derivable from the file list, so only a real content line counts.
 
@@ -476,7 +493,7 @@ Instead, keep the evidence out of reach and make the demand more specific:
 > Your previous EVIDENCE did not verify. Re-read `/tmp/pr-<NUMBER>.diff` and give the EVIDENCE_LINE /
 > EVIDENCE_TEXT pair for a `+` or `-` line in the **second half** of the file (line number > <N/2>).
 
-Verify exactly as above, additionally rejecting any EVIDENCE_LINE ≤ <N/2>. The line-number requirement already means an agent whose tools return nothing cannot pass; restricting to the far half stops it from replaying a number it happened to keep from the first attempt.
+Verify exactly as above (same single-`verdict` block), adding one guard before the `case`: reject when `EVIDENCE_LINE ≤ <N/2>`. The line-number requirement already means an agent whose tools return nothing cannot pass; restricting to the far half stops it from replaying a number it happened to keep from the first attempt.
 
 If the second attempt also fails, record that agent as **failed** in the draft and in `## Failures` (Step 8).
 
