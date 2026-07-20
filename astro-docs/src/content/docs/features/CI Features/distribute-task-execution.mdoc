@@ -269,7 +269,18 @@ Then, adjust your CI pipeline configuration to **enable task distribution**. If 
 npx nx g ci-workflow
 ```
 
-The key line in your CI config is the `start-ci-run` command:
+Declare how tasks are distributed in a `.nx/ci-config.yaml` file:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-medium-js
+lifecycle:
+  stop-after:
+    - build
+```
+
+Then start the run with `start-nx-agents`:
 
 ```yaml {% meta="{15}" %}
 // .github/workflows/ci.yml
@@ -286,7 +297,7 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      - run: pnpm dlx nx-cloud start-nx-agents
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -299,11 +310,13 @@ jobs:
       - run: pnpm exec nx affected -t lint test build
 ```
 
-This command tells Nx Cloud to:
+This tells Nx Cloud to:
 
-- Start a CI run (`npx nx start-ci-run`)
-- Collect all Nx commands that are being issued (e.g., `pnpm exec nx affected -t lint test build`) and
-- Distribute them across 3 agents (`3 linux-medium-js`) where `linux-medium-js` is a predefined agent [launch template](/docs/reference/nx-cloud/launch-templates).
+- Start a CI run (`npx nx-cloud start-nx-agents`)
+- Collect all Nx commands that are being issued (e.g., `pnpm exec nx affected -t lint test build`)
+- Distribute them across 3 agents (`3 linux-medium-js`), where `linux-medium-js` is a predefined agent [launch template](/docs/reference/nx-cloud/launch-templates)
+
+For every configuration option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
 ### Configure Nx Agents on your CI Provider
 
@@ -330,7 +343,7 @@ Continuous assignment currently requires `NX_CLOUD_CONTINUOUS_ASSIGNMENT=true` i
 
 _**Nx Agents are cost and resource-efficient**_ because tasks are automatically distributed, **optimizing for speed while keeping resource utilization high**. You can also [dynamically adjust the number of agents](/docs/features/ci-features/dynamic-agents) based on the size of the PR, and we're working on [some more AI-powered features](/docs/features/ci-features/self-healing-ci) to optimize this even further. In addition, [remote caching](/docs/features/ci-features/remote-cache) guarantees tasks are not run twice, and artifacts are shared efficiently among agents.
 
-_**Nx Agents are non-invasive**_ in that you don't need to completely overhaul your existing CI configuration or your Nx workspace to use them. You can start using Nx Agents with your existing CI provider by adding the `nx start-ci-run...` command mentioned previously. In addition, all artifacts and logs are played back to the main job so you can keep processing them as if they were run on the main job. Hence, your existing post-processing steps should still keep working as before.
+Nx Agents are non-invasive. You don't need to overhaul your existing CI configuration or your Nx workspace to use them. You add a `.nx/ci-config.yaml` file and the `start-nx-agents` command to your existing CI provider. All artifacts and logs are played back to the main job, so your existing post-processing steps keep working as before.
 
 For a more thorough explanation of how Nx Agents optimize your CI pipeline, read this [guide to parallelization and distribution in CI](/docs/concepts/ci-concepts/parallelization-distribution).
 

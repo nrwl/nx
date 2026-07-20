@@ -1,0 +1,231 @@
+---
+title: 'CI Configuration File'
+description: 'Configure Nx Cloud CI Pipeline Executions with the .nx/ci-config.yaml file'
+filter: 'type:References'
+---
+
+`nx-cloud start-nx-agents` reads its configuration from a `.nx/ci-config.yaml` file at the root of your workspace.
+The file controls how a CI Pipeline Execution runs: task distribution, agent lifecycle, self-healing, and the environment forwarded to agents.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 5 linux-large
+lifecycle:
+  stop-after:
+    - build
+    - test
+    - e2e
+```
+
+Start the run by invoking the command once, early in your main job:
+
+```shell
+npx nx-cloud start-nx-agents
+```
+
+The command takes no configuration flags. Everything lives in the file, so the same configuration is versioned with your workspace and can be overridden per environment.
+
+{% aside type="caution" title="start-ci-run and .nx/ci-config.yaml cannot be combined" %}
+`nx-cloud start-ci-run` does not read `.nx/ci-config.yaml`. If a config file is present, `start-ci-run` exits with an error and directs you to `start-nx-agents`.
+Choose one path: either the config file with `start-nx-agents`, or CLI flags with `start-ci-run`.
+For a mapping between the two, see the [Nx Cloud CLI reference](/docs/reference/nx-cloud-cli).
+{% /aside %}
+
+## File location
+
+Nx Cloud reads the file from `.nx/ci-config.yaml`. A `.nx/ci-config.yml` extension also works.
+
+## Top-level structure
+
+The file has five top-level sections. All are optional, and each falls back to its defaults when omitted.
+
+| Section     | Purpose                                                             |
+| ----------- | ------------------------------------------------------------------- |
+| `lifecycle` | Stop conditions and stall detection for the run.                    |
+| `ai`        | Self-healing CI configuration.                                      |
+| `dte`       | Distributed task execution: how tasks are distributed to Nx Agents. |
+| `nx-agents` | Configuration for the Nx Agents themselves.                         |
+| `overrides` | Per-environment overrides keyed by `NX_CLOUD_ENV`.                  |
+
+## `lifecycle`
+
+Stop conditions and stall detection for the run group.
+
+```yaml
+# .nx/ci-config.yaml
+lifecycle:
+  fail-after: 1
+  heartbeat: true
+  stop-after:
+    - build
+    - test
+    - e2e
+```
+
+### `lifecycle.fail-after`
+
+Number of task failures allowed before the run group is marked failed.
+`0` means never fail, so the run always finishes. `1` stops on the first failure.
+
+Type: `integer`, minimum `0`. Default: `1`.
+
+### `lifecycle.heartbeat`
+
+When `true`, Nx Cloud monitors the run for stalled progress and marks it failed if no agent reports in for too long.
+
+Type: `boolean`. Default: `true`.
+
+### `lifecycle.stop-after`
+
+Targets that mark this CI run complete once each one has finished.
+List every target you expect in the pipeline so the run does not end before all work is done.
+
+Type: array of strings.
+
+```yaml
+# .nx/ci-config.yaml
+lifecycle:
+  stop-after:
+    - lint
+    - test
+    - build
+```
+
+## `ai`
+
+Self-healing CI configuration.
+See [self-healing CI](/docs/features/ci-features/self-healing-ci) for how the fixes are generated and applied.
+
+```yaml
+# .nx/ci-config.yaml
+ai:
+  fix-tasks-patterns:
+    - '*lint*'
+    - '*test*'
+  auto-apply-patterns:
+    - '*lint*'
+```
+
+### `ai.fix-tasks-patterns`
+
+Glob patterns of task IDs that self-healing CI is allowed to attempt fixes for.
+
+Type: array of strings.
+
+### `ai.auto-apply-patterns`
+
+Glob patterns of task IDs whose fixes are applied automatically without explicit approval.
+
+Type: array of strings.
+
+## `dte`
+
+Distributed task execution: how tasks are distributed to Nx Agents.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  enabled-by-default: true
+  distribute-on: 5 linux-large
+  assignment-rules: .nx/assignment-rules.yaml
+```
+
+### `dte.enabled-by-default`
+
+When `true`, tasks in this run group are distributed across agents automatically.
+
+Type: `boolean`. Default: `true`.
+
+### `dte.distribute-on`
+
+How many agents to use and which [launch templates](/docs/reference/nx-cloud/launch-templates) to run them on.
+Accepts either a single launch-template string, or a map of changeset sizes to launch-template strings for [dynamic agent allocation](/docs/features/ci-features/dynamic-agents).
+
+A launch-template string is one or more `<number> <template-name>` segments separated by commas.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 5 linux-large
+```
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on:
+    small-changeset: 3 linux-medium
+    medium-changeset: 6 linux-large
+    large-changeset: 10 linux-large
+```
+
+To bring your own compute instead of using Nx Agents, set `distribute-on: manual`.
+See [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute).
+
+### `dte.assignment-rules`
+
+Rules that pin matching tasks to specific agent types.
+Provide the rules inline, or a path to a YAML file containing them.
+See [assignment rules](/docs/reference/nx-cloud/assignment-rules) for the rule format.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  assignment-rules: .nx/assignment-rules.yaml
+```
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  assignment-rules:
+    - projects:
+        - '*'
+      targets:
+        - build
+      run-on:
+        - agent: linux-large-A
+          parallelism: 2
+```
+
+Each inline rule matches tasks by `projects`, `targets`, and `configurations` globs, and routes them to the agents listed under `run-on`.
+`run-on` is required on every rule. Each `run-on` entry needs an `agent`, with optional `parallelism`.
+
+## `nx-agents`
+
+Configuration for the Nx Agents.
+
+```yaml
+# .nx/ci-config.yaml
+nx-agents:
+  with-env-vars:
+    - CHROMATIC_BRANCH
+    - CHROMATIC_SHA
+```
+
+### `nx-agents.with-env-vars`
+
+Environment variables forwarded from the main job to every Nx Agent.
+Variables prefixed with `NX_` are forwarded automatically, so list only the additional ones you need.
+
+Type: array of strings.
+
+## `overrides`
+
+Per-environment overrides keyed by `NX_CLOUD_ENV` value.
+Each override is a partial config that takes precedence over the base sections when its key matches the active environment.
+This has no `start-ci-run` flag equivalent. It is specific to the config file.
+
+```yaml
+# .nx/ci-config.yaml
+lifecycle:
+  fail-after: 1
+
+overrides:
+  main:
+    lifecycle:
+      fail-after: 0
+```
+
+In this example the run stops on the first failure everywhere, except when `NX_CLOUD_ENV` is `main`, where it runs to completion.
+
+An override only replaces the sections you set. Sections you leave out fall back to the base config, and the base config falls back to defaults.

@@ -883,6 +883,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'reference/nx-cloud/config',
           },
           {
+            label: 'CI configuration file',
+            link: 'reference/nx-cloud/ci-config',
+          },
+          {
             label: 'Custom images',
             link: 'reference/nx-cloud/custom-images',
           },
