@@ -894,11 +894,13 @@ describe('exit summary payload (TUI countdown)', () => {
     // The embedded newline is a contract, not just formatting: the Rust popup partitions
     // recommendations by `r.contains('\n')` — newline-free ones render under
     // "Recommendations:", newline-bearing ones route to the longest-tasks block drawn last
-    // (see countdown_popup.rs) — and formatReport picks its layout the same way. Flattening
-    // these rows onto one line would silently misroute the recommendation, so the exact
-    // bytes are pinned here; the terminal snapshot and the Markdown assertions each cover
-    // only their own path. Same chain as the formatReport snapshot: `c` is filtered out for
-    // being under the 20% threshold.
+    // (see countdown_popup.rs). formatReport reads the same signal but decides something
+    // narrower with it — whether a lone recommendation can collapse to the inline
+    // `Recommendation:` form — and never partitions or reorders. Flattening these rows onto
+    // one line would silently misroute the recommendation in the popup, so the exact bytes
+    // are pinned here; the terminal snapshot and the Markdown assertions each cover only
+    // their own path. Same chain as the formatReport snapshot: `c` is filtered out for being
+    // under the 20% threshold.
     const a = makeTask('a', { start: 0, end: 10000 });
     const b = makeTask('b', { start: 10000, end: 40000 });
     const c = makeTask('c', { start: 40000, end: 45000 });
@@ -1294,8 +1296,8 @@ describe('formatReportMarkdown', () => {
     // Single newline between rows, longest first — a tight list nested under the bullet.
     expect(formatReportMarkdown(s, 'run-many -t build')).toContain(
       '- Speed up or split the longest tasks on the critical path:\n' +
-        '  - \`b\` — 30.0s\n' +
-        '  - \`a\` — 10.0s'
+        '  - `b` — 30.0s\n' +
+        '  - `a` — 10.0s'
     );
   });
 
