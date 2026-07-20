@@ -22,6 +22,16 @@ export interface TransformedSource {
 }
 
 /**
+ * A {@link TransformedSource} produced under a specific loader-chained input
+ * sourcemap. The JavaScript transformer reads and merges a file's external
+ * sourcemap itself, so the entry is only valid while that map is unchanged;
+ * `chainedMap` holds the serialized map the entry was produced with.
+ */
+export interface BabelFileCacheEntry extends TransformedSource {
+  chainedMap: string | undefined;
+}
+
+/**
  * Key used by `typeScriptFileCache`: the normalized path with any Windows
  * drive letter stripped, so emitted filenames and loader resource paths match.
  */
@@ -42,10 +52,13 @@ export class SourceFileCache extends Map<string, ts.SourceFile> {
 
   /**
    * JavaScript transformer output for files outside the Angular compilation
-   * (e.g. package code), keyed by {@link toTypeScriptFileCacheKey}. These are
-   * never re-emitted, so modifying a file must evict its entry.
+   * (e.g. package code), split into code and forwarded sourcemap, keyed by
+   * {@link toTypeScriptFileCacheKey}. These are never re-emitted, so
+   * modifying a file must evict its entry; a changed chained input map
+   * invalidates an entry at the consumer instead (see
+   * {@link BabelFileCacheEntry}).
    */
-  readonly babelFileCache = new Map<string, string>();
+  readonly babelFileCache = new Map<string, BabelFileCacheEntry>();
 
   referencedFiles?: readonly string[];
 

@@ -40,7 +40,7 @@ describe('SourceFileCache', () => {
     const cache = new SourceFileCache();
     cache.babelFileCache.set(
       toTypeScriptFileCacheKey('/root/dist/lib/index.mjs'),
-      'transformed'
+      { code: 'transformed', map: undefined, chainedMap: undefined }
     );
 
     cache.invalidate(['/root/dist/lib/index.mjs']);
@@ -64,10 +64,11 @@ describe('SourceFileCache', () => {
       toTypeScriptFileCacheKey('/root/src/kept.ts'),
       'raw emit'
     );
-    cache.babelFileCache.set(
-      toTypeScriptFileCacheKey('/root/src/removed.ts'),
-      'transformed'
-    );
+    cache.babelFileCache.set(toTypeScriptFileCacheKey('/root/src/removed.ts'), {
+      code: 'transformed',
+      map: undefined,
+      chainedMap: undefined,
+    });
 
     cache.prune(['/root/src/removed.ts']);
 

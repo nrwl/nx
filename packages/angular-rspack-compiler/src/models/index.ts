@@ -8,6 +8,7 @@ export { JavaScriptTransformer, AngularCompilation, createAngularCompilation };
 export {
   SourceFileCache,
   toTypeScriptFileCacheKey,
+  type BabelFileCacheEntry,
   type TransformedSource,
 } from '../utils/source-file-cache';
 

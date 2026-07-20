@@ -89,7 +89,7 @@ export default function loader(
         .transformData(normalizedRequest, cached, true, false)
         .then((transformed: Uint8Array) => {
           const text = Buffer.from(transformed).toString();
-          const [code, map] = extractInlineSourceMap(text);
+          const { code, map } = extractInlineSourceMap(text);
           // A newer emit may have replaced the entry while transforming;
           // only store the result for the emit it was produced from.
           if (typescriptFileCache.get(normalizedRequest) === cached) {
