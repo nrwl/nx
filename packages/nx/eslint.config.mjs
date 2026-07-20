@@ -62,6 +62,91 @@ export default [
     ignores: ['**/*.spec.ts'],
   },
   {
+    // Siblings under migrate/ (including subtrees like agentic/) must go
+    // through migrate/run/'s barrel rather than reaching into its internal
+    // modules directly. run/ itself is excluded via ignores: importing those
+    // modules directly is the normal intra-directory pattern there.
+    files: ['src/command-line/migrate/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'typescript',
+              message:
+                'TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.',
+              allowTypeImports: true,
+            },
+          ],
+          patterns: [
+            {
+              group: ['nx/*'],
+              message: "Circular import in 'nx' found. Use relative path.",
+            },
+            {
+              group: ['**/native-bindings', '**/native-bindings.js'],
+              message:
+                'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
+            },
+            {
+              // Depth-independent: matches the relative form from migrate/
+              // itself ('./run/*') and from any nested subtree
+              // ('../run/*', '../../run/*', ...).
+              group: ['**/run/*'],
+              message:
+                "Import migrate/run's public surface from its barrel ('./run'), not its internal modules directly.",
+            },
+            {
+              group: ['**/execute-migration', '**/execute-migration.js'],
+              message:
+                "Import the execution engine through './migrate', which re-exports its whole surface.",
+            },
+          ],
+        },
+      ],
+    },
+    ignores: ['**/*.spec.ts', '**/migrate.ts', '**/migrate/run/**'],
+  },
+  {
+    // The inverse boundary: run/ must not import migrate.ts, which would
+    // close an import cycle (migrate.ts already imports run/'s barrel).
+    // Importing other shared helpers under migrate/ (execute-migration,
+    // migrate-commits, sort-migrations, agentic/*, etc.) is fine.
+    files: ['src/command-line/migrate/run/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'typescript',
+              message:
+                'TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.',
+              allowTypeImports: true,
+            },
+          ],
+          patterns: [
+            {
+              group: ['nx/*'],
+              message: "Circular import in 'nx' found. Use relative path.",
+            },
+            {
+              group: ['**/native-bindings', '**/native-bindings.js'],
+              message:
+                'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
+            },
+            {
+              group: ['**/migrate', '**/migrate.js'],
+              message:
+                "Importing migrate.ts from migrate/run closes an import cycle: migrate.ts already imports run's barrel. Import the shared helper modules under migrate/ directly instead.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['./package.json', './executors.json', './migrations.json'],
     rules: {
       '@nx/nx-plugin-checks': [

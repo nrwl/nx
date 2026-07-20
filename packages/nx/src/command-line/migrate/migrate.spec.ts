@@ -50,6 +50,7 @@ import {
   isHybridMigration,
   isNpmPeerDepsError,
   isPromptOnlyMigration,
+  isRunPhaseInvocation,
   Migrator,
   normalizeVersion,
   parseMigrationReturn,
@@ -61,7 +62,10 @@ import {
   resolveMigrationForRun,
   resolveInclude,
 } from './migrate';
-import { applyNxJsonMigrateDefaults } from './migrate-config';
+import {
+  applyNxJsonMigrateDefaults,
+  assertCommitPrefixHasCommits,
+} from './migrate-config';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import {
   readPromptFilesFromInstall,
@@ -2179,6 +2183,68 @@ describe('Migration', () => {
       expect(r).toMatchObject({
         type: 'runMigrations',
         interactive: false,
+      });
+    });
+
+    it('should discriminate a single migration when --run-migration is set', async () => {
+      const r = await parseMigrationsOptions({
+        runMigration: '@nx/js:my-migration',
+      });
+      expect(r).toEqual({
+        type: 'runSingleMigration',
+        runMigration: '@nx/js:my-migration',
+      });
+    });
+
+    it('should reject an empty --run-migration', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: '' })
+      ).rejects.toThrow(/'--run-migration' requires a migration id/);
+    });
+
+    it('should reject --run-migration combined with --run-migrations', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', runMigrations: '' })
+      ).rejects.toThrow(/cannot be combined with '--run-migrations'/);
+    });
+
+    it('should reject --run-migration combined with --include', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', include: 'required' })
+      ).rejects.toThrow(/cannot be combined with '--include'/);
+    });
+
+    it('should reject --run-migration combined with --multi-major-mode', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ runMigration: 'a', multiMajorMode: 'direct' })
+      ).rejects.toThrow(/cannot be combined with '--multi-major-mode'/);
+    });
+
+    describe('run-phase commit-prefix gating', () => {
+      it('classifies --run-migration as run-phase and everything else as not', () => {
+        expect(isRunPhaseInvocation({ runMigration: '@nx/js:x' })).toBe(true);
+        expect(isRunPhaseInvocation({ runMigrations: '' })).toBe(false);
+        expect(isRunPhaseInvocation({ packageAndVersion: 'nx@latest' })).toBe(
+          false
+        );
+      });
+
+      it('does not throw the commit-prefix assert for a run-phase invocation', () => {
+        // nx.json enables agentic + a custom prefix; a worker invocation gets
+        // the prefix overlaid but not agentic.
+        const config = { agentic: true, commitPrefix: 'custom: ' } as const;
+        const merged = applyNxJsonMigrateDefaults(
+          { runMigration: '@nx/js:x' },
+          config,
+          {}
+        );
+
+        // The overlay would otherwise wedge every worker invocation...
+        expect(() => assertCommitPrefixHasCommits(merged)).toThrow(
+          /requires commits to be enabled/i
+        );
+        // ...so migrate() skips the assert for run-phase invocations.
+        expect(isRunPhaseInvocation(merged)).toBe(true);
       });
     });
 

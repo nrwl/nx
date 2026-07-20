@@ -210,6 +210,15 @@ export function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
   }
 }
 
+export function logSkippedPostMigrationInstall(root: string): void {
+  const packageManager = detectPackageManager(root);
+  const installCommand = getPackageManagerCommand(packageManager, root).install;
+  output.warn({
+    title: 'Migrations updated your dependencies, but the install was skipped',
+    bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
+  });
+}
+
 export class ChangedDepInstaller {
   private initialDeps: string;
   private _skippedInstall = false;

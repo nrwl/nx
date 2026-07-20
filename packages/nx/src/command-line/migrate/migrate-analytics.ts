@@ -276,6 +276,21 @@ export function reportMigrateRunError(opts: {
   });
 }
 
+/**
+ * A single migration executed standalone by the worker. The migration's type
+ * rides the prompt-choice dimension.
+ */
+export function reportMigrateSingleMigrationRun(opts: {
+  migrationType: 'generator' | 'prompt' | 'hybrid';
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_run_standalone', {
+      [customDimensions.promptChoice]: opts.migrationType,
+    });
+  });
+}
+
 // `_migrate` runs either from a temp install of the latest CLI or from the
 // workspace-local installation; same signal as the run-phase re-dispatch
 // check in migrate.ts.

@@ -87,6 +87,7 @@ describe('GA4 event name length cap', () => {
       'migrate_generate_complete',
       'migrate_run_start',
       'migrate_run_complete',
+      'migrate_single_migration_run_standalone',
       ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
       ...Object.keys(GENERATE_ERROR_CODES).map(
         (c) => `migrate_generate_error_${c}`
@@ -438,6 +439,16 @@ describe('migrate-analytics events', () => {
       expect(paramsFor('migrate_run_error_migration_exec')).not.toHaveProperty(
         'migrationName'
       );
+    });
+  });
+
+  describe('single-migration events', () => {
+    it('reports the migration type on a standalone run', () => {
+      const a = load();
+      a.reportMigrateSingleMigrationRun({ migrationType: 'prompt' });
+      expect(paramsFor('migrate_single_migration_run_standalone')).toEqual({
+        promptChoice: 'prompt',
+      });
     });
   });
 });

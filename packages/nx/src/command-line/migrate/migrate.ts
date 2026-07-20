@@ -135,10 +135,7 @@ import {
   assertCommitPrefixHasCommits,
 } from './migrate-config';
 import type { EnabledResolvedAgentic, ResolvedAgentic } from './agentic/types';
-import {
-  applyAgenticHandoffGitignoreFallback,
-  isHandoffGitignoreMigration,
-} from './agentic/handoff-gitignore';
+import { applyAgenticHandoffGitignoreFallback } from './agentic/handoff-gitignore';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
@@ -167,12 +164,15 @@ import {
 } from './version-utils';
 import {
   ChangedDepInstaller,
+  logSkippedPostMigrationInstall,
   NpmPeerDepsInstallError,
   readMigrationCollection,
   readPackageMigrationConfig,
   runInstall,
   runNxOrAngularMigration,
 } from './execute-migration';
+import { runSingleMigrationWorker } from './run';
+import { sortMigrations } from './sort-migrations';
 
 export * from './execute-migration';
 export { normalizeVersion };
@@ -1204,12 +1204,44 @@ type RunMigrations = {
   interactive?: boolean;
 };
 
+type RunSingleMigration = {
+  type: 'runSingleMigration';
+  runMigration: string;
+};
+
 export async function parseMigrationsOptions(
   options: {
     [k: string]: any;
   },
   fetch?: MigratorOptions['fetch']
-): Promise<GenerateMigrations | RunMigrations> {
+): Promise<GenerateMigrations | RunMigrations | RunSingleMigration> {
+  if (options.runMigration !== undefined) {
+    if (options.runMigration === '') {
+      throw new Error(
+        `Error: '--run-migration' requires a migration id, e.g. '--run-migration=@nx/js:my-migration'.`
+      );
+    }
+    if (options.runMigrations !== undefined) {
+      throw new Error(
+        `Error: '--run-migration' (run a single migration) cannot be combined with '--run-migrations' (run the whole migrations file).`
+      );
+    }
+    if (options.include) {
+      throw new Error(
+        `Error: '--run-migration' cannot be combined with '--include'.`
+      );
+    }
+    if (options.multiMajorMode) {
+      throw new Error(
+        `Error: '--run-migration' cannot be combined with '--multi-major-mode'.`
+      );
+    }
+    return {
+      type: 'runSingleMigration',
+      runMigration: options.runMigration as string,
+    };
+  }
+
   if (options.runMigrations === '') {
     options.runMigrations = 'migrations.json';
   }
@@ -2667,28 +2699,8 @@ export async function executeMigrations(
   const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
   const migrationsWithNoChanges: ExecutableMigration[] = [];
-  const sortedMigrations = migrations.sort((a, b) => {
-    // Under `--agentic`, hoist the v23 migration that ignores
-    // `.nx/migrate-runs` to position 0 so its .gitignore update lands
-    // before any per-migration commit absorbs the run's handoff scratch.
-    // See `agentic/handoff-gitignore.ts` for the full rationale and the
-    // inline-fallback path that covers intra-pre-v23 agentic runs.
-    if (agentic?.kind === 'enabled') {
-      if (isHandoffGitignoreMigration(a)) return -1;
-      if (isHandoffGitignoreMigration(b)) return 1;
-    }
-
-    // special case for the split configuration migration to run first
-    if (a.name === '15-7-0-split-configuration-into-project-json-files') {
-      return -1;
-    }
-    if (b.name === '15-7-0-split-configuration-into-project-json-files') {
-      return 1;
-    }
-
-    return lt(normalizeVersion(a.version), normalizeVersion(b.version))
-      ? -1
-      : 1;
+  const sortedMigrations = sortMigrations(migrations, {
+    hoistHandoffGitignore: agentic?.kind === 'enabled',
   });
 
   // Lazy-load the agentic chain so non-agentic runs don't pay its startup cost.
@@ -3110,13 +3122,22 @@ export async function executeMigrations(
   };
 }
 
-function logSkippedPostMigrationInstall(root: string): void {
-  const packageManager = detectPackageManager(root);
-  const installCommand = getPackageManagerCommand(packageManager, root).install;
-  output.warn({
-    title: 'Migrations updated your dependencies, but the install was skipped',
-    bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
-  });
+// Forwards this invocation's raw argv to the workspace-local nx, used from
+// each run path's temp-installation check (`!__dirname.startsWith(workspaceRoot)`).
+// Returns the child's exit code when it is non-zero, undefined otherwise; the
+// caller returns this value directly to stop and let the local nx take over.
+function handOffToLocalNx(args: string[]): number | undefined {
+  const exitCode = runOrReturnExitCode(() =>
+    runNxSync(`migrate ${args.join(' ')}`, {
+      stdio: ['inherit', 'inherit', 'inherit'],
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    })
+  );
+  return exitCode !== 0 ? exitCode : undefined;
 }
 
 async function runMigrations(
@@ -3141,20 +3162,7 @@ async function runMigrations(
   if (!__dirname.startsWith(workspaceRoot)) {
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
-    const exitCode = runOrReturnExitCode(() =>
-      runNxSync(`migrate ${args.join(' ')}`, {
-        stdio: ['inherit', 'inherit', 'inherit'],
-        env: {
-          ...process.env,
-          NX_MIGRATE_SKIP_INSTALL: 'true',
-          NX_MIGRATE_USE_LOCAL: 'true',
-        },
-      })
-    );
-    if (exitCode !== 0) {
-      return exitCode;
-    }
-    return;
+    return handOffToLocalNx(args);
   }
 
   const migrationsExists: boolean = fileExists(opts.runMigrations);
@@ -3170,9 +3178,8 @@ async function runMigrations(
     );
   }
 
-  const migrations: ExecutableMigration[] = readJsonFile(
-    join(root, opts.runMigrations)
-  ).migrations;
+  const migrationsJson = readJsonFile(join(root, opts.runMigrations));
+  const migrations: ExecutableMigration[] = migrationsJson.migrations;
 
   reportMigrateRunStart({
     createCommits: shouldCreateCommits ?? false,
@@ -3384,6 +3391,14 @@ async function runMigrations(
   });
 }
 
+// A run-phase invocation drives an existing plan (a single migration) rather
+// than generating or running the whole migrations file. Its commit config
+// resolves downstream, so the top-level commit-prefix assert and the
+// error-funnel selection both key off this.
+export function isRunPhaseInvocation(args: { [k: string]: any }): boolean {
+  return args['runMigration'] !== undefined;
+}
+
 export async function migrate(
   root: string,
   args: { [k: string]: any },
@@ -3393,25 +3408,46 @@ export async function migrate(
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const mergedArgs = applyNxJsonMigrateDefaults(args, readNxJson().migrate);
-    assertCommitPrefixHasCommits(mergedArgs);
+    // A run-phase invocation (--run-migration) resolves its commit config
+    // downstream via resolveCreateCommits, so the commit-prefix assert must
+    // not fire for it.
+    const runPhase = isRunPhaseInvocation(mergedArgs);
+    if (!runPhase) {
+      assertCommitPrefixHasCommits(mergedArgs);
+    }
     // One fetcher (registry-first, install fallback) shared by the `--include`
     // eligibility gate and the migration cascade so package metadata is fetched
     // at most once per package/version.
     const fetch = createFetcher(getPackageManagerCommand());
-    // `--run-migrations` without a value parses as '' - undefined means the
-    // generate phase.
-    const isGenerateInvocation = mergedArgs['runMigrations'] === undefined;
+    // A parse failure on a run-phase invocation belongs in the run funnel, not
+    // the generate funnel. `--run-migrations` without a value parses as '';
+    // undefined here (and no run-phase flag) means the generate phase.
+    const isGenerateInvocation =
+      mergedArgs['runMigrations'] === undefined && !runPhase;
     let opts: Awaited<ReturnType<typeof parseMigrationsOptions>>;
     try {
       opts = await parseMigrationsOptions(mergedArgs, fetch);
     } catch (e) {
       if (isGenerateInvocation) {
         reportMigrateGenerateError('resolve_version', e);
+      } else if (runPhase) {
+        reportMigrateRunError({ code: 'other', error: e });
       }
       throw e;
     }
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts, fetch);
+    } else if (opts.type === 'runSingleMigration') {
+      try {
+        return await runSingleMigrationFromCli(root, opts, rawArgs, mergedArgs);
+      } catch (e) {
+        // Guidance is already logged by `runInstall`; return without a noisy
+        // stack after the friendly output.
+        if (e instanceof NpmPeerDepsInstallError) {
+          return 1;
+        }
+        throw e;
+      }
     } else {
       try {
         return await runMigrations(
@@ -3435,6 +3471,77 @@ export async function migrate(
         throw e;
       }
     }
+  });
+}
+
+// Mirrors `runMigrations`' pre-install + local-nx hand-off before dispatching
+// to the single-migration worker, so `nx migrate --run-migration` behaves the
+// same when invoked from a temp `nx@latest` installation.
+async function runSingleMigrationFromCli(
+  root: string,
+  opts: RunSingleMigration,
+  args: string[],
+  mergedArgs: { [k: string]: any }
+): Promise<number | void> {
+  const shouldSkipInstall = mergedArgs['skipInstall'];
+  if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
+    await runInstall();
+  }
+
+  if (!__dirname.startsWith(workspaceRoot)) {
+    // Running from a temp installation with nx latest; switch to the local
+    // installation.
+    return handOffToLocalNx(args);
+  }
+
+  const commitPrefix =
+    mergedArgs['commitPrefix'] ?? DEFAULT_MIGRATION_COMMIT_PREFIX;
+  // Standalone commits follow the CLI flags, resolved the same way the classic
+  // loop resolves them: --create-commits without a git repo is a hard error and
+  // a custom prefix without commits warns. Agentic never applies on this path.
+  const resolved = resolveCreateCommits({
+    createCommits: mergedArgs['createCommits'],
+    agenticKind: 'disabled',
+    isGitRepo: isGitRepository(root),
+    commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
+  });
+  if (resolved.error) {
+    throw new Error(resolved.error);
+  }
+  if (resolved.warning) {
+    output.warn({ title: resolved.warning });
+  }
+  const createCommits = resolved.effective;
+
+  // Confirm before committing on the default branch when prompting is
+  // possible; a decline aborts before the migration runs.
+  if (createCommits && canPrompt(mergedArgs['interactive'])) {
+    const currentBranch = getGitCurrentBranch(root);
+    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
+    // generator); compare against the local branch name.
+    const defaultBranch = getBaseRef(readNxJson(root)).replace(/^origin\//, '');
+    const proceed = await confirmCommitsOnDefaultBranch({
+      currentBranch,
+      defaultBranch,
+    });
+    if (!proceed) {
+      output.log({
+        title: `Skipped running the migration to avoid committing to the default branch '${currentBranch}'.`,
+        bodyLines: [
+          'Switch to a different branch and re-run, or re-run and confirm to proceed.',
+        ],
+      });
+      return;
+    }
+  }
+
+  await runSingleMigrationWorker({
+    root,
+    options: opts,
+    createCommits,
+    commitPrefix,
+    skipInstall: shouldSkipInstall,
+    isVerbose: mergedArgs['verbose'],
   });
 }
 
