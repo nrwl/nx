@@ -180,10 +180,18 @@ function bridgeAuthIni(
 
   // pnpm's getDefaultCreds applies a bare global _auth/_authToken/username/
   // _password (no nerf-dart prefix) to the default registry; npm honors auth only
-  // in the nerf-darted form, so re-key the value pnpm would use (workspace .npmrc
-  // layers over auth.ini) onto the resolved default registry's dart.
+  // in the nerf-darted form, so re-key it onto that registry's dart. The target
+  // must follow the registry pnpm resolves, including one declared in the
+  // workspace .npmrc, which is left for npm to read natively and therefore is not
+  // in env: aiming at npmjs there would send a private credential to the public
+  // registry. A workspace .npmrc bare key is not a source here; npm reads that
+  // file itself and rejects bare auth in it (ERR_INVALID_AUTH).
+  const projectRegistry = projectNpmrc.get('registry');
   const defaultRegistryDart = nerfDart(
-    env['npm_config_registry'] ?? 'https://registry.npmjs.org/'
+    env['npm_config_registry'] ??
+      (projectRegistry !== undefined
+        ? expandEnvVars(projectRegistry)
+        : 'https://registry.npmjs.org/')
   );
   if (defaultRegistryDart) {
     for (const bareKey of [
@@ -192,10 +200,10 @@ function bridgeAuthIni(
       'username',
       '_password',
     ] as const) {
-      const raw = projectNpmrc.get(bareKey) ?? authIni.get(bareKey);
+      const raw = authIni.get(bareKey);
       const dartKey = `npm_config_${defaultRegistryDart}:${bareKey}`;
       if (raw !== undefined && env[dartKey] === undefined) {
-        env[dartKey] = expandEnvVars(raw);
+        env[dartKey] = raw;
       }
     }
   }

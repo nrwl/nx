@@ -225,11 +225,26 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('prefers a workspace .npmrc bare auth over auth.ini when re-keying', () => {
-      writeFileSync(join(root, '.npmrc'), '_authToken=project-token');
+    it('re-keys a bare auth.ini token onto a workspace .npmrc registry', () => {
+      // The .npmrc registry is left for npm to read natively, so it never lands
+      // in the env; the dart must still follow it instead of defaulting to the
+      // public registry, which would leak the credential.
+      writeFileSync(
+        join(root, '.npmrc'),
+        'registry=https://reg-b.example.com/'
+      );
       writeAuthIni('_authToken=ini-token');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-        'npm_config_//registry.npmjs.org/:_authToken': 'project-token',
+        'npm_config_//reg-b.example.com/:_authToken': 'ini-token',
+      });
+    });
+
+    it('does not re-key a bare workspace .npmrc auth entry', () => {
+      // npm reads the workspace .npmrc itself and rejects bare auth there.
+      writeFileSync(join(root, '.npmrc'), '_authToken=project-token');
+      writeAuthIni('registry=https://reg-g.example.com/');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-g.example.com/',
       });
     });
 
