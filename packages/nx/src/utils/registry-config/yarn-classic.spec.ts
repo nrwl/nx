@@ -29,6 +29,10 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'YARN_REGISTRY',
     'yarn_registry',
     'npm_config_@types:registry',
+    'npm_config_always_auth',
+    'NPM_CONFIG_ALWAYS_AUTH',
+    'yarn_always_auth',
+    'YARN_ALWAYS_AUTH',
     'PREFIX',
     'FAKEROOTKEY',
   ];
@@ -297,9 +301,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
-  it('resolves always-auth from .yarnrc over the .npmrc chain', () => {
-    // always-auth is an option key, so .yarnrc wins; a bare `false` there keeps
-    // auth off even though an ancestor .npmrc sets it true.
+  it('ignores .yarnrc when resolving always-auth', () => {
+    // The gate reads NpmRegistry's config, which loadConfig fills from the npmrc
+    // chain alone, so a .yarnrc `false` cannot turn off an .npmrc `true`.
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_authToken=ancestor-token',
@@ -308,6 +312,38 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     files[`${ROOT}/.yarnrc`] = 'always-auth false\n';
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
       npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it.each([
+    'npm_config_always_auth',
+    'NPM_CONFIG_ALWAYS_AUTH',
+    'YARN_ALWAYS_AUTH',
+  ])('resolves always-auth from the %s env var', (envKey) => {
+    // BaseRegistry merges both env prefixes before any file is read, and an
+    // npmrc never overwrites what the env already set.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+    ].join('\n');
+    process.env[envKey] = 'true';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('lets an always-auth env var beat an .npmrc that disables it', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+      'always-auth=false',
+    ].join('\n');
+    process.env.YARN_ALWAYS_AUTH = 'true';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
     });
   });
 
