@@ -82,15 +82,54 @@ impl NxGlobSet {
     }
 }
 
+/// Splits a glob that is a single top-level brace group (`{a,b,c}`) into its
+/// alternatives, so each can be extglob-converted independently; returns
+/// anything else unchanged. A glob that starts with `{` and ends with `}` can
+/// still be several groups (`{a,b}/x.{c,d}`), which globset expands natively,
+/// so only a group whose opening brace closes at the final character is split.
+/// The common path returns a borrowing `Once` to stay allocation-free.
 fn potential_glob_split(
     glob: &str,
-) -> itertools::Either<std::str::Split<'_, char>, std::iter::Once<&str>> {
+) -> itertools::Either<std::vec::IntoIter<&str>, std::iter::Once<&str>> {
     use itertools::Either::*;
-    if glob.starts_with('{') && glob.ends_with('}') {
-        Left(glob.trim_matches('{').trim_end_matches('}').split(','))
-    } else {
-        Right(std::iter::once(glob))
+    let bytes = glob.as_bytes();
+    if bytes.first() != Some(&b'{') || bytes.last() != Some(&b'}') {
+        return Right(std::iter::once(glob));
     }
+
+    // Not a single group if the opening brace closes before the final char.
+    let mut depth = 0usize;
+    for (i, &b) in bytes.iter().enumerate() {
+        match b {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 && i != bytes.len() - 1 {
+                    return Right(std::iter::once(glob));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Split on commas at the outer depth, leaving any nested `{...}` intact.
+    let inner = &glob[1..bytes.len() - 1];
+    let mut parts = Vec::new();
+    let mut depth = 0usize;
+    let mut start = 0usize;
+    for (i, &b) in inner.as_bytes().iter().enumerate() {
+        match b {
+            b'{' => depth += 1,
+            b'}' => depth -= 1,
+            b',' if depth == 0 => {
+                parts.push(&inner[start..i]);
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    parts.push(&inner[start..]);
+    Left(parts.into_iter())
 }
 
 pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<Arc<NxGlobSet>> {
@@ -375,6 +414,38 @@ mod test {
         assert!(glob_set.is_match("packages/package-b/package.json"));
         assert!(glob_set.is_match("packages/package-c/package.json"));
         assert!(!glob_set.is_match("packages/package-a/package.json"));
+    }
+
+    #[test]
+    fn supports_multiple_brace_groups() {
+        // The vite/vitest generators write this include; for a workspace-root
+        // project it reaches the native glob unprefixed, so it starts with `{`,
+        // ends with `}`, and spans three groups.
+        let glob_set =
+            build_glob_set(&["{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"])
+                .unwrap();
+        assert!(glob_set.is_match("src/a.spec.ts"));
+        assert!(glob_set.is_match("tests/b.test.tsx"));
+        assert!(glob_set.is_match("src/deep/c.spec.mts"));
+        assert!(!glob_set.is_match("src/helper.ts"));
+        assert!(!glob_set.is_match("lib/a.spec.ts"));
+    }
+
+    #[test]
+    fn potential_glob_split_only_splits_a_single_enclosing_group() {
+        let split = |glob| potential_glob_split(glob).collect::<Vec<_>>();
+        // A single top-level group is split so each branch converts on its own.
+        assert_eq!(split("{a,b,c}"), vec!["a", "b", "c"]);
+        // Multiple groups spanning the string are left whole for globset.
+        assert_eq!(
+            split("{src,tests}/**/*.{test,spec}.{js,ts}"),
+            vec!["{src,tests}/**/*.{test,spec}.{js,ts}"]
+        );
+        // A comma nested inside a group is not a split point.
+        assert_eq!(split("{a,@(b|c).{d,e}}"), vec!["a", "@(b|c).{d,e}"]);
+        // Not a single enclosing group -> unchanged.
+        assert_eq!(split("{a,b}/*"), vec!["{a,b}/*"]);
+        assert_eq!(split("src/**/*.ts"), vec!["src/**/*.ts"]);
     }
 
     #[test]
