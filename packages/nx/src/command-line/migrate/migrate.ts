@@ -173,6 +173,10 @@ import {
 } from './execute-migration';
 import { runSingleMigrationWorker } from './run';
 import { sortMigrations } from './sort-migrations';
+import {
+  assertTempCliSupportsNewMigrateFlags,
+  assertWorkspaceNxSupportsNewMigrateFlags,
+} from './version-skew-guard';
 
 export * from './execute-migration';
 export { normalizeVersion };
@@ -3474,6 +3478,17 @@ export async function migrate(
   });
 }
 
+// The workspace-local nx version, or undefined when it cannot be resolved from
+// the workspace root (Guard B treats that as "do not block").
+function readLocalNxVersion(root: string): string | undefined {
+  try {
+    return readModulePackageJson('nx', getNxRequirePaths(root)).packageJson
+      .version;
+  } catch {
+    return undefined;
+  }
+}
+
 // Mirrors `runMigrations`' pre-install + local-nx hand-off before dispatching
 // to the single-migration worker, so `nx migrate --run-migration` behaves the
 // same when invoked from a temp `nx@latest` installation.
@@ -3489,6 +3504,13 @@ async function runSingleMigrationFromCli(
   }
 
   if (!__dirname.startsWith(workspaceRoot)) {
+    // The workspace-local nx we are about to hand off to must be new enough to
+    // understand the new flags we forward to it.
+    assertWorkspaceNxSupportsNewMigrateFlags({
+      argv: args,
+      readLocalNxVersion: () => readLocalNxVersion(root),
+    });
+
     // Running from a temp installation with nx latest; switch to the local
     // installation.
     return handOffToLocalNx(args);
@@ -3558,6 +3580,17 @@ export async function runMigration() {
       process.env.NX_USE_LOCAL !== 'true' &&
       process.env.NX_MIGRATE_USE_LOCAL === undefined
     ) {
+      // The temp CLI about to be installed must be new enough to understand the
+      // new flags before we forward them to it (mirrors nxCliPath's spec).
+      const cliVersionSpec = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
+      await assertTempCliSupportsNewMigrateFlags({
+        argv: process.argv.slice(3),
+        cliVersionSpec,
+        fromEnvOverride: !!process.env.NX_MIGRATE_CLI_VERSION,
+        resolveVersion: (spec) =>
+          resolvePackageVersionRespectingMinReleaseAge('nx', spec),
+      });
+
       const p = await nxCliPath();
       if (p === null) {
         return runLocalMigrate();
