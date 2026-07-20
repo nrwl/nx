@@ -1751,6 +1751,12 @@ export function generateFlatOverride(
   // parserOptions, which re-emitting them by hand does not do.
   let { excludedFiles, rules, files, ...rest } = override;
 
+  // eslintrc accepts `parser: null` to mean "use the default parser". Flat config
+  // has no null-parser concept and FlatCompat throws on it, so omit the key.
+  if (rest.parser === null) {
+    delete rest.parser;
+  }
+
   const objectLiteralElements: ts.ObjectLiteralElementLike[] = [
     ts.factory.createSpreadAssignment(ts.factory.createIdentifier('config')),
   ];

@@ -249,6 +249,35 @@ describe('ast-utils', () => {
             }
         }))"
       `);
+
+      // eslintrc allows `parser: null` (use the default parser). Flat config has no
+      // equivalent and FlatCompat throws on it, so the key must be dropped entirely.
+      expect(
+        getOutput({
+          files: ['*.ts'],
+          parser: null,
+          env: { node: true },
+          plugins: ['@typescript-eslint'],
+          rules: {},
+        })
+      ).toMatchInlineSnapshot(`
+        "...compat.config({
+            env: {
+                node: true
+            },
+            plugins: [
+                "@typescript-eslint"
+            ]
+        }).map(config => ({
+            ...config,
+            files: [
+                "**/*.ts"
+            ],
+            rules: {
+                ...config.rules
+            }
+        }))"
+      `);
     });
   });
 
