@@ -1,7 +1,10 @@
 import type { Link, PerformanceSummaryPayload } from '../../native';
 import { formatDuration } from '../../native';
 import { supportsHyperlinks, terminalLink } from '../../utils/terminal-link';
-import type { PerformanceSummary } from './performance-analysis';
+import type {
+  PerformanceSummary,
+  TaskDurationRow,
+} from './performance-analysis';
 
 const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
 const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
@@ -49,14 +52,34 @@ interface RecLink {
  * the terminal and payload as space-aligned columns, Markdown as a nested list
  * (HTML collapses space runs, so aligned columns don't survive rendering there).
  */
-type RecTaskRows = Array<{ id: string; duration: number }>;
+type RecTaskRows = TaskDurationRow[];
 
 function phraseLink(phrase: string, taggedUrl: string): RecLink {
   return { visible: phrase, href: taggedUrl };
 }
 
+// Both predicates test for what the part *is*, never for what it isn't: a new `RecPart`
+// member matches neither and falls through to the renderers' exhaustive branches. A
+// `!isRecTaskRows` catch-all would instead silently classify it as a link, and TS can't
+// catch that — it never checks a type predicate's body, so `.filter(isRecLink)` in
+// `recommendationLinks` would ship `{text: undefined, href: undefined}` to the popup.
 function isRecLink(part: RecPart): part is RecLink {
-  return typeof part !== 'string' && !Array.isArray(part);
+  return typeof part !== 'string' && 'href' in part;
+}
+
+function isRecTaskRows(part: RecPart): part is RecTaskRows {
+  return Array.isArray(part);
+}
+
+/**
+ * The renderers' final branch. Every {@link RecPart} member is handled positively above it,
+ * so `part` is `never` here — adding a member without teaching the renderer about it turns
+ * this into a compile error instead of a part silently rendering as the wrong kind.
+ */
+function unhandledRecPart(part: never): never {
+  throw new Error(
+    `Unhandled recommendation part: ${JSON.stringify(part)}. Every RecPart member needs a branch in each renderer.`
+  );
 }
 
 /**
@@ -69,10 +92,13 @@ export function recommendationToPayloadString(rec: Recommendation): string {
       if (typeof part === 'string') {
         return part;
       }
+      if (isRecTaskRows(part)) {
+        return taskRowsToText(part);
+      }
       if (isRecLink(part)) {
         return part.visible;
       }
-      return taskRowsToText(part);
+      return unhandledRecPart(part);
     })
     .join('');
 }
@@ -97,12 +123,15 @@ function recommendationToTerminalString(
       if (typeof part === 'string') {
         return part;
       }
-      if (Array.isArray(part)) {
+      if (isRecTaskRows(part)) {
         return taskRowsToText(part);
       }
-      return hyperlinks
-        ? terminalLink(part.visible, part.href)
-        : `${part.visible} → ${part.href}`;
+      if (isRecLink(part)) {
+        return hyperlinks
+          ? terminalLink(part.visible, part.href)
+          : `${part.visible} → ${part.href}`;
+      }
+      return unhandledRecPart(part);
     })
     .join('');
 }
@@ -136,10 +165,9 @@ function recoverableTime(s: PerformanceSummary): number {
 }
 
 /** Render the longest critical-path tasks as aligned columns: task (left), duration (right). */
-function formatTopTaskRows(
-  tasks: Array<{ id: string; duration: number }>
-): string[] {
-  // The only caller returns early when empty, so `tasks` is non-empty here.
+function formatTopTaskRows(tasks: TaskDurationRow[]): string[] {
+  // Non-empty by construction: the only recommendation carrying task rows requires
+  // `criticalPathTop.length > 0` to apply, so no empty array reaches the widths below.
   const idWidth = Math.max(...tasks.map((t) => t.id.length));
   const durations = tasks.map((t) => formatDuration(t.duration));
   const durWidth = Math.max(...durations.map((d) => d.length));
@@ -160,7 +188,7 @@ interface RecommendationContext {
   runDuration: number;
   canDistribute: boolean;
   distributing: boolean;
-  criticalPathTop: Array<{ id: string; duration: number }>;
+  criticalPathTop: TaskDurationRow[];
   cacheHits: number;
   cacheableCount: number;
   cacheSkipped: boolean;
@@ -396,12 +424,15 @@ function recommendationToMarkdownString(rec: Recommendation): string {
       if (typeof part === 'string') {
         return part;
       }
+      if (isRecTaskRows(part)) {
+        return part
+          .map((t) => `\n  - \`${t.id}\` — ${formatDuration(t.duration)}`)
+          .join('');
+      }
       if (isRecLink(part)) {
         return `[${part.visible}](${part.href})`;
       }
-      return part
-        .map((t) => `\n  - \`${t.id}\` — ${formatDuration(t.duration)}`)
-        .join('');
+      return unhandledRecPart(part);
     })
     .join('');
 }
