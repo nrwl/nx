@@ -51,3 +51,31 @@ describe('findClosestMatches', () => {
     expect(findClosestMatches('build', [])).toEqual([]);
   });
 });
+
+describe('suggestion performance', () => {
+  it('stays fast when suggesting against a massive workspace', () => {
+    // Simulate a very large workspace: thousands of projects, each with a
+    // handful of targets, producing tens of thousands of candidate task ids.
+    // Target suggestions only run once per failed command, but a huge workspace
+    // must not make that computation noticeably slow.
+    const targetNames = ['build', 'test', 'lint', 'serve', 'e2e'];
+    const candidates: string[] = [];
+    for (let i = 0; i < 5000; i++) {
+      for (const targetName of targetNames) {
+        candidates.push(`project-${i}:${targetName}`);
+      }
+    }
+    expect(candidates.length).toBe(25000);
+
+    const start = performance.now();
+    const matches = findClosestMatches('project-1234:biuld', candidates);
+    const durationMs = performance.now() - start;
+
+    // Generous bound: the computation is trivial in practice (well under
+    // 100ms), so approaching this bound signals a real algorithmic regression
+    // rather than a loaded CI machine.
+    expect(durationMs).toBeLessThan(2000);
+    // Sanity check that it still surfaces the intended task id at scale.
+    expect(matches).toContain('project-1234:build');
+  });
+});
