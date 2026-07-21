@@ -559,11 +559,15 @@ async fn send_batches(
         return Ok(());
     }
 
-    // _dbg routes a whole request to DebugView, so debug and non-debug items
-    // never share one.
-    let (debug_events, events): (Vec<_>, Vec<_>) = event_queue
+    // _dbg is a request-level param: hoist it out of the items and onto the
+    // request URL. It routes a whole request to DebugView, so debug and
+    // non-debug items never share one.
+    let (mut debug_events, events): (Vec<_>, Vec<_>) = event_queue
         .drain(..)
         .partition(|params| params.contains_key(request_param::DEBUG_VIEW));
+    for params in &mut debug_events {
+        params.remove(request_param::DEBUG_VIEW);
+    }
     for (items, debug_mode) in [(events, false), (debug_events, true)] {
         if items.is_empty() {
             continue;
@@ -593,15 +597,15 @@ async fn send_batches(
         }
     }
 
-    for page_view in page_view_queue.drain(..) {
+    for mut page_view in page_view_queue.drain(..) {
         let title = page_view.get(event_param::DOCUMENT_TITLE).cloned();
         let location = page_view.get(event_param::DOCUMENT_LOCATION).cloned();
 
         log_page_view("trace", "Sending", &title, &location);
 
         let mut request_params = common_params.clone();
-        if let Some(dbg) = page_view.get(request_param::DEBUG_VIEW) {
-            request_params.insert(request_param::DEBUG_VIEW.to_string(), dbg.clone());
+        if let Some(dbg) = page_view.remove(request_param::DEBUG_VIEW) {
+            request_params.insert(request_param::DEBUG_VIEW.to_string(), dbg);
         }
         if let Some(ref t) = title {
             request_params.insert(event_param::DOCUMENT_TITLE.to_string(), t.clone());
