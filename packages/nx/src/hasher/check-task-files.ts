@@ -340,13 +340,19 @@ function matchesDependentTaskOutputs(
  * error.
  */
 function toWorkspaceRelativePath(candidatePath: string): string {
+  // Backslash separators must be split *before* anchoring: on POSIX a backslash
+  // is an ordinary filename character, so `dep\..\..` would ride through
+  // join/relative as one opaque segment and only become a live `..` traversal
+  // after the swap. Swapped directly rather than via normalizePath, which also
+  // strips a Windows drive letter and would make isAbsolute misjudge `C:\…`.
+  const forwardSlashed = candidatePath.replace(/\\/g, '/');
   // Anchoring a relative path to the workspace root before relativizing it back
   // resolves any `..` segments. Left in, they would traverse *through* a pattern
   // that globset had already matched — `dist/libs/dep/../../../secrets.env`
   // matching an output of `dist/libs/dep`.
-  const absolute = isAbsolute(candidatePath)
-    ? candidatePath
-    : join(defaultWorkspaceRoot, candidatePath);
+  const absolute = isAbsolute(forwardSlashed)
+    ? forwardSlashed
+    : join(defaultWorkspaceRoot, forwardSlashed);
   return normalizePath(relative(defaultWorkspaceRoot, absolute));
 }
 

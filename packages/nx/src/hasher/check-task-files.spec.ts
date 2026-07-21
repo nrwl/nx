@@ -444,6 +444,68 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(result.matched).toEqual(['libs/dep/dist/index.d.ts']);
     });
 
+    it('does NOT attach provenance to a backslash-spelled `..` traversal', async () => {
+      // Same fixture as above, but the candidate re-spells the traversal with
+      // backslashes. Unresolved, it would textually satisfy both the glob and
+      // the upstream-output containment and come back blessed with a
+      // dependentTasksOutputFiles category.
+      mockCreateProjectGraphAsync.mockResolvedValue(buildGraphWithDeps());
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs([]),
+      });
+
+      mockCreateTaskGraph.mockReturnValue({
+        roots: ['dep:build'],
+        tasks: {
+          'myproj:build': {
+            id: 'myproj:build',
+            target: { project: 'myproj', target: 'build' },
+            overrides: {},
+            outputs: [],
+          },
+          'dep:build': {
+            id: 'dep:build',
+            target: { project: 'dep', target: 'build' },
+            overrides: {},
+            outputs: [],
+          },
+        },
+        dependencies: {
+          'myproj:build': ['dep:build'],
+          'dep:build': [],
+        },
+        continuousDependencies: {},
+      });
+
+      mockGetStructuredInputs.mockReturnValue({
+        selfInputs: [],
+        depsInputs: [],
+        depsOutputs: [
+          { dependentTasksOutputFiles: '**/*.d.ts', transitive: false },
+        ],
+        projectInputs: [],
+        depsFilesets: [],
+      } as ReturnType<typeof mockedGetInputs>);
+
+      mockGetOutputs.mockImplementation(((t: {
+        project?: string;
+        target?: { project?: string };
+      }) =>
+        (t.project ?? t.target?.project) === 'dep'
+          ? ['libs/dep/dist']
+          : []) as typeof getOutputsForTargetAndConfiguration);
+
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/dep/dist\\..\\..\\..\\secrets.d.ts',
+      ]);
+
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual([
+        'libs/dep/dist\\..\\..\\..\\secrets.d.ts',
+      ]);
+      expect(result.categories.size).toBe(0);
+    });
+
     it('does NOT match when path matches the glob but no upstream output covers it', async () => {
       mockCreateProjectGraphAsync.mockResolvedValue(buildGraphWithDeps());
       mockInspectTaskInputs.mockReturnValue({
@@ -723,6 +785,49 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(result.unmatched).toEqual([
         'apps/web/.next/static/../cache/webpack/a.pack',
       ]);
+    });
+
+    it('resolves backslash-spelled `..` instead of matching through it', async () => {
+      // On POSIX a backslash is an ordinary filename character, so `dep\..\..`
+      // must be split into segments before anchoring — otherwise the `..` is
+      // re-injected after resolution and traverses through the pattern.
+      mockGetOutputs.mockReturnValue(['dist/libs/dep']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/libs/dep\\..\\..\\..\\secrets.env',
+      ]);
+
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual([
+        'dist/libs/dep\\..\\..\\..\\secrets.env',
+      ]);
+    });
+
+    it('resolves backslash-spelled `..` before applying a negated exclusion', async () => {
+      mockGetOutputs.mockReturnValue([
+        'apps/web/.next/**',
+        '!apps/web/.next/cache/**',
+      ]);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'apps/web/.next/static\\..\\cache\\webpack\\a.pack',
+      ]);
+
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual([
+        'apps/web/.next/static\\..\\cache\\webpack\\a.pack',
+      ]);
+    });
+
+    it('matches a backslash-separated path inside an output directory', async () => {
+      mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist\\libs\\myproj\\index.js',
+      ]);
+
+      expect(result.matched).toEqual(['dist\\libs\\myproj\\index.js']);
+      expect(result.unmatched).toEqual([]);
     });
 
     it('resolves a relative `..` path that lands back inside an output', async () => {
