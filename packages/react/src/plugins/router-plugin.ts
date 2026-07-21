@@ -4,6 +4,8 @@ import {
   clearRequireCache,
   loadConfigFile,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   type CreateNodes,
@@ -18,9 +20,7 @@ import {
 
 import { dirname, join } from 'path';
 import { readdirSync } from 'fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
-import { hashObject } from 'nx/src/devkit-internals';
 import {
   addBuildAndWatchDepsTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,

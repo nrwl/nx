@@ -16,8 +16,6 @@ import {
 import type { Schema as EsLintExecutorOptions } from '@nx/eslint/internal';
 
 import { PluginLintChecksGeneratorSchema } from './schema';
-import { NX_PREFIX } from 'nx/src/utils/logger';
-import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import {
   addOverrideToLintConfig,
   findEslintFile,
@@ -26,6 +24,11 @@ import {
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
+import {
+  NX_PREFIX,
+  PackageJson,
+  readNxMigrateConfig,
+} from '@nx/devkit/internal';
 
 export default async function pluginLintCheckGenerator(
   host: Tree,

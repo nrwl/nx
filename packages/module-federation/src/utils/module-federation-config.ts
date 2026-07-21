@@ -193,9 +193,7 @@ function createDefaultRemoteUrlResolver(
   isServer: boolean = false,
   remoteEntryExt: 'js' | 'mjs' = 'js'
 ): (remote: string) => string {
-  const {
-    readCachedProjectConfiguration,
-  } = require('nx/src/project-graph/project-graph');
+  const { readCachedProjectConfiguration } = require('@nx/devkit/internal');
   const target = 'serve';
   const remoteEntry = isServer
     ? 'server/remoteEntry.js'

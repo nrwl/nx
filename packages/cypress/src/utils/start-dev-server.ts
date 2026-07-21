@@ -12,12 +12,9 @@ import {
 import { join } from 'path';
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import detectPort from 'detect-port';
-import {
-  getExecutorInformation,
-  parseExecutor,
-} from 'nx/src/command-line/run/executor-utils';
 import { existsSync, writeFileSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';
+import { getExecutorInformation, parseExecutor } from '@nx/devkit/internal';
 
 const PORT_LOCK_DIR = join(tmpdir(), 'nx-cypress-port-locks');
 

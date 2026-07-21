@@ -3,6 +3,8 @@ import {
   calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -20,8 +22,6 @@ import {
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { hashObject } from 'nx/src/devkit-internals';
 
 export interface ReactNativePluginOptions {
   startTargetName?: string;

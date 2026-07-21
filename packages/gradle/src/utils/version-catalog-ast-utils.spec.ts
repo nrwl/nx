@@ -1,6 +1,4 @@
 import { Tree } from '@nx/devkit';
-import { FsTree } from 'nx/src/generators/tree';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import {
   updatePluginVersionInCatalogAst,
   extractPluginVersionFromCatalogAst,
@@ -8,6 +6,8 @@ import {
   getPluginAliasFromCatalogAst,
 } from './version-catalog-ast-utils';
 import { gradleProjectGraphPluginName } from './versions';
+import { FsTree } from '@nx/devkit/internal';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('version-catalog-ast-utils', () => {
   let tempFs: TempFs;
