@@ -36,6 +36,45 @@ export function nerfDart(registryUrl: string): string | null {
   }
 }
 
+/**
+ * The setting name npm resolves an environment key to: a case-insensitive
+ * `npm_config_` prefix and a positional slice, then `_` -> `-` and lowercase
+ * for every key but a nerf-darted one. Null for a key npm does not read.
+ * See https://github.com/npm/cli/blob/bb056c85059cfb39514614e31abba09f20ac1612/workspaces/config/lib/index.js#L345-L356
+ */
+function npmConfigSetting(envKey: string): string | null {
+  if (!/^npm_config_/i.test(envKey)) {
+    return null;
+  }
+  const key = envKey.slice('npm_config_'.length);
+  return key.startsWith('//') ? key : key.replace(/(?!^)_/g, '-').toLowerCase();
+}
+
+/**
+ * Merges an npm_config_* overlay into the environment for a spawned npm,
+ * dropping the ambient keys that spell an overlaid setting differently (a
+ * `NPM_CONFIG_REGISTRY` twin of `npm_config_registry`, say). npm resolves its
+ * env tier last-write-wins over the received key order, and both macOS
+ * `/bin/sh` and npm's own shell launcher rebuild that order, so leaving both
+ * spellings in place hands the setting to whichever one they happen to emit
+ * last rather than to the overlay.
+ */
+export function mergeNpmConfigEnv(
+  baseEnv: NodeJS.ProcessEnv,
+  overlay: NpmConfigEnv
+): NodeJS.ProcessEnv {
+  const overlaid = new Set(
+    Object.keys(overlay).map(npmConfigSetting).filter(Boolean)
+  );
+  const merged: NodeJS.ProcessEnv = {};
+  for (const [key, value] of Object.entries(baseEnv)) {
+    if (!overlaid.has(npmConfigSetting(key))) {
+      merged[key] = value;
+    }
+  }
+  return { ...merged, ...overlay };
+}
+
 export function setRegistry(env: NpmConfigEnv, url: string): void {
   env['npm_config_registry'] = url;
 }

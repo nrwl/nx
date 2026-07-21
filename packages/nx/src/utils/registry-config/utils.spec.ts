@@ -2,6 +2,7 @@ import {
   expandEnvVars,
   expandPnpmEnvVars,
   getPackageScope,
+  mergeNpmConfigEnv,
   nerfDart,
   readEnvVar,
 } from './utils';
@@ -130,5 +131,64 @@ describe('readEnvVar', () => {
 
   it('returns undefined when no case variant is set', () => {
     expect(readEnvVar({}, 'npm_config_registry')).toBeUndefined();
+  });
+});
+
+describe('mergeNpmConfigEnv', () => {
+  it('drops an ambient key npm resolves to an overlaid setting', () => {
+    expect(
+      mergeNpmConfigEnv(
+        {
+          NPM_CONFIG_REGISTRY: 'https://ambient.example.com/',
+          PATH: '/usr/bin',
+        },
+        { npm_config_registry: 'https://overlay.example.com/' }
+      )
+    ).toEqual({
+      PATH: '/usr/bin',
+      npm_config_registry: 'https://overlay.example.com/',
+    });
+  });
+
+  it('drops a twin spelled with the other separator', () => {
+    expect(
+      mergeNpmConfigEnv(
+        { 'npm_config_strict-ssl': 'false' },
+        { npm_config_strict_ssl: 'true' }
+      )
+    ).toEqual({ npm_config_strict_ssl: 'true' });
+  });
+
+  it('drops a nerf-darted twin (npm slices the prefix positionally)', () => {
+    expect(
+      mergeNpmConfigEnv(
+        { 'NPM_CONFIG_//reg.example.com/:_authToken': 'ambient-token' },
+        { 'npm_config_//reg.example.com/:_authToken': 'overlay-token' }
+      )
+    ).toEqual({ 'npm_config_//reg.example.com/:_authToken': 'overlay-token' });
+  });
+
+  it('keeps a nerf-darted key for another host (npm never case-folds a dart)', () => {
+    expect(
+      mergeNpmConfigEnv(
+        { 'npm_config_//REG.example.com/:_authToken': 'ambient-token' },
+        { 'npm_config_//reg.example.com/:_authToken': 'overlay-token' }
+      )
+    ).toEqual({
+      'npm_config_//REG.example.com/:_authToken': 'ambient-token',
+      'npm_config_//reg.example.com/:_authToken': 'overlay-token',
+    });
+  });
+
+  it('keeps an npm setting the overlay does not carry', () => {
+    expect(
+      mergeNpmConfigEnv(
+        { NPM_CONFIG_CAFILE: '/ca.pem' },
+        { npm_config_registry: 'https://overlay.example.com/' }
+      )
+    ).toEqual({
+      NPM_CONFIG_CAFILE: '/ca.pem',
+      npm_config_registry: 'https://overlay.example.com/',
+    });
   });
 });
