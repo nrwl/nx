@@ -25,7 +25,7 @@ import {
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
 import { PackageJson, readModulePackageJson } from './package-json';
-import { getNpmSpawnRegistryEnv } from './registry-config';
+import { getNpmSpawnRegistryEnv, mergeNpmConfigEnv } from './registry-config';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -674,8 +674,7 @@ export async function packageRegistryView(
   const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
     cwd: configRoot,
-    env: {
-      ...process.env,
+    env: mergeNpmConfigEnv(process.env, {
       ...getNpmSpawnRegistryEnv(
         pkg,
         configRoot,
@@ -683,7 +682,7 @@ export async function packageRegistryView(
         getPackageManagerVersionSafe(workspacePm, configRoot)
       ),
       ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
-    },
+    }),
   });
   return stdout.toString().trim();
 }
@@ -726,8 +725,7 @@ export async function packageRegistryPack(
     {
       cwd: configRoot,
       windowsHide: true,
-      env: {
-        ...process.env,
+      env: mergeNpmConfigEnv(process.env, {
         ...getNpmSpawnRegistryEnv(
           pkg,
           configRoot,
@@ -740,7 +738,7 @@ export async function packageRegistryPack(
         ...(options?.bypassMinReleaseAge
           ? { npm_config_min_release_age: '0' }
           : {}),
-      },
+      }),
     }
   );
 
