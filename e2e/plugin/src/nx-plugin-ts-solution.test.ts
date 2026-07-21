@@ -9,10 +9,14 @@ import {
   renameFile,
   runCLI,
   runCommand,
+  tmpProjPath,
+  trimDaemonLog,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 import {
   ASYNC_GENERATOR_EXECUTOR_CONTENTS,
   NX_PLUGIN_V2_CONTENTS,
@@ -28,7 +32,34 @@ describe('Nx Plugin (TS solution)', () => {
     });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    // The suite shares one long-lived daemon, so dump its log once before
+    // teardown — CI shows why an inferred project went missing (stale graph,
+    // plugin load failure, missed watcher events).
+    try {
+      const daemonLog = join(
+        tmpProjPath(),
+        '.nx',
+        'workspace-data',
+        'd',
+        'daemon.log'
+      );
+      if (existsSync(daemonLog)) {
+        // Trimmed — see trimDaemonLog; the raw log is thousands of lines.
+        console.log(
+          `\n========== daemon.log (trimmed) ==========\n${trimDaemonLog(
+            readFileSync(daemonLog, 'utf-8')
+          )}\n========== end daemon.log ==========\n`
+        );
+      } else {
+        console.log(`[plugin-debug] no daemon log at ${daemonLog}`);
+      }
+    } catch (e) {
+      console.log(`[plugin-debug] failed to read daemon log: ${e}`);
+    }
+
+    cleanupProject();
+  });
 
   it('should be able to generate a Nx Plugin with generators, executors and migrations', async () => {
     const plugin = uniq('plugin');

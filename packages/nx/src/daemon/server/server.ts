@@ -664,6 +664,16 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 };
 
 export async function startServer(): Promise<Server> {
+  // Watch before scan: a file written during boot must be visible to the
+  // watcher or the scan below. Scan-first left a blind window where such
+  // files stayed invisible to both until an unrelated change arrived.
+  if (!getWatcherInstance()) {
+    storeWatcherInstance(await watchWorkspace(server, handleWorkspaceChanges));
+    serverLogger.watcherLog(
+      `Subscribed to changes within: ${workspaceRoot} (native)`
+    );
+  }
+
   setupWorkspaceContext(workspaceRoot);
 
   // Initialize analytics for daemon process
@@ -733,16 +743,6 @@ export async function startServer(): Promise<Server> {
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
-
-          if (!getWatcherInstance()) {
-            storeWatcherInstance(
-              await watchWorkspace(server, handleWorkspaceChanges)
-            );
-
-            serverLogger.watcherLog(
-              `Subscribed to changes within: ${workspaceRoot} (native)`
-            );
-          }
 
           if (!getOutputWatcherInstance()) {
             storeOutputWatcherInstance(
