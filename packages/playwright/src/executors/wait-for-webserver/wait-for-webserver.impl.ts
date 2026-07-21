@@ -15,8 +15,8 @@ type Server = Schema['servers'][number];
 // A probe resolves to `null` when the server is ready, or to a short
 // description of why it is not, which is surfaced when the wait times out.
 type ProbeFailure = string | null;
-// A probe that ran out of budget before reaching the server observed nothing,
-// so it must not replace what the previous probe saw.
+// A probe the deadline cut short before it could learn anything observed
+// nothing, so it must not replace what the previous probe saw.
 const NO_OBSERVATION = 'the deadline passed before the server responded';
 
 export async function waitForWebserverExecutor(
@@ -72,8 +72,9 @@ function findServerProblem(server: Server): string | undefined {
   }
 }
 
+// 0 is not a connectable port, so it is rejected rather than probed.
 function isValidPort(port: number): boolean {
-  return Number.isInteger(port) && port >= 0 && port <= 65535;
+  return Number.isInteger(port) && port >= 1 && port <= 65535;
 }
 
 async function waitForServer(server: Server, timeout: number): Promise<void> {
@@ -92,7 +93,7 @@ async function waitForServer(server: Server, timeout: number): Promise<void> {
     }
     if (Date.now() >= deadline) {
       throw new Error(
-        `Timed out after ${timeout}ms waiting for the E2E web server at ${label} to be ready. Last probe: ${
+        `Timed out after ${timeout}ms waiting for the E2E web server at ${label} to be ready. Last observation: ${
           lastObserved ?? failure
         }.`
       );
@@ -102,9 +103,8 @@ async function waitForServer(server: Server, timeout: number): Promise<void> {
   }
 }
 
-// Match Playwright's own check so the gate only clears once Playwright would
-// reuse the running server: connect to the port on both loopback addresses,
-// or poll the URL for an HTTP status below 404.
+// Mirror Playwright's own readiness check: connect to the port on both
+// loopback addresses, or poll the URL for an HTTP status below 404.
 function probeServer(server: Server, deadline: number): Promise<ProbeFailure> {
   return server.port != null
     ? probePort(server.port)
@@ -187,9 +187,9 @@ function requestStatus(
   redirectsRemaining = MAX_REDIRECTS
 ): Promise<UrlResponse> {
   return new Promise((resolve) => {
-    // Bound each request by the overall readiness deadline, not a fixed
-    // interval, so an endpoint that legitimately responds slowly is not
-    // aborted before Playwright itself would give up.
+    // Give each request the rest of the readiness budget as its idle timeout,
+    // rather than a fixed interval, so an endpoint that legitimately responds
+    // slowly is not aborted before Playwright itself would give up.
     const remaining = deadline - Date.now();
     if (remaining <= 0) {
       resolve({ href: url.href, status: 0, failure: NO_OBSERVATION });
@@ -251,7 +251,18 @@ function requestStatus(
     );
     request.once('timeout', () => {
       request.destroy();
-      resolve({ href: url.href, status: 0, failure: `${url.href} timed out` });
+      // Staying silent for the window the port probe allows is something the
+      // server did. Going quiet with a sliver of budget left is not: that is
+      // the deadline arriving mid-request, and it says nothing about a server
+      // an earlier probe may have already reached.
+      resolve({
+        href: url.href,
+        status: 0,
+        failure:
+          remaining >= FALLBACK_RETRY_DELAY
+            ? `${url.href} did not respond`
+            : NO_OBSERVATION,
+      });
     });
     request.once('error', (error: NodeJS.ErrnoException) => {
       request.destroy();

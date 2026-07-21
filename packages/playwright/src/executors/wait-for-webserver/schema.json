@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/schema",
   "version": 2,
   "title": "Schema for Playwright Wait For Web Server Executor",
-  "description": "Waits for the E2E web server(s) to be ready before the Playwright test tasks run.",
+  "description": "Waits for the E2E web server(s) to be ready.",
   "type": "object",
   "properties": {
     "servers": {
@@ -14,7 +14,7 @@
           "port": {
             "type": "number",
             "description": "The port to wait for TCP connections on.",
-            "minimum": 0,
+            "minimum": 1,
             "maximum": 65535,
             "multipleOf": 1
           },
