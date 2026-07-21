@@ -562,18 +562,6 @@ fn log_page_view(level: &str, prefix: &str, title: &Option<String>, location: &O
     }
 }
 
-/// Request params for a batch: the shared common params, with _dbg hoisted to
-/// the request level when the batch's items were tracked in debug mode (the
-/// same lift dt/dl get for page views; like those, the key also stays on the
-/// item).
-fn batch_request_params(common_params: &ParameterMap, debug_mode: bool) -> ParameterMap {
-    let mut params = common_params.clone();
-    if debug_mode {
-        params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
-    }
-    params
-}
-
 async fn send_batches(
     client: &Client,
     common_params: &ParameterMap,
@@ -594,7 +582,10 @@ async fn send_batches(
         if items.is_empty() {
             continue;
         }
-        let request_params = batch_request_params(common_params, debug_mode);
+        let mut request_params = common_params.clone();
+        if debug_mode {
+            request_params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+        }
         for chunk in items.chunks(MAX_EVENTS_PER_BATCH) {
             let event_names: Vec<String> = chunk
                 .iter()
@@ -617,13 +608,15 @@ async fn send_batches(
     }
 
     for page_view in page_view_queue.drain(..) {
-        let debug_mode = page_view.contains_key(request_param::DEBUG_VIEW);
         let title = page_view.get(event_param::DOCUMENT_TITLE).cloned();
         let location = page_view.get(event_param::DOCUMENT_LOCATION).cloned();
 
         log_page_view("trace", "Sending", &title, &location);
 
-        let mut request_params = batch_request_params(common_params, debug_mode);
+        let mut request_params = common_params.clone();
+        if let Some(dbg) = page_view.get(request_param::DEBUG_VIEW) {
+            request_params.insert(request_param::DEBUG_VIEW.to_string(), dbg.clone());
+        }
         if let Some(ref t) = title {
             request_params.insert(event_param::DOCUMENT_TITLE.to_string(), t.clone());
         }
