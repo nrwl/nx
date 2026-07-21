@@ -1,10 +1,12 @@
 import {
   expandEnvVars,
+  expandNpmEnvVars,
   expandPnpmEnvVars,
   getPackageScope,
   mergeNpmConfigEnv,
   nerfDart,
   readEnvVar,
+  readNpmConfigEnv,
 } from './utils';
 
 describe('getPackageScope', () => {
@@ -134,6 +136,75 @@ describe('readEnvVar', () => {
   });
 });
 
+describe('readNpmConfigEnv', () => {
+  it('reads any casing of the npm_config_ prefix', () => {
+    expect(
+      readNpmConfigEnv(
+        { Npm_Config_Registry: 'https://a.example.com/' },
+        'registry'
+      )
+    ).toBe('https://a.example.com/');
+  });
+
+  it('takes the last spelling, as npm does', () => {
+    expect(
+      readNpmConfigEnv(
+        {
+          npm_config_registry: 'https://a.example.com/',
+          NPM_CONFIG_REGISTRY: 'https://b.example.com/',
+        },
+        'registry'
+      )
+    ).toBe('https://b.example.com/');
+  });
+
+  it('skips an empty value rather than letting it win', () => {
+    expect(
+      readNpmConfigEnv(
+        {
+          npm_config_registry: 'https://a.example.com/',
+          NPM_CONFIG_REGISTRY: '',
+        },
+        'registry'
+      )
+    ).toBe('https://a.example.com/');
+  });
+
+  it('finds nothing for a scope npm rewrites on the way in', () => {
+    expect(
+      readNpmConfigEnv(
+        { 'npm_config_@my_scope:registry': 'https://a.example.com/' },
+        '@my_scope:registry'
+      )
+    ).toBeUndefined();
+  });
+});
+
+describe('expandNpmEnvVars', () => {
+  it('expands a resolvable reference', () => {
+    expect(
+      expandNpmEnvVars('https://${HOST}/', { HOST: 'a.example.com' })
+    ).toBe('https://a.example.com/');
+  });
+
+  it('leaves an unresolvable reference verbatim', () => {
+    expect(expandNpmEnvVars('${MISSING}', {})).toBe('${MISSING}');
+  });
+
+  it('resolves the ${VAR?} form to an empty string when unset', () => {
+    expect(expandNpmEnvVars('${MISSING?}', {})).toBe('');
+  });
+
+  it('consumes the escape npm consumes', () => {
+    expect(expandNpmEnvVars('\\${HOST}', { HOST: 'a.example.com' })).toBe(
+      '${HOST}'
+    );
+    expect(expandNpmEnvVars('\\\\${HOST}', { HOST: 'a.example.com' })).toBe(
+      '\\a.example.com'
+    );
+  });
+});
+
 describe('mergeNpmConfigEnv', () => {
   it('drops an ambient key npm resolves to an overlaid setting', () => {
     expect(
@@ -190,5 +261,38 @@ describe('mergeNpmConfigEnv', () => {
       NPM_CONFIG_CAFILE: '/ca.pem',
       npm_config_registry: 'https://overlay.example.com/',
     });
+  });
+
+  it('keeps only the last ambient spelling of a setting it does not carry', () => {
+    // Two spellings would otherwise leave the winner to the reordering shell.
+    expect(
+      mergeNpmConfigEnv(
+        {
+          npm_config_cafile: '/first.pem',
+          NPM_CONFIG_CAFILE: '/last.pem',
+        },
+        {}
+      )
+    ).toEqual({ NPM_CONFIG_CAFILE: '/last.pem' });
+  });
+
+  it('lets an empty ambient value neither win nor displace', () => {
+    expect(
+      mergeNpmConfigEnv(
+        { npm_config_cafile: '/ca.pem', NPM_CONFIG_CAFILE: '' },
+        {}
+      )
+    ).toEqual({ npm_config_cafile: '/ca.pem', NPM_CONFIG_CAFILE: '' });
+  });
+
+  it('drops even an empty ambient twin of an overlaid setting', () => {
+    // A Windows environment is case-insensitive and passes on only the first
+    // spelling, so an empty twin left in place can displace the overlay.
+    expect(
+      mergeNpmConfigEnv(
+        { NPM_CONFIG_REGISTRY: '' },
+        { npm_config_registry: 'https://overlay.example.com/' }
+      )
+    ).toEqual({ npm_config_registry: 'https://overlay.example.com/' });
   });
 });
