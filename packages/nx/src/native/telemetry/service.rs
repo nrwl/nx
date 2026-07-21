@@ -105,10 +105,6 @@ impl TelemetryService {
             "Google%20Chrome;111.0.5563.64|Not(A%3ABrand;8.0.0.0|Chromium;111.0.5563.64"
                 .to_string(),
         );
-        if read_debug_mode() {
-            common_request_parameters
-                .insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
-        }
 
         let mut user_parameters = HashMap::new();
         user_parameters.insert(user_dimension::OS_ARCHITECTURE.to_string(), opts.os_arch);
@@ -265,8 +261,9 @@ fn enqueue_event(
     event: EventData,
     user_params: &ParameterMap,
     current_page_title: Option<&str>,
-    queue: &mut Vec<ParameterMap>,
+    queue: &mut Vec<QueuedItem>,
 ) {
+    let debug_mode = event.debug_mode;
     let mut params = user_params.clone();
     params.extend(event.parameters);
     params.insert(
@@ -278,15 +275,16 @@ fn enqueue_event(
             .entry(event_param::DOCUMENT_TITLE.to_string())
             .or_insert_with(|| title.to_string());
     }
-    queue.push(sanitize_params(params));
+    queue.push((sanitize_params(params), debug_mode));
 }
 
 /// Convert a PageViewData into sanitized params and push onto the queue
 fn enqueue_page_view(
     page_view: PageViewData,
     user_params: &ParameterMap,
-    queue: &mut Vec<ParameterMap>,
+    queue: &mut Vec<QueuedItem>,
 ) {
+    let debug_mode = page_view.debug_mode;
     let mut params = user_params.clone();
     params.extend(page_view.parameters);
     params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
@@ -301,36 +299,35 @@ fn enqueue_page_view(
             MAX_URL_PARAM_VALUE_LENGTH,
         ),
     );
-    queue.push(sanitize_params(params));
+    queue.push((sanitize_params(params), debug_mode));
 }
 
-/// Read on the MAIN thread only (track_* napi calls and service init) — the
-/// background thread must not touch env vars (see the SAFETY note in
-/// persist_session_refreshes). Read per event rather than captured at init so
-/// a long-lived daemon honors NX_DEBUG_TELEMETRY reflected from a client env
-/// (applyDaemonEnvFromClient).
+/// Read on the MAIN JS thread only (track_* napi calls) — the main thread
+/// also does the unsafe env::set_var in persist_session_refreshes, and getenv
+/// racing setenv from another thread is UB. Callers of track_event_impl /
+/// track_page_view_impl (including track_rust_event) inherit this constraint.
+/// Read per event rather than captured at init so a long-lived daemon honors
+/// NX_DEBUG_TELEMETRY reflected from a client env (applyDaemonEnvFromClient).
 fn read_debug_mode() -> bool {
     std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true"
 }
 
-/// Keep the _dbg request param in step with the debug flag carried on each
-/// queued item, so a daemon whose env was refreshed mid-life routes to GA
-/// DebugView (or stops doing so) without a restart.
-fn set_debug_view(common_params: &mut ParameterMap, debug_mode: bool) {
-    if debug_mode {
-        common_params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
-    } else {
-        common_params.remove(request_param::DEBUG_VIEW);
-    }
-}
+/// Sanitized params plus the debug flag captured when the item was tracked.
+/// The flag rides with each item (rather than toggling shared request params)
+/// so batching latency and the flush/timeout drain paths cannot attribute one
+/// item's debug state to another.
+type QueuedItem = (ParameterMap, bool);
 
 /// Sampled events (perf spans) arrive stamped with a sample_rate parameter
 /// (see perf-logging.ts); events without it always pass. A stamped event is
 /// reported only when the current session falls inside that fraction: the
 /// first 8 hex chars of the session UUID map uniformly onto [0,1). The
-/// decision is per-session — a sampled-in session keeps every span, and the
-/// live (possibly refreshed) session id always governs — and deterministic
-/// across the CLI, daemon, and plugin workers sharing the session.
+/// decision is per-session: a sampled-in session keeps every span, and the
+/// live (possibly refreshed) session id always governs, so each event's
+/// sampling verdict matches the sid it is reported under. Processes sharing
+/// a session id agree; after an idle refresh, other processes keep their own
+/// id until the refresh is persisted, so they may briefly sample under a
+/// different sid.
 /// Debug mode (NX_DEBUG_TELEMETRY) bypasses sampling entirely so events can
 /// be verified in GA DebugView.
 fn is_sampled_in(debug_mode: bool, session_id: &str, parameters: &ParameterMap) -> bool {
@@ -356,8 +353,8 @@ fn drain_channels(
     page_view_rx: &Receiver<PageViewData>,
     user_params: &ParameterMap,
     current_page_title: &mut Option<String>,
-    event_queue: &mut Vec<ParameterMap>,
-    page_view_queue: &mut Vec<ParameterMap>,
+    event_queue: &mut Vec<QueuedItem>,
+    page_view_queue: &mut Vec<QueuedItem>,
 ) {
     while let Ok(event) = event_rx.try_recv() {
         if !is_sampled_in(event.debug_mode, session_id, &event.parameters) {
@@ -401,8 +398,8 @@ fn background_sender(
     );
     let mut session = SessionState::new(initial_session_id, session_refresh_tx);
     let mut current_page_title: Option<String> = None;
-    let mut event_queue = Vec::new();
-    let mut page_view_queue = Vec::new();
+    let mut event_queue: Vec<QueuedItem> = Vec::new();
+    let mut page_view_queue: Vec<QueuedItem> = Vec::new();
     let mut last_send = std::time::Instant::now();
 
     loop {
@@ -425,7 +422,6 @@ fn background_sender(
                 match msg {
                     Ok(page_view) => {
                         session.touch(&mut common_params);
-                        set_debug_view(&mut common_params, page_view.debug_mode);
                         tracing::trace!("Queuing page view: {}", page_view.title);
                         current_page_title = Some(page_view.title.clone());
                         enqueue_page_view(page_view, &user_params, &mut page_view_queue);
@@ -437,7 +433,6 @@ fn background_sender(
                 match msg {
                     Ok(event) => {
                         session.touch(&mut common_params);
-                        set_debug_view(&mut common_params, event.debug_mode);
                         if is_sampled_in(event.debug_mode, &session.session_id, &event.parameters) {
                             tracing::trace!("Queuing event: {}", event.name);
                             enqueue_event(event, &user_params, current_page_title.as_deref(), &mut event_queue);
@@ -569,18 +564,38 @@ fn log_page_view(level: &str, prefix: &str, title: &Option<String>, location: &O
     }
 }
 
+/// Request params for a batch: the shared common params, with _dbg added when
+/// every item in the batch was tracked in debug mode.
+fn batch_request_params(common_params: &ParameterMap, debug_mode: bool) -> ParameterMap {
+    let mut params = common_params.clone();
+    if debug_mode {
+        params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+    }
+    params
+}
+
 async fn send_batches(
     client: &Client,
     common_params: &ParameterMap,
-    event_queue: &mut Vec<ParameterMap>,
-    page_view_queue: &mut Vec<ParameterMap>,
+    event_queue: &mut Vec<QueuedItem>,
+    page_view_queue: &mut Vec<QueuedItem>,
 ) -> Result<()> {
     if event_queue.is_empty() && page_view_queue.is_empty() {
         return Ok(());
     }
 
-    if !event_queue.is_empty() {
-        for chunk in event_queue.chunks(MAX_EVENTS_PER_BATCH) {
+    // Batches are homogeneous in debug mode — the _dbg request param routes a
+    // whole request to GA DebugView, so debug and non-debug items never share
+    // a request.
+    let (debug_events, events): (Vec<_>, Vec<_>) =
+        event_queue.drain(..).partition(|(_, debug)| *debug);
+    for (batch, debug_mode) in [(events, false), (debug_events, true)] {
+        if batch.is_empty() {
+            continue;
+        }
+        let request_params = batch_request_params(common_params, debug_mode);
+        let items: Vec<ParameterMap> = batch.into_iter().map(|(params, _)| params).collect();
+        for chunk in items.chunks(MAX_EVENTS_PER_BATCH) {
             let event_names: Vec<String> = chunk
                 .iter()
                 .filter_map(|params| params.get(event_param::EVENT_NAME).cloned())
@@ -590,7 +605,7 @@ async fn send_batches(
                 chunk.len(),
                 event_names.join(", ")
             );
-            match send_request(client, common_params, chunk.to_vec()).await {
+            match send_request(client, &request_params, chunk.to_vec()).await {
                 Ok(_) => {
                     tracing::debug!("Sent {} events: [{}]", chunk.len(), event_names.join(", "));
                 }
@@ -599,16 +614,15 @@ async fn send_batches(
                 }
             }
         }
-        event_queue.clear();
     }
 
-    for page_view in page_view_queue.drain(..) {
+    for (page_view, debug_mode) in page_view_queue.drain(..) {
         let title = page_view.get(event_param::DOCUMENT_TITLE).cloned();
         let location = page_view.get(event_param::DOCUMENT_LOCATION).cloned();
 
         log_page_view("trace", "Sending", &title, &location);
 
-        let mut request_params = common_params.clone();
+        let mut request_params = batch_request_params(common_params, debug_mode);
         if let Some(ref t) = title {
             request_params.insert(event_param::DOCUMENT_TITLE.to_string(), t.clone());
         }
