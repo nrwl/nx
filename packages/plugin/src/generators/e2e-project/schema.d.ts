@@ -6,6 +6,7 @@ export interface Schema {
   projectDirectory?: string;
   pluginOutputPath?: string;
   jestConfig?: string;
+  testRunner?: 'jest' | 'vitest';
   linter?: Linter | LinterType;
   skipFormat?: boolean;
   rootProject?: boolean;
