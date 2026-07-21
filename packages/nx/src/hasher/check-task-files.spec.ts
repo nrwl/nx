@@ -305,6 +305,35 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(categories.get('./src/index.ts')).toBe('files');
     });
 
+    it('throws when two candidates share a value but disagree on path', async () => {
+      // Results are keyed by value, so one value with two path forms could
+      // otherwise land in both matched and unmatched at once.
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs(['libs/a/x']),
+      });
+
+      await expect(
+        checkFilesAreInputs('myproj:build', [
+          { value: 'x', path: 'libs/a/x' },
+          { value: 'x', path: 'libs/b/x' },
+        ])
+      ).rejects.toThrow(/conflicting path forms/);
+    });
+
+    it('accepts the same candidate given twice', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs(['libs/a/x']),
+      });
+
+      const result = await checkFilesAreInputs('myproj:build', [
+        { value: 'x', path: 'libs/a/x' },
+        { value: 'x', path: 'libs/a/x' },
+      ]);
+
+      expect(result.matched).toEqual(['x']);
+      expect(result.unmatched).toEqual([]);
+    });
+
     it('matches environment, runtime and external inputs by name', async () => {
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': {

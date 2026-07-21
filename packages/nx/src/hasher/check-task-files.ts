@@ -344,7 +344,10 @@ function toWorkspaceRelativePath(candidatePath: string): string {
   // is an ordinary filename character, so `dep\..\..` would ride through
   // join/relative as one opaque segment and only become a live `..` traversal
   // after the swap. Swapped directly rather than via normalizePath, which also
-  // strips a Windows drive letter and would make isAbsolute misjudge `C:\…`.
+  // strips a Windows drive letter: isAbsolute accepts the drive-less form too,
+  // but relative() then resolves it against the cwd's drive, so a path on
+  // another drive (`D:\…`) could be relativized to *inside* the workspace — a
+  // Windows-only fail-open no POSIX test can catch.
   const forwardSlashed = candidatePath.replace(/\\/g, '/');
   // Anchoring a relative path to the workspace root before relativizing it back
   // resolves any `..` segments. Left in, they would traverse *through* a pattern
@@ -459,9 +462,23 @@ export async function checkFilesAreInputs(
   const unmatched: string[] = [];
   const categories = new Map<string, InputCategory>();
 
+  // Results are keyed by value, so a value given two path forms could land in
+  // both matched and unmatched at once. Exact duplicates are collapsed instead.
+  const seenPaths = new Map<string, string>();
+
   for (const file of files) {
     const candidate =
       typeof file === 'string' ? { value: file, path: file } : file;
+    const seenPath = seenPaths.get(candidate.value);
+    if (seenPath !== undefined) {
+      if (seenPath !== candidate.path) {
+        throw new Error(
+          `Value "${candidate.value}" was given conflicting path forms "${seenPath}" and "${candidate.path}".`
+        );
+      }
+      continue;
+    }
+    seenPaths.set(candidate.value, candidate.path);
     const category = classifyInput(taskId, candidate, raw, ctx);
     if (category) {
       matched.push(candidate.value);
