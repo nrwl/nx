@@ -108,7 +108,7 @@ import { registerFileChangeListener } from './file-watching/file-change-events';
 import {
   hasRegisteredFileWatcherSockets,
   notifyFileWatcherSocketsOfError,
-  registeredFileWatcherSockets,
+  registerFileWatcherSocket,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
 import {
@@ -370,7 +370,7 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       mode
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    registeredFileWatcherSockets.push({ socket, config: payload.config });
+    registerFileWatcherSocket({ socket, config: payload.config });
     // A client must not announce readiness until this socket is subscribed.
     // Older clients do not request an acknowledgement and expect only changes.
     if (payload.registrationId) {
