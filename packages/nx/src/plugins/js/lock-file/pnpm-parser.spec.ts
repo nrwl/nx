@@ -2029,6 +2029,62 @@ snapshots:
       });
       expect(nodes['npm:pnpm']).toBeUndefined();
     });
+
+    it('should handle CRLF line endings', () => {
+      const lockFile = `---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 11.0.0-rc.0
+        version: 11.0.0-rc.0
+
+packages:
+
+  pnpm@11.0.0-rc.0:
+    resolution: {integrity: sha512-pnpm-metadata}
+
+---
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-lodash}
+
+snapshots:
+
+  lodash@4.17.21: {}`.replace(/\n/g, '\r\n');
+
+      const { nodes } = getPnpmLockfileNodes(lockFile, 'pnpm-11-crlf');
+
+      expect(nodes['npm:lodash']).toMatchObject({
+        data: {
+          packageName: 'lodash',
+          version: '4.17.21',
+          hash: 'sha512-lodash',
+        },
+        name: 'npm:lodash',
+        type: 'npm',
+      });
+      expect(nodes['npm:pnpm']).toBeUndefined();
+    });
   });
 
   describe('patched dependencies', () => {
