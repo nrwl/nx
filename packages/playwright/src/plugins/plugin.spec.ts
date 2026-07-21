@@ -1074,12 +1074,11 @@ describe('@nx/playwright/plugin', () => {
     const { targets } = results[0][1].projects['.'];
 
     expect(targets['e2e--wait-for-webserver'].options).toEqual({
-      servers: [{ port: 4200 }],
-      timeout: 120000,
+      servers: [{ port: 4200, timeout: 120000 }],
     });
   });
 
-  it('should use the longest configured webServer.timeout across servers', async () => {
+  it('should keep each configured webServer.timeout on its own server', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
       webServer: [
@@ -1109,7 +1108,13 @@ describe('@nx/playwright/plugin', () => {
     );
     const { targets } = results[0][1].projects['.'];
 
-    expect(targets['e2e--wait-for-webserver'].options.timeout).toBe(120000);
+    // a fast server must not inherit a slower server's budget.
+    expect(targets['e2e--wait-for-webserver'].options).toEqual({
+      servers: [
+        { port: 4200, timeout: 30000 },
+        { port: 3333, timeout: 120000 },
+      ],
+    });
   });
 
   it('should let the webServerTimeout plugin option override the configured webServer.timeout', async () => {
@@ -1136,7 +1141,7 @@ describe('@nx/playwright/plugin', () => {
     const { targets } = results[0][1].projects['.'];
 
     expect(targets['e2e--wait-for-webserver'].options).toEqual({
-      servers: [{ port: 4200 }],
+      servers: [{ port: 4200, timeout: 120000 }],
       timeout: 300000,
     });
   });
