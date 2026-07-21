@@ -507,7 +507,9 @@ describe('parseRunOneOptions', () => {
         'Cannot find target "biuld" for project "my-app"'
       );
       expect(error.bodyLines).toContain('Did you mean "build"?');
-      expect(error.bodyLines).toContain('  - build');
+      // The closest match is already surfaced as the suggestion, so it is not
+      // repeated in the available targets list.
+      expect(error.bodyLines).not.toContain('  - build');
       expect(error.bodyLines).toContain('  - serve');
       expect(error.bodyLines).toContain('  - run');
     });
