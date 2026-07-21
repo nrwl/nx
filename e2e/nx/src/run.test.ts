@@ -200,7 +200,9 @@ describe('Nx Running Tests', () => {
       });
       // The target does not exist, so run-one reports the available targets
       // (the only included script) instead of a cryptic task graph error.
-      expect(echoFailOutput).toContain(`Cannot find target "echo:fail"`);
+      expect(echoFailOutput).toContain(
+        `Cannot find target "echo:fail" for project "${mylib}"`
+      );
       expect(echoFailOutput).toContain(`echo:dev`);
 
       updateJson(`libs/${mylib}/project.json`, (c) => original);

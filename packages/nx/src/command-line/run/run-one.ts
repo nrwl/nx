@@ -19,7 +19,10 @@ import {
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { output } from '../../utils/output';
 import { splitTarget } from '../../utils/split-target';
-import { findClosestMatches } from '../../utils/string-similarity';
+import {
+  findClosestMatches,
+  levenshteinDistance,
+} from '../../utils/string-similarity';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
@@ -216,11 +219,22 @@ function findClosestSpecifier(
 }
 
 /**
- * Lists up to `MAX_LISTED_TARGETS` targets, appending a "...and N more" line
- * when the project has more targets than we show.
+ * Lists up to `MAX_LISTED_TARGETS` targets, ordered by how closely they resemble
+ * the target the user typed (closest first, ties broken alphabetically) so the
+ * most likely intended targets surface first. `closestMatch` is omitted because
+ * it is already surfaced separately as the "Did you mean" suggestion. Appends a
+ * "...and N more" line when the project has more targets than we show.
  */
-function formatAvailableTargets(availableTargets: string[]): string[] {
-  const sorted = [...availableTargets].sort();
+function formatAvailableTargets(
+  availableTargets: string[],
+  target: string,
+  closestMatch?: string
+): string[] {
+  const sorted = availableTargets
+    .filter((t) => t !== closestMatch)
+    .map((t) => ({ target: t, distance: levenshteinDistance(target, t) }))
+    .sort((a, b) => a.distance - b.distance || a.target.localeCompare(b.target))
+    .map(({ target }) => target);
   const shown = sorted.slice(0, MAX_LISTED_TARGETS);
   const lines = ['Available targets:', ...shown.map((t) => `  - ${t}`)];
   if (sorted.length > shown.length) {
@@ -285,7 +299,9 @@ export function getRunOneTargetError(
   }
 
   if (availableTargets.length) {
-    bodyLines.push(...formatAvailableTargets(availableTargets));
+    bodyLines.push(
+      ...formatAvailableTargets(availableTargets, target, closestMatch)
+    );
   } else {
     bodyLines.push(
       `The project "${project.name}" does not have any targets configured.`
