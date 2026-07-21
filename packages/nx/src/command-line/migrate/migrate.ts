@@ -1833,8 +1833,7 @@ async function getPackageMigrationsConfigFromRegistry(
 
     // Registries other than npmjs and the local registry may not support full metadata via npm view
     // so throw error so that fetcher falls back to getting config via install.
-    // registry.yarnpkg.com is npmjs' CNAME (yarn berry's default registry) and
-    // serves the same full metadata, so it supports the npm view path too.
+    // registry.yarnpkg.com is npmjs' CNAME, so it serves the same metadata.
     if (
       ![
         'registry.npmjs.org',

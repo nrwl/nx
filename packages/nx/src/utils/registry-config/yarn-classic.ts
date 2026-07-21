@@ -50,7 +50,7 @@ import {
  * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/registries/npm-registry.js#L345-L436
  */
 
-export const YARN_CLASSIC_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';
+const YARN_CLASSIC_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';
 
 // A parsed .yarnrc value mirrors yarn's lockfile tokenizer: a bare `true`/
 // `false` is a boolean, a bare integer is a number, and everything else
@@ -73,7 +73,6 @@ export function getYarnClassicSpawnRegistryEnv(
   const scope = getPackageScope(packageName);
   const realHome = homedir();
   const { primary, secondary } = yarnHomeTiers(realHome);
-  // Computed once: each feeds two chains below and must stay identical.
   const ancestors = ancestorDirectories(root);
   const etcDir = globalEtcDir();
 
@@ -356,7 +355,6 @@ function resolveOptions(
     setCafile(env, resolveYarnPath(cafile, root, home));
   }
 
-  // strict-ssl is Boolean()-coerced by yarn; only a falsy value disables TLS.
   const strictSsl = resolveOption(
     firstDefined,
     npmrcChain,

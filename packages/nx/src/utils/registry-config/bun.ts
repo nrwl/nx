@@ -173,17 +173,11 @@ function normalizeBunRegistryValue(
     // Table form: bun expands a whole-value `$VAR` in the url (Scope.fromAPI)
     // and in each credential field (env.getAuto) before use.
     const result: BunRegistryValue = { url: expandBunRegistryUrl(value.url) };
-    const token = expandBunAuthValue(value.token);
-    if (token !== undefined) {
-      result.token = token;
-    }
-    const username = expandBunAuthValue(value.username);
-    if (username !== undefined) {
-      result.username = username;
-    }
-    const password = expandBunAuthValue(value.password);
-    if (password !== undefined) {
-      result.password = password;
+    for (const field of ['token', 'username', 'password'] as const) {
+      const expanded = expandBunAuthValue(value[field]);
+      if (expanded !== undefined) {
+        result[field] = expanded;
+      }
     }
     return result;
   }
@@ -247,8 +241,7 @@ function applyBunAuth(env: NpmConfigEnv, value: BunRegistryValue): void {
 
 function readBunfigInstall(path: string): BunfigInstall | null {
   const parsed = readBunfigRaw(path);
-  // null: no bunfig present. 'invalid': bun's own parser would reject it (bun
-  // aborts on that). Either way there is no install config to read here.
+  // An unparseable bunfig would abort bun itself; skip the surface here.
   if (parsed === null || parsed === 'invalid') {
     return null;
   }

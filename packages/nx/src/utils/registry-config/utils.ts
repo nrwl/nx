@@ -47,7 +47,12 @@ function npmConfigSetting(envKey: string): string | null {
     return null;
   }
   const key = envKey.slice('npm_config_'.length);
-  return key.startsWith('//') ? key : key.replace(/(?!^)_/g, '-').toLowerCase();
+  return key.startsWith('//') ? key : normalizeNpmConfigKey(key);
+}
+
+/** npm's key rewrite: non-leading `_` to `-`, then lowercased. */
+export function normalizeNpmConfigKey(key: string): string {
+  return key.replace(/(?!^)_/g, '-').toLowerCase();
 }
 
 /**

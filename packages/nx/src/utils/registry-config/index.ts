@@ -4,7 +4,12 @@ import { getBunSpawnRegistryEnv } from './bun';
 import { getPnpmSpawnRegistryEnv } from './pnpm';
 import { getYarnBerrySpawnRegistryEnv } from './yarn-berry';
 import { getYarnClassicSpawnRegistryEnv } from './yarn-classic';
-import { getPackageScope, setRegistry, type NpmConfigEnv } from './utils';
+import {
+  getPackageScope,
+  normalizeNpmConfigKey,
+  setRegistry,
+  type NpmConfigEnv,
+} from './utils';
 
 // Type-only import: a value import would create a cycle with package-manager.ts.
 import type { PackageManager } from '../package-manager';
@@ -113,7 +118,7 @@ function reconcileScopedRegistryKey(
     return;
   }
   const key = `${scope}:registry`;
-  if (key.replace(/(?!^)_/g, '-').toLowerCase() !== key) {
+  if (normalizeNpmConfigKey(key) !== key) {
     setRegistry(env, scopedRegistry);
   }
 }

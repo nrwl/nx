@@ -195,7 +195,6 @@ function bridgeAuthIni(
   ) {
     setScopedRegistry(env, scope, authIniScopedRegistry);
   }
-  // Nerf-darted auth/TLS keys (e.g. //host/:_authToken) from auth.ini.
   for (const [key, value] of authIni) {
     if (key.startsWith('//') && !projectNpmrc.has(key)) {
       env[`npm_config_${key}`] = value;
@@ -373,8 +372,7 @@ function warnUnscopedCredential(dart: string, keys: string[]): void {
  * YAML is dead config in pnpm itself (it loads CA material from the
  * npmrc-family files only: .npmrc, which npm reads natively, and auth.ini,
  * bridged in bridgeAuthIni), so the YAML key is deliberately not bridged.
- * Proxy keys follow the same yaml surface (source-verified; not empirically
- * testable in the sandbox).
+ * Proxy keys follow the same yaml surface (source-verified).
  */
 function applyYamlNetworkSettings(
   env: NpmConfigEnv,
