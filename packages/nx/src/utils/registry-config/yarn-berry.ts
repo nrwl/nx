@@ -107,29 +107,21 @@ export function getYarnBerrySpawnRegistryEnv(
     if (!deepMerge) {
       return firstDefinedIn(rcFiles, pick);
     }
-    const merged: BerryScopeEntry = {};
+    const merged: Record<string, string | boolean> = {};
     let any = false;
-    const server = firstDefinedIn(rcFiles, (c) => pick(c)?.npmRegistryServer);
-    if (server !== undefined) {
-      merged.npmRegistryServer = server;
-      any = true;
+    for (const key of [
+      'npmRegistryServer',
+      'npmAuthToken',
+      'npmAuthIdent',
+      'npmAlwaysAuth',
+    ] as const) {
+      const value = firstDefinedIn(rcFiles, (c) => pick(c)?.[key]);
+      if (value !== undefined) {
+        merged[key] = value;
+        any = true;
+      }
     }
-    const token = firstDefinedIn(rcFiles, (c) => pick(c)?.npmAuthToken);
-    if (token !== undefined) {
-      merged.npmAuthToken = token;
-      any = true;
-    }
-    const ident = firstDefinedIn(rcFiles, (c) => pick(c)?.npmAuthIdent);
-    if (ident !== undefined) {
-      merged.npmAuthIdent = ident;
-      any = true;
-    }
-    const always = firstDefinedIn(rcFiles, (c) => pick(c)?.npmAlwaysAuth);
-    if (always !== undefined) {
-      merged.npmAlwaysAuth = always;
-      any = true;
-    }
-    return any ? merged : undefined;
+    return any ? (merged as BerryScopeEntry) : undefined;
   };
 
   // Berry env-expands ${VAR}/${VAR-default}/${VAR:-default} in every string
@@ -450,9 +442,7 @@ function resolveNetworkSettings(
 // when unset or empty), then bridged. Berry throws on an undefined bare ${VAR}
 // (which aborts berry itself, so a working workspace never has one); we leave
 // such a reference literal rather than failing the migrate. 4.13.0 rewrote the
-// parser, so dispatch to the matching one: the scanner below (4.13+) expands
-// nested defaults like ${A:-${B}} and treats `\$`/`\}`/`\\` as escapes;
-// expandBerryEnvVarsLegacy is the older single-regex form.
+// parser, so dispatch to the one matching the running version.
 // see https://github.com/yarnpkg/berry/blob/c5857bdee5737425b879492db5e2732a5e6e14f2/packages/yarnpkg-core/sources/miscUtils.ts#L473
 function expandBerryEnvVars(
   value: string,
@@ -464,11 +454,8 @@ function expandBerryEnvVars(
     : scanBerryEnv(value, 0, env, false).text;
 }
 
-// Berry < 4.13 expanded env vars with a single regex: the name class is
-// [\d\w_]+ (a leading _ or digit is valid, unlike the 4.13+ [a-zA-Z]\w* above),
-// one leading backslash escapes the reference, ${VAR-default} substitutes the
-// default only when the var is unset while ${VAR:-default} also does so when it
-// is empty, and an undefined bare ${VAR} throws (left literal here to fail open).
+// Berry < 4.13 expanded env vars with a single regex, where one leading
+// backslash escapes the reference.
 // See https://github.com/yarnpkg/berry/blob/%40yarnpkg/cli/4.12.0/packages/yarnpkg-core/sources/miscUtils.ts
 function expandBerryEnvVarsLegacy(
   value: string,

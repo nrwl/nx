@@ -693,8 +693,7 @@ export async function packageRegistryView(
  * the local project, and `bun` doesn't support pack.
  *
  * @param packDestination Directory passed to npm's `--pack-destination`, where
- * the `.tgz` is written. The command itself runs from the workspace's package
- * manager config root (so npm reads its .npmrc), not from this directory.
+ * the `.tgz` is written.
  * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
  */
 export async function packageRegistryPack(
@@ -715,11 +714,11 @@ export async function packageRegistryPack(
   const workspacePm = detectPackageManager();
   const configRoot = getPackageManagerConfigRoot();
   // Run from the config root (not the temp dir) so npm reads the workspace
-  // .npmrc natively, the registry/auth an npm workspace configures there (which
-  // packageRegistryView already picks up); --pack-destination keeps the
-  // tarball in the temp dir. For non-npm package managers the env overlay
-  // reproduces the config npm cannot read (pnpm-workspace.yaml, .yarnrc(.yml),
-  // bunfig.toml). npm prints the tarball basename to stdout.
+  // .npmrc natively, the same registry/auth packageRegistryView picks up;
+  // --pack-destination keeps the tarball in the temp dir. For non-npm package
+  // managers the env overlay reproduces the config npm cannot read
+  // (pnpm-workspace.yaml, .yarnrc(.yml), bunfig.toml). npm prints the tarball
+  // basename to stdout.
   const { stdout } = await execAsync(
     `${pm} pack "${pkg}@${version}" --pack-destination "${packDestination}"`,
     {
@@ -746,13 +745,14 @@ export async function packageRegistryPack(
   return { tarballPath };
 }
 
-/**
- * `packageRegistryView`/`packageRegistryPack` are called in tight resolution
- * loops; cache the version probe (it shells out when the packageManager field
- * is absent). Returns null when the version cannot be determined, in which
- * case registry bridging degrades to npm's own resolution.
- */
+// `packageRegistryView`/`packageRegistryPack` are called in tight resolution
+// loops; cache the version probe (it shells out when the packageManager field
+// is absent).
 const packageManagerVersionCache = new Map<string, string | null>();
+/**
+ * Returns null when the version cannot be determined. What that means is per
+ * package manager: pnpm and yarn skip bridging, bun assumes a current version.
+ */
 function getPackageManagerVersionSafe(
   packageManager: PackageManager,
   root: string
