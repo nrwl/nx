@@ -78,7 +78,7 @@ export function validateMigrationMarkdownAssets(opts: {
       const expected = resolve(rootDir, projectRoot, value);
       if (!isInside(outputDir, expected)) {
         violations.push({
-          message: `The \`${key}\` file "${value}" referenced by migrations.json resolves outside "${assetsJson.outDir}". Only that directory is published, so the reference cannot resolve in the installed package.`,
+          message: `The \`${key}\` file "${value}" referenced by migrations.json resolves outside the built output "${assetsJson.outDir}". Migration references resolve relative to the installed package root and must point inside the built output.`,
           sourceProject: opts.sourceProject,
           file: opts.migrationsPath,
         });
