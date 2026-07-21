@@ -6,20 +6,41 @@ import { Task } from '../config/task-graph';
 import { workspaceRoot } from '../utils/workspace-root';
 import { getEnvPathsForTask } from './task-env-paths';
 
+/**
+ * Resolves the FORCE_COLOR value for forked child processes.
+ *
+ * When the user sets FORCE_COLOR=0, bin/nx.ts deletes it from process.env
+ * (workaround for picocolors treating "0" as truthy) and saves the original
+ * value in NX_ORIGINAL_FORCE_COLOR. Without this check, the undefined
+ * FORCE_COLOR would default to 'true', re-enabling colors in all children.
+ */
+export function getForceColorForChild(): string {
+  if (process.env.FORCE_COLOR !== undefined) {
+    return process.env.FORCE_COLOR;
+  }
+  if (process.env.NX_ORIGINAL_FORCE_COLOR === '0') {
+    return '0';
+  }
+  return 'true';
+}
+
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
   captureStderr: boolean
 ): NodeJS.ProcessEnv {
-  return {
+  const res = {
     // User Process Env Variables override Dotenv Variables
     ...process.env,
     // Nx Env Variables overrides everything
     ...getNxEnvVariablesForForkedProcess(
-      process.env.FORCE_COLOR === undefined ? 'true' : process.env.FORCE_COLOR,
+      getForceColorForChild(),
       skipNxCache,
       captureStderr
     ),
   };
+  // NX_ORIGINAL_FORCE_COLOR is an internal signal and should not leak into child processes
+  delete res.NX_ORIGINAL_FORCE_COLOR;
+  return res;
 }
 
 // The orchestrator now calls this eagerly during the coordinator pre-hash
@@ -80,6 +101,9 @@ export function getEnvVariablesForTask(
   }
   // we don't reset NX_BASE or NX_HEAD because those are set by the user and should be preserved
   delete res.NX_SET_CLI;
+  // NX_ORIGINAL_FORCE_COLOR is an internal signal used by getForceColorForChild()
+  // and should not leak into child processes
+  delete res.NX_ORIGINAL_FORCE_COLOR;
   return res;
 }
 
