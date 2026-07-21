@@ -30,8 +30,7 @@ describe('NextJs Component Testing', () => {
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs app using babel compiler', () => {
+  it('should test a NextJs app using babel compiler', () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
     //  add bable compiler to app
@@ -43,8 +42,7 @@ describe('NextJs Component Testing', () => {
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs lib using babel compiler', async () => {
+  it('should test a NextJs lib using babel compiler', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
     //  add bable compiler to lib
@@ -56,8 +54,7 @@ describe('NextJs Component Testing', () => {
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs lib', async () => {
+  it('should test a NextJs lib', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
     if (runE2ETests()) {
@@ -67,8 +64,7 @@ describe('NextJs Component Testing', () => {
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs buildable lib', async () => {
+  it('should test a NextJs buildable lib', async () => {
     const buildableLibName = uniq('next-buildable-lib');
     createLibWithCt(buildableLibName, true);
     if (runE2ETests()) {
@@ -78,8 +74,7 @@ describe('NextJs Component Testing', () => {
     }
   });
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test a NextJs server component that uses router', async () => {
+  it('should test a NextJs server component that uses router', async () => {
     const lib = uniq('next-lib');
     createLibWithCtCypress(lib);
     if (runE2ETests()) {

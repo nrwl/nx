@@ -192,7 +192,15 @@ ${jitComment}
     );
   }
 
-  if (presetImportPath) {
+  // Re-running the generator must not prepend a second declaration - Cypress
+  // loads TS configs through esbuild, which rejects duplicate bindings.
+  const isPresetAlreadyDeclared =
+    tsquery.query(
+      updatedConfigContents,
+      ':matches(ImportSpecifier, BindingElement) Identifier[name="nxComponentTestingPreset"]'
+    ).length > 0;
+
+  if (presetImportPath && !isPresetAlreadyDeclared) {
     // Use the path verbatim - callers pass the public exported subpath. Don't
     // append `.js`: @nx/react and @nx/angular's package exports only declare
     // the bare `./plugins/component-testing` subpath, so a `.js` suffix
