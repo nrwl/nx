@@ -48,7 +48,8 @@ Rules:
 
 - Explicit assertions or `toMatchInlineSnapshot`. Never `toMatchSnapshot` (external snapshot files); no migration spec in the repo uses it.
 - The mandatory case list (negative, idempotency, malformed-input, multi-edit, precedence, list-sanity, reproduced-behavior, each with its trigger) lives in SKILL.md section 5; the skeleton above shows the negative and idempotency shapes.
-- Hybrid migrations: assert on the return value.
+- Prompt-only migrations get no spec file; there is no implementation to import.
+- Any migration returning `{ nextSteps, agentContext }` (hybrid or not): assert on the return value.
 
 ```ts
 const result = await update(tree);

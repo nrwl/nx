@@ -57,7 +57,8 @@ does not cover.
 
 Rules:
 
+- Shipped exemplars predate this template and vary their heading names; match the elements (the guard, stepwise before/after, the validation loop, explicit scope), not the exact headings.
 - Hybrid prompts additionally instruct the agent to verify (not redo) the deterministic pre-pass: review the changed files, and treat every advisory-context item as pending work.
 - When upstream publishes an npx-runnable codemod, instruct the agent to run it and verify the result rather than reimplementing the transform.
 - Scope statements are load-bearing: state explicitly what the agent must not touch.
-- The filename must differ from any implementation basename in the same directory (docs-site leak; SKILL.md section 4).
+- The filename must differ from any implementation basename in the same directory (the `documentation` .md owns that name; SKILL.md section 4).

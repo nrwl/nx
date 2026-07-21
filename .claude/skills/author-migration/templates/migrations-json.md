@@ -1,6 +1,6 @@
 # migrations.json entry templates
 
-Replace `<...>` placeholders. Migration entries go under the file's top-level `generators` section, packageJsonUpdates groups under `packageJsonUpdates` (full file shape at the bottom). Version values follow the target-train rule from SKILL.md section 2. Paths are dist-prefixed because they resolve against the installed package. The examples below use `./dist/src/migrations/...`, the shape for packages whose `tsconfig.lib.json` has `rootDir: "."` (the dominant shape); packages that set `rootDir: "src"` publish without the `src` segment (`./dist/migrations/...`, e.g. dotnet and maven). Copy the shape from a sibling entry, or for a package's first entry derive it from `rootDir` and confirm the path exists under the built `dist/`; path validation strips `dist/` and resolves the source file, so a wrong dist shape passes it.
+Replace `<...>` placeholders. Migration entries go under the file's top-level `generators` section, packageJsonUpdates groups under `packageJsonUpdates` (full file shape at the bottom). Version values follow the target-train rule from SKILL.md section 2. Paths are dist-prefixed because they resolve against the installed package. The examples below use `./dist/src/migrations/...`, the shape for packages whose `tsconfig.lib.json` has `rootDir: "."` (the dominant shape); packages that set `rootDir: "src"` publish without the `src` segment (`./dist/migrations/...`, e.g. dotnet and maven). Copy the shape from a sibling entry, or for a package's first entry derive it from `rootDir` and confirm the path exists under the built `dist/`; path validation strips `dist/` and resolves the source file, so the dangerous wrong shape (`./dist/src/...` in a `rootDir: "src"` package) still resolves and passes, while only shapes whose stripped path misses the source tree fail.
 
 ## Generator-only
 
@@ -33,7 +33,7 @@ Add `requires` when the migration only applies past an upstream major:
 
 ## Hybrid (deterministic pre-pass plus AI half)
 
-One entry, both keys. The prompt filename must differ from the implementation basename (docs-site leak, SKILL.md section 4).
+One entry, both keys. The prompt filename must differ from the implementation basename (the `documentation` .md owns that name; SKILL.md section 4).
 
 ```json
 "update-23-2-0-convert-bar-config": {
