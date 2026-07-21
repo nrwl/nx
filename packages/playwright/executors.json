@@ -14,7 +14,7 @@
     "wait-for-webserver": {
       "implementation": "./dist/src/executors/wait-for-webserver/wait-for-webserver.impl",
       "schema": "./dist/src/executors/wait-for-webserver/schema.json",
-      "description": "Wait for the E2E web server(s) to accept connections before running the Playwright CI test tasks.",
+      "description": "Wait for the E2E web server(s) to accept connections before running the Playwright test tasks.",
       "hidden": true
     }
   }
