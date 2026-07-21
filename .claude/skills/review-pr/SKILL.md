@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces only critical and important findings (plus strengths; nice-to-have suggestions are dropped), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
 allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
@@ -76,7 +76,8 @@ Parse out:
 
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
-- **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR (e.g. after the review criteria changed), delete the draft file or just say so in the session.
+- **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
+- **`PIPELINE_VERSION: 2`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ## Step 3: Check the PR out inside the sandbox container
 
@@ -381,9 +382,12 @@ only with `docker exec` against that container:
 
 ## What to report
 
-Report only **critical** and **important** findings, plus **strengths**. Do not
-produce a suggestions / nice-to-have section — polish-level feedback will be
-discarded unread.
+Report **critical** and **important** findings, plus **strengths**. Concrete,
+actionable nice-to-haves (a rename, a restructure, a missing cross-link) may go
+in a terse **Suggestions** list — one line each; vague polish will be discarded.
+When you endorse a debatable design decision (fail-open vs fail-closed,
+normalization, escape hatches, compat trade-offs), say so explicitly in a
+**Maintainer calls** line rather than folding it into an endorsement.
 
 Apply the following standing maintainer calibrations; a finding matching one of
 these is advisory at most and not worth writing up:
@@ -528,7 +532,15 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 
 ### Trim to critical + important
 
-**Only critical and important findings are kept.** The charter tells the agents not to produce suggestions; this trim is the backstop for when they do anyway. After capturing `$RAW_REVIEW_BODY`, drop any **Suggestions** / nice-to-have section — discard those findings, do not downgrade or relocate them. Keep **Critical**, **Important**, and **Strengths**. The trimmed text is what flows into the steps below (reconciliation in Step 5b, formatting in Step 6).
+**Only critical and important findings drive the verdict.** Keep **Critical**, **Important**, and **Strengths** in full. Suggestions are no longer discarded: distill any **Suggestions** / nice-to-have material into a `### Suggestions` section of at most 5 one-line bullets (`file:line — ask`), keeping only concrete, actionable asks (a rename, a restructure, a doc cross-link) and dropping vague polish. This tier NEVER influences the verdict — it exists because the maintainer's own reviews are largely made of it. The trimmed text is what flows into the steps below (reconciliation in Step 5b, formatting in Step 6).
+
+### Maintainer calls
+
+The review body must include a `### Maintainer calls` section whenever the review _endorsed_ a debatable design decision on the maintainer's behalf — fail-open vs fail-closed, normalize-then-compare vs exact comparison, an opt-out escape hatch left permissive, compat-driven leniency, a documented trade-off accepted as-is. One line each: the decision, the stricter/alternative option, and why the PR's choice was endorsed. These are the judgments a human most often overrides — burying them inside Strengths or an agent's endorsement hides exactly the calls the maintainer wants to veto. If there are none, omit the section.
+
+### Docs direction (when the diff touches `astro-docs/`)
+
+Review changed docs for _editorial direction_, not just factual accuracy: does the page recommend a practice the team shouldn't encourage (e.g. sharing a daemon across containers — a remote-code-execution vector), does it frame an escape hatch as a primary use case, does a new env var/flag doc link back to the concept page that explains its risks? A doc that accurately describes a bad recommendation is a finding, not a strength. Rate genuinely harmful guidance Important; wording/positioning asks go under Suggestions.
 
 ### Nx-specific calibration
 
@@ -784,7 +796,7 @@ Capture the agent's output as `$REPRO_REPORT`. Fold it into the final review bod
 
 ## Step 5b: Reconcile against prior reviews (only on re-review)
 
-If a prior review exists, do a second pass _yourself_ (don't dispatch another agent — you already have all the context). Work only from the trimmed findings (critical / important — Suggestions were already dropped in Step 5). For each finding:
+If a prior review exists, do a second pass _yourself_ (don't dispatch another agent — you already have all the context). Work from the trimmed critical / important findings (the Suggestions and Maintainer-calls sections carry over as-is, refreshed for the new diff). For each finding:
 
 - Was the same concern raised in a prior review and now appears resolved? → move it under **Addressed since last review**.
 - Was the same concern raised in a prior review and still present? → move it under **Still concerning** with a note like "raised in <date>".
@@ -861,6 +873,7 @@ head_sha: <HEAD_REF_OID>
 last_reviewed_at: <ISO_8601>
 verdict: <lgtm|needs-changes|blocked|superseded|unnecessary|failed>
 attempt: <N>
+pipeline_version: <PIPELINE_VERSION>
 posted_at:
 posted_url:
 ---
