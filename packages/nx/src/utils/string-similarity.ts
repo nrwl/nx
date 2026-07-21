@@ -34,6 +34,40 @@ export function levenshteinDistance(a: string, b: string): number {
 }
 
 /**
+ * Ranks every candidate by how closely it resembles `input`, from closest to
+ * furthest, tie-broken alphabetically so the order is deterministic. Each entry
+ * keeps its computed distance so callers can reuse it (e.g. to both pick the
+ * closest match and order a list) without recomputing.
+ */
+export function rankByDistance(
+  input: string,
+  candidates: readonly string[]
+): { candidate: string; distance: number }[] {
+  return candidates
+    .map((candidate) => ({
+      candidate,
+      distance: levenshteinDistance(input, candidate),
+    }))
+    .sort(
+      (a, b) =>
+        a.distance - b.distance || a.candidate.localeCompare(b.candidate)
+    );
+}
+
+/**
+ * Whether a candidate at edit `distance` from `input` is close enough to be a
+ * useful suggestion. The tolerance scales with the length of `input` so that
+ * longer words allow for more typos. Exposed so callers that already have a
+ * distance (e.g. from `rankByDistance`) can gate on it without recomputing.
+ */
+export function isWithinSuggestionThreshold(
+  input: string,
+  distance: number
+): boolean {
+  return distance <= Math.max(2, Math.ceil(input.length * 0.4));
+}
+
+/**
  * Returns up to `limit` candidates that most closely resemble `input`, sorted
  * from closest to furthest. Candidates that are not similar enough to be a
  * useful suggestion are excluded. The tolerance scales with the length of
@@ -44,14 +78,8 @@ export function findClosestMatches(
   candidates: readonly string[],
   limit = 3
 ): string[] {
-  const threshold = Math.max(2, Math.ceil(input.length * 0.4));
-  return candidates
-    .map((candidate) => ({
-      candidate,
-      distance: levenshteinDistance(input, candidate),
-    }))
-    .filter(({ distance }) => distance <= threshold)
-    .sort((a, b) => a.distance - b.distance)
+  return rankByDistance(input, candidates)
+    .filter(({ distance }) => isWithinSuggestionThreshold(input, distance))
     .slice(0, limit)
     .map(({ candidate }) => candidate);
 }

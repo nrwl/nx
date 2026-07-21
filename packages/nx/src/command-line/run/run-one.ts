@@ -21,7 +21,8 @@ import { output } from '../../utils/output';
 import { splitTarget } from '../../utils/split-target';
 import {
   findClosestMatches,
-  levenshteinDistance,
+  isWithinSuggestionThreshold,
+  rankByDistance,
 } from '../../utils/string-similarity';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
@@ -219,26 +220,55 @@ function findClosestSpecifier(
 }
 
 /**
- * Lists up to `MAX_LISTED_TARGETS` targets, ordered by how closely they resemble
- * the target the user typed (closest first, ties broken alphabetically) so the
- * most likely intended targets surface first. `closestMatch` is omitted because
- * it is already surfaced separately as the "Did you mean" suggestion. Appends a
- * "...and N more" line when the project has more targets than we show.
+ * Finds the closest available target to what the user typed, staying
+ * config-aware. When a configuration was parsed off the specifier, the rejoined
+ * `target:configuration` is tried first so a colon-containing real target name
+ * (e.g. `zzcustom:variant`) still matches. The bare-`target` tier reuses the
+ * precomputed `ranked` list (its head, gated by the suggestion threshold)
+ * instead of recomputing distances, matching `findClosestSpecifier`'s
+ * progressive-join preference order for these two tiers.
+ */
+function findClosestTarget(
+  target: string,
+  configuration: string | undefined,
+  availableTargets: readonly string[],
+  ranked: { candidate: string; distance: number }[]
+): string | undefined {
+  if (configuration) {
+    const [rejoined] = findClosestMatches(
+      `${target}:${configuration}`,
+      availableTargets,
+      1
+    );
+    if (rejoined) {
+      return rejoined;
+    }
+  }
+  const nearest = ranked[0];
+  return nearest && isWithinSuggestionThreshold(target, nearest.distance)
+    ? nearest.candidate
+    : undefined;
+}
+
+/**
+ * Lists up to `MAX_LISTED_TARGETS` targets from a list already ranked by how
+ * closely they resemble the target the user typed (closest first, ties broken
+ * alphabetically) so the most likely intended targets surface first.
+ * `closestMatch` is dropped because it is already surfaced separately as the
+ * "Did you mean" suggestion. Appends a "...and N more" line when the project has
+ * more targets than we show.
  */
 function formatAvailableTargets(
-  availableTargets: string[],
-  target: string,
+  ranked: { candidate: string; distance: number }[],
   closestMatch?: string
 ): string[] {
-  const sorted = availableTargets
-    .filter((t) => t !== closestMatch)
-    .map((t) => ({ target: t, distance: levenshteinDistance(target, t) }))
-    .sort((a, b) => a.distance - b.distance || a.target.localeCompare(b.target))
-    .map(({ target }) => target);
-  const shown = sorted.slice(0, MAX_LISTED_TARGETS);
+  const targets = ranked
+    .map(({ candidate }) => candidate)
+    .filter((candidate) => candidate !== closestMatch);
+  const shown = targets.slice(0, MAX_LISTED_TARGETS);
   const lines = ['Available targets:', ...shown.map((t) => `  - ${t}`)];
-  if (sorted.length > shown.length) {
-    lines.push(`  ...and ${sorted.length - shown.length} more`);
+  if (targets.length > shown.length) {
+    lines.push(`  ...and ${targets.length - shown.length} more`);
   }
   return lines;
 }
@@ -290,18 +320,22 @@ export function getRunOneTargetError(
   }
 
   const bodyLines: string[] = [];
-  const [closestMatch] = findClosestSpecifier(
-    [target, configuration],
-    availableTargets
+  // Rank the available targets by distance to the bare target ONCE. This drives
+  // the ordered "Available targets" block and doubles as the bare-target tier of
+  // the closest-match lookup, so distances are not computed twice.
+  const ranked = rankByDistance(target, availableTargets);
+  const closestMatch = findClosestTarget(
+    target,
+    configuration,
+    availableTargets,
+    ranked
   );
   if (closestMatch) {
     bodyLines.push(`Did you mean "${closestMatch}"?`, '');
   }
 
   if (availableTargets.length) {
-    bodyLines.push(
-      ...formatAvailableTargets(availableTargets, target, closestMatch)
-    );
+    bodyLines.push(...formatAvailableTargets(ranked, closestMatch));
   } else {
     bodyLines.push(
       `The project "${project.name}" does not have any targets configured.`
