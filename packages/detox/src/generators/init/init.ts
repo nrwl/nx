@@ -1,7 +1,8 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -71,6 +72,12 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export function updateDependencies(host: Tree, schema: Schema) {
+  // The user explicitly asked for detox, and its postinstall builds the
+  // framework cache it needs to run at all, so enable it — npm and yarn run
+  // it unconditionally. Transitive deps stay denied.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    detox: true,
+  });
   return addDependenciesToPackageJson(
     host,
     {},

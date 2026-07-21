@@ -93,7 +93,7 @@ Use `nx affected` to run tasks only for projects impacted by the PR's changes:
 
 ```yaml {% meta="{5}" %}
 # .github/workflows/ci.yml
-- uses: actions/checkout@v4
+- uses: actions/checkout@v7
   with:
     fetch-depth: 0
 - run: npx nx affected -t lint test build

@@ -19,7 +19,7 @@ use crate::native::tui::utils::{
     calculate_actual_duration_ms, format_duration_with_estimate, get_task_status_style,
 };
 use crate::native::{
-    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskGraph},
 };
 
@@ -628,13 +628,12 @@ impl TuiApp for InlineApp {
     ///
     /// Inline mode needs smaller PTYs to fit the compact viewport,
     /// unlike full-screen mode where interactive PTYs use their own dimensions.
-    fn register_running_interactive_task(
-        &mut self,
-        task_id: String,
-        parser_and_writer: &(ParserArc, WriterArc),
-    ) {
-        let mut pty =
-            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+    fn register_running_interactive_task(&mut self, task_id: String, pty_handles: &PtyHandles) {
+        let mut pty = PtyInstance::interactive(
+            pty_handles.0.clone(),
+            pty_handles.1.clone(),
+            pty_handles.2.clone(),
+        );
 
         // Resize PTY to inline dimensions (mode-specific)
         let (rows, cols) = self.calculate_pty_dimensions();
@@ -784,7 +783,7 @@ impl InlineApp {
 
                     // Call insert_before on the dereferenced Terminal
                     // This only works with inline viewport
-                    if let Ok(()) = tui.insert_before(height, |buf| {
+                    match tui.insert_before(height, |buf| {
                         // Convert batched scrollback lines to owned ratatui Lines
                         let lines: Vec<Line<'static>> =
                             batch.iter().map(|line| Line::from(line.clone())).collect();
@@ -797,18 +796,21 @@ impl InlineApp {
                         use ratatui::widgets::Widget;
                         paragraph.render(buf.area, buf);
                     }) {
-                        // Track total lines inserted for cleanup on exit
-                        self.total_inserted_lines += height as u32;
+                        Ok(()) => {
+                            // Track total lines inserted for cleanup on exit
+                            self.total_inserted_lines += height as u32;
 
-                        tracing::trace!(
-                            "render_scrollback_above_tui: Rendered {} lines (total scrollback: {})",
-                            lines_to_render,
-                            current_scrollback_lines
-                        );
-                    } else {
-                        tracing::error!(
-                            "insert_before failed - method may not exist on this terminal type"
-                        );
+                            tracing::trace!(
+                                "render_scrollback_above_tui: Rendered {} lines (total scrollback: {})",
+                                lines_to_render,
+                                current_scrollback_lines
+                            );
+                        }
+                        Err(e) => {
+                            tracing::error!(
+                                "Failed to insert scrollback above the inline viewport: {e}"
+                            );
+                        }
                     }
                 }
             }
@@ -1040,6 +1042,11 @@ impl InlineApp {
             .map(|s| s.id().to_string())
             .or_else(|| self.get_current_running_item());
 
+        // A task the user is watching can start out (or become) one that another
+        // Nx process is running - it will never get a pty here, so say so rather
+        // than sitting on "Waiting for tasks to start...".
+        let mut fallback_message = " Waiting for tasks to start... ";
+
         if let Some(ref current_task) = current_task {
             let state = self.core.state().lock();
             if let Some(pty) = state.get_pty_instance(current_task) {
@@ -1048,15 +1055,22 @@ impl InlineApp {
                 self.render_inline_task_output(f, area, &pty);
                 return;
             }
+            if state.is_running_in_another_process(current_task) {
+                fallback_message = " Running in another Nx process... ";
+            } else if matches!(
+                state.get_task_status(current_task),
+                Some(TaskStatus::InProgress)
+            ) {
+                fallback_message = " Waiting for task results... ";
+            }
         }
 
-        // Fallback: show a message indicating no task is running
         use crate::native::tui::theme::THEME;
         use ratatui::layout::Alignment;
         use ratatui::style::Style;
         use ratatui::widgets::{Block, Borders};
 
-        let message = NxParagraph::new(" Waiting for tasks to start... ")
+        let message = NxParagraph::new(fallback_message)
             .style(Style::default().fg(THEME.secondary_fg))
             .alignment(Alignment::Center)
             .block(Block::default().borders(Borders::NONE));
@@ -1822,5 +1836,43 @@ mod integration_tests {
             state2.get_task_status("shared:build"),
             Some(TaskStatus::Success)
         );
+    }
+
+    fn render_main_content(app: &mut InlineApp) -> String {
+        use ratatui::{Terminal, backend::TestBackend};
+
+        let mut terminal = Terminal::new(TestBackend::new(60, 3)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                app.render_inline_main_content(f, area);
+            })
+            .unwrap();
+
+        terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect()
+    }
+
+    /// A task being watched inline can transition straight from pending to
+    /// running in another Nx process. It never gets a pty here, so the view has
+    /// to say that instead of waiting for output that will never arrive.
+    #[test]
+    fn test_inline_reports_task_running_in_another_process() {
+        let mut app = create_test_inline_app();
+        app.selected_item = Some(SelectionEntry::Task("app1:build".to_string()));
+
+        app.update_task_status("app1:build", TaskStatus::NotStarted);
+        assert!(render_main_content(&mut app).contains("Waiting for tasks to start"));
+
+        app.update_task_status("app1:build", TaskStatus::Shared);
+        assert!(render_main_content(&mut app).contains("Running in another Nx process"));
+
+        app.update_task_status("app1:build", TaskStatus::Stopped);
+        assert!(render_main_content(&mut app).contains("Running in another Nx process"));
     }
 }

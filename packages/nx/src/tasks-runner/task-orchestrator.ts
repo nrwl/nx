@@ -1196,7 +1196,7 @@ export class TaskOrchestrator {
             // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
             this.options.lifeCycle.registerRunningTask(
               task.id,
-              runningTask.getParserAndWriter()
+              runningTask.getPtyHandles()
             );
             runningTask.onOutput((output) => {
               this.options.lifeCycle.appendTaskOutput(task.id, output, true);
@@ -1255,7 +1255,7 @@ export class TaskOrchestrator {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
           this.options.lifeCycle.registerRunningTask(
             task.id,
-            runningTask.getParserAndWriter()
+            runningTask.getPtyHandles()
           );
           runningTask.onOutput((output) => {
             this.options.lifeCycle.appendTaskOutput(task.id, output, true);

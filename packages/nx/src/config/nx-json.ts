@@ -856,7 +856,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   targetDefaults?: TargetDefaults;
   /**
    * Default options for `nx affected`
-   * @deprecated use {@link defaultBase} instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
+   * @deprecated use {@link defaultBase} instead. For more information see https://nx.dev/docs/reference/nx-json#default-base
    */
   affected?: NxAffectedConfig;
 

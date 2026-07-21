@@ -6,9 +6,7 @@ packages:
   - 'nx-dev/*'
   - 'tools/*'
   - 'astro-docs'
-  - 'examples/*/*'
-  - 'examples/angular-rspack/module-federation/host'
-  - 'examples/angular-rspack/module-federation/remote'
+  # examples/ contains standalone pnpm workspaces with their own lockfiles
   - 'packages/nx/native-packages/*'
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
@@ -31,6 +29,8 @@ overrides:
   # pin to one version so expand-deps can flatten nx's published deps.
   hasown: '2.0.4'
   '@xhmikosr/decompress': '10.2.1'
+  websocket-driver: '^0.7.5'
+  tar: '^7.5.19'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'

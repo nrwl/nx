@@ -1,10 +1,164 @@
 ---
 title: Nx Environment Variables
-description: Reference for all environment variables that configure and control Nx behavior in different environments.
+description: Learn how Nx loads environment variables and find a reference for the variables that configure Nx, plugins, and Nx Cloud.
 sidebar:
   order: 6
 filter: 'type:References'
 ---
+
+Nx loads environment variables from the process and from environment files in your workspace. You can use environment variables to configure task behavior, pass values to applications, and change how Nx operates.
+
+Frameworks and bundlers can have additional rules for exposing environment variables to application code. Refer to their documentation for those rules.
+
+## Loading environment variables
+
+Nx loads environment variables from the following files, in order:
+
+1. `[project-root]/.env.[target-name].[target-configuration-name].local`
+2. `[project-root]/.env.[target-name].[target-configuration-name]`
+3. `[project-root]/.[target-name].[target-configuration-name].local.env`
+4. `[project-root]/.[target-name].[target-configuration-name].env`
+5. `[project-root]/.env.[target-configuration-name].local`
+6. `[project-root]/.env.[target-configuration-name]`
+7. `[project-root]/.[target-configuration-name].local.env`
+8. `[project-root]/.[target-configuration-name].env`
+9. `[project-root]/.env.[target-name].local`
+10. `[project-root]/.env.[target-name]`
+11. `[project-root]/.[target-name].local.env`
+12. `[project-root]/.[target-name].env`
+13. `[project-root]/.env.local`
+14. `[project-root]/.local.env`
+15. `[project-root]/.env`
+16. `.env.[target-name].[target-configuration-name].local`
+17. `.env.[target-name].[target-configuration-name]`
+18. `.[target-name].[target-configuration-name].local.env`
+19. `.[target-name].[target-configuration-name].env`
+20. `.env.[target-configuration-name].local`
+21. `.env.[target-configuration-name]`
+22. `.[target-configuration-name].local.env`
+23. `.[target-configuration-name].env`
+24. `.env.[target-name].local`
+25. `.env.[target-name]`
+26. `.[target-name].local.env`
+27. `.[target-name].env`
+28. `.env.local`
+29. `.local.env`
+30. `.env`
+
+Nx checks environment files using these priorities:
+
+- Project-specific files before workspace-level files
+- Target and configuration-specific files before general files
+- Local files before non-local files
+
+{% aside type="caution" title="Order is important" %}
+Nx moves through the list, ignores files it cannot find, and loads environment variables into the current process. If a variable is already loaded, Nx does not overwrite it. This behavior:
+
+1. Prevents developers from accidentally overwriting important system-level variables such as `NODE_ENV`.
+2. Allows `.env.local` or `.local.env` files to override project defaults in `.env`.
+3. Allows target-specific files such as `.env.build` or `.build.env` to override variables for a particular target.
+
+For example:
+
+1. `apps/my-app/.env.local` contains `NX_PUBLIC_API_URL=http://localhost:3333`.
+2. `apps/my-app/.env` contains `NX_PUBLIC_API_URL=https://api.example.com`.
+3. Nx loads the value from `apps/my-app/.env.local` first. Because `NX_PUBLIC_API_URL` is already set when Nx reads `apps/my-app/.env`, Nx ignores the second value.
+
+Store application-specific environment files in the application directory, such as `apps/my-app`. Use workspace-level environment files for workspace-wide settings, such as the [Nx Cloud access token](/docs/guides/nx-cloud/access-tokens).
+{% /aside %}
+
+{% aside type="caution" title="Package managers can set variables before Nx runs" %}
+A package manager can add variables to the process before Nx reads environment files. Nx preserves those values because they are already set.
+
+For example, the npm `node-options` setting from a project, user, or global `.npmrc` becomes a `NODE_OPTIONS` environment variable when you run `npm run nx ...` or `npx nx ...`. If `.env` also defines `NODE_OPTIONS`, the `.npmrc` value takes precedence. Running `nx` directly uses the value from `.env`.
+
+If you rely on a variable from an environment file, make sure nothing else sets it first.
+{% /aside %}
+
+{% aside type="caution" title="Task-specific environment files are not loaded in batch mode" %}
+Nx does not load task-specific environment files for tasks run in [batch mode](/docs/reference/glossary#batch-mode). Gradle and Maven tasks run in batch mode by default.
+
+Batch processes receive variables from the current environment and root environment files such as `.env` and `.env.local`. Variables in files such as `.env.[target-name]` are not available.
+{% /aside %}
+
+### Environment variables for atomized targets
+
+Atomized target names are created dynamically, typically by using file names as suffixes. Because those names are difficult to use in environment file names, Nx searches for the atomized target's parent and non-atomized target instead.
+
+For example, instead of looking for `.env.e2e-ci--path/to/atomized/file`, Nx looks for:
+
+- `.env.e2e-ci`
+- `.env.e2e`
+
+The combinations of targets, configurations, and path priorities follow this order:
+
+- `[project-root]/[parent-target-name].[target-configuration-name]`
+- `[project-root]/[non-atomized-target-name].[target-configuration-name]`
+- `[project-root]/[target-configuration-name]`
+- `[project-root]/[parent-target-name]`
+- `[project-root]/[non-atomized-target-name]`
+- `[project-root]/{general environment variables}`
+- `[target-name].[target-configuration-name]`
+- `[target-configuration-name]`
+- `[parent-target-name]`
+- `[non-atomized-target-name]`
+- `{general environment variables}`
+
+### Environment variables for configurations
+
+Nx only loads environment files for a configuration when that configuration is defined for the task. If the `build` target for `app` does not define a `development` configuration, the following command uses `.env.build` instead of `.env.build.development`:
+
+```shell
+nx build app --configuration development
+```
+
+To load `.env.build.development`, define the `development` configuration for the task, even if the configuration is empty:
+
+```jsonc {% meta="{5-7}" %}
+// apps/app/project.json
+{
+  "targets": {
+    "build": {
+      // ...
+      "configurations": {
+        "development": {},
+      },
+    },
+  },
+}
+```
+
+### Load a custom environment file
+
+To load variables from an environment file that is not listed above, use one of the following options:
+
+1. Use [env-cmd](https://www.npmjs.com/package/env-cmd): `env-cmd -f .qa.env nx serve`
+2. Use [dotenvx](https://github.com/dotenvx/dotenvx): `dotenvx run --env-file=.qa.env -- nx serve`
+3. Use the `envFile` option of the [run-commands executor](/docs/guides/tasks--caching/run-commands-executor#envfile)
+
+### Ad-hoc environment variables
+
+You can also set environment variables for an individual command by using your operating system and shell.
+
+**Unix systems**
+
+Set the environment variable before the command:
+
+```shell
+NX_PUBLIC_API_URL=http://localhost:3333 nx build myapp
+```
+
+**Windows (cmd.exe)**
+
+```shell
+set "NX_PUBLIC_API_URL=http://localhost:3333" && nx build myapp
+```
+
+**Windows (PowerShell)**
+
+```shell
+($env:NX_PUBLIC_API_URL = "http://localhost:3333") -and (nx build myapp)
+```
 
 ## Nx environment variables
 

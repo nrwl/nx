@@ -7,7 +7,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 use crate::native::{
-    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskResult},
 };
 
@@ -238,24 +238,23 @@ pub trait TuiApp: Send {
         // Default: no-op
     }
 
-    /// Register a running interactive task with its PTY parser and writer
+    /// Register a running interactive task with its PTY handles
     ///
     /// Default implementation creates a PTY, registers it, and calls the hook.
-    /// Interactive PTYs are NOT resized because they handle dimensions through
-    /// the parser/writer. Override if mode-specific resizing is needed.
+    /// The PTY inherits the dimensions it was opened with; it is resized to the
+    /// pane it is displayed in once the pane is laid out. Override if
+    /// mode-specific resizing is needed at registration time.
     ///
     /// # Arguments
     ///
     /// * `task_id` - The task identifier
-    /// * `parser_and_writer` - Reference to PTY parser and writer
-    fn register_running_interactive_task(
-        &mut self,
-        task_id: String,
-        parser_and_writer: &(ParserArc, WriterArc),
-    ) {
-        // Interactive PTYs don't need dimension calculation - they use parser/writer dimensions
-        let pty =
-            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+    /// * `pty_handles` - Reference to the PTY parser, writer and master
+    fn register_running_interactive_task(&mut self, task_id: String, pty_handles: &PtyHandles) {
+        let pty = PtyInstance::interactive(
+            pty_handles.0.clone(),
+            pty_handles.1.clone(),
+            pty_handles.2.clone(),
+        );
 
         let pty = Arc::new(pty);
         self.state()

@@ -97,6 +97,41 @@ Two failure modes:
 
 Ask of each strong claim: "what in this doc supports the strength of this word?" If nothing, weaken or cite.
 
+### Vary sentence rhythm
+
+Uniform, medium-length sentences in a confident register are the strongest
+statistical AI signature. Human writing is bursty: short fragments next to
+long chains.
+
+**The test:** Read a paragraph aloud. If every sentence takes the same
+breath, split one and merge two others.
+
+### Ration colon-expansion sentences
+
+"Claim: elaboration, elaboration, elaboration" is fine once per section.
+Repeated, it's a fingerprint.
+
+**The test:** Grep for mid-sentence colons. More than one or two per screen
+of prose, rewrite the extras as plain sentences.
+
+### Vary bullet structure
+
+A bolded lead-in label is fine, and often the clearest way to write a short
+reference list. What reads as AI is a run of bullets in lockstep: same
+opening grammar, same claim-then-elaborate shape, same length, every time.
+
+**The test:** In longform prose, if three or more adjacent bullets march in
+lockstep, break the pattern. Vary the lengths, drop the label from one, or
+fold a bullet into the surrounding paragraph.
+
+### Ration balanced-contrast constructions
+
+"Neither X nor Y", "not just X but Y", "X, not Y" are rhetorically tidy and
+AI drafts overuse them.
+
+**The test:** One per section. If a paragraph contains two, keep the one
+that carries a real distinction and flatten the other into a plain claim.
+
 ### Pre-publish pass order
 
 Run passes in this order. Structural first, vocabulary last.
@@ -396,7 +431,9 @@ Minimize external links. They break over time and are hard to maintain. When you
 - Use unordered lists when order doesn't matter.
 - Use dashes (`-`) for unordered lists.
 - Start ordered list items with `1.` (Markdown auto-increments).
-- Make list items parallel in structure.
+- Make list items parallel in structure for short reference lists
+  (option names, file types, steps). For prose bullets in longform pieces,
+  vary structure instead. See "Vary bullet structure."
 - Add a colon after the introductory phrase.
 - Don't use list items to complete an introductory sentence.
 

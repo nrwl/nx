@@ -3,11 +3,11 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   Tree,
   addProjectConfiguration,
-  readProjectConfiguration,
-  readJson,
   getProjects,
-  writeJson,
+  readJson,
+  readProjectConfiguration,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { e2eProjectGenerator } from './e2e';
@@ -217,6 +217,59 @@ describe('NxPlugin e2e-project Generator', () => {
       "
     `);
     expect(tree.exists('my-plugin-e2e/.spec.swcrc')).toBeFalsy();
+  });
+
+  it('should add vitest support', async () => {
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      testRunner: 'vitest',
+      addPlugin: false,
+    });
+
+    const project = readProjectConfiguration(tree, 'my-plugin-e2e');
+
+    expect(project.targets.e2e.executor).toBe('@nx/vitest:test');
+    expect(project.targets.e2e).toMatchObject({
+      dependsOn: ['^build'],
+      options: expect.objectContaining({
+        pool: 'forks',
+        poolOptions: {
+          forks: {
+            singleFork: true,
+          },
+        },
+      }),
+    });
+
+    expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
+    const vitestConfigExists =
+      tree.exists('my-plugin-e2e/vitest.config.ts') ||
+      tree.exists('my-plugin-e2e/vitest.config.mts');
+    expect(vitestConfigExists).toBeTruthy();
+
+    const vitestConfigPath = tree.exists('my-plugin-e2e/vitest.config.ts')
+      ? 'my-plugin-e2e/vitest.config.ts'
+      : 'my-plugin-e2e/vitest.config.mts';
+    const vitestConfig = tree.read(vitestConfigPath, 'utf-8');
+    expect(vitestConfig).toContain(
+      "globalSetup: '../tools/scripts/vitest-global-setup.ts'"
+    );
+    // vitest has no globalTeardown option; teardown is exported from the
+    // globalSetup file instead
+    expect(vitestConfig).not.toContain('globalTeardown');
+
+    const globalSetup = tree.read(
+      'tools/scripts/vitest-global-setup.ts',
+      'utf-8'
+    );
+    expect(globalSetup).toContain(
+      "export { default as setup } from './start-local-registry'"
+    );
+    expect(globalSetup).toContain(
+      "export { default as teardown } from './stop-local-registry'"
+    );
   });
 
   it('should setup the eslint builder', async () => {

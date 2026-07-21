@@ -17,6 +17,10 @@ interface WriterArc {
   readonly __brand: unique symbol;
 }
 
+interface MasterArc {
+  readonly __brand: unique symbol;
+}
+
 interface HashInstruction {
   readonly __brand: unique symbol;
 }
