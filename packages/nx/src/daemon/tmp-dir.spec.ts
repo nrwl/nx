@@ -1,9 +1,9 @@
 import { chmodSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'tmp';
 import {
-  DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   getPluginSocketDir,
   getSocketDir,
+  InvalidSocketDirConfigured,
 } from './tmp-dir';
 
 jest.mock('node:fs', () => {
@@ -58,19 +58,18 @@ describe('socket directories', () => {
     expect(getSocketDir()).not.toBe(getPluginSocketDir());
   });
 
-  it('refuses the shared system temp directory and falls back to the workspace data dir', () => {
+  it('throws InvalidSocketDirConfigured when the socket dir resolves to the system temp dir', () => {
     setPlatform('linux');
-    // Pointing NX_SOCKET_DIR at the raw system temp dir is unsafe: every user on
-    // the machine can access it, so it can never be locked down to us. We fail
-    // closed by falling back to the owner-controlled workspace data dir instead
-    // of trusting the shared root.
+    // Pointing NX_SOCKET_DIR at the raw system temp dir is invalid config: every
+    // user on the machine can access it, so it can never be locked down to us.
+    // This must fail loudly rather than silently substituting a default.
     process.env.NX_SOCKET_DIR = tmpdir;
 
-    const dir = getSocketDir();
-
-    expect(dir).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    expect(dir).not.toBe(tmpdir);
-    expect(chmodSync).not.toHaveBeenCalledWith(tmpdir, expect.anything());
+    expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
+    // The shared temp dir must never be created or chmod-ed on the way to the
+    // throw.
+    expect(mkdirSync).not.toHaveBeenCalled();
+    expect(chmodSync).not.toHaveBeenCalled();
   });
 
   it('restricts an explicit NX_SOCKET_DIR override', () => {
