@@ -108,7 +108,7 @@ import { registerFileChangeListener } from './file-watching/file-change-events';
 import {
   hasRegisteredFileWatcherSockets,
   notifyFileWatcherSocketsOfError,
-  registeredFileWatcherSockets,
+  registerFileWatcherSocket,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
 import {
@@ -367,7 +367,7 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       mode
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    registeredFileWatcherSockets.push({ socket, config: payload.config });
+    registerFileWatcherSocket({ socket, config: payload.config });
   } else if (isRegisterProjectGraphListenerMessage(payload)) {
     registeredProjectGraphListenerSockets.push(socket);
   } else if (isHandleGlobMessage(payload)) {
