@@ -208,4 +208,24 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       'test-ci--src/root.spec.ts',
     ]);
   });
+
+  it('should discover a workspace-root project using the generated multi-brace include', async () => {
+    await temp.createFiles({
+      'vitest.config.ts': '',
+      'src/a.spec.ts': '',
+      'tests/b.test.tsx': '',
+      'src/helper.ts': '',
+    });
+    // The vite/vitest generators write this include; for a root project it
+    // reaches the workspace glob unprefixed, so it starts with `{`, ends with
+    // `}`, and spans three brace groups.
+    mockResolvedTestConfig({
+      include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    });
+
+    await expect(getAtomizedTargets('vitest.config.ts')).resolves.toEqual([
+      'test-ci--src/a.spec.ts',
+      'test-ci--tests/b.test.tsx',
+    ]);
+  });
 });
