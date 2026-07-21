@@ -3,13 +3,14 @@ import { logger } from '../../utils/logger';
 import { isHybridMigration } from './migration-shape';
 
 /**
- * Presentation layer for `nx migrate --run-migrations`. Pure helpers — every
- * function maps (state) → (terminal output or string lines). Shared visual
- * vocabulary across the migrate run:
+ * Presentation layer for the migrate run phase (`--run-migrations` and the
+ * single-migration worker). Pure helpers: every function maps (state) ->
+ * (terminal output or string lines). Shared visual vocabulary across the
+ * migrate run:
  *   `→` start  ·  `✓` success  ·  `✗` failure  ·  `↷` skipped  ·  `ℹ` info  ·  `─` boundary
  *
  * Inputs are typed structurally (e.g. `{ name: string }[]`) so this module
- * stays decoupled from `ExecutableMigration` and the executor in migrate.ts.
+ * stays decoupled from the migration executor in migrate.ts.
  */
 
 /**

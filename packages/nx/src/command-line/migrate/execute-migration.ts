@@ -277,7 +277,7 @@ export async function runNxOrAngularMigration(
   },
   isVerbose: boolean,
   captureGeneratorOutput = false,
-  resolvedCollection?: { collection: MigrationsJson; collectionPath: string }
+  resolvedCollection?: ResolvedMigrationCollection
 ): Promise<{
   changes: FileChange[];
   nextSteps: string[];
@@ -430,7 +430,15 @@ export function filterStrings(value: unknown): string[] {
   return value.filter((v): v is string => typeof v === 'string');
 }
 
-export function readMigrationCollection(packageName: string, root: string) {
+export interface ResolvedMigrationCollection {
+  collection: MigrationsJson;
+  collectionPath: string;
+}
+
+export function readMigrationCollection(
+  packageName: string,
+  root: string
+): ResolvedMigrationCollection {
   const collectionPath = readPackageMigrationConfig(
     packageName,
     root

@@ -16,9 +16,9 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
  * CLI flag always wins, then `nx.json`, then the built-in default. Returns a new
  * args object; the input is not mutated.
  *
- * Phase-aware: generate-only options (`include`, `multiMajorMode`) are applied only
- * in the generate phase; `agentic`/`validate` only when running the whole
- * migrations file; `createCommits`/`commitPrefix` when running the file or a
+ * Phase-aware: generate-only options (`include`, `multiMajorMode`) are applied
+ * only in the generate phase; the run-phase options (`agentic`, `validate`,
+ * `createCommits`, `commitPrefix`) when running the whole migrations file or a
  * single migration (`--run-migration`). This mirrors where each option is
  * consumed and avoids tripping the "cannot be combined with --run-migrations"
  * guards in `parseMigrationsOptions`.
@@ -41,8 +41,6 @@ export function applyNxJsonMigrateDefaults(
   // `--run-migrations` with no value is normalized to '' by yargs, so a defined
   // (even empty-string) value means we're in the run-migrations phase.
   const isRunMigrations = merged.runMigrations !== undefined;
-  // The single-migration worker (`--run-migration`) shares the commit options
-  // with the run-migrations loop but nothing else.
   const isSingleMigration = merged.runMigration !== undefined;
 
   if (isRunMigrations || isSingleMigration) {
@@ -64,9 +62,6 @@ export function applyNxJsonMigrateDefaults(
       assertType(migrateConfig.commitPrefix, 'string', 'commitPrefix');
       merged.commitPrefix = migrateConfig.commitPrefix;
     }
-  }
-
-  if (isRunMigrations && !isSingleMigration) {
     if (merged.agentic === undefined && migrateConfig.agentic !== undefined) {
       assertValidAgentic(migrateConfig.agentic);
       merged.agentic = coerceAgenticArg(migrateConfig.agentic) as AgenticArg;

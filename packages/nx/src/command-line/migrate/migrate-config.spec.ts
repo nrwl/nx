@@ -230,7 +230,7 @@ describe('applyNxJsonMigrateDefaults', () => {
   describe('single-migration phase', () => {
     const base = { runMigration: '@nx/js:some-migration' };
 
-    it('fills the commit options from config but not run-loop or generate-only options', () => {
+    it('fills the run-phase options from config but not generate-only options', () => {
       const config: NxMigrateConfiguration = {
         createCommits: true,
         commitPrefix: 'chore: migrate ',
@@ -242,14 +242,14 @@ describe('applyNxJsonMigrateDefaults', () => {
       const result = applyNxJsonMigrateDefaults(base, config, noEnv);
       expect(result.createCommits).toBe(true);
       expect(result.commitPrefix).toBe('chore: migrate ');
-      expect(result.agentic).toBeUndefined();
-      expect(result.validate).toBeUndefined();
+      expect(result.agentic).toBe('claude-code');
+      expect(result.validate).toBe(false);
       expect(result.include).toBeUndefined();
       expect(result.includeFromConfig).toBeUndefined();
       expect(result.multiMajorMode).toBeUndefined();
     });
 
-    it('lets the CLI commit flags win over config', () => {
+    it('lets the CLI commit flags win over config while config still fills the rest', () => {
       const args = {
         ...base,
         createCommits: false,
@@ -258,10 +258,14 @@ describe('applyNxJsonMigrateDefaults', () => {
       const config: NxMigrateConfiguration = {
         createCommits: true,
         commitPrefix: 'config prefix ',
+        agentic: 'claude-code',
       };
       const result = applyNxJsonMigrateDefaults(args, config, noEnv);
       expect(result.createCommits).toBe(false);
       expect(result.commitPrefix).toBe('cli prefix ');
+      // The config-filled key proves the single-migration branch ran; the
+      // assertions above hold even when args pass through untouched.
+      expect(result.agentic).toBe('claude-code');
     });
   });
 

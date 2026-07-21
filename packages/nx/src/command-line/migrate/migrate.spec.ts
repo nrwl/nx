@@ -2950,19 +2950,21 @@ module.exports = {
       ).rejects.toThrow(/cannot be combined with '--multi-major-mode'/);
     });
 
-    it('should reject --run-migration combined with --agentic', async () => {
-      await expect(() =>
-        parseMigrationsOptions({ runMigration: 'a', agentic: true })
-      ).rejects.toThrow(/cannot be combined with '--agentic'/);
-      await expect(() =>
-        parseMigrationsOptions({ runMigration: 'a', agentic: 'claude-code' })
-      ).rejects.toThrow(/cannot be combined with '--agentic'/);
-    });
-
-    it('should reject --run-migration combined with --validate', async () => {
-      await expect(() =>
-        parseMigrationsOptions({ runMigration: 'a', validate: true })
-      ).rejects.toThrow(/cannot be combined with '--validate'/);
+    it('should accept --run-migration combined with --agentic and --validate', async () => {
+      // The run-phase agentic flags apply to the single-migration worker too;
+      // they ride the parse result alongside the migration id.
+      await expect(
+        parseMigrationsOptions({
+          runMigration: 'a',
+          agentic: 'claude-code',
+          validate: true,
+        })
+      ).resolves.toEqual({
+        type: 'runSingleMigration',
+        runMigration: 'a',
+        agentic: 'claude-code',
+        validate: true,
+      });
     });
 
     it('should reject --run-migration combined with --if-exists', async () => {
@@ -2971,7 +2973,7 @@ module.exports = {
       ).rejects.toThrow(/cannot be combined with '--if-exists'/);
     });
 
-    it('should accept explicit "off" values of the whole-file flags with --run-migration', async () => {
+    it('should accept explicit "off" values of the other run-phase flags with --run-migration', async () => {
       // --no-agentic / --no-validate and the --if-exists yargs default (false)
       // match what the single-migration path does anyway.
       await expect(
@@ -2984,6 +2986,8 @@ module.exports = {
       ).resolves.toEqual({
         type: 'runSingleMigration',
         runMigration: 'a',
+        agentic: false,
+        validate: false,
       });
     });
 

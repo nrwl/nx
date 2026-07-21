@@ -127,13 +127,14 @@ import {
   validateMigrationEntries,
   writePromptMigrationFiles,
 } from './prompt-files';
+import type { AgenticRunContext } from './agentic/run-step';
 import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX, MigrateArgs } from './command-object';
 import {
   applyNxJsonMigrateDefaults,
   assertCommitPrefixHasCommits,
 } from './migrate-config';
-import type { EnabledResolvedAgentic, ResolvedAgentic } from './agentic/types';
+import type { ResolvedAgentic } from './agentic/types';
 import { applyAgenticHandoffGitignoreFallback } from './agentic/handoff-gitignore';
 import {
   commitCheckpointBeforeMigrations,
@@ -1219,6 +1220,9 @@ type RunMigrations = {
 type RunSingleMigration = {
   type: 'runSingleMigration';
   runMigration: string;
+  agentic: AgenticArg;
+  validate?: boolean;
+  interactive?: boolean;
 };
 
 export async function parseMigrationsOptions(
@@ -1246,19 +1250,9 @@ export async function parseMigrationsOptions(
         `Error: '--run-migration' cannot be combined with '--multi-major-mode'.`
       );
     }
-    // The flags below only apply when running the whole migrations file, so an
-    // explicit "on" value is a conflict; their explicit "off" values match what
-    // this path does anyway and are tolerated (--if-exists defaults to false).
-    if (options.agentic !== undefined && options.agentic !== false) {
-      throw new Error(
-        `Error: '--run-migration' cannot be combined with '--agentic'.`
-      );
-    }
-    if (options.validate === true) {
-      throw new Error(
-        `Error: '--run-migration' cannot be combined with '--validate'.`
-      );
-    }
+    // `--if-exists` only applies when running the whole migrations file, so an
+    // explicit "on" value is a conflict; its yargs default (false) matches what
+    // this path does anyway and is tolerated.
     if (options.ifExists === true) {
       throw new Error(
         `Error: '--run-migration' cannot be combined with '--if-exists'.`
@@ -1267,6 +1261,9 @@ export async function parseMigrationsOptions(
     return {
       type: 'runSingleMigration',
       runMigration: options.runMigration,
+      agentic: options.agentic,
+      validate: options.validate,
+      interactive: options.interactive,
     };
   }
 
@@ -2614,13 +2611,7 @@ export async function executeMigrations(
   });
 
   // Lazy-load the agentic chain so non-agentic runs don't pay its startup cost.
-  let agenticRun:
-    | {
-        agentic: EnabledResolvedAgentic;
-        runDir: string;
-        runStep: typeof import('./agentic/run-step').runAgenticPromptStep;
-      }
-    | undefined;
+  let agenticRun: AgenticRunContext | undefined;
   if (agentic?.kind === 'enabled' && sortedMigrations.length > 0) {
     const { initRunDir, resolveAgenticRunId } =
       require('./agentic/handoff') as typeof import('./agentic/handoff');
@@ -3667,55 +3658,18 @@ async function runSingleMigrationFromCli(
     return handOffToLocalNx(args);
   }
 
-  const commitPrefix: string =
-    mergedArgs['commitPrefix'] ?? DEFAULT_MIGRATION_COMMIT_PREFIX;
-  const requestedCreateCommits: boolean | undefined =
-    mergedArgs['createCommits'];
-  // Standalone commits follow the CLI flags, resolved the same way the classic
-  // loop resolves them: --create-commits without a git repo is a hard error and
-  // a custom prefix without commits warns. Agentic never applies on this path.
-  const resolved = resolveCreateCommits({
-    createCommits: requestedCreateCommits,
-    agenticKind: 'disabled',
-    isGitRepo: isGitRepository(root),
-    commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
-  });
-  if (resolved.error) {
-    throw new Error(resolved.error);
-  }
-  if (resolved.warning) {
-    output.warn({ title: resolved.warning });
-  }
-  const createCommits = resolved.effective;
-
-  const interactive: boolean | undefined = mergedArgs['interactive'];
-  // Confirm before committing on the default branch when prompting is
-  // possible; a decline aborts before the migration runs.
-  if (createCommits && canPrompt(interactive)) {
-    const currentBranch = getGitCurrentBranch(root);
-    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
-    // generator); compare against the local branch name.
-    const defaultBranch = getBaseRef(readNxJson(root)).replace(/^origin\//, '');
-    const proceed = await confirmCommitsOnDefaultBranch({
-      currentBranch,
-      defaultBranch,
-    });
-    if (!proceed) {
-      output.log({
-        title: `Skipped running the migration to avoid committing to the default branch '${currentBranch}'.`,
-        bodyLines: [
-          'Switch to a different branch and re-run, or re-run and confirm to proceed.',
-        ],
-      });
-      return;
-    }
-  }
-
+  // The worker resolves the agentic flow, the effective commit config, and
+  // the default-branch confirmation itself; hand it the raw flags.
   await runSingleMigrationWorker({
     root,
     options: { runMigration: opts.runMigration },
-    createCommits,
-    commitPrefix,
+    agentic: opts.agentic,
+    validate: opts.validate,
+    createCommits: mergedArgs['createCommits'] as boolean | undefined,
+    commitPrefix:
+      (mergedArgs['commitPrefix'] as string | undefined) ??
+      DEFAULT_MIGRATION_COMMIT_PREFIX,
+    interactive: opts.interactive,
     skipInstall: shouldSkipInstall,
     isVerbose: mergedArgs['verbose'] ?? false,
   });
