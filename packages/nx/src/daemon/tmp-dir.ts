@@ -4,7 +4,7 @@
  * and where we create the actual unix socket/named pipe for the daemon.
  */
 import { chmodSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
 import { tmpdir } from 'tmp';
@@ -93,16 +93,37 @@ export function getPluginSocketDir() {
 
 function createOwnerOnlySocketDir(dir: string): string {
   try {
-    mkdirSync(dir, { recursive: true, mode: 0o700 });
-    // Restrict the socket directory to its owner so that other local users
-    // cannot connect to the sockets inside it (which would let them execute
-    // code in the daemon or a plugin worker). We never touch the shared system
-    // temp dir, which other processes rely on.
-    if (dir !== tmpdir) {
-      restrictToOwner(dir);
+    // The system temp dir is usable by every account on the machine (it is
+    // typically world-writable), so we can never lock it down to the current
+    // user. Refuse to place sockets directly in it - another local user could
+    // connect and execute code in the daemon or a plugin worker. Fall through
+    // to the owner-controlled workspace data dir instead of silently trusting
+    // a shared root.
+    if (resolve(dir) === resolve(tmpdir)) {
+      throw new Error(
+        `Refusing to place Nx sockets directly in the shared system temp directory ('${tmpdir}') because it is accessible to every user on the machine. Set NX_SOCKET_DIR to a directory that only your user can access.`
+      );
     }
+
+    // `mode` only applies to directories mkdirSync actually creates; a
+    // pre-existing directory keeps its current permissions, so we still chmod
+    // it below to guarantee the sockets inside are reachable only by their
+    // owner.
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    restrictToOwner(dir);
     return dir;
   } catch (e) {
+    // Fail closed: fall back to the owner-controlled workspace data dir rather
+    // than a shared location, and lock it down as well. The lockdown is
+    // best-effort so a chmod failure here never prevents the daemon from
+    // obtaining a socket directory.
+    try {
+      mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, {
+        recursive: true,
+        mode: 0o700,
+      });
+      restrictToOwner(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    } catch {}
     return DAEMON_DIR_FOR_CURRENT_WORKSPACE;
   }
 }
