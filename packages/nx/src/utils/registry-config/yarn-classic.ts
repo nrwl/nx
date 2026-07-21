@@ -200,6 +200,10 @@ function resolveAuth(
 // value regardless of whether npm reads it natively, since it drives the auth
 // gate rather than a bridge.
 function alwaysAuthFor(authKey: string, npmrcChain: RcFile[]): boolean {
+  // From the npmrc chain only. An env-supplied //host/:always-auth reaches
+  // yarn's own read just for a host with no dot in it (mergeEnv writes env keys
+  // through objectPath, where a dot is a path separator, while every read is
+  // flat), so consulting one here would authenticate where yarn sends nothing.
   const registryScoped = authKey.startsWith('//')
     ? firstDefined(npmrcChain, `${authKey.replace(/:[^:]+$/, '')}:always-auth`)
         ?.value

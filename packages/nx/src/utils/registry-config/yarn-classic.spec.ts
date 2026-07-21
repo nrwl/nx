@@ -56,6 +56,12 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     }
     // Anchor the <globalPrefix>/etc tier at a controlled directory.
     process.env.PREFIX = PREFIX;
+    // Deleting FAKEROOTKEY above puts production on its root home tier whenever
+    // the run itself is uid 0 (container CI), so pin the uid the cases below
+    // assume and let the root ones opt in.
+    if (process.platform !== 'win32') {
+      jest.spyOn(process, 'getuid' as any).mockReturnValue(501 as any);
+    }
   });
 
   afterEach(() => {
@@ -229,34 +235,22 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   // process.getuid only exists on POSIX, where the root home tier applies.
   const itPosix = process.platform === 'win32' ? it.skip : it;
   itPosix('reads the root /usr/local/share home when running as root', () => {
-    const getuid = jest
-      .spyOn(process, 'getuid' as any)
-      .mockReturnValue(0 as any);
-    try {
-      files['/usr/local/share/.yarnrc'] =
-        'registry "https://reg-root.example.com/"\n';
-      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
-        npm_config_registry: 'https://reg-root.example.com/',
-      });
-    } finally {
-      getuid.mockRestore();
-    }
+    (process.getuid as jest.Mock).mockReturnValue(0);
+    files['/usr/local/share/.yarnrc'] =
+      'registry "https://reg-root.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-root.example.com/',
+    });
   });
 
   itPosix(
     'expands a ~/ cafile against /usr/local/share when running as root',
     () => {
-      const getuid = jest
-        .spyOn(process, 'getuid' as any)
-        .mockReturnValue(0 as any);
-      try {
-        files[`${ROOT}/.yarnrc`] = 'cafile "~/certs/ca.pem"\n';
-        expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
-          npm_config_cafile: resolve('/usr/local/share', 'certs/ca.pem'),
-        });
-      } finally {
-        getuid.mockRestore();
-      }
+      (process.getuid as jest.Mock).mockReturnValue(0);
+      files[`${ROOT}/.yarnrc`] = 'cafile "~/certs/ca.pem"\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_cafile: resolve('/usr/local/share', 'certs/ca.pem'),
+      });
     }
   );
 
