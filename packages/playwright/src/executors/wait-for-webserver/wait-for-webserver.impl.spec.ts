@@ -15,6 +15,9 @@ jest.mock('node:https', () => ({
 
 const context = {} as ExecutorContext;
 
+type AnyServer = Server | ReturnType<typeof createTcpServer>;
+const openServers = new Set<AnyServer>();
+
 describe('waitForWebserverExecutor', () => {
   let errorSpy: jest.SpyInstance;
 
@@ -22,8 +25,13 @@ describe('waitForWebserverExecutor', () => {
     errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     errorSpy.mockRestore();
+    // Closing at the end of a test would be skipped by a failing assertion,
+    // leaving a listening handle behind for the rest of the worker's life.
+    await Promise.all(
+      [...openServers].map((server) => close(server).catch(() => {}))
+    );
   });
 
   it('resolves once a TCP server accepts connections on the port', async () => {
@@ -37,7 +45,6 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: true });
-    await close(server);
   });
 
   it('resolves once an HTTP server responds with a 2xx status', async () => {
@@ -51,7 +58,6 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: true });
-    await close(server);
   });
 
   it('treats an early 4xx (e.g. 403) response as ready, like Playwright', async () => {
@@ -68,7 +74,6 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: true });
-    await close(server);
   });
 
   it('falls back to /index.html when the root url returns 404', async () => {
@@ -85,7 +90,6 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: true });
-    await close(server);
   });
 
   it('follows redirects and evaluates the destination status, like Playwright', async () => {
@@ -113,7 +117,6 @@ describe('waitForWebserverExecutor', () => {
     // The 302 alone already sits inside the ready window, so only the request
     // to the destination proves the chain was actually followed.
     expect(requested).toEqual(['/', '/ready']);
-    await close(server);
   });
 
   it('does not treat an endless redirect loop as ready', async () => {
@@ -135,7 +138,6 @@ describe('waitForWebserverExecutor', () => {
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('redirected more than')
     );
-    await close(server);
   });
 
   it('does not treat a redirect to an unparseable location as ready', async () => {
@@ -156,7 +158,6 @@ describe('waitForWebserverExecutor', () => {
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('redirected to an invalid location')
     );
-    await close(server);
   });
 
   it('waits for every configured server, not just the first', async () => {
@@ -177,7 +178,6 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: false });
-    await close(ready);
   });
 
   it('does not treat a redirect to an unavailable destination as ready', async () => {
@@ -200,7 +200,6 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: false });
-    await close(server);
   });
 
   it('waits for a slow endpoint that responds past the retry interval, like Playwright', async () => {
@@ -219,7 +218,6 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: true });
-    await close(server);
   }, 10000);
 
   it('does not treat a 5xx response as ready', async () => {
@@ -236,7 +234,6 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: false });
-    await close(server);
   });
 
   it('fails when the server never becomes reachable before the timeout', async () => {
@@ -288,16 +285,67 @@ describe('waitForWebserverExecutor', () => {
     await listen(server, 0);
     const { port } = server.address() as AddressInfo;
 
+    // Room for at least one full request/response, otherwise the wait ends
+    // without ever observing the status it is meant to report.
     await waitForWebserverExecutor(
-      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
+      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 1000 },
       context
     );
 
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('responded with status 503')
     );
-    await close(server);
   });
+
+  it('keeps the observed status when a later probe is cut short before it can learn anything', async () => {
+    let responses = 0;
+    const server = createHttpServer((_req, res) => {
+      // Only the first request is answered. The next one is still waiting when
+      // the deadline arrives, too early to call the server unresponsive.
+      if (responses++ === 0) {
+        res.statusCode = 503;
+        res.end();
+      }
+    });
+    await listen(server, 0);
+    const { port } = server.address() as AddressInfo;
+
+    await waitForWebserverExecutor(
+      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 500 },
+      context
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('responded with status 503')
+    );
+  });
+
+  it('reports a server that answers nothing rather than an earlier failure it has moved past', async () => {
+    // Bind and release a port so the first probe is refused, then listen on
+    // it with a handler that never answers.
+    const placeholder = createTcpServer();
+    await listen(placeholder, 0);
+    const { port } = placeholder.address() as AddressInfo;
+    await close(placeholder);
+    const server = createHttpServer(() => {});
+    const timer = setTimeout(
+      () => void listen(server, port).catch(() => {}),
+      50
+    );
+
+    await waitForWebserverExecutor(
+      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 2000 },
+      context
+    );
+
+    clearTimeout(timer);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('did not respond')
+    );
+    expect(errorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('ECONNREFUSED')
+    );
+  }, 10000);
 
   it('reports the connection error when a port never accepts connections', async () => {
     const server = createTcpServer();
@@ -347,7 +395,7 @@ describe('waitForWebserverExecutor', () => {
     expect(Date.now() - start).toBeLessThan(3000);
   });
 
-  it.each([NaN, -1, 65536, 1.5])(
+  it.each([NaN, -1, 0, 65536, 1.5])(
     'fails immediately when the port (%p) cannot be connected to rather than retrying it',
     async (port) => {
       const start = Date.now();
@@ -385,7 +433,10 @@ describe('waitForWebserverExecutor', () => {
       await close(server);
       // Comes up after the first probe has already failed, so a 0 read as
       // "give up immediately" would never see it.
-      const timer = setTimeout(() => void listen(server, port), 300);
+      const timer = setTimeout(
+        () => void listen(server, port).catch(() => {}),
+        300
+      );
 
       const result = await waitForWebserverExecutor(
         level === 'the server'
@@ -396,7 +447,6 @@ describe('waitForWebserverExecutor', () => {
 
       expect(result).toEqual({ success: true });
       clearTimeout(timer);
-      await close(server);
     },
     10000
   );
@@ -447,18 +497,21 @@ function unreachableRequest(): any {
   return request;
 }
 
-function listen(
-  server: Server | ReturnType<typeof createTcpServer>,
-  port: number
-): Promise<void> {
-  return new Promise<void>((resolve) =>
-    server.listen(port, '127.0.0.1', () => resolve())
-  );
+function listen(server: AnyServer, port: number): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    // A released port can be taken again before a test re-listens on it, which
+    // would otherwise surface as an uncaught EADDRINUSE and kill the worker.
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => {
+      server.removeListener('error', reject);
+      openServers.add(server);
+      resolve();
+    });
+  });
 }
 
-function close(
-  server: Server | ReturnType<typeof createTcpServer>
-): Promise<void> {
+function close(server: AnyServer): Promise<void> {
+  openServers.delete(server);
   return new Promise<void>((resolve, reject) =>
     server.close((err) => (err ? reject(err) : resolve()))
   );
