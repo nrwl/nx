@@ -82,8 +82,9 @@ This applies to an endorsement exactly as it applies to a finding, and matters m
 - **Hot path + scales with workspace size** → report (important; critical if it makes any command measurably slower at scale or the daemon leak is unbounded).
 - **Warm path + clearly avoidable waste** → report as important only when the fix is straightforward; otherwise endorse with a note.
 - **Cold path** → not a finding, no matter how inefficient. A generator that clones an array twice is fine.
+- **Weigh a stress test heavily for full-workspace iteration, even on a cold path.** When changed code iterates the entire project/task/candidate set (O(projects) or worse), seriously consider suggesting a stress-test spec at realistic scale (thousands of projects) as an advisory — a scale claim pinned by a test beats one that is only reasoned about. Not a mechanical requirement: skip it when the per-item work is trivially constant and the reasoning is airtight; lean toward asking when the per-item cost is non-obvious (regex/glob work, string algorithms, nested lookups). This is the one softening of the cold-path rule, and it's advisory, never verdict-driving.
 - Constant-factor micro-optimizations (`for` vs `forEach`, string concat style) are never findings.
-- Don't demand benchmarks — reason from call frequency and input scale, and say so.
+- Don't demand benchmarks — reason from call frequency and input scale, and say so. (The stress-test advisory above asks for a unit-level spec, not a benchmark.)
 
 ## Verdicts (report exactly one)
 
