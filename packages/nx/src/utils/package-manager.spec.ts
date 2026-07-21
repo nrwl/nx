@@ -924,6 +924,37 @@ describe('package-manager', () => {
       expect(overlaySpy.mock.calls[0][3]).toBe('1.2.0');
     });
 
+    it('should drop an ambient npm config key that spells an overlaid setting differently', async () => {
+      // npm reads its env tier last-write-wins over the key order it receives,
+      // and the shells in the spawn path reorder it, so both spellings surviving
+      // means the ambient one can win.
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'bun' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+        npm_config_registry: 'https://sentinel.example.com/',
+      });
+      const saved = process.env.NPM_CONFIG_REGISTRY;
+      process.env.NPM_CONFIG_REGISTRY = 'https://ambient.example.com/';
+
+      try {
+        await packageRegistryView('nx', 'latest', '--json');
+      } finally {
+        if (saved === undefined) {
+          delete process.env.NPM_CONFIG_REGISTRY;
+        } else {
+          process.env.NPM_CONFIG_REGISTRY = saved;
+        }
+      }
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.env.NPM_CONFIG_REGISTRY).toBeUndefined();
+      expect(options.env.npm_config_registry).toBe(
+        'https://sentinel.example.com/'
+      );
+    });
+
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
       // A non-JS workspace has no root package.json; its .npmrc and package
       // manager files live under .nx/installation.
