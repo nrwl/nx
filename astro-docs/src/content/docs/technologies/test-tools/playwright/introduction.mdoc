@@ -77,6 +77,14 @@ The `@nx/playwright/plugin` is configured in the `plugins` array in `nx.json`.
 
 The `targetName` and `ciTargetName` options control the name of the inferred Playwright tasks. The default names are `e2e` and `e2e-ci`.
 
+When your Playwright config declares a `webServer` that sets `reuseExistingServer` and whose
+`command` runs an Nx task, such as `npx nx run my-app:serve`, Nx runs that task as a dependency of
+the Playwright tasks instead of letting Playwright start its own server.
+If that `webServer` also sets a `port` or a `url`, Nx infers an extra task that waits for the server
+to accept connections before the tests run.
+The `webServerTimeout` option sets how long, in milliseconds, that task waits before failing.
+It defaults to the `timeout` configured on the `webServer`, or 60000 when neither is set.
+
 ### Splitting E2E tests
 
 `@nx/playwright/plugin` uses Nx Atomizer to automatically split your e2e tests into smaller tasks for more efficient distribution in CI. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
