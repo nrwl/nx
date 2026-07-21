@@ -19,7 +19,7 @@ use crate::native::tui::utils::{
     calculate_actual_duration_ms, format_duration_with_estimate, get_task_status_style,
 };
 use crate::native::{
-    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskGraph},
 };
 
@@ -628,13 +628,12 @@ impl TuiApp for InlineApp {
     ///
     /// Inline mode needs smaller PTYs to fit the compact viewport,
     /// unlike full-screen mode where interactive PTYs use their own dimensions.
-    fn register_running_interactive_task(
-        &mut self,
-        task_id: String,
-        parser_and_writer: &(ParserArc, WriterArc),
-    ) {
-        let mut pty =
-            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+    fn register_running_interactive_task(&mut self, task_id: String, pty_handles: &PtyHandles) {
+        let mut pty = PtyInstance::interactive(
+            pty_handles.0.clone(),
+            pty_handles.1.clone(),
+            pty_handles.2.clone(),
+        );
 
         // Resize PTY to inline dimensions (mode-specific)
         let (rows, cols) = self.calculate_pty_dimensions();

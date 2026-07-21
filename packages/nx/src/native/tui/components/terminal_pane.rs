@@ -1,8 +1,8 @@
 use crate::native::tui::clipboard::copy_to_clipboard;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent};
 use ratatui::{
     buffer::Buffer,
-    layout::{Alignment, Rect},
+    layout::{Alignment, Position, Rect},
     style::{Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{
@@ -472,6 +472,32 @@ impl TerminalPaneData {
             }
         }
         Ok(None)
+    }
+
+    /// Forward a mouse event to the running application when this pane is in
+    /// interactive mode and the app has requested mouse reporting (vim, htop,
+    /// lazygit, ...). Returns true when the event was consumed by the app, in
+    /// which case the TUI's own scroll/select handling must not run.
+    pub fn handle_mouse_event(&mut self, mouse: MouseEvent) -> io::Result<bool> {
+        if !self.is_interactive {
+            return Ok(false);
+        }
+        let Some(pty) = &self.pty else {
+            return Ok(false);
+        };
+        let Some(area) = self.last_content_area else {
+            return Ok(false);
+        };
+        if !area.contains(Position::new(mouse.column, mouse.row)) {
+            return Ok(false);
+        }
+        let mut pty_mut = pty.as_ref().clone();
+        pty_mut.forward_mouse_event(
+            mouse.kind,
+            mouse.modifiers,
+            mouse.column - area.x,
+            mouse.row - area.y,
+        )
     }
 
     pub fn set_interactive(&mut self, interactive: bool) {

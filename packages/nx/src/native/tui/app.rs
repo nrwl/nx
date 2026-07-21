@@ -22,7 +22,7 @@ use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetSta
 
 use crate::native::tui::tui::Tui;
 use crate::native::{
-    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskResult},
 };
 
@@ -143,6 +143,9 @@ pub struct App {
     /// Whether the TUI is currently capturing the mouse. Toggled with F10 so the
     /// user can fall back to their terminal's native cell selection.
     mouse_capture_enabled: bool,
+    /// Whether any-motion tracking (?1003) is currently enabled on the outer
+    /// terminal, mirroring an interactive pane's app that requested it.
+    any_motion_capture_enabled: bool,
     /// An in-progress (or completed-but-still-highlighted) text selection over a
     /// rendered region (popup text area or task list), in screen coordinates.
     region_selection: Option<RegionSelection>,
@@ -571,6 +574,7 @@ impl App {
             last_click: None,
             selecting_pane: None,
             mouse_capture_enabled: true,
+            any_motion_capture_enabled: false,
             region_selection: None,
             region_snapshot: None,
             pending_list_click: None,
@@ -826,14 +830,13 @@ impl App {
     }
 
     // A pseudo-terminal running task will provide the parser and writer directly
-    pub fn register_running_interactive_task(
-        &mut self,
-        task_id: String,
-        parser_and_writer: &(ParserArc, WriterArc),
-    ) {
+    pub fn register_running_interactive_task(&mut self, task_id: String, pty_handles: &PtyHandles) {
         debug!("Registering interactive task: {}", task_id);
-        let pty =
-            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+        let pty = PtyInstance::interactive(
+            pty_handles.0.clone(),
+            pty_handles.1.clone(),
+            pty_handles.2.clone(),
+        );
         self.register_running_task(task_id, pty);
     }
 
@@ -1542,7 +1545,9 @@ impl App {
                         self.close_popup(Focus::HintPopup);
                     }
                 } else {
+                    // The disable sequence resets ?1003 too.
                     let _ = crate::native::tui::tui::disable_mouse_capture();
+                    self.any_motion_capture_enabled = false;
                     // In-app selections can no longer be updated by the mouse.
                     self.clear_all_pane_selections();
                     self.region_selection = None;
@@ -1826,6 +1831,7 @@ impl App {
                 })
                 .ok();
                 self.mouse_regions = captured_regions;
+                self.sync_any_motion_capture();
             }
             Action::SendConsoleMessage(msg) => {
                 let state = self.core.state().lock();
@@ -2496,6 +2502,19 @@ impl App {
         }
 
         let (col, row) = (mouse.column, mouse.row);
+
+        // An interactive pane running an app that requested mouse reporting
+        // (vim, htop, lazygit, ...) gets events over its content forwarded to
+        // the app; the TUI's own scroll/select/focus handling applies
+        // everywhere else and to apps that never asked for the mouse.
+        if let Some(MouseRegionKind::Pane(pane_idx)) = self.region_at(col, row)
+            && self.terminal_pane_data[pane_idx]
+                .handle_mouse_event(mouse)
+                .unwrap_or(false)
+        {
+            return;
+        }
+
         match mouse.kind {
             MouseEventKind::ScrollUp => self.scroll_at(col, row, ScrollDirection::Up, action_tx),
             MouseEventKind::ScrollDown => {
@@ -2505,6 +2524,31 @@ impl App {
             MouseEventKind::Drag(MouseButton::Left) => self.handle_left_drag(col, row),
             MouseEventKind::Up(MouseButton::Left) => self.handle_left_release(col, row),
             _ => {}
+        }
+    }
+
+    /// The outer terminal normally runs in button-event tracking (?1002) so
+    /// bare hover motion doesn't flood the event loop. An interactive pane
+    /// whose app asked for any-motion tracking (?1003) needs those hover
+    /// events to forward, so mirror the request on the outer terminal while it
+    /// holds and drop back to the narrow set once it no longer does.
+    fn sync_any_motion_capture(&mut self) {
+        let wanted = self.mouse_capture_enabled
+            && self.terminal_pane_data.iter().any(|pane| {
+                pane.is_interactive()
+                    && pane
+                        .pty
+                        .as_ref()
+                        .and_then(|pty| pty.mouse_protocol())
+                        .is_some_and(|(mode, _)| mode == vt100_ctt::MouseProtocolMode::AnyMotion)
+            });
+        if wanted != self.any_motion_capture_enabled {
+            self.any_motion_capture_enabled = wanted;
+            let _ = if wanted {
+                crate::native::tui::tui::enable_any_motion_capture()
+            } else {
+                crate::native::tui::tui::disable_any_motion_capture()
+            };
         }
     }
 

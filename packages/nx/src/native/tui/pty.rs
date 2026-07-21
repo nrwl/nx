@@ -1,7 +1,9 @@
+use super::mouse_protocol::encode_mouse_event;
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::strings::display_width;
 use super::utils::normalize_newlines;
-use crossterm::event::{KeyCode, KeyEvent};
+use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, resize_master};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use std::{
     io::{self, Write},
@@ -64,6 +66,10 @@ struct ScrollbackState {
 pub struct PtyInstance {
     parser: Arc<RwLock<Parser>>,
     writer: Option<Arc<Mutex<Box<dyn Write + Send>>>>,
+    /// Control end of the underlying pty, when the task actually runs in one.
+    /// Resizing the parser only changes how we render captured bytes; resizing
+    /// the master is what tells the child process to redraw at the new size.
+    master: Option<MasterArc>,
     dimensions: Arc<RwLock<(u16, u16)>>,
     scroll_momentum: Arc<Mutex<ScrollMomentum>>,
     /// Generation counter for async resize. Incremented on each resize request
@@ -380,12 +386,14 @@ impl PtyInstance {
     pub fn interactive(
         parser: Arc<RwLock<Parser>>,
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
+        master: MasterArc,
     ) -> Self {
         // Read the dimensions from the parser
         let (rows, cols) = parser.read().screen().size();
         Self {
             parser,
             writer: Some(writer),
+            master: Some(master),
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
@@ -413,6 +421,7 @@ impl PtyInstance {
         Self {
             parser,
             writer: None,
+            master: None,
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
@@ -437,6 +446,7 @@ impl PtyInstance {
         Self {
             parser,
             writer: None,
+            master: None,
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
@@ -474,6 +484,16 @@ impl PtyInstance {
         }
     }
 
+    /// Resize the underlying pty, raising SIGWINCH in the child.
+    ///
+    /// Tasks that don't run in a pty (batch tasks, forked processes) have no
+    /// master and simply have nothing to notify.
+    fn notify_child_of_resize(&self, rows: u16, cols: u16) {
+        if let Some(master) = &self.master {
+            resize_master(master, rows, cols);
+        }
+    }
+
     pub fn resize(&mut self, rows: u16, cols: u16) -> io::Result<()> {
         // Ensure minimum sizes
         let rows = rows.max(3);
@@ -497,6 +517,9 @@ impl PtyInstance {
         if !should_resize {
             return Ok(());
         }
+
+        // Tell the child process its window changed so it redraws at the new size
+        self.notify_child_of_resize(rows, cols);
 
         // Update dimensions
         let mut dimensions_guard = self.dimensions.write();
@@ -559,6 +582,13 @@ impl PtyInstance {
 
         // Increment generation to cancel any in-flight resize
         let generation = self.resize_generation.fetch_add(1, Ordering::SeqCst) + 1;
+
+        // Tell the child process its window changed so it redraws at the new size.
+        // This is independent of the reparse below: the reparse re-wraps the bytes
+        // we have already captured (which is what keeps scrollback correct), while
+        // this is what makes the child itself emit correctly-sized output from here
+        // on. Full-screen children (opentui, ink, vim...) only relayout on SIGWINCH.
+        self.notify_child_of_resize(rows, cols);
 
         // Update dimensions immediately so subsequent resize calls see the new
         // target and early-return instead of spawning redundant threads
@@ -640,6 +670,45 @@ impl PtyInstance {
 
     pub fn get_dimensions(&self) -> (u16, u16) {
         *self.dimensions.read()
+    }
+
+    /// The mouse reporting mode and encoding the child app has requested via
+    /// DECSET (`?9`/`?1000`/`?1002`/`?1003` and `?1005`/`?1006`). `None` when
+    /// the parser is momentarily write-locked by the output thread.
+    pub fn mouse_protocol(
+        &self,
+    ) -> Option<(
+        vt100_ctt::MouseProtocolMode,
+        vt100_ctt::MouseProtocolEncoding,
+    )> {
+        let parser = self.parser.try_read()?;
+        let screen = parser.screen();
+        Some((
+            screen.mouse_protocol_mode(),
+            screen.mouse_protocol_encoding(),
+        ))
+    }
+
+    /// Forward a mouse event to the child app if it has requested mouse
+    /// reporting. `col`/`row` are 0-based cells relative to the child's
+    /// screen. Returns whether the event was written.
+    pub fn forward_mouse_event(
+        &mut self,
+        kind: MouseEventKind,
+        modifiers: KeyModifiers,
+        col: u16,
+        row: u16,
+    ) -> io::Result<bool> {
+        let Some((mode, encoding)) = self.mouse_protocol() else {
+            return Ok(false);
+        };
+        match encode_mouse_event(mode, encoding, kind, modifiers, col, row) {
+            Some(bytes) => {
+                self.write_input(&bytes)?;
+                Ok(true)
+            }
+            None => Ok(false),
+        }
     }
 
     pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
@@ -1033,6 +1102,7 @@ impl PtyInstance {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use portable_pty::PtySystem;
     use std::sync::Arc;
 
     fn create_test_pty_instance(alternate_screen: bool) -> PtyInstance {
@@ -1046,6 +1116,7 @@ mod tests {
         PtyInstance {
             parser,
             writer: None,
+            master: None,
             dimensions: Arc::new(RwLock::new((24, 80))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
@@ -1277,5 +1348,76 @@ mod tests {
         // Jumping to the very end clamps to the bottom.
         pty.scroll_to_visual_row(10_000);
         assert_eq!(pty.get_scroll_offset(), 0);
+    }
+
+    /// Build an interactive PtyInstance backed by a real pty, returning the
+    /// instance alongside the master so tests can read back the winsize the
+    /// kernel reports — which is what the child process sees.
+    fn create_interactive_pty_instance(rows: u16, cols: u16) -> (PtyInstance, MasterArc) {
+        let pair = portable_pty::NativePtySystem::default()
+            .openpty(portable_pty::PtySize {
+                rows,
+                cols,
+                pixel_width: 0,
+                pixel_height: 0,
+            })
+            .expect("failed to open pty");
+
+        let writer = Arc::new(Mutex::new(pair.master.take_writer().unwrap()));
+        let master: MasterArc = Arc::new(Mutex::new(pair.master));
+        let parser = Arc::new(RwLock::new(Parser::new(rows, cols, 1000)));
+
+        let pty = PtyInstance::interactive(parser, writer, master.clone());
+        (pty, master)
+    }
+
+    fn master_size(master: &MasterArc) -> (u16, u16) {
+        let size = master.lock().get_size().expect("failed to read pty size");
+        (size.rows, size.cols)
+    }
+
+    #[test]
+    fn test_resize_updates_kernel_winsize() {
+        let (mut pty, master) = create_interactive_pty_instance(24, 80);
+        assert_eq!(master_size(&master), (24, 80));
+
+        pty.resize(30, 100).unwrap();
+
+        // The kernel-reported size is what the child sees via TIOCGWINSZ, and
+        // changing it is what raises SIGWINCH. Without this the child keeps
+        // rendering at its original dimensions no matter how the pane changes.
+        assert_eq!(master_size(&master), (30, 100));
+        assert_eq!(pty.get_dimensions(), (30, 100));
+    }
+
+    #[test]
+    fn test_resize_async_updates_kernel_winsize() {
+        let (pty, master) = create_interactive_pty_instance(24, 80);
+
+        // The reparse is backgrounded, but the child must be notified eagerly —
+        // so the ioctl lands before resize_async returns.
+        pty.resize_async(40, 120);
+
+        assert_eq!(master_size(&master), (40, 120));
+    }
+
+    #[test]
+    fn test_resize_to_same_dimensions_does_not_notify_child() {
+        let (mut pty, master) = create_interactive_pty_instance(24, 80);
+
+        pty.resize(24, 80).unwrap();
+
+        // No spurious SIGWINCH: a no-op resize must stay a no-op, otherwise every
+        // redraw would kick full-screen children into relayouting.
+        assert_eq!(master_size(&master), (24, 80));
+    }
+
+    #[test]
+    fn test_non_interactive_pty_resize_has_no_master_to_notify() {
+        // Tasks without a pty (batch tasks, forked processes) still resize their
+        // parser for rendering; they just have no child to signal.
+        let mut pty = PtyInstance::non_interactive_with_dimensions(24, 80);
+        pty.resize(30, 100).unwrap();
+        assert_eq!(pty.get_dimensions(), (30, 100));
     }
 }

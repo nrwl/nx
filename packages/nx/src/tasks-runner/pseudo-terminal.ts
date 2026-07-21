@@ -235,8 +235,8 @@ export class PseudoTtyProcess implements RunningTask {
     }
   }
 
-  getParserAndWriter() {
-    return this.childProcess.getParserAndWriter();
+  getPtyHandles() {
+    return this.childProcess.getPtyHandles();
   }
 }
 
