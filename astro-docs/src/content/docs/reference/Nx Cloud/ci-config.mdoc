@@ -47,7 +47,7 @@ The file has five top-level sections. All are optional, and each falls back to i
 | `ai`        | Self-healing CI configuration.                                      |
 | `dte`       | Distributed task execution: how tasks are distributed to Nx Agents. |
 | `nx-agents` | Configuration for the Nx Agents themselves.                         |
-| `overrides` | Per-environment overrides keyed by `NX_CLOUD_ENV`.                  |
+| `overrides` | Per-environment overrides keyed by `NX_CI_EXECUTION_ENV`.           |
 
 ## `lifecycle`
 
@@ -212,7 +212,7 @@ Type: array of strings.
 
 ## `overrides`
 
-Per-environment overrides keyed by `NX_CLOUD_ENV` value.
+Per-environment overrides keyed by [`NX_CI_EXECUTION_ENV`](/docs/reference/environment-variables) value.
 Each override is a partial config that takes precedence over the base sections when its key matches the active environment.
 This has no `start-ci-run` flag equivalent. It is specific to the config file.
 
@@ -227,6 +227,6 @@ overrides:
       fail-after: 0
 ```
 
-In this example the run stops on the first failure everywhere, except when `NX_CLOUD_ENV` is `main`, where it runs to completion.
+In this example the run stops on the first failure everywhere, except when `NX_CI_EXECUTION_ENV` is `main`, where it runs to completion.
 
 An override only replaces the sections you set. Sections you leave out fall back to the base config, and the base config falls back to defaults.
