@@ -14,7 +14,6 @@ pub type ParameterMap = HashMap<String, String>;
 pub(crate) struct EventData {
     pub name: String,
     pub parameters: ParameterMap,
-    pub debug_mode: bool,
 }
 
 /// Page view data to be tracked
@@ -23,7 +22,6 @@ pub(crate) struct PageViewData {
     pub title: String,
     pub location: Option<String>,
     pub parameters: ParameterMap,
-    pub debug_mode: bool,
 }
 
 /// Configuration for initializing the telemetry service.
@@ -196,10 +194,13 @@ impl TelemetryService {
         event_name: String,
         parameters: Option<HashMap<String, String>>,
     ) -> Result<()> {
+        let mut parameters = parameters.unwrap_or_default();
+        if read_debug_mode() {
+            parameters.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+        }
         let event = EventData {
             name: event_name,
-            parameters: parameters.unwrap_or_default(),
-            debug_mode: read_debug_mode(),
+            parameters,
         };
 
         if let Some(tx) = self.event_tx.lock().as_ref() {
@@ -216,11 +217,14 @@ impl TelemetryService {
         page_location: Option<String>,
         parameters: Option<HashMap<String, String>>,
     ) -> Result<()> {
+        let mut parameters = parameters.unwrap_or_default();
+        if read_debug_mode() {
+            parameters.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+        }
         let page_view = PageViewData {
             title: page_title,
             location: page_location,
-            parameters: parameters.unwrap_or_default(),
-            debug_mode: read_debug_mode(),
+            parameters,
         };
 
         if let Some(tx) = self.page_view_tx.lock().as_ref() {
@@ -264,9 +268,6 @@ fn enqueue_event(
     queue: &mut Vec<ParameterMap>,
 ) {
     let mut params = user_params.clone();
-    if event.debug_mode {
-        params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
-    }
     params.extend(event.parameters);
     params.insert(
         event_param::EVENT_NAME.to_string(),
@@ -287,9 +288,6 @@ fn enqueue_page_view(
     queue: &mut Vec<ParameterMap>,
 ) {
     let mut params = user_params.clone();
-    if page_view.debug_mode {
-        params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
-    }
     params.extend(page_view.parameters);
     params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
     params.insert(
@@ -315,10 +313,10 @@ fn read_debug_mode() -> bool {
 
 /// Events without a sample_rate param always pass. A stamped event passes
 /// when the first 8 hex chars of the live session UUID map onto [0,1) below
-/// the rate, so a sampled-in session keeps every span. Debug mode bypasses
-/// sampling.
-fn is_sampled_in(debug_mode: bool, session_id: &str, parameters: &ParameterMap) -> bool {
-    if debug_mode {
+/// the rate, so a sampled-in session keeps every span. Debug-mode events
+/// (stamped _dbg at track time) always pass.
+fn is_sampled_in(session_id: &str, parameters: &ParameterMap) -> bool {
+    if parameters.contains_key(request_param::DEBUG_VIEW) {
         return true;
     }
     let Some(rate) = parameters
@@ -344,7 +342,7 @@ fn drain_channels(
     page_view_queue: &mut Vec<ParameterMap>,
 ) {
     while let Ok(event) = event_rx.try_recv() {
-        if !is_sampled_in(event.debug_mode, session_id, &event.parameters) {
+        if !is_sampled_in(session_id, &event.parameters) {
             continue;
         }
         enqueue_event(
@@ -420,7 +418,7 @@ fn background_sender(
                 match msg {
                     Ok(event) => {
                         session.touch(&mut common_params);
-                        if is_sampled_in(event.debug_mode, &session.session_id, &event.parameters) {
+                        if is_sampled_in(&session.session_id, &event.parameters) {
                             tracing::trace!("Queuing event: {}", event.name);
                             enqueue_event(event, &user_params, current_page_title.as_deref(), &mut event_queue);
                         } else {
@@ -737,7 +735,6 @@ mod tests {
     #[test]
     fn events_without_sample_rate_always_pass() {
         assert!(is_sampled_in(
-            false,
             "ffffffff-0000-4000-8000-000000000000",
             &HashMap::new()
         ));
@@ -747,12 +744,10 @@ mod tests {
     fn sessions_below_the_rate_threshold_are_sampled_in() {
         // 0x00000000 / 2^32 = 0 and 0x19999999 / 2^32 ≈ 0.0999999998
         assert!(is_sampled_in(
-            false,
             "00000000-0000-4000-8000-000000000000",
             &params_with_rate("0.1")
         ));
         assert!(is_sampled_in(
-            false,
             "19999999-0000-4000-8000-000000000000",
             &params_with_rate("0.1")
         ));
@@ -762,12 +757,10 @@ mod tests {
     fn sessions_at_or_above_the_rate_threshold_are_sampled_out() {
         // 0x1999999a / 2^32 ≈ 0.1000000001
         assert!(!is_sampled_in(
-            false,
             "1999999a-0000-4000-8000-000000000000",
             &params_with_rate("0.1")
         ));
         assert!(!is_sampled_in(
-            false,
             "ffffffff-0000-4000-8000-000000000000",
             &params_with_rate("0.1")
         ));
@@ -775,23 +768,23 @@ mod tests {
 
     #[test]
     fn malformed_session_ids_are_sampled_out() {
-        assert!(!is_sampled_in(false, "zzz", &params_with_rate("0.1")));
-        assert!(!is_sampled_in(false, "", &params_with_rate("0.1")));
+        assert!(!is_sampled_in("zzz", &params_with_rate("0.1")));
+        assert!(!is_sampled_in("", &params_with_rate("0.1")));
     }
 
     #[test]
     fn debug_mode_bypasses_sampling() {
+        let mut params = params_with_rate("0.1");
+        params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
         assert!(is_sampled_in(
-            true,
             "ffffffff-0000-4000-8000-000000000000",
-            &params_with_rate("0.1")
+            &params
         ));
     }
 
     #[test]
     fn unparseable_rates_pass() {
         assert!(is_sampled_in(
-            false,
             "ffffffff-0000-4000-8000-000000000000",
             &params_with_rate("not-a-number")
         ));
