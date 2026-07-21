@@ -8,6 +8,7 @@ import {
   updateJson,
   isVerboseE2ERun,
   readFile,
+  trimDaemonLog,
 } from '@nx/e2e-utils';
 import { spawn } from 'child_process';
 import treeKill from 'tree-kill';
@@ -58,10 +59,21 @@ describe('Nx Watch', () => {
   });
 
   afterEach(() => {
-    if (process.env.NX_E2E_OUTPUT_DAEMON_LOGS === 'true') {
-      let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
+    // Dump before reset (which stops the daemon), so CI shows the watcher's
+    // batch emissions next to a failing assertion.
+    try {
+      const daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
       const testName = expect.getState().currentTestName;
-      console.log(`${testName} daemon log: \n${daemonLog}`);
+      if (process.env.NX_E2E_OUTPUT_DAEMON_LOGS === 'true') {
+        console.log(`${testName} daemon log: \n${daemonLog}`);
+      } else {
+        // Trimmed — see trimDaemonLog; the raw log is thousands of lines.
+        console.log(
+          `${testName} daemon log (trimmed): \n${trimDaemonLog(daemonLog)}`
+        );
+      }
+    } catch (e) {
+      console.log(`[watch-debug] failed to read daemon log: ${e}`);
     }
     runCLI('reset');
   });

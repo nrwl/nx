@@ -803,6 +803,50 @@ mod tests {
     }
 
     #[test]
+    fn write_immediately_after_watch_registration_is_captured() {
+        // The daemon starts watching before scanning the workspace; that
+        // only closes the boot blind window if a write landing right after
+        // watch() returns is never missed. No settling sleep on purpose —
+        // start_watcher() is not used because it sleeps after registration.
+        let dir = tempdir().expect("tempdir");
+        let canonical = dir.path().canonicalize().expect("canonicalize tempdir");
+        let mut watcher = Watcher::new(
+            canonical.to_str().expect("utf-8 path").to_string(),
+            None,
+            Some(false),
+        );
+        let captured: Captured = Arc::new(Mutex::new(Vec::new()));
+        let captured_for_cb = captured.clone();
+        let callback: WatchEventCallback = Box::new(move |res| {
+            if let Ok(events) = res {
+                captured_for_cb.lock().unwrap().extend(events);
+            }
+        });
+        watcher.watch_inner(callback).expect("start watch");
+
+        fs::write(canonical.join("boot.txt"), "x").expect("write");
+
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            let flushed = watcher.force_flush_pending();
+            let seen = flushed.iter().any(|e| e.path == "boot.txt")
+                || captured
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .any(|e| e.path == "boot.txt");
+            if seen {
+                break;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "write immediately after watch registration was never reported"
+            );
+            std::thread::sleep(Duration::from_millis(50));
+        }
+    }
+
+    #[test]
     fn force_flush_pending_captures_trickling_burst() {
         // Regression: force-flush used to drain only already-arrived events,
         // cutting a burst delivered with gaps mid-stream and serving a stale
