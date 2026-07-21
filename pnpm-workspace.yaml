@@ -30,6 +30,7 @@ overrides:
   hasown: '2.0.4'
   '@xhmikosr/decompress': '10.2.1'
   websocket-driver: '^0.7.5'
+  tar: '^7.5.19'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
