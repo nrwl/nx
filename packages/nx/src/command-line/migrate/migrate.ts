@@ -3784,9 +3784,10 @@ export async function runMigration() {
       ) {
         delete process.env.npm_config_registry;
       }
-      // Intentionally not runNxSync: `p` is a freshly installed nx (from
-      // nxCliPath()), so migrations run against the target version rather than
-      // the nx currently executing this process.
+      // Intentionally not runNxSync: `p` is an nx CLI freshly installed into a
+      // temp dir by nxCliPath() (latest, or NX_MIGRATE_CLI_VERSION), so
+      // migrations run with an up-to-date migrate implementation instead of
+      // the workspace's current nx.
       return runOrReturnExitCode(() =>
         execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
