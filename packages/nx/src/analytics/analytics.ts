@@ -53,6 +53,13 @@ export type EventParameters = Partial<
 
 let _telemetryInitialized = false;
 
+/**
+ * Fraction of sessions that report perf spans. Stamping this rate on a
+ * measure's detail (as the sampleRate dimension) opts it into sampling; see
+ * is_sampled_in in native/telemetry/service.rs. Multiply GA counts by 1/rate.
+ */
+export const PERF_SPAN_SAMPLE_RATE = 0.1;
+
 export async function startAnalytics() {
   // Analytics not supported on WASM
   if (IS_WASM) {
