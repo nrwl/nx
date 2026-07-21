@@ -220,6 +220,12 @@ This has no `start-ci-run` flag equivalent. It is specific to the config file.
 # .nx/ci-config.yaml
 dte:
   distribute-on: 5 linux-large
+  assignment-rules:
+    - targets:
+        - e2e-ci
+      run-on:
+        - agent: linux-large
+          parallelism: 1
 
 overrides:
   main:
@@ -232,7 +238,10 @@ overrides:
               parallelism: 1
 ```
 
-In this example every environment distributes across `linux-large` agents.
-When `NX_CI_EXECUTION_ENV` is `main`, an assignment rule additionally pins `e2e-ci` tasks to a `linux-extra-large` agent.
+In this example every environment distributes across `linux-large` agents and routes `e2e-ci` tasks to a `linux-large` agent.
+When `NX_CI_EXECUTION_ENV` is `main`, the override replaces `assignment-rules`, routing `e2e-ci` to a `linux-extra-large` agent instead.
+
+Overrides apply per key. An override replaces the base value for the keys it sets, so an array like `assignment-rules` is replaced as a whole rather than merged with the base rules.
+Keys the override does not set keep their base values, so `distribute-on` remains `5 linux-large` on `main`.
 
 An override only replaces the sections you set. Sections you leave out fall back to the base config, and the base config falls back to defaults.

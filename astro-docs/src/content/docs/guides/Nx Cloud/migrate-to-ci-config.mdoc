@@ -91,8 +91,8 @@ Commit both changes together and run the pipeline. Confirm that:
 
 ## Per-environment overrides
 
-A `start-ci-run` command carries one fixed set of flags. To vary configuration by environment, you branched in your CI workflow, either with conditional flags or with separate jobs per environment.
-The config file replaces that with [`overrides`](/docs/reference/nx-cloud/ci-config#overrides), keyed by `NX_CI_EXECUTION_ENV`. You keep the differences in one file instead of spread across your CI configuration.
+With `start-ci-run`, giving different pipelines different behavior meant passing different flags to each one.
+The config file replaces that with [`overrides`](/docs/reference/nx-cloud/ci-config#overrides), keyed by `NX_CI_EXECUTION_ENV`, so those per-environment differences live in one file.
 
 ```yaml
 # .nx/ci-config.yaml
