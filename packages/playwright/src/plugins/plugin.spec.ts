@@ -1051,6 +1051,49 @@ describe('@nx/playwright/plugin', () => {
     );
   });
 
+  it.each([
+    { port: 0 },
+    { url: '' },
+    // Playwright probes the url's port over TCP here, which is not the check
+    // the readiness task would run.
+    { port: 0, url: 'http://127.0.0.1:4200' },
+  ])(
+    'should not infer a wait-for-webserver task when the webServer sets %p',
+    async (server) => {
+      await mockPlaywrightConfig(tempFs, {
+        testDir: 'tests',
+        webServer: {
+          command: 'npx nx run app1:serve',
+          reuseExistingServer: true,
+          ...server,
+        },
+      });
+      await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const project = results[0][1].projects['.'];
+      const { targets } = project;
+
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+      ]);
+      expect(targets['e2e'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+      ]);
+      expect(project.metadata.targetGroups['E2E (CI)']).not.toContain(
+        'e2e--wait-for-webserver'
+      );
+    }
+  );
+
   it('should default the wait-for-webserver timeout to the configured webServer.timeout', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',

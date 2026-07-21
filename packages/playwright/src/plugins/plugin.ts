@@ -34,9 +34,9 @@ export interface PlaywrightPluginOptions {
   ciTargetName?: string;
   /**
    * Maximum time in milliseconds the inferred web server readiness task waits
-   * for the server to accept connections before failing. Overrides the
-   * `timeout` configured on Playwright's `webServer`. Defaults to that
-   * configured timeout, or 60000 when neither is set.
+   * for a server to be ready before failing. Overrides the `timeout` each
+   * Playwright `webServer` configures. Defaults to that configured timeout,
+   * or 60000 when neither is set.
    */
   webServerTimeout?: number;
 }
@@ -53,6 +53,13 @@ type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 interface WebserverCommandTask {
   project: string;
   target: string;
+  port?: number;
+  url?: string;
+  ignoreHTTPSErrors?: boolean;
+  timeout?: number;
+}
+
+interface WebserverReadinessServer {
   port?: number;
   url?: string;
   ignoreHTTPSErrors?: boolean;
@@ -196,31 +203,13 @@ async function buildPlaywrightTargets(
   const webserverCommandTasks = getWebserverCommandTasks(playwrightConfig);
 
   // When an inferred web server exposes a port/url, add a task that waits for
-  // it to accept connections. Playwright's `reuseExistingServer` probe
+  // it to be ready. Playwright's `reuseExistingServer` probe
   // otherwise races the server boot, misses, and spawns its own nested server
   // command whose I/O then leaks into the task. Both the `e2e` task and the
   // atomized CI tasks depend on it.
-  const webserverReadinessTasks = webserverCommandTasks.filter(
-    (task) => task.port != null || task.url != null
-  );
-  const webserverReadinessServers = webserverReadinessTasks.map((task) => {
-    const server: {
-      port?: number;
-      url?: string;
-      ignoreHTTPSErrors?: boolean;
-      timeout?: number;
-    } = task.port != null ? { port: task.port } : { url: task.url };
-    if (task.ignoreHTTPSErrors) {
-      server.ignoreHTTPSErrors = true;
-    }
-    // Carry each server's own `webServer.timeout` (the budget Playwright waits
-    // for a server it starts) so a slow server is not cut short and a fast one
-    // is not given another server's budget.
-    if (task.timeout != null) {
-      server.timeout = task.timeout;
-    }
-    return server;
-  });
+  const webserverReadinessServers = webserverCommandTasks
+    .map(toReadinessServer)
+    .filter(Boolean);
   const webserverReadyTargetName =
     webserverReadinessServers.length > 0
       ? `${options.targetName}--wait-for-webserver`
@@ -620,6 +609,37 @@ function getWebserverCommandTasks(
   }
 
   return tasks;
+}
+
+// Playwright picks a web server's readiness probe by presence rather than
+// truthiness: a defined `port` makes it check that port over TCP even when the
+// value is falsy and the address comes from `url`, and a web server it can
+// address neither way gets no probe at all. Gate only on what both read the
+// same way, so the gate cannot fail where Playwright would have found the
+// server.
+function toReadinessServer(
+  task: WebserverCommandTask
+): WebserverReadinessServer | undefined {
+  let server: WebserverReadinessServer;
+  if (task.port) {
+    server = { port: task.port };
+  } else if (task.url && task.port == null) {
+    server = { url: task.url };
+  } else {
+    return undefined;
+  }
+
+  if (task.ignoreHTTPSErrors) {
+    server.ignoreHTTPSErrors = true;
+  }
+  // Carry each server's own `webServer.timeout` (the budget Playwright waits
+  // for a server it starts) so a slow server is not cut short and a fast one
+  // is not given another server's budget.
+  if (task.timeout != null) {
+    server.timeout = task.timeout;
+  }
+
+  return server;
 }
 
 function parseTaskFromCommand(command: string): {
