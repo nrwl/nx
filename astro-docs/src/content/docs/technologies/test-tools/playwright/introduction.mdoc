@@ -83,8 +83,12 @@ The command must be exactly `nx run <project>:<target>` or `nx <target> <project
 prefixed by `npx`, `yarn`, `bun`, `pnpm`, `pnpm exec`, or `pnpx`.
 Nx doesn't recognize a command with extra arguments, such as `npx nx run my-app:serve --port=4200`.
 
-If that `webServer` also sets a `port` or a `url`, Nx infers an extra task that waits for the server
-to be ready.
+The Playwright docs suggest setting `reuseExistingServer` to `!process.env.CI`.
+Set it to `true` instead, since Nx already runs the web server as a task dependency.
+With `false`, Nx skips that task and Playwright starts its own server inside each Playwright task.
+
+If that `webServer` also sets a `port`, or a `url` with no `port`, Nx infers an extra task that waits
+for the server to be ready.
 Playwright then finds the server already running and reuses it.
 If the `webServer` sets neither, Playwright has nothing to check and starts its own server.
 
@@ -113,10 +117,12 @@ To generate an E2E project for an existing project, run the following generator
 nx g @nx/playwright:configuration --project=your-app-name
 ```
 
-Optionally, you can use the `--webServerCommand` and `--webServerAddress` option, to auto setup the [web server option](https://playwright.dev/docs/test-webserver) in the playwright config
+The generator prompts for the [web server option](https://playwright.dev/docs/test-webserver) to add
+to the Playwright config.
+Pass `--webServerCommand` and `--webServerAddress` to skip the prompts.
 
 ```shell
-nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="npx serve your-project-name" --webServerAddress="http://localhost:4200"
+nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="npx nx serve your-project-name" --webServerAddress="http://localhost:4200"
 ```
 
 ### Testing applications
@@ -209,9 +215,9 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'npx serve <your-app-name>',
+    command: 'npx nx serve <your-app-name>',
     url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
   },
   use: {
     baseURL: 'http://localhost:4200', // url playwright visits with `await page.goto('/')`;
@@ -225,24 +231,23 @@ In order to set different `baseURL` values for different environments you can pa
 import { defineConfig } from '@playwright/test';
 
 const baseUrl =
-  (process.env.BASE_URL ?? process.env.CI)
+  process.env.BASE_URL ??
+  (process.env.CI
     ? 'https://some-staging-url.example.com'
-    : 'http://localhost:4200';
+    : 'http://localhost:4200');
 
 export default defineConfig({
   // Rest of your config...
 
-  // Run your local dev server before starting the tests
-  webServer: {
-    command: 'npx serve <your-app-name>',
-    url: baseUrl,
-    reuseExistingServer: !process.env.CI,
-  },
   use: {
     baseURL: baseUrl, // url playwright visits with `await page.goto('/')`;
   },
 });
 ```
+
+Leave `webServer` out when the tests run against a deployed environment.
+There's no local server for Playwright to start, and pointing `webServer.url` at a URL that already
+answers makes Playwright fail unless `reuseExistingServer` is `true`.
 
 By default Nx, provides a `nxE2EPreset` with predefined configuration for Playwright.
 
@@ -275,7 +280,7 @@ export default defineConfig({
   webServer: {
     command: 'npx nx serve <your-app-name>',
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     cwd: workspaceRoot,
   },
 });
