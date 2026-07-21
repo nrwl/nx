@@ -330,6 +330,7 @@ export interface EventDimensions {
   packageName: string
   packageVersion: string
   duration: string
+  sampleRate: string
   taskCount: string
   projectCount: string
   cachedTaskCount: string
