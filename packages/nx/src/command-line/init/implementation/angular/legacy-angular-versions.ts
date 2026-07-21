@@ -132,6 +132,9 @@ export async function getLegacyMigrationFunctionIfApplicable(
     );
 
     output.log({ title: '📝 Setting up workspace' });
+    // Intentionally not runNxSync: legacyMigrationCommand is either the Angular
+    // CLI (`ng g ...:ng-add`) or a version-pinned `nx@<version> init`, neither
+    // of which is the local nx that runNxSync would resolve.
     execSync(`${pmc.exec} ${legacyMigrationCommand}`, {
       stdio: [0, 1, 2],
       windowsHide: true,

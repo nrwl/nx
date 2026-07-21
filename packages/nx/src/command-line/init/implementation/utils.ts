@@ -28,7 +28,6 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { connectWorkspaceToCloud } from '../../nx-cloud/connect/connect-to-nx-cloud';
 import { deduceDefaultBase } from './deduce-default-base';
-import { getRunNxBaseCommand } from '../../../utils/child-process';
 
 export function createNxJsonFile(
   repoRoot: string,
