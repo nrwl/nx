@@ -282,6 +282,24 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    it('leaves a workspace .npmrc credential ahead of a bare auth.ini one', () => {
+      // The re-key lands at npm's env tier, which outranks the file npm reads
+      // for itself, so the user-level credential would displace the workspace
+      // one that pnpm prefers.
+      writeFileSync(
+        join(root, '.npmrc'),
+        '//reg-a.example.com/:_authToken=project-token'
+      );
+      writeAuthIni(
+        ['registry=https://reg-a.example.com/', '_authToken=ini-token'].join(
+          '\n'
+        )
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+      });
+    });
+
     it('warns once when a bare auth.ini credential cannot reach the contacted registry', () => {
       // The pin leaves the request unauthenticated, so npm reports a bare 401
       // with nothing tying it back to auth.ini.
