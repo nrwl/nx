@@ -101,7 +101,6 @@ When in doubt whether a source is trusted, trace where it enters the process. "C
 - **Hardening suggestions** (add validation "just in case", defense-in-depth without a traced attack path) → never a finding; the repo rejects speculative guards.
 - **Dependency CVEs / version bumps** → out of scope; dependabot's beat, not yours.
 - A finding without a complete origin-to-sink chain is a hunch — drop it.
-- **Security-mechanism PRs also get a design pass.** When the PR's _purpose_ is a security control (permissions, validation, secrets handling, IPC hardening), judge the mechanism's shape, not just injection sinks. For each design point, ask what the strictest reasonable variant would be — fail-closed rather than fail-open, guarantees established atomically at creation rather than patched in afterward, no escape hatch that quietly reopens the hole — and whether the PR chose something laxer. Where it did, deliberately or not, do NOT silently endorse it; report it as a **maintainer call**: the choice, the stricter alternative, and the trade-off. Whether a strictness trade-off (compat, convenience) is worth it is the maintainer's decision, not the review's.
 
 ## Verdicts (report exactly one)
 
