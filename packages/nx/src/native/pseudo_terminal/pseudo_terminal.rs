@@ -143,6 +143,10 @@ impl PseudoTerminal {
             // and give rendering predictable windows to read.
             let mut pending_tui_buf: Vec<u8> = Vec::new();
             const BATCH_THRESHOLD: usize = 64 * 1024;
+            // Filters reply-eliciting escape sequences out of the captured
+            // copy only — the live stdout passthrough and the TUI parser get
+            // raw bytes, so a running child still talks to the real terminal.
+            let mut capture_filter = super::strip_queries::QueryFilter::new();
 
             'read_loop: loop {
                 if let Ok(len) = reader.read(&mut buf) {
@@ -153,11 +157,20 @@ impl PseudoTerminal {
                             parser.process(&pending_tui_buf);
                             pending_tui_buf.clear();
                         }
+                        let held = capture_filter.flush();
+                        if !held.is_empty() {
+                            stdout_tx_clone
+                                .send(String::from_utf8_lossy(&held).to_string())
+                                .ok();
+                        }
                         break;
                     }
-                    stdout_tx_clone
-                        .send(String::from_utf8_lossy(&buf[0..len]).to_string())
-                        .ok();
+                    let captured = capture_filter.feed(&buf[0..len]);
+                    if !captured.is_empty() {
+                        stdout_tx_clone
+                            .send(String::from_utf8_lossy(&captured).to_string())
+                            .ok();
+                    }
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
                     debug!("Read {} bytes", len);
