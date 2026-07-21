@@ -27,8 +27,8 @@ import {
 } from '../message-types/configure-ai-agents';
 import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import {
+  assertValidDaemonMessage,
   isDaemonMessage,
-  isForeignWorkspaceMessage,
 } from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
@@ -264,18 +264,13 @@ async function handleMessage(socket: Socket, data: string) {
   // further. The daemon is scoped to the workspace that launched it; a mismatch
   // means the client reached the wrong daemon (e.g. a shared NX_SOCKET_DIR). We
   // respond with an error but keep the daemon alive for its own workspace.
-  if (
-    isDaemonMessage(payload) &&
-    isForeignWorkspaceMessage(payload, workspaceRoot)
-  ) {
-    await respondWithError(
-      socket,
-      `Workspace root mismatch`,
-      new Error(
-        `The Nx Daemon for '${workspaceRoot}' received a message from a different workspace ('${payload.workspaceRoot}') and refused to process it. This usually means multiple workspaces are sharing a socket directory; ensure NX_SOCKET_DIR (or NX_DAEMON_SOCKET_DIR) is not set to a shared location.`
-      )
-    );
-    return;
+  if (isDaemonMessage(payload)) {
+    try {
+      assertValidDaemonMessage(payload, workspaceRoot);
+    } catch (e) {
+      await respondWithError(socket, `Workspace root mismatch`, e);
+      return;
+    }
   }
 
   if (isDaemonMessage(payload) && payload.env) {
@@ -768,6 +763,13 @@ export async function startServer(): Promise<Server> {
           // Unix socket requires write permission on the socket file; on
           // macOS/BSD the (already-0700) socket directory is what gates access.
           // Skipped on Windows, where `socketPath` is a named pipe.
+          //
+          // We chmod after `listen` rather than creating the socket with the
+          // mode up front: `net.Server.listen` exposes no mode option, and the
+          // only creation-time lever (`process.umask`) is process-global and
+          // would also affect the daemon log files written during bootstrap.
+          // The owning directory is already created owner-only (mkdirSync with
+          // mode 0o700), so this is the socket-file layer of the same control.
           if (!isWindows) {
             try {
               chmodSync(socketPath, 0o600);
