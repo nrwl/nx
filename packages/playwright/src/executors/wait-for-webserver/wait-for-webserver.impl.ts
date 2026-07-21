@@ -12,26 +12,41 @@ const FALLBACK_RETRY_DELAY = 1_000;
 const MAX_REDIRECTS = 10;
 
 type Server = Schema['servers'][number];
+// A probe resolves to `null` when the server is ready, or to a short
+// description of why it is not, which is surfaced when the wait times out.
+type ProbeFailure = string | null;
+// A probe that ran out of budget before reaching the server observed nothing,
+// so it must not replace what the previous probe saw.
+const NO_OBSERVATION = 'the deadline passed before the server responded';
 
 export async function waitForWebserverExecutor(
   options: Schema,
   _context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const servers = options.servers ?? [];
-  const invalidServer = servers.find(
-    (server) => server.port == null && !server.url
-  );
-  if (invalidServer) {
+  if (servers.length === 0) {
     logger.error(
-      '@nx/playwright:wait-for-webserver requires each server to define a "port" or a "url".'
+      '@nx/playwright:wait-for-webserver requires at least one server to wait for.'
     );
     return { success: false };
   }
-
-  const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+  const problem = servers.map(findServerProblem).find(Boolean);
+  if (problem) {
+    logger.error(`@nx/playwright:wait-for-webserver ${problem}`);
+    return { success: false };
+  }
 
   try {
-    await Promise.all(servers.map((server) => waitForServer(server, timeout)));
+    await Promise.all(
+      servers.map((server) =>
+        // A zero timeout means "unset" rather than "give up immediately", which
+        // is how Playwright reads it (`this._options.timeout || 60 * 1e3`).
+        waitForServer(
+          server,
+          options.timeout || server.timeout || DEFAULT_TIMEOUT
+        )
+      )
+    );
     return { success: true };
   } catch (e) {
     logger.error(e instanceof Error ? e.message : String(e));
@@ -41,18 +56,45 @@ export async function waitForWebserverExecutor(
 
 export default waitForWebserverExecutor;
 
+// Neither a malformed URL nor an out-of-range port can become valid, so they
+// are rejected up front instead of being retried until the timeout and
+// reported as a slow server. An unusable port is also the only input that makes
+// `connect` throw synchronously, which no probe could turn into a failure.
+function findServerProblem(server: Server): string | undefined {
+  if (server.port == null && !server.url) {
+    return 'requires each server to define a "port" or a "url".';
+  }
+  if (server.port != null && !isValidPort(server.port)) {
+    return `received an invalid "port": ${server.port}.`;
+  }
+  if (server.url && !canParseUrl(server.url)) {
+    return `received an invalid "url": ${server.url}.`;
+  }
+}
+
+function isValidPort(port: number): boolean {
+  return Number.isInteger(port) && port >= 0 && port <= 65535;
+}
+
 async function waitForServer(server: Server, timeout: number): Promise<void> {
   const label = server.url ?? `port ${server.port}`;
   const deadline = Date.now() + timeout;
   const schedule = [...RETRY_SCHEDULE];
+  let lastObserved: string | undefined;
 
   while (true) {
-    if (await isServerReady(server, deadline)) {
+    const failure = await probeServer(server, deadline);
+    if (failure === null) {
       return;
+    }
+    if (failure !== NO_OBSERVATION) {
+      lastObserved = failure;
     }
     if (Date.now() >= deadline) {
       throw new Error(
-        `Timed out after ${timeout}ms waiting for the E2E web server at ${label} to be ready.`
+        `Timed out after ${timeout}ms waiting for the E2E web server at ${label} to be ready. Last probe: ${
+          lastObserved ?? failure
+        }.`
       );
     }
     const delay = schedule.shift() ?? FALLBACK_RETRY_DELAY;
@@ -62,35 +104,44 @@ async function waitForServer(server: Server, timeout: number): Promise<void> {
 
 // Match Playwright's own check so the gate only clears once Playwright would
 // reuse the running server: connect to the port on both loopback addresses,
-// or poll the URL for an HTTP status in the 200-403 range.
-function isServerReady(server: Server, deadline: number): Promise<boolean> {
+// or poll the URL for an HTTP status below 404.
+function probeServer(server: Server, deadline: number): Promise<ProbeFailure> {
   return server.port != null
-    ? isPortUsed(server.port)
-    : isUrlAvailable(server.url, server.ignoreHTTPSErrors ?? false, deadline);
+    ? probePort(server.port)
+    : probeUrl(server.url, server.ignoreHTTPSErrors ?? false, deadline);
 }
 
-function isPortUsed(port: number): Promise<boolean> {
+function probePort(port: number): Promise<ProbeFailure> {
   const canConnect = (host: string) =>
-    new Promise<boolean>((resolve) => {
+    new Promise<ProbeFailure>((resolve) => {
+      const address = host.includes(':')
+        ? `[${host}]:${port}`
+        : `${host}:${port}`;
       const socket = connect({ port, host });
-      const settle = (result: boolean) => {
+      const settle = (failure: ProbeFailure) => {
         socket.removeAllListeners();
         socket.destroy();
-        resolve(result);
+        resolve(failure);
       };
       socket.setTimeout(FALLBACK_RETRY_DELAY);
-      socket.once('connect', () => settle(true));
-      socket.once('timeout', () => settle(false));
-      socket.once('error', () => settle(false));
+      socket.once('connect', () => settle(null));
+      socket.once('timeout', () => settle(`${address} timed out`));
+      socket.once('error', (error: NodeJS.ErrnoException) =>
+        settle(`${address} ${error.code ?? error.message}`)
+      );
     });
 
-  return new Promise<boolean>((resolve) => {
+  return new Promise<ProbeFailure>((resolve) => {
+    const failures: string[] = [];
     let pending = 2;
-    const onResult = (connected: boolean) => {
-      if (connected) {
-        resolve(true);
-      } else if (--pending === 0) {
-        resolve(false);
+    const onResult = (failure: ProbeFailure) => {
+      if (failure === null) {
+        resolve(null);
+      } else {
+        failures.push(failure);
+        if (--pending === 0) {
+          resolve(failures.join('; '));
+        }
       }
     };
     void canConnect('127.0.0.1').then(onResult);
@@ -98,40 +149,50 @@ function isPortUsed(port: number): Promise<boolean> {
   });
 }
 
-async function isUrlAvailable(
+async function probeUrl(
   url: string,
   ignoreHTTPSErrors: boolean,
   deadline: number
-): Promise<boolean> {
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(url);
-  } catch {
-    return false;
-  }
+): Promise<ProbeFailure> {
+  // Validated before any server is probed, so this cannot throw.
+  const parsedUrl = new URL(url);
 
-  let statusCode = await httpStatusCode(parsedUrl, ignoreHTTPSErrors, deadline);
-  if (statusCode === 404 && parsedUrl.pathname === '/') {
+  let response = await requestStatus(parsedUrl, ignoreHTTPSErrors, deadline);
+  if (response.status === 404 && parsedUrl.pathname === '/') {
     const indexUrl = new URL(parsedUrl);
     indexUrl.pathname = '/index.html';
-    statusCode = await httpStatusCode(indexUrl, ignoreHTTPSErrors, deadline);
+    response = await requestStatus(indexUrl, ignoreHTTPSErrors, deadline);
   }
-  return statusCode >= 200 && statusCode < 404;
+  if (response.status >= 200 && response.status < 404) {
+    return null;
+  }
+  return (
+    response.failure ??
+    `${response.href} responded with status ${response.status}`
+  );
 }
 
-function httpStatusCode(
+interface UrlResponse {
+  // The URL that produced the response, which is the redirect destination when
+  // the chain was followed.
+  href: string;
+  status: number;
+  failure?: string;
+}
+
+function requestStatus(
   url: URL,
   ignoreHTTPSErrors: boolean,
   deadline: number,
   redirectsRemaining = MAX_REDIRECTS
-): Promise<number> {
+): Promise<UrlResponse> {
   return new Promise((resolve) => {
     // Bound each request by the overall readiness deadline, not a fixed
     // interval, so an endpoint that legitimately responds slowly is not
     // aborted before Playwright itself would give up.
     const remaining = deadline - Date.now();
     if (remaining <= 0) {
-      resolve(0);
+      resolve({ href: url.href, status: 0, failure: NO_OBSERVATION });
       return;
     }
     const isHttps = url.protocol === 'https:';
@@ -148,27 +209,35 @@ function httpStatusCode(
       url,
       requestOptions,
       (response) => {
-        const statusCode = response.statusCode ?? 0;
+        const status = response.statusCode ?? 0;
         const location = response.headers.location;
         response.resume();
         request.destroy();
         // Follow redirects like Playwright and evaluate the final
         // destination, so a redirect to an unavailable page is not read as
         // ready. Treat an exhausted or malformed chain as not ready.
-        if (statusCode >= 300 && statusCode < 400 && location) {
+        if (status >= 300 && status < 400 && location) {
           if (redirectsRemaining <= 0) {
-            resolve(0);
+            resolve({
+              href: url.href,
+              status: 0,
+              failure: `${url.href} redirected more than ${MAX_REDIRECTS} times`,
+            });
             return;
           }
           let redirectUrl: URL;
           try {
             redirectUrl = new URL(location, url);
           } catch {
-            resolve(0);
+            resolve({
+              href: url.href,
+              status: 0,
+              failure: `${url.href} redirected to an invalid location "${location}"`,
+            });
             return;
           }
           resolve(
-            httpStatusCode(
+            requestStatus(
               redirectUrl,
               ignoreHTTPSErrors,
               deadline,
@@ -177,19 +246,32 @@ function httpStatusCode(
           );
           return;
         }
-        resolve(statusCode);
+        resolve({ href: url.href, status });
       }
     );
     request.once('timeout', () => {
       request.destroy();
-      resolve(0);
+      resolve({ href: url.href, status: 0, failure: `${url.href} timed out` });
     });
-    request.once('error', () => {
+    request.once('error', (error: NodeJS.ErrnoException) => {
       request.destroy();
-      resolve(0);
+      resolve({
+        href: url.href,
+        status: 0,
+        failure: `${url.href} ${error.code ?? error.message}`,
+      });
     });
     request.end();
   });
+}
+
+function canParseUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function sleep(ms: number): Promise<void> {
