@@ -216,9 +216,12 @@ function bridgeAuthIni(
   const bareKeys = BARE_AUTH_KEYS.filter((key) => authIni.has(key));
   if (credentialDart) {
     for (const bareKey of bareKeys) {
-      const dartKey = `npm_config_${credentialDart}:${bareKey}`;
-      if (env[dartKey] === undefined) {
-        env[dartKey] = authIni.get(bareKey);
+      const dartKey = `${credentialDart}:${bareKey}`;
+      if (
+        env[`npm_config_${dartKey}`] === undefined &&
+        !projectNpmrc.has(dartKey)
+      ) {
+        env[`npm_config_${dartKey}`] = authIni.get(bareKey);
       }
     }
   }
