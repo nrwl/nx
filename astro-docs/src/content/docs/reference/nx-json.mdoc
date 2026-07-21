@@ -187,6 +187,29 @@ This will exclude all e2e projects except `toolkit-workspace-e2e`.
 - The last matching pattern determines if a file is included
 - If the first pattern is a negation, all files are matched initially
 
+### Plugin-specific configuration with `pluginsConfig`
+
+Use `pluginsConfig` for plugin-specific settings that Nx reads from `nx.json` outside of the `plugins` array.
+
+Keys are plugin package names such as `@nx/js`.
+
+For example:
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "dependencyNarrowing": {
+        "affectedNarrowing": true
+      }
+    }
+  }
+}
+```
+
+For `@nx/js` dependency narrowing behavior and options, see [Narrow project graph dependencies](/docs/technologies/typescript/guides/dependency-narrowing).
+
 ## Task options
 
 The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.
