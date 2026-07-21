@@ -158,6 +158,23 @@ describe('getBunSpawnRegistryEnv', () => {
     });
   });
 
+  it('translates bunfig user/password credentials to npm auth keys', () => {
+    writeBunfig(
+      [
+        '[install]',
+        'registry = { url = "https://reg-a.example.com/", username = "alice", password = "s3cret" }',
+      ].join('\n')
+    );
+    // bun sends Basic base64(user:pass) for these; npm reconstructs the same
+    // header from username plus a base64 _password.
+    expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:username': 'alice',
+      'npm_config_//reg-a.example.com/:_password':
+        Buffer.from('s3cret').toString('base64'),
+    });
+  });
+
   it('translates URL-embedded user:pass credentials', () => {
     writeBunfig(
       '[install]\nregistry = "https://user:pass@reg-a.example.com/"\n'

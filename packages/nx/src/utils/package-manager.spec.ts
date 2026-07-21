@@ -916,12 +916,13 @@ describe('package-manager', () => {
       expect(options.env.npm_config_registry).toBe(
         'https://sentinel.example.com/'
       );
-      // The overlay is keyed on the detected workspace package manager and its
-      // resolved version; assert all four args so a miswired PM/version is caught.
-      expect(overlaySpy.mock.calls[0][0]).toBe('nx');
-      expect(overlaySpy.mock.calls[0][1]).toBe(workspaceRoot);
-      expect(overlaySpy.mock.calls[0][2]).toBe('bun');
-      expect(overlaySpy.mock.calls[0][3]).toBe('1.2.0');
+      expect(overlaySpy).toHaveBeenNthCalledWith(
+        1,
+        'nx',
+        workspaceRoot,
+        'bun',
+        '1.2.0'
+      );
     });
 
     it('should drop an ambient npm config key that spells an overlaid setting differently', async () => {
@@ -1039,12 +1040,13 @@ describe('package-manager', () => {
       expect(options.env.npm_config_registry).toBe(
         'https://sentinel.example.com/'
       );
-      // The overlay is keyed on the detected workspace package manager and its
-      // resolved version; assert all four args so a miswired PM/version is caught.
-      expect(overlaySpy.mock.calls[0][0]).toBe('nx');
-      expect(overlaySpy.mock.calls[0][1]).toBe(workspaceRoot);
-      expect(overlaySpy.mock.calls[0][2]).toBe('bun');
-      expect(overlaySpy.mock.calls[0][3]).toBe('1.2.0');
+      expect(overlaySpy).toHaveBeenNthCalledWith(
+        1,
+        'nx',
+        workspaceRoot,
+        'bun',
+        '1.2.0'
+      );
     });
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
