@@ -61,6 +61,7 @@ import { ErrorToast } from '@nx/graph-ui-common';
 import classNames from 'classnames';
 import { Tab, TabGroup, TabList } from '@headlessui/react';
 import { useCurrentPath } from '../hooks/use-current-path';
+import { useGraphWheelSensitivity } from '../hooks/use-graph-wheel-sensitivity';
 
 export function ProjectsShell() {
   const environmentConfig = useEnvironmentConfig();
@@ -118,6 +119,8 @@ function ProjectsShellInner() {
   const [lastHash, setLastHash] = useState(selectedWorkspaceLoaderData.hash);
   const [searchParams, setSearchParams] = useSearchParams();
   const graphState = searchParams.get('graph');
+
+  useGraphWheelSensitivity(orchestrator);
 
   useRendererEvents(orchestrator, {
     compositeProjectNodeDoubleTap: ({ data }) => {
