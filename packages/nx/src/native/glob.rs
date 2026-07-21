@@ -146,7 +146,18 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
         .iter()
         .flat_map(|s| potential_glob_split(s.as_ref()))
         .map(|glob| {
-            if glob.contains('!') || glob.contains('|') || glob.contains('(') || glob.contains("{,")
+            // Decide on the pattern without its negation marker. A leading `!`
+            // marks the whole glob as an exclusion — it is not extglob syntax —
+            // and convert_glob strips bare `@`, `+` and `?` out of anything it
+            // touches (see special_char_with_no_group, which `+spec.ts`-style
+            // patterns rely on). Routing a plain exclusion through it purely
+            // because of that leading `!` silently rewrote `!dist/@scope/pkg`
+            // to `!dist/scope/pkg`, so the exclusion matched nothing.
+            let pattern = glob.strip_prefix('!').unwrap_or(glob);
+            if pattern.contains('!')
+                || pattern.contains('|')
+                || pattern.contains('(')
+                || pattern.contains("{,")
             {
                 convert_glob(glob)
             } else {
@@ -161,6 +172,15 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     let glob_set = Arc::new(NxGlobSetBuilder::new(&result)?.build()?);
     GLOB_CACHE.insert(cache_key, Arc::clone(&glob_set));
     Ok(glob_set)
+}
+
+#[napi]
+/// Checks which `paths` match the given `globs`, using the same glob engine
+/// as the task hasher (`build_glob_set`). Used to statically match
+/// `dependentTasksOutputFiles` globs against candidate paths.
+pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
+    let glob_set = build_glob_set(&globs)?;
+    Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
 }
 
 pub(crate) fn contains_glob_pattern(value: &str) -> bool {
@@ -182,6 +202,38 @@ pub(crate) fn contains_glob_pattern(value: &str) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn should_not_strip_literal_chars_from_plain_negated_globs() {
+        // A leading `!` is not extglob syntax. Routing a plain exclusion
+        // through convert_glob because of it used to eat the `@`/`+`, so the
+        // exclusion matched nothing at all.
+        let glob_set = build_glob_set(&["dist/**", "!dist/libs/@scope/pkg/.cache/**"]).unwrap();
+        assert!(glob_set.is_match("dist/libs/@scope/pkg/index.js"));
+        assert!(!glob_set.is_match("dist/libs/@scope/pkg/.cache/x"));
+
+        let glob_set = build_glob_set(&["dist/**", "!dist/libs/a+b/.cache/**"]).unwrap();
+        assert!(!glob_set.is_match("dist/libs/a+b/.cache/x"));
+
+        // Extglob exclusions still convert exactly as before — nx's own default
+        // inputs rely on `+spec.ts` collapsing to `spec.ts`.
+        let glob_set = build_glob_set(&["libs/**/*", "!libs/**/?(*.)+spec.ts?(.snap)"]).unwrap();
+        assert!(!glob_set.is_match("libs/a/b.spec.ts"));
+        assert!(glob_set.is_match("libs/a/b.ts"));
+    }
+
+    #[test]
+    fn should_match_glob_paths() {
+        let result = match_glob_paths(
+            vec!["**/*.d.ts".to_string()],
+            vec![
+                "dist/libs/dep/index.d.ts".to_string(),
+                "dist/libs/dep/index.js".to_string(),
+            ],
+        )
+        .unwrap();
+        assert_eq!(result, vec![true, false]);
+    }
 
     #[test]
     fn should_work_with_simple_globs() {

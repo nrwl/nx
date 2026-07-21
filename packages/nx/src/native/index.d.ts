@@ -557,6 +557,24 @@ export interface Link {
 
 export declare function logDebug(message: string): void
 
+/**
+ * Checks which `paths` match the given `globs`, using the same glob engine
+ * as the task hasher (`build_glob_set`). Used to statically match
+ * `dependentTasksOutputFiles` globs against candidate paths.
+ */
+export declare function matchGlobPaths(globs: Array<string>, paths: Array<string>): Array<boolean>
+
+/**
+ * Statically checks which `paths` would be captured by the given output
+ * `entries`, without touching the file system. Mirrors `expand_outputs`
+ * semantics: entries match themselves and anything nested under them (so a
+ * directory entry captures its contents), negated (`!`-prefixed) entries
+ * exclude matches from the whole entry set, and a non-empty list with only
+ * negated entries matches everything not excluded. An empty list matches
+ * nothing.
+ */
+export declare function matchOutputPaths(entries: Array<string>, paths: Array<string>): Array<boolean>
+
 /** Combined metadata for groups and processes */
 export interface Metadata {
   /** Group-level metadata */
