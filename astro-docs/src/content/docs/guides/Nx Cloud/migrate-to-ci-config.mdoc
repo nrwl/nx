@@ -24,7 +24,7 @@ With `start-ci-run`, configuration instead came from that command's flags, so it
 
 {% aside type="caution" title="The two commands cannot be combined" %}
 `start-ci-run` does not read `.nx/ci-config.yaml`. Once the file exists, `start-ci-run` exits with an error and points you to `start-nx-agents`.
-This is a switch, not an addition: move your flags into the file and change the command in the same step. Do not leave both in place.
+Move your CLI flags into the file and change the command in the same step. Do not leave both in place.
 {% /aside %}
 
 ## Before you start
@@ -91,7 +91,7 @@ Commit both changes together and run the pipeline. Confirm that:
 
 ## Per-environment overrides
 
-`start-ci-run` applied the same flags to every pipeline. The config file adds a capability the flags did not have: [`overrides`](/docs/reference/nx-cloud/ci-config#overrides), keyed by `NX_CLOUD_ENV`, let you change configuration per environment.
+`start-ci-run` applied the same flags to every pipeline. The config file adds a capability the flags did not have: [`overrides`](/docs/reference/nx-cloud/ci-config#overrides), keyed by `NX_CI_EXECUTION_ENV`, let you change configuration per environment.
 
 ```yaml
 # .nx/ci-config.yaml
@@ -104,4 +104,4 @@ overrides:
       fail-after: 0
 ```
 
-Here every pipeline stops on the first failure, except when `NX_CLOUD_ENV` is `main`, where the run finishes so you see every failure at once.
+Here every pipeline stops on the first failure, except when `NX_CI_EXECUTION_ENV` is `main`, where the run finishes so you see every failure at once.

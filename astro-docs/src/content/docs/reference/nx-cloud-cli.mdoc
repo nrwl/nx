@@ -374,23 +374,7 @@ lifecycle:
 Pick one path for your workspace: the config file with `start-nx-agents`, or CLI flags with `start-ci-run`.
 {% /aside %}
 
-#### Migrating from start-ci-run flags
-
-Every `start-ci-run` flag has a `.nx/ci-config.yaml` counterpart. For a step-by-step walkthrough, see [Migrate from start-ci-run to start-nx-agents](/docs/guides/nx-cloud/migrate-to-ci-config). For the full schema, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
-
-| `start-ci-run` flag             | `.nx/ci-config.yaml`                                                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `--distribute-on`               | `dte.distribute-on`                                                                                                               |
-| `--assignment-rules`            | `dte.assignment-rules`                                                                                                            |
-| `--use-dte-by-default`          | `dte.enabled-by-default`                                                                                                          |
-| `--stop-agents-after`           | `lifecycle.stop-after`                                                                                                            |
-| `--stop-agents-on-failure`      | `lifecycle.fail-after` (`true` becomes `1`, `false` becomes `0`, and the file also accepts higher counts such as `fail-after: 3`) |
-| `--require-explicit-completion` | `lifecycle.heartbeat` (inverted: explicit completion means `heartbeat: false`)                                                    |
-| `--with-env-vars`               | `nx-agents.with-env-vars`                                                                                                         |
-| `--fix-tasks`                   | `ai.fix-tasks-patterns`                                                                                                           |
-| `--auto-apply-fixes`            | `ai.auto-apply-patterns`                                                                                                          |
-
-Two `start-ci-run` flags have no config-file counterpart. `--force` is a local-run guard that `start-nx-agents` does not need, and `start-nx-agents` accepts no flags other than `--help`.
+To move an existing `start-ci-run` setup to the config file, see [Migrate from start-ci-run to start-nx-agents](/docs/guides/nx-cloud/migrate-to-ci-config), which maps each flag to its `.nx/ci-config.yaml` counterpart.
 
 ### `nx-cloud start-ci-run`
 
