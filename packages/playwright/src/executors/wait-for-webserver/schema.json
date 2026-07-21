@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/schema",
   "version": 2,
   "title": "Schema for Playwright Wait For Web Server Executor",
-  "description": "Waits for the E2E web server(s) to be ready before the Playwright CI test tasks run.",
+  "description": "Waits for the E2E web server(s) to be ready before the Playwright test tasks run.",
   "type": "object",
   "properties": {
     "servers": {
@@ -13,24 +13,31 @@
         "properties": {
           "port": {
             "type": "number",
-            "description": "The port to wait for TCP connections on."
+            "description": "The port to wait for TCP connections on.",
+            "minimum": 0,
+            "maximum": 65535,
+            "multipleOf": 1
           },
           "url": {
             "type": "string",
-            "description": "The URL to poll until the server responds with a 2xx, 3xx, or early 4xx status."
+            "description": "The URL to poll. Redirects are followed and the server is ready once the final response has a status below 404."
           },
           "ignoreHTTPSErrors": {
             "type": "boolean",
             "description": "Whether to ignore HTTPS errors (e.g. a self-signed certificate) when polling the URL.",
             "default": false
+          },
+          "timeout": {
+            "type": "number",
+            "description": "The maximum time to wait for this server in milliseconds. Defaults to 60000.",
+            "default": 60000
           }
         }
       }
     },
     "timeout": {
       "type": "number",
-      "description": "The maximum time to wait in milliseconds before failing.",
-      "default": 60000
+      "description": "The maximum time to wait in milliseconds before failing. Overrides the timeout configured on every server."
     }
   },
   "required": ["servers"]

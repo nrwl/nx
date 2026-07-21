@@ -3,6 +3,7 @@ export type Schema = {
     port?: number;
     url?: string;
     ignoreHTTPSErrors?: boolean;
+    timeout?: number;
   }>;
   timeout?: number;
 };
