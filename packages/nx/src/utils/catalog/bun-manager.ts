@@ -5,9 +5,9 @@ import {
   type CatalogManager,
 } from './manager';
 import {
-  readCatalogDefinitions,
-  updateCatalogVersionsInFile,
-} from './manager-utils';
+  readBunCatalogDefinitions,
+  updateBunCatalogVersionsInFile,
+} from './bun-manager-utils';
 import type {
   CatalogDefinitions,
   CatalogEntry,
@@ -15,15 +15,20 @@ import type {
   CatalogReferenceMatch,
 } from './types';
 
-const YARNRC_FILENAME = '.yarnrc.yml';
+const BUN_CATALOG_FILENAME = 'package.json';
 
 /**
- * Yarn Berry (v4+) catalog manager implementation
+ * Bun-specific catalog manager implementation.
+ *
+ * Bun declares catalogs in the root package.json `catalog`/`catalogs` fields,
+ * either at the top level or nested under the object form of `workspaces`.
+ * Unlike pnpm, the name "default" is not special: `catalog:` resolves only
+ * against `catalog`, and `catalog:default` against `catalogs.default`.
  */
-export class YarnCatalogManager implements CatalogManager {
-  readonly name = 'yarn';
+export class BunCatalogManager implements CatalogManager {
+  readonly name = 'bun';
   readonly catalogProtocol = 'catalog:';
-  // Parsed fs-root definitions, cached per pass. See readCatalogDefinitions.
+  // Parsed fs-root definitions, cached per pass. See readBunCatalogDefinitions.
   private definitionsByRoot = new Map<string, CatalogDefinitions | null>();
 
   isCatalogReference(version: string): boolean {
@@ -35,9 +40,10 @@ export class YarnCatalogManager implements CatalogManager {
       return null;
     }
 
-    const catalogName = version.substring(this.catalogProtocol.length);
-    // Normalize both "catalog:" and "catalog:default" to the same representation
-    const isDefault = !catalogName || catalogName === 'default';
+    const catalogName = version.substring(this.catalogProtocol.length).trim();
+    // Only an empty/whitespace name selects the default catalog; "default" is
+    // a regular named catalog in bun.
+    const isDefault = !catalogName;
 
     return {
       catalogName: isDefault ? undefined : catalogName,
@@ -46,12 +52,12 @@ export class YarnCatalogManager implements CatalogManager {
   }
 
   getCatalogDefinitionFilePaths(): string[] {
-    return [YARNRC_FILENAME];
+    return [BUN_CATALOG_FILENAME];
   }
 
   getCatalogDefinitions(treeOrRoot: Tree | string): CatalogDefinitions | null {
-    return readCatalogDefinitions(
-      YARNRC_FILENAME,
+    return readBunCatalogDefinitions(
+      BUN_CATALOG_FILENAME,
       treeOrRoot,
       this.definitionsByRoot
     );
@@ -74,8 +80,7 @@ export class YarnCatalogManager implements CatalogManager {
 
     let catalogToUse: CatalogEntry | undefined;
     if (catalogRef.isDefaultCatalog) {
-      // Check both locations for default catalog
-      catalogToUse = catalogDefs.catalog ?? catalogDefs.catalogs?.default;
+      catalogToUse = catalogDefs.catalog;
     } else if (catalogRef.catalogName) {
       catalogToUse = catalogDefs.catalogs?.[catalogRef.catalogName];
     }
@@ -106,8 +111,10 @@ export class YarnCatalogManager implements CatalogManager {
     if (!catalogDefs) {
       throw new Error(
         formatCatalogError(
-          `Cannot get Yarn catalog definitions. No ${YARNRC_FILENAME} found in workspace root.`,
-          [`Create a ${YARNRC_FILENAME} file in your workspace root`]
+          `Cannot get Bun catalog definitions. No catalog defined in ${BUN_CATALOG_FILENAME}.`,
+          [
+            `Add a "catalog" or "catalogs" field to ${BUN_CATALOG_FILENAME} in your workspace root`,
+          ]
         )
       );
     }
@@ -115,22 +122,12 @@ export class YarnCatalogManager implements CatalogManager {
     let catalogToUse: CatalogEntry | undefined;
 
     if (catalogRef.isDefaultCatalog) {
-      const hasCatalog = !!catalogDefs.catalog;
-      const hasCatalogsDefault = !!catalogDefs.catalogs?.default;
-
-      // Error if both defined
-      if (hasCatalog && hasCatalogsDefault) {
-        throw new Error(
-          "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both."
-        );
-      }
-
-      catalogToUse = catalogDefs.catalog ?? catalogDefs.catalogs?.default;
+      catalogToUse = catalogDefs.catalog;
       if (!catalogToUse) {
         const availableCatalogs = Object.keys(catalogDefs.catalogs || {});
 
         const suggestions = [
-          `Define a default catalog in ${YARNRC_FILENAME} under the "catalog" key`,
+          `Define a default catalog in ${BUN_CATALOG_FILENAME} under the "catalog" key`,
         ];
         if (availableCatalogs.length > 0) {
           suggestions.push(
@@ -142,7 +139,7 @@ export class YarnCatalogManager implements CatalogManager {
 
         throw new Error(
           formatCatalogError(
-            `No default catalog defined in ${YARNRC_FILENAME}`,
+            `No default catalog defined in ${BUN_CATALOG_FILENAME}`,
             suggestions
           )
         );
@@ -150,17 +147,10 @@ export class YarnCatalogManager implements CatalogManager {
     } else if (catalogRef.catalogName) {
       catalogToUse = catalogDefs.catalogs?.[catalogRef.catalogName];
       if (!catalogToUse) {
-        const availableCatalogs = Object.keys(
-          catalogDefs.catalogs || {}
-        ).filter((c) => c !== 'default');
-        const defaultCatalog = !!catalogDefs.catalog
-          ? 'catalog'
-          : !catalogDefs.catalogs?.default
-            ? 'catalogs.default'
-            : null;
+        const availableCatalogs = Object.keys(catalogDefs.catalogs || {});
 
         const suggestions = [
-          `Define the catalog in ${YARNRC_FILENAME} under the "catalogs" key`,
+          `Define the catalog in ${BUN_CATALOG_FILENAME} under the "catalogs" key`,
         ];
         if (availableCatalogs.length > 0) {
           suggestions.push(
@@ -169,13 +159,13 @@ export class YarnCatalogManager implements CatalogManager {
               .join(', ')}`
           );
         }
-        if (defaultCatalog) {
-          suggestions.push(`Or use the default catalog ("${defaultCatalog}")`);
+        if (catalogDefs.catalog) {
+          suggestions.push(`Or use the default catalog ("catalog:")`);
         }
 
         throw new Error(
           formatCatalogError(
-            `Catalog "${catalogRef.catalogName}" not found in ${YARNRC_FILENAME}`,
+            `Catalog "${catalogRef.catalogName}" not found in ${BUN_CATALOG_FILENAME}`,
             suggestions
           )
         );
@@ -183,20 +173,13 @@ export class YarnCatalogManager implements CatalogManager {
     }
 
     if (!catalogToUse![packageName]) {
-      let catalogName: string;
-      if (catalogRef.isDefaultCatalog) {
-        // Context-aware messaging based on which location exists
-        const hasCatalog = !!catalogDefs.catalog;
-        catalogName = hasCatalog
-          ? 'default catalog ("catalog")'
-          : 'default catalog ("catalogs.default")';
-      } else {
-        catalogName = `catalog '${catalogRef.catalogName}'`;
-      }
+      const catalogName = catalogRef.isDefaultCatalog
+        ? 'default catalog ("catalog")'
+        : `catalog '${catalogRef.catalogName}'`;
 
       const availablePackages = Object.keys(catalogToUse!);
       const suggestions = [
-        `Add "${packageName}" to ${catalogName} in ${YARNRC_FILENAME}`,
+        `Add "${packageName}" to ${catalogName} in ${BUN_CATALOG_FILENAME}`,
       ];
       if (availablePackages.length > 0) {
         suggestions.push(
@@ -223,6 +206,6 @@ export class YarnCatalogManager implements CatalogManager {
       catalogName?: string;
     }>
   ): void {
-    updateCatalogVersionsInFile(YARNRC_FILENAME, treeOrRoot, updates);
+    updateBunCatalogVersionsInFile(BUN_CATALOG_FILENAME, treeOrRoot, updates);
   }
 }

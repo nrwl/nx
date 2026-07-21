@@ -2672,6 +2672,123 @@ describe('Dependency checks (eslint)', () => {
     });
   });
 
+  describe('bun catalogs', () => {
+    beforeEach(() => {
+      jest.spyOn(packageManager, 'detectPackageManager').mockReturnValue('bun');
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    function runMissingDepRule(rootPackageJsonContent: object) {
+      const packageJson = {
+        name: '@mycompany/liba',
+        dependencies: {
+          external1: '^16.0.0',
+        },
+      };
+
+      const fileSys = {
+        './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+        './libs/liba/src/index.ts': '',
+        './package.json': JSON.stringify(rootPackageJsonContent, null, 2),
+      };
+      vol.fromJSON(fileSys, '/root');
+
+      const failures = runRule(
+        {},
+        `/root/libs/liba/package.json`,
+        JSON.stringify(packageJson, null, 2),
+        {
+          nodes: {
+            liba: {
+              name: 'liba',
+              type: 'lib',
+              data: {
+                root: 'libs/liba',
+                targets: {
+                  build: {},
+                },
+              },
+            },
+          },
+          externalNodes,
+          dependencies: {
+            liba: [
+              { source: 'liba', target: 'npm:external1', type: 'static' },
+              {
+                source: 'liba',
+                target: 'npm:random-external',
+                type: 'static',
+              },
+            ],
+          },
+        },
+        {
+          liba: [
+            createFile(`libs/liba/src/main.ts`, [
+              'npm:external1',
+              'npm:random-external',
+            ]),
+            createFile(`libs/liba/package.json`, ['npm:external1']),
+          ],
+        }
+      );
+
+      expect(failures.length).toEqual(1);
+      expect(failures[0].message).toContain('random-external');
+
+      const content = JSON.stringify(packageJson, null, 2);
+      return (
+        content.slice(0, failures[0].fix!.range[0]) +
+        failures[0].fix!.text +
+        content.slice(failures[0].fix!.range[1])
+      );
+    }
+
+    it('should use catalog: for missing dep when package is in the catalog field', () => {
+      const result = runMissingDepRule({
+        ...rootPackageJson,
+        catalog: { 'random-external': '^1.0.0' },
+      });
+
+      expect(result).toContain('"random-external": "catalog:"');
+    });
+
+    it('should use catalog:default for missing dep when package is in catalogs.default', () => {
+      // Unlike pnpm, bun's `catalog:` does not resolve from `catalogs.default`;
+      // it is an ordinary named catalog addressed as `catalog:default`.
+      const result = runMissingDepRule({
+        ...rootPackageJson,
+        catalogs: { default: { 'random-external': '^1.0.0' } },
+      });
+
+      expect(result).toContain('"random-external": "catalog:default"');
+    });
+
+    it('should use catalog:name for missing dep when package is in a named catalog', () => {
+      const result = runMissingDepRule({
+        ...rootPackageJson,
+        catalogs: { react: { 'random-external': '^1.0.0' } },
+      });
+
+      expect(result).toContain('"random-external": "catalog:react"');
+    });
+
+    it('should resolve from a workspaces-nested catalog', () => {
+      const result = runMissingDepRule({
+        ...rootPackageJson,
+        workspaces: {
+          packages: ['libs/*'],
+          catalog: { 'random-external': '^1.0.0' },
+        },
+      });
+
+      expect(result).toContain('"random-external": "catalog:"');
+    });
+  });
+
   it('should require swc if @nx/js:swc executor', () => {
     const packageJson = {
       name: '@mycompany/liba',

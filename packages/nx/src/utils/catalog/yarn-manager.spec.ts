@@ -244,6 +244,36 @@ catalogs:
     });
   });
 
+  describe('getCatalogReferencesForPackage', () => {
+    it('should return default and named references for a package in both', () => {
+      tree.write(
+        '.yarnrc.yml',
+        `
+catalog:
+  react: ^18.0.0
+catalogs:
+  legacy:
+    react: ^17.0.0
+`
+      );
+
+      expect(
+        manager.getCatalogReferencesForPackage(tree, 'react')
+      ).toStrictEqual([
+        { catalogRef: 'catalog:', versionSpec: '^18.0.0' },
+        { catalogRef: 'catalog:legacy', versionSpec: '^17.0.0' },
+      ]);
+    });
+
+    it('should return an empty array when the package is not catalogued', () => {
+      tree.write('.yarnrc.yml', `catalog:\n  react: ^18.0.0\n`);
+
+      expect(
+        manager.getCatalogReferencesForPackage(tree, 'lodash')
+      ).toStrictEqual([]);
+    });
+  });
+
   describe('validateCatalogReference', () => {
     it('should throw for non-catalog syntax', () => {
       expect(() =>
