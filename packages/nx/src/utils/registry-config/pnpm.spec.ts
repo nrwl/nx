@@ -24,6 +24,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
   let configHome: string;
   const managedEnvKeys = [
     'npm_config_registry',
+    'NPM_CONFIG_REGISTRY',
+    'Npm_Config_Registry',
     'pnpm_config_registry',
     'PNPM_CONFIG_REGISTRY',
     'XDG_CONFIG_HOME',
@@ -456,6 +458,82 @@ describe('getPnpmSpawnRegistryEnv', () => {
       );
       writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
+    it('drops auth.ini cert/key when an ambient npm registry redirects the request', () => {
+      // pnpm >= 11 ignores npm_config_*, so nothing in the overlay displaces an
+      // ambient one; the spawned npm reads it and contacts that host instead.
+      process.env.NPM_CONFIG_REGISTRY = 'https://reg-b.example.com/';
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
+    it('reads the ambient registry under any casing npm accepts', () => {
+      process.env.Npm_Config_Registry = 'https://reg-b.example.com/';
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
+    it('takes the last ambient spelling when several are set', () => {
+      process.env.npm_config_registry = 'https://registry.npmjs.org/';
+      process.env.NPM_CONFIG_REGISTRY = 'https://reg-b.example.com/';
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
+    it('takes the last ambient spelling whichever casing it is', () => {
+      process.env.NPM_CONFIG_REGISTRY = 'https://reg-b.example.com/';
+      process.env.npm_config_registry = 'https://registry.npmjs.org/';
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_cert: 'CERTPEM',
+        npm_config_key: 'KEYPEM',
+      });
+    });
+
+    it('ignores an empty ambient registry (npm skips it too)', () => {
+      process.env.NPM_CONFIG_REGISTRY = '';
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_cert: 'CERTPEM',
+        npm_config_key: 'KEYPEM',
+      });
+    });
+
+    it('reads a blank ambient registry as npm default (npm trims it away)', () => {
+      process.env.NPM_CONFIG_REGISTRY = '   ';
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_cert: 'CERTPEM',
+        npm_config_key: 'KEYPEM',
+      });
+    });
+
+    it('reads an ambient registry that expands to nothing as npm default', () => {
+      // npm's pickRegistry falls through on a falsy registry, so the request
+      // still goes to npmjs, which is what the credentials are pinned to.
+      process.env.NPM_CONFIG_REGISTRY = '${NX_TEST_UNSET_REGISTRY?}';
+      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_cert: 'CERTPEM',
+        npm_config_key: 'KEYPEM',
+      });
+    });
+
+    it('bridges auth.ini cert/key when the overlay overrides the ambient registry', () => {
+      process.env.NPM_CONFIG_REGISTRY = 'https://reg-b.example.com/';
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          'cert=CERTPEM',
+          'key=KEYPEM',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_cert: 'CERTPEM',
+        npm_config_key: 'KEYPEM',
+      });
     });
 
     it('expands a ~/ auth.ini cafile against the home dir', () => {

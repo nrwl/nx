@@ -51,13 +51,33 @@ function npmConfigSetting(envKey: string): string | null {
 }
 
 /**
+ * The value npm resolves for `setting` out of an environment: every
+ * `npm_config_*` spelling maps onto the same setting and the last one read
+ * wins, and an empty value is skipped outright (loadEnv). `setting` is the name
+ * npm looks the value up under, so a scope npm rewrites (`@my_scope`) finds
+ * nothing, exactly as it does for npm itself.
+ */
+export function readNpmConfigEnv(
+  env: NodeJS.ProcessEnv,
+  setting: string
+): string | undefined {
+  let value: string | undefined;
+  for (const [key, candidate] of Object.entries(env)) {
+    if (candidate && npmConfigSetting(key) === setting) {
+      value = candidate;
+    }
+  }
+  return value;
+}
+
+/**
  * Merges an npm_config_* overlay into the environment for a spawned npm,
- * dropping the ambient keys that spell an overlaid setting differently (a
- * `NPM_CONFIG_REGISTRY` twin of `npm_config_registry`, say). npm resolves its
- * env tier last-write-wins over the received key order, and both macOS
- * `/bin/sh` and npm's own shell launcher rebuild that order, so leaving both
- * spellings in place hands the setting to whichever one they happen to emit
- * last rather than to the overlay.
+ * leaving one spelling per setting: the overlay's where it carries the setting,
+ * otherwise the ambient one npm itself would resolve. npm reads its env tier
+ * last-write-wins over the received key order, and both macOS `/bin/sh` and
+ * npm's own shell launcher rebuild that order, so a setting left spelled two
+ * ways (`NPM_CONFIG_REGISTRY` beside `npm_config_registry`) goes to whichever
+ * one they happen to emit last instead of to the value resolved here.
  */
 export function mergeNpmConfigEnv(
   baseEnv: NodeJS.ProcessEnv,
@@ -67,10 +87,30 @@ export function mergeNpmConfigEnv(
     Object.keys(overlay).map(npmConfigSetting).filter(Boolean)
   );
   const merged: NodeJS.ProcessEnv = {};
+  const keptSpelling = new Map<string, string>();
   for (const [key, value] of Object.entries(baseEnv)) {
-    if (!overlaid.has(npmConfigSetting(key))) {
+    const setting = npmConfigSetting(key);
+    if (setting === null) {
       merged[key] = value;
+      continue;
     }
+    // Even an empty ambient entry goes when the overlay carries the setting: a
+    // Windows environment is case-insensitive, and only the first spelling in
+    // it reaches the child, which would be this one rather than the overlay's.
+    if (overlaid.has(setting)) {
+      continue;
+    }
+    // npm skips an empty value, so it neither overrides nor competes.
+    if (!value) {
+      merged[key] = value;
+      continue;
+    }
+    const superseded = keptSpelling.get(setting);
+    if (superseded !== undefined) {
+      delete merged[superseded];
+    }
+    keptSpelling.set(setting, key);
+    merged[key] = value;
   }
   return { ...merged, ...overlay };
 }
@@ -170,6 +210,31 @@ function replaceEnvExpr(
     }
     return esc.slice(esc.length / 2) + (resolve(name) ?? `$\{${name}}`);
   });
+}
+
+const NPM_ENV_EXPR = /(?<!\\)(\\*)\$\{([^${}?]+)(\?)?\}/g;
+
+/**
+ * Resolves `${VAR}` references to the value npm itself ends up with, escapes
+ * consumed and the `${VAR?}` form falling back to an empty string. Use it to
+ * predict what a value npm reads for itself becomes, not to produce one for it:
+ * a bridged value goes through npm's own pass, which expandEnvVars accounts for.
+ * See https://github.com/npm/cli/blob/bb056c85059cfb39514614e31abba09f20ac1612/workspaces/config/lib/env-replace.js
+ */
+export function expandNpmEnvVars(
+  value: string,
+  env: NodeJS.ProcessEnv = process.env
+): string {
+  return value.replace(
+    NPM_ENV_EXPR,
+    (orig: string, esc: string, name: string, optional: string) => {
+      if (esc.length % 2) {
+        return orig.slice((esc.length + 1) / 2);
+      }
+      const fallback = optional ? '' : `$\{${name}}`;
+      return esc.slice(esc.length / 2) + (env[name] ?? fallback);
+    }
+  );
 }
 
 /**

@@ -8,10 +8,11 @@ import {
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import { logger } from '../logger';
 import {
-  expandEnvVars,
+  expandNpmEnvVars,
   expandPnpmEnvVars,
   getPackageScope,
   nerfDart,
+  readNpmConfigEnv,
   setCafile,
   setProxies,
   setRegistry,
@@ -277,13 +278,14 @@ function bridgeAuthIni(
 }
 
 /**
- * The registry the spawned npm will contact, as far as this process can see: the
- * registry bridged into the env overlay, else the one the workspace .npmrc
- * declares, else npm's default. npm reads that .npmrc natively, so its value is
- * expanded with npm's grammar rather than pnpm's. A registry declared only in a
+ * The registry the spawned npm will contact, as far as this process can see, in
+ * npm's own precedence: the registry bridged into the env overlay, else one
+ * already in the environment, else the one the workspace .npmrc declares, else
+ * npm's default. npm reads the last two itself, so their values are expanded
+ * with npm's grammar rather than pnpm's. A registry declared only in a
  * user-level ~/.npmrc is not visible here, which leaves the comparison covering
- * the workspace-controlled sources, the ones that can redirect the request to a
- * host the user never configured.
+ * the sources that can redirect the request to a host the user never
+ * configured.
  */
 function contactedRegistry(
   env: NpmConfigEnv,
@@ -291,15 +293,23 @@ function contactedRegistry(
   scope: string | null
 ): string {
   const declaredFor = (key: string): string | undefined => {
-    const fromNpmrc = projectNpmrc.get(key);
-    return (
+    // An ambient npm_config_* survives only where the overlay claims nothing
+    // (mergeNpmConfigEnv drops it otherwise), and it still outranks the .npmrc.
+    const declared =
       env[`npm_config_${key}`] ??
-      (fromNpmrc !== undefined ? expandEnvVars(fromNpmrc) : undefined)
-    );
+      readNpmConfigEnv(process.env, key) ??
+      projectNpmrc.get(key);
+    // npm trims a value before it expands one (parseField), so a blank value
+    // collapses while a padded reference still resolves.
+    return declared === undefined
+      ? undefined
+      : expandNpmEnvVars(declared.trim());
   };
+  // npm's pickRegistry falls through on a falsy value, so a setting that
+  // expanded to nothing lands on the next one rather than on an empty host.
   return (
-    (scope ? declaredFor(`${scope}:registry`) : undefined) ??
-    declaredFor('registry') ??
+    (scope ? declaredFor(`${scope}:registry`) : undefined) ||
+    declaredFor('registry') ||
     DEFAULT_REGISTRY
   );
 }
