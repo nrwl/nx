@@ -261,10 +261,12 @@ fn enqueue_event(
     event: EventData,
     user_params: &ParameterMap,
     current_page_title: Option<&str>,
-    queue: &mut Vec<QueuedItem>,
+    queue: &mut Vec<ParameterMap>,
 ) {
-    let debug_mode = event.debug_mode;
     let mut params = user_params.clone();
+    if event.debug_mode {
+        params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+    }
     params.extend(event.parameters);
     params.insert(
         event_param::EVENT_NAME.to_string(),
@@ -275,17 +277,19 @@ fn enqueue_event(
             .entry(event_param::DOCUMENT_TITLE.to_string())
             .or_insert_with(|| title.to_string());
     }
-    queue.push((sanitize_params(params), debug_mode));
+    queue.push(sanitize_params(params));
 }
 
 /// Convert a PageViewData into sanitized params and push onto the queue
 fn enqueue_page_view(
     page_view: PageViewData,
     user_params: &ParameterMap,
-    queue: &mut Vec<QueuedItem>,
+    queue: &mut Vec<ParameterMap>,
 ) {
-    let debug_mode = page_view.debug_mode;
     let mut params = user_params.clone();
+    if page_view.debug_mode {
+        params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+    }
     params.extend(page_view.parameters);
     params.insert(event_param::EVENT_NAME.to_string(), "page_view".to_string());
     params.insert(
@@ -299,7 +303,7 @@ fn enqueue_page_view(
             MAX_URL_PARAM_VALUE_LENGTH,
         ),
     );
-    queue.push((sanitize_params(params), debug_mode));
+    queue.push(sanitize_params(params));
 }
 
 /// Read on the MAIN JS thread only (track_* napi calls) — the main thread
@@ -311,12 +315,6 @@ fn enqueue_page_view(
 fn read_debug_mode() -> bool {
     std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true"
 }
-
-/// Sanitized params plus the debug flag captured when the item was tracked.
-/// The flag rides with each item (rather than toggling shared request params)
-/// so batching latency and the flush/timeout drain paths cannot attribute one
-/// item's debug state to another.
-type QueuedItem = (ParameterMap, bool);
 
 /// Sampled events (perf spans) arrive stamped with a sample_rate parameter
 /// (see perf-logging.ts); events without it always pass. A stamped event is
@@ -353,8 +351,8 @@ fn drain_channels(
     page_view_rx: &Receiver<PageViewData>,
     user_params: &ParameterMap,
     current_page_title: &mut Option<String>,
-    event_queue: &mut Vec<QueuedItem>,
-    page_view_queue: &mut Vec<QueuedItem>,
+    event_queue: &mut Vec<ParameterMap>,
+    page_view_queue: &mut Vec<ParameterMap>,
 ) {
     while let Ok(event) = event_rx.try_recv() {
         if !is_sampled_in(event.debug_mode, session_id, &event.parameters) {
@@ -398,8 +396,8 @@ fn background_sender(
     );
     let mut session = SessionState::new(initial_session_id, session_refresh_tx);
     let mut current_page_title: Option<String> = None;
-    let mut event_queue: Vec<QueuedItem> = Vec::new();
-    let mut page_view_queue: Vec<QueuedItem> = Vec::new();
+    let mut event_queue = Vec::new();
+    let mut page_view_queue = Vec::new();
     let mut last_send = std::time::Instant::now();
 
     loop {
@@ -564,8 +562,10 @@ fn log_page_view(level: &str, prefix: &str, title: &Option<String>, location: &O
     }
 }
 
-/// Request params for a batch: the shared common params, with _dbg added when
-/// every item in the batch was tracked in debug mode.
+/// Request params for a batch: the shared common params, with _dbg hoisted to
+/// the request level when the batch's items were tracked in debug mode (the
+/// same lift dt/dl get for page views; like those, the key also stays on the
+/// item).
 fn batch_request_params(common_params: &ParameterMap, debug_mode: bool) -> ParameterMap {
     let mut params = common_params.clone();
     if debug_mode {
@@ -577,8 +577,8 @@ fn batch_request_params(common_params: &ParameterMap, debug_mode: bool) -> Param
 async fn send_batches(
     client: &Client,
     common_params: &ParameterMap,
-    event_queue: &mut Vec<QueuedItem>,
-    page_view_queue: &mut Vec<QueuedItem>,
+    event_queue: &mut Vec<ParameterMap>,
+    page_view_queue: &mut Vec<ParameterMap>,
 ) -> Result<()> {
     if event_queue.is_empty() && page_view_queue.is_empty() {
         return Ok(());
@@ -587,14 +587,14 @@ async fn send_batches(
     // Batches are homogeneous in debug mode — the _dbg request param routes a
     // whole request to GA DebugView, so debug and non-debug items never share
     // a request.
-    let (debug_events, events): (Vec<_>, Vec<_>) =
-        event_queue.drain(..).partition(|(_, debug)| *debug);
-    for (batch, debug_mode) in [(events, false), (debug_events, true)] {
-        if batch.is_empty() {
+    let (debug_events, events): (Vec<_>, Vec<_>) = event_queue
+        .drain(..)
+        .partition(|params| params.contains_key(request_param::DEBUG_VIEW));
+    for (items, debug_mode) in [(events, false), (debug_events, true)] {
+        if items.is_empty() {
             continue;
         }
         let request_params = batch_request_params(common_params, debug_mode);
-        let items: Vec<ParameterMap> = batch.into_iter().map(|(params, _)| params).collect();
         for chunk in items.chunks(MAX_EVENTS_PER_BATCH) {
             let event_names: Vec<String> = chunk
                 .iter()
@@ -616,7 +616,8 @@ async fn send_batches(
         }
     }
 
-    for (page_view, debug_mode) in page_view_queue.drain(..) {
+    for page_view in page_view_queue.drain(..) {
+        let debug_mode = page_view.contains_key(request_param::DEBUG_VIEW);
         let title = page_view.get(event_param::DOCUMENT_TITLE).cloned();
         let location = page_view.get(event_param::DOCUMENT_LOCATION).cloned();
 
