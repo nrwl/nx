@@ -208,9 +208,16 @@ async function buildPlaywrightTargets(
       port?: number;
       url?: string;
       ignoreHTTPSErrors?: boolean;
+      timeout?: number;
     } = task.port != null ? { port: task.port } : { url: task.url };
     if (task.ignoreHTTPSErrors) {
       server.ignoreHTTPSErrors = true;
+    }
+    // Carry each server's own `webServer.timeout` (the budget Playwright waits
+    // for a server it starts) so a slow server is not cut short and a fast one
+    // is not given another server's budget.
+    if (task.timeout != null) {
+      server.timeout = task.timeout;
     }
     return server;
   });
@@ -218,17 +225,6 @@ async function buildPlaywrightTargets(
     webserverReadinessServers.length > 0
       ? `${options.targetName}--wait-for-webserver`
       : undefined;
-  // Honor Playwright's own `webServer.timeout` (the budget it waits for a
-  // server it starts) so a slow server is not cut short. The plugin option
-  // overrides it; use the longest configured timeout across servers.
-  const configuredTimeouts = webserverReadinessTasks
-    .map((task) => task.timeout)
-    .filter((timeout): timeout is number => timeout != null);
-  const webserverReadinessTimeout =
-    options.webServerTimeout ??
-    (configuredTimeouts.length > 0
-      ? Math.max(...configuredTimeouts)
-      : undefined);
 
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
@@ -284,8 +280,8 @@ async function buildPlaywrightTargets(
       cache: false,
       options: {
         servers: webserverReadinessServers,
-        ...(webserverReadinessTimeout != null
-          ? { timeout: webserverReadinessTimeout }
+        ...(options.webServerTimeout != null
+          ? { timeout: options.webServerTimeout }
           : {}),
       },
       dependsOn: getDependsOn(webserverCommandTasks),
