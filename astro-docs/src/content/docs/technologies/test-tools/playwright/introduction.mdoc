@@ -77,13 +77,19 @@ The `@nx/playwright/plugin` is configured in the `plugins` array in `nx.json`.
 
 The `targetName` and `ciTargetName` options control the name of the inferred Playwright tasks. The default names are `e2e` and `e2e-ci`.
 
-When your Playwright config declares a `webServer` that sets `reuseExistingServer` and whose
-`command` runs an Nx task, such as `npx nx run my-app:serve`, Nx runs that task as a dependency of
-the Playwright tasks instead of letting Playwright start its own server.
+When your Playwright config declares a `webServer` that sets `reuseExistingServer` to `true` and
+whose `command` runs an Nx task, Nx runs that task as a dependency of the Playwright tasks.
+The command must be exactly `nx run <project>:<target>` or `nx <target> <project>`, optionally
+prefixed by `npx`, `yarn`, `bun`, `pnpm`, `pnpm exec`, or `pnpx`.
+Nx doesn't recognize a command with extra arguments, such as `npx nx run my-app:serve --port=4200`.
+
 If that `webServer` also sets a `port` or a `url`, Nx infers an extra task that waits for the server
-to accept connections before the tests run.
+to be ready.
+Playwright then finds the server already running and reuses it.
+If the `webServer` sets neither, Playwright has nothing to check and starts its own server.
+
 The `webServerTimeout` option sets how long, in milliseconds, that task waits before failing.
-It defaults to the `timeout` configured on the `webServer`, or 60000 when neither is set.
+It defaults to each web server's configured `timeout`, or 60000 when neither is set.
 
 ### Splitting E2E tests
 
