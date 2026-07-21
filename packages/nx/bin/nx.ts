@@ -4,6 +4,7 @@
 // See: https://github.com/alexeyraspopov/picocolors/issues/100
 
 if (process.env.FORCE_COLOR === '0') {
+  process.env.NX_ORIGINAL_FORCE_COLOR = '0';
   process.env.NO_COLOR = '1';
   delete process.env.FORCE_COLOR;
 }
