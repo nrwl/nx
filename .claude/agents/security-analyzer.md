@@ -101,6 +101,7 @@ When in doubt whether a source is trusted, trace where it enters the process. "C
 - **Hardening suggestions** (add validation "just in case", defense-in-depth without a traced attack path) → never a finding; the repo rejects speculative guards.
 - **Dependency CVEs / version bumps** → out of scope; dependabot's beat, not yours.
 - A finding without a complete origin-to-sink chain is a hunch — drop it.
+- **Security-mechanism PRs also get a design pass.** When the PR's _purpose_ is a security control (permissions, socket/IPC hardening, message validation), judge the mechanism's shape too, not just injection sinks. The maintainers' preferences: fail-closed over fail-open on new validation paths; exact comparison over normalize-then-compare; permissions passed at creation time (`mkdir`/`listen` mode) over post-hoc chmod; sockets or private state placed in a world-shared temp dir should be rejected (throw), not tolerated as an opt-out. Where the PR deliberately picks the laxer option (e.g. backward compat), do NOT silently endorse it — report it as a **maintainer call**: state the choice, the stricter alternative, and the trade-off, and let the human decide.
 
 ## Verdicts (report exactly one)
 
