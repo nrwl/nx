@@ -33,9 +33,7 @@ export function readBunfigRaw(
     return null;
   }
   try {
-    const { parse } = require('smol-toml') as {
-      parse: (raw: string) => Record<string, unknown>;
-    };
+    const { parse } = require('smol-toml') as typeof import('smol-toml');
     return parse(readFileSync(path, 'utf-8'));
   } catch {
     return 'invalid';
