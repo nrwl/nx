@@ -17,6 +17,8 @@ New entries always go under `generators`. Entries under `schematics` run through
 
 Do not author: `cli` (dead since the runner-by-section change; schema marks it "No longer used"), `schema` (documented in the JSON schema but never read by the runtime), `x-repair-skip` unless the migration is an nx-core migration that must not re-run under `nx repair` (repair re-runs ALL nx-core migrations regardless of version).
 
+Collection scope: installed versions resolve by node resolution from the workspace root (`createInstalledPackageVersionsResolver` -> `readModulePackageJson`), not from package.json entries. A package-group member that is node-resolvable from the root (for example a hoisted transitive dependency) still has its migrations collected and gated; one that does not resolve is skipped even when workspace code imports it (pnpm-style isolated layouts keep transitive packages on disk but not root-resolvable).
+
 ## Return values
 
 `Migration = (tree) => void | string[] | MigrationReturnObject | Promise<...>`.
