@@ -1,6 +1,6 @@
 # documentation .md template
 
-For the colocated doc of a migration generator. Read by humans on nx.dev (the docs site inlines the .md that shares the implementation's basename) and passed to agents as reference material via the `documentation` key. Exemplar: `packages/nx/src/migrations/update-21-0-0/remove-legacy-cache.md`.
+For the colocated doc of a migration entry. Read by humans on nx.dev (the docs site inlines the .md that shares the implementation's basename) and passed to agents as reference material via the `documentation` key. Exemplar: `packages/nx/src/migrations/update-21-0-0/remove-legacy-cache.md`.
 
 Headings start at h4: the docs site nests the content under an h3 entry heading, so h1-h3 would break the page hierarchy.
 
@@ -33,3 +33,4 @@ Rules:
 - Multiple distinct changes get multiple Before/After pairs, each under its own h5 or with a one-line lead-in.
 - Optional trailing `#### Reference` section with links to the upstream changelog or guide.
 - Name the file after the implementation (`<name>.md` next to `<name>.ts`) so the docs site picks it up; wire the same file into the entry's `documentation` key for agentic runs.
+- Prompt migrations use the what-the-upgrade-involves genre instead: prose on what the upgrade involves and what is automated, named `upgrade-to-<framework>-<major>.md` (exemplar: `packages/react/src/migrations/update-23-1-0/upgrade-to-react-19.md`). With no implementation basename to share, it reaches agents via the `documentation` key only, not the docs site.

@@ -60,4 +60,4 @@ Rules:
 - Hybrid prompts additionally instruct the agent to verify (not redo) the deterministic pre-pass: review the changed files, and treat every advisory-context item as pending work.
 - When upstream publishes an npx-runnable codemod, instruct the agent to run it and verify the result rather than reimplementing the transform.
 - Scope statements are load-bearing: state explicitly what the agent must not touch.
-- The filename must differ from any implementation basename in the same directory (the docs site inlines `<implementation>.md` into public docs).
+- The filename must differ from any implementation basename in the same directory (docs-site leak; SKILL.md section 4).

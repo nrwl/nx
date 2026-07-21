@@ -47,7 +47,7 @@ describe('remove-foo-option migration', () => {
 Rules:
 
 - Explicit assertions or `toMatchInlineSnapshot`. Never `toMatchSnapshot` (external snapshot files); no migration spec in the repo uses it.
-- At least one negative (no-op) test is mandatory; the idempotency test is mandatory whenever the migration's trigger can survive a run.
+- The mandatory case list (negative, idempotency, malformed-input, multi-edit, precedence, list-sanity, reproduced-behavior, each with its trigger) lives in SKILL.md section 5; the skeleton above shows the negative and idempotency shapes.
 - Hybrid migrations: assert on the return value.
 
 ```ts
@@ -55,5 +55,3 @@ const result = await update(tree);
 expect(result.nextSteps).toContainEqual(expect.stringContaining('...'));
 expect(result.agentContext).toContainEqual(expect.stringContaining('...'));
 ```
-
-- Malformed-input tests are mandatory when the migration parses files: feed an unparseable file and assert the migration skips it without throwing.

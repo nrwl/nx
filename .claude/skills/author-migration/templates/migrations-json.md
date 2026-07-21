@@ -1,6 +1,6 @@
 # migrations.json entry templates
 
-Replace `<...>` placeholders. Version values follow the target-train rule from SKILL.md section 2. Paths are dist-prefixed because they resolve against the installed package. The examples below use `./dist/src/migrations/...`, the shape for packages whose `tsconfig.lib.json` has `rootDir: "."` (the dominant shape); packages that set `rootDir: "src"` publish without the `src` segment (`./dist/migrations/...`, e.g. dotnet and maven). Copy the shape from a sibling entry, or for a package's first entry derive it from `rootDir` and confirm the path exists under the built `dist/`; path validation strips `dist/` and resolves the source file, so a wrong dist shape passes it.
+Replace `<...>` placeholders. Migration entries go under the file's top-level `generators` section, packageJsonUpdates groups under `packageJsonUpdates` (full file shape at the bottom). Version values follow the target-train rule from SKILL.md section 2. Paths are dist-prefixed because they resolve against the installed package. The examples below use `./dist/src/migrations/...`, the shape for packages whose `tsconfig.lib.json` has `rootDir: "."` (the dominant shape); packages that set `rootDir: "src"` publish without the `src` segment (`./dist/migrations/...`, e.g. dotnet and maven). Copy the shape from a sibling entry, or for a package's first entry derive it from `rootDir` and confirm the path exists under the built `dist/`; path validation strips `dist/` and resolves the source file, so a wrong dist shape passes it.
 
 ## Generator-only
 
@@ -26,7 +26,8 @@ Add `requires` when the migration only applies past an upstream major:
   "version": "23.2.0-beta.3",
   "requires": { "bar": ">=4.0.0" },
   "description": "AI-assisted migration: rewrites bar config files to the v4 format, whose options do not map 1:1, so it is driven by an AI prompt rather than a deterministic generator",
-  "prompt": "./dist/src/migrations/update-23-2-0/migrate-bar-config-format.md"
+  "prompt": "./dist/src/migrations/update-23-2-0/migrate-bar-config-format.md",
+  "documentation": "./dist/src/migrations/update-23-2-0/upgrade-to-bar-v4.md"
 }
 ```
 
@@ -47,7 +48,7 @@ One entry, both keys. The prompt filename must differ from the implementation ba
 
 ## packageJsonUpdates
 
-Plain bump for the release train:
+Plain bump for the target train:
 
 ```json
 "23.2.0": {
@@ -92,8 +93,12 @@ Bumping a package that ships its own migrations, without triggering them:
 }
 ```
 
-And migrations.json starts with:
+And a new migrations.json has this shape:
 
 ```json
-"$schema": "../../node_modules/nx/schemas/migrations-schema.json"
+{
+  "$schema": "../../node_modules/nx/schemas/migrations-schema.json",
+  "generators": {},
+  "packageJsonUpdates": {}
+}
 ```
