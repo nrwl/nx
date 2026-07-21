@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createApp, createLib } from '../../utils/testing-generators';
 import { logger, Tree } from '@nx/devkit';

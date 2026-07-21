@@ -1,6 +1,4 @@
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { Tree } from '@nx/devkit';
-import { FsTree } from 'nx/src/generators/tree';
 import {
   addNxProjectGraphPlugin,
   extractNxPluginVersion,
@@ -8,6 +6,8 @@ import {
 } from './gradle-project-graph-plugin-utils';
 import { gradleProjectGraphPluginName } from '../../utils/versions';
 import * as execGradle from '../../utils/exec-gradle';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { FsTree } from '@nx/devkit/internal';
 
 jest.mock('../../utils/exec-gradle', () => ({
   findGradlewFile: jest.fn(),

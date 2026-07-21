@@ -1,4 +1,8 @@
-import { getRelativeCwd, logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  getRelativeCwd,
+  logShowProjectCommand,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addProjectConfiguration,
@@ -27,7 +31,6 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { updateJestConfigContent } from '../../utils/jest-utils';
 import { maybeJs } from '../../utils/maybe-js';

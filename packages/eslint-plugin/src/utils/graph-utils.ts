@@ -4,12 +4,12 @@ import type {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '@nx/devkit';
+import { DependencyType } from '@nx/devkit';
 import {
-  DependencyType,
   fileDataDepTarget,
   fileDataDepType,
-} from 'nx/src/config/project-graph';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+  findMatchingProjects,
+} from '@nx/devkit/internal';
 
 interface Reach {
   graph: ProjectGraph;

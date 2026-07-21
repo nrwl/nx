@@ -6,13 +6,13 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { createPackageGenerator } from '../create-package/create-package';
 import { pluginGenerator } from '../plugin/plugin';
 import type {
   NormalizedPresetGeneratorOptions,
   PresetGeneratorSchema,
 } from './schema';
+import { type PackageJson } from '@nx/devkit/internal';
 
 export async function presetGenerator(
   tree: Tree,

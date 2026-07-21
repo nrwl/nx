@@ -1,4 +1,8 @@
-import { logShowProjectCommand } from '@nx/devkit/internal';
+import {
+  logShowProjectCommand,
+  createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -15,10 +19,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator, extractTsConfigBase } from '@nx/js';
-import {
-  createNxCloudOnboardingURLForWelcomeApp,
-  getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
   isbotVersion,

@@ -1,5 +1,5 @@
 import type { CreateNodesContext } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodes, type AngularProjectConfiguration } from './plugin';
 import { loadVite } from './utils/vitest';
 

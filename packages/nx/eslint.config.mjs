@@ -1,4 +1,4 @@
-import { baseConfig } from '../../eslint.config.mjs';
+import { allowDirectNxImports, baseConfig } from '../../eslint.config.mjs';
 import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
@@ -155,4 +155,5 @@ export default [
   {
     ignores: ['**/__fixtures__/**/*', 'dist'],
   },
+  allowDirectNxImports,
 ];

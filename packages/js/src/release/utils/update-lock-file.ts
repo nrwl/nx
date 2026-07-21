@@ -6,9 +6,8 @@ import {
   output,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { daemonClient } from 'nx/src/daemon/client/client';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
+import { daemonClient } from '@nx/devkit/internal';
+import { getLockFileName } from '@nx/devkit/internal';
 import { gte } from 'semver';
 
 export async function updateLockFile(

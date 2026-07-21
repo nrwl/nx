@@ -8,13 +8,17 @@ import { ExecutorContext } from '@nx/devkit';
 
 // Get reference to the mocked function
 const mockDetectPortFn = jest.requireMock('detect-port') as jest.Mock;
-import * as executorUtils from 'nx/src/command-line/run/executor-utils';
+import { getExecutorInformation } from '@nx/devkit/internal';
 import * as path from 'path';
 import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
 
 jest.mock('@nx/devkit');
 let devkit = require('@nx/devkit');
+jest.mock('nx/src/command-line/run/executor-utils', () => ({
+  ...jest.requireActual('nx/src/command-line/run/executor-utils'),
+  getExecutorInformation: jest.fn(),
+}));
 jest.mock('../../utils/versions', () => ({
   ...jest.requireActual('../../utils/versions'),
   getInstalledCypressMajorVersion: jest.fn(),
@@ -54,7 +58,7 @@ describe('Cypress builder', () => {
   jest.spyOn(devkit, 'readTargetOptions').mockReturnValue({
     watch: true,
   });
-  jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+  (getExecutorInformation as jest.Mock).mockReturnValue({
     schema: { properties: {} },
     hasherFactory: jest.fn(),
     implementationFactory: jest.fn(),

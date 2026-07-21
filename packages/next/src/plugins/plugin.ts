@@ -3,6 +3,8 @@ import {
   loadConfigFile,
   getNamedInputs,
   PluginCache,
+  hashObject,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -22,8 +24,6 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { readdirSync } from 'fs';
-import { hashObject } from 'nx/src/devkit-internals';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, join } from 'path';
 
 export interface NextPluginOptions {

@@ -1,4 +1,4 @@
-import { E2EWebServerDetails } from '@nx/devkit/internal';
+import { E2EWebServerDetails, type PackageJson } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -16,7 +16,6 @@ import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(
   tree: Tree,

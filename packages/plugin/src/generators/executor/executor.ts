@@ -1,4 +1,7 @@
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   generateFiles,
@@ -12,7 +15,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { getArtifactMetadataDirectory } from '../../utils/paths';
 import { nxVersion } from '../../utils/versions';

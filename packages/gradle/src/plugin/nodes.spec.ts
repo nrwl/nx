@@ -1,6 +1,5 @@
 import { CreateNodesContext, readJsonFile } from '@nx/devkit';
 import { join } from 'path';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { type ProjectGraphReport } from './utils/get-project-graph-from-gradle-plugin';
 
 let gradleReport: ProjectGraphReport;
@@ -15,6 +14,7 @@ jest.mock('./utils/get-project-graph-from-gradle-plugin', () => {
 });
 
 import { createNodes } from './nodes';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/gradle/plugin/nodes', () => {
   let createNodesFunction = createNodes[1];

@@ -1,6 +1,6 @@
 import { dirname, parse } from 'path';
-import { joinPathFragments, normalizePath } from 'nx/src/utils/path';
 import { getRelativeDirectoryToProjectRoot } from '../../../utils/get-main-file-dir';
+import { joinPathFragments, normalizePath } from '@nx/devkit';
 
 interface OutputFileNameOptions {
   buildTargetExecutor: string;

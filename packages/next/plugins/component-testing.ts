@@ -26,9 +26,9 @@ import {
   withNx,
 } from '@nx/webpack';
 import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/internal';
-import { readNxJson } from 'nx/src/config/configuration';
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 
 export function nxComponentTestingPreset(
   pathToConfig: string,

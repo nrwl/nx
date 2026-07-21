@@ -1,7 +1,7 @@
 import { workspaceRoot } from '@nx/devkit';
 import { isNxWebpackComposablePlugin } from '../config';
 import type { Configuration } from 'webpack';
-import { readNxJsonFromDisk } from 'nx/src/devkit-internals';
+import { readNxJsonFromDisk } from '@nx/devkit/internal';
 
 /**
  * Reads the webpack options from a give webpack configuration. The configuration can be:

@@ -11,7 +11,7 @@ export { names } from '@nx/devkit';
 
 export { output } from './src/utilities/output';
 
-export { readPackageJson } from 'nx/src/project-graph/file-utils';
+export { readPackageJson } from '@nx/devkit/internal';
 
 export {
   getWorkspacePath,

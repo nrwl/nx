@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   NxJsonConfiguration,
@@ -8,7 +8,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { PackageJson } from 'nx/src/utils/package-json';
 import {
   angularDevkitVersion,
   angularVersion,
@@ -19,6 +18,7 @@ import {
 } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupSsr } from './setup-ssr';
+import { PackageJson } from '@nx/devkit/internal';
 
 describe('setupSSR', () => {
   describe('with application builder', () => {

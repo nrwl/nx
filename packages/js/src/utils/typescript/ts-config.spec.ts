@@ -1,6 +1,6 @@
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { readTsConfigPaths, resolvePathsBaseUrl } from './ts-config';
 import { join } from 'path';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('resolvePathsBaseUrl', () => {
   let tempFs: TempFs;

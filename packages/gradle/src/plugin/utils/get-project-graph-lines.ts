@@ -1,7 +1,7 @@
 import { AggregateCreateNodesError, output, workspaceRoot } from '@nx/devkit';
-import { isCI } from 'nx/src/devkit-internals';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { GradlePluginOptions } from './gradle-plugin-options';
+import { isCI } from '@nx/devkit/internal';
 
 const DEFAULT_GRAPH_TIMEOUT_SECONDS = isCI() ? 600 : 120;
 

@@ -1,4 +1,13 @@
-import { baseConfig, reactHooksV7Off } from '../../eslint.config.mjs';
+import {
+  allowDirectNxImports,
+  baseConfig,
+  reactHooksV7Off,
+} from '../../eslint.config.mjs';
 import nx from '@nx/eslint-plugin';
 
-export default [...baseConfig, ...nx.configs['flat/react'], ...reactHooksV7Off];
+export default [
+  ...baseConfig,
+  ...nx.configs['flat/react'],
+  ...reactHooksV7Off,
+  allowDirectNxImports,
+];

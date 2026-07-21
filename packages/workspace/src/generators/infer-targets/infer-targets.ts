@@ -1,4 +1,9 @@
-import { NoTargetsToMigrateError } from '@nx/devkit/internal';
+import {
+  NoTargetsToMigrateError,
+  GeneratorInformation,
+  getGeneratorInformation,
+  findInstalledPlugins,
+} from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
   formatFiles,
@@ -10,11 +15,6 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { prompt } from 'enquirer';
-import {
-  GeneratorInformation,
-  getGeneratorInformation,
-} from 'nx/src/command-line/generate/generator-utils';
-import { findInstalledPlugins } from 'nx/src/utils/plugins/installed-plugins';
 
 interface Schema {
   project?: string;

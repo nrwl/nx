@@ -1,4 +1,7 @@
-import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
+import {
+  determineProjectNameAndRootOptions,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -33,7 +36,6 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import type { VitestGeneratorSchema } from '@nx/vitest/generators';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';
 import { nxVersion } from '../../utils/versions';

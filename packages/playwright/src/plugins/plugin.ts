@@ -2,6 +2,10 @@ import {
   calculateHashesForCreateNodes,
   loadConfigFile,
   getNamedInputs,
+  hashObject,
+  workspaceDataDirectory,
+  PluginCache,
+  getFilesInDirectoryUsingContext,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -23,10 +27,6 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, parse, relative, resolve, sep } from 'node:path';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
-import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 
 export interface PlaywrightPluginOptions {

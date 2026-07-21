@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-fs';
+import '@nx/devkit/internal-testing-utils/mock-fs';
 
 import type {
   FileData,
@@ -9,9 +9,9 @@ import type {
 import { Linter } from 'eslint';
 import * as jsoncParser from 'jsonc-eslint-parser';
 import { vol } from 'memfs';
-import type { FileDataDependency } from 'nx/src/config/project-graph';
-import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
-import * as packageManager from 'nx/src/utils/package-manager';
+import { detectPackageManager } from '@nx/devkit';
+import type { FileDataDependency } from '@nx/devkit/internal';
+import { createProjectRootMappings } from '@nx/devkit/internal';
 import dependencyChecks, {
   Options,
   RULE_NAME as dependencyChecksRuleName,
@@ -25,6 +25,14 @@ jest.mock('@nx/devkit', () => ({
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
+
+jest.mock('nx/src/utils/package-manager', () => {
+  const actual = jest.requireActual('nx/src/utils/package-manager');
+  return {
+    ...actual,
+    detectPackageManager: jest.fn(actual.detectPackageManager),
+  };
+});
 
 const rootPackageJson = {
   dependencies: {
@@ -1718,9 +1726,7 @@ describe('Dependency checks (eslint)', () => {
 
   describe('pnpm catalogs', () => {
     beforeEach(() => {
-      jest
-        .spyOn(packageManager, 'detectPackageManager')
-        .mockReturnValue('pnpm');
+      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
     });
 
     afterEach(() => {

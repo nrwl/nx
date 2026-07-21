@@ -1,1 +1,12 @@
-export * from 'nx/src/project-graph/project-graph';
+export {
+  createProjectGraphAsync,
+  readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from '@nx/devkit';
+export {
+  buildProjectGraphAndSourceMapsWithoutDaemon,
+  createProjectGraphAndSourceMapsAsync,
+  handleProjectGraphError,
+  preventRecursionInGraphConstruction,
+  readCachedProjectConfiguration,
+} from '@nx/devkit/internal';

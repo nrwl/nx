@@ -2,8 +2,8 @@ import { runMavenAnalysis } from './maven-analyzer';
 import { spawn, execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { readJsonFile } from '@nx/devkit';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { EventEmitter } from 'events';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 
 jest.mock('child_process');
 jest.mock('fs');

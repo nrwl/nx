@@ -7,13 +7,13 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import {
   findRootJestConfig,
   type JestPresetExtension,
 } from '../../../utils/config/config-file';
 import type { NormalizedJestProjectSchema } from '../schema';
 import { getProjectType } from '@nx/js/internal';
+import { readTargetDefaultsForTarget } from '@nx/devkit/internal';
 
 export async function createJestConfig(
   tree: Tree,

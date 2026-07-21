@@ -1,9 +1,5 @@
 import { generateFiles, joinPathFragments, names, type Tree } from '@nx/devkit';
 import { getRelativePathToRootTsConfig, getRootTsConfigFileName } from '@nx/js';
-import {
-  createNxCloudOnboardingURLForWelcomeApp,
-  getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import {
   getComponentType,
@@ -12,6 +8,10 @@ import {
 import { validateHtmlSelector } from '../../utils/selector';
 import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
 import type { NormalizedSchema } from './normalized-schema';
+import {
+  createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
+} from '@nx/devkit/internal';
 
 export async function createFiles(
   tree: Tree,

@@ -1,6 +1,6 @@
 import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import { basename, dirname } from 'path';
-import { interpolate } from 'nx/src/tasks-runner/utils';
+import { interpolate } from '@nx/devkit/internal';
 
 export type StaticRemoteConfig = {
   basePath: string;

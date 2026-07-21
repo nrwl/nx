@@ -1,6 +1,6 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 jest.mock('@nx/devkit/internal', () => ({
   ...jest.requireActual('@nx/devkit/internal'),
