@@ -109,11 +109,12 @@ export type HandoffOutcome =
   | { kind: 'ambiguous-abort'; causeSummary?: string[] };
 
 /**
- * Result of the up-front resolution phase that runs once per `--run-migrations`
- * invocation, before the migration loop. Cached and consulted for every entry.
+ * Result of the up-front resolution phase, run once per run-phase invocation
+ * and applied to every migration it covers.
  *
  * - `inside-agent`: nx detected it is itself running inside another agent;
- *   every agentic step is skipped and prompt migrations go to `nextSteps`.
+ *   every agentic step is skipped and prompt migrations are surfaced for the
+ *   outer agent to apply.
  * - `disabled`: the user opted out (explicit `--agentic=false`, declined the
  *   up-front prompt, or non-TTY without the flag).
  * - `enabled`: the agentic flow runs and `selectedAgent` is the agent it
