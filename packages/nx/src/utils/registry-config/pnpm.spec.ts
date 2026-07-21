@@ -28,6 +28,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'Npm_Config_Registry',
     'pnpm_config_registry',
     'PNPM_CONFIG_REGISTRY',
+    'npm_config_//reg-b.example.com/:_authToken',
     'XDG_CONFIG_HOME',
   ];
   const savedEnv: Record<string, string | undefined> = {};
@@ -236,8 +237,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('treats a registry that expanded to nothing as unset', () => {
-      // An empty npm_config_registry sends npm to the public registry instead
-      // of failing, so the key must not be emitted at all.
+      // npm skips an empty env value, and pnpm re-checks for an empty registry,
+      // so neither reads one as a destination.
       delete process.env.NX_TEST_UNSET_REGISTRY;
       writeAuthIni('registry=${NX_TEST_UNSET_REGISTRY}');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
@@ -301,8 +302,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('warns once when a bare auth.ini credential cannot reach the contacted registry', () => {
-      // The pin leaves the request unauthenticated, so npm reports a bare 401
-      // with nothing tying it back to auth.ini.
+      // Nothing in npm's own error ties the missing credential back to auth.ini.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -317,8 +317,135 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
       expect(logger.warn).toHaveBeenCalledTimes(1);
       expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
-        'https://reg-b.example.com/'
+        '//reg-b.example.com/'
       );
+    });
+
+    it('names the registry without the credentials embedded in its url', () => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeFileSync(
+        join(root, '.npmrc'),
+        'registry=https://alice:s3cr3t@reg-b.example.com/'
+      );
+      writeAuthIni('_authToken=ini-token');
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+      });
+      const message = (logger.warn as jest.Mock).mock.calls[0][0];
+      expect(message).toContain('//reg-b.example.com/');
+      expect(message).not.toContain('s3cr3t');
+    });
+
+    it('stays quiet when the workspace .npmrc already authenticates that registry', () => {
+      // npm reads that credential itself, so the request is authenticated and
+      // there is nothing to report.
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeFileSync(
+        join(root, '.npmrc'),
+        [
+          'registry=https://reg-b.example.com/',
+          '//reg-b.example.com/:_authToken=project-token',
+        ].join('\n')
+      );
+      writeAuthIni('_authToken=ini-token');
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+      });
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('stays quiet when a parent registry path carries the credential', () => {
+      // npm walks up the nerf dart, so a credential on the host covers a
+      // registry served from a path below it.
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeFileSync(
+        join(root, '.npmrc'),
+        [
+          'registry=https://reg-b.example.com/npm/',
+          '//reg-b.example.com/:_authToken=project-token',
+        ].join('\n')
+      );
+      writeAuthIni('_authToken=ini-token');
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+      });
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('stays quiet when the credential comes from the environment', () => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      process.env['npm_config_//reg-b.example.com/:_authToken'] = 'env-token';
+      writeFileSync(
+        join(root, '.npmrc'),
+        'registry=https://reg-b.example.com/'
+      );
+      writeAuthIni('_authToken=ini-token');
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+      });
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('still warns when the credential npm would find is incomplete', () => {
+      // npm needs username and _password together, so a lone username leaves
+      // the request unauthenticated after all.
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeFileSync(
+        join(root, '.npmrc'),
+        [
+          'registry=https://reg-b.example.com/',
+          '//reg-b.example.com/:username=alice',
+        ].join('\n')
+      );
+      writeAuthIni('_authToken=ini-token');
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+      });
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it('names the keys that are actually unscoped in the remediation', () => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeFileSync(
+        join(root, '.npmrc'),
+        'registry=https://reg-b.example.com/'
+      );
+      writeAuthIni(['username=alice', '_password=cGFzcw=='].join('\n'));
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+      });
+      const message = (logger.warn as jest.Mock).mock.calls[0][0];
+      expect(message).toContain('"//reg-b.example.com/:username=..."');
+      expect(message).toContain('"//reg-b.example.com/:_password=..."');
+      expect(message).not.toContain('_authToken');
+    });
+
+    it('stays quiet when the bare credential expanded to nothing', () => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      delete process.env.NX_TEST_UNSET_TOKEN;
+      writeFileSync(
+        join(root, '.npmrc'),
+        'registry=https://reg-b.example.com/'
+      );
+      writeAuthIni('_authToken=${NX_TEST_UNSET_TOKEN}');
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '11.5.0');
+      });
+      expect(logger.warn).not.toHaveBeenCalled();
     });
 
     it('stays quiet when the bare auth.ini credential reaches its registry', () => {

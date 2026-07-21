@@ -168,9 +168,9 @@ function bridgeAuthIni(
     authIni.set(key, expandPnpmEnvVars(value));
   }
   const projectNpmrc = readNpmrcMap(join(root, '.npmrc')) ?? new Map();
-  // A value that expanded to nothing selects no destination: pnpm's own readers
-  // re-check for an empty registry, and an empty npm_config_registry routes npm
-  // to the public registry rather than failing.
+  // An empty value declares nothing: pnpm's own readers re-check for an empty
+  // registry, and npm skips an empty env value outright. Deriving from one is
+  // what does damage (an empty cafile resolves to the workspace root).
   const declared = (key: string): string | undefined =>
     authIni.get(key) || undefined;
 
@@ -213,7 +213,7 @@ function bridgeAuthIni(
   // A workspace .npmrc bare key is not a source here either; npm reads that file
   // itself and rejects bare auth in it (ERR_INVALID_AUTH).
   const credentialDart = nerfDart(authIniRegistry ?? DEFAULT_REGISTRY);
-  const bareKeys = BARE_AUTH_KEYS.filter((key) => authIni.has(key));
+  const bareKeys = BARE_AUTH_KEYS.filter((key) => declared(key) !== undefined);
   if (credentialDart) {
     for (const bareKey of bareKeys) {
       const dartKey = `${credentialDart}:${bareKey}`;
@@ -228,12 +228,17 @@ function bridgeAuthIni(
 
   const contacted = contactedRegistry(env, projectNpmrc, scope);
   const contactedDart = nerfDart(contacted);
-  // The pin is what keeps the credential off a registry auth.ini never named, so
-  // the request goes out unauthenticated and npm reports a bare 401. Name the
-  // reason and the fix, which is the same one pnpm gives: it warns on every
-  // unscoped credential it rescopes and has deprecated the unscoped form.
-  if (bareKeys.length > 0 && credentialDart !== contactedDart) {
-    warnUnscopedCredential(contacted);
+  // A withheld credential is invisible in npm's own error, so name it, unless
+  // npm already finds one for that registry among the sources visible here. A
+  // user-level ~/.npmrc is not one, so the message states only what was
+  // withheld rather than predicting how the request will fail.
+  if (
+    bareKeys.length > 0 &&
+    contactedDart &&
+    credentialDart !== contactedDart &&
+    !hasCredentials(env, projectNpmrc, contactedDart)
+  ) {
+    warnUnscopedCredential(contactedDart, bareKeys);
   }
 
   // Flat TLS/proxy keys are part of pnpm's auth-config inheritance set
@@ -295,36 +300,70 @@ function contactedRegistry(
   projectNpmrc: Map<string, string>,
   scope: string | null
 ): string {
-  const declaredFor = (key: string): string | undefined => {
-    // An ambient npm_config_* survives only where the overlay claims nothing
-    // (mergeNpmConfigEnv drops it otherwise), and it still outranks the .npmrc.
-    const declared =
-      env[`npm_config_${key}`] ??
-      readNpmConfigEnv(process.env, key) ??
-      projectNpmrc.get(key);
-    // npm trims a value before it expands one (parseField), so a blank value
-    // collapses while a padded reference still resolves.
-    return declared === undefined
-      ? undefined
-      : expandNpmEnvVars(declared.trim());
-  };
   // npm's pickRegistry falls through on a falsy value, so a setting that
   // expanded to nothing lands on the next one rather than on an empty host.
   return (
-    (scope ? declaredFor(`${scope}:registry`) : undefined) ||
-    declaredFor('registry') ||
+    (scope ? npmResolved(env, projectNpmrc, `${scope}:registry`) : undefined) ||
+    npmResolved(env, projectNpmrc, 'registry') ||
     DEFAULT_REGISTRY
   );
 }
 
+/** The value npm resolves for `key`, as far as this process can see. */
+function npmResolved(
+  env: NpmConfigEnv,
+  projectNpmrc: Map<string, string>,
+  key: string
+): string | undefined {
+  // An ambient npm_config_* survives only where the overlay claims nothing
+  // (mergeNpmConfigEnv drops it otherwise), and it still outranks the .npmrc.
+  const declared =
+    env[`npm_config_${key}`] ??
+    readNpmConfigEnv(process.env, key) ??
+    projectNpmrc.get(key);
+  // npm trims a value before it expands one (parseField), so a blank value
+  // collapses while a padded reference still resolves.
+  return declared === undefined ? undefined : expandNpmEnvVars(declared.trim());
+}
+
+/**
+ * Whether npm finds credentials for `dart`, following its own lookup: a token,
+ * an ident, or a complete user/password or client-certificate pair, at the dart
+ * or at any parent of it (npm-registry-fetch regFromURI/hasAuth).
+ */
+function hasCredentials(
+  env: NpmConfigEnv,
+  projectNpmrc: Map<string, string>,
+  dart: string
+): boolean {
+  const read = (key: string): string | undefined =>
+    npmResolved(env, projectNpmrc, key);
+  let regKey = dart;
+  while (regKey.length > '//'.length) {
+    if (
+      read(`${regKey}:_authToken`) ||
+      read(`${regKey}:_auth`) ||
+      (read(`${regKey}:username`) && read(`${regKey}:_password`)) ||
+      (read(`${regKey}:certfile`) && read(`${regKey}:keyfile`))
+    ) {
+      return true;
+    }
+    regKey = regKey.replace(/([^/]+|\/)$/, '');
+  }
+  return false;
+}
+
 let warnedUnscopedCredential = false;
-function warnUnscopedCredential(registry: string): void {
+// The nerf dart, not the registry URL: a registry URL can carry its own basic
+// auth, which would then be in every console and CI log the warning reaches.
+function warnUnscopedCredential(dart: string, keys: string[]): void {
   if (warnedUnscopedCredential) {
     return;
   }
   warnedUnscopedCredential = true;
+  const scoped = keys.map((key) => `"${dart}:${key}=..."`).join(', ');
   logger.warn(
-    `A credential in pnpm's auth.ini is not scoped to a registry, so it was not sent to ${registry} when fetching packages. pnpm pins an unscoped credential to the registry that same file declares, and has deprecated the unscoped form; scope it (for example "//registry.example.com/:_authToken=...") to use it with this registry.`
+    `A credential in pnpm's auth.ini is not scoped to a registry, so it was not used for ${dart} when fetching packages. pnpm pins an unscoped credential to the registry that same file declares, and has deprecated the unscoped form. Scope it (${scoped}) to use it with this registry.`
   );
 }
 
