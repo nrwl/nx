@@ -306,28 +306,17 @@ fn enqueue_page_view(
     queue.push(sanitize_params(params));
 }
 
-/// Read on the MAIN JS thread only (track_* napi calls) — the main thread
-/// also does the unsafe env::set_var in persist_session_refreshes, and getenv
-/// racing setenv from another thread is UB. Callers of track_event_impl /
-/// track_page_view_impl (including track_rust_event) inherit this constraint.
-/// Read per event rather than captured at init so a long-lived daemon honors
-/// NX_DEBUG_TELEMETRY reflected from a client env (applyDaemonEnvFromClient).
+/// Main JS thread only — env reads race the unsafe env::set_var in
+/// persist_session_refreshes. Read per event so a live daemon honors env
+/// reflection from clients.
 fn read_debug_mode() -> bool {
     std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true"
 }
 
-/// Sampled events (perf spans) arrive stamped with a sample_rate parameter
-/// (see perf-logging.ts); events without it always pass. A stamped event is
-/// reported only when the current session falls inside that fraction: the
-/// first 8 hex chars of the session UUID map uniformly onto [0,1). The
-/// decision is per-session: a sampled-in session keeps every span, and the
-/// live (possibly refreshed) session id always governs, so each event's
-/// sampling verdict matches the sid it is reported under. Processes sharing
-/// a session id agree; after an idle refresh, other processes keep their own
-/// id until the refresh is persisted, so they may briefly sample under a
-/// different sid.
-/// Debug mode (NX_DEBUG_TELEMETRY) bypasses sampling entirely so events can
-/// be verified in GA DebugView.
+/// Events without a sample_rate param always pass. A stamped event passes
+/// when the first 8 hex chars of the live session UUID map onto [0,1) below
+/// the rate, so a sampled-in session keeps every span. Debug mode bypasses
+/// sampling.
 fn is_sampled_in(debug_mode: bool, session_id: &str, parameters: &ParameterMap) -> bool {
     if debug_mode {
         return true;
@@ -572,9 +561,8 @@ async fn send_batches(
         return Ok(());
     }
 
-    // Batches are homogeneous in debug mode — the _dbg request param routes a
-    // whole request to GA DebugView, so debug and non-debug items never share
-    // a request.
+    // _dbg routes a whole request to DebugView, so debug and non-debug items
+    // never share one.
     let (debug_events, events): (Vec<_>, Vec<_>) = event_queue
         .drain(..)
         .partition(|params| params.contains_key(request_param::DEBUG_VIEW));

@@ -254,9 +254,7 @@ pub fn get_event_dimensions() -> EventDimensions {
 
 /// Track an event from Rust code
 /// This is a fire-and-forget operation - errors are logged but not returned
-///
-/// Must be called from the main JS thread: it reads env vars, which races the
-/// main thread's env::set_var (UB) if called from any other thread.
+/// Main JS thread only — reads env vars, racing env::set_var on other threads.
 pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<String, String>) {
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
         if let Err(e) = telemetry.track_event_impl(event_name.into(), Some(parameters)) {
