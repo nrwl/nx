@@ -321,6 +321,14 @@ describe('TargetProjectLocator', () => {
             packageName: 'lodash',
           },
         },
+        'npm:lodash@4.0.0': {
+          name: 'npm:lodash@4.0.0',
+          type: 'npm',
+          data: {
+            version: '4.0.0',
+            packageName: 'lodash',
+          },
+        },
         'npm:lodash-4': {
           name: 'npm:lodash-4',
           type: 'npm',
@@ -588,7 +596,7 @@ describe('TargetProjectLocator', () => {
       expect(proj5).toEqual('proj5');
     });
 
-    it('should be able to resolve packages aliases', () => {
+    it('should prefer alias nodes when canonical package nodes also exist', () => {
       const lodash = targetProjectLocator.findProjectFromImport(
         'lodash',
         'libs/proj/index.ts'
