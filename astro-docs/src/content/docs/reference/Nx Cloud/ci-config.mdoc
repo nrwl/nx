@@ -218,15 +218,21 @@ This has no `start-ci-run` flag equivalent. It is specific to the config file.
 
 ```yaml
 # .nx/ci-config.yaml
-lifecycle:
-  fail-after: 1
+dte:
+  distribute-on: 5 linux-large
 
 overrides:
   main:
-    lifecycle:
-      fail-after: 0
+    dte:
+      assignment-rules:
+        - targets:
+            - e2e-ci
+          run-on:
+            - agent: linux-extra-large
+              parallelism: 1
 ```
 
-In this example the run stops on the first failure everywhere, except when `NX_CI_EXECUTION_ENV` is `main`, where it runs to completion.
+In this example every environment distributes across `linux-large` agents.
+When `NX_CI_EXECUTION_ENV` is `main`, an assignment rule additionally pins `e2e-ci` tasks to a `linux-extra-large` agent.
 
 An override only replaces the sections you set. Sections you leave out fall back to the base config, and the base config falls back to defaults.
