@@ -1,5 +1,8 @@
 import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
+import { join } from 'path';
+import { register as registerPaths } from 'tsconfig-paths';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import {
   getTranspiler,
   getTsNodeCompilerOptions,
@@ -10,11 +13,18 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
+  registerTsConfigPaths,
 } from './register';
 
 // Avoid a real swc registration side effect when exercising getTranspiler.
 jest.mock('@swc-node/register/register', () => ({
   register: () => () => {},
+}));
+
+// Capture the registered baseUrl without installing a resolver hook.
+jest.mock('tsconfig-paths', () => ({
+  ...jest.requireActual('tsconfig-paths'),
+  register: jest.fn(() => () => {}),
 }));
 
 describe('getTsNodeCompilerOptions', () => {
@@ -471,5 +481,47 @@ describe('NodeNext ESM resolve hook (nodeNextEsmResolveHook, sync)', () => {
         makeNextResolve([])
       )
     ).toThrow(expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }));
+  });
+});
+
+describe('registerTsConfigPaths', () => {
+  let tempFs: TempFs;
+
+  beforeEach(() => {
+    tempFs = new TempFs('register-ts-config-paths', false);
+    (registerPaths as jest.Mock).mockClear();
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+  });
+
+  it('should resolve the baseUrl through an extends chain containing JSONC', () => {
+    tempFs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: { '@lib/*': ['libs/*/src/index.ts'] },
+        },
+      })
+    );
+    tempFs.createFileSync(
+      'project/tsconfig.json',
+      `{
+  "extends": "../tsconfig.base.json",
+  /* a block comment */
+  "compilerOptions": {
+    // a line comment
+    "strictPropertyInitialization": false,
+  },
+}`
+    );
+
+    registerTsConfigPaths(join(tempFs.tempDir, 'project', 'tsconfig.json'));
+
+    expect(registerPaths).toHaveBeenCalledWith(
+      expect.objectContaining({ baseUrl: tempFs.tempDir })
+    );
   });
 });
