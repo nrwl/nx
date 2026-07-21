@@ -43,6 +43,9 @@ import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
   confirmCommitsOnDefaultBranch,
+  resolveCreateCommits,
+} from './migrate-commits';
+import {
   createFetcher,
   filterDowngradedUpdates,
   formatCommandFailure,
@@ -59,7 +62,6 @@ import {
   readLocalNxVersion,
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
-  resolveCreateCommits,
   resolveDocumentationFileToWorkspacePath,
   resolveMigrationForRun,
   resolveInclude,

@@ -1,5 +1,7 @@
 import { mkdirSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
+import { rsort } from 'semver';
+import { normalizeVersion } from '../version-utils';
 import { HandoffFile } from './types';
 
 /**
@@ -12,6 +14,13 @@ export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
 /** Returns the run directory for a given workspace + run id (target version). */
 export function runDirPath(workspaceRoot: string, runId: string): string {
   return join(workspaceRoot, MIGRATE_RUNS_RELATIVE_DIR, runId);
+}
+
+/** The version-derived run id: the highest target version in the plan. */
+export function resolveAgenticRunId(
+  migrations: ReadonlyArray<{ version: string }>
+): string {
+  return rsort(migrations.map((m) => normalizeVersion(m.version)))[0]!;
 }
 
 /**
