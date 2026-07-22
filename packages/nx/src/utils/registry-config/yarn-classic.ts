@@ -38,8 +38,11 @@ import {
  * .yarnrc > the unscoped chain.
  *
  * Option keys (cafile, strict-ssl, proxy) resolve the other way around, and off
- * the env first: `npm_config_<key>` > `yarn_<key>` > .yarnrc > npm config.
- * `strict-ssl` reaches yarn from the env and .yarnrc only, never from an .npmrc.
+ * the env first: `yarn_<key>` > .yarnrc > `npm_config_<key>` > .npmrc > yarn's
+ * DEFAULTS. YarnRegistry.getOption reads yarn's own config before npm's, and
+ * loadConfig folds DEFAULTS into that config, so a key DEFAULTS carries never
+ * reaches the npm tier at all: `strict-ssl` is one of them, which is why no
+ * npm-config source (env or .npmrc) can turn TLS verification off for yarn.
  * It is Boolean()-coerced, so only a bare `false` (yaml/lockfile boolean, or the
  * env string yarn coerces the same way) disables TLS; a quoted `"false"` in a
  * file stays the truthy string 'false' and keeps verification on. A `cafile`
@@ -391,10 +394,12 @@ function resolveOptions(
     setCafile(env, resolveYarnPath(cafile, root, home));
   }
 
-  // Only the .yarnrc side: a `strict-ssl` in an .npmrc does not reach the
-  // setting yarn reads (verified on 1.22.22, where an .npmrc `strict-ssl=false`
-  // leaves verification on), so bridging one would turn TLS verification off for
-  // the spawned npm where neither yarn nor npm turns it off.
+  // Only the yarn side declares this one: DEFAULTS carries `strict-ssl`, so no
+  // npm-config source reaches it (verified on 1.22.22, where both an .npmrc
+  // `strict-ssl=false` and `npm_config_strict_ssl=false` leave verification on).
+  // That cuts both ways, so a declared value is bridged in either direction:
+  // npm has to be told to keep verifying where its own config would stop, not
+  // just told to stop where yarn does.
   // An env value arrives as a string; yarn coerces the bare booleans out of it
   // before the Boolean() check, so `YARN_STRICT_SSL=false` really does turn
   // verification off where a quoted `"false"` in a file does not.
@@ -403,8 +408,11 @@ function resolveOptions(
     strictSslEnv !== undefined
       ? normalizeYarnConfigValue(strictSslEnv)
       : firstDefined(yarnrcChain, 'strict-ssl')?.value;
-  if (strictSsl !== undefined && !truthyStrictSsl(strictSsl)) {
-    setStrictSsl(env, false);
+  if (
+    strictSsl !== undefined &&
+    truthyStrictSsl(strictSsl) !== npmVerifiesTls(npmrcChain)
+  ) {
+    setStrictSsl(env, truthyStrictSsl(strictSsl));
   }
 
   setProxies(env, {
@@ -420,22 +428,20 @@ function resolveOptions(
 /**
  * The `yarn_`-prefixed env tier for an option key (YARN_CAFILE, YARN_STRICT_SSL,
  * YARN_PROXY, ...). BaseRegistry.init merges it before any rc file is read and
- * loadConfig keeps what it already has, so it outranks every file; npm cannot
- * see it under that name. A `npm_config_` value outranks it in turn, and npm
- * reads that one for itself, so it needs no bridge and only has to suppress
- * this one.
+ * loadConfig keeps what it already has, so it outranks every file, and
+ * YarnRegistry.getOption consults yarn's own config before npm's, so it also
+ * outranks a `npm_config_` value (verified on 1.22.22: with both YARN_CAFILE and
+ * npm_config_cafile set, `yarn config get cafile` returns the YARN_ one). npm
+ * cannot see it under that name, so it has to be bridged.
  */
 function yarnEnvOption(key: string): string | undefined {
-  const envKey = key.replace(/-/g, '_');
-  if (readEnvVar(process.env, `npm_config_${envKey}`) !== undefined) {
-    return undefined;
-  }
-  return readEnvVar(process.env, `yarn_${envKey}`);
+  return readEnvVar(process.env, `yarn_${key.replace(/-/g, '_')}`);
 }
 
-// Resolves an option key the way yarn does (.yarnrc wins over .npmrc), and
-// returns the value to bridge: the .yarnrc value when present, otherwise the
-// first .npmrc value but only if npm cannot read it natively.
+// Resolves an option key the way yarn does below its own env tier (.yarnrc,
+// then npm's config), and returns the value to bridge: the .yarnrc value when
+// present, otherwise the first .npmrc value but only if npm cannot read it
+// natively.
 function resolveOption<T extends YarnValue>(
   lookup: (chain: RcFile[], key: string) => Match<T> | undefined,
   npmrcChain: RcFile[],
@@ -445,6 +451,12 @@ function resolveOption<T extends YarnValue>(
   const yarnrc = lookup(yarnrcChain, key);
   if (yarnrc) {
     return yarnrc.value;
+  }
+  // Under .yarnrc yarn falls through to npm's own config, where the
+  // `npm_config_` env tier outranks every .npmrc. npm reads that tier itself,
+  // so a value there needs no bridge and shadows the file chain below it.
+  if (readNpmConfigEnv(process.env, key) !== undefined) {
+    return undefined;
   }
   const npmrc = lookup(npmrcChain, key);
   return npmrc && !npmrc.npmNative ? npmrc.value : undefined;
@@ -534,6 +546,21 @@ function firstString(chain: RcFile[], key: string): Match<string> | undefined {
 // 'false' (a quoted value) is truthy, only a bare boolean false / 0 / '' isn't.
 function truthyStrictSsl(value: YarnValue): boolean {
   return Boolean(value);
+}
+
+// What the spawned npm resolves for strict-ssl on its own: its env tier over the
+// .npmrc files it reads natively, defaulting to verification on. Only a literal
+// `false` turns it off, which toYarnValueMap has already typed as a boolean.
+function npmVerifiesTls(npmrcChain: RcFile[]): boolean {
+  const fromEnv = readNpmConfigEnv(process.env, 'strict-ssl');
+  if (fromEnv !== undefined) {
+    return fromEnv !== 'false';
+  }
+  const native = firstDefined(
+    npmrcChain.filter((file) => file.npmNative),
+    'strict-ssl'
+  );
+  return native?.value !== false;
 }
 
 // yarn expands a leading `~/` to the home dir, then path.resolve()s against the
