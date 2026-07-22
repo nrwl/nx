@@ -232,8 +232,8 @@ export type TypedLintingShape = 'project-service' | 'parser-options-project';
  * existing configuration when adding new overrides.
  *
  * - `'project-service'`: modern typescript-eslint v8 shape with an explicit
- *   `parserOptions.projectService` (`true`, `false`, or an object). A `false`
- *   opt-out still counts so callers preserve it instead of overwriting it.
+ *   `parserOptions.projectService`. A `false` opt-out still counts so callers
+ *   preserve it instead of overwriting it.
  * - `'parser-options-project'`: legacy shape using `parserOptions.project`.
  * - `null`: no typed-linting parser options detected.
  */
@@ -244,9 +244,10 @@ export function detectTypedLintingShape(
   // isn't mistaken for a real setting.
   const source = stripComments(content);
   // Tolerate both JS/TS source (`projectService:`) and JSON (`"projectService":`).
-  // An explicit `false` counts too, so we preserve a user's opt-out instead of
+  // Match on the key alone, whatever its value: an explicit `false` opt-out or a
+  // variable reference is still the user's choice, so we preserve it instead of
   // appending a conflicting `projectService: true`.
-  if (/\bprojectService["']?\s*:\s*(?:true|false|\{)/.test(source)) {
+  if (/\bprojectService["']?\s*:/.test(source)) {
     return 'project-service';
   }
   if (parserOptionsHasProject(source)) {
@@ -256,11 +257,17 @@ export function detectTypedLintingShape(
 }
 
 /**
- * Whether a `project` array/string is set *inside* a `parserOptions` object.
- * Scans the balanced braces of each `parserOptions` block instead of a single
- * open-ended regex, so a `project` key in an unrelated block (e.g.
- * `settings['import/resolver'].typescript.project`) is not a false match. The
- * `[\['"]` anchor still ignores a nested `project: { ... }` object key.
+ * Whether a `project` key is set to a value that turns typed linting on, *inside*
+ * a `parserOptions` object. Scans the balanced braces of each `parserOptions`
+ * block instead of a single open-ended regex, so a `project` key in an unrelated
+ * block (e.g. `settings['import/resolver'].typescript.project`) is not a false
+ * match.
+ *
+ * `project` accepts `boolean | string | string[] | null`, and typescript-eslint
+ * only builds a program (and only rejects a sibling `projectService`) when the
+ * value is truthy. An explicit `false`/`null`/`undefined` therefore leaves typed
+ * linting off and conflicts with nothing, so it must not count. Any other value,
+ * including a variable reference we can't evaluate, counts.
  */
 function parserOptionsHasProject(content: string): boolean {
   const parserOptions = /\bparserOptions["']?\s*:\s*\{/g;
@@ -270,7 +277,10 @@ function parserOptionsHasProject(content: string): boolean {
       content,
       match.index + match[0].length - 1
     );
-    if (block !== null && /\bproject["']?\s*:\s*[\['"]/.test(block)) {
+    if (
+      block !== null &&
+      /\bproject["']?\s*:(?!\s*(?:false|null|undefined)\b)/.test(block)
+    ) {
       return true;
     }
   }
@@ -312,11 +322,21 @@ function extractBalancedBraces(
 }
 
 /**
- * Removes `//` line and block comments while preserving string literals, so a
- * comment marker inside a string (e.g. a URL) is left intact.
+ * A `/` following one of these characters (or opening the file) starts a regex
+ * literal; anywhere else it is a division operator.
+ */
+const REGEX_LITERAL_PRECEDERS = /^$|[(,=:[!&|?{};+\-*%~^<>]/;
+
+/**
+ * Removes `//` line and block comments while preserving string and regex
+ * literals, so a comment marker inside either (e.g. a URL, or the `//` in
+ * `/[//]/`) is left intact.
  */
 function stripComments(content: string): string {
   let result = '';
+  // Last non-whitespace character kept, used to tell a regex literal from a
+  // division operator.
+  let lastSignificant = '';
   for (let i = 0; i < content.length; i++) {
     const ch = content[i];
     if (ch === '"' || ch === "'" || ch === '`') {
@@ -331,8 +351,11 @@ function stripComments(content: string): string {
         }
         i++;
       }
+      lastSignificant = ch;
       continue;
     }
+    // `//` and `/*` are always comments, since no regex literal can start with
+    // either, so these two checks must come before the regex one.
     if (ch === '/' && content[i + 1] === '/') {
       while (i < content.length && content[i] !== '\n') i++;
       result += '\n';
@@ -348,15 +371,38 @@ function stripComments(content: string): string {
       i++;
       continue;
     }
+    if (ch === '/' && REGEX_LITERAL_PRECEDERS.test(lastSignificant)) {
+      result += ch;
+      i++;
+      let inCharClass = false;
+      while (i < content.length) {
+        result += content[i];
+        if (content[i] === '\\') {
+          result += content[++i] ?? '';
+        } else if (content[i] === '[') {
+          inCharClass = true;
+        } else if (content[i] === ']') {
+          inCharClass = false;
+        } else if (content[i] === '/' && !inCharClass) {
+          break;
+        }
+        i++;
+      }
+      lastSignificant = '/';
+      continue;
+    }
     result += ch;
+    if (ch.trim() !== '') {
+      lastSignificant = ch;
+    }
   }
   return result;
 }
 
 /**
  * Adds a typed-linting block (`parserOptions.projectService` + `tsconfigRootDir`)
- * to a project's flat ESLint config. No-op for legacy `.eslintrc` configs since
- * typescript-eslint v7 does not support the project service.
+ * to a project's flat ESLint config. No-op for legacy `.eslintrc` configs, whose
+ * JSON format cannot express the `__dirname` that `tsconfigRootDir` needs.
  *
  * Use after operations that strip existing overrides (e.g.
  * `replaceOverridesInLintConfig`) to re-establish typed linting.

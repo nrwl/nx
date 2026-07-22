@@ -763,6 +763,97 @@ module.exports = [
       ).toBe('parser-options-project');
     });
 
+    it('detects parser-options-project when `project` is set to `true`', () => {
+      // `project` accepts `boolean | string | string[] | null`, so a boolean is
+      // as conflicting with `projectService` as an array is.
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { project: true } } }];'
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it.each(['false', 'null', 'undefined'])(
+      'does not count `project: %s`, which leaves typed linting off',
+      (value) => {
+        // typescript-eslint only builds a program for a truthy `project`, so a
+        // falsy one is neither typed linting nor a conflict for `projectService`.
+        expect(
+          detectTypedLintingShape(
+            `export default [{ languageOptions: { parserOptions: { project: ${value} } } }];`
+          )
+        ).toBeNull();
+      }
+    );
+
+    it('does not count `"project": false` (JSON)', () => {
+      expect(
+        detectTypedLintingShape(
+          '{"overrides": [{"parserOptions": {"project": false}}]}'
+        )
+      ).toBeNull();
+    });
+
+    it('counts a variable reference whose name starts with a falsy literal', () => {
+      // `falseyPaths` is an identifier, not `false`; we can't evaluate it, so it
+      // has to count.
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { project: falseyPaths } } }];'
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('detects parser-options-project when `project` is a template literal', () => {
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { project: `${import.meta.dirname}/tsconfig.json` } } }];'
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('detects parser-options-project when `project` is a variable reference', () => {
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { project: tsconfigPaths } } }];'
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('detects project-service when `projectService` is a variable reference', () => {
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { projectService: projectServiceOptions } } }];'
+        )
+      ).toBe('project-service');
+    });
+
+    it('detects a setting that follows a regex literal containing `//`', () => {
+      // The `//` inside the character class must not start a line comment and
+      // swallow the rest of the line.
+      expect(
+        detectTypedLintingShape(
+          `export default [{ settings: { pattern: /[//]/ }, languageOptions: { parserOptions: { projectService: true } } }];`
+        )
+      ).toBe('project-service');
+    });
+
+    it('still strips a line comment that follows a separator', () => {
+      expect(
+        detectTypedLintingShape(
+          `export default [\n  { rules: {} }, // projectService: true\n];`
+        )
+      ).toBeNull();
+    });
+
+    it('does not treat a division operator as a regex literal', () => {
+      expect(
+        detectTypedLintingShape(
+          `const ratio = width / 2;\nexport default [{ languageOptions: { parserOptions: { projectService: true } } }];`
+        )
+      ).toBe('project-service');
+    });
+
     it('ignores a commented-out projectService setting', () => {
       expect(
         detectTypedLintingShape(
@@ -884,6 +975,36 @@ module.exports = [
       const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
       expect(content).not.toContain('projectService');
       expect(content).toContain("project: ['./tsconfig.json']");
+    });
+
+    it('does not append a projectService block when `parserOptions.project` is `true`', () => {
+      // typescript-eslint throws when `project` and `projectService` are both
+      // enabled, so a boolean `project` must be detected like an array one.
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `export default [{ files: ['**/*.ts'], languageOptions: { parserOptions: { project: true } }, rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+      expect(content).not.toContain('projectService');
+      expect(content).toContain('project: true');
+    });
+
+    it('appends a projectService block when `parserOptions.project` is `false`', () => {
+      // A falsy `project` gives no type information and doesn't conflict with
+      // `projectService`, so `--enableTypedLinting` must still take effect.
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `export default [{ files: ['**/*.ts'], languageOptions: { parserOptions: { project: false } }, rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+      expect(content).toContain('projectService: true');
+      expect(content).toContain('project: false');
     });
 
     it('honors an explicit projectService: false opt-out', () => {
