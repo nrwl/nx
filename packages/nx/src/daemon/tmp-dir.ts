@@ -7,7 +7,10 @@ import { chmodSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
-import { tmpdir } from 'tmp';
+// The shared OS temp dir. Only used to *reject* it as a socket location (see
+// InvalidSocketDirConfigured); the sockets themselves live under NX_SOCKET_ROOT.
+import { tmpdir as systemTmpDir } from 'tmp';
+import { NX_TMP_DIR, NX_TMP_DIR_POSIX } from '../utils/nx-tmp-dir';
 import { workspaceRoot } from '../utils/workspace-root';
 
 /**
@@ -62,52 +65,86 @@ export function isDaemonDisabled() {
   }
 }
 
+/**
+ * All Nx sockets (daemon, forked processes, plugin workers) live under this
+ * single stable root so that sandboxed environments (e.g. AI agent sandboxes)
+ * can allow unix socket access with one predictable rule. See NX_TMP_DIR for
+ * why a fixed /tmp path is used on POSIX. Windows named pipes are not subject
+ * to filesystem sandboxing, so the OS temp dir is fine there.
+ */
+export const NX_SOCKET_ROOT_POSIX = join(NX_TMP_DIR_POSIX, 'sockets');
+
+export const NX_SOCKET_ROOT = join(NX_TMP_DIR, 'sockets');
+
+export function getNxSocketRoot(): string {
+  return (
+    process.env.NX_SOCKET_DIR ??
+    process.env.NX_DAEMON_SOCKET_DIR ??
+    NX_SOCKET_ROOT
+  );
+}
+
 function socketDirName() {
   const hasher = createHash('sha256');
   hasher.update(workspaceRoot.toLowerCase());
   hasher.update(String(process.pid));
   const unique = hasher.digest('hex').substring(0, 20);
-  return join(tmpdir, unique);
+  return join(getNxSocketRoot(), unique);
 }
 
 function pluginSocketDirName() {
   // Kept intentionally short (see notes above on socket path length limits) so
   // that the workspace-scoped plugin socket directory still leaves room for the
-  // socket file name within the OS limit.
+  // socket file name within the OS limit. Lives under the same stable socket
+  // root as the daemon socket so a single sandbox allowlist entry covers both.
   const hash = createHash('sha256')
     .update(workspaceRoot.toLowerCase())
     .digest('hex')
     .substring(0, 8);
-  return join(tmpdir, `nx-${hash}`);
+  return join(getNxSocketRoot(), `nx-${hash}`);
 }
 
 /**
- * We try to create a socket file in a tmp dir, but if it doesn't work because
- * for instance we don't have permissions, we create it in DAEMON_DIR_FOR_CURRENT_WORKSPACE
+ * We try to create a socket dir under the common socket root, but if it doesn't
+ * work because for instance we don't have permissions, we create it in
+ * DAEMON_DIR_FOR_CURRENT_WORKSPACE. Either way the directory is locked down to
+ * the current user so that only they can reach the sockets inside it.
  */
 export function getSocketDir() {
+  const configuredDir =
+    process.env.NX_SOCKET_DIR ?? process.env.NX_DAEMON_SOCKET_DIR;
   return createOwnerOnlySocketDir(
-    process.env.NX_SOCKET_DIR ??
-      process.env.NX_DAEMON_SOCKET_DIR ??
-      socketDirName()
+    configuredDir ?? socketDirName(),
+    configuredDir === undefined
   );
 }
 
 /**
- * Plugin worker sockets get their own workspace-scoped directory under the OS
- * temp dir. They previously sat directly in the shared system temp dir (which
- * we cannot lock down); giving them an owner-only directory prevents other
- * local users from connecting to a plugin worker and executing code in it.
+ * Plugin worker sockets get their own workspace-scoped directory under the
+ * common socket root. They previously sat directly in the shared system temp
+ * dir (which we cannot lock down); giving them an owner-only directory prevents
+ * other local users from connecting to a plugin worker and executing code in it.
  */
 export function getPluginSocketDir() {
+  const configuredDir =
+    process.env.NX_SOCKET_DIR ?? process.env.NX_DAEMON_SOCKET_DIR;
   return createOwnerOnlySocketDir(
-    process.env.NX_SOCKET_DIR ??
-      process.env.NX_DAEMON_SOCKET_DIR ??
-      pluginSocketDirName()
+    configuredDir ?? pluginSocketDirName(),
+    configuredDir === undefined
   );
 }
 
-function createOwnerOnlySocketDir(dir: string): string {
+/**
+ * @param dir the resolved socket directory to create and lock down.
+ * @param usingDefaultRoot whether `dir` sits under the default stable socket
+ *        root (i.e. NX_SOCKET_DIR / NX_DAEMON_SOCKET_DIR are unset). When true
+ *        the shared root is made sticky + world-writable so other users on the
+ *        machine can create their own owner-only socket dirs alongside this one.
+ */
+function createOwnerOnlySocketDir(
+  dir: string,
+  usingDefaultRoot: boolean
+): string {
   // The system temp dir is usable by every account on the machine (it is
   // typically world-writable), so we can never lock it down to the current
   // user. Pointing the Nx socket dir there is invalid configuration, not a
@@ -116,7 +153,13 @@ function createOwnerOnlySocketDir(dir: string): string {
   // instead of silently substituting a default. This check sits outside the
   // try below so the error propagates rather than being swallowed by the
   // permission-failure fallback.
-  if (resolve(dir) === resolve(tmpdir)) {
+  //
+  // This compares against the *bare* system temp dir only. The default stable
+  // socket root (NX_SOCKET_ROOT, e.g. /tmp/.nx/sockets) is a dedicated
+  // subdirectory of it, not equal to it, so the default location never trips
+  // this guard; and each socket dir is a further hashed subdirectory again, so
+  // the sockets never sit directly in a world-shared location either.
+  if (resolve(dir) === resolve(systemTmpDir)) {
     throw new InvalidSocketDirConfigured(dir);
   }
 
@@ -126,6 +169,9 @@ function createOwnerOnlySocketDir(dir: string): string {
     // it below to guarantee the sockets inside are reachable only by their
     // owner.
     mkdirSync(dir, { recursive: true, mode: 0o700 });
+    if (usingDefaultRoot) {
+      restrictSharedRootToSticky();
+    }
     restrictToOwner(dir);
     return dir;
   } catch (e) {
@@ -155,6 +201,26 @@ function restrictToOwner(path: string) {
     return;
   }
   chmodSync(path, 0o700);
+}
+
+/**
+ * Make the shared socket root sticky + world-writable (0o1777, like /tmp
+ * itself) so that other users on the machine can create their *own* owner-only
+ * socket dirs beneath it. This only relaxes the shared *root*; each individual
+ * socket dir underneath is still locked to its owner by restrictToOwner, so no
+ * user can reach another user's sockets. Best-effort: chmod only succeeds for
+ * the user that created the dir, and a failure must never stop us from
+ * obtaining a socket dir. Windows named pipes are not filesystem-gated, so this
+ * is a POSIX-only concern.
+ */
+function restrictSharedRootToSticky() {
+  if (process.platform === 'win32') {
+    return;
+  }
+  try {
+    chmodSync(NX_TMP_DIR_POSIX, 0o1777);
+    chmodSync(NX_SOCKET_ROOT_POSIX, 0o1777);
+  } catch {}
 }
 
 export function removeSocketDir() {
