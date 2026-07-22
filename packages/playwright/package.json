@@ -79,6 +79,7 @@
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "tslib": "catalog:typescript",
+    "https-proxy-agent": "catalog:",
     "minimatch": "catalog:",
     "semver": "catalog:"
   },
