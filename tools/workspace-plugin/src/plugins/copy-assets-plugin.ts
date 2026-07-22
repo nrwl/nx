@@ -54,14 +54,18 @@ export const createNodes: CreateNodes = [
           ...objectAssets.map((asset) => {
             const input = asset.input ?? projectRoot;
             const output = asset.output ?? '/';
+            // CLAUDE.md files are repo-internal development docs — never
+            // ship them in published packages, no matter how broad a
+            // package's asset globs are (some copy `**/*.md`).
             const ignore =
               input === projectRoot
                 ? [
                     `${relative(projectRoot, assetsJson.outDir)}/**`,
                     'assets.json',
+                    '**/CLAUDE.md',
                     ...(asset.ignore ?? []),
                   ]
-                : asset.ignore;
+                : ['**/CLAUDE.md', ...(asset.ignore ?? [])];
             return {
               input,
               glob: asset.glob,
