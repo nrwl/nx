@@ -251,7 +251,7 @@ export function getYarnBerrySpawnRegistryEnv(
       // Safe to say outright here: berry reads no .npmrc, so nothing yarn does
       // depends on that credential.
       'Remove that credential from .npmrc if npm should not authenticate there; yarn never reads that file.',
-      (key) => readNpmConfigEnv(process.env, key) ?? npmrcValue(root, key)
+      npmrcReader(root)
     );
   }
 
@@ -259,17 +259,20 @@ export function getYarnBerrySpawnRegistryEnv(
   return env;
 }
 
-// The .npmrc files npm reads for itself and berry ignores. npm also reads a
-// <globalPrefix>/etc npmrc and its own builtin one, which are not enumerated
-// here: missing one only means the warning stays silent.
-function npmrcValue(root: string, key: string): string | undefined {
-  for (const path of [join(root, '.npmrc'), join(homedir(), '.npmrc')]) {
-    const value = readNpmrcMap(path)?.get(key);
-    if (value !== undefined) {
-      return value;
-    }
-  }
-  return undefined;
+/**
+ * Reads a key the way the spawned npm would, off its env tier and then the
+ * .npmrc files berry ignores. npm also reads a <globalPrefix>/etc npmrc and its
+ * own builtin one, which are not enumerated here: missing one only means the
+ * warning stays silent. The maps are read once because the caller probes dozens
+ * of keys walking npm's credential ladder.
+ */
+function npmrcReader(root: string): (key: string) => string | undefined {
+  const maps = [join(root, '.npmrc'), join(homedir(), '.npmrc')].map((path) =>
+    readNpmrcMap(path)
+  );
+  return (key) =>
+    readNpmConfigEnv(process.env, key) ??
+    maps.find((map) => map?.get(key) !== undefined)?.get(key);
 }
 
 function collectRcFiles(root: string): BerryRcFile[] {
