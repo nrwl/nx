@@ -25,6 +25,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     'YARN_NPM_REGISTRY_SERVER',
     'YARN_NPM_AUTH_TOKEN',
     'YARN_NPM_AUTH_IDENT',
+    'YARN_NPM_ALWAYS_AUTH',
     'YARN_RC_FILENAME',
     'YARN_HTTPS_CA_FILE_PATH',
     'YARN_CA_FILE_PATH',
@@ -207,6 +208,77 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     );
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
       npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
+  // Berry coerces a Boolean setting through miscUtils.parseBoolean, so 1, '1'
+  // and 'true' all enable it; a literal `=== true` check sees only the first
+  // YAML form and silently drops the credential from an unscoped fetch.
+  it.each(['npmAlwaysAuth: 1', `npmAlwaysAuth: '1'`, `npmAlwaysAuth: 'true'`])(
+    'authenticates an unscoped fetch for a berry-truthy %s',
+    (setting) => {
+      projectRc(
+        [
+          'npmRegistryServer: https://reg-a.example.com/',
+          setting,
+          'npmAuthToken: secret-token',
+        ].join('\n')
+      );
+      expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'secret-token',
+      });
+    }
+  );
+
+  it.each([
+    'npmAlwaysAuth: 0',
+    `npmAlwaysAuth: '0'`,
+    'npmAlwaysAuth: false',
+    // Outside both of parseBoolean's sets berry aborts, so nothing is left to
+    // reproduce; withholding the credential is the safe reading.
+    'npmAlwaysAuth: yes',
+  ])('leaves an unscoped fetch unauthenticated for %s', (setting) => {
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        setting,
+        'npmAuthToken: secret-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
+  it('honors YARN_NPM_ALWAYS_AUTH=1 over the rc file', () => {
+    process.env.YARN_NPM_ALWAYS_AUTH = '1';
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmAlwaysAuth: false',
+        'npmAuthToken: secret-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': 'secret-token',
+    });
+  });
+
+  it('honors a numeric npmAlwaysAuth on an npmRegistries entry', () => {
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmRegistries:',
+        '  "//reg-a.example.com":',
+        '    npmAlwaysAuth: 1',
+        '    npmAuthToken: registry-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': 'registry-token',
     });
   });
 
@@ -668,6 +740,73 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
       npm_config_registry: 'https://registry.yarnpkg.com',
       npm_config_strict_ssl: 'true',
+    });
+  });
+
+  // Berry aborts on either shape, so dropping the file and carrying on would
+  // aim the injected credential at registry.yarnpkg.com, a host the workspace
+  // never configured. The caller turns the throw into no bridging at all.
+  it('fails on an rc file that does not parse', () => {
+    projectRc(
+      [
+        'npmRegistryServer: "https://reg-a.example.com/',
+        '  bad: [unclosed',
+      ].join('\n')
+    );
+    homeRc('npmAuthToken: home-token\n');
+    expect(() =>
+      getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')
+    ).toThrow();
+  });
+
+  // The parse error quotes the lines around the fault, so it carries whatever
+  // credential sits next to the mistake.
+  it('keeps the rc file contents out of the failure it reports', () => {
+    projectRc(
+      ['npmAuthToken: ghp_ShortTok99', 'npmRegistryServer: "unclosed'].join(
+        '\n'
+      )
+    );
+    let message = '';
+    try {
+      getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0');
+    } catch (e) {
+      message = e.message;
+    }
+    expect(message).toContain(`${ROOT}/.yarnrc.yml`);
+    expect(message).not.toContain('ghp_ShortTok99');
+  });
+
+  // yarn reads a repeated key as last-wins (@yarnpkg/parsers loads with
+  // json: true), so a file yarn 4.15.0 accepts must resolve here too.
+  it('reads an rc file that repeats a key, the last one winning', () => {
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmAuthToken: tok-one',
+        'npmAuthToken: tok-two',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_@acme:registry': 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': 'tok-two',
+    });
+  });
+
+  it('fails on an rc file that is not a settings mapping', () => {
+    projectRc('npmRegistryServer "https://reg-a.example.com/"\n');
+    expect(() =>
+      getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')
+    ).toThrow(/not a settings mapping/);
+  });
+
+  it('treats an empty or comment-only rc file as a config that declares nothing', () => {
+    projectRc('# nothing here\n');
+    ancestorRc('');
+    homeRc('npmRegistryServer: https://reg-f.example.com/\n');
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-f.example.com/',
     });
   });
 });
