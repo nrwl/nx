@@ -1,6 +1,10 @@
 import 'nx/src/internal-testing-utils/mock-fs';
 import { vol } from 'memfs';
-import { checkIfIdentifierIsFunction } from './nx-plugin-checks';
+import { parseForESLint } from 'jsonc-eslint-parser';
+import {
+  checkIfIdentifierIsFunction,
+  validateNoDuplicateKeys,
+} from './nx-plugin-checks';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
@@ -114,5 +118,94 @@ describe('checkIfIdentifierIsFunction', () => {
 
     const result = checkIfIdentifierIsFunction(filePath, 'myGenerator');
     expect(result).toBe(false);
+  });
+});
+
+describe('validateNoDuplicateKeys', () => {
+  function collectReports(json: string): { messageId: string; key: string }[] {
+    const rootNode = (parseForESLint(json).ast.body[0] as any).expression;
+    const reports: any[] = [];
+    const context = { report: (r: any) => reports.push(r) } as any;
+    validateNoDuplicateKeys(rootNode, context);
+    return reports.map((r) => ({ messageId: r.messageId, key: r.data.key }));
+  }
+
+  it('should report a duplicated entry key', () => {
+    const reports = collectReports(`{
+      "generators": {
+        "update-1-0-0-foo": { "version": "1.0.0-beta.1" },
+        "update-1-0-0-foo": { "version": "1.0.0-beta.2" }
+      }
+    }`);
+
+    expect(reports).toEqual([
+      { messageId: 'duplicateKey', key: 'update-1-0-0-foo' },
+    ]);
+  });
+
+  it('should report a duplicated top-level section key', () => {
+    const reports = collectReports(`{
+      "generators": {},
+      "generators": {}
+    }`);
+
+    expect(reports).toEqual([{ messageId: 'duplicateKey', key: 'generators' }]);
+  });
+
+  it('should report duplicated keys in nested objects', () => {
+    const reports = collectReports(`{
+      "packageJsonUpdates": {
+        "1.0.0": {
+          "version": "1.0.0-beta.1",
+          "packages": {
+            "@acme/foo": { "version": "2.0.0" },
+            "@acme/foo": { "version": "3.0.0" }
+          }
+        }
+      }
+    }`);
+
+    expect(reports).toEqual([{ messageId: 'duplicateKey', key: '@acme/foo' }]);
+  });
+
+  it('should report duplicated keys inside objects nested in arrays', () => {
+    const reports = collectReports(`{
+      "nx-migrations": {
+        "packageGroup": [
+          { "package": "@acme/foo", "version": "*", "version": "latest" }
+        ]
+      }
+    }`);
+
+    expect(reports).toEqual([{ messageId: 'duplicateKey', key: 'version' }]);
+  });
+
+  it('should not report the same key name in sibling objects', () => {
+    const reports = collectReports(`{
+      "generators": {
+        "update-1-0-0-foo": { "version": "1.0.0-beta.1" },
+        "update-1-0-0-bar": { "version": "1.0.0-beta.1" }
+      },
+      "schematics": {
+        "update-1-0-0-foo": { "version": "1.0.0-beta.1" }
+      }
+    }`);
+
+    expect(reports).toEqual([]);
+  });
+
+  it('should report each extra occurrence of a key', () => {
+    const reports = collectReports(`{
+      "executors": {
+        "build": { "schema": "./a.json" },
+        "build": { "schema": "./b.json" },
+        "build": { "schema": "./c.json" }
+      }
+    }`);
+
+    expect(reports).toEqual([
+      { messageId: 'duplicateKey', key: 'build' },
+      { messageId: 'duplicateKey', key: 'build' },
+    ]);
   });
 });
