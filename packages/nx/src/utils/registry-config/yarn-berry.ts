@@ -35,7 +35,8 @@ import {
  * lives in .yarnrc.yml, which npm cannot read; it is translated to nerf-darted
  * npm keys. TLS: caFilePath (v2/3) / httpsCaFilePath (v4), per-host
  * networkSettings (hostname globs, longest key first), enableStrictSsl
- * (global only).
+ * (global only). A matching networkSettings entry is read before the global
+ * value of the same key, so for those keys alone it outranks the env vars too.
  *
  * See https://github.com/yarnpkg/berry/blob/a26895a80d2784a5be92c54d5e7622bc9b0864a5/packages/yarnpkg-core/sources/Configuration.ts#L1424
  */
@@ -184,9 +185,7 @@ export function getYarnBerrySpawnRegistryEnv(
   // YARN_NPM_AUTH_* env), then reads token-then-ident from that single object.
   // A present-but-credential-less npmRegistries entry stops the search: berry
   // emits no auth rather than falling back to the global/env credentials.
-  const registryEntryExists = rcFiles.some(
-    (f) => lookupNpmRegistriesEntry(f.config, effectiveRegistry) !== undefined
-  );
+  const registryKey = selectNpmRegistriesKey(rcFiles, effectiveRegistry);
   let authToken: string | undefined;
   let authIdent: string | undefined;
   // npmAlwaysAuth (default false) of the SELECTED auth config object; it gates
@@ -199,9 +198,9 @@ export function getYarnBerrySpawnRegistryEnv(
     authToken = scopeEntry.npmAuthToken;
     authIdent = scopeEntry.npmAuthIdent;
     alwaysAuth = isBerryTrueBoolean(scopeEntry.npmAlwaysAuth);
-  } else if (registryEntryExists) {
-    const registryEntry = resolveMapEntry((c) =>
-      lookupNpmRegistriesEntry(c, effectiveRegistry)
+  } else if (registryKey !== undefined) {
+    const registryEntry = resolveMapEntry(
+      (c) => c.npmRegistries?.[registryKey]
     );
     authToken = registryEntry?.npmAuthToken;
     authIdent = registryEntry?.npmAuthIdent;
@@ -257,9 +256,11 @@ function collectRcFiles(root: string): BerryRcFile[] {
     // registry while still bridging the credentials the other files declare.
     let config: BerryConfig;
     try {
-      // berry loads its rc files through @yarnpkg/parsers, which passes json:
-      // true, so a duplicate key is last-wins there rather than an error.
-      config = readYamlFile<BerryConfig>(path, { json: true });
+      // berry loads its rc files through @yarnpkg/parsers, which calls js-yaml
+      // with the failsafe schema and json: true. That combination is what makes
+      // `npmAuthToken: 12345` a string and a repeated key last-wins rather than
+      // an error, so read them the same way instead of re-typing the scalars.
+      config = readYamlFile<BerryConfig>(path, { json: true, failsafe: true });
     } catch {
       // The parse error quotes the lines around the fault, which in an rc file
       // is credential material, and the caller logs whatever reaches it.
@@ -272,29 +273,101 @@ function collectRcFiles(root: string): BerryRcFile[] {
     if (typeof config !== 'object' || Array.isArray(config)) {
       throw new Error(`The yarn rc file at ${path} is not a settings mapping.`);
     }
+    normalizeMapSettings(config, path);
     files.push({ path, config });
   }
   return files;
 }
 
-/** npmRegistries keys may carry a protocol or start with `//`; both match. */
-function lookupNpmRegistriesEntry(
-  config: BerryConfig,
-  registry: string
-): BerryRegistryEntry | undefined {
-  if (!config.npmRegistries) {
+/**
+ * Berry types npmScopes/npmRegistries/networkSettings and their entries, and
+ * rejects the wrong shape before it resolves anything: a null is tolerated (that
+ * level keeps its defaults) but any other non-object aborts yarn with "must be
+ * an object". Reproduce both, so a config berry refuses to run on never reads as
+ * if berry had accepted it, and the tolerated shape stops reaching the lookups
+ * below as a null. Verified on 3.8.7 and 4.15.0.
+ */
+function normalizeMapSettings(config: BerryConfig, path: string): void {
+  config.npmScopes = normalizeMapSetting(config.npmScopes, 'npmScopes', path);
+  // npmRegistries is declared with normalizeKeys, so berry strips the trailing
+  // slash off each key as it loads the map; do it here rather than at every
+  // lookup, and let a colliding key win last the way berry's Map does.
+  const registries = normalizeMapSetting(
+    config.npmRegistries,
+    'npmRegistries',
+    path
+  );
+  config.npmRegistries = registries
+    ? Object.fromEntries(
+        Object.entries(registries).map(([key, entry]) => [
+          normalizeRegistryKey(key),
+          entry,
+        ])
+      )
+    : undefined;
+  config.networkSettings = normalizeMapSetting(
+    config.networkSettings,
+    'networkSettings',
+    path
+  );
+}
+
+function normalizeMapSetting<T extends object>(
+  map: Record<string, T> | undefined,
+  setting: string,
+  path: string
+): Record<string, T> | undefined {
+  const entries = asBerryObject<Record<string, T>>(map, setting, path);
+  if (!entries) {
     return undefined;
   }
-  const normalized = registry.replace(/\/$/, '');
-  // berry strips any scheme (not just http/https) when matching the entry key.
-  const protocolStripped = normalized.replace(/^[a-z]+:/, '');
-  for (const [key, value] of Object.entries(config.npmRegistries)) {
-    const normalizedKey = key.replace(/\/$/, '');
-    if (normalizedKey === normalized || normalizedKey === protocolStripped) {
-      return value;
+  for (const key of Object.keys(entries)) {
+    // A null entry is still a configured key, with every sub-setting defaulted.
+    entries[key] =
+      asBerryObject<T>(entries[key], `${setting}["${key}"]`, path) ?? ({} as T);
+  }
+  return entries;
+}
+
+function asBerryObject<T extends object>(
+  value: unknown,
+  setting: string,
+  path: string
+): T | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(
+      `The yarn setting "${setting}" in ${path} is not an object.`
+    );
+  }
+  return value as T;
+}
+
+/**
+ * Berry looks the effective registry up in its merged npmRegistries map by exact
+ * key first and only then with the scheme stripped, so the key has to be picked
+ * across every rc file before any entry is read: an exact key in the home rc
+ * still beats a scheme-less one in the project rc.
+ */
+function selectNpmRegistriesKey(
+  rcFiles: BerryRcFile[],
+  registry: string
+): string | undefined {
+  const exact = normalizeRegistryKey(registry);
+  // berry strips any scheme (not just http/https) for the second lookup.
+  for (const key of [exact, exact.replace(/^[a-z]+:/, '')]) {
+    if (rcFiles.some((f) => f.config.npmRegistries?.[key] !== undefined)) {
+      return key;
     }
   }
   return undefined;
+}
+
+/** Berry's normalizeRegistry, which it also applies to every npmRegistries key. */
+function normalizeRegistryKey(registry: string): string {
+  return registry.replace(/\/$/, '');
 }
 
 /**
@@ -316,13 +389,13 @@ function applyTls(
   yarnVersion: string
 ): void {
   const legacy = lt(yarnVersion, BERRY_ENV_PARSER_REWRITE);
-  // v2/v3 use caFilePath; v4 renamed it to httpsCaFilePath (the wrong key for
-  // the major makes berry itself abort, so a working workspace only has the
-  // right one). Read both to stay version-tolerant.
-  const caKeys: (keyof BerryConfig & ('caFilePath' | 'httpsCaFilePath'))[] =
-    major(yarnVersion) >= 4
-      ? ['httpsCaFilePath', 'caFilePath']
-      : ['caFilePath', 'httpsCaFilePath'];
+  const v4 = major(yarnVersion) >= 4;
+  // v2/v3 name the CA setting caFilePath, v4 renamed it to httpsCaFilePath. The
+  // other major's name aborts berry, as an rc setting and as a YARN_* env var
+  // alike, so only the name the running major accepts describes a resolution
+  // there is anything left to reproduce.
+  const caKey = v4 ? 'httpsCaFilePath' : 'caFilePath';
+  const caEnvKey = v4 ? 'YARN_HTTPS_CA_FILE_PATH' : 'YARN_CA_FILE_PATH';
 
   let host: string | undefined;
   try {
@@ -330,50 +403,21 @@ function applyTls(
   } catch {}
 
   // Berry's getNetworkSettings fills each key independently from every glob that
-  // matches the host (longest key first, first non-null wins). v4 merges a
-  // per-host-key block across rc files per sub-key; v2/v3 keep the highest-
-  // priority file's whole block. A networkSettings value overrides the global
-  // key for that key only.
-  const network = resolveNetworkSettings(
-    rcFiles,
-    host,
-    major(yarnVersion) >= 4
-  );
+  // matches the host (longest key first, first non-null wins) and only then
+  // falls back to the global setting, so a per-host entry outranks the YARN_*
+  // env vars while those still outrank the rc files. v4 merges a per-host-key
+  // block across rc files per sub-key; v2/v3 keep the highest-priority file's
+  // whole block.
+  const network = resolveNetworkSettings(rcFiles, host, v4);
 
-  let cafile: { value: string; baseDir: string } | undefined;
-  for (const caKey of caKeys) {
-    if (network[caKey]) {
-      cafile = network[caKey];
-      break;
-    }
-  }
-  if (!cafile) {
-    outer: for (const file of rcFiles) {
-      for (const caKey of caKeys) {
-        if (file.config[caKey]) {
-          cafile = { value: file.config[caKey]!, baseDir: dirname(file.path) };
-          break outer;
-        }
-      }
-    }
-  }
-
-  const httpProxy = expandBerryValue(
-    network.httpProxy ?? firstDefinedIn(rcFiles, (c) => c.httpProxy),
-    legacy
-  );
-  const httpsProxy = expandBerryValue(
-    network.httpsProxy ?? firstDefinedIn(rcFiles, (c) => c.httpsProxy),
-    legacy
-  );
-
-  const envCaFile =
-    process.env['YARN_HTTPS_CA_FILE_PATH'] ?? process.env['YARN_CA_FILE_PATH'];
-  if (envCaFile) {
-    setCafile(env, resolve(expandBerryEnvVars(envCaFile, legacy)));
-  } else if (cafile) {
-    // Berry expands env vars in path settings, then resolves relative to the rc
-    // file's directory.
+  // Berry expands env vars in path settings, then resolves an rc-sourced path
+  // relative to that rc file's directory and an env-sourced one relative to the
+  // directory yarn was invoked from.
+  const cafile =
+    network[caKey] ??
+    envPath(process.env[caEnvKey]) ??
+    firstPathIn(rcFiles, caKey);
+  if (cafile) {
     setCafile(
       env,
       resolve(cafile.baseDir, expandBerryEnvVars(cafile.value, legacy))
@@ -388,9 +432,36 @@ function applyTls(
   }
 
   setProxies(env, {
-    httpProxy: process.env['YARN_HTTP_PROXY'] ?? httpProxy,
-    httpsProxy: process.env['YARN_HTTPS_PROXY'] ?? httpsProxy,
+    httpProxy: expandBerryValue(
+      network.httpProxy ??
+        process.env['YARN_HTTP_PROXY'] ??
+        firstDefinedIn(rcFiles, (c) => c.httpProxy),
+      legacy
+    ),
+    httpsProxy: expandBerryValue(
+      network.httpsProxy ??
+        process.env['YARN_HTTPS_PROXY'] ??
+        firstDefinedIn(rcFiles, (c) => c.httpsProxy),
+      legacy
+    ),
   });
+}
+
+function envPath(value: string | undefined): NetworkPath | undefined {
+  return value ? { value, baseDir: process.cwd() } : undefined;
+}
+
+function firstPathIn(
+  rcFiles: BerryRcFile[],
+  key: 'caFilePath' | 'httpsCaFilePath'
+): NetworkPath | undefined {
+  for (const file of rcFiles) {
+    const value = file.config[key];
+    if (value) {
+      return { value, baseDir: dirname(file.path) };
+    }
+  }
+  return undefined;
 }
 
 interface NetworkPath {
@@ -406,7 +477,9 @@ interface ResolvedNetwork {
 
 // Reproduces berry getNetworkSettings: each network key is filled from the first
 // (longest-glob-first) matching host entry that defines it; per-host-key blocks
-// are themselves merged across rc files (project-first per sub-key).
+// are themselves merged across rc files. Berry builds that merged map lowest
+// priority first, and its sort is stable, so two globs of equal length are
+// consulted in that same order.
 function resolveNetworkSettings(
   rcFiles: BerryRcFile[],
   host: string | undefined,
@@ -417,37 +490,34 @@ function resolveNetworkSettings(
     return result;
   }
   const merged = new Map<string, ResolvedNetwork>();
-  for (const file of rcFiles) {
+  for (const file of [...rcFiles].reverse()) {
     const settings = file.config.networkSettings;
     if (!settings) {
       continue;
     }
     const baseDir = dirname(file.path);
     for (const [hostKey, entry] of Object.entries(settings)) {
-      const existing = merged.get(hostKey);
-      // v2/v3: the highest-priority file defining this glob owns the whole
-      // entry, so a lower file never contributes a missing sub-key.
-      if (existing && !deepMerge) {
-        continue;
-      }
-      const m = existing ?? {};
-      if (entry.caFilePath != null && m.caFilePath === undefined) {
+      // Walking lowest priority first, a later file is the higher-priority one:
+      // under v4 each sub-key it defines wins, and under v2/v3 it owns the whole
+      // entry, so a lower file never contributes a missing sub-key there.
+      const m = (deepMerge && merged.get(hostKey)) || {};
+      if (entry.caFilePath != null) {
         m.caFilePath = { value: entry.caFilePath, baseDir };
       }
-      if (entry.httpsCaFilePath != null && m.httpsCaFilePath === undefined) {
+      if (entry.httpsCaFilePath != null) {
         m.httpsCaFilePath = { value: entry.httpsCaFilePath, baseDir };
       }
-      if (entry.httpProxy != null && m.httpProxy === undefined) {
+      if (entry.httpProxy != null) {
         m.httpProxy = entry.httpProxy;
       }
-      if (entry.httpsProxy != null && m.httpsProxy === undefined) {
+      if (entry.httpsProxy != null) {
         m.httpsProxy = entry.httpsProxy;
       }
       merged.set(hostKey, m);
     }
   }
   const matching = [...merged.entries()]
-    .filter(([key]) => minimatch(host, key))
+    .filter(([key]) => matchesHostGlob(host, key))
     .sort((a, b) => b[0].length - a[0].length)
     .map(([, m]) => m);
   for (const m of matching) {
@@ -457,6 +527,20 @@ function resolveNetworkSettings(
     result.httpsProxy ??= m.httpsProxy;
   }
   return result;
+}
+
+/**
+ * Berry matches a networkSettings key against the hostname with micromatch,
+ * which parses two forms differently from minimatch: a bare `(a|b)` is an
+ * extglob alternation rather than literal parentheses, and a leading `!` negates
+ * the pattern only when it is not the start of a `!(...)` extglob. Left to
+ * minimatch a `!(...)` key matches nearly every host, which would hand one
+ * host's CA and proxy to the registry.
+ */
+function matchesHostGlob(host: string, key: string): boolean {
+  return minimatch(host, key.replace(/(^|[^\\@!+*?])\(/g, '$1@('), {
+    nonegate: key.startsWith('!('),
+  });
 }
 
 // Berry's miscUtils.replaceEnvVariables, applied to every string setting:

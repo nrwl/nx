@@ -55,6 +55,11 @@ interface YamlReadOptions {
    * Compatibility with JSON.parse behaviour. If true, then duplicate keys in a mapping will override values rather than throwing an error.
    */
   json?: boolean;
+  /**
+   * Resolves only the tags every YAML parser must support, which keeps every
+   * scalar a string instead of typing `true` or `12` for the caller.
+   */
+  failsafe?: boolean;
 }
 
 /**
@@ -68,8 +73,13 @@ export function readYamlFile<T extends object = any>(
   options?: YamlReadOptions
 ): T {
   const content = readFileSync(path, 'utf-8');
-  const { load } = require('@zkochan/js-yaml');
-  return load(content, { ...options, filename: path }) as T;
+  const { load, FAILSAFE_SCHEMA } = require('@zkochan/js-yaml');
+  const { failsafe, ...loadOptions } = options ?? {};
+  return load(content, {
+    ...loadOptions,
+    ...(failsafe ? { schema: FAILSAFE_SCHEMA } : {}),
+    filename: path,
+  }) as T;
 }
 
 /**
