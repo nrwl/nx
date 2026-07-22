@@ -1,5 +1,5 @@
 import {
-  assertValidDaemonMessage,
+  assertNotForeignWorkspaceMessage,
   isForeignWorkspaceMessage,
 } from './daemon-message';
 
@@ -40,30 +40,52 @@ describe('isForeignWorkspaceMessage', () => {
   });
 });
 
-describe('assertValidDaemonMessage', () => {
-  const daemonRoot = '/Users/me/workspace';
+describe('assertNotForeignWorkspaceMessage', () => {
+  const receiverRoot = '/Users/me/workspace';
 
   it('does not throw when the workspace roots match', () => {
     expect(() =>
-      assertValidDaemonMessage(
-        { type: 'PING', workspaceRoot: daemonRoot },
-        daemonRoot
+      assertNotForeignWorkspaceMessage(
+        { type: 'PING', workspaceRoot: receiverRoot },
+        receiverRoot
       )
     ).not.toThrow();
   });
 
   it('does not throw when the message has no workspace root', () => {
     expect(() =>
-      assertValidDaemonMessage({ type: 'PING' }, daemonRoot)
+      assertNotForeignWorkspaceMessage({ type: 'PING' }, receiverRoot)
     ).not.toThrow();
   });
 
   it('throws with both workspace roots when they differ', () => {
     expect(() =>
-      assertValidDaemonMessage(
+      assertNotForeignWorkspaceMessage(
         { type: 'PING', workspaceRoot: '/Users/me/other-workspace' },
-        daemonRoot
+        receiverRoot
       )
     ).toThrow(/other-workspace/);
+  });
+
+  it('names the Nx Daemon in the error by default', () => {
+    // The daemon relies on the default description; keep that wording stable.
+    expect(() =>
+      assertNotForeignWorkspaceMessage(
+        { type: 'PING', workspaceRoot: '/Users/me/other-workspace' },
+        receiverRoot
+      )
+    ).toThrow(`The Nx Daemon for '${receiverRoot}'`);
+  });
+
+  it('uses a custom receiver description so plugin workers can reuse it', () => {
+    // The plugin worker passes its own description; the shared assertion must
+    // surface it instead of the daemon wording.
+    expect(() =>
+      assertNotForeignWorkspaceMessage(
+        { type: 'load', workspaceRoot: '/Users/me/other-workspace' },
+        receiverRoot,
+        'The Nx plugin worker "my-plugin" (pid: 123)'
+      )
+    ).toThrow(/The Nx plugin worker "my-plugin" \(pid: 123\)/);
   });
 });
