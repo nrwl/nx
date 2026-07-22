@@ -48,6 +48,8 @@ The `@nx/storybook` plugin will create a task for any project that has a Storybo
 - `.storybook/main.mjs`
 - `.storybook/main.mts`
 
+The project directory that contains `.storybook` must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
@@ -66,14 +68,25 @@ The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
         "buildStorybookTargetName": "build-storybook",
         "serveStorybookTargetName": "storybook",
         "testStorybookTargetName": "test-storybook",
-        "staticStorybookTargetName": "static-storybook"
+        "staticStorybookTargetName": "static-storybook",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` and `staticStorybookTargetName` options control the names of the inferred Storybook tasks. The default names are `build-storybook`, `storybook`, `test-storybook` and `static-storybook`.
+| Option                      | Default            | Inferred behavior                                   |
+| --------------------------- | ------------------ | --------------------------------------------------- |
+| `buildStorybookTargetName`  | `build-storybook`  | Builds and caches the static Storybook output.      |
+| `serveStorybookTargetName`  | `storybook`        | Runs the Storybook development server continuously. |
+| `testStorybookTargetName`   | `test-storybook`   | Runs `test-storybook` when the project supports it. |
+| `staticStorybookTargetName` | `static-storybook` | Serves the built Storybook output continuously.     |
+| `buildDepsTargetName`       | `build-deps`       | Builds project dependencies.                        |
+| `watchDepsTargetName`       | `watch-deps`       | Watches project dependencies.                       |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/storybook/plugin`.
 
 ## Using Storybook
 

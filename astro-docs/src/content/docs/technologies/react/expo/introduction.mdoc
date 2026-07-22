@@ -49,9 +49,10 @@ This will install the correct version of `@nx/expo`.
 The `@nx/expo` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
 
 - `app.config.js`
+- `app.config.ts`
 - `app.json`
 
-In the app config file, it needs to have key `expo`:
+The directory must contain both `package.json` and `metro.config.js`. Nx treats the project as Expo only when the app configuration has an `expo` key and `package.json` lists `expo` as a dependency or development dependency:
 
 ```json
 // app.json
@@ -86,14 +87,30 @@ The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
         "prebuildTargetName": "prebuild",
         "installTargetName": "install",
         "buildTargetName": "build",
-        "submitTargetName": "submit"
+        "submitTargetName": "submit",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-Once a Expo configuration file has been identified, the targets are created with the name you specify under `startTargetName`, `serveTargetName`, `runIosTargetName`, `runAndroidTargetname`, `exportTargetName`, `prebuildTargetName`, `installTargetName`, `buildTargetName` or `submitTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `start`, `serve`, `run-ios`, `run-anroid`, `export`, `prebuild`, `install`, `build` and `submit`.
+| Option                 | Default       | Inferred behavior                                     |
+| ---------------------- | ------------- | ----------------------------------------------------- |
+| `startTargetName`      | `start`       | Runs the `@nx/expo:start` executor continuously.      |
+| `serveTargetName`      | `serve`       | Runs `expo start --web` continuously.                 |
+| `runIosTargetName`     | `run-ios`     | Runs `expo run:ios` continuously.                     |
+| `runAndroidTargetName` | `run-android` | Runs `expo run:android` continuously.                 |
+| `exportTargetName`     | `export`      | Runs and caches `expo export`, including its outputs. |
+| `prebuildTargetName`   | `prebuild`    | Runs the `@nx/expo:prebuild` executor.                |
+| `installTargetName`    | `install`     | Runs the `@nx/expo:install` executor.                 |
+| `buildTargetName`      | `build`       | Runs the `@nx/expo:build` executor.                   |
+| `submitTargetName`     | `submit`      | Runs `eas submit`.                                    |
+| `buildDepsTargetName`  | none          | Name of an optional dependency build task.            |
+| `watchDepsTargetName`  | none          | Name of an optional dependency watch task.            |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/expo/plugin`.
 
 ### Creating applications
 
