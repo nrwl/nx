@@ -613,7 +613,16 @@ async function startPluginWorker(
       ...getPluginResolveConditionNodeArgs(),
       // swc transpiles without type-checking: ~7x faster to boot, and this is
       // paid once per worker spawn.
-      ...(isWorkerTypescript ? ['--require', '@swc-node/register'] : []),
+      //
+      // Resolve the register hook to an absolute path: the worker is spawned
+      // with `cwd: root` (the workspace root), and node resolves a bare
+      // `--require` specifier relative to the child's cwd. A workspace root
+      // without a hoisted `node_modules/@swc-node/register` (e.g. temp/virtual
+      // test workspaces) would otherwise fail with "Cannot find module
+      // '@swc-node/register'" and the worker would exit before connecting.
+      ...(isWorkerTypescript
+        ? ['--require', require.resolve('@swc-node/register')]
+        : []),
       workerPath,
       ipcPath,
       name,
