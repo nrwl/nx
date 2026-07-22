@@ -263,10 +263,22 @@ function supportedPtyPlatform() {
     return true;
   }
 
-  // TODO: Re-enable Windows support when it's stable
-  // Currently, there's an issue with control chars.
-  // See: https://github.com/nrwl/nx/issues/22358
-  if (process.env.NX_WINDOWS_PTY_SUPPORT !== 'true') {
+  // Windows ConPTY support is enabled by default. The original blocker
+  // (nrwl/nx#22358 — "issue with control chars") was filed against Nx 18.x
+  // on a different terminal stack (older crossterm, no ratatui 0.30,
+  // different portable-pty path). #22358 is closed/stale; its symptom
+  // (`^[[12;1R` cursor-position-query response echoed to the terminal) is
+  // the kind of bug terminal libraries typically resolve over time.
+  //
+  // Disabling ConPTY on Windows causes child task processes to inherit
+  // the parent console's stdin and race the TUI's crossterm EventStream
+  // for keystrokes — observed as a frozen TUI once any child opens its
+  // stdin reader (Angular dev-server's r/q/u prompts, dotnet watch,
+  // MCP STDIO servers). See nrwl/nx#33720 for the full analysis.
+  //
+  // Users who hit a Windows ConPTY regression can opt out with
+  // NX_WINDOWS_PTY_SUPPORT='false'.
+  if (process.env.NX_WINDOWS_PTY_SUPPORT === 'false') {
     return false;
   }
 

@@ -4,6 +4,8 @@ import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import { killProcessTree, killProcessTreeGraceful } from '../../native';
+import { childStdinMode } from '../../tasks-runner/child-stdin-mode';
+import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -418,7 +420,7 @@ class RunningNodeProcess implements RunningTask {
       env,
       cwd,
       windowsHide: true,
-      stdio: ['inherit', 'pipe', 'pipe'],
+      stdio: [childStdinMode({ tuiEnabled: isTuiEnabled() }), 'pipe', 'pipe'],
     });
 
     this.closedPromise = new Promise<void>((resolve) => {
