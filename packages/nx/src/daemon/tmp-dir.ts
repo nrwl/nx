@@ -20,7 +20,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 export class InvalidSocketDirConfigured extends Error {
   constructor(public readonly dir: string) {
     super(
-      `The configured Nx socket directory ('${dir}') resolves to the shared system temp directory ('${tmpdir}'), which every user on the machine can access. Pointing the Nx socket directory there is unsafe: another local user could connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR (or NX_DAEMON_SOCKET_DIR) to a directory that only your user can access.`
+      `The configured Nx socket directory ${dir} cannot be the shared system temp directory. Pointing the Nx socket directory there is unsafe as another local user could connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
     );
     this.name = 'InvalidSocketDirConfigured';
   }

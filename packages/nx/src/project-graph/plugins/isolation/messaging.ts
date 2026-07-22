@@ -4,6 +4,7 @@ import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serialize } from '../../../daemon/socket-utils';
 import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
@@ -155,11 +156,28 @@ type PluginMessageDefs = DefineMessages<{
 // EXPORTED TYPES (derived from PluginMessageDefs)
 // =============================================================================
 
+/**
+ * Every message on the plugin-worker socket carries the sending process's
+ * workspace root so the receiver can reject messages from a different
+ * workspace, the same foreign-workspace protection the Nx daemon applies to
+ * its socket (see `DaemonMessage.workspaceRoot`).
+ *
+ * It is OPTIONAL and stamped centrally in `sendMessageOverSocket`, exactly like
+ * the daemon stamps it in `DaemonSocketMessenger.sendMessage`: the many message
+ * constructors don't set it, and making it required would force each of them to
+ * supply a value the transport layer immediately overwrites. An unstamped or
+ * legacy message (undefined) is treated as "not foreign", consistent with the
+ * daemon's `isForeignWorkspaceMessage`.
+ */
+export type WorkspaceScopedMessage = { workspaceRoot?: string };
+
 /** Union of all plugin worker message types */
-export type PluginWorkerMessage = AllMessages<PluginMessageDefs>;
+export type PluginWorkerMessage = AllMessages<PluginMessageDefs> &
+  WorkspaceScopedMessage;
 
 /** Union of all plugin worker result types */
-export type PluginWorkerResult = AllResults<PluginMessageDefs>;
+export type PluginWorkerResult = AllResults<PluginMessageDefs> &
+  WorkspaceScopedMessage;
 
 /** Result type for the load message */
 export type PluginWorkerLoadResult = ResultOf<PluginMessageDefs, 'load'>;
@@ -181,7 +199,7 @@ export type PluginWorkerEmitLogNotification = {
   type: 'emitLog';
   level: 'log' | 'warn' | 'error';
   message: string;
-};
+} & WorkspaceScopedMessage;
 
 export type PluginWorkerNotification = PluginWorkerEmitLogNotification;
 
@@ -294,6 +312,11 @@ export function sendMessageOverSocket(
   socket: Socket,
   message: PluginWorkerMessage | PluginWorkerResult | PluginWorkerNotification
 ): void {
+  // Stamp every outbound message with this process's workspace root so the
+  // receiver can reject messages from a different workspace. This mirrors
+  // `DaemonSocketMessenger.sendMessage`, which stamps `DaemonMessage`s the same
+  // way, and keeps the individual message constructors from having to set it.
+  message.workspaceRoot = workspaceRoot;
   socket.write(serialize(message));
   socket.write(MESSAGE_END_SEQ);
 }
