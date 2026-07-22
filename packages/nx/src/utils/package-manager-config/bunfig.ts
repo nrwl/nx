@@ -22,9 +22,9 @@ export function getBunGlobalConfigBase(env: NodeJS.ProcessEnv): string | null {
 }
 
 /**
- * Parses a bunfig.toml. An absent file returns null; a file bun's own TOML
- * parser would reject returns 'invalid' (bun hard-errors on it, so callers
- * decide whether to defer or skip the surface).
+ * Parses a bunfig.toml. An absent file returns null; a file that cannot be read
+ * or that bun's own TOML parser would reject returns 'invalid' (bun hard-errors
+ * on both, so there is no resolution left for a caller to reproduce).
  */
 export function readBunfigRaw(
   path: string
@@ -32,8 +32,10 @@ export function readBunfigRaw(
   if (!existsSync(path)) {
     return null;
   }
+  // Outside the try: a parser that will not load is a broken installation, not
+  // a corrupt workspace file, and reporting it as one would blame every bunfig.
+  const { parse } = require('smol-toml') as typeof import('smol-toml');
   try {
-    const { parse } = require('smol-toml') as typeof import('smol-toml');
     return parse(readFileSync(path, 'utf-8'));
   } catch {
     return 'invalid';

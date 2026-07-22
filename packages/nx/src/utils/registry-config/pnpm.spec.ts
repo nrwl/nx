@@ -64,6 +64,16 @@ describe('getPnpmSpawnRegistryEnv', () => {
     expect(getPnpmSpawnRegistryEnv('is-even', root, null)).toEqual({});
   });
 
+  it('fails on a pnpm-workspace.yaml that does not parse', () => {
+    // pnpm aborts on it, so there is no resolution left to reproduce. Reading it
+    // as an empty document instead would silently drop the registry it holds and
+    // send the spawned npm to npmjs.
+    writeYaml('registries:\n\tdefault: https://reg-a.example.com/\n');
+    expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
+      /pnpm workspace file at .* could not be read/
+    );
+  });
+
   it('returns nothing below 10.6.0 (registries map not honored by pnpm)', () => {
     writeYaml('registries:\n  default: https://reg-a.example.com/\n');
     expect(getPnpmSpawnRegistryEnv('is-even', root, '9.15.9')).toEqual({});
