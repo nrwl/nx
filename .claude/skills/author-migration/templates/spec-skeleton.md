@@ -3,7 +3,7 @@
 Colocated as `<name>.spec.ts`. Arrange with tree writes, act by calling the imported default export, assert with explicit reads. Inside `packages/nx`, import the tree util relatively (`../../generators/testing-utils/create-tree-with-empty-workspace`) instead of `@nx/devkit/testing`.
 
 ```ts
-import { readJson, type Tree } from '@nx/devkit';
+import { addProjectConfiguration, readJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './remove-foo-option';
 
@@ -12,19 +12,30 @@ describe('remove-foo-option migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    // arrange the trigger shape every test acts on
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        build: { executor: '@nx/foo:build', options: { foo: true } },
+      },
+    });
   });
 
   it('should remove the foo option from build targets', async () => {
-    // arrange: addProjectConfiguration(tree, ...) or tree.write(...)
-
     await update(tree);
 
-    // assert with explicit reads
-    // expect(readJson(tree, 'apps/app1/project.json').targets.build.options.foo).toBeUndefined();
+    const project = readJson(tree, 'apps/app1/project.json');
+    expect(project.targets.build.options.foo).toBeUndefined();
   });
 
   it('should not change projects that do not use the executor', async () => {
-    tree.write('apps/other/project.json', originalContent);
+    addProjectConfiguration(tree, 'other', {
+      root: 'apps/other',
+      targets: {
+        build: { executor: '@acme/other:build', options: { foo: true } },
+      },
+    });
+    const originalContent = tree.read('apps/other/project.json', 'utf-8');
 
     await update(tree);
 
@@ -36,6 +47,8 @@ describe('remove-foo-option migration', () => {
   it('should be a no-op when run twice', async () => {
     await update(tree);
     const afterFirstRun = tree.read('apps/app1/project.json', 'utf-8');
+    // guards the vacuous pass: a missing path reads as null on both sides
+    expect(afterFirstRun).not.toBeNull();
 
     await update(tree);
 

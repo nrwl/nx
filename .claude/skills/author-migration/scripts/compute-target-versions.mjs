@@ -2,20 +2,32 @@
 // Computes the target-train version options for a migration authoring task
 // (SKILL.md section 2). Anchored on the npm dist-tags: a prerelease `next`
 // above `latest` is an active prerelease train; anything else means the train
-// rolled over and the next cut starts a new minor. Run from the repo root so
-// `semver` resolves from the workspace's node_modules.
+// rolled over and the next cut starts a new minor. Requires the repo's
+// node_modules to be installed; `semver` resolves from there.
 import { execSync } from 'node:child_process';
 import semver from 'semver';
 
-const distTags = JSON.parse(
-  execSync('npm view nx dist-tags --json', { encoding: 'utf-8' })
-);
-const { latest, next } = distTags;
-if (!semver.valid(latest) || !semver.valid(next)) {
+function bail(reason) {
   console.error(
-    `Unexpected nx dist-tags (latest: ${latest}, next: ${next}); compute the options by hand per SKILL.md section 2.`
+    `${reason}; compute the options by hand per SKILL.md section 2.`
   );
   process.exit(1);
+}
+
+let distTags;
+try {
+  distTags = JSON.parse(
+    execSync('npm view nx dist-tags --json', {
+      encoding: 'utf-8',
+      timeout: 30_000,
+    })
+  );
+} catch (e) {
+  bail(`Could not read the nx dist-tags (${String(e.message).split('\n')[0]})`);
+}
+const { latest, next } = distTags ?? {};
+if (!semver.valid(latest) || !semver.valid(next) || semver.prerelease(latest)) {
+  bail(`Unexpected nx dist-tags (latest: ${latest}, next: ${next})`);
 }
 
 const options = [];
