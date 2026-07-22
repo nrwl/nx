@@ -89,12 +89,20 @@ export function getBunSpawnRegistryEnv(
     process.env.npm_config_registry,
   ].find((value) => value && /^https?:\/\//.test(value));
 
-  const npmrcValue = (key: string): string | undefined => {
+  // A registry read from an .npmrc goes through both of bun's expansions: its
+  // ini reader resolves `${VAR}` anywhere in the value, and the scope it then
+  // builds resolves a value that starts with `$` as a whole variable name. So
+  // `registry=$MY_REGISTRY` is honored, which `${VAR}` alone would leave as a
+  // literal for npm to reject as an invalid URL.
+  const npmrcRegistryValue = (key: string): string | undefined => {
     const raw = projectNpmrc?.get(key) ?? globalNpmrc?.get(key);
-    return raw === undefined ? undefined : expandEnvVars(raw);
+    return raw === undefined
+      ? undefined
+      : expandBunRegistryUrl(expandEnvVars(raw));
   };
   const bunfigValue = (
-    read: (install: BunfigInstall) => string | BunRegistryValue | undefined
+    read: (install: BunfigInstall) => string | BunRegistryValue | undefined,
+    fallbackUrl: string
   ): BunRegistryValue | undefined => {
     for (const install of [projectBunfig, globalBunfig]) {
       if (!install) {
@@ -102,31 +110,34 @@ export function getBunSpawnRegistryEnv(
       }
       const value = read(install);
       if (value !== undefined) {
-        return normalizeBunRegistryValue(value);
+        return normalizeBunRegistryValue(value, fallbackUrl);
       }
     }
     return undefined;
   };
 
-  const npmrcRegistry = npmrcValue('registry');
+  const npmrcRegistry = npmrcRegistryValue('registry');
   const defaultPick: BunRegistryValue = envRegistry
     ? { url: envRegistry }
     : npmrcRegistry
       ? { url: npmrcRegistry }
-      : (bunfigValue((install) => install.registry) ?? {
+      : (bunfigValue((install) => install.registry, BUN_DEFAULT_REGISTRY) ?? {
           url: BUN_DEFAULT_REGISTRY,
         });
   setRegistry(env, defaultPick.url);
   applyBunAuth(env, defaultPick);
 
   if (scope) {
-    const npmrcScoped = npmrcValue(`${scope}:registry`);
+    const npmrcScoped = npmrcRegistryValue(`${scope}:registry`);
     // [install.scopes] keys are accepted with or without the leading @.
     const scopedPick: BunRegistryValue = npmrcScoped
       ? { url: npmrcScoped }
       : (bunfigValue(
           (install) =>
-            install.scopes?.[scope] ?? install.scopes?.[scope.slice(1)]
+            install.scopes?.[scope] ?? install.scopes?.[scope.slice(1)],
+          // A scope entry that declares only credentials keeps the default
+          // registry as its url, so its token still reaches the right host.
+          defaultPick.url
         ) ?? defaultPick);
     setScopedRegistry(env, scope, scopedPick.url);
     if (scopedPick !== defaultPick) {
@@ -167,12 +178,16 @@ export function getBunSpawnRegistryEnv(
  * table.
  */
 function normalizeBunRegistryValue(
-  value: string | BunRegistryValue
+  value: string | BunRegistryValue,
+  fallbackUrl: string
 ): BunRegistryValue {
   if (typeof value !== 'string') {
     // Table form: bun expands a whole-value `$VAR` in the url (Scope.fromAPI)
-    // and in each credential field (env.getAuto) before use.
-    const result: BunRegistryValue = { url: expandBunRegistryUrl(value.url) };
+    // and in each credential field (env.getAuto) before use. Bun accepts the
+    // table without a url and leaves the enclosing registry in place.
+    const result: BunRegistryValue = {
+      url: value.url ? expandBunRegistryUrl(value.url) : fallbackUrl,
+    };
     for (const field of ['token', 'username', 'password'] as const) {
       const expanded = expandBunAuthValue(value[field]);
       if (expanded !== undefined) {
@@ -246,7 +261,65 @@ function readBunfigInstall(path: string): BunfigInstall | null {
     return null;
   }
   const install = parsed.install;
-  return install && typeof install === 'object'
-    ? (install as BunfigInstall)
-    : null;
+  if (!install || typeof install !== 'object' || Array.isArray(install)) {
+    return null;
+  }
+  validateBunfigInstall(install as BunfigInstall, path);
+  return install as BunfigInstall;
+}
+
+/**
+ * Bun type-checks the [install] table before it resolves anything and aborts on
+ * a value of the wrong shape ("Expected registry to be a URL string or an
+ * object", "Invalid cafile. Expected a string."). Reproduce that rather than
+ * carrying a number into a URL parse or a path join, where it would either
+ * throw somewhere unrelated or bridge a value bun never accepted.
+ */
+function validateBunfigInstall(install: BunfigInstall, path: string): void {
+  const fail = (what: string): never => {
+    throw new Error(`The bunfig at ${path} declares ${what}.`);
+  };
+  if (install.registry !== undefined) {
+    validateBunRegistryValue(install.registry, 'install.registry', fail);
+  }
+  if (install.scopes !== undefined) {
+    if (typeof install.scopes !== 'object' || Array.isArray(install.scopes)) {
+      fail('an install.scopes that is not a table');
+    }
+    for (const [key, value] of Object.entries(install.scopes)) {
+      validateBunRegistryValue(value, `install.scopes["${key}"]`, fail);
+    }
+  }
+  if (install.cafile !== undefined && typeof install.cafile !== 'string') {
+    fail('an install.cafile that is not a string');
+  }
+  if (
+    install.ca !== undefined &&
+    typeof install.ca !== 'string' &&
+    !(
+      Array.isArray(install.ca) &&
+      install.ca.every((entry) => typeof entry === 'string')
+    )
+  ) {
+    fail('an install.ca that is neither a string nor an array of strings');
+  }
+}
+
+function validateBunRegistryValue(
+  value: unknown,
+  setting: string,
+  fail: (what: string) => never
+): void {
+  if (typeof value === 'string') {
+    return;
+  }
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    fail(`a ${setting} that is neither a URL string nor a table`);
+  }
+  for (const field of ['url', 'token', 'username', 'password'] as const) {
+    const field_ = (value as Record<string, unknown>)[field];
+    if (field_ !== undefined && typeof field_ !== 'string') {
+      fail(`a ${setting}.${field} that is not a string`);
+    }
+  }
 }

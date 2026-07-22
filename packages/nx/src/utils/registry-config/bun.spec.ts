@@ -312,4 +312,92 @@ describe('getBunSpawnRegistryEnv', () => {
       npm_config_registry: 'https://reg-a.example.com/',
     });
   });
+
+  it('expands a whole-value $VAR in an .npmrc registry', () => {
+    // bun's scope builder resolves a `$`-prefixed registry value whatever file
+    // it came from, so the .npmrc form is honored just like the bunfig one.
+    process.env.BUN_TEST_REGISTRY = 'https://reg-var.example.com/';
+    try {
+      writeFileSync(join(root, '.npmrc'), 'registry=$BUN_TEST_REGISTRY');
+      expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+        npm_config_registry: 'https://reg-var.example.com/',
+      });
+    } finally {
+      delete process.env.BUN_TEST_REGISTRY;
+    }
+  });
+
+  it('expands a whole-value $VAR in an .npmrc scoped registry', () => {
+    process.env.BUN_TEST_REGISTRY = 'https://reg-var.example.com/';
+    try {
+      writeFileSync(join(root, '.npmrc'), '@acme:registry=$BUN_TEST_REGISTRY');
+      expect(getBunSpawnRegistryEnv('@acme/pkg', root, '1.3.14')).toEqual({
+        npm_config_registry: 'https://registry.npmjs.org/',
+        'npm_config_@acme:registry': 'https://reg-var.example.com/',
+      });
+    } finally {
+      delete process.env.BUN_TEST_REGISTRY;
+    }
+  });
+
+  it('leaves an unset $VAR in an .npmrc registry literal, as bun does', () => {
+    delete process.env.BUN_TEST_UNSET;
+    writeFileSync(join(root, '.npmrc'), 'registry=$BUN_TEST_UNSET');
+    expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+      npm_config_registry: '$BUN_TEST_UNSET',
+    });
+  });
+
+  it('does not expand a $VAR that is not the whole .npmrc registry value', () => {
+    process.env.BUN_TEST_HOST = 'reg-var.example.com';
+    try {
+      writeFileSync(join(root, '.npmrc'), 'registry=https://$BUN_TEST_HOST/');
+      expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+        npm_config_registry: 'https://$BUN_TEST_HOST/',
+      });
+    } finally {
+      delete process.env.BUN_TEST_HOST;
+    }
+  });
+
+  it('keeps a credentials-only bunfig scope on the default registry', () => {
+    // bun accepts a scope table with no url and leaves the enclosing registry
+    // in place, so the token has to be darted to that registry.
+    writeBunfig(
+      [
+        '[install]',
+        'registry = "https://reg-a.example.com/"',
+        '[install.scopes]',
+        '"@acme" = { token = "acme-token" }',
+      ].join('\n')
+    );
+    expect(getBunSpawnRegistryEnv('@acme/pkg', root, '1.3.14')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_@acme:registry': 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': 'acme-token',
+    });
+  });
+
+  it.each([
+    ['registry = 1234', /install\.registry that is neither/],
+    [
+      'registry = { url = 1234 }',
+      /install\.registry\.url that is not a string/,
+    ],
+    ['cafile = 1234', /install\.cafile that is not a string/],
+    ['ca = 1234', /install\.ca that is neither/],
+    ['scopes = 1234', /install\.scopes that is not a table/],
+  ])('fails on a bunfig %p, which bun rejects outright', (line, message) => {
+    writeBunfig(`[install]\n${line}\n`);
+    expect(() => getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toThrow(
+      message
+    );
+  });
+
+  it('fails on a bunfig scope entry that is not a URL string or a table', () => {
+    writeBunfig('[install.scopes]\n"@acme" = 1234\n');
+    expect(() => getBunSpawnRegistryEnv('@acme/pkg', root, '1.3.14')).toThrow(
+      /install\.scopes\["@acme"\] that is neither/
+    );
+  });
 });
