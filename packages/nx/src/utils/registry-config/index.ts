@@ -46,8 +46,11 @@ export function getNpmSpawnRegistryEnv(
     return env;
   } catch (e) {
     // Falling open to npm's own resolution keeps the command running, but it can
-    // silently reach a different registry than the workspace configures, so
-    // leave the cause recoverable.
+    // silently reach a different registry than the workspace configures. Say
+    // that much unconditionally, the way an undetermined version already does,
+    // and leave the cause itself recoverable: an rc parse error quotes the lines
+    // around the fault, which in these files is credential material.
+    warnUnreadableConfig(packageManager);
     logger.verbose(
       `Failed to resolve the ${packageManager} registry configuration; falling back to npm's own resolution.`,
       e
@@ -121,6 +124,17 @@ function reconcileScopedRegistryKey(
   if (normalizeNpmConfigKey(key) !== key) {
     setRegistry(env, scopedRegistry);
   }
+}
+
+const warnedUnreadableConfigs = new Set<PackageManager>();
+function warnUnreadableConfig(packageManager: PackageManager): void {
+  if (warnedUnreadableConfigs.has(packageManager)) {
+    return;
+  }
+  warnedUnreadableConfigs.add(packageManager);
+  logger.warn(
+    `Could not read the ${packageManager} configuration; packages will be fetched using npm's own registry resolution, which may differ from ${packageManager}'s. Run with NX_VERBOSE_LOGGING=true for the cause.`
+  );
 }
 
 // Warn once per package manager so a silent revert to npm's default registry is
