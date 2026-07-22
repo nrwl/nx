@@ -213,9 +213,15 @@ async function runPublishOnProjects(
     loadDotEnvFiles: boolean;
   }
 ): Promise<PublishProjectsResult> {
-  const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
-    (projectName) => projectGraph.nodes[projectName]
-  );
+  // Filter to only projects with a new version (semver or docker)
+  const projectsToRun: ProjectGraphProjectNode[] = projectNames
+    .filter(
+      (p) =>
+        !args.versionData ||
+        (args.versionData[p]?.newVersion ?? args.versionData[p]?.dockerVersion)
+    )
+    .map((p) => projectGraph.nodes[p]);
+  if (!projectsToRun.length) return {};
 
   const overrides = createOverrides(args.__overrides_unparsed__);
 

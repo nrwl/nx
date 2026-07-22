@@ -264,7 +264,8 @@ export class ReleaseGroupProcessor {
       const hasDockerTechnology = Object.values(
         this.projectGraph.nodes[project]?.data?.targets ?? []
       ).some(({ metadata }) => metadata?.technologies?.includes('docker'));
-      if (!hasDockerTechnology) {
+      const hasNewVersion = this.versionData.get(project)?.newVersion;
+      if (!hasDockerTechnology || !hasNewVersion) {
         continue;
       }
       const finalConfigForProject =
