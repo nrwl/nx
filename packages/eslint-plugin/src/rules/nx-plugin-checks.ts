@@ -59,7 +59,8 @@ export type MessageIds =
   | 'missingVersion'
   | 'noGeneratorsOrSchematicsFound'
   | 'noExecutorsOrBuildersFound'
-  | 'valueShouldBeObject';
+  | 'valueShouldBeObject'
+  | 'duplicateKey';
 
 export const RULE_NAME = 'nx-plugin-checks';
 
@@ -128,6 +129,8 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
         '{{ key }}: Missing required property - `implementation`',
       invalidPromptPath: '{{ key }}: Prompt path should point to a valid file',
       missingVersion: '{{ key }}: Missing required property - `version`',
+      duplicateKey:
+        '{{ key }}: Duplicate key. JSON parsers keep only the last occurrence, silently dropping the earlier one',
     },
   },
   defaultOptions: [DEFAULT_OPTIONS],
@@ -175,6 +178,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       ['JSONExpressionStatement > JSONObjectExpression'](
         node: AST.JSONObjectExpression
       ) {
+        validateNoDuplicateKeys(node, context);
         if (sourceFilePath === generatorsJson) {
           checkCollectionFileNode(node, 'generator', context, projects);
         } else if (sourceFilePath === migrationsJson) {
@@ -582,6 +586,51 @@ export function validatePackageGroup(
             node: propertyNode.value as any,
           });
         }
+      }
+    }
+  }
+}
+
+/**
+ * A duplicate key anywhere in these manifests silently drops data:
+ * JSON parsers keep only the last occurrence, so a duplicated generator,
+ * executor, or migration entry key discards the earlier definition with no
+ * error at runtime.
+ */
+export function validateNoDuplicateKeys(
+  node: AST.JSONObjectExpression | AST.JSONArrayExpression,
+  context: TSESLint.RuleContext<MessageIds, Options>
+): void {
+  if (node.type === 'JSONObjectExpression') {
+    const seen = new Set<string>();
+    for (const property of node.properties) {
+      const key =
+        property.key.type === 'JSONLiteral'
+          ? String(property.key.value)
+          : property.key.name;
+      if (seen.has(key)) {
+        context.report({
+          messageId: 'duplicateKey',
+          data: { key },
+          node: property.key as any,
+        });
+      }
+      seen.add(key);
+      if (
+        property.value.type === 'JSONObjectExpression' ||
+        property.value.type === 'JSONArrayExpression'
+      ) {
+        validateNoDuplicateKeys(property.value, context);
+      }
+    }
+  } else {
+    for (const element of node.elements) {
+      if (
+        element &&
+        (element.type === 'JSONObjectExpression' ||
+          element.type === 'JSONArrayExpression')
+      ) {
+        validateNoDuplicateKeys(element, context);
       }
     }
   }
