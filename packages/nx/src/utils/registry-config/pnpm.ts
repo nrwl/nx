@@ -127,10 +127,17 @@ export function getPnpmSpawnRegistryEnv(
 }
 
 function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
-  const doc = readPnpmYamlConfig(join(root, 'pnpm-workspace.yaml'));
-  // An unparseable file would abort pnpm itself; skip the surface here.
-  if (doc === null || doc === 'invalid') {
+  const path = join(root, 'pnpm-workspace.yaml');
+  const doc = readPnpmYamlConfig(path);
+  if (doc === null) {
     return {};
+  }
+  if (doc === 'invalid') {
+    // pnpm aborts on a file it cannot parse, so there is no resolution left to
+    // reproduce. Propagate to the caller's fall-open rather than continuing as
+    // though the workspace declared no registry, which is what an unreadable
+    // file most often hides.
+    throw new Error(`The pnpm workspace file at ${path} could not be read.`);
   }
   return doc as PnpmWorkspaceSettings;
 }

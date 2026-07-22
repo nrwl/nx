@@ -256,9 +256,16 @@ function applyBunAuth(env: NpmConfigEnv, value: BunRegistryValue): void {
 
 function readBunfigInstall(path: string): BunfigInstall | null {
   const parsed = readBunfigRaw(path);
-  // An unparseable bunfig would abort bun itself; skip the surface here.
-  if (parsed === null || parsed === 'invalid') {
+  if (parsed === null) {
     return null;
+  }
+  if (parsed === 'invalid') {
+    // bun aborts on a bunfig it cannot read or parse, so there is no resolution
+    // left to reproduce, the same as for the wrong-shaped values below. Both
+    // propagate to the caller's fall-open. Skipping the file instead would pin
+    // npm to the default registry as though the workspace configured none,
+    // overriding a registry npm resolves from a file of its own.
+    throw new Error(`The bunfig at ${path} could not be read.`);
   }
   const install = parsed.install;
   if (!install || typeof install !== 'object' || Array.isArray(install)) {

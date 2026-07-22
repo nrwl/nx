@@ -394,6 +394,24 @@ describe('getBunSpawnRegistryEnv', () => {
     );
   });
 
+  it('fails on a bunfig that does not parse, the same as one bun type-rejects', () => {
+    // bun aborts on both, so there is no resolution left to reproduce and the
+    // caller has to fall open. Treating this one as an absent file instead would
+    // pin npm to the default registry as though the workspace configured none.
+    writeBunfig('[install\nregistry = "https://reg-a.example.com/"\n');
+    expect(() => getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toThrow(
+      /bunfig at .* could not be read/
+    );
+  });
+
+  it('fails on a global bunfig that does not parse', () => {
+    writeBunfig('[install\n', home);
+    writeFileSync(join(root, '.npmrc'), 'registry=https://reg-b.example.com/');
+    expect(() => getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toThrow(
+      /bunfig at .* could not be read/
+    );
+  });
+
   it('fails on a bunfig scope entry that is not a URL string or a table', () => {
     writeBunfig('[install.scopes]\n"@acme" = 1234\n');
     expect(() => getBunSpawnRegistryEnv('@acme/pkg', root, '1.3.14')).toThrow(

@@ -163,6 +163,24 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     expect(logger.verbose).toHaveBeenCalledTimes(1);
   });
 
+  it('warns once (not per package) that a configuration could not be read', () => {
+    const { logger } = require('../logger');
+    (logger.warn as jest.Mock).mockClear();
+    files[`${ROOT}/.yarnrc.yml`] =
+      'npmRegistryServer: "https://reg-a/\n  x: [\n';
+    jest.isolateModules(() => {
+      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
+      fresh('is-even', ROOT, 'yarn', '4.16.0');
+      fresh('is-odd', ROOT, 'yarn', '4.16.0');
+    });
+    // Verbose is off by default, so a workspace nx knows is misconfigured would
+    // otherwise fall back to npm's own resolution with no output at all.
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+      'Could not read the yarn configuration'
+    );
+  });
+
   it('degrades to no bridging when a yarn rc file does not parse', () => {
     const { logger } = require('../logger');
     (logger.verbose as jest.Mock).mockClear();
