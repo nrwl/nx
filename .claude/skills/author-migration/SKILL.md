@@ -54,12 +54,12 @@ Record the mapping in the PR description under a `## Migration coverage` heading
 
 The version field is a gate, not a label: an entry runs when `installed < version <= target` with semver prerelease ordering (see [runtime-contract.md](runtime-contract.md)).
 
-- The target train is the developer's decision, made once per authoring task and covering every entry and `packageJsonUpdates` group in the change: the work may target a train other than the active one. When the task does not state a target, ask the developer, presenting options computed from `npm view nx dist-tags` and `git tag --sort=-creatordate | head -5`:
-  - `next` resolves higher than `latest` (no stable above it): offer that train's exact next prerelease, latest tag + 1 (latest tag `23.1.0-beta.8` -> `23.1.0-beta.9`). Recommend this default.
-  - `next` resolves at or below `latest` (the train rolled over, no new prerelease cut yet): offer the next minor at beta.0 (`latest` `23.2.0` -> `23.3.0-beta.0`).
-  - In either case, when `next` is not a major bump over `latest` (e.g. latest `22.4.1`, next `22.5.0-beta.3`): additionally offer the next major at beta.0 (`23.0.0-beta.0`) for breaking work aimed at the upcoming major; the option must say that the branch, not the version field, chooses the ship vehicle, so this waits for the train switch.
+- The target train is the developer's decision, made once per authoring task and covering every entry and `packageJsonUpdates` group in the change: the work may target a train other than the active one. When the task does not state a target, ask the developer, presenting the options printed by `node .claude/skills/author-migration/scripts/compute-target-versions.mjs` (run from the repo root; anchored on `npm view nx dist-tags`). What it computes:
+  - `next` is a prerelease above `latest` (an active prerelease train): that train's exact next prerelease (`next` `23.1.0-beta.8` -> `23.1.0-beta.9`). Recommended default.
+  - Otherwise (the train rolled over, no new prerelease cut yet): the next minor at beta.0 (`latest` `23.2.0` -> `23.3.0-beta.0`).
+  - In either case, when `next` is not a major bump over `latest` (e.g. latest `22.4.1`, next `22.5.0-beta.3`): additionally the next major at beta.0 (`23.0.0-beta.0`) for breaking work aimed at the upcoming major; the option must say that the branch, not the version field, chooses the ship vehicle, so this waits for the train switch.
   - Free-text entry covers trains none of the computed options match.
-- Non-interactive runs have no one to ask: use the computed default and flag the choice in the PR notes, naming which computed option you took when more than one applied. Treat a run as non-interactive only when there is no channel to ask at all; if you can ask, ask, even when the version need only surfaces at the end of the work.
+- Non-interactive runs have no one to ask: use the script's recommended default and flag the choice in the PR notes, naming which computed option you took when more than one applied. Treat a run as non-interactive only when there is no channel to ask at all; if you can ask, ask, even when the version need only surfaces at the end of the work.
 - Never a bare final version (prerelease users would skip it) and never a backdated prerelease (users past that prerelease silently skip it). All entries in the change use the chosen train's exact next prerelease, even when batching related migrations.
 - The version field does not choose which release ships the code; the branch does. A breaking migration must wait for the train switch before merging (the SVGR removal was fully reverted for landing on the wrong train).
 - Fixing a shipped migration: amend the implementation in place AND bump the entry version to the current next prerelease so workspaces that already ran the broken version re-run it. The re-stamped version is still the train choice: when the task did not state the train, ask, using the computed options above; the current next prerelease is not a self-sufficient default just because it can be computed.
@@ -86,7 +86,7 @@ packages/<plugin>/src/migrations/update-<major>-<minor>-<patch>/<name>.md       
 packages/<plugin>/src/migrations/update-<major>-<minor>-<patch>/<other-name>.md   (prompt: basename must differ from any .ts)
 ```
 
-Entries go under the top-level `generators` section (`schematics` is the legacy Angular Devkit adapter section). Entry key: kebab-case, unique within the file (JSON.parse silently keeps only the last of two identical keys, dropping the earlier migration with no error), with a slug naming the action. The full `update-<major>-<minor>-<patch>-<slug>` form is a soft convention that namespaces the slug per release, not a requirement: packages/nx uses `<ver>-<slug>` (e.g. `23-0-0-add-migrate-runs-to-git-ignore`) or plain slugs; jest and much of packages/angular use plain slugs or a reversed `<slug>-<ver>` form (`update-module-resolution-22-2-0`). Follow the file's dominant form; use the full form in a new migrations.json or where no form dominates. A version part in the key is a coarse release-level hint, not required to match the entry's `version` field (usually a prerelease, e.g. `23.0.0-beta.18`); docs group by the `version` field, not the key. The key is user-visible: it becomes the `--create-commits` commit subject, the docs heading, and the run listing line.
+Entries go under the top-level `generators` section (`schematics` is the legacy Angular Devkit adapter section). Entry key: kebab-case, unique within the file (`@nx/nx-plugin-checks` flags duplicates, which JSON parsers otherwise resolve by silently keeping only the last occurrence), with a slug naming the action. The full `update-<major>-<minor>-<patch>-<slug>` form is a soft convention that namespaces the slug per release, not a requirement: packages/nx uses `<ver>-<slug>` (e.g. `23-0-0-add-migrate-runs-to-git-ignore`) or plain slugs; jest and much of packages/angular use plain slugs or a reversed `<slug>-<ver>` form (`update-module-resolution-22-2-0`). Follow the file's dominant form; use the full form in a new migrations.json or where no form dominates. A version part in the key is a coarse release-level hint, not required to match the entry's `version` field (usually a prerelease, e.g. `23.0.0-beta.18`); docs group by the `version` field, not the key. The key is user-visible: it becomes the `--create-commits` commit subject, the docs heading, and the run listing line.
 
 Do not rely on `@nx/plugin:migration` generator output alone: it scaffolds empty stubs, defaults the key to the bare filename, and never writes `requires`, `.md` files, prompt entries, or per-package `packageJsonUpdates` details. Hand-author from [templates/migrations-json.md](templates/migrations-json.md).
 
@@ -94,10 +94,10 @@ First migration in a plugin? Also check:
 
 - `package.json` has `"nx-migrations": { "migrations": "./migrations.json", "supportsOptionalMigrations": true }` (new plugins use `nx-migrations`; `ng-update` is legacy Angular CLI interop, do not add it).
 - `migrations.json` starts with `"$schema": "../../node_modules/nx/schemas/migrations-schema.json"` (new files only; do not backfill others).
-- `assets.json` copies `src/migrations/**/*.md` into dist so each .md lands next to its built implementation. For `rootDir: "src"` packages the equivalent is `{ "glob": "migrations/**/*.md", "input": "packages/<plugin>/src" }` (see `packages/maven/assets.json`). A missing glob silently drops the .md from the published package, which breaks `prompt`/`documentation` resolution and the docs site.
+- `assets.json` copies `src/migrations/**/*.md` into dist so each .md lands next to its built implementation. For `rootDir: "src"` packages the equivalent is `{ "glob": "migrations/**/*.md", "input": "packages/<plugin>/src" }` (see `packages/maven/assets.json`). A missing glob drops the .md from the published package, which breaks `prompt`/`documentation` resolution and the docs site; the `migration-markdown-assets` conformance rule fails on any referenced .md the assets config does not produce.
 - A root `migrations.spec.ts` calling `assertValidMigrationPaths` from `@nx/devkit/internal-testing-utils` exists.
 - The plugin's eslint config applies `@nx/nx-plugin-checks` with `./migrations.json` in the rule's `files` array.
-- A brand-new `@nx/*` plugin must be added to `packages/nx/package.json` `nx-migrations.packageGroup`, or `nx migrate` will never bump it. Nothing lints this; check manually.
+- A brand-new `@nx/*` plugin must be added to `packages/nx/package.json` `nx-migrations.packageGroup`, or `nx migrate` will never bump it (enforced by the `nx-package-group` conformance rule).
 
 ## 4. Implement
 
@@ -162,7 +162,7 @@ A version-constant change is also a generator-output change: generator specs pin
 
 ## 5. Test and validate
 
-Spec canon (skeleton in [templates/spec-skeleton.md](templates/spec-skeleton.md)); a prompt-only entry gets no spec file, since there is no implementation to run and no harness exercises prompt .md content (its checks are the root `migrations.spec.ts` path validation and the real-repo run below):
+Spec canon (skeleton in [templates/spec-skeleton.md](templates/spec-skeleton.md)); a prompt-only entry gets no spec file, since there is no implementation to run and no harness exercises prompt .md content (its checks are the root `migrations.spec.ts` path validation, the conformance rules, and the real-repo run below):
 
 - `createTreeWithEmptyWorkspace()` + `tree.write` / `addProjectConfiguration` to arrange; run the imported default export; assert with explicit reads (`readJson`, `tree.read(..., 'utf-8')`) using `toBe`/`toEqual`/`toContain` or `toMatchInlineSnapshot`. Never `toMatchSnapshot` (external snapshot files); no migration spec uses it.
 - Mandatory negative test: capture the content, run the migration on a workspace it should not touch, assert the content is unchanged.
@@ -174,12 +174,17 @@ Spec canon (skeleton in [templates/spec-skeleton.md](templates/spec-skeleton.md)
 - Mandatory reproduced-behavior test when the migration statically replicates behavior the same change deletes from a runtime path (a merge, a default, a path expansion): diff the replacement against the deleted code case by case and cover each case it exercised; a helper reused from another context usually differs at the edges (resolution roots, `rootDir` handling, option precedence). Treat an incidental gap in the deleted code (a mode it silently skipped) as a decision to make: keep it out of the replacement only with a stated reason, a code comment or a returned next-step, not silently by omission.
 - Any migration returning `{ nextSteps, agentContext }` (hybrid or not): `const result = await migration(tree)` and assert on both channels.
 
-Static validation is weaker than it looks: `assertValidMigrationPaths` checks path resolution per entry (implementation .ts and prompt/documentation .md existence alike, against the source tree after stripping `dist/`, so the published dist shape is never validated) but its orphan check only flags unreferenced top-level `.ts` entry points with a default export (orphaned `.md` files and helpers pass), and `@nx/nx-plugin-checks` never ties an entry's name/version/description to its implementation path (a wrong-but-existing path passes everything; this shipped as a real bug in `packages/nx`). The pre-PR checklist below is the actual coherence gate.
+Run the repo validators; they must pass:
+
+- `npx nx run-many -t test,lint -p <plugin>`: the root `migrations.spec.ts` (`assertValidMigrationPaths`) resolves every entry's implementation/prompt/documentation path against the source tree and flags orphaned entry-point .ts files and orphaned .md files; lint runs `@nx/nx-plugin-checks`, which validates manifest shape and flags duplicate keys.
+- `npx nx build workspace-plugin && pnpm nx-cloud conformance:check`: the `migration-markdown-assets` rule checks the published shape (each referenced .md is actually produced into the built output, each implementation path maps back through the build's `rootDir`/`outDir` to a real source file); `nx-package-group` checks packageGroup membership for new plugins.
+
+What no validator checks: whether a path names the RIGHT file (a wrong-but-existing implementation path passes everything and runs at run time; this shipped as a real bug in `packages/nx`), version and train semantics, `requires` fit, spec coverage, and .md claim accuracy. The pre-PR checklist below covers exactly that judgment residue.
 
 Before release, validate against a real repository:
 
-- Local registry: `pnpm local-registry` in one shell, `pnpm nx-release <next-prerelease> --local` to build and publish, then in the target repo run `NX_SKIP_PROVENANCE_CHECK=true nx migrate <version>` (locally published packages have no provenance attestations; without the variable migrate fails).
-- Registry-free alternative: build and install the plugin tarball in the target repo, write a migrations file `{ "migrations": [{ "package", "name", "version" }] }`, and run `nx migrate --run-migrations=<file>`. No version-window or provenance checks on this path.
+- Local registry: `pnpm local-registry` in one shell; in another, `npm adduser --registry http://localhost:4873` (real credentials are not required, e.g. test/test/test@test.io; publishing just needs a login), then `pnpm nx-release <next-prerelease> --local` to build and publish; then in the target repo run `NX_SKIP_PROVENANCE_CHECK=true npx nx migrate <version>` (locally published packages have no provenance attestations; without the variable migrate fails).
+- Registry-free alternative: build and install the plugin tarball in the target repo, write a migrations file `{ "migrations": [{ "package", "name", "version" }] }`, and run `npx nx migrate --run-migrations=<file>`. No version-window or provenance checks on this path.
 
 ## 6. Docs and description
 
@@ -190,15 +195,17 @@ Before release, validate against a real repository:
 
 ## 7. Pre-PR checklist
 
-- [ ] Entry key unique and slug-bearing, following the file's dominant key form (full `update-<ver>-<slug>` in a new file); any version part in the key is a release-level hint only, not required to match the `version` field (often a prerelease).
-- [ ] `implementation` path shape matches the package's build layout: copied from a sibling entry, or for a package's first entry derived from `tsconfig.lib.json` `rootDir` (mapping in [templates/migrations-json.md](templates/migrations-json.md)) and confirmed to exist under the built `dist/`. It points at THIS migration's file (open the file and confirm; validation strips `dist/` and resolves the source .ts, so it misses a wrong-but-existing file and any wrong dist shape whose stripped path still hits a real source file).
-- [ ] `implementation` used, not `factory`; no `cli`, no `schema`.
+The section-5 validators gate the mechanical layer (paths resolve, no orphans, no duplicate keys, published shape, packageGroup). This list is the judgment residue no validator covers:
+
+- [ ] Validators green: `npx nx run-many -t test,lint -p <plugin>` and the conformance check (section 5).
+- [ ] Entry key slug-bearing, following the file's dominant key form (full `update-<ver>-<slug>` in a new file); any version part in the key is a release-level hint only, not required to match the `version` field (often a prerelease).
+- [ ] `implementation` points at THIS migration's file: open the file and confirm. Validators check that referenced paths exist, never that they name the right migration.
+- [ ] `implementation` used, not `factory`; no `cli`, no `schema` (legacy keys the validators accept).
 - [ ] Version is the exact next prerelease of the target train the developer chose (asked once when the task did not state it); `requires` reviewed against landing versions (no upper bound on the entry's own gate), against alternative package names (umbrella vs scoped: no single-name gate), and for fit (gate present only when the migration's behavior depends on that package's version); a fix to an already-shipped migration re-stamps the version to that train's next prerelease so workspaces that ran the broken version re-run it.
-- [ ] No orphans: every file under the touched `update-<ver>/` directory is referenced by an entry, and every new entry's files exist.
 - [ ] Spec covers every applicable mandatory case from section 5 (negative always; idempotency, malformed-input, multi-edit, precedence, list-sanity, reproduced-behavior when their triggers apply); specs assert the return object when the migration returns one; prompt-only entries have no spec; `formatFiles` called.
 - [ ] Detection covers the full expression surface (section 4): `@nx/*` wrapper executors, referenced-target indirection, config-file signals, both `targetDefaults` shapes.
 - [ ] Version-constant changes: old value grepped out of every spec/snapshot; owning package's suite run. No `utils/versions` imports in migration files (`nxVersion` for sibling `@nx/*` adds excepted).
-- [ ] .md files colocated and, for prompts, the filename differs from the implementation basename; every new entry sets `documentation`; `assets.json` covers `src/migrations/**/*.md`.
+- [ ] .md files colocated; the prompt filename differs from the implementation basename; every new entry sets `documentation`.
 - [ ] .md claims (version selection, triggers, coverage) re-checked against the final implementation; each coverage claim backed by a spec case.
 - [ ] First migration in a plugin: the section-3 wiring list done (`nx-migrations` in package.json, `$schema`, `assets.json` .md glob, root `migrations.spec.ts`, `@nx/nx-plugin-checks` on migrations.json, `packageGroup` for a brand-new plugin).
 - [ ] PR description carries the `## Migration coverage` mapping.
