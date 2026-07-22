@@ -17,7 +17,7 @@ export default createConformanceRule({
   name: 'migration-markdown-assets',
   category: 'consistency',
   description:
-    'Ensures the markdown files a migrations.json references through `prompt` and `documentation` are copied into the built package',
+    'Ensures the files a migrations.json references resolve in the built package: the `prompt` and `documentation` markdown is copied into it, and every implementation path maps back to a source file',
   implementation: async ({ projectGraph }) => {
     const violations: ConformanceViolation[] = [];
 
@@ -71,7 +71,19 @@ export function validateMigrationMarkdownAssets(opts: {
 
   const violations: ConformanceViolation[] = [];
   const referenced: { key: string; value: string; expected: string }[] = [];
+  const buildLayout = readBuildLayout(projectRoot, rootDir);
   for (const migration of Object.values<any>(entries)) {
+    // Same precedence as nx's own resolution: `implementation` wins over `factory`.
+    const implementation = migration.implementation || migration.factory;
+    if (implementation && buildLayout) {
+      const violation = validateImplementationPath(
+        implementation,
+        buildLayout,
+        opts
+      );
+      if (violation) violations.push(violation);
+    }
+
     for (const key of REFERENCE_KEYS) {
       const value = migration[key];
       if (!value) continue;
@@ -101,6 +113,80 @@ export function validateMigrationMarkdownAssets(opts: {
   }
 
   return violations;
+}
+
+type BuildLayout = { sourceDir: string; outDir: string };
+
+/**
+ * Reads the `rootDir`/`outDir` the package builds with. Returns null when
+ * neither tsconfig declares both, so a package whose layout cannot be
+ * determined is left unchecked rather than checked against a guess.
+ */
+function readBuildLayout(
+  projectRoot: string,
+  rootDir: string
+): BuildLayout | null {
+  for (const tsconfig of ['tsconfig.lib.json', 'tsconfig.json']) {
+    const tsconfigPath = join(rootDir, projectRoot, tsconfig);
+    if (!existsSync(tsconfigPath)) continue;
+    const compilerOptions = readJsonFile(tsconfigPath).compilerOptions ?? {};
+    if (compilerOptions.rootDir && compilerOptions.outDir) {
+      return {
+        sourceDir: compilerOptions.rootDir,
+        outDir: compilerOptions.outDir,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Implementations are tsc outputs rather than copied assets, so the assets
+ * pipeline cannot vouch for them. Map the published path back through the
+ * build's `rootDir`/`outDir` and check the source file it comes from instead.
+ */
+function validateImplementationPath(
+  implementation: string,
+  buildLayout: BuildLayout,
+  opts: {
+    projectRoot: string;
+    sourceProject: string;
+    migrationsPath: string;
+    rootDir: string;
+  }
+): ConformanceViolation | null {
+  const packageDir = join(opts.rootDir, opts.projectRoot);
+  const outputDir = resolve(packageDir, buildLayout.outDir);
+  // A `#member` suffix names an export within the file; only the path matters here.
+  const publishedPath = implementation.split('#')[0];
+  const published = resolve(packageDir, publishedPath);
+
+  if (!isInside(outputDir, published)) {
+    return {
+      message: `The implementation "${implementation}" referenced by migrations.json resolves outside the build output "${buildLayout.outDir}". Implementation paths are published paths and must point at a file the build emits.`,
+      sourceProject: opts.sourceProject,
+      file: opts.migrationsPath,
+    };
+  }
+
+  const sourceFile = `${join(
+    packageDir,
+    buildLayout.sourceDir,
+    relative(outputDir, published)
+  )}.ts`;
+  if (!existsSync(sourceFile)) {
+    return {
+      message: `The implementation "${implementation}" referenced by migrations.json maps back to "${relative(
+        opts.rootDir,
+        sourceFile
+      )}", which does not exist, so the build emits nothing at that path.`,
+      sourceProject: opts.sourceProject,
+      file: opts.migrationsPath,
+    };
+  }
+
+  return null;
 }
 
 /**

@@ -165,4 +165,104 @@ describe('migration-markdown-assets', () => {
 
     expect(violations).toEqual([]);
   });
+
+  describe('implementation paths', () => {
+    function writeTsconfig(
+      compilerOptions: { rootDir: string; outDir: string },
+      name = 'tsconfig.lib.json'
+    ) {
+      writeFile(`${projectRoot}/${name}`, JSON.stringify({ compilerOptions }));
+    }
+
+    function validateImplementation(implementation: Record<string, string>) {
+      return validate(
+        {
+          generators: {
+            'update-1-0-0': { version: '1.0.0', ...implementation },
+          },
+        },
+        [{ glob: 'src/**/schema.json' }]
+      );
+    }
+
+    it('should return no violations when the implementation maps to an existing source file', () => {
+      writeTsconfig({ rootDir: '.', outDir: 'dist' });
+      writeFile(`${projectRoot}/src/migrations/update-1-0-0/migration.ts`);
+
+      const violations = validateImplementation({
+        implementation: './dist/src/migrations/update-1-0-0/migration',
+      });
+
+      expect(violations).toEqual([]);
+    });
+
+    it('should return a violation when the implementation points outside the build output', () => {
+      writeTsconfig({ rootDir: '.', outDir: 'dist' });
+      writeFile(`${projectRoot}/src/migrations/update-1-0-0/migration.ts`);
+
+      const violations = validateImplementation({
+        implementation: './src/migrations/update-1-0-0/migration',
+      });
+
+      expect(violations).toHaveLength(1);
+      expect(violations[0].message).toContain(
+        'resolves outside the build output'
+      );
+    });
+
+    it('should return a violation when the source file the implementation maps to is missing', () => {
+      writeTsconfig({ rootDir: '.', outDir: 'dist' });
+
+      const violations = validateImplementation({
+        implementation: './dist/src/migrations/update-1-0-0/migration',
+      });
+
+      expect(violations).toHaveLength(1);
+      expect(violations[0].message).toContain(
+        'packages/acme/src/migrations/update-1-0-0/migration.ts'
+      );
+    });
+
+    it('should check a `factory` entry the same way as an `implementation` one', () => {
+      writeTsconfig({ rootDir: '.', outDir: 'dist' });
+
+      const violations = validateImplementation({
+        factory: './dist/src/migrations/update-1-0-0/migration',
+      });
+
+      expect(violations).toHaveLength(1);
+    });
+
+    it('should ignore a `#member` suffix when resolving the source file', () => {
+      writeTsconfig({ rootDir: '.', outDir: 'dist' });
+      writeFile(`${projectRoot}/src/migrations/update-1-0-0/migration.ts`);
+
+      const violations = validateImplementation({
+        implementation: './dist/src/migrations/update-1-0-0/migration#update',
+      });
+
+      expect(violations).toEqual([]);
+    });
+
+    it('should map the implementation through a rootDir of "src"', () => {
+      writeTsconfig({ rootDir: 'src', outDir: 'dist' });
+      writeFile(`${projectRoot}/src/migrations/update-1-0-0/migration.ts`);
+
+      const violations = validateImplementation({
+        implementation: './dist/migrations/update-1-0-0/migration',
+      });
+
+      expect(violations).toEqual([]);
+    });
+
+    it('should fall back to tsconfig.json when tsconfig.lib.json is absent', () => {
+      writeTsconfig({ rootDir: '.', outDir: 'dist' }, 'tsconfig.json');
+
+      const violations = validateImplementation({
+        implementation: './dist/src/migrations/update-1-0-0/migration',
+      });
+
+      expect(violations).toHaveLength(1);
+    });
+  });
 });
