@@ -42,6 +42,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     'YARN_NPM_REGISTRY_SERVER',
     'YARN_NPM_AUTH_TOKEN',
     'YARN_NPM_AUTH_IDENT',
+    'YARN_NPM_ALWAYS_AUTH',
     'YARN_RC_FILENAME',
     'YARN_ENABLE_STRICT_SSL',
     'YARN_HTTP_PROXY',
@@ -159,6 +160,20 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
       getNpmSpawnRegistryEnv('is-even', undefined as any, 'pnpm', '11.5.0')
     ).toEqual({});
     // Falling open is silent on stdout, so the cause has to stay recoverable.
+    expect(logger.verbose).toHaveBeenCalledTimes(1);
+  });
+
+  it('degrades to no bridging when a yarn rc file does not parse', () => {
+    const { logger } = require('../logger');
+    (logger.verbose as jest.Mock).mockClear();
+    files[`${ROOT}/.yarnrc.yml`] =
+      'npmRegistryServer: "https://reg-a.example.com/\n  bad: [unclosed\n';
+    files[`${HOME}/.yarnrc.yml`] = 'npmAuthToken: home-token\n';
+    // Not the yarnpkg default plus the home token, which is where skipping the
+    // unreadable file would have sent the credential.
+    expect(getNpmSpawnRegistryEnv('@acme/pkg', ROOT, 'yarn', '4.16.0')).toEqual(
+      {}
+    );
     expect(logger.verbose).toHaveBeenCalledTimes(1);
   });
 

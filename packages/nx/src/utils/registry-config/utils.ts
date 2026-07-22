@@ -224,7 +224,9 @@ const NPM_ENV_EXPR = /(?<!\\)(\\*)\$\{([^${}?]+)(\?)?\}/g;
  * consumed and the `${VAR?}` form falling back to an empty string. Use it to
  * predict what a value npm reads for itself becomes, not to produce one for it:
  * a bridged value goes through npm's own pass, which expandEnvVars accounts for.
- * See https://github.com/npm/cli/blob/bb056c85059cfb39514614e31abba09f20ac1612/workspaces/config/lib/env-replace.js
+ * The `${VAR?}` form only landed in npm 11.6.0, so against an older spawned npm
+ * the prediction resolves a reference that npm itself would leave verbatim.
+ * See https://github.com/npm/cli/blob/v11.16.0/workspaces/config/lib/env-replace.js
  */
 export function expandNpmEnvVars(
   value: string,

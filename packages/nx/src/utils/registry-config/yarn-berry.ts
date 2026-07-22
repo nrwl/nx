@@ -52,11 +52,24 @@ interface BerryRcFile {
   config: BerryConfig;
 }
 
+/**
+ * A berry Boolean setting as it reaches us: YAML yields `true`/`false` but also
+ * `1`/`0` and the quoted forms, and an env-sourced value is always a string.
+ * Berry coerces at read time (miscUtils.parseBoolean), so the raw shape is kept.
+ */
+type BerryBoolean = boolean | number | string;
+
 interface BerryScopeEntry {
   npmRegistryServer?: string;
   npmAuthToken?: string;
   npmAuthIdent?: string;
-  npmAlwaysAuth?: boolean;
+  npmAlwaysAuth?: BerryBoolean;
+}
+
+interface BerryRegistryEntry {
+  npmAuthToken?: string;
+  npmAuthIdent?: string;
+  npmAlwaysAuth?: BerryBoolean;
 }
 
 const JSR_REGISTRY = 'https://npm.jsr.io';
@@ -65,17 +78,14 @@ interface BerryConfig {
   npmRegistryServer?: string;
   npmAuthToken?: string;
   npmAuthIdent?: string;
-  npmAlwaysAuth?: boolean;
+  npmAlwaysAuth?: BerryBoolean;
   caFilePath?: string;
   httpsCaFilePath?: string;
-  enableStrictSsl?: boolean;
+  enableStrictSsl?: BerryBoolean;
   httpProxy?: string;
   httpsProxy?: string;
   npmScopes?: Record<string, BerryScopeEntry>;
-  npmRegistries?: Record<
-    string,
-    { npmAuthToken?: string; npmAuthIdent?: string; npmAlwaysAuth?: boolean }
-  >;
+  npmRegistries?: Record<string, BerryRegistryEntry>;
   networkSettings?: Record<
     string,
     {
@@ -107,7 +117,7 @@ export function getYarnBerrySpawnRegistryEnv(
     if (!deepMerge) {
       return firstDefinedIn(rcFiles, pick);
     }
-    const merged: Record<string, string | boolean> = {};
+    const merged: Record<string, BerryBoolean> = {};
     let any = false;
     for (const key of [
       'npmRegistryServer',
@@ -188,14 +198,14 @@ export function getYarnBerrySpawnRegistryEnv(
   ) {
     authToken = scopeEntry.npmAuthToken;
     authIdent = scopeEntry.npmAuthIdent;
-    alwaysAuth = scopeEntry.npmAlwaysAuth === true;
+    alwaysAuth = isBerryTrueBoolean(scopeEntry.npmAlwaysAuth);
   } else if (registryEntryExists) {
     const registryEntry = resolveMapEntry((c) =>
       lookupNpmRegistriesEntry(c, effectiveRegistry)
     );
     authToken = registryEntry?.npmAuthToken;
     authIdent = registryEntry?.npmAuthIdent;
-    alwaysAuth = registryEntry?.npmAlwaysAuth === true;
+    alwaysAuth = isBerryTrueBoolean(registryEntry?.npmAlwaysAuth);
   } else {
     authToken =
       process.env['YARN_NPM_AUTH_TOKEN'] ??
@@ -203,10 +213,10 @@ export function getYarnBerrySpawnRegistryEnv(
     authIdent =
       process.env['YARN_NPM_AUTH_IDENT'] ??
       firstDefinedIn(rcFiles, (c) => c.npmAuthIdent);
-    alwaysAuth =
-      process.env['YARN_NPM_ALWAYS_AUTH'] !== undefined
-        ? process.env['YARN_NPM_ALWAYS_AUTH'] === 'true'
-        : firstDefinedIn(rcFiles, (c) => c.npmAlwaysAuth) === true;
+    alwaysAuth = isBerryTrueBoolean(
+      process.env['YARN_NPM_ALWAYS_AUTH'] ??
+        firstDefinedIn(rcFiles, (c) => c.npmAlwaysAuth)
+    );
   }
   // Expand ${VAR} before use so the npmAuthIdent base64 decision (made on the
   // presence of a `:`) and the bridged value are computed on the real
@@ -241,14 +251,28 @@ function collectRcFiles(root: string): BerryRcFile[] {
     if (!existsSync(path)) {
       continue;
     }
+    // An unreadable, corrupt or non-mapping rc file aborts yarn itself, so there
+    // is no resolution left to reproduce. Every shape propagates to the caller's
+    // fall-open; dropping the file instead would resolve to berry's default
+    // registry while still bridging the credentials the other files declare.
+    let config: BerryConfig;
     try {
-      const config = readYamlFile<BerryConfig>(path);
-      if (config && typeof config === 'object') {
-        files.push({ path, config });
-      }
+      // berry loads its rc files through @yarnpkg/parsers, which passes json:
+      // true, so a duplicate key is last-wins there rather than an error.
+      config = readYamlFile<BerryConfig>(path, { json: true });
     } catch {
-      // An unreadable rc file would abort berry itself; skip it here.
+      // The parse error quotes the lines around the fault, which in an rc file
+      // is credential material, and the caller logs whatever reaches it.
+      throw new Error(`The yarn rc file at ${path} could not be read.`);
     }
+    // An empty or comment-only file is a valid rc that declares nothing.
+    if (config === undefined || config === null) {
+      continue;
+    }
+    if (typeof config !== 'object' || Array.isArray(config)) {
+      throw new Error(`The yarn rc file at ${path} is not a settings mapping.`);
+    }
+    files.push({ path, config });
   }
   return files;
 }
@@ -257,9 +281,7 @@ function collectRcFiles(root: string): BerryRcFile[] {
 function lookupNpmRegistriesEntry(
   config: BerryConfig,
   registry: string
-):
-  | { npmAuthToken?: string; npmAuthIdent?: string; npmAlwaysAuth?: boolean }
-  | undefined {
+): BerryRegistryEntry | undefined {
   if (!config.npmRegistries) {
     return undefined;
   }
@@ -560,10 +582,17 @@ function parseBerryRef(
   };
 }
 
-// Mirrors berry miscUtils.parseBoolean's false set for SettingsType.BOOLEAN
-// (false/'false'/0/'0'); every other value (true/'true'/1/'1', ...) is truthy.
+// Berry's miscUtils.parseBoolean false set for SettingsType.BOOLEAN.
 function isBerryFalseBoolean(value: unknown): boolean {
   return value === false || value === 0 || value === 'false' || value === '0';
+}
+
+// Its true set. Berry throws on a value in neither, which aborts berry itself,
+// so each side keeps the tolerance that is safe for its setting: an unparseable
+// enableStrictSsl keeps TLS verification on, an unparseable npmAlwaysAuth leaves
+// an unscoped fetch unauthenticated.
+function isBerryTrueBoolean(value: unknown): boolean {
+  return value === true || value === 1 || value === 'true' || value === '1';
 }
 
 /** Expands ${VAR} in an optional berry string value, passing undefined through. */

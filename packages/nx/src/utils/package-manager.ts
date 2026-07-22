@@ -24,6 +24,7 @@ import {
   writeJsonFile,
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
+import { logger } from './logger';
 import { PackageJson, readModulePackageJson } from './package-json';
 import { getNpmSpawnRegistryEnv, mergeNpmConfigEnv } from './registry-config';
 import { workspaceRoot } from './workspace-root';
@@ -762,7 +763,15 @@ function getPackageManagerVersionSafe(
     let version: string | null = null;
     try {
       version = getPackageManagerVersion(packageManager, root);
-    } catch {}
+    } catch (e) {
+      // What a null version costs the caller is per package manager (see
+      // above), and none of it is visible on stdout, so leave the cause
+      // recoverable.
+      logger.verbose(
+        `Failed to determine the ${packageManager} version in "${root}".`,
+        e
+      );
+    }
     packageManagerVersionCache.set(key, version);
   }
   return packageManagerVersionCache.get(key);
