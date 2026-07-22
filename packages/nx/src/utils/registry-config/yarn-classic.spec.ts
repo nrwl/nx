@@ -613,21 +613,60 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       });
     });
 
-    it.each([
-      ['registry https://reg-a.example.com/', 'an unquoted URL value'],
-      [
-        'registry: https://reg-a.example.com/',
-        'a colon form with an unquoted URL',
-      ],
-    ])('drops the whole file on %p (%s)', (line) => {
+    it('drops the whole file on an unquoted URL value', () => {
       // The `://` tokenizes into three tokens, which throws in yarn's parser and
-      // costs the file every setting, not just the offending line.
-      files[`${ROOT}/.yarnrc`] = `${line}\ncafile "./certs/ca.pem"\n`;
+      // costs the file every setting, not just the offending line. The YAML
+      // retry loads it as one plain scalar, not a mapping, so it declares
+      // nothing either (verified on 1.22.22: yarn resolves its own default).
+      files[`${ROOT}/.yarnrc`] =
+        'registry https://reg-a.example.com/\ncafile "./certs/ca.pem"\n';
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
     });
 
-    it('drops the whole file on a line yarn cannot tokenize', () => {
+    it('honors a YAML-shaped file the lockfile parser rejects', () => {
+      // The muscle memory .yarnrc.yml produces. Yarn's parser throws on the
+      // `://`, the js-yaml retry accepts the file, and yarn honors every key in
+      // it (verified on 1.22.22: `yarn config get registry` returns reg-a and
+      // yarn goes on to open the cafile). Dropping it would send npm to the
+      // default registry, which is the failure this bridging exists to prevent.
+      files[`${ROOT}/.yarnrc`] = [
+        'registry: https://reg-a.example.com/',
+        'cafile: ./certs/ca.pem',
+      ].join('\n');
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_cafile: resolve(ROOT, './certs/ca.pem'),
+      });
+    });
+
+    it('leaves a scalar the YAML retry loaded a string', () => {
+      // The retry runs under the failsafe schema, where every scalar is a
+      // string, and yarn Boolean()-coerces what it reads: `false` arrives
+      // truthy and verification stays on. Typing it as a boolean here would
+      // turn TLS verification off for npm where yarn leaves it on.
+      files[`${ROOT}/.yarnrc`] = [
+        'registry: https://reg-a.example.com/',
+        'strict-ssl: false',
+      ].join('\n');
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+      });
+    });
+
+    it('drops the whole file when both parsers reject it', () => {
       files[`${ROOT}/.yarnrc`] = 'cafile "./certs/ca.pem"\n@@@ !!!\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
+    });
+
+    it('drops the whole file on a duplicate key (classic passes no json flag)', () => {
+      // berry's parser sets `json: true`, which makes a repeated key last-wins;
+      // classic passes the schema alone, so js-yaml throws, the retry fails and
+      // yarn itself dies on the file. Falling back to npm's own resolution is
+      // the closest thing left to reproduce.
+      files[`${ROOT}/.yarnrc`] = [
+        'registry: https://reg-a.example.com/',
+        'registry: https://reg-b.example.com/',
+      ].join('\n');
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
     });
 
