@@ -404,9 +404,10 @@ export class ReleaseGroupProcessor {
         // Update all projects in topological order
         for (const project of sortedProjects) {
           if (!this.bumpedProjects.has(project)) {
+            const baseBump = this.resolveDependentBumpType(project, 'patch');
             await this.bumpVersionForProject(
               project,
-              this.applyPreidToBumpType('patch', project),
+              this.applyPreidToBumpType(baseBump, project),
               'OTHER_PROJECT_IN_FIXED_GROUP_WAS_BUMPED_DUE_TO_DEPENDENCY',
               {}
             );
@@ -892,9 +893,13 @@ export class ReleaseGroupProcessor {
 
       for (const dependent of dependentsToProcess) {
         if (!this.bumpedProjects.has(dependent)) {
+          const baseBump = this.resolveDependentBumpType(
+            dependent,
+            bumpType as SemverBumpType
+          );
           await this.bumpVersionForProject(
             dependent,
-            this.applyPreidToBumpType('patch', dependent),
+            this.applyPreidToBumpType(baseBump, dependent),
             'DEPENDENCY_WAS_BUMPED',
             {}
           );
@@ -955,15 +960,18 @@ export class ReleaseGroupProcessor {
       .newVersionInput;
   }
 
-  // TODO: Support influencing the side effect bump in a future version, always patch for now like in legacy versioning
   private determineSideEffectBump(
     releaseGroup: ReleaseGroupWithName,
     dependencyBumpType: SemverBumpType
   ): SemverBumpType {
-    // Any project in the group can be used to resolve the applyPreidToDependents
-    // setting, since it is a group/workspace level option.
+    // Any project in the group can be used to resolve the dependentBumpType
+    // and applyPreidToDependents settings, since they are group/workspace level options.
     const anyProject = releaseGroup.projects[0];
-    return this.applyPreidToBumpType('patch', anyProject);
+    const baseBump = this.resolveDependentBumpType(
+      anyProject,
+      dependencyBumpType
+    );
+    return this.applyPreidToBumpType(baseBump, anyProject);
   }
 
   /**
@@ -998,6 +1006,28 @@ export class ReleaseGroupProcessor {
       default:
         return bumpType;
     }
+  }
+
+  /**
+   * Resolves the base bump type to apply to a dependent project based on the
+   * configured dependentBumpType setting. When set to 'match', the bump type
+   * of the dependency that triggered the bump is used instead of a fixed type.
+   */
+  private resolveDependentBumpType(
+    projectName: string,
+    dependencyBumpType: SemverBumpType
+  ): SemverBumpType {
+    const finalConfig = this.getCachedFinalConfigForProject(projectName);
+    const configuredBumpType = finalConfig.dependentBumpType ?? 'patch';
+    if (configuredBumpType === 'match') {
+      // Strip any 'pre' prefix from the dependency bump type so that
+      // 'prepatch' becomes 'patch', 'preminor' becomes 'minor', etc.
+      if (dependencyBumpType.startsWith('pre')) {
+        return dependencyBumpType.replace(/^pre/, '') as SemverBumpType;
+      }
+      return dependencyBumpType;
+    }
+    return configuredBumpType;
   }
 
   private getProjectDependents(project: string): Set<string> {
