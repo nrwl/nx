@@ -10,8 +10,9 @@ import {
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { isOnDaemon } from '../daemon/is-on-daemon';
+import { sandboxSocketHint } from '../daemon/sandbox-socket-hint';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
-import { FileLock, IS_WASM } from '../native';
+import { FileLock, IS_WASM, isAiAgent } from '../native';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { getCallSites } from '../utils/call-sites';
 import { DelayedSpinner } from '../utils/delayed-spinner';
@@ -451,7 +452,11 @@ export async function createProjectGraphAndSourceMapsAsync(
           title: `Nx Daemon was not able to compute the project graph.`,
           bodyLines: [
             `Log file with the error: ${errorLogFile}`,
-            `Please file an issue at https://github.com/nrwl/nx`,
+            // Agents act on what reaches stdout, not on log files — surface
+            // the likely cause and fix directly instead of "file an issue".
+            ...(isAiAgent()
+              ? sandboxSocketHint()
+              : [`Please file an issue at https://github.com/nrwl/nx`]),
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });
