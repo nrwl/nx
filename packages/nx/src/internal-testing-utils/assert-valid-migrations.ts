@@ -47,7 +47,11 @@ export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
     for (const m of Object.values(entries)) {
       const impl = m.factory ?? m.implementation;
       if (impl) {
-        referenced.add(normalizeMigrationImplPath(impl));
+        referenced.add(
+          normalizeMigrationImplPath(
+            toSourcePath(root, impl.split('#')[0], '.ts')
+          )
+        );
       }
     }
 
@@ -65,7 +69,7 @@ function validateMigration(m: MigrationsJsonEntry, root: string) {
     let [implPath, implMember] = impl.includes('#')
       ? impl.split('#')
       : [impl, null];
-    implPath = implPath.replace(/dist\//, '');
+    implPath = toSourcePath(root, implPath, '.ts');
     let implModule;
     expect(() => {
       implModule = require(path.join(root, `${implPath}.ts`));
@@ -75,21 +79,37 @@ function validateMigration(m: MigrationsJsonEntry, root: string) {
     }
   }
   if (m.prompt) {
-    // migrations.json is the published shape — prompt paths point at the
-    // built `./dist/src/.../foo.md`. The spec runs against the source tree,
-    // so map the published path back to its source location.
-    const promptSourcePath = m.prompt.replace(/^\.?\/?dist\//, '');
+    const promptSourcePath = toSourcePath(root, m.prompt, '');
     expect(fs.existsSync(path.join(root, promptSourcePath))).toBe(true);
   }
   if (m.documentation) {
-    // Same published-shape mapping as `prompt`: documentation paths point at
-    // the built `./dist/src/.../foo.md`, so map back to the source tree.
-    const documentationSourcePath = m.documentation.replace(
-      /^\.?\/?dist\//,
-      ''
-    );
+    const documentationSourcePath = toSourcePath(root, m.documentation, '');
     expect(fs.existsSync(path.join(root, documentationSourcePath))).toBe(true);
   }
+}
+
+/**
+ * migrations.json carries published paths. The spec runs against the source
+ * tree, so map them back: strip `dist/` (`./dist/src/...` -> `src/...`), and
+ * for rootDir:"src" packages whose build strips the `src/` segment
+ * (`./dist/migrations/...` with sources under `src/migrations/...`),
+ * re-prefix `src/` when the direct mapping does not resolve. Unresolvable
+ * paths return the direct mapping so the caller's assertion reports it.
+ */
+function toSourcePath(
+  root: string,
+  publishedPath: string,
+  ext: string
+): string {
+  const stripped = publishedPath.replace(/^\.?\/?/, '').replace(/^dist\//, '');
+  if (fs.existsSync(path.join(root, `${stripped}${ext}`))) {
+    return stripped;
+  }
+  const srcPrefixed = `src/${stripped}`;
+  if (fs.existsSync(path.join(root, `${srcPrefixed}${ext}`))) {
+    return srcPrefixed;
+  }
+  return stripped;
 }
 
 /**
