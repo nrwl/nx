@@ -809,4 +809,194 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       npm_config_registry: 'https://reg-f.example.com/',
     });
   });
+
+  it('keeps an unquoted numeric token a string (berry parses rc files failsafe)', () => {
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmAlwaysAuth: true',
+        'npmAuthToken: 12345',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': '12345',
+    });
+  });
+
+  it('keeps a bare tilde caFilePath a literal path (berry does not read it as null)', () => {
+    projectRc('httpsCaFilePath: ~\n');
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      npm_config_cafile: resolve(ROOT, './~'),
+    });
+  });
+
+  it('treats a null npmScopes as declaring no scope at all', () => {
+    projectRc(
+      ['npmRegistryServer: https://reg-a.example.com/', 'npmScopes:'].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_@acme:registry': 'https://reg-a.example.com/',
+    });
+  });
+
+  it('treats a null npmScopes entry as a configured scope with defaults', () => {
+    // Berry seeds a configured scope's registry to its own default rather than
+    // to the top-level npmRegistryServer.
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmScopes:',
+        '  acme:',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_@acme:registry': 'https://registry.yarnpkg.com',
+    });
+  });
+
+  it('fails on a scalar npmScopes (berry rejects the shape)', () => {
+    projectRc('npmScopes: hello\n');
+    expect(() =>
+      getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')
+    ).toThrow(/"npmScopes" in .* is not an object/);
+  });
+
+  it('fails on a scalar npmScopes entry (berry rejects the shape)', () => {
+    projectRc('npmScopes:\n  acme: hello\n');
+    expect(() =>
+      getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')
+    ).toThrow(/"npmScopes\["acme"\]" in .* is not an object/);
+  });
+
+  it('treats a null networkSettings host entry as declaring no override', () => {
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'httpsCaFilePath: ./certs/global-ca.pem',
+        'networkSettings:',
+        '  "reg-a.example.com":',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      npm_config_cafile: resolve(ROOT, './certs/global-ca.pem'),
+    });
+  });
+
+  it('prefers an exact npmRegistries key over a scheme-less one in a closer file', () => {
+    // Berry looks the registry up in the merged map by exact key first, so the
+    // home file's exact key wins over the project file's scheme-less key.
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmRegistries:',
+        '  "//reg-a.example.com":',
+        '    npmAuthToken: scheme-less-token',
+      ].join('\n')
+    );
+    homeRc(
+      [
+        'npmRegistries:',
+        '  "https://reg-a.example.com":',
+        '    npmAuthToken: exact-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_@acme:registry': 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': 'exact-token',
+    });
+  });
+
+  it('reads a networkSettings glob the way micromatch does, not minimatch', () => {
+    // A bare (a|b) is an alternation for berry, and a leading ! opens an extglob
+    // rather than negating the whole pattern.
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'networkSettings:',
+        '  "(reg-a|reg-b).example.com":',
+        '    httpProxy: http://alt-proxy.example.com:8080',
+        '  "!(reg-a).example.com":',
+        '    httpsCaFilePath: ./certs/other-ca.pem',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      npm_config_proxy: 'http://alt-proxy.example.com:8080',
+    });
+  });
+
+  it('resolves equal-length networkSettings globs lowest rc file first', () => {
+    // Berry builds the merged map from the lowest-priority file up and sorts it
+    // stably by key length, so the home file's glob is consulted first.
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'networkSettings:',
+        '  "reg-?.example.com":',
+        '    httpsCaFilePath: ./certs/project-ca.pem',
+      ].join('\n')
+    );
+    homeRc(
+      [
+        'networkSettings:',
+        '  "reg-a.example.???":',
+        '    httpsCaFilePath: ./certs/home-ca.pem',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      npm_config_cafile: resolve(HOME, './certs/home-ca.pem'),
+    });
+  });
+
+  it('lets a per-host networkSettings CA outrank the YARN_* env var', () => {
+    // getNetworkSettings only falls back to the global setting (which is where
+    // the env var lands) for the keys no matching host entry declared.
+    process.env.YARN_HTTPS_CA_FILE_PATH = '/etc/ssl/env-ca.pem';
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'networkSettings:',
+        '  "reg-a.example.com":',
+        '    httpsCaFilePath: ./certs/host-ca.pem',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      npm_config_cafile: resolve(ROOT, './certs/host-ca.pem'),
+    });
+  });
+
+  it('keeps the YARN_* CA env var ahead of the rc files', () => {
+    process.env.YARN_HTTPS_CA_FILE_PATH = '/etc/ssl/env-ca.pem';
+    projectRc('httpsCaFilePath: ./certs/rc-ca.pem\n');
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      npm_config_cafile: '/etc/ssl/env-ca.pem',
+    });
+  });
+
+  it('ignores the CA env var and setting the running major rejects', () => {
+    // v4 renamed caFilePath to httpsCaFilePath, and berry aborts on the name it
+    // does not know, under YARN_* just as much as in the rc file.
+    process.env.YARN_CA_FILE_PATH = '/etc/ssl/v3-env-ca.pem';
+    projectRc('caFilePath: ./certs/v3-ca.pem\n');
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+    });
+  });
+
+  it('reads the v3 CA env var on v3', () => {
+    process.env.YARN_CA_FILE_PATH = '/etc/ssl/v3-env-ca.pem';
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.8.7')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      npm_config_cafile: '/etc/ssl/v3-env-ca.pem',
+    });
+  });
 });
