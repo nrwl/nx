@@ -346,7 +346,39 @@ npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name
 - `connect-workspace` is the best entry point for AI agents because it can detect the repository, create an organization when needed, and return actionable JSON when GitHub authorization is required.
 - `connect github --json` starts device flow, and `connect github poll --device-code ... --json` can be used to poll for completion.
 
+### `nx-cloud start-nx-agents`
+
+Invoke `npx nx-cloud start-nx-agents` at the beginning of your main job to provision the [Nx Agents](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
+
+Nx Cloud reads your CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. Every Nx Cloud command reads that file, so your configuration applies to the run whichever command starts it. `start-nx-agents` takes no configuration flags.
+
+**Usage:**
+
+```shell
+npx nx-cloud start-nx-agents
+```
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 5 linux-large
+lifecycle:
+  stop-after:
+    - build
+    - test
+    - e2e
+```
+
+{% aside type="caution" title="start-nx-agents and start-ci-run cannot be combined" %}
+`start-ci-run` does not read `.nx/ci-config.yaml`. If a config file is present, `start-ci-run` exits with an error and points you to `start-nx-agents`.
+Pick one path for your workspace: the config file with `start-nx-agents`, or CLI flags with `start-ci-run`.
+{% /aside %}
+
+To move an existing `start-ci-run` setup to the config file, see [Migrate from start-ci-run to start-nx-agents](/docs/guides/nx-cloud/migrate-to-ci-config), which maps each flag to its `.nx/ci-config.yaml` counterpart.
+
 ### `nx-cloud start-ci-run`
+
+`start-ci-run` configures a CI run through CLI flags. If you prefer to keep your configuration in a versioned file, use [`start-nx-agents`](#nx-cloud-start-nx-agents) with a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file instead.
 
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of command correspond to the same CI run.
 

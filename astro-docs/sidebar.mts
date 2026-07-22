@@ -853,6 +853,10 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           { label: 'Setup CI', link: 'guides/nx-cloud/setup-ci' },
+          {
+            label: 'Migrate to start-nx-agents',
+            link: 'guides/nx-cloud/migrate-to-ci-config',
+          },
           { label: 'Access tokens', link: 'guides/nx-cloud/access-tokens' },
           {
             label: 'Personal access tokens',
@@ -877,6 +881,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Configuring the cloud runner',
             link: 'reference/nx-cloud/config',
+          },
+          {
+            label: 'CI configuration file',
+            link: 'reference/nx-cloud/ci-config',
           },
           {
             label: 'Custom images',
