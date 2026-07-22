@@ -8,11 +8,13 @@ import {
   getPackageScope,
   nerfDart,
   readEnvVar,
+  readNpmConfigEnv,
   setCafile,
   setProxies,
   setRegistry,
   setScopedRegistry,
   setStrictSsl,
+  warnNativeCredential,
   type NpmConfigEnv,
 } from './utils';
 
@@ -168,6 +170,17 @@ function resolveAuth(
   // always-auth is set for the registry it is about to query, whichever key the
   // credential itself came from. Skip the bridge where yarn would send nothing.
   const authenticates = scope !== null || alwaysAuthFor(dart, npmrcChain);
+  if (!authenticates && dart) {
+    // The gate stops the bridge, not npm's own read of the same files, so say
+    // so where npm is about to authenticate on a registry yarn resolved.
+    warnNativeCredential(env, dart, 'yarn', (key) => {
+      const match = firstString(npmrcChain, key);
+      return (
+        readNpmConfigEnv(process.env, key) ??
+        (match?.npmNative ? match.value : undefined)
+      );
+    });
+  }
   const bareBridges: { key: string; value: string }[] = [];
   for (const key of authKeys) {
     const winner = firstString(npmrcChain, key);
@@ -201,12 +214,8 @@ function resolveAuth(
 // Unlike resolveOption this returns the value regardless of whether npm reads it
 // natively, since it drives the auth gate rather than a bridge.
 function alwaysAuthFor(dart: string | null, npmrcChain: RcFile[]): boolean {
-  // From the npmrc chain only. An env-supplied //host/:always-auth reaches
-  // yarn's own read just for a host with no dot in it (mergeEnv writes env keys
-  // through objectPath, where a dot is a path separator, while every read is
-  // flat), so consulting one here would authenticate where yarn sends nothing.
   const registryScoped = dart
-    ? firstDefined(npmrcChain, `${dart}:always-auth`)?.value
+    ? registryScopedAlwaysAuth(dart, npmrcChain)
     : undefined;
   // BaseRegistry.init merges the `yarn_` env prefix and loadConfig then merges
   // `npm_config_` over it, before any file is read; loadConfig's Object.assign
@@ -219,6 +228,29 @@ function alwaysAuthFor(dart: string | null, npmrcChain: RcFile[]): boolean {
       ? normalizeYarnConfigValue(globalFromEnv)
       : firstDefined(npmrcChain, 'always-auth')?.value;
   return Boolean(registryScoped || global);
+}
+
+// The registry-scoped tier of that lookup. mergeEnv lowercases an env key,
+// rewrites `__` to `.` and `_` to `-`, then stores it with objectPath, which
+// splits on `.` into nested objects, while every read is flat. So a
+// registry-scoped env key reaches yarn's own read only when the whole key is
+// dot-free, which for a fixed `:always-auth` suffix means the dart itself is
+// (verified on 1.22.22: an env key for //localhost:PORT/ authenticates an
+// unscoped fetch, the same key for //127.0.0.1:PORT/ does not). Consulting one
+// that yarn cannot see would authenticate where yarn sends nothing.
+function registryScopedAlwaysAuth(
+  dart: string,
+  npmrcChain: RcFile[]
+): YarnValue | undefined {
+  if (!dart.includes('.')) {
+    const fromEnv =
+      readEnvVar(process.env, `npm_config_${dart}:always-auth`) ??
+      readEnvVar(process.env, `yarn_${dart}:always-auth`);
+    if (fromEnv !== undefined) {
+      return normalizeYarnConfigValue(fromEnv);
+    }
+  }
+  return firstDefined(npmrcChain, `${dart}:always-auth`)?.value;
 }
 
 /** yarn's BaseRegistry.normalizeConfigOption: only the bare booleans coerce. */
