@@ -557,9 +557,21 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       });
     });
 
-    it('defers to npm_config_cafile, which npm resolves itself', () => {
+    it('outranks npm_config_cafile', () => {
+      // YarnRegistry.getOption reads yarn's own config before npm's, so the
+      // yarn_ tier wins and npm has to be moved off the value it would pick.
       process.env.npm_config_cafile = './certs/npm-ca.pem';
       process.env.YARN_CAFILE = './certs/env-ca.pem';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_cafile: resolve(ROOT, './certs/env-ca.pem'),
+      });
+    });
+
+    it('defers to npm_config_cafile below the .yarnrc tier', () => {
+      // Nothing on the yarn side declares it, so yarn falls through to npm's
+      // own config and reaches the same value npm resolves for itself.
+      files['/repo/.npmrc'] = 'cafile=./certs/ancestor-ca.pem';
+      process.env.npm_config_cafile = './certs/npm-ca.pem';
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
     });
 
@@ -573,6 +585,23 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         npm_config_https_proxy: 'http://proxy.example.com:8443',
       });
     });
+  });
+
+  it('keeps TLS verification on for npm where an .npmrc would turn it off', () => {
+    // yarn's DEFAULTS carry strict-ssl, so getOption never reaches npm's config
+    // and this .npmrc cannot disable verification for yarn. Left alone the
+    // spawned npm would read the same file and stop verifying, which is the one
+    // direction of this divergence that fails open.
+    files[`${ROOT}/.npmrc`] = 'strict-ssl=false';
+    files[`${ROOT}/.yarnrc`] = 'strict-ssl true\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_strict_ssl: 'true',
+    });
+  });
+
+  it('does not restate a strict-ssl npm already resolves the same way', () => {
+    files[`${ROOT}/.yarnrc`] = 'strict-ssl true\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
   });
 
   it('does not bridge a strict-ssl that only an .npmrc declares', () => {
