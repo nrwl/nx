@@ -1,7 +1,9 @@
 import { logger, type ExecutorContext } from '@nx/devkit';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as http from 'node:http';
 import * as https from 'node:https';
 import { connect } from 'node:net';
+import { resolveProxyForUrl, type ProxyResolution } from './proxy';
 import type { Schema } from './schema';
 
 const DEFAULT_TIMEOUT = 60_000;
@@ -9,7 +11,6 @@ const DEFAULT_TIMEOUT = 60_000;
 // up front, then a steady interval.
 const RETRY_SCHEDULE = [100, 250, 500];
 const FALLBACK_RETRY_DELAY = 1_000;
-const MAX_REDIRECTS = 10;
 
 type Server = Schema['servers'][number];
 // A probe resolves to `null` when the server is ready, or to a short
@@ -56,10 +57,11 @@ export async function waitForWebserverExecutor(
 
 export default waitForWebserverExecutor;
 
-// Neither a malformed URL nor an out-of-range port can become valid, so they
-// are rejected up front instead of being retried until the timeout and
-// reported as a slow server. An unusable port is also the only input that makes
-// `connect` throw synchronously, which no probe could turn into a failure.
+// A malformed URL, an out-of-range port and a proxy that cannot be used are all
+// inputs that can never become valid, so they are rejected up front instead of
+// being retried until the timeout and reported as a slow server. An unusable
+// port is also the only input that makes `connect` throw synchronously, which
+// no probe could turn into a failure.
 function findServerProblem(server: Server): string | undefined {
   if (server.port == null && !server.url) {
     return 'requires each server to define a "port" or a "url".';
@@ -67,9 +69,29 @@ function findServerProblem(server: Server): string | undefined {
   if (server.port != null && !isValidPort(server.port)) {
     return `received an invalid "port": ${server.port}.`;
   }
-  if (server.url && !canParseUrl(server.url)) {
-    return `received an invalid "url": ${server.url}.`;
+  if (server.url) {
+    let url: URL;
+    try {
+      url = new URL(server.url);
+    } catch {
+      return `received an invalid "url": ${server.url}.`;
+    }
+    // Only the address the wait starts from is checked here. A redirect can
+    // cross to a protocol with its own proxy variable, which the probe reports
+    // when it gets there.
+    const resolution = resolveProxyForUrl(url);
+    if (resolution.kind === 'unusable') {
+      return `${unusableProxyProblem(resolution)}.`;
+    }
   }
+}
+
+// Left unpunctuated because a probe failure is also quoted mid-sentence when
+// the wait times out.
+function unusableProxyProblem(
+  resolution: Extract<ProxyResolution, { kind: 'unusable' }>
+): string {
+  return `cannot use the proxy configured in ${resolution.variable}: ${resolution.value} ${resolution.reason}`;
 }
 
 // 0 is not a connectable port, so it is rejected rather than probed.
@@ -103,8 +125,10 @@ async function waitForServer(server: Server, timeout: number): Promise<void> {
   }
 }
 
-// Mirror Playwright's own readiness check: connect to the port on both
-// loopback addresses, or poll the URL for an HTTP status below 404.
+// Probe the way Playwright does: connect to the port on both loopback
+// addresses, or poll the URL for a status from 200 to 403, through whatever
+// proxy the environment configures for it. A port is always probed directly,
+// because Playwright checks one with a raw socket too.
 function probeServer(server: Server, deadline: number): Promise<ProbeFailure> {
   return server.port != null
     ? probePort(server.port)
@@ -168,8 +192,16 @@ async function probeUrl(
   }
   return (
     response.failure ??
-    `${response.href} responded with status ${response.status}`
+    `${response.href} responded with status ${response.status}${viaProxy(
+      response.via
+    )}`
   );
+}
+
+// The one place the phrase is written, so a failure the probe words and one the
+// request words cannot drift apart.
+function viaProxy(via: string | undefined): string {
+  return via ? ` via the proxy at ${via}` : '';
 }
 
 interface UrlResponse {
@@ -178,111 +210,202 @@ interface UrlResponse {
   href: string;
   status: number;
   failure?: string;
+  // The proxy the status came back through, if any. A proxy that answers in the
+  // server's place produces one that reads as the server's own until the
+  // message says otherwise.
+  via?: string;
 }
 
 function requestStatus(
   url: URL,
   ignoreHTTPSErrors: boolean,
   deadline: number,
-  redirectsRemaining = MAX_REDIRECTS
+  redirects = 0
 ): Promise<UrlResponse> {
+  // A chain that ran out of budget still told us the server is answering, so it
+  // is a real observation rather than silence, whether the budget ran out
+  // between hops or inside the last one.
+  const redirectFailure =
+    redirects > 0
+      ? `${url.href} redirected ${redirects} times without resolving`
+      : undefined;
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) {
+    return Promise.resolve({
+      href: url.href,
+      status: 0,
+      failure: redirectFailure ?? NO_OBSERVATION,
+    });
+  }
+
+  // Resolved per URL rather than once per probe so a redirect that changes
+  // protocol re-selects the way Playwright's own recursion does.
+  const resolution = resolveProxyForUrl(url);
+  if (resolution.kind === 'unusable') {
+    return Promise.resolve({
+      href: url.href,
+      status: 0,
+      failure: `${url.href} ${unusableProxyProblem(resolution)}`,
+    });
+  }
+
+  const via = resolution.kind === 'proxy' ? resolution.proxy.host : undefined;
+  const describe = (detail: string) => `${url.href} ${detail}${viaProxy(via)}`;
+
   return new Promise((resolve) => {
-    // Give each request the rest of the readiness budget as its idle timeout,
-    // rather than a fixed interval, so an endpoint that legitimately responds
-    // slowly is not aborted before Playwright itself would give up.
-    const remaining = deadline - Date.now();
-    if (remaining <= 0) {
-      resolve({ href: url.href, status: 0, failure: NO_OBSERVATION });
-      return;
-    }
-    const isHttps = url.protocol === 'https:';
     const requestOptions: https.RequestOptions = {
       method: 'GET',
       headers: { Accept: '*/*' },
-      timeout: remaining,
+      rejectUnauthorized: !ignoreHTTPSErrors,
     };
-    if (isHttps) {
-      requestOptions.rejectUnauthorized = !ignoreHTTPSErrors;
-    }
 
-    const request = (isHttps ? https.request : http.request)(
-      url,
-      requestOptions,
-      (response) => {
-        const status = response.statusCode ?? 0;
-        const location = response.headers.location;
-        response.resume();
-        request.destroy();
-        // Follow redirects like Playwright and evaluate the final
-        // destination, so a redirect to an unavailable page is not read as
-        // ready. Treat an exhausted or malformed chain as not ready.
-        if (status >= 300 && status < 400 && location) {
-          if (redirectsRemaining <= 0) {
-            resolve({
-              href: url.href,
-              status: 0,
-              failure: `${url.href} redirected more than ${MAX_REDIRECTS} times`,
-            });
-            return;
-          }
-          let redirectUrl: URL;
-          try {
-            redirectUrl = new URL(location, url);
-          } catch {
-            resolve({
-              href: url.href,
-              status: 0,
-              failure: `${url.href} redirected to an invalid location "${location}"`,
-            });
-            return;
-          }
-          resolve(
-            requestStatus(
-              redirectUrl,
-              ignoreHTTPSErrors,
-              deadline,
-              redirectsRemaining - 1
-            )
-          );
-          return;
-        }
-        resolve({ href: url.href, status });
+    let request: http.ClientRequest | undefined;
+    let settled = false;
+    // Until the agent finishes `CONNECT` the request holds no socket, so
+    // destroying it cannot reach the connection to the proxy. Aborting is what
+    // closes that leg; without it a proxy that never answers leaves a live
+    // socket nothing else can reach.
+    const connecting = new AbortController();
+    // Declared ahead of the settle it is cleared by, which the timer's own
+    // callback in turn calls.
+    let budget: NodeJS.Timeout;
+    const settle = (response: UrlResponse | Promise<UrlResponse>) => {
+      if (settled) {
+        return;
       }
-    );
-    request.once('timeout', () => {
-      request.destroy();
+      settled = true;
+      clearTimeout(budget);
+      request?.destroy();
+      connecting.abort();
+      resolve(response);
+    };
+
+    // The rest of the readiness budget bounds the request in wall-clock time. A
+    // request arms its own idle timeout only once it holds a socket, and one
+    // waiting on a proxy that accepted the connection but never answered
+    // `CONNECT` never gets that far. Unreferenced because it is a bound rather
+    // than work of its own: it still fires while a request is in flight, and
+    // cannot hold the process open once nothing else does.
+    budget = setTimeout(() => {
       // Staying silent for the window the port probe allows is something the
       // server did. Going quiet with a sliver of budget left is not: that is
       // the deadline arriving mid-request, and it says nothing about a server
       // an earlier probe may have already reached.
-      resolve({
+      settle({
         href: url.href,
         status: 0,
         failure:
-          remaining >= FALLBACK_RETRY_DELAY
-            ? `${url.href} did not respond`
-            : NO_OBSERVATION,
+          redirectFailure ??
+          (remaining >= FALLBACK_RETRY_DELAY
+            ? describe('did not respond')
+            : NO_OBSERVATION),
       });
-    });
-    request.once('error', (error: NodeJS.ErrnoException) => {
-      request.destroy();
-      resolve({
+    }, remaining).unref();
+
+    const onResponse = (response: http.IncomingMessage) => {
+      const status = response.statusCode ?? 0;
+      const location = response.headers.location;
+      response.resume();
+      // Follow redirects like Playwright and evaluate the final
+      // destination, so a redirect to an unavailable page is not read as
+      // ready. The readiness deadline bounds the chain instead of a hop
+      // count, which would fail a long chain Playwright follows to a
+      // ready server. Treat a malformed chain as not ready.
+      if (status >= 300 && status < 400 && location) {
+        let redirectUrl: URL;
+        try {
+          redirectUrl = new URL(location, url);
+        } catch {
+          settle({
+            href: url.href,
+            status: 0,
+            // Node's header parser passes tab and the C1 controls through, and
+            // the value reaches a terminal from here.
+            failure: describe(
+              `redirected to an invalid location "${location.replace(
+                /[\x00-\x1f\x7f-\x9f]/g,
+                ''
+              )}"`
+            ),
+          });
+          return;
+        }
+        settle(
+          requestStatus(redirectUrl, ignoreHTTPSErrors, deadline, redirects + 1)
+        );
+        return;
+      }
+      settle({ href: url.href, via, status });
+    };
+
+    switch (resolution.kind) {
+      case 'direct':
+        request = (url.protocol === 'https:' ? https : http).request(
+          url,
+          requestOptions,
+          onResponse
+        );
+        break;
+      case 'proxy':
+        request = proxiedRequest(
+          url,
+          resolution.proxy,
+          requestOptions,
+          connecting.signal,
+          onResponse
+        );
+        break;
+      default: {
+        // Both kinds that reach here route the request somewhere; a new one has
+        // to say where.
+        const unhandled: never = resolution;
+        throw new Error(
+          `Unhandled proxy resolution ${JSON.stringify(unhandled)}`
+        );
+      }
+    }
+
+    // Not `once`: aborting the connection raises a second error on a request
+    // that has already been settled, and an emitter left without a listener
+    // would throw it at the process.
+    request.on('error', (error: NodeJS.ErrnoException) => {
+      const detail = error.code ?? error.message;
+      settle({
         href: url.href,
         status: 0,
-        failure: `${url.href} ${error.code ?? error.message}`,
+        failure: describe(
+          redirects > 0 ? `${detail} after ${redirects} redirects` : detail
+        ),
       });
     });
     request.end();
   });
 }
 
-function canParseUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
+// An http target is named in the request line and the request itself goes to
+// the proxy, which is what Playwright does. An https target cannot be named
+// that way, so the agent opens a tunnel with `CONNECT` and TLS runs over it.
+// Proxy credentials travel differently on the two routes, on the URL for the
+// first and as `Proxy-Authorization` for the second, and both match Playwright.
+function proxiedRequest(
+  url: URL,
+  proxy: URL,
+  options: https.RequestOptions,
+  signal: AbortSignal,
+  onResponse: (response: http.IncomingMessage) => void
+): http.ClientRequest {
+  if (url.protocol === 'https:') {
+    const agent = new HttpsProxyAgent(proxy);
+    // The agent dials the proxy itself, so this is the only handle on that
+    // connection. A signal in the request options does not reach it.
+    agent.connectOpts.signal = signal;
+    return https.request(url, { ...options, agent }, onResponse);
   }
+  return (proxy.protocol === 'https:' ? https : http).request(
+    proxy,
+    { ...options, path: url.href },
+    onResponse
+  );
 }
 
 function sleep(ms: number): Promise<void> {
