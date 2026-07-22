@@ -417,7 +417,7 @@ export function getFirstCommitSha(directory?: string): string | null {
       windowsHide: true,
     })
       .trim()
-      .split('\n')
+      .split(/\r?\n/)
       .filter(Boolean);
     return roots.sort()[0] ?? null;
   } catch {
