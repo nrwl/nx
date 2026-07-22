@@ -1,6 +1,5 @@
 import { existsSync } from 'fs';
-import { homedir } from 'os';
-import { join, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
 import { gte, lt } from 'semver';
 import {
   getPnpmConfigDir,
@@ -21,22 +20,6 @@ import {
   setStrictSsl,
   type NpmConfigEnv,
 } from './utils';
-
-// pnpm's @pnpm/npm-conf parseField resolves a path setting against the cwd (the
-// workspace root), expanding a leading `~/` (and `~\` only on Windows) against
-// the home dir first. pnpm seeds its HOME from os.homedir() before resolving,
-// so use that (os.homedir()) rather than a possibly-unset process.env.HOME.
-function resolvePnpmPath(value: string, root: string): string {
-  const home = homedir();
-  const tilde =
-    process.platform === 'win32'
-      ? value.startsWith('~/') || value.startsWith('~\\')
-      : value.startsWith('~/');
-  if (tilde && home) {
-    return resolve(home, value.slice(2));
-  }
-  return resolve(root, value);
-}
 
 /*
  * pnpm registry resolution, by version line (behavior verified against the
@@ -91,20 +74,26 @@ export function getPnpmSpawnRegistryEnv(
   const scope = getPackageScope(packageName);
 
   if (lt(pnpmVersion, '11.0.0')) {
-    // Wholesale semantics: any applicable registries entry beats every other
-    // surface, so force both the default and the scoped key to the yaml pick.
-    // A scoped-only map with an unscoped target crashes pnpm itself (the
-    // replace wipes registries.default), so there is no behavior to mimic and
-    // npm's own resolution is left in place.
-    const pick =
-      (scope ? settings.registries?.[scope] : undefined) ??
-      settings.registries?.default;
-    if (pick) {
-      setRegistry(env, pick);
-      if (scope) {
-        setScopedRegistry(env, scope, pick);
-      }
+    // Wholesale semantics: the map replaces the npmrc/env/CLI registry
+    // selection outright, so the default has to be forced to the yaml default
+    // and the scoped key to whichever entry pnpm would pick, even when that is
+    // the yaml default shadowing a scoped key the workspace .npmrc declares.
+    // A scoped-only map leaves pnpm no default at all, which crashes it on an
+    // unscoped target (the replace wipes registries.default) but resolves a
+    // scoped one fine, so npm's own default is left in place there rather than
+    // aimed at a registry pnpm only uses for that scope.
+    if (settings.registries?.default) {
+      setRegistry(env, settings.registries.default);
     }
+    const pick = scope
+      ? (settings.registries?.[scope] ?? settings.registries?.default)
+      : undefined;
+    if (scope && pick) {
+      setScopedRegistry(env, scope, pick);
+    }
+    // auth.ini is an 11.x file, so the workspace .npmrc is the only layer whose
+    // bypass list can need re-spelling here.
+    bridgeNoProxy(env, root);
     applyYamlNetworkSettings(env, settings);
     return env;
   }
@@ -128,8 +117,9 @@ export function getPnpmSpawnRegistryEnv(
     setRegistry(env, defaultRegistry);
   }
 
-  bridgeAuthIni(env, root, scope);
-  bridgeNoProxy(env, root);
+  const authIniPath = getAuthIniPath();
+  bridgeAuthIni(env, root, scope, authIniPath);
+  bridgeNoProxy(env, root, authIniPath);
 
   applyYamlNetworkSettings(env, settings);
   return env;
@@ -150,13 +140,17 @@ function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
  * it, so its keys are injected at the env tier, guarded so a workspace .npmrc
  * that defines the same key keeps winning (matching pnpm's layer order).
  */
+function getAuthIniPath(): string {
+  return join(getPnpmConfigDir(process.env), 'auth.ini');
+}
+
 function bridgeAuthIni(
   env: NpmConfigEnv,
   root: string,
-  scope: string | null
+  scope: string | null,
+  authIniPath: string
 ): void {
-  const configDir = getPnpmConfigDir(process.env);
-  const authIni = readNpmrcMap(join(configDir, 'auth.ini'));
+  const authIni = readNpmrcMap(authIniPath);
   if (!authIni) {
     return;
   }
@@ -172,7 +166,7 @@ function bridgeAuthIni(
   const projectNpmrc = readNpmrcMap(join(root, '.npmrc')) ?? new Map();
   // An empty value declares nothing: pnpm's own readers re-check for an empty
   // registry, and npm skips an empty env value outright. Deriving from one is
-  // what does damage (an empty cafile resolves to the workspace root).
+  // what does damage (an empty cafile resolves to auth.ini's own directory).
   const declared = (key: string): string | undefined =>
     authIni.get(key) || undefined;
 
@@ -249,9 +243,12 @@ function bridgeAuthIni(
     !projectNpmrc.has(key) && authIni.has(key);
   const cafile = unbridged('cafile') ? declared('cafile') : undefined;
   if (cafile) {
-    // pnpm resolves a relative cafile against its cwd (the workspace root) and
-    // expands a leading ~/ against $HOME (@pnpm/npm-conf parseField).
-    setCafile(env, resolvePnpmPath(cafile, root));
+    // pnpm resolves a relative cafile against the directory of the file that
+    // declared it, not the workspace root, and never expands a leading `~`
+    // (verified on 11.9.0: `~/ca.pem` reads <config dir>/~/ca.pem). npm ignores
+    // a cafile it cannot open, so getting the base wrong drops the trust anchor
+    // with no diagnostic at all.
+    setCafile(env, resolve(dirname(authIniPath), cafile));
   }
   // Inline `ca` PEM material: npm reads it only as a flat (global) key, and pnpm
   // deliberately does not source-scope trust anchors, so it needs no pin check.
@@ -286,14 +283,20 @@ function bridgeAuthIni(
 }
 
 /**
- * The proxy-bypass list is the one npmrc key whose spelling differs: pnpm reads
- * `no-proxy` and ignores `noproxy`, npm does the exact opposite (it warns about
- * `no-proxy` as an unknown config and moves on). So pnpm's value never reaches
- * the spawned npm from any file, the workspace .npmrc included, and the layer
- * that wins in pnpm has to be bridged under npm's spelling. A `noProxy` in
+ * The proxy-bypass list is the one npmrc key whose spelling differs. Measured
+ * against a logging proxy: pnpm 11 honors `no-proxy` and ignores `noproxy`,
+ * where npm does the exact opposite (it warns about `no-proxy` as an unknown
+ * config and moves on). pnpm 10.x honors both, so only the spelling npm cannot
+ * read needs bridging on either line. Either way pnpm's `no-proxy` never
+ * reaches the spawned npm from any file, the workspace .npmrc included, and the
+ * layer that wins in pnpm has to be re-spelled. A `noProxy` in
  * pnpm-workspace.yaml outranks both files and is applied after this.
  */
-function bridgeNoProxy(env: NpmConfigEnv, root: string): void {
+function bridgeNoProxy(
+  env: NpmConfigEnv,
+  root: string,
+  authIniPath?: string
+): void {
   const npmrcPath = join(root, '.npmrc');
   const projectNpmrc = readNpmrcMap(npmrcPath);
   // With the higher layer unreadable there is no telling which one wins, and
@@ -305,9 +308,7 @@ function bridgeNoProxy(env: NpmConfigEnv, root: string): void {
   // is pnpm's way of clearing an inherited bypass list.
   const value = projectNpmrc?.has('no-proxy')
     ? projectNpmrc.get('no-proxy')
-    : readNpmrcMap(join(getPnpmConfigDir(process.env), 'auth.ini'))?.get(
-        'no-proxy'
-      );
+    : authIniPath && readNpmrcMap(authIniPath)?.get('no-proxy');
   if (value) {
     // npm ignores `no-proxy` in the file it does read, so the value never goes
     // through npm's own expansion under that key; expand it with pnpm's grammar
