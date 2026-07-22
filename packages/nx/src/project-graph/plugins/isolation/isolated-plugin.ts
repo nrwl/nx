@@ -580,7 +580,15 @@ async function startPluginWorker(
       // Spawn the worker with the same resolve conditions Nx uses for plugin
       // entries so the plugin's transitive workspace imports resolve to source.
       ...getPluginResolveConditionNodeArgs(),
-      ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
+      // Resolve ts-node/register to an absolute path: the worker is spawned
+      // with `cwd: root` (the workspace root), and node resolves a bare
+      // `--require` specifier relative to the child's cwd. A workspace root
+      // without a hoisted `node_modules/ts-node` (e.g. temp/virtual test
+      // workspaces) would otherwise fail with "Cannot find module
+      // 'ts-node/register'" and the worker would exit before connecting.
+      ...(isWorkerTypescript
+        ? ['--require', require.resolve('ts-node/register')]
+        : []),
       workerPath,
       ipcPath,
       name,
