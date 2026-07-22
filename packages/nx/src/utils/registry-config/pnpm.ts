@@ -11,6 +11,7 @@ import {
   expandNpmEnvVars,
   expandPnpmEnvVars,
   getPackageScope,
+  hasCredentialFor,
   nerfDart,
   readNpmConfigEnv,
   setCafile,
@@ -368,21 +369,7 @@ function hasCredentials(
   projectNpmrc: Map<string, string>,
   dart: string
 ): boolean {
-  const read = (key: string): string | undefined =>
-    npmResolved(env, projectNpmrc, key);
-  let regKey = dart;
-  while (regKey.length > '//'.length) {
-    if (
-      read(`${regKey}:_authToken`) ||
-      read(`${regKey}:_auth`) ||
-      (read(`${regKey}:username`) && read(`${regKey}:_password`)) ||
-      (read(`${regKey}:certfile`) && read(`${regKey}:keyfile`))
-    ) {
-      return true;
-    }
-    regKey = regKey.replace(/([^/]+|\/)$/, '');
-  }
-  return false;
+  return hasCredentialFor(dart, (key) => npmResolved(env, projectNpmrc, key));
 }
 
 let warnedUnscopedCredential = false;

@@ -4,9 +4,12 @@ import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { gte, lt, major } from 'semver';
 import { readYamlFile } from '../fileutils';
+import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
   getPackageScope,
+  nerfDart,
+  readNpmConfigEnv,
   setAuthIdent,
   setAuthToken,
   setCafile,
@@ -14,6 +17,7 @@ import {
   setRegistry,
   setScopedRegistry,
   setStrictSsl,
+  warnNativeCredential,
   type NpmConfigEnv,
 } from './utils';
 
@@ -234,8 +238,35 @@ export function getYarnBerrySpawnRegistryEnv(
     }
   }
 
+  // berry never reads an .npmrc, so any credential one holds for the registry
+  // berry resolved is one berry itself would never send. Unlike yarn classic
+  // there is no gate to consult: whatever berry would send is already in the
+  // overlay, which the warning checks for.
+  const dart = nerfDart(effectiveRegistry);
+  if (dart) {
+    warnNativeCredential(
+      env,
+      dart,
+      'yarn',
+      (key) => readNpmConfigEnv(process.env, key) ?? npmrcValue(root, key)
+    );
+  }
+
   applyTls(env, rcFiles, effectiveRegistry, yarnVersion);
   return env;
+}
+
+// The .npmrc files npm reads for itself and berry ignores. npm also reads a
+// <globalPrefix>/etc npmrc and its own builtin one, which are not enumerated
+// here: missing one only means the warning stays silent.
+function npmrcValue(root: string, key: string): string | undefined {
+  for (const path of [join(root, '.npmrc'), join(homedir(), '.npmrc')]) {
+    const value = readNpmrcMap(path)?.get(key);
+    if (value !== undefined) {
+      return value;
+    }
+  }
+  return undefined;
 }
 
 function collectRcFiles(root: string): BerryRcFile[] {

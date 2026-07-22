@@ -1,4 +1,5 @@
 import { dirname } from 'path';
+import { logger } from '../logger';
 
 /**
  * Environment entries (npm_config_* keys) to overlay on a spawned npm process
@@ -289,4 +290,63 @@ export function readEnvVar(
   name: string
 ): string | undefined {
   return env[name] ?? env[name.toLowerCase()] ?? env[name.toUpperCase()];
+}
+
+/**
+ * Whether npm would find a credential for `dart` among the values `read`
+ * exposes. npm strips one path segment at a time off the nerf-dart until only
+ * the host is left, which covers the key spelled with and without its trailing
+ * slash, and accepts a token, a basic `_auth`, a username/password pair, or a
+ * client-certificate pair.
+ * See https://github.com/npm/npm-registry-fetch/blob/v18.0.2/lib/auth.js#L16-L49
+ */
+export function hasCredentialFor(
+  dart: string,
+  read: (key: string) => string | undefined
+): boolean {
+  let regKey = dart;
+  while (regKey.length > '//'.length) {
+    if (
+      read(`${regKey}:_authToken`) ||
+      read(`${regKey}:_auth`) ||
+      (read(`${regKey}:username`) && read(`${regKey}:_password`)) ||
+      (read(`${regKey}:certfile`) && read(`${regKey}:keyfile`))
+    ) {
+      return true;
+    }
+    regKey = regKey.replace(/([^/]+|\/)$/, '');
+  }
+  return false;
+}
+
+let warnedNativeCredential = false;
+
+/**
+ * npm reads the user's own .npmrc chain and the overlay cannot switch that off,
+ * so npm can authenticate on a registry the package manager resolved but would
+ * have queried anonymously. The fetch still succeeds, so nothing else reports
+ * it. Say it once, and only where the overlay is what sent npm to that registry:
+ * left to itself npm would have used its own resolution and the same
+ * credentials, which is what the user gets from npm anywhere else.
+ */
+export function warnNativeCredential(
+  env: NpmConfigEnv,
+  dart: string,
+  packageManager: string,
+  npmVisible: (key: string) => string | undefined
+): void {
+  if (
+    warnedNativeCredential ||
+    env['npm_config_registry'] === undefined ||
+    // A credential the overlay carries is the package manager's own and
+    // outranks the file, so npm sending it reproduces rather than diverges.
+    hasCredentialFor(dart, (key) => env[`npm_config_${key}`]) ||
+    !hasCredentialFor(dart, npmVisible)
+  ) {
+    return;
+  }
+  warnedNativeCredential = true;
+  logger.warn(
+    `npm will send the credential your .npmrc holds for ${dart} when fetching packages. ${packageManager} would not send it for this request. Remove that credential from .npmrc if npm should not authenticate there.`
+  );
 }
