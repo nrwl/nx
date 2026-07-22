@@ -412,11 +412,16 @@ export function mergeCreateNodesResults(
     // Stage the default layer for synthesis. Merge errors are discarded and
     // external nodes land in a scratch object — the same results merge into
     // the manager below, where both surface once with proper plugin context.
-    // The discard is safe because every merge throw depends only on the
-    // plugin's own config, never on the merge base (which differs between
-    // the two passes).
-    // Name references are NOT registered here: sentinels registered against
-    // the throwaway rootMap would mutate the plugin results and be orphaned.
+    // The discard is safe because every merge throw is base-independent in
+    // both its condition and its reachability: each throw's condition reads
+    // only the plugin's own config, and the spread-ambiguity throws fire even
+    // when a key is dropped by a base-owns-key shortcut, because those
+    // shortcuts eagerly validate the dropped value (`assertNoIntegerLikeSpreadKey`).
+    // So a given config raises the same error in this pass and the real merge
+    // below despite their bases differing.
+    // Name references are NOT registered here: `applySubstitutions` sweeps only
+    // the manager's `rootMap`, so sentinels registered against this throwaway
+    // rootMap would never be visited and would never resolve.
     const stagingErrors: MergeError[] = [];
     const stagingExternalNodes: Record<string, ProjectGraphExternalNode> = {};
     for (const pluginResults of defaultResults) {

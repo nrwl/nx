@@ -821,6 +821,73 @@ describe('spread syntax in mergeTargetConfigurations', () => {
     ).toThrow(/integer-like key/i);
   });
 
+  // A nested `'...'` spread object with an integer-like key is ambiguous
+  // regardless of which side of the merge owns the key it lives under. When a
+  // pre-`'...'` key is owned by the base, the merge lets the base win and drops
+  // the incoming value without merging it — but the ambiguity is a property of
+  // the authored value, so it must still throw. Otherwise the error would fire
+  // in the target-defaults staging merge (default-only base) but vanish in the
+  // real merge (full base), silently dropping the invalid object.
+  describe('nested integer-like spread under a pre-"..." key', () => {
+    const nestedInvalid = {
+      '...': true,
+      '123': 'ambiguous',
+    };
+
+    it('throws when the base does NOT own the enclosing key', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            metadataThing: nestedInvalid,
+            '...': true,
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            inputs: ['production'],
+          }
+        )
+      ).toThrow(/integer-like key/i);
+    });
+
+    it('throws even when the base OWNS the enclosing key (base-independent)', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            metadataThing: nestedInvalid,
+            '...': true,
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            metadataThing: { existing: 'base-value' },
+            inputs: ['production'],
+          }
+        )
+      ).toThrow(/integer-like key/i);
+    });
+
+    it('throws for a named configuration the base OWNS (base-independent)', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            configurations: {
+              prod: nestedInvalid,
+              '...': true,
+            },
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            configurations: {
+              prod: { existing: 'base-value' },
+            },
+          }
+        )
+      ).toThrow(/integer-like key/i);
+    });
+  });
+
   it('should replace array without spread token', () => {
     const result = mergeTargetConfigurations(
       {

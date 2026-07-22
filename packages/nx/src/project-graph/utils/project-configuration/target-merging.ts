@@ -12,6 +12,7 @@ import {
 
 import type { SourceInformation } from './source-maps';
 import {
+  assertNoIntegerLikeSpreadKey,
   getMergeValueResult,
   INTEGER_LIKE_KEY_PATTERN,
   IntegerLikeSpreadKeyError,
@@ -277,6 +278,14 @@ function mergeConfigurations<T extends Object>(
       // Before '...': base wins for shared names. Keep base's source-map
       // entries when it owns the config.
       if (baseHasConfig) {
+        // Base wins, so the incoming config is dropped without reaching
+        // `mergeConfigurationValue`. Validate its nested spread here so an
+        // integer-like-key ambiguity throws regardless of which side owns
+        // the config name (mirrors the base-independent target-level check).
+        assertNoIntegerLikeSpreadKey(
+          newConfigurations?.[configName],
+          configIdentifier ? `Object at "${configIdentifier}"` : 'Object'
+        );
         mergedConfigurations[configName] = baseConfigurations[configName];
       } else {
         mergedConfigurations[configName] = mergeConfigurationValue(
@@ -454,6 +463,16 @@ export function mergeTargetConfigurations(
 
     if (hasSpread && keysBeforeSpread.has(key)) {
       // Before '...': base wins; fall through to target only if base lacks it.
+      // When base wins, the incoming `target[key]` is dropped without ever
+      // reaching `getMergeValueResult`, so validate its nested spread here —
+      // the integer-like-key ambiguity is a property of the authored value,
+      // not of which side owns the key, and must throw either way.
+      assertNoIntegerLikeSpreadKey(
+        target[key],
+        projectConfigSourceMap
+          ? `Object at "${targetIdentifier}.${key}"`
+          : 'Object'
+      );
       result[key] =
         key in mergeBase
           ? mergeBase[key]

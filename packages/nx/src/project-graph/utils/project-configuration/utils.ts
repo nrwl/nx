@@ -40,6 +40,33 @@ export class IntegerLikeSpreadKeyError extends Error {
   }
 }
 
+/**
+ * Throws `IntegerLikeSpreadKeyError` when `value` is a `'...'` spread object
+ * whose enumeration hoists an integer-like key ahead of the spread, making its
+ * authored position ambiguous.
+ *
+ * The ambiguity is a property of the authored value alone, not of any merge
+ * base. `mergeObjectWithSpread` runs this the moment it merges such a value —
+ * but a merge layer that lets the base win a key drops the incoming value
+ * without merging it, so the check must also be run eagerly at those
+ * base-owns-key shortcuts. Otherwise the error would surface or vanish
+ * depending on which side owns the key (e.g. it fires in the target-defaults
+ * staging merge but not the real merge), which is exactly the divergence that
+ * makes discarding staging errors unsafe.
+ */
+export function assertNoIntegerLikeSpreadKey(
+  value: unknown,
+  errorContext: string
+): void {
+  if (!isObject(value) || value[NX_SPREAD_TOKEN] !== true) {
+    return;
+  }
+  const keys = Object.keys(value);
+  if (keys[0] && INTEGER_LIKE_KEY_PATTERN.test(keys[0])) {
+    throw new IntegerLikeSpreadKeyError(keys[0], errorContext);
+  }
+}
+
 type SourceMapContext = {
   sourceMap: Record<string, SourceInformation>;
   key: string;
@@ -208,13 +235,11 @@ function mergeObjectWithSpread(
     ? `Object at "${sourceMapContext.key}"`
     : 'Object';
 
-  const newKeys = Object.keys(newValue);
+  // Integer-like keys are hoisted to the front of enumeration, so one
+  // alongside `'...'` makes its authored position ambiguous.
+  assertNoIntegerLikeSpreadKey(newValue, errorContext);
 
-  // Integer-like keys are hoisted to the front of enumeration, so if one
-  // exists alongside `'...'` it must be newKeys[0].
-  if (newKeys[0] && INTEGER_LIKE_KEY_PATTERN.test(newKeys[0])) {
-    throw new IntegerLikeSpreadKeyError(newKeys[0], errorContext);
-  }
+  const newKeys = Object.keys(newValue);
 
   // Base per-key sources captured lazily — only for shared keys the new
   // object overwrites before `'...'`, since writing their new source
