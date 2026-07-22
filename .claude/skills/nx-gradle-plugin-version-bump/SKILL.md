@@ -123,13 +123,13 @@ Add a new entry at the end of the `generators` object (before the closing `}`), 
 ```json
 "change-plugin-version-NEW_VERSION": {
   "version": "NX_MIGRATION_VERSION",
-  "cli": "nx",
   "description": "Change dev.nx.gradle.project-graph to version NEW_VERSION in build file",
-  "factory": "./src/migrations/MIGRATION_FOLDER/change-plugin-version-NEW_VERSION"
+  "implementation": "./dist/src/migrations/MIGRATION_FOLDER/change-plugin-version-NEW_VERSION",
+  "documentation": "./dist/src/migrations/MIGRATION_FOLDER/change-plugin-version-NEW_VERSION.md"
 }
 ```
 
-The migration key uses the version with hyphens replacing dots (e.g., `0-1-16`).
+The migration key uses the version with hyphens replacing dots (e.g., `0-1-16`). The paths are dist-prefixed because the published package ships only `dist/`, and `documentation` is how the entry references the step-4 file. Older entries also carry `cli: "nx"` (deprecated in the migrations schema) and the `factory` alias for `implementation`; the template uses the primary key and omits `cli`. For the general entry shape see the [author-migration](../author-migration/SKILL.md) skill.
 
 ## Verification
 
