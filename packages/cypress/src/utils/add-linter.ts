@@ -144,8 +144,8 @@ export async function addLinterToCyProject(
 
     // For flat configs typed linting is handled by `lintProjectGenerator` via
     // `parserOptions.projectService`, so we don't emit `parserOptions.project`
-    // here. For legacy `.eslintrc` configs, fall back to the typescript-eslint
-    // v7 shape that the legacy stack supports.
+    // here. Legacy `.eslintrc` configs are JSON, which can't express the
+    // `__dirname` that `tsconfigRootDir` needs, so they keep `project`.
     const legacyParserOptions =
       !isFlatConfig && enableTypedLinting
         ? { project: `${projectConfig.root}/tsconfig.*?.json` }

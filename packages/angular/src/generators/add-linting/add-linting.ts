@@ -102,8 +102,8 @@ export async function addLintingGenerator(
         ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),
         {
           files: ['*.ts'],
-          // Legacy `.eslintrc` is on typescript-eslint v7, which only supports
-          // `parserOptions.project` (no `projectService`).
+          // Legacy `.eslintrc` is JSON, which can't express the `__dirname`
+          // that `tsconfigRootDir` needs, so it keeps `parserOptions.project`.
           ...(hasTypedLinting
             ? {
                 parserOptions: {
