@@ -248,6 +248,9 @@ export function getYarnBerrySpawnRegistryEnv(
       env,
       dart,
       'yarn',
+      // Safe to say outright here: berry reads no .npmrc, so nothing yarn does
+      // depends on that credential.
+      'Remove that credential from .npmrc if npm should not authenticate there; yarn never reads that file.',
       (key) => readNpmConfigEnv(process.env, key) ?? npmrcValue(root, key)
     );
   }

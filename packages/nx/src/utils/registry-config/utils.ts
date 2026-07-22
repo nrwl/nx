@@ -328,11 +328,15 @@ let warnedNativeCredential = false;
  * it. Say it once, and only where the overlay is what sent npm to that registry:
  * left to itself npm would have used its own resolution and the same
  * credentials, which is what the user gets from npm anywhere else.
+ *
+ * `remediation` closes the message, because what the user can safely do about it
+ * depends on whether the package manager reads .npmrc at all.
  */
 export function warnNativeCredential(
   env: NpmConfigEnv,
   dart: string,
   packageManager: string,
+  remediation: string,
   npmVisible: (key: string) => string | undefined
 ): void {
   if (
@@ -347,6 +351,6 @@ export function warnNativeCredential(
   }
   warnedNativeCredential = true;
   logger.warn(
-    `npm will send the credential your .npmrc holds for ${dart} when fetching packages. ${packageManager} would not send it for this request. Remove that credential from .npmrc if npm should not authenticate there.`
+    `npm will send the credential your .npmrc holds for ${dart} when fetching packages. ${packageManager} would not send it for this request. ${remediation}`
   );
 }

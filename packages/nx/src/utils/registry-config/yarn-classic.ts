@@ -177,13 +177,21 @@ function resolveAuth(
   if (!authenticates && dart) {
     // The gate stops the bridge, not npm's own read of the same files, so say
     // so where npm is about to authenticate on a registry yarn resolved.
-    warnNativeCredential(env, dart, 'yarn', (key) => {
-      const match = firstString(npmrcChain, key);
-      return (
-        readNpmConfigEnv(process.env, key) ??
-        (match?.npmNative ? match.value : undefined)
-      );
-    });
+    warnNativeCredential(
+      env,
+      dart,
+      'yarn',
+      // Not "remove it": yarn reads the same file and sends that credential for
+      // every scoped package, so deleting it would break those installs.
+      'yarn does send it for scoped packages, and for any registry with always-auth set, so removing it from .npmrc would stop those from authenticating too.',
+      (key) => {
+        const match = firstString(npmrcChain, key);
+        return (
+          readNpmConfigEnv(process.env, key) ??
+          (match?.npmNative ? match.value : undefined)
+        );
+      }
+    );
   }
   const bareBridges: { key: string; value: string }[] = [];
   for (const key of authKeys) {

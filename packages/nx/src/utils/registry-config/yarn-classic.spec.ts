@@ -773,6 +773,10 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-y.example.com/');
       expect(warnings[0]).toContain('yarn would not send it');
+      // Classic reads the same file and sends that credential for every scoped
+      // package, so telling the user to delete it would break yarn install.
+      expect(warnings[0]).toContain('yarn does send it for scoped packages');
+      expect(warnings[0]).not.toContain('Remove that credential');
     });
 
     it('stays quiet when always-auth makes yarn send the same credential', () => {
