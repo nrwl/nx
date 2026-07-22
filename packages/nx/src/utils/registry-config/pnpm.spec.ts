@@ -553,6 +553,20 @@ describe('getPnpmSpawnRegistryEnv', () => {
       );
     });
 
+    it('resolves an auth.ini cafile against the workspace root below 11.2.0', () => {
+      // The npmrc-dir base landed in 11.2.0; before it the only reader is
+      // loadCAFile, a bare readFileSync on the raw value, so the path is
+      // relative to the cwd. npm ignores a cafile it cannot open, so using the
+      // wrong base here drops the trust anchor with no diagnostic.
+      writeAuthIni('cafile=./ca.pem');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.1.0')).toEqual({
+        npm_config_cafile: join(root, 'ca.pem'),
+      });
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.2.0')).toEqual({
+        npm_config_cafile: join(configHome, 'pnpm', 'ca.pem'),
+      });
+    });
+
     it('bridges flat TLS/proxy keys from auth.ini (cafile resolved against auth.ini)', () => {
       writeAuthIni(
         [
