@@ -482,6 +482,9 @@
         }
       },
       {
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/nx-package-group"
+      },
+      {
         "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
