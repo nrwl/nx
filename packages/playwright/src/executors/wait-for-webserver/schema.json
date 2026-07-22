@@ -20,7 +20,7 @@
           },
           "url": {
             "type": "string",
-            "description": "The URL to poll. Redirects are followed and the server is ready once the final response has a status below 404."
+            "description": "The URL to poll. Redirects are followed and the server is ready once the final response has a status from 200 to 403."
           },
           "ignoreHTTPSErrors": {
             "type": "boolean",
