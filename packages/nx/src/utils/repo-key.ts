@@ -35,7 +35,10 @@ export function computeRepoKey(identity: string, relativePath: string): string {
 function getRepoIdentity(directory: string): string | null {
   const remote = getVcsRemoteInfo(directory);
   if (remote) {
-    return `${remote.domain}/${remote.slug}`;
+    // Hosts route case-insensitively and hold one canonical casing, so a
+    // hand-typed remote must key the same as the canonical one the claim
+    // flow derives from the host's API.
+    return `${remote.domain}/${remote.slug}`.toLowerCase().replace(/\/+$/, '');
   }
   return getFirstCommitSha(directory);
 }

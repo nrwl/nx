@@ -54,6 +54,18 @@ describe('deriveRepoKey', () => {
     expect(tokenKey).toEqual(sshKey);
   });
 
+  it('should normalize remote casing and trailing slashes', () => {
+    git('remote add origin git@GitHub.com:NRWL/Nx.git');
+    expect(deriveRepoKey(repo)).toEqual(
+      computeRepoKey('github.com/nrwl/nx', '')
+    );
+
+    git('remote set-url origin https://github.com/nrwl/nx/');
+    expect(deriveRepoKey(repo)).toEqual(
+      computeRepoKey('github.com/nrwl/nx', '')
+    );
+  });
+
   it('should include the workspace path relative to the git root', () => {
     git('remote add origin git@github.com:nrwl/nx.git');
     const nested = join(repo, 'apps', 'inner');
