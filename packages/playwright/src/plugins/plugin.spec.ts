@@ -1054,9 +1054,14 @@ describe('@nx/playwright/plugin', () => {
   it.each([
     { port: 0 },
     { url: '' },
-    // Playwright probes the url's port over TCP here, which is not the check
-    // the readiness task would run.
+    // Playwright probes the url's port over TCP whenever `port` is defined,
+    // which is not the check the readiness task would run.
     { port: 0, url: 'http://127.0.0.1:4200' },
+    { port: null, url: 'http://127.0.0.1:4200' },
+    // A `playwright.config.js` is not type-checked, so either can arrive as a
+    // type Playwright coerces but the readiness task can't probe.
+    { port: '4200' as unknown as number },
+    { url: 4200 as unknown as string },
   ])(
     'should not infer a wait-for-webserver task when the webServer sets %p',
     async (server) => {
