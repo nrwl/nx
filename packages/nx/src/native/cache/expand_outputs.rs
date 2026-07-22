@@ -99,6 +99,34 @@ where
         })
         .collect::<Vec<_>>();
 
+    // Filter out directory entries that are ancestors of negated paths.
+    // Without this, _copy in cache.rs would recursively copy the directory
+    // contents, re-including the negated subdirectories.
+    let found_paths = if negated_globs.is_empty() {
+        found_paths
+    } else {
+        found_paths
+            .into_iter()
+            .filter(|path| {
+                let full_path = directory.join(path);
+                if !full_path.is_dir() {
+                    return true;
+                }
+                let path_with_slash = format!("{}/", path);
+                let is_ancestor_of_negated = negated_globs
+                    .iter()
+                    .any(|neg| neg.starts_with(&path_with_slash));
+                if is_ancestor_of_negated {
+                    trace!(
+                        "Filtering out directory '{}' that is an ancestor of a negated path",
+                        path
+                    );
+                }
+                !is_ancestor_of_negated
+            })
+            .collect::<Vec<_>>()
+    };
+
     debug!(
         "Expanded outputs: found {} paths matching glob patterns",
         found_paths.len()
@@ -655,6 +683,102 @@ mod test {
                 .exists()
         );
         assert!(workspace.child("app/.next/server/app.js").exists());
+    }
+
+    #[test]
+    fn should_not_include_negated_ancestor_directories_in_cache_put() {
+        use crate::native::cache::file_ops::_copy;
+
+        let workspace = TempDir::new().unwrap();
+        let cache = TempDir::new().unwrap();
+
+        workspace
+            .child("dist/app/.next/cache/webpack/pack.js")
+            .write_str("cached-webpack")
+            .unwrap();
+        workspace
+            .child("dist/app/.next/cache/images/img.png")
+            .write_str("cached-image")
+            .unwrap();
+        workspace
+            .child("dist/app/.next/static/chunks/main.js")
+            .write_str("chunk")
+            .unwrap();
+        workspace
+            .child("dist/app/.next/server/pages/index.js")
+            .write_str("page")
+            .unwrap();
+        workspace
+            .child("dist/app/.next/BUILD_ID")
+            .write_str("abc123")
+            .unwrap();
+        workspace
+            .child("dist/app/package.json")
+            .write_str("{}")
+            .unwrap();
+
+        let outputs = vec!["dist/app".to_string(), "!dist/app/.next/cache".to_string()];
+
+        let expanded = _expand_outputs(workspace.path(), outputs).unwrap();
+
+        // The .next directory itself should NOT be in the expanded list
+        // because it is an ancestor of the negated path .next/cache.
+        assert!(
+            !expanded.contains(&"dist/app/.next".to_string()),
+            "dist/app/.next directory should be filtered out as ancestor of negated path, got: {:?}",
+            expanded
+        );
+
+        // .next/cache contents should not be in the expanded list
+        assert!(
+            !expanded.iter().any(|p| p.contains(".next/cache")),
+            ".next/cache should not appear in expanded outputs, got: {:?}",
+            expanded
+        );
+
+        // Non-negated children should still be present
+        assert!(
+            expanded.iter().any(|p| p.contains(".next/static")),
+            ".next/static should be in expanded outputs"
+        );
+        assert!(
+            expanded.iter().any(|p| p.contains(".next/BUILD_ID")),
+            ".next/BUILD_ID should be in expanded outputs"
+        );
+
+        // Simulate cache put: copy each expanded output to cache dir
+        let cache_hash_dir = cache.child("hash123");
+        cache_hash_dir.create_dir_all().unwrap();
+
+        for output in expanded.iter() {
+            let src = workspace.join(output);
+            if src.exists() {
+                let dest = cache_hash_dir.join(output);
+                _copy(&src, &dest).expect(&format!("Failed to copy {}", output));
+            }
+        }
+
+        // The cache should NOT contain .next/cache
+        assert!(
+            !cache_hash_dir.child("dist/app/.next/cache").exists(),
+            ".next/cache should NOT be in the cache directory"
+        );
+
+        // The cache SHOULD contain non-negated outputs
+        assert!(
+            cache_hash_dir
+                .child("dist/app/.next/static/chunks/main.js")
+                .exists(),
+            ".next/static should be in the cache"
+        );
+        assert!(
+            cache_hash_dir.child("dist/app/.next/BUILD_ID").exists(),
+            ".next/BUILD_ID should be in the cache"
+        );
+        assert!(
+            cache_hash_dir.child("dist/app/package.json").exists(),
+            "package.json should be in the cache"
+        );
     }
 
     #[test]
