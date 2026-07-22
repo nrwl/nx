@@ -1,6 +1,6 @@
 # migrations.json entry templates
 
-Replace `<...>` placeholders. Migration entries go under the file's top-level `generators` section, packageJsonUpdates groups under `packageJsonUpdates` (full file shape at the bottom). Version values follow the target-train rule from SKILL.md section 2. Paths are dist-prefixed because they resolve against the installed package. The examples below use `./dist/src/migrations/...`, the shape for packages whose `tsconfig.lib.json` has `rootDir: "."` (the dominant shape); packages that set `rootDir: "src"` publish without the `src` segment (`./dist/migrations/...`, e.g. dotnet and maven). Copy the shape from a sibling entry, or for a package's first entry derive it from `rootDir`. The `migration-markdown-assets` conformance rule maps each published path back through the build's `rootDir`/`outDir` and fails on a wrong shape (`./dist/src/...` in a `rootDir: "src"` package); a package whose tsconfig declares no `rootDir`/`outDir` pair is left unchecked there, so confirm its paths against the built `dist/` by hand.
+The JSON blocks are examples: entry keys, version values, and package names are illustrative; the key sets and path shapes are the contract. Migration entries go under the file's top-level `generators` section, packageJsonUpdates groups under `packageJsonUpdates` (full file shape at the bottom). Version values follow the target-train rule from SKILL.md section 2. Paths are dist-prefixed because they resolve against the installed package. The examples below use `./dist/src/migrations/...`, the shape for packages whose `tsconfig.lib.json` has `rootDir: "."` (the dominant shape); packages that set `rootDir: "src"` publish without the `src` segment (`./dist/migrations/...`, e.g. dotnet and maven). Copy the shape from a sibling entry, or for a package's first entry derive it from `rootDir`. The `migration-markdown-assets` conformance rule maps each published path back through the build's `rootDir`/`outDir` and fails on a wrong shape (`./dist/src/...` in a `rootDir: "src"` package); a package whose tsconfig declares no `rootDir`/`outDir` pair is left unchecked there, so confirm its paths against the built `dist/` by hand.
 
 ## Generator-only
 
@@ -58,6 +58,8 @@ Plain bump for the target train:
   }
 }
 ```
+
+`alwaysAddToPackageJson: false` bumps the package only where it is already installed, the norm for managed deps; `true` (or `"dependencies"`/`"devDependencies"`) also adds it when missing.
 
 Cross-major bump gated on the source major (one group per supported source major, ordered oldest first):
 
