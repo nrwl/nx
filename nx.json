@@ -145,15 +145,30 @@
       "options": {},
       "cache": true
     },
-    "test": {
-      "dependsOn": ["test-native", "build-native", "^build-native"],
-      "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
-        "env": {
-          "NODE_OPTIONS": "--experimental-vm-modules"
+    "test": [
+      {
+        "dependsOn": ["test-native", "build-native", "^build-native"]
+      },
+      {
+        "filter": {
+          "plugin": "@nx/jest/plugin"
+        },
+        "options": {
+          "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+          "env": {
+            "NODE_OPTIONS": "--experimental-vm-modules"
+          }
+        }
+      },
+      {
+        "filter": {
+          "plugin": "@nx/vitest"
+        },
+        "options": {
+          "args": ["--passWithNoTests"]
         }
       }
-    },
+    ],
     "lint": {
       "dependsOn": ["build-native", "^build-native", "build"],
       "inputs": [
@@ -175,7 +190,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-ci": {
@@ -186,7 +201,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-macos-ci": {
@@ -196,7 +211,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ],
       "options": {
         "args": ["--forceExit"]
@@ -206,7 +221,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-base": {
@@ -234,6 +249,7 @@
   },
   "plugins": [
     "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
+    "./tools/workspace-plugin/src/plugins/examples-plugin.ts",
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
@@ -248,7 +264,12 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
+      "exclude": [
+        "examples/angular-rspack/**/*",
+        "examples/react/**/*",
+        "nx-dev/**/*",
+        "e2e/**/*"
+      ],
       "options": {
         "typecheck": true,
         "build": {
@@ -268,6 +289,7 @@
     },
     {
       "plugin": "@nx/playwright/plugin",
+      "exclude": ["examples/react/**"],
       "options": {
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
@@ -275,7 +297,7 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/**/__fixtures__/**/*"],
+      "exclude": ["packages/**/__fixtures__/**/*", "examples/react/**/*"],
       "options": {
         "targetName": "lint"
       }
@@ -353,17 +375,6 @@
       }
     },
     {
-      "plugin": "@nx/rspack/plugin",
-      "include": ["examples/angular-rspack/**"],
-      "options": {
-        "buildTargetName": "build",
-        "serveTargetName": "serve",
-        "previewTargetName": "preview",
-        "buildDepsTargetName": "build-deps",
-        "watchDepsTargetName": "watch-deps"
-      }
-    },
-    {
       "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"
@@ -372,13 +383,6 @@
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
       ]
-    },
-    {
-      "plugin": "@nx/vitest",
-      "options": {
-        "testTargetName": "vite:test"
-      },
-      "include": ["astro-docs/**"]
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
@@ -519,7 +523,8 @@
             "NX_PREFIX_OUTPUT",
             "NX_INFER_ALL_PACKAGE_JSONS",
             "NX_AI_FILES_USE_LOCAL",
-            "NX_WINDOWS_PTY_SUPPORT"
+            "NX_WINDOWS_PTY_SUPPORT",
+            "NX_ORIGINAL_FORCE_COLOR"
           ]
         }
       }

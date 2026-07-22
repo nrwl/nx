@@ -40,6 +40,17 @@ module.exports = () => {
    */
   process.env.NX_DAEMON = 'false';
 
+  /**
+   * Package manager detection falls back to npm_config_user_agent when no
+   * lockfile exists (the common case for in-memory test trees), so test
+   * results would depend on whether jest was invoked through npm, pnpm, or
+   * yarn. CI agents run under an npm user agent; remove the variable so
+   * local runs behave the same. Tests that exercise a specific package
+   * manager set this variable (or write a lockfile/pnpm-workspace.yaml)
+   * themselves.
+   */
+  delete process.env.npm_config_user_agent;
+
   const emptyProjectGraph = { nodes: {}, dependencies: {} };
   const emptyProjectGraphAndMaps = {
     projectGraph: emptyProjectGraph,

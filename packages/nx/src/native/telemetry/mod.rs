@@ -190,6 +190,7 @@ pub struct EventDimensions {
     pub package_name: String,
     pub package_version: String,
     pub duration: String,
+    pub sample_rate: String,
     pub task_count: String,
     pub project_count: String,
     pub cached_task_count: String,
@@ -222,6 +223,7 @@ pub fn get_event_dimensions() -> EventDimensions {
         package_name: event_dimension::PACKAGE_NAME.to_string(),
         package_version: event_dimension::PACKAGE_VERSION.to_string(),
         duration: event_dimension::DURATION.to_string(),
+        sample_rate: event_dimension::SAMPLE_RATE.to_string(),
         task_count: event_dimension::TASK_COUNT.to_string(),
         project_count: event_dimension::PROJECT_COUNT.to_string(),
         cached_task_count: event_dimension::CACHED_TASK_COUNT.to_string(),
@@ -252,6 +254,7 @@ pub fn get_event_dimensions() -> EventDimensions {
 
 /// Track an event from Rust code
 /// This is a fire-and-forget operation - errors are logged but not returned
+/// Main JS thread only — reads env vars, racing env::set_var on other threads.
 pub fn track_rust_event(event_name: impl Into<String>, parameters: HashMap<String, String>) {
     if let Some(telemetry) = GLOBAL_TELEMETRY.get() {
         if let Err(e) = telemetry.track_event_impl(event_name.into(), Some(parameters)) {

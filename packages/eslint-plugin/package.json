@@ -97,10 +97,10 @@
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "catalog:eslint",
     "@typescript-eslint/utils": "catalog:eslint",
-    "chalk": "catalog:",
     "confusing-browser-globals": "^1.0.9",
     "globals": "^17.0.0",
     "jsonc-eslint-parser": "^2.1.0",
+    "picocolors": "catalog:",
     "semver": "catalog:",
     "tslib": "catalog:typescript"
   },

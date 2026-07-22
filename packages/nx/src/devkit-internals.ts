@@ -66,6 +66,11 @@ export {
   PromptResolutionError,
 } from './command-line/migrate/prompt-files';
 export {
+  checkFilesAreInputs,
+  checkFilesAreOutputs,
+} from './hasher/check-task-files';
+export {
   getCatalogManager,
   getCatalogDependenciesFromPackageJson,
 } from './utils/catalog';
+export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';

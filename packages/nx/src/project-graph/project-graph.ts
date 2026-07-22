@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks';
 
 import { join } from 'path';
-import { customDimensions } from '../analytics';
+import { customDimensions, PERF_SPAN_SAMPLE_RATE } from '../analytics';
 import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -313,6 +313,7 @@ export async function createProjectGraphAndSourceMapsAsync(
             [customDimensions.projectCount]: Object.keys(
               currentProjectGraph.nodes
             ).length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });
@@ -401,6 +402,7 @@ export async function createProjectGraphAndSourceMapsAsync(
           ...(customDimensions && {
             [customDimensions.projectCount]: Object.keys(res.projectGraph.nodes)
               .length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });
@@ -424,6 +426,7 @@ export async function createProjectGraphAndSourceMapsAsync(
             [customDimensions.projectCount]: Object.keys(
               projectGraphAndSourceMaps.projectGraph.nodes
             ).length,
+            [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
           }),
         },
       });

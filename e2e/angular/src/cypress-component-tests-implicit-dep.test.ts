@@ -25,8 +25,7 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip('should test lib with implicit dep on buildTarget', () => {
+  it('should test lib with implicit dep on buildTarget', () => {
     const { projectName, appName, buildableLibName, usedInAppLibName } = setup;
 
     // creates graph like buildableLib -> lib -> app

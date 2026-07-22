@@ -890,6 +890,41 @@ describe('exit summary payload (TUI countdown)', () => {
       ).toBe(true);
     }));
 
+  it('embeds the critical-path task rows as aligned columns in the payload string', () => {
+    // The embedded newline is a contract, not just formatting: the Rust popup partitions
+    // recommendations by `r.contains('\n')` — newline-free ones render under
+    // "Recommendations:", newline-bearing ones route to the longest-tasks block drawn last
+    // (see countdown_popup.rs). formatReport reads the same signal but decides something
+    // narrower with it — whether a lone recommendation can collapse to the inline
+    // `Recommendation:` form — and never partitions or reorders. Flattening these rows onto
+    // one line would silently misroute the recommendation in the popup, so the exact bytes
+    // are pinned here; the terminal snapshot and the Markdown assertions each cover only
+    // their own path. Same chain as the formatReport snapshot: `c` is filtered out for being
+    // under the 20% threshold.
+    const a = makeTask('a', { start: 0, end: 10000 });
+    const b = makeTask('b', { start: 10000, end: 40000 });
+    const c = makeTask('c', { start: 40000, end: 45000 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 2, {
+      statuses: { a: 'success', b: 'success', c: 'success' },
+      remoteCacheEnabled: false,
+      isCI: true,
+    })!;
+
+    const speedUp = buildExitSummaryPayload(s).recommendations.find((r) =>
+      r.startsWith('Speed up or split')
+    );
+    // Newline-led, two-space indent, four-space gutter, right-aligned durations: this is
+    // `formatTopTaskRows`' return value verbatim, which the payload and the terminal share.
+    // It is NOT what the terminal prints — `renderRec` adds six more spaces of continuation
+    // indent, so the formatReport snapshot below shows eight. Don't reconcile the two by
+    // padding here: the popup re-indents these rows itself, relative to this two-space form.
+    expect(speedUp).toBe(
+      'Speed up or split the longest tasks on the critical path:\n' +
+        '  b    30.0s\n' +
+        '  a    10.0s'
+    );
+  });
+
   it('clears the active lifecycle once consumed, so a later flush gets nothing', () =>
     withEnvironmentVariables(envFor({}), () => {
       const a = makeTask('a', { start: 0, end: 1000 });
@@ -1238,8 +1273,32 @@ describe('formatReportMarkdown', () => {
       ### Recommendations
 
       - [Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache).
-      - Speed up or split the longest tasks on the critical path:<br>a    45.0s"
+      - Speed up or split the longest tasks on the critical path:
+        - \`a\` — 45.0s"
     `);
+  });
+
+  it('renders multiple critical-path tasks as consecutive nested list items', () => {
+    // The snapshot above only ever carries one task row, so it pins the per-row prefix
+    // and the 2-space nesting indent but not what separates two rows. A blank line there
+    // makes GitHub render a "loose" list with paragraph spacing between the items, which
+    // is exactly the ragged rendering this PR set out to fix. Same chain as the
+    // formatReport snapshot: `c` is filtered out for being under the 20% threshold.
+    const a = makeTask('a', { start: 0, end: 10000 });
+    const b = makeTask('b', { start: 10000, end: 40000 });
+    const c = makeTask('c', { start: 40000, end: 45000 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 2, {
+      statuses: { a: 'success', b: 'success', c: 'success' },
+      remoteCacheEnabled: false,
+      isCI: true,
+    })!;
+
+    // Single newline between rows, longest first — a tight list nested under the bullet.
+    expect(formatReportMarkdown(s, 'run-many -t build')).toContain(
+      '- Speed up or split the longest tasks on the critical path:\n' +
+        '  - `b` — 30.0s\n' +
+        '  - `a` — 10.0s'
+    );
   });
 
   it('reports success instead of a failed-tasks list when nothing failed', () => {

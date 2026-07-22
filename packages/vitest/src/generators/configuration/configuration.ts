@@ -224,7 +224,10 @@ getTestBed().initTestEnvironment(
               : `import react from '@vitejs/plugin-react'`,
           ],
           plugins: ['react()'],
-          coverageProvider: schema.coverageProvider,
+          coverageProvider:
+            schema.coverageProvider === 'none'
+              ? undefined
+              : schema.coverageProvider,
           useEsmExtension: true,
         },
         true,
@@ -547,6 +550,8 @@ function getCoverageProviderDependency(
       return {
         '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
       };
+    case 'none':
+      return {};
     default:
       return {
         '@vitest/coverage-v8': vitestCoverageV8Version,

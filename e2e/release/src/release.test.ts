@@ -17,6 +17,7 @@ import {
   runCommandUntil,
   tmpProjPath,
   uniq,
+  updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
@@ -314,8 +315,18 @@ describe('nx release', () => {
     const verdaccioPort = 7190;
     const customRegistryUrl = `http://localhost:${verdaccioPort}`;
     const process = await runCommandUntil(
-      `local-registry @proj/source --port=${verdaccioPort}`,
+      // location=none so a killed process can't leak registry config into
+      // ~/.npmrc; every consumer passes --registry explicitly instead
+      `local-registry @proj/source --port=${verdaccioPort} --location none`,
       (output) => output.includes(`warn --- http address`)
+    );
+
+    // local-registry would normally record the auth token, but location=none
+    // excludes that; npm publish needs it in a config file
+    updateFile(
+      '.npmrc',
+      (contents) =>
+        `${contents}\n//localhost:${verdaccioPort}/:_authToken=secretVerdaccioToken`
     );
 
     const versionOutput2 = runCLI(

@@ -1,0 +1,18 @@
+---
+source: packages/nx/src/native/tui/components/terminal_pane.rs
+expression: out
+---
+┏  ✔  build  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                            ┃
+┃  error: build failed                       ┃
+   #####
+┃  ok                                        ┃
+┃  another error here                        ┃
+           *****
+┃  fine                                      ┃
+┃  last error line                           ┃
+        *****
+┃  █                                         ┃
+┃                                            ┃
+┃                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

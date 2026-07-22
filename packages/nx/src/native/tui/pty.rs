@@ -1,6 +1,9 @@
+use super::mouse_protocol::encode_mouse_event;
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
+use super::strings::display_width;
 use super::utils::normalize_newlines;
-use crossterm::event::{KeyCode, KeyEvent};
+use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, resize_master};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use std::{
     io::{self, Write},
@@ -63,16 +66,34 @@ struct ScrollbackState {
 pub struct PtyInstance {
     parser: Arc<RwLock<Parser>>,
     writer: Option<Arc<Mutex<Box<dyn Write + Send>>>>,
+    /// Control end of the underlying pty, when the task actually runs in one.
+    /// Resizing the parser only changes how we render captured bytes; resizing
+    /// the master is what tells the child process to redraw at the new size.
+    master: Option<MasterArc>,
     dimensions: Arc<RwLock<(u16, u16)>>,
     scroll_momentum: Arc<Mutex<ScrollMomentum>>,
     /// Generation counter for async resize. Incremented on each resize request
     /// so that stale background resize threads can detect they've been superseded.
     resize_generation: Arc<AtomicU64>,
+    /// Last value returned by `output_generation()`. Read every frame while a
+    /// pane search is active; using a non-blocking `try_read` plus this cache
+    /// keeps the render thread from stalling on the parser write lock (held by
+    /// the PTY writer during heavy output, and by the async resize swap).
+    output_generation_cache: Arc<AtomicU64>,
     /// Cached result of cursor-movement detection. Flips true on first hit and
     /// stays true — so subsequent arrow key events skip the O(n) buffer scan.
     handles_cursor_movement: Arc<AtomicBool>,
     /// Shared state for background scrollback processing in inline mode
     scrollback_state: Arc<Mutex<ScrollbackState>>,
+}
+
+/// Byte index where the `n`th char of `line` begins, or the line's byte length
+/// when `n` is past the end. Used to slice a char range for width measurement.
+fn char_boundary(line: &str, n: usize) -> usize {
+    line.char_indices()
+        .nth(n)
+        .map(|(byte, _)| byte)
+        .unwrap_or(line.len())
 }
 
 /// Count how many visual rows a single logical line produces when wrapped.
@@ -365,15 +386,18 @@ impl PtyInstance {
     pub fn interactive(
         parser: Arc<RwLock<Parser>>,
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
+        master: MasterArc,
     ) -> Self {
         // Read the dimensions from the parser
         let (rows, cols) = parser.read().screen().size();
         Self {
             parser,
             writer: Some(writer),
+            master: Some(master),
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -397,9 +421,11 @@ impl PtyInstance {
         Self {
             parser,
             writer: None,
+            master: None,
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -420,9 +446,11 @@ impl PtyInstance {
         Self {
             parser,
             writer: None,
+            master: None,
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -456,6 +484,16 @@ impl PtyInstance {
         }
     }
 
+    /// Resize the underlying pty, raising SIGWINCH in the child.
+    ///
+    /// Tasks that don't run in a pty (batch tasks, forked processes) have no
+    /// master and simply have nothing to notify.
+    fn notify_child_of_resize(&self, rows: u16, cols: u16) {
+        if let Some(master) = &self.master {
+            resize_master(master, rows, cols);
+        }
+    }
+
     pub fn resize(&mut self, rows: u16, cols: u16) -> io::Result<()> {
         // Ensure minimum sizes
         let rows = rows.max(3);
@@ -479,6 +517,9 @@ impl PtyInstance {
         if !should_resize {
             return Ok(());
         }
+
+        // Tell the child process its window changed so it redraws at the new size
+        self.notify_child_of_resize(rows, cols);
 
         // Update dimensions
         let mut dimensions_guard = self.dimensions.write();
@@ -541,6 +582,13 @@ impl PtyInstance {
 
         // Increment generation to cancel any in-flight resize
         let generation = self.resize_generation.fetch_add(1, Ordering::SeqCst) + 1;
+
+        // Tell the child process its window changed so it redraws at the new size.
+        // This is independent of the reparse below: the reparse re-wraps the bytes
+        // we have already captured (which is what keeps scrollback correct), while
+        // this is what makes the child itself emit correctly-sized output from here
+        // on. Full-screen children (opentui, ink, vim...) only relayout on SIGWINCH.
+        self.notify_child_of_resize(rows, cols);
 
         // Update dimensions immediately so subsequent resize calls see the new
         // target and early-return instead of spawning redundant threads
@@ -622,6 +670,45 @@ impl PtyInstance {
 
     pub fn get_dimensions(&self) -> (u16, u16) {
         *self.dimensions.read()
+    }
+
+    /// The mouse reporting mode and encoding the child app has requested via
+    /// DECSET (`?9`/`?1000`/`?1002`/`?1003` and `?1005`/`?1006`). `None` when
+    /// the parser is momentarily write-locked by the output thread.
+    pub fn mouse_protocol(
+        &self,
+    ) -> Option<(
+        vt100_ctt::MouseProtocolMode,
+        vt100_ctt::MouseProtocolEncoding,
+    )> {
+        let parser = self.parser.try_read()?;
+        let screen = parser.screen();
+        Some((
+            screen.mouse_protocol_mode(),
+            screen.mouse_protocol_encoding(),
+        ))
+    }
+
+    /// Forward a mouse event to the child app if it has requested mouse
+    /// reporting. `col`/`row` are 0-based cells relative to the child's
+    /// screen. Returns whether the event was written.
+    pub fn forward_mouse_event(
+        &mut self,
+        kind: MouseEventKind,
+        modifiers: KeyModifiers,
+        col: u16,
+        row: u16,
+    ) -> io::Result<bool> {
+        let Some((mode, encoding)) = self.mouse_protocol() else {
+            return Ok(false);
+        };
+        match encode_mouse_event(mode, encoding, kind, modifiers, col, row) {
+            Some(bytes) => {
+                self.write_input(&bytes)?;
+                Ok(true)
+            }
+            None => Ok(false),
+        }
     }
 
     pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
@@ -710,6 +797,139 @@ impl PtyInstance {
 
     pub fn get_total_content_rows(&self) -> usize {
         self.parser.read().screen().get_total_content_rows()
+    }
+
+    /// A version key for the terminal content and its wrapping, cheap to read.
+    ///
+    /// Derived from the parser itself so it works no matter how the parser is
+    /// fed: the raw-output length changes on every write — both `process_output`
+    /// *and* a live task's PTY reader writing the shared parser directly (which
+    /// bypasses `process_output` entirely) — and, unlike a content-row count,
+    /// never saturates once the scrollback fills. It is not monotonic: the
+    /// `MAX_RAW_OUTPUT_BYTES` compaction *shrinks* it, which still reads as a
+    /// change (a post-compaction length coinciding with a previously-seen one
+    /// would skip one refresh and self-heal on the next write). Folding in the
+    /// screen dimensions makes a resize rewrap (same bytes, shifted rows)
+    /// register as a change too. A cache keyed on this — the pane search's
+    /// match list — recomputes exactly when the screen changed.
+    pub fn output_generation(&self) -> u64 {
+        // Non-blocking: this runs every frame while a search is active, so it
+        // must never wait on the parser write lock (held by the PTY writer
+        // during heavy output and by the async resize swap) — that would stall
+        // the repaint. When the lock is momentarily unavailable, reuse the last
+        // value; the next frame picks up any change.
+        let Some(parser) = self.parser.try_read() else {
+            return self.output_generation_cache.load(Ordering::Relaxed);
+        };
+        let raw_len = parser.get_raw_output().len() as u64;
+        let (rows, cols) = parser.screen().size();
+        // The three facts, simply concatenated into one u64:
+        //   [ raw_len (32 bits) | rows (16 bits) | cols (16 bits) ]
+        // Compaction caps raw_len at ~5 MB — far below 2^32 — so the pack is
+        // lossless: two different states never share a fingerprint.
+        let generation = (raw_len << 32) | ((rows as u64) << 16) | cols as u64;
+        self.output_generation_cache
+            .store(generation, Ordering::Relaxed);
+        generation
+    }
+
+    /// The absolute visual row currently at the top of the viewport — the same
+    /// coordinate basis as `content_coords_at` and `search_visual_positions`.
+    pub fn visual_top(&self) -> usize {
+        let parser = self.parser.read();
+        let screen = parser.screen();
+        let total = screen.get_total_content_rows();
+        let viewport = screen.size().0 as usize;
+        total
+            .saturating_sub(viewport)
+            .saturating_sub(screen.scrollback())
+    }
+
+    /// Force the cached dimensions out of sync with the parser's real width,
+    /// reproducing the window during `resize_async` where `dimensions` has been
+    /// updated but the parser has not yet been reparsed at the new size.
+    #[cfg(test)]
+    pub(crate) fn set_cached_dimensions_for_test(&self, rows: u16, cols: u16) {
+        *self.dimensions.write() = (rows, cols);
+    }
+
+    /// Scroll so the given absolute visual row sits about a third from the
+    /// viewport top (bringing some context above the match into view).
+    pub fn scroll_to_visual_row(&mut self, row: usize) {
+        let mut parser = self.parser.write();
+        let screen = parser.screen();
+        let total = screen.get_total_content_rows();
+        let viewport = screen.size().0 as usize;
+        let max_scrollback = total.saturating_sub(viewport);
+        let desired_top = row.saturating_sub(viewport / 3);
+        let scrollback = total
+            .saturating_sub(viewport)
+            .saturating_sub(desired_top)
+            .min(max_scrollback);
+        parser.screen_mut().set_scrollback(scrollback);
+    }
+
+    /// Case-insensitively find every occurrence of `query` in the terminal
+    /// content (scrollback included). Positions are returned in the wrapped
+    /// visual coordinate basis shared with `content_coords_at`, as
+    /// `(visual_row, col, col_width)` — the third element is the match's width
+    /// in display columns, not a character count — in reading order. Each grid
+    /// row is searched independently, so a query straddling a wrap seam (e.g.
+    /// `error` split as `err`/`or` across two visual rows of a long wrapped
+    /// line) is not matched — a deliberate trade for grid-exact positions.
+    pub fn search_visual_positions(&self, query: &str) -> Vec<(usize, usize, usize)> {
+        if query.is_empty() {
+            return Vec::new();
+        }
+        // Reconstruct the exact grid the pane renders, then search it row by
+        // row. Re-parsing `all_contents_formatted()` into a parser tall enough
+        // to hold every row in its visible screen (zero scrollback) gives the
+        // SAME visual-row layout as `get_total_content_rows()` and the render.
+        //
+        // The previous approach re-wrapped `all_contents()` with wrap_ansi, but
+        // that diverges from the real grid: `all_contents()` trims trailing
+        // blanks from wrapped rows (left behind by `\r`/clear-to-end progress
+        // output), so re-wrapping the joined logical line produces fewer rows
+        // than vt100 actually used. On long, narrow, cursor-heavy output
+        // (e.g. a Maven build past the scrollback cap) the error accumulated and
+        // every highlight drifted downward.
+        let (formatted, cols, total) = {
+            let parser = self.parser.read();
+            let screen = parser.screen();
+            (
+                screen.all_contents_formatted(),
+                screen.size().1,
+                screen.get_total_content_rows(),
+            )
+        };
+        if cols == 0 || total == 0 {
+            return Vec::new();
+        }
+        let mut grid = Parser::new(total.min(u16::MAX as usize) as u16, cols, 0);
+        grid.process(&formatted);
+
+        let needle = query.to_lowercase();
+        let needle_chars = needle.chars().count();
+        let mut matches = Vec::new();
+        for (row, line) in grid.screen().rows(0, cols).enumerate() {
+            let haystack = line.to_lowercase();
+            let mut from = 0usize;
+            while let Some(found) = haystack[from..].find(&needle) {
+                let byte = from + found;
+                // Locate by char offset in the lowercased row, then measure the
+                // prefix in display *columns* so wide characters (CJK, emoji)
+                // don't shift the highlight — the overlay walks the buffer in
+                // columns. (Lowercasing is assumed char-count-preserving.)
+                let char_offset = haystack[..byte].chars().count();
+                let start_byte = char_boundary(&line, char_offset);
+                let end_byte = char_boundary(&line, char_offset + needle_chars);
+                let col = display_width(&line[..start_byte]);
+                let match_cols = display_width(&line[start_byte..end_byte]).max(1);
+                matches.push((row, col, match_cols));
+                from = byte + needle.len().max(1);
+            }
+        }
+        matches
     }
 
     /// Extract the plain text covered by a selection expressed in absolute
@@ -882,6 +1102,7 @@ impl PtyInstance {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use portable_pty::PtySystem;
     use std::sync::Arc;
 
     fn create_test_pty_instance(alternate_screen: bool) -> PtyInstance {
@@ -895,9 +1116,11 @@ mod tests {
         PtyInstance {
             parser,
             writer: None,
+            master: None,
             dimensions: Arc::new(RwLock::new((24, 80))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -1033,5 +1256,168 @@ mod tests {
             pty.handles_arrow_keys(),
             "Should detect enquirer-style cursor manipulation"
         );
+    }
+
+    #[test]
+    fn search_finds_case_insensitive_matches_in_visual_coordinates() {
+        let pty = create_test_pty_instance(false);
+        pty.parser
+            .write()
+            .process(b"first Error here\r\nnothing\r\nlast ERROR\r\n");
+
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches, vec![(0, 6, 5), (2, 5, 5)]);
+
+        // Wrapped lines report positions past the first visual row.
+        let long_line = format!("{}error\r\n", "x".repeat(80));
+        pty.parser.write().process(long_line.as_bytes());
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches.last(), Some(&(4, 0, 5)));
+
+        assert!(pty.search_visual_positions("").is_empty());
+        assert!(pty.search_visual_positions("absent").is_empty());
+    }
+
+    /// The output generation must keep changing after the scrollback fills,
+    /// even though the content-row count saturates. This is what lets a cache
+    /// keyed on the generation (the pane search) detect that content is still
+    /// shifting once past `SCROLLBACK_SIZE`.
+    #[test]
+    fn output_generation_changes_after_content_row_count_saturates() {
+        let pty = create_test_pty_instance(false);
+        // Fill well past SCROLLBACK_SIZE (1000).
+        pty.process_output("line\r\n".repeat(1200).as_bytes());
+        let rows_a = pty.get_total_content_rows();
+        let gen_a = pty.output_generation();
+
+        pty.process_output("more\r\n".repeat(200).as_bytes());
+        let rows_b = pty.get_total_content_rows();
+        let gen_b = pty.output_generation();
+
+        assert_eq!(
+            rows_a, rows_b,
+            "the content-row count saturates and stops signalling change"
+        );
+        assert_ne!(
+            gen_a, gen_b,
+            "the output generation still changes after saturation"
+        );
+    }
+
+    /// A live task's PTY reader writes the shared parser directly, bypassing
+    /// `process_output`. The generation must still change, or a pane search
+    /// over a streaming task would freeze (stale count and highlights).
+    #[test]
+    fn output_generation_changes_when_the_parser_is_fed_directly() {
+        let pty = create_test_pty_instance(false);
+        let gen_a = pty.output_generation();
+        pty.parser.write().process(b"streamed output line\r\n");
+        let gen_b = pty.output_generation();
+        assert_ne!(
+            gen_a, gen_b,
+            "generation must change on a direct parser write (the live PTY path)"
+        );
+    }
+
+    #[test]
+    fn search_positions_are_display_columns_not_char_counts() {
+        let pty = create_test_pty_instance(false);
+        // Two double-width CJK chars precede the match. In char counts the
+        // match would start at column 2; in display columns it starts at 4,
+        // which is what the (column-walking) highlight overlay needs.
+        pty.parser.write().process("你好error\r\n".as_bytes());
+
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches, vec![(0, 4, 5)]);
+    }
+
+    #[test]
+    fn scroll_to_visual_row_brings_the_row_into_view() {
+        let mut pty = create_test_pty_instance(false);
+        for i in 0..100 {
+            pty.parser
+                .write()
+                .process(format!("line {}\r\n", i).as_bytes());
+        }
+
+        pty.scroll_to_visual_row(10);
+        let top = pty.visual_top();
+        assert!(top <= 10, "row 10 must be at or below the top, top={top}");
+        assert!(top + 24 > 10, "row 10 must be within the 24-row viewport");
+
+        // Jumping to the very end clamps to the bottom.
+        pty.scroll_to_visual_row(10_000);
+        assert_eq!(pty.get_scroll_offset(), 0);
+    }
+
+    /// Build an interactive PtyInstance backed by a real pty, returning the
+    /// instance alongside the master so tests can read back the winsize the
+    /// kernel reports — which is what the child process sees.
+    fn create_interactive_pty_instance(rows: u16, cols: u16) -> (PtyInstance, MasterArc) {
+        let pair = portable_pty::NativePtySystem::default()
+            .openpty(portable_pty::PtySize {
+                rows,
+                cols,
+                pixel_width: 0,
+                pixel_height: 0,
+            })
+            .expect("failed to open pty");
+
+        let writer = Arc::new(Mutex::new(pair.master.take_writer().unwrap()));
+        let master: MasterArc = Arc::new(Mutex::new(pair.master));
+        let parser = Arc::new(RwLock::new(Parser::new(rows, cols, 1000)));
+
+        let pty = PtyInstance::interactive(parser, writer, master.clone());
+        (pty, master)
+    }
+
+    fn master_size(master: &MasterArc) -> (u16, u16) {
+        let size = master.lock().get_size().expect("failed to read pty size");
+        (size.rows, size.cols)
+    }
+
+    #[test]
+    fn test_resize_updates_kernel_winsize() {
+        let (mut pty, master) = create_interactive_pty_instance(24, 80);
+        assert_eq!(master_size(&master), (24, 80));
+
+        pty.resize(30, 100).unwrap();
+
+        // The kernel-reported size is what the child sees via TIOCGWINSZ, and
+        // changing it is what raises SIGWINCH. Without this the child keeps
+        // rendering at its original dimensions no matter how the pane changes.
+        assert_eq!(master_size(&master), (30, 100));
+        assert_eq!(pty.get_dimensions(), (30, 100));
+    }
+
+    #[test]
+    fn test_resize_async_updates_kernel_winsize() {
+        let (pty, master) = create_interactive_pty_instance(24, 80);
+
+        // The reparse is backgrounded, but the child must be notified eagerly —
+        // so the ioctl lands before resize_async returns.
+        pty.resize_async(40, 120);
+
+        assert_eq!(master_size(&master), (40, 120));
+    }
+
+    #[test]
+    fn test_resize_to_same_dimensions_does_not_notify_child() {
+        let (mut pty, master) = create_interactive_pty_instance(24, 80);
+
+        pty.resize(24, 80).unwrap();
+
+        // No spurious SIGWINCH: a no-op resize must stay a no-op, otherwise every
+        // redraw would kick full-screen children into relayouting.
+        assert_eq!(master_size(&master), (24, 80));
+    }
+
+    #[test]
+    fn test_non_interactive_pty_resize_has_no_master_to_notify() {
+        // Tasks without a pty (batch tasks, forked processes) still resize their
+        // parser for rendering; they just have no child to signal.
+        let mut pty = PtyInstance::non_interactive_with_dimensions(24, 80);
+        pty.resize(30, 100).unwrap();
+        assert_eq!(pty.get_dimensions(), (30, 100));
     }
 }

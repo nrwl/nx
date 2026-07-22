@@ -67,11 +67,11 @@ describe('Lerna Smoke Tests', () => {
       result = result
         .replace(/.*\/node_modules\/.*\n/, '') // yarn adds "$ /node_modules/.bin/lerna run print-name" to the output
         .replace(/.*package-1@0.*\n/, '') // yarn output doesn't contain "> package-1@0.0.0 print-name"
-        .replace('$ echo test-package-1', '> echo test-package-1');
+        // npm and yarn echo the script command; pnpm 11 does not
+        .replace(/[$>] echo test-package-1\n/, '');
       expect(result).toMatchInlineSnapshot(`
 
                 > package-1:print-name
-                > echo test-package-1
                 test-package-1
                 Lerna (powered by Nx)   Successfully ran target print-name for project package-1
                 Run duration: {DURATION}
