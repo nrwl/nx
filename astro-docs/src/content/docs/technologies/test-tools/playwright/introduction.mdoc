@@ -87,8 +87,10 @@ The Playwright docs suggest setting `reuseExistingServer` to `!process.env.CI`.
 Set it to `true` instead, since Nx already runs the web server as a task dependency.
 With `false`, Nx skips that task and Playwright starts its own server inside each Playwright task.
 
-If that `webServer` also sets a `port`, or a `url` with no `port`, Nx infers an extra task that waits
-for the server to be ready.
+If that `webServer` also sets a `port` number, Nx infers an extra task that waits for the server to
+be ready.
+It infers the same task from a `url` when the `webServer` leaves `port` unset, which is when
+Playwright checks the URL rather than the port.
 Playwright then finds the server already running and reuses it.
 If the `webServer` sets neither, Playwright has nothing to check and starts its own server.
 

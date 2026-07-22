@@ -27,6 +27,7 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
+import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 
 export interface PlaywrightPluginOptions {
@@ -59,12 +60,7 @@ interface WebserverCommandTask {
   timeout?: number;
 }
 
-interface WebserverReadinessServer {
-  port?: number;
-  url?: string;
-  ignoreHTTPSErrors?: boolean;
-  timeout?: number;
-}
+type WebserverReadinessServer = WaitForWebserverSchema['servers'][number];
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
 export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
@@ -614,16 +610,21 @@ function getWebserverCommandTasks(
 // Playwright picks a web server's readiness probe by presence rather than
 // truthiness: a defined `port` makes it check that port over TCP even when the
 // value is falsy and the address comes from `url`, and a web server it can
-// address neither way gets no probe at all. Gate only on what both read the
-// same way, so the gate cannot fail where Playwright would have found the
-// server.
+// address neither way gets no probe at all. An unchecked `playwright.config.js`
+// can also carry a `port` Playwright coerces but the readiness task can't
+// probe. Gate only on the shapes the task probes the same way; the rest is
+// left to Playwright.
 function toReadinessServer(
   task: WebserverCommandTask
 ): WebserverReadinessServer | undefined {
   let server: WebserverReadinessServer;
-  if (task.port) {
+  if (typeof task.port === 'number' && task.port) {
     server = { port: task.port };
-  } else if (task.url && task.port == null) {
+  } else if (
+    typeof task.url === 'string' &&
+    task.url &&
+    task.port === undefined
+  ) {
     server = { url: task.url };
   } else {
     return undefined;
