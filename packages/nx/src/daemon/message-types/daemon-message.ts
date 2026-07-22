@@ -21,34 +21,49 @@ export function isDaemonMessage(msg: unknown): msg is DaemonMessage {
 }
 
 /**
- * A daemon is scoped to the workspace that launched it. A message whose
- * `workspaceRoot` differs from the daemon's own root came from a different
- * workspace (e.g. two workspaces sharing an `NX_SOCKET_DIR`) and must not be
- * processed. Both values are produced from the same workspace-root resolution,
- * so they are compared directly.
+ * Any message that carries the sending process's workspace root. The Nx daemon
+ * (`DaemonMessage`) and the plugin-worker protocol (`WorkspaceScopedMessage` in
+ * plugin isolation) both stamp this field so the receiver can reject messages
+ * from a different workspace. Typed structurally here so the shared checks below
+ * apply to both without either module depending on the other's message type.
+ */
+type WorkspaceScopedMessage = { workspaceRoot?: string };
+
+/**
+ * A socket receiver (the daemon, or a plugin worker) is scoped to the workspace
+ * that launched it. A message whose `workspaceRoot` differs from the receiver's
+ * own root came from a different workspace (e.g. two workspaces sharing an
+ * `NX_SOCKET_DIR`) and must not be processed. Both values are produced from the
+ * same workspace-root resolution, so they are compared directly. An undefined
+ * `workspaceRoot` (unstamped or legacy message) is treated as "not foreign".
  */
 export function isForeignWorkspaceMessage(
-  msg: DaemonMessage,
-  daemonWorkspaceRoot: string
+  msg: WorkspaceScopedMessage,
+  receiverWorkspaceRoot: string
 ): boolean {
   if (msg.workspaceRoot === undefined) {
     return false;
   }
-  return msg.workspaceRoot !== daemonWorkspaceRoot;
+  return msg.workspaceRoot !== receiverWorkspaceRoot;
 }
 
 /**
- * Asserts that a message is safe for this daemon to process. Throws when the
- * message originated from a different workspace so the caller can surface the
- * mismatch details to the client and refuse the request.
+ * Asserts that a message is safe for its receiver to process, throwing when it
+ * originated from a different workspace. Shared by the Nx daemon and the plugin
+ * workers: both listen on a socket that a process from another workspace could
+ * reach (e.g. via a shared `NX_SOCKET_DIR`) and must refuse those messages. The
+ * daemon catches this to respond to the client with the mismatch; the plugin
+ * worker catches it to drop the message. `receiverDescription` names the
+ * receiver in the error so it reads correctly for whichever one raised it.
  */
-export function assertValidDaemonMessage(
-  msg: DaemonMessage,
-  daemonWorkspaceRoot: string
+export function assertNotForeignWorkspaceMessage(
+  msg: WorkspaceScopedMessage,
+  receiverWorkspaceRoot: string,
+  receiverDescription = `The Nx Daemon for '${receiverWorkspaceRoot}'`
 ): void {
-  if (isForeignWorkspaceMessage(msg, daemonWorkspaceRoot)) {
+  if (isForeignWorkspaceMessage(msg, receiverWorkspaceRoot)) {
     throw new Error(
-      `The Nx Daemon for '${daemonWorkspaceRoot}' received a message from a different workspace ('${msg.workspaceRoot}') and refused to process it. This usually means multiple workspaces are sharing a socket directory; ensure NX_SOCKET_DIR (or NX_DAEMON_SOCKET_DIR) is not set to a shared location.`
+      `${receiverDescription} received a message from a different workspace ('${msg.workspaceRoot}') and refused to process it. This usually means multiple workspaces are sharing a socket directory; ensure NX_SOCKET_DIR (or NX_DAEMON_SOCKET_DIR) is not set to a shared location.`
     );
   }
 }
