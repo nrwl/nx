@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
+import { readYamlFile } from '../fileutils';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
@@ -568,10 +569,13 @@ function toYarnValueMap(
 
 /**
  * Parses yarn classic's .yarnrc into a last-write-wins map, or null when the
- * file is missing, unreadable, or has a construct yarn's parser rejects. Yarn
- * reads it with its lockfile parser, so a single malformed line throws and
- * costs the whole file, not just that line, and yarn carries on as though the
- * file declared nothing (verified on 1.22.22).
+ * file is missing, unreadable, or rejected by both of yarn's parsers. Yarn reads
+ * it with its lockfile parser first, so a single line that parser rejects costs
+ * the whole file rather than just that line, and then retries the whole file
+ * with js-yaml. A file the retry accepts is honored in full, which is how
+ * `registry: https://host/` works despite the lockfile grammar throwing on it
+ * (verified on 1.22.22).
+ * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/lockfile/parse.js#L384-L397
  *
  * @yarnpkg/lockfile on npm is a 2018 snapshot of that parser and has since
  * diverged: its name token excludes `.`, so it rejects the `cafile ./ca.pem`
@@ -590,8 +594,39 @@ function readYarnrcMap(path: string): Map<string, YarnValue> | null {
   try {
     return parseYarnrc(raw);
   } catch {
+    return parseYarnrcAsYaml(path);
+  }
+}
+
+/**
+ * Yarn's fallback for a .yarnrc its lockfile parser rejects: js-yaml under the
+ * failsafe schema, which makes every scalar a string. Classic passes the schema
+ * alone, where berry's parser also passes `json: true`, so a duplicate key
+ * throws here rather than resolving last-wins.
+ */
+function parseYarnrcAsYaml(path: string): Map<string, YarnValue> | null {
+  let loaded: unknown;
+  try {
+    loaded = readYamlFile(path, { failsafe: true });
+  } catch {
     return null;
   }
+  const map = new Map<string, YarnValue>();
+  // A document that is not a mapping (a bare scalar, a list) loads fine and
+  // declares nothing, which is how yarn ends up ignoring an unquoted
+  // `registry https://host/`: every lookup on it misses.
+  if (!loaded || typeof loaded !== 'object' || Array.isArray(loaded)) {
+    return map;
+  }
+  for (const [key, value] of Object.entries(loaded)) {
+    // The failsafe schema yields a string for every scalar, so anything else is
+    // a nested block, and nothing read here is one. A quoted or plain `false`
+    // arriving as the truthy string 'false' is yarn's own behavior, not a loss.
+    if (typeof value === 'string') {
+      map.set(key, value);
+    }
+  }
+  return map;
 }
 
 type YarnToken =
