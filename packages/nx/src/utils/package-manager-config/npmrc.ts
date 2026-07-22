@@ -31,7 +31,10 @@ export function readNpmrcEntries(path: string): NpmrcEntry[] | null {
 /** The parsing half of {@link readNpmrcEntries}, usable without a filesystem. */
 export function parseNpmrcContent(raw: string): NpmrcEntry[] {
   const entries: NpmrcEntry[] = [];
-  for (const line of raw.split(/\r?\n/)) {
+  // ini breaks lines on any run of CR/LF, so a bare CR starts a new line there
+  // too; splitting on `\r?\n` alone would hide everything after one from us
+  // while npm still reads it.
+  for (const line of raw.split(/[\r\n]+/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
       continue;
