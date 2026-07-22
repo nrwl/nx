@@ -21,22 +21,43 @@ When running Nx commands inside [Claude Code](https://docs.anthropic.com/en/docs
 
 ## The fix
 
-Add `allowAllUnixSockets: true` to your Claude Code sandbox permissions. You can set this at the project level (`.claude/settings.local.json`) or user level (`~/.claude/settings.json`):
+Add `allowAllUnixSockets: true` to your Claude Code sandbox network settings. You can set this at the project level (`.claude/settings.local.json`) or user level (`~/.claude/settings.json`):
 
 ```json
 // .claude/settings.local.json
 {
-  "permissions": {
-    "allowAllUnixSockets": true
+  "sandbox": {
+    "network": {
+      "allowAllUnixSockets": true
+    }
   }
 }
 ```
 
 This grants Nx the ability to create and connect to Unix sockets, which it needs for daemon communication, plugin isolation, and forked task execution.
 
-## Why `allowAllUnixSockets` instead of specific paths
+## Scoped allowlisting with the Nx socket root
 
-Claude Code's `allowUnixSockets` setting accepts specific socket paths, but Nx generates socket paths dynamically using `process.pid`, a counter, and `performance.now()`. These paths change on every run and can't be predicted ahead of time. Allowlisting individual paths isn't feasible, so `allowAllUnixSockets: true` is the recommended approach.
+Nx creates all of its sockets under a single stable directory on macOS and Linux: `/tmp/.nx/sockets`, unless overridden via `NX_SOCKET_DIR`. Allowlist that one directory, and grant read/write access to its parent so Nx can create the socket files, instead of granting blanket socket access:
+
+```json
+// .claude/settings.json
+{
+  "sandbox": {
+    "filesystem": {
+      "allowRead": ["/tmp/.nx"],
+      "allowWrite": ["/tmp/.nx"]
+    },
+    "network": {
+      "allowUnixSockets": ["/tmp/.nx/sockets"]
+    }
+  }
+}
+```
+
+The path is identical on every machine, so the entries are safe to commit and share with your team. Running `nx configure-ai-agents` adds them to `.claude/settings.json` automatically.
+
+Claude Code's `allowUnixSockets` setting currently only allows _connecting_ to sockets, not _creating_ them. A scoped allowlist works when the daemon is already running (started outside the sandbox, for example from your own terminal), but processes inside the sandbox that need to create sockets, such as a fresh daemon, plugin workers, or forked tasks, still require `allowAllUnixSockets: true`.
 
 ## Alternative workarounds
 
@@ -66,11 +87,11 @@ Both environment variables work around the symptom rather than fixing the root c
 
 For advanced use cases, Nx provides environment variables to override where socket files are created:
 
-| Variable                         | Description                                                                                         |
-| -------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin)                     |
-| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`. |
-| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                |
+| Variable                         | Description                                                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin). Defaults to `/tmp/.nx/sockets`. |
+| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.              |
+| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                             |
 
 These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.
 

@@ -84,7 +84,8 @@ fn is_vscode_ai() -> bool {
 /// Detects if the current process is being run by the OpenAI Codex CLI.
 ///
 /// `CODEX_THREAD_ID` is set per session by the Codex CLI (verified against
-/// `openai/codex` Rust source). Do not use `CODEX_TUI_RECORD_SESSION` — that
+/// `openai/codex` Rust source). Superset exposes the active agent via
+/// `SUPERSET_AGENT_ID=codex`. Do not use `CODEX_TUI_RECORD_SESSION` — that
 /// variable is *read* by Codex, not set by it.
 fn is_codex_ai() -> bool {
     match env::var("CODEX_THREAD_ID") {
@@ -92,7 +93,13 @@ fn is_codex_ai() -> bool {
             debug!("Codex AI detected via CODEX_THREAD_ID environment variable");
             true
         }
-        Err(_) => false,
+        Err(_) => match env::var("SUPERSET_AGENT_ID") {
+            Ok(agent_id) if agent_id == "codex" => {
+                debug!("Codex AI detected via SUPERSET_AGENT_ID=codex environment variable");
+                true
+            }
+            _ => false,
+        },
     }
 }
 
@@ -163,6 +170,7 @@ mod tests {
             "COMPOSER_NO_INTERACTION",
             "OPENCODE",
             "CODEX_THREAD_ID",
+            "SUPERSET_AGENT_ID",
             "GEMINI_CLI",
             "VSCODE_AGENT",
         ];
@@ -184,6 +192,7 @@ mod tests {
         let original_composer_no_interaction = env::var("COMPOSER_NO_INTERACTION").ok();
         let original_opencode = env::var("OPENCODE").ok();
         let original_codex_thread_id = env::var("CODEX_THREAD_ID").ok();
+        let original_superset_agent_id = env::var("SUPERSET_AGENT_ID").ok();
         let original_gemini_cli = env::var("GEMINI_CLI").ok();
         let original_vscode_agent = env::var("VSCODE_AGENT").ok();
 
@@ -297,6 +306,31 @@ mod tests {
         );
         unsafe {
             env::remove_var("CODEX_THREAD_ID");
+        }
+
+        // Test Codex AI detection via Superset
+        unsafe {
+            env::set_var("SUPERSET_AGENT_ID", "codex");
+        }
+        assert!(
+            is_codex_ai(),
+            "Should detect Codex AI with SUPERSET_AGENT_ID=codex"
+        );
+        assert!(is_ai_agent(), "Main function should detect Codex AI");
+        assert_eq!(
+            detect_ai_agent(),
+            Some("codex".to_string()),
+            "detect_ai_agent should return codex for SUPERSET_AGENT_ID=codex"
+        );
+        unsafe {
+            env::set_var("SUPERSET_AGENT_ID", "claude");
+        }
+        assert!(
+            !is_codex_ai(),
+            "Should not detect Codex AI with a non-codex SUPERSET_AGENT_ID"
+        );
+        unsafe {
+            env::remove_var("SUPERSET_AGENT_ID");
         }
 
         // Test Cursor AI detection with wrong PAGER
@@ -414,6 +448,11 @@ mod tests {
         if let Some(val) = original_codex_thread_id {
             unsafe {
                 env::set_var("CODEX_THREAD_ID", val);
+            }
+        }
+        if let Some(val) = original_superset_agent_id {
+            unsafe {
+                env::set_var("SUPERSET_AGENT_ID", val);
             }
         }
         if let Some(val) = original_gemini_cli {
