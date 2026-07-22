@@ -10,6 +10,7 @@ import {
 } from '../../../utils/consume-messages-from-socket';
 import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
+import { isForeignWorkspaceMessage } from '../../../daemon/message-types/daemon-message';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { setPluginWorkerHostSocket } from './worker-streaming';
@@ -42,6 +43,12 @@ let plugin: LoadedNxPlugin;
 
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
+// The workspace root of the host that spawned this worker, passed explicitly so
+// the foreign-workspace check compares against the owner's root rather than one
+// the worker re-resolves. The worker's own resolution can legitimately differ
+// from the host's (e.g. a host that overrode its root at runtime without
+// updating the child's env), which would drop every real message as "foreign".
+const hostWorkspaceRoot = process.argv[4];
 
 const CONNECT_TIMEOUT_MS = 30_000;
 
@@ -77,6 +84,18 @@ const server = createServer((socket) => {
     consumeMessagesFromSocket((raw) => {
       const message = parseMessage<any>(raw);
       if (!isPluginWorkerMessage(message)) {
+        return;
+      }
+      // Reject messages from a different workspace, the same way the daemon
+      // refuses foreign-workspace messages on its socket. A message whose
+      // workspaceRoot differs from this worker's own root came from a process
+      // in another workspace (e.g. one that reached this worker's socket via a
+      // shared NX_SOCKET_DIR); do not process it. An undefined workspaceRoot is
+      // treated as "not foreign", consistent with the daemon.
+      if (isForeignWorkspaceMessage(message, hostWorkspaceRoot)) {
+        logger.verbose(
+          `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) ignored a "${message.type}" message from a different workspace (${message.workspaceRoot})`
+        );
         return;
       }
       return consumeMessage(socket, message, {

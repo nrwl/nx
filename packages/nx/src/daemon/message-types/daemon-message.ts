@@ -1,6 +1,17 @@
 export type DaemonMessage = {
   type: string;
   env?: Record<string, string>;
+  /**
+   * The workspace root of the sending client. This is NOT set by the many call
+   * sites that construct messages (they build `{ type, ... }` literals without
+   * it); it is stamped centrally by `DaemonSocketMessenger.sendMessage` just
+   * before the message goes over the socket. It is therefore optional at the
+   * type level: making it required would force ~30 construction sites to set a
+   * value that the transport layer immediately overwrites. It can also be
+   * absent on a received message that predates this field or that did not come
+   * through the messenger, which is why `isForeignWorkspaceMessage` treats
+   * `undefined` as "not foreign" rather than rejecting it.
+   */
   workspaceRoot?: string;
   data?: any;
 };
