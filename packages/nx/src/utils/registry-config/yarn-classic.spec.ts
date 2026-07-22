@@ -33,6 +33,16 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'NPM_CONFIG_ALWAYS_AUTH',
     'yarn_always_auth',
     'YARN_ALWAYS_AUTH',
+    'yarn_cafile',
+    'YARN_CAFILE',
+    'npm_config_cafile',
+    'NPM_CONFIG_CAFILE',
+    'yarn_strict_ssl',
+    'YARN_STRICT_SSL',
+    'yarn_proxy',
+    'YARN_PROXY',
+    'yarn_https_proxy',
+    'YARN_HTTPS_PROXY',
     'PREFIX',
     'FAKEROOTKEY',
   ];
@@ -463,6 +473,127 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     ].join('\n');
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
       'npm_config_//reg-b.example.com/:_authToken': 'project-token',
+    });
+  });
+
+  describe('the yarn_ env tier for option keys', () => {
+    it('bridges YARN_CAFILE, which npm cannot see under that name', () => {
+      process.env.YARN_CAFILE = './certs/env-ca.pem';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_cafile: resolve(ROOT, './certs/env-ca.pem'),
+      });
+    });
+
+    it('lets YARN_CAFILE outrank the .yarnrc value', () => {
+      files[`${ROOT}/.yarnrc`] = 'cafile "./certs/file-ca.pem"\n';
+      process.env.YARN_CAFILE = './certs/env-ca.pem';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_cafile: resolve(ROOT, './certs/env-ca.pem'),
+      });
+    });
+
+    it('defers to npm_config_cafile, which npm resolves itself', () => {
+      process.env.npm_config_cafile = './certs/npm-ca.pem';
+      process.env.YARN_CAFILE = './certs/env-ca.pem';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
+    });
+
+    it('bridges YARN_STRICT_SSL and the proxy vars', () => {
+      process.env.YARN_STRICT_SSL = 'false';
+      process.env.YARN_PROXY = 'http://proxy.example.com:8080';
+      process.env.YARN_HTTPS_PROXY = 'http://proxy.example.com:8443';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_strict_ssl: 'false',
+        npm_config_proxy: 'http://proxy.example.com:8080',
+        npm_config_https_proxy: 'http://proxy.example.com:8443',
+      });
+    });
+  });
+
+  it('does not bridge a strict-ssl that only an .npmrc declares', () => {
+    // yarn reads strict-ssl off its own config, which no .npmrc feeds, so
+    // bridging an ancestor one would disable TLS verification for the spawned
+    // npm where yarn keeps it on.
+    files['/repo/.npmrc'] = 'strict-ssl=false';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
+  });
+
+  it('authenticates an unscoped fetch on a registry-scoped always-auth', () => {
+    // yarn reads always-auth for the registry it is about to query, so a bare
+    // global token is sent even though the always-auth key names the registry
+    // rather than the credential.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-b.example.com/',
+      '_authToken=ancestor-token',
+      '//reg-b.example.com/:always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-b.example.com/',
+      'npm_config_//reg-b.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  describe('.yarnrc parsing (yarn reads it with its lockfile parser)', () => {
+    it('reads the key: "value" form', () => {
+      files[`${ROOT}/.yarnrc`] = 'registry: "https://reg-a.example.com/"\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+      });
+    });
+
+    it('reads an unquoted path value', () => {
+      files[`${ROOT}/.yarnrc`] = 'cafile ./certs/ca.pem\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_cafile: resolve(ROOT, './certs/ca.pem'),
+      });
+    });
+
+    it.each([
+      ['registry https://reg-a.example.com/', 'an unquoted URL value'],
+      [
+        'registry: https://reg-a.example.com/',
+        'a colon form with an unquoted URL',
+      ],
+    ])('drops the whole file on %p (%s)', (line) => {
+      // The `://` tokenizes into three tokens, which throws in yarn's parser and
+      // costs the file every setting, not just the offending line.
+      files[`${ROOT}/.yarnrc`] = `${line}\ncafile "./certs/ca.pem"\n`;
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
+    });
+
+    it('drops the whole file on a line yarn cannot tokenize', () => {
+      files[`${ROOT}/.yarnrc`] = 'cafile "./certs/ca.pem"\n@@@ !!!\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
+    });
+
+    it('keeps a trailing comment out of the value', () => {
+      files[`${ROOT}/.yarnrc`] =
+        'registry "https://reg-a.example.com/" # the mirror\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+      });
+    });
+
+    it('keeps the settings around a nested block', () => {
+      files[`${ROOT}/.yarnrc`] = [
+        'registry "https://reg-a.example.com/"',
+        'nested:',
+        '  inner "value"',
+        'cafile "./certs/ca.pem"',
+      ].join('\n');
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_cafile: resolve(ROOT, './certs/ca.pem'),
+      });
+    });
+
+    it('types a bare boolean but not a quoted one', () => {
+      files[`${ROOT}/.yarnrc`] = 'strict-ssl false\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_strict_ssl: 'false',
+      });
+      files[`${ROOT}/.yarnrc`] = 'strict-ssl "false"\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
     });
   });
 

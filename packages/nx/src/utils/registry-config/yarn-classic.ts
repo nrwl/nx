@@ -34,13 +34,16 @@ import {
  * Scoped: @scope:registry in npm config (env/.npmrc) > @scope:registry in
  * .yarnrc > the unscoped chain.
  *
- * Option keys (cafile, strict-ssl, proxy) resolve the other way around: yarn
- * config (.yarnrc) first, then npm config. `strict-ssl` is Boolean()-coerced,
- * so only a bare `false` (yaml/lockfile boolean) disables TLS; a quoted
- * `"false"` stays the truthy string 'false' and keeps verification on. A
- * `cafile` value is tilde-expanded (`~/`) then resolved against the cwd.
- * `always-auth` is not one of these: it is read off the npm registry's own
- * config (npmrc chain plus the `yarn_`/`npm_config_` env prefixes), not .yarnrc.
+ * Option keys (cafile, strict-ssl, proxy) resolve the other way around, and off
+ * the env first: `npm_config_<key>` > `yarn_<key>` > .yarnrc > npm config.
+ * `strict-ssl` reaches yarn from the env and .yarnrc only, never from an .npmrc.
+ * It is Boolean()-coerced, so only a bare `false` (yaml/lockfile boolean, or the
+ * env string yarn coerces the same way) disables TLS; a quoted `"false"` in a
+ * file stays the truthy string 'false' and keeps verification on. A `cafile`
+ * value is tilde-expanded (`~/`) then resolved against the cwd. `always-auth` is
+ * not one of these: it is read off the npm registry's own config (npmrc chain
+ * plus the `yarn_`/`npm_config_` env prefixes), not .yarnrc, and for the
+ * registry being queried rather than for the key the credential came from.
  *
  * npm natively reads the project, home, and <globalPrefix>/etc .npmrc plus env
  * vars identically, so bridging is only needed when a yarn-only surface wins
@@ -161,15 +164,14 @@ function resolveAuth(
   // .npmrc, while yarn's getOption reads it from the whole chain. Values carry
   // over as-is: npm consumes the _auth/_password base64 the way yarn reads it.
   const dart = nerfDart(authRegistry);
+  // yarn authenticates a scoped fetch unconditionally; an unscoped one only when
+  // always-auth is set for the registry it is about to query, whichever key the
+  // credential itself came from. Skip the bridge where yarn would send nothing.
+  const authenticates = scope !== null || alwaysAuthFor(dart, npmrcChain);
   const bareBridges: { key: string; value: string }[] = [];
   for (const key of authKeys) {
     const winner = firstString(npmrcChain, key);
-    if (!winner) {
-      continue;
-    }
-    // yarn authenticates a scoped fetch unconditionally; an unscoped one only
-    // when always-auth is set. Skip the bridge where yarn would send nothing.
-    if (!scope && !alwaysAuthFor(key, npmrcChain)) {
+    if (!winner || !authenticates) {
       continue;
     }
     if (key.startsWith('//')) {
@@ -193,19 +195,18 @@ function resolveAuth(
 }
 
 // yarn's getRegistryOrGlobalOption(registry, 'always-auth'): a registry-scoped
-// `//host/:always-auth` wins, else the global `always-auth`, then Boolean()-
-// coerced. Both come from NpmRegistry's own config, which .yarnrc never feeds:
-// loadConfig reads the npmrc chain only. Unlike resolveOption this returns the
-// value regardless of whether npm reads it natively, since it drives the auth
-// gate rather than a bridge.
-function alwaysAuthFor(authKey: string, npmrcChain: RcFile[]): boolean {
+// `//host/:always-auth` for the registry being queried wins, else the global
+// `always-auth`, then Boolean()-coerced. Both come from NpmRegistry's own
+// config, which .yarnrc never feeds: loadConfig reads the npmrc chain only.
+// Unlike resolveOption this returns the value regardless of whether npm reads it
+// natively, since it drives the auth gate rather than a bridge.
+function alwaysAuthFor(dart: string | null, npmrcChain: RcFile[]): boolean {
   // From the npmrc chain only. An env-supplied //host/:always-auth reaches
   // yarn's own read just for a host with no dot in it (mergeEnv writes env keys
   // through objectPath, where a dot is a path separator, while every read is
   // flat), so consulting one here would authenticate where yarn sends nothing.
-  const registryScoped = authKey.startsWith('//')
-    ? firstDefined(npmrcChain, `${authKey.replace(/:[^:]+$/, '')}:always-auth`)
-        ?.value
+  const registryScoped = dart
+    ? firstDefined(npmrcChain, `${dart}:always-auth`)?.value
     : undefined;
   // BaseRegistry.init merges the `yarn_` env prefix and loadConfig then merges
   // `npm_config_` over it, before any file is read; loadConfig's Object.assign
@@ -350,30 +351,53 @@ function resolveOptions(
   // Option keys resolve .yarnrc first, then the full .npmrc chain. npm reads
   // its native .npmrc entries on its own, so a value is bridged only when the
   // winner is a .yarnrc entry or a yarn-only .npmrc entry.
-  const cafile = resolveOption(firstString, npmrcChain, yarnrcChain, 'cafile');
+  const cafile =
+    yarnEnvOption('cafile') ??
+    resolveOption(firstString, npmrcChain, yarnrcChain, 'cafile');
   if (cafile) {
     setCafile(env, resolveYarnPath(cafile, root, home));
   }
 
-  const strictSsl = resolveOption(
-    firstDefined,
-    npmrcChain,
-    yarnrcChain,
-    'strict-ssl'
-  );
+  // Only the .yarnrc side: a `strict-ssl` in an .npmrc does not reach the
+  // setting yarn reads (verified on 1.22.22, where an .npmrc `strict-ssl=false`
+  // leaves verification on), so bridging one would turn TLS verification off for
+  // the spawned npm where neither yarn nor npm turns it off.
+  // An env value arrives as a string; yarn coerces the bare booleans out of it
+  // before the Boolean() check, so `YARN_STRICT_SSL=false` really does turn
+  // verification off where a quoted `"false"` in a file does not.
+  const strictSslEnv = yarnEnvOption('strict-ssl');
+  const strictSsl =
+    strictSslEnv !== undefined
+      ? normalizeYarnConfigValue(strictSslEnv)
+      : firstDefined(yarnrcChain, 'strict-ssl')?.value;
   if (strictSsl !== undefined && !truthyStrictSsl(strictSsl)) {
     setStrictSsl(env, false);
   }
 
   setProxies(env, {
-    httpProxy: resolveOption(firstString, npmrcChain, yarnrcChain, 'proxy'),
-    httpsProxy: resolveOption(
-      firstString,
-      npmrcChain,
-      yarnrcChain,
-      'https-proxy'
-    ),
+    httpProxy:
+      yarnEnvOption('proxy') ??
+      resolveOption(firstString, npmrcChain, yarnrcChain, 'proxy'),
+    httpsProxy:
+      yarnEnvOption('https-proxy') ??
+      resolveOption(firstString, npmrcChain, yarnrcChain, 'https-proxy'),
   });
+}
+
+/**
+ * The `yarn_`-prefixed env tier for an option key (YARN_CAFILE, YARN_STRICT_SSL,
+ * YARN_PROXY, ...). BaseRegistry.init merges it before any rc file is read and
+ * loadConfig keeps what it already has, so it outranks every file; npm cannot
+ * see it under that name. A `npm_config_` value outranks it in turn, and npm
+ * reads that one for itself, so it needs no bridge and only has to suppress
+ * this one.
+ */
+function yarnEnvOption(key: string): string | undefined {
+  const envKey = key.replace(/-/g, '_');
+  if (readEnvVar(process.env, `npm_config_${envKey}`) !== undefined) {
+    return undefined;
+  }
+  return readEnvVar(process.env, `yarn_${envKey}`);
 }
 
 // Resolves an option key the way yarn does (.yarnrc wins over .npmrc), and
@@ -511,11 +535,15 @@ function toYarnValueMap(
 }
 
 /**
- * Parses yarn classic's .yarnrc (yarn-lockfile syntax: `key "value"` or
- * `"quoted key" "value"`, `#` comments, optional trailing comment) into a
- * last-write-wins map. A bare `true`/`false`/integer becomes a boolean/number,
- * matching yarn's tokenizer; quoted values stay strings. Returns null when the
- * file is missing or unreadable.
+ * Parses yarn classic's .yarnrc into a last-write-wins map, or null when the
+ * file is missing, unreadable, or has a construct yarn's parser rejects. Yarn
+ * reads it with its lockfile parser, so a single malformed line throws and
+ * costs the whole file, not just that line, and yarn carries on as though the
+ * file declared nothing (verified on 1.22.22).
+ *
+ * @yarnpkg/lockfile on npm is a 2018 snapshot of that parser and has since
+ * diverged: its name token excludes `.`, so it rejects the `cafile ./ca.pem`
+ * that yarn 1.22 accepts. Reading with it would drop whole files yarn honors.
  */
 function readYarnrcMap(path: string): Map<string, YarnValue> | null {
   if (!existsSync(path)) {
@@ -527,37 +555,170 @@ function readYarnrcMap(path: string): Map<string, YarnValue> | null {
   } catch {
     return null;
   }
-  const map = new Map<string, YarnValue>();
-  for (const line of raw.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) {
-      continue;
-    }
-    const match = trimmed.match(
-      /^(?:"([^"]+)"|([^\s"]+))\s+(?:"([^"]*)"|(\S+))\s*(?:#.*)?$/
-    );
-    if (!match) {
-      continue;
-    }
-    const key = match[1] ?? match[2];
-    // A quoted value (group 3) is always a string; a bare value (group 4) is
-    // typed the way yarn's lockfile tokenizer types it.
-    const value =
-      match[3] !== undefined ? match[3] : parseBareYarnValue(match[4]);
-    map.set(key, value);
+  try {
+    return parseYarnrc(raw);
+  } catch {
+    return null;
   }
-  return map;
 }
 
-function parseBareYarnValue(raw: string): YarnValue {
-  if (raw === 'true') {
-    return true;
+type YarnToken =
+  | { type: 'value'; value: YarnValue }
+  | { type: 'indent'; value: number }
+  | { type: 'colon' | 'comma' | 'newline' | 'eof' | 'invalid'; value?: never };
+
+/**
+ * Yarn's lockfile tokenizer. A bare word runs until `:`, a space, a comma or a
+ * newline and starts with a letter, `/`, `.` or `-`, which is why an unquoted
+ * URL value breaks the file: its `://` splits into three tokens.
+ */
+function* tokenizeYarnrc(input: string): Generator<YarnToken> {
+  let lastNewline = false;
+  while (input.length) {
+    let chop = 0;
+    if (input[0] === '\n' || input[0] === '\r') {
+      chop = input[0] === '\r' && input[1] === '\n' ? 2 : 1;
+      yield { type: 'newline' };
+    } else if (input[0] === '#') {
+      const end = input.indexOf('\n');
+      chop = end === -1 ? input.length : end;
+    } else if (input[0] === ' ') {
+      if (lastNewline) {
+        let size = 1;
+        while (input[size] === ' ') {
+          size++;
+        }
+        if (size % 2) {
+          throw new Error('Invalid number of spaces');
+        }
+        chop = size;
+        yield { type: 'indent', value: size / 2 };
+      } else {
+        chop = 1;
+      }
+    } else if (input[0] === '"') {
+      let i = 1;
+      for (; i < input.length; i++) {
+        if (
+          input[i] === '"' &&
+          !(input[i - 1] === '\\' && input[i - 2] !== '\\')
+        ) {
+          i++;
+          break;
+        }
+      }
+      chop = i;
+      try {
+        yield { type: 'value', value: JSON.parse(input.slice(0, i)) };
+      } catch {
+        yield { type: 'invalid' };
+      }
+    } else if (/^[0-9]/.test(input)) {
+      const digits = /^[0-9]+/.exec(input)[0];
+      chop = digits.length;
+      yield { type: 'value', value: +digits };
+    } else if (input.startsWith('true')) {
+      chop = 4;
+      yield { type: 'value', value: true };
+    } else if (input.startsWith('false')) {
+      chop = 5;
+      yield { type: 'value', value: false };
+    } else if (input[0] === ':') {
+      chop = 1;
+      yield { type: 'colon' };
+    } else if (input[0] === ',') {
+      chop = 1;
+      yield { type: 'comma' };
+    } else if (/^[a-zA-Z/.-]/.test(input)) {
+      let i = 0;
+      while (i < input.length && !':  \n\r,'.includes(input[i])) {
+        i++;
+      }
+      chop = i;
+      yield { type: 'value', value: input.slice(0, i) };
+    } else {
+      yield { type: 'invalid' };
+    }
+    if (!chop) {
+      throw new Error('Made no progress');
+    }
+    lastNewline = input[0] === '\n' || (input[0] === '\r' && input[1] === '\n');
+    input = input.slice(chop);
   }
-  if (raw === 'false') {
-    return false;
-  }
-  if (/^-?\d+$/.test(raw)) {
-    return Number(raw);
-  }
-  return raw;
+  yield { type: 'eof' };
+}
+
+/**
+ * Yarn's lockfile parser, flattened: only top-level scalar settings are kept,
+ * since nothing read here is an object, but a nested block is still parsed so
+ * its presence does not discard the settings around it. Throws on anything
+ * yarn's parser rejects.
+ */
+function parseYarnrc(raw: string): Map<string, YarnValue> {
+  const tokens = tokenizeYarnrc(raw);
+  const map = new Map<string, YarnValue>();
+  const next = (): YarnToken => tokens.next().value as YarnToken;
+  let token: YarnToken = next();
+
+  const parseLevel = (indent: number, keep: boolean): void => {
+    while (true) {
+      if (token.type === 'newline') {
+        token = next();
+        if (!indent) {
+          continue;
+        }
+        if (token.type !== 'indent') {
+          return;
+        }
+        if (token.value !== indent) {
+          return;
+        }
+        token = next();
+      } else if (token.type === 'indent') {
+        if (token.value !== indent) {
+          return;
+        }
+        token = next();
+      } else if (token.type === 'eof') {
+        return;
+      } else if (token.type === 'value') {
+        const keys = [String(token.value)];
+        token = next();
+        while (token.type === 'comma') {
+          token = next();
+          if (token.type !== 'value') {
+            throw new Error('Expected string');
+          }
+          keys.push(String(token.value));
+          token = next();
+        }
+        const wasColon = token.type === 'colon';
+        if (wasColon) {
+          token = next();
+        }
+        if (token.type === 'value') {
+          const value = token.value;
+          if (keep) {
+            for (const key of keys) {
+              map.set(key, value);
+            }
+          }
+          token = next();
+        } else if (wasColon) {
+          // A nested block: parsed for its tokens, dropped from the flat map.
+          parseLevel(indent + 1, false);
+          if (indent && token.type !== 'indent') {
+            return;
+          }
+        } else {
+          throw new Error('Invalid value type');
+        }
+      } else {
+        throw new Error(`Unknown token: ${token.type}`);
+      }
+    }
+  };
+
+  parseLevel(0, true);
+  return map;
 }
