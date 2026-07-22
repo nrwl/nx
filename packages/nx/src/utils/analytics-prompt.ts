@@ -1,5 +1,3 @@
-import { createHash } from 'crypto';
-import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { prompt } from 'enquirer';
 import { join } from 'path';
@@ -8,6 +6,7 @@ import { isCI } from './is-ci';
 import { readNxJson } from '../config/nx-json';
 import { readJsonFile } from './fileutils';
 import { writeFormattedJsonFile } from './write-formatted-json-file';
+import { deriveRepoKey } from './repo-key';
 import { workspaceRoot } from './workspace-root';
 
 /**
@@ -95,7 +94,7 @@ async function saveAnalyticsPreference(
 
 /**
  * Generates a deterministic workspace ID.
- * Priority: nxCloudId > git remote URL (hashed).
+ * Priority: nxCloudId > repo key (normalized remote + relative path).
  * Returns null if neither is available (no telemetry).
  */
 export function generateWorkspaceId(cwd?: string): string | null {
@@ -108,40 +107,5 @@ export function generateWorkspaceId(cwd?: string): string | null {
     return nxCloudId;
   }
 
-  // Fall back to git remote URL hash
-  try {
-    const remoteUrl = execSync('git remote get-url origin', {
-      stdio: 'pipe',
-      cwd: root,
-      windowsHide: true,
-    })
-      .toString()
-      .trim();
-
-    if (remoteUrl) {
-      return createHash('sha256').update(remoteUrl).digest('hex').slice(0, 32);
-    }
-  } catch {
-    // No git remote available
-  }
-
-  // Fall back to first commit SHA — already a hash
-  try {
-    const firstCommit = execSync('git rev-list --max-parents=0 HEAD', {
-      stdio: 'pipe',
-      cwd: root,
-      windowsHide: true,
-    })
-      .toString()
-      .trim()
-      .split('\n')[0];
-
-    if (firstCommit) {
-      return firstCommit;
-    }
-  } catch {
-    // Not a git repo
-  }
-
-  return null;
+  return deriveRepoKey(root);
 }
