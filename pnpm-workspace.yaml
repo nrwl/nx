@@ -164,6 +164,7 @@ catalogs:
     tailwind-merge: '^2.4.0'
   vite:
     vitest: '^4.0.0'
+trustPolicy: no-downgrade
 allowBuilds:
   '@nestjs/core': true
   '@parcel/watcher': false
