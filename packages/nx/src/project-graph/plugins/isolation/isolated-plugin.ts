@@ -16,6 +16,7 @@ import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
@@ -575,6 +576,14 @@ async function startPluginWorker(name: string) {
       workerPath,
       ipcPath,
       name,
+      // The spawning host's workspace root. The worker validates incoming
+      // messages against this value (not one it re-resolves itself) so the
+      // owner and worker agree on identity by construction. Re-resolving in the
+      // worker is fragile: a host that set its root at runtime (e.g. tests via
+      // setWorkspaceRoot, which does not propagate to the child's env) would
+      // resolve a different root in the worker and drop every legitimate
+      // message as "foreign".
+      workspaceRoot,
     ],
     {
       stdio: ['ignore', 'pipe', 'pipe'],
