@@ -11,6 +11,9 @@ jest.mock('fs', () => ({
   existsSync: jest.fn(),
   readFileSync: jest.fn(),
 }));
+jest.mock('../logger', () => ({
+  logger: { warn: jest.fn(), verbose: jest.fn() },
+}));
 
 import * as fs from 'fs';
 import { homedir } from 'os';
@@ -33,6 +36,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'NPM_CONFIG_ALWAYS_AUTH',
     'yarn_always_auth',
     'YARN_ALWAYS_AUTH',
+    'npm_config_//localhost:4873/:always-auth',
+    'yarn_//localhost:4873/:always-auth',
+    'npm_config_//reg-d.example.com/:always-auth',
     'yarn_cafile',
     'YARN_CAFILE',
     'npm_config_cafile',
@@ -338,6 +344,65 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
+  it.each([
+    'npm_config_//localhost:4873/:always-auth',
+    'yarn_//localhost:4873/:always-auth',
+  ])('resolves a registry-scoped always-auth from the %s env var', (envKey) => {
+    // mergeEnv stores an env key through objectPath, which splits on `.`, while
+    // every read is flat, so a dot-free registry-scoped key is one yarn does
+    // find (verified on 1.22.22: this authenticates an unscoped fetch).
+    files['/repo/.npmrc'] = [
+      'registry=http://localhost:4873/',
+      '//localhost:4873/:_authToken=ancestor-token',
+    ].join('\n');
+    process.env[envKey] = 'true';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'http://localhost:4873/',
+      'npm_config_//localhost:4873/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('ignores a registry-scoped always-auth env var for a dotted host', () => {
+    // objectPath nests `//reg-d.example.com/:always-auth` under `//reg-d`, so
+    // yarn's flat read never sees it and the fetch stays anonymous.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+    ].join('\n');
+    process.env['npm_config_//reg-d.example.com/:always-auth'] = 'true';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+    });
+  });
+
+  it('lets a registry-scoped always-auth env var beat an .npmrc that disables it', () => {
+    files['/repo/.npmrc'] = [
+      'registry=http://localhost:4873/',
+      '//localhost:4873/:_authToken=ancestor-token',
+      '//localhost:4873/:always-auth=false',
+    ].join('\n');
+    process.env['npm_config_//localhost:4873/:always-auth'] = 'true';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'http://localhost:4873/',
+      'npm_config_//localhost:4873/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('falls through to the global always-auth when a registry-scoped env var disables it', () => {
+    // yarn's getRegistryOrGlobalOption ORs the two tiers, so a falsy
+    // registry-scoped value does not veto a global one.
+    files['/repo/.npmrc'] = [
+      'registry=http://localhost:4873/',
+      '//localhost:4873/:_authToken=ancestor-token',
+      'always-auth=true',
+    ].join('\n');
+    process.env['npm_config_//localhost:4873/:always-auth'] = 'false';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'http://localhost:4873/',
+      'npm_config_//localhost:4873/:_authToken': 'ancestor-token',
+    });
+  });
+
   it('lets an always-auth env var beat an .npmrc that disables it', () => {
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
@@ -610,5 +675,80 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       'always-auth=true',
     ].join('\n');
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
+  });
+
+  describe('reporting a credential yarn would not send', () => {
+    // The overlay cannot stop npm reading the same .npmrc, so npm authenticates
+    // on a registry yarn resolved but would have queried anonymously.
+    const warnFor = (packages: string[]): string[] => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      jest.isolateModules(() => {
+        const {
+          getYarnClassicSpawnRegistryEnv: fresh,
+        } = require('./yarn-classic');
+        for (const pkg of packages) {
+          fresh(pkg, ROOT);
+        }
+      });
+      return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
+    };
+
+    beforeEach(() => {
+      files[`${ROOT}/.yarnrc`] = 'registry "https://reg-y.example.com/"\n';
+      files[`${ROOT}/.npmrc`] =
+        '//reg-y.example.com/:_authToken=native-token\n';
+    });
+
+    it('warns once when npm authenticates on a bridged registry yarn would not', () => {
+      const warnings = warnFor(['is-even', 'is-odd']);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain('//reg-y.example.com/');
+      expect(warnings[0]).toContain('yarn would not send it');
+    });
+
+    it('stays quiet when always-auth makes yarn send the same credential', () => {
+      files[`${ROOT}/.npmrc`] += 'always-auth=true\n';
+      expect(warnFor(['is-even'])).toEqual([]);
+    });
+
+    it('stays quiet for a scoped fetch, which yarn authenticates', () => {
+      expect(warnFor(['@acme/pkg'])).toEqual([]);
+    });
+
+    it('stays quiet when no registry was bridged', () => {
+      // npm resolves this registry and this credential on its own, so it would
+      // send the same header with or without the overlay.
+      delete files[`${ROOT}/.yarnrc`];
+      files[`${ROOT}/.npmrc`] =
+        'registry=https://reg-y.example.com/\n//reg-y.example.com/:_authToken=native-token\n';
+      expect(warnFor(['is-even'])).toEqual([]);
+    });
+
+    it('stays quiet when the credential sits in a file npm cannot read', () => {
+      files[`${ROOT}/.npmrc`] = '';
+      files['/repo/.npmrc'] =
+        '//reg-y.example.com/:_authToken=ancestor-token\n';
+      expect(warnFor(['is-even'])).toEqual([]);
+    });
+
+    it('follows npm up the registry path to a credential darted at the host', () => {
+      files[`${ROOT}/.yarnrc`] =
+        'registry "https://reg-y.example.com/artifactory/api/npm/repo/"\n';
+      files[`${ROOT}/.npmrc`] =
+        '//reg-y.example.com/:_authToken=native-token\n';
+      expect(warnFor(['is-even'])).toHaveLength(1);
+    });
+
+    it.each([
+      ['_auth', '//reg-y.example.com/:_auth=dXNlcjpwYXNz'],
+      [
+        'username and _password',
+        '//reg-y.example.com/:username=user\n//reg-y.example.com/:_password=cGFzcw==',
+      ],
+    ])('recognizes a credential held as %s', (_form, npmrc) => {
+      files[`${ROOT}/.npmrc`] = `${npmrc}\n`;
+      expect(warnFor(['is-even'])).toHaveLength(1);
+    });
   });
 });
