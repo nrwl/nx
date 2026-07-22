@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "isolatedModules": true,
     "outDir": "out-tsc/spec",
     "types": ["jest", "node"],
     "rootDir": "."
