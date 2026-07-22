@@ -298,3 +298,26 @@ export async function configureAgents(
   modificationResults.messages.forEach((message) => output.log(message));
   modificationResults.errors.forEach((error) => output.error(error));
 }
+
+/**
+ * Detects a filesystem permission error thrown while writing agent
+ * configuration files. Agent harnesses (e.g. Claude Code) deny writes to
+ * their own settings files (such as .claude/settings.json) from sandboxed
+ * shell commands, so when `nx configure-ai-agents` or `nx init` runs inside
+ * an agent's bash tool the flush fails with EPERM even though the same
+ * command succeeds in a regular terminal.
+ */
+export function isPermissionWriteError(error: unknown): boolean {
+  const code = (error as any)?.code;
+  return code === 'EPERM' || code === 'EACCES';
+}
+
+export function agentConfigWriteBlockedLines(error: unknown): string[] {
+  const path = (error as any)?.path;
+  const code = (error as any)?.code ?? 'EPERM';
+  return [
+    `Writing ${path ?? 'an agent configuration file'} was blocked (${code}).`,
+    "Agent sandboxes protect their own settings files from writes made by sandboxed shell commands, so this command cannot finish when run through an agent's bash tool.",
+    'To complete the AI agent setup, the user must run `nx configure-ai-agents` themselves in a regular terminal.',
+  ];
+}
