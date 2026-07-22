@@ -42,8 +42,22 @@ export default defineConfig({
   },
   trailingSlash: 'never',
   redirects: {
+    '/guides/tips-n-tricks/define-environment-variables':
+      '/docs/reference/environment-variables#loading-environment-variables',
+    '/technologies/angular/guides/use-environment-variables-in-angular':
+      '/docs/reference/environment-variables#loading-environment-variables',
+    '/technologies/react/guides/use-environment-variables-in-react':
+      '/docs/reference/environment-variables#loading-environment-variables',
     '/knowledge-base/installation':
       '/docs/knowledge-base/installation-and-updates',
+    '/guides/nx-cloud/source-control-integration/github':
+      '/docs/features/ci-features/github-integration',
+    '/concepts/decisions/overview':
+      '/docs/concepts/decisions/monorepo-vs-polyrepo',
+    '/concepts/decisions/why-monorepos':
+      '/docs/concepts/decisions/what-is-a-monorepo',
+    '/features/maintain-typescript-monorepos':
+      '/docs/technologies/typescript/introduction',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
     '/reference/remote-cache-plugins':

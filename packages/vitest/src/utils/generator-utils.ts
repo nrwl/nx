@@ -23,7 +23,7 @@ export type TargetFlags = Partial<Record<Target, boolean>>;
 export interface VitestGeneratorSchema {
   project: string;
   uiFramework?: 'angular' | 'react' | 'vue' | 'none';
-  coverageProvider: 'v8' | 'istanbul' | 'custom';
+  coverageProvider: 'v8' | 'istanbul' | 'custom' | 'none';
   inSourceTests?: boolean;
   skipViteConfig?: boolean;
   testTarget?: string;
@@ -88,7 +88,7 @@ export interface ViteConfigFileOptions {
   rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
-  coverageProvider?: 'v8' | 'istanbul' | 'custom';
+  coverageProvider?: 'v8' | 'istanbul' | 'custom' | 'none';
   setupFile?: string;
   useEsmExtension?: boolean;
   port?: number;
@@ -202,7 +202,9 @@ ${
     ? `    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],\n`
     : ''
 }\
-    reporters: ['default'],
+    reporters: ['default']${
+      options.coverageProvider !== 'none'
+        ? `,
     coverage: {
       reportsDirectory: '${reportsDirectory}',
       provider: ${
@@ -210,6 +212,8 @@ ${
           ? `'${options.coverageProvider}' as const`
           : `'v8' as const`
       },
+    }`
+        : ''
     }
   },`
     : '';

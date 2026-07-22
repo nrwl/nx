@@ -1,7 +1,6 @@
 import * as pc from 'picocolors';
-import { exec, execSync, spawn, type StdioOptions } from 'child_process';
+import { exec, execSync, type StdioOptions } from 'child_process';
 import { canPrompt, migratePrompt } from './safe-prompt';
-import { handleImport } from '../../utils/handle-import';
 import { dirname, join, relative } from 'path';
 import { createRequire } from 'module';
 import { joinPathFragments } from '../../utils/path';
@@ -27,12 +26,6 @@ import {
 } from '../../config/misc-interfaces';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import {
-  FileChange,
-  flushChanges,
-  FsTree,
-  printChanges,
-} from '../../generators/tree';
-import {
   fileExists,
   JsonReadOptions,
   JsonWriteOptions,
@@ -43,9 +36,11 @@ import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
 import {
+  getGitCurrentBranch,
   getUncommittedChangesSnapshot,
   isGitRepository,
 } from '../../utils/git-utils';
+import { getBaseRef } from '../../utils/command-line-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -91,10 +86,6 @@ import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
-import {
-  createProjectGraphAsync,
-  readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import {
   ensurePackageHasProvenance,
@@ -174,7 +165,16 @@ import {
   normalizeVersion,
   normalizeVersionWithTagCheck,
 } from './version-utils';
+import {
+  ChangedDepInstaller,
+  NpmPeerDepsInstallError,
+  readMigrationCollection,
+  readPackageMigrationConfig,
+  runInstall,
+  runNxOrAngularMigration,
+} from './execute-migration';
 
+export * from './execute-migration';
 export { normalizeVersion };
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
@@ -2011,47 +2011,6 @@ async function getPackageMigrationsUsingInstallImpl(
   return result;
 }
 
-interface PackageMigrationConfig extends NxMigrationsConfiguration {
-  packageJson: PackageJson;
-  packageGroup: ArrayPackageGroup;
-}
-
-function readPackageMigrationConfig(
-  packageName: string,
-  dir: string
-): PackageMigrationConfig {
-  const { path: packageJsonPath, packageJson: json } = readModulePackageJson(
-    packageName,
-    getNxRequirePaths(dir)
-  );
-
-  const config = readNxMigrateConfig(json);
-
-  if (!config) {
-    return { packageJson: json, migrations: null, packageGroup: [] };
-  }
-
-  try {
-    const migrationFile = require.resolve(config.migrations, {
-      paths: [dirname(packageJsonPath)],
-    });
-
-    return {
-      packageJson: json,
-      migrations: migrationFile,
-      packageGroup: config.packageGroup,
-      supportsOptionalMigrations: config.supportsOptionalMigrations,
-    };
-  } catch {
-    return {
-      packageJson: json,
-      migrations: null,
-      packageGroup: config.packageGroup,
-      supportsOptionalMigrations: config.supportsOptionalMigrations,
-    };
-  }
-}
-
 async function createMigrationsFile(
   root: string,
   migrations: {
@@ -2546,140 +2505,6 @@ function showConnectToCloudMessage() {
   }
 }
 
-function runInstall(
-  nxWorkspaceRoot?: string,
-  phase: MigrationInstallPhase = 'pre-migration'
-): Promise<void> {
-  const cwd = nxWorkspaceRoot ?? process.cwd();
-  const packageManager = detectPackageManager(cwd);
-  const pmCommands = getPackageManagerCommand(packageManager, cwd);
-
-  const installCommand = `${pmCommands.install} ${
-    pmCommands.ignoreScriptsFlag ?? ''
-  }`;
-  output.log({
-    title: `Running '${installCommand}' to make sure necessary packages are installed`,
-  });
-
-  return new Promise<void>((resolve, reject) => {
-    // For npm, pipe stderr so we can detect peer dependency errors while still
-    // mirroring it live to the user's terminal. Other package managers inherit
-    // stderr directly since we don't need to inspect their output.
-    const shouldCaptureStderr = packageManager === 'npm';
-    const child = spawn(installCommand, {
-      shell: true,
-      stdio: ['inherit', 'inherit', shouldCaptureStderr ? 'pipe' : 'inherit'],
-      windowsHide: true,
-      cwd,
-    });
-
-    const stderrChunks: Buffer[] = [];
-    child.stderr?.on('data', (chunk: Buffer) => {
-      process.stderr.write(chunk);
-      stderrChunks.push(chunk);
-    });
-
-    child.on('error', reject);
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-
-      if (shouldCaptureStderr) {
-        const stderr = Buffer.concat(stderrChunks).toString().trim();
-        if (isNpmPeerDepsError(stderr)) {
-          // Log the remediation guidance here so every caller of `runInstall`
-          // (CLI migrate, `nx repair`, single-migration runner, etc.) surfaces
-          // it consistently. Top-level callers catch `NpmPeerDepsInstallError`
-          // and return a non-zero exit code without re-logging.
-          logNpmPeerDepsError(phase);
-          reject(new NpmPeerDepsInstallError());
-          return;
-        }
-      }
-
-      reject(new Error(`Command failed: ${installCommand}`));
-    });
-  });
-}
-
-type MigrationInstallPhase = 'pre-migration' | 'post-migration';
-
-class NpmPeerDepsInstallError extends Error {
-  constructor() {
-    super('npm install failed due to peer dependency conflicts.');
-    this.name = 'NpmPeerDepsInstallError';
-  }
-}
-
-/**
- * Detects npm peer-dependency resolution failures. Keyed on the `ERESOLVE`
- * error code, which npm consistently emits for this class of failure across
- * v7+ (`npm ERR! code ERESOLVE` / `npm error code ERESOLVE`). Falls back to a
- * small set of stable phrases in case the code line is missing from the
- * captured output.
- */
-export function isNpmPeerDepsError(stderr: string): boolean {
-  if (/\bERESOLVE\b/.test(stderr)) {
-    return true;
-  }
-  const lowerStderr = stderr.toLowerCase();
-  return (
-    lowerStderr.includes('unable to resolve dependency tree') ||
-    lowerStderr.includes('could not resolve dependency') ||
-    lowerStderr.includes('conflicting peer dependency')
-  );
-}
-
-function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
-  const peerDepsResolutionSteps = [
-    'Recommended approaches (in order of preference):',
-    '',
-    '1. Use "overrides" in package.json to force compatible versions across the dependency tree.',
-    '   See https://docs.npmjs.com/cli/configuring-npm/package-json#overrides',
-    '2. Persist legacy peer deps resolution in the project ".npmrc":',
-    '   npm config set legacy-peer-deps=true --location=project',
-    '   (bypasses peer dependency resolution; use with caution)',
-    '3. As a last resort, force the installation by running "npm install --force".',
-    '   (does not persist and may produce broken installs)',
-  ];
-  const manualInstallHint = [
-    'If you installed the dependencies manually, pass "--skip-install" to avoid re-installing them:',
-    '   nx migrate --run-migrations --skip-install',
-  ];
-
-  if (phase === 'pre-migration') {
-    output.error({
-      title:
-        'You need to resolve the peer dependency conflicts before the migration can continue',
-      bodyLines: [
-        ...peerDepsResolutionSteps,
-        '',
-        'Once the conflicts are resolved, re-run the migrations:',
-        '   nx migrate --run-migrations',
-        '',
-        ...manualInstallHint,
-      ],
-    });
-  } else {
-    output.error({
-      title:
-        'Some migrations have been applied, but installing the updated dependencies failed',
-      bodyLines: [
-        ...peerDepsResolutionSteps,
-        '',
-        'Once the conflicts are resolved, run "npm install" to install the updated dependencies.',
-        'If the migration was interrupted before completing, re-run the remaining migrations:',
-        '   nx migrate --run-migrations',
-        '',
-        ...manualInstallHint,
-      ],
-    });
-  }
-}
-
 type ExecutableMigration = {
   package: string;
   name: string;
@@ -2782,6 +2607,34 @@ export function resolveCreateCommits(args: {
         ? 'A custom migrate commit prefix is configured, but commits are not enabled for this run, so it has no effect. Set `migrate.createCommits` to `true` (or pass `--create-commits`) to create a commit per migration.'
         : undefined,
   };
+}
+
+/**
+ * Confirms before creating per-migration commits while the user sits on the
+ * repository's default branch, so migrations don't silently commit there (most
+ * relevant since `--agentic` enables commits by default). Only the default
+ * branch triggers a prompt; a detached HEAD, a different branch, or an
+ * unresolved default branch all proceed untouched. Callers gate this on
+ * commits being effective and prompting being possible, so non-interactive
+ * runs (CI, `--no-interactive`) never reach here.
+ */
+export async function confirmCommitsOnDefaultBranch(args: {
+  currentBranch: string | null;
+  defaultBranch: string | null;
+}): Promise<boolean> {
+  const { currentBranch, defaultBranch } = args;
+  if (!currentBranch || !defaultBranch || currentBranch !== defaultBranch) {
+    return true;
+  }
+  const { proceed } = await migratePrompt<{ proceed: boolean }>([
+    {
+      name: 'proceed',
+      type: 'confirm',
+      message: `You're on the default branch '${currentBranch}'. nx migrate will create a commit for each migration on this branch. Continue?`,
+      initial: false,
+    },
+  ]);
+  return proceed;
 }
 
 /**
@@ -3257,34 +3110,6 @@ export async function executeMigrations(
   };
 }
 
-export class ChangedDepInstaller {
-  private initialDeps: string;
-  private _skippedInstall = false;
-
-  constructor(
-    private readonly root: string,
-    private readonly shouldSkipInstall = false
-  ) {
-    this.initialDeps = getStringifiedPackageJsonDeps(root);
-  }
-
-  public get skippedInstall(): boolean {
-    return this._skippedInstall;
-  }
-
-  public async installDepsIfChanged(): Promise<void> {
-    const currentDeps = getStringifiedPackageJsonDeps(this.root);
-    if (this.initialDeps !== currentDeps) {
-      if (this.shouldSkipInstall) {
-        this._skippedInstall = true;
-      } else {
-        await runInstall(this.root, 'post-migration');
-      }
-    }
-    this.initialDeps = currentDeps;
-  }
-}
-
 function logSkippedPostMigrationInstall(root: string): void {
   const packageManager = detectPackageManager(root);
   const installCommand = getPackageManagerCommand(packageManager, root).install;
@@ -3292,92 +3117,6 @@ function logSkippedPostMigrationInstall(root: string): void {
     title: 'Migrations updated your dependencies, but the install was skipped',
     bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
   });
-}
-
-export async function runNxOrAngularMigration(
-  root: string,
-  migration: {
-    package: string;
-    name: string;
-    description?: string;
-    version: string;
-  },
-  isVerbose: boolean,
-  captureGeneratorOutput = false,
-  resolvedCollection?: { collection: MigrationsJson; collectionPath: string }
-): Promise<{
-  changes: FileChange[];
-  nextSteps: string[];
-  agentContext: string[];
-  logs: string;
-  madeChanges: boolean;
-}> {
-  const { collection, collectionPath } =
-    resolvedCollection ?? readMigrationCollection(migration.package, root);
-  let changes: FileChange[] = [];
-  let nextSteps: string[] = [];
-  let agentContext: string[] = [];
-  let logs = '';
-  // Angular's `ngResult.changes` is synthesized from the schematic's
-  // DryRunEvent stream so Nx and Angular paths can share commit/validation
-  // gating via `changes.length > 0`.
-  let madeChanges = false;
-  logger.info(pc.dim('→ Running generator…'));
-  if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
-      root,
-      collectionPath,
-      collection,
-      migration.name,
-      migration.version,
-      captureGeneratorOutput
-    ));
-    madeChanges = changes.length > 0;
-
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
-    if (migration.description) {
-      logger.info(`  ${migration.description}`);
-    }
-    logger.info('');
-    if (!madeChanges) {
-      logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
-    }
-
-    logger.info('Changes:');
-    printChanges(changes, '  ');
-    logger.info('');
-  } else {
-    const ngCliAdapter = await getNgCompatLayer();
-    const migrationProjectGraph = await createProjectGraphAsync();
-    const ngResult = await ngCliAdapter.runMigration(
-      root,
-      migration.package,
-      migration.name,
-      readProjectsConfigurationFromProjectGraph(migrationProjectGraph).projects,
-      isVerbose,
-      migrationProjectGraph
-    );
-    changes = ngResult.changes;
-    madeChanges = ngResult.madeChanges;
-    logs = ngResult.loggingQueue.join('\n');
-
-    logger.info(`Ran ${migration.name} from ${migration.package}`);
-    if (migration.description) {
-      logger.info(`  ${migration.description}`);
-    }
-    logger.info('');
-    if (!madeChanges) {
-      logger.info(`No changes were made\n`);
-      return { changes, nextSteps, agentContext, logs, madeChanges };
-    }
-
-    logger.info('Changes:');
-    ngResult.loggingQueue.forEach((log) => logger.info('  ' + log));
-    logger.info('');
-  }
-
-  return { changes, nextSteps, agentContext, logs, madeChanges };
 }
 
 async function runMigrations(
@@ -3470,6 +3209,26 @@ async function runMigrations(
   }
   if (createCommitsWarning) {
     output.warn({ title: createCommitsWarning });
+  }
+
+  if (effectiveCreateCommits && canPrompt(opts.interactive)) {
+    const currentBranch = getGitCurrentBranch(root);
+    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
+    // generator); compare against the local branch name.
+    const defaultBranch = getBaseRef(readNxJson(root)).replace(/^origin\//, '');
+    const proceed = await confirmCommitsOnDefaultBranch({
+      currentBranch,
+      defaultBranch,
+    });
+    if (!proceed) {
+      output.log({
+        title: `Skipped running migrations to avoid committing to the default branch '${currentBranch}'.`,
+        bodyLines: [
+          'Switch to a different branch and re-run, or re-run and confirm to proceed.',
+        ],
+      });
+      return;
+    }
   }
 
   const shouldRunValidation = resolveShouldRunValidation({
@@ -3625,83 +3384,6 @@ async function runMigrations(
   });
 }
 
-function getStringifiedPackageJsonDeps(root: string): string {
-  try {
-    const { dependencies, devDependencies } = readJsonFile<PackageJson>(
-      join(root, 'package.json')
-    );
-
-    return JSON.stringify([dependencies, devDependencies]);
-  } catch {
-    // We don't really care if the .nx/installation property changes,
-    // whenever nxw is invoked it will handle the dep updates.
-    return '';
-  }
-}
-
-async function runNxMigration(
-  root: string,
-  collectionPath: string,
-  collection: MigrationsJson,
-  name: string,
-  migrationVersion: string | undefined,
-  captureGeneratorOutput: boolean
-) {
-  const { path: implPath, fnSymbol } = getImplementationPath(
-    collection,
-    collectionPath,
-    name,
-    migrationVersion
-  );
-  const fn = require(implPath)[fnSymbol];
-  const host = new FsTree(
-    root,
-    process.env.NX_VERBOSE_LOGGING === 'true',
-    `migration ${collection.name}:${name}`
-  );
-  let result: unknown;
-  let logs = '';
-  if (captureGeneratorOutput) {
-    const { withGeneratorOutputCapture } =
-      require('./agentic/capture-generator-output') as typeof import('./agentic/capture-generator-output');
-    ({ result, logs } = await withGeneratorOutputCapture(() => fn(host, {})));
-  } else {
-    result = await fn(host, {});
-  }
-  const { nextSteps, agentContext } = parseMigrationReturn(result);
-  host.lock();
-  const changes = host.listChanges();
-  flushChanges(root, changes);
-  return { changes, nextSteps, agentContext, logs };
-}
-
-export function parseMigrationReturn(value: unknown): {
-  nextSteps: string[];
-  agentContext: string[];
-} {
-  if (Array.isArray(value)) {
-    return { nextSteps: filterStrings(value), agentContext: [] };
-  }
-  if (value && typeof value === 'object') {
-    const obj = value as Record<string, unknown>;
-    return {
-      nextSteps: filterStrings(obj.nextSteps),
-      agentContext: filterStrings(obj.agentContext),
-    };
-  }
-  // Catches `void`, mistakenly-returned generator callbacks, malformed values.
-  return { nextSteps: [], agentContext: [] };
-}
-
-// Bucket-level tolerance: a single non-string entry shouldn't discard the
-// whole `nextSteps` / `agentContext` array. Migration authors occasionally
-// push `null` / `undefined` / a number into the array; we drop the bad entries
-// and keep the rest so end-of-run guidance isn't silently lost.
-function filterStrings(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((v): v is string => typeof v === 'string');
-}
-
 export async function migrate(
   root: string,
   args: { [k: string]: any },
@@ -3784,6 +3466,10 @@ export async function runMigration() {
       ) {
         delete process.env.npm_config_registry;
       }
+      // Intentionally not runNxSync: `p` is an nx CLI freshly installed into a
+      // temp dir by nxCliPath() (latest, or NX_MIGRATE_CLI_VERSION), so
+      // migrations run with an up-to-date migrate implementation instead of
+      // the workspace's current nx.
       return runOrReturnExitCode(() =>
         execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
@@ -3794,61 +3480,6 @@ export async function runMigration() {
 
     return runLocalMigrate();
   });
-}
-
-export function readMigrationCollection(packageName: string, root: string) {
-  const collectionPath = readPackageMigrationConfig(
-    packageName,
-    root
-  ).migrations;
-  const collection = readJsonFile<MigrationsJson>(collectionPath);
-  collection.name ??= packageName;
-  return {
-    collection,
-    collectionPath,
-  };
-}
-
-export function getImplementationPath(
-  collection: MigrationsJson,
-  collectionPath: string,
-  name: string,
-  migrationVersion?: string
-): { path: string; fnSymbol: string } {
-  const g = collection.generators?.[name] || collection.schematics?.[name];
-  if (!g) {
-    throw new MigrationImplementationMissingError(
-      `Unable to determine implementation path for "${collectionPath}:${name}"`,
-      collectionPath,
-      migrationVersion
-    );
-  }
-  const implRelativePathAndMaybeSymbol = g.implementation || g.factory;
-  const [implRelativePath, fnSymbol = 'default'] =
-    implRelativePathAndMaybeSymbol.split('#');
-
-  let implPath: string;
-
-  try {
-    implPath = require.resolve(implRelativePath, {
-      paths: [dirname(collectionPath)],
-    });
-  } catch (e) {
-    try {
-      // workaround for a bug in node 12
-      implPath = require.resolve(
-        `${dirname(collectionPath)}/${implRelativePath}`
-      );
-    } catch {
-      throw new MigrationImplementationMissingError(
-        `Could not resolve implementation for migration "${name}" from "${collectionPath}"`,
-        collectionPath,
-        migrationVersion ?? g.version
-      );
-    }
-  }
-
-  return { path: implPath, fnSymbol };
 }
 
 /**
@@ -3933,78 +3564,6 @@ export function resolveDocumentationFileToWorkspacePath(
   }
   const relativePath = relative(root, documentationFile);
   return relativePath.startsWith('..') ? documentationFile : relativePath;
-}
-
-class MigrationImplementationMissingError extends Error {
-  constructor(
-    baseMessage: string,
-    collectionPath: string,
-    migrationVersion: string | undefined
-  ) {
-    super(
-      buildMigrationMissingMessage(
-        baseMessage,
-        collectionPath,
-        migrationVersion
-      )
-    );
-    this.name = 'MigrationImplementationMissingError';
-  }
-}
-
-function buildMigrationMissingMessage(
-  baseMessage: string,
-  collectionPath: string,
-  migrationVersion: string | undefined
-): string {
-  if (!migrationVersion) {
-    return baseMessage;
-  }
-
-  try {
-    const packageJsonPath = join(dirname(collectionPath), 'package.json');
-    if (!existsSync(packageJsonPath)) {
-      return baseMessage;
-    }
-    const packageJson = readJsonFile<PackageJson>(packageJsonPath);
-    const installedVersion = packageJson.version;
-
-    if (
-      installedVersion &&
-      lt(normalizeVersion(installedVersion), normalizeVersion(migrationVersion))
-    ) {
-      const packageManager = detectPackageManager();
-      const pmc = getPackageManagerCommand(packageManager);
-      const overrideFieldName = getOverrideFieldName(packageManager);
-
-      return (
-        `${baseMessage}\n\n` +
-        `The installed version of "${packageJson.name}" is ${installedVersion}, ` +
-        `but this migration requires version ${migrationVersion}. ` +
-        `This likely means the package version is being held back by an ${overrideFieldName} ` +
-        `in your package.json. ` +
-        `Remove the ${overrideFieldName} and run "${pmc.install}" to install the correct version.`
-      );
-    }
-  } catch {
-    // Fall through to return the base message if we can't read package info
-  }
-
-  return baseMessage;
-}
-
-function getOverrideFieldName(
-  packageManager: ReturnType<typeof detectPackageManager>
-): string {
-  switch (packageManager) {
-    case 'pnpm':
-      return '"pnpm.overrides"';
-    case 'yarn':
-      return '"resolutions"';
-    case 'npm':
-    case 'bun':
-      return '"overrides"';
-  }
 }
 
 export async function nxCliPath(nxWorkspaceRoot?: string) {
@@ -4092,21 +3651,3 @@ function addToNodePath(dir: string) {
   // Update the env variable.
   process.env.NODE_PATH = paths.join(delimiter);
 }
-
-function isAngularMigration(collection: MigrationsJson, name: string) {
-  return !collection.generators?.[name] && collection.schematics?.[name];
-}
-
-const getNgCompatLayer = (() => {
-  let _ngCliAdapter: typeof import('../../adapter/ngcli-adapter');
-  return async function getNgCompatLayer() {
-    if (!_ngCliAdapter) {
-      _ngCliAdapter = await handleImport(
-        '../../adapter/ngcli-adapter.js',
-        __dirname
-      );
-      require('../../adapter/compat');
-    }
-    return _ngCliAdapter;
-  };
-})();

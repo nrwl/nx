@@ -6,6 +6,7 @@ import {
   killProcessAndPorts,
   newProject,
   readJson,
+  reservePort,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -140,7 +141,7 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should start', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = await reservePort();
 
     try {
       process = await runCommandUntil(
@@ -169,7 +170,7 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should serve', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = await reservePort();
 
     try {
       process = await runCommandUntil(

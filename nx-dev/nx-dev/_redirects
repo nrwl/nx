@@ -74,7 +74,7 @@
 /ci/distributed-builds /docs/concepts/ci-concepts/parallelization-distribution 301
 /ci/setup-incremental-builds-angular /recipes/angular/setup-incremental-builds-angular 301
 /guides/turbo-and-nx /docs/guides/adopting-nx/from-turborepo 301
-/guides/why-monorepos /docs/concepts/decisions/why-monorepos 301
+/guides/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
 /guides/adding-assets-react /recipes/react/adding-assets 301
 /guides/environment-variables /docs/reference/environment-variables 301
 /guides/performance-profiling /docs/troubleshooting/performance-profiling 301
@@ -391,7 +391,7 @@
 /recipes/database/postgres-fastify /docs/getting-started/intro 301
 /recipes/database/serverless-fastify-planetscale /docs/getting-started/intro 301
 /recipes/example-repos/* /showcase/example-repos/:splat 301
-/recipes/environment-variables/define-environment-variables /docs/guides/tips-n-tricks/define-environment-variables 301
+/recipes/environment-variables/define-environment-variables /docs/reference/environment-variables#loading-environment-variables 301
 /recipes/other/eslint /docs/technologies/eslint 301
 /recipes/other/browser-support /docs/guides/tips-n-tricks/browser-support 301
 /recipes/other/include-assets-in-build /docs/guides/tips-n-tricks/include-assets-in-build 301
@@ -490,7 +490,7 @@
 /blog/2023-04-19-nx-cloud-3 /blog/nx-cloud-3-0-faster-more-efficient-modernized 301
 
 # --- decisionsSection ---
-/concepts/more-concepts/why-monorepos /docs/concepts/decisions/why-monorepos 301
+/concepts/more-concepts/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
 /concepts/more-concepts/dependency-management /docs/concepts/decisions/dependency-management 301
 /concepts/more-concepts/code-sharing /docs/concepts/decisions/code-ownership 301
 /concepts/more-concepts/applications-and-libraries /docs/concepts/decisions/project-size 301
@@ -588,9 +588,15 @@
 
 # --- deprecatedReferenceRedirects ---
 /deprecated/global-implicit-dependencies /docs/reference/deprecated/global-implicit-dependencies 301
-/deprecated/affected-config /docs/reference/deprecated/affected-config 301
+# DOC-556: /docs/reference/deprecated/affected-config does not exist. The dead page
+# documented the nx.json `affected` block, which now lives on the nx.json reference.
+/deprecated/affected-config /docs/reference/nx-json#default-base 301
 /deprecated/custom-tasks-runner /docs/reference/deprecated/custom-tasks-runner 301
 /deprecated/legacy-cache /docs/reference/deprecated/legacy-cache 301
+# DOC-556: broken backlink targets (Ahrefs, 2026-07-17)
+/deprecated/as-provided-vs-derived /docs/reference/deprecated/as-provided-vs-derived 301
+/deprecated/integrated-vs-package-based /docs/reference/deprecated/integrated-vs-package-based 301
+/deprecated/rescope /docs/reference/deprecated/rescope 301
 
 # --- commandRedirects ---
 /nx/affected /docs/reference/nx-commands#nx-affected 301
@@ -888,6 +894,8 @@
 /ci/getting-started/intro /docs/getting-started/nx-cloud 301
 /ci/features /docs/features/ci-features 301
 /ci/features/self-healing-ci /docs/features/ci-features/self-healing-ci 301
+# DOC-556: linked from the nrwl/nx README (21.5k referring pages)
+/ci/features/self-healing /docs/features/ci-features/self-healing-ci 301
 /ci/features/remote-cache /docs/features/ci-features/remote-cache 301
 /ci/features/distribute-task-execution /docs/features/ci-features/distribute-task-execution 301
 /ci/features/affected /docs/features/ci-features/affected 301
@@ -950,7 +958,7 @@
 /extending-nx /docs/extending-nx 301
 /extending-nx/* /docs/extending-nx/:splat 301
 /features/enhance-AI /docs/features/enhance-ai 301
-/features/maintain-ts-monorepos /docs/features/maintain-typescript-monorepos 301
+/features/maintain-ts-monorepos /docs/technologies/typescript/introduction 301
 /features /docs/features 301
 /features/* /docs/features/:splat 301
 /nx-enterprise /docs/enterprise 301
@@ -1344,3 +1352,12 @@
 /launch-nx / 301
 /ai / 301
 /webinar /webinars 301
+
+# --- DOC-556: broken backlink targets (Ahrefs site audit, 2026-07-17) ---
+# Legacy URLs with external referring pages that currently 404.
+/storybook/overview-react /docs/technologies/test-tools/storybook 301
+/angular /docs/technologies/angular/introduction 301
+/web /docs/getting-started/intro 301
+/nx/reset /docs/reference/nx-commands#nx-reset 301
+/core-concepts/computation-caching /docs/features/cache-task-results 301
+/nx-community /docs/getting-started/intro 301

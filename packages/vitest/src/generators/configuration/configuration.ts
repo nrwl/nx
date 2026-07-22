@@ -20,6 +20,7 @@ import {
 import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
+  ensureTypescript,
   getProjectType,
   isUsingTsSolutionSetup,
   typesNodeVersion,
@@ -34,9 +35,18 @@ import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
 import { getInstalledViteMajorVersion } from '../../utils/version-utils';
-import { versions } from '../../utils/versions';
+import { getInstalledVitestMajorVersion, versions } from '../../utils/versions';
 import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 import { clean, coerce, major } from 'semver';
+import type {
+  ExportAssignment,
+  Expression,
+  ObjectLiteralExpression,
+  PropertyAssignment,
+  SourceFile,
+} from 'typescript';
+
+let ts: typeof import('typescript');
 
 /**
  * Determines whether to use vitest.config.mts instead of vite.config.mts.
@@ -214,7 +224,10 @@ getTestBed().initTestEnvironment(
               : `import react from '@vitejs/plugin-react'`,
           ],
           plugins: ['react()'],
-          coverageProvider: schema.coverageProvider,
+          coverageProvider:
+            schema.coverageProvider === 'none'
+              ? undefined
+              : schema.coverageProvider,
           useEsmExtension: true,
         },
         true,
@@ -274,20 +287,104 @@ getTestBed().initTestEnvironment(
     tasks.push(installDependenciesTask);
   }
 
-  // Setup workspace config file (https://vitest.dev/guide/workspace.html)
-  if (
-    !isRootProject &&
-    !tree.exists(`vitest.workspace.ts`) &&
-    !tree.exists(`vitest.workspace.js`) &&
-    !tree.exists(`vitest.workspace.json`) &&
-    !tree.exists(`vitest.projects.ts`) &&
-    !tree.exists(`vitest.projects.js`) &&
-    !tree.exists(`vitest.projects.json`)
-  ) {
-    tree.write(
-      'vitest.workspace.ts',
-      `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];`
-    );
+  // Setup the root config aggregating the project configs. Vitest 4 removed
+  // workspace files in favor of inlining the projects into a root vitest.config
+  // via `test.projects` (https://vitest.dev/guide/migration.html#workspace-is-replaced-with-projects).
+  // Emit that shape for vitest 4+ and when the installed version can't be
+  // detected (new installs resolve to v4); vitest 3 keeps the workspace file.
+  if (!isRootProject) {
+    const projectGlobs = `'**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'`;
+    const vitestMajorVersion = getInstalledVitestMajorVersion(tree);
+
+    if (vitestMajorVersion === null || vitestMajorVersion >= 4) {
+      const hasWorkspaceFile = ['ts', 'js', 'json'].some(
+        (ext) =>
+          tree.exists(`vitest.workspace.${ext}`) ||
+          tree.exists(`vitest.projects.${ext}`)
+      );
+      const rootVitestConfig = findRootConfig(tree, 'vitest.config');
+      const rootViteConfig = findRootConfig(tree, 'vite.config');
+
+      if (hasWorkspaceFile) {
+        // A workspace/projects file already defines the project set and the
+        // vitest 4 migration converts it; leave it untouched.
+      } else if (rootVitestConfig) {
+        // A root vitest.config.* wins vitest's config resolution, so we can
+        // neither add a competing aggregator nor safely rewrite it. Warn when it
+        // doesn't aggregate, or when its shape can't be read statically, since
+        // the new project would otherwise be silently absent from
+        // workspace-level vitest runs.
+        const declaresProjects = rootConfigDeclaresProjects(
+          tree,
+          rootVitestConfig
+        );
+        if (declaresProjects === 'missing') {
+          logger.warn(
+            `Found a root "${rootVitestConfig}" without a \`test.projects\` entry. ` +
+              `The "${schema.project}" project won't be part of workspace-level ` +
+              `vitest runs until you add its config file to \`test.projects\` there.`
+          );
+        } else if (declaresProjects === 'unknown') {
+          logger.warn(
+            `Found a root "${rootVitestConfig}" whose test setup couldn't be ` +
+              `analyzed. If the "${schema.project}" project isn't picked up by ` +
+              `workspace-level vitest runs, add its config file to ` +
+              `\`test.projects\` there.`
+          );
+        }
+      } else if (rootViteConfig) {
+        // A root vite.config.* is vitest's config today. Writing a
+        // vitest.config.* would win resolution and shadow it, dropping the vite
+        // settings (aliases, plugins) from vitest runs, and projects don't
+        // inherit those from a root aggregator either. Leave it in place.
+        const declaresProjects = rootConfigDeclaresProjects(
+          tree,
+          rootViteConfig
+        );
+        if (declaresProjects === 'missing') {
+          logger.warn(
+            `Found a root "${rootViteConfig}" without a \`test.projects\` entry. ` +
+              `The "${schema.project}" project runs through that root config, so ` +
+              `its own vitest configuration (e.g. \`environment\`, \`setupFiles\`) ` +
+              `won't apply. Add its config file to a \`test.projects\` entry there ` +
+              `to run it with its own configuration.`
+          );
+        } else if (declaresProjects === 'unknown') {
+          logger.warn(
+            `Found a root "${rootViteConfig}" whose test setup couldn't be ` +
+              `analyzed. If the "${schema.project}" project isn't picked up by ` +
+              `workspace-level vitest runs, add its config file to ` +
+              `\`test.projects\` there.`
+          );
+        }
+      } else {
+        // No root config exists, so emit the aggregator. Its projects glob
+        // matches every vite/vitest config, including this file itself and any
+        // root vite.config added later; exclude both so neither is resolved as
+        // an extra project that, carrying no `include`, re-runs every spec via
+        // the default glob.
+        tree.write(
+          'vitest.config.ts',
+          `import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    projects: [${projectGlobs}, '!vitest.config.{mjs,js,ts,mts}', '!vite.config.{mjs,js,ts,mts}'],
+  },
+});
+`
+        );
+      }
+    } else if (
+      !tree.exists(`vitest.workspace.ts`) &&
+      !tree.exists(`vitest.workspace.js`) &&
+      !tree.exists(`vitest.workspace.json`) &&
+      !tree.exists(`vitest.projects.ts`) &&
+      !tree.exists(`vitest.projects.js`) &&
+      !tree.exists(`vitest.projects.json`)
+    ) {
+      tree.write('vitest.workspace.ts', `export default [${projectGlobs}];`);
+    }
   }
 
   if (!schema.skipFormat) {
@@ -453,6 +550,8 @@ function getCoverageProviderDependency(
       return {
         '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
       };
+    case 'none':
+      return {};
     default:
       return {
         '@vitest/coverage-v8': vitestCoverageV8Version,
@@ -541,6 +640,111 @@ function findTestDefault(
     return rest;
   }
   return value;
+}
+
+function findRootConfig(
+  tree: Tree,
+  name: 'vitest.config' | 'vite.config'
+): string | undefined {
+  for (const ext of ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs']) {
+    const candidate = `${name}.${ext}`;
+    if (tree.exists(candidate)) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Classifies a root config's default export by whether it already aggregates
+ * projects via `test.projects` (or the vitest 3 `test.workspace`):
+ * - `'declares'`: it aggregates projects.
+ * - `'missing'`: it's a readable object config with no such aggregation.
+ * - `'unknown'`: the shape can't be read statically (dynamic/function configs,
+ *   spreads), where the safe move is to leave the config untouched rather than
+ *   shadow it.
+ */
+function rootConfigDeclaresProjects(
+  tree: Tree,
+  configPath: string
+): 'declares' | 'missing' | 'unknown' {
+  ts ??= ensureTypescript();
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+
+  let sourceFile: SourceFile;
+  try {
+    sourceFile = tsquery.ast(tree.read(configPath, 'utf-8'));
+  } catch {
+    return 'unknown';
+  }
+
+  const exportAssignment = sourceFile.statements.find(
+    (s): s is ExportAssignment => ts.isExportAssignment(s) && !s.isExportEquals
+  );
+  if (!exportAssignment) {
+    return 'unknown';
+  }
+
+  let expression = unwrapExpression(exportAssignment.expression);
+  // Unwrap a single-argument config wrapper such as `defineConfig(...)`.
+  if (
+    ts.isCallExpression(expression) &&
+    ts.isIdentifier(expression.expression) &&
+    expression.arguments.length === 1
+  ) {
+    expression = unwrapExpression(expression.arguments[0]);
+  }
+  if (!ts.isObjectLiteralExpression(expression)) {
+    return 'unknown';
+  }
+  // A spread could hide a `test` block we can't see.
+  if (expression.properties.some((p) => ts.isSpreadAssignment(p))) {
+    return 'unknown';
+  }
+
+  const testProperty = findObjectProperty(expression, 'test');
+  if (!testProperty) {
+    return 'missing';
+  }
+  if (!ts.isObjectLiteralExpression(testProperty.initializer)) {
+    return 'unknown';
+  }
+  const testObject = testProperty.initializer;
+  if (testObject.properties.some((p) => ts.isSpreadAssignment(p))) {
+    return 'unknown';
+  }
+
+  return findObjectProperty(testObject, 'projects') ||
+    findObjectProperty(testObject, 'workspace')
+    ? 'declares'
+    : 'missing';
+}
+
+function unwrapExpression(expression: Expression): Expression {
+  while (
+    ts.isAsExpression(expression) ||
+    ts.isSatisfiesExpression(expression) ||
+    ts.isParenthesizedExpression(expression)
+  ) {
+    expression = expression.expression;
+  }
+  return expression;
+}
+
+function findObjectProperty(
+  objectLiteral: ObjectLiteralExpression,
+  name: string
+): PropertyAssignment | undefined {
+  for (const property of objectLiteral.properties) {
+    if (
+      ts.isPropertyAssignment(property) &&
+      (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) &&
+      property.name.text === name
+    ) {
+      return property;
+    }
+  }
+  return undefined;
 }
 
 export default configurationGenerator;

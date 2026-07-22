@@ -140,6 +140,13 @@ export {
   ensurePlaywrightBrowsersInstallation,
 } from './ensure-browser-installation';
 
+// webpack-dev-server's `port: 'auto'` probes from a fixed base (8080), so
+// concurrent e2e-ci tasks on one agent race to bind it (EADDRINUSE in Cypress
+// CT). Give each jest process its own base so probes start in disjoint ranges.
+process.env.WEBPACK_DEV_SERVER_BASE_PORT ??= String(
+  8080 + (process.pid % 5000) * 10
+);
+
 export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(
     Object.entries(process.env).filter(([key]) => {

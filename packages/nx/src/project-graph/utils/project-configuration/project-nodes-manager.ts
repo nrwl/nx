@@ -31,7 +31,9 @@ export function mergeProjectConfigurationIntoRootMap(
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
   skipTargetNormalization?: boolean,
-  deferSpreadsWithoutBase?: boolean
+  // Preserve `'...'` spreads that have no base value (default) so a later
+  // merge layer can resolve them; pass `false` only for a final merge.
+  deferSpreadsWithoutBase: boolean = true
 ): {
   nameChanged: boolean;
 } {
@@ -319,11 +321,15 @@ export class ProjectNodesManager {
   ): void {
     const previousName = this.rootMap[project.root]?.name;
 
+    // This is a final apply — dangling `'...'` spreads must resolve (expand
+    // against the empty base) so they never leak into the project graph.
     mergeProjectConfigurationIntoRootMap(
       this.rootMap,
       project,
       configurationSourceMaps,
-      sourceInformation
+      sourceInformation,
+      undefined,
+      false
     );
 
     const merged = this.rootMap[project.root];
@@ -355,7 +361,7 @@ export class ProjectNodesManager {
    *
    * Pass a different `mergedRootMap` for the default-plugin intermediate
    * pass, then call again with `this.rootMap` after it's applied so
-   * sentinel parents rebind onto the final arrays.
+   * name refs introduced by that merge are sentinelized as well.
    */
   registerNameRefs(
     pluginResultProjects?: Record<

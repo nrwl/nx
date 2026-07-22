@@ -74,10 +74,7 @@
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/module-federation": "workspace:*",
-    "@nx/rspack": "workspace:*",
     "@nx/web": "workspace:*",
-    "@nx/webpack": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "catalog:eslint",
     "enquirer": "catalog:",
@@ -86,8 +83,7 @@
     "picocolors": "catalog:",
     "picomatch": "catalog:",
     "semver": "catalog:",
-    "tslib": "catalog:typescript",
-    "webpack-merge": "^5.8.0"
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",
@@ -100,8 +96,12 @@
     "@angular-devkit/core": "catalog:angular-supported-versions",
     "@angular-devkit/schematics": "catalog:angular-supported-versions",
     "@schematics/angular": "catalog:angular-supported-versions",
+    "@nx/module-federation": "workspace:*",
+    "@nx/rspack": "workspace:*",
+    "@nx/webpack": "workspace:*",
     "ng-packagr": "catalog:angular-supported-versions",
-    "rxjs": "catalog:angular-supported-versions"
+    "rxjs": "catalog:angular-supported-versions",
+    "webpack-merge": "^5.8.0"
   },
   "peerDependenciesMeta": {
     "@angular/build": {
@@ -110,7 +110,19 @@
     "@angular-devkit/build-angular": {
       "optional": true
     },
+    "@nx/module-federation": {
+      "optional": true
+    },
+    "@nx/rspack": {
+      "optional": true
+    },
+    "@nx/webpack": {
+      "optional": true
+    },
     "ng-packagr": {
+      "optional": true
+    },
+    "webpack-merge": {
       "optional": true
     }
   },

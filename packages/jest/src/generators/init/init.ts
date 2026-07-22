@@ -1,4 +1,5 @@
 import {
+  acknowledgeBuildScripts,
   addPlugin,
   findTargetDefault,
   upsertTargetDefault,
@@ -6,6 +7,7 @@ import {
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   readNxJson,
   removeDependenciesFromPackageJson,
@@ -97,6 +99,13 @@ function createJestDefaultPatch(
 
 function updateDependencies(tree: Tree, options: JestInitSchema) {
   const { jestVersion, nxVersion } = versions(tree);
+
+  // jest 30 pulls in unrs-resolver; its postinstall only fetches a fallback
+  // binding for platforms not covered by its prebuilt optional dependencies,
+  // so skip it.
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    'unrs-resolver': false,
+  });
 
   return addDependenciesToPackageJson(
     tree,

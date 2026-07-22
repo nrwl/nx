@@ -318,10 +318,6 @@ const learnGroups: SidebarItems = [
             link: 'guides/adopting-nx/preserving-git-histories',
           },
           {
-            label: 'Nx vs Turborepo',
-            link: 'guides/adopting-nx/nx-vs-turborepo',
-          },
-          {
             label: 'Migrating from Turborepo',
             link: 'guides/adopting-nx/from-turborepo',
           },
@@ -630,19 +626,19 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/yarn-pnp',
           },
           {
-            label: 'Use npm workspaces with Nx',
+            label: 'npm workspaces',
             link: 'guides/tips-n-tricks/npm-workspaces',
           },
           {
-            label: 'Use pnpm workspaces with Nx',
+            label: 'pnpm workspaces',
             link: 'guides/tips-n-tricks/pnpm-workspaces',
           },
           {
-            label: 'Use Yarn workspaces with Nx',
+            label: 'Yarn workspaces',
             link: 'guides/tips-n-tricks/yarn-workspaces',
           },
           {
-            label: 'Use Bun workspaces with Nx',
+            label: 'Bun workspaces',
             link: 'guides/tips-n-tricks/bun-workspaces',
           },
           {
@@ -656,10 +652,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Configuring browser support',
             link: 'guides/tips-n-tricks/browser-support',
-          },
-          {
-            label: 'Define environment variables',
-            link: 'guides/tips-n-tricks/define-environment-variables',
           },
           {
             label: 'Including assets in your build',
@@ -758,12 +750,12 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Why monorepos',
-            link: 'concepts/decisions/why-monorepos',
+            label: 'What is a monorepo',
+            link: 'concepts/decisions/what-is-a-monorepo',
           },
           {
             label: 'Monorepo or polyrepo',
-            link: 'concepts/decisions/overview',
+            link: 'concepts/decisions/monorepo-vs-polyrepo',
           },
           {
             label: 'Dependency management',
@@ -969,7 +961,7 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tasks--caching/change-cache-location',
           },
           {
-            label: 'Self-hosted caching',
+            label: 'Self-hosted remote cache',
             link: 'guides/tasks--caching/self-hosted-caching',
           },
           {
@@ -1005,10 +997,6 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'TypeScript',
         collapsed: true,
         items: [
-          {
-            label: 'Maintain TypeScript monorepos',
-            link: 'features/maintain-typescript-monorepos',
-          },
           ...getTechnologyKBItems('typescript'),
           {
             label: 'Buildable and publishable libraries',
@@ -1093,6 +1081,31 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'Vitest',
         collapsed: true,
         items: [...getTechnologyKBItems('vitest', 'test-tools')],
+      },
+      {
+        label: 'Comparisons',
+        collapsed: true,
+        items: [
+          {
+            label: 'Nx vs Turborepo',
+            link: 'guides/comparisons/nx-vs-turborepo',
+          },
+          { label: 'Nx vs Vite+', link: 'guides/comparisons/nx-vs-vite-plus' },
+          { label: 'Nx vs Bazel', link: 'guides/comparisons/nx-vs-bazel' },
+          { label: 'Nx vs Depot', link: 'guides/comparisons/nx-vs-depot' },
+          {
+            label: 'Nx vs Blacksmith',
+            link: 'guides/comparisons/nx-vs-blacksmith',
+          },
+          {
+            label: 'Nx vs Develocity',
+            link: 'guides/comparisons/nx-vs-develocity',
+          },
+          {
+            label: 'Nx vs Buildkite',
+            link: 'guides/comparisons/nx-vs-buildkite',
+          },
+        ],
       },
     ],
   },

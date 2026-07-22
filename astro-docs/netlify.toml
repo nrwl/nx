@@ -23,6 +23,27 @@ NX_DOTNET_DISABLE = "true"
 
 # Permanent redirects (301 by default)
 
+# DOC-551: Environment variable docs consolidated into the reference page
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/define-environment-variables"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/use-environment-variables-in-angular"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
+[[redirects]]
+from = "/docs/technologies/react/guides/use-environment-variables-in-react"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
+[[redirects]]
+from = "/recipes/environment-variables/use-environment-variables-in-angular"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
+[[redirects]]
+from = "/recipes/environment-variables/use-environment-variables-in-react"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
 # Storybook docs consolidation
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/storybook-9-setup"
@@ -72,6 +93,26 @@ to = "/docs/features/ci-features/self-healing-ci"
 from = "/docs/guides/nx-cloud/manual-dte"
 to = "/docs/guides/nx-cloud/bring-your-own-compute"
 
+# DOC-549: GitHub source control guide merged into the GitHub Actions integration page
+[[redirects]]
+from = "/docs/guides/nx-cloud/source-control-integration/github"
+to = "/docs/features/ci-features/github-integration"
+
+# DOC-549: decisions overview renamed to monorepo-vs-polyrepo
+[[redirects]]
+from = "/docs/concepts/decisions/overview"
+to = "/docs/concepts/decisions/monorepo-vs-polyrepo"
+
+# DOC-549: why-monorepos renamed to what-is-a-monorepo
+[[redirects]]
+from = "/docs/concepts/decisions/why-monorepos"
+to = "/docs/concepts/decisions/what-is-a-monorepo"
+
+# DOC-549: maintain-typescript-monorepos merged into the TypeScript introduction
+[[redirects]]
+from = "/docs/features/maintain-typescript-monorepos"
+to = "/docs/technologies/typescript/introduction"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"
@@ -79,6 +120,11 @@ to = "/docs/extending-nx/create-preset"
 [[redirects]]
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
 to = "/docs/guides/adopting-nx/adding-to-monorepo"
+
+# Turborepo comparison moved to Comparisons section (#36275)
+[[redirects]]
+from = "/docs/guides/adopting-nx/nx-vs-turborepo"
+to = "/docs/guides/comparisons/nx-vs-turborepo"
 
 # Angular multiple workspace migration page removed (DOC-419)
 [[redirects]]
@@ -177,6 +223,12 @@ from = "/docs/enterprise/metadata-only-workspace"
 to = "https://trypolygraph.com"
 status = 301
 force = true
+
+# DOC-556: this page never existed under /docs. The deprecated nx.json `affected`
+# block is now documented on the nx.json reference page.
+[[redirects]]
+from = "/docs/reference/deprecated/affected-config"
+to = "/docs/reference/nx-json#default-base"
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

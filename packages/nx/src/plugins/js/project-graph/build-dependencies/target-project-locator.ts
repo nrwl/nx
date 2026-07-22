@@ -241,13 +241,21 @@ export class TargetProjectLocator {
       }
 
       const version = clean(externalPackageJson.version);
-      let matchingExternalNode =
-        this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
+      const isAliasImport = packageName !== externalPackageJson.name;
+      let matchingExternalNode: ProjectGraphExternalNode | null = null;
+
+      if (isAliasImport) {
+        // Prefer the alias node when both the alias import and the resolved package
+        // exist in the graph, otherwise generated package.json files lose the alias key.
+        const aliasNpmProjectKey = `npm:${packageName}@npm:${externalPackageJson.name}@${version}`;
+        matchingExternalNode =
+          this.npmProjects[aliasNpmProjectKey] ??
+          this.npmProjects[`npm:${packageName}`];
+      }
 
       if (!matchingExternalNode) {
-        // check if it's a package alias, where the resolved package key is used as the version
-        const aliasNpmProjectKey = `npm:${packageName}@npm:${externalPackageJson.name}@${version}`;
-        matchingExternalNode = this.npmProjects[aliasNpmProjectKey];
+        matchingExternalNode =
+          this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
       }
 
       if (!matchingExternalNode) {

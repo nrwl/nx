@@ -34,6 +34,7 @@ import {
   getNxKeyInformation,
 } from '../utils/nx-key';
 import { output } from '../utils/output';
+import { shouldPrintConfigureAiAgentsDisclaimer } from '../ai/configure-ai-agents-disclaimer';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
@@ -250,7 +251,8 @@ async function getTerminalOutputLifeCycle(
         nxJson.tui ?? {},
         titleText,
         workspaceRoot,
-        taskGraph
+        taskGraph,
+        isNxCloudUsed(nxJson)
       );
       // The native endCommand renders the perf report in the exit popup; the runner
       // sources the payload and CompositeLifeCycle forwards it here.
@@ -623,13 +625,16 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
       return;
     }
     const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
-    if (outdatedAgents.length > 0) {
-      output.logRawLine(
-        output.dim(
-          'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
-        )
-      );
+    if (
+      !shouldPrintConfigureAiAgentsDisclaimer(outdatedAgents, workspaceRoot)
+    ) {
+      return;
     }
+    output.logRawLine(
+      output.dim(
+        'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
+      )
+    );
   } catch {
     // Silently ignore errors
   }

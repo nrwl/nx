@@ -335,53 +335,14 @@
       "path": "./e2e/module-federation"
     },
     {
-      "path": "./examples/angular-rspack/module-federation/remote"
-    },
-    {
-      "path": "./examples/angular-rspack/module-federation/host"
-    },
-    {
-      "path": "./examples/angular-rspack/zoneless-csr-i18n"
-    },
-    {
-      "path": "./examples/angular-rspack/zoneless-csr-css"
-    },
-    {
-      "path": "./examples/angular-rspack/zoneless-ssg-css"
-    },
-    {
-      "path": "./examples/angular-rspack/zoneless-ssr-css"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-css-assets"
-    },
-    {
-      "path": "./examples/angular-rspack/appshell-css"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-tailwind"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-i18n"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-scss"
-    },
-    {
-      "path": "./examples/angular-rspack/csr-css"
-    },
-    {
-      "path": "./examples/angular-rspack/ssg-css"
-    },
-    {
-      "path": "./examples/angular-rspack/ssr-css"
-    },
-    {
       "path": "./nx-dev/nx-dev-e2e"
     },
     {
       "path": "./e2e/nx-build"
     }
   ],
-  "extends": "./tsconfig.base.json"
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

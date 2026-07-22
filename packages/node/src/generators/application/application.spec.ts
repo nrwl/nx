@@ -1,11 +1,20 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-// const mockFormatFiles = jest.fn();
-// jest.mock('@nx/devkit', () => {
-//   return {
-//     ...jest.requireActual('@nx/devkit'),
-//     formatFiles: (...args) => mockFormatFiles(...args),
-// }
-// })
+// Mock `@nx/devkit` so that (1) the project graph is empty during generation and
+// (2) the detected package manager is pinned. Pinning keeps inferred lock-file
+// outputs (e.g. prune-lockfile) deterministic regardless of which package
+// manager runs the tests. Individual tests can override `detectPackageManager`.
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    createProjectGraphAsync: jest
+      .fn()
+      .mockResolvedValue({ nodes: {}, dependencies: {} }),
+    detectPackageManager: jest.fn(() => 'npm'),
+    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
 
 import {
   getProjects,

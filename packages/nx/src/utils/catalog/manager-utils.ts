@@ -1,6 +1,3 @@
-// Keep in sync with packages/devkit/src/utils/catalog/manager-utils.ts; the body
-// below the imports is duplicated because @nx/devkit supports a range of nx majors
-// and this logic isn't part of the nx surface it can import across that range.
 import { load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -106,7 +103,7 @@ function setThroughAliases(
   parent.set(targetPath[targetPath.length - 1], value);
 }
 
-export function readCatalogConfigFromFs(
+function readCatalogConfigFromFs(
   filename: string,
   fullPath: string
 ): CatalogDefinitions | null {
@@ -121,7 +118,7 @@ export function readCatalogConfigFromFs(
   }
 }
 
-export function readCatalogConfigFromTree(
+function readCatalogConfigFromTree(
   filename: string,
   tree: Tree
 ): CatalogDefinitions | null {
@@ -135,6 +132,33 @@ export function readCatalogConfigFromTree(
     });
     return null;
   }
+}
+
+// Managers are created per operation (getCatalogManager news one up), so the
+// fs (string-root) branch is cached to read the file once per pass instead of
+// once per catalog reference. The Tree branch stays live since the tree is
+// mutable within a generator.
+export function readCatalogDefinitions(
+  filename: string,
+  treeOrRoot: Tree | string,
+  cache: Map<string, CatalogDefinitions | null>
+): CatalogDefinitions | null {
+  if (typeof treeOrRoot === 'string') {
+    if (cache.has(treeOrRoot)) {
+      return cache.get(treeOrRoot);
+    }
+    const configPath = join(treeOrRoot, filename);
+    const defs = existsSync(configPath)
+      ? readCatalogConfigFromFs(filename, configPath)
+      : null;
+    cache.set(treeOrRoot, defs);
+    return defs;
+  }
+
+  if (!treeOrRoot.exists(filename)) {
+    return null;
+  }
+  return readCatalogConfigFromTree(filename, treeOrRoot);
 }
 
 export function updateCatalogVersionsInFile(

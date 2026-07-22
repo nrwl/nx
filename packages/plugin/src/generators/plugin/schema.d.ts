@@ -7,7 +7,7 @@ export interface Schema {
   skipTsConfig?: boolean; // default is false
   skipFormat?: boolean; // default is false
   skipLintChecks?: boolean; // default is false
-  e2eTestRunner?: 'jest' | 'none';
+  e2eTestRunner?: 'jest' | 'vitest' | 'none';
   e2eProjectDirectory?: string;
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';

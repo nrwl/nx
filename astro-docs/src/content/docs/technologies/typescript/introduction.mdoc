@@ -9,9 +9,126 @@ weight: 2
 filter: 'type:References'
 ---
 
-The TypeScript plugin for Nx, `@nx/js`, helps you run and maintain a TypeScript monorepo. It provides [generators for creating TypeScript and JavaScript projects](#generate-and-manage-typescript-libraries), and the `@nx/js/typescript` plugin automatically infers [`typecheck` and `build` tasks](#how-the-typescript-plugin-infers-tasks) for your projects using package manager workspaces and TypeScript project references. Maintaining TypeScript project references in a monorepo can be cumbersome, the `@nx/js` plugin comes with a [sync generator](/docs/concepts/sync-generators) to automatically upkeep these references.
+A TypeScript/JavaScript (TS/JS) monorepo keeps many packages in one repository, sharing types and code directly instead of through published packages. Nx runs and maintains that monorepo at scale: it detects projects from your package manager workspaces, keeps TypeScript project references in sync automatically, and runs typechecking and builds with caching and affected detection.
 
-You don't need the plugin to use TypeScript with Nx, any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin can help simplify setups and maintenance of TypeScript projects at scale.
+The `@nx/js` plugin provides [generators for creating TypeScript and JavaScript projects](#generate-and-manage-typescript-libraries), and its `@nx/js/typescript` plugin infers [`typecheck` and `build` tasks](#how-the-typescript-plugin-infers-tasks) from your tsconfig files. You don't need the plugin to use TypeScript with Nx, any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin can help simplify setups and maintenance of TypeScript projects at scale.
+
+## How Nx maintains a TypeScript monorepo
+
+Keeping all the tools in a large TypeScript monorepo correctly configured and working together is a difficult task, and every added tool is a new chance for conflicts. Nx approaches this from two directions: it configures itself to match the existing configuration of your other tools, and it enhances certain tools to work better in a monorepo.
+
+### Project detection with package manager workspaces
+
+If your repository uses package manager workspaces, Nx uses those settings to find all the [projects](/docs/reference/project-configuration) in your repository. You don't define projects for your package manager and again for Nx: the `workspaces` configuration is enough for Nx to build the project graph.
+
+```json
+// package.json
+{
+  "workspaces": ["apps/*", "packages/*"]
+}
+```
+
+{% graph height="200px" title="Project View" %}
+
+```json
+{
+  "composite": false,
+  "projects": [
+    {
+      "name": "product-state",
+      "type": "lib",
+      "data": {
+        "root": "packages/cart/product-state",
+        "tags": ["scope:cart", "type:state"]
+      }
+    },
+    {
+      "name": "ui-buttons",
+      "type": "lib",
+      "data": {
+        "root": "packages/ui/buttons",
+        "tags": ["scope:shared", "type:ui"]
+      }
+    },
+    {
+      "name": "cart",
+      "type": "app",
+      "data": {
+        "root": "apps/cart",
+        "tags": ["type:app", "scope:cart"]
+      }
+    }
+  ],
+  "dependencies": {
+    "product-state": [],
+    "ui-buttons": [],
+    "cart": [
+      { "source": "cart", "target": "product-state", "type": "static" },
+      { "source": "cart", "target": "ui-buttons", "type": "static" }
+    ]
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": [],
+  "enableTooltips": false
+}
+```
+
+{% /graph %}
+
+### Tasks inferred from your tooling configuration
+
+Nx [plugins](/docs/concepts/nx-plugins) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/concepts/inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
+
+### TypeScript project references kept in sync
+
+TypeScript [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) let the compiler build and typecheck each project independently, reusing intermediate `*.tsbuildinfo` files instead of re-typechecking every dependency. This provides [significant performance improvements](/docs/concepts/typescript-project-linking#typescript-project-references-performance-benefits), particularly in a large monorepo.
+
+The downside is that each project's references have to be defined by hand in the appropriate `tsconfig.*.json` file, which is tedious to set up and hard to maintain as the repository changes. Nx uses a [sync generator](/docs/concepts/sync-generators) to update the references automatically from the project graph it already knows about:
+
+```jsonc
+// apps/cart/tsconfig.json
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [], // intentionally empty
+  "references": [
+    // UPDATED BY NX SYNC
+    // All project dependencies
+    {
+      "path": "../../packages/product-state",
+    },
+    {
+      "path": "../../packages/ui/buttons",
+    },
+    // This project's other tsconfig.*.json files
+    {
+      "path": "./tsconfig.lib.json",
+    },
+    {
+      "path": "./tsconfig.spec.json",
+    },
+  ],
+}
+```
+
+If someone adds another dependency to the `cart` app and runs the `build` task, Nx detects that the project references are out of sync and asks whether to update them:
+
+```plaintext {% title="nx build cart" frame="terminal" %}
+ NX   The workspace is out of sync
+
+[@nx/js:typescript-sync]: Some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.
+
+This will result in an error in CI.
+
+? Would you like to sync the identified changes to get your workspace up to date? …
+❯ Yes, sync the changes and run the tasks
+  No, run the tasks without syncing the changes
+```
 
 ## Requirements
 
@@ -19,10 +136,12 @@ Nx supports the latest version of TypeScript. TypeScript itself only officially 
 
 | Nx Version     | TypeScript Version |
 | -------------- | ------------------ |
-| 23.x (current) | >= 5.8.0 < 6.1.0   |
+| 23.x (current) | >= 5.8.0 < 7.1.0   |
 | 22.x           | >= 5.4.2 < 5.10.0  |
 | 21.x           | >= 5.4.2 < 5.10.0  |
 | 20.x           | ~5.4.2             |
+
+TypeScript 7.0 does not yet provide a programmatic API. To use its CLI while tools that consume the API continue to use TypeScript 6.0, see [Use TypeScript 7.0 alongside TypeScript 6.0](/docs/technologies/typescript/guides/typescript-7).
 
 ## Setting up @nx/js plugin
 
@@ -89,7 +208,7 @@ pnpm create nx-workspace my-org --template nrwl/typescript-template
 {% /tabitem %}
 {% /tabs %}
 
-This creates a monorepo configured with [TypeScript Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) and your package manager's [workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) feature. [Nx automatically maintains the project references](/docs/features/maintain-typescript-monorepos) as you add and remove projects.
+This creates a monorepo configured with [TypeScript Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) and your package manager's [workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) feature. [Nx automatically maintains the project references](#typescript-project-references-kept-in-sync) as you add and remove projects.
 
 {% aside type="tip" title="Tutorial" %}
 For a guided walkthrough, follow the [Learn Nx Tutorial](/docs/getting-started/tutorials/crafting-your-workspace).

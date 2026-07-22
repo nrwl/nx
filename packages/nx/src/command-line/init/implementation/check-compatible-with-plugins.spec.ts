@@ -52,8 +52,8 @@ describe('checkCompatibleWithPlugins', () => {
   it('should return incompatible plugin with excluded files if error is AggregateCreateNodesError', async () => {
     const error = new AggregateCreateNodesError(
       [
-        ['file1', undefined],
-        ['file2', undefined],
+        ['file1', new Error('failed to process file1')],
+        ['file2', new Error('failed to process file2')],
       ],
       []
     );
@@ -64,8 +64,8 @@ describe('checkCompatibleWithPlugins', () => {
     const result = await checkCompatibleWithPlugins();
     expect(result).toEqual({
       0: [
-        { file: 'file1', error: undefined },
-        { file: 'file2', error: undefined },
+        { file: 'file1', error: new Error('failed to process file1') },
+        { file: 'file2', error: new Error('failed to process file2') },
       ],
     });
   });
@@ -93,16 +93,16 @@ describe('checkCompatibleWithPlugins', () => {
     });
     const aggregateError0 = new AggregateCreateNodesError(
       [
-        ['file1', undefined],
-        ['file2', undefined],
+        ['file1', new Error('failed to process file1')],
+        ['file2', new Error('failed to process file2')],
       ],
       []
     );
     aggregateError0.pluginIndex = 0;
     const aggregateError2 = new AggregateCreateNodesError(
       [
-        ['file3', undefined],
-        ['file4', undefined],
+        ['file3', new Error('failed to process file3')],
+        ['file4', new Error('failed to process file4')],
       ],
       []
     );
@@ -127,11 +127,14 @@ describe('checkCompatibleWithPlugins', () => {
     );
     const result = await checkCompatibleWithPlugins();
     expect(result).toEqual({
-      0: [{ file: 'file1' }, { file: 'file2' }],
+      0: [
+        { file: 'file1', error: new Error('failed to process file1') },
+        { file: 'file2', error: new Error('failed to process file2') },
+      ],
       2: [
         { file: 'file2', error: mergeNodesError },
-        { file: 'file3' },
-        { file: 'file4' },
+        { file: 'file3', error: new Error('failed to process file3') },
+        { file: 'file4', error: new Error('failed to process file4') },
       ],
     });
   });

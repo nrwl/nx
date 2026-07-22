@@ -234,7 +234,7 @@ When some targets matching an entry in the map should have different defaults th
     "test": [
       { "cache": true },
       {
-        "filter": { "plugin": "@nx/vite" },
+        "filter": { "plugin": "@nx/vitest" },
         "inputs": ["default", "^production"]
       },
       {
@@ -246,14 +246,14 @@ When some targets matching an entry in the map should have different defaults th
 }
 ```
 
-| Field             | Type                                                                         | Description                                                                                                                                                                                      |
-| ----------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| key               | `string`                                                                     | The map key: a target name (e.g. `test`), a glob (e.g. `e2e-ci--*`), or an executor identifier (e.g. `@nx/js:tsc`).                                                                              |
-| value             | `object` \| `array`                                                          | A plain configuration object, or an ordered array of filtered entries.                                                                                                                           |
-| `filter.plugin`   | `string`                                                                     | Optional. Restricts the entry to targets inferred by a specific plugin (e.g. `@nx/vite`). Useful when two plugins expose a target with the same name (e.g. `@nx/vite:test` and `@nx/jest:test`). |
-| `filter.projects` | `string` \| `string[]`                                                       | Optional. Restricts the entry to matching projects. Accepts project names, globs, directory patterns, tags (`tag:foo`), and negation (`!foo`) — anything `findMatchingProjects` understands.     |
-| `filter.executor` | `string`                                                                     | Optional. Restricts the entry to targets that resolve to this executor.                                                                                                                          |
-| other             | any field from [Target Configuration](/docs/reference/project-configuration) | The defaults applied when the entry matches.                                                                                                                                                     |
+| Field             | Type                                                                         | Description                                                                                                                                                                                          |
+| ----------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| key               | `string`                                                                     | The map key: a target name (e.g. `test`), a glob (e.g. `e2e-ci--*`), or an executor identifier (e.g. `@nx/js:tsc`).                                                                                  |
+| value             | `object` \| `array`                                                          | A plain configuration object, or an ordered array of filtered entries.                                                                                                                               |
+| `filter.plugin`   | `string`                                                                     | Optional. Restricts the entry to targets inferred by a specific plugin (e.g. `@nx/vitest`). Useful when two plugins expose a target with the same name (e.g. `@nx/vitest:test` and `@nx/jest:test`). |
+| `filter.projects` | `string` \| `string[]`                                                       | Optional. Restricts the entry to matching projects. Accepts project names, globs, directory patterns, tags (`tag:foo`), and negation (`!foo`) — anything `findMatchingProjects` understands.         |
+| `filter.executor` | `string`                                                                     | Optional. Restricts the entry to targets that resolve to this executor.                                                                                                                              |
+| other             | any field from [Target Configuration](/docs/reference/project-configuration) | The defaults applied when the entry matches.                                                                                                                                                         |
 
 Within a key's array, entries apply in document order. **Later entries override prior entries**. An entry with **no `filter`** is a catch-all baseline that applies to every variant of that target; an entry **with a `filter`** applies only where its `plugin`, `projects`, and `executor` match. Because a later entry overrides an earlier one, a trailing catch-all can reset a value set above it. Target defaults apply after targets have been inferred by plugins but before project configuration in `project.json` or `package.json`.
 

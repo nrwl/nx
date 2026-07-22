@@ -1,26 +1,8 @@
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as packageManagerUtils from 'nx/src/utils/package-manager';
 import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
 import { addDependenciesToPackageJson, ensurePackage } from './package-json';
-
-// Mock fs for catalog tests
-jest.mock('fs', () => require('memfs').fs);
-jest.mock('node:fs', () => require('memfs').fs);
-
-// Mock yaml reading functions
-jest.mock('nx/src/devkit-internals', () => ({
-  ...jest.requireActual('nx/src/devkit-internals'),
-  readYamlFile: jest.fn((path: string) => {
-    const { vol } = require('memfs');
-    try {
-      const content = vol.readFileSync(path, 'utf8');
-      return require('@zkochan/js-yaml').load(content);
-    } catch (error) {
-      throw new Error(`Cannot read YAML file at ${path}`);
-    }
-  }),
-}));
 
 describe('addDependenciesToPackageJson', () => {
   let tree: Tree;
@@ -491,7 +473,9 @@ describe('addDependenciesToPackageJson', () => {
 
   describe('catalog support', () => {
     beforeEach(() => {
-      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('pnpm');
+      jest
+        .spyOn(packageManagerUtils, 'detectPackageManager')
+        .mockReturnValue('pnpm');
       tree.root = '/test-workspace';
     });
 
@@ -533,7 +517,9 @@ catalog:
     });
 
     it('should use direct dependencies with unsupported package managers', () => {
-      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('npm');
+      jest
+        .spyOn(packageManagerUtils, 'detectPackageManager')
+        .mockReturnValue('npm');
       writeJson(tree, 'package.json', {
         dependencies: { react: 'catalog:' },
       });

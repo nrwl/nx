@@ -103,10 +103,6 @@ impl TelemetryService {
             "Google%20Chrome;111.0.5563.64|Not(A%3ABrand;8.0.0.0|Chromium;111.0.5563.64"
                 .to_string(),
         );
-        if std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true" {
-            common_request_parameters
-                .insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
-        }
 
         let mut user_parameters = HashMap::new();
         user_parameters.insert(user_dimension::OS_ARCHITECTURE.to_string(), opts.os_arch);
@@ -198,9 +194,13 @@ impl TelemetryService {
         event_name: String,
         parameters: Option<HashMap<String, String>>,
     ) -> Result<()> {
+        let mut parameters = parameters.unwrap_or_default();
+        if read_debug_mode() {
+            parameters.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+        }
         let event = EventData {
             name: event_name,
-            parameters: parameters.unwrap_or_default(),
+            parameters,
         };
 
         if let Some(tx) = self.event_tx.lock().as_ref() {
@@ -217,10 +217,14 @@ impl TelemetryService {
         page_location: Option<String>,
         parameters: Option<HashMap<String, String>>,
     ) -> Result<()> {
+        let mut parameters = parameters.unwrap_or_default();
+        if read_debug_mode() {
+            parameters.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+        }
         let page_view = PageViewData {
             title: page_title,
             location: page_location,
-            parameters: parameters.unwrap_or_default(),
+            parameters,
         };
 
         if let Some(tx) = self.page_view_tx.lock().as_ref() {
@@ -300,8 +304,36 @@ fn enqueue_page_view(
     queue.push(sanitize_params(params));
 }
 
+/// Main JS thread only — env reads race the unsafe env::set_var in
+/// persist_session_refreshes. Read per event so a live daemon honors env
+/// reflection from clients.
+fn read_debug_mode() -> bool {
+    std::env::var("NX_DEBUG_TELEMETRY").unwrap_or_default() == "true"
+}
+
+/// Events without a sample_rate param always pass. A stamped event passes
+/// when the first 8 hex chars of the live session UUID map onto [0,1) below
+/// the rate, so a sampled-in session keeps every span. Debug-mode events
+/// (stamped _dbg at track time) always pass.
+fn is_sampled_in(session_id: &str, parameters: &ParameterMap) -> bool {
+    if parameters.contains_key(request_param::DEBUG_VIEW) {
+        return true;
+    }
+    let Some(rate) = parameters
+        .get(event_dimension::SAMPLE_RATE)
+        .and_then(|r| r.parse::<f64>().ok())
+    else {
+        return true;
+    };
+    session_id
+        .get(..8)
+        .and_then(|prefix| u32::from_str_radix(prefix, 16).ok())
+        .is_some_and(|v| (v as f64 / 4294967296.0) < rate)
+}
+
 /// Drain all pending events and page views from channels into queues
 fn drain_channels(
+    session_id: &str,
     event_rx: &Receiver<EventData>,
     page_view_rx: &Receiver<PageViewData>,
     user_params: &ParameterMap,
@@ -310,6 +342,9 @@ fn drain_channels(
     page_view_queue: &mut Vec<ParameterMap>,
 ) {
     while let Ok(event) = event_rx.try_recv() {
+        if !is_sampled_in(session_id, &event.parameters) {
+            continue;
+        }
         enqueue_event(
             event,
             user_params,
@@ -383,8 +418,12 @@ fn background_sender(
                 match msg {
                     Ok(event) => {
                         session.touch(&mut common_params);
-                        tracing::trace!("Queuing event: {}", event.name);
-                        enqueue_event(event, &user_params, current_page_title.as_deref(), &mut event_queue);
+                        if is_sampled_in(&session.session_id, &event.parameters) {
+                            tracing::trace!("Queuing event: {}", event.name);
+                            enqueue_event(event, &user_params, current_page_title.as_deref(), &mut event_queue);
+                        } else {
+                            tracing::trace!("Dropping sampled-out event: {}", event.name);
+                        }
                     }
                     Err(_) => break,
                 }
@@ -392,7 +431,7 @@ fn background_sender(
             recv(flush_rx) -> msg => {
                 match msg {
                     Ok(reply) => {
-                        drain_channels(&event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
+                        drain_channels(&session.session_id, &event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
                         let result = rt.block_on(send_batches(
                             &client,
                             &common_params,
@@ -406,7 +445,7 @@ fn background_sender(
                 }
             }
             default(timeout) => {
-                drain_channels(&event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
+                drain_channels(&session.session_id, &event_rx, &page_view_rx, &user_params, &mut current_page_title, &mut event_queue, &mut page_view_queue);
                 let _ = rt.block_on(send_batches(
                     &client,
                     &common_params,
@@ -520,8 +559,24 @@ async fn send_batches(
         return Ok(());
     }
 
-    if !event_queue.is_empty() {
-        for chunk in event_queue.chunks(MAX_EVENTS_PER_BATCH) {
+    // _dbg is a request-level param: hoist it out of the items and onto the
+    // request URL. It routes a whole request to DebugView, so debug and
+    // non-debug items never share one.
+    let (debug_events, events): (Vec<_>, Vec<_>) = event_queue
+        .drain(..)
+        .partition(|params| params.contains_key(request_param::DEBUG_VIEW));
+    for (mut items, debug_mode) in [(events, false), (debug_events, true)] {
+        if items.is_empty() {
+            continue;
+        }
+        let mut request_params = common_params.clone();
+        if debug_mode {
+            request_params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+            for params in &mut items {
+                params.remove(request_param::DEBUG_VIEW);
+            }
+        }
+        for chunk in items.chunks(MAX_EVENTS_PER_BATCH) {
             let event_names: Vec<String> = chunk
                 .iter()
                 .filter_map(|params| params.get(event_param::EVENT_NAME).cloned())
@@ -531,7 +586,7 @@ async fn send_batches(
                 chunk.len(),
                 event_names.join(", ")
             );
-            match send_request(client, common_params, chunk.to_vec()).await {
+            match send_request(client, &request_params, chunk.to_vec()).await {
                 Ok(_) => {
                     tracing::debug!("Sent {} events: [{}]", chunk.len(), event_names.join(", "));
                 }
@@ -540,16 +595,18 @@ async fn send_batches(
                 }
             }
         }
-        event_queue.clear();
     }
 
-    for page_view in page_view_queue.drain(..) {
+    for mut page_view in page_view_queue.drain(..) {
         let title = page_view.get(event_param::DOCUMENT_TITLE).cloned();
         let location = page_view.get(event_param::DOCUMENT_LOCATION).cloned();
 
         log_page_view("trace", "Sending", &title, &location);
 
         let mut request_params = common_params.clone();
+        if let Some(dbg) = page_view.remove(request_param::DEBUG_VIEW) {
+            request_params.insert(request_param::DEBUG_VIEW.to_string(), dbg);
+        }
         if let Some(ref t) = title {
             request_params.insert(event_param::DOCUMENT_TITLE.to_string(), t.clone());
         }
@@ -669,4 +726,71 @@ fn sanitize_params(mut params: ParameterMap) -> ParameterMap {
     }
 
     sanitized
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn params_with_rate(rate: &str) -> ParameterMap {
+        HashMap::from([(event_dimension::SAMPLE_RATE.to_string(), rate.to_string())])
+    }
+
+    #[test]
+    fn events_without_sample_rate_always_pass() {
+        assert!(is_sampled_in(
+            "ffffffff-0000-4000-8000-000000000000",
+            &HashMap::new()
+        ));
+    }
+
+    #[test]
+    fn sessions_below_the_rate_threshold_are_sampled_in() {
+        // 0x00000000 / 2^32 = 0 and 0x19999999 / 2^32 ≈ 0.0999999998
+        assert!(is_sampled_in(
+            "00000000-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+        assert!(is_sampled_in(
+            "19999999-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+    }
+
+    #[test]
+    fn sessions_at_or_above_the_rate_threshold_are_sampled_out() {
+        // 0x1999999a / 2^32 ≈ 0.1000000001
+        assert!(!is_sampled_in(
+            "1999999a-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+        assert!(!is_sampled_in(
+            "ffffffff-0000-4000-8000-000000000000",
+            &params_with_rate("0.1")
+        ));
+    }
+
+    #[test]
+    fn malformed_session_ids_are_sampled_out() {
+        assert!(!is_sampled_in("zzz", &params_with_rate("0.1")));
+        assert!(!is_sampled_in("", &params_with_rate("0.1")));
+    }
+
+    #[test]
+    fn debug_mode_bypasses_sampling() {
+        let mut params = params_with_rate("0.1");
+        params.insert(request_param::DEBUG_VIEW.to_string(), "1".to_string());
+        assert!(is_sampled_in(
+            "ffffffff-0000-4000-8000-000000000000",
+            &params
+        ));
+    }
+
+    #[test]
+    fn unparseable_rates_pass() {
+        assert!(is_sampled_in(
+            "ffffffff-0000-4000-8000-000000000000",
+            &params_with_rate("not-a-number")
+        ));
+    }
 }

@@ -5,7 +5,8 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "outDir": "dist/spec",
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",
