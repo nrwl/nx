@@ -1,15 +1,9 @@
-// pnpm seeds its HOME from os.homedir(), which the cafile ~/ expansion mirrors;
-// os.homedir() ignores a runtime process.env.HOME under jest, so mock it.
-jest.mock('os', () => ({
-  ...jest.requireActual('os'),
-  homedir: jest.fn(() => jest.requireActual('os').homedir()),
-}));
 jest.mock('../logger', () => ({
   logger: { warn: jest.fn(), verbose: jest.fn() },
 }));
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
-import { homedir, tmpdir } from 'os';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import { getPnpmSpawnRegistryEnv } from './pnpm';
 
@@ -87,12 +81,21 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('forces both keys to the scoped entry for a scoped package', () => {
+    it('keeps the yaml default when a scoped package routes elsewhere', () => {
       writeYaml(
         'registries:\n  default: https://reg-a.example.com/\n  "@types": https://reg-e.example.com/\n'
       );
       expect(getPnpmSpawnRegistryEnv('@types/node', root, '10.16.0')).toEqual({
-        npm_config_registry: 'https://reg-e.example.com/',
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_@types:registry': 'https://reg-e.example.com/',
+      });
+    });
+
+    it('bridges only the scoped key when the map has no default', () => {
+      // pnpm resolves a scoped package from a scoped-only map fine; it is the
+      // unscoped fetch that crashes, so there is no default to reproduce.
+      writeYaml('registries:\n  "@types": https://reg-e.example.com/\n');
+      expect(getPnpmSpawnRegistryEnv('@types/node', root, '10.16.0')).toEqual({
         'npm_config_@types:registry': 'https://reg-e.example.com/',
       });
     });
@@ -103,6 +106,21 @@ describe('getPnpmSpawnRegistryEnv', () => {
         npm_config_registry: 'https://reg-a.example.com/',
         'npm_config_@types:registry': 'https://reg-a.example.com/',
       });
+    });
+
+    it('bridges a workspace .npmrc no-proxy on 10.x too, which npm reads from no file', () => {
+      writeFileSync(
+        join(root, '.npmrc'),
+        'https-proxy=http://proxy.example.com:8080\nno-proxy=internal.example.com'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
+        npm_config_noproxy: 'internal.example.com',
+      });
+    });
+
+    it('leaves a workspace .npmrc noproxy alone on 10.x (npm reads it natively)', () => {
+      writeFileSync(join(root, '.npmrc'), 'noproxy=internal.example.com');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({});
     });
 
     it('bridges nothing for an unscoped package when the map has only scoped entries (pnpm itself crashes here)', () => {
@@ -525,7 +543,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       );
     });
 
-    it('bridges flat TLS/proxy keys from auth.ini (cafile resolved against the workspace cwd)', () => {
+    it('bridges flat TLS/proxy keys from auth.ini (cafile resolved against auth.ini)', () => {
       writeAuthIni(
         [
           'cafile=./ca.pem',
@@ -534,7 +552,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         ].join('\n')
       );
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-        npm_config_cafile: join(root, 'ca.pem'),
+        npm_config_cafile: join(configHome, 'pnpm', 'ca.pem'),
         npm_config_strict_ssl: 'false',
         npm_config_https_proxy: 'http://proxy.example.com:8443',
       });
@@ -682,24 +700,17 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('expands a ~/ auth.ini cafile against the home dir', () => {
-      (homedir as jest.Mock).mockReturnValue('/home/testuser');
-      try {
-        writeAuthIni('cafile=~/certs/ca.pem');
-        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-          npm_config_cafile: join('/home/testuser', 'certs/ca.pem'),
-        });
-      } finally {
-        (homedir as jest.Mock).mockReturnValue(
-          jest.requireActual('os').homedir()
-        );
-      }
+    it('keeps a ~/ auth.ini cafile literal (pnpm does not expand it)', () => {
+      writeAuthIni('cafile=~/certs/ca.pem');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_cafile: join(configHome, 'pnpm', '~/certs/ca.pem'),
+      });
     });
 
-    // pnpm reads `no-proxy` and ignores `noproxy`; npm does the exact opposite
-    // (it warns about `no-proxy` as an unknown config and moves on), so the
-    // bypass list has to be re-spelled from whichever npmrc-family file pnpm
-    // takes it from.
+    // pnpm accepts both `no-proxy` (which wins) and `noproxy`; npm knows only
+    // `noproxy` and warns about `no-proxy` as an unknown config, so the bypass
+    // list has to be re-spelled from whichever npmrc-family file pnpm takes it
+    // from, plus from auth.ini under either spelling since npm cannot read it.
     it("bridges an auth.ini no-proxy under npm's noproxy spelling", () => {
       writeAuthIni(
         [
@@ -739,6 +750,11 @@ describe('getPnpmSpawnRegistryEnv', () => {
     it('lets an empty workspace .npmrc no-proxy clear the auth.ini one', () => {
       writeAuthIni('no-proxy=ini.example.com');
       writeFileSync(join(root, '.npmrc'), 'no-proxy=');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
+    it('leaves an auth.ini noproxy alone (pnpm 11 ignores that spelling)', () => {
+      writeAuthIni('noproxy=ini.example.com');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
     });
 
