@@ -119,7 +119,7 @@ export function getPnpmSpawnRegistryEnv(
   }
 
   const authIniPath = getAuthIniPath();
-  bridgeAuthIni(env, root, scope, authIniPath);
+  bridgeAuthIni(env, root, scope, authIniPath, pnpmVersion);
   bridgeNoProxy(env, root, authIniPath);
 
   applyYamlNetworkSettings(env, settings);
@@ -156,7 +156,8 @@ function bridgeAuthIni(
   env: NpmConfigEnv,
   root: string,
   scope: string | null,
-  authIniPath: string
+  authIniPath: string,
+  pnpmVersion: string
 ): void {
   const authIni = readNpmrcMap(authIniPath);
   if (!authIni) {
@@ -251,12 +252,15 @@ function bridgeAuthIni(
     !projectNpmrc.has(key) && authIni.has(key);
   const cafile = unbridged('cafile') ? declared('cafile') : undefined;
   if (cafile) {
-    // pnpm resolves a relative cafile against the directory of the file that
-    // declared it, not the workspace root, and never expands a leading `~`
-    // (verified on 11.9.0: `~/ca.pem` reads <config dir>/~/ca.pem). npm ignores
-    // a cafile it cannot open, so getting the base wrong drops the trust anchor
-    // with no diagnostic at all.
-    setCafile(env, resolve(dirname(authIniPath), cafile));
+    // From 11.2.0 pnpm resolves a relative cafile against the directory of the
+    // file that declared it, not the workspace root; before that its only reader
+    // is loadCAFile, a bare readFileSync on the raw value, so it lands on the
+    // cwd the command runs in (the workspace root for a migrate). Neither
+    // expands a leading `~` (verified on 11.9.0: `~/ca.pem` reads
+    // <config dir>/~/ca.pem). npm ignores a cafile it cannot open, so getting
+    // the base wrong drops the trust anchor with no diagnostic at all.
+    const base = gte(pnpmVersion, '11.2.0') ? dirname(authIniPath) : root;
+    setCafile(env, resolve(base, cafile));
   }
   // Inline `ca` PEM material: npm reads it only as a flat (global) key, and pnpm
   // deliberately does not source-scope trust anchors, so it needs no pin check.
