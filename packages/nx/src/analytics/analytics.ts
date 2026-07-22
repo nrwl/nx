@@ -82,7 +82,10 @@ export async function startAnalytics() {
       return;
     }
     const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
-    const userId = await getTelemetryUserId(workspaceId);
+    // A CI fleet is not a user: shared images bake in /etc/machine-id, so a
+    // uid would collapse whole fleets into one GA "user" (and trip per-user
+    // collection caps). GA falls back to cid = workspace for CI traffic.
+    const userId = isCI() ? undefined : await getTelemetryUserId(workspaceId);
     const packageManagerInfo = getPackageManagerInfo();
 
     const nodeVersion = parse(process.version);
