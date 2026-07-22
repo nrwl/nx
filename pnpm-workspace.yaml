@@ -49,6 +49,7 @@ catalog:
   gpt3-tokenizer: '^1.1.5'
   http-proxy-middleware: '^3.0.5'
   http-server: '^14.1.0'
+  https-proxy-agent: '^7.0.6'
   jsonc-parser: '^3.2.0'
   minimatch: '10.2.5'
   next-seo: '^5.13.0'
