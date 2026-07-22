@@ -215,14 +215,16 @@ return; // otherwise skip
 
 with no `requires` block on the migration entry in `migrations.json`.
 
-**Why wrong:** Neither approach is a source-major gate.
+**Why wrong:** Neither approach gates at the layer the runner filters on.
 
 - `incompatibleWith` blocks running on workspaces that have the matching version — it doesn't gate to a source-major range. A workspace on `@angular-devkit/build-angular: 22.0.0` will still pass the `incompatibleWith` check.
-- A runtime per-package guard runs the migration _body_ on every workspace and skips internally. The migration record still appears as "executed" to the migrate runner, and any side effects (logging, partial work) leak. The `nx migrate` runner uses `requires` as the source-major filter; bypassing it means the migration isn't filtered at the right layer.
+- A runtime per-package guard runs the migration _body_ on every workspace and skips internally. The migration record still appears as "executed" to the migrate runner, and any side effects (logging, partial work) leak. The `nx migrate` runner filters on `requires`; an in-body guard whose condition `requires` can express bypasses that layer.
 
-**Do instead:** `requires: { "<pkg>": ">=N.0.0 <(N+1).0.0" }` — the actual source-major gate at the migration-entry level. Drop the in-body guard once the `requires` is in place.
+**Do instead:** On a `packageJsonUpdates` entry (variant A): `requires: { "<pkg>": ">=N.0.0 <(N+1).0.0" }`, the source-major window. On a migration entry (variant B): `requires` with the destination range, usually `{ "<pkg>": ">=N.0.0" }` alone. Entry gates evaluate once at collection time against the version the package lands on in this run (installed only when the run does not bump it), so an upper bound meant as "migrating from N" skips whenever the run bumps past the cap and the migration never runs: `migrate-to-storybook-10` gated `>=9.0.0 <10.0.0` never fired because the same run landed storybook on 10, fixed in #33613 by flipping the gate to `>=10.0.0`. Add an upper bound only when the migration is inapplicable at or above it (`next >=15.0.0 <16.0.0` on the next-15 instructions entry in `packages/next/migrations.json`). Drop the in-body guard once the `requires` is in place.
 
-**Reference:** Anti-pattern (variant B) — `@nx/eslint` `update-typescript-eslint-v8.13.0` (NXC-4387) has runtime `gte('8.0.0') + lt('8.13.0')` per-package guards but no `requires` block. `@nx/jest` similar with `incompatibleWith` (NXC-4391).
+**Exception (conditions `requires` cannot express):** `requires` is AND across package names and an absent package fails the gate, so "either the umbrella or the scoped package is installed" cannot be written there; that check belongs in the body. See `hasTypescriptEslintV8` in `packages/eslint/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules.ts`, which replaced a single-name `requires` that silently skipped workspaces declaring only the scoped packages (#36180). An in-body guard whose condition `requires` can express is still this anti-pattern.
+
+**Reference:** Anti-pattern (variant B): `@nx/eslint` `update-typescript-eslint-v8.13.0` (NXC-4387, removed with the pre-v21 migration prune in #35909) had runtime `gte('8.0.0') + lt('8.13.0')` per-package guards but no `requires` block. `@nx/jest` similar with `incompatibleWith` (NXC-4391).
 
 ## 11. Naming a specific plugin in shared helper docstrings
 
