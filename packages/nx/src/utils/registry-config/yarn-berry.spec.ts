@@ -10,6 +10,9 @@ jest.mock('fs', () => ({
   existsSync: jest.fn(),
   readFileSync: jest.fn(),
 }));
+jest.mock('../logger', () => ({
+  logger: { warn: jest.fn(), verbose: jest.fn() },
+}));
 
 import * as fs from 'fs';
 import { homedir } from 'os';
@@ -997,6 +1000,57 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.8.7')).toEqual({
       npm_config_registry: 'https://registry.yarnpkg.com',
       npm_config_cafile: '/etc/ssl/v3-env-ca.pem',
+    });
+  });
+
+  describe('reporting a credential berry would not send', () => {
+    // berry never reads an .npmrc, so a credential one holds for the registry
+    // berry resolved is one berry itself would never send.
+    const warnFor = (packages: string[]): string[] => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      jest.isolateModules(() => {
+        const { getYarnBerrySpawnRegistryEnv: fresh } = require('./yarn-berry');
+        for (const pkg of packages) {
+          fresh(pkg, ROOT, '4.16.0');
+        }
+      });
+      return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
+    };
+
+    beforeEach(() => {
+      projectRc('npmRegistryServer: https://reg-a.example.com/\n');
+      files[`${ROOT}/.npmrc`] =
+        '//reg-a.example.com/:_authToken=native-token\n';
+    });
+
+    it('warns once when npm authenticates on a registry berry resolved', () => {
+      const warnings = warnFor(['is-even', 'is-odd']);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain('//reg-a.example.com/');
+    });
+
+    it('warns for a scoped fetch too, since berry still reads no .npmrc', () => {
+      expect(warnFor(['@acme/pkg'])).toHaveLength(1);
+    });
+
+    it('stays quiet when berry supplies the credential itself', () => {
+      // The overlay carries berry's own token, which outranks the .npmrc, so
+      // npm sends what berry would have sent.
+      projectRc(
+        [
+          'npmRegistryServer: https://reg-a.example.com/',
+          'npmAuthToken: berry-token',
+          'npmAlwaysAuth: true',
+        ].join('\n') + '\n'
+      );
+      expect(warnFor(['is-even'])).toEqual([]);
+    });
+
+    it('stays quiet when the .npmrc holds nothing for that registry', () => {
+      files[`${ROOT}/.npmrc`] =
+        '//other.example.com/:_authToken=native-token\n';
+      expect(warnFor(['is-even'])).toEqual([]);
     });
   });
 });
