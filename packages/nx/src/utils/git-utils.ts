@@ -6,7 +6,7 @@ import {
 } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
-import { dirname, join, posix, sep } from 'path';
+import { dirname, join, posix, relative, sep } from 'path';
 import { logger } from './logger';
 
 function execFileAsync(
@@ -60,12 +60,7 @@ export class GitRepository {
   constructor(private directory: string) {}
 
   getGitRootPath(cwd: string) {
-    return execFileSync('git', ['rev-parse', '--show-toplevel'], {
-      cwd,
-      windowsHide: true,
-    })
-      .toString()
-      .trim();
+    return getGitRootPath(cwd);
   }
 
   async hasUncommittedChanges() {
@@ -364,6 +359,68 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
     // Return first found remote
     return firstRemote;
   } catch (e) {
+    return null;
+  }
+}
+
+export function getGitRootPath(cwd?: string): string {
+  return execFileSync('git', ['rev-parse', '--show-toplevel'], {
+    cwd,
+    windowsHide: true,
+  })
+    .toString()
+    .trim();
+}
+
+/**
+ * Path of `directory` relative to its git root, posix-separated so it is
+ * identical on every OS, and '' when the directory is the git root itself.
+ * Null outside a git repository.
+ */
+export function getGitRootRelativePath(directory: string): string | null {
+  try {
+    return relative(getGitRootPath(directory), directory)
+      .split(sep)
+      .join(posix.sep);
+  } catch {
+    return null;
+  }
+}
+
+/** A shallow clone's truncated history has no stable root commit. */
+export function isShallowRepository(directory?: string): boolean {
+  try {
+    return (
+      execSync('git rev-parse --is-shallow-repository', {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        cwd: directory,
+        windowsHide: true,
+      }).trim() === 'true'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * SHA of the repository's first commit. Merged unrelated histories leave
+ * several root commits — the sorted-first one is picked so every clone
+ * agrees. Null when there are no commits, or outside a git repository.
+ */
+export function getFirstCommitSha(directory?: string): string | null {
+  try {
+    const roots = execSync('git rev-list --max-parents=0 HEAD', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      cwd: directory,
+      windowsHide: true,
+    })
+      .trim()
+      .split('\n')
+      .filter(Boolean);
+    return roots.sort()[0] ?? null;
+  } catch {
     return null;
   }
 }
