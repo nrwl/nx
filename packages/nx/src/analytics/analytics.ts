@@ -1,4 +1,4 @@
-import { readNxJson } from '../config/nx-json';
+import { type NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
 import { IS_WASM } from '../native';
@@ -71,12 +71,12 @@ export async function startAnalytics() {
   // detection, machine id, telemetry init) may throw past this boundary -
   // on any failure, continue without telemetry.
   try {
-    if (!isAnalyticsEnabled()) {
+    const nxJson = readNxJson(workspaceRoot);
+    if (!isAnalyticsEnabled(nxJson)) {
       return;
     }
 
-    const nxJson = readNxJson(workspaceRoot);
-    const workspaceId = generateWorkspaceId(workspaceRoot);
+    const workspaceId = generateWorkspaceId(workspaceRoot, nxJson);
     if (!workspaceId) {
       // Not a git repo — no telemetry
       return;
@@ -277,8 +277,7 @@ function getPackageManagerInfo() {
   };
 }
 
-function isAnalyticsEnabled(): boolean {
-  const nxJson = readNxJson(workspaceRoot);
+function isAnalyticsEnabled(nxJson: NxJsonConfiguration | null): boolean {
   return nxJson?.analytics === true;
 }
 

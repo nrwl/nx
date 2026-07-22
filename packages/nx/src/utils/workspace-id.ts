@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { readNxJson } from '../config/nx-json';
+import type { NxJsonConfiguration } from '../config/nx-json';
 import {
   getFirstCommitSha,
   getGitRootRelativePath,
@@ -12,8 +12,10 @@ import {
  * one (most stable — it survives repo moves and renames), else the repo key.
  * Null when neither is available, in which case nothing is reported.
  */
-export function generateWorkspaceId(root: string): string | null {
-  const nxJson = readNxJson(root);
+export function generateWorkspaceId(
+  root: string,
+  nxJson: NxJsonConfiguration | null
+): string | null {
   const nxCloudId = nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken;
   if (nxCloudId) {
     return nxCloudId;
