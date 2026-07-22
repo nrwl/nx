@@ -152,6 +152,10 @@
       "type": "boolean",
       "description": "Specifies whether to add inference plugins when generating new projects."
     },
+    "neverConfigureAiAgents": {
+      "type": "boolean",
+      "description": "Set this to true to disable Nx's automatic detection of AI agent configuration drift. When opted out, Nx will not print the \"Run nx configure-ai-agents to update\" disclaimer after task runs and the daemon will not compute agent configuration status in the background. The `nx configure-ai-agents` command itself remains usable when explicitly invoked. Use the `NX_NEVER_CONFIGURE_AI_AGENTS=true` env var to override this per-invocation."
+    },
     "analytics": {
       "type": "boolean",
       "description": "Set this to true to allow Nx to collect usage analytics."
