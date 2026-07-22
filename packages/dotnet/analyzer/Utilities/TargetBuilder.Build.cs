@@ -50,6 +50,8 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
+            // Forward CLI params and task options (e.g. --runtime) to the upstream
+            // build of dependency projects so they build against the same runtime.
             DependsOn = [new TargetDependency { Target = targetName, Dependencies = true, Params = "forward", Options = "forward" }],
             Cache = true,
             Inputs =

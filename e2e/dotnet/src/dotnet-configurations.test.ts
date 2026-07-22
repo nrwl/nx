@@ -200,7 +200,11 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
       expect(details.targets.pack.dependsOn).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ target: 'build:release' }),
+          expect.objectContaining({
+            target: 'build:release',
+            params: 'forward',
+            options: 'forward',
+          }),
         ])
       );
     });
@@ -211,7 +215,11 @@ describe('.NET Plugin - Configuration Behavior', () => {
 
       expect(details.targets.publish.dependsOn).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ target: 'build:release' }),
+          expect.objectContaining({
+            target: 'build:release',
+            params: 'forward',
+            options: 'forward',
+          }),
         ])
       );
     });
@@ -225,6 +233,8 @@ describe('.NET Plugin - Configuration Behavior', () => {
           expect.objectContaining({
             target: 'build:release',
             dependencies: true,
+            params: 'forward',
+            options: 'forward',
           }),
         ])
       );
