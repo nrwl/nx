@@ -20,7 +20,7 @@ import * as os from 'os';
 import { createHash } from 'crypto';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { isCI } from '../utils/is-ci';
-import { generateWorkspaceId } from '../utils/analytics-prompt';
+import { generateWorkspaceId } from '../utils/workspace-id';
 import { getDbConnection } from '../utils/db-connection';
 
 // Conditionally import telemetry functions only on non-WASM platforms
@@ -76,7 +76,7 @@ export async function startAnalytics() {
     }
 
     const nxJson = readNxJson(workspaceRoot);
-    const workspaceId = generateWorkspaceId();
+    const workspaceId = generateWorkspaceId(workspaceRoot);
     if (!workspaceId) {
       // Not a git repo — no telemetry
       return;

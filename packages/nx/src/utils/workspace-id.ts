@@ -1,11 +1,25 @@
 import { createHash } from 'crypto';
+import { readNxJson } from '../config/nx-json';
 import {
   getFirstCommitSha,
   getGitRootRelativePath,
   getVcsRemoteInfo,
   isShallowRepository,
 } from './git-utils';
-import { workspaceRoot } from './workspace-root';
+
+/**
+ * The workspace's analytics identity: the Nx Cloud id when the workspace has
+ * one (most stable — it survives repo moves and renames), else the repo key.
+ * Null when neither is available, in which case nothing is reported.
+ */
+export function generateWorkspaceId(root: string): string | null {
+  const nxJson = readNxJson(root);
+  const nxCloudId = nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken;
+  if (nxCloudId) {
+    return nxCloudId;
+  }
+  return deriveRepoKey(root);
+}
 
 /**
  * Derive the stable, unsalted key identifying this workspace in the
@@ -18,9 +32,7 @@ import { workspaceRoot } from './workspace-root';
  * when no remote exists. Returns null when no identity is derivable — not
  * a git repository, or a shallow clone without a remote.
  */
-export function deriveRepoKey(
-  directory: string = workspaceRoot
-): string | null {
+export function deriveRepoKey(directory: string): string | null {
   const identity = getRepoIdentity(directory);
   if (!identity) {
     return null;

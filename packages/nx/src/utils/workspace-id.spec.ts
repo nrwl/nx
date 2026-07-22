@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { computeRepoKey, deriveRepoKey } from './repo-key';
+import { computeRepoKey, deriveRepoKey } from './workspace-id';
 
 describe('computeRepoKey', () => {
   it('should hash identity and relative path together', () => {

@@ -391,7 +391,7 @@ export function getGitRootRelativePath(directory: string): string | null {
 export function isShallowRepository(directory?: string): boolean {
   try {
     return (
-      execSync('git rev-parse --is-shallow-repository', {
+      execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
         encoding: 'utf8',
         stdio: 'pipe',
         cwd: directory,
@@ -410,7 +410,7 @@ export function isShallowRepository(directory?: string): boolean {
  */
 export function getFirstCommitSha(directory?: string): string | null {
   try {
-    const roots = execSync('git rev-list --max-parents=0 HEAD', {
+    const roots = execFileSync('git', ['rev-list', '--max-parents=0', 'HEAD'], {
       encoding: 'utf8',
       stdio: 'pipe',
       cwd: directory,

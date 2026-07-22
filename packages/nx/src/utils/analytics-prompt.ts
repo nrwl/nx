@@ -6,7 +6,6 @@ import { isCI } from './is-ci';
 import { readNxJson } from '../config/nx-json';
 import { readJsonFile } from './fileutils';
 import { writeFormattedJsonFile } from './write-formatted-json-file';
-import { deriveRepoKey } from './repo-key';
 import { workspaceRoot } from './workspace-root';
 
 /**
@@ -90,22 +89,4 @@ async function saveAnalyticsPreference(
   } catch {
     // Silently fail - don't block user's command
   }
-}
-
-/**
- * Generates a deterministic workspace ID.
- * Priority: nxCloudId > repo key (normalized remote + relative path).
- * Returns null if neither is available (no telemetry).
- */
-export function generateWorkspaceId(cwd?: string): string | null {
-  const root = cwd ?? workspaceRoot;
-
-  // Use nxCloudId if available — most stable identifier
-  const nxJson = readNxJson(root);
-  const nxCloudId = nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken;
-  if (nxCloudId) {
-    return nxCloudId;
-  }
-
-  return deriveRepoKey(root);
 }
