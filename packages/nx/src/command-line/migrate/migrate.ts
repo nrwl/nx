@@ -3873,7 +3873,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
     return join(tmpDir, `node_modules`, '.bin', 'nx');
   } catch (e) {
     console.error(
-      `Failed to install the ${version} version of the migration script. Using the current version.`
+      `Failed to install the ${version} version of the migration script. Falling back to the workspace's installed nx.`
     );
     if (isVerbose) {
       console.error(e);
