@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { join, resolve } from 'path';
 import { gte, lt } from 'semver';
@@ -116,10 +117,10 @@ export function getPnpmSpawnRegistryEnv(
   if (scope && settings.registries?.[scope]) {
     setScopedRegistry(env, scope, settings.registries[scope]);
   }
-  // pnpm only honors the uppercase PNPM_CONFIG_* env prefix from 11.1.0.
+  // pnpm only honors the uppercase PNPM_CONFIG_* env prefix from 11.0.6.
   const envRegistry =
     process.env['pnpm_config_registry'] ??
-    (gte(pnpmVersion, '11.1.0')
+    (gte(pnpmVersion, '11.0.6')
       ? process.env['PNPM_CONFIG_REGISTRY']
       : undefined);
   const defaultRegistry = envRegistry ?? settings.registries?.default;
@@ -128,6 +129,7 @@ export function getPnpmSpawnRegistryEnv(
   }
 
   bridgeAuthIni(env, root, scope);
+  bridgeNoProxy(env, root);
 
   applyYamlNetworkSettings(env, settings);
   return env;
@@ -280,8 +282,38 @@ function bridgeAuthIni(
     httpsProxy: unbridged('https-proxy')
       ? authIni.get('https-proxy')
       : undefined,
-    noProxy: unbridged('no-proxy') ? authIni.get('no-proxy') : undefined,
   });
+}
+
+/**
+ * The proxy-bypass list is the one npmrc key whose spelling differs: pnpm reads
+ * `no-proxy` and ignores `noproxy`, npm does the exact opposite (it warns about
+ * `no-proxy` as an unknown config and moves on). So pnpm's value never reaches
+ * the spawned npm from any file, the workspace .npmrc included, and the layer
+ * that wins in pnpm has to be bridged under npm's spelling. A `noProxy` in
+ * pnpm-workspace.yaml outranks both files and is applied after this.
+ */
+function bridgeNoProxy(env: NpmConfigEnv, root: string): void {
+  const npmrcPath = join(root, '.npmrc');
+  const projectNpmrc = readNpmrcMap(npmrcPath);
+  // With the higher layer unreadable there is no telling which one wins, and
+  // bridging auth.ini's value could reinstate a list the workspace clears.
+  if (!projectNpmrc && existsSync(npmrcPath)) {
+    return;
+  }
+  // The workspace .npmrc outranks auth.ini, and declaring the key empty there
+  // is pnpm's way of clearing an inherited bypass list.
+  const value = projectNpmrc?.has('no-proxy')
+    ? projectNpmrc.get('no-proxy')
+    : readNpmrcMap(join(getPnpmConfigDir(process.env), 'auth.ini'))?.get(
+        'no-proxy'
+      );
+  if (value) {
+    // npm ignores `no-proxy` in the file it does read, so the value never goes
+    // through npm's own expansion under that key; expand it with pnpm's grammar
+    // (`${VAR:-default}` resolves, `${VAR?}` does not).
+    setProxies(env, { noProxy: expandPnpmEnvVars(value) });
+  }
 }
 
 /**

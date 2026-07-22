@@ -29,6 +29,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'pnpm_config_registry',
     'PNPM_CONFIG_REGISTRY',
     'npm_config_//reg-b.example.com/:_authToken',
+    'PNPM_TEST_NOPROXY',
     'XDG_CONFIG_HOME',
   ];
   const savedEnv: Record<string, string | undefined> = {};
@@ -695,15 +696,81 @@ describe('getPnpmSpawnRegistryEnv', () => {
       }
     });
 
-    it('only honors the uppercase PNPM_CONFIG_REGISTRY env from 11.1.0', () => {
+    // pnpm reads `no-proxy` and ignores `noproxy`; npm does the exact opposite
+    // (it warns about `no-proxy` as an unknown config and moves on), so the
+    // bypass list has to be re-spelled from whichever npmrc-family file pnpm
+    // takes it from.
+    it("bridges an auth.ini no-proxy under npm's noproxy spelling", () => {
+      writeAuthIni(
+        [
+          'https-proxy=http://proxy.example.com:8080',
+          'no-proxy=internal.example.com',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_https_proxy: 'http://proxy.example.com:8080',
+        npm_config_noproxy: 'internal.example.com',
+      });
+    });
+
+    it('bridges a workspace .npmrc no-proxy, which npm reads from no file', () => {
+      writeFileSync(
+        join(root, '.npmrc'),
+        [
+          'https-proxy=http://proxy.example.com:8080',
+          'no-proxy=internal.example.com',
+        ].join('\n')
+      );
+      // npm resolves https-proxy from the .npmrc itself, so only the bypass list
+      // needs an env entry.
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_noproxy: 'internal.example.com',
+      });
+    });
+
+    it('prefers the workspace .npmrc no-proxy over the auth.ini one', () => {
+      writeAuthIni('no-proxy=ini.example.com');
+      writeFileSync(join(root, '.npmrc'), 'no-proxy=project.example.com');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_noproxy: 'project.example.com',
+      });
+    });
+
+    it('lets an empty workspace .npmrc no-proxy clear the auth.ini one', () => {
+      writeAuthIni('no-proxy=ini.example.com');
+      writeFileSync(join(root, '.npmrc'), 'no-proxy=');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
+    it('bridges no no-proxy when the workspace .npmrc cannot be read', () => {
+      writeAuthIni('no-proxy=ini.example.com');
+      // A directory in its place: the file exists and reads as an error, so the
+      // layer that outranks auth.ini is unknown rather than absent.
+      mkdirSync(join(root, '.npmrc'));
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    });
+
+    it('expands a no-proxy env reference with pnpm grammar', () => {
+      process.env.PNPM_TEST_NOPROXY = 'internal.example.com';
+      writeAuthIni(
+        'no-proxy=${PNPM_TEST_NOPROXY},${PNPM_TEST_UNSET:-fallback.example.com}'
+      );
+      // npm leaves the `:-` default form verbatim, so only pnpm's expander
+      // produces this.
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_noproxy: 'internal.example.com,fallback.example.com',
+      });
+    });
+
+    it('only honors the uppercase PNPM_CONFIG_REGISTRY env from 11.0.6', () => {
       writeYaml('registries:\n  default: https://reg-a.example.com/\n');
       process.env.PNPM_CONFIG_REGISTRY = 'https://reg-up.example.com/';
-      // 11.0.x ignores the uppercase form, so the yaml default wins.
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.4')).toEqual({
+      // 11.0.5 and below ignore the uppercase form, so the yaml default wins.
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.5')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
       });
-      // 11.1.0+ honors it.
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.1.0')).toEqual({
+      // 11.0.6+ honors it.
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.6')).toEqual({
         npm_config_registry: 'https://reg-up.example.com/',
       });
     });
