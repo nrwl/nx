@@ -69,6 +69,14 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
     expect(map?.get('registry')).toBe('https://r/');
   });
 
+  it('breaks lines on a bare CR the way ini does', () => {
+    // ini splits on /[\r\n]+/, so the comment ends at the CR and the registry is
+    // a line of its own. Reading only /\r?\n/ would hide it inside the comment
+    // while the spawned npm still honors it.
+    const map = read('; note\rregistry=https://r/');
+    expect(map?.get('registry')).toBe('https://r/');
+  });
+
   it('keeps last-write-wins for repeated keys', () => {
     expect(
       read('registry=https://a/\nregistry=https://b/')?.get('registry')
