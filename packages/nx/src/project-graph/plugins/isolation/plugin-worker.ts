@@ -10,7 +10,7 @@ import {
 } from '../../../utils/consume-messages-from-socket';
 import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
-import { isForeignWorkspaceMessage } from '../../../daemon/message-types/daemon-message';
+import { assertNotForeignWorkspaceMessage } from '../../../daemon/message-types/daemon-message';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { setPluginWorkerHostSocket } from './worker-streaming';
@@ -87,15 +87,26 @@ const server = createServer((socket) => {
       if (!isPluginWorkerMessage(message)) {
         return;
       }
-      // Reject messages from a different workspace, the same way the daemon
-      // refuses foreign-workspace messages on its socket. A message whose
-      // workspaceRoot differs from this worker's own root came from a process
-      // in another workspace (e.g. one that reached this worker's socket via a
-      // shared NX_SOCKET_DIR); do not process it. An undefined workspaceRoot is
-      // treated as "not foreign", consistent with the daemon.
-      if (isForeignWorkspaceMessage(message, hostWorkspaceRoot)) {
+      // Reject messages from a different workspace using the exact same check
+      // the daemon applies to its own socket. A message whose workspaceRoot
+      // differs from this worker's host root came from a process in another
+      // workspace (e.g. one that reached this worker's socket via a shared
+      // NX_SOCKET_DIR) and must not be processed. We catch and drop rather than
+      // let the assertion propagate: a stray foreign message must not crash a
+      // worker that is validly serving its host. The daemon, which has a
+      // response channel, instead surfaces the same assertion back to the
+      // client.
+      try {
+        assertNotForeignWorkspaceMessage(
+          message,
+          hostWorkspaceRoot,
+          `The Nx plugin worker "${expectedPluginName}" (pid: ${process.pid})`
+        );
+      } catch (e) {
         logger.verbose(
-          `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) ignored a "${message.type}" message from a different workspace (${message.workspaceRoot})`
+          `[plugin-worker] ignored a "${message.type}" message: ${
+            e instanceof Error ? e.message : e
+          }`
         );
         return;
       }
