@@ -213,8 +213,16 @@ export function loadAndExpandDotEnvFile(
     // Encode every file's path + mtime so the entry invalidates if any change.
     signature = files.map((f) => `${f}:${statSync(f).mtimeMs}`).join('|');
   } catch {
-    // A file does not exist — behave identically to dotenv (silently no-op).
-    return expand({ parsed: {}, processEnv: environmentVariables });
+    // Could not stat a file (e.g. it does not exist). Fall back to dotenv's own
+    // handling — which returns `{ error }` for a missing file — so callers that
+    // inspect `result.error` (e.g. a missing required `envFile`) still observe
+    // it. Skip caching since there is no valid mtime signature to key on.
+    const myEnv = loadDotEnvFile({
+      path: filename,
+      processEnv: environmentVariables,
+      override,
+    });
+    return expand({ ...myEnv, processEnv: environmentVariables });
   }
 
   const cached = dotEnvParseCache.get(cacheKey);
