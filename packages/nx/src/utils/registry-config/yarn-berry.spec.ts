@@ -1028,6 +1028,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       const warnings = warnFor(['is-even', 'is-odd']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-a.example.com/');
+      // Safe advice here only because berry reads no .npmrc at all.
+      expect(warnings[0]).toContain('Remove that credential from .npmrc');
     });
 
     it('warns for a scoped fetch too, since berry still reads no .npmrc', () => {
