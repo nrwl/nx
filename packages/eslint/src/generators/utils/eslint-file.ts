@@ -249,6 +249,23 @@ export function isTypedLintingEnabled(options: {
 export type TypedLintingShape = 'project-service' | 'parser-options-project';
 
 /**
+ * Reads the configs a flat config spreads in (`...baseConfig`), so detection can
+ * follow the import that names them.
+ */
+export interface SpreadConfigReader {
+  /** Path of the config whose content is being inspected. */
+  path: string;
+  /**
+   * The spread config's path and content, or `null` when it can't be read: a
+   * package import, or a file the tree doesn't hold.
+   */
+  read(
+    specifier: string,
+    fromPath: string
+  ): { path: string; content: string } | null;
+}
+
+/**
  * Detects whether an existing ESLint config file content has typed linting
  * configured and which shape it uses, so callers can preserve the user's
  * existing configuration when adding new overrides.
@@ -261,11 +278,15 @@ export type TypedLintingShape = 'project-service' | 'parser-options-project';
  *
  * Only keys inside a `parserOptions` object count, so an unrelated `project`
  * (e.g. `settings['import/resolver'].typescript.project`) is not a false match.
+ *
+ * Pass `spreads` to follow the configs a flat config spreads in. Without it only
+ * the given content is inspected, which is all a legacy `.eslintrc` needs.
  */
 export function detectTypedLintingShape(
-  content: string
+  content: string,
+  spreads?: SpreadConfigReader
 ): TypedLintingShape | null {
-  const blocks = findParserOptions(content);
+  const blocks = findParserOptions(content, spreads, new Set());
   if (blocks.some((block) => block.hasProjectService)) {
     return 'project-service';
   }
@@ -295,11 +316,15 @@ interface ParserOptions {
  * apart more reliably than the caller can: `findEslintFile` also turns up
  * `.eslintrc.js`, whose content is JS in an otherwise legacy workspace.
  */
-function findParserOptions(content: string): ParserOptions[] {
+function findParserOptions(
+  content: string,
+  spreads: SpreadConfigReader | undefined,
+  seenExports: Set<string>
+): ParserOptions[] {
   const eslintrc = tryParseJson(content);
   return eslintrc
     ? findParserOptionsInJson(eslintrc)
-    : findParserOptionsInSource(content);
+    : findParserOptionsInSource(content, spreads, seenExports);
 }
 
 function tryParseJson(content: string): object | null {
@@ -340,18 +365,325 @@ function findParserOptionsInJson(config: object): ParserOptions[] {
   return blocks;
 }
 
-function findParserOptionsInSource(content: string): ParserOptions[] {
+function findParserOptionsInSource(
+  content: string,
+  spreads: SpreadConfigReader | undefined,
+  seenExports: Set<string>
+): ParserOptions[] {
   const { source, checker } = parseSource(content);
+
+  return collectParserOptions(source, checker, spreads, seenExports, new Set());
+}
+
+/**
+ * Every `parserOptions` reachable from a node, spreads followed. A spread of
+ * another module contributes only the export it selects, and a spread of a local
+ * array contributes that array's entries.
+ */
+function collectParserOptions(
+  root: ts.Node,
+  checker: ts.TypeChecker,
+  spreads: SpreadConfigReader | undefined,
+  seenExports: Set<string>,
+  localSeen: Set<ts.Node>
+): ParserOptions[] {
   const blocks: ParserOptions[] = [];
   const visit = (node: ts.Node): void => {
     const object = getParserOptionsObject(node, checker);
     if (object) {
       blocks.push(readParserOptions(object, checker));
     }
+    if (spreads && ts.isSpreadElement(node)) {
+      blocks.push(
+        ...followSpread(node, checker, spreads, seenExports, localSeen)
+      );
+    }
     ts.forEachChild(node, visit);
   };
-  visit(source);
+  visit(root);
+
   return blocks;
+}
+
+/**
+ * The typed-linting settings a spread pulls in. ESLint merges `parserOptions`
+ * across every config entry matching a file, so typed linting set in a spread
+ * config conflicts with a block appended here just as an inline one would.
+ * `seenExports` stops a cycle between two configs spreading each other.
+ */
+function followSpread(
+  node: ts.SpreadElement,
+  checker: ts.TypeChecker,
+  spreads: SpreadConfigReader,
+  seenExports: Set<string>,
+  localSeen: Set<ts.Node>
+): ParserOptions[] {
+  const reference = getImportedModuleReference(node.expression, checker);
+  if (reference) {
+    return collectFromImportedExport(reference, spreads, seenExports);
+  }
+
+  return followLocalSpread(
+    node.expression,
+    checker,
+    spreads,
+    seenExports,
+    localSeen
+  );
+}
+
+/** Reads the module an expression referenced, once per export. */
+function collectFromImportedExport(
+  reference: ImportedModuleReference,
+  spreads: SpreadConfigReader,
+  seenExports: Set<string>
+): ParserOptions[] {
+  const imported = spreads.read(reference.specifier, spreads.path);
+  if (!imported) {
+    return [];
+  }
+  // Keyed per export, not per file: one config can spread two exports of the
+  // same module, and the second must still be read.
+  const visited = `${imported.path}:${reference.exportName}`;
+  if (seenExports.has(visited)) {
+    return [];
+  }
+  seenExports.add(visited);
+
+  return findParserOptionsInExport(
+    imported.content,
+    reference.exportName,
+    { ...spreads, path: imported.path },
+    seenExports
+  );
+}
+
+/**
+ * What one export of a config module contributes. Scanning the whole module
+ * would attribute an unrelated export's `parserOptions` to the config actually
+ * spread in, so only the selected export's value is walked. An export we cannot
+ * locate contributes nothing, leaving the caller free to append.
+ */
+function findParserOptionsInExport(
+  content: string,
+  exportName: string,
+  spreads: SpreadConfigReader,
+  seenExports: Set<string>
+): ParserOptions[] {
+  const { source, checker } = parseSource(content);
+  const exported = findExportedExpression(source, exportName);
+  if (!exported) {
+    return [];
+  }
+  // The export may hand straight back a config from somewhere else
+  // (`import inner from './deep.mjs'; export default inner`).
+  const reference = getImportedModuleReference(exported, checker);
+  if (reference) {
+    return collectFromImportedExport(reference, spreads, seenExports);
+  }
+  // Otherwise it names the config rather than spelling it out, so the name has
+  // to be followed before there is anything to walk.
+  const localSeen = new Set<ts.Node>();
+  const value = resolveExpressionValue(exported, checker, localSeen);
+
+  return value
+    ? collectParserOptions(value, checker, spreads, seenExports, localSeen)
+    : [];
+}
+
+/**
+ * The expression a name ultimately denotes, following alias chains such as
+ * `const inner = [...]; const base = inner; export default base`. A name bound
+ * to anything we can't read statically resolves to nothing. `seen` guards a
+ * cycle like `const a = b; const b = a`.
+ */
+function resolveExpressionValue(
+  expression: ts.Expression,
+  checker: ts.TypeChecker,
+  seen: Set<ts.Node>
+): ts.Expression | null {
+  const unwrapped = unwrapExpression(expression);
+  if (!ts.isIdentifier(unwrapped)) {
+    return unwrapped;
+  }
+  const declaration = checker.getSymbolAtLocation(unwrapped)?.declarations?.[0];
+  if (
+    !declaration ||
+    !ts.isVariableDeclaration(declaration) ||
+    !declaration.initializer ||
+    seen.has(declaration)
+  ) {
+    return null;
+  }
+  seen.add(declaration);
+
+  return resolveExpressionValue(declaration.initializer, checker, seen);
+}
+
+/** The value an export name is bound to, in either module system. */
+function findExportedExpression(
+  source: ts.SourceFile,
+  exportName: string
+): ts.Expression | null {
+  for (const statement of source.statements) {
+    if (exportName === DEFAULT_EXPORT) {
+      if (ts.isExportAssignment(statement)) {
+        return statement.expression;
+      }
+      const assigned = getModuleExportsAssignment(statement);
+      if (assigned) {
+        return assigned;
+      }
+      continue;
+    }
+    if (!ts.isVariableStatement(statement) || !isExported(statement)) {
+      continue;
+    }
+    for (const declaration of statement.declarationList.declarations) {
+      if (
+        ts.isIdentifier(declaration.name) &&
+        declaration.name.text === exportName &&
+        declaration.initializer
+      ) {
+        return declaration.initializer;
+      }
+    }
+  }
+
+  return null;
+}
+
+/** The right-hand side of a `module.exports = ...` statement. */
+function getModuleExportsAssignment(
+  statement: ts.Statement
+): ts.Expression | null {
+  if (
+    !ts.isExpressionStatement(statement) ||
+    !ts.isBinaryExpression(statement.expression) ||
+    statement.expression.operatorToken.kind !== ts.SyntaxKind.EqualsToken
+  ) {
+    return null;
+  }
+  const { left, right } = statement.expression;
+
+  return ts.isPropertyAccessExpression(left) &&
+    ts.isIdentifier(left.expression) &&
+    left.expression.text === 'module' &&
+    left.name.text === 'exports'
+    ? right
+    : null;
+}
+
+function isExported(statement: ts.VariableStatement): boolean {
+  return (
+    statement.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+    ) ?? false
+  );
+}
+
+/** A local array the config spreads in; its entries belong to this config. */
+function followLocalSpread(
+  expression: ts.Expression,
+  checker: ts.TypeChecker,
+  spreads: SpreadConfigReader,
+  seenExports: Set<string>,
+  localSeen: Set<ts.Node>
+): ParserOptions[] {
+  // Only a name needs following. An inline array is already being walked as
+  // part of the surrounding config, so resolving it again would double-count.
+  if (!ts.isIdentifier(unwrapExpression(expression))) {
+    return [];
+  }
+  const value = resolveExpressionValue(expression, checker, localSeen);
+  if (!value) {
+    return [];
+  }
+
+  return collectParserOptions(value, checker, spreads, seenExports, localSeen);
+}
+
+/** A whole-module reference: a default import, or any `require` call. */
+const DEFAULT_EXPORT = 'default';
+
+interface ImportedModuleReference {
+  specifier: string;
+  /** The export the spread selects, `DEFAULT_EXPORT` for a whole-module one. */
+  exportName: string;
+}
+
+/**
+ * The module and export a spread pulls its entries from, whether the module is
+ * named inline (`...require('...')`) or through a binding: `import baseConfig
+ * from '...'`, `import { base } from '...'` and `const baseConfig =
+ * require('...')`. A local alias of any of those (`const aliased = baseConfig`)
+ * resolves to the same module. Anything else the expression could be (a local
+ * array, some other call's result) names no file to follow. `seen` guards a
+ * cycle such as `const a = b; const b = a`.
+ */
+function getImportedModuleReference(
+  expression: ts.Expression,
+  checker: ts.TypeChecker,
+  seen: Set<ts.Node> = new Set()
+): ImportedModuleReference | null {
+  const unwrapped = unwrapExpression(expression);
+  if (ts.isCallExpression(unwrapped)) {
+    return toDefaultReference(getRequireSpecifier(unwrapped));
+  }
+  if (!ts.isIdentifier(unwrapped)) {
+    return null;
+  }
+  const declaration = checker.getSymbolAtLocation(unwrapped)?.declarations?.[0];
+  if (!declaration) {
+    return null;
+  }
+
+  if (ts.isImportClause(declaration)) {
+    return toDefaultReference(
+      getModuleSpecifierText(declaration.parent.moduleSpecifier)
+    );
+  }
+  if (ts.isImportSpecifier(declaration)) {
+    const specifier = getModuleSpecifierText(
+      declaration.parent.parent.parent.moduleSpecifier
+    );
+    return specifier
+      ? {
+          specifier,
+          exportName: (declaration.propertyName ?? declaration.name).text,
+        }
+      : null;
+  }
+  if (
+    ts.isVariableDeclaration(declaration) &&
+    declaration.initializer &&
+    !seen.has(declaration)
+  ) {
+    seen.add(declaration);
+    return getImportedModuleReference(declaration.initializer, checker, seen);
+  }
+
+  return null;
+}
+
+function toDefaultReference(
+  specifier: string | null
+): ImportedModuleReference | null {
+  return specifier ? { specifier, exportName: DEFAULT_EXPORT } : null;
+}
+
+/** The module a `require('...')` call names. */
+function getRequireSpecifier(node: ts.CallExpression): string | null {
+  if (!ts.isIdentifier(node.expression) || node.expression.text !== 'require') {
+    return null;
+  }
+  const [argument] = node.arguments;
+
+  return argument ? getModuleSpecifierText(argument) : null;
+}
+
+function getModuleSpecifierText(node: ts.Expression): string | null {
+  return ts.isStringLiteral(node) ? node.text : null;
 }
 
 /**
@@ -577,6 +909,27 @@ function isFalsyLiteral(node: ts.Expression | null): boolean {
 }
 
 /**
+ * A spread config as the tree holds it. Only a relative specifier can name a
+ * workspace file; a package import resolves through `node_modules`, which is not
+ * ours to read.
+ */
+function readSpreadConfig(
+  tree: Tree,
+  specifier: string,
+  fromPath: string
+): { path: string; content: string } | null {
+  if (!specifier.startsWith('.')) {
+    return null;
+  }
+  const path = joinPathFragments(dirname(fromPath), specifier);
+  if (!tree.exists(path)) {
+    return null;
+  }
+
+  return { path, content: tree.read(path, 'utf8') };
+}
+
+/**
  * Adds a typed-linting block (`parserOptions.projectService` + `tsconfigRootDir`)
  * to a project's flat ESLint config. No-op for legacy `.eslintrc` configs, whose
  * JSON format cannot express the `__dirname` that `tsconfigRootDir` needs.
@@ -601,8 +954,13 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
   const content = tree.read(fileName, 'utf8');
   // Idempotent: skip if typed linting is already configured in any shape
   // (modern `projectService` or legacy `parserOptions.project`), so we don't
-  // append a duplicate or a second, conflicting block.
-  if (detectTypedLintingShape(content) !== null) {
+  // append a duplicate or a second, conflicting block. The configs this one
+  // spreads count too, since ESLint merges them into the same file's settings.
+  const spreads: SpreadConfigReader = {
+    path: fileName,
+    read: (specifier, fromPath) => readSpreadConfig(tree, specifier, fromPath),
+  };
+  if (detectTypedLintingShape(content, spreads) !== null) {
     return;
   }
   // The block carries `tsconfigRootDir`, whose value differs per module system,

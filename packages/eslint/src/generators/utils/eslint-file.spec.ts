@@ -1353,5 +1353,264 @@ module.exports = [
       expect(content).toContain('tsconfigRootDir: import.meta.dirname');
       expect(content).not.toContain('tsconfigRootDir: __dirname');
     });
+
+    it('does not append when a spread config already sets parserOptions.project', () => {
+      // ESLint merges parserOptions across every entry matching a file, so a
+      // block appended here would sit alongside the spread config's `project`
+      // and make typescript-eslint throw on every type-checked file.
+      tree.write(
+        'eslint.config.mjs',
+        `export default [{ files: ['**/*.ts'], languageOptions: { parserOptions: { project: ['./tsconfig.json'] } } }];\n`
+      );
+      const original = `import baseConfig from '../../eslint.config.mjs';\nexport default [...baseConfig, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('does not append when a required spread config already sets projectService', () => {
+      tree.write(
+        'eslint.config.cjs',
+        `module.exports = [{ files: ['**/*.ts'], languageOptions: { parserOptions: { projectService: true } } }];\n`
+      );
+      const original = `const baseConfig = require('../../eslint.config.cjs');\nmodule.exports = [...baseConfig, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.cjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.cjs', 'utf-8')).toBe(original);
+    });
+
+    it('does not append when a config is spread straight from a require call', () => {
+      // `...require('...')` names the module inline, with no binding to resolve.
+      tree.write(
+        'eslint.config.cjs',
+        `module.exports = [{ files: ['**/*.ts'], languageOptions: { parserOptions: { project: ['./tsconfig.json'] } } }];\n`
+      );
+      const original = `module.exports = [...require('../../eslint.config.cjs'), { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.cjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.cjs', 'utf-8')).toBe(original);
+    });
+
+    it('ignores a named export the config does not spread in', () => {
+      // Only the selected export belongs to this config. `typed` may configure
+      // some other project entirely, so it must not suppress the append.
+      tree.write(
+        'libs/shared.mjs',
+        `export const base = [{ rules: {} }];\nexport const typed = [{ languageOptions: { parserOptions: { project: true } } }];\n`
+      );
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import { base } from '../shared.mjs';\nexport default [...base, { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
+
+    it('ignores a sibling export when the config spreads the default one', () => {
+      tree.write(
+        'libs/shared.mjs',
+        `export const typed = [{ languageOptions: { parserOptions: { project: true } } }];\nexport default [{ rules: {} }];\n`
+      );
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import base from '../shared.mjs';\nexport default [...base, { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
+
+    it('reads typed linting from the named export the config spreads in', () => {
+      tree.write(
+        'libs/shared.mjs',
+        `export const other = [{ rules: {} }];\nexport const base = [{ languageOptions: { parserOptions: { project: true } } }];\n`
+      );
+      const original = `import { base } from '../shared.mjs';\nexport default [...base, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('reads both exports when the config spreads two from one module', () => {
+      // Visiting `plain` must not mark the whole file as read, or `typed` never
+      // gets inspected and a conflicting block is appended.
+      tree.write(
+        'libs/shared.mjs',
+        `export const plain = [{ rules: {} }];\nexport const typed = [{ languageOptions: { parserOptions: { project: true } } }];\n`
+      );
+      const original = `import { plain, typed } from '../shared.mjs';\nexport default [...plain, ...typed, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('follows an export that names its config instead of spelling it out', () => {
+      tree.write(
+        'libs/shared.mjs',
+        `const base = [{ languageOptions: { parserOptions: { project: true } } }];\nexport default base;\n`
+      );
+      const original = `import base from '../shared.mjs';\nexport default [...base, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('follows an alias chain behind an export', () => {
+      tree.write(
+        'libs/shared.mjs',
+        `const inner = [{ languageOptions: { parserOptions: { project: true } } }];\nconst base = inner;\nexport const cfg = base;\n`
+      );
+      const original = `import { cfg } from '../shared.mjs';\nexport default [...cfg, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('follows a named config behind `module.exports`', () => {
+      tree.write(
+        'libs/shared.cjs',
+        `const base = [{ languageOptions: { parserOptions: { project: true } } }];\nmodule.exports = base;\n`
+      );
+      const original = `import base from '../shared.cjs';\nexport default [...base, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('follows a local alias of a default import to its module', () => {
+      tree.write(
+        'libs/shared.mjs',
+        `export default [{ languageOptions: { parserOptions: { project: true } } }];\n`
+      );
+      const original = `import base from '../shared.mjs';\nconst aliased = base;\nexport default [...aliased, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('follows a local alias of a named import to its export', () => {
+      tree.write(
+        'libs/shared.mjs',
+        `export const cfg = [{ languageOptions: { parserOptions: { project: true } } }];\n`
+      );
+      const original = `import { cfg } from '../shared.mjs';\nconst aliased = cfg;\nexport default [...aliased, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('follows a local alias of a required config to its module', () => {
+      tree.write(
+        'libs/shared.cjs',
+        `module.exports = [{ languageOptions: { parserOptions: { project: true } } }];\n`
+      );
+      const original = `const base = require('../shared.cjs');\nconst aliased = base;\nmodule.exports = [...aliased, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.cjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.cjs', 'utf-8')).toBe(original);
+    });
+
+    it('follows an export that hands back a config imported from elsewhere', () => {
+      tree.write(
+        'libs/deep.mjs',
+        `export default [{ languageOptions: { parserOptions: { project: true } } }];\n`
+      );
+      tree.write(
+        'libs/shared.mjs',
+        `import inner from './deep.mjs';\nexport default inner;\n`
+      );
+      const original = `import base from '../shared.mjs';\nexport default [...base, { rules: {} }];\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+    });
+
+    it('appends when the spread config configures no typed linting', () => {
+      tree.write('eslint.config.mjs', `export default [{ rules: {} }];\n`);
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import baseConfig from '../../eslint.config.mjs';\nexport default [...baseConfig, { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
+
+    it('appends when the spread names a package rather than a workspace file', () => {
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import baseConfig from 'some-shared-config';\nexport default [...baseConfig, { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
+
+    it('appends when the spread config is missing from the tree', () => {
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import baseConfig from '../../eslint.config.mjs';\nexport default [...baseConfig, { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
+
+    it('terminates on configs that spread each other', () => {
+      tree.write(
+        'eslint.config.mjs',
+        `import projectConfig from './libs/test/eslint.config.mjs';\nexport default [...projectConfig];\n`
+      );
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import baseConfig from '../../eslint.config.mjs';\nexport default [...baseConfig, { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
   });
 });
