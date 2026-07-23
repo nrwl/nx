@@ -133,10 +133,10 @@ export function parseMigrations(pluginPath: string): Map<string, any> | null {
   for (const [name, config] of Object.entries(
     migrationsJson.generators || {}
   ) as [string, any][]) {
-    if (config.implementation || config.factory) {
-      config['fullPath'] = resolvePath(
+    if (config.documentation) {
+      config['documentationPath'] = resolvePath(
         pluginPath,
-        config.implementation || config.factory
+        config.documentation
       );
     }
 
