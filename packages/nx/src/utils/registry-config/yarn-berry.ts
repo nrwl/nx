@@ -13,6 +13,7 @@ import {
   setAuthIdent,
   setAuthToken,
   setCafile,
+  setClientCertificate,
   setProxies,
   setRegistry,
   setScopedRegistry,
@@ -52,6 +53,12 @@ const BERRY_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';
 // version the legacy parser applies.
 const BERRY_ENV_PARSER_REWRITE = '4.13.0';
 
+// httpsCertFilePath/httpsKeyFilePath landed in 3.2.0, as an rc setting and
+// inside networkSettings at once (@yarnpkg/cli-dist 3.1.1 carries neither name,
+// 3.2.0 both). Below it berry aborts on the setting the way it does on the
+// wrong major's CA name, so there is no resolution left to reproduce.
+const BERRY_CLIENT_CERT_SETTINGS = '3.2.0';
+
 interface BerryRcFile {
   path: string;
   config: BerryConfig;
@@ -86,6 +93,8 @@ interface BerryConfig {
   npmAlwaysAuth?: BerryBoolean;
   caFilePath?: string;
   httpsCaFilePath?: string;
+  httpsCertFilePath?: string;
+  httpsKeyFilePath?: string;
   enableStrictSsl?: BerryBoolean;
   httpProxy?: string;
   httpsProxy?: string;
@@ -96,6 +105,8 @@ interface BerryConfig {
     {
       caFilePath?: string;
       httpsCaFilePath?: string;
+      httpsCertFilePath?: string;
+      httpsKeyFilePath?: string;
       httpProxy?: string;
       httpsProxy?: string;
     }
@@ -450,15 +461,33 @@ function applyTls(
   // Berry expands env vars in path settings, then resolves an rc-sourced path
   // relative to that rc file's directory and an env-sourced one relative to the
   // directory yarn was invoked from.
-  const cafile =
-    network[caKey] ??
-    envPath(process.env[caEnvKey]) ??
-    firstPathIn(rcFiles, caKey);
+  const resolvePath = (
+    key: BerryPathKey,
+    envKey: string
+  ): string | undefined => {
+    const path =
+      network[key] ?? envPath(process.env[envKey]) ?? firstPathIn(rcFiles, key);
+    return path
+      ? resolve(path.baseDir, expandBerryEnvVars(path.value, legacy))
+      : undefined;
+  };
+
+  const cafile = resolvePath(caKey, caEnvKey);
   if (cafile) {
-    setCafile(
-      env,
-      resolve(cafile.baseDir, expandBerryEnvVars(cafile.value, legacy))
+    setCafile(env, cafile);
+  }
+
+  if (gte(yarnVersion, BERRY_CLIENT_CERT_SETTINGS)) {
+    // Berry presents a client certificate only when both halves resolve, and
+    // npm reads the pair the same way, so a lone half stays out of the overlay.
+    const certfile = resolvePath(
+      'httpsCertFilePath',
+      'YARN_HTTPS_CERT_FILE_PATH'
     );
+    const keyfile = resolvePath('httpsKeyFilePath', 'YARN_HTTPS_KEY_FILE_PATH');
+    if (certfile && keyfile) {
+      setClientCertificate(env, effectiveRegistry, certfile, keyfile);
+    }
   }
 
   const strictSsl =
@@ -490,7 +519,7 @@ function envPath(value: string | undefined): NetworkPath | undefined {
 
 function firstPathIn(
   rcFiles: BerryRcFile[],
-  key: 'caFilePath' | 'httpsCaFilePath'
+  key: BerryPathKey
 ): NetworkPath | undefined {
   for (const file of rcFiles) {
     const value = file.config[key];
@@ -501,16 +530,23 @@ function firstPathIn(
   return undefined;
 }
 
+/** The berry settings that name a file, resolvable per host and globally. */
+const BERRY_PATH_KEYS = [
+  'caFilePath',
+  'httpsCaFilePath',
+  'httpsCertFilePath',
+  'httpsKeyFilePath',
+] as const;
+type BerryPathKey = (typeof BERRY_PATH_KEYS)[number];
+
 interface NetworkPath {
   value: string;
   baseDir: string;
 }
-interface ResolvedNetwork {
-  caFilePath?: NetworkPath;
-  httpsCaFilePath?: NetworkPath;
+type ResolvedNetwork = Partial<Record<BerryPathKey, NetworkPath>> & {
   httpProxy?: string;
   httpsProxy?: string;
-}
+};
 
 // Reproduces berry getNetworkSettings: each network key is filled from the first
 // (longest-glob-first) matching host entry that defines it; per-host-key blocks
@@ -538,11 +574,10 @@ function resolveNetworkSettings(
       // under v4 each sub-key it defines wins, and under v2/v3 it owns the whole
       // entry, so a lower file never contributes a missing sub-key there.
       const m = (deepMerge && merged.get(hostKey)) || {};
-      if (entry.caFilePath != null) {
-        m.caFilePath = { value: entry.caFilePath, baseDir };
-      }
-      if (entry.httpsCaFilePath != null) {
-        m.httpsCaFilePath = { value: entry.httpsCaFilePath, baseDir };
+      for (const key of BERRY_PATH_KEYS) {
+        if (entry[key] != null) {
+          m[key] = { value: entry[key], baseDir };
+        }
       }
       if (entry.httpProxy != null) {
         m.httpProxy = entry.httpProxy;
@@ -558,8 +593,9 @@ function resolveNetworkSettings(
     .sort((a, b) => b[0].length - a[0].length)
     .map(([, m]) => m);
   for (const m of matching) {
-    result.caFilePath ??= m.caFilePath;
-    result.httpsCaFilePath ??= m.httpsCaFilePath;
+    for (const key of BERRY_PATH_KEYS) {
+      result[key] ??= m[key];
+    }
     result.httpProxy ??= m.httpProxy;
     result.httpsProxy ??= m.httpsProxy;
   }
