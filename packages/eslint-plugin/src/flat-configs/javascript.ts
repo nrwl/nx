@@ -1,6 +1,10 @@
 import eslint from '@eslint/js';
 import globals from 'globals';
 import tseslint, { type ConfigArray } from 'typescript-eslint';
+import { packageExists } from '../utils/config-utils';
+
+const isPrettierAvailable =
+  packageExists('prettier') && packageExists('eslint-config-prettier');
 
 /**
  * This configuration is intended to be applied to ALL .js and .jsx files
@@ -76,7 +80,11 @@ const config: ConfigArray = tseslint.config(
        */
       '@typescript-eslint/no-require-imports': 'off',
     },
-  }
+  },
+  /**
+   * We include it last so it overrides the conflicting rules from the configuration blocks above.
+   */
+  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : [])
 );
 
 export default config;
