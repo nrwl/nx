@@ -1,0 +1,147 @@
+name: SIGINT SIGSEGV Hunt
+
+# Diagnostic workflow — loops the `SIGINT process cleanup` e2e tests
+# (e2e/nx/src/run.test.ts) which intermittently die with SIGSEGV (exit 139)
+# in CI (12 failed jobs between 2026-07-13 and 2026-07-23, 3 on master),
+# trying to force a reproduction with core dumps enabled so we finally get
+# a native backtrace for the intermittent CI segfaults.
+#
+# Report-only: shards never go red on a crash — read the step summaries
+# ("RESULT shard=N: X/Y iterations had signal deaths") and download the
+# sigint-segv-hunt-shard-* artifacts for cores + gdb backtraces.
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: 'Iterations per shard'
+        required: false
+        default: '20'
+  push:
+    branches:
+      - ci-sigint-segv-hunt
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  PNPM_HOME: ~/.pnpm
+  # Pin corepack to the pnpm version from packageManager. Without this, corepack
+  # falls back to "latest" in directories that have no packageManager field
+  # (e.g. e2e temp dirs), pulling pnpm 11 and breaking install.
+  COREPACK_DEFAULT_TO_LATEST: '0'
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    env:
+      NX_E2E_CI_CACHE_KEY: e2e-github-linux
+      NX_E2E_RUN_E2E: 'true'
+      NX_CI_EXECUTION_ENV: 'linux'
+      NX_DAEMON: 'true'
+      NX_VERBOSE_LOGGING: 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install project dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Enable core dumps for segfault diagnostics
+        run: |
+          sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+          # Runner default pipes cores to apport, which discards them.
+          sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p'
+
+      - name: Warm up e2e dependencies
+        # First run builds the packages and populates local-registry storage;
+        # subsequent loop iterations reuse those cached dependency tasks.
+        run: |
+          ulimit -c unlimited
+          pnpm nx run e2e-nx:e2e-local -- --testNamePattern="SIGINT process cleanup" || true
+
+      - name: Hunt loop
+        run: |
+          ulimit -c unlimited
+          ITERATIONS="${{ github.event.inputs.iterations || '20' }}"
+          mkdir -p /tmp/hunt-logs
+          crashes=0
+          for i in $(seq 1 "$ITERATIONS"); do
+            echo "::group::shard ${{ matrix.shard }} iteration $i/$ITERATIONS"
+            set +e
+            pnpm nx run e2e-nx:e2e-local --skip-nx-cache -- --testNamePattern="SIGINT process cleanup" 2>&1 | tee "/tmp/hunt-logs/iter-$i.log"
+            set -e
+            # Case-SENSITIVE on purpose: -i matches lowercase branch/commit
+            # metadata echoed by Nx Cloud and produces false positives.
+            if grep -aqE 'Exited with code 139|Segmentation fault|SIGSEGV' "/tmp/hunt-logs/iter-$i.log"; then
+              crashes=$((crashes+1))
+              cp "/tmp/hunt-logs/iter-$i.log" "/tmp/cores/iter-shard${{ matrix.shard }}-$i.log"
+              echo "!! signal death detected in iteration $i"
+            fi
+            echo "::endgroup::"
+          done
+          echo "RESULT shard=${{ matrix.shard }}: $crashes/$ITERATIONS iterations had signal deaths" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Collect segfault cores
+        if: always()
+        run: |
+          shopt -s nullglob
+          cores=(/tmp/cores/core.*)
+          if [ ${#cores[@]} -eq 0 ]; then
+            echo 'No core dumps found'
+            exit 0
+          fi
+          command -v gdb >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q gdb; }
+          kept=0
+          for c in "${cores[@]}"; do
+            echo "===== backtrace for $c ====="
+            # `command -v node` resolves to the mise shim; symbolizing a core
+            # against the wrong executable yields garbage frames. Read the
+            # crashed process's real executable path from the core itself.
+            exe=$(file -b "$c" | sed -n "s/.*execfn: '\([^']*\)'.*/\1/p")
+            [ -x "$exe" ] || exe=$(mise which node 2>/dev/null || command -v node)
+            gdb -q -batch -ex 'set pagination off' -ex bt -ex 'info threads' \
+              "$exe" "$c" 2>&1 | head -150 | tee -a /tmp/cores/backtraces.txt
+            if [ "$kept" -lt 3 ]; then
+              gzip -f "$c" && kept=$((kept+1)) || true
+            else
+              rm -f "$c"
+            fi
+          done
+
+      - name: Upload segfault cores
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sigint-segv-hunt-shard-${{ matrix.shard }}
+          path: |
+            /tmp/cores/backtraces.txt
+            /tmp/cores/*.gz
+            /tmp/cores/*.log
+          if-no-files-found: ignore
