@@ -32,6 +32,10 @@
           "input": "production",
           "projects": ["tag:maven:dev.nx.maven"]
         },
+        {
+          "input": "production",
+          "projects": ["tag:dotnet-analyzer"]
+        },
         "{workspaceRoot}/scripts/local-registry",
         "native"
       ],
