@@ -3,7 +3,8 @@ title: 'Yarn Workspaces: Setup, Commands, and Best Practices'
 description: 'Learn Yarn workspaces: setup, linking packages, running scripts with yarn workspaces foreach, hoisting behavior, and best practices for growing monorepos.'
 filter: 'type:Guides'
 topics:
-  - 'Recipes'
+  - 'Package managers'
+  - 'Dependencies'
 ---
 
 Yarn workspaces let a single repository (or a monorepo) hold multiple packages that are developed together. You declare them in the root `package.json` `workspaces` field, and `yarn install` resolves the whole project at once, hoisting shared dependencies to the root and linking workspace packages to each other.

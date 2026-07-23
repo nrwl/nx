@@ -3,7 +3,8 @@ title: 'Bun Workspaces: Setup, Commands, and Best Practices'
 description: 'Learn Bun workspaces: setup, linking packages with workspace:*, running scripts with --filter, and best practices for fast monorepos.'
 filter: 'type:Guides'
 topics:
-  - 'Recipes'
+  - 'Package managers'
+  - 'Dependencies'
 ---
 
 Bun workspaces let you manage multiple packages in a single repository (or a monorepo) using the same `workspaces` field npm and Yarn read. `bun install` resolves every package in a single pass, dedupes shared dependencies to the root `node_modules`, and links local packages declared with the `workspace:` protocol.
