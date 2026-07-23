@@ -1,16 +1,15 @@
 const { join, basename } = require('path');
 const {
-  chmodSync,
   copyFileSync,
-  existsSync,
-  mkdirSync,
   renameSync,
   statSync,
   unlinkSync,
 } = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
-const { getNativeFileCacheLocation } = require('./native-file-cache-location');
+const {
+  ensureSecureNativeFileCacheLocation,
+} = require('./native-file-cache-location');
 
 const MAX_COPY_RETRIES = 3;
 
@@ -96,8 +95,17 @@ Module._load = function (request, parent, isMain) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation);
 
-    // we copy the file to a workspace-scoped tmp directory and prefix with nxVersion to avoid stale files being loaded
-    const nativeFileCacheLocation = getNativeFileCacheLocation();
+    // Securely resolve the per-user cache dir. Returns null when it cannot be
+    // created and *trusted* (e.g. a sandbox with no write allowance yet, or a
+    // per-uid dir another local user pre-created under the world-writable
+    // root). In that case load the binding in place from node_modules — that
+    // is strictly better than failing to load, and safer than loading a file
+    // from a directory we don't own.
+    const nativeFileCacheLocation = ensureSecureNativeFileCacheLocation();
+    if (!nativeFileCacheLocation) {
+      return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+    }
+
     // This is a path to copy to, not the one that gets loaded
     const tmpTmpFile = join(
       nativeFileCacheLocation,
@@ -118,27 +126,6 @@ Module._load = function (request, parent, isMain) {
           return originalLoad.apply(this, [nativeLocation, parent, isMain]);
         }
         throw e;
-      }
-    }
-    if (!existsSync(nativeFileCacheLocation)) {
-      try {
-        mkdirSync(nativeFileCacheLocation, { recursive: true });
-      } catch {
-        // The cache root is not writable — e.g. a sandbox that has no write
-        // allowance for NX_TMP_DIR (yet). The cache only exists to avoid
-        // file-locking and noexec issues; loading the binding in place is
-        // strictly better than failing to load it at all.
-        return originalLoad.apply(this, [nativeLocation, parent, isMain]);
-      }
-      if (!process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
-        // The shared NX_TMP_DIR root may have just been created by the mkdir
-        // above. Like /tmp itself it is shared between users, so it needs to
-        // be sticky + world-writable for other users to create their own
-        // cache/socket dirs under it. chmod only succeeds for the user that
-        // created the dir, hence best-effort.
-        try {
-          chmodSync(require('../utils/nx-tmp-dir').NX_TMP_DIR, 0o1777);
-        } catch {}
       }
     }
 
