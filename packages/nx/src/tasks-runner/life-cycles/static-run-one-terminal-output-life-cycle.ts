@@ -16,6 +16,8 @@ import { formatTargetsAndProjects } from './formatting-utils';
 export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
+  stoppedTasks = [] as Task[];
+  allCompletedTasks = new Map<string, Task>();
 
   constructor(
     private readonly initiatingProject: string,
@@ -58,6 +60,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
               ),
             ]
           : [];
+      bodyLines.push(...this.tasksNotRunSummary());
 
       output.success({
         title: `Successfully ran ${formatTargetsAndProjects(
@@ -70,15 +73,24 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     } else {
       output.addVerticalSeparatorWithoutNewLines('red');
 
-      const bodyLines = [
+      const bodyLines: string[] = [];
+      if (this.stoppedTasks.length > 0) {
+        bodyLines.push(
+          output.dim('Tasks stopped before they finished:'),
+          '',
+          ...this.stoppedTasks.map((task) => `${output.dim('-')} ${task.id}`),
+          ''
+        );
+      }
+      bodyLines.push(
         output.dim('Failed tasks:'),
         '',
         ...this.failedTasks.map((task) => `${output.dim('-')} ${task.id}`),
         '',
         `${output.dim('Hint: run the command with')} --verbose ${output.dim(
           'for more details.'
-        )}`,
-      ];
+        )}`
+      );
       output.error({
         title: `Running ${formatTargetsAndProjects(
           this.projectNames,
@@ -90,10 +102,50 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     }
   }
 
+  /**
+   * Tasks with a `skipped` status are never reported through `endTasks`, so
+   * they are derived by subtracting everything that did complete.
+   */
+  private skippedTasks() {
+    return this.tasks.filter((t) => !this.allCompletedTasks.has(t.id));
+  }
+
+  /**
+   * Tasks that never produced output worth printing are summarized as counts,
+   * with their names available behind --verbose.
+   */
+  private tasksNotRunSummary(): string[] {
+    const skippedTasks = this.skippedTasks();
+    const counts: string[] = [];
+    if (skippedTasks.length > 0) {
+      counts.push(`${skippedTasks.length} skipped`);
+    }
+    if (this.stoppedTasks.length > 0) {
+      counts.push(`${this.stoppedTasks.length} stopped`);
+    }
+    if (counts.length === 0) {
+      return [];
+    }
+
+    const lines = [output.dim(counts.join(', '))];
+    if (this.args.verbose) {
+      lines.push(
+        '',
+        ...[...skippedTasks, ...this.stoppedTasks].map(
+          (task) => `${output.dim('-')} ${task.id}`
+        )
+      );
+    }
+    return lines;
+  }
+
   endTasks(taskResults: TaskResult[]): void {
     for (let t of taskResults) {
+      this.allCompletedTasks.set(t.task.id, t.task);
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
+      } else if (t.status === 'stopped') {
+        this.stoppedTasks.push(t.task);
       } else if (t.status === 'local-cache') {
         this.cachedTasks.push(t.task);
       } else if (t.status === 'local-cache-kept-existing') {
@@ -109,20 +161,28 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     status: TaskStatus,
     terminalOutput: string
   ) {
+    // Counted in the end of run summary instead.
+    if (status === 'skipped' || status === 'stopped') {
+      return;
+    }
+
     const args = getPrintableCommandArgsForTask(task);
     if (
       this.args.verbose ||
-      status === 'success' ||
       status === 'failure' ||
       task.target.project === this.initiatingProject
     ) {
+      /**
+       * The task that was actually asked for always shows its full output, even
+       * on success — printing nothing for `nx build myapp` would be surprising.
+       */
       output.logCommandOutput(args.join(' '), status, terminalOutput);
     } else {
       /**
-       * Do not show the terminal output in the case where it is not the initiating project and verbose is not set,
-       * but still print the command that was run and its status (so that cache hits can still be traced).
+       * Dependency tasks collapse to a single line, so that a cache hit or a
+       * success can still be traced without carrying its whole log.
        */
-      output.logCommandOutput(args.join(' '), status, '');
+      output.logCommandSummary(args.join(' '), status);
     }
   }
 }

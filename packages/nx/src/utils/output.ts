@@ -1,3 +1,4 @@
+import * as figures from 'figures';
 import { EOL } from 'os';
 import * as pc from 'picocolors';
 import * as readline from 'readline';
@@ -299,6 +300,20 @@ class CLIOutput {
     if (grouped) {
       this.writeToStream(GH_GROUP_SUFFIX);
     }
+  }
+
+  /**
+   * A single line standing in for a task's full output, used when the output
+   * itself carries no information worth printing (a success, or a cache hit).
+   */
+  logCommandSummary(message: string, taskStatus: TaskStatus) {
+    const icon =
+      taskStatus === 'failure' ? pc.red(figures.cross) : pc.green(figures.tick);
+    const command = this.addTaskStatus(
+      taskStatus,
+      this.formatCommand(this.normalizeMessage(message))
+    );
+    this.writeToStream(`${icon}  ${command}${EOL}`);
   }
 
   private getCommandWithStatus(
