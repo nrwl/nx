@@ -22,6 +22,18 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'Npm_Config_Registry',
     'pnpm_config_registry',
     'PNPM_CONFIG_REGISTRY',
+    'pnpm_config_strict_ssl',
+    'PNPM_CONFIG_STRICT_SSL',
+    'pnpm_config_proxy',
+    'PNPM_CONFIG_PROXY',
+    'pnpm_config_https_proxy',
+    'PNPM_CONFIG_HTTPS_PROXY',
+    'pnpm_config_no_proxy',
+    'PNPM_CONFIG_NO_PROXY',
+    'pnpm_config_noproxy',
+    'PNPM_CONFIG_NOPROXY',
+    'pnpm_config_cafile',
+    'PNPM_CONFIG_CAFILE',
     'npm_config_//reg-b.example.com/:_authToken',
     'PNPM_TEST_NOPROXY',
     'XDG_CONFIG_HOME',
@@ -836,6 +848,106 @@ describe('getPnpmSpawnRegistryEnv', () => {
       // produces this.
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
         npm_config_noproxy: 'internal.example.com,fallback.example.com',
+      });
+    });
+
+    describe('PNPM_CONFIG_* network settings', () => {
+      // Measured on 11.9.0 against a self-signed registry and two logging
+      // proxies, each pairing in both directions.
+      it('bridges a strict-ssl the env turns off, over the yaml', () => {
+        writeYaml('strictSsl: true\n');
+        process.env.PNPM_CONFIG_STRICT_SSL = 'false';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_strict_ssl: 'false',
+        });
+      });
+
+      it('bridges a strict-ssl the env turns on, over the yaml', () => {
+        writeYaml('strictSsl: false\n');
+        process.env.PNPM_CONFIG_STRICT_SSL = 'true';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_strict_ssl: 'true',
+        });
+      });
+
+      it('bridges the env proxies over the yaml ones', () => {
+        writeYaml(
+          [
+            'proxy: http://yaml.example.com:8080',
+            'httpsProxy: https://yaml.example.com:8443',
+          ].join('\n')
+        );
+        process.env.PNPM_CONFIG_PROXY = 'http://env.example.com:8080';
+        process.env.PNPM_CONFIG_HTTPS_PROXY = 'https://env.example.com:8443';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_proxy: 'http://env.example.com:8080',
+          npm_config_https_proxy: 'https://env.example.com:8443',
+        });
+      });
+
+      it('leaves an env cafile alone (pnpm never uses it to fetch)', () => {
+        process.env.PNPM_CONFIG_CAFILE = '/etc/ssl/env-ca.pem';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+      });
+
+      it('bridges PNPM_CONFIG_NO_PROXY over every other layer', () => {
+        writeAuthIni('no-proxy=ini.example.com');
+        writeYaml('noProxy: yaml.example.com\n');
+        process.env.PNPM_CONFIG_NO_PROXY = 'env.example.com';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_noproxy: 'env.example.com',
+        });
+      });
+
+      it('keeps a no-proxy spelling ahead of PNPM_CONFIG_NOPROXY', () => {
+        // pnpm reads `no-proxy` first and only then `noproxy`, so the spelling
+        // decides before the layer does.
+        writeFileSync(join(root, '.npmrc'), 'no-proxy=project.example.com');
+        process.env.PNPM_CONFIG_NOPROXY = 'env.example.com';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_noproxy: 'project.example.com',
+        });
+      });
+
+      it('bridges PNPM_CONFIG_NOPROXY over a yaml noproxy', () => {
+        writeYaml('noproxy: yaml.example.com\n');
+        process.env.PNPM_CONFIG_NOPROXY = 'env.example.com';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_noproxy: 'env.example.com',
+        });
+      });
+
+      it('keeps a workspace .npmrc no-proxy ahead of a yaml noproxy', () => {
+        writeFileSync(join(root, '.npmrc'), 'no-proxy=project.example.com');
+        writeYaml('noproxy: yaml.example.com\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_noproxy: 'project.example.com',
+        });
+      });
+
+      it('reads the lowercase prefix below 11.0.6', () => {
+        process.env.pnpm_config_https_proxy = 'https://env.example.com:8443';
+        process.env.PNPM_CONFIG_PROXY = 'http://env.example.com:8080';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.5')).toEqual({
+          npm_config_https_proxy: 'https://env.example.com:8443',
+        });
+      });
+
+      it('treats an empty env value as declaring nothing', () => {
+        writeYaml('proxy: http://yaml.example.com:8080\n');
+        process.env.PNPM_CONFIG_PROXY = '';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_proxy: 'http://yaml.example.com:8080',
+        });
+      });
+
+      it('leaves the env settings alone on 10.x (pnpm reads npm_config_* there)', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        process.env.PNPM_CONFIG_STRICT_SSL = 'false';
+        process.env.PNPM_CONFIG_PROXY = 'http://env.example.com:8080';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.15.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
       });
     });
 
