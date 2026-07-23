@@ -5,6 +5,7 @@ import {
   logger,
   names,
   offsetFromRoot,
+  parseJson,
   readJson,
   type Tree,
   updateJson,
@@ -236,167 +237,322 @@ export type TypedLintingShape = 'project-service' | 'parser-options-project';
  *   preserve it instead of overwriting it.
  * - `'parser-options-project'`: legacy shape using `parserOptions.project`.
  * - `null`: no typed-linting parser options detected.
+ *
+ * Only keys inside a `parserOptions` object count, so an unrelated `project`
+ * (e.g. `settings['import/resolver'].typescript.project`) is not a false match.
  */
 export function detectTypedLintingShape(
   content: string
 ): TypedLintingShape | null {
-  // Strip comments first so commented-out config (e.g. `// projectService: true`)
-  // isn't mistaken for a real setting.
-  const source = stripComments(content);
-  // Tolerate both JS/TS source (`projectService:`) and JSON (`"projectService":`).
-  // Match on the key alone, whatever its value: an explicit `false` opt-out or a
-  // variable reference is still the user's choice, so we preserve it instead of
-  // appending a conflicting `projectService: true`.
-  if (/\bprojectService["']?\s*:/.test(source)) {
+  const blocks = findParserOptions(content);
+  if (blocks.some((block) => block.hasProjectService)) {
     return 'project-service';
   }
-  if (parserOptionsHasProject(source)) {
+  if (blocks.some((block) => block.enablesProject)) {
     return 'parser-options-project';
   }
   return null;
 }
 
 /**
- * Whether a `project` key is set to a value that turns typed linting on, *inside*
- * a `parserOptions` object. Scans the balanced braces of each `parserOptions`
- * block instead of a single open-ended regex, so a `project` key in an unrelated
- * block (e.g. `settings['import/resolver'].typescript.project`) is not a false
- * match.
+ * What one `parserOptions` object says about typed linting.
  *
  * `project` accepts `boolean | string | string[] | null`, and typescript-eslint
  * only builds a program (and only rejects a sibling `projectService`) when the
  * value is truthy. An explicit `false`/`null`/`undefined` therefore leaves typed
- * linting off and conflicts with nothing, so it must not count. Any other value,
- * including a variable reference we can't evaluate, counts.
+ * linting off and conflicts with nothing, so it must not count. Anything we
+ * can't evaluate (a variable reference, an ES shorthand) does count, since
+ * assuming it's off risks appending a conflicting block over a working config.
  */
-function parserOptionsHasProject(content: string): boolean {
-  const parserOptions = /\bparserOptions["']?\s*:\s*\{/g;
-  let match: RegExpExecArray | null;
-  while ((match = parserOptions.exec(content)) !== null) {
-    const block = extractBalancedBraces(
-      content,
-      match.index + match[0].length - 1
+interface ParserOptions {
+  hasProjectService: boolean;
+  enablesProject: boolean;
+}
+
+/**
+ * Legacy `.eslintrc` files are JSON, flat configs are JS. Parsing tells them
+ * apart more reliably than the caller can: `findEslintFile` also turns up
+ * `.eslintrc.js`, whose content is JS in an otherwise legacy workspace.
+ */
+function findParserOptions(content: string): ParserOptions[] {
+  const eslintrc = tryParseJson(content);
+  return eslintrc
+    ? findParserOptionsInJson(eslintrc)
+    : findParserOptionsInSource(content);
+}
+
+function tryParseJson(content: string): object | null {
+  try {
+    const parsed = parseJson(content);
+    return typeof parsed === 'object' && parsed !== null ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function findParserOptionsInJson(config: object): ParserOptions[] {
+  const blocks: ParserOptions[] = [];
+  const visit = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (typeof value !== 'object' || value === null) {
+      return;
+    }
+    const record = value as Record<string, unknown>;
+    const options = record.parserOptions;
+    if (typeof options === 'object' && options !== null) {
+      const { project } = options as Record<string, unknown>;
+      blocks.push({
+        hasProjectService: 'projectService' in options,
+        enablesProject:
+          'project' in options &&
+          project !== false &&
+          project !== null &&
+          project !== undefined,
+      });
+    }
+    Object.values(record).forEach(visit);
+  };
+  visit(config);
+  return blocks;
+}
+
+function findParserOptionsInSource(content: string): ParserOptions[] {
+  const { source, checker } = parseSource(content);
+  const blocks: ParserOptions[] = [];
+  const visit = (node: ts.Node): void => {
+    const object = getParserOptionsObject(node, checker);
+    if (object) {
+      blocks.push(readParserOptions(object, checker));
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return blocks;
+}
+
+/**
+ * Parses the config with a type checker attached, so a `parserOptions` written
+ * as a reference resolves under real scope rules (shadowing, destructuring,
+ * parameters, imports) rather than an approximation of them. One in-memory
+ * file, no lib and no module resolution, so nothing reads from disk.
+ */
+function parseSource(content: string): {
+  source: ts.SourceFile;
+  checker: ts.TypeChecker;
+} {
+  // Parsed as TS: flat configs may be `.ts`/`.cts`/`.mts`, and TS is a superset,
+  // so the same parse covers the `.js` variants.
+  const fileName = 'eslint.config.ts';
+  const source = ts.createSourceFile(
+    fileName,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS
+  );
+  const host: ts.CompilerHost = {
+    getSourceFile: (name) => (name === fileName ? source : undefined),
+    getDefaultLibFileName: () => 'lib.d.ts',
+    writeFile: () => {},
+    getCurrentDirectory: () => '',
+    getCanonicalFileName: (name) => name,
+    useCaseSensitiveFileNames: () => true,
+    getNewLine: () => '\n',
+    fileExists: (name) => name === fileName,
+    readFile: (name) => (name === fileName ? content : undefined),
+  };
+  const program = ts.createProgram(
+    [fileName],
+    { noLib: true, allowJs: true, types: [] },
+    host
+  );
+
+  return { source, checker: program.getTypeChecker() };
+}
+
+/**
+ * The `parserOptions` object a node contributes: an inline literal, or the
+ * literal behind a reference (`parserOptions: opts`, or the `{ parserOptions }`
+ * shorthand). A variable only counts once the config actually references it, so
+ * an unused declaration configures nothing.
+ */
+function getParserOptionsObject(
+  node: ts.Node,
+  checker: ts.TypeChecker
+): ts.ObjectLiteralExpression | null {
+  if (
+    ts.isShorthandPropertyAssignment(node) &&
+    node.name.text === 'parserOptions'
+  ) {
+    return resolveSymbolObject(
+      checker.getShorthandAssignmentValueSymbol(node),
+      checker,
+      new Set()
     );
-    if (
-      block !== null &&
-      /\bproject["']?\s*:(?!\s*(?:false|null|undefined)\b)/.test(block)
-    ) {
-      return true;
-    }
   }
-  return false;
+  if (
+    !ts.isPropertyAssignment(node) ||
+    getPropertyName(node.name) !== 'parserOptions'
+  ) {
+    return null;
+  }
+  return resolveObjectExpression(node.initializer, checker, new Set());
 }
 
 /**
- * Returns the substring from the `{` at `openIndex` to its matching `}`
- * (inclusive), or `null` when the braces are unbalanced.
+ * Strips the expression wrappers that don't change the value, so an object
+ * literal behind `as const`, `satisfies`, a non-null assertion or parentheses is
+ * still read as one.
  */
-function extractBalancedBraces(
-  content: string,
-  openIndex: number
-): string | null {
-  let depth = 0;
-  for (let i = openIndex; i < content.length; i++) {
-    const ch = content[i];
-    // Skip string literals so braces inside a value (e.g. a glob like
-    // `'packages/{app}/tsconfig.json'`) aren't counted toward the depth.
-    if (ch === '"' || ch === "'" || ch === '`') {
-      i++;
-      while (i < content.length) {
-        if (content[i] === '\\') {
-          i++;
-        } else if (content[i] === ch) {
-          break;
-        }
-        i++;
-      }
-      continue;
-    }
-    if (ch === '{') {
-      depth++;
-    } else if (ch === '}' && --depth === 0) {
-      return content.slice(openIndex, i + 1);
-    }
+function unwrapExpression(node: ts.Expression): ts.Expression {
+  let current = node;
+  while (
+    ts.isParenthesizedExpression(current) ||
+    ts.isAsExpression(current) ||
+    ts.isSatisfiesExpression(current) ||
+    ts.isNonNullExpression(current) ||
+    ts.isTypeAssertionExpression(current)
+  ) {
+    current = current.expression;
   }
-  return null;
+  return current;
 }
 
 /**
- * A `/` following one of these characters (or opening the file) starts a regex
- * literal; anywhere else it is a division operator.
+ * The object literal an expression ultimately denotes, following alias chains
+ * (`const opts = typed`). Anything else the name could be bound to (a parameter,
+ * a destructured property, a call result, an import) can't be read statically,
+ * so it resolves to nothing and leaves the config alone. `seen` guards against a
+ * cycle such as `const a = b; const b = a`.
  */
-const REGEX_LITERAL_PRECEDERS = /^$|[(,=:[!&|?{};+\-*%~^<>]/;
+function resolveObjectExpression(
+  expression: ts.Expression,
+  checker: ts.TypeChecker,
+  seen: Set<ts.Node>
+): ts.ObjectLiteralExpression | null {
+  const unwrapped = unwrapExpression(expression);
+  if (ts.isObjectLiteralExpression(unwrapped)) {
+    return unwrapped;
+  }
+  if (!ts.isIdentifier(unwrapped) || seen.has(unwrapped)) {
+    return null;
+  }
+  seen.add(unwrapped);
+
+  return resolveSymbolObject(
+    checker.getSymbolAtLocation(unwrapped),
+    checker,
+    seen
+  );
+}
+
+/** The object literal behind a resolved name, if it was declared with one. */
+function resolveSymbolObject(
+  symbol: ts.Symbol | undefined,
+  checker: ts.TypeChecker,
+  seen: Set<ts.Node>
+): ts.ObjectLiteralExpression | null {
+  const declaration = symbol?.declarations?.[0];
+  return declaration &&
+    ts.isVariableDeclaration(declaration) &&
+    declaration.initializer
+    ? resolveObjectExpression(declaration.initializer, checker, seen)
+    : null;
+}
 
 /**
- * Removes `//` line and block comments while preserving string and regex
- * literals, so a comment marker inside either (e.g. a URL, or the `//` in
- * `/[//]/`) is left intact.
+ * The properties a `parserOptions` object ends up with, spreads expanded in
+ * source order so a later entry overrides an earlier one, as it does at runtime.
+ * A value of `null` means the key is set to something we can't read (a shorthand
+ * or a nested reference).
  */
-function stripComments(content: string): string {
-  let result = '';
-  // Last non-whitespace character kept, used to tell a regex literal from a
-  // division operator.
-  let lastSignificant = '';
-  for (let i = 0; i < content.length; i++) {
-    const ch = content[i];
-    if (ch === '"' || ch === "'" || ch === '`') {
-      result += ch;
-      i++;
-      while (i < content.length) {
-        result += content[i];
-        if (content[i] === '\\') {
-          result += content[++i] ?? '';
-        } else if (content[i] === ch) {
-          break;
-        }
-        i++;
-      }
-      lastSignificant = ch;
-      continue;
-    }
-    // `//` and `/*` are always comments, since no regex literal can start with
-    // either, so these two checks must come before the regex one.
-    if (ch === '/' && content[i + 1] === '/') {
-      while (i < content.length && content[i] !== '\n') i++;
-      result += '\n';
-      continue;
-    }
-    if (ch === '/' && content[i + 1] === '*') {
-      i += 2;
-      while (
-        i < content.length &&
-        !(content[i] === '*' && content[i + 1] === '/')
-      )
-        i++;
-      i++;
-      continue;
-    }
-    if (ch === '/' && REGEX_LITERAL_PRECEDERS.test(lastSignificant)) {
-      result += ch;
-      i++;
-      let inCharClass = false;
-      while (i < content.length) {
-        result += content[i];
-        if (content[i] === '\\') {
-          result += content[++i] ?? '';
-        } else if (content[i] === '[') {
-          inCharClass = true;
-        } else if (content[i] === ']') {
-          inCharClass = false;
-        } else if (content[i] === '/' && !inCharClass) {
-          break;
-        }
-        i++;
-      }
-      lastSignificant = '/';
-      continue;
-    }
-    result += ch;
-    if (ch.trim() !== '') {
-      lastSignificant = ch;
-    }
+function flattenProperties(
+  node: ts.ObjectLiteralExpression,
+  checker: ts.TypeChecker,
+  seen: Set<ts.Node>
+): { properties: Map<string, ts.Expression | null>; unreadable: boolean } {
+  const properties = new Map<string, ts.Expression | null>();
+  let unreadable = false;
+  if (seen.has(node)) {
+    return { properties, unreadable };
   }
-  return result;
+  seen.add(node);
+
+  for (const property of node.properties) {
+    if (ts.isSpreadAssignment(property)) {
+      const spread = resolveObjectExpression(
+        property.expression,
+        checker,
+        seen
+      );
+      if (!spread) {
+        unreadable = true;
+        continue;
+      }
+      const nested = flattenProperties(spread, checker, seen);
+      unreadable ||= nested.unreadable;
+      for (const [key, value] of nested.properties) {
+        properties.set(key, value);
+      }
+      continue;
+    }
+
+    const key = property.name ? getPropertyName(property.name) : null;
+    if (!key) {
+      // A computed key could be either of the ones we look for.
+      unreadable = true;
+      continue;
+    }
+    properties.set(
+      key,
+      ts.isPropertyAssignment(property) ? property.initializer : null
+    );
+  }
+
+  return { properties, unreadable };
+}
+
+function readParserOptions(
+  node: ts.ObjectLiteralExpression,
+  checker: ts.TypeChecker
+): ParserOptions {
+  const { properties, unreadable } = flattenProperties(
+    node,
+    checker,
+    new Set()
+  );
+  const project = properties.get('project');
+
+  return {
+    hasProjectService: properties.has('projectService'),
+    // A shorthand (`{ project }`) hides its value, and an unreadable spread could
+    // carry any `project` at all; both count, since assuming typed linting is off
+    // risks appending a conflicting block over a working config.
+    enablesProject:
+      unreadable || (properties.has('project') && !isFalsyLiteral(project)),
+  };
+}
+
+function getPropertyName(name: ts.PropertyName): string | null {
+  return ts.isIdentifier(name) ||
+    ts.isStringLiteral(name) ||
+    ts.isNumericLiteral(name)
+    ? name.text
+    : null;
+}
+
+function isFalsyLiteral(node: ts.Expression | null): boolean {
+  if (!node) {
+    return false;
+  }
+  return (
+    node.kind === ts.SyntaxKind.FalseKeyword ||
+    node.kind === ts.SyntaxKind.NullKeyword ||
+    (ts.isIdentifier(node) && node.text === 'undefined')
+  );
 }
 
 /**
@@ -411,7 +567,7 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
   if (!useFlatConfig(tree)) {
     return;
   }
-  let fileName: string;
+  let fileName: string | undefined;
   for (const f of eslintFlatConfigFilenames) {
     if (tree.exists(joinPathFragments(root, f))) {
       fileName = joinPathFragments(root, f);
@@ -457,7 +613,7 @@ export function addOverrideToLintConfig(
   const isBase =
     options.checkBaseConfig && findEslintFile(tree, root).includes('.base');
   if (useFlatConfig(tree)) {
-    let fileName: string;
+    let fileName: string | undefined;
     if (isBase) {
       for (const file of BASE_ESLINT_CONFIG_FILENAMES) {
         if (tree.exists(joinPathFragments(root, file))) {
@@ -511,7 +667,7 @@ export function updateOverrideInLintConfig(
     override: Linter.ConfigOverride<Linter.RulesRecord>
   ) => Linter.ConfigOverride<Linter.RulesRecord>
 ) {
-  let fileName: string;
+  let fileName: string | undefined;
   let root = rootOrFile;
   if (tree.exists(rootOrFile) && tree.isFile(rootOrFile)) {
     fileName = rootOrFile;
@@ -561,7 +717,7 @@ export function lintConfigHasOverride(
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   checkBaseConfig = false
 ): boolean {
-  let fileName: string;
+  let fileName: string | undefined;
   let root = rootOrFile;
   if (tree.exists(rootOrFile) && tree.isFile(rootOrFile)) {
     fileName = rootOrFile;
@@ -609,7 +765,7 @@ export function replaceOverridesInLintConfig(
   overrides: Linter.ConfigOverride<Linter.RulesRecord>[]
 ) {
   if (useFlatConfig(tree)) {
-    let fileName: string;
+    let fileName: string | undefined;
     for (const f of eslintFlatConfigFilenames) {
       if (tree.exists(joinPathFragments(root, f))) {
         fileName = joinPathFragments(root, f);
@@ -649,7 +805,7 @@ export function addExtendsToLintConfig(
 ): GeneratorCallback {
   if (useFlatConfig(tree)) {
     const pluginExtends: ts.SpreadElement[] = [];
-    let fileName: string;
+    let fileName: string | undefined;
     for (const f of eslintFlatConfigFilenames) {
       if (tree.exists(joinPathFragments(root, f))) {
         fileName = joinPathFragments(root, f);
@@ -770,7 +926,7 @@ export function addPredefinedConfigToFlatLintConfig(
   if (!useFlatConfig(tree))
     throw new Error('Predefined configs can only be used with flat configs');
 
-  let fileName: string;
+  let fileName: string | undefined;
   for (const f of eslintFlatConfigFilenames) {
     if (tree.exists(joinPathFragments(root, f))) {
       fileName = joinPathFragments(root, f);
@@ -796,7 +952,7 @@ export function addPluginsToLintConfig(
 ) {
   const plugins = Array.isArray(plugin) ? plugin : [plugin];
   if (useFlatConfig(tree)) {
-    let fileName: string;
+    let fileName: string | undefined;
     for (const f of eslintFlatConfigFilenames) {
       if (tree.exists(joinPathFragments(root, f))) {
         fileName = joinPathFragments(root, f);
@@ -831,7 +987,7 @@ export function addIgnoresToLintConfig(
   ignorePatterns: string[]
 ) {
   if (useFlatConfig(tree)) {
-    let fileName: string;
+    let fileName: string | undefined;
     for (const f of eslintFlatConfigFilenames) {
       if (tree.exists(joinPathFragments(root, f))) {
         fileName = joinPathFragments(root, f);

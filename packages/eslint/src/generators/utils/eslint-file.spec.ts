@@ -828,6 +828,42 @@ module.exports = [
       ).toBe('project-service');
     });
 
+    it('detects project-service when `projectService` uses the ES shorthand', () => {
+      // The value lives in a variable we can't evaluate, so the shorthand has to
+      // count; appending our own block would override the user's choice.
+      expect(
+        detectTypedLintingShape(
+          'const projectService = false;\nexport default [{ languageOptions: { parserOptions: { projectService } } }];'
+        )
+      ).toBe('project-service');
+    });
+
+    it('detects parser-options-project when `project` uses the ES shorthand', () => {
+      // Appending `projectService: true` next to a truthy `project` makes
+      // typescript-eslint fatal on every file it type-checks.
+      expect(
+        detectTypedLintingShape(
+          "const project = ['tsconfig.json'];\nexport default [{ languageOptions: { parserOptions: { project } } }];"
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('detects the ES shorthand when other keys follow it', () => {
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { project, tsconfigRootDir: __dirname } } }];'
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('does not mistake `projectService` for a shorthand `project`', () => {
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { projectService: false } } }];'
+        )
+      ).toBe('project-service');
+    });
+
     it('detects a setting that follows a regex literal containing `//`', () => {
       // The `//` inside the character class must not start a line comment and
       // swallow the rest of the line.
@@ -852,6 +888,260 @@ module.exports = [
           `const ratio = width / 2;\nexport default [{ languageOptions: { parserOptions: { projectService: true } } }];`
         )
       ).toBe('project-service');
+    });
+
+    it('detects a setting sharing a line with a regex literal containing `//`', () => {
+      // The `//` inside the character class is regex content, not a comment, so
+      // it must not hide the config that follows it on the same line.
+      expect(
+        detectTypedLintingShape(
+          `const isTest = (s) => { return /[//]/.test(s); }, opts = { parserOptions: { projectService: true } };`
+        )
+      ).toBe('project-service');
+    });
+
+    it('does not count the key when it only appears inside a string', () => {
+      expect(
+        detectTypedLintingShape(
+          `export default [{ rules: { 'x/y': ['error', { message: 'prefer projectService, always' }] } }];`
+        )
+      ).toBeNull();
+    });
+
+    it('does not count a `project` substring inside a glob value', () => {
+      expect(
+        detectTypedLintingShape(
+          `export default [{ languageOptions: { parserOptions: { cacheDir: 'tmp/{eslint,project}' } } }];`
+        )
+      ).toBeNull();
+    });
+
+    it('reads a legacy `.eslintrc` that carries comments', () => {
+      expect(
+        detectTypedLintingShape(
+          `{\n  // typed linting\n  "overrides": [{ "parserOptions": { "projectService": true } }],\n}`
+        )
+      ).toBe('project-service');
+    });
+
+    it('reads a legacy `.eslintrc.js`, whose content is JS rather than JSON', () => {
+      expect(
+        detectTypedLintingShape(
+          `module.exports = { overrides: [{ parserOptions: { project: './tsconfig.json' } }] };`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('detects a `parserOptions` object referenced under another name', () => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { project: ['tsconfig.json'] };\nexport default [{ languageOptions: { parserOptions: opts } }];`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('ignores a `parserOptions` variable the config never references', () => {
+      // Declared but unused, so it configures nothing and must not suppress an
+      // explicit typed-linting request.
+      expect(
+        detectTypedLintingShape(
+          `const parserOptions = { project: './unused.json' };\nexport default [{ rules: {} }];`
+        )
+      ).toBeNull();
+    });
+
+    it('resolves a reference to the declaration in scope, not a shadowed one', () => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { ecmaVersion: 2022 };\nfunction helper() {\n  const opts = { project: './helper.json' };\n  return opts;\n}\nexport default [{ languageOptions: { parserOptions: opts } }];`
+        )
+      ).toBeNull();
+    });
+
+    it('stops at a parameter that shadows an outer object', () => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { project: './unrelated.json' };\nfunction makeConfig(opts) {\n  return { languageOptions: { parserOptions: opts } };\n}\nexport default [makeConfig({ ecmaVersion: 2022 })];`
+        )
+      ).toBeNull();
+    });
+
+    it.each([
+      ['a destructured parameter', 'function makeConfig({ opts }) {'],
+      [
+        'a renamed destructured parameter',
+        'function makeConfig({ base: opts }) {',
+      ],
+    ])('stops at %s', (_name, signature) => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { project: './unrelated.json' };\n${signature}\n  return { languageOptions: { parserOptions: opts } };\n}\nexport default [makeConfig({})];`
+        )
+      ).toBeNull();
+    });
+
+    it('reads through an `as const` on a TypeScript flat config', () => {
+      // `eslintFlatConfigFilenames` covers `.ts`/`.cts`/`.mts`, so TS-only syntax
+      // reaches here. Missing the opt-out would overwrite it with `true`.
+      expect(
+        detectTypedLintingShape(
+          `const opts = { projectService: false } as const;\nexport default [{ languageOptions: { parserOptions: opts } }];`
+        )
+      ).toBe('project-service');
+    });
+
+    it('reads a setting brought in by a spread', () => {
+      expect(
+        detectTypedLintingShape(
+          `const typed = { projectService: false };\nexport default [{ languageOptions: { parserOptions: { ...typed } } }];`
+        )
+      ).toBe('project-service');
+    });
+
+    it('follows an alias chain to the declaring object', () => {
+      expect(
+        detectTypedLintingShape(
+          `const typed = { projectService: false };\nconst opts = typed;\nexport default [{ languageOptions: { parserOptions: opts } }];`
+        )
+      ).toBe('project-service');
+    });
+
+    it('lets a later spread override an earlier `project`', () => {
+      // `{ project: [...], ...typed }` ends up with `project: false` at runtime.
+      expect(
+        detectTypedLintingShape(
+          `const typed = { project: false };\nexport default [{ languageOptions: { parserOptions: { project: ['tsconfig.json'], ...typed } } }];`
+        )
+      ).toBeNull();
+    });
+
+    it('counts a spread it cannot resolve, rather than assuming it is empty', () => {
+      expect(
+        detectTypedLintingShape(
+          `export default [{ languageOptions: { parserOptions: { ...getBase() } } }];`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('terminates on a circular alias', () => {
+      expect(
+        detectTypedLintingShape(
+          `const a = b;\nconst b = a;\nexport default [{ languageOptions: { parserOptions: a } }];`
+        )
+      ).toBeNull();
+    });
+
+    it('reads through a `satisfies` expression', () => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { project: ['tsconfig.json'] } satisfies object;\nexport default [{ languageOptions: { parserOptions: opts } }];`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('reads through parentheses around an inline object', () => {
+      expect(
+        detectTypedLintingShape(
+          `export default [{ languageOptions: { parserOptions: ({ projectService: false }) } }];`
+        )
+      ).toBe('project-service');
+    });
+
+    it('stops at a destructured variable', () => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { project: './unrelated.json' };\nfunction makeConfig(input) {\n  const { opts } = input;\n  return { languageOptions: { parserOptions: opts } };\n}\nexport default [makeConfig({})];`
+        )
+      ).toBeNull();
+    });
+
+    it('stops at a `catch` binding', () => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { project: './unrelated.json' };\nfunction makeConfig() {\n  try { risky(); } catch (opts) { return { languageOptions: { parserOptions: opts } }; }\n}\nexport default [makeConfig()];`
+        )
+      ).toBeNull();
+    });
+
+    it('stops at a loop binding', () => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { project: './unrelated.json' };\nfunction makeConfig(all) {\n  for (const opts of all) { return { languageOptions: { parserOptions: opts } }; }\n}\nexport default [makeConfig([])];`
+        )
+      ).toBeNull();
+    });
+
+    it('stops at a nearer binding whose value cannot be read statically', () => {
+      expect(
+        detectTypedLintingShape(
+          `const opts = { project: './unrelated.json' };\nfunction makeConfig() {\n  const opts = buildOptions();\n  return { languageOptions: { parserOptions: opts } };\n}\nexport default [makeConfig()];`
+        )
+      ).toBeNull();
+    });
+
+    it('resolves a reference declared in the same function scope', () => {
+      expect(
+        detectTypedLintingShape(
+          `export default (() => {\n  const opts = { project: ['tsconfig.json'] };\n  return [{ languageOptions: { parserOptions: opts } }];\n})();`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('ignores a `parserOptions` variable local to an unrelated helper', () => {
+      expect(
+        detectTypedLintingShape(
+          `function makeOpts() { const parserOptions = { project: './x.json' }; return parserOptions; }\nexport default [{ rules: {} }];`
+        )
+      ).toBeNull();
+    });
+
+    it('detects a `parserOptions` object declared separately and passed by shorthand', () => {
+      expect(
+        detectTypedLintingShape(
+          `const parserOptions = { project: ['tsconfig.json'] };\nexport default [{ languageOptions: { parserOptions } }];`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it.each(['of', 'await', 'yield'])(
+      'treats a division that follows the contextual keyword `%s` as division',
+      (name) => {
+        // These are legal identifiers, so `%s / 2` is real division. Lexing it
+        // as a regex would run past the end of the line and swallow the config.
+        expect(
+          detectTypedLintingShape(
+            `const ${name} = 1;\nconst ratio = ${name} / 2;\nconst marker = '//*';\nexport default [{ languageOptions: { parserOptions: { project: './tsconfig.json' } } }];\n/* end */`
+          )
+        ).toBe('parser-options-project');
+      }
+    );
+
+    it('does not run an unterminated regex literal past its line', () => {
+      // The `/` here divides, so treating it as a regex opener would consume the
+      // rest of the file and hide the config below it.
+      expect(
+        detectTypedLintingShape(
+          `const ratio = (a) => { return a / 2; };\nexport default [{ languageOptions: { parserOptions: { projectService: true } } }];`
+        )
+      ).toBe('project-service');
+    });
+
+    it('treats a division that follows an identifier ending in a keyword as division', () => {
+      // `myreturn` is an identifier, so the `/` divides and the `//` that follows
+      // opens a real comment.
+      expect(
+        detectTypedLintingShape(
+          `const myreturn = 4;\nconst ratio = myreturn / 2; // projectService: true\nexport default [{ rules: {} }];`
+        )
+      ).toBeNull();
+    });
+
+    it('treats a division that follows a member access as division', () => {
+      expect(
+        detectTypedLintingShape(
+          `const ratio = counts.in / 2; // projectService: true\nexport default [{ rules: {} }];`
+        )
+      ).toBeNull();
     });
 
     it('ignores a commented-out projectService setting', () => {
