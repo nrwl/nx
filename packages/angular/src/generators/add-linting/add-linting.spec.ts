@@ -114,6 +114,32 @@ describe('addLinting generator', () => {
     ).not.toContain('projectService');
   });
 
+  it('should carry over typed linting from an existing YAML config', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    // `findEslintFile` prefers `.eslintrc.yaml` over `.eslintrc.json`, so the
+    // carry-over check reads the YAML while the overrides are rewritten into the
+    // JSON that `lintProjectGenerator` creates.
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `overrides:\n  - files: ['*.ts']\n    parserOptions:\n      project: ['${appProjectRoot}/tsconfig.*?.json']\n`
+    );
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toEqual({
+      project: [`${appProjectRoot}/tsconfig.*?.json`],
+    });
+  });
+
   it('should not set parserOptions in the .eslintrc.json file when typed linting is disabled', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {

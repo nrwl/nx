@@ -952,6 +952,48 @@ module.exports = [
       ).toBe('project-service');
     });
 
+    it('reads a legacy YAML config', () => {
+      expect(
+        detectTypedLintingShape(
+          `overrides:\n  - files: ['*.ts']\n    parserOptions:\n      project: ['apps/demo/tsconfig.*?.json']\n`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('reads `projectService` from a legacy YAML config', () => {
+      expect(
+        detectTypedLintingShape(
+          `overrides:\n  - files: ['*.ts']\n    parserOptions:\n      projectService: true\n`
+        )
+      ).toBe('project-service');
+    });
+
+    it('reads a YAML config that carries comments', () => {
+      expect(
+        detectTypedLintingShape(
+          `# typed linting\nroot: true\noverrides:\n  - parserOptions:\n      project: './tsconfig.json'\n`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('does not count a falsy `project` in a YAML config', () => {
+      expect(
+        detectTypedLintingShape(
+          `overrides:\n  - parserOptions:\n      project: null\n`
+        )
+      ).toBeNull();
+    });
+
+    it('prefers the JS parse over YAML for a one-line JS config', () => {
+      // `module.exports = {root: true};` is also valid YAML, as a mapping keyed
+      // on the whole line, so the JS parse has to win.
+      expect(
+        detectTypedLintingShape(
+          `module.exports = {parserOptions: {project: ['./tsconfig.json']}};`
+        )
+      ).toBe('parser-options-project');
+    });
+
     it('reads a legacy `.eslintrc.js`, whose content is JS rather than JSON', () => {
       expect(
         detectTypedLintingShape(

@@ -312,9 +312,10 @@ interface ParserOptions {
 }
 
 /**
- * Legacy `.eslintrc` files are JSON, flat configs are JS. Parsing tells them
- * apart more reliably than the caller can: `findEslintFile` also turns up
- * `.eslintrc.js`, whose content is JS in an otherwise legacy workspace.
+ * A legacy config can be JSON, JS or YAML, and a bare `.eslintrc` can be any of
+ * them, so each parser is tried in turn rather than picked from the filename.
+ * YAML goes last: a one-line JS config can parse as YAML into a mapping keyed on
+ * the whole line, which would otherwise preempt the parser that understands it.
  */
 function findParserOptions(
   content: string,
@@ -322,14 +323,37 @@ function findParserOptions(
   seenExports: Set<string>
 ): ParserOptions[] {
   const eslintrc = tryParseJson(content);
-  return eslintrc
-    ? findParserOptionsInJson(eslintrc)
-    : findParserOptionsInSource(content, spreads, seenExports);
+  if (eslintrc) {
+    return findParserOptionsInJson(eslintrc);
+  }
+
+  const blocks = findParserOptionsInSource(content, spreads, seenExports);
+  if (blocks.length > 0) {
+    return blocks;
+  }
+
+  const yaml = tryParseYaml(content);
+  return yaml ? findParserOptionsInJson(yaml) : blocks;
 }
 
 function tryParseJson(content: string): object | null {
   try {
     const parsed = parseJson(content);
+    return typeof parsed === 'object' && parsed !== null ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * `@zkochan/js-yaml` is an optional peer, so a workspace without it reads a YAML
+ * config as no typed linting, which is what happened before YAML was parsed at
+ * all.
+ */
+function tryParseYaml(content: string): object | null {
+  try {
+    const { load } = require('@zkochan/js-yaml');
+    const parsed = load(content, { json: true });
     return typeof parsed === 'object' && parsed !== null ? parsed : null;
   } catch {
     return null;
