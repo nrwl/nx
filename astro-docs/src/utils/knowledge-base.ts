@@ -1,6 +1,48 @@
+import { execFileSync } from 'node:child_process';
 import type { CollectionEntry } from 'astro:content';
 import { getNewestCommitDate } from 'virtual:starlight/git-info';
 import knowledgeBaseTopics from '../data/knowledge-base-topics.json';
+
+const lastModifiedCache = new Map<string, Date>();
+
+// Plain newest-commit date follows bulk file moves (e.g. the KB rework), so
+// skip rename commits (R*) and take the newest real edit. Falls back to the
+// starlight date when history is unavailable (shallow clone).
+function getArticleLastModified(filePath: string): Date {
+  const cached = lastModifiedCache.get(filePath);
+  if (cached) return cached;
+
+  let lastModified = getNewestCommitDate(filePath);
+  try {
+    // NUL-delimit records so each splits into date + its name-status lines.
+    const log = execFileSync(
+      'git',
+      [
+        'log',
+        '--follow',
+        '-M',
+        '--name-status',
+        '--format=%x00%cI',
+        '--',
+        filePath,
+      ],
+      { encoding: 'utf8', windowsHide: true }
+    );
+    for (const record of log.split('\0')) {
+      const [iso, ...statusLines] = record.split('\n').filter(Boolean);
+      if (!iso) continue;
+      const status = statusLines[0]?.split('\t')[0] ?? '';
+      if (status.startsWith('R')) continue; // rename/move, not a content edit
+      lastModified = new Date(iso);
+      break;
+    }
+  } catch {
+    // Not a git checkout or no reachable history; keep the starlight date.
+  }
+
+  lastModifiedCache.set(filePath, lastModified);
+  return lastModified;
+}
 
 export interface KnowledgeBaseTopic {
   id: string;
@@ -39,7 +81,7 @@ export function getKnowledgeBaseArticles(
         href: `/docs/kb/${slug}`,
         topics: doc.data.topics ?? [],
         featured: doc.data.featured ?? false,
-        lastModified: getNewestCommitDate(doc.filePath),
+        lastModified: getArticleLastModified(doc.filePath),
       };
     });
 }
