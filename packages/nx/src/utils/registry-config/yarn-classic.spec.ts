@@ -682,21 +682,46 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       });
     });
 
-    it('drops the whole file when both parsers reject it', () => {
+    it('reads a file the retry loads as one scalar as declaring nothing', () => {
+      // The lockfile parser rejects the `@@@` line and the retry loads the whole
+      // file as a plain scalar, so yarn honors none of it (verified on 1.22.22:
+      // `yarn config list` prints the file spread by character index, `cafile`
+      // reads undefined and the registry stays yarn's default).
       files[`${ROOT}/.yarnrc`] = 'cafile "./certs/ca.pem"\n@@@ !!!\n';
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
     });
 
-    it('drops the whole file on a duplicate key (classic passes no json flag)', () => {
+    it('fails on a duplicate key (classic passes no json flag)', () => {
       // berry's parser sets `json: true`, which makes a repeated key last-wins;
-      // classic passes the schema alone, so js-yaml throws, the retry fails and
-      // yarn itself dies on the file. Falling back to npm's own resolution is
-      // the closest thing left to reproduce.
+      // classic passes the schema alone, so js-yaml throws, and with both
+      // parsers rejecting yarn rethrows the first error and exits 1 (verified
+      // on 1.22.22). Resolving on without the file would send npm to the
+      // default registry while yarn refuses to run at all.
       files[`${ROOT}/.yarnrc`] = [
         'registry: https://reg-a.example.com/',
         'registry: https://reg-b.example.com/',
       ].join('\n');
-      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
+      expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+        /\.yarnrc at .* could not be read/
+      );
+    });
+
+    it('fails on a .yarnrc that cannot be opened', () => {
+      // yarn propagates the EACCES and exits 1 (verified on 1.22.22 with a
+      // chmod 000 file), so there is nothing left to reproduce here either.
+      files[`${ROOT}/.yarnrc`] = 'registry "https://reg-a.example.com/"\n';
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === `${ROOT}/.yarnrc`) {
+            throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
+          }
+          return readFile(p, ...rest);
+        }
+      );
+      expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+        /\.yarnrc at .* could not be read/
+      );
     });
 
     it('keeps a trailing comment out of the value', () => {
