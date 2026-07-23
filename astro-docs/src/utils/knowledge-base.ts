@@ -26,7 +26,7 @@ function getArticleLastModified(filePath: string): Date {
         '--',
         filePath,
       ],
-      { encoding: 'utf8' }
+      { encoding: 'utf8', windowsHide: true }
     );
     for (const record of log.split('\0')) {
       const [iso, ...statusLines] = record.split('\n').filter(Boolean);
