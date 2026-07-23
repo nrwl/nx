@@ -57,6 +57,11 @@ interface PnpmWorkspaceSettings {
   proxy?: string;
   httpsProxy?: string;
   noProxy?: string;
+  // The one key on this surface that pnpm also answers to in npm's own
+  // spelling. Its siblings are camelCase-only (verified on 11.2.2 and 11.9.0
+  // against a proxy: `httpsproxy`, `HTTPSPROXY` and `https-proxy` are all
+  // ignored), so nothing else here needs an alias.
+  noproxy?: string;
 }
 
 export function getPnpmSpawnRegistryEnv(
@@ -415,6 +420,9 @@ function applyYamlNetworkSettings(
   setProxies(env, {
     httpProxy: settings.proxy,
     httpsProxy: settings.httpsProxy,
-    noProxy: settings.noProxy,
+    // pnpm honors either spelling and prefers noProxy when both are set
+    // (verified on 11.2.2 and 11.9.0: with noProxy naming another host, a
+    // noproxy bypass for the registry stops applying).
+    noProxy: settings.noProxy ?? settings.noproxy,
   });
 }
