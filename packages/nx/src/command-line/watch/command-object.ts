@@ -52,6 +52,18 @@ function withWatchOptions(yargs: Argv) {
         alias: 'g',
         hidden: true,
       })
+      .option('include', {
+        type: 'array',
+        string: true,
+        description:
+          'Glob pattern for workspace-relative file paths that should re-trigger the watched command. A changed file must match at least one --include pattern to count. Pass multiple patterns space-delimited after one flag (e.g. `--include "**/*.ts" "**/*.html"`) or by repeating the flag; each value is one whole glob, so brace globs like `**/*.{ts,tsx}` are kept intact. When omitted, all changed files are included.',
+      })
+      .option('exclude', {
+        type: 'array',
+        string: true,
+        description:
+          'Glob pattern for workspace-relative file paths that should never re-trigger the watched command. A file matching any --exclude pattern is always skipped, even if it also matched --include. Pass multiple patterns space-delimited after one flag (e.g. `--exclude "**/*.spec.ts" "**/*.md"`) or by repeating the flag; each value is one whole glob.',
+      })
       .option('command', { type: 'string', hidden: true })
       .option('verbose', {
         type: 'boolean',
