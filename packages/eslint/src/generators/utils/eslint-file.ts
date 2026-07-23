@@ -1010,7 +1010,7 @@ export function addOverrideToLintConfig(
     }
 
     let content = tree.read(fileName, 'utf8');
-    const format = determineEslintConfigFormat(content);
+    const format = determineEslintConfigFormatForFile(fileName, content);
 
     const flatOverride = generateFlatOverride(override, format);
     // Check if the provided override using legacy eslintrc properties or plugins, if so we need to add compat
@@ -1152,7 +1152,7 @@ export function replaceOverridesInLintConfig(
       }
     }
     let content = tree.read(fileName, 'utf8');
-    const format = determineEslintConfigFormat(content);
+    const format = determineEslintConfigFormatForFile(fileName, content);
     // Check if any of the provided overrides using legacy eslintrc properties or plugins, if so we need to add compat
     if (overrides.some(overrideNeedsCompat)) {
       content = addFlatCompatToFlatConfig(content);

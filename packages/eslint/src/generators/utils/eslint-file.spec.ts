@@ -7,6 +7,7 @@ import {
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
+  addOverrideToLintConfig,
   addTypedLintingToFlatConfig,
   detectTypedLintingShape,
   findEslintFile,
@@ -478,6 +479,36 @@ module.exports = [
         ];"
       `);
     });
+
+    it('should import the parser the way a `.cts` config can load it', () => {
+      tree.write('eslint.config.cts', 'export default [];');
+      tree.write('apps/demo/eslint.config.cts', 'export default [];');
+
+      replaceOverridesInLintConfig(tree, 'apps/demo', [
+        { files: ['*.ts'], parser: '@typescript-eslint/parser', rules: {} },
+      ]);
+
+      const content = tree.read('apps/demo/eslint.config.cts', 'utf-8');
+      expect(content).toContain('require("@typescript-eslint/parser")');
+      expect(content).not.toContain('await import(');
+    });
+  });
+
+  describe('addOverrideToLintConfig', () => {
+    it('should import the parser the way a `.cts` config can load it', () => {
+      tree.write('eslint.config.cts', 'export default [];');
+      tree.write('apps/demo/eslint.config.cts', 'export default [];');
+
+      addOverrideToLintConfig(tree, 'apps/demo', {
+        files: ['*.ts'],
+        parser: '@typescript-eslint/parser',
+        rules: {},
+      });
+
+      const content = tree.read('apps/demo/eslint.config.cts', 'utf-8');
+      expect(content).toContain('require("@typescript-eslint/parser")');
+      expect(content).not.toContain('await import(');
+    });
   });
 
   describe('addIgnoresToLintConfig', () => {
@@ -865,8 +896,7 @@ module.exports = [
     });
 
     it('detects a setting that follows a regex literal containing `//`', () => {
-      // The `//` inside the character class must not start a line comment and
-      // swallow the rest of the line.
+      // The `//` is regex content, not the start of a comment.
       expect(
         detectTypedLintingShape(
           `export default [{ settings: { pattern: /[//]/ }, languageOptions: { parserOptions: { projectService: true } } }];`
@@ -874,7 +904,7 @@ module.exports = [
       ).toBe('project-service');
     });
 
-    it('still strips a line comment that follows a separator', () => {
+    it('ignores a key that only appears in a trailing line comment', () => {
       expect(
         detectTypedLintingShape(
           `export default [\n  { rules: {} }, // projectService: true\n];`
@@ -882,7 +912,7 @@ module.exports = [
       ).toBeNull();
     });
 
-    it('does not treat a division operator as a regex literal', () => {
+    it('detects a setting in a file that also divides', () => {
       expect(
         detectTypedLintingShape(
           `const ratio = width / 2;\nexport default [{ languageOptions: { parserOptions: { projectService: true } } }];`
@@ -891,8 +921,6 @@ module.exports = [
     });
 
     it('detects a setting sharing a line with a regex literal containing `//`', () => {
-      // The `//` inside the character class is regex content, not a comment, so
-      // it must not hide the config that follows it on the same line.
       expect(
         detectTypedLintingShape(
           `const isTest = (s) => { return /[//]/.test(s); }, opts = { parserOptions: { projectService: true } };`
@@ -1104,10 +1132,9 @@ module.exports = [
     });
 
     it.each(['of', 'await', 'yield'])(
-      'treats a division that follows the contextual keyword `%s` as division',
+      'detects a setting in a file that divides a variable named `%s`',
       (name) => {
-        // These are legal identifiers, so `%s / 2` is real division. Lexing it
-        // as a regex would run past the end of the line and swallow the config.
+        // Contextual keywords are legal identifiers here, so `%s / 2` divides.
         expect(
           detectTypedLintingShape(
             `const ${name} = 1;\nconst ratio = ${name} / 2;\nconst marker = '//*';\nexport default [{ languageOptions: { parserOptions: { project: './tsconfig.json' } } }];\n/* end */`
@@ -1116,9 +1143,7 @@ module.exports = [
       }
     );
 
-    it('does not run an unterminated regex literal past its line', () => {
-      // The `/` here divides, so treating it as a regex opener would consume the
-      // rest of the file and hide the config below it.
+    it('detects a setting below a division inside a function body', () => {
       expect(
         detectTypedLintingShape(
           `const ratio = (a) => { return a / 2; };\nexport default [{ languageOptions: { parserOptions: { projectService: true } } }];`
@@ -1126,9 +1151,7 @@ module.exports = [
       ).toBe('project-service');
     });
 
-    it('treats a division that follows an identifier ending in a keyword as division', () => {
-      // `myreturn` is an identifier, so the `/` divides and the `//` that follows
-      // opens a real comment.
+    it('ignores a key commented out after a division', () => {
       expect(
         detectTypedLintingShape(
           `const myreturn = 4;\nconst ratio = myreturn / 2; // projectService: true\nexport default [{ rules: {} }];`
@@ -1136,7 +1159,7 @@ module.exports = [
       ).toBeNull();
     });
 
-    it('treats a division that follows a member access as division', () => {
+    it('ignores a key commented out after a division on a member access', () => {
       expect(
         detectTypedLintingShape(
           `const ratio = counts.in / 2; // projectService: true\nexport default [{ rules: {} }];`
