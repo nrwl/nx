@@ -27,7 +27,15 @@ export class SharedRunningTask implements RunningTask {
   }
 
   private async waitForTaskToFinish(taskId: string) {
-    console.log(`Waiting for ${taskId} in another nx process`);
+    const runningTasks = this.runningTasksService.getRunningTasks([taskId]);
+    const context = runningTasks[0];
+    if (context) {
+      console.log(
+        `Waiting for ${taskId} in another nx process (pid: ${context.pid}, cwd: ${context.cwd})`
+      );
+    } else {
+      console.log(`Waiting for ${taskId} in another nx process`);
+    }
     // wait for the running task to finish
     do {
       await new Promise((resolve) => setTimeout(resolve, 100));
