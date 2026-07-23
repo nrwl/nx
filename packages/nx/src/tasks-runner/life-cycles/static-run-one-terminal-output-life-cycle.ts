@@ -27,8 +27,17 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       targets?: string[];
       configuration?: string;
       verbose?: boolean;
+      outputStyle?: string;
     }
   ) {}
+
+  /**
+   * Whether this run prints every task's output in full rather than collapsing
+   * the ones that succeeded.
+   */
+  private get printsFullOutput(): boolean {
+    return this.args.verbose || this.args.outputStyle === 'static-full';
+  }
 
   startCommand(): void {
     const numberOfDeps = this.tasks.length - 1;
@@ -74,6 +83,17 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       output.addVerticalSeparatorWithoutNewLines('red');
 
       const bodyLines: string[] = [];
+      const skippedTasks = this.skippedTasks();
+      if (skippedTasks.length > 0) {
+        bodyLines.push(
+          output.dim(
+            'Tasks not run because their dependencies failed or --nx-bail=true:'
+          ),
+          '',
+          ...skippedTasks.map((task) => `${output.dim('-')} ${task.id}`),
+          ''
+        );
+      }
       if (this.stoppedTasks.length > 0) {
         bodyLines.push(
           output.dim('Tasks stopped before they finished:'),
@@ -161,28 +181,31 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     status: TaskStatus,
     terminalOutput: string
   ) {
-    // Counted in the end of run summary instead.
-    if (status === 'skipped' || status === 'stopped') {
-      return;
-    }
-
     const args = getPrintableCommandArgsForTask(task);
     if (
-      this.args.verbose ||
+      this.printsFullOutput ||
       status === 'failure' ||
       task.target.project === this.initiatingProject
     ) {
       /**
        * The task that was actually asked for always shows its full output, even
        * on success — printing nothing for `nx build myapp` would be surprising.
+       * A stopped task's partial output is kept for the same reason: it is what
+       * diagnoses a hang.
        */
       output.logCommandOutput(args.join(' '), status, terminalOutput);
-    } else {
-      /**
-       * Dependency tasks collapse to a single line, so that a cache hit or a
-       * success can still be traced without carrying its whole log.
-       */
-      output.logCommandSummary(args.join(' '), status);
+      return;
     }
+
+    // Counted in the end of run summary instead.
+    if (status === 'skipped' || status === 'stopped') {
+      return;
+    }
+
+    /**
+     * Dependency tasks collapse to a single line, so that a cache hit or a
+     * success can still be traced without carrying its whole log.
+     */
+    output.logCommandSummary(args.join(' '), status);
   }
 }

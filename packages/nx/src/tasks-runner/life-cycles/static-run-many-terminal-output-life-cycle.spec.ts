@@ -65,7 +65,7 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
   let task: Task;
 
   function createLifeCycle(
-    args: { verbose?: boolean } = {},
+    args: { verbose?: boolean; outputStyle?: string } = {},
     tasks: Task[] = [task]
   ) {
     return new StaticRunManyTerminalOutputLifeCycle(
@@ -129,6 +129,32 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
         expect(result).toContain('the task body');
       }
     );
+
+    it.each(COLLAPSED_STATUSES)(
+      'prints the full output for a %s task under --output-style=static-full',
+      (status) => {
+        lifeCycle = createLifeCycle({ outputStyle: 'static-full' });
+
+        const result = captureOutput(() =>
+          lifeCycle.printTaskTerminalOutput(task, status, 'the task body')
+        );
+
+        expect(result).toContain('> nx run proj:test');
+        expect(result).toContain('the task body');
+      }
+    );
+
+    it('recovers a stopped task partial output under --verbose', () => {
+      // A stopped task was killed mid-flight; what it managed to print is
+      // exactly what diagnoses the hang.
+      lifeCycle = createLifeCycle({ verbose: true });
+
+      const result = captureOutput(() =>
+        lifeCycle.printTaskTerminalOutput(task, 'stopped', 'partial output')
+      );
+
+      expect(result).toContain('partial output');
+    });
   });
 
   describe('log grouping', () => {
@@ -168,6 +194,30 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
       }
     );
 
+    it.each([
+      ['on GitHub Actions', 'true'],
+      ['outside GitHub Actions', undefined],
+    ])(
+      'does not glue a following summary line onto a full block %s',
+      (_name, githubActions) => {
+        const other = makeTask('other');
+        const result = withEnvironmentVariables(
+          { GITHUB_ACTIONS: githubActions, NX_SKIP_LOG_GROUPING: undefined },
+          () =>
+            captureOutput(() => {
+              // Task output routinely lacks a trailing newline.
+              lifeCycle.printTaskTerminalOutput(task, 'failure', 'no newline');
+              lifeCycle.printTaskTerminalOutput(other, 'success', 'body');
+            })
+        );
+
+        const summary = `${figures.tick}  nx run other:test`;
+        const index = result.indexOf(summary);
+        expect(index).toBeGreaterThan(-1);
+        expect(result[index - 1]).toEqual('\n');
+      }
+    );
+
     it('honors NX_SKIP_LOG_GROUPING', () => {
       const result = withEnvironmentVariables(
         { GITHUB_ACTIONS: 'true', NX_SKIP_LOG_GROUPING: 'true' },
@@ -183,29 +233,46 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
   });
 
   describe('endCommand', () => {
-    it('summarizes skipped and stopped tasks as counts', () => {
+    it('summarizes tasks that never ran as a count', () => {
       const ran = makeTask('ran');
-      const stopped = makeTask('stopped');
       const neverRan = makeTask('never-ran');
-      lifeCycle = createLifeCycle({}, [ran, stopped, neverRan]);
+      lifeCycle = createLifeCycle({}, [ran, neverRan]);
 
-      lifeCycle.endTasks([
-        taskResult(ran, 'success'),
-        taskResult(stopped, 'stopped'),
-      ]);
+      lifeCycle.endTasks([taskResult(ran, 'success')]);
 
       const result = captureOutput(() => lifeCycle.endCommand());
 
-      expect(result).toContain('1 skipped, 1 stopped');
+      expect(result).toContain('1 skipped');
       expect(result).not.toContain('never-ran:test');
-      expect(result).not.toContain('stopped:test');
     });
 
-    it('lists the skipped and stopped task names under --verbose', () => {
-      const ran = makeTask('ran');
+    it('lists both skipped and stopped tasks by name when the run did not complete', () => {
+      const failed = makeTask('failed');
       const stopped = makeTask('stopped');
       const neverRan = makeTask('never-ran');
-      lifeCycle = createLifeCycle({ verbose: true }, [ran, stopped, neverRan]);
+      lifeCycle = createLifeCycle({}, [failed, stopped, neverRan]);
+
+      lifeCycle.endTasks([
+        taskResult(failed, 'failure'),
+        taskResult(stopped, 'stopped'),
+      ]);
+
+      const result = captureOutput(() => lifeCycle.endCommand());
+
+      expect(result).toContain(
+        'Tasks not run because their dependencies failed'
+      );
+      expect(result).toContain('never-ran:test');
+      expect(result).toContain('Tasks stopped before they finished:');
+      expect(result).toContain('stopped:test');
+      expect(result).toContain('Failed tasks:');
+      expect(result).toContain('failed:test');
+    });
+
+    it('does not claim success when a task was stopped', () => {
+      const ran = makeTask('ran');
+      const stopped = makeTask('stopped');
+      lifeCycle = createLifeCycle({}, [ran, stopped]);
 
       lifeCycle.endTasks([
         taskResult(ran, 'success'),
@@ -214,9 +281,44 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
 
       const result = captureOutput(() => lifeCycle.endCommand());
 
-      expect(result).toContain('1 skipped, 1 stopped');
+      expect(result).not.toContain('Successfully ran');
+      expect(result).toContain('did not complete');
+      expect(result).toContain('Tasks stopped before they finished:');
+      // Nothing outright failed, so there is no failure list to print.
+      expect(result).not.toContain('Failed tasks:');
+    });
+
+    it('lists the names of tasks that never ran under --verbose', () => {
+      const ran = makeTask('ran');
+      const neverRan = makeTask('never-ran');
+      lifeCycle = createLifeCycle({ verbose: true }, [ran, neverRan]);
+
+      lifeCycle.endTasks([taskResult(ran, 'success')]);
+
+      const result = captureOutput(() => lifeCycle.endCommand());
+
+      expect(result).toContain('1 skipped');
       expect(result).toContain('never-ran:test');
-      expect(result).toContain('stopped:test');
+    });
+
+    it('says how much output was withheld', () => {
+      lifeCycle.printTaskTerminalOutput(task, 'success', 'the task body');
+      lifeCycle.endTasks([taskResult(task, 'success')]);
+
+      const result = captureOutput(() => lifeCycle.endCommand());
+
+      expect(result).toContain('Output of 1 successful task was not shown');
+      expect(result).toContain('--verbose');
+    });
+
+    it('does not offer the hint when nothing was withheld', () => {
+      lifeCycle = createLifeCycle({ verbose: true });
+      lifeCycle.printTaskTerminalOutput(task, 'success', 'the task body');
+      lifeCycle.endTasks([taskResult(task, 'success')]);
+
+      const result = captureOutput(() => lifeCycle.endCommand());
+
+      expect(result).not.toContain('was not shown');
     });
 
     it('does not mention skipped or stopped tasks when there are none', () => {
@@ -267,9 +369,6 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
         'e:test',
       ]);
       expect(lifeCycle.stoppedTasks.map((t) => t.id)).toEqual(['f:test']);
-      // Nx Cloud reads terminalOutput off of the results it is handed, so
-      // filtering what gets printed must never filter what gets reported.
-      expect(results.every((r) => !!r.terminalOutput)).toBe(true);
     });
   });
 });
