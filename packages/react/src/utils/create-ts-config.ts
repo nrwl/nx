@@ -1,10 +1,9 @@
-import { Tree } from 'nx/src/generators/tree';
 import * as shared from '@nx/js';
-import { updateJson, writeJson } from 'nx/src/generators/utils/json';
 import {
   getTsConfigBaseOptions,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
+import { Tree, updateJson, writeJson } from '@nx/devkit';
 
 export function createTsConfig(
   host: Tree,

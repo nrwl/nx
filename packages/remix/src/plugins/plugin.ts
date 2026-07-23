@@ -3,9 +3,9 @@ import {
   getNamedInputs,
   loadConfigFile,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   AggregateCreateNodesError,
   type CreateDependencies,

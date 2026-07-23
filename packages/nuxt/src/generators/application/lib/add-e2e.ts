@@ -1,6 +1,7 @@
 import {
   getE2EWebServerInfo,
   readTargetDefaultsForTarget,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
@@ -13,7 +14,6 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(
   host: Tree,

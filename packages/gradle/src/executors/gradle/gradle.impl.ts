@@ -5,7 +5,7 @@ import {
   getCustomGradleExecutableDirectoryFromPlugin,
 } from '../../utils/exec-gradle';
 import { dirname, join } from 'node:path';
-import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
+import { runCommandsExecutor as runCommandsImpl } from '@nx/devkit/internal';
 import { getExcludeTasksFromTaskGraph } from './get-exclude-task';
 
 export default async function gradleExecutor(

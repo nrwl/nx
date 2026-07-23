@@ -1,7 +1,7 @@
 import { basename, dirname } from 'path';
-import { interpolate } from 'nx/src/devkit-internals';
 import { joinPathFragments, ProjectGraph } from '@nx/devkit';
 import { StaticRemoteConfig } from '../../utils';
+import { interpolate } from '@nx/devkit/internal';
 
 export function parseRemotesConfig(
   remotes: string[] | undefined,

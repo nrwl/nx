@@ -6,10 +6,9 @@ import {
 import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, isAbsolute } from 'node:path';
-import { LARGE_BUFFER } from 'nx/src/executors/run-commands/run-commands.impl';
 import { GradlePluginOptions } from '../plugin/utils/gradle-plugin-options';
-import { signalToCode } from 'nx/src/utils/exit-codes';
 import treeKill from 'tree-kill';
+import { LARGE_BUFFER, signalToCode } from '@nx/devkit/internal';
 
 export const fileSeparator = process.platform.startsWith('win')
   ? 'file:///'

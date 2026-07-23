@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   NxJsonConfiguration,
@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { LinterInitOptions, lintInitGenerator } from './init';
-import { setWorkspaceRoot } from 'nx/src/utils/workspace-root';
+import { setWorkspaceRoot } from '@nx/devkit/internal';
 
 function getDefault(
   td: TargetDefaults | undefined,

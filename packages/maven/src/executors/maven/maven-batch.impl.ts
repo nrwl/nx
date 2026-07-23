@@ -3,9 +3,8 @@ import { spawn } from 'child_process';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { createInterface } from 'readline';
-import { TaskResult } from 'nx/src/config/misc-interfaces';
-import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import { MavenExecutorSchema } from './schema';
+import { TaskResult, RunCommandsOptions } from '@nx/devkit/internal';
 
 /**
  * Get path to the batch runner JAR

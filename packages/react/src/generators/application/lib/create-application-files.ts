@@ -17,10 +17,6 @@ import { WithReactOptions } from '../../../../plugins/with-react';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
-import {
-  createNxCloudOnboardingURLForWelcomeApp,
-  getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
@@ -32,6 +28,10 @@ import {
   typesNodeVersion,
   typesReactVersion,
 } from '../../../utils/versions';
+import {
+  createNxCloudOnboardingURLForWelcomeApp,
+  getNxCloudAppOnBoardingUrl,
+} from '@nx/devkit/internal';
 
 export function getDefaultTemplateVariables(
   host: Tree,

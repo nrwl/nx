@@ -1,5 +1,5 @@
 import type { CreateNodesResultArray } from '@nx/devkit';
-import type { RawProjectGraphDependency } from 'nx/src/project-graph/project-graph-builder';
+import { type RawProjectGraphDependency } from '@nx/devkit';
 
 export interface MavenPluginOptions {
   verbose?: boolean;

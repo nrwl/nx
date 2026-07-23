@@ -6,7 +6,7 @@ import {
   loadViteDynamicImport,
   loadVitestDynamicImport,
 } from '../../../utils/executor-utils';
-import { isCI } from 'nx/src/devkit-internals';
+import { isCI } from '@nx/devkit/internal';
 
 jest.mock('../../../utils/options-utils', () => ({
   normalizeViteConfigFilePath: jest.fn(),

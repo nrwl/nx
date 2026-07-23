@@ -1,4 +1,8 @@
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  PackageJson,
+  readNxMigrateConfig,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   generateFiles,
@@ -13,7 +17,6 @@ import {
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { dirname, join } from 'node:path';
-import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import { getArtifactMetadataDirectory } from '../../utils/paths';
 import { nxVersion } from '../../utils/versions';
 import { addMigrationJsonChecks } from '../lint-checks/generator';

@@ -4,22 +4,19 @@
 // internal consumers and may change without semver protection. Consider it
 // the @nx/js equivalent of `@nx/devkit/internal`.
 
-// Re-exports of nx-source internals (need `no-restricted-imports` overrides).
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+// Re-exports of nx-source internals.
 export {
   forceRegisterEsmLoader,
   loadTsFile,
   registerTsProject,
   registerTsConfigPaths,
   requireWithTsconfigFallback,
-} from 'nx/src/plugins/js/utils/register';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+} from '@nx/devkit/internal';
 export {
   TargetProjectLocator,
   isBuiltinModuleImport,
-} from 'nx/src/plugins/js/project-graph/build-dependencies/target-project-locator';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-export { findProjectsNpmDependencies } from 'nx/src/plugins/js/package-json/create-package-json';
+} from '@nx/devkit/internal';
+export { findProjectsNpmDependencies } from '@nx/devkit/internal';
 
 // Raw tsconfig walkers (the other AST utils ship via the public @nx/js entry)
 export {

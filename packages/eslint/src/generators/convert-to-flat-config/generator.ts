@@ -15,7 +15,6 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import type { InputDefinition } from 'nx/src/config/workspace-json-project-json';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
 import { hasEslintPlugin } from '../utils/plugin';
@@ -40,6 +39,7 @@ import {
   migrateAngularEslintV22FlatConfig,
   resolveAngularEslintVersion,
 } from './angular-eslint';
+import { type InputDefinition } from '@nx/devkit/internal';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,

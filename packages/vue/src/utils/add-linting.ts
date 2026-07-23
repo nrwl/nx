@@ -2,6 +2,8 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   runTasksInSerial,
+  Tree,
+  joinPathFragments,
 } from '@nx/devkit';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
@@ -16,8 +18,6 @@ import {
   versions,
 } from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
-import { Tree } from 'nx/src/generators/tree';
-import { joinPathFragments } from 'nx/src/utils/path';
 import {
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,

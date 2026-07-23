@@ -14,6 +14,7 @@ import {
   updateJson,
   updateProjectConfiguration,
   writeJson,
+  getProjects,
 } from '@nx/devkit';
 
 import { Linter as LinterEnum, LinterType } from '../utils/linter';
@@ -26,7 +27,6 @@ import { lintInitGenerator } from '../init/init';
 import { warnEslintExecutorGenerating } from '../../utils/deprecation';
 import type { Linter } from 'eslint';
 import { migrateConfigToMonorepoStyle } from '../init/init-migration';
-import { getProjects } from 'nx/src/generators/utils/project-configuration';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
   createNodeList,
