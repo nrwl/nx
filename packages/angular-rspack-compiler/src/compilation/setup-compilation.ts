@@ -2,6 +2,7 @@ import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
 import { InlineStyleLanguage, FileReplacement, type Sass } from '../models';
 import { loadCompilerCli } from '../utils';
+import { applyEs2022TargetDefaults } from '../utils/typescript-compiler-options';
 import { assertSupportedAngularRspackCompilerVersions } from '../utils/assert-supported-versions';
 import {
   ComponentStylesheetBundler,
@@ -16,6 +17,13 @@ import { createRequire } from 'node:module';
 export interface StylesheetTransformResult {
   contents: string;
   outputFiles?: Array<{ path: string; text: string }>;
+  /** Bundle metadata listing the files that went into the stylesheet. */
+  metafile?: {
+    outputs: Record<
+      string,
+      { inputs: Record<string, { bytesInOutput: number }> }
+    >;
+  };
 }
 
 export interface SetupCompilationOptions {
@@ -28,12 +36,15 @@ export interface SetupCompilationOptions {
   hasServer?: boolean;
   includePaths?: string[];
   sass?: Sass;
+  watch?: boolean;
+  sourceMap?: boolean;
+  preserveSymlinks?: boolean;
+  customConditions?: string[];
 }
 
 export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
   suppressOutputPathCheck: true,
   outDir: undefined,
-  sourceMap: true,
   declaration: false,
   declarationMap: false,
   allowEmptyCodegenFiles: false,
@@ -49,6 +60,17 @@ export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
 let COMPONENT_STYLESHEET_BUNDLER: ComponentStylesheetBundler | undefined =
   undefined;
 
+/**
+ * Reads the project's TypeScript configuration with the Angular compiler
+ * defaults applied and creates (or reuses) the shared component stylesheet
+ * bundler. TypeScript sourcemaps are emitted inline and only when
+ * `options.sourceMap` is enabled. Targets below ES2022 are raised (see
+ * `applyEs2022TargetDefaults`), unsupported `module` values are set to
+ * ES2022, and partial compilation mode is forced to full, each with a
+ * warning in the returned `setupWarnings`. Combining `isolatedModules` with
+ * `emitDecoratorMetadata` is also warned about, without forcing either
+ * option.
+ */
 export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
   options: SetupCompilationOptions
@@ -60,9 +82,22 @@ export async function setupCompilation(
     config.source?.tsconfigPath ?? options.tsConfig,
     {
       ...DEFAULT_NG_COMPILER_OPTIONS,
+      // Sourcemaps must be inline to survive the loader chain, and emitting
+      // them forgoes Angular's fast raw-TS emit path, so only emit them when
+      // script sourcemaps are requested.
+      inlineSources: !!options.sourceMap,
+      inlineSourceMap: !!options.sourceMap,
+      sourceMap: undefined,
+      // Composite emit is unsupported and conflicts with the incremental
+      // state handling; force it off.
+      composite: false,
+      // The bundler resolves symlinks based on this option alone; the
+      // program must resolve the same way, so the tsconfig value is ignored.
+      preserveSymlinks: options.preserveSymlinks,
       ...(options.useTsProjectReferences
         ? {
             sourceMap: false,
+            inlineSourceMap: false,
             inlineSources: false,
             isolatedModules: true,
           }
@@ -71,6 +106,53 @@ export async function setupCompilation(
   );
 
   const compilerOptions = tsCompilerOptions;
+
+  const setupWarnings: string[] = [];
+  const hasExplicitUseDefineForClassFields =
+    compilerOptions.useDefineForClassFields !== undefined;
+  if (applyEs2022TargetDefaults(compilerOptions)) {
+    setupWarnings.push(
+      hasExplicitUseDefineForClassFields
+        ? "TypeScript compiler option 'target' is set to 'ES2022'."
+        : "TypeScript compiler options 'target' and 'useDefineForClassFields' are set to 'ES2022' and 'false' respectively."
+    );
+  }
+  // Partial compilation output requires the Angular linker, which the JS
+  // transformer skips for application code; it would ship unlinked and fail
+  // at runtime.
+  if (compilerOptions.compilationMode === 'partial') {
+    setupWarnings.push(
+      'Angular partial compilation mode is not supported when building applications. Full compilation mode will be used instead.'
+    );
+    compilerOptions.compilationMode = 'full';
+  }
+  if (
+    compilerOptions.module === undefined ||
+    compilerOptions.module < ts.ModuleKind.ES2015
+  ) {
+    compilerOptions.module = ts.ModuleKind.ES2022;
+    setupWarnings.push(
+      "TypeScript compiler options 'module' values 'CommonJS', 'UMD', 'System' and 'AMD' are not supported. The 'module' option will be set to 'ES2022' instead."
+    );
+  }
+  if (
+    compilerOptions.isolatedModules &&
+    compilerOptions.emitDecoratorMetadata
+  ) {
+    setupWarnings.push(
+      "TypeScript compiler option 'isolatedModules' may prevent the 'emitDecoratorMetadata' option from emitting all metadata. " +
+        "The 'emitDecoratorMetadata' option is not required by Angular and can be removed if not explicitly required by the project."
+    );
+  }
+  // With bundler-style resolution the program resolves package exports with
+  // these conditions; keep them in step with the bundler's custom
+  // conditions so both resolve the same files.
+  if (
+    compilerOptions.moduleResolution === ts.ModuleResolutionKind.Bundler ||
+    compilerOptions.module === ts.ModuleKind.Preserve
+  ) {
+    compilerOptions.customConditions = options.customConditions;
+  }
 
   const searchDirectories = await generateSearchDirectories([options.root]);
   const postcssConfiguration =
@@ -116,13 +198,14 @@ export async function setupCompilation(
       tailwindConfiguration,
     },
     options.inlineStyleLanguage,
-    false
+    !!options.watch
   );
 
   return {
     rootNames,
     compilerOptions,
     componentStylesheetBundler: COMPONENT_STYLESHEET_BUNDLER,
+    setupWarnings,
   };
 }
 
@@ -174,10 +257,10 @@ export function styleTransform(
         }
       }
 
-      // Return both contents and outputFiles
       return {
         contents: stylesheetResult.contents,
         outputFiles: stylesheetResult.outputFiles,
+        metafile: stylesheetResult.metafile,
       };
     } catch (e) {
       console.error(
