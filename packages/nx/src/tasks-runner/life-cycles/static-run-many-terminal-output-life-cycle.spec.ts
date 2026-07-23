@@ -145,6 +145,29 @@ describe('StaticRunManyTerminalOutputLifeCycle', () => {
       expect(result).toContain('::endgroup::');
     });
 
+    it.each([
+      ['output with a trailing newline', 'the body\n'],
+      ['output without a trailing newline', 'the body'],
+    ])(
+      'terminates the group on its own line for %s',
+      (_name, terminalOutput) => {
+        const result = withEnvironmentVariables(
+          { GITHUB_ACTIONS: 'true', NX_SKIP_LOG_GROUPING: undefined },
+          () =>
+            captureOutput(() =>
+              lifeCycle.printTaskTerminalOutput(task, 'failure', terminalOutput)
+            )
+        );
+
+        // GitHub only honors a workflow command at the start of a line; glued
+        // onto the end of the task's last line it is just text, and the fold
+        // never closes.
+        const index = result.lastIndexOf('::endgroup::');
+        expect(index).toBeGreaterThan(-1);
+        expect(result[index - 1]).toEqual('\n');
+      }
+    );
+
     it('honors NX_SKIP_LOG_GROUPING', () => {
       const result = withEnvironmentVariables(
         { GITHUB_ACTIONS: 'true', NX_SKIP_LOG_GROUPING: 'true' },

@@ -298,6 +298,12 @@ class CLIOutput {
     this.writeToStream(output);
 
     if (grouped) {
+      // GitHub only recognizes a workflow command at the start of a line, so a
+      // task whose output has no trailing newline would otherwise glue
+      // ::endgroup:: onto its last line and leave the fold unterminated.
+      if (output && !output.endsWith('\n')) {
+        this.addNewline();
+      }
       this.writeToStream(GH_GROUP_SUFFIX);
     }
   }
