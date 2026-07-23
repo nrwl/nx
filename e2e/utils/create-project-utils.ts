@@ -296,7 +296,7 @@ export function runCreateWorkspace(
       | 'vitest-analog'
       | 'none';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
-    formatter?: 'prettier' | 'none';
+    formatter?: 'prettier' | 'oxfmt' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;
