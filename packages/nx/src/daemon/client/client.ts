@@ -175,6 +175,7 @@ export class DaemonClient {
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
   private _waitForDaemonReady: Promise<void> | null = null;
   private _daemonReady: () => void | null = null;
+  private _daemonReadyFailed: (err: Error) => void | null = null;
 
   // Shared file watcher connection state
   private fileWatcherMessenger: DaemonSocketMessenger | undefined;
@@ -277,9 +278,27 @@ export class DaemonClient {
     this.projectGraphListenerMessenger = undefined;
 
     this._daemonStatus = DaemonStatus.DISCONNECTED;
-    this._waitForDaemonReady = new Promise<void>(
-      (resolve) => (this._daemonReady = resolve)
-    );
+    this._waitForDaemonReady = this.createReadyPromise();
+  }
+
+  private createReadyPromise(): Promise<void> {
+    const promise = new Promise<void>((resolve, reject) => {
+      this._daemonReady = resolve;
+      this._daemonReadyFailed = reject;
+    });
+    // Callers don't always await — swallow the unhandled-rejection warning
+    // so a rejected ready promise that no one observes doesn't crash the
+    // process. Real awaiters still see the rejection.
+    promise.catch(() => {});
+    return promise;
+  }
+
+  // Move out of CONNECTING and surface an error to every caller parked on
+  // `_waitForDaemonReady`. Without this, a failure while CONNECTING leaves
+  // concurrent callers waiting on a promise that will never settle.
+  private failDaemonReady(err: Error) {
+    this._daemonStatus = DaemonStatus.DISCONNECTED;
+    this._daemonReadyFailed?.(err);
   }
 
   private getSocketPath(): string {
@@ -1001,30 +1020,41 @@ export class DaemonClient {
     }
     // Ensure daemon is running and socket path is available
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
+      // Create a fresh ready promise for any concurrent caller that hits
+      // the CONNECTING branch below before this attempt resolves.
+      this._waitForDaemonReady = this.createReadyPromise();
       this._daemonStatus = DaemonStatus.CONNECTING;
 
-      let daemonPid: number | null = null;
-      let serverAvailable: boolean;
       try {
-        serverAvailable = await this.isServerAvailable();
-      } catch (err) {
-        // Version mismatch - treat as server not available, start new one
-        if (err instanceof VersionMismatchError) {
-          serverAvailable = false;
-        } else {
-          throw err;
+        let daemonPid: number | null = null;
+        let serverAvailable: boolean;
+        try {
+          serverAvailable = await this.isServerAvailable();
+        } catch (err) {
+          // Version mismatch - treat as server not available, start new one
+          if (err instanceof VersionMismatchError) {
+            serverAvailable = false;
+          } else {
+            throw err;
+          }
         }
-      }
-      if (!serverAvailable) {
-        daemonPid = await this.startInBackground();
-      }
-      this.setUpConnection();
-      this._daemonStatus = DaemonStatus.CONNECTED;
-      this._daemonReady();
+        if (!serverAvailable) {
+          daemonPid = await this.startInBackground();
+        }
+        this.setUpConnection();
+        this._daemonStatus = DaemonStatus.CONNECTED;
+        this._daemonReady();
 
-      daemonPid ??= getDaemonProcessIdSync();
-      // Fire-and-forget - don't block daemon connection by waiting for metrics registration
-      this.registerDaemonProcessWithMetricsService(daemonPid);
+        daemonPid ??= getDaemonProcessIdSync();
+        // Fire-and-forget - don't block daemon connection by waiting for metrics registration
+        this.registerDaemonProcessWithMetricsService(daemonPid);
+      } catch (err) {
+        // Reset to DISCONNECTED and reject the ready promise so every
+        // concurrent caller parked on the CONNECTING branch gets the
+        // error instead of hanging forever.
+        this.failDaemonReady(err);
+        throw err;
+      }
     } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
       await this._waitForDaemonReady;
       const daemonPid = getDaemonProcessIdSync();
@@ -1098,10 +1128,26 @@ export class DaemonClient {
   private async handleConnectionError(error: Error) {
     clientLogger.log(`[Reconnect] Connection error detected: ${error.message}`);
 
+    // Plugin workers can't survive the daemon going away: their view of
+    // the workspace is tied to the dead daemon (graph state, cached
+    // context, plugin module state). Reconnecting to a new daemon —
+    // potentially a different version — can't produce a correct result,
+    // and `startInBackground` would throw anyway. Fail every queued and
+    // future message with a clear error so callers see a fast failure
+    // instead of hanging on a reconnect path that can't succeed.
+    if (global.NX_PLUGIN_WORKER) {
+      const pluginWorkerError = daemonProcessException(
+        `Plugin worker lost its daemon connection and cannot reconnect: ${error.message}`
+      );
+      if (this.currentReject) {
+        this.currentReject(pluginWorkerError);
+      }
+      this.failDaemonReady(pluginWorkerError);
+      return;
+    }
+
     // Create a new ready promise for new requests to wait on
-    this._waitForDaemonReady = new Promise<void>(
-      (resolve) => (this._daemonReady = resolve)
-    );
+    this._waitForDaemonReady = this.createReadyPromise();
 
     // Set status to CONNECTING so new requests will wait for reconnection
     this._daemonStatus = DaemonStatus.CONNECTING;
@@ -1117,8 +1163,10 @@ export class DaemonClient {
         if (this.currentReject) {
           this.currentReject(err);
         }
+        this.failDaemonReady(err);
         return;
       }
+      this.failDaemonReady(err);
       throw err;
     }
 
@@ -1144,6 +1192,7 @@ export class DaemonClient {
       if (this.currentReject) {
         this.currentReject(error);
       }
+      this.failDaemonReady(error);
     }
   }
 
