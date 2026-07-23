@@ -1,4 +1,4 @@
-import { major } from 'semver';
+import { major, parse } from 'semver';
 import { logger } from '../logger';
 import { getBunSpawnRegistryEnv } from './bun';
 import { getPnpmSpawnRegistryEnv } from './pnpm';
@@ -56,6 +56,44 @@ export function getNpmSpawnRegistryEnv(
       e
     );
     return {};
+  }
+}
+
+/**
+ * Whether the package manager resolves registry, auth and TLS settings without
+ * reading `npm_config_*`, so an ambient one is a value it would never have seen.
+ * pnpm reads them up to 10.x and stops at 11.0.0 (which switched to its own
+ * `PNPM_CONFIG_*` prefix), and yarn berry has never read them; npm reads them by
+ * definition, and bun reads them for the settings this module bridges.
+ *
+ * Callers pass it to `mergeNpmConfigEnv`, which then drops those ambient entries
+ * rather than letting npm's env tier resolve one the package manager ignored.
+ * An undetermined or unparseable version answers false: bridging is skipped or
+ * falls open there anyway, so the ambient environment stays as it is today.
+ */
+export function ignoresNpmConfigEnv(
+  packageManager: PackageManager,
+  packageManagerVersion: string | null
+): boolean {
+  const version = packageManagerVersion ? parse(packageManagerVersion) : null;
+  if (!version) {
+    return false;
+  }
+  switch (packageManager) {
+    case 'npm':
+    case 'bun':
+      return false;
+    case 'pnpm':
+      return version.major >= 11;
+    case 'yarn':
+      return version.major >= 2;
+    default: {
+      // A new PackageManager member fails typecheck here until it is classified
+      // above. This runs outside getNpmSpawnRegistryEnv's catch, so at runtime
+      // it keeps the ambient environment instead of throwing.
+      const _exhaustive: never = packageManager;
+      return false;
+    }
   }
 }
 
