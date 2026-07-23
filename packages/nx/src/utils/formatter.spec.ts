@@ -40,7 +40,10 @@ describe('detectFormatterInTree', () => {
 
   it('should detect oxfmt from a dependency when it has no config file', () => {
     // oxfmt runs on defaults, so a config file is optional.
-    tree.write('package.json', JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } }));
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } })
+    );
 
     expect(detectFormatterInTree(tree)).toBe('oxfmt');
   });
@@ -48,13 +51,19 @@ describe('detectFormatterInTree', () => {
   it('should NOT treat an installed prettier as intent to use prettier', () => {
     // Workspaces formatting with biome/dprint routinely have prettier in the
     // dependency graph. Formatting them with prettier would be wrong (#30426).
-    tree.write('package.json', JSON.stringify({ devDependencies: { prettier: '^3.6.2' } }));
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { prettier: '^3.6.2' } })
+    );
 
     expect(detectFormatterInTree(tree)).toBeNull();
   });
 
   it('should detect prettier configured through package.json', () => {
-    tree.write('package.json', JSON.stringify({ prettier: { singleQuote: true } }));
+    tree.write(
+      'package.json',
+      JSON.stringify({ prettier: { singleQuote: true } })
+    );
 
     expect(detectFormatterInTree(tree)).toBe('prettier');
   });
@@ -94,7 +103,9 @@ describe('detectFormatter', () => {
     writeFileSync(join(root, '.prettierrc'), '{}');
 
     expect(detectFormatter(root)).toBe('prettier');
-    expect(detectFormatter(mkdtempSync(join(tmpdir(), 'nx-empty-')))).toBeNull();
+    expect(
+      detectFormatter(mkdtempSync(join(tmpdir(), 'nx-empty-')))
+    ).toBeNull();
   });
 
   it('should NOT treat an installed prettier as intent to use prettier', () => {

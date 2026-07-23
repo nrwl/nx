@@ -25,7 +25,11 @@ import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { readModulePackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { detectFormatter, type FormatterType } from '../../utils/formatter';
+import {
+  detectFormatter,
+  FORMATTER_MAX_BUFFER,
+  type FormatterType,
+} from '../../utils/formatter';
 import { getOxfmtBinPath } from '../../utils/oxfmt';
 
 export async function format(
@@ -217,10 +221,14 @@ function write(formatterType: FormatterType, patterns: string[]) {
 
 function writeWithOxfmt(patterns: string[]) {
   const oxfmtPath = getOxfmtBinPath();
-  execFileSync('node', [oxfmtPath, ...OXFMT_BASE_ARGS, '--write', ...patterns], {
-    stdio: [0, 1, 2],
-    windowsHide: true,
-  });
+  execFileSync(
+    'node',
+    [oxfmtPath, ...OXFMT_BASE_ARGS, '--write', ...patterns],
+    {
+      stdio: [0, 1, 2],
+      windowsHide: true,
+    }
+  );
 }
 
 function writeWithPrettier(patterns: string[]) {
@@ -278,7 +286,11 @@ function checkWithOxfmt(patterns: string[]): Promise<string[]> {
     execFile(
       'node',
       [oxfmtPath, ...OXFMT_BASE_ARGS, '--list-different', ...patterns],
-      { encoding: 'utf-8' as const, windowsHide: true },
+      {
+        encoding: 'utf-8' as const,
+        windowsHide: true,
+        maxBuffer: FORMATTER_MAX_BUFFER,
+      },
       (error, stdout, stderr) => {
         // oxfmt writes the differing paths to stdout *before* it reports any
         // error, so a non-empty stdout does not mean the run succeeded. The
@@ -294,7 +306,13 @@ function checkWithOxfmt(patterns: string[]): Promise<string[]> {
         } else {
           // Exit 1 with no stdout means an invalid config; exit 2 means oxfmt
           // failed outright (parse error, unreadable file).
-          reject(new Error(stderr?.trim() || error?.message || `oxfmt exited with code ${code}`));
+          reject(
+            new Error(
+              stderr?.trim() ||
+                error?.message ||
+                `oxfmt exited with code ${code}`
+            )
+          );
         }
       }
     );
@@ -308,7 +326,7 @@ function checkWithPrettier(patterns: string[]): Promise<string[]> {
       `node "${prettierPath}" --list-different ${patterns
         .map(quoteForShell)
         .join(' ')}`,
-      { encoding: 'utf-8', windowsHide: true },
+      { encoding: 'utf-8', windowsHide: true, maxBuffer: FORMATTER_MAX_BUFFER },
       (error, stdout) => {
         if (error) {
           if (stdout.length === 0) {
