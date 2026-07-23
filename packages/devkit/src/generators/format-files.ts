@@ -146,7 +146,10 @@ async function formatWithOxfmt(
   ) => Promise<Map<string, string>>;
   let oxfmtConfigFiles: string[];
   try {
-    ({ formatFilesWithOxfmt, oxfmtConfigFiles } = require('nx/src/devkit-internals'));
+    ({
+      formatFilesWithOxfmt,
+      oxfmtConfigFiles,
+    } = require('nx/src/devkit-internals'));
     if (!formatFilesWithOxfmt) return;
   } catch {
     return;
