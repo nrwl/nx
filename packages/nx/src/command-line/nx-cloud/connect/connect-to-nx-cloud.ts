@@ -22,7 +22,7 @@ import {
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
 import { isCI } from '../../../utils/is-ci';
-import { isAiAgent } from '../../../native';
+import { isAiAgent, openUrl } from '../../../native';
 import { detectPackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
@@ -200,26 +200,28 @@ async function runConnectToNxCloud(
     undefined,
     options?.generateToken === true
   );
+  const manualConnectNote = {
+    title: `Your Nx Cloud workspace is ready.`,
+    bodyLines: [
+      `To claim it, connect it to your Nx Cloud account:`,
+      `- Go to the following URL to connect your workspace to Nx Cloud:`,
+      '',
+      `${connectCloudUrl}`,
+    ],
+  };
   try {
     const cloudConnectSpinner = ora(
       `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
     ).start();
     await sleep(2000);
-    const { default: open } = await (new Function(
-      'return import("open")'
-    )() as Promise<typeof import('open')>);
-    await open(connectCloudUrl);
-    cloudConnectSpinner.succeed();
+    if (openUrl(connectCloudUrl)) {
+      cloudConnectSpinner.succeed();
+    } else {
+      cloudConnectSpinner.fail();
+      output.note(manualConnectNote);
+    }
   } catch (e) {
-    output.note({
-      title: `Your Nx Cloud workspace is ready.`,
-      bodyLines: [
-        `To claim it, connect it to your Nx Cloud account:`,
-        `- Go to the following URL to connect your workspace to Nx Cloud:`,
-        '',
-        `${connectCloudUrl}`,
-      ],
-    });
+    output.note(manualConnectNote);
   }
 
   return true;
