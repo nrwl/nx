@@ -62,7 +62,7 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
   let dependency: Task;
 
   function createLifeCycle(
-    args: { verbose?: boolean } = {},
+    args: { verbose?: boolean; outputStyle?: string } = {},
     tasks: Task[] = [initiating, dependency]
   ) {
     return new StaticRunOneTerminalOutputLifeCycle(
@@ -134,6 +134,20 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
     );
 
     it.each(COLLAPSED_STATUSES)(
+      'prints the full output of a dependency task on %s under --output-style=static-full',
+      (status) => {
+        const lifeCycle = createLifeCycle({ outputStyle: 'static-full' });
+
+        const result = captureOutput(() =>
+          lifeCycle.printTaskTerminalOutput(dependency, status, 'the lib body')
+        );
+
+        expect(result).toContain('> nx run lib:build');
+        expect(result).toContain('the lib body');
+      }
+    );
+
+    it.each(COLLAPSED_STATUSES)(
       'prints the full output of a dependency task on %s under --verbose',
       (status) => {
         const lifeCycle = createLifeCycle({ verbose: true });
@@ -184,6 +198,20 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
       expect(result).toContain('1 skipped, 1 stopped');
       expect(result).toContain('never-ran:build');
       expect(result).toContain('stopped:build');
+    });
+
+    it('lists tasks that never ran when the run failed', () => {
+      const neverRan = makeTask('never-ran');
+      const lifeCycle = createLifeCycle({}, [initiating, neverRan]);
+
+      lifeCycle.endTasks([taskResult(initiating, 'failure')]);
+
+      const result = captureOutput(() => lifeCycle.endCommand());
+
+      expect(result).toContain(
+        'Tasks not run because their dependencies failed'
+      );
+      expect(result).toContain('never-ran:build');
     });
 
     it('reports stopped tasks alongside failures', () => {
