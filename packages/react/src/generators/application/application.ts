@@ -75,7 +75,8 @@ export async function applicationGeneratorInternal(
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin,
-    formatter: schema.formatter,
+    // The published @nx/js types predate 'oxfmt'; it is accepted at runtime.
+    formatter: schema.formatter as 'none' | 'prettier',
     platform: 'web',
   });
   tasks.push(jsInitTask);
