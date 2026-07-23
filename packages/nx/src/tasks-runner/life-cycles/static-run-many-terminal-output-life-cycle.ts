@@ -16,6 +16,7 @@ import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
+  stoppedTasks = [] as Task[];
   allCompletedTasks = new Map<string, Task>();
 
   constructor(
@@ -24,6 +25,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     private readonly args: {
       targets?: string[];
       configuration?: string;
+      verbose?: boolean;
     },
     private readonly taskOverrides: any
   ) {}
@@ -91,6 +93,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
               ),
             ]
           : [];
+      bodyLines.push(...this.tasksNotRunSummary());
 
       output.success({
         title: `Successfully ran ${formatTargetsAndProjects(
@@ -115,6 +118,14 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
           ''
         );
       }
+      if (this.stoppedTasks.length > 0) {
+        bodyLines.push(
+          output.dim('Tasks stopped before they finished:'),
+          '',
+          ...this.stoppedTasks.map((task) => `${output.dim('-')} ${task.id}`),
+          ''
+        );
+      }
       bodyLines.push(
         output.dim('Failed tasks:'),
         '',
@@ -133,8 +144,41 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     }
   }
 
+  /**
+   * Tasks with a `skipped` status are never reported through `endTasks`, so
+   * they are derived by subtracting everything that did complete.
+   */
   private skippedTasks() {
     return this.tasks.filter((t) => !this.allCompletedTasks.has(t.id));
+  }
+
+  /**
+   * Tasks that never produced output worth printing are summarized as counts,
+   * with their names available behind --verbose.
+   */
+  private tasksNotRunSummary(): string[] {
+    const skippedTasks = this.skippedTasks();
+    const counts: string[] = [];
+    if (skippedTasks.length > 0) {
+      counts.push(`${skippedTasks.length} skipped`);
+    }
+    if (this.stoppedTasks.length > 0) {
+      counts.push(`${this.stoppedTasks.length} stopped`);
+    }
+    if (counts.length === 0) {
+      return [];
+    }
+
+    const lines = [output.dim(counts.join(', '))];
+    if (this.args.verbose) {
+      lines.push(
+        '',
+        ...[...skippedTasks, ...this.stoppedTasks].map(
+          (task) => `${output.dim('-')} ${task.id}`
+        )
+      );
+    }
+    return lines;
   }
 
   endTasks(taskResults: TaskResult[]): void {
@@ -142,6 +186,8 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       this.allCompletedTasks.set(t.task.id, t.task);
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
+      } else if (t.status === 'stopped') {
+        this.stoppedTasks.push(t.task);
       } else if (t.status === 'local-cache') {
         this.cachedTasks.push(t.task);
       } else if (t.status === 'local-cache-kept-existing') {
@@ -154,10 +200,19 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
 
   printTaskTerminalOutput(
     task: Task,
-    cacheStatus: TaskStatus,
+    taskStatus: TaskStatus,
     terminalOutput: string
   ) {
+    // Counted in the end of run summary instead.
+    if (taskStatus === 'skipped' || taskStatus === 'stopped') {
+      return;
+    }
+
     const args = getPrintableCommandArgsForTask(task);
-    output.logCommandOutput(args.join(' '), cacheStatus, terminalOutput);
+    if (this.args.verbose || taskStatus === 'failure') {
+      output.logCommandOutput(args.join(' '), taskStatus, terminalOutput);
+    } else {
+      output.logCommandSummary(args.join(' '), taskStatus);
+    }
   }
 }
