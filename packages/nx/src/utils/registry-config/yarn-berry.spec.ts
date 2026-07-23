@@ -32,6 +32,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     'YARN_RC_FILENAME',
     'YARN_HTTPS_CA_FILE_PATH',
     'YARN_CA_FILE_PATH',
+    'YARN_HTTPS_CERT_FILE_PATH',
+    'YARN_HTTPS_KEY_FILE_PATH',
     'YARN_ENABLE_STRICT_SSL',
     'YARN_HTTP_PROXY',
     'YARN_HTTPS_PROXY',
@@ -1000,6 +1002,86 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.8.7')).toEqual({
       npm_config_registry: 'https://registry.yarnpkg.com',
       npm_config_cafile: '/etc/ssl/v3-env-ca.pem',
+    });
+  });
+
+  it('bridges a client certificate as a pair', () => {
+    projectRc(
+      [
+        'httpsCertFilePath: ./certs/client.crt',
+        'httpsKeyFilePath: ./certs/client.key',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      'npm_config_//registry.yarnpkg.com/:certfile': resolve(
+        ROOT,
+        './certs/client.crt'
+      ),
+      'npm_config_//registry.yarnpkg.com/:keyfile': resolve(
+        ROOT,
+        './certs/client.key'
+      ),
+    });
+  });
+
+  it('emits neither half of an incomplete client certificate', () => {
+    // Berry presents nothing without the key, and npm reads the pair the same
+    // way, so a lone certfile would only be dead config in the overlay.
+    projectRc('httpsCertFilePath: ./certs/client.crt\n');
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+    });
+  });
+
+  it('fills the client certificate per host and the key globally', () => {
+    // getNetworkSettings fills each key independently, so a per-host cert and a
+    // global key are the one pair berry ends up presenting.
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'httpsKeyFilePath: ./certs/global.key',
+        'networkSettings:',
+        '  "reg-a.example.com":',
+        '    httpsCertFilePath: ./certs/host.crt',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:certfile': resolve(
+        ROOT,
+        './certs/host.crt'
+      ),
+      'npm_config_//reg-a.example.com/:keyfile': resolve(
+        ROOT,
+        './certs/global.key'
+      ),
+    });
+  });
+
+  it('reads the client certificate from the YARN_* env vars', () => {
+    process.env.YARN_HTTPS_CERT_FILE_PATH = '/etc/ssl/env.crt';
+    process.env.YARN_HTTPS_KEY_FILE_PATH = '/etc/ssl/env.key';
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.8.7')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      'npm_config_//registry.yarnpkg.com/:certfile': '/etc/ssl/env.crt',
+      'npm_config_//registry.yarnpkg.com/:keyfile': '/etc/ssl/env.key',
+    });
+  });
+
+  it('ignores the client certificate settings below 3.2.0', () => {
+    // berry did not know the names yet and aborts on them, so there is no
+    // resolution to reproduce.
+    process.env.YARN_HTTPS_CERT_FILE_PATH = '/etc/ssl/env.crt';
+    process.env.YARN_HTTPS_KEY_FILE_PATH = '/etc/ssl/env.key';
+    projectRc(
+      [
+        'httpsCertFilePath: ./certs/client.crt',
+        'httpsKeyFilePath: ./certs/client.key',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.1.1')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
     });
   });
 

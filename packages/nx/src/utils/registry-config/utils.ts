@@ -195,6 +195,24 @@ export function setAuthIdent(
   }
 }
 
+/**
+ * npm presents a client certificate only when both halves are configured, so
+ * they are set together; each is a path, not the material itself.
+ * See https://github.com/npm/npm-registry-fetch/blob/v19.1.1/lib/auth.js#L170
+ */
+export function setClientCertificate(
+  env: NpmConfigEnv,
+  registryUrl: string,
+  certfile: string,
+  keyfile: string
+): void {
+  const dart = nerfDart(registryUrl);
+  if (dart) {
+    env[`npm_config_${dart}:certfile`] = certfile;
+    env[`npm_config_${dart}:keyfile`] = keyfile;
+  }
+}
+
 export function setCafile(env: NpmConfigEnv, path: string): void {
   env['npm_config_cafile'] = path;
 }
