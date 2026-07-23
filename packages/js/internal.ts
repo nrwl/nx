@@ -50,7 +50,10 @@ export {
 // the public @nx/js entry. getTsConfigBaseOptions is public too, but is
 // re-exported here so internal consumers can import it from @nx/js/internal.
 export { getTsConfigBaseOptions } from './src/utils/typescript/create-ts-config';
-export { createTreeParseConfigHost } from './src/utils/typescript/ts-config';
+export {
+  createTreeParseConfigHost,
+  type TreeParseConfigHost,
+} from './src/utils/typescript/ts-config';
 export { ensureTypescript } from './src/utils/typescript/ensure-typescript';
 export {
   getRangeMinimum,

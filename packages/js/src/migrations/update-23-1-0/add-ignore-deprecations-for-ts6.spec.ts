@@ -1054,8 +1054,9 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
     it('flags a child that inherits a deprecated value through a package-form "extends"', async () => {
       // A package-provided base (an @tsconfig/* preset) is reached through node
-      // module resolution, which a naive tree.read host cannot follow because
-      // TypeScript realpath-absolutizes the target. The base lives under
+      // module resolution, which probes for the package with fileExists and
+      // directoryExists; a host answering those from ts.sys reads real disk and
+      // never finds a base that exists only in the tree. The base lives under
       // node_modules and is not named tsconfig*.json, so it is never collected;
       // its node10 reaches the child only if the host resolves the package.
       tree.write(

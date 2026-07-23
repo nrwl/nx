@@ -12,8 +12,10 @@ import {
   createTreeParseConfigHost,
   readTsConfigPaths,
   resolvePathsBaseUrl,
+  type TreeParseConfigHost,
 } from './ts-config';
 import { join } from 'path';
+import * as ts from 'typescript';
 
 describe('resolvePathsBaseUrl', () => {
   let tempFs: TempFs;
@@ -333,15 +335,20 @@ describe('readTsConfigPaths', () => {
 describe('createTreeParseConfigHost', () => {
   let root: string;
   let outside: string;
-  let host: ReturnType<typeof createTreeParseConfigHost>;
+  let tree: FsTree;
+  let host: TreeParseConfigHost;
+  let originalCwd: string;
 
   beforeEach(() => {
+    originalCwd = process.cwd();
     root = realpathSync(mkdtempSync(join(tmpdir(), 'tree-host-root-')));
     outside = realpathSync(mkdtempSync(join(tmpdir(), 'tree-host-out-')));
-    host = createTreeParseConfigHost(new FsTree(root, false));
+    tree = new FsTree(root, false);
+    host = createTreeParseConfigHost(tree);
   });
 
   afterEach(() => {
+    process.chdir(originalCwd);
     rmSync(root, { recursive: true, force: true });
     rmSync(outside, { recursive: true, force: true });
   });
@@ -381,5 +388,60 @@ describe('createTreeParseConfigHost', () => {
     expect(host.fileExists(join(root, 'config'))).toBe(false);
     expect(host.directoryExists(join(root, 'config'))).toBe(true);
     expect(host.fileExists(join(root, 'config.json'))).toBe(true);
+  });
+
+  it('parses an extension-less extends to the .json sibling of a same-named directory', () => {
+    mkdirSync(join(root, 'config'));
+    tree.write(
+      'config.json',
+      JSON.stringify({ compilerOptions: { moduleResolution: 'node10' } })
+    );
+
+    const parsed = ts.parseJsonConfigFileContent(
+      { extends: './config', compilerOptions: {} },
+      host,
+      '.'
+    );
+
+    expect(parsed.options.moduleResolution).toBe(
+      ts.ModuleResolutionKind.Node10
+    );
+  });
+
+  it('resolves a package-form extends against the tree root, not the working directory', () => {
+    // TypeScript resolves the package as a relative path and hands it to
+    // realpath; ts.sys.realpath would anchor it to process.cwd(), so a
+    // same-named package sitting next to the process would win over the tree.
+    tree.write(
+      'node_modules/@tsconfig/base/package.json',
+      JSON.stringify({ name: '@tsconfig/base', version: '1.0.0' })
+    );
+    tree.write(
+      'node_modules/@tsconfig/base/base.json',
+      JSON.stringify({ compilerOptions: { moduleResolution: 'node10' } })
+    );
+    mkdirSync(join(outside, 'node_modules/@tsconfig/base'), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(outside, 'node_modules/@tsconfig/base/package.json'),
+      JSON.stringify({ name: '@tsconfig/base', version: '1.0.0' })
+    );
+    writeFileSync(
+      join(outside, 'node_modules/@tsconfig/base/base.json'),
+      JSON.stringify({ compilerOptions: { declaration: true } })
+    );
+    process.chdir(outside);
+
+    const parsed = ts.parseJsonConfigFileContent(
+      { extends: '@tsconfig/base/base.json', compilerOptions: {} },
+      host,
+      'libs/a'
+    );
+
+    expect(parsed.options.moduleResolution).toBe(
+      ts.ModuleResolutionKind.Node10
+    );
+    expect(parsed.options.declaration).toBeUndefined();
   });
 });
