@@ -1848,7 +1848,7 @@ async function determineStandaloneOrMonorepo(): Promise<
       type: 'autocomplete',
       name: 'workspaceType',
       message: `Integrated monorepo, or standalone project?`,
-      initial: 0,
+      initial: 1,
       choices: [
         {
           name: 'integrated',
