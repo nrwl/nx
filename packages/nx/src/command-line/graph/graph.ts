@@ -567,8 +567,9 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      // Best-effort: openUrl never throws and returns false if no browser could
-      // be launched. The URL is already printed above, so a failure is silent.
+      // Best-effort: openUrl never throws and returns false if the opener
+      // process couldn't be spawned. The URL is already printed above, so a
+      // failure is silent.
       openUrl(url.toString());
     }
 
