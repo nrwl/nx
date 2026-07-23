@@ -58,7 +58,8 @@ export async function applicationGeneratorInternal(
         : 'tsconfig.base.json',
       skipFormat: true,
       addTsPlugin,
-      formatter: _options.formatter,
+      // The published @nx/js types predate 'oxfmt'; it is accepted at runtime.
+      formatter: _options.formatter as 'none' | 'prettier',
       platform: 'web',
     })
   );
