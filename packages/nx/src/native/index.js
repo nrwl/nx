@@ -1,10 +1,5 @@
 const { join, basename } = require('path');
-const {
-  copyFileSync,
-  renameSync,
-  statSync,
-  unlinkSync,
-} = require('fs');
+const { copyFileSync, renameSync, statSync, unlinkSync } = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const {
