@@ -1,11 +1,34 @@
+import * as figures from 'figures';
 import { EOL } from 'os';
 import * as pc from 'picocolors';
 import * as readline from 'readline';
 import { WriteStream } from 'tty';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 
+/**
+ * The statuses whose output can be collapsed to a single line: the task did the
+ * work, or the cache stood in for it.
+ */
+export type CollapsibleTaskStatus = Extract<
+  TaskStatus,
+  'success' | 'local-cache' | 'local-cache-kept-existing' | 'remote-cache'
+>;
+
 const GH_GROUP_PREFIX = '::group::';
 const GH_GROUP_SUFFIX = '::endgroup::';
+
+/**
+ * Whether task output should be wrapped in collapsible log groups. Grouping
+ * requires each task's output to be written as one contiguous block, which is
+ * why batch mode's implicit streaming backs off when this is on. It does not
+ * govern streaming in general — an explicit `--output-style`, the TUI, and
+ * long running tasks all still stream.
+ */
+export function isLogGroupingEnabled(): boolean {
+  return (
+    process.env.NX_SKIP_LOG_GROUPING !== 'true' && !!process.env.GITHUB_ACTIONS
+  );
+}
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -86,8 +109,24 @@ class CLIOutput {
   underline = pc.underline;
   dim = pc.dim;
 
+  /**
+   * Whether stdout is positioned at the start of a line. Task output does not
+   * reliably end in a newline, so writers that must begin on a fresh line ask
+   * for one via {@link ensureLineStart} rather than guessing.
+   */
+  private atLineStart = true;
+
   private writeToStream(str: string, stream: WriteStream = process.stdout) {
+    if (stream === process.stdout && str.length > 0) {
+      this.atLineStart = str.endsWith('\n');
+    }
     stream.write(str);
+  }
+
+  private ensureLineStart() {
+    if (!this.atLineStart) {
+      this.addNewline();
+    }
   }
 
   overwriteLine(lineText: string = '') {
@@ -273,10 +312,8 @@ class CLIOutput {
       taskStatus
     );
 
-    if (
-      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
-      process.env.GITHUB_ACTIONS
-    ) {
+    const grouped = isLogGroupingEnabled();
+    if (grouped) {
       const icon = this.getStatusIcon(taskStatus);
       commandOutputWithStatus = `${GH_GROUP_PREFIX}${icon} ${commandOutputWithStatus}`;
     }
@@ -287,12 +324,29 @@ class CLIOutput {
     this.addNewline();
     this.writeToStream(output);
 
-    if (
-      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
-      process.env.GITHUB_ACTIONS
-    ) {
-      this.writeToStream(GH_GROUP_SUFFIX);
+    if (grouped) {
+      // GitHub only recognizes ::endgroup:: as a workflow command when it
+      // starts a line, and task output routinely lacks a trailing newline.
+      this.ensureLineStart();
+      this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
     }
+  }
+
+  /**
+   * A single line standing in for a task's full output, used when the output
+   * itself carries no information worth printing (a success, or a cache hit).
+   * Statuses that carry a diagnosable body are deliberately not accepted here.
+   */
+  logCommandSummary(message: string, taskStatus: CollapsibleTaskStatus) {
+    // The preceding task may have left the cursor mid-line, and this line must
+    // not be glued onto the end of that task's output.
+    this.ensureLineStart();
+    const icon = pc.green(figures.tick);
+    const command = this.addTaskStatus(
+      taskStatus,
+      this.formatCommand(this.normalizeMessage(message))
+    );
+    this.writeToStream(`${icon}  ${command}${EOL}`);
   }
 
   private getCommandWithStatus(

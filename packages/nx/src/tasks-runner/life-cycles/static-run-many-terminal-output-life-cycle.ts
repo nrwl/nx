@@ -16,7 +16,9 @@ import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
+  stoppedTasks = [] as Task[];
   allCompletedTasks = new Map<string, Task>();
+  private collapsedTasks = 0;
 
   constructor(
     private readonly projectNames: string[],
@@ -24,6 +26,8 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     private readonly args: {
       targets?: string[];
       configuration?: string;
+      verbose?: boolean;
+      outputStyle?: string;
     },
     private readonly taskOverrides: any
   ) {}
@@ -80,7 +84,10 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       output.logSingleLine(`No tasks were run`);
       return;
     }
-    if (this.failedTasks.length === 0) {
+    // A stopped task was killed mid-flight, so the run did not complete even
+    // though nothing outright failed. `didCommandComplete` already treats it
+    // that way; reporting "Successfully ran" here would contradict it.
+    if (this.failedTasks.length === 0 && this.stoppedTasks.length === 0) {
       output.addVerticalSeparatorWithoutNewLines('green');
 
       const bodyLines =
@@ -91,6 +98,8 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
               ),
             ]
           : [];
+      bodyLines.push(...this.tasksNotRunSummary());
+      bodyLines.push(...this.hiddenOutputHint());
 
       output.success({
         title: `Successfully ran ${formatTargetsAndProjects(
@@ -115,26 +124,101 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
           ''
         );
       }
-      bodyLines.push(
-        output.dim('Failed tasks:'),
-        '',
-        ...[...this.failedTasks.values()].map(
-          (task) => `${output.dim('-')} ${task.id}`
-        )
+      if (this.stoppedTasks.length > 0) {
+        bodyLines.push(
+          output.dim('Tasks stopped before they finished:'),
+          '',
+          ...this.stoppedTasks.map((task) => `${output.dim('-')} ${task.id}`),
+          ''
+        );
+      }
+      if (this.failedTasks.length > 0) {
+        bodyLines.push(
+          output.dim('Failed tasks:'),
+          '',
+          ...[...this.failedTasks.values()].map(
+            (task) => `${output.dim('-')} ${task.id}`
+          )
+        );
+      }
+      bodyLines.push(...this.hiddenOutputHint());
+
+      const targets = formatTargetsAndProjects(
+        this.projectNames,
+        this.args.targets,
+        this.tasks
       );
       output.error({
-        title: `Running ${formatTargetsAndProjects(
-          this.projectNames,
-          this.args.targets,
-          this.tasks
-        )} failed`,
+        title:
+          this.failedTasks.length > 0
+            ? `Running ${targets} failed`
+            : `Running ${targets} did not complete`,
         bodyLines,
       });
     }
   }
 
+  /**
+   * Tasks with a `skipped` status are never reported through `endTasks`, so
+   * they are derived by subtracting everything that did complete.
+   */
   private skippedTasks() {
     return this.tasks.filter((t) => !this.allCompletedTasks.has(t.id));
+  }
+
+  /**
+   * Whether this run prints every task's output in full rather than collapsing
+   * the ones that succeeded.
+   */
+  private get printsFullOutput(): boolean {
+    return this.args.verbose || this.args.outputStyle === 'static-full';
+  }
+
+  /**
+   * Tells the reader that output was withheld, so a task that succeeded while
+   * printing something worth reading is not silently swallowed.
+   */
+  private hiddenOutputHint(): string[] {
+    if (this.printsFullOutput || this.collapsedTasks === 0) {
+      return [];
+    }
+    return [
+      '',
+      `${output.dim(
+        `Output of ${this.collapsedTasks} successful ${
+          this.collapsedTasks === 1 ? 'task was' : 'tasks were'
+        } not shown. Run with`
+      )} --verbose ${output.dim('to see it.')}`,
+    ];
+  }
+
+  /**
+   * Tasks that never produced output worth printing are summarized as counts,
+   * with their names available behind --verbose.
+   */
+  private tasksNotRunSummary(): string[] {
+    const skippedTasks = this.skippedTasks();
+    const counts: string[] = [];
+    if (skippedTasks.length > 0) {
+      counts.push(`${skippedTasks.length} skipped`);
+    }
+    if (this.stoppedTasks.length > 0) {
+      counts.push(`${this.stoppedTasks.length} stopped`);
+    }
+    if (counts.length === 0) {
+      return [];
+    }
+
+    const lines = [output.dim(counts.join(', '))];
+    if (this.args.verbose) {
+      lines.push(
+        '',
+        ...[...skippedTasks, ...this.stoppedTasks].map(
+          (task) => `${output.dim('-')} ${task.id}`
+        )
+      );
+    }
+    return lines;
   }
 
   endTasks(taskResults: TaskResult[]): void {
@@ -142,6 +226,8 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       this.allCompletedTasks.set(t.task.id, t.task);
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
+      } else if (t.status === 'stopped') {
+        this.stoppedTasks.push(t.task);
       } else if (t.status === 'local-cache') {
         this.cachedTasks.push(t.task);
       } else if (t.status === 'local-cache-kept-existing') {
@@ -154,10 +240,23 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
 
   printTaskTerminalOutput(
     task: Task,
-    cacheStatus: TaskStatus,
+    taskStatus: TaskStatus,
     terminalOutput: string
   ) {
     const args = getPrintableCommandArgsForTask(task);
-    output.logCommandOutput(args.join(' '), cacheStatus, terminalOutput);
+    if (this.printsFullOutput || taskStatus === 'failure') {
+      // A stopped task was killed part way through, so its partial output is
+      // exactly what is wanted when diagnosing a hang — never drop it here.
+      output.logCommandOutput(args.join(' '), taskStatus, terminalOutput);
+      return;
+    }
+
+    // Counted in the end of run summary instead.
+    if (taskStatus === 'skipped' || taskStatus === 'stopped') {
+      return;
+    }
+
+    this.collapsedTasks++;
+    output.logCommandSummary(args.join(' '), taskStatus);
   }
 }

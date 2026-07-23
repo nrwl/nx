@@ -313,7 +313,10 @@ async function runPublishOnProjects(
     { nxJson },
     {
       targets: [requiredTargetName],
-      outputStyle: 'static',
+      // Everything this command reports — the dry-run summary, the package
+      // contents, the registry and tag — is printed from inside the task, so
+      // it must not be collapsed away when the task succeeds.
+      outputStyle: 'static-full',
       ...(args as any),
       // It is possible for workspaces to have circular dependencies between packages and still release them to a registry
       nxIgnoreCycles: true,

@@ -61,6 +61,7 @@ import {
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
   removeTasksFromTaskGraph,
+  isStaticOutputStyle,
   shouldStreamOutput,
 } from './utils';
 
@@ -1060,10 +1061,9 @@ export class TaskOrchestrator {
 
     const pipeOutput = await this.pipeOutputCapture(task);
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput =
-      this.outputStyle === 'static'
-        ? false
-        : shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput = isStaticOutputStyle(this.outputStyle)
+      ? false
+      : shouldStreamOutput(task, this.initiatingProject);
 
     const env = pipeOutput
       ? getEnvVariablesForTask(
@@ -1369,10 +1369,9 @@ export class TaskOrchestrator {
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput =
-      this.outputStyle === 'static'
-        ? false
-        : shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput = isStaticOutputStyle(this.outputStyle)
+      ? false
+      : shouldStreamOutput(task, this.initiatingProject);
 
     let env = pipeOutput
       ? getEnvVariablesForTask(
