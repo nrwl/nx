@@ -35,6 +35,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     'YARN_HTTPS_CERT_FILE_PATH',
     'YARN_HTTPS_KEY_FILE_PATH',
     'YARN_ENABLE_STRICT_SSL',
+    'YARN_ENABLE_NETWORK',
     'YARN_HTTP_PROXY',
     'YARN_HTTPS_PROXY',
     'BERRY_TEST_CA',
@@ -1002,6 +1003,87 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.8.7')).toEqual({
       npm_config_registry: 'https://registry.yarnpkg.com',
       npm_config_cafile: '/etc/ssl/v3-env-ca.pem',
+    });
+  });
+
+  describe('a host yarn refuses to reach', () => {
+    // enableNetwork: false makes berry exit without contacting the registry
+    // (verified on 4.15.0), and npm has no setting that reproduces it.
+    const warnOnce = (rc: string, versions: string[]): string[] => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      projectRc(rc);
+      jest.isolateModules(() => {
+        const { getYarnBerrySpawnRegistryEnv: fresh } = require('./yarn-berry');
+        for (const version of versions) {
+          fresh('is-even', ROOT, version);
+        }
+      });
+      return (logger.warn as jest.Mock).mock.calls.map((call) => call[0]);
+    };
+
+    it('reports a global enableNetwork once', () => {
+      const messages = warnOnce(
+        [
+          'npmRegistryServer: https://reg-a.example.com/',
+          'enableNetwork: false',
+        ].join('\n'),
+        ['4.16.0', '4.16.0']
+      );
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toContain('reg-a.example.com');
+    });
+
+    it('reports a per-host enableNetwork for the registry it resolved', () => {
+      const messages = warnOnce(
+        [
+          'npmRegistryServer: https://reg-a.example.com/',
+          'networkSettings:',
+          '  "reg-a.example.com":',
+          '    enableNetwork: false',
+        ].join('\n'),
+        ['4.16.0']
+      );
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toContain('reg-a.example.com');
+    });
+
+    it('stays quiet when another host is the one cut off', () => {
+      const messages = warnOnce(
+        [
+          'npmRegistryServer: https://reg-a.example.com/',
+          'networkSettings:',
+          '  "reg-other.example.com":',
+          '    enableNetwork: false',
+        ].join('\n'),
+        ['4.16.0']
+      );
+      expect(messages).toEqual([]);
+    });
+
+    it('lets a per-host entry re-enable the network globally turned off', () => {
+      // getNetworkSettings reads the matching host entry before the global
+      // value, so the narrower setting is the one that applies.
+      const messages = warnOnce(
+        [
+          'npmRegistryServer: https://reg-a.example.com/',
+          'enableNetwork: false',
+          'networkSettings:',
+          '  "reg-a.example.com":',
+          '    enableNetwork: true',
+        ].join('\n'),
+        ['4.16.0']
+      );
+      expect(messages).toEqual([]);
+    });
+
+    it('reports the env var too', () => {
+      process.env.YARN_ENABLE_NETWORK = 'false';
+      const messages = warnOnce(
+        'npmRegistryServer: https://reg-a.example.com/\n',
+        ['4.16.0']
+      );
+      expect(messages).toHaveLength(1);
     });
   });
 
