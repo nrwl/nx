@@ -43,7 +43,7 @@ import {
 } from './flat-config/ast-utils';
 import { mapFilePath } from './flat-config/path-utils';
 import ts = require('typescript');
-import { dirname } from 'node:path/posix';
+import { dirname, extname } from 'node:path/posix';
 
 export function findEslintFile(
   tree: Tree,
@@ -198,6 +198,27 @@ function offsetFilePath(
     return pathToFile;
   }
   return joinPathFragments(offset, projectRoot, pathToFile);
+}
+
+/**
+ * The module system a flat config file actually runs under. `.cts` and `.mts`
+ * fix it by extension, so the content is only a signal for the ambiguous ones
+ * (`.js`, `.ts`). Trusting content alone reads an idiomatic `export default` in
+ * a `.cts` as ESM and emits an `import.meta` its CommonJS output rejects.
+ */
+function determineEslintConfigFormatForFile(
+  fileName: string,
+  content: string
+): 'mjs' | 'cjs' {
+  const extension = extname(fileName);
+  if (extension === '.mjs' || extension === '.mts') {
+    return 'mjs';
+  }
+  if (extension === '.cjs' || extension === '.cts') {
+    return 'cjs';
+  }
+
+  return determineEslintConfigFormat(content);
 }
 
 export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
@@ -584,9 +605,9 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
   if (detectTypedLintingShape(content) !== null) {
     return;
   }
-  // AST-based detection avoids string false-positives like `// export default ...`
-  // inside a `.cjs` config.
-  const format = determineEslintConfigFormat(content);
+  // The block carries `tsconfigRootDir`, whose value differs per module system,
+  // so the extension has to win over the content where it is decisive.
+  const format = determineEslintConfigFormatForFile(fileName, content);
   const block = generateTypedLintingFlatConfigOverride(format);
   const updated = addBlockToFlatConfigExport(content, block);
   if (updated === content) {

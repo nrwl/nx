@@ -1325,5 +1325,33 @@ module.exports = [
       );
       warn.mockRestore();
     });
+
+    it('uses __dirname for a cts config written with `export default`', () => {
+      // `.cts` builds into CommonJS, where `import.meta` is a TypeScript error,
+      // so the extension has to outrank the ESM-looking content.
+      tree.write(
+        'libs/test/eslint.config.cts',
+        `export default [{ files: ['**/*.ts'], rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.cts', 'utf-8');
+      expect(content).toContain('tsconfigRootDir: __dirname');
+      expect(content).not.toContain('import.meta.dirname');
+    });
+
+    it('uses import.meta.dirname for an mts config written with `module.exports`', () => {
+      tree.write(
+        'libs/test/eslint.config.mts',
+        `module.exports = [{ files: ['**/*.ts'], rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mts', 'utf-8');
+      expect(content).toContain('tsconfigRootDir: import.meta.dirname');
+      expect(content).not.toContain('tsconfigRootDir: __dirname');
+    });
   });
 });
