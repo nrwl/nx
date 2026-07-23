@@ -6,6 +6,7 @@ pub mod logger;
 mod machine_id;
 pub mod metadata;
 pub mod plugins;
+pub mod profiler;
 pub mod project_graph;
 pub mod tasks;
 mod types;

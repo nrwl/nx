@@ -1,5 +1,6 @@
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
+import { statSync } from 'node:fs';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
 import { Task } from '../config/task-graph';
@@ -23,6 +24,18 @@ export function getForceColorForChild(): string {
   }
   return 'true';
 }
+
+// ── .env parse cache ──────────────────────────────────────────────────────────
+// Keyed by the joined file path(s). Invalidated when any file's mtime changes
+// (the signature encodes every file's path + mtime). We cache only the raw
+// parsed key=value pairs (pre-expansion). Variable expansion (${FOO}
+// substitutions) still runs live because it depends on the per-task processEnv
+// context which differs between tasks.
+interface DotEnvCacheEntry {
+  signature: string;
+  parsed: Record<string, string>;
+}
+const dotEnvParseCache = new Map<string, DotEnvCacheEntry>();
 
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
@@ -183,21 +196,65 @@ function getNxEnvVariablesForTask(
  * @param filename the .env file(s) to load
  * @param environmentVariables the object to load environment variables into
  * @param override whether to override existing environment variables
+ *
+ * Parsed file content is cached in-process keyed by (path, mtime). Repeated
+ * calls for the same unchanged file skip the file read and re-parse. Variable
+ * expansion still runs live since it depends on the caller's env context.
  */
 export function loadAndExpandDotEnvFile(
   filename: string | string[],
   environmentVariables: NodeJS.ProcessEnv,
   override = false
 ) {
+  const files = Array.isArray(filename) ? filename : [filename];
+  const cacheKey = files.join('\0');
+  let signature: string;
+  try {
+    // Encode every file's path + mtime so the entry invalidates if any change.
+    signature = files.map((f) => `${f}:${statSync(f).mtimeMs}`).join('|');
+  } catch {
+    // Could not stat a file (e.g. it does not exist). Fall back to dotenv's own
+    // handling — which returns `{ error }` for a missing file — so callers that
+    // inspect `result.error` (e.g. a missing required `envFile`) still observe
+    // it. Skip caching since there is no valid mtime signature to key on.
+    const myEnv = loadDotEnvFile({
+      path: filename,
+      processEnv: environmentVariables,
+      override,
+    });
+    return expand({ ...myEnv, processEnv: environmentVariables });
+  }
+
+  const cached = dotEnvParseCache.get(cacheKey);
+  if (cached && cached.signature === signature) {
+    // Cache hit: apply pre-parsed content to environmentVariables, then expand.
+    applyParsedToEnv(cached.parsed, environmentVariables, override);
+    return expand({ parsed: cached.parsed, processEnv: environmentVariables });
+  }
+
+  // Cache miss: let dotenv read + parse the file(s), then store the parsed result.
   const myEnv = loadDotEnvFile({
     path: filename,
     processEnv: environmentVariables,
     override,
   });
-  return expand({
-    ...myEnv,
-    processEnv: environmentVariables,
-  });
+  if (myEnv.parsed) {
+    dotEnvParseCache.set(cacheKey, { signature, parsed: myEnv.parsed });
+  }
+  return expand({ ...myEnv, processEnv: environmentVariables });
+}
+
+/** Replicate dotenv's apply-to-processEnv step for cache-hit paths. */
+function applyParsedToEnv(
+  parsed: Record<string, string>,
+  processEnv: NodeJS.ProcessEnv,
+  override: boolean
+) {
+  for (const key of Object.keys(parsed)) {
+    if (override || !Object.prototype.hasOwnProperty.call(processEnv, key)) {
+      processEnv[key] = parsed[key];
+    }
+  }
 }
 
 /**
