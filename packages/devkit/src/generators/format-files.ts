@@ -54,13 +54,19 @@ export async function formatFiles(
   }
 
   let formatterType: 'prettier' | 'oxfmt' | null = null;
+  let detectFormatterInTree: ((tree: Tree) => typeof formatterType) | undefined;
   try {
-    const { detectFormatterInTree } = require('nx/src/devkit-internals');
-    if (detectFormatterInTree) {
-      formatterType = detectFormatterInTree(tree);
-    }
-  } catch {
-    // Fallback for older nx versions: check prettier directly
+    detectFormatterInTree =
+      require('nx/src/devkit-internals').detectFormatterInTree;
+  } catch {}
+
+  if (detectFormatterInTree) {
+    formatterType = detectFormatterInTree(tree);
+  } else {
+    // devkit supports nx +/- 1 major, and detectFormatterInTree does not exist
+    // in older versions. Missing exports do not throw, so this has to be a
+    // presence check rather than a catch - otherwise formatting is silently
+    // skipped against an older nx.
     try {
       if ((await importPrettier()) && isUsingPrettierInTree(tree)) {
         formatterType = 'prettier';
@@ -132,33 +138,56 @@ async function formatWithOxfmt(
   files: Set<{ path: string; content: Buffer }>
 ) {
   // Declared locally rather than via `typeof import('nx/src/devkit-internals')`:
-  // devkit type-checks against the published nx, which predates this export.
-  let formatContentWithOxfmt: (
-    filepath: string,
-    content: string,
-    configPath?: string
-  ) => Promise<string>;
+  // devkit type-checks against the published nx, which predates these exports.
+  let formatFilesWithOxfmt: (
+    files: { path: string; content: string }[],
+    workspaceRoot: string,
+    seedConfig?: { name: string; content: string }
+  ) => Promise<Map<string, string>>;
+  let oxfmtConfigFiles: string[];
   try {
-    formatContentWithOxfmt =
-      require('nx/src/devkit-internals').formatContentWithOxfmt;
-    if (!formatContentWithOxfmt) return;
+    ({ formatFilesWithOxfmt, oxfmtConfigFiles } = require('nx/src/devkit-internals'));
+    if (!formatFilesWithOxfmt) return;
   } catch {
     return;
   }
 
-  await Promise.all(
-    Array.from(files).map(async (file) => {
-      try {
-        const formatted = await formatContentWithOxfmt(
-          path.join(tree.root, file.path),
-          file.content.toString('utf-8')
-        );
-        tree.write(file.path, formatted);
-      } catch (e) {
-        console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
-      }
-    })
-  );
+  const staged = Array.from(files).map((file) => ({
+    path: file.path,
+    content: file.content.toString('utf-8'),
+  }));
+
+  try {
+    const formatted = await formatFilesWithOxfmt(
+      staged,
+      tree.root,
+      getGeneratedOxfmtConfig(tree, oxfmtConfigFiles)
+    );
+    for (const [filePath, content] of formatted) {
+      tree.write(filePath, content);
+    }
+  } catch (e) {
+    // One message for the batch - a per-file warning would be a wall of noise.
+    console.warn(`Could not format files with oxfmt. Error: "${e.message}"`);
+  }
+}
+
+/**
+ * A config the generator just created exists only in the tree, so oxfmt cannot
+ * discover it on disk. Hand it over so the files it writes match the config it
+ * ships with.
+ */
+function getGeneratedOxfmtConfig(
+  tree: Tree,
+  configFiles: string[]
+): { name: string; content: string } | undefined {
+  const changed = new Set(tree.listChanges().map((change) => change.path));
+  for (const name of configFiles ?? []) {
+    if (changed.has(name)) {
+      return { name, content: tree.read(name, 'utf-8') };
+    }
+  }
+  return undefined;
 }
 
 function sortTsConfig(tree: Tree) {
