@@ -790,6 +790,37 @@ console.log('Build complete');
 
       expect(output).toContain(`http://localhost:${unusedPort}`);
     });
+
+    it('should warn and continue if remote cache retrieval fails but NX_REMOTE_CACHE_NON_FATAL=true', async () => {
+      const projectName = uniq('myapp');
+      const outputFilePath = `dist/${projectName}/output.txt`;
+      updateFile(
+        `projects/${projectName}/project.json`,
+        JSON.stringify({
+          name: projectName,
+          targets: {
+            build: {
+              command: `node -e 'const {mkdirSync, writeFileSync} = require("fs"); mkdirSync("dist/${projectName}", {recursive: true}); writeFileSync("${outputFilePath}", "Hello World")'`,
+              outputs: ['{workspaceRoot}/dist/{projectName}'],
+              cache: true,
+            },
+          },
+        })
+      );
+      const output = runCLI(`build ${projectName}`, {
+        env: {
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${unusedPort}`,
+          NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
+          NX_REMOTE_CACHE_NON_FATAL: 'true',
+        },
+        silenceError: true,
+      });
+
+      expect(output).toContain(
+        `Warning: Remote cache error occurred but was ignored due to NX_REMOTE_CACHE_NON_FATAL=true. Nx will continue running, but nothing will be read from the remote cache. Error details:`
+      );
+      expect(output).toContain(`http://localhost:${unusedPort}`);
+    });
   });
 
   function expectCached(
