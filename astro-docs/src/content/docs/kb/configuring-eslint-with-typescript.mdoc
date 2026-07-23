@@ -10,7 +10,13 @@ topics:
 
 ESLint is powerful linter by itself, able to work on the syntax of your source files and assert things about based on the rules you configure. It gets even more powerful, however, when TypeScript type-checker is layered on top of it when analyzing TypeScript files, which is something that `@typescript-eslint` allows us to do.
 
-By default, Nx sets up your ESLint configs with performance in mind - we want your linting to run as fast as possible. Because creating the necessary so called TypeScript `Program`s required to create the type-checker behind the scenes is relatively expensive compared to pure syntax analysis, you should only configure the `parserOptions.project` option in your project's `.eslintrc.json` when you need to use rules requiring type information (and you should not configure `parserOptions.project` in your workspace's root `.eslintrc.json`).
+By default, Nx sets up your ESLint configs with performance in mind.
+Creating the TypeScript `Program`s that back the type-checker is expensive compared to pure syntax analysis, so only turn typed linting on for a project once you need rules that require type information.
+Leave it off in your workspace's root config.
+
+How you turn it on depends on the config format.
+Flat configs use `parserOptions.projectService`, which lets typescript-eslint find the right tsconfig for each file.
+Legacy `.eslintrc` configs are JSON, so they can't express the `tsconfigRootDir` value Nx pairs with the project service, and they keep using `parserOptions.project`.
 
 Let's take an example of an ESLint config that Nx might generate for you out of the box for a Next.js project called `tuskdesk`:
 
@@ -25,7 +31,7 @@ import nxPlugin from '@nx/eslint-plugin';
 import reactPlugin from '@nx/react/eslint-plugin';
 
 const compat = new FlatCompat({
-  baseDirectory: __dirname,
+  baseDirectory: import.meta.dirname,
   recommendedConfig: js.configs.recommended,
 });
 
@@ -76,7 +82,7 @@ export default [
 {% /tabitem %}
 {% /tabs %}
 
-Here we do _not_ have `parserOptions.project`, which is appropriate because we are not leveraging any rules which require type information.
+Here we have _no_ typed linting configured, which is appropriate because we aren't using any rules which require type information.
 
 If we now come in and add a rule which does require type information, for example `@typescript-eslint/await-thenable`, our config will look as follows:
 
@@ -91,7 +97,7 @@ import nxPlugin from '@nx/eslint-plugin';
 import reactPlugin from '@nx/react/eslint-plugin';
 
 const compat = new FlatCompat({
-  baseDirectory: __dirname,
+  baseDirectory: import.meta.dirname,
   recommendedConfig: js.configs.recommended,
 });
 
@@ -155,15 +161,14 @@ Now if we try and run `nx lint tuskdesk` we will get an error
 
 Linting "tuskdesk"...
 
-    Error: You have attempted to use a lint rule which requires the full
-    TypeScript type-checker to be available, but you do not have
-    `parserOptions.project` configured to point at your project
-    tsconfig.json files in the relevant TypeScript file "overrides"
-    block of your project ESLint config `apps/tuskdesk/.eslintrc.json`
+    You have used a rule which requires type information, but don't have
+    parserOptions set to generate type information for this file.
+    See https://tseslint.com/typed-linting for enabling linting with
+    type information.
 
 ```
 
-The solution is to update our config once more, this time to set `parserOptions.project` to appropriately point at our various tsconfig.json files which belong to our project:
+The solution is to update our config once more, this time to configure typed linting for the project:
 
 {% tabs syncKey="eslint-config-preference" %}
 {% tabitem label="Flat Config" %}
@@ -174,10 +179,9 @@ import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import nxPlugin from '@nx/eslint-plugin';
 import reactPlugin from '@nx/react/eslint-plugin';
-import tseslint from 'typescript-eslint';
 
 const compat = new FlatCompat({
-  baseDirectory: __dirname,
+  baseDirectory: import.meta.dirname,
   recommendedConfig: js.configs.recommended,
 });
 
@@ -188,9 +192,10 @@ export default [
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     languageOptions: {
-      // We set parserOptions.project for the project to allow TypeScript to create the type-checker behind the scenes when we run linting
+      // The project service lets typescript-eslint find the tsconfig files for us and create the type-checker behind the scenes when we run linting
       parserOptions: {
-        project: ['apps/tuskdesk/tsconfig.*?.json'],
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
@@ -244,8 +249,30 @@ export default [
 
 And that's it! Now any rules requiring type information will run correctly when we run `nx lint tuskdesk`.
 
-{% aside type="caution" title="Using Next.js" %}
-As well as adapting the path to match your project's real path, please be aware that if you apply the above to a **Next.js** application, you should change the glob pattern at the end to be `tsconfig(.*)?.json`.
+`import.meta` isn't available in CommonJS, so in a `.cjs` or `.cts` flat config use `tsconfigRootDir: __dirname` instead.
+A `.mts` config uses `import.meta.dirname`, like the `.mjs` example above.
+
+{% aside type="caution" title="Using Next.js with a legacy config" %}
+When you set `parserOptions.project` by hand, adapt the path to match your project's real path.
+If you apply the above to a Next.js application, you should also change the glob pattern at the end to be `tsconfig(.*)?.json`.
 
 E.g. if `tuskdesk` had been a Next.js app, we would have written: `"project": ["apps/tuskdesk/tsconfig(.*)?.json"]`
+
+Flat configs using `projectService` don't need this.
+The project service finds the tsconfig files itself.
+{% /aside %}
+
+## Letting Nx configure it for you
+
+Generators that set up linting for a project accept `--enableTypedLinting`, which writes the block above for you in whichever format your workspace uses:
+
+```shell
+nx g @nx/react:app apps/tuskdesk --enableTypedLinting
+```
+
+A generator skips the step when your config already configures typed linting, whether through `projectService` or `parserOptions.project`, so re-running one won't produce a conflicting block.
+
+{% aside type="note" title="Deprecated flag" %}
+`--setParserOptionsProject` is the former name of this flag and still works, but it's deprecated and will be removed in Nx v24.
+Use `--enableTypedLinting` instead.
 {% /aside %}
