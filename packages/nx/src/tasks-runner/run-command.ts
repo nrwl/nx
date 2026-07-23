@@ -33,7 +33,7 @@ import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
 } from '../utils/nx-key';
-import { output } from '../utils/output';
+import { isLogGroupingEnabled, output } from '../utils/output';
 import { shouldPrintConfigureAiAgentsDisclaimer } from '../ai/configure-ai-agents-disclaimer';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
@@ -954,10 +954,14 @@ export function setEnvVarsBasedOnArgs(
   nxArgs: NxArgs,
   loadDotEnvFiles: boolean
 ) {
+  // Batch mode turns on streaming implicitly, but streamed output interleaves
+  // between tasks and so cannot be wrapped in collapsible log groups. Where
+  // grouping applies, let it win over the implicit request; an output style the
+  // user asked for explicitly still wins over grouping.
+  const batchMode = process.env.NX_BATCH_MODE === 'true' || nxArgs.batch;
   if (
     nxArgs.outputStyle == 'stream' ||
-    process.env.NX_BATCH_MODE === 'true' ||
-    nxArgs.batch
+    (batchMode && !isLogGroupingEnabled())
   ) {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
