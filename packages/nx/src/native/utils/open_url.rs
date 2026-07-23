@@ -18,6 +18,16 @@ pub fn open_url(url: String) -> bool {
     open_url_native(&url)
 }
 
+/// wasm can't spawn a child process, so opening a browser is a no-op there. This
+/// stub keeps `openUrl` exported on the wasm binding, so JS callers get the
+/// documented `false` ("couldn't open") instead of a `TypeError` from calling a
+/// missing export.
+#[cfg(target_arch = "wasm32")]
+#[napi]
+pub fn open_url(_url: String) -> bool {
+    false
+}
+
 /// Rust-facing entry point (the napi wrapper just forwards a `String`). Callers
 /// inside the native crate — e.g. the TUI — use this directly.
 #[cfg(not(target_arch = "wasm32"))]
@@ -41,10 +51,11 @@ fn build_open_command(url: &str) -> Command {
 
 #[cfg(all(not(target_arch = "wasm32"), target_os = "windows"))]
 fn build_open_command(url: &str) -> Command {
-    let mut c = Command::new("cmd");
-    // The empty "" is the window-title argument `start` expects first.
-    c.args(["/C", "start", "", url]);
-    c
+    // Use PowerShell's Start-Process with the URL as a base64 -EncodedCommand
+    // rather than `cmd /C start "" <url>`: std spawns the URL unquoted, and
+    // `cmd` treats a `&` in a query string as a command separator, which both
+    // truncates real cloud/release URLs and is a command-injection sink.
+    powershell_start_process(url)
 }
 
 #[cfg(all(
@@ -59,7 +70,7 @@ fn build_open_command(url: &str) -> Command {
     // it is exactly the crash this replaces (`open@8` misdetected Podman as
     // bare WSL) — so containers must stay on `xdg-open`.
     if is_wsl2() && !is_in_container() {
-        windows_browser_command(url)
+        powershell_start_process(url)
     } else {
         let mut c = Command::new("xdg-open");
         c.arg(url);
@@ -83,7 +94,7 @@ fn is_wsl2() -> bool {
     })
 }
 
-/// Detects an OCI container (Docker `/​.dockerenv`, or Podman
+/// Detects an OCI container (Docker `/.dockerenv`, or Podman
 /// `/run/.containerenv`). This is the marker `open@8`'s `is-docker` missed for
 /// Podman, causing the original crash.
 #[cfg(all(
@@ -99,17 +110,14 @@ fn is_in_container() -> bool {
     })
 }
 
-/// Launch the Windows browser from WSL via the host PowerShell. The URL is
-/// handed over as a base64 UTF-16LE `-EncodedCommand` (the same mechanism the
-/// `open` package used) so shell metacharacters — notably `&` in a query
-/// string, a `cmd.exe` separator — can neither break the command line nor
-/// inject anything: the URL never appears on a command line as text.
-#[cfg(all(
-    not(target_arch = "wasm32"),
-    not(target_os = "macos"),
-    not(target_os = "windows")
-))]
-fn windows_browser_command(url: &str) -> Command {
+/// Launch the default browser via the Windows host PowerShell — used on native
+/// Windows and, through WSL interop, on non-container WSL2. The URL is handed
+/// over as a base64 UTF-16LE `-EncodedCommand` (the same mechanism the `open`
+/// package used) so shell metacharacters — notably `&` in a query string, a
+/// `cmd.exe` separator — can neither break the command line nor inject
+/// anything: the URL never appears on a command line as text.
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
+fn powershell_start_process(url: &str) -> Command {
     // Single-quoted PowerShell literal; the only in-literal escape is a single
     // quote, doubled.
     let script = format!("Start-Process '{}'", url.replace('\'', "''"));
@@ -128,12 +136,8 @@ fn windows_browser_command(url: &str) -> Command {
 }
 
 /// Minimal standard-alphabet base64 encoder (padded). Kept local to avoid a new
-/// crate dependency for the single WSL `-EncodedCommand` call site.
-#[cfg(all(
-    not(target_arch = "wasm32"),
-    not(target_os = "macos"),
-    not(target_os = "windows")
-))]
+/// crate dependency for the `-EncodedCommand` call site.
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
 fn base64_encode(input: &[u8]) -> String {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::with_capacity(input.len().div_ceil(3) * 4);
@@ -179,12 +183,12 @@ mod tests {
     }
 
     #[test]
-    fn wsl_command_encodes_url_without_leaking_metacharacters() {
+    fn powershell_command_encodes_url_without_leaking_metacharacters() {
         // A URL with `&` (cmd separator) and a single quote must round-trip
         // through the encoded command untouched — the raw URL must never appear
         // as a plain argument.
         let url = "https://cloud.nx.app/connect?a=1&b=2&x='y";
-        let cmd = windows_browser_command(url);
+        let cmd = powershell_start_process(url);
         let args: Vec<String> = cmd
             .get_args()
             .map(|a| a.to_string_lossy().into_owned())

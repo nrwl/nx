@@ -159,9 +159,10 @@ export async function openCloudSetupUrl(
 
   try {
     // Reuse the workspace's freshly-installed native Nx opener rather than
-    // bundling our own `open` dependency. Nx is installed at the same version
-    // as this CLI, so `openUrl` is present; an older Nx without it just falls
-    // through to the catch, where the URL is already shown in the banner.
+    // bundling our own `open` dependency. Nx is installed at the same version as
+    // this CLI, so `openUrl` is present; an older Nx that lacks it makes the
+    // optional call a silent no-op, while a missing native module throws and is
+    // caught. Either way the URL is already shown in the banner.
     const nativePath = require.resolve('nx/src/native', {
       paths: [workspaceDirectory],
     });
