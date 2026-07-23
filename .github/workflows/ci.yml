@@ -21,6 +21,8 @@ env:
 jobs:
   main-linux:
     runs-on: ubuntu-latest
+    outputs:
+      segfault-cores: ${{ steps.collect-segfault-cores.outputs.cores-found }}
     env:
       NX_BATCH_MODE: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
@@ -45,7 +47,9 @@ jobs:
 
       - name: Set verbose logging from debug mode
         if: runner.debug == '1'
-        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+        run: |
+          echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+          echo "NX_SEGFAULT_DIAGNOSTICS_LOG=true" >> "$GITHUB_ENV"
 
       - name: Fetch Master
         run: git fetch origin master:master
@@ -92,8 +96,18 @@ jobs:
         run:
           pnpm nx report
 
+      - name: Enable core dumps for segfault diagnostics
+        run: |
+          sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+          # Runner default pipes cores to apport, which discards them.
+          sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p'
+
       - name: Run Checks/Lint/Test/Build
         run: |
+          # Intermittent SIGSEGV kills of nx clients happen in this step
+          # (e.g. runs 29067764140, 29103579727); keep cores so the
+          # "Collect segfault cores" step can capture a native backtrace.
+          ulimit -c unlimited
           pids=()
 
           pnpm nx record -- nx format:check &
@@ -115,9 +129,75 @@ jobs:
             wait "$pid"
           done
         timeout-minutes: 100
+      - name: Collect segfault cores
+        id: collect-segfault-cores
+        if: failure()
+        run: |
+          shopt -s nullglob
+          cores=(/tmp/cores/core.*)
+          if [ ${#cores[@]} -eq 0 ]; then
+            echo 'No core dumps found'
+            exit 0
+          fi
+          echo "cores-found=true" >> "$GITHUB_OUTPUT"
+          command -v gdb >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q gdb; }
+          kept=0
+          for c in "${cores[@]}"; do
+            {
+              echo "===== backtrace for $c ====="
+              # `command -v node` resolves to the mise shim; symbolizing a core
+              # against the wrong executable yields garbage frames. Read the
+              # crashed process's real executable path from the core itself.
+              exe=$(file -b "$c" | sed -n "s/.*execfn: '\([^']*\)'.*/\1/p")
+              [ -x "$exe" ] || exe=$(mise which node 2>/dev/null || command -v node)
+              gdb -q -batch -ex 'set pagination off' -ex bt -ex 'info threads' \
+                "$exe" "$c" 2>&1 | head -150
+            } >> /tmp/cores/backtraces.txt
+            if [ "$kept" -lt 3 ]; then
+              gzip -f "$c" && kept=$((kept+1)) || true
+            else
+              rm -f "$c"
+            fi
+          done
+          echo "Captured ${#cores[@]} core dump(s); backtraces are in the segfault-cores-linux artifact"
+          # Full gdb output is noisy; only mirror it into the job log when
+          # explicitly requested (or when the run is in debug mode, which
+          # sets this flag in "Set verbose logging from debug mode").
+          if [ "$NX_SEGFAULT_DIAGNOSTICS_LOG" = "true" ]; then
+            cat /tmp/cores/backtraces.txt
+          fi
+
+      - name: Upload segfault cores
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: segfault-cores-linux
+          path: |
+            /tmp/cores/backtraces.txt
+            /tmp/cores/*.gz
+          if-no-files-found: ignore
+
       - name: Fix CI
         run: pnpm nx fix-ci
         if: failure()
+
+  notify-segfault-capture:
+    name: Report captured segfault cores
+    runs-on: ubuntu-latest
+    needs: main-linux
+    # Fires only when "Collect segfault cores" actually found core dumps.
+    # Skipped for fork PRs, which cannot read the webhook secret.
+    if: ${{ always() && needs.main-linux.outputs.segfault-cores == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
+        with:
+          status: 'failure'
+          message_format: '{emoji} SIGSEGV core dump captured in main-linux (`${{ github.ref_name }}`) — backtraces in the `segfault-cores-linux` artifact'
+          notification_title: 'CI segfault catcher'
+          footer: '<{run_url}|View run + artifact> / Last commit <{commit_url}|{commit_sha}>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   main-macos:
     runs-on: macos-latest
