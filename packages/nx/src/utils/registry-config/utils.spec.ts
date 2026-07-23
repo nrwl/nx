@@ -285,6 +285,49 @@ describe('mergeNpmConfigEnv', () => {
     ).toEqual({ npm_config_cafile: '/ca.pem', NPM_CONFIG_CAFILE: '' });
   });
 
+  it('drops an ambient setting the package manager never reads', () => {
+    // npm's env tier sits above every .npmrc, so an ambient cafile pnpm 11 or
+    // berry ignored would still displace the chain they resolved from.
+    expect(
+      mergeNpmConfigEnv(
+        { NPM_CONFIG_CAFILE: '/ca.pem', PATH: '/usr/bin' },
+        { npm_config_registry: 'https://overlay.example.com/' },
+        true
+      )
+    ).toEqual({
+      PATH: '/usr/bin',
+      npm_config_registry: 'https://overlay.example.com/',
+    });
+  });
+
+  it('drops an ambient credential and scoped registry the same way', () => {
+    expect(
+      mergeNpmConfigEnv(
+        {
+          'npm_config_//reg.example.com/:_authToken': 'ambient-token',
+          'npm_config_@myorg:registry': 'https://ambient.example.com/',
+        },
+        {},
+        true
+      )
+    ).toEqual({});
+  });
+
+  it('keeps an ambient setting outside the ones it resolves', () => {
+    // Only registry, auth and TLS are resolved on the package manager's behalf;
+    // everything else is npm's own and the package manager has no say in it.
+    expect(
+      mergeNpmConfigEnv(
+        { npm_config_cache: '/cache', npm_config_userconfig: '/user/.npmrc' },
+        {},
+        true
+      )
+    ).toEqual({
+      npm_config_cache: '/cache',
+      npm_config_userconfig: '/user/.npmrc',
+    });
+  });
+
   it('drops even an empty ambient twin of an overlaid setting', () => {
     // A Windows environment is case-insensitive and passes on only the first
     // spelling, so an empty twin left in place can displace the overlay.
