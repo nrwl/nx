@@ -54,7 +54,9 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DependsOn = [buildReleaseTarget],
+            // Forward CLI params and task options (e.g. --runtime) to build:release so
+            // the published output is built against the requested runtime.
+            DependsOn = [new TargetDependency { Target = buildReleaseTarget, Params = "forward", Options = "forward" }],
             Cache = true,
             Inputs =
             [

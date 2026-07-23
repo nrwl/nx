@@ -198,22 +198,45 @@ describe('.NET Plugin - Configuration Behavior', () => {
       const projectDetails = runCLI(`show project MyLibrary --json`);
       const details = JSON.parse(projectDetails);
 
-      expect(details.targets.pack.dependsOn).toContain('build:release');
+      expect(details.targets.pack.dependsOn).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            target: 'build:release',
+            params: 'forward',
+            options: 'forward',
+          }),
+        ])
+      );
     });
 
     it('should show publish depends on build:release', () => {
       const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
-      expect(details.targets.publish.dependsOn).toContain('build:release');
+      expect(details.targets.publish.dependsOn).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            target: 'build:release',
+            params: 'forward',
+            options: 'forward',
+          }),
+        ])
+      );
     });
 
-    it('should show build:release depends on ^build:release', () => {
+    it('should show build:release depends on build:release of dependencies', () => {
       const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
-      expect(details.targets['build:release'].dependsOn).toContain(
-        '^build:release'
+      expect(details.targets['build:release'].dependsOn).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            target: 'build:release',
+            dependencies: true,
+            params: 'forward',
+            options: 'forward',
+          }),
+        ])
       );
     });
   });
