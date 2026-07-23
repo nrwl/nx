@@ -552,9 +552,18 @@ function getDependencies(
                 findVersion(versionRange, name, isV5),
                 isV5
               );
-              const target =
+              let target =
                 ctx.externalNodes[`npm:${name}@${version}`] ||
                 ctx.externalNodes[`npm:${name}`];
+              // For npm aliases (e.g. "auth0-legacy": "auth0@4.37.0"),
+              // the alias name won't match any node. Fall back to
+              // looking up the raw versionRange as a package reference.
+              if (!target && name !== versionRange) {
+                const rawVersion = parseBaseVersion(versionRange, isV5);
+                target =
+                  ctx.externalNodes[`npm:${rawVersion}`] ||
+                  ctx.externalNodes[`npm:${versionRange}`];
+              }
               if (target) {
                 const dep: RawProjectGraphDependency = {
                   source: node.name,
