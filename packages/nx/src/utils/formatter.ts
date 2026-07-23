@@ -37,7 +37,8 @@ function hasOxfmtDependency(packageJson: {
   devDependencies?: Record<string, string>;
 }): boolean {
   return Boolean(
-    packageJson.dependencies?.['oxfmt'] ?? packageJson.devDependencies?.['oxfmt']
+    packageJson.dependencies?.['oxfmt'] ??
+      packageJson.devDependencies?.['oxfmt']
   );
 }
 
@@ -58,3 +59,9 @@ export function detectFormatterInTree(tree: Tree): FormatterType {
 
   return null;
 }
+
+/**
+ * Formatters list every mismatching path on stdout, which overruns Node's 1MB
+ * default on a large workspace.
+ */
+export const FORMATTER_MAX_BUFFER = 50 * 1024 * 1024;

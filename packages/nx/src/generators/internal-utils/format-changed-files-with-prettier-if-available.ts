@@ -1,7 +1,7 @@
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { detectFormatter } from '../../utils/formatter';
-import { formatContentWithOxfmt } from '../../utils/oxfmt';
+import { formatFilesWithOxfmt as batchFormatWithOxfmt } from '../../utils/oxfmt';
 import type { Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 
@@ -128,23 +128,20 @@ async function formatFilesWithOxfmt(
   root: string,
   options?: { silent?: boolean }
 ): Promise<Map<string, string>> {
-  const results = new Map<string, string>();
-
-  await Promise.all(
-    Array.from(files).map(async (file) => {
-      try {
-        const formatted = await formatContentWithOxfmt(
-          path.join(root, file.path),
-          file.content.toString('utf-8')
-        );
-        results.set(file.path, formatted);
-      } catch (e) {
-        if (!options?.silent) {
-          console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
-        }
-      }
-    })
-  );
-
-  return results;
+  try {
+    // A single oxfmt invocation for the whole batch - the binary costs
+    // ~100ms to start, so one process per file does not scale.
+    return await batchFormatWithOxfmt(
+      files.map((file) => ({
+        path: file.path,
+        content: file.content.toString('utf-8'),
+      })),
+      root
+    );
+  } catch (e) {
+    if (!options?.silent) {
+      console.warn(`Could not format files with oxfmt. Error: "${e.message}"`);
+    }
+    return new Map<string, string>();
+  }
 }

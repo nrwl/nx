@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, rmSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import * as path from 'path';
+import { FORMATTER_MAX_BUFFER } from './formatter';
 import { readModulePackageJson } from './package-json';
 
 let cachedOxfmtBin: string | undefined;
@@ -45,7 +46,11 @@ export function formatContentWithOxfmt(
     const child = execFile(
       'node',
       [oxfmtBin, `--stdin-filepath=${filepath}`],
-      { encoding: 'utf-8' as const, windowsHide: true },
+      {
+        encoding: 'utf-8' as const,
+        windowsHide: true,
+        maxBuffer: FORMATTER_MAX_BUFFER,
+      },
       (error, stdout) => {
         if (error) {
           reject(error);
@@ -124,7 +129,11 @@ export async function formatFilesWithOxfmt(
       execFile(
         'node',
         [oxfmtBin, '--no-error-on-unmatched-pattern', '--write', scratch],
-        { encoding: 'utf-8' as const, windowsHide: true },
+        {
+          encoding: 'utf-8' as const,
+          windowsHide: true,
+          maxBuffer: FORMATTER_MAX_BUFFER,
+        },
         (error, _stdout, stderr) => {
           if (error) {
             reject(new Error(stderr?.trim() || error.message));
