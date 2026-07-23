@@ -2,6 +2,7 @@ import type { ChildProcess, Serializable } from 'child_process';
 import { killProcessTreeGraceful } from '../../native';
 import type { TaskResult } from '../../config/misc-interfaces';
 import { signalToCode } from '../../utils/exit-codes';
+import { isLogGroupingEnabled } from '../../utils/output';
 import {
   BatchMessage,
   BatchMessageType,
@@ -59,8 +60,13 @@ export class BatchProcess {
       this.childProcess.stdout.on('data', (chunk) => {
         const output = chunk.toString();
 
-        // Maintain current terminal output behavior
-        process.stdout.write(chunk);
+        // Batch executors write to stdout and also report the same text back as
+        // the task's terminalOutput. Forwarding it live would land outside the
+        // task's log group and duplicate whatever the grouped block prints, so
+        // where grouping applies the grouped block is the only copy.
+        if (!isLogGroupingEnabled()) {
+          process.stdout.write(chunk);
+        }
 
         // Notify callbacks for TUI
         for (const cb of this.outputCallbacks) {
@@ -74,8 +80,9 @@ export class BatchProcess {
       this.childProcess.stderr.on('data', (chunk) => {
         const output = chunk.toString();
 
-        // Maintain current terminal output behavior
-        process.stderr.write(chunk);
+        if (!isLogGroupingEnabled()) {
+          process.stderr.write(chunk);
+        }
 
         // Notify callbacks for TUI
         for (const cb of this.outputCallbacks) {
