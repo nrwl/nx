@@ -96,6 +96,22 @@ export async function formatFilesWithOxfmt(
       );
     }
 
+    // Staged files sit outside the workspace tree, so oxfmt would not find the
+    // ignore files it normally honours. Copy them next to the staged content
+    // so ignored paths stay ignored, matching the prettier backend.
+    await Promise.all(
+      ['.gitignore', '.prettierignore'].map(async (name) => {
+        const source = path.join(workspaceRoot, name);
+        if (existsSync(source)) {
+          await writeFile(
+            path.join(scratch, name),
+            await readFile(source, 'utf-8'),
+            'utf-8'
+          );
+        }
+      })
+    );
+
     await Promise.all(
       files.map(async (file) => {
         const staged = path.join(scratch, file.path);
