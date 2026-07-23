@@ -1,5 +1,6 @@
 import { TasksRunner } from './tasks-runner';
-import { getRunner } from './run-command';
+import { getRunner, setEnvVarsBasedOnArgs } from './run-command';
+import type { NxArgs } from '../utils/command-line-utils';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { join } from 'path';
 import { nxCloudTasksRunnerShell } from '../nx-cloud/nx-cloud-tasks-runner-shell';
@@ -119,5 +120,82 @@ describe('getRunner', () => {
         "useDaemonProcess": false,
       }
     `);
+  });
+});
+
+describe('setEnvVarsBasedOnArgs', () => {
+  /**
+   * Streamed output interleaves between tasks, so it cannot be wrapped in the
+   * collapsible log groups that CI relies on. These cover which of the two wins.
+   */
+  function resolveStreaming(
+    env: Record<string, string | undefined>,
+    nxArgs: Partial<NxArgs> = {}
+  ) {
+    return withEnvironmentVariables(
+      {
+        GITHUB_ACTIONS: undefined,
+        NX_BATCH_MODE: undefined,
+        NX_PREFIX_OUTPUT: undefined,
+        NX_SKIP_LOG_GROUPING: undefined,
+        NX_STREAM_OUTPUT: undefined,
+        NX_TUI: undefined,
+        ...env,
+      },
+      () => {
+        setEnvVarsBasedOnArgs(nxArgs as NxArgs, false);
+        return process.env.NX_STREAM_OUTPUT === 'true';
+      }
+    );
+  }
+
+  it('streams in batch mode when log grouping does not apply', () => {
+    expect(resolveStreaming({ NX_BATCH_MODE: 'true' })).toBe(true);
+  });
+
+  it('does not stream in batch mode on GitHub Actions, so output can be grouped', () => {
+    expect(
+      resolveStreaming({ NX_BATCH_MODE: 'true', GITHUB_ACTIONS: 'true' })
+    ).toBe(false);
+  });
+
+  it('does not stream for --batch on GitHub Actions', () => {
+    expect(resolveStreaming({ GITHUB_ACTIONS: 'true' }, { batch: true })).toBe(
+      false
+    );
+  });
+
+  it('streams in batch mode on GitHub Actions when grouping is skipped', () => {
+    expect(
+      resolveStreaming({
+        NX_BATCH_MODE: 'true',
+        GITHUB_ACTIONS: 'true',
+        NX_SKIP_LOG_GROUPING: 'true',
+      })
+    ).toBe(true);
+  });
+
+  it('streams when the user explicitly asks for it, even on GitHub Actions', () => {
+    expect(
+      resolveStreaming(
+        { NX_BATCH_MODE: 'true', GITHUB_ACTIONS: 'true' },
+        { outputStyle: 'stream' }
+      )
+    ).toBe(true);
+  });
+
+  it('streams for stream-without-prefixes on GitHub Actions', () => {
+    expect(
+      resolveStreaming(
+        { GITHUB_ACTIONS: 'true' },
+        { outputStyle: 'stream-without-prefixes' }
+      )
+    ).toBe(true);
+  });
+
+  it('streams when the TUI is active regardless of grouping', () => {
+    expect(resolveStreaming({ GITHUB_ACTIONS: 'true', NX_TUI: 'true' })).toBe(
+      true
+    );
   });
 });

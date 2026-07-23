@@ -7,6 +7,17 @@ import type { TaskStatus } from '../tasks-runner/tasks-runner';
 const GH_GROUP_PREFIX = '::group::';
 const GH_GROUP_SUFFIX = '::endgroup::';
 
+/**
+ * Whether task output should be wrapped in collapsible log groups. Grouping
+ * requires each task's output to be written as one contiguous block, so this
+ * also determines whether output can be streamed as it is produced.
+ */
+export function isLogGroupingEnabled(): boolean {
+  return (
+    process.env.NX_SKIP_LOG_GROUPING !== 'true' && !!process.env.GITHUB_ACTIONS
+  );
+}
+
 export interface CLIErrorMessageConfig {
   title: string;
   bodyLines?: string[];
@@ -273,10 +284,8 @@ class CLIOutput {
       taskStatus
     );
 
-    if (
-      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
-      process.env.GITHUB_ACTIONS
-    ) {
+    const grouped = isLogGroupingEnabled();
+    if (grouped) {
       const icon = this.getStatusIcon(taskStatus);
       commandOutputWithStatus = `${GH_GROUP_PREFIX}${icon} ${commandOutputWithStatus}`;
     }
@@ -287,10 +296,7 @@ class CLIOutput {
     this.addNewline();
     this.writeToStream(output);
 
-    if (
-      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
-      process.env.GITHUB_ACTIONS
-    ) {
+    if (grouped) {
       this.writeToStream(GH_GROUP_SUFFIX);
     }
   }
