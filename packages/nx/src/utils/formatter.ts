@@ -16,22 +16,29 @@ export function detectFormatter(root: string): FormatterType {
     return 'prettier';
   }
 
+  // oxfmt runs on defaults with no config file at all, so a declared
+  // dependency is the only signal an unconfigured oxfmt workspace gives.
+  // Prettier deliberately has no equivalent fallback: prettier being merely
+  // present in node_modules must not mean "format with prettier", or
+  // workspaces using biome/dprint get reformatted (#30426).
   const packageJsonPath = join(root, 'package.json');
   if (existsSync(packageJsonPath)) {
     const packageJson = readJsonFile(packageJsonPath);
-    const deps = {
-      ...packageJson.dependencies,
-      ...packageJson.devDependencies,
-    };
-    if (deps['oxfmt']) {
+    if (hasOxfmtDependency(packageJson)) {
       return 'oxfmt';
-    }
-    if (deps['prettier']) {
-      return 'prettier';
     }
   }
 
   return null;
+}
+
+function hasOxfmtDependency(packageJson: {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+}): boolean {
+  return Boolean(
+    packageJson.dependencies?.['oxfmt'] ?? packageJson.devDependencies?.['oxfmt']
+  );
 }
 
 export function detectFormatterInTree(tree: Tree): FormatterType {
@@ -42,17 +49,10 @@ export function detectFormatterInTree(tree: Tree): FormatterType {
     return 'prettier';
   }
 
+  // See detectFormatter: oxfmt-only fallback, deliberately not prettier.
   if (tree.exists('package.json')) {
-    const packageJson = readJson(tree, 'package.json');
-    const deps = {
-      ...packageJson.dependencies,
-      ...packageJson.devDependencies,
-    };
-    if (deps['oxfmt']) {
+    if (hasOxfmtDependency(readJson(tree, 'package.json'))) {
       return 'oxfmt';
-    }
-    if (deps['prettier']) {
-      return 'prettier';
     }
   }
 

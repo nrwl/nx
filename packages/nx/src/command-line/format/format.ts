@@ -49,17 +49,13 @@ export async function format(
     readNxJson()
   );
 
-  const patterns = (
-    await getPatterns(formatterType, { ...args, ...nxArgs } as any)
-  ).map((p) => {
-    // On non-Windows, escape $ to prevent shell variable interpolation
-    // (the shell consumes one \, so \\$ becomes \$ which the shell treats as literal $)
-    // On Windows (cmd.exe), $ is not a special character, so escaping it would
-    // cause prettier to look for a file with a literal \$ in the name
-    // prettier-ignore
-    const escaped = process.platform !== 'win32' ? p.replace(/\$/g, '\\\$') : p;
-    return `"${escaped}"`;
-  });
+  // Patterns are kept raw here. Prettier is invoked through a shell so it
+  // quotes them at the call site; oxfmt is invoked with execFile and needs
+  // the unquoted paths.
+  const patterns = await getPatterns(formatterType, {
+    ...args,
+    ...nxArgs,
+  } as any);
 
   // Chunkify the patterns array to prevent crashing the windows terminal
   const chunkList: string[][] = chunkify(patterns);
@@ -116,9 +112,15 @@ async function getPatterns(
 
     const p = parseFiles(args);
 
-    let patterns = p.files.map((f) => path.relative(workspaceRoot, f));
+    // Deleted files still show up in the changed-file set, and neither
+    // formatter should be handed a path that is no longer there.
+    let patterns = p.files
+      .map((f) => path.relative(workspaceRoot, f))
+      .filter((f) => fileExists(f));
 
     if (formatterType === 'prettier') {
+      // oxfmt needs no equivalent filter - it silently skips file types it
+      // does not handle, and OXFMT_BASE_ARGS keeps an all-skipped run green.
       const prettier = await handleImport('prettier');
       const supportedExtensions = new Set(
         (await prettier.getSupportInfo()).languages
@@ -126,8 +128,8 @@ async function getPatterns(
           .filter((extension) => !!extension)
           .concat('.swcrc')
       );
-      patterns = patterns.filter(
-        (f) => fileExists(f) && supportedExtensions.has(path.extname(f))
+      patterns = patterns.filter((f) =>
+        supportedExtensions.has(path.extname(f))
       );
     }
 
@@ -168,7 +170,7 @@ function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
   }
   const chunk = [];
   const addToChunkIfNeeded = (file: string) => {
-    if (chunkList.every((c) => !c.includes(`"${file}"`))) {
+    if (chunkList.every((c) => !c.includes(file))) {
       chunk.push(file);
     }
   };
@@ -188,6 +190,19 @@ function getPatternsFromProjects(
   return getProjectRoots(projects, projectGraph);
 }
 
+/**
+ * oxfmt silently skips paths it does not recognise, and exits 2 when *every*
+ * path was skipped. Nx routinely passes mixed file lists, so treat an empty
+ * match as success rather than a failure.
+ */
+const OXFMT_BASE_ARGS = ['--no-error-on-unmatched-pattern'];
+
+const enum OxfmtExitCode {
+  Success = 0,
+  Mismatch = 1,
+  Failure = 2,
+}
+
 function write(formatterType: FormatterType, patterns: string[]) {
   if (patterns.length === 0) {
     return;
@@ -202,8 +217,7 @@ function write(formatterType: FormatterType, patterns: string[]) {
 
 function writeWithOxfmt(patterns: string[]) {
   const oxfmtPath = getOxfmtBinPath();
-  const unquoted = patterns.map(stripQuotes);
-  execFileSync('node', [oxfmtPath, '--write', ...unquoted], {
+  execFileSync('node', [oxfmtPath, ...OXFMT_BASE_ARGS, '--write', ...patterns], {
     stdio: [0, 1, 2],
     windowsHide: true,
   });
@@ -221,9 +235,9 @@ function writeWithPrettier(patterns: string[]) {
   const listDifferentArg = shouldUseListDifferent() ? '--list-different ' : '';
 
   execSync(
-    `node "${prettierPath}" --write ${listDifferentArg}${regularPatterns.join(
-      ' '
-    )}`,
+    `node "${prettierPath}" --write ${listDifferentArg}${regularPatterns
+      .map(quoteForShell)
+      .join(' ')}`,
     {
       stdio: [0, 1, 2],
       windowsHide: true,
@@ -232,9 +246,9 @@ function writeWithPrettier(patterns: string[]) {
 
   if (swcrcPatterns.length > 0) {
     execSync(
-      `node "${prettierPath}" --write ${listDifferentArg}${swcrcPatterns.join(
-        ' '
-      )} --parser json`,
+      `node "${prettierPath}" --write ${listDifferentArg}${swcrcPatterns
+        .map(quoteForShell)
+        .join(' ')} --parser json`,
       {
         stdio: [0, 1, 2],
         windowsHide: true,
@@ -260,23 +274,27 @@ async function check(
 
 function checkWithOxfmt(patterns: string[]): Promise<string[]> {
   const oxfmtPath = getOxfmtBinPath();
-  const unquoted = patterns.map(stripQuotes);
   return new Promise((resolve, reject) => {
     execFile(
       'node',
-      [oxfmtPath, '--list-different', ...unquoted],
+      [oxfmtPath, ...OXFMT_BASE_ARGS, '--list-different', ...patterns],
       { encoding: 'utf-8' as const, windowsHide: true },
-      (error, stdout) => {
-        if (error) {
-          if (stdout.length === 0) {
-            reject(error);
-          }
+      (error, stdout, stderr) => {
+        // oxfmt writes the differing paths to stdout *before* it reports any
+        // error, so a non-empty stdout does not mean the run succeeded. The
+        // exit code is the only reliable signal.
+        const code = typeof error?.['code'] === 'number' ? error['code'] : 0;
+        if (code === OxfmtExitCode.Success) {
+          resolve([]);
+        } else if (
+          code === OxfmtExitCode.Mismatch &&
+          stdout.trim().length > 0
+        ) {
           resolve(stdout.trim().split('\n'));
         } else {
-          if (stdout.trim().length > 0) {
-            resolve(stdout.trim().split('\n'));
-          }
-          resolve([]);
+          // Exit 1 with no stdout means an invalid config; exit 2 means oxfmt
+          // failed outright (parse error, unreadable file).
+          reject(new Error(stderr?.trim() || error?.message || `oxfmt exited with code ${code}`));
         }
       }
     );
@@ -287,7 +305,9 @@ function checkWithPrettier(patterns: string[]): Promise<string[]> {
   const prettierPath = getPrettierPath();
   return new Promise((resolve, reject) => {
     exec(
-      `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
+      `node "${prettierPath}" --list-different ${patterns
+        .map(quoteForShell)
+        .join(' ')}`,
       { encoding: 'utf-8', windowsHide: true },
       (error, stdout) => {
         if (error) {
@@ -359,13 +379,15 @@ function shouldUseListDifferent(): boolean {
 }
 
 /**
- * Strip surrounding double quotes from a pattern string.
- * Patterns are quoted for shell-based exec calls (prettier),
- * but execFile-based calls (oxfmt) need raw paths.
+ * Quote a pattern for the shell-based exec calls used by prettier. oxfmt is
+ * invoked via execFile and must receive raw paths instead.
  */
-function stripQuotes(pattern: string): string {
-  if (pattern.startsWith('"') && pattern.endsWith('"')) {
-    return pattern.slice(1, -1);
-  }
-  return pattern;
+function quoteForShell(pattern: string): string {
+  // On non-Windows, escape $ to prevent shell variable interpolation
+  // (the shell consumes one \, so \\$ becomes \$ which the shell treats as literal $)
+  // On Windows (cmd.exe), $ is not a special character, so escaping it would
+  // cause prettier to look for a file with a literal \$ in the name
+  // prettier-ignore
+  const escaped = process.platform !== 'win32' ? pattern.replace(/\$/g, '\\\$') : pattern;
+  return `"${escaped}"`;
 }
