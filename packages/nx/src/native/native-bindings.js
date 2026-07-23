@@ -627,6 +627,7 @@ module.exports.killProcessTreeGraceful = nativeBinding.killProcessTreeGraceful
 module.exports.logDebug = nativeBinding.logDebug
 module.exports.matchGlobPaths = nativeBinding.matchGlobPaths
 module.exports.matchOutputPaths = nativeBinding.matchOutputPaths
+module.exports.openUrl = nativeBinding.openUrl
 module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.remove = nativeBinding.remove
 module.exports.restoreTerminal = nativeBinding.restoreTerminal
