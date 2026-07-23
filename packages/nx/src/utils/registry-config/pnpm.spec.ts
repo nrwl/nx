@@ -156,6 +156,43 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    it("bridges a yaml noproxy in npm's own spelling", () => {
+      // pnpm answers to both spellings on this surface, unlike its siblings
+      // (verified on 11.2.2 and 11.9.0 against a proxy: a `noproxy` bypass is
+      // honored, while `httpsproxy` and `https-proxy` are ignored). Reading
+      // only the camelCase key sent npm through a proxy pnpm bypasses.
+      writeYaml(
+        [
+          'registries:',
+          '  default: https://reg-a.example.com/',
+          'httpsProxy: http://proxy.example.com:8080',
+          'noproxy: internal.example.com',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_https_proxy: 'http://proxy.example.com:8080',
+        npm_config_noproxy: 'internal.example.com',
+      });
+    });
+
+    it('prefers a yaml noProxy over noproxy when both are set', () => {
+      // pnpm's own precedence (verified on 11.2.2 and 11.9.0: with noProxy
+      // naming another host, a noproxy bypass for the registry stops applying).
+      writeYaml(
+        [
+          'registries:',
+          '  default: https://reg-a.example.com/',
+          'noProxy: camel.example.com',
+          'noproxy: lower.example.com',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_noproxy: 'camel.example.com',
+      });
+    });
+
     it('does not bridge yaml caFile (dead config in pnpm itself)', () => {
       writeYaml(
         'registries:\n  default: https://reg-a.example.com/\ncaFile: ./ca.pem\n'
