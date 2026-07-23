@@ -143,7 +143,7 @@ async function formatWithOxfmt(
     files: { path: string; content: string }[],
     workspaceRoot: string,
     seedConfig?: { name: string; content: string }
-  ) => Promise<Map<string, string>>;
+  ) => Promise<{ formatted: Map<string, string>; error?: string }>;
   let oxfmtConfigFiles: string[];
   try {
     ({
@@ -161,13 +161,16 @@ async function formatWithOxfmt(
   }));
 
   try {
-    const formatted = await formatFilesWithOxfmt(
+    const { formatted, error } = await formatFilesWithOxfmt(
       staged,
       tree.root,
       getGeneratedOxfmtConfig(tree, oxfmtConfigFiles)
     );
     for (const [filePath, content] of formatted) {
       tree.write(filePath, content);
+    }
+    if (error) {
+      console.warn(`Could not format some files with oxfmt. Error: "${error}"`);
     }
   } catch (e) {
     // One message for the batch - a per-file warning would be a wall of noise.
