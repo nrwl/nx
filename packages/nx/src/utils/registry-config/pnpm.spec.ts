@@ -851,6 +851,99 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    describe('token helpers', () => {
+      // pnpm runs the command and sends what it prints (verified on 11.9.0: a
+      // helper in the user .npmrc put `Bearer helper-token-123` on the wire).
+      // npm has no equivalent setting.
+      it('keeps a tokenHelper out of the overlay, and its siblings in', () => {
+        writeAuthIni(
+          [
+            'registry=https://reg-a.example.com/',
+            '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
+            '//reg-b.example.com/:_authToken=b-token',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-b.example.com/:_authToken': 'b-token',
+        });
+      });
+
+      it('warns once, naming the registry and not the helper', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        writeAuthIni(
+          [
+            'registry=https://reg-a.example.com/',
+            '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
+          ].join('\n')
+        );
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh('is-even', root, '11.5.0');
+          fresh('is-odd', root, '11.5.0');
+        });
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        const message = (logger.warn as jest.Mock).mock.calls[0][0];
+        expect(message).toContain('//reg-a.example.com/');
+        expect(message).not.toContain('get-token');
+      });
+
+      it('reports an unscoped tokenHelper against the registry it is pinned to', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        writeAuthIni(
+          [
+            'registry=https://reg-a.example.com/',
+            'tokenHelper=/usr/local/bin/get-token',
+          ].join('\n')
+        );
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh('is-even', root, '11.5.0');
+        });
+        expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+          '//reg-a.example.com/'
+        );
+      });
+
+      it('stays quiet about a helper for a registry npm will not contact', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        writeAuthIni(
+          [
+            'registry=https://reg-a.example.com/',
+            '//reg-other.example.com/:tokenHelper=/usr/local/bin/get-token',
+          ].join('\n')
+        );
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh('is-even', root, '11.5.0');
+        });
+        expect(logger.warn).not.toHaveBeenCalled();
+      });
+
+      it('stays quiet when npm authenticates that registry anyway', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        writeFileSync(
+          join(root, '.npmrc'),
+          '//reg-a.example.com/:_authToken=project-token'
+        );
+        writeAuthIni(
+          [
+            'registry=https://reg-a.example.com/',
+            '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
+          ].join('\n')
+        );
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh('is-even', root, '11.5.0');
+        });
+        expect(logger.warn).not.toHaveBeenCalled();
+      });
+    });
+
     describe('PNPM_CONFIG_* network settings', () => {
       // Measured on 11.9.0 against a self-signed registry and two logging
       // proxies, each pairing in both directions.
