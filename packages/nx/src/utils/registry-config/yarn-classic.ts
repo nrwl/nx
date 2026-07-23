@@ -604,10 +604,10 @@ function toYarnValueMap(
 
 /**
  * Parses yarn classic's .yarnrc into a last-write-wins map, or null when the
- * file is missing, unreadable, or rejected by both of yarn's parsers. Yarn reads
- * it with its lockfile parser first, so a single line that parser rejects costs
- * the whole file rather than just that line, and then retries the whole file
- * with js-yaml. A file the retry accepts is honored in full, which is how
+ * file is missing. Yarn reads it with its lockfile parser first, so a single
+ * line that parser rejects costs the whole file rather than just that line, and
+ * then retries the whole file with js-yaml. A file the retry accepts is honored
+ * in full, which is how
  * `registry: https://host/` works despite the lockfile grammar throwing on it
  * (verified on 1.22.22).
  * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/lockfile/parse.js#L384-L397
@@ -624,7 +624,11 @@ function readYarnrcMap(path: string): Map<string, YarnValue> | null {
   try {
     raw = readFileSync(path, 'utf-8');
   } catch {
-    return null;
+    // yarn dies on a .yarnrc it cannot open (verified on 1.22.22: the EACCES
+    // propagates and yarn exits 1), so there is no resolution left to
+    // reproduce. Skipping the file instead would resolve on from the remaining
+    // ones, which is how a workspace registry silently becomes the default.
+    throw new Error(`The .yarnrc at ${path} could not be read.`);
   }
   try {
     return parseYarnrc(raw);
@@ -639,12 +643,16 @@ function readYarnrcMap(path: string): Map<string, YarnValue> | null {
  * alone, where berry's parser also passes `json: true`, so a duplicate key
  * throws here rather than resolving last-wins.
  */
-function parseYarnrcAsYaml(path: string): Map<string, YarnValue> | null {
+function parseYarnrcAsYaml(path: string): Map<string, YarnValue> {
   let loaded: unknown;
   try {
     loaded = readYamlFile(path, { failsafe: true });
   } catch {
-    return null;
+    // Rejected by both parsers, which is where yarn rethrows the first error
+    // and dies rather than reading on without the file (verified on 1.22.22
+    // with a duplicate key: exit 1). The message stays off the parse error,
+    // which quotes the lines around the fault: credential material here.
+    throw new Error(`The .yarnrc at ${path} could not be read.`);
   }
   const map = new Map<string, YarnValue>();
   // A document that is not a mapping (a bare scalar, a list) loads fine and
