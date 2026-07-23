@@ -711,11 +711,12 @@ describe('spread syntax in mergeTargetConfigurations', () => {
       ]);
     });
 
-    it('lets a real plugin claim the target node key last (target defaults aside)', () => {
+    it('keeps the target node key with its creator when a second plugin only layers fields', () => {
       const sourceMap: Record<string, SourceInformation> = {
         'targets.build': ['a.config.ts', 'plugin-a'],
       };
-      // A second real plugin augments the same target — real plugins win last.
+      // plugin-b re-states the same executor and adds `cache` — no identity
+      // change, so plugin-a still owns the target.
       mergeTargetConfigurations(
         { executor: 'nx:run-commands', cache: true },
         { executor: 'nx:run-commands' },
@@ -724,7 +725,166 @@ describe('spread syntax in mergeTargetConfigurations', () => {
         'targets.build'
       );
 
+      expect(sourceMap['targets.build']).toEqual(['a.config.ts', 'plugin-a']);
+    });
+
+    it('transfers the target node key when a plugin changes the target identity', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+        'targets.build.cache': ['a.config.ts', 'plugin-a'],
+      };
+      // plugin-b sets an executor on a target that had none — an identity
+      // change, so ownership of the node moves with it.
+      mergeTargetConfigurations(
+        { executor: '@acme/b:build' },
+        { cache: true },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
       expect(sourceMap['targets.build']).toEqual(['b.config.ts', 'plugin-b']);
+      // Fields it didn't touch keep their origin.
+      expect(sourceMap['targets.build.cache']).toEqual([
+        'a.config.ts',
+        'plugin-a',
+      ]);
+    });
+
+    it('transfers the target node key when a plugin supplies the command a run-commands target was missing', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+      };
+      // plugin-a created `build` as a bare nx:run-commands target with no
+      // command; plugin-b supplies `options.command` — the runnable identity
+      // for run-commands (see isCompatibleTarget) — so ownership moves, just
+      // like setting an executor on a target that had none.
+      mergeTargetConfigurations(
+        { options: { command: 'vite build' } },
+        { executor: 'nx:run-commands' },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['b.config.ts', 'plugin-b']);
+    });
+
+    it('transfers the target node key when a plugin supplies the script a run-script target was missing', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.test': ['a.config.ts', 'plugin-a'],
+      };
+      mergeTargetConfigurations(
+        { options: { script: 'test' } },
+        { executor: 'nx:run-script' },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.test'
+      );
+
+      expect(sourceMap['targets.test']).toEqual(['b.config.ts', 'plugin-b']);
+    });
+
+    it('keeps the target node key with its creator when a second plugin re-states the same command', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+      };
+      // Same runnable identity, just layered fields — no transfer.
+      mergeTargetConfigurations(
+        { options: { command: 'vite build' }, cache: true },
+        { executor: 'nx:run-commands', options: { command: 'vite build' } },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['a.config.ts', 'plugin-a']);
+    });
+  });
+
+  // The integer-key/spread ambiguity is a property of the authored config
+  // (key hoisting loses the position), not of the merge base — so it must
+  // throw whether or not the base target is compatible. This also keeps the
+  // error identical between the target-defaults staging merge (default-only
+  // base) and the real merge (full base), so discarding staging errors can't
+  // lose it.
+  it('should throw for an integer-like key alongside a spread even when the base target is incompatible', () => {
+    expect(() =>
+      mergeTargetConfigurations(
+        {
+          executor: '@acme/b:build',
+          '123': 'ambiguous',
+          '...': true,
+        } as any,
+        { executor: '@acme/a:build' }
+      )
+    ).toThrow(/integer-like key/i);
+  });
+
+  // A nested `'...'` spread object with an integer-like key is ambiguous
+  // regardless of which side of the merge owns the key it lives under. When a
+  // pre-`'...'` key is owned by the base, the merge lets the base win and drops
+  // the incoming value without merging it — but the ambiguity is a property of
+  // the authored value, so it must still throw. Otherwise the error would fire
+  // in the target-defaults staging merge (default-only base) but vanish in the
+  // real merge (full base), silently dropping the invalid object.
+  describe('nested integer-like spread under a pre-"..." key', () => {
+    const nestedInvalid = {
+      '...': true,
+      '123': 'ambiguous',
+    };
+
+    it('throws when the base does NOT own the enclosing key', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            metadataThing: nestedInvalid,
+            '...': true,
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            inputs: ['production'],
+          }
+        )
+      ).toThrow(/integer-like key/i);
+    });
+
+    it('throws even when the base OWNS the enclosing key (base-independent)', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            metadataThing: nestedInvalid,
+            '...': true,
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            metadataThing: { existing: 'base-value' },
+            inputs: ['production'],
+          }
+        )
+      ).toThrow(/integer-like key/i);
+    });
+
+    it('throws for a named configuration the base OWNS (base-independent)', () => {
+      expect(() =>
+        mergeTargetConfigurations(
+          {
+            executor: 'nx:run-commands',
+            configurations: {
+              prod: nestedInvalid,
+              '...': true,
+            },
+          } as any,
+          {
+            executor: 'nx:run-commands',
+            configurations: {
+              prod: { existing: 'base-value' },
+            },
+          }
+        )
+      ).toThrow(/integer-like key/i);
     });
   });
 

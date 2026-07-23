@@ -176,10 +176,10 @@ export function mergeProjectConfigurationIntoRootMap(
       const target = project.targets?.[targetName];
 
       if (sourceMap) {
-        // A target default stamping fields onto an existing target must not
-        // steal provenance for the target's existence; real plugins still win
-        // last. Field-level attribution is handled inside
-        // `mergeTargetConfigurations`.
+        // Claims the node key for a newly-created target (or reclaims it from
+        // a weak target-defaults stamp). Whether an *existing* target changes
+        // owners is decided inside `mergeTargetConfigurations`, which knows
+        // whether this merge changed the target's identity.
         recordTargetIdentitySourceMapInfo(
           sourceMap,
           targetSourceMapKey(targetName),
@@ -355,26 +355,22 @@ export class ProjectNodesManager {
 
   /**
    * Inserts project-name sentinels into `inputs` and `dependsOn` on the
-   * merged objects from `mergedRootMap` (defaulting to this manager's
-   * rootMap). Walking the merged entries matters because a spread-produced
-   * array is a fresh instance.
-   *
-   * Pass a different `mergedRootMap` for the default-plugin intermediate
-   * pass, then call again with `this.rootMap` after it's applied so
-   * name refs introduced by that merge are sentinelized as well.
+   * merged objects in this manager's rootMap. Walking the merged entries —
+   * not the plugin results — matters because a spread-produced array is a
+   * fresh instance, and because sentinels written into plugin-result arrays
+   * would corrupt them for any later merge that re-reads the results.
    */
   registerNameRefs(
     pluginResultProjects?: Record<
       string,
       Omit<ProjectConfiguration, 'root'> & Partial<ProjectConfiguration>
-    >,
-    mergedRootMap: Record<string, ProjectConfiguration> = this.rootMap
+    >
   ): void {
     if (!pluginResultProjects) return;
     const scoped: Record<string, ProjectConfiguration> = {};
     for (const root in pluginResultProjects) {
-      if (mergedRootMap[root]) {
-        scoped[root] = mergedRootMap[root];
+      if (this.rootMap[root]) {
+        scoped[root] = this.rootMap[root];
       }
     }
     this.nameSubstitutionManager.registerNameRefs(scoped);
