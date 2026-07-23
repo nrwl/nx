@@ -59,7 +59,7 @@ exports[`library should add vue and vitest to package.json when non-buildable 1`
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-vue": "^9.16.1",
     "jsdom": "^27.1.0",
-    "prettier": "~3.6.2",
+    "oxfmt": "^0.60.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.58.0",
     "vite": "^8.0.0",
