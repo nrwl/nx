@@ -126,13 +126,11 @@ describe('angularStories generator: libraries', () => {
         type Story = StoryObj<SecondaryButtonComponent>;
 
         export const Primary: Story = {
-          args: {
-          },
+          args: {},
         };
 
         export const Heading: Story = {
-          args: {
-          },
+          args: {},
           play: async ({ canvas }) => {
             await expect(canvas.getByText(/secondary-button/gi)).toBeTruthy();
           },
