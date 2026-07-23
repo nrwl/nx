@@ -460,6 +460,31 @@ describe('package-manager', () => {
       expect(result).toContain('minimumReleaseAge: 1440');
     });
 
+    it('should drop link:/file: overrides but keep version overrides', () => {
+      // `pnpm link` writes a relative link: override; in the temp dir it points
+      // at a non-existent path and hijacks exact-version adds.
+      const result = modifyPnpmWorkspaceYamlToFitNewDirectory(
+        [
+          'overrides:',
+          '  nx: link:packages/nx',
+          '  foo: file:../foo',
+          "  minimist: '^1.2.6'",
+          'minimumReleaseAge: 1440',
+        ].join('\n')
+      );
+      expect(result).not.toContain('link:packages/nx');
+      expect(result).not.toContain('file:../foo');
+      expect(parse(result).overrides).toEqual({ minimist: '^1.2.6' });
+      expect(result).toContain('minimumReleaseAge: 1440');
+    });
+
+    it('should drop the overrides map entirely when only link: entries exist', () => {
+      const result = modifyPnpmWorkspaceYamlToFitNewDirectory(
+        ['overrides:', '  nx: link:packages/nx'].join('\n')
+      );
+      expect(parse(result).overrides).toBeUndefined();
+    });
+
     it('should add a packages field to an empty or comments-only manifest', () => {
       // An empty/comments-only source has null doc contents; older pnpm still
       // rejects a packages-less manifest, so `packages: ['.']` must be added.
@@ -895,6 +920,22 @@ describe('package-manager', () => {
       const [cmd, options] = execMock.mock.calls[0];
       expect(cmd).toContain('npm pack');
       expect(options.env.npm_config_force).toBe('true');
+    });
+
+    it('should leave npm min-release-age alone by default', async () => {
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.env.npm_config_min_release_age).toBeUndefined();
+    });
+
+    it('should disable npm min-release-age when the caller vouches for the version', async () => {
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0', {
+        bypassMinReleaseAge: true,
+      });
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.env.npm_config_min_release_age).toBe('0');
     });
   });
 });

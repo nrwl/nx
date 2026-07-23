@@ -428,6 +428,20 @@ export function modifyPnpmWorkspaceYamlToFitNewDirectory(
   doc.set('packages', ['.']);
   // Relative patch paths don't resolve in the temp dir.
   doc.delete('patchedDependencies');
+  // link:/file: overrides (e.g. written by `pnpm link`) point at paths that
+  // don't exist in the temp dir, and an override would hijack an exact-version
+  // add (`pnpm add pkg@x.y.z` would install the linked dir instead).
+  const overrides = doc.toJS()?.overrides;
+  if (overrides && typeof overrides === 'object') {
+    for (const [name, spec] of Object.entries(overrides)) {
+      if (typeof spec === 'string' && /^(link|file):/.test(spec)) {
+        doc.deleteIn(['overrides', name]);
+      }
+    }
+    if (Object.keys(doc.toJS()?.overrides ?? {}).length === 0) {
+      doc.delete('overrides');
+    }
+  }
   return doc.toString();
 }
 
@@ -652,7 +666,15 @@ export async function packageRegistryView(
 export async function packageRegistryPack(
   cwd: string,
   pkg: string,
-  version: string
+  version: string,
+  options?: {
+    // Only pass when `version` is exact, was already resolved through the
+    // workspace package manager's min-release-age policy, AND that package
+    // manager is not npm: npm's own gate is then foreign config (no
+    // exclusions) that would wrongly re-judge the vetted version. In an npm
+    // workspace the gate IS the workspace policy — leave it enforcing.
+    bypassMinReleaseAge?: boolean;
+  }
 ): Promise<{ tarballPath: string }> {
   /**
    * Only `npm pack` supports downloading a tarball of a specified remote
@@ -668,7 +690,13 @@ export async function packageRegistryPack(
     windowsHide: true,
     // npm enforces `devEngines.packageManager` even on `pack`; force keeps the
     // download working in workspaces that pin a non-npm manager (onFail: error).
-    env: { ...process.env, npm_config_force: 'true' },
+    env: {
+      ...process.env,
+      npm_config_force: 'true',
+      ...(options?.bypassMinReleaseAge
+        ? { npm_config_min_release_age: '0' }
+        : {}),
+    },
   });
 
   const tarballPath = stdout.trim();
