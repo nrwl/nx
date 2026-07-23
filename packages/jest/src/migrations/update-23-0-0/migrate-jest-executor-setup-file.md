@@ -2,7 +2,7 @@
 
 Migrates the previously deprecated `setupFile` option of the `@nx/jest:jest` executor. The setup file path is appended to the `setupFilesAfterEnv` array in the project's Jest configuration (using `<rootDir>/...` form), and the deprecated option is removed from `project.json` and `nx.json` target defaults.
 
-If the Jest configuration cannot be parsed automatically (e.g. it exports a factory function or assigns `setupFilesAfterEnv` to a non-array value), the deprecated option is still removed and a warning is logged listing the affected projects so the setup file path can be moved manually.
+If the setup file cannot be migrated automatically (e.g. the Jest configuration cannot be parsed because it exports a factory function or assigns `setupFilesAfterEnv` to a non-array value, it sets `rootDir` to a non-literal value, or the target shares a Jest configuration with another target using a different setup file), the deprecated option is still removed and a warning is logged listing the affected targets so the setup file path can be moved manually.
 
 #### Examples
 
@@ -135,7 +135,7 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
 }
 ```
 
-Per-project paths don't make sense as workspace defaults, so the option is removed without rewriting individual project Jest configs. A warning is logged so the setup file path can be added to each project's Jest config manually if needed.
+Per-project paths don't make sense as workspace defaults, so the option is removed from `nx.json`. Base targets that inherited it don't lose their setup file: the inherited path is expanded and added to `setupFilesAfterEnv` in each project's Jest config, the same as if the target had declared the option itself. A warning is logged noting the removal from `nx.json`.
 
 Remove the option from a target default entry matching on the `@nx/jest:jest` executor:
 
