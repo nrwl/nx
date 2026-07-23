@@ -35,14 +35,11 @@ import type {
   ConfigurationSourceMaps,
   SourceInformation,
 } from './project-configuration/source-maps';
-import {
-  targetSourceMapKey,
-  TARGET_DEFAULTS_PLUGIN_NAME,
-} from './project-configuration/source-maps';
 
 import { createTargetDefaultsResults } from './project-configuration/target-defaults';
 
 export { mergeTargetConfigurations } from './project-configuration/target-merging';
+import { deepClone } from './project-configuration/target-merging';
 export { readTargetDefaultsForTarget } from './project-configuration/target-defaults';
 
 export type ConfigurationResult = {
@@ -266,14 +263,13 @@ type MergeFn = (
  * Runs a single plugin batch through two passes:
  *
  * 1. Every project node in every plugin result is handed to `mergeFn`,
- *    which decides where it lands (the manager's rootMap, an
- *    intermediate rootMap, etc.). Any failure is collected into
- *    `errors`; processing keeps going. External nodes are accumulated
- *    onto the shared `externalNodes` record.
+ *    which merges it into the manager's rootMap. Any failure is
+ *    collected into `errors`; processing keeps going. External nodes
+ *    are accumulated onto the shared `externalNodes` record.
  * 2. After every project in the batch has been merged, name-reference
- *    sentinels for the batch are registered against `nameRefRootMap` —
- *    the rootMap the batch was merged into — so sentinels point at the
- *    target objects that actually received the merges.
+ *    sentinels for the batch are registered against the manager's
+ *    rootMap, so sentinels point at the target objects that actually
+ *    received the merges.
  *
  * The two passes can't be collapsed: a sentinel registered too early
  * would point at the pre-merge object, and a later project in the same
@@ -285,7 +281,16 @@ function mergeCreateNodesResultsFromSinglePlugin(
   pluginResults: CreateNodesResultEntry[],
   mergeFn: MergeFn,
   nodesManager: ProjectNodesManager,
-  nameRefRootMap: Record<string, ProjectConfiguration>,
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  errors: MergeError[]
+): void {
+  mergeSinglePluginResults(pluginResults, mergeFn, externalNodes, errors);
+  registerNameRefsFromSinglePlugin(pluginResults, nodesManager, errors);
+}
+
+function mergeSinglePluginResults(
+  pluginResults: CreateNodesResultEntry[],
+  mergeFn: MergeFn,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   errors: MergeError[]
 ): void {
@@ -310,13 +315,19 @@ function mergeCreateNodesResultsFromSinglePlugin(
 
     Object.assign(externalNodes, pluginExternalNodes);
   }
+}
 
+function registerNameRefsFromSinglePlugin(
+  pluginResults: CreateNodesResultEntry[],
+  nodesManager: ProjectNodesManager,
+  errors: MergeError[]
+): void {
   for (const result of pluginResults) {
     const [pluginName, file, nodes, pluginIndex] = result;
     const { projects: projectNodes } = nodes;
 
     try {
-      nodesManager.registerNameRefs(projectNodes, nameRefRootMap);
+      nodesManager.registerNameRefs(projectNodes);
     } catch (error) {
       errors.push(
         new MergeNodesError({ file, pluginName, error, pluginIndex })
@@ -328,19 +339,22 @@ function mergeCreateNodesResultsFromSinglePlugin(
 /**
  * Merges create nodes results into a single rootMap.
  *
- * Specified plugin results are merged once into the manager. Default
- * plugin results are first staged into an intermediate rootMap (with
- * `'...'` spreads deferred) so that synthesis can read each layer's
- * contribution without re-running the merge. The synthetic result from
- * `createTargetDefaultsResults` is then merged into the manager, and
- * the staged intermediate is replayed on top — that replay is where
- * deferred spreads expand against the final (specified + synth) base.
+ * Every layer merges into the manager through the same source-map-aware
+ * merge, in precedence order:
  *
- * Synthesis itself doesn't materialize a second rootMap. Per
- * (root, target) it does an on-the-fly merge of the two layered
- * contributions to learn the eventual executor/command, then matches
- * defaults against that merged shape. This keeps specified-plugin
- * merge work to a single pass.
+ *   specified plugins → synthetic target defaults → default plugins
+ *
+ * so field-level provenance is decided by the merge itself for all three
+ * layers — whichever layer a field's final value came from owns its
+ * attribution, and `'...'` spreads in default-plugin configs resolve against
+ * the accumulated specified + target-defaults base.
+ *
+ * Target-default synthesis needs the *merged* shape of the default layer
+ * (to predict each target's eventual executor/command) before that layer
+ * merges into the manager. To get it, default results are first staged into
+ * a throwaway intermediate rootMap with unresolvable `'...'` spreads
+ * deferred. The staging output feeds only `createTargetDefaultsResults`; the
+ * default plugins then merge into the manager from their original results.
  */
 export function mergeCreateNodesResults(
   specifiedResults: CreateNodesResultEntry[][],
@@ -354,135 +368,105 @@ export function mergeCreateNodesResults(
   const nodesManager = new ProjectNodesManager();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
   const configurationSourceMaps: ConfigurationSourceMaps = {};
-  const intermediateDefaultRootMap: Record<string, ProjectConfiguration> = {};
-  // Kept separate so the intermediate merge doesn't clobber
-  // specified/TD attribution on fields the defaults don't touch.
-  const defaultConfigurationSourceMaps: ConfigurationSourceMaps = {};
 
   const mergeToManager: MergeFn = (project, sourceInfo) =>
     nodesManager.mergeProjectNode(project, configurationSourceMaps, sourceInfo);
-
-  const mergeToIntermediate: MergeFn = (project, sourceInfo) => {
-    mergeProjectConfigurationIntoRootMap(
-      intermediateDefaultRootMap,
-      project,
-      defaultConfigurationSourceMaps,
-      sourceInfo
-    );
-  };
 
   for (const pluginResults of specifiedResults) {
     mergeCreateNodesResultsFromSinglePlugin(
       pluginResults,
       mergeToManager,
       nodesManager,
-      nodesManager.getRootMap(),
       externalNodes,
       errors
     );
   }
 
-  for (const pluginResults of defaultResults) {
-    mergeCreateNodesResultsFromSinglePlugin(
-      pluginResults,
-      mergeToIntermediate,
-      nodesManager,
+  // Without target defaults there is nothing to synthesize, and the staging
+  // pass exists only to feed synthesis — skip straight to the default-plugin
+  // merge.
+  if (Object.keys(nxJsonConfiguration.targetDefaults ?? {}).length > 0) {
+    // Throwaway staging area: the default layer's merged shape (unresolvable
+    // `'...'` spreads deferred), read only by target-default synthesis. The
+    // default plugins merge into the manager from their original results, not
+    // from this map. No source maps are kept for it — synthesis attributes
+    // targets without them (a default plugin can never be named by a
+    // `filter.plugin`); the real default merge writes the manager's.
+    const intermediateDefaultRootMap: Record<string, ProjectConfiguration> = {};
+
+    // The rootMap merge adopts input arrays/objects by reference and grows
+    // them in place (e.g. `mergeMetadata`), so staging works on deep clones —
+    // handing it the plugin results themselves would corrupt them before the
+    // real merge below reads them.
+    const mergeToIntermediate: MergeFn = (project, sourceInfo) => {
+      mergeProjectConfigurationIntoRootMap(
+        intermediateDefaultRootMap,
+        deepClone(project),
+        undefined,
+        sourceInfo,
+        false,
+        true
+      );
+    };
+
+    // Stage the default layer for synthesis. Merge errors are discarded and
+    // external nodes land in a scratch object — the same results merge into
+    // the manager below, where both surface once with proper plugin context.
+    // The discard is safe because every merge throw is base-independent in
+    // both its condition and its reachability: each throw's condition reads
+    // only the plugin's own config, and the spread-ambiguity throws fire even
+    // when a key is dropped by a base-owns-key shortcut, because those
+    // shortcuts eagerly validate the dropped value (`assertNoIntegerLikeSpreadKey`).
+    // So a given config raises the same error in this pass and the real merge
+    // below despite their bases differing.
+    // Name references are NOT registered here: `applySubstitutions` sweeps only
+    // the manager's `rootMap`, so sentinels registered against this throwaway
+    // rootMap would never be visited and would never resolve.
+    const stagingErrors: MergeError[] = [];
+    const stagingExternalNodes: Record<string, ProjectGraphExternalNode> = {};
+    for (const pluginResults of defaultResults) {
+      mergeSinglePluginResults(
+        pluginResults,
+        mergeToIntermediate,
+        stagingExternalNodes,
+        stagingErrors
+      );
+    }
+
+    const targetDefaultsResults = createTargetDefaultsResults(
+      nodesManager.getRootMap(),
       intermediateDefaultRootMap,
-      externalNodes,
-      errors
+      nxJsonConfiguration,
+      configurationSourceMaps
     );
-  }
 
-  const targetDefaultsResults = createTargetDefaultsResults(
-    nodesManager.getRootMap(),
-    intermediateDefaultRootMap,
-    nxJsonConfiguration,
-    configurationSourceMaps,
-    defaultConfigurationSourceMaps
-  );
-
-  if (targetDefaultsResults.length > 0) {
-    mergeCreateNodesResultsFromSinglePlugin(
-      targetDefaultsResults,
-      mergeToManager,
-      nodesManager,
-      nodesManager.getRootMap(),
-      externalNodes,
-      errors
-    );
-  }
-
-  // Apply the intermediate default rootMap as a single layer. Preserved
-  // spread sentinels resolve here against the real specified + TD base.
-  // Source maps are intentionally not written — TD attribution for
-  // fields that yield to the base (e.g. keys before `...`) stays intact.
-  for (const root in intermediateDefaultRootMap) {
-    const project = intermediateDefaultRootMap[root];
-    try {
-      nodesManager.mergeProjectNode(project, undefined, undefined);
-    } catch (error) {
-      errors.push(
-        new MergeNodesError({
-          file: 'nx.json',
-          pluginName: 'nx/default-plugins',
-          error,
-          pluginIndex: undefined,
-        })
+    if (targetDefaultsResults.length > 0) {
+      mergeCreateNodesResultsFromSinglePlugin(
+        targetDefaultsResults,
+        mergeToManager,
+        nodesManager,
+        externalNodes,
+        errors
       );
     }
   }
 
-  // The intermediate apply may have rebuilt dependsOn / inputs arrays via
-  // spread merges, introducing name-ref strings that weren't visible in any
-  // single plugin result. Re-walking the final merged targets sentinelizes
-  // them so the final substitution sweep resolves them too.
-  nodesManager.registerNameRefs(intermediateDefaultRootMap);
-
-  // Overlay default-plugin attribution onto the main source maps using
-  // "only fill missing" semantics. Any key already present in
-  // configurationSourceMaps was written by a specified plugin or by
-  // target defaults, and that attribution is strictly more correct:
-  //  - For fields the default plugin never shadowed, the existing entry
-  //    already matches what the default plugin would overlay.
-  //  - For fields where a default plugin placed `...` after other keys,
-  //    those keys yielded to the base during the single-layer apply
-  //    above. The stale default-plugin entry in
-  //    `defaultConfigurationSourceMaps` must NOT clobber the base
-  //    attribution that the specified plugin / TD already recorded.
-  const mainRootMap = nodesManager.getRootMap();
-  for (const root in defaultConfigurationSourceMaps) {
-    const existing = (configurationSourceMaps[root] ??= {});
-    const incoming = defaultConfigurationSourceMaps[root];
-
-    // A default plugin's targets are synthesized into the main rootmap by
-    // target defaults *before* the default layer is applied, so target
-    // defaults wrote the main source map's entry for the target node and its
-    // identity fields first — even though it never authored them (it only
-    // stamps them as a merge guard and cannot bring a target into existence).
-    // The identity fields are the executor/command plus, for run-commands, the
-    // `options.command`/`options.commands` the synthetic copies from the winner
-    // to stay compatible (#36067). For those keys, the real default plugin's
-    // attribution must override the target-defaults stamp.
-    const identityKeys = new Set<string>();
-    for (const targetName in mainRootMap[root]?.targets ?? {}) {
-      const base = targetSourceMapKey(targetName);
-      identityKeys.add(base);
-      identityKeys.add(`${base}.executor`);
-      identityKeys.add(`${base}.command`);
-      identityKeys.add(`${base}.options.command`);
-      identityKeys.add(`${base}.options.commands`);
-    }
-
-    for (const key in incoming) {
-      if (existing[key] === undefined) {
-        existing[key] = incoming[key];
-      } else if (
-        identityKeys.has(key) &&
-        existing[key][1] === TARGET_DEFAULTS_PLUGIN_NAME
-      ) {
-        existing[key] = incoming[key];
-      }
-    }
+  // Merge the default plugins into the manager on top of the specified + TD
+  // base, from their original results. This is the same source-map-aware path
+  // the other layers take, so every field a default plugin wins — including
+  // fields it overrides on a specified/TD target — is attributed to it by the
+  // merge itself, `'...'` spreads resolve against the real base (keys a spread
+  // lets the base win keep their base attribution), and identity provenance
+  // follows the node-ownership rules in `recordTargetIdentitySourceMapInfo` /
+  // `getMergeValueResult`.
+  for (const pluginResults of defaultResults) {
+    mergeCreateNodesResultsFromSinglePlugin(
+      pluginResults,
+      mergeToManager,
+      nodesManager,
+      externalNodes,
+      errors
+    );
   }
 
   const projectRootMap = nodesManager.getRootMap();

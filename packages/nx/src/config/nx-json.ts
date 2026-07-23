@@ -71,8 +71,10 @@ export type TargetDefaultEntry = {
 export type TargetDefaultFilter = {
   /**
    * Restrict the default to targets originated by a specific plugin
-   * (e.g. `@nx/vite`). Matches against the plugin that wrote the target's
-   * `executor` or `command`.
+   * (e.g. `@nx/vite`). Matches against the plugin from nx.json's `plugins`
+   * that wrote the target's `executor` or `command`. Targets whose
+   * executor/command comes from `project.json` or `package.json` have no
+   * source plugin and never match.
    */
   plugin?: string;
   /**

@@ -2234,4 +2234,37 @@ describe('ProjectNameInNodePropsManager', () => {
       expect(templateDependsOn[0]).toBe('project-b:build');
     });
   });
+
+  describe('refs registered after a rename (name history)', () => {
+    // Refs register after a whole batch merges, so a reference to `b-old`
+    // can be registered when the same batch already renamed the project to
+    // `b-new`. The name history maps the stale name back to its root so the
+    // ref binds and resolves to the current name.
+    it('should bind a ref to a stale name via the name history and resolve it to the current name', () => {
+      const manager = createManager();
+
+      const projectB = createProject('b-old', 'libs/b', {
+        targets: { build: {} },
+      });
+      identifyProjects(manager, createPluginResult([projectB]));
+
+      // The rename lands before project A's refs are registered.
+      renameProject(manager, 'libs/b', 'b-new');
+
+      const projectA = createProject('project-a', 'libs/a', {
+        targets: { test: { dependsOn: ['b-old:build'] } },
+      });
+      identifyProjects(manager, createPluginResult([projectA]));
+      manager.registerNameRefs(createPluginResult([projectA]));
+
+      const rootMap = createRootMap([
+        { name: 'project-a', root: 'libs/a', targets: projectA.targets },
+        { name: 'b-new', root: 'libs/b', targets: projectB.targets },
+      ]);
+
+      manager.applySubstitutions(rootMap);
+
+      expect(projectA.targets.test.dependsOn).toEqual(['b-new:build']);
+    });
+  });
 });
