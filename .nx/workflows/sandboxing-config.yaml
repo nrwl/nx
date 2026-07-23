@@ -20,3 +20,9 @@ task-exclusions:
       - '**'
     exclude-writes:
       - '**'
+
+  - project: graph-client
+    target: build-client
+    exclude-reads:
+      - '**/*.stories.{js,jsx,ts,tsx,mdx}'
+      - '**/*.{spec,test}.{js,jsx,ts,tsx}'
