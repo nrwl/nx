@@ -1,6 +1,10 @@
 import { ProjectGraph } from '../../config/project-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { parseRunOneOptions } from './run-one';
+import {
+  getCannotFindProjectError,
+  getRunOneTargetError,
+  parseRunOneOptions,
+} from './run-one';
 
 describe('parseRunOneOptions', () => {
   let projectGraph: ProjectGraph;
@@ -41,6 +45,16 @@ describe('parseRunOneOptions', () => {
             targets: {
               build: { executor: '@nx/js:tsc' },
               serve: { executor: '@nx/webpack:dev-server' },
+            },
+          },
+        },
+        'colon-proj': {
+          name: 'colon-proj',
+          type: 'lib',
+          data: {
+            root: 'libs/colon-proj',
+            targets: {
+              'zzcustom:variant': { executor: 'nx:run-commands' },
             },
           },
         },
@@ -473,6 +487,151 @@ describe('parseRunOneOptions', () => {
         customFlag: 'value',
         target: 'build',
       });
+    });
+  });
+
+  describe('getRunOneTargetError', () => {
+    it('should return null when the target exists on the project', () => {
+      expect(
+        getRunOneTargetError(projectGraph.nodes['my-app'], 'build')
+      ).toBeNull();
+    });
+
+    it('should list available targets and suggest the closest one for a typo', () => {
+      const error = getRunOneTargetError(
+        projectGraph.nodes['my-app'],
+        'biuld'
+      )!;
+
+      expect(error.title).toBe(
+        'Cannot find target "biuld" for project "my-app"'
+      );
+      expect(error.bodyLines).toContain('Did you mean "build"?');
+      // The closest match is already surfaced as the suggestion, so it is not
+      // repeated in the available targets list.
+      expect(error.bodyLines).not.toContain('  - build');
+      expect(error.bodyLines).toContain('  - serve');
+      expect(error.bodyLines).toContain('  - run');
+    });
+
+    it('should omit the suggestion when no target is close enough', () => {
+      const error = getRunOneTargetError(
+        projectGraph.nodes['my-app'],
+        'nonsense'
+      )!;
+
+      expect(
+        error.bodyLines.some((line: string) => line.startsWith('Did you mean'))
+      ).toBe(false);
+      expect(error.bodyLines).toContain('  - build');
+    });
+
+    it('should report when the project has no targets', () => {
+      const error = getRunOneTargetError(
+        {
+          name: 'empty',
+          type: 'lib',
+          data: { root: 'libs/empty', targets: {} },
+        },
+        'build'
+      )!;
+
+      expect(error.title).toBe(
+        'Cannot find target "build" for project "empty"'
+      );
+      expect(error.bodyLines).toContain(
+        'The project "empty" does not have any targets configured.'
+      );
+    });
+
+    it('should suggest a colon-containing target even though its tail is parsed as a configuration', () => {
+      // `nx run colon-proj:zzcustom:variantt` splits to target "zzcustom",
+      // configuration "variantt"; the real target name contains the colon.
+      const error = getRunOneTargetError(
+        projectGraph.nodes['colon-proj'],
+        'zzcustom',
+        'variantt'
+      )!;
+
+      expect(error.title).toBe(
+        'Cannot find target "zzcustom" for project "colon-proj"'
+      );
+      expect(error.bodyLines).toContain('Did you mean "zzcustom:variant"?');
+    });
+
+    it('should still suggest the target for a genuine target + configuration typo', () => {
+      // Here "production" is a real configuration name, not part of the target,
+      // so the bare target form must still win.
+      const error = getRunOneTargetError(
+        projectGraph.nodes['my-app'],
+        'biuld',
+        'production'
+      )!;
+
+      expect(error.bodyLines).toContain('Did you mean "build"?');
+    });
+
+    it('should cap the listed targets to five and report the remainder', () => {
+      const error = getRunOneTargetError(
+        {
+          name: 'many',
+          type: 'lib',
+          data: {
+            root: 'libs/many',
+            targets: {
+              build: {},
+              test: {},
+              lint: {},
+              serve: {},
+              e2e: {},
+              docs: {},
+              deploy: {},
+            },
+          },
+        },
+        'nope'
+      )!;
+
+      const targetLines = error.bodyLines.filter((line: string) =>
+        line.startsWith('  - ')
+      );
+      expect(targetLines).toHaveLength(5);
+      expect(error.bodyLines).toContain('  ...and 2 more');
+    });
+  });
+
+  describe('getCannotFindProjectError', () => {
+    it('should suggest the closest task id when the project name has a typo', () => {
+      const error = getCannotFindProjectError(projectGraph, 'my-ap', 'serve');
+
+      expect(error.title).toBe("Cannot find project 'my-ap'");
+      expect(error.bodyLines).toContain('Did you mean one of these?');
+      expect(error.bodyLines).toContain('  - my-app:serve');
+    });
+
+    it('should omit suggestions when nothing is close enough', () => {
+      const error = getCannotFindProjectError(
+        projectGraph,
+        'completely-unrelated',
+        'whatever'
+      );
+
+      expect(error.title).toBe("Cannot find project 'completely-unrelated'");
+      expect(error.bodyLines).toEqual([]);
+    });
+
+    it('should suggest the full task id for a project typo on a colon target', () => {
+      // `nx run colon-pro:zzcustom:variant` -> project "colon-pro" (typo),
+      // target "zzcustom", configuration "variant".
+      const error = getCannotFindProjectError(
+        projectGraph,
+        'colon-pro',
+        'zzcustom',
+        'variant'
+      );
+
+      expect(error.title).toBe("Cannot find project 'colon-pro'");
+      expect(error.bodyLines).toContain('  - colon-proj:zzcustom:variant');
     });
   });
 
