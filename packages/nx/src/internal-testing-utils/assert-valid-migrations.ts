@@ -61,6 +61,28 @@ export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
 
     expect(orphans).toEqual([]);
   });
+
+  it('should not have orphaned .md files under ./src/migrations', () => {
+    const migrationsPath = path.join(root, 'src/migrations');
+    if (!fs.existsSync(migrationsPath)) return;
+
+    const referenced = new Set<string>();
+    const entries = { ...json.generators, ...(json.schematics ?? {}) };
+    for (const m of Object.values(entries)) {
+      if (m.prompt) {
+        referenced.add(toMigrationMarkdownSourcePath(m.prompt));
+      }
+      if (m.documentation) {
+        referenced.add(toMigrationMarkdownSourcePath(m.documentation));
+      }
+    }
+
+    const orphans = collectMarkdownFiles(migrationsPath)
+      .map((file) => path.relative(root, file).replace(/\\/g, '/'))
+      .filter((rel) => !referenced.has(rel));
+
+    expect(orphans).toEqual([]);
+  });
 }
 
 function validateMigration(m: MigrationsJsonEntry, root: string) {
@@ -138,6 +160,33 @@ function collectMigrationEntryPointFiles(migrationsPath: string): string[] {
     }
   }
   return files;
+}
+
+function collectMarkdownFiles(dir: string): string[] {
+  const files: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectMarkdownFiles(entryPath));
+    } else if (entry.name.endsWith('.md')) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
+/**
+ * Maps a published markdown path from migrations.json back to its source
+ * location. Most packages build with rootDir "." and publish
+ * `./dist/src/migrations/foo.md`, but packages with rootDir "src" publish
+ * `./dist/migrations/foo.md`, so the stripped `src/` segment is added back.
+ */
+function toMigrationMarkdownSourcePath(publishedPath: string): string {
+  const sourcePath = publishedPath
+    .replace(/\\/g, '/')
+    .replace(/^\.\//, '')
+    .replace(/^dist\//, '');
+  return sourcePath.startsWith('src/') ? sourcePath : `src/${sourcePath}`;
 }
 
 function normalizeMigrationImplPath(implPath: string): string {
