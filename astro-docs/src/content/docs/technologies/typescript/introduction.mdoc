@@ -87,7 +87,7 @@ Nx [plugins](/docs/concepts/nx-plugins) for tools like TypeScript, Vite, Playwri
 
 ### TypeScript project references kept in sync
 
-TypeScript [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) let the compiler build and typecheck each project independently, reusing intermediate `*.tsbuildinfo` files instead of re-typechecking every dependency. This provides [significant performance improvements](/docs/concepts/typescript-project-linking#typescript-project-references-performance-benefits), particularly in a large monorepo.
+TypeScript [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html) let the compiler build and typecheck each project independently, reusing intermediate `*.tsbuildinfo` files instead of re-typechecking every dependency. This provides [significant performance improvements](/docs/kb/typescript-project-linking#typescript-project-references-performance-benefits), particularly in a large monorepo.
 
 The downside is that each project's references have to be defined by hand in the appropriate `tsconfig.*.json` file, which is tedious to set up and hard to maintain as the repository changes. Nx uses a [sync generator](/docs/concepts/sync-generators) to update the references automatically from the project graph it already knows about:
 
@@ -141,14 +141,14 @@ Nx supports the latest version of TypeScript. TypeScript itself only officially 
 | 21.x           | >= 5.4.2 < 5.10.0  |
 | 20.x           | ~5.4.2             |
 
-TypeScript 7.0 does not yet provide a programmatic API. To use its CLI while tools that consume the API continue to use TypeScript 6.0, see [Use TypeScript 7.0 alongside TypeScript 6.0](/docs/technologies/typescript/guides/typescript-7).
+TypeScript 7.0 does not yet provide a programmatic API. To use its CLI while tools that consume the API continue to use TypeScript 6.0, see [Use TypeScript 7.0 alongside TypeScript 6.0](/docs/kb/typescript-7).
 
 ## Setting up @nx/js plugin
 
 ### Add to an existing Nx workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/js` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/js` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
@@ -215,7 +215,7 @@ For a guided walkthrough, follow the [Learn Nx Tutorial](/docs/getting-started/t
 {% /aside %}
 
 The `--template nrwl/typescript-template` uses the modern setup with workspaces and project references as of Nx 20.
-You can [migrate an existing workspace from path aliases ](/docs/technologies/typescript/guides/switch-to-workspaces-project-references) to the modern setup.
+You can [migrate an existing workspace from path aliases ](/docs/kb/switch-to-workspaces-project-references) to the modern setup.
 
 If you want to keep using the older style of setups with `compilerOptions.paths`, use `create-nx-workspace --preset=apps`.
 
@@ -255,7 +255,7 @@ nx g @nx/js:lib libs/my-lib --bundler=swc
 nx g @nx/js:lib libs/my-lib --bundler=rollup
 ```
 
-If you plan to publish your library to npm, then you can pass in the `--publishable` flag to automatically setup [Nx Release](/docs/guides/nx-release/release-npm-packages) to manage the releasing process.
+If you plan to publish your library to npm, then you can pass in the `--publishable` flag to automatically setup [Nx Release](/docs/kb/release-npm-packages) to manage the releasing process.
 
 ```shell
 nx g @nx/js:lib libs/my-lib --bundler=tsc --publishable
@@ -289,7 +289,7 @@ The output location is controlled by `outDir` in your build tsconfig (defaults t
 
 The plugin reads `outDir` automatically and sets the correct [task outputs](/docs/concepts/how-caching-works) for caching.
 
-If you're manually defining the `build` targets, make sure to keep the [target configuration outputs](/docs/guides/tasks--caching/configure-outputs) in sync with where typescript is outputting the built artifacts. This ensures Nx properly restores the cache for your build tasks.
+If you're manually defining the `build` targets, make sure to keep the [target configuration outputs](/docs/kb/configure-outputs) in sync with where typescript is outputting the built artifacts. This ensures Nx properly restores the cache for your build tasks.
 
 ### Run typechecking
 
@@ -347,7 +347,7 @@ This project **will not** get a `build` task because its exports point directly 
 }
 ```
 
-This distinction is important in monorepos — not all libraries need to be compiled. Libraries consumed only within the monorepo can point directly to source for faster development, while libraries published to npm need a build step. See [TypeScript Project Linking](/docs/concepts/typescript-project-linking) for more on how projects reference each other.
+This distinction is important in monorepos because not all libraries need to be compiled. Libraries consumed only within the monorepo can point directly to source for faster development, while libraries published to npm need a build step. See [TypeScript Project Linking](/docs/kb/typescript-project-linking) for more on how projects reference each other.
 
 ### Plugin options
 
@@ -428,7 +428,7 @@ To see what tasks Nx inferred for a project:
 nx show project <my-project>
 ```
 
-Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
+Or open the [project details view in Nx Console](/docs/kb/console-project-details#_top).
 
 ## Set up CI for your TypeScript monorepo
 
@@ -440,8 +440,8 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 {% cardgrid %}
 {% linkcard title="Learn Nx Tutorial" description="Build a TypeScript monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
-{% linkcard title="Switch to Workspaces & Project References" description="Migrate from path aliases to the modern monorepo setup." href="/docs/technologies/typescript/guides/switch-to-workspaces-project-references" /%}
-{% linkcard title="Compile to Multiple Formats" description="Build libraries to both ESM and CommonJS with Rollup." href="/docs/technologies/typescript/guides/compile-multiple-formats" /%}
+{% linkcard title="Switch to Workspaces & Project References" description="Migrate from path aliases to the modern monorepo setup." href="/docs/kb/switch-to-workspaces-project-references" /%}
+{% linkcard title="Compile to Multiple Formats" description="Build libraries to both ESM and CommonJS with Rollup." href="/docs/kb/compile-multiple-formats" /%}
 {% linkcard title="Generators Reference" description="Full API reference for @nx/js generators." href="/docs/technologies/typescript/generators" /%}
 {% linkcard title="Executors Reference" description="Full API reference for @nx/js executors." href="/docs/technologies/typescript/executors" /%}
 {% linkcard title="Migrations Reference" description="Full reference for @nx/js migrations." href="/docs/technologies/typescript/migrations" /%}

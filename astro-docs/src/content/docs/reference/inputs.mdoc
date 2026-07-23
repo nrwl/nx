@@ -106,7 +106,7 @@ You can also use the object format with the `dependencies` property to achieve t
 By default, Nx will use all files in a project as well as all files in the project's dependencies when computing a hash for tasks belonging to the project.
 This may cause Nx to rerun some tasks even when files irrelevant to the task have changed but it ensures that by default, Nx always re-runs the task when it should.
 
-To get a better idea of how to use inputs, you can browse some [common input sets](/docs/guides/tasks--caching/configure-inputs#common-inputs).
+To get a better idea of how to use inputs, you can browse some [common input sets](/docs/kb/configure-inputs#common-inputs).
 
 ### Environment variables
 
@@ -373,5 +373,5 @@ nx test myreactapp
 {% cardgrid %}
 {% linkcard title="nx.json reference"  description="namedInputs can be defined in nx.json" href="/docs/reference/nx-json#inputs-namedinputs" /%}
 {% linkcard title="Project configuration reference"  description="inputs and namedInputs can be defined in project configuration" href="/docs/reference/project-configuration#inputs-and-named-inputs" /%}
-{% linkcard title="Configure Inputs for Task Caching"  description="This recipes walks you through a few examples of how to configure inputs and namedInputs" href="/docs/guides/tasks--caching/configure-inputs" /%}
+{% linkcard title="Configure Inputs for Task Caching"  description="This recipes walks you through a few examples of how to configure inputs and namedInputs" href="/docs/kb/configure-inputs" /%}
 {% /cardgrid %}

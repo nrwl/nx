@@ -14,7 +14,7 @@ filter: 'type:References'
 The Remix plugin for Nx, `@nx/remix`, automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications). You don't need the plugin to use Remix with Nx - it adds automatic task inference, route scaffolding, and simplified configuration.
 
 {% aside type="note" %}
-React Router v7 is the successor to Remix. `@nx/remix` supports Remix v2; [`@nx/react`](/docs/technologies/react/guides/react-router) handles React Router v7. For new projects, use React Router instead. Existing Remix v2 projects continue to work with `@nx/remix`.
+React Router v7 is the successor to Remix. `@nx/remix` supports Remix v2. [`@nx/react`](/docs/kb/react-router) handles React Router v7. For new projects, use React Router instead. Existing Remix v2 projects continue to work with `@nx/remix`.
 {% /aside %}
 
 ## Requirements
@@ -32,7 +32,7 @@ The `@nx/remix` plugin supports the following package versions.
 ### Add to an existing Nx workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
@@ -226,7 +226,7 @@ To see what tasks Nx inferred for a project:
 nx show project my-app
 ```
 
-Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
+Or open the [project details view in Nx Console](/docs/kb/console-project-details#_top).
 
 ## Set up CI for your Remix monorepo
 
@@ -237,7 +237,7 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 ## What's next
 
 {% cardgrid %}
-{% linkcard title="React Router Guide" description="React Router is the successor to Remix. Learn how to use it with Nx." href="/docs/technologies/react/guides/react-router" /%}
+{% linkcard title="React Router Guide" description="React Router is the successor to Remix. Learn how to use it with Nx." href="/docs/kb/react-router" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
 {% linkcard title="Generators Reference" description="Full API reference for @nx/remix generators." href="/docs/technologies/react/remix/generators" /%}
 {% linkcard title="Executors Reference" description="Full API reference for @nx/remix executors." href="/docs/technologies/react/remix/executors" /%}
