@@ -344,7 +344,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
     // Auto-open the Cloud setup URL in the browser when user selected 'yes'
     if (!options.skipCloudConnect) {
-      await openCloudSetupUrl(connectUrl);
+      await openCloudSetupUrl(connectUrl, directory);
     }
   } else if (isTemplate && (nxCloud === 'skip' || nxCloud === 'never')) {
     // Strip marker comments from README

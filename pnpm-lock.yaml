@@ -2401,9 +2401,6 @@ importers:
       flat:
         specifier: ^5.0.2
         version: 5.0.2
-      open:
-        specifier: ^8.4.0
-        version: 8.4.2
       ora:
         specifier: 'catalog:'
         version: 5.4.1
@@ -3247,9 +3244,6 @@ importers:
       npm-run-path:
         specifier: ^4.0.1
         version: 4.0.1
-      open:
-        specifier: ^10.1.0
-        version: 10.1.0
       ora:
         specifier: 'catalog:'
         version: 5.4.1

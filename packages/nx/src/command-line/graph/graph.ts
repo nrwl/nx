@@ -12,6 +12,7 @@ import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenge
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
+import { openUrl } from '../../native';
 import {
   basename,
   dirname,
@@ -566,15 +567,9 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      (
-        new Function('return import("open")')() as Promise<
-          typeof import('open')
-        >
-      )
-        .then((m) => m.default(url.toString()))
-        .catch(() => {
-          // Ignore errors when opening browser (e.g. no browser available)
-        });
+      // Best-effort: openUrl never throws and returns false if no browser could
+      // be launched. The URL is already printed above, so a failure is silent.
+      openUrl(url.toString());
     }
 
     return new Promise((res) => {
