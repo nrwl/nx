@@ -3631,6 +3631,44 @@ describe('Migration', () => {
       const fetch = createFetcher({} as any);
       await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
     });
+
+    it('the fetcher rejects when an exact requested version comes back as a different version', async () => {
+      // A config surface (registry proxy, override, cooldown gate) silently
+      // substituting another version must fail the run, not corrupt the plan.
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('2.0.1');
+      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify({
+          dist: {
+            tarball:
+              'https://registry.npmjs.org/mypackage/-/mypackage-2.0.1.tgz',
+          },
+        })
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', '2.0.0')).rejects.toThrow(
+        'resolved to version 2.0.1'
+      );
+    });
+
+    it('the fetcher passes through tag and range specs that resolve to a different version', async () => {
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('2.0.1');
+      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify({
+          dist: {
+            tarball:
+              'https://registry.npmjs.org/mypackage/-/mypackage-2.0.1.tgz',
+          },
+        })
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+        version: '2.0.1',
+      });
+    });
   });
 
   describe('multi-major migration prompt', () => {

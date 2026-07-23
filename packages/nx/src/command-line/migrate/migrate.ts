@@ -1739,6 +1739,19 @@ export function createFetcher(pmc: PackageManagerCommands) {
 
     migrations = fetchMigrations(packageName, packageVersion, setCache).then(
       (result) => {
+        // An exact requested version must come back verbatim; a mismatch means
+        // a config surface (registry proxy, override, cooldown gate) silently
+        // substituted another version, which would corrupt the whole plan.
+        if (
+          valid(packageVersion) &&
+          result.version &&
+          result.version !== packageVersion
+        ) {
+          throw new Error(
+            `Fetching ${packageName}@${packageVersion} resolved to version ${result.version}. ` +
+              `Check for registry, override, or minimum-release-age configuration that hides the requested version.`
+          );
+        }
         if (result.schematics) {
           result.generators = { ...result.schematics, ...result.generators };
           delete result.schematics;
@@ -1851,7 +1864,13 @@ async function downloadPackageMigrationsFromRegistry(
     const { tarballPath } = await packageRegistryPack(
       dir,
       packageName,
-      packageVersion
+      packageVersion,
+      // packageVersion is exact and already resolved through the workspace
+      // package manager's min-release-age policy by the fetcher. In an npm
+      // workspace the pack gate IS that policy, so leave it enforcing; for
+      // other package managers npm's gate is foreign config with no
+      // exclusions and would wrongly re-judge the vetted version.
+      { bypassMinReleaseAge: detectPackageManager() !== 'npm' }
     );
 
     const fullTarballPath = join(dir, tarballPath);
