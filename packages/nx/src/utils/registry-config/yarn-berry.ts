@@ -4,6 +4,7 @@ import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { gte, lt, major } from 'semver';
 import { readYamlFile } from '../fileutils';
+import { logger } from '../logger';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
@@ -38,10 +39,13 @@ import {
  *
  * Auth (npmAuthToken/npmAuthIdent at scope > npmRegistries[registry] > global)
  * lives in .yarnrc.yml, which npm cannot read; it is translated to nerf-darted
- * npm keys. TLS: caFilePath (v2/3) / httpsCaFilePath (v4), per-host
- * networkSettings (hostname globs, longest key first), enableStrictSsl
+ * npm keys. TLS: caFilePath (v2/3) / httpsCaFilePath (v4), the
+ * httpsCertFilePath/httpsKeyFilePath client-certificate pair (3.2.0 on),
+ * per-host networkSettings (hostname globs, longest key first), enableStrictSsl
  * (global only). A matching networkSettings entry is read before the global
  * value of the same key, so for those keys alone it outranks the env vars too.
+ * enableNetwork is resolved the same way but has no npm counterpart, so a host
+ * berry refuses to reach is reported rather than reproduced.
  *
  * See https://github.com/yarnpkg/berry/blob/a26895a80d2784a5be92c54d5e7622bc9b0864a5/packages/yarnpkg-core/sources/Configuration.ts#L1424
  */
@@ -95,6 +99,7 @@ interface BerryConfig {
   httpsCaFilePath?: string;
   httpsCertFilePath?: string;
   httpsKeyFilePath?: string;
+  enableNetwork?: BerryBoolean;
   enableStrictSsl?: BerryBoolean;
   httpProxy?: string;
   httpsProxy?: string;
@@ -107,6 +112,7 @@ interface BerryConfig {
       httpsCaFilePath?: string;
       httpsCertFilePath?: string;
       httpsKeyFilePath?: string;
+      enableNetwork?: BerryBoolean;
       httpProxy?: string;
       httpsProxy?: string;
     }
@@ -490,6 +496,18 @@ function applyTls(
     }
   }
 
+  const enableNetwork =
+    network.enableNetwork ??
+    process.env['YARN_ENABLE_NETWORK'] ??
+    firstDefinedIn(rcFiles, (c) => c.enableNetwork);
+  if (
+    host &&
+    enableNetwork !== undefined &&
+    isBerryFalseBoolean(enableNetwork)
+  ) {
+    warnDisabledNetwork(host);
+  }
+
   const strictSsl =
     process.env['YARN_ENABLE_STRICT_SSL'] ??
     firstDefinedIn(rcFiles, (c) => c.enableStrictSsl);
@@ -511,6 +529,23 @@ function applyTls(
       legacy
     ),
   });
+}
+
+let warnedDisabledNetwork = false;
+/**
+ * Berry refuses to reach a host it has enableNetwork off for and exits (verified
+ * on 4.15.0: the registry is never contacted). The spawned npm has no such
+ * setting and will make the request, so say so once rather than reproducing a
+ * refusal that would leave the workspace un-migrated.
+ */
+function warnDisabledNetwork(host: string): void {
+  if (warnedDisabledNetwork) {
+    return;
+  }
+  warnedDisabledNetwork = true;
+  logger.warn(
+    `yarn is configured not to use the network for ${host} (enableNetwork is false), so yarn itself would refuse to fetch from it. Packages will still be fetched from that registry.`
+  );
 }
 
 function envPath(value: string | undefined): NetworkPath | undefined {
@@ -544,6 +579,7 @@ interface NetworkPath {
   baseDir: string;
 }
 type ResolvedNetwork = Partial<Record<BerryPathKey, NetworkPath>> & {
+  enableNetwork?: BerryBoolean;
   httpProxy?: string;
   httpsProxy?: string;
 };
@@ -579,6 +615,9 @@ function resolveNetworkSettings(
           m[key] = { value: entry[key], baseDir };
         }
       }
+      if (entry.enableNetwork != null) {
+        m.enableNetwork = entry.enableNetwork;
+      }
       if (entry.httpProxy != null) {
         m.httpProxy = entry.httpProxy;
       }
@@ -596,6 +635,7 @@ function resolveNetworkSettings(
     for (const key of BERRY_PATH_KEYS) {
       result[key] ??= m[key];
     }
+    result.enableNetwork ??= m.enableNetwork;
     result.httpProxy ??= m.httpProxy;
     result.httpsProxy ??= m.httpsProxy;
   }
