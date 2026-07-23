@@ -272,6 +272,20 @@ nx g @nx/react:app apps/tuskdesk --enableTypedLinting
 
 A generator skips the step when your config already configures typed linting, whether through `projectService` or `parserOptions.project`, so re-running one won't produce a conflicting block.
 
+To work that out, it reads the configs yours spreads in. It can't read one that lives in a package, comes back from a function call, or arrives through a dynamic `import()`. When it hits one of those, the block it writes also sets `project: null`:
+
+```javascript
+parserOptions: {
+  projectService: true,
+  // A config spread in above may set `parserOptions.project`, which conflicts
+  // with `projectService`. Remove this once you know none of them do.
+  project: null,
+  tsconfigRootDir: import.meta.dirname,
+},
+```
+
+`projectService` and a `parserOptions.project` can't both be active, so setting it to `null` keeps a config the generator couldn't inspect from breaking linting. Once you've checked that none of the configs you spread in set `parserOptions.project`, you can delete the line.
+
 {% aside type="note" title="Deprecated flag" %}
 `--setParserOptionsProject` is the former name of this flag and still works, but it's deprecated and will be removed in Nx v24.
 Use `--enableTypedLinting` instead.

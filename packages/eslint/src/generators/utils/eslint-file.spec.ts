@@ -1255,6 +1255,70 @@ module.exports = [
       process.env.ESLINT_USE_FLAT_CONFIG = originalUseFlatConfig;
     });
 
+    it('does not defuse `project` when every spread was read', () => {
+      tree.write(
+        'eslint.config.mjs',
+        `import nx from '@nx/eslint-plugin';\nexport default [...nx.configs['flat/base'], { rules: {} }];\n`
+      );
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import baseConfig from '../../eslint.config.mjs';\nexport default [...baseConfig, { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+      expect(content).toContain('projectService: true');
+      expect(content).not.toContain('project: null');
+    });
+
+    it('defuses `project` when a spread names a config it cannot read', () => {
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import baseConfig from '@myorg/eslint-config';\nexport default [...baseConfig, { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+      expect(content).toContain('projectService: true');
+      expect(content).toContain('project: null');
+      expect(content).toContain('Remove this once you know none of them do.');
+    });
+
+    it('defuses `project` when a spread is a value it cannot evaluate', () => {
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import { makeConfig } from '../../tools/eslint.mjs';\nexport default [...makeConfig(), { rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toContain(
+        'project: null'
+      );
+    });
+
+    it('skips the append when a re-export barrel leads to `project`', () => {
+      tree.write(
+        'tools/eslint/typed.mjs',
+        `export default [{ languageOptions: { parserOptions: { project: ['./tsconfig.json'] } } }];\n`
+      );
+      tree.write(
+        'tools/eslint/index.mjs',
+        `export { default } from './typed.mjs';\n`
+      );
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `import base from '../../tools/eslint/index.mjs';\nexport default [...base, { rules: {} }];\n`
+      );
+      const before = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(before);
+    });
+
     it('appends a projectService block with import.meta.dirname to an mjs flat config', () => {
       tree.write(
         'libs/test/eslint.config.mjs',

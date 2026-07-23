@@ -1954,7 +1954,8 @@ const DEFAULT_TYPED_LINTING_FILES = [
  * `tsconfigRootDir: __dirname` for `cjs`.
  */
 export function generateProjectServiceParserOptions(
-  format: 'mjs' | 'cjs'
+  format: 'mjs' | 'cjs',
+  defuseProject = false
 ): ts.ObjectLiteralExpression {
   return ts.factory.createObjectLiteralExpression(
     [
@@ -1962,6 +1963,7 @@ export function generateProjectServiceParserOptions(
         'projectService',
         ts.factory.createTrue()
       ),
+      ...(defuseProject ? [generateProjectDefusingAssignment()] : []),
       ts.factory.createPropertyAssignment(
         'tsconfigRootDir',
         format === 'mjs'
@@ -1984,9 +1986,38 @@ export function generateProjectServiceParserOptions(
  * project service. Default files match the typed-linting block that
  * generators historically emitted via `parserOptions.project`.
  */
+/**
+ * `project: null` for a config that spreads in something we could not read.
+ * ESLint merges `parserOptions` across entries, and typescript-eslint rejects a
+ * merged truthy `project` next to `projectService`, so this keeps an unseen
+ * `project` from breaking every file. The comment carries the condition for
+ * dropping it, since only the user can check what the spread configs set.
+ */
+function generateProjectDefusingAssignment(): ts.PropertyAssignment {
+  const assignment = ts.factory.createPropertyAssignment(
+    'project',
+    ts.factory.createNull()
+  );
+  ts.addSyntheticLeadingComment(
+    assignment,
+    ts.SyntaxKind.SingleLineCommentTrivia,
+    ' A config spread in above may set `parserOptions.project`, which conflicts',
+    true
+  );
+  ts.addSyntheticLeadingComment(
+    assignment,
+    ts.SyntaxKind.SingleLineCommentTrivia,
+    ' with `projectService`. Remove this once you know none of them do.',
+    true
+  );
+
+  return assignment;
+}
+
 export function generateTypedLintingFlatConfigOverride(
   format: 'mjs' | 'cjs',
-  files: string[] = DEFAULT_TYPED_LINTING_FILES
+  files: string[] = DEFAULT_TYPED_LINTING_FILES,
+  defuseProject = false
 ): ts.ObjectLiteralExpression {
   return ts.factory.createObjectLiteralExpression(
     [
@@ -2003,7 +2034,7 @@ export function generateTypedLintingFlatConfigOverride(
           [
             ts.factory.createPropertyAssignment(
               'parserOptions',
-              generateProjectServiceParserOptions(format)
+              generateProjectServiceParserOptions(format, defuseProject)
             ),
           ],
           true

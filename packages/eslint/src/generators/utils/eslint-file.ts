@@ -286,15 +286,54 @@ export function detectTypedLintingShape(
   content: string,
   spreads?: SpreadConfigReader
 ): TypedLintingShape | null {
-  const blocks = findParserOptions(content, spreads, new Set());
-  if (blocks.some((block) => block.hasProjectService)) {
-    return 'project-service';
-  }
-  if (blocks.some((block) => block.enablesProject)) {
-    return 'parser-options-project';
-  }
-  return null;
+  return inspectTypedLinting(content, spreads).shape;
 }
+
+/**
+ * What a config says about typed linting, plus whether the walk was complete.
+ *
+ * `unresolvedSpread` means a spread named a config we could not read, so a
+ * `project` may be in effect that `shape` does not report. Callers that append a
+ * `projectService` block need it: ESLint merges `parserOptions` across entries,
+ * and typescript-eslint rejects a merged truthy `project` next to it.
+ */
+export interface TypedLintingReport {
+  shape: TypedLintingShape | null;
+  unresolvedSpread: boolean;
+}
+
+export function inspectTypedLinting(
+  content: string,
+  spreads?: SpreadConfigReader
+): TypedLintingReport {
+  const walk: ConfigWalk = { seenExports: new Set(), unresolvedSpread: false };
+  const blocks = findParserOptions(content, spreads, walk);
+  const shape = blocks.some((block) => block.hasProjectService)
+    ? 'project-service'
+    : blocks.some((block) => block.enablesProject)
+      ? 'parser-options-project'
+      : null;
+
+  return { shape, unresolvedSpread: walk.unresolvedSpread };
+}
+
+/**
+ * State carried through one config walk. `seenExports` stops a cycle between two
+ * configs spreading each other; `unresolvedSpread` records that the walk hit a
+ * config it could not read, so its answer is a lower bound.
+ */
+interface ConfigWalk {
+  seenExports: Set<string>;
+  unresolvedSpread: boolean;
+}
+
+/**
+ * Spreads of configs we ship ourselves. They are the three `...nx.configs[...]`
+ * entries in every generated root config, and none of them sets
+ * `parserOptions.project`, so treating them as read keeps the common path off
+ * the uncertain branch. Pinned by a test over the shipped presets.
+ */
+const KNOWN_SAFE_CONFIG_PACKAGE = '@nx/eslint-plugin';
 
 /**
  * What one `parserOptions` object says about typed linting.
@@ -320,14 +359,14 @@ interface ParserOptions {
 function findParserOptions(
   content: string,
   spreads: SpreadConfigReader | undefined,
-  seenExports: Set<string>
+  walk: ConfigWalk
 ): ParserOptions[] {
   const eslintrc = tryParseJson(content);
   if (eslintrc) {
     return findParserOptionsInJson(eslintrc);
   }
 
-  const blocks = findParserOptionsInSource(content, spreads, seenExports);
+  const blocks = findParserOptionsInSource(content, spreads, walk);
   if (blocks.length > 0) {
     return blocks;
   }
@@ -392,11 +431,11 @@ function findParserOptionsInJson(config: object): ParserOptions[] {
 function findParserOptionsInSource(
   content: string,
   spreads: SpreadConfigReader | undefined,
-  seenExports: Set<string>
+  walk: ConfigWalk
 ): ParserOptions[] {
   const { source, checker } = parseSource(content);
 
-  return collectParserOptions(source, checker, spreads, seenExports, new Set());
+  return collectParserOptions(source, checker, spreads, walk, new Set());
 }
 
 /**
@@ -408,7 +447,7 @@ function collectParserOptions(
   root: ts.Node,
   checker: ts.TypeChecker,
   spreads: SpreadConfigReader | undefined,
-  seenExports: Set<string>,
+  walk: ConfigWalk,
   localSeen: Set<ts.Node>
 ): ParserOptions[] {
   const blocks: ParserOptions[] = [];
@@ -418,9 +457,7 @@ function collectParserOptions(
       blocks.push(readParserOptions(object, checker));
     }
     if (spreads && ts.isSpreadElement(node)) {
-      blocks.push(
-        ...followSpread(node, checker, spreads, seenExports, localSeen)
-      );
+      blocks.push(...followSpread(node, checker, spreads, walk, localSeen));
     }
     ts.forEachChild(node, visit);
   };
@@ -439,20 +476,52 @@ function followSpread(
   node: ts.SpreadElement,
   checker: ts.TypeChecker,
   spreads: SpreadConfigReader,
-  seenExports: Set<string>,
+  walk: ConfigWalk,
   localSeen: Set<ts.Node>
 ): ParserOptions[] {
   const reference = getImportedModuleReference(node.expression, checker);
   if (reference) {
-    return collectFromImportedExport(reference, spreads, seenExports);
+    return collectFromImportedExport(reference, spreads, walk);
+  }
+  if (isKnownSafeSpread(node.expression, checker)) {
+    return [];
   }
 
-  return followLocalSpread(
-    node.expression,
-    checker,
-    spreads,
-    seenExports,
-    localSeen
+  return followLocalSpread(node.expression, checker, spreads, walk, localSeen);
+}
+
+/**
+ * Whether a spread names a config we ship, whose contents we therefore already
+ * know. `...nx.configs['flat/base']` reads a member of a package import rather
+ * than the import itself, so nothing else here can follow it.
+ */
+function isKnownSafeSpread(
+  expression: ts.Expression,
+  checker: ts.TypeChecker
+): boolean {
+  let current = unwrapExpression(expression);
+  while (
+    ts.isPropertyAccessExpression(current) ||
+    ts.isElementAccessExpression(current)
+  ) {
+    current = unwrapExpression(current.expression);
+  }
+  if (!ts.isIdentifier(current)) {
+    return false;
+  }
+  const declaration = checker.getSymbolAtLocation(current)?.declarations?.[0];
+  if (!declaration) {
+    return false;
+  }
+  const moduleSpecifier = ts.isImportClause(declaration)
+    ? declaration.parent.moduleSpecifier
+    : ts.isImportSpecifier(declaration)
+      ? declaration.parent.parent.parent.moduleSpecifier
+      : null;
+
+  return (
+    !!moduleSpecifier &&
+    getModuleSpecifierText(moduleSpecifier) === KNOWN_SAFE_CONFIG_PACKAGE
   );
 }
 
@@ -460,25 +529,28 @@ function followSpread(
 function collectFromImportedExport(
   reference: ImportedModuleReference,
   spreads: SpreadConfigReader,
-  seenExports: Set<string>
+  walk: ConfigWalk
 ): ParserOptions[] {
   const imported = spreads.read(reference.specifier, spreads.path);
   if (!imported) {
+    if (reference.specifier !== KNOWN_SAFE_CONFIG_PACKAGE) {
+      walk.unresolvedSpread = true;
+    }
     return [];
   }
   // Keyed per export, not per file: one config can spread two exports of the
   // same module, and the second must still be read.
   const visited = `${imported.path}:${reference.exportName}`;
-  if (seenExports.has(visited)) {
+  if (walk.seenExports.has(visited)) {
     return [];
   }
-  seenExports.add(visited);
+  walk.seenExports.add(visited);
 
   return findParserOptionsInExport(
     imported.content,
     reference.exportName,
     { ...spreads, path: imported.path },
-    seenExports
+    walk
   );
 }
 
@@ -492,18 +564,25 @@ function findParserOptionsInExport(
   content: string,
   exportName: string,
   spreads: SpreadConfigReader,
-  seenExports: Set<string>
+  walk: ConfigWalk
 ): ParserOptions[] {
   const { source, checker } = parseSource(content);
   const exported = findExportedExpression(source, exportName);
   if (!exported) {
+    // A barrel forwards the export without ever binding it locally, so there is
+    // no expression here to walk, only another module to read.
+    const forwarded = findReExportedModule(source, exportName);
+    if (forwarded) {
+      return collectFromImportedExport(forwarded, spreads, walk);
+    }
+    walk.unresolvedSpread = true;
     return [];
   }
   // The export may hand straight back a config from somewhere else
   // (`import inner from './deep.mjs'; export default inner`).
   const reference = getImportedModuleReference(exported, checker);
   if (reference) {
-    return collectFromImportedExport(reference, spreads, seenExports);
+    return collectFromImportedExport(reference, spreads, walk);
   }
   // Otherwise it names the config rather than spelling it out, so the name has
   // to be followed before there is anything to walk.
@@ -511,7 +590,7 @@ function findParserOptionsInExport(
   const value = resolveExpressionValue(exported, checker, localSeen);
 
   return value
-    ? collectParserOptions(value, checker, spreads, seenExports, localSeen)
+    ? collectParserOptions(value, checker, spreads, walk, localSeen)
     : [];
 }
 
@@ -577,6 +656,45 @@ function findExportedExpression(
   return null;
 }
 
+/**
+ * The module an export is forwarded from, for a barrel that re-exports rather
+ * than binding: `export { default } from './base.mjs'`.
+ */
+function findReExportedModule(
+  source: ts.SourceFile,
+  exportName: string
+): ImportedModuleReference | null {
+  for (const statement of source.statements) {
+    if (!ts.isExportDeclaration(statement) || !statement.moduleSpecifier) {
+      continue;
+    }
+    const specifier = getModuleSpecifierText(statement.moduleSpecifier);
+    if (!specifier) {
+      continue;
+    }
+    if (!statement.exportClause) {
+      // `export * from` forwards every named export, but never the default one.
+      if (exportName !== DEFAULT_EXPORT) {
+        return { specifier, exportName };
+      }
+      continue;
+    }
+    if (!ts.isNamedExports(statement.exportClause)) {
+      continue;
+    }
+    for (const element of statement.exportClause.elements) {
+      if (element.name.text === exportName) {
+        return {
+          specifier,
+          exportName: (element.propertyName ?? element.name).text,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
 /** The right-hand side of a `module.exports = ...` statement. */
 function getModuleExportsAssignment(
   statement: ts.Statement
@@ -611,20 +729,26 @@ function followLocalSpread(
   expression: ts.Expression,
   checker: ts.TypeChecker,
   spreads: SpreadConfigReader,
-  seenExports: Set<string>,
+  walk: ConfigWalk,
   localSeen: Set<ts.Node>
 ): ParserOptions[] {
   // Only a name needs following. An inline array is already being walked as
   // part of the surrounding config, so resolving it again would double-count.
-  if (!ts.isIdentifier(unwrapExpression(expression))) {
+  const unwrapped = unwrapExpression(expression);
+  if (!ts.isIdentifier(unwrapped)) {
+    // Anything else is a value we cannot evaluate: a call, an `await import()`.
+    if (!ts.isArrayLiteralExpression(unwrapped)) {
+      walk.unresolvedSpread = true;
+    }
     return [];
   }
   const value = resolveExpressionValue(expression, checker, localSeen);
   if (!value) {
+    walk.unresolvedSpread = true;
     return [];
   }
 
-  return collectParserOptions(value, checker, spreads, seenExports, localSeen);
+  return collectParserOptions(value, checker, spreads, walk, localSeen);
 }
 
 /** A whole-module reference: a default import, or any `require` call. */
@@ -984,13 +1108,20 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
     path: fileName,
     read: (specifier, fromPath) => readSpreadConfig(tree, specifier, fromPath),
   };
-  if (detectTypedLintingShape(content, spreads) !== null) {
+  const { shape, unresolvedSpread } = inspectTypedLinting(content, spreads);
+  if (shape !== null) {
     return;
   }
   // The block carries `tsconfigRootDir`, whose value differs per module system,
   // so the extension has to win over the content where it is decisive.
   const format = determineEslintConfigFormatForFile(fileName, content);
-  const block = generateTypedLintingFlatConfigOverride(format);
+  // A config we could not read may set `project`, so the block defuses it rather
+  // than betting on a walk that already came up short.
+  const block = generateTypedLintingFlatConfigOverride(
+    format,
+    undefined,
+    unresolvedSpread
+  );
   const updated = addBlockToFlatConfigExport(content, block);
   if (updated === content) {
     // `addBlockToFlatConfigExport` only edits a plain array export
