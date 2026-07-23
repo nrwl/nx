@@ -12,7 +12,6 @@ import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenge
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import open from 'open';
 import {
   basename,
   dirname,
@@ -567,7 +566,15 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      open(url.toString());
+      (
+        new Function('return import("open")')() as Promise<
+          typeof import('open')
+        >
+      )
+        .then((m) => m.default(url.toString()))
+        .catch(() => {
+          // Ignore errors when opening browser (e.g. no browser available)
+        });
     }
 
     return new Promise((res) => {
