@@ -76,18 +76,20 @@ export function formatContentWithOxfmt(
  *
  * Returns the formatted content keyed by the original relative path. Paths
  * oxfmt does not handle are absent from the map, and callers should leave
- * those files untouched.
+ * those files untouched. A file oxfmt cannot parse fails only itself: the rest
+ * of the batch is still applied, and the failure is reported through `error`.
  */
 export async function formatFilesWithOxfmt(
   files: { path: string; content: string }[],
   workspaceRoot: string,
   seedConfig?: { name: string; content: string }
-): Promise<Map<string, string>> {
+): Promise<{ formatted: Map<string, string>; error?: string }> {
   const formatted = new Map<string, string>();
   if (files.length === 0) {
-    return formatted;
+    return { formatted };
   }
 
+  let error: string | undefined;
   const oxfmtBin = getOxfmtBinPath();
   const baseDir = existsSync(workspaceRoot) ? workspaceRoot : tmpdir();
   const scratch = mkdtempSync(path.join(baseDir, '.nx-oxfmt-'));
@@ -125,7 +127,10 @@ export async function formatFilesWithOxfmt(
       })
     );
 
-    await new Promise<void>((resolve, reject) => {
+    // A parse failure in one file exits the whole run non-zero, but oxfmt has
+    // still written every file it could. Record the failure and keep going, so
+    // one unparseable file does not cost the batch its formatting.
+    error = await new Promise<string | undefined>((resolve) => {
       execFile(
         'node',
         [oxfmtBin, '--no-error-on-unmatched-pattern', '--write', scratch],
@@ -134,12 +139,8 @@ export async function formatFilesWithOxfmt(
           windowsHide: true,
           maxBuffer: FORMATTER_MAX_BUFFER,
         },
-        (error, _stdout, stderr) => {
-          if (error) {
-            reject(new Error(stderr?.trim() || error.message));
-          } else {
-            resolve();
-          }
+        (execError, _stdout, stderr) => {
+          resolve(execError ? stderr?.trim() || execError.message : undefined);
         }
       );
     });
@@ -156,5 +157,5 @@ export async function formatFilesWithOxfmt(
     rmSync(scratch, { recursive: true, force: true });
   }
 
-  return formatted;
+  return { formatted, error };
 }

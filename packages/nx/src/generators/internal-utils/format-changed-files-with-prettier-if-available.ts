@@ -131,13 +131,17 @@ async function formatFilesWithOxfmt(
   try {
     // A single oxfmt invocation for the whole batch - the binary costs
     // ~100ms to start, so one process per file does not scale.
-    return await batchFormatWithOxfmt(
+    const { formatted, error } = await batchFormatWithOxfmt(
       files.map((file) => ({
         path: file.path,
         content: file.content.toString('utf-8'),
       })),
       root
     );
+    if (error && !options?.silent) {
+      console.warn(`Could not format some files with oxfmt. Error: "${error}"`);
+    }
+    return formatted;
   } catch (e) {
     if (!options?.silent) {
       console.warn(`Could not format files with oxfmt. Error: "${e.message}"`);
