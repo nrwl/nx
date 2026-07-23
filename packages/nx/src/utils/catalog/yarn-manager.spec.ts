@@ -35,12 +35,14 @@ describe('YarnCatalogManager', () => {
       });
     });
 
-    it('should normalize catalog:default to default catalog reference', () => {
+    it('should treat catalog:default as a named catalog reference', () => {
+      // Unlike pnpm, yarn does not treat "default" as an alias for the
+      // `catalog` field — it is an ordinary named catalog.
       const result = manager.parseCatalogReference('catalog:default');
 
       expect(result).toStrictEqual({
-        catalogName: undefined,
-        isDefaultCatalog: true,
+        catalogName: 'default',
+        isDefaultCatalog: false,
       });
     });
 
@@ -146,7 +148,9 @@ catalog:
       expect(result).toBe('^18.0.0');
     });
 
-    it('should resolve catalog:default from top-level catalog field', () => {
+    it('should not resolve catalog:default from the catalog field', () => {
+      // "default" is an ordinary named catalog in yarn, so it does not
+      // resolve against the singular `catalog` field.
       tree.write(
         '.yarnrc.yml',
         `
@@ -161,10 +165,10 @@ catalog:
         'catalog:default'
       );
 
-      expect(result).toBe('^18.0.0');
+      expect(result).toBe(null);
     });
 
-    it('should resolve catalog: from catalogs.default field', () => {
+    it('should not resolve catalog: from the catalogs.default field', () => {
       tree.write(
         '.yarnrc.yml',
         `
@@ -176,10 +180,10 @@ catalogs:
 
       const result = manager.resolveCatalogReference(tree, 'react', 'catalog:');
 
-      expect(result).toBe('^18.0.0');
+      expect(result).toBe(null);
     });
 
-    it('should resolve catalog:default from catalogs.default field', () => {
+    it('should resolve catalog:default from the catalogs.default field', () => {
       tree.write(
         '.yarnrc.yml',
         `
@@ -245,6 +249,24 @@ catalogs:
   });
 
   describe('getCatalogReferencesForPackage', () => {
+    it('should return catalog:default for a package in catalogs.default', () => {
+      // Unlike pnpm, `catalogs.default` is an ordinary named catalog in yarn.
+      tree.write(
+        '.yarnrc.yml',
+        `
+catalogs:
+  default:
+    react: ^18.0.0
+`
+      );
+
+      expect(
+        manager.getCatalogReferencesForPackage(tree, 'react')
+      ).toStrictEqual([
+        { catalogRef: 'catalog:default', versionSpec: '^18.0.0' },
+      ]);
+    });
+
     it('should return default and named references for a package in both', () => {
       tree.write(
         '.yarnrc.yml',
@@ -291,7 +313,9 @@ catalogs:
       );
     });
 
-    it('should throw for catalog: when both definitions exist', () => {
+    it('should allow catalog and catalogs.default to coexist', () => {
+      // Unlike pnpm, yarn does not treat this as a duplicate default: the two
+      // are addressed independently via "catalog:" and "catalog:default".
       tree.write(
         '.yarnrc.yml',
         `
@@ -305,28 +329,10 @@ catalogs:
 
       expect(() =>
         manager.validateCatalogReference(tree, 'react', 'catalog:')
-      ).toThrow(
-        "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both."
-      );
-    });
-
-    it('should throw for catalog:default when both definitions exist', () => {
-      tree.write(
-        '.yarnrc.yml',
-        `
-catalog:
-  react: ^18.0.0
-catalogs:
-  default:
-    lodash: ^4.17.21
-`
-      );
-
+      ).not.toThrow();
       expect(() =>
-        manager.validateCatalogReference(tree, 'react', 'catalog:default')
-      ).toThrow(
-        "The 'default' catalog was defined multiple times. Use the 'catalog' field or 'catalogs.default', but not both."
-      );
+        manager.validateCatalogReference(tree, 'lodash', 'catalog:default')
+      ).not.toThrow();
     });
 
     it('should throw when default catalog not found', () => {
@@ -383,7 +389,7 @@ catalog:
       ).not.toThrow();
     });
 
-    it('should validate catalog:default with top-level catalog field', () => {
+    it('should throw for catalog:default when only the catalog field exists', () => {
       tree.write(
         '.yarnrc.yml',
         `
@@ -394,10 +400,10 @@ catalog:
 
       expect(() =>
         manager.validateCatalogReference(tree, 'react', 'catalog:default')
-      ).not.toThrow();
+      ).toThrow('Catalog "default" not found in .yarnrc.yml');
     });
 
-    it('should validate catalog: with catalogs.default field', () => {
+    it('should throw for catalog: when only catalogs.default exists', () => {
       tree.write(
         '.yarnrc.yml',
         `
@@ -409,7 +415,7 @@ catalogs:
 
       expect(() =>
         manager.validateCatalogReference(tree, 'react', 'catalog:')
-      ).not.toThrow();
+      ).toThrow('No default catalog defined in .yarnrc.yml');
     });
 
     it('should validate catalog:default with catalogs.default field', () => {
@@ -449,7 +455,9 @@ catalog:
       expect(result.catalog.lodash).toBe('^4.17.21');
     });
 
-    it('should update existing catalogs.default field', () => {
+    it('should update a catalogs.default entry via its literal name', () => {
+      // `catalogs.default` is an ordinary named catalog in yarn, addressed by
+      // catalogName "default" — a default (unnamed) update goes to `catalog`.
       tree.write(
         '.yarnrc.yml',
         `
@@ -461,7 +469,7 @@ catalogs:
       );
 
       manager.updateCatalogVersions(tree, [
-        { packageName: 'react', version: '^18.3.0' },
+        { packageName: 'react', version: '^18.3.0', catalogName: 'default' },
       ]);
 
       const content = tree.read('.yarnrc.yml', 'utf-8');
@@ -606,11 +614,10 @@ catalog:
       expect(result.catalogs.legacy.react).toBe('^17.0.2');
     });
 
-    it('should write through catalogs.default when catalog is an empty placeholder', () => {
-      // Regression: with both keys present and `catalog:` as a null
-      // placeholder, the update must go to the populated catalogs.default
-      // and not seed a new top-level `catalog`, which would produce a
-      // duplicate-default config rejected by validateCatalogReference.
+    it('should route a default update to catalog even when catalogs.default exists', () => {
+      // The default catalog is only the `catalog` field in yarn, so an
+      // unnamed update must not be redirected into the `catalogs.default`
+      // named catalog.
       tree.write(
         '.yarnrc.yml',
         `catalog:
@@ -626,30 +633,8 @@ catalogs:
 
       const content = tree.read('.yarnrc.yml', 'utf-8');
       const result = load(content);
-      expect(result.catalogs.default.react).toBe('^18.3.0');
-      // The empty `catalog:` placeholder should remain empty, not be
-      // populated with a duplicate entry.
-      expect(result.catalog).toBeNull();
-    });
-
-    it('should handle an empty catalogs.default block', () => {
-      tree.write(
-        '.yarnrc.yml',
-        `catalogs:
-  default:
-`
-      );
-
-      manager.updateCatalogVersions(tree, [
-        { packageName: 'react', version: '^18.3.0' },
-      ]);
-
-      const content = tree.read('.yarnrc.yml', 'utf-8');
-      const result = load(content);
-      // Should write through the existing catalogs.default skeleton rather
-      // than creating a new shorthand `catalog:` key.
-      expect(result.catalogs.default.react).toBe('^18.3.0');
-      expect(result.catalog).toBeUndefined();
+      expect(result.catalog.react).toBe('^18.3.0');
+      expect(result.catalogs.default.react).toBe('^18.0.0');
     });
 
     it('should update through a YAML alias pointing at an anchored map', () => {
@@ -706,10 +691,8 @@ catalogs:
     });
 
     it('should update through an alias on the catalogs key itself', () => {
-      // Regression: when `catalogs:` is itself an alias to an anchored map
-      // containing `default`, the router must follow the alias to find the
-      // existing default rather than fall through and create a duplicate
-      // top-level `catalog`.
+      // When `catalogs:` is itself an alias to an anchored map, a named
+      // update must follow the alias to the existing entry.
       tree.write(
         '.yarnrc.yml',
         `_cats: &cats
@@ -720,7 +703,7 @@ catalogs: *cats
       );
 
       manager.updateCatalogVersions(tree, [
-        { packageName: 'react', version: '^18.3.0' },
+        { packageName: 'react', version: '^18.3.0', catalogName: 'default' },
       ]);
 
       const content = tree.read('.yarnrc.yml', 'utf-8');
