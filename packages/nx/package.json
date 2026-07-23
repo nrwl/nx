@@ -71,7 +71,7 @@
     "lines-and-columns": "2.0.3",
     "minimatch": "catalog:",
     "npm-run-path": "^4.0.1",
-    "open": "^8.4.0",
+    "open": "^10.1.0",
     "ora": "catalog:",
     "resolve.exports": "2.0.3",
     "semver": "catalog:",
