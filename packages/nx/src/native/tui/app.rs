@@ -364,39 +364,9 @@ impl RegionSnapshot {
 const DOUBLE_CLICK_MS: u128 = 400;
 
 /// Open a URL in the user's default browser (NXC-3940). Best-effort: a missing
-/// opener can never crash the TUI. Returns `true` if the opener process was
-/// spawned, `false` if it couldn't be (e.g. no `xdg-open` on a headless box) so
-/// the caller can tell the user instead of failing silently. The child's stdio
-/// is detached to null so it can't corrupt the terminal we're drawing to.
-fn open_url(url: &str) -> bool {
-    use std::process::{Command, Stdio};
-
-    #[cfg(target_os = "macos")]
-    let mut cmd = {
-        let mut c = Command::new("open");
-        c.arg(url);
-        c
-    };
-    #[cfg(target_os = "windows")]
-    let mut cmd = {
-        let mut c = Command::new("cmd");
-        // The empty "" is the window title argument that `start` expects first.
-        c.args(["/C", "start", "", url]);
-        c
-    };
-    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
-    let mut cmd = {
-        let mut c = Command::new("xdg-open");
-        c.arg(url);
-        c
-    };
-
-    cmd.stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .is_ok()
-}
+/// opener can never crash the TUI. The shared implementation is container-aware
+/// on WSL; see [`crate::native::utils::open_url`].
+use crate::native::utils::open_url::open_url_native as open_url;
 
 impl App {
     /// Create a new App with existing shared state (for mode switching)

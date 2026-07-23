@@ -1015,6 +1015,13 @@ export interface OutputFile {
   stamp: string
 }
 
+/**
+ * Open `url` in the user's default browser. Returns `true` if an opener
+ * process was spawned, `false` if it couldn't be (e.g. no `xdg-open`), so the
+ * caller can tell the user instead of failing silently. Never throws.
+ */
+export declare function openUrl(url: string): boolean
+
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
 
 /**
