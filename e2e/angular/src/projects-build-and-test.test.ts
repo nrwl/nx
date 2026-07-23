@@ -129,6 +129,30 @@ describe('Angular Projects - Build and Test', () => {
       env: { NODE_ENV: 'production' },
     });
 
+    // Build with sourcemaps enabled (the development configuration sets
+    // `sourceMap: true`) and verify the emitted sourcemap resolves back to
+    // the original TypeScript sources instead of the intermediate Ivy JS.
+    runCLI(`build ${app} --skip-nx-cache`, {
+      env: { NGRS_CONFIG: 'development' },
+    });
+    const bundleMap = JSON.parse(
+      readFile(`dist/my-dir/${app}/browser/main.js.map`)
+    );
+    const tsSources = bundleMap.sources
+      .map((source: string, index: number) => ({
+        source,
+        content: bundleMap.sourcesContent?.[index],
+      }))
+      .filter(({ source }) => source.endsWith('.ts'));
+    expect(tsSources.length).toBeGreaterThan(0);
+    // The original TypeScript contains the `@Component` decorator, while the
+    // intermediate Ivy JS has it compiled away into `ɵcmp`.
+    const componentSource = tsSources.find(({ content }) =>
+      content?.includes('@Component')
+    );
+    expect(componentSource).toBeDefined();
+    expect(componentSource.content).not.toContain('ɵcmp');
+
     if (runE2ETests()) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(port)).toBeTruthy();
