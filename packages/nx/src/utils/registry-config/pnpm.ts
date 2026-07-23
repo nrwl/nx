@@ -112,23 +112,93 @@ export function getPnpmSpawnRegistryEnv(
   if (scope && settings.registries?.[scope]) {
     setScopedRegistry(env, scope, settings.registries[scope]);
   }
-  // pnpm only honors the uppercase PNPM_CONFIG_* env prefix from 11.0.6.
-  const envRegistry =
-    process.env['pnpm_config_registry'] ??
-    (gte(pnpmVersion, '11.0.6')
-      ? process.env['PNPM_CONFIG_REGISTRY']
-      : undefined);
-  const defaultRegistry = envRegistry ?? settings.registries?.default;
+  const defaultRegistry =
+    readPnpmEnvVar('registry', pnpmVersion) ?? settings.registries?.default;
   if (defaultRegistry) {
     setRegistry(env, defaultRegistry);
   }
 
   const authIniPath = getAuthIniPath();
   bridgeAuthIni(env, root, scope, authIniPath, pnpmVersion);
-  bridgeNoProxy(env, root, authIniPath);
 
-  applyYamlNetworkSettings(env, settings);
+  // The bypass list resolves across all of these at once (resolveNoProxy), so
+  // the yaml does not get to write it on its own here.
+  applyYamlNetworkSettings(env, settings, false);
+  applyEnvNetworkSettings(env, pnpmVersion);
+  const noProxy = resolveNoProxy(settings, root, authIniPath, pnpmVersion);
+  if (noProxy) {
+    setProxies(env, { noProxy });
+  }
   return env;
+}
+
+/**
+ * pnpm's own env reader: the lowercase prefix, then the uppercase one, with an
+ * empty value counting as undeclared. The uppercase spelling only arrived in
+ * 11.0.6 (measured: 11.0.5 reads pnpm_config_registry and ignores
+ * PNPM_CONFIG_REGISTRY, 11.0.6 reads both).
+ * See readEnvVar in pnpm's config reader.
+ */
+function readPnpmEnvVar(key: string, pnpmVersion: string): string | undefined {
+  const value =
+    process.env[`pnpm_config_${key}`] ??
+    (gte(pnpmVersion, '11.0.6')
+      ? process.env[`PNPM_CONFIG_${key.toUpperCase()}`]
+      : undefined);
+  return value || undefined;
+}
+
+/**
+ * The TLS and proxy settings pnpm >= 11 takes from its own `PNPM_CONFIG_*`
+ * prefix. They outrank pnpm-workspace.yaml (measured on 11.9.0 in both
+ * directions for each key), so they are applied after it. `cafile` is left out
+ * on purpose: pnpm accepts it and then never uses it for the fetch, the same
+ * dead config as the yaml key.
+ */
+function applyEnvNetworkSettings(env: NpmConfigEnv, pnpmVersion: string): void {
+  const strictSsl = readPnpmEnvVar('strict_ssl', pnpmVersion);
+  if (strictSsl !== undefined) {
+    // parseField types this setting Boolean, so only an explicit 'false' turns
+    // verification off; every other value leaves it on.
+    setStrictSsl(env, strictSsl !== 'false');
+  }
+  setProxies(env, {
+    httpProxy: readPnpmEnvVar('proxy', pnpmVersion),
+    httpsProxy: readPnpmEnvVar('https_proxy', pnpmVersion),
+  });
+}
+
+/**
+ * The proxy-bypass list pnpm >= 11 ends up using. It reads the `no-proxy`
+ * spelling and only falls back to `noproxy`, so the spelling decides before the
+ * layer does: a workspace .npmrc `no-proxy` beats a pnpm-workspace.yaml
+ * `noproxy`. Within one spelling the env sits above the yaml, which sits above
+ * the files. Every pair below was measured on 11.9.0 in both directions.
+ * See createPackageManagerNetworkConfig in pnpm's config reader.
+ */
+function resolveNoProxy(
+  settings: PnpmWorkspaceSettings,
+  root: string,
+  authIniPath: string,
+  pnpmVersion: string
+): string | undefined {
+  const envNoProxy = readPnpmEnvVar('no_proxy', pnpmVersion);
+  if (envNoProxy) {
+    return envNoProxy;
+  }
+  if (settings.noProxy) {
+    return settings.noProxy;
+  }
+  const fromFiles = fileNoProxy(root, authIniPath);
+  if (fromFiles === 'unreadable') {
+    // The layer that would have won is unreadable, so the `noproxy` spelling
+    // below it cannot be applied either: it only wins when no `no-proxy` exists.
+    return undefined;
+  }
+  if (fromFiles) {
+    return fromFiles;
+  }
+  return readPnpmEnvVar('noproxy', pnpmVersion) ?? settings.noproxy;
 }
 
 function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
@@ -314,24 +384,36 @@ function bridgeNoProxy(
   root: string,
   authIniPath?: string
 ): void {
+  const value = fileNoProxy(root, authIniPath);
+  if (value && value !== 'unreadable') {
+    setProxies(env, { noProxy: value });
+  }
+}
+
+/**
+ * The `no-proxy` the npmrc-family files declare, or 'unreadable' when the layer
+ * that would have won cannot be read.
+ */
+function fileNoProxy(
+  root: string,
+  authIniPath?: string
+): string | 'unreadable' | undefined {
   const npmrcPath = join(root, '.npmrc');
   const projectNpmrc = readNpmrcMap(npmrcPath);
   // With the higher layer unreadable there is no telling which one wins, and
   // bridging auth.ini's value could reinstate a list the workspace clears.
   if (!projectNpmrc && existsSync(npmrcPath)) {
-    return;
+    return 'unreadable';
   }
   // The workspace .npmrc outranks auth.ini, and declaring the key empty there
   // is pnpm's way of clearing an inherited bypass list.
   const value = projectNpmrc?.has('no-proxy')
     ? projectNpmrc.get('no-proxy')
     : authIniPath && readNpmrcMap(authIniPath)?.get('no-proxy');
-  if (value) {
-    // npm ignores `no-proxy` in the file it does read, so the value never goes
-    // through npm's own expansion under that key; expand it with pnpm's grammar
-    // (`${VAR:-default}` resolves, `${VAR?}` does not).
-    setProxies(env, { noProxy: expandPnpmEnvVars(value) });
-  }
+  // npm ignores `no-proxy` in the file it does read, so the value never goes
+  // through npm's own expansion under that key; expand it with pnpm's grammar
+  // (`${VAR:-default}` resolves, `${VAR?}` does not).
+  return value ? expandPnpmEnvVars(value) : undefined;
 }
 
 /**
@@ -409,10 +491,14 @@ function warnUnscopedCredential(dart: string, keys: string[]): void {
  * npmrc-family files only: .npmrc, which npm reads natively, and auth.ini,
  * bridged in bridgeAuthIni), so the YAML key is deliberately not bridged.
  * Proxy keys follow the same yaml surface (source-verified).
+ *
+ * `applyNoProxy` is off where a caller resolves the bypass list across more
+ * layers than the yaml itself.
  */
 function applyYamlNetworkSettings(
   env: NpmConfigEnv,
-  settings: PnpmWorkspaceSettings
+  settings: PnpmWorkspaceSettings,
+  applyNoProxy = true
 ): void {
   if (typeof settings.strictSsl === 'boolean') {
     setStrictSsl(env, settings.strictSsl);
@@ -423,6 +509,6 @@ function applyYamlNetworkSettings(
     // pnpm honors either spelling and prefers noProxy when both are set
     // (verified on 11.2.2 and 11.9.0: with noProxy naming another host, a
     // noproxy bypass for the registry stops applying).
-    noProxy: settings.noProxy ?? settings.noproxy,
+    noProxy: applyNoProxy ? (settings.noProxy ?? settings.noproxy) : undefined,
   });
 }
