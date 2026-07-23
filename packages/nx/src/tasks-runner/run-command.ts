@@ -75,7 +75,7 @@ import {
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
-import { shouldStreamOutput } from './utils';
+import { isStaticOutputStyle, shouldStreamOutput } from './utils';
 import { signalToCode } from '../utils/exit-codes';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
@@ -1177,7 +1177,7 @@ function shouldUseDynamicLifeCycle(
   if (!process.stdout.isTTY) return false;
   if (isCI()) return false;
   if (
-    outputStyle === 'static' ||
+    isStaticOutputStyle(outputStyle) ||
     outputStyle === 'stream' ||
     outputStyle === 'stream-without-prefixes'
   )
