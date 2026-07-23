@@ -69,7 +69,7 @@ fn build_open_command(url: &str) -> Command {
     // Docker/Podman container the Windows interop path is absent and spawning
     // it is exactly the crash this replaces (`open@8` misdetected Podman as
     // bare WSL) — so containers must stay on `xdg-open`.
-    if is_wsl2() && !is_in_container() {
+    if is_wsl() && !is_in_container() {
         powershell_start_process(url)
     } else {
         let mut c = Command::new("xdg-open");
@@ -78,20 +78,32 @@ fn build_open_command(url: &str) -> Command {
     }
 }
 
-/// WSL2 has "WSL2" in `/proc/version`; WSL1's interop differs and is not
-/// targeted (its `xdg-open` path is left as the default fallback).
+/// Both WSL1 and WSL2 register a `WSLInterop` binfmt entry, so `powershell.exe`
+/// is launchable from either — hence no WSL1/WSL2 distinction here. Matches the
+/// `is-wsl` package (which the replaced `open` used) so no WSL flavour loses the
+/// Windows bridge. If interop is disabled via `wsl.conf`, the spawn simply fails
+/// and the caller falls back to printing the URL.
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
     not(target_os = "windows")
 ))]
-fn is_wsl2() -> bool {
-    static IS_WSL2: OnceLock<bool> = OnceLock::new();
-    *IS_WSL2.get_or_init(|| {
+fn is_wsl() -> bool {
+    static IS_WSL: OnceLock<bool> = OnceLock::new();
+    *IS_WSL.get_or_init(|| {
         std::fs::read_to_string("/proc/version")
-            .map(|contents| contents.contains("WSL2"))
+            .map(|contents| proc_version_is_wsl(&contents))
             .unwrap_or(false)
     })
+}
+
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn proc_version_is_wsl(proc_version: &str) -> bool {
+    proc_version.to_lowercase().contains("microsoft")
 }
 
 /// Detects an OCI container (Docker `/.dockerenv`, or Podman
@@ -180,6 +192,23 @@ mod tests {
         assert_eq!(base64_encode(b"foob"), "Zm9vYg==");
         assert_eq!(base64_encode(b"fooba"), "Zm9vYmE=");
         assert_eq!(base64_encode(b"foobar"), "Zm9vYmFy");
+    }
+
+    #[test]
+    fn detects_both_wsl1_and_wsl2_but_not_plain_linux() {
+        // WSL1 and WSL2 both support Windows interop, so both must take the
+        // bridge. Real /proc/version strings: WSL1 capitalizes "Microsoft",
+        // WSL2 is lowercase in "microsoft-standard-WSL2".
+        let wsl1 = "Linux version 4.4.0-19041-Microsoft (Microsoft@Microsoft.com) \
+                    (gcc version 5.4.0 (GCC) ) #1237-Microsoft Sat Sep 11 14:32:00 PST 2021";
+        let wsl2 = "Linux version 5.15.90.1-microsoft-standard-WSL2 (oe-user@oe-host) \
+                    (gcc (GCC) 9.3.0) #1 SMP Fri Jan 27 02:56:13 UTC 2023";
+        let plain = "Linux version 6.1.0-18-amd64 (debian-kernel@lists.debian.org) \
+                     (gcc-12 (Debian 12.2.0-14) 12.2.0) #1 SMP PREEMPT_DYNAMIC Debian";
+
+        assert!(proc_version_is_wsl(wsl1));
+        assert!(proc_version_is_wsl(wsl2));
+        assert!(!proc_version_is_wsl(plain));
     }
 
     #[test]
