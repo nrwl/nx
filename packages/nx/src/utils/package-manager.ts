@@ -26,7 +26,11 @@ import {
 import { getNxInstallationPath } from './installation-directory';
 import { logger } from './logger';
 import { PackageJson, readModulePackageJson } from './package-json';
-import { getNpmSpawnRegistryEnv, mergeNpmConfigEnv } from './registry-config';
+import {
+  getNpmSpawnRegistryEnv,
+  ignoresNpmConfigEnv,
+  mergeNpmConfigEnv,
+} from './registry-config';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -666,6 +670,10 @@ export async function packageRegistryView(
   // redirections.
   const spec = version ? `${pkg}@${version}` : pkg;
   const configRoot = getPackageManagerConfigRoot();
+  const workspacePmVersion = getPackageManagerVersionSafe(
+    workspacePm,
+    configRoot
+  );
   // cwd anchors the project .npmrc / pnpm-workspace.yaml discovery to the
   // workspace; the env overlay reproduces registry config npm cannot read
   // itself (pnpm >= 11 ignores npm_config_* and resolves natively instead).
@@ -675,15 +683,19 @@ export async function packageRegistryView(
   const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
     cwd: configRoot,
-    env: mergeNpmConfigEnv(process.env, {
-      ...getNpmSpawnRegistryEnv(
-        pkg,
-        configRoot,
-        workspacePm,
-        getPackageManagerVersionSafe(workspacePm, configRoot)
-      ),
-      ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
-    }),
+    env: mergeNpmConfigEnv(
+      process.env,
+      {
+        ...getNpmSpawnRegistryEnv(
+          pkg,
+          configRoot,
+          workspacePm,
+          workspacePmVersion
+        ),
+        ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+      },
+      ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+    ),
   });
   return stdout.toString().trim();
 }
@@ -714,6 +726,10 @@ export async function packageRegistryPack(
 
   const workspacePm = detectPackageManager();
   const configRoot = getPackageManagerConfigRoot();
+  const workspacePmVersion = getPackageManagerVersionSafe(
+    workspacePm,
+    configRoot
+  );
   // Run from the config root (not the temp dir) so npm reads the workspace
   // .npmrc natively, the same registry/auth packageRegistryView picks up;
   // --pack-destination keeps the tarball in the temp dir. For non-npm package
@@ -725,20 +741,24 @@ export async function packageRegistryPack(
     {
       cwd: configRoot,
       windowsHide: true,
-      env: mergeNpmConfigEnv(process.env, {
-        ...getNpmSpawnRegistryEnv(
-          pkg,
-          configRoot,
-          workspacePm,
-          getPackageManagerVersionSafe(workspacePm, configRoot)
-        ),
-        // downgrade npm's devEngines.packageManager enforcement (onFail: error)
-        // to a warning so pack still runs in a non-npm workspace
-        npm_config_force: 'true',
-        ...(options?.bypassMinReleaseAge
-          ? { npm_config_min_release_age: '0' }
-          : {}),
-      }),
+      env: mergeNpmConfigEnv(
+        process.env,
+        {
+          ...getNpmSpawnRegistryEnv(
+            pkg,
+            configRoot,
+            workspacePm,
+            workspacePmVersion
+          ),
+          // downgrade npm's devEngines.packageManager enforcement (onFail:
+          // error) to a warning so pack still runs in a non-npm workspace
+          npm_config_force: 'true',
+          ...(options?.bypassMinReleaseAge
+            ? { npm_config_min_release_age: '0' }
+            : {}),
+        },
+        ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+      ),
     }
   );
 

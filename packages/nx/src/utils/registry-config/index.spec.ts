@@ -23,7 +23,7 @@ jest.mock('../logger', () => ({
 
 import * as fs from 'fs';
 import { homedir } from 'os';
-import { getNpmSpawnRegistryEnv } from './index';
+import { getNpmSpawnRegistryEnv, ignoresNpmConfigEnv } from './index';
 
 describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   const ROOT = '/repo/workspace';
@@ -222,5 +222,30 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
         'npm_config_@myorg:registry': 'https://reg-b.example.com/',
       }
     );
+  });
+});
+
+describe('ignoresNpmConfigEnv', () => {
+  it('reports npm and bun as reading the env tier', () => {
+    expect(ignoresNpmConfigEnv('npm', '11.16.0')).toBe(false);
+    expect(ignoresNpmConfigEnv('bun', '1.3.13')).toBe(false);
+  });
+
+  it('reports pnpm as ignoring it from 11.0.0 on', () => {
+    // 11.0.0 moved pnpm off npm_config_* onto its own PNPM_CONFIG_* prefix.
+    expect(ignoresNpmConfigEnv('pnpm', '10.15.0')).toBe(false);
+    expect(ignoresNpmConfigEnv('pnpm', '11.0.0')).toBe(true);
+    expect(ignoresNpmConfigEnv('pnpm', '11.9.0')).toBe(true);
+  });
+
+  it('reports yarn berry as ignoring it, classic as reading it', () => {
+    expect(ignoresNpmConfigEnv('yarn', '1.22.22')).toBe(false);
+    expect(ignoresNpmConfigEnv('yarn', '2.4.3')).toBe(true);
+    expect(ignoresNpmConfigEnv('yarn', '4.15.0')).toBe(true);
+  });
+
+  it('leaves the environment alone for a version it cannot read', () => {
+    expect(ignoresNpmConfigEnv('pnpm', null)).toBe(false);
+    expect(ignoresNpmConfigEnv('yarn', 'stable')).toBe(false);
   });
 });

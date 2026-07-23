@@ -76,6 +76,34 @@ export function readNpmConfigEnv(
   return value;
 }
 
+/** The registry, auth and TLS settings this module resolves for a package manager. */
+const BRIDGED_SETTINGS = new Set([
+  'registry',
+  'ca',
+  'cafile',
+  'cert',
+  'key',
+  'strict-ssl',
+  'proxy',
+  'https-proxy',
+  'noproxy',
+]);
+
+/**
+ * Whether `setting` is one this module resolves on the package manager's behalf,
+ * covering the nerf-darted credential/TLS keys and any `@scope:registry` as
+ * well as the flat names above. `userconfig` is deliberately absent: it selects
+ * npm's own config file rather than a value the package manager resolves, and
+ * npm reading its own .npmrc is outside what the overlay reproduces.
+ */
+function isBridgedSetting(setting: string): boolean {
+  return (
+    setting.startsWith('//') ||
+    setting.endsWith(':registry') ||
+    BRIDGED_SETTINGS.has(setting)
+  );
+}
+
 /**
  * Merges an npm_config_* overlay into the environment for a spawned npm,
  * leaving one spelling per setting: the overlay's where it carries the setting,
@@ -84,10 +112,18 @@ export function readNpmConfigEnv(
  * npm's own shell launcher rebuild that order, so a setting left spelled two
  * ways (`NPM_CONFIG_REGISTRY` beside `npm_config_registry`) goes to whichever
  * one they happen to emit last instead of to the value resolved here.
+ *
+ * `managerIgnoresEnv` says the package manager resolves the settings above
+ * without reading `npm_config_*` at all, so an ambient one is a value it would
+ * never have seen. Those are dropped even where the overlay claims nothing:
+ * npm's env tier sits above every file, so leaving one in place does not just
+ * add a value, it stops npm from reaching the .npmrc chain that the package
+ * manager itself resolved from.
  */
 export function mergeNpmConfigEnv(
   baseEnv: NodeJS.ProcessEnv,
-  overlay: NpmConfigEnv
+  overlay: NpmConfigEnv,
+  managerIgnoresEnv = false
 ): NodeJS.ProcessEnv {
   const overlaid = new Set(
     Object.keys(overlay).map(npmConfigSetting).filter(Boolean)
@@ -104,6 +140,9 @@ export function mergeNpmConfigEnv(
     // Windows environment is case-insensitive, and only the first spelling in
     // it reaches the child, which would be this one rather than the overlay's.
     if (overlaid.has(setting)) {
+      continue;
+    }
+    if (managerIgnoresEnv && isBridgedSetting(setting)) {
       continue;
     }
     // npm skips an empty value, so it neither overrides nor competes.
