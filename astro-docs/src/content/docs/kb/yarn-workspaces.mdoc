@@ -77,6 +77,33 @@ yarn workspace web run build            # a single workspace
 
 Yarn 4 ships `foreach` out of the box. On Yarn 3, add it first with `yarn plugin import workspace-tools`. On Yarn 1 (Classic), the equivalent is `yarn workspaces run build`.
 
+## Share dependency versions with Yarn catalogs
+
+Catalogs (Yarn 4.10+) define a dependency version once in `.yarnrc.yml` and reference it from every package, so packages can't drift onto different versions of the same dependency. The `catalog` key holds the default catalog and `catalogs` holds named catalogs. Nx resolves these references (`catalog:` in generators, migrations, release versioning, and the `@nx/dependency-checks` lint rule) starting in Nx 22.6.
+
+```yaml
+# .yarnrc.yml
+catalog:
+  react: ^19.0.0
+  react-dom: ^19.0.0
+catalogs:
+  testing:
+    vitest: ^3.0.0
+```
+
+```jsonc
+// apps/web/package.json
+{
+  "name": "web",
+  "dependencies": {
+    "react": "catalog:",
+    "vitest": "catalog:testing",
+  },
+}
+```
+
+`catalog:` points at the `catalog` key and `catalog:testing` at a named catalog. Unlike pnpm, `default` is not a special name: `catalog:` resolves only against the `catalog` key, and `catalog:default` addresses a named catalog literally called `default`. Yarn does not treat `catalogs.default` as the default catalog.
+
 ## Do Yarn workspaces hoist dependencies?
 
 Yes. With the default node-modules linker, Yarn hoists shared dependencies to the root `node_modules`, so each version is installed once and packages resolve it by walking up the directory tree. Only conflicting versions get nested inside an individual workspace's `node_modules` folder.
