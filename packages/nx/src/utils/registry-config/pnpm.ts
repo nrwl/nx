@@ -14,6 +14,7 @@ import {
   hasCredentialFor,
   nerfDart,
   readNpmConfigEnv,
+  registryKeysFor,
   setCafile,
   setProxies,
   setRegistry,
@@ -276,9 +277,17 @@ function bridgeAuthIni(
     setScopedRegistry(env, scope, authIniScopedRegistry);
   }
   for (const [key, value] of authIni) {
-    if (key.startsWith('//') && !projectNpmrc.has(key)) {
-      env[`npm_config_${key}`] = value;
+    if (!key.startsWith('//') || projectNpmrc.has(key)) {
+      continue;
     }
+    // A tokenHelper names a command to run for the token. npm has no such
+    // setting and pnpm skips the key when it arrives through the environment,
+    // so passing it on would put a command line in the child's environment that
+    // neither tool ever reads. The credential it stands for is reported below.
+    if (key.endsWith(':tokenHelper')) {
+      continue;
+    }
+    env[`npm_config_${key}`] = value;
   }
 
   // pnpm's getDefaultCreds applies a bare global _auth/_authToken/username/
@@ -318,6 +327,13 @@ function bridgeAuthIni(
     !hasCredentials(env, projectNpmrc, contactedDart)
   ) {
     warnUnscopedCredential(contactedDart, bareKeys);
+  }
+  if (
+    contactedDart &&
+    declaresTokenHelper(authIni, contactedDart, credentialDart) &&
+    !hasCredentials(env, projectNpmrc, contactedDart)
+  ) {
+    warnTokenHelper(contactedDart);
   }
 
   // Flat TLS/proxy keys are part of pnpm's auth-config inheritance set
@@ -468,6 +484,37 @@ function hasCredentials(
   dart: string
 ): boolean {
   return hasCredentialFor(dart, (key) => npmResolved(env, projectNpmrc, key));
+}
+
+/**
+ * Whether the credential pnpm would present at `dart` comes from a token
+ * helper: one keyed on that registry or a parent of it, or the unscoped one,
+ * which pnpm pins to the registry auth.ini itself declares. A helper outranks
+ * every other credential in the same entry (credsToHeader), so it is what pnpm
+ * would have sent.
+ */
+function declaresTokenHelper(
+  authIni: Map<string, string>,
+  dart: string,
+  credentialDart: string | null
+): boolean {
+  return (
+    registryKeysFor(dart).some((key) => authIni.get(`${key}:tokenHelper`)) ||
+    (credentialDart === dart && !!authIni.get('tokenHelper'))
+  );
+}
+
+let warnedTokenHelper = false;
+// The nerf dart only, for the same reason warnUnscopedCredential uses it. The
+// helper's command line stays out too: it is what produces the credential.
+function warnTokenHelper(dart: string): void {
+  if (warnedTokenHelper) {
+    return;
+  }
+  warnedTokenHelper = true;
+  logger.warn(
+    `pnpm runs a token helper to authenticate with ${dart}, which npm cannot do, so packages will be fetched from there without that credential. Store the token the helper returns as "${dart}:_authToken=..." in a file npm reads if it should authenticate there.`
+  );
 }
 
 let warnedUnscopedCredential = false;

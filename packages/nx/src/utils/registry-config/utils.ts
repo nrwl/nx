@@ -350,30 +350,38 @@ export function readEnvVar(
 }
 
 /**
+ * The registry keys npm looks a setting up under for `dart`, nearest first: it
+ * strips one path segment at a time until only the host is left, which covers
+ * the key spelled with and without its trailing slash.
+ * See https://github.com/npm/npm-registry-fetch/blob/v18.0.2/lib/auth.js#L16-L26
+ */
+export function registryKeysFor(dart: string): string[] {
+  const keys: string[] = [];
+  let regKey = dart;
+  while (regKey.length > '//'.length) {
+    keys.push(regKey);
+    regKey = regKey.replace(/([^/]+|\/)$/, '');
+  }
+  return keys;
+}
+
+/**
  * Whether npm would find a credential for `dart` among the values `read`
- * exposes. npm strips one path segment at a time off the nerf-dart until only
- * the host is left, which covers the key spelled with and without its trailing
- * slash, and accepts a token, a basic `_auth`, a username/password pair, or a
- * client-certificate pair.
- * See https://github.com/npm/npm-registry-fetch/blob/v18.0.2/lib/auth.js#L16-L49
+ * exposes: a token, a basic `_auth`, a username/password pair, or a
+ * client-certificate pair, at the dart or at any parent of it.
+ * See https://github.com/npm/npm-registry-fetch/blob/v18.0.2/lib/auth.js#L34-L49
  */
 export function hasCredentialFor(
   dart: string,
   read: (key: string) => string | undefined
 ): boolean {
-  let regKey = dart;
-  while (regKey.length > '//'.length) {
-    if (
+  return registryKeysFor(dart).some(
+    (regKey) =>
       read(`${regKey}:_authToken`) ||
       read(`${regKey}:_auth`) ||
       (read(`${regKey}:username`) && read(`${regKey}:_password`)) ||
       (read(`${regKey}:certfile`) && read(`${regKey}:keyfile`))
-    ) {
-      return true;
-    }
-    regKey = regKey.replace(/([^/]+|\/)$/, '');
-  }
-  return false;
+  );
 }
 
 let warnedNativeCredential = false;
