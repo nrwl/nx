@@ -1,0 +1,133 @@
+[
+  {
+    "id": "troubleshooting",
+    "label": "Troubleshooting",
+    "description": "Diagnose and fix common Nx workspace problems."
+  },
+  {
+    "id": "recipes",
+    "label": "Recipes",
+    "description": "Solve common Nx workspace tasks with reusable configurations and commands."
+  },
+  {
+    "id": "creating-releases",
+    "label": "Creating releases",
+    "description": "Version, publish, and automate releases with Nx."
+  },
+  {
+    "id": "nx-console",
+    "label": "Nx Console",
+    "description": "Generate code, run tasks, and manage migrations from your IDE."
+  },
+  {
+    "id": "installation-and-updates",
+    "label": "Installation and updates",
+    "description": "Install Nx, keep versions aligned, and update workspaces safely."
+  },
+  {
+    "id": "organizational-decisions",
+    "label": "Organizational decisions",
+    "description": "Choose a monorepo structure, ownership model, and dependency strategy for your organization."
+  },
+  {
+    "id": "extending-nx",
+    "label": "Extending Nx",
+    "description": "Create plugins, generators, and executors for workspace-specific tooling."
+  },
+  {
+    "id": "continuous-integration",
+    "label": "Continuous integration",
+    "description": "Configure CI pipelines, task distribution, caching, and failure handling."
+  },
+  {
+    "id": "tasks-caching",
+    "label": "Tasks & caching",
+    "description": "Configure task inputs, outputs, dependencies, and caching."
+  },
+  {
+    "id": "benchmarks",
+    "label": "Benchmarks",
+    "description": "Compare Nx build, cache, and CI performance."
+  },
+  {
+    "id": "typescript",
+    "label": "TypeScript",
+    "description": "Configure TypeScript builds, project linking, and package formats in an Nx workspace."
+  },
+  {
+    "id": "angular",
+    "label": "Angular",
+    "description": "Configure Angular projects, builds, tests, and migrations in an Nx workspace."
+  },
+  {
+    "id": "react",
+    "label": "React",
+    "description": "Configure React projects, builds, tests, and deployment in an Nx workspace."
+  },
+  {
+    "id": "nextjs",
+    "label": "Next.js",
+    "description": "Configure and deploy Next.js applications from an Nx workspace.",
+    "legacyIndex": false
+  },
+  {
+    "id": "vue",
+    "label": "Vue",
+    "description": "Configure Vue and Nuxt projects, builds, and deployment in an Nx workspace."
+  },
+  {
+    "id": "node",
+    "label": "Node",
+    "description": "Build, bundle, and deploy Node.js applications from an Nx workspace."
+  },
+  {
+    "id": "dotnet",
+    "label": ".NET",
+    "description": "Add .NET projects to an Nx workspace and configure incremental builds."
+  },
+  {
+    "id": "module-federation",
+    "label": "Module Federation",
+    "description": "Build and operate host, remote, and micro frontend architectures with Nx."
+  },
+  {
+    "id": "eslint",
+    "label": "ESLint",
+    "description": "Configure ESLint, custom rules, and dependency constraints in an Nx workspace."
+  },
+  {
+    "id": "vite",
+    "label": "Vite",
+    "description": "Configure Vite builds, tests, and plugins in an Nx workspace."
+  },
+  {
+    "id": "webpack",
+    "label": "Webpack",
+    "description": "Configure Webpack builds, plugins, and framework integrations in an Nx workspace."
+  },
+  {
+    "id": "cypress",
+    "label": "Cypress",
+    "description": "Configure Cypress component and end-to-end tests in an Nx workspace."
+  },
+  {
+    "id": "playwright",
+    "label": "Playwright",
+    "description": "Configure Playwright tests and merge outputs from atomized tasks in an Nx workspace."
+  },
+  {
+    "id": "storybook",
+    "label": "Storybook",
+    "description": "Configure, compose, test, and upgrade Storybook projects in an Nx workspace."
+  },
+  {
+    "id": "vitest",
+    "label": "Vitest",
+    "description": "Configure Vitest and migrate existing test projects in an Nx workspace."
+  },
+  {
+    "id": "comparisons",
+    "label": "Comparisons",
+    "description": "Compare Nx and Nx Cloud with build tools, task runners, and CI acceleration products."
+  }
+]
