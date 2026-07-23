@@ -131,7 +131,13 @@ async function formatWithOxfmt(
   tree: Tree,
   files: Set<{ path: string; content: Buffer }>
 ) {
-  let formatContentWithOxfmt: typeof import('nx/src/devkit-internals').formatContentWithOxfmt;
+  // Declared locally rather than via `typeof import('nx/src/devkit-internals')`:
+  // devkit type-checks against the published nx, which predates this export.
+  let formatContentWithOxfmt: (
+    filepath: string,
+    content: string,
+    configPath?: string
+  ) => Promise<string>;
   try {
     formatContentWithOxfmt =
       require('nx/src/devkit-internals').formatContentWithOxfmt;
