@@ -1,4 +1,5 @@
 import { detectPackageManager } from '../package-manager';
+import { BunCatalogManager } from './bun-manager';
 import type { CatalogManager } from './manager';
 import { PnpmCatalogManager } from './pnpm-manager';
 import { YarnCatalogManager } from './yarn-manager';
@@ -16,6 +17,8 @@ export function getCatalogManager(
       return new PnpmCatalogManager();
     case 'yarn':
       return new YarnCatalogManager();
+    case 'bun':
+      return new BunCatalogManager();
     default:
       return null;
   }

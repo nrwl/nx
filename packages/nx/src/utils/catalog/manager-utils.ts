@@ -168,8 +168,17 @@ export function updateCatalogVersionsInFile(
     packageName: string;
     version: string;
     catalogName?: string;
-  }>
+  }>,
+  options?: {
+    /**
+     * Treat "default" as an alias for the `catalog` field and route default
+     * updates through a populated `catalogs.default` (pnpm semantics). When
+     * false, "default" is an ordinary named catalog (yarn semantics).
+     */
+    aliasDefaultCatalog?: boolean;
+  }
 ): void {
+  const aliasDefaultCatalog = options?.aliasDefaultCatalog ?? true;
   let checkExists: () => boolean;
   let readYaml: () => string;
   let writeYaml: (content: string) => void;
@@ -234,14 +243,18 @@ export function updateCatalogVersionsInFile(
     for (const update of updates) {
       const { packageName, version, catalogName } = update;
       const normalizedCatalogName =
-        catalogName === 'default' ? undefined : catalogName;
+        aliasDefaultCatalog && catalogName === 'default'
+          ? undefined
+          : catalogName;
 
       let targetPath: string[];
       if (!normalizedCatalogName) {
         // An empty `catalog:` placeholder must not claim the default route
         // when `catalogs.default` is populated; that would create a
-        // duplicate-default config rejected by pnpm.
-        if (isMapAt(doc, ['catalog'])) {
+        // duplicate-default config rejected by pnpm. Without the alias,
+        // "default" is an ordinary named catalog and the default route is
+        // always the `catalog` field.
+        if (!aliasDefaultCatalog || isMapAt(doc, ['catalog'])) {
           targetPath = ['catalog', packageName];
         } else if (existsAt(doc, ['catalogs', 'default'])) {
           targetPath = ['catalogs', 'default', packageName];
