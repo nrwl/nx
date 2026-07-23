@@ -11,7 +11,7 @@ filter: 'type:References'
 
 [React](https://react.dev/) is a popular library for building user interfaces. In a React monorepo, every project benefits from Nx [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-The React plugin for Nx, `@nx/react`, provides generators for [applications and libraries](#generate-react-applications-and-libraries), executors for [Module Federation](/docs/technologies/react/guides/module-federation-with-ssr), and [library build support](/docs/concepts/buildable-and-publishable-libraries). It integrates with popular bundlers and test runners so you can configure each project to match your team's toolchain. You don't need the plugin to use React with Nx - it simplifies scaffolding and code generation.
+The React plugin for Nx, `@nx/react`, provides generators for [applications and libraries](#generate-react-applications-and-libraries), executors for [Module Federation](/docs/kb/react-module-federation-with-ssr), and [library build support](/docs/kb/buildable-and-publishable-libraries). It integrates with popular bundlers and test runners so you can configure each project to match your team's toolchain. You don't need the plugin to use React with Nx - it simplifies scaffolding and code generation.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ The `@nx/react` plugin supports the following package versions.
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 {% aside type="tip" title="Using a React Meta-Framework?" %}
-If you're building with **Next.js** or **Remix**, use their dedicated plugins which include inferred task support. See the [Next.js plugin](/docs/technologies/react/next/introduction) or [Remix plugin](/docs/technologies/react/remix/introduction) hub pages. For **React Router** in framework mode, see the [React Router guide](/docs/technologies/react/guides/react-router).
+If you're building with **Next.js** or **Remix**, use their dedicated plugins which include inferred task support. See the [Next.js plugin](/docs/technologies/react/next/introduction) or [Remix plugin](/docs/technologies/react/remix/introduction) hub pages. For **React Router** in framework mode, see the [React Router guide](/docs/kb/react-router).
 {% /aside %}
 
 ## Setting up @nx/react
@@ -32,7 +32,7 @@ If you're building with **Next.js** or **Remix**, use their dedicated plugins wh
 ### Add to an existing Nx workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/react` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/react` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
@@ -97,7 +97,7 @@ nx g @nx/react:lib libs/my-lib --publishable --importPath=@myorg/my-lib
 ```
 
 The same [bundler options](#choose-a-bundler) apply when creating buildable libraries. Read more about the options available for the [library generator](/docs/technologies/react/generators#library).
-You can also read more about [buildable and publishable libraries](/docs/concepts/buildable-and-publishable-libraries).
+You can also read more about [buildable and publishable libraries](/docs/kb/buildable-and-publishable-libraries).
 
 ### Serve applications
 
@@ -126,7 +126,7 @@ To see the full configuration for a project:
 nx show project my-app
 ```
 
-Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
+Or open the [project details view in Nx Console](/docs/kb/console-project-details#_top).
 
 For full generator and executor option lists, see the [generators reference](/docs/technologies/react/generators) and [executors reference](/docs/technologies/react/executors).
 
@@ -140,8 +140,8 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 {% cardgrid %}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
-{% linkcard title="React Router Guide" description="Set up React Router in framework mode with Nx." href="/docs/technologies/react/guides/react-router" /%}
-{% linkcard title="Module Federation with SSR" description="Configure Module Federation with server-side rendering." href="/docs/technologies/react/guides/module-federation-with-ssr" /%}
+{% linkcard title="React Router Guide" description="Set up React Router in framework mode with Nx." href="/docs/kb/react-router" /%}
+{% linkcard title="Module Federation with SSR" description="Configure Module Federation with server-side rendering." href="/docs/kb/react-module-federation-with-ssr" /%}
 {% linkcard title="Next.js Plugin" description="Use Nx with Next.js for inferred tasks and generators." href="/docs/technologies/react/next/introduction" /%}
 {% linkcard title="Generators Reference" description="Full API reference for @nx/react generators." href="/docs/technologies/react/generators" /%}
 {% linkcard title="Executors Reference" description="Full API reference for @nx/react executors." href="/docs/technologies/react/executors" /%}

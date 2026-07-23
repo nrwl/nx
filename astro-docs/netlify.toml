@@ -189,7 +189,7 @@ to = "/docs/features/ci-features/resource-usage"
 # NXC-4453: Knowledge Base "Installation" section renamed to "Installation and updates"
 [[redirects]]
 from = "/docs/knowledge-base/installation"
-to = "/docs/knowledge-base/installation-and-updates"
+to = "/docs/kb/installation-and-updates"
 
 # @nx/vite:convert-to-inferred linked to this. The link need to be fixed in code, and
 # this redirect added to handle holder plugin versions using the old link.
@@ -230,6 +230,847 @@ force = true
 from = "/docs/reference/deprecated/affected-config"
 to = "/docs/reference/nx-json#default-base"
 
+# DOC-552: Knowledge Base articles moved to flat /docs/kb routes
+[[redirects]]
+from = "/docs/concepts/buildable-and-publishable-libraries"
+to = "/docs/kb/buildable-and-publishable-libraries"
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/cache-security"
+to = "/docs/kb/cache-security"
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/heartbeat-and-manual-shutdown-handling"
+to = "/docs/kb/heartbeat-and-manual-shutdown-handling"
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/reduce-waste"
+to = "/docs/kb/reduce-waste"
+
+[[redirects]]
+from = "/docs/concepts/decisions/code-ownership"
+to = "/docs/kb/code-ownership"
+
+[[redirects]]
+from = "/docs/concepts/decisions/dependency-management"
+to = "/docs/kb/dependency-management"
+
+[[redirects]]
+from = "/docs/concepts/decisions/folder-structure"
+to = "/docs/kb/folder-structure"
+
+[[redirects]]
+from = "/docs/concepts/decisions/monorepo-vs-polyrepo"
+to = "/docs/kb/monorepo-vs-polyrepo"
+
+[[redirects]]
+from = "/docs/concepts/decisions/project-dependency-rules"
+to = "/docs/kb/project-dependency-rules"
+
+[[redirects]]
+from = "/docs/concepts/decisions/project-size"
+to = "/docs/kb/project-size"
+
+[[redirects]]
+from = "/docs/concepts/decisions/what-is-a-monorepo"
+to = "/docs/kb/what-is-a-monorepo"
+
+[[redirects]]
+from = "/docs/concepts/typescript-project-linking"
+to = "/docs/kb/typescript-project-linking"
+
+[[redirects]]
+from = "/docs/extending-nx/compose-executors"
+to = "/docs/kb/compose-executors"
+
+[[redirects]]
+from = "/docs/extending-nx/composing-generators"
+to = "/docs/kb/composing-generators"
+
+[[redirects]]
+from = "/docs/extending-nx/create-install-package"
+to = "/docs/kb/create-install-package"
+
+[[redirects]]
+from = "/docs/extending-nx/create-preset"
+to = "/docs/kb/create-preset"
+
+[[redirects]]
+from = "/docs/extending-nx/create-sync-generator"
+to = "/docs/kb/create-sync-generator"
+
+[[redirects]]
+from = "/docs/extending-nx/createnodes-compatibility"
+to = "/docs/kb/createnodes-compatibility"
+
+[[redirects]]
+from = "/docs/extending-nx/creating-files"
+to = "/docs/kb/creating-files"
+
+[[redirects]]
+from = "/docs/extending-nx/intro"
+to = "/docs/kb/intro"
+
+[[redirects]]
+from = "/docs/extending-nx/local-executors"
+to = "/docs/kb/local-executors"
+
+[[redirects]]
+from = "/docs/extending-nx/local-generators"
+to = "/docs/kb/local-generators"
+
+[[redirects]]
+from = "/docs/extending-nx/migration-generators"
+to = "/docs/kb/migration-generators"
+
+[[redirects]]
+from = "/docs/extending-nx/modifying-files"
+to = "/docs/kb/modifying-files"
+
+[[redirects]]
+from = "/docs/extending-nx/organization-specific-plugin"
+to = "/docs/kb/organization-specific-plugin"
+
+[[redirects]]
+from = "/docs/extending-nx/performant-project-graph-plugins"
+to = "/docs/kb/performant-project-graph-plugins"
+
+[[redirects]]
+from = "/docs/extending-nx/project-graph-plugins"
+to = "/docs/kb/project-graph-plugins"
+
+[[redirects]]
+from = "/docs/extending-nx/publish-plugin"
+to = "/docs/kb/publish-plugin"
+
+[[redirects]]
+from = "/docs/extending-nx/task-running-lifecycle"
+to = "/docs/kb/task-running-lifecycle"
+
+[[redirects]]
+from = "/docs/extending-nx/tooling-plugin"
+to = "/docs/kb/tooling-plugin"
+
+[[redirects]]
+from = "/docs/guides/comparisons/nx-vs-bazel"
+to = "/docs/kb/nx-vs-bazel"
+
+[[redirects]]
+from = "/docs/guides/comparisons/nx-vs-blacksmith"
+to = "/docs/kb/nx-vs-blacksmith"
+
+[[redirects]]
+from = "/docs/guides/comparisons/nx-vs-buildkite"
+to = "/docs/kb/nx-vs-buildkite"
+
+[[redirects]]
+from = "/docs/guides/comparisons/nx-vs-depot"
+to = "/docs/kb/nx-vs-depot"
+
+[[redirects]]
+from = "/docs/guides/comparisons/nx-vs-develocity"
+to = "/docs/kb/nx-vs-develocity"
+
+[[redirects]]
+from = "/docs/guides/comparisons/nx-vs-turborepo"
+to = "/docs/kb/nx-vs-turborepo"
+
+[[redirects]]
+from = "/docs/guides/comparisons/nx-vs-vite-plus"
+to = "/docs/kb/nx-vs-vite-plus"
+
+[[redirects]]
+from = "/docs/guides/installation/install-non-javascript"
+to = "/docs/kb/install-non-javascript"
+
+[[redirects]]
+from = "/docs/guides/installation/update-global-installation"
+to = "/docs/kb/update-global-installation"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/access-tokens"
+to = "/docs/kb/access-tokens"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/bring-your-own-compute"
+to = "/docs/kb/bring-your-own-compute"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/fix-sandbox-violations"
+to = "/docs/kb/fix-sandbox-violations"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/personal-access-tokens"
+to = "/docs/kb/personal-access-tokens"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/setup-ci"
+to = "/docs/kb/setup-ci"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/source-control-integration"
+to = "/docs/kb/source-control-integration"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/source-control-integration/github-app-permissions"
+to = "/docs/kb/github-app-permissions"
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/use-bun"
+to = "/docs/kb/use-bun"
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-generate-command"
+to = "/docs/kb/console-generate-command"
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-migrate-ui"
+to = "/docs/kb/console-migrate-ui"
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-nx-cloud"
+to = "/docs/kb/console-nx-cloud"
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-project-details"
+to = "/docs/kb/console-project-details"
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-run-command"
+to = "/docs/kb/console-run-command"
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-telemetry"
+to = "/docs/kb/console-telemetry"
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-troubleshooting"
+to = "/docs/kb/nx-console-troubleshooting"
+
+[[redirects]]
+from = "/docs/guides/nx-release/automate-github-releases"
+to = "/docs/kb/automate-github-releases"
+
+[[redirects]]
+from = "/docs/guides/nx-release/automate-gitlab-releases"
+to = "/docs/kb/automate-gitlab-releases"
+
+[[redirects]]
+from = "/docs/guides/nx-release/publish-rust-crates"
+to = "/docs/kb/publish-rust-crates"
+
+[[redirects]]
+from = "/docs/guides/nx-release/release-docker-images"
+to = "/docs/kb/release-docker-images"
+
+[[redirects]]
+from = "/docs/guides/nx-release/release-npm-packages"
+to = "/docs/kb/release-npm-packages"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/change-cache-location"
+to = "/docs/kb/change-cache-location"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/configure-inputs"
+to = "/docs/kb/configure-inputs"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/configure-outputs"
+to = "/docs/kb/configure-outputs"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/convert-to-inferred"
+to = "/docs/kb/convert-to-inferred"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/defining-task-pipeline"
+to = "/docs/kb/defining-task-pipeline"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/pass-args-to-commands"
+to = "/docs/kb/pass-args-to-commands"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/reduce-repetitive-configuration"
+to = "/docs/kb/reduce-repetitive-configuration"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/root-level-scripts"
+to = "/docs/kb/root-level-scripts"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/run-commands-executor"
+to = "/docs/kb/run-commands-executor"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/run-tasks-in-parallel"
+to = "/docs/kb/run-tasks-in-parallel"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/self-hosted-caching"
+to = "/docs/kb/self-hosted-caching"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/skipping-cache"
+to = "/docs/kb/skipping-cache"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/terminal-ui"
+to = "/docs/kb/terminal-ui"
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/workspace-watching"
+to = "/docs/kb/workspace-watching"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/analyze-source-files"
+to = "/docs/kb/analyze-source-files"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/browser-support"
+to = "/docs/kb/browser-support"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/bun-workspaces"
+to = "/docs/kb/bun-workspaces"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/feature-based-testing"
+to = "/docs/kb/feature-based-testing"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/identify-dependencies-between-folders"
+to = "/docs/kb/identify-dependencies-between-folders"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/include-all-packagejson"
+to = "/docs/kb/include-all-packagejson"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/include-assets-in-build"
+to = "/docs/kb/include-assets-in-build"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/keep-nx-versions-in-sync"
+to = "/docs/kb/keep-nx-versions-in-sync"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/migrate-nx-imports-to-devkit"
+to = "/docs/kb/migrate-nx-imports-to-devkit"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/npm-workspaces"
+to = "/docs/kb/npm-workspaces"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/pnpm-workspaces"
+to = "/docs/kb/pnpm-workspaces"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/standalone-to-monorepo"
+to = "/docs/kb/standalone-to-monorepo"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/yarn-pnp"
+to = "/docs/kb/yarn-pnp"
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/yarn-workspaces"
+to = "/docs/kb/yarn-workspaces"
+
+[[redirects]]
+from = "/docs/reference/benchmarks/caching"
+to = "/docs/kb/caching"
+
+[[redirects]]
+from = "/docs/reference/benchmarks/nx-agents"
+to = "/docs/kb/nx-agents"
+
+[[redirects]]
+from = "/docs/reference/benchmarks/tsc-batch-mode"
+to = "/docs/kb/tsc-batch-mode"
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/assignment-rules"
+to = "/docs/kb/assignment-rules"
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/config"
+to = "/docs/kb/config"
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/custom-images"
+to = "/docs/kb/custom-images"
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/custom-steps"
+to = "/docs/kb/custom-steps"
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/launch-template-examples"
+to = "/docs/kb/launch-template-examples"
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/launch-templates"
+to = "/docs/kb/launch-templates"
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/create-config"
+to = "/docs/kb/create-config"
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/create-server"
+to = "/docs/kb/create-server"
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides/getting-started"
+to = "/docs/kb/getting-started"
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides/handling-configurations"
+to = "/docs/kb/handling-configurations"
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides/internationalization"
+to = "/docs/kb/internationalization"
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides/migrate-from-webpack"
+to = "/docs/kb/migrate-from-webpack"
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/angular-nx-version-matrix"
+to = "/docs/kb/angular-nx-version-matrix"
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/dynamic-module-federation-with-angular"
+to = "/docs/kb/dynamic-module-federation-with-angular"
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/module-federation-with-ssr"
+to = "/docs/kb/angular-module-federation-with-ssr"
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/nx-and-angular"
+to = "/docs/kb/nx-and-angular"
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/nx-devkit-angular-devkit"
+to = "/docs/kb/nx-devkit-angular-devkit"
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/setup-incremental-builds-angular"
+to = "/docs/kb/setup-incremental-builds-angular"
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects"
+to = "/docs/kb/using-tailwind-css-with-angular-projects"
+
+[[redirects]]
+from = "/docs/technologies/angular/migration/angular"
+to = "/docs/kb/migrate-angular-cli-to-nx"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/vite/guides/configure-vite"
+to = "/docs/kb/configure-vite"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/webpack/guides/webpack-config-setup"
+to = "/docs/kb/webpack-config-setup"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/webpack/guides/webpack-plugins"
+to = "/docs/kb/webpack-plugins"
+
+[[redirects]]
+from = "/docs/technologies/dotnet/guides/incremental-builds"
+to = "/docs/kb/incremental-builds"
+
+[[redirects]]
+from = "/docs/technologies/dotnet/guides/migrate-from-nx-dotnet-core"
+to = "/docs/kb/migrate-from-nx-dotnet-core"
+
+[[redirects]]
+from = "/docs/technologies/eslint/eslint-plugin/guides/dependency-checks"
+to = "/docs/kb/dependency-checks"
+
+[[redirects]]
+from = "/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries"
+to = "/docs/kb/enforce-module-boundaries"
+
+[[redirects]]
+from = "/docs/technologies/eslint/eslint-plugin/introduction"
+to = "/docs/kb/introduction"
+
+[[redirects]]
+from = "/docs/technologies/eslint/guides/custom-workspace-rules"
+to = "/docs/kb/custom-workspace-rules"
+
+[[redirects]]
+from = "/docs/technologies/eslint/guides/eslint"
+to = "/docs/kb/configuring-eslint-with-typescript"
+
+[[redirects]]
+from = "/docs/technologies/eslint/guides/flat-config"
+to = "/docs/kb/flat-config"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/faster-builds-with-module-federation"
+to = "/docs/kb/faster-builds-with-module-federation"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/manage-library-versions-with-module-federation"
+to = "/docs/kb/manage-library-versions-with-module-federation"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/micro-frontend-architecture"
+to = "/docs/kb/micro-frontend-architecture"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/module-federation-and-nx"
+to = "/docs/kb/module-federation-and-nx"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview"
+to = "/docs/kb/nx-module-federation-technical-overview"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/consumer-and-provider"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/create-a-host"
+to = "/docs/kb/create-a-host"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/create-a-remote"
+to = "/docs/kb/create-a-remote"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/federate-a-module"
+to = "/docs/kb/federate-a-module"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin"
+to = "/docs/kb/nx-module-federation-dev-server-plugin"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/nx-module-federation-plugin"
+to = "/docs/kb/nx-module-federation-plugin"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/using-tailwind-css-with-module-federation"
+to = "/docs/kb/using-tailwind-css-with-module-federation"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/vite-module-federation"
+to = "/docs/kb/vite-module-federation"
+
+[[redirects]]
+from = "/docs/technologies/node/guides/application-proxies"
+to = "/docs/kb/application-proxies"
+
+[[redirects]]
+from = "/docs/technologies/node/guides/bundling-node-projects"
+to = "/docs/kb/bundling-node-projects"
+
+[[redirects]]
+from = "/docs/technologies/node/guides/deploying-node-projects"
+to = "/docs/kb/deploying-node-projects"
+
+[[redirects]]
+from = "/docs/technologies/node/guides/node-aws-lambda"
+to = "/docs/kb/node-aws-lambda"
+
+[[redirects]]
+from = "/docs/technologies/node/guides/node-server-fly-io"
+to = "/docs/kb/node-server-fly-io"
+
+[[redirects]]
+from = "/docs/technologies/node/guides/node-serverless-functions-netlify"
+to = "/docs/kb/node-serverless-functions-netlify"
+
+[[redirects]]
+from = "/docs/technologies/node/guides/wait-for-tasks"
+to = "/docs/kb/wait-for-tasks"
+
+[[redirects]]
+from = "/docs/technologies/react/guides/adding-assets-react"
+to = "/docs/kb/adding-assets-react"
+
+[[redirects]]
+from = "/docs/technologies/react/guides/deploy-nextjs-to-vercel"
+to = "/docs/kb/deploy-nextjs-to-vercel"
+
+[[redirects]]
+from = "/docs/technologies/react/guides/module-federation-with-ssr"
+to = "/docs/kb/react-module-federation-with-ssr"
+
+[[redirects]]
+from = "/docs/technologies/react/guides/react-compiler"
+to = "/docs/kb/react-compiler"
+
+[[redirects]]
+from = "/docs/technologies/react/guides/react-router"
+to = "/docs/kb/react-router"
+
+[[redirects]]
+from = "/docs/technologies/react/guides/using-tailwind-css-in-react"
+to = "/docs/kb/using-tailwind-css-in-react"
+
+[[redirects]]
+from = "/docs/technologies/react/next/guides/next-config-setup"
+to = "/docs/kb/next-config-setup"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/guides/cypress-component-testing"
+to = "/docs/kb/cypress-component-testing"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/guides/cypress-setup-node-events"
+to = "/docs/kb/cypress-setup-node-events"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/guides/cypress-v11-migration"
+to = "/docs/kb/cypress-v11-migration"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/playwright/guides/merge-atomized-outputs"
+to = "/docs/kb/merge-atomized-outputs"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/angular-configuring-styles"
+to = "/docs/kb/angular-configuring-styles"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/angular-storybook-compodoc"
+to = "/docs/kb/angular-storybook-compodoc"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/best-practices"
+to = "/docs/kb/best-practices"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/configuring-storybook"
+to = "/docs/kb/configuring-storybook"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/custom-builder-configs"
+to = "/docs/kb/custom-builder-configs"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/one-storybook-for-all"
+to = "/docs/kb/one-storybook-for-all"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/one-storybook-per-scope"
+to = "/docs/kb/one-storybook-per-scope"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/one-storybook-with-composition"
+to = "/docs/kb/one-storybook-with-composition"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/overview-angular"
+to = "/docs/kb/overview-angular"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/overview-react"
+to = "/docs/kb/overview-react"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/overview-vue"
+to = "/docs/kb/overview-vue"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/storybook-composition-setup"
+to = "/docs/kb/storybook-composition-setup"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/storybook-interaction-tests"
+to = "/docs/kb/storybook-interaction-tests"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/upgrading-storybook"
+to = "/docs/kb/upgrading-storybook"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite"
+to = "/docs/kb/migrating-from-nx-vite"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/vitest/guides/testing-without-building-dependencies"
+to = "/docs/kb/testing-without-building-dependencies"
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/compile-multiple-formats"
+to = "/docs/kb/compile-multiple-formats"
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/define-secondary-entrypoints"
+to = "/docs/kb/define-secondary-entrypoints"
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/enable-tsc-batch-mode"
+to = "/docs/kb/enable-tsc-batch-mode"
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/js-and-ts"
+to = "/docs/kb/js-and-ts"
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/switch-to-workspaces-project-references"
+to = "/docs/kb/switch-to-workspaces-project-references"
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/typescript-7"
+to = "/docs/kb/typescript-7"
+
+[[redirects]]
+from = "/docs/technologies/vue/nuxt/guides/deploy-nuxt-to-vercel"
+to = "/docs/kb/deploy-nuxt-to-vercel"
+
+[[redirects]]
+from = "/docs/troubleshooting/ci-execution-failed"
+to = "/docs/kb/ci-execution-failed"
+
+[[redirects]]
+from = "/docs/troubleshooting/console-troubleshooting"
+to = "/docs/kb/troubleshooting-console-troubleshooting"
+
+[[redirects]]
+from = "/docs/troubleshooting/nx-sandbox-unix-sockets"
+to = "/docs/kb/nx-sandbox-unix-sockets"
+
+[[redirects]]
+from = "/docs/troubleshooting/performance-profiling"
+to = "/docs/kb/performance-profiling"
+
+[[redirects]]
+from = "/docs/troubleshooting/resolve-circular-dependencies"
+to = "/docs/kb/resolve-circular-dependencies"
+
+[[redirects]]
+from = "/docs/troubleshooting/troubleshoot-cache-misses"
+to = "/docs/kb/troubleshoot-cache-misses"
+
+[[redirects]]
+from = "/docs/troubleshooting/troubleshoot-convert-to-inferred"
+to = "/docs/kb/troubleshoot-convert-to-inferred"
+
+[[redirects]]
+from = "/docs/troubleshooting/troubleshoot-nx-install-issues"
+to = "/docs/kb/troubleshoot-nx-install-issues"
+
+[[redirects]]
+from = "/docs/troubleshooting/unknown-local-cache"
+to = "/docs/kb/unknown-local-cache"
+
+# DOC-552: Legacy Knowledge Base indexes replaced by topic discovery
+[[redirects]]
+from = "/docs/knowledge-base"
+to = "/docs/kb"
+
+[[redirects]]
+from = "/docs/knowledge-base/angular"
+to = "/docs/kb/angular"
+
+[[redirects]]
+from = "/docs/knowledge-base/benchmarks"
+to = "/docs/kb/benchmarks"
+
+[[redirects]]
+from = "/docs/knowledge-base/comparisons"
+to = "/docs/kb/comparisons"
+
+[[redirects]]
+from = "/docs/knowledge-base/continuous-integration"
+to = "/docs/kb/continuous-integration"
+
+[[redirects]]
+from = "/docs/knowledge-base/creating-releases"
+to = "/docs/kb/creating-releases"
+
+[[redirects]]
+from = "/docs/knowledge-base/cypress"
+to = "/docs/kb/cypress"
+
+[[redirects]]
+from = "/docs/knowledge-base/dotnet"
+to = "/docs/kb/dotnet"
+
+[[redirects]]
+from = "/docs/knowledge-base/eslint"
+to = "/docs/kb/eslint"
+
+[[redirects]]
+from = "/docs/knowledge-base/extending-nx"
+to = "/docs/kb/extending-nx"
+
+[[redirects]]
+from = "/docs/knowledge-base/installation-and-updates"
+to = "/docs/kb/installation-and-updates"
+
+[[redirects]]
+from = "/docs/knowledge-base/module-federation"
+to = "/docs/kb/module-federation"
+
+[[redirects]]
+from = "/docs/knowledge-base/node"
+to = "/docs/kb/node"
+
+[[redirects]]
+from = "/docs/knowledge-base/nx-console"
+to = "/docs/kb/nx-console"
+
+[[redirects]]
+from = "/docs/knowledge-base/organizational-decisions"
+to = "/docs/kb/organizational-decisions"
+
+[[redirects]]
+from = "/docs/knowledge-base/playwright"
+to = "/docs/kb/playwright"
+
+[[redirects]]
+from = "/docs/knowledge-base/react"
+to = "/docs/kb/react"
+
+[[redirects]]
+from = "/docs/knowledge-base/recipes"
+to = "/docs/kb/recipes"
+
+[[redirects]]
+from = "/docs/knowledge-base/storybook"
+to = "/docs/kb/storybook"
+
+[[redirects]]
+from = "/docs/knowledge-base/tasks-caching"
+to = "/docs/kb/tasks-caching"
+
+[[redirects]]
+from = "/docs/knowledge-base/troubleshooting"
+to = "/docs/kb/troubleshooting"
+
+[[redirects]]
+from = "/docs/knowledge-base/typescript"
+to = "/docs/kb/typescript"
+
+[[redirects]]
+from = "/docs/knowledge-base/vite"
+to = "/docs/kb/vite"
+
+[[redirects]]
+from = "/docs/knowledge-base/vitest"
+to = "/docs/kb/vitest"
+
+[[redirects]]
+from = "/docs/knowledge-base/vue"
+to = "/docs/kb/vue"
+
+[[redirects]]
+from = "/docs/knowledge-base/webpack"
+to = "/docs/kb/webpack"
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"

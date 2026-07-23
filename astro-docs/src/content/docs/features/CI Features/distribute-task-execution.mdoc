@@ -22,7 +22,7 @@ Nx Agents offer several key advantages:
 - **Efficient Task Replay:** By leveraging [remote caching](/docs/features/ci-features/remote-cache), tasks can be replayed efficiently across machines, enhancing distribution speed.
 - **Intelligent Task Distribution:** Tasks are distributed based on historical run times and dependencies, ensuring correct and optimal execution.
 - **Dynamic Resource Allocation:** Agents are [allocated dynamically based on the size of the PR](/docs/features/ci-features/dynamic-agents), balancing cost and speed.
-- **Seamless CI Integration:** Easily adopt Nx Agents with your [existing CI provider](/docs/guides/nx-cloud/setup-ci), requiring minimal setup changes.
+- **Seamless CI Integration:** Easily adopt Nx Agents with your [existing CI provider](/docs/kb/setup-ci), requiring minimal setup changes.
 - **Simple Activation:** Enable distribution with just a [single line of code](#enable-nx-agents) in your CI configuration.
 
 ## Enable Nx Agents
@@ -261,7 +261,7 @@ Be conservative. Explain tradeoffs. When unsure, call out the uncertainty instea
 {% /tabitem %}
 {% tabitem label="Manual" %}
 
-Check out the [connect to Nx Cloud recipe](/docs/guides/nx-cloud/setup-ci) for more details.
+Check out the [connect to Nx Cloud recipe](/docs/kb/setup-ci) for more details.
 
 Then, adjust your CI pipeline configuration to **enable task distribution**. If you don't have a CI config yet, you can generate a new one using the following command:
 
@@ -303,13 +303,13 @@ This command tells Nx Cloud to:
 
 - Start a CI run (`npx nx start-ci-run`)
 - Collect all Nx commands that are being issued (e.g., `pnpm exec nx affected -t lint test build`) and
-- Distribute them across 3 agents (`3 linux-medium-js`) where `linux-medium-js` is a predefined agent [launch template](/docs/reference/nx-cloud/launch-templates).
+- Distribute them across 3 agents (`3 linux-medium-js`) where `linux-medium-js` is a predefined agent [launch template](/docs/kb/launch-templates).
 
 ### Configure Nx Agents on your CI Provider
 
 Every organization manages their CI/CD pipelines differently, so the guides don't cover org-specific aspects of CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly using Nx Agents and [Nx Replay](/docs/features/ci-features/remote-cache).
 
-Read our [setup guides for your CI provider of choice](/docs/guides/nx-cloud/setup-ci).
+Read our [setup guides for your CI provider of choice](/docs/kb/setup-ci).
 
 {% /tabitem %}
 {% /tabs %}
@@ -338,9 +338,9 @@ For a more thorough explanation of how Nx Agents optimize your CI pipeline, read
 
 {% cardgrid %}
 
-{% linkcard title="Create Custom Launch Templates" description="Define your own launch templates to set up agents in the exact right way"  href="/docs/reference/nx-cloud/launch-templates" /%}
+{% linkcard title="Create Custom Launch Templates" description="Define your own launch templates to set up agents in the exact right way"  href="/docs/kb/launch-templates" /%}
 
-{% linkcard title="Enforce a Custom Node Version" description="Pin the Node version on your agents from .nvmrc, Volta, or mise"  href="/docs/reference/nx-cloud/launch-template-examples#custom-node-version" /%}
+{% linkcard title="Enforce a Custom Node Version" description="Pin the Node version on your agents from .nvmrc, Volta, or mise"  href="/docs/kb/launch-template-examples#custom-node-version" /%}
 
 {% linkcard title="Dynamically Allocate Agents" description="Assign a different number of agents to a pipeline based on the size of the PR"  href="/docs/features/ci-features/dynamic-agents" /%}
 

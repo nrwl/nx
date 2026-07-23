@@ -42,7 +42,7 @@ your tasks with [Nx Agents](/docs/features/ci-features/distribute-task-execution
 single machine. There's nothing else to configure.
 
 {% aside type="note" title="Bringing your own compute" %}
-If you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute) and run the agents on
+If you [bring your own compute](/docs/kb/bring-your-own-compute) and run the agents on
 your own CI, add a single CLI step per agent job to upload metrics. See
 [the section below](#resource-metrics-when-you-bring-your-own-compute).
 {% /aside %}
@@ -142,7 +142,7 @@ Here's the GitHub Actions step:
 The `if: always()` condition is important: if an agent is OOM-killed mid-run, the normal step
 sequence stops, but the upload still needs to happen so you can see which task caused the kill.
 
-The [bring your own compute guide](/docs/guides/nx-cloud/bring-your-own-compute) shows the equivalent step for CircleCI,
+The [bring your own compute guide](/docs/kb/bring-your-own-compute) shows the equivalent step for CircleCI,
 Azure Pipelines, Bitbucket Pipelines, GitLab CI, and Jenkins.
 
 ## Configuration
