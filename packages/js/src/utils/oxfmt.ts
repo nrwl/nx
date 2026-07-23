@@ -22,7 +22,10 @@ export function generateOxfmtSetup(
   options: { skipPackageJson?: boolean }
 ): GeneratorCallback {
   if (oxfmtConfigFiles.every((name) => !tree.exists(name))) {
-    writeJson(tree, '.oxfmtrc.json', { singleQuote: true });
+    // Matches the style Nx has always generated. oxfmt's own defaults differ
+    // from prettier's (printWidth 100 vs 80), so they are set explicitly to
+    // keep generated code identical across the two formatters.
+    writeJson(tree, '.oxfmtrc.json', { singleQuote: true, printWidth: 80 });
   }
 
   return options.skipPackageJson
