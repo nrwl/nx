@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxOxlintConvertFromEslint",
+  "title": "Add Oxlint alongside ESLint",
+  "description": "Register `@nx/oxlint` and add Oxlint targets alongside the existing ESLint setup. ESLint configuration is left untouched.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Limit the conversion to a single project."
+    },
+    "targetName": {
+      "type": "string",
+      "description": "Name for the added Oxlint target.",
+      "default": "oxlint"
+    },
+    "addExplicitTargets": {
+      "type": "boolean",
+      "description": "Add explicit `@nx/oxlint:lint` targets for projects that have an ESLint target.",
+      "default": true
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "description": "Do not add dependencies to `package.json`.",
+      "default": false
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "description": "Keep existing dependency versions when possible.",
+      "default": false
+    }
+  },
+  "additionalProperties": false
+}

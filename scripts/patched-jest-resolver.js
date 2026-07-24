@@ -97,6 +97,7 @@ module.exports = function (modulePath, options) {
     '@nx/nest',
     '@nx/node',
     '@nx/nuxt',
+    '@nx/oxlint',
     '@nx/playwright',
     '@nx/plugin',
     '@nx/react',

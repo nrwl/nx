@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "title": "Oxlint executor",
+  "description": "Run Oxlint for a project.",
+  "type": "object",
+  "properties": {
+    "lintFilePatterns": {
+      "type": "array",
+      "description": "List of files/globs to lint.",
+      "items": {
+        "type": "string"
+      },
+      "default": ["{projectRoot}"]
+    },
+    "config": {
+      "type": "string",
+      "description": "Path to an Oxlint config file. Also disables nested config discovery."
+    },
+    "fix": {
+      "type": "boolean",
+      "description": "Automatically fix fixable issues."
+    },
+    "fixSuggestions": {
+      "type": "boolean",
+      "description": "Apply suggested fixes in addition to regular fixes."
+    },
+    "fixDangerously": {
+      "type": "boolean",
+      "description": "Apply dangerous fixes."
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Only show errors."
+    },
+    "maxWarnings": {
+      "type": "number",
+      "description": "Maximum warnings allowed before failing."
+    },
+    "format": {
+      "type": "string",
+      "description": "Output formatter."
+    },
+    "denyWarnings": {
+      "type": "boolean",
+      "description": "Treat warnings as failures."
+    },
+    "silent": {
+      "type": "boolean",
+      "description": "Silence all diagnostics output."
+    },
+    "tsconfig": {
+      "type": "string",
+      "description": "Path to the tsconfig used by type-aware rules."
+    },
+    "typeAware": {
+      "type": "boolean",
+      "description": "Enable rules that require type information. Requires `oxlint-tsgolint` and TypeScript 7."
+    },
+    "disableNestedConfig": {
+      "type": "boolean",
+      "description": "Disable nested config discovery. Oxlint resolves nested configs by default."
+    }
+  },
+  "required": ["lintFilePatterns"]
+}
