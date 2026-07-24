@@ -1,12 +1,16 @@
 ---
 title: NxModuleFederationPlugin
-description: Details about the NxModuleFederationPlugin
+description: Reference for the NxModuleFederationPlugin and NxModuleFederationDevServerPlugin Rspack plugins used by legacy Nx Module Federation setups.
 filter: 'type:Guides'
 topics:
   - 'Module Federation'
 ---
 
-The `NxModuleFederationPlugin` is a [Rspack](https://rspack.dev) plugin that handles module federation in Nx Workspaces. It aims to provide the same Developer Experience(DX) that you would normally receive from using Nx `withModuleFederation` function.
+{% aside type="caution" title="Legacy: existing workspaces only" %}
+These plugins support Module Federation setups created with the deprecated `host` and `remote` generators, which will be removed in Nx v24. New workspaces should use the `consumer` and `provider` generators with the official Module Federation plugins instead. See [consumer and provider](/docs/kb/consumer-and-provider).
+{% /aside %}
+
+The `NxModuleFederationPlugin` is a [Rspack](https://rspack.dev) plugin that handles module federation in Nx Workspaces. It aims to provide the same Developer Experience(DX) that you would normally receive from using Nx `withModuleFederation` function. The companion `NxModuleFederationDevServerPlugin` and `NxModuleFederationSSRDevServerPlugin` handle the development server, matching the DX of the deprecated `module-federation-dev-server` executors in a non-executor ([Inferred Tasks](/docs/concepts/inferred-tasks)) project.
 
 ## Usage
 
@@ -78,7 +82,14 @@ The NxModuleFederationPlugin wraps and configures the Module Federation plugin f
 
 4. **Shared Libraries**: The plugin includes a dedicated system for managing shared libraries across federated modules, helping to avoid duplicate code and ensure consistent versions.
 
-You can learn more about how Nx handles Module Federation in the [Module Federation and Nx Guide](/docs/kb/module-federation-and-nx#develop-as-a-user).
+### How the dev server plugins work
+
+The `NxModuleFederationDevServerPlugin` and `NxModuleFederationSSRDevServerPlugin` serve the remote applications via a single file server (using `http-server`) and proxy requests to the remote applications to the correct port. This allows for a more streamlined development experience when working with module federation.
+
+The key difference between the two is that `NxModuleFederationSSRDevServerPlugin` handles both `browser` and `server` bundles to support Server Side Rendering (SSR). It also serves the host/consumer application by forking ([child_process.fork](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)) the `server.js` output from the `server` bundle of the host application.
+
+You can learn more about how Nx handles Module Federation in
+[What is Micro Frontend Architecture?](/docs/kb/micro-frontend-architecture).
 
 ## Deployment
 
@@ -245,4 +256,82 @@ export type NxModuleFederationConfigOverride = Omit<
   moduleFederationPlugin.ModuleFederationPluginOptions,
   'exposes' | 'remotes' | 'name' | 'shared' | 'filename'
 >;
+```
+
+### NxModuleFederationDevServerPlugin
+
+```ts
+export class NxModuleFederationDevServerPlugin {
+  constructor(
+    private _options: {
+      config: ModuleFederationConfig;
+      devServerConfig?: NxModuleFederationDevServerConfig;
+    }
+  ) {
+    this._options.devServerConfig ??= {
+      host: 'localhost',
+    };
+  }
+}
+```
+
+### NxModuleFederationSSRDevServerPlugin
+
+```ts
+export class NxModuleFederationSSRDevServerPlugin {
+  constructor(
+    private _options: {
+      config: ModuleFederationConfig;
+      devServerConfig?: NxModuleFederationDevServerConfig;
+    }
+  ) {
+    this._options.devServerConfig ??= {
+      host: 'localhost',
+    };
+  }
+}
+```
+
+### NxModuleFederationDevServerConfig
+
+```ts
+export interface NxModuleFederationDevServerConfig {
+  /**
+   * The URL hostname to use for the dev server.
+   */
+  host?: string;
+  /**
+   * The port to use for the static remotes.
+   */
+  staticRemotesPort?: number;
+  /**
+   * The path to the module federation manifest file when using Dynamic Module Federation.
+   */
+  pathToManifestFile?: string;
+  /**
+   * Whether to use SSL for the remote applications.
+   */
+  ssl?: boolean;
+  /**
+   * The path to the SSL certificate file.
+   */
+  sslCert?: string;
+  /**
+   * The path to the SSL key file.
+   */
+  sslKey?: string;
+  /**
+   * The number of parallel processes to use when building the static remotes.
+   */
+  parallel?: number;
+  /**
+   * Options to provide fine-grained control over how the dev server finds the remote applications.
+   */
+  devRemoteFindOptions?: DevRemoteFindOptions;
+}
+
+export interface DevRemoteFindOptions {
+  retries?: number;
+  retryDelay?: number;
+}
 ```

@@ -60,6 +60,23 @@ Package manager workspaces ([npm](/docs/kb/npm-workspaces), [pnpm](/docs/kb/pnpm
 They don't build a task graph, cache results, or detect which projects a change affects.
 Lerna adds versioning and publishing on top, and modern Lerna delegates task running to Nx.
 
+## What tools do you need for a monorepo?
+
+Monorepo tools fall into a few categories, and most workspaces combine them:
+
+- **Package manager workspaces** install and link local packages so projects can import each other, as covered above.
+
+- **Build systems** add the layer workspaces lack: a task graph, caching, and affected detection. This is the category Nx is in, alongside tools like Turborepo, Bazel, and Rush.
+
+- **Versioning and publishing tools** coordinate releases of multiple packages. Nx covers this with [nx release](/docs/features/manage-releases), and standalone tools include Lerna and Changesets.
+
+- **CI capabilities** keep pipelines fast as the repository grows: remote caching, distributed task execution, and flaky-task handling, provided by Nx Cloud.
+
+For a side-by-side view of the landscape, see [monorepo.tools](https://monorepo.tools).
+For how Nx compares to specific tools, see
+[Nx vs Turborepo](/docs/kb/nx-vs-turborepo), [Nx vs Lerna](/docs/kb/nx-vs-lerna),
+[Nx vs Rush Stack](/docs/kb/nx-vs-rush-stack), and [Nx vs Bazel](/docs/kb/nx-vs-bazel).
+
 ## Why do AI coding agents work better in monorepos?
 
 AI coding agents get more from a monorepo than from scattered repositories:

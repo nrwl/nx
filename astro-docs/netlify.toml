@@ -645,11 +645,11 @@ to = "/docs/kb/angular-nx-version-matrix"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/dynamic-module-federation-with-angular"
-to = "/docs/kb/dynamic-module-federation-with-angular"
+to = "/docs/kb/angular-micro-frontends"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/module-federation-with-ssr"
-to = "/docs/kb/angular-module-federation-with-ssr"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/nx-and-angular"
@@ -729,11 +729,11 @@ to = "/docs/kb/micro-frontend-architecture"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/module-federation-and-nx"
-to = "/docs/kb/module-federation-and-nx"
+to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview"
-to = "/docs/kb/nx-module-federation-technical-overview"
+to = "/docs/kb/nx-module-federation-plugin"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/consumer-and-provider"
@@ -741,19 +741,19 @@ to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/create-a-host"
-to = "/docs/kb/create-a-host"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/create-a-remote"
-to = "/docs/kb/create-a-remote"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/federate-a-module"
-to = "/docs/kb/federate-a-module"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin"
-to = "/docs/kb/nx-module-federation-dev-server-plugin"
+to = "/docs/kb/nx-module-federation-plugin"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-plugin"
@@ -805,7 +805,7 @@ to = "/docs/kb/deploy-nextjs-to-vercel"
 
 [[redirects]]
 from = "/docs/technologies/react/guides/module-federation-with-ssr"
-to = "/docs/kb/react-module-federation-with-ssr"
+to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/react/guides/react-compiler"
@@ -1071,6 +1071,55 @@ to = "/docs/kb/vue"
 [[redirects]]
 from = "/docs/knowledge-base/webpack"
 to = "/docs/kb/webpack"
+# DOC-555: module federation prune + decisions stub removal
+[[redirects]]
+from = "/docs/kb/dynamic-module-federation-with-angular"
+to = "/docs/kb/angular-micro-frontends"
+
+[[redirects]]
+from = "/docs/kb/angular-module-federation-with-ssr"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/kb/module-federation-and-nx"
+to = "/docs/technologies/module-federation/introduction"
+
+[[redirects]]
+from = "/docs/kb/nx-module-federation-technical-overview"
+to = "/docs/kb/nx-module-federation-plugin"
+
+[[redirects]]
+from = "/docs/kb/create-a-host"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/kb/create-a-remote"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/kb/federate-a-module"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/kb/nx-module-federation-dev-server-plugin"
+to = "/docs/kb/nx-module-federation-plugin"
+
+[[redirects]]
+from = "/docs/kb/react-module-federation-with-ssr"
+to = "/docs/kb/consumer-and-provider"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts"
+to = "/docs/technologies/module-federation/introduction"
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides"
+to = "/docs/technologies/module-federation/introduction"
+
+[[redirects]]
+from = "/docs/concepts/decisions"
+to = "/docs/kb/monorepo-vs-polyrepo"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"

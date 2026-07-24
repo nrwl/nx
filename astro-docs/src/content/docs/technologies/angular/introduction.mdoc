@@ -144,25 +144,9 @@ See [Set up incremental builds for Angular libraries](/docs/kb/setup-incremental
 nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib
 ```
 
-### Set up Module Federation
+### Set up micro frontends
 
-Nx includes generators for scaffolding [Module Federation](/docs/kb/module-federation-and-nx) architectures with Angular. Generate a host application and its remotes in one command:
-
-```shell
-nx g @nx/angular:host apps/shell --remotes=products,checkout
-```
-
-> See all options in the [Angular host generators reference](/docs/technologies/angular/generators#host).
-
-Add a remote to an existing host:
-
-```shell
-nx g @nx/angular:remote apps/login --host=shell
-```
-
-> See all options in the [Angular remote generators reference](/docs/technologies/angular/generators#remote).
-
-Pass `--dynamic` for [dynamic federation](/docs/kb/dynamic-module-federation-with-angular) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](/docs/kb/angular-module-federation-with-ssr).
+As of Nx v23, the `@nx/angular` `host` and `remote` generators are deprecated. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation), with Nx orchestrating, caching, and scoping CI to the affected apps. See [Micro Frontends with Angular](/docs/kb/angular-micro-frontends) for the setup path.
 
 ## Structure your Angular monorepo
 
@@ -192,7 +176,7 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 {% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Nx Agents, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
 {% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/kb/migrate-angular-cli-to-nx" /%}
-{% linkcard title="Dynamic Module Federation" description="Load Angular remotes at runtime with dynamic federation." href="/docs/kb/dynamic-module-federation-with-angular" /%}
+{% linkcard title="Micro Frontends with Angular" description="Build Angular micro frontends with Native Federation." href="/docs/kb/angular-micro-frontends" /%}
 {% linkcard title="Tailwind CSS with Angular" description="Add Tailwind CSS to Angular apps and libraries." href="/docs/kb/using-tailwind-css-with-angular-projects" /%}
 {% linkcard title="Angular Generators Reference" description="All @nx/angular generators." href="/docs/technologies/angular/generators" /%}
 {% linkcard title="Angular Executors Reference" description="All @nx/angular executors." href="/docs/technologies/angular/executors" /%}

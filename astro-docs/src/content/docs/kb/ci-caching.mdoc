@@ -1,0 +1,85 @@
+---
+title: 'CI Caching: Speed Up CI with a Build Cache'
+description: 'How a build cache speeds up CI: local and remote caching, affected-only runs, and task distribution, and when each one pays off.'
+filter: 'type:Guides'
+sidebar:
+  label: CI Caching
+topics:
+  - 'Continuous integration'
+---
+
+CI caching means storing the results of tasks (builds, tests, lints) keyed by their inputs, so a
+pipeline that runs the same task on the same code replays the stored result instead of executing
+it again.
+In a typical workflow, the same code is built and tested many times: locally before pushing, on
+every CI run of a PR, and again after merging.
+A build cache eliminates every repeat execution, which is why teams adopting one commonly see
+30-70% faster CI.
+
+## How a build cache works
+
+A build cache computes a hash of everything a task depends on: source files, dependencies,
+configuration, environment.
+If a result for that hash exists, the cached output (files and terminal output) is replayed.
+If not, the task runs and the result is stored.
+Correctness depends entirely on the inputs being complete, so cache tooling that understands your
+project structure matters more than raw storage speed.
+Nx [caches task results](/docs/features/cache-task-results) with inputs inferred from your
+tooling configuration, and [how caching works](/docs/concepts/how-caching-works) covers the
+hashing model in detail.
+
+## Local cache vs remote cache
+
+A local cache only helps one machine.
+CI machines are usually ephemeral, so a local cache alone does almost nothing for pipeline times:
+every run starts cold.
+A remote cache shares results across every machine, so CI replays work your teammates or previous
+pipeline runs already did, and your local machine replays work CI did.
+
+With Nx, the remote cache is [Nx Replay](/docs/features/ci-features/remote-cache): zero-config,
+with access control and integrity checks.
+If you need to run the cache on your own infrastructure, use a
+[self-hosted remote cache](/docs/kb/self-hosted-caching).
+
+## What caching can't fix
+
+A cache only removes repeat work, and two other sources of CI time need different tools:
+
+- **First-time work** - a change to a shared library invalidates the cache for everything that
+  depends on it. [`nx affected`](/docs/features/ci-features/affected) keeps the task list scoped
+  to what a change actually touches, and
+  [reduce wasted time in CI](/docs/kb/reduce-waste) analyzes how the two combine.
+- **The critical path** - when a large PR invalidates many tasks, one machine can only
+  parallelize so far. [Distributed task execution](/docs/features/ci-features/distribute-task-execution)
+  spreads the remaining work across agents, with cached results shared between them through the
+  same remote cache.
+
+Together these form a pipeline where the worst case is bounded by the largest single task, not
+the size of the repository.
+The [building blocks of fast CI](/docs/concepts/ci-concepts/building-blocks-fast-ci) covers the
+full picture.
+
+## Frequently asked questions
+
+### Is it safe to cache test results in CI?
+
+Yes, when the cache key covers every input the test depends on.
+Nx hashes source files, dependency graphs, configuration, and declared environment variables, and
+[task sandboxing](/docs/features/ci-features/sandboxing) can enforce that tasks don't read
+undeclared inputs.
+Flaky tests are the real hazard: a flaky failure cached as a result is misleading, which is why
+Nx Cloud [detects flaky tasks](/docs/features/ci-features/flaky-tasks) and retries them instead
+of caching the noise.
+
+### How much faster does CI get with a remote cache?
+
+It depends on how often the same task re-runs on unchanged code.
+Across Nx Cloud workspaces we observed 30-70% faster CI, with the biggest wins in repositories
+with many projects where most PRs touch a small slice.
+
+### Do I need a monorepo to benefit from CI caching?
+
+No, but the benefit scales with project count.
+In a single-project repository, any change invalidates most of the cache.
+In a [monorepo](/docs/kb/what-is-a-monorepo), each project caches independently, so most projects
+replay from cache on any given PR.

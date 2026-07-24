@@ -8,7 +8,7 @@ topics:
   - 'Organizational decisions'
 ---
 
-One of the most obvious benefits of having a monorepo is that you can easily share code across projects. This enables you to apply the Don't Repeat Yourself principle across the whole codebase. Code sharing could mean using a function or a component in multiple projects. Or code sharing could mean using a typescript interface to define the network API interface for both the front end and back end applications.
+One of the most obvious benefits of having a monorepo is that you can share code across projects, applying the Don't Repeat Yourself principle across the whole codebase. Code sharing could mean using a function or a component in multiple projects. Or code sharing could mean using a TypeScript interface to define the network API interface for both the front end and back end applications.
 
 Code sharing is usually a good thing, but it can cause problems.
 
@@ -26,21 +26,21 @@ Another team can use a piece of code that is intended to be internal to your pro
 
 ### Projects depending on the wrong libraries
 
-Libraries with presentational components can accidentally use code from a library that holds a data store. Projects with Angular code can accidentally use code from a React project. Projects from team A could accidentally use code in projects that are intended to be only for team B. These kinds of rules will vary based on the organisation, but they can all be enforced automatically using tags and the `enforce-module-boundaries` lint rule.
+Libraries with presentational components can accidentally use code from a library that holds a data store. Projects with Angular code can accidentally use code from a React project. Projects from team A could accidentally use code in projects that are intended to be only for team B. These kinds of rules will vary based on the organization, but they can all be enforced automatically using tags and the `enforce-module-boundaries` lint rule.
 
 ## Defining code ownership
 
-As more teams are contributing to the same repository, it becomes crucial to establish clear code ownership.
+As more teams contribute to the same repository, establish clear code ownership.
 
 Since Nx allows us to place projects in any directory structure, those directories can become code-ownership boundaries. That's
-why the structure of an Nx workspace often reflects the structure of an organization. GitHub users can use
-the `CODEOWNERS` file for that.
+why the [folder structure](/docs/kb/folder-structure) of an Nx workspace often reflects the structure of an organization. GitHub, GitLab, and
+Bitbucket all support a `CODEOWNERS` file that assigns required reviewers by path.
 
 ```plaintext
-/libs/happynrwlapp          julie-happynrwlapp-lead
-/apps/happynrwlapp          julie-happynrwlapp-lead
-/libs/shared/ui             hank-the-ui-guy
-/libs/shared/utils-testing  julie,hank
+/apps/booking/              @acme/booking-team
+/libs/booking/              @acme/booking-team
+/libs/shared/ui/            @acme/design-system-team
+/libs/shared/data-access/   @acme/platform-team
 ```
 
 If you want to know more about code ownership on GitHub, please

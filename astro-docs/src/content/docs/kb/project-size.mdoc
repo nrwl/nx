@@ -11,21 +11,23 @@ Like a lot of decisions in programming, deciding to make a new Nx project or not
 
 ## What is a project for?
 
-> Developers new to Nx can be initially hesitant to move their logic into separate projects, because they assume it implies that those projects need to be general purpose and shareable across applications.
+{% aside type="note" %}
+Developers new to Nx can be initially hesitant to move their logic into separate projects, because they assume it implies that those projects need to be general purpose and shareable across applications.
+{% /aside %}
 
-**This is a common misconception, moving code into projects can be done from a pure code organization perspective.**
+This is a common misconception: moving code into projects can be done from a pure code organization perspective.
 
 Ease of re-use might emerge as a positive side effect of refactoring code into projects by applying an _"API thinking"_ approach. It is not the main driver though.
 
-In fact when organizing projects you should think about your business domains.
+In fact when organizing projects you should think about your business domains, as covered in [folder structure](/docs/kb/folder-structure).
 
-## Should i make a new project?
+## Should you make a new project?
 
 There are three main benefits to breaking your code up into more projects.
 
 ### 1. Faster commands
 
-The more granular your projects are, the more effective `nx affected` and Nx computation cache will be. For example, if `projectA` contains 10 tests, but only 5 of them were affected by a particular code change, all 10 tests will be run by `nx affected -t test`. If you can predict which 5 tests are usually run together, you can split all the related code into a separate project to allow the two groups of 5 tests to be executed independently.
+The more granular your projects are, the more effective `nx affected` and the Nx computation cache will be. For example, if `projectA` contains 10 tests, but only 5 of them were affected by a particular code change, all 10 tests will be run by `nx affected -t test`. If you can predict which 5 tests are usually run together, you can split all the related code into a separate project to allow the two groups of 5 tests to be executed independently.
 
 ### 2. Visualizing architecture
 
@@ -35,16 +37,25 @@ The `nx graph` command generates a graph of how apps and projects depend on each
 
 You can enforce constraints on how different types of projects depend on each other [using tags](/docs/features/enforce-module-boundaries). Following pre-determined conventions on what kind of code can go in different types of projects allows your tagging system to enforce good architectural patterns.
 
-Also, each project defines its own API, which allows for encapsulating logic that other parts of codebase can not access. You can even use a [CODEOWNERS file](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners) to assign ownership of a certain project to a user or team.
+Also, each project defines its own API, which allows for encapsulating logic that other parts of the codebase can not access. You can even use a [CODEOWNERS file](/docs/kb/code-ownership) to assign ownership of a certain project to a user or team.
 
-## Should i add to an existing project?
+## Should you add to an existing project?
 
 Limiting the number of projects by keeping code in an existing project also has benefits.
 
 ### 1. Consolidating code
 
-Related code should be close together. If a developer can accomplish a task without moving between multiple different folders, it helps them work faster and make less mistakes. Every new project adds some folders and configuration files that are not directly contributing to business value. Nx helps reduce the cost of adding a new project, but it isn't zero.
+Related code should be close together. If a developer can accomplish a task without moving between multiple different folders, it helps them work faster and make fewer mistakes. Every new project adds some folders and configuration files that are not directly contributing to business value. Nx helps reduce the cost of adding a new project, but it isn't zero.
 
 ### 2. Removing constraints
 
 Especially for rapidly evolving code, the standard architectural constraints may just get in the way of experimentation and exploration. It may be worthwhile to develop for a while in a single project in order to allow a real architecture to emerge and then refactoring into multiple projects once the pace of change has slowed down.
+
+## Useful heuristics
+
+There is no correct number of projects, but these signals tend to settle the conversation:
+
+- **Split when tests slow you down.** A project whose test suite dominates CI, while most changes only touch a slice of it, is the clearest split candidate: affected detection and caching immediately stop re-running the unaffected slice.
+- **Split along ownership.** When two teams keep editing the same project, boundaries and review assignments blur. One project per owning team keeps `CODEOWNERS` and module boundary tags honest.
+- **Don't split what always changes together.** If two projects appear in nearly every commit together, the boundary costs navigation and configuration without buying any caching or ownership benefit.
+- **Type checking scales with project boundaries.** Each project type-checks against its dependencies' declaration files rather than their full sources, so granular projects keep editor feedback and `typecheck` tasks fast as the codebase grows. See [TypeScript project linking](/docs/kb/typescript-project-linking) for how project references make this work.
