@@ -9,19 +9,18 @@ jest.mock('../native', () => ({
 
 const mockIsAiAgent = isAiAgent as jest.MockedFunction<typeof isAiAgent>;
 
-// Callers only reach the hint when `isSandbox()` is true or when the errno
-// (connect EPERM/EACCES, a failed bind) already proves sockets are blocked, so
-// the wording is allowed to name the cause outright.
 describe('sandboxSocketHint', () => {
-  const socketRoot = '/tmp/.nx/sockets';
+  // Deliberately not the POSIX default (/tmp/.nx/sockets) so that a hardcoded
+  // socket root in the module under test would fail these tests.
+  const socketRoot = '/var/folders/nx-spec-sockets';
 
   afterEach(() => {
     mockIsAiAgent.mockReset();
   });
 
-  const hint = () =>
+  const hint = (opts?: { certain?: boolean }) =>
     withEnvironmentVariables({ NX_SOCKET_DIR: socketRoot }, () =>
-      sandboxSocketHint()
+      sandboxSocketHint(opts)
     );
 
   it('should point at the socket root and the NX_SOCKET_DIR escape hatch for humans', () => {
@@ -42,13 +41,32 @@ describe('sandboxSocketHint', () => {
   });
 
   it.each([true, false])(
-    'should state the cause rather than hedging (isAiAgent: %s)',
+    'should hedge by default, because a sandbox being present is not proof it blocked the socket (isAiAgent: %s)',
     (isAgent: boolean) => {
       mockIsAiAgent.mockReturnValue(isAgent);
 
       expect(hint()[0]).toBe(
+        `A sandbox blocking unix socket access is a common cause. Nx creates its sockets under ${socketRoot}.`
+      );
+    }
+  );
+
+  it.each([true, false])(
+    'should state the cause outright when the caller has an errno proving it (isAiAgent: %s)',
+    (isAgent: boolean) => {
+      mockIsAiAgent.mockReturnValue(isAgent);
+
+      expect(hint({ certain: true })[0]).toBe(
         `Your sandbox is blocking unix socket access. Nx creates its sockets under ${socketRoot}.`
       );
     }
   );
+
+  it('should tell sandboxes that only allowlist connections that they must also allow socket creation', () => {
+    // Every caller is creating a socket or making the first connection to one
+    // that does not exist yet, so a connect-only allowlist is never sufficient.
+    mockIsAiAgent.mockReturnValue(true);
+
+    expect(hint().join('\n')).toContain('allowAllUnixSockets');
+  });
 });

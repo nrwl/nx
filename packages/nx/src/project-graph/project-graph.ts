@@ -454,11 +454,11 @@ export async function createProjectGraphAndSourceMapsAsync(
           bodyLines: [
             `Log file with the error: ${errorLogFile}`,
             // Agents act on what reaches stdout, not on log files — when a
-            // sandbox is in play, surface the cause and fix directly instead
-            // of "file an issue".
-            ...(isSandbox()
-              ? sandboxSocketHint()
-              : [`Please file an issue at https://github.com/nrwl/nx`]),
+            // sandbox is in play, surface the likely cause and its fix inline.
+            // This branch covers every internal daemon error, including ones a
+            // sandbox cannot explain, so the issue link stays either way.
+            ...(isSandbox() ? sandboxSocketHint() : []),
+            `Please file an issue at https://github.com/nrwl/nx`,
             'Nx Daemon is going to be disabled until you run "nx reset".',
           ],
         });

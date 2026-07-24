@@ -1095,7 +1095,9 @@ export class DaemonClient {
           error = daemonProcessException(
             [
               'The operating system refused the connection to the Nx Daemon socket.',
-              ...sandboxSocketHint(),
+              // EPERM/EACCES on a connect is the one errno that proves the
+              // socket was blocked rather than merely absent or stale.
+              ...sandboxSocketHint({ certain: true }),
             ].join('\n')
           );
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
