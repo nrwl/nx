@@ -28,7 +28,7 @@ pub(crate) struct PageViewData {
 pub(crate) struct TelemetryOptions {
     pub session_id: String,
     pub workspace_id: String,
-    pub user_id: String,
+    pub user_id: Option<String>,
     pub nx_version: String,
     pub package_manager_name: String,
     pub package_manager_version: Option<String>,
@@ -75,7 +75,9 @@ impl TelemetryService {
             request_param::CLIENT_ID.to_string(),
             opts.workspace_id.clone(),
         );
-        common_request_parameters.insert(request_param::USER_ID.to_string(), opts.user_id.clone());
+        if let Some(user_id) = &opts.user_id {
+            common_request_parameters.insert(request_param::USER_ID.to_string(), user_id.clone());
+        }
         common_request_parameters.insert(
             request_param::TRACKING_ID.to_string(),
             TRACKING_ID_PROD.to_string(),
@@ -106,7 +108,9 @@ impl TelemetryService {
 
         let mut user_parameters = HashMap::new();
         user_parameters.insert(user_dimension::OS_ARCHITECTURE.to_string(), opts.os_arch);
-        user_parameters.insert(user_dimension::USER_ID.to_string(), opts.user_id);
+        if let Some(user_id) = opts.user_id {
+            user_parameters.insert(user_dimension::USER_ID.to_string(), user_id);
+        }
         user_parameters.insert(user_dimension::NODE_VERSION.to_string(), opts.node_version);
         user_parameters.insert(
             user_dimension::PACKAGE_MANAGER.to_string(),

@@ -82,7 +82,7 @@ pub fn initialize_telemetry(
         Arc<Mutex<NxDbConnection>>,
     >,
     workspace_id: String,
-    user_id: String,
+    user_id: Option<String>,
     nx_version: String,
     package_manager_name: String,
     package_manager_version: Option<String>,
@@ -126,7 +126,7 @@ pub fn initialize_telemetry(
 pub fn initialize_telemetry_with_session_id(
     session_id: String,
     workspace_id: String,
-    user_id: String,
+    user_id: Option<String>,
     nx_version: String,
     package_manager_name: String,
     package_manager_version: Option<String>,
