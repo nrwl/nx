@@ -98,6 +98,9 @@ describe('platform-server-exports.loader', () => {
     );
     expect(result).toContain(`"../browser"`);
     expect(result).toContain(`allowedHosts: ["example.com"]`);
+    expect(result).toMatch(
+      /__ngRspackCreateServerAssets\([\s\S]*?"index\.html",\s*true\s*\)/
+    );
   });
 
   it('should trim the trailing slash from the engine manifest base path', () => {
