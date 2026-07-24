@@ -140,6 +140,53 @@ describe('addLinting generator', () => {
     });
   });
 
+  it('should not add parserOptions.project when the existing config runs the project service', async () => {
+    // The project service needs no glob and typescript-eslint throws when one
+    // sits next to it, so there is nothing to carry over here.
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `overrides:\n  - files: ['*.ts']\n    parserOptions:\n      projectService: true\n`
+    );
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toBeUndefined();
+  });
+
+  it('should not carry over parserOptions.project when the project service is also on', async () => {
+    // A top-level `parserOptions` survives the override rewrite, so re-emitting
+    // the glob below it would leave the project service and a `project` in
+    // effect together, which typescript-eslint rejects.
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `parserOptions:\n  projectService: true\noverrides:\n  - files: ['*.ts']\n    parserOptions:\n      project: ['${appProjectRoot}/tsconfig.*?.json']\n`
+    );
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toBeUndefined();
+  });
+
   it('should not set parserOptions in the .eslintrc.json file when typed linting is disabled', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {

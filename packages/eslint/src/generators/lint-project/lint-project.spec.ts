@@ -426,6 +426,9 @@ describe('@nx/eslint:lint-project', () => {
               languageOptions: {
                   parserOptions: {
                       projectService: true,
+                      // \`projectService\` conflicts with a \`parserOptions.project\` set by any config
+                      // merged into this one. Remove this once you know none of them set it.
+                      project: null,
                       tsconfigRootDir: import.meta.dirname
                   }
               }
@@ -433,6 +436,27 @@ describe('@nx/eslint:lint-project', () => {
       ];
       "
     `);
+  });
+
+  it('should place the typed-linting block after the base config it spreads in', async () => {
+    // ESLint merges `parserOptions` across entries and the last one wins, so a
+    // block placed before the spread would leave a `project` the base config
+    // sets in effect, which typescript-eslint rejects next to `projectService`.
+    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: 'eslint',
+      project: 'test-lib',
+      enableTypedLinting: true,
+      skipFormat: true,
+      eslintConfigFormat: 'mjs',
+    });
+
+    const content = tree.read('libs/test-lib/eslint.config.mjs', 'utf-8');
+    expect(content.indexOf('...baseConfig')).toBeLessThan(
+      content.indexOf('projectService')
+    );
   });
 
   it('should emit projectService for typed linting in flat config (cjs)', async () => {
@@ -463,6 +487,9 @@ describe('@nx/eslint:lint-project', () => {
               languageOptions: {
                   parserOptions: {
                       projectService: true,
+                      // \`projectService\` conflicts with a \`parserOptions.project\` set by any config
+                      // merged into this one. Remove this once you know none of them set it.
+                      project: null,
                       tsconfigRootDir: __dirname
                   }
               }

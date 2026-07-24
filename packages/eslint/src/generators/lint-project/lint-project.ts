@@ -317,6 +317,9 @@ function createEsLintConfiguration(
       importMap.set(pathToRootConfig, 'baseConfig');
       nodes.push(generateSpreadElement('baseConfig'));
     }
+    // After the base config, never before it: ESLint merges `parserOptions`
+    // across entries and the last one wins, so this block's `project: null` only
+    // neutralizes a `project` the base config sets while it comes later.
     if (enableTypedLinting) {
       nodes.push(
         generateTypedLintingFlatConfigOverride(options.eslintConfigFormat)

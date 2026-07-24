@@ -1953,9 +1953,8 @@ const DEFAULT_TYPED_LINTING_FILES = [
  * Emits `tsconfigRootDir: import.meta.dirname` for `mjs` and
  * `tsconfigRootDir: __dirname` for `cjs`.
  */
-export function generateProjectServiceParserOptions(
-  format: 'mjs' | 'cjs',
-  defuseProject = false
+function generateProjectServiceParserOptions(
+  format: 'mjs' | 'cjs'
 ): ts.ObjectLiteralExpression {
   return ts.factory.createObjectLiteralExpression(
     [
@@ -1963,7 +1962,7 @@ export function generateProjectServiceParserOptions(
         'projectService',
         ts.factory.createTrue()
       ),
-      ...(defuseProject ? [generateProjectDefusingAssignment()] : []),
+      generateProjectDefusingAssignment(),
       ts.factory.createPropertyAssignment(
         'tsconfigRootDir',
         format === 'mjs'
@@ -1982,16 +1981,12 @@ export function generateProjectServiceParserOptions(
 }
 
 /**
- * Generates a flat-config override block enabling typed linting via the
- * project service. Default files match the typed-linting block that
- * generators historically emitted via `parserOptions.project`.
- */
-/**
- * `project: null` for a config that spreads in something we could not read.
- * ESLint merges `parserOptions` across entries, and typescript-eslint rejects a
- * merged truthy `project` next to `projectService`, so this keeps an unseen
- * `project` from breaking every file. The comment carries the condition for
- * dropping it, since only the user can check what the spread configs set.
+ * ESLint merges `parserOptions` across every config entry matching a file, and
+ * typescript-eslint rejects a merged truthy `project` next to `projectService`.
+ * A config can pick one up from anywhere it extends, spreads in, or composes,
+ * and several of those routes cannot be read statically, so the block
+ * neutralizes it outright. The comment carries the condition for dropping it,
+ * since only the user can check what the configs they pull in set.
  */
 function generateProjectDefusingAssignment(): ts.PropertyAssignment {
   const assignment = ts.factory.createPropertyAssignment(
@@ -2001,23 +1996,27 @@ function generateProjectDefusingAssignment(): ts.PropertyAssignment {
   ts.addSyntheticLeadingComment(
     assignment,
     ts.SyntaxKind.SingleLineCommentTrivia,
-    ' A config spread in above may set `parserOptions.project`, which conflicts',
+    ' `projectService` conflicts with a `parserOptions.project` set by any config',
     true
   );
   ts.addSyntheticLeadingComment(
     assignment,
     ts.SyntaxKind.SingleLineCommentTrivia,
-    ' with `projectService`. Remove this once you know none of them do.',
+    ' merged into this one. Remove this once you know none of them set it.',
     true
   );
 
   return assignment;
 }
 
+/**
+ * Generates a flat-config override block enabling typed linting via the
+ * project service. Default files match the typed-linting block that
+ * generators historically emitted via `parserOptions.project`.
+ */
 export function generateTypedLintingFlatConfigOverride(
   format: 'mjs' | 'cjs',
-  files: string[] = DEFAULT_TYPED_LINTING_FILES,
-  defuseProject = false
+  files: string[] = DEFAULT_TYPED_LINTING_FILES
 ): ts.ObjectLiteralExpression {
   return ts.factory.createObjectLiteralExpression(
     [
@@ -2034,7 +2033,7 @@ export function generateTypedLintingFlatConfigOverride(
           [
             ts.factory.createPropertyAssignment(
               'parserOptions',
-              generateProjectServiceParserOptions(format, defuseProject)
+              generateProjectServiceParserOptions(format)
             ),
           ],
           true
