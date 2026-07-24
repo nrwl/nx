@@ -83,8 +83,12 @@ export function ensureSecureNativeFileCacheLocation(): string | null {
  * symlink), and is not writable by group or other (mode 0700). Returns false if
  * it exists but fails any of those checks — i.e. it may have been planted by
  * another user through the world-writable parent.
+ *
+ * Exported for testing: this is the check that stops another local user from
+ * planting a `.node` we would load and execute, so it is verified directly
+ * rather than through the caller.
  */
-function ensureOwnedPrivateDir(dir: string): boolean {
+export function ensureOwnedPrivateDir(dir: string): boolean {
   try {
     mkdirSync(dir, { mode: 0o700 });
     // We just created it, so it is ours and private.
