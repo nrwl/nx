@@ -39,6 +39,7 @@ import { NATIVE_CACHE_ROOT } from '../native/native-file-cache-location';
 import {
   NX_HOME_TMP_DIR,
   NX_TMP_DIR,
+  NX_TMP_DIR_POSIX,
   NX_USER_TMP_DIR,
 } from '../utils/nx-tmp-dir';
 import { isSandbox } from '../utils/is-sandbox';

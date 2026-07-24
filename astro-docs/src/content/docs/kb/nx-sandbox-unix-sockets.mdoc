@@ -55,7 +55,7 @@ The daemon, forked task processes and plugin workers put their sockets beneath o
 }
 ```
 
-`~` expands to the home directory of whoever runs Nx, so one committed entry covers every user. Wildcards don't work in these settings, so each entry has to be a literal path.
+`~` expands to the home directory of whoever runs Nx, so one committed entry covers every user. Wildcards don't work in these settings, so each entry has to be a literal path. Running `nx configure-ai-agents` adds these entries to `.claude/settings.json` automatically.
 
 The write grant covers `/tmp/.nx` rather than only its `sockets` descendants because the first Nx run also has to create the root. Nx copies its compiled native binding into a cache under the same root before loading it, which the grant needs to cover too.
 

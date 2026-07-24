@@ -450,6 +450,60 @@ describe('setup-ai-agents generator', () => {
         ]);
       });
 
+      it('should allow nx socket usage through the sandbox', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/tmp/.nx/sockets',
+        ]);
+        expect(config.sandbox.filesystem.allowRead).toEqual(['/tmp/.nx']);
+        expect(config.sandbox.filesystem.allowWrite).toEqual(['/tmp/.nx']);
+      });
+
+      it('should preserve existing sandbox socket and filesystem entries without duplicating the nx ones', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              filesystem: {
+                allowWrite: ['~/.gradle', '/tmp/.nx'],
+              },
+              network: {
+                allowUnixSockets: ['/var/run/docker.sock', '/tmp/.nx/sockets'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.filesystem.allowWrite).toEqual([
+          '~/.gradle',
+          '/tmp/.nx',
+        ]);
+        expect(config.sandbox.filesystem.allowRead).toEqual(['/tmp/.nx']);
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/var/run/docker.sock',
+          '/tmp/.nx/sockets',
+        ]);
+      });
+
       it('should preserve existing ref in nx-claude-plugins source', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
