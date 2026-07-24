@@ -173,6 +173,11 @@
     "zoneless": {
       "description": "Generate an application that does not use `zone.js`. It defaults to `true`. _Note: this is only supported in Angular versions >= 21.0.0_",
       "type": "boolean"
+    },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier", "oxfmt"]
     }
   },
   "additionalProperties": false,

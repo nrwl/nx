@@ -2,7 +2,6 @@ import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
-  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -11,9 +10,11 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { isUsingPrettierInTree } from 'nx/src/devkit-internals';
 import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
+import { generateOxfmtSetup } from '../../utils/oxfmt';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
@@ -23,7 +24,6 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
-  prettierVersion,
   swcHelpersVersion,
   tsLibVersion,
   typescriptVersion,
@@ -36,7 +36,14 @@ export async function initGenerator(
 ): Promise<GeneratorCallback> {
   schema.addTsPlugin ??= false;
   const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
-  schema.formatter ??= isUsingNewTsSetup ? 'none' : 'prettier';
+  // Keep prettier when the workspace already uses it; only a workspace with no
+  // formatter configured falls back to the oxfmt default. Otherwise a prettier
+  // workspace would gain a stray .oxfmtrc.json that then wins detection.
+  schema.formatter ??= isUsingNewTsSetup
+    ? 'none'
+    : isUsingPrettierInTree(tree)
+      ? 'prettier'
+      : 'oxfmt';
 
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
@@ -134,6 +141,11 @@ export async function initGeneratorInternal(
       skipPackageJson: schema.skipPackageJson,
     });
     tasks.push(prettierTask);
+  } else if (schema.formatter === 'oxfmt') {
+    const oxfmtTask = generateOxfmtSetup(tree, {
+      skipPackageJson: schema.skipPackageJson,
+    });
+    tasks.push(oxfmtTask);
   }
 
   const rootTsConfigFileName = getRootTsConfigFileName(tree);
@@ -156,15 +168,6 @@ export async function initGeneratorInternal(
       )
     : () => {};
   tasks.push(installTask);
-
-  if (
-    !schema.skipPackageJson &&
-    // For `create-nx-workspace` or `nx g @nx/js:init`, we want to make sure users didn't set formatter to none.
-    // For programmatic usage, the formatter is normally undefined, and we want prettier to continue to be ensured, even if not ultimately installed.
-    schema.formatter !== 'none'
-  ) {
-    ensurePackage('prettier', prettierVersion);
-  }
 
   if (!schema.skipFormat) {
     // even if skipPackageJson === true, we can safely run formatFiles, prettier might

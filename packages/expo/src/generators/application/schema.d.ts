@@ -18,6 +18,6 @@ export interface Schema {
   addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
-  formatter?: 'prettier' | 'none';
+  formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;
 }

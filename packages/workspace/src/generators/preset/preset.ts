@@ -48,6 +48,7 @@ async function createPreset(tree: Tree, options: Schema) {
       ssr: options.ssr,
       prefix: options.prefix,
       zoneless: options.zoneless,
+      formatter: options.formatter,
       nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.AngularStandalone) {
@@ -78,6 +79,7 @@ async function createPreset(tree: Tree, options: Schema) {
       ssr: options.ssr,
       prefix: options.prefix,
       zoneless: options.zoneless,
+      formatter: options.formatter,
       nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.ReactMonorepo) {

@@ -85,6 +85,8 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   );
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
+    // The published @nx/js types predate 'oxfmt'; it is accepted at runtime.
+    formatter: schema.formatter as 'none' | 'prettier',
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin,
