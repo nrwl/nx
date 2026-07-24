@@ -436,6 +436,31 @@ describe('app', () => {
         });
       });
 
+      it('should install ESLint v10 plugins by default in an empty Nx workspace', async () => {
+        delete process.env.ESLINT_USE_FLAT_CONFIG;
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson.devDependencies.eslint).toMatch(/^\^?10\./);
+        expect(packageJson.devDependencies['eslint-plugin-import-x']).toMatch(
+          /^\^?4\./
+        );
+        expect(
+          packageJson.devDependencies['eslint-plugin-react-hooks']
+        ).toMatch(/^\^?7\./);
+        // react/jsx-a11y have no ESLint v10 release, so they must not install
+        expect(
+          packageJson.devDependencies['eslint-plugin-react']
+        ).toBeUndefined();
+        expect(
+          packageJson.devDependencies['eslint-plugin-jsx-a11y']
+        ).toBeUndefined();
+      });
+
       it('should install eslint-config-next@15 when an existing Next.js 15 project is detected', async () => {
         tree.write(
           '/package.json',

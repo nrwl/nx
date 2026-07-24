@@ -671,6 +671,27 @@ describe('app', () => {
     expect(appSpecContent).toMatch(/import App from '.\/app'/);
   });
 
+  it('should add flat config and ESLint v10 plugins by default', async () => {
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+    await applicationGenerator(appTree, { ...schema, linter: 'eslint' });
+
+    const packageJson = readJson(appTree, '/package.json');
+
+    expect(packageJson.devDependencies.eslint).toMatch(/^\^?10\./);
+    expect(packageJson.devDependencies['eslint-plugin-import-x']).toMatch(
+      /^\^?4\./
+    );
+    expect(packageJson.devDependencies['eslint-plugin-react-hooks']).toMatch(
+      /^\^?7\./
+    );
+    // react/jsx-a11y/import have no ESLint v10 release, so they must not install
+    expect(packageJson.devDependencies['eslint-plugin-react']).toBeUndefined();
+    expect(
+      packageJson.devDependencies['eslint-plugin-jsx-a11y']
+    ).toBeUndefined();
+    expect(packageJson.devDependencies['eslint-plugin-import']).toBeUndefined();
+  });
+
   it('should add .eslintrc.json and dependencies', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, { ...schema, linter: 'eslint' });

@@ -81,6 +81,7 @@
   },
   "peerDependencies": {
     "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0 || ^10.0.0",
     "eslint-config-prettier": "catalog:eslint"
   },
   "peerDependenciesMeta": {

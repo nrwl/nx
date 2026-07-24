@@ -16,7 +16,7 @@ import {
 import { convertToFlatConfigGenerator } from './generator';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
-import { eslintrcVersion, eslintVersion } from '../../utils/versions';
+import { eslintrcVersion } from '../../utils/versions';
 import { dump } from '@zkochan/js-yaml';
 
 function getLintInputs(nxJson: NxJsonConfiguration): string[] {
@@ -1561,7 +1561,7 @@ describe('convert-to-flat-config generator', () => {
       expect(devDependencies['typescript-eslint']).toBe('^8.20.0');
       // Newly required flat-config packages are still added.
       expect(devDependencies['@eslint/eslintrc']).toBe(eslintrcVersion);
-      expect(devDependencies['@eslint/js']).toBe(eslintVersion);
+      expect(devDependencies['@eslint/js']).toBe('^9.8.0');
     });
 
     it('should overwrite existing ESLint pins by default', async () => {
@@ -1583,7 +1583,7 @@ describe('convert-to-flat-config generator', () => {
       await convertToFlatConfigGenerator(tree, options);
 
       const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies.eslint).toBe(eslintVersion);
+      expect(devDependencies.eslint).toBe('^9.8.0');
     });
   });
 

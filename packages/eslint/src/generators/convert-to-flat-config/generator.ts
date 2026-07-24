@@ -24,8 +24,7 @@ import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslin
 import {
   eslintConfigPrettierVersion,
   eslintrcVersion,
-  eslintVersion,
-  typescriptESLintVersion,
+  getConvertToFlatConfigVersions,
 } from '../../utils/versions';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
@@ -461,9 +460,12 @@ function processConvertedConfig(
   // save new
   tree.write(join(root, target), content);
 
-  // Once converted to flat config, the workspace should use the latest ESLint
-  // stack. Install the versions directly instead of routing through
-  // `versions(tree)`, which keys off the pre-conversion declared ESLint version.
+  // Conversion changes the config format, not the ESLint major. Resolve the
+  // stack from the installed version so an existing v9 workspace stays on v9 (a
+  // forced v10 bump strands v9-only plugins) and a v10 workspace is not
+  // downgraded.
+  const { eslintVersion, typescriptESLintVersion } =
+    getConvertToFlatConfigVersions(tree);
   const devDependencies: Record<string, string> = {
     eslint: eslintVersion,
     'eslint-config-prettier': eslintConfigPrettierVersion,
@@ -496,8 +498,8 @@ function processConvertedConfig(
     devDependencies['angular-eslint'] = resolveAngularEslintVersion(tree);
   }
 
-  // Direct invocation is an opt-in upgrade, so by default existing pins are
-  // overwritten to land the workspace on the latest flat-config-ready stack.
+  // Direct invocation is an opt-in conversion, so by default existing pins are
+  // overwritten to land the workspace on the resolved flat-config-ready stack.
   // Migrations pass `keepExistingVersions` so the version bump stays owned by
   // `packageJsonUpdates` and only newly added packages are installed here.
   addDependenciesToPackageJson(
