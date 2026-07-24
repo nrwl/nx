@@ -352,7 +352,7 @@ export class MockJsVersionActions extends VersionActions {
           if (!current) continue;
           if (
             preserveLocalDependencyProtocols &&
-            (current.startsWith('file:') || current.startsWith('workspace:'))
+            this.isLocalDependencyProtocol(current)
           ) {
             count--;
             continue;
@@ -367,6 +367,52 @@ export class MockJsVersionActions extends VersionActions {
       }
     }
     return logs;
+  }
+
+  // Mirrors `JsVersionActions` for the local-protocol handling the release core
+  // delegates to, minus the package-manager-specific `workspace:`+npm guard so
+  // these unit tests stay hermetic.
+  override isLocalDependencyProtocol(versionSpecifier: string): boolean {
+    return (
+      versionSpecifier.startsWith('file:') ||
+      versionSpecifier.startsWith('workspace:')
+    );
+  }
+
+  override getPinnedLocalDependencyRange(
+    versionSpecifier: string
+  ): string | null {
+    if (!versionSpecifier.startsWith('workspace:')) {
+      return null;
+    }
+    const range = versionSpecifier.slice('workspace:'.length);
+    if (range === '' || range === '*' || range === '^' || range === '~') {
+      return null;
+    }
+    return range;
+  }
+
+  override getResolvedLocalDependencyRange(
+    versionSpecifier: string,
+    resolvedVersion: string,
+    versionPrefix: NxReleaseVersionConfiguration['versionPrefix']
+  ): string {
+    let prefix = '';
+    if (
+      versionPrefix === '~' ||
+      versionPrefix === '^' ||
+      versionPrefix === '='
+    ) {
+      prefix = versionPrefix;
+    } else if (versionSpecifier.startsWith('workspace:')) {
+      const range = versionSpecifier.slice('workspace:'.length);
+      if (range.startsWith('^')) {
+        prefix = '^';
+      } else if (range.startsWith('~')) {
+        prefix = '~';
+      }
+    }
+    return `${prefix}${resolvedVersion.replace(/^[~^=]/, '')}`;
   }
 }
 

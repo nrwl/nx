@@ -801,6 +801,22 @@ export class ReleaseGroupProcessor {
           const cleanNewVersion = newVersion.replace(/^[~^=]/, '');
           dependenciesToUpdate[dep.target] = `${finalPrefix}${cleanNewVersion}`;
         }
+      } else {
+        // The dependency is NOT part of this release (a subset release, e.g.
+        // releasing only a dependent project). Its version was never resolved
+        // into `cachedCurrentVersions`, so a local dependency protocol reference
+        // to it (as determined by the ecosystem-specific VersionActions) would
+        // otherwise be left unresolved in the manifest. When the manifest is
+        // configured to NOT preserve local protocols, rewrite the reference to a
+        // concrete range - resolving the dependency's current version on-demand
+        // where needed. If that version cannot be resolved, the protocol is left
+        // untouched (the release is never failed for an out-of-set dependency).
+        await this.resolveOutOfSetLocalDependencyVersion(
+          versionActions,
+          cachedFinalConfigForProject,
+          dep.target,
+          dependenciesToUpdate
+        );
       }
     }
 
@@ -813,6 +829,92 @@ export class ReleaseGroupProcessor {
     for (const logMessage of logMessages) {
       projectLogger.buffer(logMessage);
     }
+  }
+
+  /**
+   * Handle a dependency that is NOT part of `allProjectsToProcess` during a
+   * subset release.
+   *
+   * If the dependency is referenced via a local protocol (as determined by the
+   * ecosystem-specific `VersionActions.isLocalDependencyProtocol`) and at least
+   * one manifest to update is configured with
+   * `preserveLocalDependencyProtocols: false`, write a concrete range into
+   * `dependenciesToUpdate` so that the protocol gets rewritten by
+   * `updateProjectDependencies`. Manifests that DO preserve protocols are
+   * unaffected, because `updateProjectDependencies` keeps the protocol for
+   * those manifests regardless.
+   *
+   * All protocol-specific knowledge is delegated to the `versionActions`
+   * abstraction so this core stays ecosystem-agnostic:
+   *  - a user-pinned local range is written verbatim (no version resolution),
+   *    via `getPinnedLocalDependencyRange`;
+   *  - a bare protocol alias requires the dependency's resolved current version,
+   *    formatted via `getResolvedLocalDependencyRange`. If that version cannot
+   *    be resolved, the reference is left untouched.
+   */
+  private async resolveOutOfSetLocalDependencyVersion(
+    versionActions: VersionActions,
+    finalConfigForProject: NxReleaseVersionConfiguration,
+    dependencyProjectName: string,
+    dependenciesToUpdate: Record<string, string>
+  ): Promise<void> {
+    // Only relevant when at least one manifest should NOT preserve local
+    // protocols; otherwise leave the protocol untouched and avoid unnecessary
+    // (and potentially expensive, e.g. git-tag) current-version resolution.
+    const shouldRewriteLocalProtocol = versionActions.manifestsToUpdate.some(
+      (manifest) => !manifest.preserveLocalDependencyProtocols
+    );
+    if (!shouldRewriteLocalProtocol) {
+      return;
+    }
+
+    const { currentVersion: currentSpecifier } =
+      await versionActions.readCurrentVersionOfDependency(
+        this.tree,
+        this.projectGraph,
+        dependencyProjectName
+      );
+    // Not referenced in this project's manifest, or not a local protocol that
+    // the ecosystem rewrites — leave it as-is (preserves existing behavior for
+    // out-of-set registry-versioned dependencies).
+    if (
+      !currentSpecifier ||
+      !versionActions.isLocalDependencyProtocol(currentSpecifier)
+    ) {
+      return;
+    }
+
+    // A user-pinned local range is written through verbatim and skips
+    // resolution entirely.
+    const pinnedRange =
+      versionActions.getPinnedLocalDependencyRange(currentSpecifier);
+    if (pinnedRange !== null) {
+      dependenciesToUpdate[dependencyProjectName] = pinnedRange;
+      return;
+    }
+
+    // Bare protocol aliases need the dependency's resolved current version.
+    const resolvedVersion =
+      await this.releaseGraph.resolveCurrentVersionForOutOfSetProject(
+        this.tree,
+        this.projectGraph,
+        dependencyProjectName,
+        this.options.preid ?? ''
+      );
+    // Could not resolve a concrete version (see
+    // `resolveCurrentVersionForOutOfSetProject`, which warns and returns null
+    // rather than throwing) — safer to leave the protocol untouched than to
+    // write an invalid value or fail the release.
+    if (!resolvedVersion) {
+      return;
+    }
+
+    dependenciesToUpdate[dependencyProjectName] =
+      versionActions.getResolvedLocalDependencyRange(
+        currentSpecifier,
+        resolvedVersion,
+        finalConfigForProject.versionPrefix
+      );
   }
 
   private async bumpVersionForProject(
