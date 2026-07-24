@@ -61,6 +61,20 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
     expect(read('key="bad\\escape"')?.get('key')).toBe('"bad\\escape"');
   });
 
+  it('reads a bare key with no = as a boolean flag set to true (ini)', () => {
+    // ini's regex leaves the value group unmatched for a valueless line, so its
+    // valueRaw defaults to true; the pipeline coerces the string back where a
+    // boolean is needed. Dropping the line loses a bare always-auth/strict-ssl.
+    expect(read('always-auth')?.get('always-auth')).toBe('true');
+    expect(readNpmrcEntries(path)).toEqual([
+      { key: 'always-auth', value: 'true' },
+    ]);
+  });
+
+  it('truncates an inline comment on a bare key', () => {
+    expect(read('always-auth # prod')?.get('always-auth')).toBe('true');
+  });
+
   it('skips blank lines and full-line comments', () => {
     const map = read(
       ['# comment', '; comment', '', 'registry=https://r/'].join('\n')

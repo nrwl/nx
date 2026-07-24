@@ -10,10 +10,11 @@ export interface NpmrcEntry {
 /**
  * Parses an .npmrc file into its `key = value` entries the way npm/yarn/pnpm do
  * (via the `ini` package): skip blank lines and `#`/`;` comment lines, split on
- * the first `=`, then run both sides through ini's `unsafe()` so surrounding
- * quotes are stripped, an unescaped inline `#`/`;` comment is truncated, and
- * backslash escapes are honored. Returns null when the file is missing or
- * unreadable so callers can distinguish "no file" from "file with no entries".
+ * the first `=` (a valueless line is a bare flag ini reads as `true`), then run
+ * both sides through ini's `unsafe()` so surrounding quotes are stripped, an
+ * unescaped inline `#`/`;` comment is truncated, and backslash escapes are
+ * honored. Returns null when the file is missing or unreadable so callers can
+ * distinguish "no file" from "file with no entries".
  */
 export function readNpmrcEntries(path: string): NpmrcEntry[] | null {
   if (!existsSync(path)) {
@@ -39,12 +40,13 @@ export function parseNpmrcContent(raw: string): NpmrcEntry[] {
     if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
       continue;
     }
+    // A line with no `=` is a bare flag, which ini reads as `true` (its regex
+    // leaves the value group unmatched, so valueRaw defaults to true), not a
+    // dropped line. Skipping it loses a bare `always-auth`/`strict-ssl` and
+    // flips the credential/TLS decision a consumer derives from it.
     const eq = trimmed.indexOf('=');
-    if (eq === -1) {
-      continue;
-    }
-    const rawKey = iniUnsafe(trimmed.slice(0, eq));
-    const value = iniUnsafe(trimmed.slice(eq + 1));
+    const rawKey = iniUnsafe(eq === -1 ? trimmed : trimmed.slice(0, eq));
+    const value = eq === -1 ? 'true' : iniUnsafe(trimmed.slice(eq + 1));
     // ini (bracketedArray on by default) treats a `key[]` suffix as an array
     // append: the bare key collects each value, instead of a literal `key[]`
     // entry holding only the last one.
@@ -89,10 +91,12 @@ function isQuoted(val: string): boolean {
 }
 
 /**
- * Mirrors the `ini` package's `unsafe()`: trims, strips a single pair of
- * surrounding quotes (single-quoted is literal, double-quoted is JSON-decoded),
- * and for an unquoted value stops at the first unescaped `;`/`#` (inline
- * comment) while honoring `\` escapes.
+ * Follows the `ini` package's `unsafe()`: trims, strips a single pair of
+ * surrounding quotes (double-quoted is JSON-decoded), and for an unquoted value
+ * stops at the first unescaped `;`/`#` (inline comment) while honoring `\`
+ * escapes. ini also JSON-decodes a single-quoted value's contents; we keep them
+ * verbatim, which only differs when those contents are valid JSON (never a
+ * registry, token, or path).
  * See https://github.com/isaacs/ini/blob/a0c72fe9e335a3f949d734fb5ef13371a850bbe3/lib/ini.js#L230
  */
 function iniUnsafe(raw: string): string {
