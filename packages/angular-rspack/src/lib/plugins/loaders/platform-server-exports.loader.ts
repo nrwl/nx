@@ -58,7 +58,8 @@ export default function loader(
     const serverAssetsRequest = JSON.stringify(
       join(__dirname, '../../ssr/server-assets')
     );
-    // The engine manifest strips a trailing slash from the base HREF.
+    // The engine matches basePath against URL pathnames verbatim, so it must
+    // not keep the base HREF's trailing slash.
     let basePath = engineWiring.baseHref || '/';
     if (basePath.length > 1 && basePath.endsWith('/')) {
       basePath = basePath.slice(0, -1);
@@ -86,7 +87,8 @@ export default function loader(
         __ngRspackJoinPath(__dirname, ${JSON.stringify(
           engineWiring.browserOutputRelativePath
         )}),
-        ${JSON.stringify(engineWiring.indexOutputName)}
+        ${JSON.stringify(engineWiring.indexOutputName)},
+        ${JSON.stringify(engineWiring.inlineCriticalCss)}
       ),
     });
     __ngRspackSetAngularAppEngineManifest({

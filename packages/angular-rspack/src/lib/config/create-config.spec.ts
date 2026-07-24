@@ -334,6 +334,34 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should reject locale inlining when an output mode is set', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+
+      await expect(
+        _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          outputMode: 'server',
+          localize: ['fr'],
+          i18nMetadata: {
+            sourceLocale: 'en-US',
+            locales: { fr: { translation: [] } },
+          },
+        })
+      ).rejects.toThrow(
+        'Locale inlining ("localize") is not supported when "outputMode" is set. Please build each locale separately.'
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it('should define a runtime import.meta.url for the server bundle', async () => {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
     try {
