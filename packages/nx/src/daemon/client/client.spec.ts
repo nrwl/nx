@@ -1,26 +1,34 @@
 import { rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname } from 'node:path';
 
 // Point the daemon log at a path this spec controls so both states — log
 // missing (first run in a fresh environment) and log present — are reachable.
+// The directory is unique per run so parallel jest workers cannot collide on it
+// and no other user can pre-plant the path on a shared machine.
 jest.mock('../tmp-dir', () => {
   const actual = jest.requireActual('../tmp-dir');
   const { join: joinPath } = require('node:path');
+  const { mkdtempSync } = require('node:fs');
   const { tmpdir: osTmpDir } = require('node:os');
   return {
     ...actual,
-    DAEMON_OUTPUT_LOG_FILE: joinPath(osTmpDir(), 'nx-spec-daemon-output.log'),
+    DAEMON_OUTPUT_LOG_FILE: joinPath(
+      mkdtempSync(joinPath(osTmpDir(), 'nx-spec-daemon-')),
+      'daemon.log'
+    ),
   };
 });
 
+import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
 import { daemonProcessException } from './client';
-
-const logFile = join(tmpdir(), 'nx-spec-daemon-output.log');
 
 describe('daemonProcessException', () => {
   afterEach(() => {
     rmSync(logFile, { force: true });
+  });
+
+  afterAll(() => {
+    rmSync(dirname(logFile), { recursive: true, force: true });
   });
 
   it('should append the tail of the daemon log when one exists', () => {

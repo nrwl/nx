@@ -42,7 +42,8 @@ export const DAEMON_OUTPUT_LOG_FILE = join(
 export const getDaemonSocketDir = () =>
   join(
     getSocketDir(),
-    // As per notes above on socket/named pipe length limitations, we keep this intentionally short
+    // Kept intentionally short to stay under the socket/named pipe path length
+    // limit enforced by `assertValidSocketPath` in socket-utils.ts.
     'd.sock'
   );
 
@@ -93,9 +94,9 @@ function socketDirName() {
 }
 
 function pluginSocketDirName() {
-  // Kept intentionally short (see notes above on socket path length limits) so
-  // that the workspace-scoped plugin socket directory still leaves room for the
-  // socket file name within the OS limit. Lives under the same stable socket
+  // Kept intentionally short (the limit is enforced by `assertValidSocketPath`
+  // in socket-utils.ts) so that the workspace-scoped plugin socket directory
+  // still leaves room for the socket file name. Lives under the same stable socket
   // root as the daemon socket so a single sandbox allowlist entry covers both.
   const hash = createHash('sha256')
     .update(workspaceRoot.toLowerCase())
