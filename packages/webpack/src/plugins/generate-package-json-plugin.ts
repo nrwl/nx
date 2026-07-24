@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import type { Compiler, WebpackPluginInstance } from 'webpack';
 import {
-  createLockFile,
   createPackageJson,
+  createPrunedLockfile,
+  emitPrunedPnpmInstallAssets,
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
   HelperDependency,
@@ -86,6 +87,9 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
               isProduction: true,
               helperDependencies: helperDependencies.map((dep) => dep.target),
               skipPackageManager: this.options.skipPackageManager,
+              // A pruned lockfile is always emitted alongside (except for bun,
+              // which ignores pnpm config), so drop baked pnpm config here.
+              prunedLockfile: true,
             }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
@@ -95,10 +99,6 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             ...runtimeDependencies,
           };
 
-          compilation.emitAsset(
-            'package.json',
-            new sources.RawSource(serializeJson(packageJson))
-          );
           const packageManager = detectPackageManager(this.options.root);
 
           if (packageManager === 'bun') {
@@ -108,17 +108,37 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
                 'Bun lockfile generation is not supported. Only package.json will be generated.'
               );
           } else {
+            const { lockFileContent, pruned } = createPrunedLockfile(
+              packageJson,
+              this.options.projectGraph,
+              this.options.projectGraph.nodes[this.options.projectName].data
+                .root,
+              this.options.root,
+              packageManager
+            );
             compilation.emitAsset(
               getLockFileName(packageManager),
-              new sources.RawSource(
-                createLockFile(
-                  packageJson,
-                  this.options.projectGraph,
-                  packageManager
-                )
-              )
+              new sources.RawSource(lockFileContent)
             );
+            if (packageManager === 'pnpm') {
+              emitPrunedPnpmInstallAssets(
+                this.options.root,
+                lockFileContent,
+                packageJson,
+                (assetPath, content) =>
+                  compilation.emitAsset(
+                    assetPath,
+                    new sources.RawSource(content)
+                  ),
+                { includeLocalPathArtifacts: pruned }
+              );
+            }
           }
+
+          compilation.emitAsset(
+            'package.json',
+            new sources.RawSource(serializeJson(packageJson))
+          );
         }
       );
     });

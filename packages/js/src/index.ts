@@ -20,7 +20,12 @@ export { isValidVariable } from './utils/is-valid-variable';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export {
   createLockFile,
+  createPrunedLockfile,
   getLockFileName,
 } from 'nx/src/plugins/js/lock-file/lock-file';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
+export {
+  emitPrunedPnpmInstallAssets,
+  writePrunedPnpmInstallSettings,
+} from 'nx/src/utils/package-json';

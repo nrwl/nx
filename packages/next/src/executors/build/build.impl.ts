@@ -6,7 +6,12 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
+import {
+  createPackageJson,
+  createPrunedLockfile,
+  getLockFileName,
+  writePrunedPnpmInstallSettings,
+} from '@nx/js';
 import { join, resolve as pathResolve } from 'path';
 import { cpSync, existsSync, writeFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
@@ -84,6 +89,9 @@ export default async function buildExecutor(
       isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
       skipOverrides: options.skipOverrides,
       skipPackageManager: options.skipPackageManager,
+      // Only drop baked pnpm config from the manifest when a pruned lockfile
+      // accompanies it; otherwise a fresh install needs it to resolve.
+      prunedLockfile: !!options.generateLockfile,
     }
   );
 
@@ -93,28 +101,41 @@ export default async function buildExecutor(
   };
 
   updatePackageJson(builtPackageJson, context);
+
+  const packageManager = detectPackageManager(context.root);
+  let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
+  if (options.generateLockfile && packageManager !== 'bun') {
+    prunedLockfile = createPrunedLockfile(
+      builtPackageJson,
+      context.projectGraph,
+      projectRoot,
+      context.root,
+      packageManager
+    );
+  }
   writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
 
   if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
-
     if (packageManager === 'bun') {
       logger.warn(
         'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
       );
     } else {
-      const lockFile = createLockFile(
-        builtPackageJson,
-        context.projectGraph,
-        packageManager
-      );
       writeFileSync(
         `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
+        prunedLockfile.lockFileContent,
         {
           encoding: 'utf-8',
         }
       );
+      if (packageManager === 'pnpm') {
+        writePrunedPnpmInstallSettings(
+          options.outputPath,
+          context.root,
+          prunedLockfile.lockFileContent,
+          { includeLocalPathArtifacts: prunedLockfile.pruned }
+        );
+      }
     }
   }
 

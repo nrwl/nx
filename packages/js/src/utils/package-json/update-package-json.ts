@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
-  createLockFile,
+  createPrunedLockfile,
   getLockFileName,
 } from 'nx/src/plugins/js/lock-file/lock-file';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
@@ -24,7 +24,11 @@ import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from 'nx/src/utils/fileutils';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import {
+  type PackageJson,
+  stripPrunedLockfilePnpmConfig,
+  writePrunedPnpmInstallSettings,
+} from 'nx/src/utils/package-json';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
@@ -73,6 +77,9 @@ export function updatePackageJson(
         root: context.root,
         // By default we remove devDependencies since this is a production build.
         isProduction: true,
+        // Only drop baked pnpm config from the manifest when a pruned lockfile
+        // accompanies it; otherwise a fresh install needs it to resolve.
+        prunedLockfile: !!options.generateLockfile,
       },
       fileMap
     );
@@ -96,6 +103,12 @@ export function updatePackageJson(
     packageJson = fileExists(pathToPackageJson)
       ? readJsonFile(pathToPackageJson)
       : { name: context.projectName, version: '0.0.1' };
+    // The buildable-deps branch above strips pnpm config via createPackageJson's
+    // prunedLockfile flag; mirror it here so a verbatim manifest paired with a
+    // pruned lockfile does not trip ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    if (options.generateLockfile) {
+      stripPrunedLockfilePnpmConfig(packageJson);
+    }
   }
 
   if (packageJson.type === 'module') {
@@ -117,28 +130,42 @@ export function updatePackageJson(
   // update package specific settings
   packageJson = getUpdatedPackageJsonContent(packageJson, options);
 
+  const packageManager = detectPackageManager(context.root);
+  let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
+  if (options.generateLockfile && packageManager !== 'bun') {
+    prunedLockfile = createPrunedLockfile(
+      packageJson,
+      context.projectGraph,
+      options.projectRoot,
+      context.root,
+      packageManager
+    );
+  }
+
   // save files
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 
   if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
     if (packageManager === 'bun') {
       logger.warn(
         `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
       );
     } else {
-      const lockFile = createLockFile(
-        packageJson,
-        context.projectGraph,
-        packageManager
-      );
       writeFileSync(
         `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
+        prunedLockfile.lockFileContent,
         {
           encoding: 'utf-8',
         }
       );
+      if (packageManager === 'pnpm') {
+        writePrunedPnpmInstallSettings(
+          options.outputPath,
+          context.root,
+          prunedLockfile.lockFileContent,
+          { includeLocalPathArtifacts: prunedLockfile.pruned }
+        );
+      }
     }
   }
 }

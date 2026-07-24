@@ -1,5 +1,6 @@
 import {
   pruneProjectGraph,
+  findLocalPathNode,
   findNodeMatchingVersion,
   addNodesAndDependencies,
   rehoistNodes,
@@ -468,6 +469,37 @@ describe('project-graph-pruning', () => {
     });
   });
 
+  describe('findLocalPathNode', () => {
+    it('throws when two local-path packages share a package name', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendored-lib@file:libs/vendored-a': {
+            type: 'npm',
+            name: 'npm:vendored-lib@file:libs/vendored-a',
+            data: {
+              packageName: 'vendored-lib',
+              version: 'file:libs/vendored-a',
+            },
+          },
+          'npm:vendored-lib@file:libs/vendored-b': {
+            type: 'npm',
+            name: 'npm:vendored-lib@file:libs/vendored-b',
+            data: {
+              packageName: 'vendored-lib',
+              version: 'file:libs/vendored-b',
+            },
+          },
+        },
+      };
+
+      expect(() => findLocalPathNode(graph, 'vendored-lib')).toThrow(
+        'Multiple local-path packages named "vendored-lib" were found in the lock file (file:libs/vendored-a, file:libs/vendored-b)'
+      );
+    });
+  });
+
   describe('pruneProjectGraph', () => {
     let graph: ProjectGraph;
     let workspacePackages: Map<string, ProjectGraphProjectNode>;
@@ -671,6 +703,155 @@ describe('project-graph-pruning', () => {
       expect(() => pruneProjectGraph(graph, prunedPackageJson)).toThrow(
         'Pruned lock file creation failed'
       );
+    });
+
+    it('carries a nodeless link: dependency without throwing under pnpm', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'link:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'pnpm')
+      ).not.toThrow();
+    });
+
+    it('still throws on a nodeless file: dependency under pnpm', () => {
+      // A file: dep needs a packages: entry, so a nodeless one means a stale
+      // lockfile; carrying it would emit a broken importer-only entry.
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'pnpm')
+      ).toThrow('Pruned lock file creation failed');
+    });
+
+    it('still throws on a nodeless link: dependency under npm', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'link:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'npm')
+      ).toThrow('Pruned lock file creation failed');
+    });
+
+    it('still throws on a nodeless link: dependency under yarn', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'link:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'yarn')
+      ).toThrow('Pruned lock file creation failed');
+    });
+
+    it('still throws on a nodeless link: dependency when no package manager is given', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'link:../vendored-lib' },
+      };
+
+      expect(() => pruneProjectGraph(graph, prunedPackageJson)).toThrow(
+        'Pruned lock file creation failed'
+      );
+    });
+
+    it('treats a link: to a workspace project as a workspace module under any pm', () => {
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'workspace-lib': 'link:../workspace-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'npm')
+      ).not.toThrow();
+      expect(
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'npm').nodes[
+          'workspace-lib'
+        ]
+      ).toBeDefined();
+    });
+
+    it('matches a file: dependency to its local-path node by name under pnpm', () => {
+      graph.externalNodes['npm:vendored-lib'] = {
+        type: 'npm',
+        name: 'npm:vendored-lib',
+        data: {
+          packageName: 'vendored-lib',
+          version: 'file:libs/vendored-lib',
+        },
+      };
+      graph.dependencies['npm:vendored-lib'] = [];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:../vendored-lib' },
+      };
+
+      const prunedGraph = pruneProjectGraph(
+        graph,
+        prunedPackageJson,
+        undefined,
+        'pnpm'
+      );
+
+      expect(
+        prunedGraph.externalNodes?.['npm:vendored-lib']?.data.version
+      ).toBe('file:libs/vendored-lib');
+    });
+
+    it('does not match a file: dependency to a local-path node by name under npm', () => {
+      graph.externalNodes['npm:vendored-lib'] = {
+        type: 'npm',
+        name: 'npm:vendored-lib',
+        data: {
+          packageName: 'vendored-lib',
+          version: 'file:libs/vendored-lib',
+        },
+      };
+      graph.dependencies['npm:vendored-lib'] = [];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'npm')
+      ).toThrow('Pruned lock file creation failed');
+    });
+
+    it('does not match a file: dependency to a local-path node by name under yarn', () => {
+      graph.externalNodes['npm:vendored-lib'] = {
+        type: 'npm',
+        name: 'npm:vendored-lib',
+        data: {
+          packageName: 'vendored-lib',
+          version: 'file:libs/vendored-lib',
+        },
+      };
+      graph.dependencies['npm:vendored-lib'] = [];
+      const prunedPackageJson: PackageJson = {
+        name: 'test',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:../vendored-lib' },
+      };
+
+      expect(() =>
+        pruneProjectGraph(graph, prunedPackageJson, undefined, 'yarn')
+      ).toThrow('Pruned lock file creation failed');
     });
 
     it('should handle complex dependency tree', () => {

@@ -5,7 +5,12 @@ import {
   writeJsonFile,
   type ExecutorContext,
 } from '@nx/devkit';
-import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
+import {
+  createPackageJson,
+  createPrunedLockfile,
+  getLockFileName,
+  writePrunedPnpmInstallSettings,
+} from '@nx/js';
 import { fork } from 'child_process';
 import { copySync, mkdir, statSync, writeFileSync } from 'fs-extra';
 import { type PackageJson } from 'nx/src/utils/package-json';
@@ -68,6 +73,7 @@ export default async function buildExecutor(
   if (!outputIsDirectory) {
     mkdir(options.outputPath);
   }
+  const packageManager = detectPackageManager(context.root);
   let packageJson: PackageJson;
   if (options.generatePackageJson) {
     packageJson = createPackageJson(context.projectName, context.projectGraph, {
@@ -75,6 +81,9 @@ export default async function buildExecutor(
       root: context.root,
       isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
       skipPackageManager: options.skipPackageManager,
+      // Only drop baked pnpm config from the manifest when a pruned lockfile
+      // accompanies it; otherwise a fresh install needs it to resolve.
+      prunedLockfile: !!options.generateLockfile,
     });
 
     // Update `package.json` to reflect how users should run the build artifacts
@@ -85,31 +94,45 @@ export default async function buildExecutor(
     }
 
     updatePackageJson(packageJson, context);
-    writeJsonFile(`${options.outputPath}/package.json`, packageJson);
   } else {
     packageJson = readJsonFile(join(projectRoot, 'package.json'));
   }
 
-  if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
+  let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
+  if (options.generateLockfile && packageManager !== 'bun') {
+    prunedLockfile = createPrunedLockfile(
+      packageJson,
+      context.projectGraph,
+      projectRoot,
+      context.root,
+      packageManager
+    );
+  }
+  if (options.generatePackageJson) {
+    writeJsonFile(`${options.outputPath}/package.json`, packageJson);
+  }
 
+  if (options.generateLockfile) {
     if (packageManager === 'bun') {
       logger.warn(
         'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
       );
     } else {
-      const lockFile = createLockFile(
-        packageJson,
-        context.projectGraph,
-        packageManager
-      );
       writeFileSync(
         `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
+        prunedLockfile.lockFileContent,
         {
           encoding: 'utf-8',
         }
       );
+      if (packageManager === 'pnpm') {
+        writePrunedPnpmInstallSettings(
+          options.outputPath,
+          context.root,
+          prunedLockfile.lockFileContent,
+          { includeLocalPathArtifacts: prunedLockfile.pruned }
+        );
+      }
     }
   }
 

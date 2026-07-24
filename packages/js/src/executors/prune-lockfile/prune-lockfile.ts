@@ -14,16 +14,19 @@ import { interpolate } from 'nx/src/tasks-runner/utils';
 import {
   type PackageJson,
   type PackageJsonDependencySection,
+  stripPrunedLockfilePnpmConfig,
+  writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
   getLockFileName,
-  createLockFile,
+  createPrunedLockfile,
 } from 'nx/src/plugins/js/lock-file/lock-file';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
+import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -44,16 +47,36 @@ export default async function pruneLockfileExecutor(
       JSON.stringify(packageJson, null, 2)
     );
   } else {
-    const { lockfileName, lockFile } = createPrunedLockfile(
+    const { project } = parseTargetString(schema.buildTarget, context);
+    const projectRoot = context.projectGraph.nodes[project].data.root;
+    const { lockFileContent, pruned } = createPrunedLockfile(
       packageJson,
-      context.projectGraph
+      context.projectGraph,
+      projectRoot,
+      workspaceRoot,
+      packageManager
     );
-    const lockfileOutputPath = join(outputDirectory, lockfileName);
-    writeFileSync(lockfileOutputPath, lockFile);
+    rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
+    const lockfileOutputPath = join(
+      outputDirectory,
+      getLockFileName(packageManager)
+    );
+    writeFileSync(lockfileOutputPath, lockFileContent);
+    // The pruned lockfile bakes pnpm config into its snapshots, so strip the
+    // manifest's pnpm config to avoid ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    stripPrunedLockfilePnpmConfig(packageJson);
     writeFileSync(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)
     );
+    if (packageManager === 'pnpm') {
+      writePrunedPnpmInstallSettings(
+        outputDirectory,
+        workspaceRoot,
+        lockFileContent,
+        { includeLocalPathArtifacts: pruned }
+      );
+    }
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
 
@@ -62,30 +85,54 @@ export default async function pruneLockfileExecutor(
   };
 }
 
-function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
-  const packageManager = detectPackageManager(workspaceRoot);
-  const lockfileName = getLockFileName(packageManager);
-  const lockFile = createLockFile(packageJson, graph, packageManager);
-
+// Point every workspace-module dependency at its copied directory so the
+// standalone output installs them as pnpm `file:` directory dependencies.
+// pnpm rejects a `file:` spec under peerDependencies, so a peer-declared
+// workspace module is moved into dependencies instead (an optional peer
+// becomes required, which is moot since the module is always copied in). Gate
+// strictly on graph membership: a `file:`/`link:` spec to a non-workspace
+// local path (e.g. a vendored tarball) is left alone, since
+// copy-workspace-modules only ever copies actual workspace projects.
+function rewriteWorkspaceModuleSpecifiers(
+  packageJson: PackageJson,
+  graph: ProjectGraph
+) {
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (
-      pkgVersion.startsWith('workspace:') ||
-      pkgVersion.startsWith('file:') ||
-      pkgVersion.startsWith('link:') ||
-      workspacePackages.has(pkgName)
-    ) {
-      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
+  for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const pkgName of Object.keys(deps)) {
+      if (!workspacePackages.has(pkgName)) {
+        continue;
+      }
+      const fileSpec = `file:./workspace_modules/${pkgName}`;
+      if (section === 'peerDependencies') {
+        (packageJson.dependencies ??= {})[pkgName] = fileSpec;
+        delete deps[pkgName];
+        // drop the now-orphaned optional/required marker for the moved module
+        if (packageJson.peerDependenciesMeta) {
+          delete packageJson.peerDependenciesMeta[pkgName];
+        }
+      } else {
+        deps[pkgName] = fileSpec;
+      }
     }
   }
-
-  return {
-    lockfileName,
-    lockFile,
-  };
+  if (
+    packageJson.peerDependencies &&
+    Object.keys(packageJson.peerDependencies).length === 0
+  ) {
+    delete packageJson.peerDependencies;
+  }
+  if (
+    packageJson.peerDependenciesMeta &&
+    Object.keys(packageJson.peerDependenciesMeta).length === 0
+  ) {
+    delete packageJson.peerDependenciesMeta;
+  }
 }
 
 /**

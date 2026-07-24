@@ -9,6 +9,7 @@ import {
 import {
   getDependencyVersionFromPackageJson,
   PackageJson,
+  stripPrunedLockfilePnpmConfig,
 } from '../../../utils/package-json';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
@@ -43,6 +44,15 @@ export function createPackageJson(
     helperDependencies?: string[];
     skipPackageManager?: boolean;
     skipOverrides?: boolean;
+    /**
+     * Set when a pruned pnpm lockfile is emitted alongside this package.json.
+     * The lockfile bakes overrides, ignoredOptionalDependencies, and
+     * packageExtensions into its resolved snapshots and checksums, so they are
+     * dropped from the manifest to avoid ERR_PNPM_LOCKFILE_CONFIG_MISMATCH on
+     * pnpm <=10. Leave unset when only a package.json is generated, so a fresh
+     * install still resolves with them.
+     */
+    prunedLockfile?: boolean;
   } = {},
   fileMap: ProjectFileMap = null
 ): PackageJson {
@@ -302,6 +312,14 @@ export function createPackageJson(
     };
   }
   // endregion Overrides/Resolutions
+
+  // When a pruned pnpm lockfile ships alongside, the manifest must not re-declare
+  // pnpm config the lockfile already baked into its snapshots and checksums, or
+  // pnpm <=10 aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH (pnpm 11 ignores the
+  // package.json `pnpm` field anyway).
+  if (options.prunedLockfile) {
+    stripPrunedLockfilePnpmConfig(packageJson);
+  }
 
   return packageJson;
 }
