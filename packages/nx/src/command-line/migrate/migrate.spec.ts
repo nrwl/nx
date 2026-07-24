@@ -69,6 +69,7 @@ import {
 import type { MigrateArgs } from './command-object';
 import { applyNxJsonMigrateDefaults } from './migrate-config';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
 import {
   readPromptFilesFromInstall,
   validateMigrationEntries,
@@ -5333,15 +5334,20 @@ module.exports = {
   });
 
   describe('generateMigrationsJsonAndUpdatePackageJson (--include=optional)', () => {
+    let tempFs: TempFs;
     let root: string;
 
     beforeEach(() => {
-      root = mkdtempSync(join(tmpdir(), 'nx-migrate-optional-'));
+      // TempFs, not a bare mkdtemp: this path formats the files it writes, and
+      // the formatter resolves config from the workspace root. Without moving
+      // the root, that resolution escapes into the real repo.
+      tempFs = new TempFs('nx-migrate-optional');
+      root = tempFs.tempDir;
       writeFileSync(join(root, 'nx.json'), JSON.stringify({}));
     });
 
     afterEach(() => {
-      rmSync(root, { recursive: true, force: true });
+      tempFs.cleanup();
     });
 
     // NXC-4590: under `--include=optional` the target package (e.g. `nx`) is in
