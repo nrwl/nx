@@ -6,12 +6,10 @@ import { claudeMcpJsonPath } from '../../ai/constants';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
 import {
   Agent,
-  agentConfigWriteBlockedLines,
   agentDisplayMap,
   AgentConfiguration,
   configureAgents,
   getAgentConfigurations,
-  isPermissionWriteError,
   supportedAgents,
 } from '../../ai/utils';
 import { daemonClient } from '../../daemon/client/client';
@@ -285,17 +283,10 @@ export async function configureAiAgentsHandlerImpl(
         });
       } catch (e) {
         configSpinner.fail('Failed to configure AI agents');
-        if (isPermissionWriteError(e)) {
-          output.error({
-            title: 'Nx was not permitted to write the AI agent configuration',
-            bodyLines: agentConfigWriteBlockedLines(e),
-          });
-        } else {
-          output.error({
-            title: 'Error details:',
-            bodyLines: [e.message],
-          });
-        }
+        output.error({
+          title: 'Error details:',
+          bodyLines: [e.message],
+        });
         process.exit(1);
       }
     } else {
@@ -420,17 +411,10 @@ export async function configureAiAgentsHandlerImpl(
     return;
   } catch (e) {
     configSpinner.fail('Failed to set up AI agents');
-    if (isPermissionWriteError(e)) {
-      output.error({
-        title: 'Nx was not permitted to write the AI agent configuration',
-        bodyLines: agentConfigWriteBlockedLines(e),
-      });
-    } else {
-      output.error({
-        title: 'Error details:',
-        bodyLines: [e.message],
-      });
-    }
+    output.error({
+      title: 'Error details:',
+      bodyLines: [e.message],
+    });
     process.exit(1);
   }
 }
