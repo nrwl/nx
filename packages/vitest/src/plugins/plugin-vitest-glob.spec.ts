@@ -145,7 +145,7 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       'libs/lib1/package.json': '{"name":"lib1"}',
       // `custom/**/*.spec.ts` must match a file directly in `custom` and
       // `**/skip/**` must exclude a directory directly under the project root
-      // — both require `**` to match zero path segments, like Vitest's glob.
+      // both require `**` to match zero path segments, like Vitest's glob.
       'libs/lib1/custom/a.spec.ts': '',
       'libs/lib1/custom/deep/b.spec.ts': '',
       'libs/lib1/custom/skip/c.spec.ts': '',

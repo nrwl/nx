@@ -23,6 +23,7 @@ import {
 import { existsSync, readdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import type { ResolvedConfig } from 'vite';
 import type { InlineConfig } from 'vitest/node';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -305,10 +306,7 @@ async function buildVitestTargets(
       // `dir`) are absent from the build resolution used above for outputs.
       // Resolve under `mode: 'test'` to match Vitest, which defaults the Vite
       // mode to 'test'; a config that branches on `command`/`mode` would
-      // otherwise enumerate a different spec set here than at test time. The
-      // opt-out path lets `createVitest` resolve its own config but still needs
-      // the serve `test.dir` from here (a relative one would otherwise resolve
-      // against the workspace root at graph-creation time, not the project).
+      // otherwise enumerate a different spec set here than at test time.
       const viteServeConfig = await resolveConfig(
         {
           configFile: absoluteConfigFilePath,
@@ -646,7 +644,7 @@ function checkIfConfigFileShouldBeProject(
 async function getTestPathsRelativeToProjectRoot(
   projectRoot: string,
   workspaceRoot: string,
-  viteConfig: Record<string, any> | undefined,
+  viteConfig: ResolvedConfig | undefined,
   // Serve-resolved `test.dir` (the command Vitest runs under). Only used on the
   // opt-out path below, which receives no `viteConfig` to read it from.
   optOutTestDir: string | undefined
@@ -835,8 +833,14 @@ const vitestWorkspaceFiles = ['vitest.workspace', 'vitest.projects'].flatMap(
  * glob, so enumeration must go through Vitest itself.
  */
 function configRequiresVitestRuntime(
-  test: Record<string, any>,
-  viteConfig: Record<string, any>,
+  // `workspace` (removed in Vitest 4) and the CLI-only `changed`/`related`
+  // filters are not part of the config-file `InlineConfig` type.
+  test: InlineConfig & {
+    workspace?: unknown;
+    changed?: unknown;
+    related?: unknown;
+  },
+  viteConfig: Pick<ResolvedConfig, 'plugins'>,
   projectDir: string
 ): boolean {
   // Multi-project configs resolve include/exclude per sub-project.
@@ -881,7 +885,7 @@ function configRequiresVitestRuntime(
     return true;
   }
   // A plugin can inject or reshape projects through this Vitest-only hook.
-  const plugins: unknown[] = viteConfig?.plugins ?? [];
+  const plugins: readonly unknown[] = viteConfig?.plugins ?? [];
   return plugins.some(
     (plugin) =>
       plugin && typeof plugin === 'object' && 'configureVitest' in plugin
