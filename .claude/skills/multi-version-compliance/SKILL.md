@@ -169,10 +169,12 @@ comment.
       version-map coverage.
     - Section D → `requires` gates per package per AND-semantics; split
       mixed entries; retain intentional pre-floor entries. **Default to
-      bilateral bounds** (`>=N <M`) when writing a cross-major gate.
-      One-sided gates (`<N` with no lower, `>=N` with no upper) need a
-      justified reason (legacy cleanup, undefined source, v0→v1 bridge)
-      — record the reason in the findings doc or as a code comment.
+      bilateral bounds** (`>=N <M`) for cross-major `packageJsonUpdates`
+      windows. One-sided windows (`<N` with no lower, `>=N` with no
+      upper) need a justified reason (legacy cleanup, undefined source,
+      v0→v1 bridge) — record the reason in the findings doc or as a code
+      comment. Migration entries gate on the destination instead,
+      usually `>=N` alone (checklist below).
     - Section E → executor and inferred-plugin feature gates.
     - Section F → below-floor throw via shared util.
     - **Cross-cutting:** if the fix changes runtime behavior, update any
@@ -375,8 +377,9 @@ For plugins managing multiple primary packages, repeat the install-map
 ### D. Migrations (migrations.json + packageJsonUpdates)
 
 - [ ] Cross-major `packageJsonUpdates` declare `requires` per bumped package
-- [ ] `requires` ranges are bilateral (`>=N <M`) by default. One-sided ranges (`<N` with no lower, `>=N` with no upper) are intentional (legacy cleanup, undefined source major, v0→v1 bridge) — flagged in "Needs human decision" or noted in the Findings.
-- [ ] Every migration declares `requires` against the touched package
+- [ ] `packageJsonUpdates` `requires` windows are bilateral (`>=N <M`) by default. One-sided ranges (`<N` with no lower, `>=N` with no upper) are intentional (legacy cleanup, undefined source major, v0→v1 bridge) — flagged in "Needs human decision" or noted in the Findings.
+- [ ] Migration entries gate on the destination: `requires` evaluates once at collection time against the version the package lands on in this run (installed only when the run does not bump it), so a bound meant as the source window (`>=9 <10` for "migrating from 9") skips whenever the run bumps past the cap (the storybook bug, #33613). Default is `>=N` alone; add an upper bound only when the migration is inapplicable at or above it (`next >=15.0.0 <16.0.0` on the next-15 instructions entry). Semantics: `.claude/skills/author-migration/SKILL.md`, `requires` section.
+- [ ] A migration declares a gate only when its behavior depends on the touched package's version; conditions `requires` cannot express (an OR of alternative package names) get an in-body check instead
 - [ ] Nx-only migrations have no third-party `requires`
 - [ ] No silent gap in `packageJsonUpdates` across the support window
 
