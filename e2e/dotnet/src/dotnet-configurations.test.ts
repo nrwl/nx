@@ -203,7 +203,6 @@ describe('.NET Plugin - Configuration Behavior', () => {
           expect.objectContaining({
             target: 'build:release',
             params: 'forward',
-            options: 'forward',
           }),
         ])
       );
@@ -218,7 +217,6 @@ describe('.NET Plugin - Configuration Behavior', () => {
           expect.objectContaining({
             target: 'build:release',
             params: 'forward',
-            options: 'forward',
           }),
         ])
       );
@@ -234,7 +232,6 @@ describe('.NET Plugin - Configuration Behavior', () => {
             target: 'build:release',
             dependencies: true,
             params: 'forward',
-            options: 'forward',
           }),
         ])
       );
