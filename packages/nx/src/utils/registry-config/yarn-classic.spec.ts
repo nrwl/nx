@@ -299,6 +299,20 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
+  it('bridges an unscoped registry auth token when a bare always-auth flag is set', () => {
+    // ini reads a valueless `always-auth` as true, so yarn authenticates the
+    // unscoped fetch and the token must be bridged, same as `always-auth=true`.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+      'always-auth',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
   it('bridges an unscoped registry auth token when a registry-scoped always-auth is set', () => {
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
