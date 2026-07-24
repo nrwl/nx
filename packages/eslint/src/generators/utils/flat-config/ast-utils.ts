@@ -27,7 +27,7 @@ export function removeOverridesFromLintConfig(content: string): string {
     ts.ScriptKind.JS
   );
 
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
 
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
@@ -87,7 +87,7 @@ export function addPatternsToFlatConfigIgnoresBlock(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
@@ -131,7 +131,7 @@ export function hasFlatConfigIgnoresBlock(content: string): boolean {
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
@@ -180,7 +180,7 @@ export function hasOverride(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
@@ -372,7 +372,7 @@ export function replaceOverride(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
@@ -490,7 +490,7 @@ export function addImportToFlatConfig(
     ts.ScriptKind.JS
   );
 
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
 
   if (format === 'mjs') {
     return addESMImportToFlatConfig(source, printer, content, variable, imp);
@@ -783,7 +783,7 @@ export function removeImportFromFlatConfig(
     ts.ScriptKind.JS
   );
 
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   if (format === 'mjs') {
     return removeImportFromFlatConfigESM(source, content, variable, imp);
   } else {
@@ -861,6 +861,16 @@ function removeImportFromFlatConfigCJS(
 }
 
 /**
+ * Whether a flat config uses an ESM `export default` (vs CJS `module.exports`).
+ * AST-based so a commented-out `export default` in a CJS file isn't misdetected.
+ */
+export function isEsmExport(source: ts.SourceFile): boolean {
+  return source.statements.some(
+    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
+  );
+}
+
+/**
  * Injects new ts.expression to the end of the module.exports or export default array.
  */
 export function addBlockToFlatConfigExport(
@@ -879,7 +889,9 @@ export function addBlockToFlatConfigExport(
     ts.ScriptKind.JS
   );
 
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  // AST-based format detection so `module.exports = [...]` files with a
+  // commented-out `export default` example aren't mis-routed to the ESM path.
+  const format: 'mjs' | 'cjs' = isEsmExport(source) ? 'mjs' : 'cjs';
 
   // find the export default array statement
   if (format === 'mjs') {
@@ -1054,7 +1066,7 @@ export function removePlugin(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const changes: StringChange[] = [];
   if (format === 'mjs') {
     ts.forEachChild(source, function analyze(node) {
@@ -1217,7 +1229,7 @@ export function removeCompatExtends(
     ts.ScriptKind.JS
   );
   const changes: StringChange[] = [];
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
 
@@ -1286,7 +1298,7 @@ export function removePredefinedConfigs(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const changes: StringChange[] = [];
   let removeImport = true;
   const exportsArray =
@@ -1359,7 +1371,14 @@ export function addPluginsToExportsBlock(
  */
 export function addFlatCompatToFlatConfig(content: string) {
   const result = addImportToFlatConfig(content, 'js', '@eslint/js');
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   if (result.includes('const compat = new FlatCompat')) {
     return result;
   }
@@ -1917,6 +1936,112 @@ export function generateFlatPredefinedConfig(
   );
 
   return spread ? ts.factory.createSpreadElement(node) : node;
+}
+
+const DEFAULT_TYPED_LINTING_FILES = [
+  '**/*.ts',
+  '**/*.tsx',
+  '**/*.js',
+  '**/*.jsx',
+];
+
+/**
+ * Generates the AST for a `parserOptions` object that enables typed linting
+ * via typescript-eslint's project service (the recommended approach since
+ * typescript-eslint v8).
+ *
+ * Emits `tsconfigRootDir: import.meta.dirname` for `mjs` and
+ * `tsconfigRootDir: __dirname` for `cjs`.
+ */
+function generateProjectServiceParserOptions(
+  format: 'mjs' | 'cjs'
+): ts.ObjectLiteralExpression {
+  return ts.factory.createObjectLiteralExpression(
+    [
+      ts.factory.createPropertyAssignment(
+        'projectService',
+        ts.factory.createTrue()
+      ),
+      generateProjectDefusingAssignment(),
+      ts.factory.createPropertyAssignment(
+        'tsconfigRootDir',
+        format === 'mjs'
+          ? ts.factory.createPropertyAccessExpression(
+              ts.factory.createMetaProperty(
+                ts.SyntaxKind.ImportKeyword,
+                ts.factory.createIdentifier('meta')
+              ),
+              ts.factory.createIdentifier('dirname')
+            )
+          : ts.factory.createIdentifier('__dirname')
+      ),
+    ],
+    true
+  );
+}
+
+/**
+ * ESLint merges `parserOptions` across every config entry matching a file, and
+ * typescript-eslint rejects a merged truthy `project` next to `projectService`.
+ * A config can pick one up from anywhere it extends, spreads in, or composes,
+ * and several of those routes cannot be read statically, so the block
+ * neutralizes it outright. The comment carries the condition for dropping it,
+ * since only the user can check what the configs they pull in set.
+ */
+function generateProjectDefusingAssignment(): ts.PropertyAssignment {
+  const assignment = ts.factory.createPropertyAssignment(
+    'project',
+    ts.factory.createNull()
+  );
+  ts.addSyntheticLeadingComment(
+    assignment,
+    ts.SyntaxKind.SingleLineCommentTrivia,
+    ' `projectService` conflicts with a `parserOptions.project` set by any config',
+    true
+  );
+  ts.addSyntheticLeadingComment(
+    assignment,
+    ts.SyntaxKind.SingleLineCommentTrivia,
+    ' merged into this one. Remove this once you know none of them set it.',
+    true
+  );
+
+  return assignment;
+}
+
+/**
+ * Generates a flat-config override block enabling typed linting via the
+ * project service. Default files match the typed-linting block that
+ * generators historically emitted via `parserOptions.project`.
+ */
+export function generateTypedLintingFlatConfigOverride(
+  format: 'mjs' | 'cjs',
+  files: string[] = DEFAULT_TYPED_LINTING_FILES
+): ts.ObjectLiteralExpression {
+  return ts.factory.createObjectLiteralExpression(
+    [
+      ts.factory.createPropertyAssignment(
+        'files',
+        ts.factory.createArrayLiteralExpression(
+          files.map((f) => ts.factory.createStringLiteral(f)),
+          true
+        )
+      ),
+      ts.factory.createPropertyAssignment(
+        'languageOptions',
+        ts.factory.createObjectLiteralExpression(
+          [
+            ts.factory.createPropertyAssignment(
+              'parserOptions',
+              generateProjectServiceParserOptions(format)
+            ),
+          ],
+          true
+        )
+      ),
+    ],
+    true
+  );
 }
 
 export function mapFilePaths<

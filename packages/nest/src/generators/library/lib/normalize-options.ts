@@ -3,6 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   getNpmScope,
   isUsingTsSolutionSetup,
@@ -85,7 +86,7 @@ export function toJsLibraryGeneratorOptions(
     tags: options.tags,
     testEnvironment: options.testEnvironment,
     unitTestRunner: options.unitTestRunner,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
     addPlugin: options.addPlugin,
     useProjectJson: options.useProjectJson,
   };

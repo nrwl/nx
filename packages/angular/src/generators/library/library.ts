@@ -1,4 +1,5 @@
 import { logShowProjectCommand } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -166,7 +167,7 @@ async function addLinting(
     projectRoot: options.projectRoot,
     prefix: options.prefix,
     unitTestRunner: options.unitTestRunner,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
   });

@@ -11,6 +11,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { nxVersion } from '../../../utils/versions';
@@ -136,7 +137,7 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting: isTypedLintingEnabled(options),
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
         rootProject: options.rootProject,
@@ -157,7 +158,7 @@ export async function addE2e(
         appDisplayName: options.displayName,
         appName: options.simpleName,
         framework: 'expo',
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting: isTypedLintingEnabled(options),
         skipFormat: true,
       });
     case 'none':

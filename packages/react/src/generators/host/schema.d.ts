@@ -12,6 +12,10 @@ export interface Schema {
   linter: Linter | LinterType;
   name?: string;
   remotes?: string[];
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   skipFormat?: boolean;
   skipNxJson?: boolean;

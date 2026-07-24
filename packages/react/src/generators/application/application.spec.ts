@@ -653,6 +653,46 @@ describe('app', () => {
     });
   });
 
+  describe('--enableTypedLinting', () => {
+    it.each(['playwright', 'cypress'] as const)(
+      'should forward the flag to the %s e2e project',
+      async (e2eTestRunner) => {
+        await applicationGenerator(appTree, {
+          ...schema,
+          e2eTestRunner,
+          enableTypedLinting: true,
+        });
+
+        expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
+          'projectService: true'
+        );
+      }
+    );
+
+    it('should forward the deprecated setParserOptionsProject flag to the e2e project', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        e2eTestRunner: 'playwright',
+        setParserOptionsProject: true,
+      });
+
+      expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
+
+    it('should not set up typed linting in the e2e project by default', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        e2eTestRunner: 'playwright',
+      });
+
+      expect(
+        appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')
+      ).not.toContain('projectService');
+    });
+  });
+
   it('should generate functional components by default', async () => {
     await applicationGenerator(appTree, schema);
 

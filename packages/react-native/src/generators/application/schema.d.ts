@@ -11,6 +11,10 @@ export interface Schema {
   classComponent?: boolean;
   js?: boolean;
   linter: Linter | LinterType;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is cypress
   bundler: 'webpack' | 'vite'; // default is webpack

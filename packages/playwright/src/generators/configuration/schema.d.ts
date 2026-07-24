@@ -11,6 +11,10 @@ export interface ConfigurationGeneratorSchema {
   skipPackageJson?: boolean;
   skipInstall?: boolean;
   linter?: Linter | LinterType;
+  enableTypedLinting?: boolean; // default is false
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean; // default is false
   /**
    * command to give playwright to run the web server

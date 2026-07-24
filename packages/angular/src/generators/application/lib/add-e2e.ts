@@ -3,6 +3,7 @@ import {
   E2EWebServerDetails,
   readTargetDefaultsForTarget,
 } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -74,7 +75,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
       rootProject: options.rootProject,

@@ -1,5 +1,6 @@
 import { GeneratorCallback, joinPathFragments, Tree } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { NormalizedSchema } from './normalized-schema';
 
 export async function addLintingToApplication(
@@ -14,7 +15,7 @@ export async function addLintingToApplication(
     ],
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
     rootProject: options.rootProject,
     addPlugin: options.addPlugin,
   });
