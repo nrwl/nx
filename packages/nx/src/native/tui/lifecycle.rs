@@ -95,6 +95,31 @@ pub enum BatchStatus {
     Failure,
 }
 
+/// The workspace's relationship to Nx Cloud, as the TUI cares about it.
+///
+/// Crosses the napi boundary as the constructor's `Option<bool>` rather than
+/// its own type: JS already distinguishes "cloud is off for this workspace"
+/// (`undefined`) from connected (`true`) and not-yet-connected (`false`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CloudConnection {
+    /// Cloud is off for this workspace (NX_NO_CLOUD / neverConnectToCloud), so
+    /// the TUI shows no cloud state and offers no way to connect.
+    #[default]
+    Disabled,
+    Connected,
+    NotConnected,
+}
+
+impl From<Option<bool>> for CloudConnection {
+    fn from(is_connected: Option<bool>) -> Self {
+        match is_connected {
+            None => Self::Disabled,
+            Some(true) => Self::Connected,
+            Some(false) => Self::NotConnected,
+        }
+    }
+}
+
 /// A docs link rendered as an OSC 8 hyperlink. Both fields come from TS so the
 /// popup never hardcodes a URL.
 #[napi(object)]
@@ -357,7 +382,9 @@ impl AppLifeCycle {
         title_text: String,
         workspace_root: String,
         task_graph: TaskGraph,
-        is_cloud_enabled: Option<bool>,
+        // `None` when cloud is off for this workspace; otherwise whether it is
+        // already connected. See `CloudConnection`.
+        is_connected_to_cloud: Option<bool>,
     ) -> Self {
         // Get the target names from nx_args.targets
         let rust_tui_cli_args = tui_cli_args.into();
@@ -380,7 +407,7 @@ impl AppLifeCycle {
             std::collections::HashMap::new(), // estimated_task_timings - will be set later
             None,
         );
-        state.set_cloud_enabled(is_cloud_enabled.unwrap_or(false));
+        state.set_cloud_connection(is_connected_to_cloud.into());
         let shared_state = Arc::new(Mutex::new(state));
 
         // Default to FullScreen mode for the constructor
@@ -770,6 +797,43 @@ impl AppLifeCycle {
     #[napi]
     pub fn set_cloud_link(&self, label: String, url: String) -> napi::Result<()> {
         self.with_app(|app| app.set_cloud_link(label, url));
+        Ok(())
+    }
+
+    /// Register the callback fired when the user presses the connect-to-cloud
+    /// shortcut. JS runs the `nx connect` logic and pushes the resulting URL
+    /// back via `setConnectUrl` / `setConnectError`.
+    // This method is excluded from test builds because it uses ThreadsafeFunction
+    // which requires Node.js runtime symbols.
+    #[cfg(not(test))]
+    #[napi]
+    pub fn register_connect_to_cloud_callback(
+        &self,
+        connect_callback: ThreadsafeFunction<(), Unknown<'static>, (), Status, false>,
+    ) -> napi::Result<()> {
+        self.with_app(|app| app.set_connect_to_cloud_callback(connect_callback));
+        Ok(())
+    }
+
+    /// Deliver the Nx Cloud onboarding URL to the connect popup.
+    #[napi]
+    pub fn set_connect_url(&self, url: String) -> napi::Result<()> {
+        self.with_app(|app| app.set_connect_url(url));
+        Ok(())
+    }
+
+    /// Surface a connect failure in the connect popup.
+    #[napi]
+    pub fn set_connect_error(&self, message: String) -> napi::Result<()> {
+        self.with_app(|app| app.set_connect_error(message));
+        Ok(())
+    }
+
+    /// Mark the workspace as connected, once a TUI-initiated connect has
+    /// written an nxCloudId to nx.json.
+    #[napi]
+    pub fn set_connected_to_cloud(&self) -> napi::Result<()> {
+        self.with_app(|app| app.set_cloud_connection(CloudConnection::Connected));
         Ok(())
     }
 }

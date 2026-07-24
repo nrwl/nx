@@ -26,6 +26,7 @@ use super::help_text::{HelpText, HelpTextContext};
 use super::link::{Link, LinkRegistry};
 use super::search_filter::{FilterProps, PaneSearchProps, SearchFilterInput};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
+use crate::native::tui::lifecycle::CloudConnection;
 use crate::native::tui::strings::fit_with_ellipsis;
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration_since, format_live_duration};
@@ -39,14 +40,26 @@ const LEFT_MARGIN: u16 = 2;
 /// A minimum useful amount of the run status text.
 const STATUS_MIN_WIDTH: u16 = 25;
 
+/// The not-connected indicator, shown in the middle slot when nothing more
+/// specific claims it. The hollow dot marks the disconnected state; a connected
+/// run is already marked by the cloud icon on the counts. `●`/`○` are used
+/// rather than `☁` because the emoji presentation is double-width and would
+/// shift the row.
+const CONNECT_DOT: &str = "○ ";
+const CONNECT_LABEL: &str = "not connected: ";
+const CONNECT_KEY: &str = "<shift>+c";
+/// Dropped to this once the shortcut no longer fits.
+const CONNECT_LABEL_SHORT: &str = "not connected";
+
 /// Per-frame view props derived from canonical state.
 #[derive(Debug, Clone, Default)]
 pub struct StatusBarProps {
     pub is_dimmed: bool,
     pub perf_report_available: bool,
-    /// Whether the run is connected to Nx Cloud, independent of any
-    /// message/link having arrived; shows the cloud icon on the counts.
-    pub cloud_enabled: bool,
+    /// The workspace's Nx Cloud connection, independent of any message/link
+    /// having arrived. `Connected` shows the cloud icon on the counts;
+    /// `NotConnected` shows the connect indicator in the middle slot.
+    pub cloud_connection: CloudConnection,
     pub cloud_message: Option<String>,
     pub cloud_link: Option<(String, String)>,
     pub completed_count: usize,
@@ -88,6 +101,19 @@ impl StatusBarProps {
     /// link, so nothing renders in the middle).
     fn has_cloud_message(&self) -> bool {
         self.cloud_link.is_none() && self.cloud_message.is_some()
+    }
+
+    fn is_cloud_connected(&self) -> bool {
+        matches!(self.cloud_connection, CloudConnection::Connected)
+    }
+
+    /// Whether the connect indicator should claim the middle slot: only while
+    /// the workspace is not connected, and only when nothing carries a cloud
+    /// message or link (which imply a connected run).
+    fn show_connect_indicator(&self) -> bool {
+        matches!(self.cloud_connection, CloudConnection::NotConnected)
+            && self.cloud_link.is_none()
+            && self.cloud_message.is_none()
     }
 }
 
@@ -311,10 +337,60 @@ impl<'a> StatusBar<'a> {
         if props.cloud_link.is_some() {
             return None;
         }
+        if let Some(message) = &props.cloud_message {
+            return Some(Span::raw(message.as_str()).width() as u16);
+        }
         props
-            .cloud_message
-            .as_ref()
-            .map(|message| Span::raw(message.as_str()).width() as u16)
+            .show_connect_indicator()
+            .then(|| Self::connect_indicator_width(false))
+    }
+
+    /// Width of the connect indicator, in its full or shortcut-less form.
+    fn connect_indicator_width(short: bool) -> u16 {
+        let label = if short {
+            CONNECT_LABEL_SHORT
+        } else {
+            CONNECT_LABEL
+        };
+        let key = if short { "" } else { CONNECT_KEY };
+        Span::raw(CONNECT_DOT).width() as u16
+            + Span::raw(label).width() as u16
+            + Span::raw(key).width() as u16
+    }
+
+    /// The not-connected indicator: a hollow dot plus the shortcut that opens
+    /// the connect popup, styled like the bar's other keyboard hints. Drops the
+    /// shortcut, then itself, as the slot narrows.
+    fn render_connect_indicator(buf: &mut Buffer, area: Rect, props: &StatusBarProps) {
+        let mut label_style = Style::default().fg(THEME.secondary_fg);
+        let mut key_style = Style::default().fg(THEME.info);
+        let mut dot_style = Style::default().fg(THEME.secondary_fg).dim();
+        if props.is_dimmed {
+            label_style = label_style.add_modifier(Modifier::DIM);
+            key_style = key_style.add_modifier(Modifier::DIM);
+            dot_style = dot_style.add_modifier(Modifier::DIM);
+        }
+
+        let spans = if Self::connect_indicator_width(false) <= area.width {
+            vec![
+                Span::styled(CONNECT_DOT, dot_style),
+                Span::styled(CONNECT_LABEL, label_style),
+                Span::styled(CONNECT_KEY, key_style),
+            ]
+        } else if Self::connect_indicator_width(true) <= area.width {
+            vec![
+                Span::styled(CONNECT_DOT, dot_style),
+                Span::styled(CONNECT_LABEL_SHORT, label_style),
+            ]
+        } else {
+            return;
+        };
+
+        Widget::render(
+            NxParagraph::new(Line::from(spans)).alignment(Alignment::Left),
+            area,
+            buf,
+        );
     }
 
     /// The middle section: a focused pane's transient feedback takes the slot
@@ -425,7 +501,8 @@ impl<'a> StatusBar<'a> {
         let mut spans = vec![Span::raw(" ")];
         // A cloud icon marks a cloud-enabled run. Kept outside the underlined
         // span so the click affordance stays on the numbers themselves.
-        if props.cloud_enabled || props.cloud_link.is_some() || props.cloud_message.is_some() {
+        if props.is_cloud_connected() || props.cloud_link.is_some() || props.cloud_message.is_some()
+        {
             let mut icon_style = Style::default().fg(THEME.secondary_fg);
             if props.is_dimmed {
                 icon_style = icon_style.add_modifier(Modifier::DIM);
@@ -471,6 +548,9 @@ impl<'a> StatusBar<'a> {
         let is_dimmed = props.is_dimmed;
 
         let Some(message) = &props.cloud_message else {
+            if props.show_connect_indicator() {
+                Self::render_connect_indicator(buf, area, props);
+            }
             return;
         };
 
@@ -818,11 +898,42 @@ mod tests {
         // Nx Cloud is configured but no message or link has arrived (or ever
         // will) — the icon still marks the run as cloud-connected.
         let mut props = base_props();
-        props.cloud_enabled = true;
+        props.cloud_connection = CloudConnection::Connected;
         let (terminal, registry) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
         // Without a link the counts are not clickable.
         assert_eq!(registry.hit_test(4, 0), None);
+    }
+
+    #[test]
+    fn not_connected_shows_the_connect_indicator() {
+        let mut props = base_props();
+        props.cloud_connection = CloudConnection::NotConnected;
+        let row = rendered_row(140, &props);
+        assert!(row.contains("○ not connected: <shift>+c"), "got: {row}");
+        // No cloud icon on the counts while disconnected.
+        assert!(!row.contains('☁'), "got: {row}");
+    }
+
+    #[test]
+    fn narrow_connect_indicator_drops_the_shortcut() {
+        let mut props = base_props();
+        props.cloud_connection = CloudConnection::NotConnected;
+        let row = rendered_row(45, &props);
+        assert!(row.contains("○ not connected"), "got: {row}");
+        assert!(!row.contains("<shift>+c"), "got: {row}");
+    }
+
+    #[test]
+    fn cloud_message_takes_precedence_over_the_connect_indicator() {
+        // A message can only arrive on a connected run, but the workspace may
+        // have connected mid-run before the status flipped.
+        let mut props = base_props();
+        props.cloud_connection = CloudConnection::NotConnected;
+        props.cloud_message = Some("Nx Cloud is analyzing your run".to_string());
+        let row = rendered_row(140, &props);
+        assert!(row.contains("Nx Cloud is analyzing your run"), "got: {row}");
+        assert!(!row.contains("not connected"), "got: {row}");
     }
 
     #[test]
