@@ -79,7 +79,7 @@ export function getPnpmSpawnRegistryEnv(
 ): NpmConfigEnv {
   const env: NpmConfigEnv = {};
   // Without a version we cannot reason about which surfaces this pnpm honors;
-  // leave npm's own resolution untouched (the pre-existing behavior).
+  // leave npm's own resolution untouched.
   if (!pnpmVersion || lt(pnpmVersion, '10.6.0')) {
     return env;
   }
@@ -247,12 +247,6 @@ function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
   return doc as PnpmWorkspaceSettings;
 }
 
-/**
- * pnpm >= 11 layers `auth.ini` (written by `pnpm config set` for registry, auth,
- * and TLS/proxy keys) between the user and the workspace .npmrc. npm never reads
- * it, so its keys are injected at the env tier, guarded so a workspace .npmrc
- * that defines the same key keeps winning (matching pnpm's layer order).
- */
 function getAuthIniPath(): string {
   return join(getPnpmConfigDir(process.env), 'auth.ini');
 }

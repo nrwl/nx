@@ -40,8 +40,7 @@ export function parseNpmrcContent(raw: string): NpmrcEntry[] {
     if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
       continue;
     }
-    // A line with no `=` is a bare flag, which ini reads as `true` (its regex
-    // leaves the value group unmatched, so valueRaw defaults to true), not a
+    // A line with no `=` is a bare flag, which ini reads as `true`, not a
     // dropped line. Skipping it loses a bare `always-auth`/`strict-ssl` and
     // flips the credential/TLS decision a consumer derives from it.
     const eq = trimmed.indexOf('=');

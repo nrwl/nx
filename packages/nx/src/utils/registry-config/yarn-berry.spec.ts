@@ -440,7 +440,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('picks the longest networkSettings host glob across merged rc files', () => {
-    // A more specific glob in the home file beats a broader one in the project.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -470,8 +469,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('fills each networkSettings key from a different matching glob', () => {
-    // Berry merges across all matching globs per key: cafile from the specific
-    // glob, proxy from the wildcard glob, for host reg-a.example.com.
+    // Berry merges across all matching globs per key.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -546,7 +544,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
         '    npmAuthToken: SECRET',
       ].join('\n')
     );
-    // v3 whole-entry merge: the project ident wins, the home token is ignored.
+    // v3 does a whole-entry merge, not a per-key merge like v4.
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.8.7')).toEqual({
       npm_config_registry: 'https://reg-a.example.com/',
       'npm_config_//reg-a.example.com/:_auth':

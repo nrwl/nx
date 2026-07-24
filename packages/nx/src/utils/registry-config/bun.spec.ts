@@ -29,8 +29,8 @@ describe('getBunSpawnRegistryEnv', () => {
     mkdirSync(root);
     home = join(base, 'home');
     mkdirSync(home);
-    // os.homedir() honors HOME (POSIX) / USERPROFILE (Windows); jest.spyOn
-    // does not work here because SWC's import interop clones the os module.
+    // getBunGlobalConfigBase reads HOME/USERPROFILE straight off the passed env
+    // object, not via os.homedir(), so setting them here needs no module mock.
     savedEnv['HOME'] = process.env['HOME'];
     savedEnv['USERPROFILE'] = process.env['USERPROFILE'];
     process.env['HOME'] = home;

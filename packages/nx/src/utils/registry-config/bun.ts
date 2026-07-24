@@ -76,8 +76,7 @@ export function getBunSpawnRegistryEnv(
     ? readBunfigInstall(join(globalConfigBase, '.bunfig.toml'))
     : null;
 
-  // bun's global npmrc replaces the user npmrc when XDG_CONFIG_HOME is set;
-  // swap npm's userconfig so the auth/TLS keys npm reads natively come from
+  // Swap npm's userconfig so the auth/TLS keys npm reads natively come from
   // the same file bun would use.
   if (npmrcSupported && process.env.XDG_CONFIG_HOME) {
     env['npm_config_userconfig'] = join(process.env.XDG_CONFIG_HOME, '.npmrc');
@@ -173,9 +172,8 @@ export function getBunSpawnRegistryEnv(
 }
 
 /**
- * Bunfig registry values: a URL string (possibly with embedded
- * `user:pass@`/`:token@` credentials) or a `{ url, token, username, password }`
- * table.
+ * A bunfig registry value can be a bare URL string with embedded
+ * `user:pass@`/`:token@` credentials, not only the structured table form.
  */
 function normalizeBunRegistryValue(
   value: string | BunRegistryValue,
@@ -261,10 +259,9 @@ function readBunfigInstall(path: string): BunfigInstall | null {
   }
   if (parsed === 'invalid') {
     // bun aborts on a bunfig it cannot read or parse, so there is no resolution
-    // left to reproduce, the same as for the wrong-shaped values below. Both
-    // propagate to the caller's fall-open. Skipping the file instead would pin
-    // npm to the default registry as though the workspace configured none,
-    // overriding a registry npm resolves from a file of its own.
+    // left to reproduce; it propagates to the caller's fall-open. Skipping the
+    // file instead would pin npm to the default registry as though the workspace
+    // configured none, overriding a registry npm resolves from a file of its own.
     throw new Error(`The bunfig at ${path} could not be read.`);
   }
   const install = parsed.install;
