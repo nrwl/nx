@@ -233,11 +233,10 @@ export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
 }
 
 /**
- * Returns whether typed linting was requested for a generator. Accepts both the
- * new `enableTypedLinting` flag and the deprecated `setParserOptionsProject`
- * flag (slated for removal in Nx v24); either one set to a truthy value enables
- * the feature. This is intentional: a generator whose `enableTypedLinting`
- * schema default is `false` must still honor a user who set the deprecated flag.
+ * Honors both `enableTypedLinting` and the deprecated `setParserOptionsProject`
+ * (slated for removal in Nx v24); either one truthy enables typed linting. A
+ * generator whose `enableTypedLinting` schema default is `false` must still
+ * honor a user who set the deprecated flag.
  */
 export function isTypedLintingEnabled(options: {
   enableTypedLinting?: boolean;
@@ -876,12 +875,6 @@ function parseSource(content: string): {
   return { source, checker: program.getTypeChecker() };
 }
 
-/**
- * The `parserOptions` object a node contributes: an inline literal, or the
- * literal behind a reference (`parserOptions: opts`, or the `{ parserOptions }`
- * shorthand). A variable only counts once the config actually references it, so
- * an unused declaration configures nothing.
- */
 /** A `parserOptions` property, whether written in full or by ES shorthand. */
 function isParserOptionsProperty(node: ts.Node): boolean {
   return (
@@ -892,6 +885,12 @@ function isParserOptionsProperty(node: ts.Node): boolean {
   );
 }
 
+/**
+ * The `parserOptions` object a node contributes: an inline literal, or the
+ * literal behind a reference (`parserOptions: opts`, or the `{ parserOptions }`
+ * shorthand). A variable only counts once the config actually references it, so
+ * an unused declaration configures nothing.
+ */
 function getParserOptionsObject(
   node: ts.Node,
   checker: ts.TypeChecker

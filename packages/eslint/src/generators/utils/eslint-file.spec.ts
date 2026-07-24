@@ -757,8 +757,6 @@ module.exports = [
     });
 
     it('reports an explicit projectService: false opt-out as a setting of its own', () => {
-      // A user who set `projectService: false` made a deliberate choice; it must
-      // be detected so callers don't append a conflicting `projectService: true`.
       expect(
         inspectTypedLinting(
           'export default [{ languageOptions: { parserOptions: { projectService: false } } }];'
@@ -862,9 +860,6 @@ module.exports = [
     });
 
     it('does not read a `parserOptions` that configures a rule (flat config)', () => {
-      // Same as the JSON case, on the source path: the scan must not descend
-      // into a rule's options and mistake its nested `parserOptions` for the
-      // config's own.
       expect(
         inspectTypedLinting(
           `export default [{ rules: { 'x/y': ['error', { parserOptions: { project: true } }] } }];`
@@ -1285,7 +1280,6 @@ module.exports = [
     });
 
     it('reports a local array the file spreads as its own', () => {
-      // It never leaves the file, so the setting is the file's own choice.
       expect(
         inspectTypedLinting(
           `const typed = [{ languageOptions: { parserOptions: { projectService: true } } }];\nexport default [...typed, { rules: {} }];\n`
@@ -1294,8 +1288,6 @@ module.exports = [
     });
 
     it('ignores shorthand `rules` whose options carry a nested parserOptions', () => {
-      // The nested `parserOptions` configures a rule, not the language; a config
-      // that binds `rules` to a variable is skipped the same as an inline one.
       expect(
         inspectTypedLinting(
           `const rules = { 'x/y': ['error', { parserOptions: { project: true } }] };\nexport default [{ rules }];`
@@ -1328,7 +1320,6 @@ module.exports = [
     });
 
     it('ignores an unused config-shaped declaration', () => {
-      // A full config entry the export never includes configures nothing.
       expect(
         inspectTypedLinting(
           `const unused = { languageOptions: { parserOptions: { projectService: true } } };\nexport default [{ files: ['*.ts'], rules: {} }];`
@@ -1705,8 +1696,7 @@ module.exports = [
 
     it('lets a present but unreadable spread property clear an earlier value', () => {
       // `registry.opts` is `override.opts`, whose value the scanner can't read, so
-      // it must not report the earlier `...base` value that runtime replaces; the
-      // unreadable value reads as undecided rather than as that stale `project`.
+      // it must not report the earlier `...base` value that runtime replaces.
       expect(
         inspectTypedLinting(
           `const base = { opts: { project: true } };\nconst source = { opts: {} };\nconst { opts } = source;\nconst override = { opts };\nconst registry = { ...base, ...override };\nexport default [{ languageOptions: { parserOptions: registry.opts } }];`
@@ -1737,8 +1727,6 @@ module.exports = [
     });
 
     it('honors the deprecated flag even when enableTypedLinting defaults to false', () => {
-      // A generator whose `enableTypedLinting` schema default is `false` must
-      // still enable typed linting for a user who set the deprecated flag.
       expect(
         isTypedLintingEnabled({
           enableTypedLinting: false,
@@ -1845,7 +1833,6 @@ module.exports = [
 
     it('is a no-op when no flat config file is present', () => {
       tree.write('libs/test/.eslintrc.json', '{}');
-      // No flat config file at the project root; helper should silently return.
       addTypedLintingToFlatConfig(tree, 'libs/test');
       expect(tree.read('libs/test/.eslintrc.json', 'utf-8')).toBe('{}');
     });
@@ -1856,8 +1843,6 @@ module.exports = [
         `export default [{ files: ['**/*.ts'], rules: {} }];\n`
       );
 
-      // A re-run (or a consumer re-adding typed linting to a config that already
-      // has it) must not duplicate the projectService block.
       addTypedLintingToFlatConfig(tree, 'libs/test');
       addTypedLintingToFlatConfig(tree, 'libs/test');
 
@@ -1866,8 +1851,6 @@ module.exports = [
     });
 
     it('does not append a projectService block when a legacy parserOptions.project block exists', () => {
-      // A config already configured with the legacy `parserOptions.project`
-      // shape must not get a second, conflicting projectService block.
       tree.write(
         'libs/test/eslint.config.mjs',
         `export default [{ files: ['**/*.ts'], languageOptions: { parserOptions: { project: ['./tsconfig.json'] } }, rules: {} }];\n`

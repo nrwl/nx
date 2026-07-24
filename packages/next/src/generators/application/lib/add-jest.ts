@@ -58,7 +58,7 @@ export async function addJest(
     joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json'),
     (json) => {
       json.compilerOptions.jsx = 'react';
-      // have to override exclude otherwise lint will fail with typed linting and jest.config.ts/jest.config.cts
+      // Override exclude so typed linting doesn't fail on jest.config.ts and jest.config.cts.
       if (isTypedLintingEnabled(options)) {
         const tsConfig = readJson(
           host,
