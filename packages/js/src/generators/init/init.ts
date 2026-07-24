@@ -10,6 +10,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { isUsingPrettierInTree } from 'nx/src/devkit-internals';
 import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
@@ -35,7 +36,14 @@ export async function initGenerator(
 ): Promise<GeneratorCallback> {
   schema.addTsPlugin ??= false;
   const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
-  schema.formatter ??= isUsingNewTsSetup ? 'none' : 'oxfmt';
+  // Keep prettier when the workspace already uses it; only a workspace with no
+  // formatter configured falls back to the oxfmt default. Otherwise a prettier
+  // workspace would gain a stray .oxfmtrc.json that then wins detection.
+  schema.formatter ??= isUsingNewTsSetup
+    ? 'none'
+    : isUsingPrettierInTree(tree)
+      ? 'prettier'
+      : 'oxfmt';
 
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
