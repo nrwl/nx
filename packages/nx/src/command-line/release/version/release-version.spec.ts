@@ -4,6 +4,9 @@ const mocks = {
   deriveSpecifierFromVersionPlan: jest.fn(),
   resolveVersionActionsForProject: jest.fn(),
   prompt: jest.fn(),
+  // Captures every message that the (mocked) ProjectLogger actually flushes,
+  // as `"<projectName> <message>"`, so tests can assert on flushed output.
+  flushedProjectLogs: [] as string[],
 };
 
 // Aliases for test usage
@@ -54,11 +57,25 @@ jest.mock('./project-logger', () => {
   const actual = jest.requireActual('./project-logger');
   return {
     ...actual,
-    // Don't slow down or add noise to unit tests output unnecessarily
+    // Faithful-but-silent double: `buffer` accumulates and `flush` "emits" the
+    // buffered lines into `mocks.flushedProjectLogs` (mirroring the real flush,
+    // which clears the buffer after emitting) instead of printing. This keeps
+    // the suite quiet while letting tests assert on what was actually flushed.
     ProjectLogger: class ProjectLogger {
-      buffer() {}
+      private logs: string[] = [];
 
-      flush() {}
+      constructor(private projectName: string) {}
+
+      buffer(msg: string) {
+        this.logs.push(msg);
+      }
+
+      flush() {
+        for (const msg of this.logs) {
+          mocks.flushedProjectLogs.push(`${this.projectName} ${msg}`);
+        }
+        this.logs = [];
+      }
     },
   };
 });
@@ -207,6 +224,8 @@ describe('releaseVersionGenerator (ported tests)', () => {
     mockResolveVersionActionsForProject.mockImplementation(
       mockResolveVersionActionsForProjectImplementation
     );
+
+    mocks.flushedProjectLogs.length = 0;
   });
 
   afterEach(() => {
@@ -2692,6 +2711,124 @@ Valid values are: "auto", "", "~", "^", "="`,
       expect(
         readJson(tree, 'pkg-tag-src/package.json').dependencies['pkg-tag-dep']
       ).toBe('4.2.0');
+    });
+
+    it('should surface the unresolvable-dependency warning even when the dependency is in a different, filtered-out release group', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            groupA ({ "projectsRelationship": "independent" }):
+              - pkg-warn-src@1.0.0 [js]
+                -> depends on pkg-warn-dep(workspace:*)
+            groupB ({ "projectsRelationship": "independent" }):
+              - pkg-warn-dep@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          // Release ONLY pkg-warn-src (groupA). pkg-warn-dep lives in groupB,
+          // which is filtered out and whose processGroup never runs.
+          { projects: ['pkg-warn-src'] }
+        );
+
+      // Force resolveCurrentVersion to throw for the out-of-set dependency so
+      // that the catch block buffers its remediation warning.
+      const resolveCurrentVersionModule = require('./resolve-current-version');
+      const original = resolveCurrentVersionModule.resolveCurrentVersion;
+      const spy = jest
+        .spyOn(resolveCurrentVersionModule, 'resolveCurrentVersion')
+        .mockImplementation(((...args: any[]) => {
+          const projectGraphNode = args[1];
+          if (projectGraphNode?.name === 'pkg-warn-dep') {
+            return Promise.reject(
+              new Error('simulated current-version resolution failure')
+            );
+          }
+          return original(...args);
+        }) as any);
+
+      try {
+        await releaseVersionGeneratorForTest(tree, {
+          nxReleaseConfig,
+          projectGraph,
+          filters,
+          userGivenSpecifier: 'patch' as SemverBumpType,
+        });
+      } finally {
+        spy.mockRestore();
+      }
+
+      // Release still completed and left the protocol untouched.
+      expect(
+        readJson(tree, 'pkg-warn-src/package.json').dependencies['pkg-warn-dep']
+      ).toBe('workspace:*');
+
+      // The warning must have been flushed (surfaced to the user), even though
+      // pkg-warn-dep's release group was never processed.
+      const warnings = mocks.flushedProjectLogs.filter((line) =>
+        line.includes('Could not resolve the current version of "pkg-warn-dep"')
+      );
+      expect(warnings).toHaveLength(1);
+    });
+
+    it('should surface the unresolvable-dependency warning exactly once when the dependency is in the same release group', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-same-src@1.0.0 [js]
+                -> depends on pkg-same-dep(workspace:*)
+              - pkg-same-dep@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-same-src'] }
+        );
+
+      const resolveCurrentVersionModule = require('./resolve-current-version');
+      const original = resolveCurrentVersionModule.resolveCurrentVersion;
+      const spy = jest
+        .spyOn(resolveCurrentVersionModule, 'resolveCurrentVersion')
+        .mockImplementation(((...args: any[]) => {
+          const projectGraphNode = args[1];
+          if (projectGraphNode?.name === 'pkg-same-dep') {
+            return Promise.reject(
+              new Error('simulated current-version resolution failure')
+            );
+          }
+          return original(...args);
+        }) as any);
+
+      try {
+        await releaseVersionGeneratorForTest(tree, {
+          nxReleaseConfig,
+          projectGraph,
+          filters,
+          userGivenSpecifier: 'patch' as SemverBumpType,
+        });
+      } finally {
+        spy.mockRestore();
+      }
+
+      // The immediate catch flush emits it and clears the buffer, so the group's
+      // own end-of-processGroup flush does not print it a second time.
+      const warnings = mocks.flushedProjectLogs.filter((line) =>
+        line.includes('Could not resolve the current version of "pkg-same-dep"')
+      );
+      expect(warnings).toHaveLength(1);
     });
   });
 

@@ -756,11 +756,17 @@ export class ReleaseGraph {
       // resolution is not re-attempted for every dependent of this project),
       // and let the caller leave the local protocol untouched.
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this.projectLoggers
-        .get(projectName)
-        ?.buffer(
-          `⚠️  Could not resolve the current version of "${projectName}", which is depended upon via a local protocol (e.g. "workspace:") but is not part of this release. Local protocol references to it will be left untouched. To rewrite them to a concrete version, make its current version resolvable - for example set "fallbackCurrentVersionResolver": "disk" or create a matching git tag. Underlying error: ${errorMessage}`
-        );
+      const projectLogger = this.projectLoggers.get(projectName);
+      projectLogger?.buffer(
+        `⚠️  Could not resolve the current version of "${projectName}", which is depended upon via a local protocol (e.g. "workspace:") but is not part of this release. Local protocol references to it will be left untouched. To rewrite them to a concrete version, make its current version resolvable - for example set "fallbackCurrentVersionResolver": "disk" or create a matching git tag. Underlying error: ${errorMessage}`
+      );
+      // Flush immediately: this project is out of the release set, and its
+      // release group may be filtered out and never processed (a processed
+      // group only flushes its own projects' loggers). Flushing here guarantees
+      // the warning surfaces regardless of group membership. `flush()` clears
+      // the buffer, so any later per-group flush of this same logger is a no-op
+      // and cannot print the warning twice.
+      projectLogger?.flush();
       this.cachedCurrentVersions.set(projectName, null);
       return null;
     }
