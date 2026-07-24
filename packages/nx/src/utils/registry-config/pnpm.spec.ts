@@ -34,9 +34,19 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'PNPM_CONFIG_NOPROXY',
     'pnpm_config_cafile',
     'PNPM_CONFIG_CAFILE',
+    'npm_config_//reg-a.example.com/:_authToken',
     'npm_config_//reg-b.example.com/:_authToken',
     'PNPM_TEST_NOPROXY',
+    'PNPM_TEST_HELPER',
+    'NX_TEST_HOST',
+    'NX_TEST_SCOPE',
     'XDG_CONFIG_HOME',
+    'pnpm_config_npmrc_auth_file',
+    'PNPM_CONFIG_NPMRC_AUTH_FILE',
+    'pnpm_config_userconfig',
+    'PNPM_CONFIG_USERCONFIG',
+    'npm_config_userconfig',
+    'NPM_CONFIG_USERCONFIG',
   ];
   const savedEnv: Record<string, string | undefined> = {};
 
@@ -49,6 +59,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
     }
     // Point pnpm's config dir (auth.ini location) at a controlled directory.
     process.env.XDG_CONFIG_HOME = configHome;
+    // The last link of pnpm's user-auth-file chain, and npm's own user config:
+    // pin both at one controlled path so no test reads the real ~/.npmrc.
+    process.env.NPM_CONFIG_USERCONFIG = join(configHome, 'user.npmrc');
   });
 
   afterEach(() => {
@@ -69,6 +82,16 @@ describe('getPnpmSpawnRegistryEnv', () => {
   function writeAuthIni(contents: string): void {
     mkdirSync(join(configHome, 'pnpm'), { recursive: true });
     writeFileSync(join(configHome, 'pnpm', 'auth.ini'), contents);
+  }
+  /** The file both pnpm and npm resolve as the user config. */
+  function writeUserConfig(contents: string): void {
+    writeFileSync(join(configHome, 'user.npmrc'), contents);
+  }
+  /** A user auth file pnpm is pointed at on its own, which npm never opens. */
+  function writePnpmOnlyUserConfig(contents: string): void {
+    const path = join(configHome, 'pnpm-only.npmrc');
+    writeFileSync(path, contents);
+    process.env.PNPM_CONFIG_NPMRC_AUTH_FILE = path;
   }
 
   it('returns nothing when the version is unknown', () => {
@@ -212,6 +235,81 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(
         getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')
       ).not.toHaveProperty('npm_config_cafile');
+    });
+
+    // getAuthHeadersFromConfig takes a tokenHelper out of userSettings alone,
+    // which every caller passes as the user config. This line has no auth.ini
+    // and no npmrcAuthFile, so that file is npm's own userconfig throughout.
+    it('reports a user-config token helper for the registry the yaml sends npm to', () => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+      writeFileSync(
+        join(configHome, 'user.npmrc'),
+        '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+      );
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '10.16.0');
+      });
+      expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+        '//reg-a.example.com/'
+      );
+    });
+
+    it('pins an unscoped helper to the registry that wins overall', () => {
+      // getAuthHeadersFromConfig keys it on allSettings.registry, so the yaml
+      // default carries it even though the user config names no registry. 11
+      // pins the same line to the declaring file instead.
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+      writeFileSync(
+        join(configHome, 'user.npmrc'),
+        'tokenHelper=/usr/local/bin/get-token'
+      );
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '10.16.0');
+      });
+      expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+        '//reg-a.example.com/'
+      );
+    });
+
+    it('ignores the 11-only auth-file selection when picking that config', () => {
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      const path = join(configHome, 'pnpm-only.npmrc');
+      writeFileSync(
+        path,
+        '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+      );
+      process.env.PNPM_CONFIG_NPMRC_AUTH_FILE = path;
+      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '10.16.0');
+      });
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('counts an ambient credential npm keeps on this line', () => {
+      // pnpm 10.x reads npm_config_*, so the spawn keeps this ambient token and
+      // npm authenticates with it; the helper is not worth reporting. On >= 11
+      // the same token is dropped and would be.
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+      writeUserConfig(
+        '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+      );
+      process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '10.16.0');
+      });
+      expect(logger.warn).not.toHaveBeenCalled();
     });
   });
 
@@ -456,7 +554,10 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('stays quiet when the credential comes from the environment', () => {
+    it('does not count an ambient credential the spawn strips on >= 11', () => {
+      // pnpm >= 11 ignores npm_config_*, so the spawn drops this ambient token
+      // (mergeNpmConfigEnv) before npm runs. npm then fetches reg-b with no
+      // credential, so the auth.ini bare token pinned to npmjs is still missing.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       process.env['npm_config_//reg-b.example.com/:_authToken'] = 'env-token';
@@ -469,7 +570,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
         fresh('is-even', root, '11.5.0');
       });
-      expect(logger.warn).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledTimes(1);
     });
 
     it('still warns when the credential npm would find is incomplete', () => {
@@ -697,59 +798,12 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
     });
 
-    it('drops auth.ini cert/key when an ambient npm registry redirects the request', () => {
-      // pnpm >= 11 ignores npm_config_*, so nothing in the overlay displaces an
-      // ambient one; the spawned npm reads it and contacts that host instead.
+    it('ignores an ambient npm registry on >= 11 and keeps cert/key at the default', () => {
+      // pnpm >= 11 ignores npm_config_*, so the spawn drops this ambient registry
+      // (mergeNpmConfigEnv) rather than let npm contact it. npm falls back to its
+      // default, which is where these client-cert halves are pinned, so they are
+      // bridged rather than withheld against a redirect that never happens.
       process.env.NPM_CONFIG_REGISTRY = 'https://reg-b.example.com/';
-      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
-    });
-
-    it('reads the ambient registry under any casing npm accepts', () => {
-      process.env.Npm_Config_Registry = 'https://reg-b.example.com/';
-      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
-    });
-
-    it('takes the last ambient spelling when several are set', () => {
-      process.env.npm_config_registry = 'https://registry.npmjs.org/';
-      process.env.NPM_CONFIG_REGISTRY = 'https://reg-b.example.com/';
-      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
-    });
-
-    it('takes the last ambient spelling whichever casing it is', () => {
-      process.env.NPM_CONFIG_REGISTRY = 'https://reg-b.example.com/';
-      process.env.npm_config_registry = 'https://registry.npmjs.org/';
-      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-        npm_config_cert: 'CERTPEM',
-        npm_config_key: 'KEYPEM',
-      });
-    });
-
-    it('ignores an empty ambient registry (npm skips it too)', () => {
-      process.env.NPM_CONFIG_REGISTRY = '';
-      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-        npm_config_cert: 'CERTPEM',
-        npm_config_key: 'KEYPEM',
-      });
-    });
-
-    it('reads a blank ambient registry as npm default (npm trims it away)', () => {
-      process.env.NPM_CONFIG_REGISTRY = '   ';
-      writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-        npm_config_cert: 'CERTPEM',
-        npm_config_key: 'KEYPEM',
-      });
-    });
-
-    it('reads an ambient registry that expands to nothing as npm default', () => {
-      // npm's pickRegistry falls through on a falsy registry, so the request
-      // still goes to npmjs, which is what the credentials are pinned to.
-      process.env.NPM_CONFIG_REGISTRY = '${NX_TEST_UNSET_REGISTRY?}';
       writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
         npm_config_cert: 'CERTPEM',
@@ -869,14 +923,39 @@ describe('getPnpmSpawnRegistryEnv', () => {
         });
       });
 
-      it('warns once, naming the registry and not the helper', () => {
+      // pnpm accepts a helper only from its user auth file: the key and its
+      // value have to be in that file, or the command aborts with
+      // TOKEN_HELPER_IN_PROJECT_CONFIG (verified on 11.9.0 against a
+      // credential-checking registry: a helper in the user .npmrc put
+      // `Bearer helper-token-123` on the wire, while the same line in auth.ini
+      // or in the project .npmrc failed the run before any request went out).
+      function warnFor(pkg = 'is-even'): jest.Mock {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
-        writeAuthIni(
-          [
-            'registry=https://reg-a.example.com/',
-            '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
-          ].join('\n')
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh(pkg, root, '11.5.0');
+        });
+        return logger.warn as jest.Mock;
+      }
+
+      it('reports a helper in the user auth file, naming the registry and not the command', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig(
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        const warn = warnFor();
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
+        expect(warn.mock.calls[0][0]).not.toContain('get-token');
+      });
+
+      it('warns once across packages', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig(
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
         jest.isolateModules(() => {
           const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
@@ -884,63 +963,208 @@ describe('getPnpmSpawnRegistryEnv', () => {
           fresh('is-odd', root, '11.5.0');
         });
         expect(logger.warn).toHaveBeenCalledTimes(1);
-        const message = (logger.warn as jest.Mock).mock.calls[0][0];
-        expect(message).toContain('//reg-a.example.com/');
-        expect(message).not.toContain('get-token');
       });
 
-      it('reports an unscoped tokenHelper against the registry it is pinned to', () => {
-        const { logger } = require('../logger');
-        (logger.warn as jest.Mock).mockClear();
-        writeAuthIni(
+      it('reports an unscoped helper against the registry that file pins it to', () => {
+        // rescopeUnscopedCreds runs per file, so the pin follows the registry
+        // the user auth file declares, not the one that wins overall.
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig(
           [
             'registry=https://reg-a.example.com/',
             'tokenHelper=/usr/local/bin/get-token',
           ].join('\n')
         );
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh('is-even', root, '11.5.0');
-        });
-        expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
-          '//reg-a.example.com/'
+        expect(warnFor().mock.calls[0][0]).toContain('//reg-a.example.com/');
+      });
+
+      it('stays quiet when an unscoped helper is pinned elsewhere', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig(
+          [
+            'registry=https://reg-other.example.com/',
+            'tokenHelper=/usr/local/bin/get-token',
+          ].join('\n')
         );
+        expect(warnFor()).not.toHaveBeenCalled();
+      });
+
+      it('leaves an unscoped helper on npmjs when its file names no registry', () => {
+        // rescopeUnscopedCreds pins it to the declaring file's own registry, so
+        // the yaml default that redirects npm does not carry it here. 10.x pins
+        // the same line to the registry that wins overall instead.
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig('tokenHelper=/usr/local/bin/get-token');
+        expect(warnFor()).not.toHaveBeenCalled();
       });
 
       it('stays quiet about a helper for a registry npm will not contact', () => {
-        const { logger } = require('../logger');
-        (logger.warn as jest.Mock).mockClear();
-        writeAuthIni(
-          [
-            'registry=https://reg-a.example.com/',
-            '//reg-other.example.com/:tokenHelper=/usr/local/bin/get-token',
-          ].join('\n')
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig(
+          '//reg-other.example.com/:tokenHelper=/usr/local/bin/get-token'
         );
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh('is-even', root, '11.5.0');
-        });
-        expect(logger.warn).not.toHaveBeenCalled();
+        expect(warnFor()).not.toHaveBeenCalled();
       });
 
-      it('stays quiet when npm authenticates that registry anyway', () => {
-        const { logger } = require('../logger');
-        (logger.warn as jest.Mock).mockClear();
+      it('stays quiet when a helper reference expands to nothing', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig('//reg-a.example.com/:tokenHelper=${PNPM_TEST_HELPER}');
+        expect(warnFor()).not.toHaveBeenCalled();
+      });
+
+      it('stays quiet when a plain credential sits beside the helper in a file npm reads', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig(
+          [
+            '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
+            '//reg-a.example.com/:_authToken=user-token',
+          ].join('\n')
+        );
+        expect(warnFor()).not.toHaveBeenCalled();
+      });
+
+      it('reports the helper when that same file is one only pnpm reads', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writePnpmOnlyUserConfig(
+          [
+            '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
+            '//reg-a.example.com/:_authToken=user-token',
+          ].join('\n')
+        );
+        expect(warnFor().mock.calls[0][0]).toContain('//reg-a.example.com/');
+      });
+
+      it('follows npmrcAuthFile from the global config.yaml', () => {
+        const path = join(configHome, 'from-yaml.npmrc');
+        writeFileSync(
+          path,
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        mkdirSync(join(configHome, 'pnpm'), { recursive: true });
+        writeFileSync(
+          join(configHome, 'pnpm', 'config.yaml'),
+          `npmrcAuthFile: ${path}\n`
+        );
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        expect(warnFor().mock.calls[0][0]).toContain('//reg-a.example.com/');
+      });
+
+      it('stays quiet when the project .npmrc authenticates that registry anyway', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeFileSync(
           join(root, '.npmrc'),
           '//reg-a.example.com/:_authToken=project-token'
         );
+        writeUserConfig(
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        expect(warnFor()).not.toHaveBeenCalled();
+      });
+
+      it('stays quiet about a helper in auth.ini, which pnpm refuses to run', () => {
         writeAuthIni(
           [
             'registry=https://reg-a.example.com/',
             '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token',
           ].join('\n')
         );
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          fresh('is-even', root, '11.5.0');
-        });
-        expect(logger.warn).not.toHaveBeenCalled();
+        expect(warnFor()).not.toHaveBeenCalled();
+      });
+
+      it('resolves a relative auth-file path against the config root', () => {
+        // Both tools resolve a relative userconfig against the cwd they run in,
+        // which is the config root the spawn uses, not this process's cwd. The
+        // wrong base reads a different file and misses the helper it holds.
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeFileSync(
+          join(root, 'pnpm-auth.npmrc'),
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        process.env.PNPM_CONFIG_NPMRC_AUTH_FILE = 'pnpm-auth.npmrc';
+        const warn = warnFor();
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
+      });
+
+      it('does not count an ambient credential the spawn strips on >= 11', () => {
+        // The helper's registry has an ambient token, but pnpm >= 11 makes the
+        // spawn drop npm_config_* (mergeNpmConfigEnv), so npm never receives it
+        // and fetches unauthenticated. The helper is still worth reporting.
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig(
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
+        const warn = warnFor();
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
+      });
+
+      it('detects a helper whose key holds an env reference', () => {
+        // pnpm expands ${VAR} in a key before reading the value under it, so a
+        // helper keyed on //${HOST}/ authenticates //reg-a.example.com/.
+        process.env.NX_TEST_HOST = 'reg-a.example.com';
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writePnpmOnlyUserConfig(
+          '//${NX_TEST_HOST}/:tokenHelper=/usr/local/bin/get-token'
+        );
+        const warn = warnFor();
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
+      });
+
+      it('counts a project .npmrc credential whose key holds an env reference', () => {
+        // npm expands ${VAR} in an .npmrc key too, so this token authenticates
+        // //reg-a.example.com/ and the helper is not worth reporting.
+        process.env.NX_TEST_HOST = 'reg-a.example.com';
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeUserConfig(
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        writeFileSync(
+          join(root, '.npmrc'),
+          '//${NX_TEST_HOST}/:_authToken=project-token'
+        );
+        expect(warnFor()).not.toHaveBeenCalled();
+      });
+
+      it('lets a later env-keyed registry override an earlier literal one', () => {
+        // Both readers expand each key and assign in file order, so the env-keyed
+        // scoped registry below overrides the literal above it; npm contacts
+        // reg-b, where the helper is.
+        process.env.NX_TEST_SCOPE = 'nx-test';
+        writeFileSync(
+          join(root, '.npmrc'),
+          [
+            '@nx-test:registry=https://reg-a.example.com/',
+            '@${NX_TEST_SCOPE}:registry=https://reg-b.example.com/',
+          ].join('\n')
+        );
+        writePnpmOnlyUserConfig(
+          '//reg-b.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        const warn = warnFor('@nx-test/pkg');
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toContain('//reg-b.example.com/');
+      });
+
+      it('lets a later literal registry override an earlier env-keyed one', () => {
+        // The literal scoped registry is last, so it wins over the env-keyed one
+        // above it; npm contacts reg-a, where the helper is.
+        process.env.NX_TEST_SCOPE = 'nx-test';
+        writeFileSync(
+          join(root, '.npmrc'),
+          [
+            '@${NX_TEST_SCOPE}:registry=https://reg-b.example.com/',
+            '@nx-test:registry=https://reg-a.example.com/',
+          ].join('\n')
+        );
+        writePnpmOnlyUserConfig(
+          '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
+        );
+        const warn = warnFor('@nx-test/pkg');
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
       });
     });
 
