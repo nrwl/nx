@@ -33,7 +33,7 @@ The decisions around that command are what determine whether the migration holds
 Resist planning a single migration that absorbs every repository at once.
 Start with the projects that already change together.
 
-One cheap signal is how often a pull request in one repository forces a follow-up pull request in another within the same week.
+One signal is how often a pull request in one repository forces a follow-up pull request in another within the same week.
 Repositories that keep showing up in those pairs belong in the same workspace.
 Repositories that never show up together gain little from the move.
 
@@ -55,26 +55,17 @@ Teams that answer the [organizational questions](/docs/kb/monorepo-vs-polyrepo#o
 Product lines in different domains that share no code are also fine where they are.
 
 Finishing with several monorepos instead of one is a normal outcome.
-The split should follow a real boundary rather than the org chart.
+The split should follow a real boundary.
 
-## 1. Prepare the destination workspace
+## 1. Create the destination workspace
 
-Pick the repository that will absorb the others.
-The largest one, or the one holding the most shared code, saves you the most import work.
-
-If that repository is already an npm, pnpm, Yarn, or Bun workspace, add Nx to it:
+Start from an empty workspace and import every project into it, including the ones from the repository you think of as the main one:
 
 ```shell
-npx nx@latest init
+npx create-nx-workspace@latest --template=empty
 ```
 
-For a repository holding a single project, see [adding Nx to an existing project](/docs/guides/adopting-nx/adding-to-existing-project).
-For an existing package manager workspace, see [adding Nx to a monorepo](/docs/guides/adopting-nx/adding-to-monorepo).
-If no repository is a good host, create a new workspace:
-
-```shell
-npx create-nx-workspace@latest
-```
+Converting your largest repository in place works too, but then everything you import afterwards has to be reconciled against conventions that were set before the migration started.
 
 Settle your [folder structure](/docs/kb/folder-structure) before importing anything.
 `nx import` puts files where you tell it to, so the destination conventions win.
@@ -84,7 +75,7 @@ Deciding that applications live in `apps/` and libraries in `packages/` now save
 
 You cannot import a source `libs/` directory into a destination `libs/` that already holds projects.
 Import each project into its own empty directory instead, such as `libs/ui` and then `libs/data-access`.
-If you scaffolded the workspace from the TypeScript preset, delete the `packages/.gitkeep` file and commit that change before your first import.
+The empty template ships a `packages/.gitkeep` file, so delete that and commit the change before your first import.
 
 {% /aside %}
 
