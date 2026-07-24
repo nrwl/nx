@@ -4,7 +4,7 @@ import {
   ContextReplacementPlugin,
   DefinePlugin,
 } from '@rspack/core';
-import { resolve } from 'path';
+import { posix, relative, resolve, sep } from 'path';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
@@ -12,6 +12,7 @@ import type {
 import { NgRspackPlugin } from '../../plugins/ng-rspack';
 import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
 import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
+import type { PlatformServerExportsLoaderOptions } from '../../plugins/loaders/platform-server-exports.loader';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { isPackageInstalled } from '../../utils/misc-helpers';
 import { getDevServerConfig } from './dev-server-config-utils';
@@ -29,6 +30,44 @@ export async function getServerConfig(
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
+
+  const angularSSRInstalled = isPackageInstalled(root, '@angular/ssr');
+  if (normalizedOptions.outputMode && !angularSSRInstalled) {
+    throw new Error(
+      'The "outputMode" option requires the "@angular/ssr" package to be installed.'
+    );
+  }
+  const platformServerExportsLoaderOptions: PlatformServerExportsLoaderOptions =
+    {
+      angularSSRInstalled,
+      isZoneJsInstalled: isPackageInstalled(root, 'zone.js'),
+      // Locale inlining is not wired up: the engine manifests would need
+      // per-locale entry points, which the inlining pipeline does not produce.
+      ...(angularSSRInstalled && normalizedOptions.server && !i18n.shouldInline
+        ? {
+            engineWiring: {
+              mainServerEntry: resolve(root, normalizedOptions.server),
+              baseHref: normalizedOptions.baseHref ?? '/',
+              locale: i18n.hasDefinedSourceLocale
+                ? i18n.sourceLocale
+                : undefined,
+              inlineCriticalCss:
+                !!normalizedOptions.optimization.styles.inlineCritical,
+              // Baked into the emitted bundle; posix separators keep it valid
+              // when the build and the server run on different platforms.
+              browserOutputRelativePath: relative(
+                normalizedOptions.outputPath.server,
+                normalizedOptions.outputPath.browser
+              )
+                .split(sep)
+                .join(posix.sep),
+              indexOutputName: normalizedOptions.index?.output,
+              supportedLocales: { [i18n.sourceLocale]: '' },
+              allowedHosts: normalizedOptions.security?.allowedHosts ?? [],
+            },
+          }
+        : {}),
+    };
 
   return {
     ...defaultConfig,
@@ -74,10 +113,7 @@ export async function getServerConfig(
           include: [
             resolve(root, (normalizedOptions.ssr as { entry: string }).entry),
           ],
-          options: {
-            angularSSRInstalled: isPackageInstalled(root, '@angular/ssr'),
-            isZoneJsInstalled: isPackageInstalled(root, 'zone.js'),
-          },
+          options: platformServerExportsLoaderOptions,
         },
         ...(defaultConfig.module?.rules ?? []),
       ],

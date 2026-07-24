@@ -55,15 +55,27 @@ export function resolveFileReplacements(
 export function getHasServer(
   root: string,
   server: string | undefined,
-  ssr: AngularRspackPluginOptions['ssr']
+  ssr: AngularRspackPluginOptions['ssr'],
+  outputMode?: 'server' | undefined
 ): boolean {
-  return !!(
-    server &&
-    ssr &&
-    (ssr as { entry: string }).entry &&
-    existsSync(join(root, server)) &&
-    existsSync(join(root, (ssr as { entry: string }).entry))
-  );
+  if (!server || !ssr || !(ssr as { entry: string }).entry) {
+    return false;
+  }
+
+  for (const file of [server, (ssr as { entry: string }).entry]) {
+    if (!existsSync(join(root, file))) {
+      // A missing file downgrades to a browser-only build; outputMode is an
+      // explicit request for a server build, so fail instead.
+      if (outputMode) {
+        throw new Error(
+          `The "outputMode" option is set to "${outputMode}", but "${file}" does not exist.`
+        );
+      }
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function validateSsr(ssr: AngularRspackPluginOptions['ssr']) {
@@ -87,12 +99,44 @@ export function validateSsr(ssr: AngularRspackPluginOptions['ssr']) {
     }
 }
 
+export function validateOutputMode(
+  outputMode: AngularRspackPluginOptions['outputMode'],
+  server: string | undefined,
+  ssr: AngularRspackPluginOptions['ssr']
+): asserts outputMode is 'server' | undefined {
+  if (outputMode === undefined) {
+    return;
+  }
+  if (outputMode !== 'server') {
+    throw new Error(
+      `The "${outputMode}" value for the "outputMode" option is not supported. Only "server" is currently supported.`
+    );
+  }
+  if (!server) {
+    throw new Error(
+      'The "server" option is required when "outputMode" is set to "server".'
+    );
+  }
+  if (typeof ssr !== 'object' || !ssr.entry) {
+    throw new Error(
+      'The "ssr.entry" option is required when "outputMode" is set to "server".'
+    );
+  }
+}
+
 export async function normalizeOptions(
   options: AngularRspackPluginOptions
 ): Promise<NormalizedAngularRspackPluginOptions> {
-  const { fileReplacements = [], server, ssr, optimization } = options;
+  const {
+    fileReplacements = [],
+    server,
+    ssr,
+    optimization,
+    outputMode,
+  } = options;
 
   validateSsr(ssr);
+  validateOutputMode(outputMode, server, ssr);
 
   const normalizedSsr = !ssr
     ? false
@@ -102,6 +146,32 @@ export async function normalizeOptions(
           platform: 'node' as const, // @TODO: Add support for neutral platform
         }
       : ssr;
+
+  if (options.security?.autoCsp) {
+    throw new Error(
+      'The "security.autoCsp" option is not supported by @nx/angular-rspack yet.'
+    );
+  }
+
+  let prerender = options.prerender ?? false;
+  let appShell = options.appShell ?? false;
+  if (outputMode) {
+    if (options.prerender !== undefined) {
+      console.warn(
+        'The "prerender" option is not considered when "outputMode" is specified.'
+      );
+    }
+    if (options.appShell !== undefined) {
+      console.warn(
+        'The "appShell" option is not considered when "outputMode" is specified.'
+      );
+    }
+    console.warn(
+      'Build-time prerendering of server routes is not supported by @nx/angular-rspack yet. Routes marked for prerendering are rendered at request time.'
+    );
+    prerender = false;
+    appShell = false;
+  }
 
   const normalizedOptimization = normalizeOptimization(optimization);
 
@@ -230,7 +300,7 @@ export async function normalizeOptions(
 
   return {
     advancedOptimizations,
-    appShell: options.appShell ?? false,
+    appShell,
     assets,
     aot,
     baseHref: options.baseHref,
@@ -247,21 +317,23 @@ export async function normalizeOptions(
     fileReplacements: resolveFileReplacements(fileReplacements, root),
     globalStyles,
     globalScripts,
-    hasServer: getHasServer(root, server, normalizedSsr),
+    hasServer: getHasServer(root, server, normalizedSsr, outputMode),
     index,
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
     namedChunks: options.namedChunks ?? false,
     ngswConfigPath: options.ngswConfigPath,
     optimization: normalizedOptimization,
     outputHashing: options.outputHashing ?? 'none',
+    outputMode,
     outputPath: normalizeOutputPath(root, options.outputPath),
     poll: options.poll ?? undefined,
     polyfills: options.polyfills ?? [],
-    prerender: options.prerender ?? false,
+    prerender,
     projectName: project?.name ?? undefined,
     progress: options.progress ?? true,
     root,
     scripts: options.scripts ?? [],
+    security: options.security,
     serviceWorker: options.serviceWorker,
     server,
     skipTypeChecking: options.skipTypeChecking ?? false,

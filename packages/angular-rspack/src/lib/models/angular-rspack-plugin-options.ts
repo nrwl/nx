@@ -293,6 +293,16 @@ export interface AngularRspackPluginOptions {
         discoverRoutes?: boolean;
       };
   /**
+   * Defines the build output target. Only 'server' is currently supported:
+   * it requires the `server` and `ssr.entry` options and the `@angular/ssr`
+   * package, and disables build-time prerendering (`prerender`/`appShell`).
+   * The `@angular/ssr` application engine wiring itself is active for any
+   * SSR build with `@angular/ssr` installed, with or without this option.
+   * 'static' (build-time prerendering of the full application) is not
+   * supported yet and is rejected.
+   */
+  outputMode?: 'server' | 'static';
+  /**
    * Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set.
    */
   preserveSymlinks?: boolean;
@@ -302,6 +312,22 @@ export interface AngularRspackPluginOptions {
   progress?: boolean;
   root?: string;
   scripts?: ScriptOrStyleEntry[];
+  /**
+   * Security features to protect against XSS and other common attacks.
+   */
+  security?: {
+    /**
+     * A list of hostnames that are allowed to access the server-side
+     * application. For more information, see
+     * https://angular.dev/best-practices/security#preventing-server-side-request-forgery-ssrf.
+     */
+    allowedHosts?: string[];
+    /**
+     * Automatic content security policy generation. Not supported yet;
+     * enabling it is rejected.
+     */
+    autoCsp?: boolean | { unsafeEval?: boolean };
+  };
   server?: string;
   /**
    * Generates a service worker config for production builds.
@@ -374,6 +400,7 @@ export interface NormalizedAngularRspackPluginOptions
   namedChunks: boolean;
   optimization: NormalizedOptimizationOptions;
   outputHashing: OutputHashing;
+  outputMode: 'server' | undefined;
   outputPath: OutputPath;
   polyfills: string[];
   projectName: string | undefined;
