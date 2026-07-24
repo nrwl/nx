@@ -74,6 +74,21 @@
       "type": "boolean",
       "description": "Use the new Environments API for building multiple environments at once. Only works with Vite 6.0.0 or higher.",
       "default": false
+    },
+    "rolldownOptions": {
+      "type": "object",
+      "description": "Rolldown-specific build options (Vite 8+). Merged into Vite's build.rolldownOptions.",
+      "properties": {
+        "preserveModules": {
+          "type": "boolean",
+          "description": "Preserve module structure in output for tree-shakeable library bundles."
+        },
+        "preserveModulesRoot": {
+          "type": "string",
+          "description": "Root directory for preserved module paths."
+        }
+      },
+      "x-priority": "normal"
     }
   },
   "definitions": {},
