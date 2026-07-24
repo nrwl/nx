@@ -55,7 +55,7 @@ Nx creates all of its sockets under a single stable directory on macOS and Linux
 }
 ```
 
-The path is identical on every machine, so the entries are safe to commit and share with your team. Running `nx configure-ai-agents` adds them to `.claude/settings.json` automatically.
+The path is identical on every machine, so the entries are safe to commit and share with your team.
 
 Claude Code's `allowUnixSockets` setting currently only allows _connecting_ to sockets, not _creating_ them. A scoped allowlist works when the daemon is already running (started outside the sandbox, for example from your own terminal), but processes inside the sandbox that need to create sockets, such as a fresh daemon, plugin workers, or forked tasks, still require `allowAllUnixSockets: true`.
 

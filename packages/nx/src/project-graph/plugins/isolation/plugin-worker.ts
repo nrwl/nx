@@ -19,8 +19,6 @@ import { unlinkSync } from 'fs';
 import { createServer } from 'net';
 import { startAnalytics } from '../../../analytics';
 import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
-import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
-import { isSandbox } from '../../../utils/is-sandbox';
 import '../../../utils/perf-logging';
 
 type Environment = Pick<
@@ -203,17 +201,11 @@ const server = createServer((socket) => {
 server.on('error', (err: NodeJS.ErrnoException) => {
   // Without this handler the worker dies silently and the host only ever
   // sees "exited before the connection was established" — surface the real
-  // failure (commonly a sandbox denying the unix socket bind).
+  // failure, including the errno, which is what distinguishes a denied bind
+  // from a leftover socket (EADDRINUSE) or a reaped socket dir (ENOENT).
   console.error(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) failed to listen on ${socketPath}: ${err.message}`
   );
-  // A bind can fail for reasons that have nothing to do with a sandbox
-  // (EADDRINUSE from a leftover socket, ENOENT from a reaped socket dir), so
-  // only mention one when the errno proves it or the environment says so.
-  const refusedByOs = err.code === 'EPERM' || err.code === 'EACCES';
-  if (refusedByOs || isSandbox()) {
-    console.error(sandboxSocketHint({ certain: refusedByOs }).join('\n'));
-  }
   process.exit(1);
 });
 // A worker killed without running its 'end' handler leaves its socket file
