@@ -193,8 +193,10 @@ export async function formatFilesWithOxfmt(
     // Staged files sit outside the workspace tree, so oxfmt would not find the
     // ignore files it normally honours. Copy them next to the staged content
     // so ignored paths stay ignored, matching the prettier backend.
+    // .editorconfig comes along for the same reason: oxfmt reads it from the
+    // cwd, and the run is pinned to this directory.
     await Promise.all(
-      ['.gitignore', '.prettierignore'].map(async (name) => {
+      ['.gitignore', '.prettierignore', '.editorconfig'].map(async (name) => {
         const source = path.join(workspaceRoot, name);
         if (existsSync(source)) {
           await writeFile(
@@ -222,6 +224,10 @@ export async function formatFilesWithOxfmt(
         'node',
         [oxfmtBin, '--no-error-on-unmatched-pattern', '--write', scratch],
         {
+          // oxfmt resolves .editorconfig from the cwd rather than from the
+          // files it formats. Run it inside the scratch dir so it cannot reach
+          // out into the workspace for config the staged files should not use.
+          cwd: scratch,
           encoding: 'utf-8' as const,
           windowsHide: true,
           maxBuffer: FORMATTER_MAX_BUFFER,
