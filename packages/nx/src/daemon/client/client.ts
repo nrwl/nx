@@ -123,6 +123,7 @@ import {
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
+import { sandboxSocketHint } from '../sandbox-socket-hint';
 import {
   DaemonSocketMessenger,
   VersionMismatchError,
@@ -1078,7 +1079,15 @@ export class DaemonClient {
 
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
-          error = daemonProcessException('The Daemon Server is not running');
+          error = daemonProcessException(
+            [
+              'The Daemon Server is not running',
+              // A denied bind leaves no socket file behind, so the client sees
+              // a missing socket rather than a refused connection. Outside a
+              // sandbox this is just the ordinary "not started yet" case.
+              ...(isSandbox() ? sandboxSocketHint() : []),
+            ].join('\n')
+          );
         } else if (
           err.message.startsWith('connect EPERM') ||
           err.message.startsWith('connect EACCES')
@@ -1086,7 +1095,12 @@ export class DaemonClient {
           // The 0700 dir and 0600 socket mean the OS refuses this rather than the
           // connect silently succeeding.
           error = daemonProcessException(
-            'The operating system refused the connection to the Nx Daemon socket.'
+            [
+              'The operating system refused the connection to the Nx Daemon socket.',
+              // EPERM/EACCES on a connect is the one errno that proves the
+              // socket was blocked rather than merely absent or stale.
+              ...sandboxSocketHint({ certain: true }),
+            ].join('\n')
           );
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
           error = daemonProcessException(
@@ -1378,7 +1392,13 @@ export class DaemonClient {
       return backgroundProcess.pid;
     } else {
       throw daemonProcessException(
-        'Failed to start or connect to the Nx Daemon process.'
+        [
+          'Failed to start or connect to the Nx Daemon process.',
+          // The daemon can fail to start for many reasons; only surface the
+          // sandbox guidance when we know a sandbox is in play, where it is
+          // the most likely cause.
+          ...(isSandbox() ? sandboxSocketHint() : []),
+        ].join('\n')
       );
     }
   }
