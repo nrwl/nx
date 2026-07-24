@@ -8,13 +8,13 @@ import type { ProjectGraph } from '../../../config/project-graph';
 import { serverLogger } from '../../../daemon/logger';
 import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
-import { isAiAgent } from '../../../native';
 import {
   consumeMessagesFromSocket,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
 import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
+import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
@@ -642,9 +642,9 @@ async function connectToWorker(
       earlyExitError = new Error(
         [
           `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
-          // The worker's own stderr may be lost with the process; when an
-          // agent is driving nx, name the likely cause and the fix directly.
-          ...(isAiAgent() ? sandboxSocketHint() : []),
+          // The worker's own stderr may be lost with the process; when a
+          // sandbox is in play, name the likely cause and the fix directly.
+          ...(isSandbox() ? sandboxSocketHint() : []),
         ].join('\n')
       );
       abortController.abort();

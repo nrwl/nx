@@ -16,13 +16,7 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import {
-  IS_WASM,
-  isAiAgent,
-  NxWorkspaceFiles,
-  TaskRun,
-  TaskTarget,
-} from '../../native';
+import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -38,6 +32,7 @@ import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
+import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import type {
@@ -1388,9 +1383,9 @@ export class DaemonClient {
         [
           'Failed to start or connect to the Nx Daemon process.',
           // The daemon can fail to start for many reasons; only surface the
-          // sandbox guidance when an AI agent is driving nx, where a sandbox
-          // blocking socket access is the most likely cause.
-          ...(isAiAgent() ? sandboxSocketHint() : []),
+          // sandbox guidance when we know a sandbox is in play, where it is
+          // the most likely cause.
+          ...(isSandbox() ? sandboxSocketHint() : []),
         ].join('\n')
       );
     }
