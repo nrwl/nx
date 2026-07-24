@@ -156,6 +156,9 @@ catalogs:
     http-server:
       specifier: ^14.1.0
       version: 14.1.0
+    https-proxy-agent:
+      specifier: ^7.0.6
+      version: 7.0.6
     jsonc-parser:
       specifier: ^3.2.0
       version: 3.3.1
@@ -3355,6 +3358,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.60.0
+      https-proxy-agent:
+        specifier: 'catalog:'
+        version: 7.0.6
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5

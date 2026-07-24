@@ -930,6 +930,297 @@ describe('@nx/playwright/plugin', () => {
     `);
   });
 
+  it('should infer a wait-for-webserver task and wire the e2e and atomized CI tasks to it when the webServer defines a port', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({
+      'tests/run-me.spec.ts': '',
+      'tests/run-me-2.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const project = results[0][1].projects['.'];
+    const { targets } = project;
+
+    expect(targets['e2e--wait-for-webserver']).toEqual({
+      executor: '@nx/playwright:wait-for-webserver',
+      cache: false,
+      options: { servers: [{ port: 4200 }] },
+      dependsOn: [{ projects: ['app1'], target: 'serve' }],
+      metadata: {
+        technologies: ['playwright'],
+        description:
+          'Waits for the E2E web server(s) to be ready before the Playwright test tasks run.',
+      },
+    });
+    // atomized CI tasks keep the continuous serve dependency (to keep it alive)
+    // and add the discrete readiness gate as a barrier.
+    expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+    expect(targets['e2e-ci--tests/run-me-2.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+    // the non-CI e2e task shares the same readiness gate as a barrier on top of
+    // the continuous serve dependency.
+    expect(targets['e2e'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+    expect(project.metadata.targetGroups['E2E (CI)']).toContain(
+      'e2e--wait-for-webserver'
+    );
+  });
+
+  it('should infer a wait-for-webserver task using the url when the webServer defines a url', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        url: 'http://localhost:4200',
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver'].options).toEqual({
+      servers: [{ url: 'http://localhost:4200' }],
+    });
+    expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+      { target: 'e2e--wait-for-webserver' },
+    ]);
+  });
+
+  it('should not infer a wait-for-webserver task when the webServer has no port or url', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const project = results[0][1].projects['.'];
+    const { targets } = project;
+
+    expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+    // both tasks fall back to depending on the serve task only, as before.
+    expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+    ]);
+    expect(targets['e2e'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+    ]);
+    expect(project.metadata.targetGroups['E2E (CI)']).not.toContain(
+      'e2e--wait-for-webserver'
+    );
+  });
+
+  it.each([
+    { port: 0 },
+    { url: '' },
+    // Playwright probes the url's port over TCP whenever `port` is defined,
+    // which is not the check the readiness task would run.
+    { port: 0, url: 'http://127.0.0.1:4200' },
+    { port: null, url: 'http://127.0.0.1:4200' },
+    // A `playwright.config.js` is not type-checked, so either can arrive as a
+    // type Playwright coerces but the readiness task can't probe.
+    { port: '4200' as unknown as number },
+    { url: 4200 as unknown as string },
+  ])(
+    'should not infer a wait-for-webserver task when the webServer sets %p',
+    async (server) => {
+      await mockPlaywrightConfig(tempFs, {
+        testDir: 'tests',
+        webServer: {
+          command: 'npx nx run app1:serve',
+          reuseExistingServer: true,
+          ...server,
+        },
+      });
+      await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const project = results[0][1].projects['.'];
+      const { targets } = project;
+
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+      ]);
+      expect(targets['e2e'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+      ]);
+      expect(project.metadata.targetGroups['E2E (CI)']).not.toContain(
+        'e2e--wait-for-webserver'
+      );
+    }
+  );
+
+  it('should default the wait-for-webserver timeout to the configured webServer.timeout', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+        timeout: 120000,
+      },
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver'].options).toEqual({
+      servers: [{ port: 4200, timeout: 120000 }],
+    });
+  });
+
+  it('should keep each configured webServer.timeout on its own server', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: [
+        {
+          command: 'npx nx run app1:serve',
+          port: 4200,
+          reuseExistingServer: true,
+          timeout: 30000,
+        },
+        {
+          command: 'npx nx run api1:serve',
+          port: 3333,
+          reuseExistingServer: true,
+          timeout: 120000,
+        },
+      ],
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    // a fast server must not inherit a slower server's budget.
+    expect(targets['e2e--wait-for-webserver'].options).toEqual({
+      servers: [
+        { port: 4200, timeout: 30000 },
+        { port: 3333, timeout: 120000 },
+      ],
+    });
+  });
+
+  it('should let the webServerTimeout plugin option override the configured webServer.timeout', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+        timeout: 120000,
+      },
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+        webServerTimeout: 300000,
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver'].options).toEqual({
+      servers: [{ port: 4200, timeout: 120000 }],
+      timeout: 300000,
+    });
+  });
+
+  it('should pass ignoreHTTPSErrors through to the wait-for-webserver task when set', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        url: 'https://localhost:4200',
+        ignoreHTTPSErrors: true,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+      { url: 'https://localhost:4200', ignoreHTTPSErrors: true },
+    ]);
+  });
+
   it('should not set parallelism to false and should infer dependsOn using the tasks run in the different webServer.command that have reuseExistingServer set to true', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',

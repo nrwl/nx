@@ -27,20 +27,40 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
+import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
   ciTargetName?: string;
+  /**
+   * Maximum time in milliseconds the inferred web server readiness task waits
+   * for a server to be ready before failing. Overrides the `timeout` each
+   * Playwright `webServer` configures. Defaults to that configured timeout,
+   * or 60000 when neither is set.
+   */
+  webServerTimeout?: number;
 }
 
 interface NormalizedOptions {
   targetName: string;
   ciTargetName: string;
   mergeReportsTargetName: string;
+  webServerTimeout?: number;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+
+interface WebserverCommandTask {
+  project: string;
+  target: string;
+  port?: number;
+  url?: string;
+  ignoreHTTPSErrors?: boolean;
+  timeout?: number;
+}
+
+type WebserverReadinessServer = WaitForWebserverSchema['servers'][number];
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
 export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
@@ -177,6 +197,20 @@ async function buildPlaywrightTargets(
   const testOutput = getTestOutput(playwrightConfig);
   const reporterOutputs = getReporterOutputs(playwrightConfig);
   const webserverCommandTasks = getWebserverCommandTasks(playwrightConfig);
+
+  // When an inferred web server exposes a port/url, add a task that waits for
+  // it to be ready. Playwright's `reuseExistingServer` probe
+  // otherwise races the server boot, misses, and spawns its own nested server
+  // command whose I/O then leaks into the task. Both the `e2e` task and the
+  // atomized CI tasks depend on it.
+  const webserverReadinessServers = webserverCommandTasks
+    .map(toReadinessServer)
+    .filter(Boolean);
+  const webserverReadyTargetName =
+    webserverReadinessServers.length > 0
+      ? `${options.targetName}--wait-for-webserver`
+      : undefined;
+
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
     options: {
@@ -197,7 +231,12 @@ async function buildPlaywrightTargets(
   };
 
   if (webserverCommandTasks.length) {
-    baseTargetConfig.dependsOn = getDependsOn(webserverCommandTasks);
+    baseTargetConfig.dependsOn = webserverReadyTargetName
+      ? [
+          ...getDependsOn(webserverCommandTasks),
+          { target: webserverReadyTargetName },
+        ]
+      : getDependsOn(webserverCommandTasks);
   } else {
     baseTargetConfig.parallelism = false;
   }
@@ -219,6 +258,25 @@ async function buildPlaywrightTargets(
       projectRoot
     ),
   };
+
+  if (webserverReadyTargetName) {
+    targets[webserverReadyTargetName] = {
+      executor: '@nx/playwright:wait-for-webserver',
+      cache: false,
+      options: {
+        servers: webserverReadinessServers,
+        ...(options.webServerTimeout != null
+          ? { timeout: options.webServerTimeout }
+          : {}),
+      },
+      dependsOn: getDependsOn(webserverCommandTasks),
+      metadata: {
+        technologies: ['playwright'],
+        description:
+          'Waits for the E2E web server(s) to be ready before the Playwright test tasks run.',
+      },
+    };
+  }
 
   if (options.ciTargetName) {
     // ensure the blob reporter output is the directory containing the blob
@@ -360,6 +418,9 @@ async function buildPlaywrightTargets(
       targets[options.ciTargetName].parallelism = false;
     }
     ciTargetGroup.push(options.ciTargetName);
+    if (webserverReadyTargetName) {
+      ciTargetGroup.push(webserverReadyTargetName);
+    }
 
     // infer the task to merge the reports from the atomized tasks
     const mergeReportsTargetOutputs = new Set<string>();
@@ -515,12 +576,12 @@ function addSubfolderToOutput(output: string, subfolder: string): string {
 
 function getWebserverCommandTasks(
   playwrightConfig: PlaywrightTestConfig
-): Array<{ project: string; target: string }> {
+): WebserverCommandTask[] {
   if (!playwrightConfig.webServer) {
     return [];
   }
 
-  const tasks: Array<{ project: string; target: string }> = [];
+  const tasks: WebserverCommandTask[] = [];
 
   const webServer = Array.isArray(playwrightConfig.webServer)
     ? playwrightConfig.webServer
@@ -533,11 +594,53 @@ function getWebserverCommandTasks(
 
     const task = parseTaskFromCommand(server.command);
     if (task) {
-      tasks.push(task);
+      tasks.push({
+        ...task,
+        port: server.port,
+        url: server.url,
+        ignoreHTTPSErrors: server.ignoreHTTPSErrors,
+        timeout: server.timeout,
+      });
     }
   }
 
   return tasks;
+}
+
+// Playwright picks a web server's readiness probe by presence rather than
+// truthiness: a defined `port` makes it check that port over TCP even when the
+// value is falsy and the address comes from `url`, and a web server it can
+// address neither way gets no probe at all. An unchecked `playwright.config.js`
+// can also carry a `port` Playwright coerces but the readiness task can't
+// probe. Gate only on the shapes the task probes the same way; the rest is
+// left to Playwright.
+function toReadinessServer(
+  task: WebserverCommandTask
+): WebserverReadinessServer | undefined {
+  let server: WebserverReadinessServer;
+  if (typeof task.port === 'number' && task.port) {
+    server = { port: task.port };
+  } else if (
+    typeof task.url === 'string' &&
+    task.url &&
+    task.port === undefined
+  ) {
+    server = { url: task.url };
+  } else {
+    return undefined;
+  }
+
+  if (task.ignoreHTTPSErrors) {
+    server.ignoreHTTPSErrors = true;
+  }
+  // Carry each server's own `webServer.timeout` (the budget Playwright waits
+  // for a server it starts) so a slow server is not cut short and a fast one
+  // is not given another server's budget.
+  if (task.timeout != null) {
+    server.timeout = task.timeout;
+  }
+
+  return server;
 }
 
 function parseTaskFromCommand(command: string): {
