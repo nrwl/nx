@@ -1,7 +1,8 @@
 import { dirname, isAbsolute, join, resolve, sep } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
+import { readJsonFile } from '../../../utils/fileutils';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
@@ -1383,7 +1384,7 @@ function resolvePathsBaseUrl(tsconfigPath: string): string {
     const absolute = resolve(queue.shift()!);
     const dir = dirname(absolute);
     try {
-      const raw = JSON.parse(readFileSync(absolute, 'utf-8'));
+      const raw = readJsonFile(absolute);
       chain.push({ dir, raw });
       const exts: string[] = raw.extends
         ? Array.isArray(raw.extends)
