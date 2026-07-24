@@ -175,12 +175,17 @@ Configure the plugin in `nx.json`:
 }
 ```
 
-| Option           | Type             | Default                     | Description                                                               |
-| ---------------- | ---------------- | --------------------------- | ------------------------------------------------------------------------- |
-| `testTargetName` | string           | `test`                      | Name of the inferred local target.                                        |
-| `ciTargetName`   | string           | none                        | Creates a CI-only target used for atomized runs.                          |
-| `ciGroupName`    | string           | derived from `ciTargetName` | Display name for the atomized CI group.                                   |
-| `testMode`       | `watch` or `run` | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run). |
+| Option              | Type               | Default                     | Description                                                                                                                                                                                               |
+| ------------------- | ------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testTargetName`    | string             | `test`                      | Name of the inferred local target.                                                                                                                                                                        |
+| `ciTargetName`      | string             | none                        | Creates a CI-only target used for atomized runs.                                                                                                                                                          |
+| `ciGroupName`       | string             | derived from `ciTargetName` | Display name for the atomized CI group.                                                                                                                                                                   |
+| `testMode`          | `watch` or `run`   | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run).                                                                                                                                 |
+| `discoverTestFiles` | `glob` or `vitest` | `glob`                      | How atomized test files are discovered. `glob` mirrors Vitest's resolution without booting Vitest per project, which is faster during graph creation. Set to `vitest` to always enumerate through Vitest. |
+
+When `discoverTestFiles` is `glob`, configs that a glob cannot reproduce faithfully still boot Vitest automatically: `test.projects` or `test.workspace` (inline or an auto-loaded `vitest.workspace.*` or `vitest.projects.*` file), plugins with a `configureVitest` hook, `test.changed` or `test.related`, and enabled browser `instances` that set their own `include`, `exclude`, `includeSource`, or `dir`. Patterns the glob reads differently than Vitest trigger the same fallback: an absolute path, a trailing `/`, or an `!(...)` extglob, each optionally negated, in `include`, `exclude`, `includeSource`, or `typecheck`'s include or exclude.
+
+The `glob` path reads the Nx workspace file index, so it never enumerates specs ignored by `.gitignore` or `.nxignore`, even ones Vitest itself would run. Set `discoverTestFiles` to `vitest` if you need those specs atomized.
 
 There is no single "disable" flag for inference. Use `include` and `exclude` to scope which projects each plugin instance applies to.
 
