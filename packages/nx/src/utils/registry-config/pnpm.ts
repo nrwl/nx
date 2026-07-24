@@ -1,4 +1,5 @@
 import { existsSync } from 'fs';
+import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { gte, lt } from 'semver';
 import {
@@ -12,7 +13,10 @@ import {
   expandPnpmEnvVars,
   getPackageScope,
   hasCredentialFor,
+  ignoresNpmConfigEnv,
   nerfDart,
+  readEnvVar,
+  readExpandedKey,
   readNpmConfigEnv,
   registryKeysFor,
   setCafile,
@@ -79,6 +83,10 @@ export function getPnpmSpawnRegistryEnv(
 
   const settings = readPnpmWorkspaceSettings(root);
   const scope = getPackageScope(packageName);
+  // The spawn drops ambient npm_config_* on the same lines this returns true for
+  // (mergeNpmConfigEnv), so a resolver here reads the environment npm receives
+  // only when it is false. Kept identical to the caller's spawn-time argument.
+  const managerIgnoresEnv = ignoresNpmConfigEnv('pnpm', pnpmVersion);
 
   if (lt(pnpmVersion, '11.0.0')) {
     // Wholesale semantics: the map replaces the npmrc/env/CLI registry
@@ -102,6 +110,16 @@ export function getPnpmSpawnRegistryEnv(
     // bypass list can need re-spelling here.
     bridgeNoProxy(env, root);
     applyYamlNetworkSettings(env, settings);
+    // This line has no auth.ini and no npmrcAuthFile: pnpm's user config is
+    // npm's own, always a file npm reads for itself.
+    reportTokenHelper(
+      env,
+      root,
+      scope,
+      getNpmUserConfigPath(root),
+      'resolved-registry',
+      managerIgnoresEnv
+    );
     return env;
   }
 
@@ -120,7 +138,15 @@ export function getPnpmSpawnRegistryEnv(
   }
 
   const authIniPath = getAuthIniPath();
-  bridgeAuthIni(env, root, scope, authIniPath, pnpmVersion);
+  bridgeAuthIni(env, root, scope, authIniPath, pnpmVersion, managerIgnoresEnv);
+  reportTokenHelper(
+    env,
+    root,
+    scope,
+    getPnpmUserConfigPath(pnpmVersion, root),
+    'declaring-file',
+    managerIgnoresEnv
+  );
 
   // The bypass list resolves across all of these at once (resolveNoProxy), so
   // the yaml does not get to write it on its own here.
@@ -233,7 +259,8 @@ function bridgeAuthIni(
   root: string,
   scope: string | null,
   authIniPath: string,
-  pnpmVersion: string
+  pnpmVersion: string,
+  managerIgnoresEnv: boolean
 ): void {
   const authIni = readNpmrcMap(authIniPath);
   if (!authIni) {
@@ -283,7 +310,9 @@ function bridgeAuthIni(
     // A tokenHelper names a command to run for the token. npm has no such
     // setting and pnpm skips the key when it arrives through the environment,
     // so passing it on would put a command line in the child's environment that
-    // neither tool ever reads. The credential it stands for is reported below.
+    // neither tool ever reads. pnpm runs a helper only out of its user auth
+    // file, and refuses to run at all when one reaches it from anywhere else,
+    // so a helper here does not stand for a credential the fetch would have had.
     if (key.endsWith(':tokenHelper')) {
       continue;
     }
@@ -314,7 +343,12 @@ function bridgeAuthIni(
     }
   }
 
-  const contacted = contactedRegistry(env, projectNpmrc, scope);
+  const contacted = contactedRegistry(
+    env,
+    projectNpmrc,
+    scope,
+    managerIgnoresEnv
+  );
   const contactedDart = nerfDart(contacted);
   // A withheld credential is invisible in npm's own error, so name it, unless
   // npm already finds one for that registry among the sources visible here. A
@@ -324,16 +358,9 @@ function bridgeAuthIni(
     bareKeys.length > 0 &&
     contactedDart &&
     credentialDart !== contactedDart &&
-    !hasCredentials(env, projectNpmrc, contactedDart)
+    !hasCredentials(env, projectNpmrc, contactedDart, managerIgnoresEnv)
   ) {
     warnUnscopedCredential(contactedDart, bareKeys);
-  }
-  if (
-    contactedDart &&
-    declaresTokenHelper(authIni, contactedDart, credentialDart) &&
-    !hasCredentials(env, projectNpmrc, contactedDart)
-  ) {
-    warnTokenHelper(contactedDart);
   }
 
   // Flat TLS/proxy keys are part of pnpm's auth-config inheritance set
@@ -445,13 +472,16 @@ function fileNoProxy(
 function contactedRegistry(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
-  scope: string | null
+  scope: string | null,
+  managerIgnoresEnv: boolean
 ): string {
   // npm's pickRegistry falls through on a falsy value, so a setting that
   // expanded to nothing lands on the next one rather than on an empty host.
   return (
-    (scope ? npmResolved(env, projectNpmrc, `${scope}:registry`) : undefined) ||
-    npmResolved(env, projectNpmrc, 'registry') ||
+    (scope
+      ? npmResolved(env, projectNpmrc, `${scope}:registry`, managerIgnoresEnv)
+      : undefined) ||
+    npmResolved(env, projectNpmrc, 'registry', managerIgnoresEnv) ||
     DEFAULT_REGISTRY
   );
 }
@@ -460,14 +490,22 @@ function contactedRegistry(
 function npmResolved(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
-  key: string
+  key: string,
+  managerIgnoresEnv: boolean
 ): string | undefined {
-  // An ambient npm_config_* survives only where the overlay claims nothing
-  // (mergeNpmConfigEnv drops it otherwise), and it still outranks the .npmrc.
+  // npm's env tier outranks the .npmrc, but a spawn that strips the ambient
+  // npm_config_* (mergeNpmConfigEnv when the manager ignores it) leaves npm only
+  // the overlay and the file, so an ambient value the manager never saw is not
+  // counted here either.
+  const ambient = managerIgnoresEnv
+    ? undefined
+    : readNpmConfigEnv(process.env, key);
   const declared =
     env[`npm_config_${key}`] ??
-    readNpmConfigEnv(process.env, key) ??
-    projectNpmrc.get(key);
+    ambient ??
+    // npm expands `${VAR}` in an .npmrc key before it looks a value up under it,
+    // so a value keyed on `//${HOST}/` is found under the resolved dart.
+    readExpandedKey(projectNpmrc, key, expandNpmEnvVars);
   // npm trims a value before it expands one (parseField), so a blank value
   // collapses while a padded reference still resolves.
   return declared === undefined ? undefined : expandNpmEnvVars(declared.trim());
@@ -481,26 +519,175 @@ function npmResolved(
 function hasCredentials(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
-  dart: string
+  dart: string,
+  managerIgnoresEnv: boolean
 ): boolean {
-  return hasCredentialFor(dart, (key) => npmResolved(env, projectNpmrc, key));
+  return hasCredentialFor(dart, (key) =>
+    npmResolved(env, projectNpmrc, key, managerIgnoresEnv)
+  );
+}
+
+/** pnpm reads a leading `~` on every platform; npm only takes `~\` on Windows. */
+const PNPM_HOME_PATH = /^~[/\\]/;
+const NPM_HOME_PATH = process.platform === 'win32' ? /^~[/\\]/ : /^~\//;
+
+/** Both tools normalize a config path this way: a leading `~` for the home
+ *  directory, else resolved against the cwd the command runs in. That cwd is the
+ *  config root the spawn uses, not this process's cwd (which a migrate from a
+ *  workspace subdirectory would differ from). An absolute value is unaffected. */
+function resolveConfigPath(
+  value: string,
+  homePattern: RegExp,
+  root: string
+): string {
+  return homePattern.test(value)
+    ? resolve(homedir(), value.slice(2))
+    : resolve(root, value);
+}
+
+/**
+ * The file pnpm >= 11 authenticates from. Its selection chain is followed here
+ * minus the two CLI links, which nx never passes. Null when the global
+ * config.yaml that could name the file cannot be read, leaving the choice
+ * unknown.
+ * See loadNpmrcConfig in pnpm's config reader.
+ */
+function getPnpmUserConfigPath(
+  pnpmVersion: string,
+  root: string
+): string | null {
+  let selected =
+    readPnpmEnvVar('npmrc_auth_file', pnpmVersion) ??
+    readPnpmEnvVar('userconfig', pnpmVersion);
+  if (selected === undefined) {
+    const globalYaml = readPnpmYamlConfig(
+      join(getPnpmConfigDir(process.env), 'config.yaml')
+    );
+    if (globalYaml === 'invalid') {
+      return null;
+    }
+    const fromYaml = globalYaml?.['npmrcAuthFile'];
+    selected =
+      (typeof fromYaml === 'string' ? fromYaml : undefined) ||
+      // The last link is npm's own setting, which npm then reads for itself.
+      readEnvVar(process.env, 'npm_config_userconfig') ||
+      undefined;
+  }
+  return selected
+    ? resolveConfigPath(selected, PNPM_HOME_PATH, root)
+    : join(homedir(), '.npmrc');
+}
+
+/**
+ * The file npm resolves as its own user config. npm documents `userconfig` as
+ * settable from the environment and the command line only, never from another
+ * config file, so its env tier over the `~/.npmrc` default is the whole chain.
+ */
+function getNpmUserConfigPath(root: string): string {
+  const configured = readNpmConfigEnv(process.env, 'userconfig');
+  return configured
+    ? resolveConfigPath(
+        expandNpmEnvVars(configured.trim()),
+        NPM_HOME_PATH,
+        root
+      )
+    : join(homedir(), '.npmrc');
+}
+
+/**
+ * Where pnpm pins a `tokenHelper` written without a registry prefix. 11
+ * rescopes it per file, onto the registry that same file declares
+ * (rescopeUnscopedCreds); 10.x pins it onto the registry that wins overall
+ * instead (getAuthHeadersFromConfig keys it on allSettings.registry).
+ */
+type UnscopedHelperPin = 'declaring-file' | 'resolved-registry';
+
+/**
+ * Reports a credential pnpm produces by running a token helper, which npm has
+ * no setting for and no way to reproduce. Both supported lines take a helper
+ * only from the user config pnpm resolves (10.x getAuthHeadersFromConfig reads
+ * it from userSettings alone; 11 additionally aborts the command outright with
+ * TOKEN_HELPER_IN_PROJECT_CONFIG when one reaches it from any other file), so
+ * `userConfigPath` is the one place worth reading. Null when the caller cannot
+ * tell which file that is.
+ */
+function reportTokenHelper(
+  env: NpmConfigEnv,
+  root: string,
+  scope: string | null,
+  userConfigPath: string | null,
+  unscopedPin: UnscopedHelperPin,
+  managerIgnoresEnv: boolean
+): void {
+  const userConfig = userConfigPath ? readNpmrcMap(userConfigPath) : null;
+  if (!userConfig) {
+    return;
+  }
+  const projectNpmrc = readNpmrcMap(join(root, '.npmrc')) ?? new Map();
+  const contactedDart = nerfDart(
+    contactedRegistry(env, projectNpmrc, scope, managerIgnoresEnv)
+  );
+  const pinnedDart =
+    unscopedPin === 'declaring-file'
+      ? // pnpm expands `${VAR}` in this file before reading the registry off it.
+        nerfDart(
+          expandPnpmEnvVars(userConfig.get('registry') ?? '') ||
+            DEFAULT_REGISTRY
+        )
+      : // The default registry, never a scoped one: pnpm keys the helper on
+        // `registry` alone, so a scoped package goes elsewhere without it.
+        nerfDart(
+          npmResolved(env, projectNpmrc, 'registry', managerIgnoresEnv) ||
+            DEFAULT_REGISTRY
+        );
+  if (
+    !contactedDart ||
+    !declaresTokenHelper(userConfig, contactedDart, pinnedDart)
+  ) {
+    return;
+  }
+  // npm opens its own user config, so a plain credential sitting beside the
+  // helper is one npm still sends. A file pnpm was pointed at on its own is one
+  // npm never opens, and nothing in it counts.
+  const npmReadsUserConfig = userConfigPath === getNpmUserConfigPath(root);
+  const npmVisible = (key: string): string | undefined => {
+    const declared = npmResolved(env, projectNpmrc, key, managerIgnoresEnv);
+    if (declared !== undefined || !npmReadsUserConfig) {
+      return declared;
+    }
+    // npm expands `${VAR}` in this file's keys too, so match the resolved dart.
+    const fromUserConfig = readExpandedKey(userConfig, key, expandNpmEnvVars);
+    return fromUserConfig === undefined
+      ? undefined
+      : expandNpmEnvVars(fromUserConfig.trim());
+  };
+  if (!hasCredentialFor(contactedDart, npmVisible)) {
+    warnTokenHelper(contactedDart);
+  }
 }
 
 /**
  * Whether the credential pnpm would present at `dart` comes from a token
- * helper: one keyed on that registry or a parent of it, or the unscoped one,
- * which pnpm pins to the registry auth.ini itself declares. A helper outranks
- * every other credential in the same entry (credsToHeader), so it is what pnpm
- * would have sent.
+ * helper: one keyed on that registry or a parent of it, or the unscoped one
+ * `pinnedDart` says pnpm aims there. A helper outranks every other credential
+ * for that registry, whichever layer those came from (credsToHeader), so it is
+ * what pnpm sends.
  */
 function declaresTokenHelper(
-  authIni: Map<string, string>,
+  userConfig: Map<string, string>,
   dart: string,
-  credentialDart: string | null
+  pinnedDart: string | null
 ): boolean {
+  // pnpm expands `${VAR}` in this file, in a key before it reads the value under
+  // it (so `//${HOST}/:tokenHelper` is found under the resolved dart) and in the
+  // value (a reference resolving to nothing declares no helper at all).
+  const declared = (key: string): string =>
+    expandPnpmEnvVars(
+      readExpandedKey(userConfig, key, expandPnpmEnvVars) ?? ''
+    );
   return (
-    registryKeysFor(dart).some((key) => authIni.get(`${key}:tokenHelper`)) ||
-    (credentialDart === dart && !!authIni.get('tokenHelper'))
+    registryKeysFor(dart).some((key) => declared(`${key}:tokenHelper`)) ||
+    (pinnedDart === dart && !!declared('tokenHelper'))
   );
 }
 

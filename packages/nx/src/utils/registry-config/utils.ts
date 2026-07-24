@@ -1,5 +1,9 @@
 import { dirname } from 'path';
+import { parse } from 'semver';
 import { logger } from '../logger';
+
+// Type-only import: a value import would create a cycle with package-manager.ts.
+import type { PackageManager } from '../package-manager';
 
 /**
  * Environment entries (npm_config_* keys) to overlay on a spawned npm process
@@ -158,6 +162,47 @@ export function mergeNpmConfigEnv(
     merged[key] = value;
   }
   return { ...merged, ...overlay };
+}
+
+/**
+ * Whether the package manager resolves registry, auth and TLS settings without
+ * reading `npm_config_*`, so an ambient one is a value it would never have seen.
+ * pnpm reads them up to 10.x and stops at 11.0.0 (which switched to its own
+ * `PNPM_CONFIG_*` prefix), and yarn berry has never read them; npm reads them by
+ * definition, and bun reads them for the settings this module bridges.
+ *
+ * Callers pass it to `mergeNpmConfigEnv`, which then drops those ambient entries
+ * rather than letting npm's env tier resolve one the package manager ignored.
+ * A resolver reasoning about what npm sees uses it the same way: an ambient
+ * value it returns true for is one the spawned npm never receives.
+ *
+ * An undetermined or unparseable version answers false: bridging is skipped or
+ * falls open there anyway, so the ambient environment stays as it is today.
+ */
+export function ignoresNpmConfigEnv(
+  packageManager: PackageManager,
+  packageManagerVersion: string | null
+): boolean {
+  const version = packageManagerVersion ? parse(packageManagerVersion) : null;
+  if (!version) {
+    return false;
+  }
+  switch (packageManager) {
+    case 'npm':
+    case 'bun':
+      return false;
+    case 'pnpm':
+      return version.major >= 11;
+    case 'yarn':
+      return version.major >= 2;
+    default: {
+      // A new PackageManager member fails typecheck here until it is classified
+      // above. Callers that run outside a fall-open catch keep the ambient
+      // environment instead of throwing.
+      const _exhaustive: never = packageManager;
+      return false;
+    }
+  }
 }
 
 export function setRegistry(env: NpmConfigEnv, url: string): void {
@@ -347,6 +392,28 @@ export function readEnvVar(
   name: string
 ): string | undefined {
   return env[name] ?? env[name.toLowerCase()] ?? env[name.toUpperCase()];
+}
+
+/**
+ * Reads `map` under `setting`, matching how npm and pnpm both expand a `${VAR}`
+ * in an .npmrc key before they look a value up under it; `setting` is already
+ * the resolved form to match. Both readers assign in file order, so the last key
+ * that `expand` turns into `setting` wins, a literal one included. A raw key with
+ * no reference is compared as-is.
+ */
+export function readExpandedKey(
+  map: Map<string, string>,
+  setting: string,
+  expand: (value: string) => string
+): string | undefined {
+  let matched: string | undefined;
+  for (const [rawKey, value] of map) {
+    const expanded = rawKey.includes('${') ? expand(rawKey) : rawKey;
+    if (expanded === setting) {
+      matched = value;
+    }
+  }
+  return matched;
 }
 
 /**
