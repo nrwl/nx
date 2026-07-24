@@ -505,11 +505,98 @@ export default defineConfig({
       const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vitest');
       expect(vitePlugin).toBeDefined();
       expect(vitePlugin.options.testTargetName).toEqual('test');
+      expect(vitePlugin.options.ciTargetName).toEqual('test-ci');
     });
 
     it('project.json should not contain test target', () => {
       const projectJson = readJson(`${reactVitest}/project.json`);
       expect(projectJson.targets.test).toBeUndefined();
+    });
+
+    it('should atomize the ci target identically with and without the vitest runtime', () => {
+      const collectAtomized = (details) =>
+        Object.keys(details.targets)
+          .filter((t) => t.startsWith('test-ci--'))
+          .sort()
+          .map((t) => ({
+            target: t,
+            command: details.targets[t].options?.command,
+          }));
+
+      // default path: spec files discovered via glob
+      const globDetails = JSON.parse(
+        runCLI(`show project ${reactVitest} --json`)
+      );
+      const parent = globDetails.targets['test-ci'];
+      expect(parent).toBeDefined();
+      expect(parent.executor).toEqual('nx:noop');
+      expect(parent.metadata.nonAtomizedTarget).toEqual('test');
+
+      const globAtomized = collectAtomized(globDetails);
+      expect(globAtomized.length).toBeGreaterThan(0);
+      for (const { target, command } of globAtomized) {
+        const relativePath = target.slice('test-ci--'.length);
+        expect(relativePath).toMatch(/\.spec\.tsx?$/);
+        expect(command).toEqual(`vitest run ${relativePath}`);
+      }
+
+      // force the vitest runtime to enumerate the specs; atomization must match
+      // the glob path exactly so the OOM-avoiding default preserves behavior
+      updateJson('nx.json', (json) => {
+        const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
+        vitest.options.discoverTestFiles = 'vitest';
+        return json;
+      });
+
+      const runtimeDetails = JSON.parse(
+        runCLI(`show project ${reactVitest} --json`)
+      );
+      expect(collectAtomized(runtimeDetails)).toEqual(globAtomized);
+    });
+
+    it('should discover atomized specs under the vitest test mode', () => {
+      // Restore the glob path (the parity test above forced the runtime).
+      updateJson('nx.json', (json) => {
+        const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
+        vitest.options.discoverTestFiles = 'glob';
+        return json;
+      });
+
+      // A config whose `test.include` branches on the resolved Vite mode.
+      // Vitest runs under mode 'test', so the glob path must resolve the same
+      // mode; resolving under 'development' would enumerate the wrong spec.
+      updateFile(
+        `${reactVitest}/vite.config.mts`,
+        `import { defineConfig } from 'vite';
+
+export default defineConfig(({ mode }) => ({
+  test: {
+    include:
+      mode === 'test'
+        ? ['src/**/*.vitest-mode.spec.ts']
+        : ['src/**/*.vite-dev-mode.spec.ts'],
+  },
+}));
+`
+      );
+      updateFile(
+        `${reactVitest}/src/sample.vitest-mode.spec.ts`,
+        `import { expect, test } from 'vitest';\ntest('mode', () => expect(true).toBe(true));\n`
+      );
+      updateFile(
+        `${reactVitest}/src/sample.vite-dev-mode.spec.ts`,
+        `import { expect, test } from 'vitest';\ntest('mode', () => expect(true).toBe(true));\n`
+      );
+
+      const details = JSON.parse(runCLI(`show project ${reactVitest} --json`));
+      const atomized = Object.keys(details.targets).filter((t) =>
+        t.startsWith('test-ci--')
+      );
+
+      expect(atomized).toContain('test-ci--src/sample.vitest-mode.spec.ts');
+      expect(atomized).not.toContain(
+        'test-ci--src/sample.vite-dev-mode.spec.ts'
+      );
     });
   });
 });

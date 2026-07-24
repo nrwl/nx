@@ -21,11 +21,18 @@ import {
   type RawTsconfigJsonCache,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import type { ResolvedConfig } from 'vite';
+import type { InlineConfig } from 'vitest/node';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
-import { loadViteDynamicImport } from '../utils/executor-utils';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import {
+  loadViteDynamicImport,
+  loadVitestConfigDynamicImport,
+} from '../utils/executor-utils';
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -43,6 +50,27 @@ export interface VitestPluginOptions {
    * - 'run': Tests run once and exit
    */
   testMode?: 'watch' | 'run';
+  /**
+   * How atomized test files (the `ciTargetName` targets) are discovered.
+   * - 'glob' (default): enumerate specs with a glob that mirrors Vitest's own
+   *   resolution instead of booting Vitest per project. Booting Vitest starts a
+   *   Vite dev server and runs the config's plugin hooks, so the glob is faster
+   *   during graph creation. The glob reads the Nx workspace file index, so
+   *   files ignored by `.gitignore`/`.nxignore` are never enumerated even when
+   *   Vitest itself would run them.
+   * - 'vitest': always enumerate through Vitest.
+   *
+   * Configs a glob cannot reproduce faithfully still boot Vitest automatically
+   * even under 'glob': `test.projects`/`test.workspace` (inline or an
+   * auto-loaded `vitest.workspace.*`/`vitest.projects.*` sibling file), plugins
+   * with a `configureVitest` hook, `test.changed`/`test.related`, enabled
+   * browser `instances` that set their own include/exclude/includeSource/dir,
+   * and `include`, `exclude`, `includeSource`, or `typecheck` include/exclude
+   * patterns the workspace glob reads differently (absolute paths, a trailing
+   * `/`, or an `!(...)` extglob, each optionally negated).
+   * @default 'glob'
+   */
+  discoverTestFiles?: 'glob' | 'vitest';
 }
 
 type VitestTargets = Pick<
@@ -227,11 +255,7 @@ async function buildVitestTargets(
   // entirely so it does not register a project rooted at the workspace root (which
   // would, for example, make `nx format` treat the whole workspace as one project).
   const isWorkspaceRoot = projectRoot === '.';
-  // TODO(jack): Remove this cast when @nx/vitest switches to moduleResolution:
-  // "nodenext". Vite 8's rolldown types break vitest's test augmentation.
-  const hasProjectsProperty = Array.isArray(
-    (viteBuildConfig as any)?.test?.projects
-  );
+  const hasProjectsProperty = Array.isArray(viteBuildConfig.test?.projects);
   if (isWorkspaceRoot && hasProjectsProperty) {
     return null;
   }
@@ -250,8 +274,7 @@ async function buildVitestTargets(
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
-    const isTypecheckEnabled = !!(viteBuildConfig as any)?.test?.typecheck
-      ?.enabled;
+    const isTypecheckEnabled = !!viteBuildConfig.test?.typecheck?.enabled;
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
@@ -273,10 +296,32 @@ async function buildVitestTargets(
         },
       };
 
+      // Not normalizing in normalizeOptions since it also affects the options
+      // computed for convert-to-inferred.
+      const useGlobDiscovery =
+        (options.discoverTestFiles ?? 'glob') !== 'vitest';
+      // Both discovery paths read the serve-resolved config: Vitest runs tests
+      // through a Vite server (the `serve` command), so `apply: 'serve'`
+      // plugins and command-sensitive `test` options (include/exclude and
+      // `dir`) are absent from the build resolution used above for outputs.
+      // Resolve under `mode: 'test'` to match Vitest, which defaults the Vite
+      // mode to 'test'; a config that branches on `command`/`mode` would
+      // otherwise enumerate a different spec set here than at test time.
+      const viteServeConfig = await resolveConfig(
+        {
+          configFile: absoluteConfigFilePath,
+          mode: 'test',
+        },
+        'serve'
+      );
       const projectRootRelativeTestPaths =
         await getTestPathsRelativeToProjectRoot(
           projectRoot,
-          context.workspaceRoot
+          context.workspaceRoot,
+          // Only the glob path reads this config; the opt-out path forces the
+          // runtime by receiving no config, and takes `test.dir` separately.
+          useGlobDiscovery ? viteServeConfig : undefined,
+          viteServeConfig.test?.dir
         );
 
       for (const relativePath of projectRootRelativeTestPaths) {
@@ -598,13 +643,267 @@ function checkIfConfigFileShouldBeProject(
 
 async function getTestPathsRelativeToProjectRoot(
   projectRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  viteConfig: ResolvedConfig | undefined,
+  // Serve-resolved `test.dir` (the command Vitest runs under). Only used on the
+  // opt-out path below, which receives no `viteConfig` to read it from.
+  optOutTestDir: string | undefined
 ): Promise<string[]> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
+
+  // `viteConfig` is resolved only when glob discovery is requested; its absence
+  // means the runtime path was selected (`discoverTestFiles: 'vitest'`).
+  if (viteConfig) {
+    const test: InlineConfig = viteConfig.test ?? {};
+    if (!configRequiresVitestRuntime(test, viteConfig, fullProjectRoot)) {
+      return globTestPathsRelativeToProjectRoot(
+        test,
+        workspaceRoot,
+        projectRoot,
+        fullProjectRoot
+      );
+    }
+
+    return getTestPathsViaVitestRuntime(fullProjectRoot, projectRoot, test.dir);
+  }
+
+  return getTestPathsViaVitestRuntime(
+    fullProjectRoot,
+    projectRoot,
+    optOutTestDir
+  );
+}
+
+/**
+ * The directory Vitest enumerates from: `test.dir` when set, else the project
+ * root. Vitest resolves a relative `test.dir` against the working directory,
+ * which for both the `test` and atomized targets is the project root.
+ */
+function resolveTestDir(fullProjectRoot: string, testDir: string | undefined) {
+  return testDir ? resolve(fullProjectRoot, testDir) : fullProjectRoot;
+}
+
+/**
+ * Enumerates a project's test files by mirroring Vitest's own resolution with
+ * a glob. Vitest globs `test.include` and `test.includeSource` (both skipped
+ * when typecheck is enabled with `only`, the latter also kept only when the
+ * file contains an in-source test) plus `test.typecheck.include` (when
+ * typecheck is enabled), each minus the relevant `exclude`, from `test.dir`
+ * when set and the project root otherwise. Defaults come from the installed
+ * Vitest so they track the user's version. Globbing goes through the Nx
+ * workspace context (the daemon-cached file index), so files ignored by
+ * `.gitignore`/`.nxignore` are never candidates. Callers must first confirm the
+ * config is reproducible with a glob via `configRequiresVitestRuntime`.
+ */
+async function globTestPathsRelativeToProjectRoot(
+  test: InlineConfig,
+  workspaceRoot: string,
+  projectRoot: string,
+  fullProjectRoot: string
+): Promise<string[]> {
+  const { configDefaults } = await loadVitestConfigDynamicImport();
+
+  const exclude: string[] = test.exclude ?? configDefaults.exclude;
+  const typecheck = test.typecheck;
+  const typecheckOnly = !!(typecheck?.enabled && typecheck?.only);
+  // The workspace context matches workspace-relative paths, while the config's
+  // patterns are relative to the directory Vitest enumerates from; anchor them
+  // to it.
+  const scanRoot = test.dir
+    ? normalizePath(
+        relative(workspaceRoot, resolveTestDir(fullProjectRoot, test.dir))
+      )
+    : projectRoot;
+  // The workspace context only reads `!` at index 0, so a negated pattern has
+  // to be re-prefixed rather than anchored as-is.
+  const anchor = (pattern: string) =>
+    isNegatedPattern(pattern)
+      ? `!${joinPathFragments(scanRoot, pattern.slice(1))}`
+      : joinPathFragments(scanRoot, pattern);
+
+  const globProjectFiles = (include: string[], ignore: string[]) => {
+    // The workspace context treats an all-negated (or empty) include set as
+    // "match everything" (it inverts to the exclude set), while Vitest
+    // enumerates nothing. Match Vitest: without a positive entry there is
+    // nothing to enumerate.
+    if (!include.some((pattern) => !isNegatedPattern(pattern))) {
+      return Promise.resolve([]);
+    }
+    return globWithWorkspaceContext(
+      workspaceRoot,
+      include.map(anchor),
+      // Vitest discards a negated `exclude` entry; forwarding it would turn the
+      // exclude set into an allowlist.
+      ignore.filter((pattern) => !isNegatedPattern(pattern)).map(anchor)
+    );
+  };
+
+  // Regular and type tests are independent walks; run them together.
+  const globJobs: Promise<string[]>[] = [];
+
+  // Typecheck enabled with `only` makes Vitest run only type tests, so skip
+  // regular tests.
+  if (!typecheckOnly) {
+    const include: string[] = test.include ?? configDefaults.include;
+    globJobs.push(globProjectFiles(include, exclude));
+  }
+
+  if (typecheck?.enabled) {
+    const include: string[] =
+      typecheck.include ?? configDefaults.typecheck.include;
+    const ignore: string[] =
+      typecheck.exclude ?? configDefaults.typecheck.exclude;
+    globJobs.push(globProjectFiles(include, ignore));
+  }
+
+  const matches = new Set<string>();
+  for (const files of await Promise.all(globJobs)) {
+    for (const file of files) matches.add(file);
+  }
+
+  // In-source tests: only files that actually contain a test are included.
+  // Typecheck enabled with `only` makes Vitest run only type tests, so skip
+  // these too.
+  if (!typecheckOnly && test.includeSource?.length) {
+    const sourceFiles = await globProjectFiles(test.includeSource, exclude);
+    // The candidate set can be the whole `src` tree, so read in bounded
+    // batches; an unbounded Promise.all over every file risks EMFILE.
+    const readConcurrency = 25;
+    for (let i = 0; i < sourceFiles.length; i += readConcurrency) {
+      const inSourceMatches = await Promise.all(
+        sourceFiles.slice(i, i + readConcurrency).map(async (file) => {
+          // Vitest tolerates unreadable in-source candidates and skips them;
+          // match that so a permission error or TOCTOU race can't abort graph
+          // creation.
+          try {
+            const content = await readFile(join(workspaceRoot, file), 'utf-8');
+            return content.includes('import.meta.vitest') ? file : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+      for (const file of inSourceMatches) {
+        if (file) matches.add(file);
+      }
+    }
+  }
+
+  // The workspace context returns workspace-relative paths, so re-relativize
+  // them to the project root. An `include` pattern (`../lib2/**`) or an
+  // out-of-project `test.dir` can land outside the project root, so drop what
+  // does, matching the runtime path.
+  return [...matches]
+    .map((file) => normalizePath(relative(projectRoot, file)))
+    .filter((file) => !file.startsWith('../'))
+    .sort();
+}
+
+// Vitest reads a leading `!` as a negation, except when it opens an extglob
+// (`!(...)`), which the runtime gate routes away before discovery reaches here.
+function isNegatedPattern(pattern: string): boolean {
+  return pattern.startsWith('!') && !pattern.startsWith('!(');
+}
+
+/**
+ * Whether the workspace context resolves a pattern differently than Vitest.
+ * Anchoring rewrites an absolute pattern into a project-relative one that
+ * enumerates the wrong location; a trailing `/` becomes a recursive directory
+ * match where Vitest (globbing with `expandDirectories: false`) matches
+ * nothing; and `!(...)` converts to an include plus literal exclusions that
+ * reproduces Vitest's extglob only for some shapes. A leading `!` is stripped
+ * first so a negated form of any of these still routes to the runtime.
+ */
+function patternRequiresVitestRuntime(pattern: string): boolean {
+  const bare = isNegatedPattern(pattern) ? pattern.slice(1) : pattern;
+  return isAbsolute(bare) || bare.endsWith('/') || bare.includes('!(');
+}
+
+// Sibling files Vitest 3 auto-loads to define sub-projects even when the config
+// object declares none. Removed in Vitest 4 in favor of inline `test.projects`.
+const vitestWorkspaceFiles = ['vitest.workspace', 'vitest.projects'].flatMap(
+  (name) =>
+    ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs', 'json'].map(
+      (ext) => `${name}.${ext}`
+    )
+);
+
+/**
+ * Whether a config's test discovery cannot be faithfully reproduced with a
+ * glob, so enumeration must go through Vitest itself.
+ */
+function configRequiresVitestRuntime(
+  // `workspace` (removed in Vitest 4) and the CLI-only `changed`/`related`
+  // filters are not part of the config-file `InlineConfig` type.
+  test: InlineConfig & {
+    workspace?: unknown;
+    changed?: unknown;
+    related?: unknown;
+  },
+  viteConfig: Pick<ResolvedConfig, 'plugins'>,
+  projectDir: string
+): boolean {
+  // Multi-project configs resolve include/exclude per sub-project.
+  if (Array.isArray(test?.projects) || test?.workspace) return true;
+  // Vitest 3 auto-loads a `vitest.workspace.*`/`vitest.projects.*` sibling file
+  // to define sub-projects even when the config object declares none; the glob
+  // resolves only the single config, so it cannot reproduce that.
+  if (vitestWorkspaceFiles.some((file) => existsSync(join(projectDir, file)))) {
+    return true;
+  }
+  // Vitest filters specs by VCS/graph state, which a glob cannot know.
+  if (test?.changed || test?.related) return true;
+  // Vitest's own defaults carry none of these shapes, so only a config that
+  // spells one out reaches the runtime for this reason.
+  const configuredPatterns: string[] = [
+    test?.include,
+    test?.exclude,
+    test?.includeSource,
+    test?.typecheck?.include,
+    test?.typecheck?.exclude,
+  ]
+    .filter(Array.isArray)
+    .flat();
+  if (configuredPatterns.some(patternRequiresVitestRuntime)) return true;
+  // Browser mode: an instance can override include/exclude/includeSource, and
+  // `dir` (the base directory Vitest scans), so a top-level glob enumerates a
+  // different spec set than the instance would. Vitest ignores `instances`
+  // while browser mode is off, and the atomized target runs `vitest run <file>`
+  // without a browser flag, so the resolved `enabled` matches the run.
+  const browserInstances: any[] = test?.browser?.instances ?? [];
+  if (
+    test?.browser?.enabled &&
+    browserInstances.some(
+      (instance) =>
+        instance &&
+        (instance.include?.length ||
+          instance.exclude?.length ||
+          instance.includeSource?.length ||
+          instance.dir)
+    )
+  ) {
+    return true;
+  }
+  // A plugin can inject or reshape projects through this Vitest-only hook.
+  const plugins: readonly unknown[] = viteConfig?.plugins ?? [];
+  return plugins.some(
+    (plugin) =>
+      plugin && typeof plugin === 'object' && 'configureVitest' in plugin
+  );
+}
+
+async function getTestPathsViaVitestRuntime(
+  fullProjectRoot: string,
+  projectRoot: string,
+  testDir?: string
+): Promise<string[]> {
   const { createVitest } = await import('vitest/node');
   const vitest = await createVitest('test', {
     root: fullProjectRoot,
-    dir: fullProjectRoot,
+    // `dir` defaults to `root`, and a relative `test.dir` would resolve against
+    // the working directory, which during graph creation is the workspace root
+    // rather than the project root.
+    dir: resolveTestDir(fullProjectRoot, testDir),
     filesOnly: true,
     watch: false,
   });
