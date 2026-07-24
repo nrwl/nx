@@ -649,7 +649,7 @@ to = "/docs/kb/angular-micro-frontends"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/module-federation-with-ssr"
-to = "/docs/kb/consumer-and-provider"
+to = "/docs/kb/angular-micro-frontends"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/nx-and-angular"
@@ -1078,7 +1078,7 @@ to = "/docs/kb/angular-micro-frontends"
 
 [[redirects]]
 from = "/docs/kb/angular-module-federation-with-ssr"
-to = "/docs/kb/consumer-and-provider"
+to = "/docs/kb/angular-micro-frontends"
 
 [[redirects]]
 from = "/docs/kb/module-federation-and-nx"
