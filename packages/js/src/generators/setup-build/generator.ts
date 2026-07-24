@@ -30,7 +30,10 @@ import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
-import { readTsConfig } from '../../utils/typescript/ts-config';
+import {
+  createTreeParseConfigHost,
+  readTsConfig,
+} from '../../utils/typescript/ts-config';
 import {
   getDefinedCustomConditionName,
   getProjectSourceRoot,
@@ -237,11 +240,10 @@ function updatePackageJsonForTsc(
     ts = ensureTypescript();
   }
 
-  const tsconfig = readTsConfig(options.tsConfig, {
-    ...ts.sys,
-    readFile: (p) => tree.read(p, 'utf-8'),
-    fileExists: (p) => tree.exists(p),
-  });
+  const tsconfig = readTsConfig(
+    options.tsConfig,
+    createTreeParseConfigHost(tree)
+  );
 
   let main: string;
   let rootDir: string;
