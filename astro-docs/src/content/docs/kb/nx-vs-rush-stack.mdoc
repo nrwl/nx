@@ -63,7 +63,7 @@ infer tasks from configs you already maintain (Vite, Jest, ESLint, and others). 
 discovered from your package manager workspace globs.
 
 Rush setup starts with `rush init`, which generates `rush.json` and a `common/config/rush` folder
-holding a dozen-plus config files (build cache, command line, version policies, npm settings).
+of config files covering the build cache, custom commands, version policies, and npm settings.
 Every project must be registered by hand in the `rush.json` projects list, each project needs a
 `build` script, and the Rush docs recommend reorganizing the repository into category folders.
 Rush is effectively pnpm-first: its documentation describes npm and yarn support as unreliable or
@@ -140,8 +140,8 @@ conformance rules extend the same idea across polyglot workspaces.
 
 ### Is Rush still maintained?
 
-Yes. Microsoft ships Rush releases several times a month, and recent work includes pnpm 10/11
-compatibility and an MCP server for AI tooling. Rush has remained on major version 5 since 2018.
+Yes. Microsoft ships Rush releases regularly, and recent work includes pnpm 10/11 compatibility
+and an MCP server for AI tooling. Rush has remained on major version 5 since 2018.
 
 ### What's the difference between Rush and Rush Stack?
 
@@ -153,6 +153,5 @@ without Rush, and they work inside Nx workspaces too.
 
 Yes. Nx discovers projects from package manager workspaces, so pointing your workspace globs at
 the existing project folders and running `npx nx init` gets task running and caching working
-without restructuring. Publishing workflows move from change files to
-[`nx release` version plans](/docs/guides/nx-release/file-based-versioning-version-plans), which
-follow the same record-intent-per-PR model.
+without restructuring. Publishing workflows move from change files to version plans, which follow
+the same record-intent-per-PR model.

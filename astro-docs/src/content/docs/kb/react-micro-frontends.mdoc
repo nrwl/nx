@@ -65,8 +65,7 @@ Mismatched shared dependency versions are the leading failure mode of micro fron
 deployments are not atomic.
 Share only the libraries that must be singletons, typically `react`, `react-dom`, and any
 cross-app communication layer, and let everything else stay bundled per application.
-The [sharing strategy section](/docs/kb/micro-frontend-architecture#share-as-few-libraries-as-possible)
-covers the reasoning and the config.
+Start with a small set and expand it when bundle duplication becomes measurable.
 
 ## Why build React micro frontends in a monorepo?
 

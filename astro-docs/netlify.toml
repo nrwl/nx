@@ -1071,6 +1071,7 @@ to = "/docs/kb/vue"
 [[redirects]]
 from = "/docs/knowledge-base/webpack"
 to = "/docs/kb/webpack"
+# DOC-555: module federation prune + decisions stub removal
 [[redirects]]
 from = "/docs/kb/dynamic-module-federation-with-angular"
 to = "/docs/kb/angular-micro-frontends"

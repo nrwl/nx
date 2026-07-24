@@ -8,7 +8,7 @@ topics:
   - 'Organizational decisions'
 ---
 
-One of the most obvious benefits of having a monorepo is that you can easily share code across projects. This enables you to apply the Don't Repeat Yourself principle across the whole codebase. Code sharing could mean using a function or a component in multiple projects. Or code sharing could mean using a typescript interface to define the network API interface for both the front end and back end applications.
+One of the most obvious benefits of having a monorepo is that you can share code across projects, applying the Don't Repeat Yourself principle across the whole codebase. Code sharing could mean using a function or a component in multiple projects. Or code sharing could mean using a TypeScript interface to define the network API interface for both the front end and back end applications.
 
 Code sharing is usually a good thing, but it can cause problems.
 
@@ -30,7 +30,7 @@ Libraries with presentational components can accidentally use code from a librar
 
 ## Defining code ownership
 
-As more teams are contributing to the same repository, it becomes crucial to establish clear code ownership.
+As more teams contribute to the same repository, establish clear code ownership.
 
 Since Nx allows us to place projects in any directory structure, those directories can become code-ownership boundaries. That's
 why the [folder structure](/docs/kb/folder-structure) of an Nx workspace often reflects the structure of an organization. GitHub, GitLab, and
