@@ -76,8 +76,9 @@ export type HandoffOutcome =
   | { kind: 'ambiguous-abort'; causeSummary?: string[] };
 
 /**
- * Result of the up-front resolution phase that runs once per `--run-migrations`
- * invocation, before the migration loop. Cached and consulted for every entry.
+ * Result of the up-front resolution phase that runs once per run-phase
+ * invocation (`--run-migrations` before its migration loop, `--run-migration`
+ * before its single migration) and applies to every migration it covers.
  *
  * - `inside-agent`: nx detected it is itself running inside another agent;
  *   every agentic step is skipped and prompt migrations go to `nextSteps`.

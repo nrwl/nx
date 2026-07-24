@@ -1,5 +1,6 @@
 import type { NxJsonConfiguration, ProjectConfiguration } from '@nx/devkit';
 import {
+  checkFilesDoNotExist,
   cleanupProject,
   createNonNxProjectDirectory,
   e2eCwd,
@@ -1024,6 +1025,50 @@ describe('migrate', () => {
       expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
       expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
     }
+  });
+
+  it('should run a single migration with --run-migration without recording run state', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    runCLI('migrate --run-migration=migrate-parent-package:run20', {
+      env: {
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    });
+
+    // only the requested migration runs
+    expect(readFile('file-20')).toEqual('content20');
+    checkFilesDoNotExist('file-11');
+    // no durable run dir and no commit without --create-commits
+    checkFilesDoNotExist('.nx/migrate-runs');
+    expect(runCommand('git --no-pager log --oneline -n 10')).not.toContain(
+      'chore: [nx migration] run20'
+    );
+
+    // commits are opt-in with --create-commits
+    runCLI(
+      'migrate --run-migration=migrate-parent-package:run11 --create-commits',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    expect(readFile('file-11')).toEqual('content11');
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+    expect(recentCommits).toContain('chore: [nx migration] run11');
+    expect(recentCommits).not.toContain('chore: [nx migration] run20');
   });
 
   it('should fail if a custom commit prefix is provided when --create-commits is not enabled', () => {

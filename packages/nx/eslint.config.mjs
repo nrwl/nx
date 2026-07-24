@@ -1,6 +1,30 @@
 import { baseConfig } from '../../eslint.config.mjs';
 import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
+// ESLint flat config replaces rule options wholesale when a later block
+// configures the same rule, so the scoped migrate blocks below must restate
+// these repo-wide restrictions; shared arrays keep the copies in sync.
+const tsRestrictedImportPaths = [
+  {
+    name: 'typescript',
+    message:
+      'TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.',
+    allowTypeImports: true,
+  },
+];
+
+const tsRestrictedImportPatterns = [
+  {
+    group: ['nx/*'],
+    message: "Circular import in 'nx' found. Use relative path.",
+  },
+  {
+    group: ['**/native-bindings', '**/native-bindings.js'],
+    message:
+      'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
+  },
+];
+
 export default [
   ...baseConfig,
   {
@@ -37,23 +61,65 @@ export default [
       '@typescript-eslint/no-restricted-imports': [
         'error',
         {
-          paths: [
+          paths: tsRestrictedImportPaths,
+          patterns: tsRestrictedImportPatterns,
+        },
+      ],
+    },
+    ignores: ['**/*.spec.ts'],
+  },
+  {
+    // Siblings under migrate/ (including subtrees like agentic/) must go
+    // through migrate/run/'s barrel rather than reaching into its internal
+    // modules directly. The ignores exempt spec files (as the sibling
+    // import-boundary blocks do), run/ itself (importing those modules
+    // directly is the normal intra-directory pattern there) and migrate.ts,
+    // which imports execute-migration directly to be the module that
+    // re-exports it.
+    files: ['src/command-line/migrate/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: tsRestrictedImportPaths,
+          patterns: [
+            ...tsRestrictedImportPatterns,
             {
-              name: 'typescript',
+              // Depth-independent: matches the relative form from migrate/
+              // itself ('./run/*') and from any nested subtree
+              // ('../run/*', '../../run/*', ...).
+              group: ['**/run/*'],
               message:
-                'TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.',
-              allowTypeImports: true,
+                "Import migrate/run's public surface from its barrel (the run directory index), not its internal modules directly.",
+            },
+            {
+              group: ['**/execute-migration', '**/execute-migration.js'],
+              message:
+                'Import the execution engine through the migrate module, which re-exports its whole surface.',
             },
           ],
+        },
+      ],
+    },
+    ignores: ['**/*.spec.ts', '**/migrate.ts', '**/migrate/run/**'],
+  },
+  {
+    // The inverse boundary: run/ must not import migrate.ts, which would
+    // close an import cycle (migrate.ts already imports run/'s barrel).
+    // Importing other shared helpers under migrate/ (execute-migration,
+    // migrate-commits, sort-migrations, agentic/*, etc.) is fine.
+    files: ['src/command-line/migrate/run/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: tsRestrictedImportPaths,
           patterns: [
+            ...tsRestrictedImportPatterns,
             {
-              group: ['nx/*'],
-              message: "Circular import in 'nx' found. Use relative path.",
-            },
-            {
-              group: ['**/native-bindings', '**/native-bindings.js'],
+              group: ['**/migrate', '**/migrate.js'],
               message:
-                'Direct imports from native-bindings.js are not allowed. Import from index.js instead.',
+                "Importing migrate.ts from migrate/run closes an import cycle: migrate.ts already imports run's barrel. Import the shared helper modules under migrate/ directly instead.",
             },
           ],
         },

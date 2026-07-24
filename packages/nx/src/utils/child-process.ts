@@ -21,6 +21,9 @@ export function getRunNxBaseCommand(
 ): string {
   if (existsSync(join(workspaceRoot, 'package.json'))) {
     if (!packageManagerCommand) {
+      // `readLocalNxVersion` (command-line/migrate/migrate.ts) mirrors this
+      // selector to predict which nx install the command will execute; keep
+      // the two in sync if the selection here changes.
       const pm = detectPackageManager(workspaceRoot);
       packageManagerCommand = getPackageManagerCommand(pm, workspaceRoot);
     }

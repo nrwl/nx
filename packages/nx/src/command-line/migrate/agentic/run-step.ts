@@ -40,6 +40,19 @@ export interface AgenticStepResult {
   ambiguous: boolean;
 }
 
+/**
+ * What an executor holds after its lazy agentic preflight: the enabled
+ * agentic resolution, the per-run scratch directory, and this module's
+ * `runAgenticPromptStep`. The function travels in the context (rather than
+ * being imported by the executor) so non-agentic runs never load the
+ * agentic chain.
+ */
+export interface AgenticRunContext {
+  agentic: EnabledResolvedAgentic;
+  runDir: string;
+  runStep: typeof runAgenticPromptStep;
+}
+
 export interface RunAgenticPromptStepInput {
   root: string;
   migration: {

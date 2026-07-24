@@ -276,6 +276,24 @@ export function reportMigrateRunError(opts: {
   });
 }
 
+/**
+ * A single-migration invocation of the standalone worker, emitted once the
+ * migration id resolves. The run can still stop after this (agentic
+ * resolution, a --create-commits request outside a git repo, the
+ * default-branch confirmation, a prompt-only migration surfaced without an
+ * agent). The migration's type rides the prompt-choice dimension.
+ */
+export function reportMigrateSingleMigrationInvocation(opts: {
+  migrationType: 'generator' | 'prompt' | 'hybrid';
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_invocation', {
+      [customDimensions.promptChoice]: opts.migrationType,
+    });
+  });
+}
+
 // `_migrate` runs either from a temp install of the latest CLI or from the
 // workspace-local installation; same signal as the run-phase re-dispatch
 // check in migrate.ts.

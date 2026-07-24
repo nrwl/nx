@@ -39,10 +39,12 @@ export function isHandoffGitignoreMigration(m: {
  *
  * Two paths cover the leak, with no overlap:
  *
- *   1. HOIST — handled by the sort comparator in `executeMigrations`. When
+ *   1. HOIST: handled by the sort comparator (`sortMigrations` in
+ *      `sort-migrations.ts`) that `executeMigrations` applies. When
  *      the v23 migration is in the queue, it sorts to position 0 and runs
  *      first via the normal migration runner (with its own log line and
- *      commit). Fully traceable in `git log`.
+ *      commit). Fully traceable in `git log`. A single-migration worker run
+ *      needs no hoisting: the requested migration is the entire queue.
  *
  *   2. INLINE FALLBACK — this function. When the migration is NOT in the
  *      queue AND the highest target version is < v23 (intra-pre-v23
@@ -75,7 +77,8 @@ export async function applyAgenticHandoffGitignoreFallback({
   root: string;
 }): Promise<void> {
   if (migrations.some(isHandoffGitignoreMigration)) {
-    // The hoist path handles this via the sort comparator.
+    // The queue runs it itself: hoisted to the front by the sort comparator
+    // in a full run, or as the single requested migration in a worker run.
     return;
   }
   if (major(installedNxVersion) >= 23) {

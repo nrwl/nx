@@ -16,11 +16,12 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
  * CLI flag always wins, then `nx.json`, then the built-in default. Returns a new
  * args object; the input is not mutated.
  *
- * Phase-aware: generate-only options (`include`, `multiMajorMode`) are applied only
- * when not running migrations; run-only options (`createCommits`,
- * `commitPrefix`, `agentic`, `validate`) only when running migrations. This
- * mirrors where each option is consumed and avoids tripping the "cannot be
- * combined with --run-migrations" guards in `parseMigrationsOptions`.
+ * Phase-aware: generate-only options (`include`, `multiMajorMode`) are applied
+ * only in the generate phase; the run-phase options (`agentic`, `validate`,
+ * `createCommits`, `commitPrefix`) when running the whole migrations file or a
+ * single migration (`--run-migration`). This mirrors where each option is
+ * consumed and avoids tripping the "cannot be combined with --run-migrations"
+ * guards in `parseMigrationsOptions`.
  *
  * `include` is carried as `includeFromConfig` rather than `include` so it is never
  * mistaken for an explicit `--include`: `resolveInclude` applies it only when the
@@ -40,8 +41,9 @@ export function applyNxJsonMigrateDefaults(
   // `--run-migrations` with no value is normalized to '' by yargs, so a defined
   // (even empty-string) value means we're in the run-migrations phase.
   const isRunMigrations = merged.runMigrations !== undefined;
+  const isSingleMigration = merged.runMigration !== undefined;
 
-  if (isRunMigrations) {
+  if (isRunMigrations || isSingleMigration) {
     if (
       merged.createCommits === undefined &&
       migrateConfig.createCommits !== undefined
@@ -68,7 +70,9 @@ export function applyNxJsonMigrateDefaults(
       assertType(migrateConfig.validate, 'boolean', 'validate');
       merged.validate = migrateConfig.validate;
     }
-  } else {
+  }
+
+  if (!isRunMigrations && !isSingleMigration) {
     if (merged.include === undefined && migrateConfig.include !== undefined) {
       assertOneOf(migrateConfig.include, MIGRATE_INCLUDE_VALUES, 'include');
       merged.includeFromConfig = migrateConfig.include;
