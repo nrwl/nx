@@ -12,8 +12,14 @@ import { getUserSegment } from './owned-private-dir';
  * Consumed by the native binding loader, so keep this file limited to local
  * helpers that themselves use Node builtins only.
  */
+export const NX_TMP_DIR_POSIX = '/tmp/.nx';
+
+/**
+ * Windows has no /tmp, named pipes are not subject to filesystem sandboxing,
+ * and per-user temp dirs are stable there, so the OS temp dir is fine.
+ */
 export const NX_TMP_DIR =
-  platform() === 'win32' ? join(tmpdir(), '.nx') : '/tmp/.nx';
+  platform() === 'win32' ? join(tmpdir(), '.nx') : NX_TMP_DIR_POSIX;
 
 /**
  * Owner-only runtime root for the current user. No user segment on Windows —
