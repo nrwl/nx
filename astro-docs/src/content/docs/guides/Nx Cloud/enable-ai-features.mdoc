@@ -26,29 +26,45 @@ AI features are available on Hobby, Team and Enterprise [Nx Cloud plans](https:/
 
 To enable Self-Healing CI for enterprise on-prem installations, follow these steps:
 
-### Setup
+{% aside type="note" title="NX_CLOUD_AI_ENABLED removed in 2026.07.1" %}
 
-Add the following configuration to your `helm-values.yaml` file:
+From Nx Cloud version 2026.07.1, the `NX_CLOUD_AI_ENABLED` environment variable is no longer needed and has no effect. AI availability is controlled per organization via the "AI Features" toggle in the organization settings.
+
+{% /aside %}
+
+### Instance-wide API key
+
+To configure a single Anthropic API key for the whole installation, add the following to your `helm-values.yaml` file:
 
 ```yaml
-nxApi
+nxApi:
   deployment:
     env:
-      - name: NX_CLOUD_AI_ENABLED
-        value: 'true'
       - name: NX_CLOUD_AI_TOKEN_PROVIDER_TYPE
         value: 'fixed'
       - name: NX_CLOUD_ANTHROPIC_API_KEY
         value: 'sk-ant-...'
-
-frontend
-  deployment:
-    env:
-      - name: NX_CLOUD_AI_ENABLED
-        value: 'true'
 ```
 
+Setting `NX_CLOUD_AI_TOKEN_PROVIDER_TYPE=fixed` requires `NX_CLOUD_ANTHROPIC_API_KEY` to be set on the `nx-api` container. If the key is missing, `nx-api` fails at startup.
+
 Then, enable AI features in the [organization settings](https://cloud.nx.app/go/organization/edit) and enable Self-Healing CI in the [workspace settings](https://cloud.nx.app/go/workspace/settings).
+
+### Bring your own API key (BYOK)
+
+Instead of the instance-wide key, an organization can use its own AI provider API key for Self-Healing CI. BYOK does not require `NX_CLOUD_AI_TOKEN_PROVIDER_TYPE`.
+
+Only the instance admin can enable BYOK: a user with `installationAdmin: true`, such as the `admin` user created via the `ADMIN_PASSWORD` environment variable. Regular organization admins see the toggle disabled.
+
+1. Log in as the installation admin.
+2. Open the organization settings.
+3. Enable the "AI Features" toggle and accept the AI terms.
+4. Enable the "Bring Your Own API Key" toggle.
+
+Supply the key in one of two ways:
+
+- Configure the provider and API key on the organization's AI provider settings page. The key is stored encrypted.
+- Configure nothing in the UI and set `ANTHROPIC_API_KEY` in the CI runner environment.
 
 ### Running self-healing CI on-prem
 
@@ -70,4 +86,4 @@ For non-DTE setups, refer to the [Self-Healing CI documentation](/docs/features/
 
 ## Regional availability
 
-AI features are not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use these features by providing their own Anthropic API key (for Self-Healing CI) and enabling the required environment variables.
+AI features are not available for the EU cluster in public cloud installations due to regional restrictions. However, on-prem customers in the EU can still use these features by providing their own Anthropic API key (for Self-Healing CI) through one of the setups described above.
