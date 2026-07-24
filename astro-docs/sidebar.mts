@@ -321,10 +321,6 @@ const learnGroups: SidebarItems = [
             label: 'Migrating from Turborepo',
             link: 'guides/adopting-nx/from-turborepo',
           },
-          {
-            label: 'Migrating from Lerna',
-            link: 'guides/adopting-nx/from-lerna',
-          },
         ],
       },
       {

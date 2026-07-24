@@ -95,11 +95,15 @@ Every core Lerna workflow has a direct Nx equivalent, but not the other way arou
 
 If you're on a modern Lerna version, you already run Nx: `lerna run` executes through the Nx task
 runner, and any `nx.json` configuration carries over. Migrating means adopting the Nx commands
-directly, and `nx release` supports the same fixed and independent versioning modes and
-conventional commits workflow as Lerna.
+directly:
 
-For the step-by-step walkthrough, including command equivalents and `lerna.json` to `nx.json`
-configuration mapping, see [Migrating from Lerna](/docs/guides/adopting-nx/from-lerna).
+1. Run `npx nx@latest init` in your workspace to set up `nx.json` and detect your tooling.
+1. Replace `lerna run <script>` with `nx run-many -t <script>`, or `nx affected -t <script>` on CI.
+1. Replace `lerna version` and `lerna publish` with `nx release`, which supports the same fixed
+   and independent versioning modes and conventional commits workflow.
+
+For the full setup walkthrough, see
+[Adding Nx to an npm/Yarn/pnpm workspace](/docs/guides/adopting-nx/adding-to-monorepo).
 
 ## Frequently asked questions
 
