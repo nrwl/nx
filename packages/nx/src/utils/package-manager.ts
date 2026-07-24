@@ -591,12 +591,39 @@ export async function resolvePackageVersionUsingRegistry(
 
     return finalResolvedVersion;
   } catch (e) {
-    // `{ cause }` preserves the underlying registry failure (e.g. a TLS error),
-    // which would otherwise be unrecoverable from this generic message.
+    // `{ cause }` keeps the underlying registry failure (e.g. a TLS error)
+    // recoverable under --verbose; redact URL credentials first because a
+    // `(p)npm view` fetch error can echo a token in the registry URL, which the
+    // tool masks only in the password position.
     throw new Error(`Unable to resolve version ${packageName}@${version}.`, {
-      cause: e,
+      cause: redactErrorCause(e),
     });
   }
+}
+
+// Masks the userinfo in a URL (`user`, `user:pass`, or a bare token) so a
+// credential in a registry URL cannot leak through an error shown under
+// --verbose.
+function redactUrlCredentials(text: string): string {
+  return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
+}
+
+// Redacts URL credentials from the strings an error surfaces so a `{ cause }`
+// shown under --verbose carries no secret.
+function redactErrorCause(error: unknown): unknown {
+  if (error && typeof error === 'object') {
+    const e = error as { message?: unknown; stack?: unknown; stderr?: unknown };
+    if (typeof e.message === 'string') {
+      e.message = redactUrlCredentials(e.message);
+    }
+    if (typeof e.stack === 'string') {
+      e.stack = redactUrlCredentials(e.stack);
+    }
+    if (typeof e.stderr === 'string') {
+      e.stderr = redactUrlCredentials(e.stderr);
+    }
+  }
+  return error;
 }
 
 /**
@@ -795,6 +822,12 @@ function getPackageManagerVersionSafe(
     packageManagerVersionCache.set(key, version);
   }
   return packageManagerVersionCache.get(key);
+}
+
+// Drops the per-process version cache. Only tests need this, to force a fresh
+// resolution; production never re-reads a version mid-run.
+export function clearPackageManagerVersionCache(): void {
+  packageManagerVersionCache.clear();
 }
 
 /**
