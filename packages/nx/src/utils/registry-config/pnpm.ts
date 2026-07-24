@@ -44,7 +44,10 @@ import {
  *   only `registries.default`. npm_config_* env vars are no longer read, and
  *   .npmrc is restricted to auth/registry/network keys. The per-package lookup
  *   is registries[scope] ?? registries.default. An `auth.ini` file in pnpm's
- *   config dir layers between the user and workspace .npmrc.
+ *   config dir layers between the user and workspace .npmrc. Because pnpm
+ *   ignores npm_config_* here, the overlay this builds is consumed by the
+ *   spawned `npm pack` (and a forced `npm view`), not by `pnpm view`, which
+ *   resolves natively.
  */
 
 const DEFAULT_REGISTRY = 'https://registry.npmjs.org/';
