@@ -106,7 +106,7 @@ Nx uses the following syntax:
 
 {% aside type="tip" title="Terminal UI" %}
 
-In Nx 21, task output is displayed in an [interactive terminal UI](/docs/guides/tasks--caching/terminal-ui) that allows you to actively choose which task output to display, search through the list of tasks and display multiple tasks side by side.
+In Nx 21, task output is displayed in an [interactive terminal UI](/docs/kb/terminal-ui) that allows you to actively choose which task output to display, search through the list of tasks and display multiple tasks side by side.
 
 {% /aside %}
 
@@ -140,7 +140,7 @@ Run the `build`, `lint`, and `test` tasks only on the `header` and `footer` proj
 npx nx run-many -t build lint test -p header footer
 ```
 
-Nx parallelizes these tasks, ensuring they **run in the correct order based on their dependencies** and [task pipeline configuration](/docs/concepts/task-pipeline-configuration). You can also [control how many tasks run in parallel at once](/docs/guides/tasks--caching/run-tasks-in-parallel).
+Nx parallelizes these tasks, ensuring they **run in the correct order based on their dependencies** and [task pipeline configuration](/docs/concepts/task-pipeline-configuration). You can also [control how many tasks run in parallel at once](/docs/kb/run-tasks-in-parallel).
 
 Learn more about the [run-many](/docs/reference/nx-commands#nx-run-many) command.
 
@@ -230,11 +230,11 @@ You can define these task dependencies globally for your workspace in `nx.json` 
 Learn more about:
 
 - [What a task pipeline is all about](/docs/concepts/task-pipeline-configuration)
-- [How to configure a task pipeline](/docs/guides/tasks--caching/defining-task-pipeline)
+- [How to configure a task pipeline](/docs/kb/defining-task-pipeline)
 
 ## Reduce repetitive configuration
 
-Learn more about leveraging `targetDefaults` to reduce repetitive configuration in the [dedicated recipe](/docs/guides/tasks--caching/reduce-repetitive-configuration).
+Learn more about leveraging `targetDefaults` to reduce repetitive configuration in the [dedicated recipe](/docs/kb/reduce-repetitive-configuration).
 
 ## Run root-level tasks
 
@@ -294,4 +294,4 @@ To invoke the task, use:
 npx nx docs
 ```
 
-Learn more about root-level tasks on [our dedicated recipe page](/docs/guides/tasks--caching/root-level-scripts).
+Learn more about root-level tasks on [our dedicated recipe page](/docs/kb/root-level-scripts).

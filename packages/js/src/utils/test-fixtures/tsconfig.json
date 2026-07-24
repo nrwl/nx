@@ -2,6 +2,9 @@
   "compilerOptions": {
     "importHelpers": true,
     "strict": false,
-    "noUncheckedSideEffectImports": false
+    "noUncheckedSideEffectImports": false,
+    "types": ["*"],
+    "esModuleInterop": false,
+    "ignoreDeprecations": "6.0"
   }
 }

@@ -7,7 +7,8 @@
     "composite": true,
     "skipLibCheck": true,
     "noImplicitAny": false,
-    "strict": false
+    "strict": false,
+    "rootDir": "."
   },
   "exclude": [
     "out-tsc",

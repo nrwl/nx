@@ -1,6 +1,3 @@
-// Keep in sync with packages/devkit/src/utils/catalog/manager-utils.ts; the body
-// below the imports is duplicated because @nx/devkit supports a range of nx majors
-// and this logic isn't part of the nx surface it can import across that range.
 import { load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -106,7 +103,7 @@ function setThroughAliases(
   parent.set(targetPath[targetPath.length - 1], value);
 }
 
-export function readCatalogConfigFromFs(
+function readCatalogConfigFromFs(
   filename: string,
   fullPath: string
 ): CatalogDefinitions | null {
@@ -121,7 +118,7 @@ export function readCatalogConfigFromFs(
   }
 }
 
-export function readCatalogConfigFromTree(
+function readCatalogConfigFromTree(
   filename: string,
   tree: Tree
 ): CatalogDefinitions | null {
@@ -137,6 +134,33 @@ export function readCatalogConfigFromTree(
   }
 }
 
+// Managers are created per operation (getCatalogManager news one up), so the
+// fs (string-root) branch is cached to read the file once per pass instead of
+// once per catalog reference. The Tree branch stays live since the tree is
+// mutable within a generator.
+export function readCatalogDefinitions(
+  filename: string,
+  treeOrRoot: Tree | string,
+  cache: Map<string, CatalogDefinitions | null>
+): CatalogDefinitions | null {
+  if (typeof treeOrRoot === 'string') {
+    if (cache.has(treeOrRoot)) {
+      return cache.get(treeOrRoot);
+    }
+    const configPath = join(treeOrRoot, filename);
+    const defs = existsSync(configPath)
+      ? readCatalogConfigFromFs(filename, configPath)
+      : null;
+    cache.set(treeOrRoot, defs);
+    return defs;
+  }
+
+  if (!treeOrRoot.exists(filename)) {
+    return null;
+  }
+  return readCatalogConfigFromTree(filename, treeOrRoot);
+}
+
 export function updateCatalogVersionsInFile(
   filename: string,
   treeOrRoot: Tree | string,
@@ -144,8 +168,17 @@ export function updateCatalogVersionsInFile(
     packageName: string;
     version: string;
     catalogName?: string;
-  }>
+  }>,
+  options?: {
+    /**
+     * Treat "default" as an alias for the `catalog` field and route default
+     * updates through a populated `catalogs.default` (pnpm semantics). When
+     * false, "default" is an ordinary named catalog (yarn semantics).
+     */
+    aliasDefaultCatalog?: boolean;
+  }
 ): void {
+  const aliasDefaultCatalog = options?.aliasDefaultCatalog ?? true;
   let checkExists: () => boolean;
   let readYaml: () => string;
   let writeYaml: (content: string) => void;
@@ -210,14 +243,18 @@ export function updateCatalogVersionsInFile(
     for (const update of updates) {
       const { packageName, version, catalogName } = update;
       const normalizedCatalogName =
-        catalogName === 'default' ? undefined : catalogName;
+        aliasDefaultCatalog && catalogName === 'default'
+          ? undefined
+          : catalogName;
 
       let targetPath: string[];
       if (!normalizedCatalogName) {
         // An empty `catalog:` placeholder must not claim the default route
         // when `catalogs.default` is populated; that would create a
-        // duplicate-default config rejected by pnpm.
-        if (isMapAt(doc, ['catalog'])) {
+        // duplicate-default config rejected by pnpm. Without the alias,
+        // "default" is an ordinary named catalog and the default route is
+        // always the `catalog` field.
+        if (!aliasDefaultCatalog || isMapAt(doc, ['catalog'])) {
           targetPath = ['catalog', packageName];
         } else if (existsAt(doc, ['catalogs', 'default'])) {
           targetPath = ['catalogs', 'default', packageName];

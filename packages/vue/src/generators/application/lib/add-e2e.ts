@@ -1,5 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { E2EWebServerDetails } from '@nx/devkit/internal';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -113,6 +114,7 @@ export async function addE2e(
         devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
         baseUrl: e2eWebServerInfo.e2eWebServerAddress,
         jsx: true,
+        enableTypedLinting: isTypedLintingEnabled(options),
         webServerCommands: {
           default: e2eWebServerInfo.e2eWebServerCommand,
           production: e2eWebServerInfo.e2eCiWebServerCommand,
@@ -164,7 +166,7 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting: isTypedLintingEnabled(options),
         webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       });

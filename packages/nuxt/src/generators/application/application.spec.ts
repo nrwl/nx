@@ -108,6 +108,39 @@ describe('app', () => {
           ).toMatchSnapshot();
         });
 
+        it('should inline the typed linting block in the flat config ESM template', async () => {
+          tree.write('eslint.config.mjs', 'export default {};');
+
+          await applicationGenerator(tree, {
+            directory: name,
+            unitTestRunner: 'vitest',
+            useAppDir: false,
+            enableTypedLinting: true,
+          });
+
+          const content = tree.read(`${name}/eslint.config.mjs`, 'utf-8');
+          expect(content).toContain('projectService: true');
+          expect(content).toContain('tsconfigRootDir: import.meta.dirname');
+          expect(content).toMatchSnapshot();
+        });
+
+        it('should inline the typed linting block in the flat config CJS template', async () => {
+          tree.write('eslint.config.cjs', 'module.exports = {};');
+
+          await applicationGenerator(tree, {
+            directory: name,
+            unitTestRunner: 'vitest',
+            useAppDir: false,
+            enableTypedLinting: true,
+          });
+
+          const content = tree.read(`${name}/eslint.config.cjs`, 'utf-8');
+          expect(content).toContain('projectService: true');
+          expect(content).toContain('tsconfigRootDir: __dirname');
+          expect(content).not.toContain('import.meta.dirname');
+          expect(content).toMatchSnapshot();
+        });
+
         it('should configure eslint correctly (eslintrc)', async () => {
           process.env.ESLINT_USE_FLAT_CONFIG = 'false';
           await applicationGenerator(tree, {

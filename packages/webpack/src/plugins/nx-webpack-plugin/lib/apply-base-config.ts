@@ -197,6 +197,10 @@ function applyNxIndependentConfig(
           })
         : new TerserPlugin({
             minify: TerserPlugin.swcMinify,
+            // terser-webpack-plugin 5.6+ forwards `extractComments` into swc's
+            // minify options, which rejects it as an unknown field. Disable it
+            // like the babel branch does above.
+            extractComments: false,
             // `terserOptions` options will be passed to `swc`
             terserOptions: {
               module: true,

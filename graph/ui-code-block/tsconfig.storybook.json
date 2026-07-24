@@ -4,7 +4,8 @@
     "emitDecoratorMetadata": true,
     "outDir": "dist/storybook",
     "composite": false,
-    "moduleResolution": "node16"
+    "moduleResolution": "node16",
+    "rootDir": "."
   },
   "files": [
     "../../node_modules/@nx/react/typings/styled-jsx.d.ts",

@@ -5,7 +5,8 @@
     "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"],
     "skipLibCheck": true,
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

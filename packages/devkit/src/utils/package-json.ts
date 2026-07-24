@@ -18,10 +18,11 @@ import type {
 import { join, resolve } from 'path';
 import { clean, coerce, gt } from 'semver';
 import { installPackagesTask } from '../tasks/install-packages-task';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- nx/src/utils/catalog exists since nx 22.0.0, the whole supported range; swap to the nx/src/devkit-internals re-export in v25
 import {
   getCatalogDependenciesFromPackageJson,
   getCatalogManager,
-} from './catalog';
+} from 'nx/src/utils/catalog';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -36,9 +37,10 @@ const NON_SEMVER_TAGS = {
 /**
  * Get the resolved version of a dependency from package.json.
  *
- * Retrieves a package version and automatically resolves PNPM catalog references
- * (e.g., "catalog:default") to their actual version strings. By default, searches
- * `dependencies` first, then falls back to `devDependencies`.
+ * Retrieves a package version and automatically resolves package manager
+ * catalog references (e.g., "catalog:default") to their actual version
+ * strings. By default, searches `dependencies` first, then falls back to
+ * `devDependencies`.
  *
  * **Tree-based usage** (generators and migrations):
  * Use when you have a `Tree` object, which is typical in Nx generators and migrations.

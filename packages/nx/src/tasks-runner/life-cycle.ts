@@ -72,7 +72,7 @@ export interface LifeCycle {
 
   registerRunningTask?(
     taskId: string,
-    parserAndWriter: ExternalObject<[any, any]>
+    ptyHandles: ExternalObject<[any, any, any]>
   ): void;
 
   registerRunningTaskWithEmptyParser?(taskId: string): void;
@@ -182,11 +182,11 @@ export class CompositeLifeCycle implements LifeCycle {
 
   registerRunningTask(
     taskId: string,
-    parserAndWriter: ExternalObject<[any, any]>
+    ptyHandles: ExternalObject<[any, any, any]>
   ): void {
     for (let l of this.lifeCycles) {
       if (l.registerRunningTask) {
-        l.registerRunningTask(taskId, parserAndWriter);
+        l.registerRunningTask(taskId, ptyHandles);
       }
     }
   }

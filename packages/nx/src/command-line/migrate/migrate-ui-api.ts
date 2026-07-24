@@ -1,8 +1,9 @@
-import { execSync, spawn, ChildProcess } from 'child_process';
+import { execFileSync, execSync, spawn, ChildProcess } from 'child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { MigrationDetailsWithId } from '../../config/misc-interfaces';
 import type { FileChange } from '../../generators/tree';
+import { assertValidGitSha } from '../../utils/git-revision';
 import {
   getImplementationPath as getMigrationImplementationPath,
   isHybridMigration,
@@ -107,6 +108,10 @@ export function finishMigrationProcess(
     parsedMigrationsJson['nx-console'] as MigrationsJsonMetadata
   ).initialGitRef;
 
+  if (squashCommits && initialGitRef) {
+    assertValidGitSha(initialGitRef.ref);
+  }
+
   if (existsSync(migrationsJsonPath)) {
     rmSync(migrationsJsonPath);
   }
@@ -116,25 +121,26 @@ export function finishMigrationProcess(
     windowsHide: true,
   });
 
-  execSync(`git commit -m "${commitMessage}" --no-verify`, {
+  commit(workspacePath, commitMessage);
+
+  if (squashCommits && initialGitRef) {
+    execFileSync('git', ['reset', '--soft', initialGitRef.ref], {
+      cwd: workspacePath,
+      encoding: 'utf-8',
+      windowsHide: true,
+    });
+
+    commit(workspacePath, commitMessage);
+  }
+}
+
+function commit(workspacePath: string, commitMessage: string) {
+  execSync('git commit --no-verify -F -', {
     cwd: workspacePath,
     encoding: 'utf-8',
     windowsHide: true,
+    input: commitMessage,
   });
-
-  if (squashCommits && initialGitRef) {
-    execSync(`git reset --soft ${initialGitRef.ref}`, {
-      cwd: workspacePath,
-      encoding: 'utf-8',
-      windowsHide: true,
-    });
-
-    execSync(`git commit -m "${commitMessage}" --no-verify`, {
-      cwd: workspacePath,
-      encoding: 'utf-8',
-      windowsHide: true,
-    });
-  }
 }
 
 export async function runSingleMigration(
@@ -489,7 +495,8 @@ export function undoMigration(workspacePath: string, id: string) {
     // `existing.ref` is the unmodified HEAD at run time, so `ref^` would
     // reset past unrelated history. Only flip the metadata to skipped.
     if (existing.changedFiles.length > 0) {
-      execSync(`git reset --hard ${existing.ref}^`, {
+      assertValidGitSha(existing.ref);
+      execFileSync('git', ['reset', '--hard', `${existing.ref}^`], {
         cwd: workspacePath,
         encoding: 'utf-8',
         windowsHide: true,

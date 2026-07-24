@@ -289,15 +289,15 @@ nxApi:
 - Feat: Assignment rules updates
   - Parallelism configuration
   - Target globs
-  - See [here](/docs/reference/nx-cloud/assignment-rules#how-to-define-an-assignment-rule) for examples
-- Feat: Parallel agent steps and step groups (docs [here](/docs/reference/nx-cloud/launch-templates#launchtemplatestemplatenamegroupname))
+  - See [here](/docs/kb/assignment-rules#how-to-define-an-assignment-rule) for examples
+- Feat: Parallel agent steps and step groups (docs [here](/docs/kb/launch-templates#launchtemplatestemplatenamegroupname))
 - Feat: Reusable agent launch template snippets via yaml anchors
-  - See example [here](/docs/reference/nx-cloud/launch-templates#full-example)
+  - See example [here](/docs/kb/launch-templates#full-example)
   - Specifically how `common-init-steps: &common-init-steps` is defined
 - Feat: Individual GitHub commit statuses for each run group
   - This is configurable in your workspace settings
-  - See [here](/docs/guides/nx-cloud/setup-ci#github-status-checks) for branch settings configuration
-  - You might also need [to update your GitHub app permissions](/docs/guides/nx-cloud/source-control-integration/github-app-permissions)
+  - See [here](/docs/kb/setup-ci#github-status-checks) for branch settings configuration
+  - You might also need [to update your GitHub app permissions](/docs/kb/github-app-permissions)
 - Misc: CIPE list is sortable by duration
 - Fix: early DTE job termination improvements
 - Fix: run details page performance improvements
@@ -342,7 +342,7 @@ Assignment rules allow you to control which tasks can run on which agents. Save 
 
 Assignment rules are defined in yaml files within your workspace's `.nx/workflows` directory. You can use assignment rules with DTE-agents or with dynamic Nx Agents. Note that additional configuration is required when using DTE agents.
 
-Read the full docs [here](/docs/reference/nx-cloud/assignment-rules#assignment-rules-beta).
+Read the full docs [here](/docs/kb/assignment-rules#assignment-rules-beta).
 
 Once you start using assignment rules, you'll be able to see all your configured "rules" in your CIPE "Analysis page".
 
@@ -375,7 +375,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
     - `~/.npm`
     - `~/.cache/yarn`
     - `.pnpm-store` (note PNPM on Nx Agents does not store its cache folder in the \$HOME dir)
-  - Please refer to the [custom launch templates docs](/docs/reference/nx-cloud/launch-templates#full-example) for how you can setup your caching under these new recommendations
+  - Please refer to the [custom launch templates docs](/docs/kb/launch-templates#full-example) for how you can setup your caching under these new recommendations
 - Nx Agents `$HOME` directory mounting
   - previously, when your Nx Agents pods were starting up, we were mounting as a k8s volume just the folder in which you checkout your repo: `$HOME/workspace`
   - however, a lot of dependencies and third-party apps use `$HOME` folder to deposit a lot of files (Rust, NPM cache folders etc.)

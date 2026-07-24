@@ -310,7 +310,44 @@ export class AggregateCreateNodesError extends Error {
         'AggregateCreateNodesError must be constructed with an array of tuples where the first element is a filename or undefined and the second element is the underlying error.'
       );
     }
+    // Plugins pass through whatever value they caught, which is not
+    // guaranteed to be an Error. Coerce so formatting can rely on
+    // message and stack being present.
+    for (const errorTuple of errors) {
+      errorTuple[1] = coerceToError(errorTuple[1]);
+    }
   }
+}
+
+function coerceToError(value: unknown): Error {
+  if (value instanceof Error) {
+    return value;
+  }
+  let message: string;
+  let stack: string | undefined;
+  if (typeof value === 'object' && value !== null) {
+    const candidate = value as { message?: unknown; stack?: unknown };
+    if (typeof candidate.message === 'string') {
+      message = candidate.message;
+      if (typeof candidate.stack === 'string') {
+        stack = candidate.stack;
+      }
+    } else {
+      try {
+        message = JSON.stringify(value);
+      } catch {
+        // Circular structures cannot be stringified.
+        message = String(value);
+      }
+    }
+  } else {
+    message = String(value);
+  }
+  const error = new Error(message);
+  // A synthesized stack would point at this coercion site rather than
+  // the original failure, so prefer the original stack or just the message.
+  error.stack = stack ?? message;
+  return error;
 }
 
 export function formatAggregateCreateNodesError(
@@ -344,7 +381,8 @@ export function formatAggregateCreateNodesError(
     }
     for (const e of errors) {
       const messageLines = e.message.split('\n');
-      const stackLines = e.stack.split('\n');
+      // Errors deserialized from a plugin worker may arrive without a stack.
+      const stackLines = (e.stack ?? e.message).split('\n');
       if (file) {
         errorBodyLines.push(...messageLines.map((line) => `      ${line}`));
         errorStackLines.push(...stackLines.map((line) => `     ${line}`));

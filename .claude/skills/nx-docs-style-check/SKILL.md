@@ -58,9 +58,21 @@ Run `nx run astro-docs:vale` to check the modified files.
   For ambiguous cases, suggest the fix and ask.
 - **suggestions** — mention them to the user but do not auto-fix.
 
-### Step 2: Fix issues Vale doesn't catch
+### Step 2: Apply the guide by hand (Vale covers only a subset)
 
-Read `astro-docs/STYLE_GUIDE.md` and check for that things that Vale may have missed.
+Vale enforces only the mechanical rules, and even the ones it implements are partial. A
+clean Vale run is **not** evidence the guide passed. Reading the guide is also not enough;
+you have to test your changed text against each rule.
+
+For the diff you just made:
+
+1. Run the guide's own "Pre-publish pass order" end to end, in order, on your changed text.
+   Where a pass is a procedure (a grep, a count, a rewrite), perform it on your text rather
+   than just confirming the pass exists.
+2. Then go through the rest of `STYLE_GUIDE.md` rule by rule, checking your changed lines
+   against every rule the pass order did not already cover. A rule counts as checked only
+   after you've read your actual sentences through it, not after you've read the rule.
+3. Fix every violation. If a rule genuinely doesn't apply to this change, move on.
 
 ### Handling false positives
 

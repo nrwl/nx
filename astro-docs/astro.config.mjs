@@ -42,8 +42,19 @@ export default defineConfig({
   },
   trailingSlash: 'never',
   redirects: {
-    '/knowledge-base/installation':
-      '/docs/knowledge-base/installation-and-updates',
+    '/guides/tips-n-tricks/define-environment-variables':
+      '/docs/reference/environment-variables#loading-environment-variables',
+    '/technologies/angular/guides/use-environment-variables-in-angular':
+      '/docs/reference/environment-variables#loading-environment-variables',
+    '/technologies/react/guides/use-environment-variables-in-react':
+      '/docs/reference/environment-variables#loading-environment-variables',
+    '/knowledge-base/installation': '/docs/kb/installation-and-updates',
+    '/guides/nx-cloud/source-control-integration/github':
+      '/docs/features/ci-features/github-integration',
+    '/concepts/decisions/overview': '/docs/kb/monorepo-vs-polyrepo',
+    '/concepts/decisions/why-monorepos': '/docs/kb/what-is-a-monorepo',
+    '/features/maintain-typescript-monorepos':
+      '/docs/technologies/typescript/introduction',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
     '/reference/remote-cache-plugins':
@@ -109,6 +120,7 @@ export default defineConfig({
         './src/plugins/github-stars.middleware.ts',
         './src/plugins/raw-content.middleware.ts',
         './src/plugins/canonical.middleware.ts',
+        './src/plugins/knowledge-base-layout.middleware.ts',
         './src/plugins/schema.middleware.ts',
       ],
       markdown: {

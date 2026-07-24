@@ -22,7 +22,7 @@ use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetSta
 
 use crate::native::tui::tui::Tui;
 use crate::native::{
-    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskResult},
 };
 
@@ -35,7 +35,10 @@ use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
+use super::components::link::LinkRegistry;
 use super::components::nx_paragraph::NxParagraph;
+use super::components::search_filter::{PaneSearchProps, SessionEvent, interpret_session_key};
+use super::components::status_bar::{PaneProps, StatusBar, StatusBarProps};
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
@@ -114,6 +117,11 @@ pub struct App {
     layout_areas: Option<LayoutAreas>,
     terminal_pane_data: [TerminalPaneData; 2],
     dependency_view_states: [Option<DependencyViewState>; 2],
+    /// Clickable links recorded by the full-width status bar during its render,
+    /// kept here (as the bar's `StatefulWidget` state) so they survive from the
+    /// draw pass to the mouse-release hit-test. The bar itself is a transient
+    /// per-frame widget, not a `Component`.
+    status_bar_links: LinkRegistry,
     spacebar_mode: bool,
     pane_tasks: [Option<SelectionEntry>; 2], // Selections assigned to panes 1 and 2 (0-indexed)
     resize_debounce_timer: Option<u128>,     // Timer for debouncing resize events
@@ -135,6 +143,9 @@ pub struct App {
     /// Whether the TUI is currently capturing the mouse. Toggled with F10 so the
     /// user can fall back to their terminal's native cell selection.
     mouse_capture_enabled: bool,
+    /// Whether any-motion tracking (?1003) is currently enabled on the outer
+    /// terminal, mirroring an interactive pane's app that requested it.
+    any_motion_capture_enabled: bool,
     /// An in-progress (or completed-but-still-highlighted) text selection over a
     /// rendered region (popup text area or task list), in screen coordinates.
     region_selection: Option<RegionSelection>,
@@ -401,7 +412,6 @@ impl App {
             initiating_tasks,
             run_mode,
             _,
-            title_text,
             task_count,
             task_status_map,
             task_start_times,
@@ -417,8 +427,6 @@ impl App {
             batch_expansion_states,
             // Max parallel for restoration
             saved_max_parallel,
-            // Filter text for restoration
-            saved_filter_text,
         ) = {
             let state_lock = state.lock();
             (
@@ -426,7 +434,6 @@ impl App {
                 state_lock.initiating_tasks().clone(),
                 state_lock.run_mode(),
                 state_lock.pinned_tasks().to_vec(),
-                state_lock.title_text().to_owned(),
                 get_task_count(state_lock.task_graph()),
                 state_lock.get_task_status_map().clone(),
                 state_lock.get_task_start_times().clone(),
@@ -442,8 +449,6 @@ impl App {
                 state_lock.get_batch_expansion_states().clone(),
                 // Get max_parallel for restoration
                 state_lock.get_max_parallel(),
-                // Get filter text for restoration
-                state_lock.get_filter_text().to_owned(),
             )
         };
 
@@ -461,8 +466,8 @@ impl App {
             initiating_tasks,
             run_mode,
             initial_focus,
-            title_text,
             selection_manager.clone(),
+            state.clone(),
         );
 
         // Restore max_parallel for proper decorator line rendering
@@ -501,17 +506,11 @@ impl App {
             }
         }
 
-        // Restore filter text
-        if !saved_filter_text.is_empty() {
-            tasks_list.set_filter_text(saved_filter_text);
-        }
-
         let help_popup = HelpPopup::new();
         let mut countdown_popup = CountdownPopup::new();
         // Re-hydrate the run report from shared state so it survives mode switches.
         if let Some(summary) = state.lock().exit_summary() {
             countdown_popup.set_summary(summary);
-            tasks_list.set_perf_report_available(true);
         }
         let hint_popup = HintPopup::new();
 
@@ -563,6 +562,7 @@ impl App {
             layout_areas: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             dependency_view_states: [None, None],
+            status_bar_links: LinkRegistry::new(),
             spacebar_mode: saved_spacebar_mode,
             pane_tasks: saved_pane_tasks,
             resize_debounce_timer: None,
@@ -574,6 +574,7 @@ impl App {
             last_click: None,
             selecting_pane: None,
             mouse_capture_enabled: true,
+            any_motion_capture_enabled: false,
             region_selection: None,
             region_snapshot: None,
             pending_list_click: None,
@@ -829,14 +830,13 @@ impl App {
     }
 
     // A pseudo-terminal running task will provide the parser and writer directly
-    pub fn register_running_interactive_task(
-        &mut self,
-        task_id: String,
-        parser_and_writer: &(ParserArc, WriterArc),
-    ) {
+    pub fn register_running_interactive_task(&mut self, task_id: String, pty_handles: &PtyHandles) {
         debug!("Registering interactive task: {}", task_id);
-        let pty =
-            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+        let pty = PtyInstance::interactive(
+            pty_handles.0.clone(),
+            pty_handles.1.clone(),
+            pty_handles.2.clone(),
+        );
         self.register_running_task(task_id, pty);
     }
 
@@ -967,6 +967,16 @@ impl App {
                     };
                 }
 
+                // While a pane search is capturing input, every key belongs to
+                // the query — global shortcuts like q/?/p must type into it
+                // instead of firing. (Ctrl+C still quits via the handler above.)
+                if let Focus::MultipleOutput(pane_idx) = self.focus()
+                    && self.terminal_pane_data[pane_idx].search_input_active()
+                {
+                    self.handle_key_event(key).ok();
+                    return Ok(false);
+                }
+
                 if matches!(key.code, KeyCode::F(12)) {
                     self.dispatch_action(Action::ToggleDebugMode);
                     return Ok(false);
@@ -984,7 +994,7 @@ impl App {
                 if matches!(key.code, KeyCode::F(11))
                     && !matches!(self.focus(), Focus::CountdownPopup)
                 {
-                    self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                    self.request_inline_mode();
                     return Ok(false);
                 }
 
@@ -1116,7 +1126,7 @@ impl App {
                                 countdown_popup.cancel_countdown();
                                 self.core.state().lock().cancel_quit();
                                 self.close_popup(Focus::CountdownPopup);
-                                self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                                self.request_inline_mode();
                                 return Ok(false);
                             }
                             _ => {
@@ -1263,7 +1273,16 @@ impl App {
                                         self.focus_previous();
                                     }
                                     KeyCode::Esc => {
-                                        if !self.is_task_list_hidden() {
+                                        // An active pane search consumes Esc
+                                        // (clears it) before focus moves back.
+                                        let pane_has_search = matches!(
+                                            self.focus(),
+                                            Focus::MultipleOutput(idx)
+                                                if self.terminal_pane_data[idx].search.is_some()
+                                        );
+                                        if pane_has_search {
+                                            self.handle_key_event(key).ok();
+                                        } else if !self.is_task_list_hidden() {
                                             self.set_base_focus(Focus::TaskList);
                                         }
                                     }
@@ -1287,8 +1306,7 @@ impl App {
                                     // If focused on a specific terminal pane, and not interactive, enter should
                                     // swap to inline tui mode focusing that task
                                     KeyCode::Enter => {
-                                        // dispatch action to switch to inline mode with focused task
-                                        self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                                        self.request_inline_mode();
                                     }
                                     _ => {
                                         // Forward other keys for interactivity, scrolling (j/k) etc
@@ -1308,101 +1326,93 @@ impl App {
                             let is_filter_mode = tasks_list.filter_mode;
 
                             match focus {
-                                Focus::TaskList => match key.code {
-                                    KeyCode::Char('j') if !is_filter_mode => {
-                                        self.dispatch_action(Action::NextTask);
-                                    }
-                                    KeyCode::Down => {
-                                        self.dispatch_action(Action::NextTask);
-                                    }
-                                    KeyCode::Char('k') if !is_filter_mode => {
-                                        self.dispatch_action(Action::PreviousTask);
-                                    }
-                                    KeyCode::Up => {
-                                        self.dispatch_action(Action::PreviousTask);
-                                    }
-                                    KeyCode::Right if !is_filter_mode => {
-                                        tasks_list.try_expand_selected_batch();
-                                    }
-                                    KeyCode::Left if !is_filter_mode => {
-                                        tasks_list.try_collapse_selected_batch();
-                                    }
-                                    KeyCode::Esc => {
-                                        if matches!(focus, Focus::HelpPopup) {
-                                            if let Some(help_popup) =
-                                                self.components.iter_mut().find_map(|c| {
-                                                    c.as_any_mut().downcast_mut::<HelpPopup>()
-                                                })
-                                            {
-                                                help_popup.set_visible(false);
-                                            }
-                                            self.close_popup(Focus::HelpPopup);
-                                        } else {
-                                            // Only clear filter when help popup is not in focus
-
-                                            tasks_list.clear_filter();
+                                // The filter's key bindings come from the
+                                // session keymap shared with the pane search
+                                // (`search_filter::interpret_session_key`), so
+                                // the two sessions cannot drift.
+                                Focus::TaskList => {
+                                    match interpret_session_key(is_filter_mode, true, &key) {
+                                        SessionEvent::Open => {
+                                            tasks_list.enter_filter_mode();
                                         }
-                                    }
-                                    KeyCode::Char(c) => {
-                                        if tasks_list.filter_mode {
+                                        SessionEvent::Append(c) => {
                                             tasks_list.add_filter_char(c);
-                                        } else {
-                                            match c {
-                                                '/' => {
-                                                    tasks_list.enter_filter_mode();
-                                                }
-                                                c => {
-                                                    match c {
-                                                        'j' => {
-                                                            self.dispatch_action(Action::NextTask);
-                                                        }
-                                                        'k' => {
-                                                            self.dispatch_action(
-                                                                Action::PreviousTask,
-                                                            );
-                                                        }
-                                                        '1' => {
-                                                            self.toggle_current_task_in_pane(0);
-                                                            let _ = self.handle_pty_resize();
-                                                            // No need to debounce
-                                                        }
-                                                        '2' => {
-                                                            self.toggle_current_task_in_pane(1);
-                                                            let _ = self.handle_pty_resize();
-                                                            // No need to debounce
-                                                        }
-                                                        '0' => self.clear_all_panes(),
-                                                        'b' => self.toggle_task_list(),
-                                                        'm' => {
-                                                            if let Some(area) = self.frame_area {
-                                                                self.toggle_layout_mode(area);
-                                                            }
-                                                        }
-                                                        _ => {}
-                                                    }
-                                                }
-                                            }
                                         }
-                                    }
-                                    KeyCode::Backspace => {
-                                        if tasks_list.filter_mode {
+                                        SessionEvent::DeleteBack => {
                                             tasks_list.remove_filter_char();
                                         }
+                                        SessionEvent::Confirm => {
+                                            tasks_list.persist_filter();
+                                        }
+                                        SessionEvent::Cancel => {
+                                            tasks_list.clear_filter();
+                                        }
+                                        SessionEvent::NotHandled => match key.code {
+                                            KeyCode::Char('j') if !is_filter_mode => {
+                                                self.dispatch_action(Action::NextTask);
+                                            }
+                                            KeyCode::Down => {
+                                                self.dispatch_action(Action::NextTask);
+                                            }
+                                            KeyCode::Char('k') if !is_filter_mode => {
+                                                self.dispatch_action(Action::PreviousTask);
+                                            }
+                                            KeyCode::Up => {
+                                                self.dispatch_action(Action::PreviousTask);
+                                            }
+                                            KeyCode::Right if !is_filter_mode => {
+                                                tasks_list.try_expand_selected_batch();
+                                            }
+                                            KeyCode::Left if !is_filter_mode => {
+                                                tasks_list.try_collapse_selected_batch();
+                                            }
+                                            // Unmodified characters never reach here
+                                            // in filter mode (the session keymap
+                                            // consumed them), but Ctrl-modified ones
+                                            // do — swallow those instead of firing
+                                            // commands mid-typing, matching the pane
+                                            // search host.
+                                            KeyCode::Char(c) if !is_filter_mode => match c {
+                                                'j' => {
+                                                    self.dispatch_action(Action::NextTask);
+                                                }
+                                                'k' => {
+                                                    self.dispatch_action(Action::PreviousTask);
+                                                }
+                                                '1' => {
+                                                    self.toggle_current_task_in_pane(0);
+                                                    let _ = self.handle_pty_resize();
+                                                    // No need to debounce
+                                                }
+                                                '2' => {
+                                                    self.toggle_current_task_in_pane(1);
+                                                    let _ = self.handle_pty_resize();
+                                                    // No need to debounce
+                                                }
+                                                '0' => self.clear_all_panes(),
+                                                'b' => self.toggle_task_list(),
+                                                'm' => {
+                                                    if let Some(area) = self.frame_area {
+                                                        self.toggle_layout_mode(area);
+                                                    }
+                                                }
+                                                _ => {}
+                                            },
+                                            KeyCode::Tab => {
+                                                self.focus_next();
+                                            }
+                                            KeyCode::BackTab => {
+                                                self.focus_previous();
+                                            }
+                                            KeyCode::Enter
+                                                if matches!(self.focus(), Focus::TaskList) =>
+                                            {
+                                                self.display_and_focus_current_task_in_terminal_pane(false);
+                                            }
+                                            _ => {}
+                                        },
                                     }
-                                    KeyCode::Tab => {
-                                        self.focus_next();
-                                    }
-                                    KeyCode::BackTab => {
-                                        self.focus_previous();
-                                    }
-                                    KeyCode::Enter if is_filter_mode => {
-                                        tasks_list.persist_filter();
-                                    }
-                                    KeyCode::Enter if matches!(self.focus(), Focus::TaskList) => {
-                                        self.display_and_focus_current_task_in_terminal_pane(false);
-                                    }
-                                    _ => {}
-                                },
+                                }
                                 Focus::MultipleOutput(_idx) => match key.code {
                                     KeyCode::Tab => {
                                         self.focus_next();
@@ -1535,7 +1545,9 @@ impl App {
                         self.close_popup(Focus::HintPopup);
                     }
                 } else {
+                    // The disable sequence resets ?1003 too.
                     let _ = crate::native::tui::tui::disable_mouse_capture();
+                    self.any_motion_capture_enabled = false;
                     // In-app selections can no longer be updated by the mouse.
                     self.clear_all_pane_selections();
                     self.region_selection = None;
@@ -1546,6 +1558,16 @@ impl App {
                 }
             }
             Action::Render => {
+                // Keep a focused pane's search match count live as its task
+                // streams output (cheap — only re-scans when the output grew).
+                if let Focus::MultipleOutput(pane_idx) = self.focus() {
+                    self.terminal_pane_data[pane_idx].refresh_search_if_grown();
+                }
+
+                // Derive the status bar's props from canonical state up front,
+                // before entering the draw closure (it takes the state lock).
+                let status_bar_props = self.build_status_bar_props();
+
                 // Hit-test regions are rebuilt every frame inside the draw closure,
                 // then stored on self so mouse events can resolve what's under the cursor.
                 let mut captured_regions: Vec<MouseRegion> = Vec::new();
@@ -1560,6 +1582,8 @@ impl App {
                             registry.clear();
                         }
                     }
+                    // The status bar clears its own registry (its widget State)
+                    // at the start of its render.
 
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
                     if self.frame_area.is_none() {
@@ -1573,6 +1597,7 @@ impl App {
 
                     let frame_area = self.frame_area.unwrap();
                     let layout_areas = self.layout_areas.as_ref().unwrap();
+                    let status_bar_area = layout_areas.status_bar;
 
                     if self.debug_mode {
                         let debug_widget = TuiLoggerSmartWidget::default().state(&self.debug_state);
@@ -1758,6 +1783,18 @@ impl App {
                         physical_idx += 1;
                     }
 
+                    // Draw the full-width status bar into its reserved bottom
+                    // row(s), before the popups so they overlay it. The bar is a
+                    // transient widget; its persistent link registry (for click
+                    // hit-testing) is supplied as the widget state.
+                    if let Some(bar_area) = status_bar_area {
+                        f.render_stateful_widget(
+                            StatusBar::new(&status_bar_props),
+                            bar_area,
+                            &mut self.status_bar_links,
+                        );
+                    }
+
                     // Draw the popups (help, countdown, interstitial)
                     // Draw each popup sequentially to avoid multiple mutable borrows
                     if let Some(help_popup) = self
@@ -1794,6 +1831,7 @@ impl App {
                 })
                 .ok();
                 self.mouse_regions = captured_regions;
+                self.sync_any_motion_capture();
             }
             Action::SendConsoleMessage(msg) => {
                 let state = self.core.state().lock();
@@ -1861,22 +1899,15 @@ impl App {
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
-        // Store in state (for mode switching persistence)
-        self.core.state().lock().set_cloud_message(message.clone());
-        // Dispatch to TasksList component for UI rendering
-        if let Some(message) = message {
-            self.dispatch_action(Action::UpdateCloudMessage(message));
-        }
+        self.core.state().lock().set_cloud_message(message);
+        // Cloud content affects the status bar height on narrow terminals.
+        self.layout_areas = None;
     }
 
     pub fn set_cloud_link(&mut self, label: String, url: String) {
-        // Store in state (for mode switching persistence)
-        self.core
-            .state()
-            .lock()
-            .set_cloud_link(Some((label.clone(), url.clone())));
-        // Dispatch to TasksList component for UI rendering
-        self.dispatch_action(Action::UpdateCloudLink(label, url));
+        self.core.state().lock().set_cloud_link(Some((label, url)));
+        // Cloud content affects the status bar height on narrow terminals.
+        self.layout_areas = None;
     }
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
@@ -1884,9 +1915,115 @@ impl App {
         self.core.dispatch_action(action);
     }
 
+    /// Gather the status bar's per-frame props from canonical state, the app's
+    /// focus, and the task list's filter session. Takes the `TuiState` lock
+    /// once and drops it before reading the `TasksList` (whose filter methods
+    /// take the same lock), so this must run outside the draw closure.
+    fn build_status_bar_props(&self) -> StatusBarProps {
+        let (mut props, filter_text) = {
+            let state = self.core.state().lock();
+            // Focused-pane details: interactivity only applies while the pane's
+            // task is running and has an interactive PTY.
+            let pane = if let Focus::MultipleOutput(pane_idx) = self.focus() {
+                let pane_data = &self.terminal_pane_data[pane_idx];
+                let task_in_progress = self.pane_tasks[pane_idx].as_ref().is_some_and(|entry| {
+                    matches!(entry, SelectionEntry::Task(name)
+                        if state.get_task_status(name) == Some(TaskStatus::InProgress))
+                });
+                Some(PaneProps {
+                    // A pane shows terminal output once its task has started (it
+                    // has a PTY); before that it renders a dependency view.
+                    has_output: pane_data.pty.is_some(),
+                    interactive: (task_in_progress && pane_data.can_be_interactive)
+                        .then_some(pane_data.is_interactive),
+                    status_message: pane_data
+                        .status_message
+                        .as_ref()
+                        .map(|(message, _)| message.clone()),
+                    search: pane_data.search.as_ref().map(|search| PaneSearchProps {
+                        query: search.query.clone(),
+                        input_mode: search.input_mode,
+                        current: search.current,
+                        total: search.matches.len(),
+                    }),
+                })
+            } else {
+                None
+            };
+            (
+                StatusBarProps {
+                    is_dimmed: matches!(
+                        self.focus(),
+                        Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
+                    ),
+                    perf_report_available: state.has_exit_summary(),
+                    cloud_enabled: state.is_cloud_enabled(),
+                    cloud_message: state.get_cloud_message().map(str::to_string),
+                    cloud_link: state.get_cloud_link().cloned(),
+                    completed_count: state.get_completed_task_count(),
+                    total_count: state.get_total_task_count(),
+                    all_completed: state.is_run_completed(),
+                    run_started_at: state.run_start_time(),
+                    run_ended_at: state.run_end_time(),
+                    filter: None,
+                    pane,
+                },
+                state.get_filter_text().to_string(),
+            )
+        };
+        // The filter display describes typing into the task list, so it only
+        // takes the bar while the list has focus — a focused pane's own context
+        // (search, hints) wins otherwise, even with a filter still applied.
+        if matches!(self.focus(), Focus::TaskList) {
+            props.filter = self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                .and_then(|tasks_list| tasks_list.filter_display(&filter_text));
+        }
+        props
+    }
+
+    /// Switch to inline mode showing the focused (or selected) item.
+    ///
+    /// Inline mode renders that one item's pty, so a task that another Nx
+    /// process is running has nothing to show there. Stay in full-screen, where
+    /// the pane at least explains what's happening, and say why.
+    fn request_inline_mode(&mut self) {
+        let item_id = self
+            .get_focused_pane_item()
+            .or_else(|| self.get_selected_item())
+            .map(|item| item.id().to_string());
+
+        if let Some(item_id) = item_id
+            && self
+                .core
+                .state()
+                .lock()
+                .is_running_in_another_process(&item_id)
+        {
+            self.dispatch_action(Action::ShowHint(
+                "This task is running in another Nx process".to_string(),
+            ));
+            return;
+        }
+
+        self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+    }
+
     fn recalculate_layout_areas(&mut self) {
         if let Some(frame_area) = self.frame_area {
-            self.layout_areas = Some(self.layout_manager.calculate_layout(frame_area));
+            // Only a free-text cloud message can need a second bar row; a
+            // structured cloud link rides on the progress counts.
+            let has_cloud_message = {
+                let state = self.core.state().lock();
+                state.get_cloud_link().is_none() && state.get_cloud_message().is_some()
+            };
+            let status_bar_height = StatusBar::required_height(frame_area.width, has_cloud_message);
+            self.layout_areas = Some(
+                self.layout_manager
+                    .calculate_layout(frame_area, status_bar_height),
+            );
         }
     }
 
@@ -1901,6 +2038,7 @@ impl App {
             self.terminal_pane_data[pane_idx].pty = None;
             self.terminal_pane_data[pane_idx].can_be_interactive = false;
             self.terminal_pane_data[pane_idx].set_interactive(false);
+            self.terminal_pane_data[pane_idx].search = None;
         }
     }
 
@@ -2364,6 +2502,19 @@ impl App {
         }
 
         let (col, row) = (mouse.column, mouse.row);
+
+        // An interactive pane running an app that requested mouse reporting
+        // (vim, htop, lazygit, ...) gets events over its content forwarded to
+        // the app; the TUI's own scroll/select/focus handling applies
+        // everywhere else and to apps that never asked for the mouse.
+        if let Some(MouseRegionKind::Pane(pane_idx)) = self.region_at(col, row)
+            && self.terminal_pane_data[pane_idx]
+                .handle_mouse_event(mouse)
+                .unwrap_or(false)
+        {
+            return;
+        }
+
         match mouse.kind {
             MouseEventKind::ScrollUp => self.scroll_at(col, row, ScrollDirection::Up, action_tx),
             MouseEventKind::ScrollDown => {
@@ -2373,6 +2524,31 @@ impl App {
             MouseEventKind::Drag(MouseButton::Left) => self.handle_left_drag(col, row),
             MouseEventKind::Up(MouseButton::Left) => self.handle_left_release(col, row),
             _ => {}
+        }
+    }
+
+    /// The outer terminal normally runs in button-event tracking (?1002) so
+    /// bare hover motion doesn't flood the event loop. An interactive pane
+    /// whose app asked for any-motion tracking (?1003) needs those hover
+    /// events to forward, so mirror the request on the outer terminal while it
+    /// holds and drop back to the narrow set once it no longer does.
+    fn sync_any_motion_capture(&mut self) {
+        let wanted = self.mouse_capture_enabled
+            && self.terminal_pane_data.iter().any(|pane| {
+                pane.is_interactive()
+                    && pane
+                        .pty
+                        .as_ref()
+                        .and_then(|pty| pty.mouse_protocol())
+                        .is_some_and(|(mode, _)| mode == vt100_ctt::MouseProtocolMode::AnyMotion)
+            });
+        if wanted != self.any_motion_capture_enabled {
+            self.any_motion_capture_enabled = wanted;
+            let _ = if wanted {
+                crate::native::tui::tui::enable_any_motion_capture()
+            } else {
+                crate::native::tui::tui::disable_any_motion_capture()
+            };
         }
     }
 
@@ -2492,7 +2668,7 @@ impl App {
                     return;
                 }
                 if is_double {
-                    self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                    self.request_inline_mode();
                     return;
                 }
                 // Begin a text selection drag at the clicked cell (NXC-3946).
@@ -2521,7 +2697,25 @@ impl App {
                     });
                 }
             }
-            None => {}
+            None => {
+                // A press on the status bar arms a text selection over the bar
+                // so a drag highlights and copies (e.g. the cloud URL); a plain
+                // click still resolves links on release.
+                if let Some(bar_area) = self
+                    .layout_areas
+                    .as_ref()
+                    .and_then(|areas| areas.status_bar)
+                    && bar_area.contains(Position::new(col, row))
+                {
+                    self.clear_all_pane_selections();
+                    self.region_selection = Some(RegionSelection {
+                        anchor: (col, row),
+                        cursor: (col, row),
+                        area: bar_area,
+                        dragging: true,
+                    });
+                }
+            }
         }
     }
 
@@ -2640,6 +2834,7 @@ impl App {
         self.components
             .iter()
             .filter_map(|c| c.link_registry())
+            .chain(std::iter::once(&self.status_bar_links))
             .find_map(|registry| registry.hit_test(col, row))
             .map(str::to_string)
     }
@@ -3290,6 +3485,15 @@ impl App {
         if let Some(pty) = state.get_pty_instance(item_id) {
             terminal_pane_data.can_be_interactive =
                 allow_interactive && in_progress && pty.can_be_interactive();
+            // A different task now occupies this pane: its search matches were
+            // computed against the previous scrollback, so drop the session.
+            let content_changed = terminal_pane_data
+                .pty
+                .as_ref()
+                .is_none_or(|current| !Arc::ptr_eq(current, &pty));
+            if content_changed {
+                terminal_pane_data.search = None;
+            }
             terminal_pane_data.pty = Some(pty.clone());
 
             // Resize PTY to match terminal pane dimensions (async to avoid blocking render)
@@ -3557,7 +3761,9 @@ impl App {
     /// Shows percentage of tasks that are complete (anything except NotStarted, InProgress, or Shared).
     fn update_terminal_progress(&self) {
         let state = self.core.state().lock();
-        let total_tasks = state.get_task_status_map().len();
+        // Same basis as the completed count: continuous tasks never finish, so
+        // they're excluded from both sides or the percentage can't reach 100.
+        let total_tasks = state.get_total_task_count();
         if total_tasks == 0 {
             return;
         }
@@ -3792,7 +3998,8 @@ impl TuiApp for App {
 
     fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
         // Persist in shared state so the report survives mode switches (rebuilt
-        // apps re-hydrate their fresh popup from here).
+        // apps re-hydrate their fresh popup from here). The status bar's help
+        // text reads the flag from state, so no component sync is needed.
         self.core.state().lock().set_exit_summary(summary.clone());
         if let Some(countdown_popup) = self
             .components
@@ -3800,13 +4007,6 @@ impl TuiApp for App {
             .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
         {
             countdown_popup.set_summary(summary);
-        }
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            tasks_list.set_perf_report_available(true);
         }
     }
 
@@ -3867,17 +4067,13 @@ impl TuiApp for App {
 
         let selected_item = self.selection_manager.lock().get_selection().cloned();
 
-        // Get batch expansion states and filter text from TasksList
-        let (batch_expansion_states, filter_text) = self
+        // Get batch expansion states from TasksList. (The filter text needs no
+        // saving: TuiState owns it canonically.)
+        let batch_expansion_states = self
             .components
             .iter()
             .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-            .map(|tasks_list| {
-                (
-                    tasks_list.get_batch_expansion_states(),
-                    tasks_list.get_filter_text().to_owned(),
-                )
-            })
+            .map(|tasks_list| tasks_list.get_batch_expansion_states())
             .unwrap_or_default();
 
         let mut state = self.core.state().lock();
@@ -3887,7 +4083,6 @@ impl TuiApp for App {
             focused_pane,
             selected_item,
             batch_expansion_states,
-            filter_text,
         );
     }
 
@@ -3915,8 +4110,8 @@ impl TuiApp for App {
     }
 
     /// Override the trait default (which only stores in state) so the napi
-    /// `&mut dyn TuiApp` call reaches the inherent method that also dispatches
-    /// `Action::UpdateCloudMessage` to the rendered TasksList.
+    /// `&mut dyn TuiApp` call reaches the inherent method, which also
+    /// invalidates the cached layout (cloud content can change the bar height).
     fn set_cloud_message(&mut self, message: Option<String>) {
         App::set_cloud_message(self, message);
     }
@@ -3962,6 +4157,45 @@ mod tests {
         )));
 
         App::with_state(state, TuiMode::FullScreen).unwrap()
+    }
+
+    /// Clicks on the cloud link resolve through `link_at`, which chains the
+    /// status bar's registry after the component registries.
+    #[test]
+    fn test_link_at_finds_status_bar_links() {
+        let mut app = create_test_app();
+        app.status_bar_links.push(
+            Rect::new(2, 30, 10, 1),
+            "https://nx.app/runs/abc".to_string(),
+        );
+
+        assert_eq!(
+            app.link_at(5, 30),
+            Some("https://nx.app/runs/abc".to_string())
+        );
+        assert_eq!(app.link_at(5, 29), None);
+    }
+
+    /// A press on the status bar arms a text selection over the bar so a drag
+    /// can highlight and copy its content (e.g. the cloud URL).
+    #[test]
+    fn test_status_bar_press_arms_a_region_selection() {
+        let mut app = create_test_app();
+        app.layout_areas = Some(LayoutAreas {
+            task_list: Some(Rect::new(0, 0, 100, 38)),
+            terminal_panes: Vec::new(),
+            status_bar: Some(Rect::new(0, 39, 100, 1)),
+        });
+
+        app.handle_left_press(50, 39);
+        let sel = app
+            .region_selection
+            .expect("press on the bar arms a selection");
+        assert_eq!(sel.area, Rect::new(0, 39, 100, 1));
+
+        // A press outside the bar (e.g. the spacer row above it) arms nothing.
+        app.handle_left_press(50, 38);
+        assert!(app.region_selection.is_none());
     }
 
     /// `print_task_terminal_output` must hide the cursor whether or not the
@@ -4439,6 +4673,63 @@ mod tests {
         let switched = std::iter::from_fn(|| rx.try_recv().ok())
             .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline)));
         assert!(switched, "two clicks on the same cell are a double-click");
+    }
+
+    /// Inline mode has nothing to render for a task another Nx process is
+    /// running (there is no pty here), so entering it is blocked with a hint.
+    #[test]
+    fn test_inline_mode_blocked_for_task_running_in_another_process() {
+        let mut app = create_test_app();
+        app.spacebar_mode = false;
+        app.pane_tasks[0] = Some(SelectionEntry::Task("app1:build".to_string()));
+        app.set_base_focus(Focus::MultipleOutput(0));
+        app.core
+            .state()
+            .lock()
+            .update_task_status("app1:build", TaskStatus::Shared);
+
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx).unwrap();
+
+        app.request_inline_mode();
+
+        let actions: Vec<Action> = std::iter::from_fn(|| rx.try_recv().ok()).collect();
+        assert!(
+            !actions
+                .iter()
+                .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline))),
+            "a task running in another Nx process must not open the inline view"
+        );
+        assert!(
+            actions.iter().any(|a| matches!(a, Action::ShowHint(_))),
+            "the user should be told why the inline view didn't open"
+        );
+    }
+
+    /// The guard is specific to tasks running elsewhere - a normal in-progress
+    /// task still drops into inline.
+    #[test]
+    fn test_inline_mode_allowed_for_local_task() {
+        let mut app = create_test_app();
+        app.spacebar_mode = false;
+        app.pane_tasks[0] = Some(SelectionEntry::Task("app1:build".to_string()));
+        app.set_base_focus(Focus::MultipleOutput(0));
+        app.core
+            .state()
+            .lock()
+            .update_task_status("app1:build", TaskStatus::InProgress);
+
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx).unwrap();
+
+        app.request_inline_mode();
+
+        let switched = std::iter::from_fn(|| rx.try_recv().ok())
+            .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline)));
+        assert!(
+            switched,
+            "a locally running task should open the inline view"
+        );
     }
 
     #[test]

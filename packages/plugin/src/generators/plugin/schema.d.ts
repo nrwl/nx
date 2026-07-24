@@ -7,11 +7,15 @@ export interface Schema {
   skipTsConfig?: boolean; // default is false
   skipFormat?: boolean; // default is false
   skipLintChecks?: boolean; // default is false
-  e2eTestRunner?: 'jest' | 'none';
+  e2eTestRunner?: 'jest' | 'vitest' | 'none';
   e2eProjectDirectory?: string;
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: Linter | LinterType;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   compiler?: 'swc' | 'tsc';
   rootProject?: boolean;

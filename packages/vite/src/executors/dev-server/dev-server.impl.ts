@@ -181,10 +181,19 @@ async function getServerExtraArgs(
   }
 
   if (configuration) {
+    const normalizeWatchOption = <T>(
+      watch: T | false | undefined
+    ): T | undefined => {
+      return watch === false ? undefined : watch;
+    };
+
     serverOptions = {
       ...serverOptions,
-      watch: buildOptionsFromBuildTarget?.watch ?? serverOptions?.watch,
+      watch:
+        normalizeWatchOption(buildOptionsFromBuildTarget?.watch) ??
+        normalizeWatchOption(serverOptions?.watch),
     };
+
     otherOptions = {
       ...otherOptions,
       ...(otherOptionsFromBuildTarget ?? {}),

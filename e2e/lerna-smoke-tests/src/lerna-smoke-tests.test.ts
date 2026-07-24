@@ -67,21 +67,17 @@ describe('Lerna Smoke Tests', () => {
       result = result
         .replace(/.*\/node_modules\/.*\n/, '') // yarn adds "$ /node_modules/.bin/lerna run print-name" to the output
         .replace(/.*package-1@0.*\n/, '') // yarn output doesn't contain "> package-1@0.0.0 print-name"
-        .replace('$ echo test-package-1', '> echo test-package-1');
+        // npm and yarn echo the script command; pnpm 11 does not
+        .replace(/[$>] echo test-package-1\n/, '');
       expect(result).toMatchInlineSnapshot(`
 
                 > package-1:print-name
-                > echo test-package-1
                 test-package-1
                 Lerna (powered by Nx)   Successfully ran target print-name for project package-1
                 Run duration: {DURATION}
                 Cache: 0/1 hit (0%)
                 Critical path: {DURATION} (1 task)
                 Recoverable time: {DURATION}
-                Recommendations:
-                - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
-                - Speed up or split the longest tasks on the critical path:
-                package-1:print-name    {DURATION}
 
             `);
     }, 1000000);

@@ -313,14 +313,16 @@ export default class JsVersionActions extends VersionActions {
       );
     }
 
-    // Update catalog definitions in pnpm-workspace.yaml
+    // Update catalog definitions in the package manager's catalog file
     if (catalogUpdates.length > 0) {
       // catalogManager is guaranteed to be defined when there are catalog updates
       catalogManager!.updateCatalogVersions(tree, catalogUpdates);
 
       const catalogText = catalogUpdates.length === 1 ? 'entry' : 'entries';
       logMessages.push(
-        `✍️  Updated ${catalogUpdates.length} catalog ${catalogText} in pnpm-workspace.yaml`
+        `✍️  Updated ${catalogUpdates.length} catalog ${catalogText} in ${catalogManager!
+          .getCatalogDefinitionFilePaths()
+          .join(', ')}`
       );
     }
 

@@ -1,3 +1,17 @@
+// Pin the detected package manager so inferred lock-file outputs (e.g.
+// prune-lockfile) and package-manager commands are deterministic regardless of
+// which package manager runs the tests.
+jest.mock('@nx/devkit', () => {
+  const actual = jest.requireActual('@nx/devkit');
+  return {
+    ...actual,
+    detectPackageManager: jest.fn(() => 'npm'),
+    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+      actual.getPackageManagerCommand(pm)
+    ),
+  };
+});
+
 import {
   readJson,
   readProjectConfiguration,

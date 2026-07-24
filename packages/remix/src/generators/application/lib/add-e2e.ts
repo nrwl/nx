@@ -123,7 +123,7 @@ export async function addE2E(
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
       webServerCommand: e2eWebsServerInfo.e2eCiWebServerCommand,
       webServerAddress: e2eWebsServerInfo.e2eCiBaseUrl,
       rootProject: options.rootProject,

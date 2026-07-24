@@ -12,7 +12,7 @@ jobs:
       <% if(packageManager == 'pnpm'){ %>
       - run:
           name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@8
+          command: npm install --prefix=$HOME/.local -g pnpm@11
       <% } %>
       <% if(packageManager == 'bun'){ %>
       - run:

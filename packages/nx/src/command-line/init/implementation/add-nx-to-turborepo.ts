@@ -3,7 +3,10 @@ import { join } from 'node:path';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { handleImport } from '../../../utils/handle-import';
 import { output } from '../../../utils/output';
-import { getPackageManagerCommand } from '../../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../../utils/package-manager';
 import { InitArgs } from '../init-v1';
 import {
   addDepsToPackageJson,
@@ -54,12 +57,13 @@ export async function addNxToTurborepo(_options: Options) {
     writeJsonFile(nxJsonPath, nxJson);
   }
 
-  const pmc = getPackageManagerCommand();
+  const packageManager = detectPackageManager(repoRoot);
+  const pmc = getPackageManagerCommand(packageManager);
 
   updateGitIgnore(repoRoot);
-  addDepsToPackageJson(repoRoot);
+  addDepsToPackageJson(repoRoot, packageManager);
 
   output.log({ title: '📦 Installing dependencies' });
 
-  runInstall(repoRoot, pmc);
+  runInstall(repoRoot, packageManager, pmc);
 }

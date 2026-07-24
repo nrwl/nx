@@ -12,7 +12,7 @@ filter: 'type:References'
 The `@nx/vite` plugin adds [inferred targets](#configuration) and [project configuration generators](#setup).
 
 {% aside type="note" title="Vitest is now in @nx/vitest" %}
-Starting with Nx v22, Vitest support has moved to the dedicated [`@nx/vitest` plugin](/docs/technologies/test-tools/vitest/introduction). In Nx v21 and prior, `@nx/vite` contained what is now in `@nx/vitest`. If you are upgrading, see the [migration guide](/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite).
+Starting with Nx v22, Vitest support has moved to the dedicated [`@nx/vitest` plugin](/docs/technologies/test-tools/vitest/introduction). In Nx v21 and prior, `@nx/vite` contained what is now in `@nx/vitest`. If you are upgrading, see the [migration guide](/docs/kb/migrating-from-nx-vite).
 {% /aside %}
 
 You can use Vite with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
@@ -34,7 +34,7 @@ For supported `vitest` versions, see the [`@nx/vitest` plugin requirements](/doc
 ### Add to an existing workspace
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/vite` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/vite` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
@@ -188,7 +188,7 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 ## What's next
 
 {% cardgrid %}
-{% linkcard title="Configure Vite" description="Set up Vite config, Nx-specific plugins, and recommended defaults." href="/docs/technologies/build-tools/vite/guides/configure-vite" /%}
+{% linkcard title="Configure Vite" description="Set up Vite config, Nx-specific plugins, and recommended defaults." href="/docs/kb/configure-vite" /%}
 {% linkcard title="React with Nx" description="Learn the React workflow in an Nx monorepo and how Vite fits." href="/docs/technologies/react/introduction" /%}
 {% linkcard title="Vue with Nx" description="See the Vue workflow in Nx and where Vite is used." href="/docs/technologies/vue/introduction" /%}
 {% linkcard title="Vitest with Nx" description="Add and run Vitest tests, including CI-friendly patterns." href="/docs/technologies/test-tools/vitest/introduction" /%}

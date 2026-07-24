@@ -28,7 +28,6 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { getVcsRemoteInfo } from '../../../utils/git-utils';
 import * as pc from 'picocolors';
 const ora = require('ora');
-const open = require('open');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
@@ -206,6 +205,9 @@ async function runConnectToNxCloud(
       `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
     ).start();
     await sleep(2000);
+    const { default: open } = await (new Function(
+      'return import("open")'
+    )() as Promise<typeof import('open')>);
     await open(connectCloudUrl);
     cloudConnectSpinner.succeed();
   } catch (e) {

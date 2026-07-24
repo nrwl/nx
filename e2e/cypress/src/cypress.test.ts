@@ -167,8 +167,7 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip(
+  it(
     `should allow CT and e2e in same project for a next project`,
     async () => {
       const appName = uniq('next-cy-app');
@@ -197,8 +196,7 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
-  it.skip(
+  it(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);

@@ -606,8 +606,10 @@ export function extractReferencesFromCommit(commit: RawGitCommit): Reference[] {
     }
   }
 
-  // Extract issue references from commit body
-  for (const m of commit.body.matchAll(IssueRE)) {
+  // Extract issue references from commit body, only when linked via a closing
+  // keyword so that other repos' issue numbers mentioned in prose are not
+  // picked up (e.g. "web-infra-dev/rspack#2292")
+  for (const m of commit.body.matchAll(IssueClosingKeywordRE)) {
     if (!references.some((i) => i.value === m[1])) {
       references.push({ type: 'issue', value: m[1] });
     }
@@ -641,6 +643,9 @@ const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 // GitLab style merge request references
 const GitLabMergeRequestRE = /See merge request (?:[a-z0-9/-]+)?(![\d]+)/gim;
 const IssueRE = /(#\d+)/gm;
+// GitHub style issue closing keywords, e.g. "Fixes #1234"
+const IssueClosingKeywordRE =
+  /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+(#\d+)/gim;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 

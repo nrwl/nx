@@ -23,7 +23,96 @@ use tokio_util::sync::CancellationToken;
 use tracing::{debug, trace};
 
 pub type Frame<'a> = ratatui::Frame<'a>;
-pub type Backend = CrosstermBackend<std::io::Stderr>;
+pub type Backend = CursorCachingBackend<std::io::Stderr>;
+
+/// Crossterm backend wrapper whose `get_cursor_position` answers from a cache
+/// instead of querying the terminal.
+///
+/// A real cursor query writes `ESC[6n` and reads the reply from terminal
+/// input, which races the crossterm `EventStream` that owns terminal input
+/// while the TUI runs and intermittently times out (the same conflict
+/// `draw_without_autoresize` exists to avoid). ratatui calls
+/// `get_cursor_position` internally — since ratatui-core 0.1.2,
+/// `Terminal::clear` snapshots the cursor, and `insert_before` calls `clear`
+/// on every scrollback insert (NXC-4597) — so the only way to guarantee the
+/// render path never reads terminal input is to answer cursor queries without
+/// touching the terminal.
+///
+/// The cache holds the last position set through the backend (initially the
+/// origin). That is sufficient because both viewports keep the cursor hidden
+/// and position it absolutely, and the inline viewport is full-height, so
+/// ratatui's inline viewport math yields row 0 regardless of what a real
+/// query would have returned.
+pub struct CursorCachingBackend<W: Write> {
+    inner: CrosstermBackend<W>,
+    cursor_position: ratatui::layout::Position,
+}
+
+impl<W: Write> CursorCachingBackend<W> {
+    pub fn new(writer: W) -> Self {
+        Self {
+            inner: CrosstermBackend::new(writer),
+            cursor_position: ratatui::layout::Position::ORIGIN,
+        }
+    }
+}
+
+impl<W: Write> ratatui::backend::Backend for CursorCachingBackend<W> {
+    type Error = std::io::Error;
+
+    fn draw<'a, I>(&mut self, content: I) -> std::io::Result<()>
+    where
+        I: Iterator<Item = (u16, u16, &'a ratatui::buffer::Cell)>,
+    {
+        self.inner.draw(content)
+    }
+
+    fn hide_cursor(&mut self) -> std::io::Result<()> {
+        self.inner.hide_cursor()
+    }
+
+    fn show_cursor(&mut self) -> std::io::Result<()> {
+        self.inner.show_cursor()
+    }
+
+    fn get_cursor_position(&mut self) -> std::io::Result<ratatui::layout::Position> {
+        Ok(self.cursor_position)
+    }
+
+    fn set_cursor_position<P: Into<ratatui::layout::Position>>(
+        &mut self,
+        position: P,
+    ) -> std::io::Result<()> {
+        let position = position.into();
+        self.inner.set_cursor_position(position)?;
+        self.cursor_position = position;
+        Ok(())
+    }
+
+    fn clear(&mut self) -> std::io::Result<()> {
+        self.inner.clear()
+    }
+
+    fn clear_region(&mut self, clear_type: ratatui::backend::ClearType) -> std::io::Result<()> {
+        self.inner.clear_region(clear_type)
+    }
+
+    fn append_lines(&mut self, n: u16) -> std::io::Result<()> {
+        self.inner.append_lines(n)
+    }
+
+    fn size(&self) -> std::io::Result<ratatui::layout::Size> {
+        self.inner.size()
+    }
+
+    fn window_size(&mut self) -> std::io::Result<ratatui::backend::WindowSize> {
+        self.inner.window_size()
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        ratatui::backend::Backend::flush(&mut self.inner)
+    }
+}
 
 #[derive(Clone, Debug)]
 pub enum Event {
@@ -67,8 +156,18 @@ pub struct Tui {
 /// - `?1006h` — SGR extended coordinates, so columns/rows past 223 are reported
 ///   correctly and release events are distinguishable.
 const ENABLE_MOUSE_CAPTURE_SEQ: &[u8] = b"\x1b[?1000h\x1b[?1002h\x1b[?1006h";
-/// Disable sequence — the same modes reset, in reverse order.
-const DISABLE_MOUSE_CAPTURE_SEQ: &[u8] = b"\x1b[?1006l\x1b[?1002l\x1b[?1000l";
+/// Disable sequence — the same modes reset, in reverse order. Also resets
+/// `?1003`, which is enabled on demand while an interactive pane's app
+/// requests any-motion tracking (see `enable_any_motion_capture`); resetting
+/// an unset mode is a no-op, so every teardown path can clear it blindly.
+const DISABLE_MOUSE_CAPTURE_SEQ: &[u8] = b"\x1b[?1003l\x1b[?1006l\x1b[?1002l\x1b[?1000l";
+
+/// Any-motion ("all-event") tracking, enabled only while a focused interactive
+/// pane's app has itself requested `?1003` so its hover events can be
+/// forwarded. Kept out of the base capture set because it reports every mouse
+/// move, flooding the event loop when nothing needs the data.
+const ENABLE_ANY_MOTION_SEQ: &[u8] = b"\x1b[?1003h";
+const DISABLE_ANY_MOTION_SEQ: &[u8] = b"\x1b[?1003l";
 
 /// Enable mouse reporting on the terminal (stderr — the same stream the TUI
 /// renders to). Idempotent: re-enabling already-enabled modes is a no-op for
@@ -85,6 +184,18 @@ pub(crate) fn enable_mouse_capture() -> std::io::Result<()> {
 pub(crate) fn disable_mouse_capture() -> std::io::Result<()> {
     let mut stderr = std::io::stderr();
     stderr.write_all(DISABLE_MOUSE_CAPTURE_SEQ)?;
+    stderr.flush()
+}
+
+pub(crate) fn enable_any_motion_capture() -> std::io::Result<()> {
+    let mut stderr = std::io::stderr();
+    stderr.write_all(ENABLE_ANY_MOTION_SEQ)?;
+    stderr.flush()
+}
+
+pub(crate) fn disable_any_motion_capture() -> std::io::Result<()> {
+    let mut stderr = std::io::stderr();
+    stderr.write_all(DISABLE_ANY_MOTION_SEQ)?;
     stderr.flush()
 }
 
@@ -114,7 +225,8 @@ impl Tui {
         let frame_rate = 60.0;
 
         // Create fullscreen terminal with its own backend
-        let fullscreen_terminal = ratatui::Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
+        let fullscreen_terminal =
+            ratatui::Terminal::new(CursorCachingBackend::new(std::io::stderr()))?;
 
         // Only create inline terminal if stdin is a TTY.
         // Inline mode requires cursor position queries (via Viewport::Inline) which use
@@ -131,7 +243,7 @@ impl Tui {
             debug!("Terminal size: {:?}", size);
             let inline_height = size.map(|(_cols, rows)| rows).unwrap_or(24);
             ratatui::Terminal::with_options(
-                CrosstermBackend::new(std::io::stderr()),
+                CursorCachingBackend::new(std::io::stderr()),
                 ratatui::TerminalOptions {
                     viewport: ratatui::Viewport::Inline(inline_height),
                 },
@@ -638,7 +750,7 @@ impl Tui {
         // The cursor position query happens here, which is safe because we
         // stopped the EventStream above.
         self.inline_terminal = Some(ratatui::Terminal::with_options(
-            CrosstermBackend::new(std::io::stderr()),
+            CursorCachingBackend::new(std::io::stderr()),
             ratatui::TerminalOptions {
                 viewport: ratatui::Viewport::Inline(rows),
             },
@@ -718,5 +830,26 @@ impl Drop for Tui {
         // is typically called during cleanup when the delay is less noticeable.
         // The main event loop should use exit_async() for proper cleanup.
         self.exit_sync().unwrap();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CursorCachingBackend;
+    use ratatui::backend::Backend;
+    use ratatui::layout::Position;
+
+    #[test]
+    fn cursor_position_is_answered_from_cache_not_the_terminal() {
+        let mut backend = CursorCachingBackend::new(Vec::new());
+        assert_eq!(backend.get_cursor_position().unwrap(), Position::ORIGIN);
+
+        backend
+            .set_cursor_position(Position { x: 3, y: 7 })
+            .unwrap();
+        assert_eq!(
+            backend.get_cursor_position().unwrap(),
+            Position { x: 3, y: 7 }
+        );
     }
 }

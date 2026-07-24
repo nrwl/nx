@@ -9,12 +9,15 @@ import {
 import { getCommonConfig } from './config-utils/common-config';
 import { getServerConfig } from './config-utils/server-config';
 import { getBrowserConfig } from './config-utils/browser-config';
+import { getSwcTranspilationTransform } from './config-utils/swc-transpilation';
 import {
   handleConfigurations,
   parseConfigurationMode,
 } from './config-utils/user-defined-config-helpers';
 import { assertSupportedRspackCoreVersion } from '../utils/assert-supported-rspack-version';
 import { isServeMode } from '../utils/rspack-serve-env';
+import type { SharedLicenseInputs } from '../plugins/extract-licenses-plugin';
+import { AngularRspackPlugin } from '../plugins/angular-rspack-plugin';
 
 export async function createConfig(
   defaultOptions: {
@@ -67,12 +70,37 @@ export async function _createConfig(
     hashFormat
   );
 
+  // Overrides may point module resolution at a different tsconfig; derive
+  // the swc rule semantics from the one the bundler will actually use.
+  const overrideTsConfig = rspackConfigOverrides?.resolve?.tsConfig;
+  const swcTranspilationTransform = getSwcTranspilationTransform(
+    typeof overrideTsConfig === 'string'
+      ? overrideTsConfig
+      : (overrideTsConfig?.configFile ?? normalizedOptions.tsConfig)
+  );
+
+  // The browser and server compilers write the licenses file to the same
+  // location; sharing the collected inputs makes each emit the union.
+  const sharedLicenseInputs: SharedLicenseInputs | undefined =
+    normalizedOptions.hasServer ? new Map() : undefined;
+
+  // An SSR build's compilers also share one Angular compilation: the browser
+  // program already includes the server entry points, so the server compiler
+  // consumes the browser compilation's output instead of running a second
+  // compilation of the same program.
+  const sharedAngularPlugin = normalizedOptions.hasServer
+    ? new AngularRspackPlugin(normalizedOptions, i18n)
+    : undefined;
+
   const configs: Configuration[] = [];
   if (normalizedOptions.hasServer) {
     const serverConfig: Configuration = await getServerConfig(
       normalizedOptions,
       i18n,
-      defaultConfig
+      defaultConfig,
+      swcTranspilationTransform,
+      sharedLicenseInputs,
+      sharedAngularPlugin
     );
     const mergedConfig = rspackMerge(serverConfig, rspackConfigOverrides ?? {});
     configs.push(mergedConfig);
@@ -82,7 +110,10 @@ export async function _createConfig(
     normalizedOptions,
     i18n,
     hashFormat,
-    defaultConfig
+    defaultConfig,
+    swcTranspilationTransform,
+    sharedLicenseInputs,
+    sharedAngularPlugin
   );
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);

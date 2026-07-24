@@ -14,7 +14,7 @@ use napi::{Status, bindgen_prelude::Unknown};
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 #[cfg(not(test))]
 use crate::native::logger::enable_logger;
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, WriterArc};
 use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 
 #[cfg(not(test))]
@@ -357,6 +357,7 @@ impl AppLifeCycle {
         title_text: String,
         workspace_root: String,
         task_graph: TaskGraph,
+        is_cloud_enabled: Option<bool>,
     ) -> Self {
         // Get the target names from nx_args.targets
         let rust_tui_cli_args = tui_cli_args.into();
@@ -368,7 +369,7 @@ impl AppLifeCycle {
         let tasks = tasks.into_iter().collect();
 
         // Create shared state first - this is the same regardless of mode
-        let shared_state = Arc::new(Mutex::new(TuiState::new(
+        let mut state = TuiState::new(
             tasks,
             initiating_tasks,
             run_mode,
@@ -378,7 +379,9 @@ impl AppLifeCycle {
             task_graph,
             std::collections::HashMap::new(), // estimated_task_timings - will be set later
             None,
-        )));
+        );
+        state.set_cloud_enabled(is_cloud_enabled.unwrap_or(false));
+        let shared_state = Arc::new(Mutex::new(state));
 
         // Default to FullScreen mode for the constructor
         let tui_mode = TuiMode::FullScreen;
@@ -682,9 +685,9 @@ impl AppLifeCycle {
     pub fn register_running_task(
         &mut self,
         task_id: String,
-        parser_and_writer: &External<(ParserArc, WriterArc)>,
+        pty_handles: &External<(ParserArc, WriterArc, MasterArc)>,
     ) {
-        self.with_app(|app| app.register_running_interactive_task(task_id, &**parser_and_writer));
+        self.with_app(|app| app.register_running_interactive_task(task_id, &**pty_handles));
     }
 
     #[napi]

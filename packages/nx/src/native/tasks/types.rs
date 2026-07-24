@@ -173,6 +173,9 @@ pub enum HashInstruction {
 pub struct InstructionPool {
     ids: DashMap<HashInstruction, u32>,
     items: DashMap<u32, HashInstruction>,
+    // Display strings, rendered once per unique instruction at intern time so
+    // hashing can hand out shared keys instead of re-rendering per task.
+    keys: DashMap<u32, Arc<str>>,
     next_id: AtomicU32,
 }
 
@@ -193,6 +196,7 @@ impl InstructionPool {
             dashmap::mapref::entry::Entry::Vacant(vacant) => {
                 let id = self.next_id.fetch_add(1, Ordering::Relaxed);
                 self.items.insert(id, vacant.key().clone());
+                self.keys.insert(id, Arc::from(vacant.key().to_string()));
                 vacant.insert(id);
                 id
             }
@@ -203,6 +207,15 @@ impl InstructionPool {
         self.items
             .get(&id)
             .expect("instruction ids are only handed out by intern()")
+    }
+
+    /// The instruction's Display string, shared across all tasks that
+    /// reference the instruction.
+    pub fn key(&self, id: u32) -> Arc<str> {
+        self.keys
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
+            .clone()
     }
 
     pub fn len(&self) -> usize {
@@ -303,6 +316,18 @@ impl fmt::Display for HashInstruction {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pool_key_matches_display_and_is_shared() {
+        let pool = InstructionPool::new();
+        let instruction = HashInstruction::ProjectConfiguration("proj".to_string());
+        let id = pool.intern(instruction.clone());
+
+        let key = pool.key(id);
+        assert_eq!(&*key, instruction.to_string());
+        // Every call hands out the same allocation, not a fresh string.
+        assert!(Arc::ptr_eq(&key, &pool.key(id)));
+    }
 
     #[test]
     fn hash_instruction_stays_small() {

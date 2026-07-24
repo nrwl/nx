@@ -85,22 +85,21 @@ describe('convert-to-flat-config generator', () => {
       });
       await convertToFlatConfigGenerator(tree, options);
 
-      expect(tree.read('package.json', 'utf-8')).toMatchInlineSnapshot(`
-        "{
-          "name": "@proj/source",
-          "dependencies": {},
-          "devDependencies": {
-            "@nx/eslint": "0.0.1",
-            "@nx/eslint-plugin": "0.0.1",
-            "@typescript-eslint/eslint-plugin": "^8.58.0",
-            "@typescript-eslint/parser": "^8.58.0",
-            "eslint": "^9.8.0",
-            "eslint-config-prettier": "^10.0.0",
-            "typescript-eslint": "^8.58.0"
-          }
-        }
-        "
-      `);
+      // The @nx/* versions come from nxVersion, which self-resolves to
+      // packages/eslint/package.json - a file `nx-release --local` rewrites in CI.
+      expect(readJson(tree, 'package.json')).toEqual({
+        name: '@proj/source',
+        dependencies: {},
+        devDependencies: {
+          '@nx/eslint': expect.anything(),
+          '@nx/eslint-plugin': expect.anything(),
+          '@typescript-eslint/eslint-plugin': '^8.58.0',
+          '@typescript-eslint/parser': '^8.58.0',
+          eslint: '^9.8.0',
+          'eslint-config-prettier': '^10.0.0',
+          'typescript-eslint': '^8.58.0',
+        },
+      });
     });
 
     it('should convert json successfully', async () => {
@@ -878,22 +877,21 @@ describe('convert-to-flat-config generator', () => {
       });
       await convertToFlatConfigGenerator(tree, options);
 
-      expect(tree.read('package.json', 'utf-8')).toMatchInlineSnapshot(`
-        "{
-          "name": "@proj/source",
-          "dependencies": {},
-          "devDependencies": {
-            "@nx/eslint": "0.0.1",
-            "@nx/eslint-plugin": "0.0.1",
-            "@typescript-eslint/eslint-plugin": "^8.58.0",
-            "@typescript-eslint/parser": "^8.58.0",
-            "eslint": "^9.8.0",
-            "eslint-config-prettier": "^10.0.0",
-            "typescript-eslint": "^8.58.0"
-          }
-        }
-        "
-      `);
+      // The @nx/* versions come from nxVersion, which self-resolves to
+      // packages/eslint/package.json - a file `nx-release --local` rewrites in CI.
+      expect(readJson(tree, 'package.json')).toEqual({
+        name: '@proj/source',
+        dependencies: {},
+        devDependencies: {
+          '@nx/eslint': expect.anything(),
+          '@nx/eslint-plugin': expect.anything(),
+          '@typescript-eslint/eslint-plugin': '^8.58.0',
+          '@typescript-eslint/parser': '^8.58.0',
+          eslint: '^9.8.0',
+          'eslint-config-prettier': '^10.0.0',
+          'typescript-eslint': '^8.58.0',
+        },
+      });
     });
 
     it('should convert json successfully', async () => {

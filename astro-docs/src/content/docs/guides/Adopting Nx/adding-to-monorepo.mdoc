@@ -292,7 +292,7 @@ from the example above to run with Nx would look something like this:
 
 Now if you run `npm run test` or `nx test` twice, the results will be retrieved from the cache. The `inputs` used in
 this example are as cautious as possible, so you can significantly improve the value of the cache
-by [customizing Nx Inputs](/docs/guides/tasks--caching/configure-inputs) for each task.
+by [customizing Nx Inputs](/docs/kb/configure-inputs) for each task.
 
 ## Incrementally adopting Nx
 
@@ -375,7 +375,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
@@ -385,9 +385,9 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this
       - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'npm'
       - run: npm ci
       - uses: nrwl/nx-set-shas@v5
@@ -413,7 +413,7 @@ The `See all runs` link goes to a page with the progress and results of tasks th
 
 ![Run details](../../../../assets/guides/adopting-nx/nx-cloud-run-details.avif)
 
-For more information about how Nx can improve your CI pipeline, check out our [detailed tutorial for you CI provider](/docs/guides/nx-cloud/setup-ci).
+For more information about how Nx can improve your CI pipeline, check out our [detailed tutorial for you CI provider](/docs/kb/setup-ci).
 
 ## Learn more
 

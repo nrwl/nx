@@ -44,7 +44,15 @@ function collectDependencies(
 
   (projectGraph.dependencies[name] ?? []).forEach((dependency) => {
     if (dependency.target.startsWith('npm:')) {
-      dependencies.npmPackages.add(dependency.target.replace('npm:', ''));
+      const npmPkg = dependency.target.replace('npm:', '');
+      // Strip version suffix for compatibility with bun's project graph format
+      // e.g. "@ngrx/store@21.0.1" -> "@ngrx/store"
+      const versionIndex = npmPkg.startsWith('@')
+        ? npmPkg.indexOf('@', 1)
+        : npmPkg.indexOf('@');
+      dependencies.npmPackages.add(
+        versionIndex > 0 ? npmPkg.substring(0, versionIndex) : npmPkg
+      );
     } else if (!dependency.target.includes(':')) {
       // Only process as workspace library if it's not an external node.
       // External nodes have prefixes like 'npm:', 'cargo:', etc.

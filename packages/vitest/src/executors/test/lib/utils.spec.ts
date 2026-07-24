@@ -6,6 +6,7 @@ import {
   loadViteDynamicImport,
   loadVitestDynamicImport,
 } from '../../../utils/executor-utils';
+import { isCI } from 'nx/src/devkit-internals';
 
 jest.mock('../../../utils/options-utils', () => ({
   normalizeViteConfigFilePath: jest.fn(),
@@ -14,6 +15,7 @@ jest.mock('../../../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn(),
   loadVitestDynamicImport: jest.fn(),
 }));
+jest.mock('nx/src/devkit-internals', () => ({ isCI: jest.fn() }));
 
 describe('getOptions', () => {
   const context = {
@@ -37,6 +39,7 @@ describe('getOptions', () => {
     (loadVitestDynamicImport as jest.Mock).mockResolvedValue({
       parseCLI: jest.fn(() => ({ filter: [], options: {} })),
     });
+    (isCI as jest.Mock).mockReturnValue(false);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -97,6 +100,113 @@ describe('getOptions', () => {
       '/root/libs/my-lib/vitest.config.ts'
     );
     expect(result.mode).toBe('ci');
+  });
+
+  describe('watch resolution', () => {
+    const mockParsedWatch = (watch: boolean | undefined) => {
+      (loadVitestDynamicImport as jest.Mock).mockResolvedValue({
+        parseCLI: jest.fn(() => ({
+          filter: [],
+          options: watch === undefined ? {} : { watch },
+        })),
+      });
+    };
+    const mockConfigWatch = (watch: boolean | undefined) => {
+      loadConfigFromFile.mockResolvedValue({
+        path: '/root/libs/my-lib/vitest.config.ts',
+        config: {
+          test: {
+            reporters: ['default'],
+            ...(watch === undefined ? {} : { watch }),
+          },
+        },
+      });
+    };
+    const mockParsedUi = () => {
+      (loadVitestDynamicImport as jest.Mock).mockResolvedValue({
+        parseCLI: jest.fn(() => ({ filter: [], options: { ui: true } })),
+      });
+    };
+    const withEnv = async (
+      ci: boolean,
+      tty: boolean,
+      fn: () => Promise<void>
+    ) => {
+      (isCI as jest.Mock).mockReturnValue(ci);
+      const prevTty = process.stdin.isTTY;
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: tty,
+        configurable: true,
+      });
+      try {
+        await fn();
+      } finally {
+        Object.defineProperty(process.stdin, 'isTTY', {
+          value: prevTty,
+          configurable: true,
+        });
+      }
+    };
+    const callGetOptions = () =>
+      getOptions({ configFile: 'vitest.config.ts' }, context, 'libs/my-lib');
+
+    it('should default watch to false when neither CLI nor config set it', async () => {
+      const result = await callGetOptions();
+      expect(result.watch).toBe(false);
+    });
+
+    it('should honor config test.watch when no CLI --watch is passed', async () => {
+      mockConfigWatch(true);
+      const result = await callGetOptions();
+      expect(result.watch).toBe(true);
+    });
+
+    it('should let an explicit CLI --watch override the config', async () => {
+      mockParsedWatch(true);
+      mockConfigWatch(false);
+      const result = await callGetOptions();
+      expect(result.watch).toBe(true);
+    });
+
+    it('should let an explicit CLI --no-watch override config test.watch: true', async () => {
+      mockParsedWatch(false);
+      mockConfigWatch(true);
+      const result = await callGetOptions();
+      expect(result.watch).toBe(false);
+    });
+
+    it('should watch on --ui in an interactive terminal (not CI)', async () => {
+      mockParsedUi();
+      await withEnv(false, true, async () => {
+        const result = await callGetOptions();
+        expect(result.watch).toBe(true);
+      });
+    });
+
+    it('should not watch on --ui in CI', async () => {
+      mockParsedUi();
+      await withEnv(true, true, async () => {
+        const result = await callGetOptions();
+        expect(result.watch).toBe(false);
+      });
+    });
+
+    it('should not watch on --ui when not attached to a TTY', async () => {
+      mockParsedUi();
+      await withEnv(false, false, async () => {
+        const result = await callGetOptions();
+        expect(result.watch).toBe(false);
+      });
+    });
+
+    it('should let config test.watch: false override --ui', async () => {
+      mockParsedUi();
+      mockConfigWatch(false);
+      await withEnv(false, true, async () => {
+        const result = await callGetOptions();
+        expect(result.watch).toBe(false);
+      });
+    });
   });
 });
 

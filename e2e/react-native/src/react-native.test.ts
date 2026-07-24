@@ -8,6 +8,7 @@ import {
   killProcessAndPorts,
   fileExists,
   checkFilesExist,
+  reservePort,
   runE2ETests,
   updateFile,
   readJson,
@@ -91,7 +92,7 @@ describe('@nx/react-native', () => {
 
   it('should start the app', async () => {
     let childProcess: ChildProcess;
-    const port = 8082;
+    const port = await reservePort();
 
     try {
       childProcess = await runCommandUntil(
@@ -120,7 +121,7 @@ describe('@nx/react-native', () => {
 
   it('should serve', async () => {
     let childProcess: ChildProcess;
-    const port = 8081;
+    const port = await reservePort();
 
     try {
       childProcess = await runCommandUntil(

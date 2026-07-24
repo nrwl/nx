@@ -7,7 +7,9 @@ weight: 2
 filter: 'type:References'
 ---
 
-The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. Run ESLint through Nx with caching enabled, and use the included code generators to set up ESLint in your workspace.
+[ESLint](https://eslint.org/) statically analyzes your code to find and fix problems. In an ESLint monorepo setup, Nx runs lint tasks with caching enabled and re-lints only the projects a change affects.
+
+The ESLint plugin integrates ESLint with Nx and includes code generators to set up ESLint in your workspace.
 
 ## Requirements
 
@@ -24,7 +26,7 @@ The `@nx/eslint` plugin supports the following package versions.
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/eslint` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/eslint` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/eslint` by running the following command:

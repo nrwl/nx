@@ -85,7 +85,7 @@ Remote cache allows your CI runs to benefit from previous runs. It takes less th
 
 {% call_to_action variant="default" title="Connect your workspace" url="https://cloud.nx.app/setup/connect-workspace/guide?utm_source=nx-dev&utm_medium=ci-tutorial&utm_campaign=try-nx-cloud" description="Setup takes less than 5 minutes" /%}
 
-See [Remote Caching](/docs/features/ci-features/remote-cache) for details on the security model and eviction. For more granular control in CI, with separate read-only and read-write tokens and branch-scoped permissions, see [CI access tokens](/docs/guides/nx-cloud/access-tokens).
+See [Remote Caching](/docs/features/ci-features/remote-cache) for details on the security model and eviction. For more granular control in CI, with separate read-only and read-write tokens and branch-scoped permissions, see [CI access tokens](/docs/kb/access-tokens).
 
 ## Running only affected tasks
 
@@ -93,7 +93,7 @@ Use `nx affected` to run tasks only for projects impacted by the PR's changes:
 
 ```yaml {% meta="{5}" %}
 # .github/workflows/ci.yml
-- uses: actions/checkout@v4
+- uses: actions/checkout@v7
   with:
     fetch-depth: 0
 - run: npx nx affected -t lint test build

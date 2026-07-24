@@ -15,9 +15,12 @@ pub use hash_env::*;
 pub use hash_external::*;
 pub use hash_json::*;
 pub use hash_project_config::*;
-pub(crate) use hash_project_files::{ProjectFileSetCache, hash_project_files_with_inputs_cached};
+pub(crate) use hash_project_files::{
+    ProjectFileIndicesCache, ProjectFileSetCache, collect_project_file_paths_cached,
+    hash_project_files_cached,
+};
 pub use hash_project_files::{
-    ProjectFilesHashResult, collect_project_files, hash_project_files_with_inputs,
+    collect_project_file_paths, collect_project_files, hash_project_files,
 };
 pub use hash_runtime::*;
 pub use hash_task_output::*;

@@ -480,7 +480,10 @@ export function normalizeSchema(
   };
 }
 
-export function addStorybookToNamedInputs(tree: Tree) {
+export function addStorybookToNamedInputs(
+  tree: Tree,
+  schema: StorybookConfigureSchema
+) {
   const nxJson = readNxJson(tree);
 
   if (nxJson.namedInputs) {
@@ -504,6 +507,7 @@ export function addStorybookToNamedInputs(tree: Tree) {
       }
 
       if (
+        schema.uiFramework !== '@storybook/angular' &&
         !nxJson.namedInputs.production.includes(
           '!{projectRoot}/tsconfig.storybook.json'
         )
@@ -518,7 +522,11 @@ export function addStorybookToNamedInputs(tree: Tree) {
   }
 }
 
-export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
+export function addStorybookToTargetDefaults(
+  tree: Tree,
+  schema: StorybookConfigureSchema,
+  setCache = true
+) {
   const nxJson = readNxJson(tree) ?? {};
 
   const existing = findTargetDefault(nxJson.targetDefaults, {
@@ -542,7 +550,10 @@ export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
   const negatedIndex = inputs.indexOf('!{projectRoot}/.storybook/**/*');
   if (negatedIndex !== -1) inputs.splice(negatedIndex, 1);
 
-  if (!inputs.includes('{projectRoot}/tsconfig.storybook.json')) {
+  if (
+    schema.uiFramework !== '@storybook/angular' &&
+    !inputs.includes('{projectRoot}/tsconfig.storybook.json')
+  ) {
     inputs.push('{projectRoot}/tsconfig.storybook.json');
   }
 

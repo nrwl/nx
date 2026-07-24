@@ -15,7 +15,7 @@ env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
   # Pin corepack to the pnpm version from packageManager. Without this, corepack
   # falls back to "latest" in directories that have no packageManager field
-  # (e.g. e2e temp dirs), pulling pnpm 11 and breaking install.
+  # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
 
 permissions: {}
