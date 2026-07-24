@@ -49,7 +49,7 @@ The main challenge with this approach is coordinating dependency updates across 
 
 {% aside type="tip" title="Dependency Catalog Support" %}
 
-When using pnpm or Yarn, use [pnpm catalogs](https://pnpm.io/catalogs) or [Yarn catalogs](https://yarnpkg.com/features/catalogs) to maintain single version policy. Define versions in `pnpm-workspace.yaml` or `.yarnrc.yml` respectively and reference them as `"<package>": "catalog:"` in project `package.json` files (Nx 22+ for pnpm and Nx 22.6+ for Yarn).
+When using pnpm, Yarn, or Bun, use [pnpm catalogs](https://pnpm.io/catalogs), [Yarn catalogs](https://yarnpkg.com/features/catalogs), or [Bun catalogs](https://bun.com/docs/install/catalogs) to maintain single version policy. Define versions in `pnpm-workspace.yaml`, `.yarnrc.yml`, or the root `package.json` `catalog` field respectively, and reference them as `"<package>": "catalog:"` in project `package.json` files (Nx 22+ for pnpm, Nx 22.6+ for Yarn, and Nx 23.2+ for Bun).
 
 {% /aside %}
 

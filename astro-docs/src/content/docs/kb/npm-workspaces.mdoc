@@ -3,7 +3,8 @@ title: 'npm Workspaces: Setup, Commands, and Best Practices'
 description: 'Learn npm workspaces: the workspaces field, installing and linking local packages, running scripts with --workspace flags, and best practices that scale.'
 filter: 'type:Guides'
 topics:
-  - 'Recipes'
+  - 'Package managers'
+  - 'Dependencies'
 ---
 
 npm workspaces manage multiple packages in a single repository (or a monorepo) from one root `package.json`. You list package folders in the `workspaces` field, and `npm install` installs all of their dependencies in one pass, symlinking local packages into the root `node_modules` so they can depend on each other without publishing to a registry.
