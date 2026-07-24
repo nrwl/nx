@@ -40,7 +40,7 @@ tools are independent and several of them (like API Extractor) work fine inside 
 Rush gives large teams strict control: reviewed dependency additions, deterministic pnpm installs,
 and a disciplined change-file workflow for publishing. That control comes with significant
 configuration surface, and the capabilities that keep CI fast at scale, build caching and
-distributed builds, are marked experimental in Rush's own documentation and require you to bring
+distributed builds, are marked experimental in the Rush documentation and require you to bring
 your own storage and infrastructure. Nx ships those capabilities as supported, first-party
 features and configures tasks from the tooling you already have.
 
@@ -82,7 +82,7 @@ watchers without extra configuration.
 
 ## Caching
 
-Rush's build cache is labeled experimental in its documentation. It writes to a local folder and
+The Rush documentation labels the build cache experimental. It writes to a local folder and
 can upload to cloud storage you provision yourself through Azure Blob Storage, Amazon S3, or HTTP
 plugins, and each project must declare its output folders in a `rush-project.json` file. There is
 no hosted cache service.
@@ -94,7 +94,7 @@ managed remote cache with fine-grained access control, or you can
 
 ## CI distribution
 
-Rush's answer to distributed CI is cobuilds: you spawn several copies of the same pipeline, and
+For distributed CI, Rush offers cobuilds: you spawn several copies of the same pipeline, and
 the clones coordinate work through the shared build cache plus a Redis instance you provision.
 The feature is experimental, and the Rush docs note it trades away the operational simplicity of a
 centralized build accelerator. Rush has no flaky-task detection or automated fix workflow.
@@ -106,7 +106,7 @@ tasks](/docs/features/ci-features/flaky-tasks), and fixes failing tasks with
 
 ## Versioning and publishing
 
-Publishing is Rush's most mature workflow. Developers record intent in change files via
+Publishing is the most mature Rush workflow. Developers record intent in change files via
 `rush change`, CI enforces their presence, and `rush publish` applies version policies (lock-step
 or independent), aggregates changelogs, and publishes.
 
