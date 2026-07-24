@@ -153,14 +153,14 @@ describe('Angular Projects - Buildable Libraries', () => {
 
     // ACT
     const libOutput = runCLI(`build ${app1} --configuration=development`);
-    const esbuildLibOutput = runCLI(
-      `build ${esbuildApp} --configuration=development`
-    );
+    // Built for its dist output, asserted on below.
+    runCLI(`build ${esbuildApp} --configuration=development`);
 
     // ASSERT
-    expect(libOutput).toContain(
-      `Building entry point '@${proj}/${buildableLib}'`
-    );
+    // The buildable lib is a dependency of app1, so under the failures-only
+    // static output its full ng-packagr body is collapsed to a single line.
+    // Assert on that line rather than on the withheld build output.
+    expect(libOutput).toContain(`nx run ${buildableLib}:build:development`);
     expect(libOutput).toContain(`nx run ${app1}:build:development`);
 
     // to proof it has been built from source the "main.js" should actually contain
