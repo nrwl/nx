@@ -1079,7 +1079,15 @@ export class DaemonClient {
 
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
-          error = daemonProcessException('The Daemon Server is not running');
+          error = daemonProcessException(
+            [
+              'The Daemon Server is not running',
+              // A denied bind leaves no socket file behind, so the client sees
+              // a missing socket rather than a refused connection. Outside a
+              // sandbox this is just the ordinary "not started yet" case.
+              ...(isSandbox() ? sandboxSocketHint() : []),
+            ].join('\n')
+          );
         } else if (
           err.message.startsWith('connect EPERM') ||
           err.message.startsWith('connect EACCES')
@@ -1434,25 +1442,34 @@ function nxJsonIsNotPresent() {
   return !hasNxJson(workspaceRoot);
 }
 
-function daemonProcessException(message: string) {
+/**
+ * Exported for testing: the `internalDaemonError` tag decides whether a daemon
+ * failure degrades to a daemonless graph build or aborts the command.
+ */
+export function daemonProcessException(message: string) {
+  // The daemon log is an enrichment, not the classifier. It is absent on the
+  // first run in a fresh environment (nothing has written it yet), and that is
+  // exactly when the daemon is most likely to fail to start — e.g. a sandbox
+  // denying the socket bind. Tagging the error only when the log could be read
+  // meant those failures fell through to a hard error instead of the daemonless
+  // fallback in createProjectGraphAndSourceMapsAsync.
+  let body = message;
   try {
     let log = readFileSync(DAEMON_OUTPUT_LOG_FILE).toString().split('\n');
     if (log.length > 20) {
       log = log.slice(log.length - 20);
     }
-    const error = new Error(
-      [
-        message,
-        '',
-        'Messages from the log:',
-        ...log,
-        '\n',
-        `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
-      ].join('\n')
-    );
-    (error as any).internalDaemonError = true;
-    return error;
-  } catch (e) {
-    return new Error(message);
-  }
+    body = [
+      message,
+      '',
+      'Messages from the log:',
+      ...log,
+      '\n',
+      `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
+    ].join('\n');
+  } catch {}
+
+  const error = new Error(body);
+  (error as any).internalDaemonError = true;
+  return error;
 }
