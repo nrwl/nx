@@ -189,11 +189,21 @@ export function validateAndNormalizeProjectRootMap(
     // We initially did this in the project.json plugin, but
     // that resulted in project.json files without names causing
     // the resulting project to change names from earlier plugins...
-    if (
-      !project.name &&
-      existsSync(join(workspaceRoot, project.root, 'project.json'))
-    ) {
-      project.name = toProjectName(join(root, 'project.json'));
+    if (!project.name) {
+      const projectJsonPath = join(workspaceRoot, project.root, 'project.json');
+      if (existsSync(projectJsonPath)) {
+        // The project.json plugin may not have run (e.g. when a single
+        // plugin is run in isolation via `addPlugin` from a generator), so
+        // prefer the name declared in project.json before deriving one from
+        // the directory name.
+        let nameFromProjectJson: string | undefined;
+        try {
+          nameFromProjectJson =
+            readJsonFile<ProjectConfiguration>(projectJsonPath).name;
+        } catch {}
+        project.name =
+          nameFromProjectJson ?? toProjectName(join(root, 'project.json'));
+      }
     }
 
     try {
