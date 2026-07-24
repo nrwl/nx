@@ -79,64 +79,77 @@ export async function connectWorkspaceToCloud(
   return accessToken;
 }
 
-export async function connectToNxCloudCommand(
-  options: { generateToken?: boolean; checkRemote?: boolean },
-  command?: string
-): Promise<boolean> {
-  // `connectToNxCloudWithPrompt` (called from `migrate`) records its own stat; skip here to avoid double-counting.
-  const selfRecord = !command;
-  const baseMeta = {
+function connectStatMeta(extra?: Record<string, unknown>) {
+  return {
     nodeVersion: process.versions.node,
     os: process.platform,
     packageManager: detectPackageManager(),
     aiAgent: isAiAgent(),
     isCI: isCI(),
+    ...extra,
   };
-  if (selfRecord) {
+}
+
+/**
+ * Runs `attempt` inside the start/complete/error `recordStat` triple the
+ * `connect` command reports. `useCloud` on completion comes from `connected`,
+ * since an attempt can finish without the workspace ending up connected.
+ */
+async function withConnectStats<T>(
+  baseMeta: Record<string, unknown>,
+  connected: (result: T) => boolean,
+  attempt: () => Promise<T>
+): Promise<T> {
+  await recordStat({
+    command: 'connect',
+    nxVersion,
+    useCloud: true,
+    meta: { type: 'start', ...baseMeta },
+  });
+  try {
+    const result = await attempt();
     await recordStat({
       command: 'connect',
       nxVersion,
-      useCloud: true,
-      meta: { type: 'start', ...baseMeta },
+      useCloud: connected(result),
+      meta: { type: 'complete', ...baseMeta },
     });
-  }
-  try {
-    const result = await runConnectToNxCloud(options, command);
-    if (selfRecord) {
-      await recordStat({
-        command: 'connect',
-        nxVersion,
-        useCloud: result,
-        meta: { type: 'complete', ...baseMeta },
-      });
-    }
     return result;
   } catch (error) {
-    if (selfRecord) {
-      const message =
-        (error instanceof Error && error.message) ||
-        String(error ?? 'Unknown error');
-      const errorName =
-        typeof (error as any)?.code === 'string'
-          ? ((error as any).code as string)
-          : error instanceof Error
-            ? error.name
-            : typeof error;
-      await recordStat({
-        command: 'connect',
-        nxVersion,
-        useCloud: false,
-        meta: {
-          type: 'error',
-          errorCode: 'UNKNOWN',
-          errorName,
-          errorMessage: message.slice(0, 500),
-          ...baseMeta,
-        },
-      });
-    }
+    const message =
+      (error instanceof Error && error.message) ||
+      String(error ?? 'Unknown error');
+    const errorName =
+      typeof (error as any)?.code === 'string'
+        ? ((error as any).code as string)
+        : error instanceof Error
+          ? error.name
+          : typeof error;
+    await recordStat({
+      command: 'connect',
+      nxVersion,
+      useCloud: false,
+      meta: {
+        type: 'error',
+        errorCode: 'UNKNOWN',
+        errorName,
+        errorMessage: message.slice(0, 500),
+        ...baseMeta,
+      },
+    });
     throw error;
   }
+}
+
+export async function connectToNxCloudCommand(
+  options: { generateToken?: boolean; checkRemote?: boolean },
+  command?: string
+): Promise<boolean> {
+  const run = () => runConnectToNxCloud(options, command);
+  // `connectToNxCloudWithPrompt` (called from `migrate`) records its own stat; skip here to avoid double-counting.
+  return command
+    ? run()
+    : withConnectStats(connectStatMeta(), (connected) => connected, run);
 }
 
 async function runConnectToNxCloud(
