@@ -239,6 +239,12 @@ async function getTerminalOutputLifeCycle(
       });
     }
 
+    // undefined = cloud is disabled for this workspace (NX_NO_CLOUD /
+    // neverConnectToCloud): the TUI shows no cloud state and offers no connect.
+    const isConnectedToCloud = isNxCloudDisabled(nxJson)
+      ? undefined
+      : isNxCloudUsed(nxJson);
+
     const lifeCycles: LifeCycle[] = [tsLifeCycle];
     // Only run the TUI if there are tasks to run
     if (tasks.length > 0) {
@@ -252,11 +258,40 @@ async function getTerminalOutputLifeCycle(
         titleText,
         workspaceRoot,
         taskGraph,
-        isNxCloudUsed(nxJson)
+        isConnectedToCloud
       );
       // The native endCommand renders the perf report in the exit popup; the runner
       // sources the payload and CompositeLifeCycle forwards it here.
       lifeCycles.unshift(appLifeCycle as unknown as LifeCycle);
+
+      if (isConnectedToCloud === false) {
+        // Pressing the connect shortcut in the TUI fires this callback: run the
+        // same logic as `nx connect` headlessly and push the onboarding URL
+        // back into the TUI. Memoized so a second press can't kick off another
+        // workspace creation; cleared on failure so the user can retry.
+        let connecting: Promise<void> | undefined;
+        appLifeCycle.registerConnectToCloudCallback(() => {
+          connecting ??= (async () => {
+            try {
+              const { connectToNxCloudFromTui } = await import(
+                '../command-line/nx-cloud/connect/connect-to-nx-cloud.js'
+              );
+              appLifeCycle.setConnectUrl(await connectToNxCloudFromTui());
+              // The manual flow writes an nxCloudId to nx.json immediately; the
+              // GitHub flow only finishes in the browser. Flip the status bar
+              // once nx.json actually reflects a connection.
+              if (isNxCloudUsed(readNxJson())) {
+                appLifeCycle.setConnectedToCloud();
+              }
+            } catch (e) {
+              connecting = undefined;
+              appLifeCycle.setConnectError(
+                e instanceof Error ? e.message : String(e)
+              );
+            }
+          })();
+        });
+      }
 
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle

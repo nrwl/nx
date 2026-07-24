@@ -242,6 +242,48 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Runs the same logic as `nx connect` headlessly for the TUI: no prompts, no
+ * spinner, no browser open (the TUI displays the returned onboarding URL in a
+ * popup instead). Throws on failure (e.g. offline, missing git remote) so the
+ * TUI can surface the error.
+ */
+export async function connectToNxCloudFromTui(): Promise<string> {
+  return withConnectStats(
+    connectStatMeta({ source: 'nx-tui' }),
+    () => true,
+    () => generateConnectUrlForTui()
+  );
+}
+
+async function generateConnectUrlForTui(): Promise<string> {
+  const nxJson = readNxJson();
+
+  const checkRemote = process.env.NX_SKIP_CHECK_REMOTE !== 'true';
+  const hasRemote = !!getVcsRemoteInfo();
+  if (!hasRemote && checkRemote) {
+    throw new Error(
+      'Push this repository to a VCS provider (e.g. GitHub) first, then try again.'
+    );
+  }
+
+  // The connect shortcut is only offered while not connected, but guard anyway
+  // (e.g. the workspace was connected from another terminal mid-run).
+  if (isNxCloudUsed(nxJson)) {
+    const token =
+      process.env.NX_CLOUD_AUTH_TOKEN ||
+      process.env.NX_CLOUD_ACCESS_TOKEN ||
+      nxJson.nxCloudAccessToken ||
+      nxJson.nxCloudId;
+    return createNxCloudOnboardingURL('nx-tui', token, undefined, false);
+  }
+
+  const token = await connectWorkspaceToCloud({
+    installationSource: 'nx-tui',
+  });
+  return createNxCloudOnboardingURL('nx-tui', token, undefined, false);
+}
+
 export async function connectExistingRepoToNxCloudPrompt(
   command = 'init',
   key: MessageKey = 'setupNxCloud',

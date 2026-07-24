@@ -32,7 +32,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, isCloudEnabled?: boolean | undefined | null)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, isConnectedToCloud?: boolean | undefined | null)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
@@ -57,6 +57,21 @@ export declare class AppLifeCycle {
    * Cloud client can call it via the lifecycle it already receives.
    */
   setCloudLink(label: string, url: string): void
+  /**
+   * Register the callback fired when the user presses the connect-to-cloud
+   * shortcut. JS runs the `nx connect` logic and pushes the resulting URL
+   * back via `setConnectUrl` / `setConnectError`.
+   */
+  registerConnectToCloudCallback(connectCallback: (() => unknown)): void
+  /** Deliver the Nx Cloud onboarding URL to the connect popup. */
+  setConnectUrl(url: string): void
+  /** Surface a connect failure in the connect popup. */
+  setConnectError(message: string): void
+  /**
+   * Mark the workspace as connected, once a TUI-initiated connect has
+   * written an nxCloudId to nx.json.
+   */
+  setConnectedToCloud(): void
 }
 
 export declare class ChildProcess {

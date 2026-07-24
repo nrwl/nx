@@ -28,6 +28,8 @@ use crate::native::{
 
 use super::action::Action;
 use super::clipboard::copy_to_clipboard;
+use super::components::connect_flow::{CONNECT_CTA_HREF, ConnectFlowState};
+use super::components::connect_popup::ConnectPopup;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
@@ -46,7 +48,7 @@ use super::components::tasks_list::{TaskListClick, TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::components::{Component, ModalPopup};
 use super::graph_utils::{get_task_count, is_task_continuous};
-use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, CloudConnection, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
@@ -168,6 +170,7 @@ pub enum Focus {
     HelpPopup,
     CountdownPopup,
     HintPopup,
+    ConnectPopup,
 }
 
 impl Focus {
@@ -176,7 +179,7 @@ impl Focus {
     fn is_popup(self) -> bool {
         matches!(
             self,
-            Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
+            Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup | Focus::ConnectPopup
         )
     }
 
@@ -188,6 +191,9 @@ impl Focus {
                 .component::<CountdownPopup>()
                 .map(|p| p as &dyn ModalPopup),
             Focus::HintPopup => app.component::<HintPopup>().map(|p| p as &dyn ModalPopup),
+            Focus::ConnectPopup => app
+                .component::<ConnectPopup>()
+                .map(|p| p as &dyn ModalPopup),
             Focus::TaskList | Focus::MultipleOutput(_) => None,
         }
     }
@@ -508,17 +514,28 @@ impl App {
 
         let help_popup = HelpPopup::new();
         let mut countdown_popup = CountdownPopup::new();
-        // Re-hydrate the run report from shared state so it survives mode switches.
-        if let Some(summary) = state.lock().exit_summary() {
-            countdown_popup.set_summary(summary);
+        // Re-hydrate the run report and the connect flow it hosts from shared
+        // state so both survive mode switches.
+        {
+            let state = state.lock();
+            if let Some(summary) = state.exit_summary() {
+                countdown_popup.set_summary(summary);
+            }
+            countdown_popup.set_cloud_connection(state.cloud_connection());
+            countdown_popup.set_connect_state(state.get_connect_flow_state());
         }
         let hint_popup = HintPopup::new();
+        let mut connect_popup = ConnectPopup::new();
+        // Re-hydrate the connect flow from shared state: a URL pushed from JS
+        // while inline mode was active would otherwise be lost on the switch.
+        connect_popup.set_state(state.lock().get_connect_flow_state());
 
         let components: Vec<Box<dyn Component>> = vec![
             Box::new(tasks_list),
             Box::new(help_popup),
             Box::new(countdown_popup),
             Box::new(hint_popup),
+            Box::new(connect_popup),
         ];
 
         let main_terminal_pane_data = TerminalPaneData::new();
@@ -1006,14 +1023,19 @@ impl App {
                 // Only handle '?' key if we're not in interactive mode and the countdown popup is not open
                 if matches!(key.code, KeyCode::Char('?'))
                     && !self.is_interactive_mode()
-                    && !matches!(self.focus(), Focus::CountdownPopup)
+                    && !matches!(self.focus(), Focus::CountdownPopup | Focus::ConnectPopup)
                 {
                     let show_help_popup = !matches!(self.focus(), Focus::HelpPopup);
+                    // Read before the component borrow: the connect shortcut is
+                    // only listed while the workspace is still disconnected, and
+                    // that can flip mid-run.
+                    let can_connect = self.can_connect_to_cloud();
                     if let Some(help_popup) = self
                         .components
                         .iter_mut()
                         .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
                     {
+                        help_popup.set_cloud_connect_available(can_connect);
                         help_popup.set_visible(show_help_popup);
                     }
                     if show_help_popup {
@@ -1035,7 +1057,10 @@ impl App {
                 if matches!(key.code, KeyCode::Char('p') | KeyCode::Char('P'))
                     && !self.is_interactive_mode()
                     && !is_filtering
-                    && !matches!(self.focus(), Focus::CountdownPopup | Focus::HelpPopup)
+                    && !matches!(
+                        self.focus(),
+                        Focus::CountdownPopup | Focus::HelpPopup | Focus::ConnectPopup
+                    )
                 {
                     if let Some(countdown_popup) = self
                         .components
@@ -1047,6 +1072,23 @@ impl App {
                             self.push_focus(Focus::CountdownPopup);
                         }
                     }
+                    return Ok(false);
+                }
+
+                // Connect to Nx Cloud ('C' = connect; lowercase 'c' copies pane
+                // output). Only offered while disconnected, and skipped while
+                // filtering so it types into the filter instead. The run report
+                // hosts the same flow inline, so it handles the key itself.
+                if matches!(key.code, KeyCode::Char('C'))
+                    && !self.is_interactive_mode()
+                    && !is_filtering
+                    && !matches!(
+                        self.focus(),
+                        Focus::CountdownPopup | Focus::HelpPopup | Focus::ConnectPopup
+                    )
+                    && self.can_connect_to_cloud()
+                {
+                    self.open_connect_popup();
                     return Ok(false);
                 }
 
@@ -1102,6 +1144,21 @@ impl App {
                                 countdown_popup.cancel_countdown();
                                 self.core.state().lock().cancel_quit();
                                 self.close_popup(Focus::CountdownPopup);
+                                return Ok(false);
+                            }
+                            KeyCode::Char('C')
+                                if countdown_popup.has_summary()
+                                    && countdown_popup.should_start_connect() =>
+                            {
+                                // The report hosts the connect flow inline, so
+                                // it stays open (and stops auto-exiting) while
+                                // the URL is generated. Gated on the report
+                                // being present: the mid-run exit dialog shows
+                                // none of the connect UI, so a stray 'C' there
+                                // must not create a cloud workspace.
+                                countdown_popup.pin_open();
+                                self.core.state().lock().cancel_quit();
+                                self.start_cloud_connect();
                                 return Ok(false);
                             }
                             KeyCode::Esc => {
@@ -1161,6 +1218,48 @@ impl App {
                     // repair the focus and let the key take its normal path
                     // instead of feeding it to an invisible modal.
                     self.close_popup(Focus::HintPopup);
+                }
+
+                // The connect popup consumes every key except 'q': <enter>
+                // follows the onboarding URL, <esc> dismisses, <shift>+c retries
+                // after a failure.
+                if matches!(self.focus(), Focus::ConnectPopup) {
+                    if key.code == KeyCode::Char('q') {
+                        // Quit must never be swallowed by a popup: dismiss it
+                        // and fall through to the normal quit path, so the exit
+                        // dialog isn't hidden behind it.
+                        if let Some(popup) = self.component_mut::<ConnectPopup>() {
+                            popup.hide();
+                        }
+                        self.close_popup(Focus::ConnectPopup);
+                    } else {
+                        match key.code {
+                            KeyCode::Esc => {
+                                if let Some(popup) = self.component_mut::<ConnectPopup>() {
+                                    popup.hide();
+                                }
+                                self.close_popup(Focus::ConnectPopup);
+                            }
+                            KeyCode::Enter => {
+                                if let Some(url) = self
+                                    .component::<ConnectPopup>()
+                                    .and_then(|popup| popup.state().url().map(str::to_string))
+                                {
+                                    self.open_url_or_hint(&url);
+                                }
+                            }
+                            KeyCode::Char('C')
+                                if self
+                                    .component::<ConnectPopup>()
+                                    .is_some_and(|popup| popup.state().needs_attempt())
+                                    && self.can_connect_to_cloud() =>
+                            {
+                                self.start_cloud_connect();
+                            }
+                            _ => {}
+                        }
+                        return Ok(false);
+                    }
                 }
 
                 if let Some(tasks_list) = self
@@ -1430,6 +1529,9 @@ impl App {
                                 }
                                 Focus::HintPopup => {
                                     // Hint popup has its own key handling above
+                                }
+                                Focus::ConnectPopup => {
+                                    // Connect popup has its own key handling above
                                 }
                             }
                         }
@@ -1811,6 +1913,15 @@ impl App {
                     {
                         let _ = countdown_popup.draw(f, frame_area);
                     }
+                    if let Some(connect_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<ConnectPopup>())
+                    {
+                        let _ = connect_popup.draw(f, frame_area);
+                    }
+                    // The hint draws last: it can be raised over any other popup
+                    // (e.g. when opening the connect URL finds no browser).
                     if let Some(hint_popup) = self
                         .components
                         .iter_mut()
@@ -1952,12 +2063,9 @@ impl App {
             };
             (
                 StatusBarProps {
-                    is_dimmed: matches!(
-                        self.focus(),
-                        Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
-                    ),
+                    is_dimmed: self.focus().is_popup(),
                     perf_report_available: state.has_exit_summary(),
-                    cloud_enabled: state.is_cloud_enabled(),
+                    cloud_connection: state.cloud_connection(),
                     cloud_message: state.get_cloud_message().map(str::to_string),
                     cloud_link: state.get_cloud_link().cloned(),
                     completed_count: state.get_completed_task_count(),
@@ -2154,9 +2262,9 @@ impl App {
                     }
                 }
             }
-            Focus::HelpPopup => Focus::TaskList,
-            Focus::CountdownPopup => Focus::TaskList,
-            Focus::HintPopup => Focus::TaskList,
+            Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup | Focus::ConnectPopup => {
+                Focus::TaskList
+            }
         };
 
         self.set_base_focus(focus);
@@ -2220,9 +2328,9 @@ impl App {
                     }
                 }
             }
-            Focus::HelpPopup => Focus::TaskList,
-            Focus::CountdownPopup => Focus::TaskList,
-            Focus::HintPopup => Focus::TaskList,
+            Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup | Focus::ConnectPopup => {
+                Focus::TaskList
+            }
         };
 
         self.set_base_focus(focus);
@@ -2782,7 +2890,7 @@ impl App {
         if let Some(href) = self.link_at(col, row) {
             self.pending_list_click = None;
             self.pending_dep_nav = None;
-            self.open_url_or_hint(&href);
+            self.activate_link(&href);
             return;
         }
 
@@ -2814,6 +2922,19 @@ impl App {
             }
             None => {}
         }
+    }
+
+    /// Act on a clicked link. The connect call-to-action is a sentinel href
+    /// rather than a real URL: it starts the connect flow in place instead of
+    /// opening a browser.
+    fn activate_link(&mut self, href: &str) {
+        if href == CONNECT_CTA_HREF {
+            if self.can_connect_to_cloud() {
+                self.start_cloud_connect();
+            }
+            return;
+        }
+        self.open_url_or_hint(href);
     }
 
     /// Open `href` in the browser, or show a hint with the URL if no opener is
@@ -2943,7 +3064,7 @@ impl App {
                     .or_else(|| self.region_url_at(col, row))
                 {
                     self.pin_active_modal_open();
-                    self.open_url_or_hint(&href);
+                    self.activate_link(&href);
                     return;
                 }
                 // Only a click *outside* the modal dismisses it.
@@ -3054,6 +3175,12 @@ impl App {
                     p.hide();
                 }
                 self.close_popup(Focus::HintPopup);
+            }
+            Focus::ConnectPopup => {
+                if let Some(p) = self.component_mut::<ConnectPopup>() {
+                    p.hide();
+                }
+                self.close_popup(Focus::ConnectPopup);
             }
             _ => {}
         }
@@ -3299,6 +3426,67 @@ impl App {
         self.components
             .iter()
             .find_map(|c| c.as_any().downcast_ref::<T>())
+    }
+
+    /// Mutable counterpart of [`Self::component`].
+    fn component_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        self.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<T>())
+    }
+
+    /// Whether the connect flow applies: the workspace has Nx Cloud available
+    /// but is not connected to it yet.
+    fn can_connect_to_cloud(&self) -> bool {
+        matches!(
+            self.core.state().lock().cloud_connection(),
+            CloudConnection::NotConnected
+        )
+    }
+
+    /// Open the connect popup, starting an attempt when the flow has not
+    /// produced a URL yet.
+    fn open_connect_popup(&mut self) {
+        let needs_attempt = self
+            .component_mut::<ConnectPopup>()
+            .map(|popup| {
+                popup.show();
+                popup.state().needs_attempt()
+            })
+            .unwrap_or(false);
+        if needs_attempt {
+            self.start_cloud_connect();
+        }
+        self.push_focus(Focus::ConnectPopup);
+    }
+
+    /// Fire the JS connect callback and move the flow into `Loading`. Without a
+    /// registered callback the flow fails immediately rather than hanging in a
+    /// loading state forever.
+    fn start_cloud_connect(&mut self) {
+        let started = self.core.state().lock().call_connect_to_cloud_callback();
+        self.set_connect_flow_state(if started {
+            ConnectFlowState::Loading
+        } else {
+            ConnectFlowState::Error(
+                "Connecting from the TUI is not available in this run. Run `nx connect` in your terminal."
+                    .to_string(),
+            )
+        });
+    }
+
+    /// Push the flow's state to shared state and to every popup that hosts it.
+    fn set_connect_flow_state(&mut self, state: ConnectFlowState) {
+        self.core
+            .state()
+            .lock()
+            .set_connect_flow_state(state.clone());
+        if let Some(popup) = self.component_mut::<ConnectPopup>() {
+            popup.set_state(state.clone());
+        }
+        if let Some(popup) = self.component_mut::<CountdownPopup>() {
+            popup.set_connect_state(state);
+        }
     }
 
     /// The current focus: the top of the focus stack.
@@ -4119,6 +4307,26 @@ impl TuiApp for App {
     fn set_cloud_link(&mut self, label: String, url: String) {
         App::set_cloud_link(self, label, url);
     }
+
+    /// Override the trait default (state only) so the live popups pick the
+    /// pushed value up on the next frame.
+    fn set_connect_url(&mut self, url: String) {
+        self.set_connect_flow_state(ConnectFlowState::Ready(url));
+    }
+
+    fn set_connect_error(&mut self, message: String) {
+        self.set_connect_flow_state(ConnectFlowState::Error(message));
+    }
+
+    fn set_cloud_connection(&mut self, status: CloudConnection) {
+        self.core.state().lock().set_cloud_connection(status);
+        if let Some(popup) = self.component_mut::<CountdownPopup>() {
+            popup.set_cloud_connection(status);
+        }
+        // The connect indicator affects the status bar height on narrow
+        // terminals.
+        self.layout_areas = None;
+    }
 }
 
 #[cfg(test)]
@@ -4919,6 +5127,117 @@ mod tests {
             report_visible(&app),
             "a click inside the report box leaves it open"
         );
+    }
+
+    fn press(app: &mut App, code: KeyCode) {
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_event(
+            tui::Event::Key(KeyEvent::new(code, KeyModifiers::NONE)),
+            &tx,
+        )
+        .unwrap();
+    }
+
+    fn connect_flow_state(app: &App) -> ConnectFlowState {
+        app.core.state().lock().get_connect_flow_state()
+    }
+
+    /// `<shift>+c` opens the connect popup and starts an attempt. In tests the
+    /// JS callback is stubbed as always-registered, so the flow reaches
+    /// `Loading` and waits for a URL.
+    #[test]
+    fn test_shift_c_opens_the_connect_popup_while_disconnected() {
+        let mut app = create_test_app();
+        TuiApp::set_cloud_connection(&mut app, CloudConnection::NotConnected);
+
+        press(&mut app, KeyCode::Char('C'));
+
+        assert_eq!(app.focus(), Focus::ConnectPopup);
+        assert_eq!(connect_flow_state(&app), ConnectFlowState::Loading);
+    }
+
+    /// The shortcut is inert once the workspace is connected — there is nothing
+    /// to connect, and the footer/help never advertise it in that state.
+    #[test]
+    fn test_shift_c_does_nothing_once_connected() {
+        let mut app = create_test_app();
+        TuiApp::set_cloud_connection(&mut app, CloudConnection::Connected);
+
+        press(&mut app, KeyCode::Char('C'));
+
+        assert_eq!(app.focus(), Focus::TaskList);
+        assert_eq!(connect_flow_state(&app), ConnectFlowState::NotStarted);
+    }
+
+    /// A URL pushed from JS reaches both the popup and shared state, so a mode
+    /// switch (which rebuilds the popup) can re-hydrate it.
+    #[test]
+    fn test_connect_url_reaches_the_popup_and_shared_state() {
+        let mut app = create_test_app();
+        TuiApp::set_cloud_connection(&mut app, CloudConnection::NotConnected);
+        press(&mut app, KeyCode::Char('C'));
+
+        TuiApp::set_connect_url(&mut app, "https://nx.app/c/abc".to_string());
+
+        let expected = ConnectFlowState::Ready("https://nx.app/c/abc".to_string());
+        assert_eq!(connect_flow_state(&app), expected);
+        assert_eq!(
+            app.component::<ConnectPopup>().map(|p| p.state().clone()),
+            Some(expected)
+        );
+    }
+
+    /// A failed attempt is retried with the same shortcut, without closing and
+    /// reopening the popup first.
+    #[test]
+    fn test_shift_c_retries_from_the_focused_error_popup() {
+        let mut app = create_test_app();
+        TuiApp::set_cloud_connection(&mut app, CloudConnection::NotConnected);
+        press(&mut app, KeyCode::Char('C'));
+        TuiApp::set_connect_error(&mut app, "offline".to_string());
+
+        press(&mut app, KeyCode::Char('C'));
+
+        assert_eq!(app.focus(), Focus::ConnectPopup);
+        assert_eq!(connect_flow_state(&app), ConnectFlowState::Loading);
+    }
+
+    /// Popups must never swallow quit, and `?` must not stack the help popup
+    /// on top of the connect popup.
+    #[test]
+    fn test_connect_popup_yields_to_quit_and_swallows_help() {
+        let mut app = create_test_app();
+        TuiApp::set_cloud_connection(&mut app, CloudConnection::NotConnected);
+        press(&mut app, KeyCode::Char('C'));
+
+        press(&mut app, KeyCode::Char('?'));
+        assert_eq!(
+            app.focus(),
+            Focus::ConnectPopup,
+            "`?` should not stack the help popup over the connect popup"
+        );
+
+        press(&mut app, KeyCode::Char('q'));
+        assert_ne!(
+            app.focus(),
+            Focus::ConnectPopup,
+            "`q` should dismiss the connect popup and take its normal path"
+        );
+    }
+
+    /// The mid-run exit dialog has no report and shows none of the connect UI,
+    /// so `<shift>+c` there must not silently create a cloud workspace.
+    #[test]
+    fn test_shift_c_is_inert_on_the_exit_dialog() {
+        let mut app = create_test_app();
+        TuiApp::set_cloud_connection(&mut app, CloudConnection::NotConnected);
+        // A countdown with no summary: the mid-run "press any key" dialog.
+        app.push_focus(Focus::CountdownPopup);
+
+        press(&mut app, KeyCode::Char('C'));
+
+        assert_eq!(connect_flow_state(&app), ConnectFlowState::NotStarted);
     }
 
     /// `p` toggles the report: while it is focused, the press dismisses it and
