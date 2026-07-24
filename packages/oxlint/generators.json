@@ -1,0 +1,23 @@
+{
+  "name": "Nx Oxlint",
+  "version": "0.1",
+  "generators": {
+    "init": {
+      "factory": "./dist/src/generators/init/init#initGeneratorInternal",
+      "schema": "./dist/src/generators/init/schema.json",
+      "description": "Initialize the `@nx/oxlint` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "lint-project": {
+      "factory": "./dist/src/generators/lint-project/lint-project#lintProjectGeneratorInternal",
+      "schema": "./dist/src/generators/lint-project/schema.json",
+      "description": "Add Oxlint to an existing project."
+    },
+    "convert-from-eslint": {
+      "factory": "./dist/src/generators/convert-from-eslint/convert-from-eslint#convertFromEslintGenerator",
+      "schema": "./dist/src/generators/convert-from-eslint/schema.json",
+      "description": "Register `@nx/oxlint` and add Oxlint targets alongside the existing ESLint setup."
+    }
+  }
+}

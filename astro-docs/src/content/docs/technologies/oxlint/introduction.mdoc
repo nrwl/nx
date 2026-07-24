@@ -1,0 +1,105 @@
+---
+title: Oxlint Plugin for Nx
+description: Set up and use the @nx/oxlint plugin with inferred tasks, hybrid ESLint migration, and experimental module-boundary enforcement.
+sidebar:
+  label: Introduction
+---
+
+The `@nx/oxlint` plugin runs [Oxlint](https://oxc.rs/docs/guide/usage/linter/) as a cached Nx task.
+
+{% aside type="caution" title="Experimental" %}
+`@nx/oxlint` is experimental. The module boundaries bridge depends on Oxlint's JavaScript plugin API, which Oxlint excludes from its semantic versioning policy and can change in any release.
+{% /aside %}
+
+## Set up
+
+```shell
+nx add @nx/oxlint
+```
+
+This installs `oxlint`, registers `@nx/oxlint/plugin`, and creates a root `.oxlintrc.json` if the workspace has no Oxlint config.
+
+## Inferred tasks
+
+`@nx/oxlint/plugin` infers a lint task for projects governed by an Oxlint config. It recognizes the four config files Oxlint discovers on its own:
+
+- `.oxlintrc.json`
+- `.oxlintrc.jsonc`
+- `oxlint.config.ts`
+- `oxlint.config.mts`
+
+A project only gets a task when it contains files Oxlint can lint, so documentation-only and non-JavaScript projects stay untouched.
+
+View the inferred task with:
+
+```shell
+nx show project my-project --web
+```
+
+### Task inputs
+
+Inferred tasks declare the Oxlint config, every config reachable through `extends`, and any `tsconfig.json` referenced from outside the project root. Changing any of them invalidates the cache.
+
+## Task naming
+
+Oxlint is designed to run alongside ESLint during a migration, so the plugin claims the first available name from:
+
+1. `lint`
+2. `oxlint`
+3. `oxlint:lint`
+4. `oxlint-lint`
+
+A workspace with no other linter gets `lint`. A workspace where ESLint already owns `lint` gets `oxlint`.
+
+## Explicit tasks
+
+When `useInferencePlugins` is disabled, use the executor directly:
+
+```json
+{
+  "targets": {
+    "lint": {
+      "executor": "@nx/oxlint:lint",
+      "options": {
+        "lintFilePatterns": ["{projectRoot}"]
+      }
+    }
+  }
+}
+```
+
+## Add Oxlint to an ESLint workspace
+
+```shell
+nx g @nx/oxlint:convert-from-eslint
+```
+
+This adds an `oxlint` task to every project that has an ESLint task and leaves the ESLint configuration in place. It doesn't translate ESLint rules into Oxlint rules. To generate an `.oxlintrc.json` from an existing ESLint config, run [`@oxlint/migrate`](https://github.com/oxc-project/oxlint-migrate) separately. To stop ESLint from re-reporting what Oxlint already covers, add [`eslint-plugin-oxlint`](https://www.npmjs.com/package/eslint-plugin-oxlint) to the ESLint config.
+
+## Type-aware linting
+
+Oxlint's type-aware rules need the `oxlint-tsgolint` package and TypeScript 7. Enable them per task with the `typeAware` option, and point `tsconfig` at the project's TypeScript config.
+
+## Module boundaries
+
+`@nx/oxlint` exposes the project-graph-aware `enforce-module-boundaries` rule as an Oxlint JavaScript plugin. Install `@nx/eslint-plugin`, then register the bridge in `.oxlintrc.json`:
+
+```json
+{
+  "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "depConstraints": []
+      }
+    ]
+  }
+}
+```
+
+The rule runs as JavaScript rather than native Rust, so it's slower than Oxlint's built-in rules.
+
+{% aside type="note" title="Dependency checks aren't available" %}
+Oxlint doesn't lint JSON files, so the `@nx/dependency-checks` rule cannot run on Oxlint. Keep ESLint for that check.
+{% /aside %}

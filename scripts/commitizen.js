@@ -18,6 +18,7 @@ const scopes = [
   { value: 'nx-cloud',          name: 'nx-cloud:              anything Nx Cloud specific' },
   { value: 'nx-plugin',         name: 'nx-plugin:             anything Nx Plugin specific' },
   { value: 'nx-dev',            name: 'nx-dev:                anything related to docs infrastructure' },
+  { value: 'oxlint',            name: 'oxlint:                anything Oxlint specific' },
   { value: 'react',             name: 'react:                 anything React specific' },
   { value: 'react-native',      name: 'react-native:          anything React Native specific' },
   { value: 'remix',             name: 'remix:                 anything Remix specific' },

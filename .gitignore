@@ -140,6 +140,7 @@ packages/js/README.md
 packages/jest/README.md
 packages/eslint/README.md
 packages/eslint-plugin/README.md
+packages/oxlint/README.md
 packages/vitest/README.md
 packages/cypress/README.md
 packages/playwright/README.md

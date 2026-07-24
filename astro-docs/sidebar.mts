@@ -456,6 +456,7 @@ const technologiesGroups: SidebarItems = [
             link: 'technologies/module-federation/introduction',
           },
           { label: 'ESLint', link: 'technologies/eslint/introduction' },
+          { label: 'Oxlint', link: 'technologies/oxlint/introduction' },
         ],
       },
       {
@@ -668,6 +669,11 @@ const referenceGroups: SidebarItems = [
           ...getTechnologyAPIItems('eslint', undefined, 'ESLint'),
           ...getTechnologyAPIItems('eslint-plugin', 'eslint', 'ESLint Plugin'),
         ],
+      },
+      {
+        label: 'Oxlint',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('oxlint', undefined, 'Oxlint')],
       },
       {
         label: 'Webpack',
