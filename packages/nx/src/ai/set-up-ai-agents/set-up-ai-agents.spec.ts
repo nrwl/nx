@@ -1162,7 +1162,7 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
           .spyOn(cloneModule, 'getAiConfigRepoPath')
           .mockReturnValue('/fake/repo');
 
-        const actualFs = jest.requireActual('fs');
+        const originalExistsSync = fs.existsSync;
         existsSyncSpy = jest
           .spyOn(fs, 'existsSync')
           .mockImplementation((path: any) => {
@@ -1184,9 +1184,10 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
             ) {
               return false; // No other generated dirs
             }
-            return actualFs.existsSync(path);
+            return originalExistsSync(path);
           });
 
+        const originalReadFileSync = fs.readFileSync;
         readFileSyncSpy = jest
           .spyOn(fs, 'readFileSync')
           .mockImplementation((path: any, ...args: any[]) => {
@@ -1196,7 +1197,7 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
             ) {
               return generatedConfig;
             }
-            return actualFs.readFileSync(path, ...args);
+            return originalReadFileSync(path, ...args);
           });
       });
 

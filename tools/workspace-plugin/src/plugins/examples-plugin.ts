@@ -79,8 +79,15 @@ export const createNodes: CreateNodes = [
                     },
                   ],
                   // The inner build/e2e write dist inside the example
-                  // (module-federation members write <member>/dist).
-                  outputs: ['{projectRoot}/dist', '{projectRoot}/*/dist'],
+                  // (module-federation members write <member>/dist; a
+                  // packages/* workspace writes packages/<lib>/dist). Scoped to
+                  // packages/* rather than **/dist so node_modules is not swept
+                  // into the cached outputs.
+                  outputs: [
+                    '{projectRoot}/dist',
+                    '{projectRoot}/*/dist',
+                    '{projectRoot}/packages/*/dist',
+                  ],
                   cache: true,
                 },
               },

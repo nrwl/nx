@@ -1,8 +1,6 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { detectFormatter, detectFormatterInTree } from './index';
 
 describe('detectFormatterInTree', () => {
@@ -70,50 +68,54 @@ describe('detectFormatterInTree', () => {
 });
 
 describe('detectFormatter', () => {
-  let root: string;
+  let fs: TempFs;
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'nx-formatter-'));
+    fs = new TempFs('detect-formatter');
   });
 
   afterEach(() => {
-    rmSync(root, { recursive: true, force: true });
+    fs.cleanup();
   });
 
   it('should return null for a directory with no formatter', () => {
-    writeFileSync(join(root, 'package.json'), '{}');
+    fs.createFileSync('package.json', '{}');
 
-    expect(detectFormatter(root)).toBeNull();
+    expect(detectFormatter(fs.tempDir)).toBeNull();
   });
 
   it('should detect oxfmt from its config file', () => {
-    writeFileSync(join(root, '.oxfmtrc.json'), '{}');
+    fs.createFileSync('.oxfmtrc.json', '{}');
 
-    expect(detectFormatter(root)).toBe('oxfmt');
+    expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
   });
 
   it('should prefer oxfmt when both are configured', () => {
-    writeFileSync(join(root, '.oxfmtrc.json'), '{}');
-    writeFileSync(join(root, '.prettierrc'), '{}');
+    fs.createFileSync('.oxfmtrc.json', '{}');
+    fs.createFileSync('.prettierrc', '{}');
 
-    expect(detectFormatter(root)).toBe('oxfmt');
+    expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
   });
 
   it('should resolve config files against the given root, not the cwd', () => {
-    writeFileSync(join(root, '.prettierrc'), '{}');
+    fs.createFileSync('.prettierrc', '{}');
 
-    expect(detectFormatter(root)).toBe('prettier');
-    expect(
-      detectFormatter(mkdtempSync(join(tmpdir(), 'nx-empty-')))
-    ).toBeNull();
+    expect(detectFormatter(fs.tempDir)).toBe('prettier');
+
+    const empty = new TempFs('detect-formatter-empty');
+    try {
+      expect(detectFormatter(empty.tempDir)).toBeNull();
+    } finally {
+      empty.cleanup();
+    }
   });
 
   it('should NOT treat an installed prettier as intent to use prettier', () => {
-    writeFileSync(
-      join(root, 'package.json'),
+    fs.createFileSync(
+      'package.json',
       JSON.stringify({ devDependencies: { prettier: '^3.6.2' } })
     );
 
-    expect(detectFormatter(root)).toBeNull();
+    expect(detectFormatter(fs.tempDir)).toBeNull();
   });
 });
