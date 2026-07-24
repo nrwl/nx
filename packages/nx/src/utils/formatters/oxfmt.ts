@@ -1,10 +1,57 @@
-import { execFile } from 'child_process';
-import { existsSync, mkdtempSync, rmSync } from 'fs';
-import { mkdir, readFile, writeFile } from 'fs/promises';
-import { tmpdir } from 'os';
-import * as path from 'path';
-import { FORMATTER_MAX_BUFFER } from './formatter';
-import { readModulePackageJson } from './package-json';
+import { execFile, execFileSync } from 'node:child_process';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import * as path from 'node:path';
+import type { Tree } from '../../generators/tree';
+import { readModulePackageJson } from '../package-json';
+import { FORMATTER_MAX_BUFFER } from './shared';
+
+/**
+ * Config filenames oxfmt discovers, in its own precedence order.
+ * See apps/oxfmt/src/core/config in oxc-project/oxc.
+ */
+export const oxfmtConfigFiles = [
+  '.oxfmtrc.json',
+  '.oxfmtrc.jsonc',
+  'oxfmt.config.ts',
+  'oxfmt.config.mts',
+  'oxfmt.config.cts',
+  'oxfmt.config.js',
+  'oxfmt.config.mjs',
+  'oxfmt.config.cjs',
+];
+
+export function isUsingOxfmt(root: string): boolean {
+  for (const file of oxfmtConfigFiles) {
+    if (existsSync(path.join(root, file))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isUsingOxfmtInTree(tree: Tree): boolean {
+  for (const file of oxfmtConfigFiles) {
+    if (tree.exists(file)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * oxfmt silently skips paths it does not recognise, and exits 2 when *every*
+ * path was skipped. Nx routinely passes mixed file lists, so treat an empty
+ * match as success rather than a failure.
+ */
+const OXFMT_BASE_ARGS = ['--no-error-on-unmatched-pattern'];
+
+const enum OxfmtExitCode {
+  Success = 0,
+  Mismatch = 1,
+  Failure = 2,
+}
 
 let cachedOxfmtBin: string | undefined;
 
@@ -26,16 +73,56 @@ export function getOxfmtBinPath(): string {
   return cachedOxfmtBin;
 }
 
-/**
- * Config filenames oxfmt discovers, in its own precedence order.
- * See apps/oxfmt/src/core/config in oxc-project/oxc.
- */
-export const oxfmtConfigFiles = [
-  '.oxfmtrc.json',
-  '.oxfmtrc.jsonc',
-  'oxfmt.config.ts',
-  'oxfmt.config.mts',
-];
+export function writeWithOxfmt(patterns: string[]): void {
+  const oxfmtPath = getOxfmtBinPath();
+  execFileSync(
+    'node',
+    [oxfmtPath, ...OXFMT_BASE_ARGS, '--write', ...patterns],
+    {
+      stdio: [0, 1, 2],
+      windowsHide: true,
+    }
+  );
+}
+
+export function checkWithOxfmt(patterns: string[]): Promise<string[]> {
+  const oxfmtPath = getOxfmtBinPath();
+  return new Promise((resolve, reject) => {
+    execFile(
+      'node',
+      [oxfmtPath, ...OXFMT_BASE_ARGS, '--list-different', ...patterns],
+      {
+        encoding: 'utf-8' as const,
+        windowsHide: true,
+        maxBuffer: FORMATTER_MAX_BUFFER,
+      },
+      (error, stdout, stderr) => {
+        // oxfmt writes the differing paths to stdout *before* it reports any
+        // error, so a non-empty stdout does not mean the run succeeded. The
+        // exit code is the only reliable signal.
+        const code = typeof error?.['code'] === 'number' ? error['code'] : 0;
+        if (code === OxfmtExitCode.Success) {
+          resolve([]);
+        } else if (
+          code === OxfmtExitCode.Mismatch &&
+          stdout.trim().length > 0
+        ) {
+          resolve(stdout.trim().split('\n'));
+        } else {
+          // Exit 1 with no stdout means an invalid config; exit 2 means oxfmt
+          // failed outright (parse error, unreadable file).
+          reject(
+            new Error(
+              stderr?.trim() ||
+                error?.message ||
+                `oxfmt exited with code ${code}`
+            )
+          );
+        }
+      }
+    );
+  });
+}
 
 export function formatContentWithOxfmt(
   filepath: string,
