@@ -1,27 +1,84 @@
 ---
-title: Folder Structure
-description: Organize Nx projects by scope and change the folder structure without disrupting project relationships.
+title: 'Monorepo Folder Structure'
+description: 'How to structure a monorepo: flat vs grouped layouts, organizing by scope, library types, and changing the folder structure as teams evolve.'
 filter: 'type:Guides'
 featured: true
+sidebar:
+  label: Folder Structure
 topics:
   - 'Organizational decisions'
 ---
 
-Nx can work with any folder structure you choose, but it is good to have a plan in place for the folder structure of your monorepo.
+A monorepo folder structure determines how quickly developers find code, how naturally ownership
+boundaries fall, and how well tooling like affected detection maps changes to projects.
+Nx works with any folder structure you choose, and the structures below are conventions that have
+held up in large workspaces, not requirements.
 
-Projects are often grouped by _scope_. A project's scope is either the application to which it belongs or (for larger applications) a section within that application.
+## How should you structure a monorepo?
 
-## Can you change the folder structure later?
+Two layouts cover most monorepos:
 
-Yes. Don't be too anxious about choosing the exact right structure from the beginning.
-Moving or renaming a project folder is a regular `mv`, and deleting one is a regular `rm`, the same as in any repository.
-Tooling doesn't factor into the decision, so pick the structure that helps developers find things, and change it when your organization changes.
+**Flat layout** - every project sits directly under one folder, usually `packages/`.
+This is the default shape of package manager workspaces, and it works well when projects are
+published packages or when the count stays small enough to scan.
 
-## Example workspace
+{% filetree %}
 
-Let's use Acme Airlines as an example organization. This organization has two apps, `booking` and `check-in`. In the Nx workspace, projects related to `booking` are grouped under a `libs/booking` folder, projects related to `check-in` are grouped under a `libs/check-in` folder and projects used in both applications are placed in `libs/shared`. You can also have nested grouping folders, (i.e. `libs/shared/seatmap`).
+- packages/
+  - eslint-config/
+  - ui-components/
+  - web-app/
+  - website/
 
-The purpose of these folders is to help with organizing by scope. We recommend grouping projects together which are (usually) updated together. It helps minimize the amount of time a developer spends navigating the folder tree to find the right file.
+{% /filetree %}
+
+**Grouped layout** - applications live under `apps/`, reusable code under `libs/`, with grouping
+folders inside.
+This fits product-focused workspaces where a handful of applications sit on top of many internal
+libraries.
+
+{% filetree %}
+
+- apps/
+  - booking/
+  - check-in/
+- libs/
+  - booking/
+    - feature-shell/
+  - check-in/
+    - feature-shell/
+  - shared/
+    - ui-components/
+
+{% /filetree %}
+
+Both layouts work with any package manager and with Nx.
+The flat layout optimizes for simplicity, the grouped layout for navigability at scale: once a
+workspace passes a few dozen projects, one flat folder stops communicating anything about how the
+code relates.
+
+## Keep applications thin
+
+In the grouped layout, an application project contains the deployable shell: entry point,
+configuration, and composition of features.
+The features themselves live in libraries.
+A common target is the majority of your code in `libs/`, with `apps/` reduced to wiring.
+
+Thin applications keep code reusable by default (a feature built as a library can move between
+applications), make boundaries enforceable (libraries have defined public APIs, application
+internals don't), and give [affected detection](/docs/features/ci-features/affected) smaller
+units to work with.
+
+## Group projects by scope
+
+Group libraries by the application or business domain they serve, not by their technical type.
+Projects that change together should sit together, which keeps navigation short and makes
+ownership obvious.
+
+Using Acme Airlines as an example: projects related to the `booking` application group under
+`libs/booking`, projects for `check-in` under `libs/check-in`, and projects used by both under
+`libs/shared`.
+Grouping folders can nest as domains grow (`libs/shared/seatmap`).
 
 {% filetree %}
 
@@ -41,21 +98,45 @@ The purpose of these folders is to help with organizing by scope. We recommend g
 
 {% /filetree %}
 
-## Sharing projects
+The folder a project lives in becomes a code-ownership boundary: a `CODEOWNERS` entry per
+grouping folder assigns each domain to its team.
+See [code ownership](/docs/kb/code-ownership) for the setup.
 
-One of the main advantages of using a monorepo is that there is more visibility into code that can be reused across many different applications. Shared projects are a great way to save developers time and effort by reusing a solution to a common problem.
+## Name libraries by type
 
-Let's consider our reference monorepo. The `shared-data-access` project contains the code needed to communicate with the back-end (for example, the URL prefix). We know that this would be the same for all libs; therefore, we should place this in the shared lib and properly document it so that all projects can use it instead of writing their own versions.
+Within a domain, a small vocabulary of library types keeps the purpose of each project readable
+from its name:
 
-{% filetree %}
+| Type            | Contains                                                   | Can depend on     |
+| --------------- | ---------------------------------------------------------- | ----------------- |
+| **feature**     | Smart components implementing a use case, routing, screens | Any type          |
+| **ui**          | Presentational components with no application state        | ui, util          |
+| **data-access** | API clients, state management, business logic              | data-access, util |
+| **util**        | Pure functions, types, and helpers with no framework state | util              |
 
-- libs/
-  - booking/
-    - data-access/ <---- app-specific project
-  - shared/
-    - data-access/ <---- shared project
-    - seatmap/
-      - data-access/ <---- shared project
-      - feature-seatmap/ <---- shared project
+A path like `libs/booking/feature-shell` or `libs/shared/seatmap/data-access` then tells you the
+domain and the role before you open a file.
+The dependency column is a starting-point policy: tag each project with its type and scope, and
+[module boundary rules](/docs/features/enforce-module-boundaries) enforce it, so a `ui` library
+reaching into `data-access` fails at lint time instead of in review.
 
-{% /filetree %}
+How finely to slice libraries is its own decision, covered in
+[project size](/docs/kb/project-size).
+
+## Share code deliberately
+
+A shared grouping folder (`libs/shared`) holds code multiple domains consume: the design system,
+API clients for common services, utilities.
+Sharing is a monorepo's [core benefit](/docs/kb/what-is-a-monorepo), and it deserves a little
+friction: code in `shared` has every domain as a consumer, so changes there affect everything and
+its owners field cross-team requests.
+Promote a library into `shared` when a second domain needs it, rather than starting everything as
+shared.
+
+## Can you change the folder structure later?
+
+Yes. Don't be too anxious about choosing the exact right structure from the beginning.
+Moving or renaming a project folder is a regular `mv`, and deleting one is a regular `rm`, the
+same as in any repository.
+Tooling doesn't factor into the decision, so pick the structure that helps developers find
+things, and change it when your organization changes.

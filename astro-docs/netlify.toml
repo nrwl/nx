@@ -1115,6 +1115,10 @@ to = "/docs/technologies/module-federation/introduction"
 from = "/docs/technologies/module-federation/guides"
 to = "/docs/technologies/module-federation/introduction"
 
+[[redirects]]
+from = "/docs/concepts/decisions"
+to = "/docs/kb/monorepo-vs-polyrepo"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
