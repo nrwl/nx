@@ -73,6 +73,9 @@ export const createNodes: CreateNodes = [
                     'default',
                     '^default',
                     '{workspaceRoot}/tsconfig.json',
+                    // Formatters (oxfmt/prettier) walk ancestors from the
+                    // example up to the repo root for editor config.
+                    '{workspaceRoot}/.editorconfig',
                     {
                       dependentTasksOutputFiles: '**/*',
                       transitive: true,
@@ -86,7 +89,7 @@ export const createNodes: CreateNodes = [
                   outputs: [
                     '{projectRoot}/dist',
                     '{projectRoot}/*/dist',
-                    '{projectRoot}/packages/*/dist',
+                    '{projectRoot}/packages/*/dist/**',
                   ],
                   cache: true,
                 },
