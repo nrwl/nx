@@ -26,74 +26,6 @@ import {
 // Any semver version string such as "1.2.3" or "1.2.3-beta.1"
 type SemverVersion = string;
 
-// Local dependency protocols that reference another package in the same
-// workspace rather than a published registry version.
-const LOCAL_DEPENDENCY_PROTOCOLS = ['workspace:', 'file:'];
-
-function isLocalDependencyProtocol(specifier: string): boolean {
-  return LOCAL_DEPENDENCY_PROTOCOLS.some((protocol) =>
-    specifier.startsWith(protocol)
-  );
-}
-
-/**
- * If `specifier` is a `workspace:` reference with a *pinned* range - anything
- * other than the bare aliases `workspace:`, `workspace:*`, `workspace:^` or
- * `workspace:~` - return that range verbatim (e.g. `workspace:^1.2.3` ->
- * `^1.2.3`, `workspace:1.2.3` -> `1.2.3`, `workspace:>=1.0.0` -> `>=1.0.0`).
- *
- * pnpm publishes such pinned ranges verbatim (dropping only the `workspace:`
- * prefix), so they are written through unchanged. Because the range is
- * user-authored, these deliberately bypass BOTH on-demand current-version
- * resolution (no git-tag lookup is needed) AND the configured `versionPrefix`.
- *
- * Returns null for `file:` protocols and for the bare `workspace:` aliases,
- * which instead require the dependency's resolved current version.
- */
-function getPinnedWorkspaceRange(specifier: string): string | null {
-  if (!specifier.startsWith('workspace:')) {
-    return null;
-  }
-  const range = specifier.slice('workspace:'.length);
-  if (range === '' || range === '*' || range === '^' || range === '~') {
-    return null;
-  }
-  return range;
-}
-
-/**
- * Compute the concrete range to write for a local dependency (a bare
- * `workspace:` alias or a `file:` protocol) that resolves to `resolvedVersion`,
- * applying the configured `versionPrefix` exactly like the in-set dependency
- * branch of `updateDependenciesForProject`:
- *  - explicit `~` / `^` / `=` -> apply that prefix to the resolved version;
- *  - `auto` (default) -> derive the prefix from the workspace range suffix
- *    (`workspace:^` -> `^`, `workspace:~` -> `~`, else exact), matching pnpm
- *    publish semantics. `file:` protocols resolve to the exact version.
- */
-function applyVersionPrefixToLocalDependency(
-  currentSpecifier: string,
-  resolvedVersion: string,
-  versionPrefix: NxReleaseVersionConfiguration['versionPrefix']
-): string {
-  let prefix = '';
-  if (versionPrefix === '~' || versionPrefix === '^' || versionPrefix === '=') {
-    prefix = versionPrefix;
-  } else if (currentSpecifier.startsWith('workspace:')) {
-    // 'auto': mirror the workspace range suffix.
-    const range = currentSpecifier.slice('workspace:'.length);
-    if (range.startsWith('^')) {
-      prefix = '^';
-    } else if (range.startsWith('~')) {
-      prefix = '~';
-    }
-  }
-  // Strip any leading prefix from the resolved version before applying ours,
-  // mirroring the in-set branch.
-  const cleanVersion = resolvedVersion.replace(/^[~^=]/, '');
-  return `${prefix}${cleanVersion}`;
-}
-
 export const BUMP_TYPE_REASON_TEXT = {
   DEPENDENCY_WAS_BUMPED: ', because a dependency was bumped, ',
   USER_SPECIFIER: ', from the given specifier, ',
@@ -872,13 +804,13 @@ export class ReleaseGroupProcessor {
       } else {
         // The dependency is NOT part of this release (a subset release, e.g.
         // releasing only a dependent project). Its version was never resolved
-        // into `cachedCurrentVersions`, so a local protocol reference (e.g.
-        // `workspace:*`) to it would otherwise be left unresolved in the
-        // manifest. When the manifest is configured to NOT preserve local
-        // protocols, rewrite the reference to a concrete range - resolving the
-        // dependency's current version on-demand where needed. If that version
-        // cannot be resolved, the protocol is left untouched (the release is
-        // never failed for an out-of-set dependency).
+        // into `cachedCurrentVersions`, so a local dependency protocol reference
+        // to it (as determined by the ecosystem-specific VersionActions) would
+        // otherwise be left unresolved in the manifest. When the manifest is
+        // configured to NOT preserve local protocols, rewrite the reference to a
+        // concrete range - resolving the dependency's current version on-demand
+        // where needed. If that version cannot be resolved, the protocol is left
+        // untouched (the release is never failed for an out-of-set dependency).
         await this.resolveOutOfSetLocalDependencyVersion(
           versionActions,
           cachedFinalConfigForProject,
@@ -903,22 +835,22 @@ export class ReleaseGroupProcessor {
    * Handle a dependency that is NOT part of `allProjectsToProcess` during a
    * subset release.
    *
-   * If the dependency is referenced via a local protocol (`workspace:` /
-   * `file:`) and at least one manifest to update is configured with
+   * If the dependency is referenced via a local protocol (as determined by the
+   * ecosystem-specific `VersionActions.isLocalDependencyProtocol`) and at least
+   * one manifest to update is configured with
    * `preserveLocalDependencyProtocols: false`, write a concrete range into
    * `dependenciesToUpdate` so that the protocol gets rewritten by
    * `updateProjectDependencies`. Manifests that DO preserve protocols are
    * unaffected, because `updateProjectDependencies` keeps the protocol for
    * those manifests regardless.
    *
-   * Two cases:
-   *  - A pinned `workspace:` range (e.g. `workspace:^1.2.3`, `workspace:1.2.3`)
-   *    is user-authored and published verbatim by pnpm, so it is written
-   *    through unchanged - no current-version resolution and no `versionPrefix`.
-   *  - A bare `workspace:` alias (`workspace:`, `workspace:*`, `workspace:^`,
-   *    `workspace:~`) or a `file:` protocol requires the dependency's resolved
-   *    current version, with the configured `versionPrefix` applied. If that
-   *    version cannot be resolved, the reference is left untouched.
+   * All protocol-specific knowledge is delegated to the `versionActions`
+   * abstraction so this core stays ecosystem-agnostic:
+   *  - a user-pinned local range is written verbatim (no version resolution),
+   *    via `getPinnedLocalDependencyRange`;
+   *  - a bare protocol alias requires the dependency's resolved current version,
+   *    formatted via `getResolvedLocalDependencyRange`. If that version cannot
+   *    be resolved, the reference is left untouched.
    */
   private async resolveOutOfSetLocalDependencyVersion(
     versionActions: VersionActions,
@@ -943,22 +875,25 @@ export class ReleaseGroupProcessor {
         dependencyProjectName
       );
     // Not referenced in this project's manifest, or not a local protocol that
-    // we rewrite — leave it as-is (preserves existing behavior for out-of-set
-    // registry-versioned dependencies).
-    if (!currentSpecifier || !isLocalDependencyProtocol(currentSpecifier)) {
+    // the ecosystem rewrites — leave it as-is (preserves existing behavior for
+    // out-of-set registry-versioned dependencies).
+    if (
+      !currentSpecifier ||
+      !versionActions.isLocalDependencyProtocol(currentSpecifier)
+    ) {
       return;
     }
 
-    // Pinned `workspace:` ranges are written through verbatim (pnpm publish
-    // parity) and skip resolution entirely.
-    const pinnedWorkspaceRange = getPinnedWorkspaceRange(currentSpecifier);
-    if (pinnedWorkspaceRange !== null) {
-      dependenciesToUpdate[dependencyProjectName] = pinnedWorkspaceRange;
+    // A user-pinned local range is written through verbatim and skips
+    // resolution entirely.
+    const pinnedRange =
+      versionActions.getPinnedLocalDependencyRange(currentSpecifier);
+    if (pinnedRange !== null) {
+      dependenciesToUpdate[dependencyProjectName] = pinnedRange;
       return;
     }
 
-    // Bare `workspace:` aliases and `file:` protocols need the dependency's
-    // resolved current version.
+    // Bare protocol aliases need the dependency's resolved current version.
     const resolvedVersion =
       await this.releaseGraph.resolveCurrentVersionForOutOfSetProject(
         this.tree,
@@ -975,7 +910,7 @@ export class ReleaseGroupProcessor {
     }
 
     dependenciesToUpdate[dependencyProjectName] =
-      applyVersionPrefixToLocalDependency(
+      versionActions.getResolvedLocalDependencyRange(
         currentSpecifier,
         resolvedVersion,
         finalConfigForProject.versionPrefix

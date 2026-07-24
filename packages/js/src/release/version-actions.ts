@@ -328,7 +328,7 @@ export default class JsVersionActions extends VersionActions {
   }
 
   // NOTE: The TODOs were carried over from the original implementation, they are not yet implemented
-  private isLocalDependencyProtocol(versionSpecifier: string): boolean {
+  isLocalDependencyProtocol(versionSpecifier: string): boolean {
     const localPackageProtocols = [
       'file:', // all package managers
       'workspace:', // not npm
@@ -368,5 +368,62 @@ export default class JsVersionActions extends VersionActions {
     //   );
     // }
     return true;
+  }
+
+  /**
+   * A `workspace:` reference with a *pinned* range - anything other than the
+   * bare aliases `workspace:`, `workspace:*`, `workspace:^` or `workspace:~` -
+   * is user-authored and published verbatim by pnpm (dropping only the
+   * `workspace:` prefix), e.g. `workspace:^1.2.3` -> `^1.2.3`,
+   * `workspace:1.2.3` -> `1.2.3`, `workspace:>=1.0.0` -> `>=1.0.0`. Such ranges
+   * are written through unchanged and deliberately bypass BOTH current-version
+   * resolution and the configured `versionPrefix`.
+   *
+   * Returns `null` for `file:` protocols and for the bare `workspace:` aliases,
+   * which instead require the dependency's resolved current version.
+   */
+  getPinnedLocalDependencyRange(versionSpecifier: string): string | null {
+    if (!versionSpecifier.startsWith('workspace:')) {
+      return null;
+    }
+    const range = versionSpecifier.slice('workspace:'.length);
+    if (range === '' || range === '*' || range === '^' || range === '~') {
+      return null;
+    }
+    return range;
+  }
+
+  /**
+   * Format the concrete range to write for a bare local protocol alias (a
+   * `workspace:` alias or a `file:` protocol) given the dependency's resolved
+   * current version and the configured `versionPrefix`:
+   *  - explicit `~` / `^` / `=` -> apply that prefix to the resolved version;
+   *  - `auto` (default) -> derive the prefix from the `workspace:` range suffix
+   *    (`workspace:^` -> `^`, `workspace:~` -> `~`, else exact), matching pnpm
+   *    publish semantics. `file:` protocols resolve to the exact version.
+   */
+  getResolvedLocalDependencyRange(
+    versionSpecifier: string,
+    resolvedVersion: string,
+    versionPrefix: NxReleaseVersionConfiguration['versionPrefix']
+  ): string {
+    let prefix = '';
+    if (
+      versionPrefix === '~' ||
+      versionPrefix === '^' ||
+      versionPrefix === '='
+    ) {
+      prefix = versionPrefix;
+    } else if (versionSpecifier.startsWith('workspace:')) {
+      // 'auto': mirror the workspace range suffix.
+      const range = versionSpecifier.slice('workspace:'.length);
+      if (range.startsWith('^')) {
+        prefix = '^';
+      } else if (range.startsWith('~')) {
+        prefix = '~';
+      }
+    }
+    // Strip any leading prefix from the resolved version before applying ours.
+    return `${prefix}${resolvedVersion.replace(/^[~^=]/, '')}`;
   }
 }

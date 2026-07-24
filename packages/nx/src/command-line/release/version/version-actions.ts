@@ -468,6 +468,58 @@ It is also possible that the project is being processed because of a dependency 
     projectGraph: ProjectGraph,
     dependenciesToUpdate: Record<string, string>
   ): Promise<string[]>;
+
+  /**
+   * Whether the given dependency version specifier uses a local (in-workspace)
+   * protocol - e.g. npm's `workspace:` or `file:` - rather than a normal
+   * registry version or range.
+   *
+   * The language-agnostic release core uses this to decide whether a dependency
+   * reference needs the ecosystem-specific local-protocol handling below when
+   * rewriting dependency versions during a subset release. Defaults to `false`
+   * so that ecosystems without local protocols are unaffected; ecosystem
+   * implementations (e.g. `@nx/js`) override it.
+   */
+  isLocalDependencyProtocol(versionSpecifier: string): boolean {
+    return false;
+  }
+
+  /**
+   * For a dependency currently referenced via a local protocol (see
+   * `isLocalDependencyProtocol`), return the concrete range that should be
+   * written to the manifest verbatim, WITHOUT resolving the dependency's current
+   * version - e.g. a user-pinned `workspace:^1.2.3` becomes `^1.2.3`.
+   *
+   * Returns `null` when the reference is a bare protocol alias whose concrete
+   * version must be resolved instead (then formatted via
+   * `getResolvedLocalDependencyRange`). Defaults to `null`.
+   */
+  getPinnedLocalDependencyRange(versionSpecifier: string): string | null {
+    return null;
+  }
+
+  /**
+   * For a dependency currently referenced via a bare local protocol alias (see
+   * `isLocalDependencyProtocol` / `getPinnedLocalDependencyRange`), format the
+   * concrete range to write into the manifest, given the dependency's resolved
+   * current version and the configured `versionPrefix`.
+   *
+   * The default applies an explicit `versionPrefix` (`~`/`^`/`=`) to the
+   * resolved version, or writes the exact version otherwise. Ecosystem
+   * implementations may additionally derive the prefix from the protocol's range
+   * suffix (e.g. `workspace:^` -> `^<version>`).
+   */
+  getResolvedLocalDependencyRange(
+    versionSpecifier: string,
+    resolvedVersion: string,
+    versionPrefix: NxReleaseVersionConfiguration['versionPrefix']
+  ): string {
+    const prefix =
+      versionPrefix === '~' || versionPrefix === '^' || versionPrefix === '='
+        ? versionPrefix
+        : '';
+    return `${prefix}${resolvedVersion.replace(/^[~^=]/, '')}`;
+  }
 }
 
 export class NOOP_VERSION_ACTIONS extends VersionActions {
