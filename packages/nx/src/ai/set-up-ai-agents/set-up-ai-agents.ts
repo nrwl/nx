@@ -38,6 +38,8 @@ import {
   opencodeMcpPath,
   rulesRegex,
 } from '../constants';
+import { NX_SOCKET_ROOT_POSIX } from '../../daemon/tmp-dir';
+import { NX_TMP_DIR_POSIX } from '../../utils/nx-tmp-dir';
 import { getAiConfigRepoPath } from '../clone-ai-config-repo';
 import { Agent, supportedAgents } from '../utils';
 import {
@@ -183,11 +185,43 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.enabledPlugins,
         'nx@nx-claude-plugins': true,
       },
-      // Widening the sandbox's egress is only justified while events are
-      // actually being sent, so it follows the workspace's analytics opt-in.
-      ...(analyticsEnabled
-        ? { sandbox: allowAnalyticsDomain(json.sandbox) }
-        : {}),
+      // Allow Nx unix socket usage (daemon, plugin workers, forked processes)
+      // through Claude Code's sandbox, and analytics requests when the
+      // workspace has them on. Nx also copies its native binary into a cache
+      // under the same fixed tmp root before loading it, so the read/write
+      // grants cover that too. The root is a fixed /tmp path on macOS and
+      // Linux, so these entries are machine-independent and safe to commit.
+      sandbox: {
+        ...json.sandbox,
+        filesystem: {
+          ...json.sandbox?.filesystem,
+          allowRead: appendIfMissing(
+            json.sandbox?.filesystem?.allowRead,
+            NX_TMP_DIR_POSIX
+          ),
+          allowWrite: appendIfMissing(
+            json.sandbox?.filesystem?.allowWrite,
+            NX_TMP_DIR_POSIX
+          ),
+        },
+        network: {
+          ...json.sandbox?.network,
+          // Egress follows the workspace's analytics opt-in (#36663). The
+          // socket grant does not: Nx needs its sockets either way.
+          ...(analyticsEnabled
+            ? {
+                allowedDomains: appendIfMissing(
+                  json.sandbox?.network?.allowedDomains,
+                  analyticsDomain
+                ),
+              }
+            : {}),
+          allowUnixSockets: appendIfMissing(
+            json.sandbox?.network?.allowUnixSockets,
+            NX_SOCKET_ROOT_POSIX
+          ),
+        },
+      },
     }));
 
     // Clean up .mcp.json (nx-mcp now handled by plugin)
@@ -432,17 +466,11 @@ export async function setupAiAgentsGeneratorImpl(
   };
 }
 
-function allowAnalyticsDomain(sandbox: any) {
-  const allowedDomains: string[] = sandbox?.network?.allowedDomains ?? [];
-  return {
-    ...sandbox,
-    network: {
-      ...sandbox?.network,
-      allowedDomains: allowedDomains.includes(analyticsDomain)
-        ? allowedDomains
-        : [...allowedDomains, analyticsDomain],
-    },
-  };
+function appendIfMissing(
+  existing: string[] | undefined,
+  value: string
+): string[] {
+  return existing?.includes(value) ? existing : [...(existing ?? []), value];
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
