@@ -69,4 +69,24 @@ describe('sandboxSocketHint', () => {
 
     expect(hint().join('\n')).toContain('allowAllUnixSockets');
   });
+
+  it.each([true, false])(
+    'should offer a remedy that needs no sandbox change (isAiAgent: %s)',
+    (isAgent: boolean) => {
+      // A denied bind is fatal to plugin isolation, and an agent often cannot
+      // write its own sandbox settings, so the hint must always name a way
+      // forward that does not depend on editing sandbox config.
+      mockIsAiAgent.mockReturnValue(isAgent);
+
+      expect(hint().join('\n')).toContain('NX_ISOLATE_PLUGINS=false');
+    }
+  );
+
+  it('should not promise that configure-ai-agents can always run in place', () => {
+    // configure-ai-agents writes the agent's own settings file, which agent
+    // sandboxes routinely deny; saying so up front avoids a second dead end.
+    mockIsAiAgent.mockReturnValue(true);
+
+    expect(hint().join('\n')).toContain('regular terminal');
+  });
 });
