@@ -1,7 +1,11 @@
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { normalizePath } from '../../utils/path';
-import { detectFormatter } from '../../utils/formatters';
+import {
+  detectFormatter,
+  detectFormatterInTree,
+  type FormatterType,
+} from '../../utils/formatters';
 import { formatFilesWithOxfmt as batchFormatWithOxfmt } from '../../utils/formatters/oxfmt';
 import type { Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
@@ -43,7 +47,17 @@ export async function formatChangedFilesWithPrettierIfAvailable(
       )
   );
 
-  const results = await formatFilesWithPrettierIfAvailable(
+  // Detect from the tree, not the disk: the tree is the source of truth and
+  // may hold a formatter config the generator just created but hasn't flushed.
+  // Probing disk config here would also read the real workspace config in
+  // tests, which is why callers previously needed fs mocks.
+  const formatterType = detectFormatterInTree(tree);
+  if (!formatterType) {
+    return;
+  }
+
+  const results = await formatDetectedFiles(
+    formatterType,
     Array.from(files),
     tree.root,
     options
@@ -61,23 +75,29 @@ export async function formatFilesWithPrettierIfAvailable(
     silent?: boolean;
   }
 ): Promise<Map<string, string>> {
-  const results = new Map<string, string>();
-
   // Check here as well for direct callers of this function
   if (process.env.NX_SKIP_FORMAT === 'true' || files.length === 0) {
-    return results;
+    return new Map<string, string>();
   }
 
+  // Direct callers have no tree, so detection falls back to disk.
   const formatterType = detectFormatter(root);
   if (!formatterType) {
-    return results;
+    return new Map<string, string>();
   }
 
-  if (formatterType === 'prettier') {
-    return formatFilesWithPrettier(files, root, options);
-  } else {
-    return formatFilesWithOxfmt(files, root, options);
-  }
+  return formatDetectedFiles(formatterType, files, root, options);
+}
+
+function formatDetectedFiles(
+  formatterType: FormatterType,
+  files: { path: string; content: string | Buffer }[],
+  root: string,
+  options?: { silent?: boolean }
+): Promise<Map<string, string>> {
+  return formatterType === 'prettier'
+    ? formatFilesWithPrettier(files, root, options)
+    : formatFilesWithOxfmt(files, root, options);
 }
 
 async function formatFilesWithPrettier(
