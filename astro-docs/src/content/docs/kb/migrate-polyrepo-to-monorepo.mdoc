@@ -74,9 +74,15 @@ Deciding that applications live in `apps/` and libraries in `packages/` now save
 
 {% aside type="caution" title="The destination directory must be empty" %}
 
-You cannot import a source `libs/` directory into a destination `libs/` that already holds projects.
-Import each project into its own empty directory instead, such as `libs/ui` and then `libs/data-access`.
-The empty template ships a `packages/.gitkeep` file, so delete that and commit the change before your first import.
+`nx import` refuses to write into a destination that already contains git-tracked files:
+
+```plaintext
+Destination directory <path> is not empty. Please make sure it is empty before importing into it.
+```
+
+Only tracked files count, so ignored build output does not block anything.
+Give each project its own destination, such as `packages/ui` and then `packages/data-access`, rather than importing a source `packages/` on top of a destination `packages/` that already holds projects.
+If you do target a directory that holds tracked files, including the `packages/.gitkeep` the empty template ships, remove them and commit before importing.
 
 {% /aside %}
 
@@ -151,7 +157,10 @@ As separate repositories, your projects depended on each other through published
 That is the definition of the polyrepo you are leaving, and `nx import` does not rewrite it.
 Until you do, the projects sit in one workspace and still resolve each other through the registry.
 
-Change every dependency that now lives in the workspace to the `workspace:` protocol:
+Repoint every dependency that now lives in the workspace. The range to use depends on your package manager:
+
+{% tabs %}
+{% tabitem label="pnpm" %}
 
 ```jsonc
 // packages/api/package.json
@@ -162,11 +171,48 @@ Change every dependency that now lives in the workspace to the `workspace:` prot
 }
 ```
 
-With pnpm this is required rather than tidy. `linkWorkspacePackages` defaults to `false`, so a `^1.0.0` range is fetched from the registry even though the package sits in `packages/utils`, and the install fails:
+Required rather than tidy here. `linkWorkspacePackages` defaults to `false`, so a `^1.0.0` range is fetched from the registry even though the package sits in `packages/utils`, and the install fails with `ERR_PNPM_FETCH_404`.
 
-```plaintext
-ERR_PNPM_FETCH_404  GET https://registry.npmjs.org/@myorg%2Futils: Not Found - 404
+{% /tabitem %}
+{% tabitem label="npm" %}
+
+```jsonc
+// packages/api/package.json
+{
+  "dependencies": {
+    "@myorg/utils": "*",
+  },
+}
 ```
+
+npm rejects the `workspace:` protocol with `EUNSUPPORTEDPROTOCOL`. It links a local package whenever the range matches, so `*` is enough.
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```jsonc
+// packages/api/package.json
+{
+  "dependencies": {
+    "@myorg/utils": "workspace:*",
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="bun" %}
+
+```jsonc
+// packages/api/package.json
+{
+  "dependencies": {
+    "@myorg/utils": "workspace:*",
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
 
 ## 5. Reconcile the root configuration
 
