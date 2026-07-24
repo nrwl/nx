@@ -17,7 +17,7 @@ Merge the repositories I name into this Nx workspace, following the instructions
 3. Run `nx import` once per project. Each destination directory must be empty. Pass `--ref` with the source branch, since it is required whenever the command cannot prompt. Preserve git history and do not squash the merge commits.
 4. Rewrite every dependency between the imported projects to `workspace:*`, then install. They still point at published versions and will resolve through the registry until you change them.
 5. Reconcile what `nx import` does not copy: `targetDefaults` (add `"build": { "dependsOn": ["^build"] }` if nothing sets build order), `namedInputs`, plugin entries in `nx.json`, package manager workspace globs, and root ESLint or TypeScript config the imported projects extend.
-6. Run `nx sync`, then `nx run-many -t build lint test` and fix failures until every project passes. Check the targets exist first, since `run-many` exits 0 for targets no project defines. Report anything you changed in the imported projects rather than silently rewriting their configuration.
+6. Run `nx sync`, then `nx run-many -t build typecheck lint test` and fix failures until every project passes. Check the targets exist first, since `run-many` exits 0 for targets no project defines. Report anything you changed in the imported projects rather than silently rewriting their configuration.
 
 Page: {pageUrl}
 {% /llm_copy_prompt %}
@@ -279,16 +279,14 @@ bun install
 {% /tabitem %}
 {% /tabs %}
 
-## 6. Verify before deleting anything
+## 6. Verify the workspace
 
 Sync the TypeScript project references, then run every target across the workspace:
 
 ```shell
 nx sync
-nx run-many -t build lint test
+nx run-many -t build typecheck lint test
 ```
-
-If `nx sync` reports no changes but typecheck still fails, run `nx reset` and sync again.
 
 Confirm those targets exist before you trust the result. `run-many` exits 0 for a target no project defines, so a workspace with no `test` target reports success without running anything. `nx show project <name>` lists what a project actually has.
 
