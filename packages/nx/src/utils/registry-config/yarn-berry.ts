@@ -8,9 +8,10 @@ import { logger } from '../logger';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
+  expandNpmEnvVars,
   getPackageScope,
   nerfDart,
-  readNpmConfigEnv,
+  readExpandedKey,
   setAuthIdent,
   setAuthToken,
   setCafile,
@@ -277,19 +278,28 @@ export function getYarnBerrySpawnRegistryEnv(
 }
 
 /**
- * Reads a key the way the spawned npm would, off its env tier and then the
- * .npmrc files berry ignores. npm also reads a <globalPrefix>/etc npmrc and its
- * own builtin one, which are not enumerated here: missing one only means the
- * warning stays silent. The maps are read once because the caller probes dozens
- * of keys walking npm's credential ladder.
+ * Reads a key the way the spawned npm would from the .npmrc files berry ignores.
+ * The env tier is left out on purpose: berry never reads npm_config_*, so the
+ * spawn strips every ambient one (mergeNpmConfigEnv), and what berry does send is
+ * in the overlay the warning checks separately. npm also reads a
+ * <globalPrefix>/etc npmrc and its own builtin one, which are not enumerated
+ * here: missing one only means the warning stays silent. npm expands a `${VAR}`
+ * in a key before the lookup, so match on the resolved key. The maps are read
+ * once because the caller probes dozens of keys walking npm's credential ladder.
  */
 function npmrcReader(root: string): (key: string) => string | undefined {
   const maps = [join(root, '.npmrc'), join(homedir(), '.npmrc')].map((path) =>
     readNpmrcMap(path)
   );
-  return (key) =>
-    readNpmConfigEnv(process.env, key) ??
-    maps.find((map) => map?.get(key) !== undefined)?.get(key);
+  return (key) => {
+    for (const map of maps) {
+      const value = map && readExpandedKey(map, key, expandNpmEnvVars);
+      if (value !== undefined) {
+        return value;
+      }
+    }
+    return undefined;
+  };
 }
 
 function collectRcFiles(root: string): BerryRcFile[] {
