@@ -1,12 +1,14 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Tree } from '../generators/tree';
-import { isUsingOxfmt, isUsingOxfmtInTree } from './is-using-oxfmt';
-import { isUsingPrettier, isUsingPrettierInTree } from './is-using-prettier';
-import { readJsonFile } from './fileutils';
-import { readJson } from '../generators/utils/json';
+import type { Tree } from '../../generators/tree';
+import { readJson } from '../../generators/utils/json';
+import { readJsonFile } from '../fileutils';
+import { isUsingOxfmt, isUsingOxfmtInTree } from './oxfmt';
+import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
 
 export type FormatterType = 'prettier' | 'oxfmt' | null;
+
+export { FORMATTER_MAX_BUFFER } from './shared';
 
 export function detectFormatter(root: string): FormatterType {
   if (isUsingOxfmt(root)) {
@@ -32,16 +34,6 @@ export function detectFormatter(root: string): FormatterType {
   return null;
 }
 
-function hasOxfmtDependency(packageJson: {
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-}): boolean {
-  return Boolean(
-    packageJson.dependencies?.['oxfmt'] ??
-      packageJson.devDependencies?.['oxfmt']
-  );
-}
-
 export function detectFormatterInTree(tree: Tree): FormatterType {
   if (isUsingOxfmtInTree(tree)) {
     return 'oxfmt';
@@ -60,8 +52,12 @@ export function detectFormatterInTree(tree: Tree): FormatterType {
   return null;
 }
 
-/**
- * Formatters list every mismatching path on stdout, which overruns Node's 1MB
- * default on a large workspace.
- */
-export const FORMATTER_MAX_BUFFER = 50 * 1024 * 1024;
+function hasOxfmtDependency(packageJson: {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+}): boolean {
+  return Boolean(
+    packageJson.dependencies?.['oxfmt'] ??
+      packageJson.devDependencies?.['oxfmt']
+  );
+}

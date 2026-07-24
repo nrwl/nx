@@ -1,7 +1,7 @@
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-import { detectFormatter } from '../../utils/formatter';
-import { formatFilesWithOxfmt as batchFormatWithOxfmt } from '../../utils/oxfmt';
+import { detectFormatter } from '../../utils/formatters';
+import { formatFilesWithOxfmt as batchFormatWithOxfmt } from '../../utils/formatters/oxfmt';
 import type { Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 
