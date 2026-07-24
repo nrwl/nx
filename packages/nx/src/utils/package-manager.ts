@@ -601,15 +601,11 @@ export async function resolvePackageVersionUsingRegistry(
   }
 }
 
-// Masks the userinfo in a URL (`user`, `user:pass`, or a bare token) so a
-// credential in a registry URL cannot leak through an error shown under
-// --verbose.
+// Masks the userinfo in a URL: `user`, `user:pass`, or a bare token.
 function redactUrlCredentials(text: string): string {
   return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
 }
 
-// Redacts URL credentials from the strings an error surfaces so a `{ cause }`
-// shown under --verbose carries no secret.
 function redactErrorCause(error: unknown): unknown {
   if (error && typeof error === 'object') {
     const e = error as { message?: unknown; stack?: unknown; stderr?: unknown };

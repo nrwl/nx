@@ -8,10 +8,9 @@ import { join } from 'path';
 import { getPnpmSpawnRegistryEnv } from './pnpm';
 
 /**
- * Each case mirrors a cell verified against the real pnpm binaries (see the
- * gh-35843 investigation): registries map honored from 10.6.0, wholesale-wins
- * through 10.x, per-key specific-wins plus pnpm_config_registry env and
- * auth.ini from 11.0.0.
+ * Each case mirrors a cell verified against the real pnpm binaries: registries
+ * map honored from 10.6.0, wholesale-wins through 10.x, per-key specific-wins
+ * plus pnpm_config_registry env and auth.ini from 11.0.0.
  */
 describe('getPnpmSpawnRegistryEnv', () => {
   let root: string;
@@ -192,10 +191,10 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it("bridges a yaml noproxy in npm's own spelling", () => {
-      // pnpm answers to both spellings on this surface, unlike its siblings
-      // (verified on 11.2.2 and 11.9.0 against a proxy: a `noproxy` bypass is
-      // honored, while `httpsproxy` and `https-proxy` are ignored). Reading
-      // only the camelCase key sent npm through a proxy pnpm bypasses.
+      // pnpm answers to both spellings here, unlike its siblings (verified on
+      // 11.2.2 and 11.9.0 against a proxy: `noproxy` is honored, `httpsproxy`
+      // and `https-proxy` ignored). Reading only the camelCase key sent npm
+      // through a proxy pnpm bypasses.
       writeYaml(
         [
           'registries:',
@@ -237,9 +236,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
       ).not.toHaveProperty('npm_config_cafile');
     });
 
-    // getAuthHeadersFromConfig takes a tokenHelper out of userSettings alone,
-    // which every caller passes as the user config. This line has no auth.ini
-    // and no npmrcAuthFile, so that file is npm's own userconfig throughout.
+    // getAuthHeadersFromConfig reads a tokenHelper from userSettings only. With
+    // no auth.ini and no npmrcAuthFile here, that file is npm's own userconfig.
     it('reports a user-config token helper for the registry the yaml sends npm to', () => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
@@ -421,8 +419,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('treats a cafile that expanded to nothing as unset', () => {
-      // An empty cafile would otherwise resolve to the workspace root, handing
-      // npm a directory where it expects a certificate file.
+      // An empty cafile would otherwise resolve to auth.ini's own directory,
+      // handing npm a directory where it expects a certificate file.
       delete process.env.NX_TEST_UNSET_CA;
       writeAuthIni('cafile=${NX_TEST_UNSET_CA}');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
@@ -925,10 +923,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
 
       // pnpm accepts a helper only from its user auth file: the key and its
       // value have to be in that file, or the command aborts with
-      // TOKEN_HELPER_IN_PROJECT_CONFIG (verified on 11.9.0 against a
-      // credential-checking registry: a helper in the user .npmrc put
-      // `Bearer helper-token-123` on the wire, while the same line in auth.ini
-      // or in the project .npmrc failed the run before any request went out).
+      // TOKEN_HELPER_IN_PROJECT_CONFIG (verified on 11.9.0: the same helper line
+      // in auth.ini or in the project .npmrc failed the run before any request
+      // went out).
       function warnFor(pkg = 'is-even'): jest.Mock {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
@@ -1149,8 +1146,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
 
       it('lets a later literal registry override an earlier env-keyed one', () => {
-        // The literal scoped registry is last, so it wins over the env-keyed one
-        // above it; npm contacts reg-a, where the helper is.
         process.env.NX_TEST_SCOPE = 'nx-test';
         writeFileSync(
           join(root, '.npmrc'),
@@ -1271,11 +1266,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
     it('only honors the uppercase PNPM_CONFIG_REGISTRY env from 11.0.6', () => {
       writeYaml('registries:\n  default: https://reg-a.example.com/\n');
       process.env.PNPM_CONFIG_REGISTRY = 'https://reg-up.example.com/';
-      // 11.0.5 and below ignore the uppercase form, so the yaml default wins.
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.5')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
       });
-      // 11.0.6+ honors it.
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.6')).toEqual({
         npm_config_registry: 'https://reg-up.example.com/',
       });

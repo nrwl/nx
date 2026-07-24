@@ -91,7 +91,6 @@ describe('expandPnpmEnvVars', () => {
   });
 
   it('keeps an empty value for ${VAR-default} but not for ${VAR:-default}', () => {
-    // Only the colon form treats an empty value as absent.
     expect(expandPnpmEnvVars('${TOKEN-fallback}', { TOKEN: '' })).toBe('');
     expect(expandPnpmEnvVars('${TOKEN:-fallback}', { TOKEN: '' })).toBe(
       'fallback'

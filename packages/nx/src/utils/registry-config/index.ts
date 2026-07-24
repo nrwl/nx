@@ -27,7 +27,7 @@ export { mergeNpmConfigEnv, ignoresNpmConfigEnv } from './utils';
  *
  * The caller provides the detected package manager and its version
  * (null when the version cannot be determined); resolution errors degrade to
- * no bridging, matching the previous behavior.
+ * no bridging.
  */
 export function getNpmSpawnRegistryEnv(
   packageName: string,

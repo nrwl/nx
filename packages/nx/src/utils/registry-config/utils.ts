@@ -80,7 +80,7 @@ export function readNpmConfigEnv(
   return value;
 }
 
-/** The registry, auth and TLS settings this module resolves for a package manager. */
+/** The registry, TLS and proxy settings this module resolves for a package manager. */
 const BRIDGED_SETTINGS = new Set([
   'registry',
   'ca',
@@ -196,9 +196,8 @@ export function ignoresNpmConfigEnv(
     case 'yarn':
       return version.major >= 2;
     default: {
-      // A new PackageManager member fails typecheck here until it is classified
-      // above. Callers that run outside a fall-open catch keep the ambient
-      // environment instead of throwing.
+      // A new PackageManager member fails typecheck here until classified above;
+      // callers outside a fall-open catch keep the ambient env instead of throwing.
       const _exhaustive: never = packageManager;
       return false;
     }

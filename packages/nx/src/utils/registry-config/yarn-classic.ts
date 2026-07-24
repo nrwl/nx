@@ -626,7 +626,7 @@ function readYarnrcMap(path: string): Map<string, YarnValue> | null {
   } catch {
     // yarn dies on a .yarnrc it cannot open (verified on 1.22.22: the EACCES
     // propagates and yarn exits 1), so there is no resolution left to
-    // reproduce. Skipping the file instead would resolve on from the remaining
+    // reproduce. Skipping the file instead would resolve from the remaining
     // ones, which is how a workspace registry silently becomes the default.
     throw new Error(`The .yarnrc at ${path} could not be read.`);
   }

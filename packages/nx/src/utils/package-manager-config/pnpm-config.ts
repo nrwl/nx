@@ -27,8 +27,8 @@ export function getPnpmConfigDir(env: NodeJS.ProcessEnv): string {
 /**
  * Reads a pnpm YAML config file (pnpm-workspace.yaml or the global
  * config.yaml). An absent file returns null so callers can fall through to
- * lower surfaces; a corrupt one returns 'invalid' so callers can decide
- * whether to defer (cooldown policy) or skip the surface (registry bridging).
+ * lower surfaces; a corrupt one returns 'invalid' so a caller can tell
+ * malformed config from an absent file instead of silently falling through.
  */
 export function readPnpmYamlConfig(
   path: string

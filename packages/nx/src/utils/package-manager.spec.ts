@@ -1086,9 +1086,9 @@ describe('package-manager', () => {
     });
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
-      // Packing used to run from a temp dir seeded with .nx/installation's
-      // config; running from the workspace root instead must keep resolving
-      // against that directory, or a non-JS workspace loses its registry auth.
+      // Config must resolve against .nx/installation's own directory even though
+      // packing runs from the workspace root, or a non-JS workspace loses its
+      // registry auth.
       (existsSync as jest.Mock).mockReturnValue(false);
       const overlaySpy = jest
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
