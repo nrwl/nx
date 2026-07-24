@@ -629,6 +629,143 @@ describe('@nx/vitest', () => {
       expect(globWithWorkspaceContext).not.toHaveBeenCalled();
     });
 
+    it.each([
+      ['an absolute path', '/abs/src/**/*.spec.ts'],
+      ['a negated absolute path', '!/abs/src/**/*.slow.spec.ts'],
+      ['a trailing slash', 'tests/'],
+      ['an `!(...)` extglob', 'src/!(helper).spec.ts'],
+    ])(
+      'should fall back to Vitest when an include pattern uses %s',
+      async (_shape, pattern) => {
+        (existsSync as jest.Mock).mockReturnValue(false);
+        (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+          resolveConfig: jest.fn().mockResolvedValue({
+            path: 'vitest.config.ts',
+            config: {},
+            dependencies: [],
+            test: { include: [pattern] },
+          }),
+        });
+
+        const nodes = await createNodesFunction(
+          ['vitest.config.ts'],
+          { testTargetName: 'test', ciTargetName: 'test-ci' },
+          context
+        );
+
+        const targets = nodes[0][1].projects!['.'].targets!;
+        expect(targets['test-ci--src/test-1.ts']).toBeDefined();
+        expect(globWithWorkspaceContext).not.toHaveBeenCalled();
+      }
+    );
+
+    it.each([
+      ['exclude', { exclude: ['/abs/**'] }],
+      ['includeSource', { includeSource: ['tests/'] }],
+      [
+        'typecheck.include',
+        { typecheck: { enabled: true, include: ['src/!(helper).spec.ts'] } },
+      ],
+      [
+        'typecheck.exclude',
+        { typecheck: { enabled: true, exclude: ['/abs/**'] } },
+      ],
+    ])(
+      'should fall back to Vitest when %s carries a glob-divergent shape',
+      async (_field, testConfig) => {
+        (existsSync as jest.Mock).mockReturnValue(false);
+        (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+          resolveConfig: jest.fn().mockResolvedValue({
+            path: 'vitest.config.ts',
+            config: {},
+            dependencies: [],
+            test: testConfig,
+          }),
+        });
+
+        const nodes = await createNodesFunction(
+          ['vitest.config.ts'],
+          { testTargetName: 'test', ciTargetName: 'test-ci' },
+          context
+        );
+
+        const targets = nodes[0][1].projects!['.'].targets!;
+        expect(targets['test-ci--src/test-1.ts']).toBeDefined();
+        expect(globWithWorkspaceContext).not.toHaveBeenCalled();
+      }
+    );
+
+    it("should enumerate from test.dir on the 'vitest' opt-out path", async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: { dir: 'tests' },
+        }),
+      });
+      const { createVitest } =
+        jest.requireMock<typeof import('vitest/node')>('vitest/node');
+
+      await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+          ciTargetName: 'test-ci',
+          discoverTestFiles: 'vitest',
+        },
+        context
+      );
+
+      // The opt-out path must honor `test.dir`; a hardcoded project root would
+      // enumerate specs Vitest itself would never run.
+      expect(createVitest).toHaveBeenCalledWith(
+        'test',
+        expect.objectContaining({ dir: expect.stringMatching(/[/\\]tests$/) })
+      );
+      expect(globWithWorkspaceContext).not.toHaveBeenCalled();
+    });
+
+    it("should use the serve-resolved test.dir on the 'vitest' opt-out path", async () => {
+      // A `command`-branched `dir` resolves differently under build and serve.
+      // Vitest runs the project under serve, so the opt-out must atomize the
+      // serve directory (`tests`), not the build one (`src`).
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest
+          .fn()
+          .mockImplementation((_config: unknown, command: string) =>
+            Promise.resolve({
+              path: 'vitest.config.ts',
+              config: {},
+              dependencies: [],
+              test: { dir: command === 'serve' ? 'tests' : 'src' },
+            })
+          ),
+      });
+      const { createVitest } =
+        jest.requireMock<typeof import('vitest/node')>('vitest/node');
+
+      await createNodesFunction(
+        ['vitest.config.ts'],
+        {
+          testTargetName: 'test',
+          ciTargetName: 'test-ci',
+          discoverTestFiles: 'vitest',
+        },
+        context
+      );
+
+      expect(createVitest).toHaveBeenCalledWith(
+        'test',
+        expect.objectContaining({ dir: expect.stringMatching(/[/\\]tests$/) })
+      );
+      expect(createVitest).not.toHaveBeenCalledWith(
+        'test',
+        expect.objectContaining({ dir: expect.stringMatching(/[/\\]src$/) })
+      );
+      expect(globWithWorkspaceContext).not.toHaveBeenCalled();
+    });
+
     it('should honor a config include/exclude over Vitest defaults', async () => {
       (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
         resolveConfig: jest.fn().mockResolvedValue({

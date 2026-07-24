@@ -228,4 +228,100 @@ describe('@nx/vitest glob discovery against a real filesystem', () => {
       'test-ci--tests/b.test.tsx',
     ]);
   });
+
+  it('should honor a negated include pattern', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+      'libs/lib1/src/b.slow.spec.ts': '',
+    });
+    mockResolvedTestConfig({
+      include: ['**/*.spec.ts', '!**/*.slow.spec.ts'],
+    });
+
+    await expect(
+      getAtomizedTargets('libs/lib1/vitest.config.ts')
+    ).resolves.toEqual(['test-ci--src/a.spec.ts']);
+  });
+
+  it('should ignore a negated exclude pattern, as Vitest does', async () => {
+    await temp.createFiles({
+      'vitest.config.ts': '',
+      'src/a.spec.ts': '',
+      'src/b.spec.ts': '',
+    });
+    // Vitest drops a negated `exclude` entry. A root project hands its patterns
+    // to the workspace glob unprefixed, where forwarding one would flip the
+    // exclude set into an allowlist and leave only `a.spec.ts`.
+    mockResolvedTestConfig({ exclude: ['!src/a.spec.ts'] });
+
+    await expect(getAtomizedTargets('vitest.config.ts')).resolves.toEqual([
+      'test-ci--src/a.spec.ts',
+      'test-ci--src/b.spec.ts',
+    ]);
+  });
+
+  it('should enumerate from test.dir instead of the project root', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+      'libs/lib1/tests/b.spec.ts': '',
+    });
+    mockResolvedTestConfig({ dir: 'tests' });
+
+    await expect(
+      getAtomizedTargets('libs/lib1/vitest.config.ts')
+    ).resolves.toEqual(['test-ci--tests/b.spec.ts']);
+  });
+
+  it('should anchor a root-relative exclude to the project root', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+      // `skip/**` must exclude only this project's `skip/`. Without anchoring it
+      // to the project root, the workspace glob reads it at the workspace root
+      // and never matches `libs/lib1/skip/**`, so the file leaks back in.
+      'libs/lib1/skip/b.spec.ts': '',
+    });
+    mockResolvedTestConfig({
+      include: ['**/*.spec.ts'],
+      exclude: ['skip/**'],
+    });
+
+    await expect(
+      getAtomizedTargets('libs/lib1/vitest.config.ts')
+    ).resolves.toEqual(['test-ci--src/a.spec.ts']);
+  });
+
+  it('should produce no targets when every include pattern is negated', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+      'libs/lib1/src/b.slow.spec.ts': '',
+    });
+    // An all-negated include has no positive entry. Vitest enumerates nothing;
+    // the workspace glob would otherwise invert this to "match every file".
+    mockResolvedTestConfig({ include: ['!**/*.slow.spec.ts'] });
+
+    await expect(
+      getAtomizedTargets('libs/lib1/vitest.config.ts')
+    ).resolves.toEqual([]);
+  });
+
+  it('should produce no targets when the include set is empty', async () => {
+    await temp.createFiles({
+      'libs/lib1/vitest.config.ts': '',
+      'libs/lib1/package.json': '{"name":"lib1"}',
+      'libs/lib1/src/a.spec.ts': '',
+    });
+    mockResolvedTestConfig({ include: [] });
+
+    await expect(
+      getAtomizedTargets('libs/lib1/vitest.config.ts')
+    ).resolves.toEqual([]);
+  });
 });
