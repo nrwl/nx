@@ -204,6 +204,15 @@ export async function setupAiAgentsGeneratorImpl(
             json.sandbox?.network?.allowUnixSockets,
             NX_SOCKET_ROOT_POSIX
           ),
+          // Nx does not only connect to sockets, it creates them: the daemon,
+          // every plugin worker, and forked task processes each bind their own.
+          // Claude Code's scoped `allowUnixSockets` permits connecting to a
+          // socket that already exists but not creating one, so the scoped
+          // entry above cannot unblock a fresh daemon or a plugin worker on its
+          // own. Both are written: the scoped entry records which path Nx uses
+          // (and is what a future create-capable scoped policy would need),
+          // while this is what actually lets Nx bind today.
+          allowAllUnixSockets: true,
         },
       },
     }));

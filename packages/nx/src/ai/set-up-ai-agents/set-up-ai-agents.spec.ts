@@ -468,6 +468,24 @@ describe('setup-ai-agents generator', () => {
         expect(config.sandbox.filesystem.allowWrite).toEqual(['/tmp/.nx']);
       });
 
+      it('should allow creating unix sockets, not only connecting to existing ones', async () => {
+        // The scoped allowUnixSockets entry covers connecting to a socket that
+        // already exists. Nx binds its own — daemon, plugin workers, forked
+        // tasks — so without this the generator would write allowances that
+        // cannot unblock the failures that send users here in the first place.
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.network.allowAllUnixSockets).toBe(true);
+      });
+
       it('should preserve existing sandbox socket and filesystem entries without duplicating the nx ones', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
