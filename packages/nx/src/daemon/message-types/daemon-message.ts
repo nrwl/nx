@@ -26,8 +26,13 @@ export function isDaemonMessage(msg: unknown): msg is DaemonMessage {
  * plugin isolation) both stamp this field so the receiver can reject messages
  * from a different workspace. Typed structurally here so the shared checks below
  * apply to both without either module depending on the other's message type.
+ *
+ * `type` is required even though the checks never read it: without a required
+ * member the type is all-optional, which makes `{}` a valid argument (so the
+ * guard answers "not foreign" for anything) and makes every message literal
+ * fail excess-property checking at the call site.
  */
-type WorkspaceScopedMessage = { workspaceRoot?: string };
+type WorkspaceScopedMessage = { type: string; workspaceRoot?: string };
 
 /**
  * A socket receiver (the daemon, or a plugin worker) is scoped to the workspace
