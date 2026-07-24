@@ -14,9 +14,10 @@ Merge the repositories I name into this Nx workspace, following the instructions
 
 1. Ask me which source repositories to import and where each one should land. Confirm the destination workspace already has an Nx setup and a folder convention before touching anything.
 2. Order the imports so leaf projects (the ones with no local dependencies) go first, then their consumers.
-3. Run `nx import` once per project. Each destination directory must be empty. Preserve git history and do not squash the merge commits.
-4. Reconcile what `nx import` does not copy: root `dependencies` and `devDependencies`, `targetDefaults`, `namedInputs`, plugin entries in `nx.json`, package manager workspace globs, and root ESLint or TypeScript config the imported projects extend.
-5. Run `nx sync`, then `nx run-many -t build lint test` and fix failures until every project passes. Report anything you changed in the imported projects rather than silently rewriting their configuration.
+3. Run `nx import` once per project. Each destination directory must be empty. Pass `--ref` with the source branch, since it is required whenever the command cannot prompt. Preserve git history and do not squash the merge commits.
+4. Rewrite every dependency between the imported projects to `workspace:*`, then install. They still point at published versions and will resolve through the registry until you change them.
+5. Reconcile what `nx import` does not copy: `targetDefaults` (add `"build": { "dependsOn": ["^build"] }` if nothing sets build order), `namedInputs`, plugin entries in `nx.json`, package manager workspace globs, and root ESLint or TypeScript config the imported projects extend.
+6. Run `nx sync`, then `nx run-many -t build lint test` and fix failures until every project passes. Check the targets exist first, since `run-many` exits 0 for targets no project defines. Report anything you changed in the imported projects rather than silently rewriting their configuration.
 
 Page: {pageUrl}
 {% /llm_copy_prompt %}
@@ -87,7 +88,7 @@ Every project then finds its dependencies already present when it lands.
 Two things to check before you start:
 
 - Duplicate project names across repositories cause a `MultipleProjectsWithSameNameError`. Rename the conflicting `package.json` names first, including the root `package.json` of each source repository, since that becomes a project too.
-- A `workspace:*` dependency pointing at a project you have not imported yet will fail the install step. The files still land correctly, so import everything and then run a full install.
+- A dependency on a project you have not imported yet fails the install step that runs at the end of each import. The files still land correctly, so import everything first and install once at the end.
 
 ## 3. Import each project
 
@@ -117,12 +118,15 @@ The flags worth knowing:
 | Flag               | What it does                                                                                          |
 | ------------------ | ----------------------------------------------------------------------------------------------------- |
 | `--source`         | The directory inside the source repository to import from. Leave it off to take the whole repository. |
-| `--ref`            | The branch to import from.                                                                            |
+| `--ref`            | The branch to import from. Required whenever you pass `--no-interactive`.                             |
 | `--plugins`        | `skip` for none, `all` for everything detected, or a list like `@nx/vite,@nx/jest`.                   |
 | `--depth`          | Limits the clone depth, which speeds up large sources at the cost of older history.                   |
 | `--no-interactive` | Skips the prompts, so scripts and agents can supply every answer up front.                            |
 
 For every option, see the [nx import reference](/docs/reference/nx-commands#nx-import).
+
+`--ref` is optional when the command can prompt you and required when it cannot, including whole-repository imports where the source has a single branch.
+Without it, a `--no-interactive` run stops and reports `"missingFields": ["ref"]` instead of importing.
 
 Each import lands as a merge commit with the source history attached, so `git log` and `git blame` keep working on the moved files.
 The underlying mechanism is a `git merge --allow-unrelated-histories` against the reorganized source branch.
@@ -130,7 +134,8 @@ To run those steps by hand, or to understand what the command is doing, see [pre
 
 Plugin detection depends on how you import.
 A whole-repository import detects the stack and offers the matching plugins, and you should accept them.
-A subdirectory import does not, so add them yourself with `npx nx add @nx/vite` and check that the plugin `include` patterns cover the directory you imported into.
+A plain TypeScript package with no bundler or test runner has nothing to detect, so an empty plugin list is the expected result rather than a failure.
+A subdirectory import does not detect anything, so add plugins yourself with `npx nx add @nx/vite` and check that the plugin `include` patterns cover the directory you imported into.
 
 {% aside type="note" title="Let an agent handle the long tail" %}
 
@@ -140,21 +145,60 @@ See the [AI setup guide](/docs/getting-started/ai-setup) and the [nx import guid
 
 {% /aside %}
 
-## 4. Reconcile the root configuration
+## 4. Point the imported projects at each other
+
+As separate repositories, your projects depended on each other through published version ranges.
+That is the definition of the polyrepo you are leaving, and `nx import` does not rewrite it.
+Until you do, the projects sit in one workspace and still resolve each other through the registry.
+
+Change every dependency that now lives in the workspace to the `workspace:` protocol:
+
+```jsonc
+// packages/api/package.json
+{
+  "dependencies": {
+    "@myorg/utils": "workspace:*",
+  },
+}
+```
+
+With pnpm this is required rather than tidy. `linkWorkspacePackages` defaults to `false`, so a `^1.0.0` range is fetched from the registry even though the package sits in `packages/utils`, and the install fails:
+
+```plaintext
+ERR_PNPM_FETCH_404  GET https://registry.npmjs.org/@myorg%2Futils: Not Found - 404
+```
+
+## 5. Reconcile the root configuration
 
 `nx import` moves the project, not the repository around it.
 Anything the source project inherited from its own root is left behind, and this is where most post-import build failures come from.
 
-Diff the source root against your destination root and carry over what the imported projects rely on:
+Build ordering is the one to check first, and it applies even when nothing was left behind.
+Nothing runs `@myorg/utils:build` before `@myorg/api:build` until a `dependsOn` says so, and an empty workspace ships no `targetDefaults` at all:
 
-- `dependencies` and `devDependencies` from the source root `package.json`.
-- `targetDefaults` from the source `nx.json`. A missing `"dependsOn": ["^build"]` breaks build ordering in ways that look like flaky failures.
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+    },
+  },
+}
+```
+
+Projects that only typecheck will pass without this and hide the problem. Anything that emits declarations or bundles will fail in ways that look like flaky CI.
+
+If a source repository was itself an Nx workspace, diff its root against yours and carry over what the imported projects rely on:
+
+- `dependencies` and `devDependencies` from the source root `package.json`, when the import took a subdirectory rather than a whole repository. A whole-repository import brings the project's own `package.json` with it.
+- The rest of `targetDefaults`, beyond the build ordering above.
 - `namedInputs`, particularly the `production` exclusions that keep test files from busting the cache.
 - Plugin entries in `nx.json` that the import did not add.
 
-Two more that bite often.
-Package manager workspace globs come across as the imported directory itself rather than as globs for the packages inside it, so `apps` needs to become `apps/*` in `pnpm-workspace.yaml` before cross-package imports resolve.
-And a subdirectory import leaves the root `eslint.config.mjs` behind while the project configs still reference `../../eslint.config.mjs`, so install the ESLint dependencies and create the root config before running `npx nx add @nx/eslint`.
+Subdirectory imports have two more failure modes.
+When the source repo declared its own workspace globs, they arrive as the imported directory itself rather than as globs for the packages inside it, so `apps` needs to become `apps/*` before cross-package imports resolve.
+And the root `eslint.config.mjs` stays behind while the project configs still reference `../../eslint.config.mjs`, so install the ESLint dependencies and create the root config before running `npx nx add @nx/eslint`.
 
 Run a full install once every project is in place:
 
@@ -189,7 +233,7 @@ bun install
 {% /tabitem %}
 {% /tabs %}
 
-## 5. Verify before deleting anything
+## 6. Verify before deleting anything
 
 Sync the TypeScript project references, then run every target across the workspace:
 
@@ -199,6 +243,8 @@ nx run-many -t build lint test
 ```
 
 If `nx sync` reports no changes but typecheck still fails, run `nx reset` and sync again.
+
+Confirm those targets exist before you trust the result. `run-many` exits 0 for a target no project defines, so a workspace with no `test` target reports success without running anything. `nx show project <name>` lists what a project actually has.
 
 Open the [project graph](/docs/features/explore-graph) and confirm the imported projects show the dependencies you expect.
 Edges that are missing here usually mean an unresolved workspace glob or a `package.json` name that no longer matches what consumers import.
