@@ -17,8 +17,11 @@ import { parse } from 'yaml';
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
 import * as fileUtils from '../utils/fileutils';
+import * as registryConfig from './registry-config';
+import { workspaceRoot } from './workspace-root';
 import {
   addPackagePathToWorkspaces,
+  clearPackageManagerVersionCache,
   detectPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
@@ -30,6 +33,7 @@ import {
   packageRegistryPack,
   packageRegistryView,
   parseVersionFromPackageManagerField,
+  resolvePackageVersionUsingRegistry,
   PackageManager,
 } from './package-manager';
 
@@ -853,6 +857,9 @@ describe('package-manager', () => {
     let execMock: jest.SpyInstance;
 
     beforeEach(() => {
+      // The version cache is module-scoped and outlives a test; clear it so each
+      // test resolves through its own execSync mock rather than a prior test's.
+      clearPackageManagerVersionCache();
       execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
         _cmd: string,
         options: any,
@@ -892,12 +899,120 @@ describe('package-manager', () => {
       expect(cmd).toContain('pnpm view');
       expect(options.env?.npm_config_force).toBeUndefined();
     });
+
+    it('should run from the workspace root and apply the registry overlay to the spawn env', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'bun' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === join(workspaceRoot, 'package.json')
+      );
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({
+          npm_config_registry: 'https://sentinel.example.com/',
+        });
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.cwd).toBe(workspaceRoot);
+      expect(options.env.npm_config_registry).toBe(
+        'https://sentinel.example.com/'
+      );
+      expect(overlaySpy).toHaveBeenNthCalledWith(
+        1,
+        'nx',
+        workspaceRoot,
+        'bun',
+        '1.2.0'
+      );
+    });
+
+    it('resolves the package manager version once per root and reuses it across calls', async () => {
+      // Guards the module-scoped cache: without it, a stale/mis-keyed entry
+      // would let a later call see a different version than the one resolved.
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'bun' } });
+      // No package.json on disk, so the version resolves through execSync, which
+      // this spy owns; keeps the test deterministic regardless of order.
+      (existsSync as jest.Mock).mockReturnValue(false);
+      const versionSpy = jest
+        .spyOn(childProcess, 'execSync')
+        .mockReturnValue('1.2.0' as any);
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({});
+
+      await packageRegistryView('nx', 'latest', '--json');
+      // A changed mock must not reach the second call: it hits the cache.
+      versionSpy.mockReturnValue('9.9.9' as any);
+      await packageRegistryView('nx', 'latest', '--json');
+
+      expect(versionSpy).toHaveBeenCalledTimes(1);
+      expect(overlaySpy.mock.calls.map((c) => c[3])).toEqual([
+        '1.2.0',
+        '1.2.0',
+      ]);
+    });
+
+    it('should drop an ambient npm config key that spells an overlaid setting differently', async () => {
+      // npm reads its env tier last-write-wins over the key order it receives,
+      // and the shells in the spawn path reorder it, so both spellings surviving
+      // means the ambient one can win.
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'bun' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({
+        npm_config_registry: 'https://sentinel.example.com/',
+      });
+      const saved = process.env.NPM_CONFIG_REGISTRY;
+      process.env.NPM_CONFIG_REGISTRY = 'https://ambient.example.com/';
+
+      try {
+        await packageRegistryView('nx', 'latest', '--json');
+      } finally {
+        if (saved === undefined) {
+          delete process.env.NPM_CONFIG_REGISTRY;
+        } else {
+          process.env.NPM_CONFIG_REGISTRY = saved;
+        }
+      }
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.env.NPM_CONFIG_REGISTRY).toBeUndefined();
+      expect(options.env.npm_config_registry).toBe(
+        'https://sentinel.example.com/'
+      );
+    });
+
+    it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
+      // A non-JS workspace has no root package.json; its .npmrc and package
+      // manager files live under .nx/installation.
+      (existsSync as jest.Mock).mockReturnValue(false);
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({});
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const installationPath = join(workspaceRoot, '.nx', 'installation');
+      const [, options] = execMock.mock.calls[0];
+      expect(options.cwd).toBe(installationPath);
+      expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
+    });
   });
 
   describe('packageRegistryPack', () => {
     let execMock: jest.SpyInstance;
 
     beforeEach(() => {
+      // The version cache is module-scoped and outlives a test; clear it so each
+      // test resolves through its own execSync mock rather than a prior test's.
+      clearPackageManagerVersionCache();
       execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
         _cmd: string,
         options: any,
@@ -918,7 +1033,8 @@ describe('package-manager', () => {
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
       const [cmd, options] = execMock.mock.calls[0];
-      expect(cmd).toContain('npm pack');
+      // Spec is quoted so range operators are not parsed as shell redirections.
+      expect(cmd).toContain('npm pack "nx@1.0.0"');
       expect(options.env.npm_config_force).toBe('true');
     });
 
@@ -936,6 +1052,108 @@ describe('package-manager', () => {
 
       const [, options] = execMock.mock.calls[0];
       expect(options.env.npm_config_min_release_age).toBe('0');
+    });
+
+    it('should pass --pack-destination and run from the workspace root with the overlay', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'bun' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === join(workspaceRoot, 'package.json')
+      );
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({
+          npm_config_registry: 'https://sentinel.example.com/',
+        });
+
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+
+      const [cmd, options] = execMock.mock.calls[0];
+      expect(cmd).toContain('--pack-destination "/tmp/pack"');
+      expect(options.cwd).toBe(workspaceRoot);
+      expect(options.env.npm_config_registry).toBe(
+        'https://sentinel.example.com/'
+      );
+      expect(overlaySpy).toHaveBeenNthCalledWith(
+        1,
+        'nx',
+        workspaceRoot,
+        'bun',
+        '1.2.0'
+      );
+    });
+
+    it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
+      // Config must resolve against .nx/installation's own directory even though
+      // packing runs from the workspace root, or a non-JS workspace loses its
+      // registry auth.
+      (existsSync as jest.Mock).mockReturnValue(false);
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({});
+
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+
+      const installationPath = join(workspaceRoot, '.nx', 'installation');
+      const [, options] = execMock.mock.calls[0];
+      expect(options.cwd).toBe(installationPath);
+      expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
+    });
+  });
+
+  describe('resolvePackageVersionUsingRegistry', () => {
+    beforeEach(() => {
+      clearPackageManagerVersionCache();
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'npm' } });
+      (existsSync as jest.Mock).mockReturnValue(false);
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0' as any);
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.clearAllMocks();
+    });
+
+    it('redacts a credential embedded in a registry URL from the error cause', async () => {
+      // npm masks only the password half of URL userinfo, so a token in the
+      // username position (or a `pnpm view` failure) would otherwise reach the
+      // --verbose output through the preserved cause.
+      const leakyUrl = 'https://SECRET-TOKEN-123@reg.example.com/nx';
+      jest.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        const err: any = new Error(
+          `Command failed: npm view\nnpm error request to ${leakyUrl} failed`
+        );
+        err.stderr = `npm error request to ${leakyUrl} failed`;
+        err.stack = `${err.message}\n    at <anonymous>`;
+        cb(err);
+        return undefined;
+      }) as any);
+
+      let caught: any;
+      try {
+        await resolvePackageVersionUsingRegistry('nx', 'latest');
+      } catch (e) {
+        caught = e;
+      }
+
+      expect(caught).toBeDefined();
+      const causeText = [
+        caught.cause?.message,
+        caught.cause?.stack,
+        caught.cause?.stderr,
+      ].join('\n');
+      expect(causeText).not.toContain('SECRET-TOKEN-123');
+      expect(causeText).toContain('https://***@reg.example.com/nx');
     });
   });
 });

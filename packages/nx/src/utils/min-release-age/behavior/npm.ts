@@ -4,7 +4,7 @@ import { join } from 'path';
 import { gte, rcompare, satisfies } from 'semver';
 import { MS_PER_DAY } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
-import { readNpmrcEntries } from '../npmrc';
+import { readNpmrcEntries } from '../../package-manager-config/npmrc';
 import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,

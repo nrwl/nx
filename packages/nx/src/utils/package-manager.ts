@@ -24,7 +24,13 @@ import {
   writeJsonFile,
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
+import { logger } from './logger';
 import { PackageJson, readModulePackageJson } from './package-json';
+import {
+  getNpmSpawnRegistryEnv,
+  ignoresNpmConfigEnv,
+  mergeNpmConfigEnv,
+} from './registry-config';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -497,6 +503,18 @@ export function copyPackageManagerConfigurationFiles(
 }
 
 /**
+ * Root whose package manager configuration (.npmrc, pnpm-workspace.yaml,
+ * .yarnrc(.yml), bunfig.toml) governs registry, auth and TLS resolution. A
+ * non-JS workspace has no root package.json and keeps its package manager
+ * files under the Nx installation directory instead.
+ */
+function getPackageManagerConfigRoot(): string {
+  return existsSync(join(workspaceRoot, 'package.json'))
+    ? workspaceRoot
+    : getNxInstallationPath(workspaceRoot);
+}
+
+/**
  * Creates a temporary directory where you can run package manager commands safely.
  *
  * For cases where you'd want to install packages that require an `.npmrc` set up,
@@ -513,11 +531,7 @@ export function createTempNpmDirectory(skipCopy = false) {
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
   if (!skipCopy) {
-    const isNonJs = !existsSync(join(workspaceRoot, 'package.json'));
-    copyPackageManagerConfigurationFiles(
-      isNonJs ? getNxInstallationPath(workspaceRoot) : workspaceRoot,
-      dir
-    );
+    copyPackageManagerConfigurationFiles(getPackageManagerConfigRoot(), dir);
   }
 
   const cleanup = async () => {
@@ -576,9 +590,36 @@ export async function resolvePackageVersionUsingRegistry(
       .replace(/'/g, '');
 
     return finalResolvedVersion;
-  } catch {
-    throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+  } catch (e) {
+    // `{ cause }` keeps the underlying registry failure (e.g. a TLS error)
+    // recoverable under --verbose; redact URL credentials first because a
+    // `(p)npm view` fetch error can echo a token in the registry URL, which the
+    // tool masks only in the password position.
+    throw new Error(`Unable to resolve version ${packageName}@${version}.`, {
+      cause: redactErrorCause(e),
+    });
   }
+}
+
+// Masks the userinfo in a URL: `user`, `user:pass`, or a bare token.
+function redactUrlCredentials(text: string): string {
+  return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
+}
+
+function redactErrorCause(error: unknown): unknown {
+  if (error && typeof error === 'object') {
+    const e = error as { message?: unknown; stack?: unknown; stderr?: unknown };
+    if (typeof e.message === 'string') {
+      e.message = redactUrlCredentials(e.message);
+    }
+    if (typeof e.stack === 'string') {
+      e.stack = redactUrlCredentials(e.stack);
+    }
+    if (typeof e.stderr === 'string') {
+      e.stderr = redactUrlCredentials(e.stderr);
+    }
+  }
+  return error;
 }
 
 /**
@@ -631,7 +672,8 @@ export async function packageRegistryView(
   // collapses to the single highest match (breaks per-version field queries).
   options?: { forceNpm?: boolean }
 ): Promise<string> {
-  let pm = detectPackageManager();
+  const workspacePm = detectPackageManager();
+  let pm = workspacePm;
   if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
@@ -650,21 +692,48 @@ export async function packageRegistryView(
   // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
   // redirections.
   const spec = version ? `${pkg}@${version}` : pkg;
-  // npm enforces `devEngines.packageManager` on every command, even a read-only
-  // `view`; in a yarn/bun workspace we run npm, so a non-npm pin with
-  // `onFail: error` aborts the lookup. force downgrades that to a warning.
-  // Scoped to npm so a `pnpm view` spawn is left untouched.
+  const configRoot = getPackageManagerConfigRoot();
+  const workspacePmVersion = getPackageManagerVersionSafe(
+    workspacePm,
+    configRoot
+  );
+  // cwd anchors the project .npmrc / pnpm-workspace.yaml discovery to the
+  // workspace; the env overlay reproduces registry config npm cannot read
+  // itself (pnpm >= 11 ignores npm_config_* and resolves natively instead).
+  // npm_config_force downgrades npm's `devEngines.packageManager` enforcement
+  // (which aborts even a read-only `view` in a yarn/bun workspace whose pin sets
+  // `onFail: error`) to a warning; scoped to npm so a `pnpm view` is untouched.
   const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
-    ...(pm === 'npm'
-      ? { env: { ...process.env, npm_config_force: 'true' } }
-      : {}),
+    cwd: configRoot,
+    env: mergeNpmConfigEnv(
+      process.env,
+      {
+        ...getNpmSpawnRegistryEnv(
+          pkg,
+          configRoot,
+          workspacePm,
+          workspacePmVersion
+        ),
+        ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+      },
+      ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+    ),
   });
   return stdout.toString().trim();
 }
 
+/**
+ * Only `npm pack` supports downloading a tarball of a specified remote
+ * package. `yarn` packs the active workspace, `pnpm pack` only packs
+ * the local project, and `bun` doesn't support pack.
+ *
+ * @param packDestination Directory passed to npm's `--pack-destination`, where
+ * the `.tgz` is written.
+ * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+ */
 export async function packageRegistryPack(
-  cwd: string,
+  packDestination: string,
   pkg: string,
   version: string,
   options?: {
@@ -676,31 +745,85 @@ export async function packageRegistryPack(
     bypassMinReleaseAge?: boolean;
   }
 ): Promise<{ tarballPath: string }> {
-  /**
-   * Only `npm pack` supports downloading a tarball of a specified remote
-   * package. `yarn` packs the active workspace, `pnpm pack` only packs
-   * the local project, and `bun` doesn't support pack.
-   *
-   * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
-   */
   const pm = 'npm';
 
-  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
-    cwd,
-    windowsHide: true,
-    // npm enforces `devEngines.packageManager` even on `pack`; force keeps the
-    // download working in workspaces that pin a non-npm manager (onFail: error).
-    env: {
-      ...process.env,
-      npm_config_force: 'true',
-      ...(options?.bypassMinReleaseAge
-        ? { npm_config_min_release_age: '0' }
-        : {}),
-    },
-  });
+  const workspacePm = detectPackageManager();
+  const configRoot = getPackageManagerConfigRoot();
+  const workspacePmVersion = getPackageManagerVersionSafe(
+    workspacePm,
+    configRoot
+  );
+  // Run from the config root (not the temp dir) so npm reads the workspace
+  // .npmrc natively, the same registry/auth packageRegistryView picks up;
+  // --pack-destination keeps the tarball in the temp dir. For non-npm package
+  // managers the env overlay reproduces the config npm cannot read
+  // (pnpm-workspace.yaml, .yarnrc(.yml), bunfig.toml). npm prints the tarball
+  // basename to stdout.
+  const { stdout } = await execAsync(
+    `${pm} pack "${pkg}@${version}" --pack-destination "${packDestination}"`,
+    {
+      cwd: configRoot,
+      windowsHide: true,
+      env: mergeNpmConfigEnv(
+        process.env,
+        {
+          ...getNpmSpawnRegistryEnv(
+            pkg,
+            configRoot,
+            workspacePm,
+            workspacePmVersion
+          ),
+          // downgrade npm's devEngines.packageManager enforcement (onFail:
+          // error) to a warning so pack still runs in a non-npm workspace
+          npm_config_force: 'true',
+          ...(options?.bypassMinReleaseAge
+            ? { npm_config_min_release_age: '0' }
+            : {}),
+        },
+        ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+      ),
+    }
+  );
 
   const tarballPath = stdout.trim();
   return { tarballPath };
+}
+
+// `packageRegistryView`/`packageRegistryPack` are called in tight resolution
+// loops; cache the version probe (it shells out when the packageManager field
+// is absent).
+const packageManagerVersionCache = new Map<string, string | null>();
+/**
+ * Returns null when the version cannot be determined. What that means is per
+ * package manager: pnpm and yarn skip bridging, bun assumes a current version.
+ */
+function getPackageManagerVersionSafe(
+  packageManager: PackageManager,
+  root: string
+): string | null {
+  const key = `${packageManager}:${root}`;
+  if (!packageManagerVersionCache.has(key)) {
+    let version: string | null = null;
+    try {
+      version = getPackageManagerVersion(packageManager, root);
+    } catch (e) {
+      // What a null version costs the caller is per package manager (see
+      // above), and none of it is visible on stdout, so leave the cause
+      // recoverable.
+      logger.verbose(
+        `Failed to determine the ${packageManager} version in "${root}".`,
+        e
+      );
+    }
+    packageManagerVersionCache.set(key, version);
+  }
+  return packageManagerVersionCache.get(key);
+}
+
+// Drops the per-process version cache. Only tests need this, to force a fresh
+// resolution; production never re-reads a version mid-run.
+export function clearPackageManagerVersionCache(): void {
+  packageManagerVersionCache.clear();
 }
 
 /**
