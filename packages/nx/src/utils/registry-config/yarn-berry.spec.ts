@@ -45,6 +45,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     'BERRY_TEST_PRIMARY',
     'BERRY_TEST_FALLBACK',
     '_BERRY_TEST_REGISTRY',
+    'npm_config_//reg-a.example.com/:_authToken',
+    'NX_TEST_HOST',
   ];
   const savedEnv: Record<string, string | undefined> = {};
 
@@ -1217,6 +1219,25 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       files[`${ROOT}/.npmrc`] =
         '//other.example.com/:_authToken=native-token\n';
       expect(warnFor(['is-even'])).toEqual([]);
+    });
+
+    it('does not count an ambient credential the berry spawn strips', () => {
+      // berry ignores npm_config_*, so the spawn drops this ambient token before
+      // npm runs; the .npmrc holds nothing for reg-a, so npm fetches it anonymously.
+      files[`${ROOT}/.npmrc`] =
+        '//other.example.com/:_authToken=native-token\n';
+      process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
+      expect(warnFor(['is-even'])).toEqual([]);
+    });
+
+    it('counts a native credential whose key holds an env reference', () => {
+      // npm expands ${VAR} in an .npmrc key, so this token authenticates reg-a,
+      // and berry, reading no .npmrc, would not send it.
+      process.env.NX_TEST_HOST = 'reg-a.example.com';
+      files[`${ROOT}/.npmrc`] = '//${NX_TEST_HOST}/:_authToken=native-token\n';
+      const warnings = warnFor(['is-even']);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain('//reg-a.example.com/');
     });
   });
 });
