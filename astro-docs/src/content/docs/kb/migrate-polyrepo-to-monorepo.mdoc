@@ -158,9 +158,36 @@ And a subdirectory import leaves the root `eslint.config.mjs` behind while the p
 
 Run a full install once every project is in place:
 
+{% tabs %}
+{% tabitem label="pnpm" %}
+
 ```shell
 pnpm install --no-frozen-lockfile
 ```
+
+{% /tabitem %}
+{% tabitem label="npm" %}
+
+```shell
+npm install
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```shell
+yarn install --no-immutable
+```
+
+{% /tabitem %}
+{% tabitem label="bun" %}
+
+```shell
+bun install
+```
+
+{% /tabitem %}
+{% /tabs %}
 
 ## 5. Verify before deleting anything
 
@@ -180,13 +207,10 @@ Get CI green on the merged workspace before you touch the source repositories.
 When it is, archive them read-only rather than deleting them.
 The history came along with the import, but open pull requests, issues, and release tags did not.
 
-## 6. Set up caching, boundaries, and ownership
+Caching already works at this point. Two things are worth picking up once the workspace is stable, and an AI agent can set either of them up for you:
 
-Consolidating code without the tooling around it gives you a large repository and none of the payoff.
-
-Turn on [caching](/docs/features/cache-task-results) so the tasks that did not change stop rerunning, and connect Nx Cloud to share those results across your team and CI.
-Tag the imported projects and configure [module boundaries](/docs/features/enforce-module-boundaries), which re-establish the dependency rules that separate repositories used to enforce on their own.
-Set up [code ownership](/docs/kb/code-ownership) so reviews still route to the teams that owned each project before the move.
+- [Module boundaries](/docs/features/enforce-module-boundaries) re-establish the dependency rules that separate repositories used to enforce on their own. Tag the imported projects, then decide which ones are allowed to depend on which.
+- Nx Cloud shares cached results across your team and CI, and [code ownership](/docs/kb/code-ownership) routes reviews to the teams that owned each project before the move.
 
 ## Repositories you cannot merge
 
