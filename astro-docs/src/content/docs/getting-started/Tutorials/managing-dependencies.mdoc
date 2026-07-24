@@ -208,14 +208,13 @@ catalog:
 {% /tabitem %}
 {% tabitem label="yarn" %}
 
-Define catalogs in `.yarnrc.yml`:
+Define the default catalog under the `catalog` key in `.yarnrc.yml` (Yarn 4.10+):
 
 ```yaml
 # .yarnrc.yml
-catalogs:
-  default:
-    react: ^19.0.0
-    react-dom: ^19.0.0
+catalog:
+  react: ^19.0.0
+  react-dom: ^19.0.0
 ```
 
 ```jsonc
@@ -236,7 +235,27 @@ npm does not have catalog support. Enforce a single version policy by defining a
 {% /tabitem %}
 {% tabitem label="bun" %}
 
-Bun does not currently support catalogs. Define shared dependency versions in the root `package.json` and reference them using `workspace:*` for internal packages.
+Define the default catalog under the `catalog` field in the root `package.json` (Nx 23.2+):
+
+```jsonc
+// package.json
+{
+  "catalog": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+  },
+}
+```
+
+```jsonc
+// apps/my-app/package.json
+{
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+  },
+}
+```
 
 {% /tabitem %}
 {% /tabs %}

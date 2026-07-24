@@ -129,5 +129,15 @@
     "id": "comparisons",
     "label": "Comparisons",
     "description": "Compare Nx and Nx Cloud with build tools, task runners, and CI acceleration products."
+  },
+  {
+    "id": "package-managers",
+    "label": "Package managers",
+    "description": "Set up and run npm, pnpm, Yarn, and Bun workspaces with Nx."
+  },
+  {
+    "id": "dependencies",
+    "label": "Dependencies",
+    "description": "Link local packages and manage external dependency versions in an Nx workspace."
   }
 ]

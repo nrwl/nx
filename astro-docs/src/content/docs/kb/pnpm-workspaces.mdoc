@@ -3,7 +3,8 @@ title: 'pnpm Workspaces: Setup, Commands, and Best Practices'
 description: 'Learn pnpm workspaces: pnpm-workspace.yaml setup, the workspace: protocol, running scripts with --filter, catalogs, and best practices that scale.'
 filter: 'type:Guides'
 topics:
-  - 'Recipes'
+  - 'Package managers'
+  - 'Dependencies'
 ---
 
 pnpm workspaces let you develop multiple packages in a single repository (or a monorepo). You declare package locations in `pnpm-workspace.yaml`, link local packages with the `workspace:` protocol, and pnpm installs everything into one content-addressable store, so each package gets a strict `node_modules` without duplicating dependencies on disk.
