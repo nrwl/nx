@@ -20,6 +20,7 @@ import { createServer } from 'net';
 import { startAnalytics } from '../../../analytics';
 import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
 import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
+import { isSandbox } from '../../../utils/is-sandbox';
 import '../../../utils/perf-logging';
 
 type Environment = Pick<
@@ -199,16 +200,31 @@ const server = createServer((socket) => {
   });
 });
 
-server.on('error', (err) => {
+server.on('error', (err: NodeJS.ErrnoException) => {
   // Without this handler the worker dies silently and the host only ever
   // sees "exited before the connection was established" — surface the real
   // failure (commonly a sandbox denying the unix socket bind).
   console.error(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) failed to listen on ${socketPath}: ${err.message}`
   );
-  console.error(sandboxSocketHint().join('\n'));
+  // A bind can fail for reasons that have nothing to do with a sandbox
+  // (EADDRINUSE from a leftover socket, ENOENT from a reaped socket dir), so
+  // only mention one when the errno proves it or the environment says so.
+  const refusedByOs = err.code === 'EPERM' || err.code === 'EACCES';
+  if (refusedByOs || isSandbox()) {
+    console.error(sandboxSocketHint({ certain: refusedByOs }).join('\n'));
+  }
   process.exit(1);
 });
+// A worker killed without running its 'end' handler leaves its socket file
+// behind, and the next worker to draw the same path fails to bind (EADDRINUSE).
+// The daemon clears its own path the same way (killSocketOrPath) before it
+// listens. Safe to remove unconditionally: the name embeds the host's pid and a
+// per-host counter, so an existing file can only be a leftover from an exited
+// process whose pid was reused, never a socket a live worker is serving.
+try {
+  unlinkSync(socketPath);
+} catch {}
 server.listen(socketPath, () => {
   logger.verbose(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
