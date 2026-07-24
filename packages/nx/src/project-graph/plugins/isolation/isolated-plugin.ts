@@ -6,7 +6,9 @@ import path = require('path');
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serverLogger } from '../../../daemon/logger';
+import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
+import { isAiAgent } from '../../../native';
 import {
   consumeMessagesFromSocket,
   parseMessage,
@@ -16,6 +18,7 @@ import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
@@ -554,7 +557,15 @@ async function startPluginWorker(name: string) {
   };
 
   const ipcPath = getPluginOsSocketPath(
-    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
+    [
+      process.pid,
+      global.nxPluginWorkerCount++,
+      // pid + counter already uniquely identify a worker within this process and
+      // keep the socket file readable; this timestamp only guards against a
+      // reused pid across process restarts. Floor + base36 keeps it a few chars
+      // so the full socket path stays within the OS length limit.
+      Math.floor(performance.now()).toString(36),
+    ].join('-')
   );
 
   const worker = spawn(
@@ -567,6 +578,14 @@ async function startPluginWorker(name: string) {
       workerPath,
       ipcPath,
       name,
+      // The spawning host's workspace root. The worker validates incoming
+      // messages against this value (not one it re-resolves itself) so the
+      // owner and worker agree on identity by construction. Re-resolving in the
+      // worker is fragile: a host that set its root at runtime (e.g. tests via
+      // setWorkspaceRoot, which does not propagate to the child's env) would
+      // resolve a different root in the worker and drop every legitimate
+      // message as "foreign".
+      workspaceRoot,
     ],
     {
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -621,7 +640,12 @@ async function connectToWorker(
   worker.once('exit', (code) => {
     if (!abortController.signal.aborted) {
       earlyExitError = new Error(
-        `Plugin worker for "${name}" exited with code ${code} before the connection was established.`
+        [
+          `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
+          // The worker's own stderr may be lost with the process; when an
+          // agent is driving nx, name the likely cause and the fix directly.
+          ...(isAiAgent() ? sandboxSocketHint() : []),
+        ].join('\n')
       );
       abortController.abort();
     }

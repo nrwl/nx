@@ -10,6 +10,7 @@ import {
 } from '../../../utils/consume-messages-from-socket';
 import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
+import { assertNotForeignWorkspaceMessage } from '../../../daemon/message-types/daemon-message';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { setPluginWorkerHostSocket } from './worker-streaming';
@@ -18,6 +19,7 @@ import { unlinkSync } from 'fs';
 import { createServer } from 'net';
 import { startAnalytics } from '../../../analytics';
 import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
+import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import '../../../utils/perf-logging';
 
 type Environment = Pick<
@@ -42,6 +44,12 @@ let plugin: LoadedNxPlugin;
 
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
+// The workspace root of the host that spawned this worker, passed explicitly so
+// the foreign-workspace check compares against the owner's root rather than one
+// the worker re-resolves. The worker's own resolution can legitimately differ
+// from the host's (e.g. a host that overrode its root at runtime without
+// updating the child's env), which would drop every real message as "foreign".
+const hostWorkspaceRoot = process.argv[4];
 
 const CONNECT_TIMEOUT_MS = 30_000;
 
@@ -77,6 +85,29 @@ const server = createServer((socket) => {
     consumeMessagesFromSocket((raw) => {
       const message = parseMessage<any>(raw);
       if (!isPluginWorkerMessage(message)) {
+        return;
+      }
+      // Reject messages from a different workspace using the exact same check
+      // the daemon applies to its own socket. A message whose workspaceRoot
+      // differs from this worker's host root came from a process in another
+      // workspace (e.g. one that reached this worker's socket via a shared
+      // NX_SOCKET_DIR) and must not be processed. We catch and drop rather than
+      // let the assertion propagate: a stray foreign message must not crash a
+      // worker that is validly serving its host. The daemon, which has a
+      // response channel, instead surfaces the same assertion back to the
+      // client.
+      try {
+        assertNotForeignWorkspaceMessage(
+          message,
+          hostWorkspaceRoot,
+          `The Nx plugin worker "${expectedPluginName}" (pid: ${process.pid})`
+        );
+      } catch (e) {
+        logger.verbose(
+          `[plugin-worker] ignored a "${message.type}" message: ${
+            e instanceof Error ? e.message : e
+          }`
+        );
         return;
       }
       return consumeMessage(socket, message, {
@@ -168,10 +199,21 @@ const server = createServer((socket) => {
   });
 });
 
-server.listen(socketPath);
-logger.verbose(
-  `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
-);
+server.on('error', (err) => {
+  // Without this handler the worker dies silently and the host only ever
+  // sees "exited before the connection was established" — surface the real
+  // failure (commonly a sandbox denying the unix socket bind).
+  console.error(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) failed to listen on ${socketPath}: ${err.message}`
+  );
+  console.error(sandboxSocketHint().join('\n'));
+  process.exit(1);
+});
+server.listen(socketPath, () => {
+  logger.verbose(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
+  );
+});
 
 async function withErrorHandling(
   cb: () => void | Promise<void>
@@ -215,16 +257,31 @@ function setErrorTimeout(
   };
 }
 
-const exitHandler = (exitCode: number) => () => {
+const cleanup = () => {
   server.close();
   try {
     unlinkSync(socketPath);
   } catch (e) {}
-  process.exit(exitCode);
 };
 
-const events = ['SIGINT', 'SIGTERM', 'SIGQUIT', 'exit'];
+const events = ['SIGINT', 'SIGTERM', 'SIGQUIT'];
 
-events.forEach((event) => process.once(event, exitHandler(0)));
-process.once('uncaughtException', exitHandler(1));
-process.once('unhandledRejection', exitHandler(1));
+events.forEach((event) =>
+  process.once(event, () => {
+    cleanup();
+    process.exit(0);
+  })
+);
+// The 'exit' handler must only clean up — calling process.exit() inside it
+// would override the real exit code (e.g. a crash would be reported as 0,
+// hiding the failure from the plugin host).
+process.once('exit', cleanup);
+const fatalHandler = (error: unknown) => {
+  // Registering an 'uncaughtException' handler suppresses Node's default
+  // error reporting, so log the error explicitly before exiting.
+  console.error(error);
+  cleanup();
+  process.exit(1);
+};
+process.once('uncaughtException', fatalHandler);
+process.once('unhandledRejection', fatalHandler);

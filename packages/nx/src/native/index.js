@@ -1,15 +1,10 @@
 const { join, basename } = require('path');
-const {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  renameSync,
-  statSync,
-  unlinkSync,
-} = require('fs');
+const { copyFileSync, renameSync, statSync, unlinkSync } = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
-const { getNativeFileCacheLocation } = require('./native-file-cache-location');
+const {
+  ensureSecureNativeFileCacheLocation,
+} = require('./native-file-cache-location');
 
 const MAX_COPY_RETRIES = 3;
 
@@ -95,8 +90,17 @@ Module._load = function (request, parent, isMain) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation);
 
-    // we copy the file to a workspace-scoped tmp directory and prefix with nxVersion to avoid stale files being loaded
-    const nativeFileCacheLocation = getNativeFileCacheLocation();
+    // Securely resolve the per-user cache dir. Returns null when it cannot be
+    // created and *trusted* (e.g. a sandbox with no write allowance yet, or a
+    // per-uid dir another local user pre-created under the world-writable
+    // root). In that case load the binding in place from node_modules — that
+    // is strictly better than failing to load, and safer than loading a file
+    // from a directory we don't own.
+    const nativeFileCacheLocation = ensureSecureNativeFileCacheLocation();
+    if (!nativeFileCacheLocation) {
+      return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+    }
+
     // This is a path to copy to, not the one that gets loaded
     const tmpTmpFile = join(
       nativeFileCacheLocation,
@@ -119,14 +123,17 @@ Module._load = function (request, parent, isMain) {
         throw e;
       }
     }
-    if (!existsSync(nativeFileCacheLocation)) {
-      mkdirSync(nativeFileCacheLocation, { recursive: true });
-    }
 
     // Retry copying up to 3 times, validating after each copy
     for (let attempt = 1; attempt <= MAX_COPY_RETRIES; attempt++) {
       // First copy to a unique location for each process
-      copyFileSync(nativeLocation, tmpTmpFile);
+      try {
+        copyFileSync(nativeLocation, tmpTmpFile);
+      } catch {
+        // Permission errors won't heal on retry — use the load-in-place
+        // fallback below.
+        break;
+      }
 
       // Validate the copy - check file size matches expected
       const copiedFileStats = statsOrNull(tmpTmpFile);

@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { chmodSync, existsSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { deserialize, serialize } from 'v8';
@@ -26,7 +26,10 @@ import {
   RESET_CONFIGURE_AI_AGENTS_STATUS,
 } from '../message-types/configure-ai-agents';
 import { applyDaemonEnvFromClient } from '../client/daemon-environment';
-import { isDaemonMessage } from '../message-types/daemon-message';
+import {
+  assertNotForeignWorkspaceMessage,
+  isDaemonMessage,
+} from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   isHandleFlushSyncGeneratorChangesToDiskMessage,
@@ -156,6 +159,7 @@ import {
   handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
   respondToClient,
+  respondWithError,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputWatcherInstance,
@@ -255,6 +259,19 @@ async function handleMessage(socket: Socket, data: string) {
     );
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
+
+  // Refuse messages from a different workspace without processing them any
+  // further. The daemon is scoped to the workspace that launched it; a mismatch
+  // means the client reached the wrong daemon (e.g. a shared NX_SOCKET_DIR). We
+  // respond with an error but keep the daemon alive for its own workspace.
+  if (isDaemonMessage(payload)) {
+    try {
+      assertNotForeignWorkspaceMessage(payload, workspaceRoot);
+    } catch (e) {
+      await respondWithError(socket, `Workspace root mismatch`, e);
+      return;
+    }
+  }
 
   if (isDaemonMessage(payload) && payload.env) {
     const changedEnvKeys = applyDaemonEnvFromClient(payload.env);
@@ -740,6 +757,26 @@ export async function startServer(): Promise<Server> {
       server.listen(socketPath, async () => {
         try {
           serverLogger.log(`Started listening on: ${socketPath}`);
+
+          // Belt-and-suspenders: restrict the socket file itself to its owner so
+          // that only the daemon owner can connect. On Linux, connecting to a
+          // Unix socket requires write permission on the socket file; on
+          // macOS/BSD the (already-0700) socket directory is what gates access.
+          // Skipped on Windows, where `socketPath` is a named pipe.
+          //
+          // We chmod after `listen` rather than creating the socket with the
+          // mode up front: `net.Server.listen` exposes no mode option, and the
+          // only creation-time lever (`process.umask`) is process-global and
+          // would also affect the daemon log files written during bootstrap.
+          // The owning directory is already created owner-only (mkdirSync with
+          // mode 0o700), so this is the socket-file layer of the same control.
+          if (!isWindows) {
+            try {
+              chmodSync(socketPath, 0o600);
+            } catch {
+              // Best effort; the 0700 socket directory is the primary control.
+            }
+          }
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();

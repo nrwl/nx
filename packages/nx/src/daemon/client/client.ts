@@ -16,7 +16,13 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  IS_WASM,
+  isAiAgent,
+  NxWorkspaceFiles,
+  TaskRun,
+  TaskTarget,
+} from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -32,7 +38,6 @@ import { parseMessage } from '../../utils/consume-messages-from-socket';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
 import { handleImport } from '../../utils/handle-import';
 import { isCI } from '../../utils/is-ci';
-import { isSandbox } from '../../utils/is-sandbox';
 import { output } from '../../utils/output';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import type {
@@ -123,6 +128,7 @@ import {
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
+import { sandboxSocketHint } from '../sandbox-socket-hint';
 import {
   DaemonSocketMessenger,
   VersionMismatchError,
@@ -239,7 +245,7 @@ export class DaemonClient {
       // version mismatch => no daemon because the installed nx version differs from the running one
       if (
         isNxVersionMismatch() ||
-        ((isCI() || isDocker() || isSandbox()) && env !== 'true') ||
+        ((isCI() || isDocker()) && env !== 'true') ||
         isDaemonDisabled() ||
         nxJsonIsNotPresent() ||
         (useDaemonProcessOption === undefined && env === 'false') ||
@@ -1079,6 +1085,16 @@ export class DaemonClient {
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
           error = daemonProcessException('The Daemon Server is not running');
+        } else if (
+          err.message.startsWith('connect EPERM') ||
+          err.message.startsWith('connect EACCES')
+        ) {
+          error = daemonProcessException(
+            [
+              'The operating system refused the connection to the Nx Daemon socket.',
+              ...sandboxSocketHint(),
+            ].join('\n')
+          );
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
           error = daemonProcessException(
             `A server instance had not been fully shut down. Please try running the command again.`
@@ -1369,7 +1385,13 @@ export class DaemonClient {
       return backgroundProcess.pid;
     } else {
       throw daemonProcessException(
-        'Failed to start or connect to the Nx Daemon process.'
+        [
+          'Failed to start or connect to the Nx Daemon process.',
+          // The daemon can fail to start for many reasons; only surface the
+          // sandbox guidance when an AI agent is driving nx, where a sandbox
+          // blocking socket access is the most likely cause.
+          ...(isAiAgent() ? sandboxSocketHint() : []),
+        ].join('\n')
       );
     }
   }

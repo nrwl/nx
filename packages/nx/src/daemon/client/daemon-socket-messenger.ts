@@ -4,6 +4,7 @@ import {
   consumeMessagesFromSocket,
   MESSAGE_END_SEQ,
 } from '../../utils/consume-messages-from-socket';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { clientLogger } from '../logger';
 import { DaemonMessage } from '../message-types/daemon-message';
 import { serialize } from '../socket-utils';
@@ -26,6 +27,9 @@ export class DaemonSocketMessenger {
     if (!this.socket) {
       throw new Error('Socket not initialized.');
     }
+    // Stamp every message with the sending workspace's root so the daemon can
+    // reject messages from a different workspace (e.g. a shared NX_SOCKET_DIR).
+    messageToDaemon.workspaceRoot = workspaceRoot;
     clientLogger.log('[Messenger] Sending message type:', messageToDaemon.type);
     performance.mark(
       'daemon-message-serialization-start-' + messageToDaemon.type
