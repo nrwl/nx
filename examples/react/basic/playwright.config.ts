@@ -22,7 +22,7 @@ export default defineConfig({
    * lets the @nx/playwright plugin derive a dependsOn on the serve target. */
   webServer: {
     command: 'npx nx run examples-react-basic:serve',
-    url: 'http://localhost:4200',
+    url: baseURL,
     reuseExistingServer: true,
     cwd: __dirname,
   },
