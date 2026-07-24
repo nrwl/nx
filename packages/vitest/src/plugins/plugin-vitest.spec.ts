@@ -391,7 +391,6 @@ describe('@nx/vitest', () => {
       );
 
       const targets = nodes[0][1].projects!['.'].targets!;
-      // Comes from the createVitest mock, not the glob.
       expect(targets['test-ci--src/test-1.ts']).toBeDefined();
       expect(targets['test-ci--src/test-2.ts']).toBeDefined();
       expect(globWithWorkspaceContext).not.toHaveBeenCalled();
