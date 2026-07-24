@@ -1,9 +1,9 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
-import type { Tree } from '../generators/tree';
-import { detectFormatter, detectFormatterInTree } from './formatter';
+import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import type { Tree } from '../../generators/tree';
+import { detectFormatter, detectFormatterInTree } from './index';
 
 describe('detectFormatterInTree', () => {
   let tree: Tree;
