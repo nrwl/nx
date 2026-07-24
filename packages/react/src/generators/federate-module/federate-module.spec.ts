@@ -103,6 +103,7 @@ describe('federate-module', () => {
 
       await federateModuleGenerator(tree, {
         ...schema,
+        remote: remoteSchema.name,
         remoteDirectory: remoteSchema.directory,
       });
 
@@ -116,7 +117,9 @@ describe('federate-module', () => {
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths[`${schema.remote}/my-federated-module`]
+        tsconfig.compilerOptions.paths[
+          `${remoteSchema.name}/my-federated-module`
+        ]
       ).toEqual(['./myremote/src/my-federated-module.ts']);
     });
   });
