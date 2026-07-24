@@ -667,11 +667,12 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('honors a YAML-shaped file the lockfile parser rejects', () => {
-      // The muscle memory .yarnrc.yml produces. Yarn's parser throws on the
-      // `://`, the js-yaml retry accepts the file, and yarn honors every key in
-      // it (verified on 1.22.22: `yarn config get registry` returns reg-a and
-      // yarn goes on to open the cafile). Dropping it would send npm to the
-      // default registry, which is the failure this bridging exists to prevent.
+      // A YAML-shaped .yarnrc.yml is the file habit produces even for classic:
+      // yarn's parser throws on the `://`, the js-yaml retry accepts the file,
+      // and yarn honors every key in it (verified on 1.22.22: `yarn config get
+      // registry` returns reg-a and yarn goes on to open the cafile). Dropping
+      // it would send npm to the default registry, the failure this bridging
+      // exists to prevent.
       files[`${ROOT}/.yarnrc`] = [
         'registry: https://reg-a.example.com/',
         'cafile: ./certs/ca.pem',

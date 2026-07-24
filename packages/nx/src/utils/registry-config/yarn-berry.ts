@@ -456,8 +456,8 @@ function applyTls(
   const v4 = major(yarnVersion) >= 4;
   // v2/v3 name the CA setting caFilePath, v4 renamed it to httpsCaFilePath. The
   // other major's name aborts berry, as an rc setting and as a YARN_* env var
-  // alike, so only the name the running major accepts describes a resolution
-  // there is anything left to reproduce.
+  // alike, so only the name the running major accepts has anything left to
+  // reproduce.
   const caKey = v4 ? 'httpsCaFilePath' : 'caFilePath';
   const caEnvKey = v4 ? 'YARN_HTTPS_CA_FILE_PATH' : 'YARN_CA_FILE_PATH';
 
