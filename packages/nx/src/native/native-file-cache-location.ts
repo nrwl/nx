@@ -69,10 +69,11 @@ export function ensureSecureNativeFileCacheLocation(): string | null {
     return null;
   }
 
+  // Verified rather than assumed: `mkdirSync(..., { recursive: true })`
+  // silently succeeds on a pre-planted symlink, and this is the directory we
+  // load a `.node` out of.
   const versionDir = join(userDir, nxVersion);
-  try {
-    mkdirSync(versionDir, { recursive: true });
-  } catch {
+  if (!ensureOwnedPrivateDir(versionDir)) {
     return null;
   }
   return versionDir;

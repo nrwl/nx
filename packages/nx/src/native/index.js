@@ -68,6 +68,14 @@ function statsOrNull(path) {
   }
 }
 
+function removeIfPresent(path) {
+  try {
+    unlinkSync(path);
+  } catch {
+    // Ignore cleanup errors
+  }
+}
+
 function isNoExecError(e) {
   return e.code === 'EACCES' || e.code === 'EPERM';
 }
@@ -125,13 +133,17 @@ Module._load = function (request, parent, isMain) {
     }
 
     // Retry copying up to 3 times, validating after each copy
+    let attemptsMade = 0;
     for (let attempt = 1; attempt <= MAX_COPY_RETRIES; attempt++) {
+      attemptsMade = attempt;
       // First copy to a unique location for each process
       try {
         copyFileSync(nativeLocation, tmpTmpFile);
       } catch {
         // Permission errors won't heal on retry — use the load-in-place
-        // fallback below.
+        // fallback below. A throwing copy can still have created a partial
+        // file, and nothing else will ever look at this unique name.
+        removeIfPresent(tmpTmpFile);
         break;
       }
 
@@ -152,16 +164,14 @@ Module._load = function (request, parent, isMain) {
       }
 
       // Copy failed validation, clean up the malformed file
-      try {
-        unlinkSync(tmpTmpFile);
-      } catch {
-        // Ignore cleanup errors
-      }
+      removeIfPresent(tmpTmpFile);
     }
 
-    // All retries failed - warn and load from original location
+    // Copying failed - warn and load from original location
     console.warn(
-      `Warning: Failed to copy native module to cache after ${MAX_COPY_RETRIES} attempts. ` +
+      `Warning: Failed to copy native module to cache after ${attemptsMade} attempt${
+        attemptsMade === 1 ? '' : 's'
+      }. ` +
         `Loading from original location instead. ` +
         `This may cause file locking issues on Windows.`
     );

@@ -173,6 +173,11 @@ describe('native file cache location', () => {
       }
     });
 
+    // NOTE: this is an end-to-end sanity check of the contract, not branch
+    // coverage. The per-uid directory is derived from the fixed NX_TMP_DIR, so
+    // this test cannot plant a hostile directory to force the refusal path —
+    // every rejection branch is covered directly in the `ensureOwnedPrivateDir`
+    // suite above.
     posixOnly(
       'should either return a locked-down per-uid directory or refuse the cache',
       () => {
