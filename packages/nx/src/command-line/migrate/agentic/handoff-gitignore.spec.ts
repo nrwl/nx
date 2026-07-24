@@ -87,6 +87,58 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     expect(mockInfo).not.toHaveBeenCalled();
   });
 
+  it('keeps the .gitignore mutation but skips the standalone commit with commitStandalone: false, even when commits are enabled', async () => {
+    // The orchestrator applies the fallback before its init checkpoint; a
+    // standalone commit there would sweep the user's pre-existing changes in
+    // along with the entry, so the checkpoint carries the edit instead.
+    writeFileSync(gitignorePath(), 'node_modules\n');
+    mockHas.mockReturnValue(true);
+    await applyAgenticHandoffGitignoreFallback({
+      migrations: [{ package: '@nx/react', name: 'some-other' }],
+      installedNxVersion: '22.5.0',
+      effectiveCreateCommits: true,
+      commitPrefix: COMMIT_PREFIX,
+      root: workspace,
+      commitStandalone: false,
+    });
+    expect(readFileSync(gitignorePath(), 'utf-8')).toContain(
+      '.nx/migrate-runs'
+    );
+    expect(mockTry).not.toHaveBeenCalled();
+  });
+
+  it('applies the entry with applyWhenPlanned even when the migration is in the queue and nx is at v23+', async () => {
+    // The orchestrator's run scratch exists before the hoisted migration runs,
+    // so a planned migration must not defer, and a planned migration means the
+    // missing entry is not a conscious removal.
+    writeFileSync(gitignorePath(), 'node_modules\n');
+    mockHas.mockReturnValue(false);
+    await applyAgenticHandoffGitignoreFallback({
+      migrations: [HANDOFF_GITIGNORE_MIGRATION],
+      installedNxVersion: '23.0.0',
+      effectiveCreateCommits: false,
+      commitPrefix: COMMIT_PREFIX,
+      root: workspace,
+      applyWhenPlanned: true,
+    });
+    expect(readFileSync(gitignorePath(), 'utf-8')).toContain(
+      '.nx/migrate-runs'
+    );
+  });
+
+  it('still respects a conscious removal with applyWhenPlanned when the migration is not in the queue', async () => {
+    writeFileSync(gitignorePath(), 'node_modules\n');
+    await applyAgenticHandoffGitignoreFallback({
+      migrations: [{ package: '@nx/react', name: 'some-other' }],
+      installedNxVersion: '23.0.0',
+      effectiveCreateCommits: false,
+      commitPrefix: COMMIT_PREFIX,
+      root: workspace,
+      applyWhenPlanned: true,
+    });
+    expect(readFileSync(gitignorePath(), 'utf-8')).toBe('node_modules\n');
+  });
+
   it('does nothing when the migration is not in the queue and installed nx is at v23+ (respect conscious removal)', async () => {
     writeFileSync(gitignorePath(), 'node_modules\n');
     await applyAgenticHandoffGitignoreFallback({

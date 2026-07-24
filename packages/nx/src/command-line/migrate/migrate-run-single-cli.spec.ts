@@ -11,6 +11,8 @@ const mockReportGenerateError = jest.fn();
 jest.mock('./run', () => ({
   runSingleMigrationWorker: (...args: unknown[]) =>
     mockRunSingleMigrationWorker(...args),
+  runOrchestratorInit: jest.fn(),
+  runOrchestratorReconcile: jest.fn(),
 }));
 
 jest.mock('../../daemon/client/client', () => ({
@@ -86,14 +88,28 @@ describe('migrate() single-migration dispatch', () => {
     });
   });
 
-  describe('single-migration parse-error funnel routing', () => {
+  describe('run-phase parse-error funnel routing', () => {
     it('reports a single-migration parse error through the run funnel, not the generate funnel', async () => {
       // An empty --run-migration fails to parse while `runMigrations` stays
-      // undefined, so only the single-migration classification keeps this out
-      // of the generate funnel.
+      // undefined, so only the run-phase classification keeps this out of the
+      // generate funnel.
       const exit = await migrate(ROOT, { runMigration: '' }, [
         '--run-migration',
       ]);
+
+      expect(exit).toBe(1);
+      expect(mockReportRunError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: 'other' })
+      );
+      expect(mockReportGenerateError).not.toHaveBeenCalled();
+    });
+
+    it('reports a run-phase flag conflict through the run funnel, not the generate funnel', async () => {
+      const exit = await migrate(
+        ROOT,
+        { runMigration: 'a', stepAction: 'retry' },
+        ['--run-migration=a', '--step-action=retry']
+      );
 
       expect(exit).toBe(1);
       expect(mockReportRunError).toHaveBeenCalledWith(
@@ -182,6 +198,35 @@ describe('migrate() single-migration dispatch', () => {
       expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toMatchObject({
         commitPrefix: 'custom: ',
         createCommits: undefined,
+      });
+    });
+
+    it('shields a dispensed invocation (--run-migration with --run-id) the same way', async () => {
+      mockReadNxJson.mockReturnValue({
+        migrate: { agentic: true, commitPrefix: 'custom: ' },
+      });
+
+      await migrate(
+        ROOT,
+        {
+          runMigration: '@nx/js:gen',
+          runId: '20260721T000000-abcd',
+          skipInstall: true,
+          verbose: false,
+        },
+        ['--run-migration=@nx/js:gen', '--run-id=20260721T000000-abcd']
+      );
+
+      expect(mockRunSingleMigrationWorker).toHaveBeenCalledTimes(1);
+      expect(mockRunSingleMigrationWorker.mock.calls[0][0]).toMatchObject({
+        commitPrefix: 'custom: ',
+        // The nx.json agentic default must not leak into a recorded run; it
+        // would trip the --agentic/--run-id parse conflict.
+        agentic: undefined,
+        options: {
+          runMigration: '@nx/js:gen',
+          runId: '20260721T000000-abcd',
+        },
       });
     });
   });
