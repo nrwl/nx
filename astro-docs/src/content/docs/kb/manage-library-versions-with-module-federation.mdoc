@@ -15,6 +15,10 @@ A challenge arises when these federated modules are integrated into a _host_ or 
 
 To mitigate these issues, Module Federation has a shared API. Its primary function is to act as a gatekeeper, ensuring that only one copy of a dependency is downloaded, regardless of how many federated modules request it.
 
+{% aside type="note" title="v23 consumer/provider setups" %}
+The automatic sharing described on this page applies to legacy setups using `withModuleFederation` or `NxModuleFederationPlugin`. With the v23 `consumer` and `provider` generators, you configure sharing explicitly in the federation plugin's `shared` option. See the [sharing strategy](/docs/kb/micro-frontend-architecture#share-as-few-libraries-as-possible). The Single Version Policy reasoning below applies either way.
+{% /aside %}
+
 ### How it works
 
 The Shared API maintains a registry of all the downloaded dependencies. When a federated module requests a dependency, the Shared API checks the registry. If the dependency already exists, the module is directed to use the existing copy. If not, the dependency is downloaded and added to the registry.
@@ -68,14 +72,14 @@ A common use-case for this is if you want to enable tree-shaking for a library l
 
 ![How Nx determines library versions](../../../assets/concepts/module-federation/nx-library-version.png)
 
-There are twos ways to manage library versions with **Nx**:
+There are two ways to manage library versions with **Nx**:
 
 {% tabs %}
 {% tabitem label="Opt out from sharing library" %}
 
 ```ts
 // remote/module-federation.config.ts
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'remote',
@@ -114,7 +118,7 @@ module.exports = {
 
 ```ts
 // remote/module-federation.config.ts
-import { ModuleFederationConfig } from '@nx/webpack';
+import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'remote',
@@ -158,6 +162,6 @@ Here is a working example of how to opt in and out of sharing library versions:
 
 By taking advantage of **Nx**'s approach to managing library versions, you can:
 
-- Streamline the process of updating a library version behind a versoning scheme like SemVer.
+- Streamline the process of updating a library version behind a versioning scheme like SemVer.
 - Opt-in or out of sharing library versions with Module Federation based on your needs.
 - Reduce the download size of your application by sharing workspace libraries between remotes and hosts.
