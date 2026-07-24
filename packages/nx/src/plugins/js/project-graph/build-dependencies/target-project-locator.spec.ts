@@ -1272,7 +1272,7 @@ describe('TargetProjectLocator', () => {
       ${{ './features/*.js': './dist/features/*.js' }}             | ${'@org/pkg1/features/some-file.js'}
       ${{ import: './dist/index.js', default: './dist/index.js' }} | ${'@org/pkg1'}
     `(
-      'should find "$importPath" as "pkg1" project when exports="$exports"',
+      'should find lib "$importPath" as "pkg1" project when exports="$exports"',
       ({ exports, importPath }) => {
         let projects: Record<string, ProjectGraphProjectNode> = {
           pkg1: {
@@ -1300,6 +1300,42 @@ describe('TargetProjectLocator', () => {
           targetProjectLocator.findImportInWorkspaceProjects(importPath);
 
         expect(result).toEqual('pkg1');
+      }
+    );
+
+    it.each`
+      exports                     | importPath
+      ${'dist/index.js'}          | ${'app1'}
+      ${{ '.': 'dist/index.js' }} | ${'app1/subpath'}
+    `(
+      'should find app "$importPath" as "app1" project when exports="$exports"',
+      ({ exports, importPath }) => {
+        let projects: Record<string, ProjectGraphProjectNode> = {
+          app1: {
+            name: 'app1',
+            type: 'app' as const,
+            data: {
+              root: 'app1',
+              metadata: {
+                js: {
+                  packageName: 'app1',
+                  packageExports: exports,
+                  isInPackageManagerWorkspaces: true,
+                },
+              },
+            },
+          },
+        };
+
+        const targetProjectLocator = new TargetProjectLocator(
+          projects,
+          {},
+          new Map()
+        );
+        const result =
+          targetProjectLocator.findImportInWorkspaceProjects(importPath);
+
+        expect(result).toEqual('app1');
       }
     );
 
