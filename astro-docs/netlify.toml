@@ -645,11 +645,11 @@ to = "/docs/kb/angular-nx-version-matrix"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/dynamic-module-federation-with-angular"
-to = "/docs/kb/angular-micro-frontends"
+to = "/docs/kb/dynamic-module-federation-with-angular"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/module-federation-with-ssr"
-to = "/docs/kb/angular-micro-frontends"
+to = "/docs/kb/angular-module-federation-with-ssr"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/nx-and-angular"
@@ -1072,14 +1072,6 @@ to = "/docs/kb/vue"
 from = "/docs/knowledge-base/webpack"
 to = "/docs/kb/webpack"
 # DOC-555: module federation prune + decisions stub removal
-[[redirects]]
-from = "/docs/kb/dynamic-module-federation-with-angular"
-to = "/docs/kb/angular-micro-frontends"
-
-[[redirects]]
-from = "/docs/kb/angular-module-federation-with-ssr"
-to = "/docs/kb/angular-micro-frontends"
-
 [[redirects]]
 from = "/docs/kb/module-federation-and-nx"
 to = "/docs/technologies/module-federation/introduction"
