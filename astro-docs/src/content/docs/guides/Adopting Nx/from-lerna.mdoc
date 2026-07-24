@@ -1,0 +1,101 @@
+---
+title: Migrating from Lerna to Nx
+description: Step-by-step guide to migrate from Lerna to Nx, including command equivalents, lerna.json to nx.json configuration mapping, and nx release adoption.
+filter: 'type:Guides'
+sidebar:
+  label: Migrating from Lerna
+---
+
+{% aside type="note" title="Looking for a comparison?" %}
+For a comparison of Nx and Lerna covering task running, caching, and release management, see [Nx vs Lerna](/docs/kb/nx-vs-lerna).
+{% /aside %}
+
+If you're on a modern Lerna version, you already run Nx: since Lerna 6, `lerna run` executes
+scripts through the Nx task runner, and Nx reads the `packages` globs in `lerna.json` to discover
+projects. Migrating means adopting the Nx commands directly, so there's no restructuring and no
+change to how your packages are installed or linked.
+
+The migration has two independent parts, and you can stop after either one:
+
+1. **Task running** - replace `lerna run` with `nx run-many` and `nx affected`.
+2. **Versioning and publishing** - replace `lerna version` and `lerna publish` with `nx release`.
+
+## Set up Nx
+
+Run `nx init` in your Lerna workspace:
+
+```shell
+npx nx@latest init
+```
+
+Nx detects the Lerna workspace, sets up `nx.json`, and configures caching for your scripts. Any
+existing `nx.json` created for Lerna caching carries over unchanged. Your `package.json` scripts
+keep working exactly as before.
+
+## Command equivalents
+
+| Lerna Command                         | Nx Equivalent                                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `lerna run build`                     | [`nx run-many -t build`](/docs/reference/nx-commands#nx-run-many)                             |
+| `lerna run build --scope=my-pkg`      | `nx run my-pkg:build`                                                                         |
+| `lerna run build --since=origin/main` | [`nx affected -t build --base=origin/main`](/docs/reference/nx-commands#nx-affected)          |
+| `lerna run build --concurrency=4`     | `nx run-many -t build --parallel=4`                                                           |
+| `lerna changed`                       | `nx show projects --affected`                                                                 |
+| `lerna list`                          | `nx show projects`                                                                            |
+| `lerna version`                       | `nx release version`                                                                          |
+| `lerna publish`                       | `nx release publish`, or [`nx release`](/docs/features/manage-releases) for the full workflow |
+| `lerna import`                        | [`nx import`](/docs/guides/adopting-nx/import-project)                                        |
+| `lerna add-caching`                   | Configured by `nx init`, adjust in [`nx.json`](/docs/reference/nx-json)                       |
+
+## Adopt nx release
+
+`nx release` covers the Lerna release workflow: it bumps versions, updates dependents, generates
+changelogs from conventional commits, creates the git tag, and publishes to npm. The `lerna.json`
+release settings map to the `release` property in `nx.json`:
+
+| Lerna Configuration           | Nx Equivalent                                                                                                                          |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `"version": "independent"`    | [`"release": { "projectsRelationship": "independent" }`](/docs/guides/nx-release/release-projects-independently)                       |
+| Fixed version in `lerna.json` | Default behavior, version resolved from git tags                                                                                       |
+| `--conventional-commits`      | [`"release": { "version": { "conventionalCommits": true } }`](/docs/guides/nx-release/automatically-version-with-conventional-commits) |
+| `packages` globs              | `"release": { "projects": [...] }` to scope which projects are released                                                                |
+| `command.publish.registry`    | [Configure custom registries](/docs/guides/nx-release/configure-custom-registries)                                                     |
+
+For example, an independently versioned Lerna workspace using conventional commits becomes:
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "projectsRelationship": "independent",
+    "version": {
+      "conventionalCommits": true,
+    },
+  },
+}
+```
+
+Run the first release with a dry run to verify the configuration before publishing anything:
+
+```shell
+nx release --dry-run
+```
+
+If your team prefers recording release intent per pull request instead of inferring it from
+commit messages, [version plans](/docs/guides/nx-release/file-based-versioning-version-plans)
+provide that workflow.
+
+## Migrate gradually
+
+Both tools can coexist while you transition. Because Lerna delegates task running to Nx, a common
+intermediate state keeps `lerna version` and `lerna publish` for releases while CI already runs
+`nx affected`. Once `nx release --dry-run` reproduces your release process, remove the `lerna`
+dependency and `lerna.json`.
+
+If Nx discovered your projects through `lerna.json` rather than package manager workspaces, add
+the globs to your package manager's workspace configuration before deleting the file (for
+example, the `workspaces` field in `package.json` for npm and yarn, or `pnpm-workspace.yaml` for
+pnpm).
+
+For the general guidance on adding Nx to an existing monorepo, see
+[Adding Nx to an npm/Yarn/pnpm workspace](/docs/guides/adopting-nx/adding-to-monorepo).

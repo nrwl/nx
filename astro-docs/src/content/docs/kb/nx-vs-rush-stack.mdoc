@@ -1,0 +1,158 @@
+---
+title: 'Nx vs Rush Stack: Monorepo Tools Compared'
+description: 'Nx vs Rush Stack (Rush, Heft, API Extractor) compared: configuration effort, task running, build caching, CI distribution, and publishing workflows.'
+filter: 'type:Guides'
+sidebar:
+  label: Nx vs Rush Stack
+topics:
+  - 'Comparisons'
+---
+
+Nx and Rush both orchestrate builds for large JavaScript monorepos, and the two projects optimize
+for different things. Rush, the build orchestrator in Microsoft's Rush Stack, focuses on strict
+dependency governance and deterministic installs for large teams, and expects you to configure and
+operate most of the surrounding infrastructure yourself. Nx covers the same orchestration ground
+with far less configuration and adds first-party remote caching, CI distribution, and code
+generation.
+
+If you're weighing Nx against other task runners, see [Nx vs Turborepo](/docs/kb/nx-vs-turborepo).
+
+## What is Nx?
+
+Nx is a build system for [monorepos](/docs/kb/what-is-a-monorepo) that runs your `package.json`
+scripts with task scheduling and local and remote caching. Plugins configure tasks from your
+existing tool configs so you maintain fewer scripts, `nx affected` scopes work to your change, and
+Nx Cloud distributes tasks across CI machines. It spans JS/TS, JVM, .NET, and more in one graph.
+
+## What is Rush Stack?
+
+[Rush Stack](https://rushstack.io) is a family of monorepo tools maintained by Microsoft. The
+centerpiece is [Rush](https://rushjs.io), the build orchestrator that handles installs, builds,
+change tracking, and publishing. The stack also includes Heft (a per-project build system), API
+Extractor (API reports and `.d.ts` rollups), Lockfile Explorer, and ESLint tooling. Rush is used
+on large Microsoft codebases such as the Azure SDK and Office 365 web clients.
+
+When people compare "Nx vs Rush", they usually mean Rush, the orchestrator. The other Rush Stack
+tools are independent and several of them (like API Extractor) work fine inside an Nx workspace.
+
+## Quick takeaway
+
+Rush gives large teams strict control: reviewed dependency additions, deterministic pnpm installs,
+and a disciplined change-file workflow for publishing. That control comes with significant
+configuration surface, and the capabilities that keep CI fast at scale, build caching and
+distributed builds, are marked experimental in Rush's own documentation and require you to bring
+your own storage and infrastructure. Nx ships those capabilities as supported, first-party
+features and configures tasks from the tooling you already have.
+
+| Topic                                                                 | Nx                                                                | Rush                                                                         |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [Onboarding](#onboarding-and-configuration)                           | Zero-config or guided `nx init`, tasks inferred from tool configs | `rush.json` plus a `common/config` folder, every project registered manually |
+| [Running tasks](#running-tasks)                                       | Task graph with project and task-level scheduling                 | Project-level `rush build`, task-level via phased builds (in development)    |
+| [Caching](#caching)                                                   | First-party local and remote cache (Nx Cloud)                     | Experimental build cache, bring-your-own Azure/S3/HTTP storage               |
+| [CI distribution](#ci-distribution)                                   | Nx Cloud agents with flaky-task retry and self-healing            | Experimental cobuilds, coordinated through your own Redis                    |
+| [Versioning and publishing](#versioning-and-publishing)               | `nx release` with conventional commits or version plans           | `rush change` files with version policies                                    |
+| [Code generation](#code-generation-and-migrations)                    | Generators plus automated dependency migrations                   | Not available (`rush init` scaffolds repository config only)                 |
+| [Dependency governance](#dependency-governance-and-module-boundaries) | Tag-based module boundaries plus conformance rules                | Reviewed package approvals, no import-level boundaries                       |
+| Package managers                                                      | npm, yarn, pnpm, bun                                              | pnpm-first (npm and yarn carry warnings in the Rush docs)                    |
+| Language support                                                      | JS/TS, JVM, .NET, and more via plugins                            | JavaScript and TypeScript packages                                           |
+
+## Onboarding and configuration
+
+Nx adopts your existing workspace incrementally: `npx nx init` detects your tooling, and plugins
+infer tasks from configs you already maintain (Vite, Jest, ESLint, and others). Projects are
+discovered from your package manager workspace globs.
+
+Rush setup starts with `rush init`, which generates `rush.json` and a `common/config/rush` folder
+holding a dozen-plus config files (build cache, command line, version policies, npm settings).
+Every project must be registered by hand in the `rush.json` projects list, each project needs a
+`build` script, and the Rush docs recommend reorganizing the repository into category folders.
+Rush is effectively pnpm-first: its documentation describes npm and yarn support as unreliable or
+unproven, and newer features like subspaces are pnpm-only.
+
+## Running tasks
+
+`rush build` runs each project's `build` script with graph-aware parallelism and incremental
+skipping based on file hashes. By default the unit of scheduling is the whole project script. To
+get task-level scheduling (test one project while building the next), you configure phased builds,
+a feature the Rush documentation describes as still under development.
+
+Nx schedules at the task level natively. The task graph understands every target of every project,
+`nx affected` limits work to what a change touches, and continuous tasks handle dev servers and
+watchers without extra configuration.
+
+## Caching
+
+Rush's build cache is labeled experimental in its documentation. It writes to a local folder and
+can upload to cloud storage you provision yourself through Azure Blob Storage, Amazon S3, or HTTP
+plugins, and each project must declare its output folders in a `rush-project.json` file. There is
+no hosted cache service.
+
+Nx [caches task results](/docs/features/cache-task-results) locally out of the box, with inputs
+and outputs inferred by plugins. [Nx Replay](/docs/features/ci-features/remote-cache) provides a
+managed remote cache with fine-grained access control, or you can
+[self-host the cache](/docs/kb/self-hosted-caching) on your own storage.
+
+## CI distribution
+
+Rush's answer to distributed CI is cobuilds: you spawn several copies of the same pipeline, and
+the clones coordinate work through the shared build cache plus a Redis instance you provision.
+The feature is experimental, and the Rush docs note it trades away the operational simplicity of a
+centralized build accelerator. Rush has no flaky-task detection or automated fix workflow.
+
+[Nx Cloud distributes tasks](/docs/features/ci-features/distribute-task-execution) across managed
+agents from a single pipeline definition, [detects and retries flaky
+tasks](/docs/features/ci-features/flaky-tasks), and fixes failing tasks with
+[self-healing CI](/docs/features/ci-features/self-healing-ci).
+
+## Versioning and publishing
+
+Publishing is Rush's most mature workflow. Developers record intent in change files via
+`rush change`, CI enforces their presence, and `rush publish` applies version policies (lock-step
+or independent), aggregates changelogs, and publishes.
+
+[`nx release`](/docs/features/manage-releases) covers the same ground with either
+[conventional commits](/docs/guides/nx-release/automatically-version-with-conventional-commits) or
+[version plan files](/docs/guides/nx-release/file-based-versioning-version-plans), the direct
+equivalent of Rush change files. It supports fixed and
+[independent](/docs/guides/nx-release/release-projects-independently) release groups and also
+publishes Rust crates and Docker images.
+
+## Code generation and migrations
+
+Rush has no scaffolding or codemod story: `rush init` generates repository configuration, and new
+projects are wired up by hand. Keeping many projects consistent over time is left to convention.
+
+Nx [generates projects and components](/docs/features/generate-code) that follow your conventions,
+and [automated migrations](/docs/features/automate-updating-dependencies) update configuration and
+source code across every project when dependencies change.
+
+## Dependency governance and module boundaries
+
+Rush governs which npm packages may enter the repository: the approved-packages policy routes new
+dependencies through review categories, and version policies keep installs deterministic. What it
+does not police is source-level imports between projects.
+
+Nx [enforces module boundaries](/docs/features/enforce-module-boundaries) with tag rules at lint
+time, so a change that reaches into another team's private code fails before review, and
+conformance rules extend the same idea across polyglot workspaces.
+
+## Frequently asked questions
+
+### Is Rush still maintained?
+
+Yes. Microsoft ships Rush releases several times a month, and recent work includes pnpm 10/11
+compatibility and an MCP server for AI tooling. Rush has remained on major version 5 since 2018.
+
+### What's the difference between Rush and Rush Stack?
+
+Rush is the monorepo build orchestrator. Rush Stack is the wider family of tools it belongs to,
+including Heft, API Extractor, and Lockfile Explorer. You can adopt the other Rush Stack tools
+without Rush, and they work inside Nx workspaces too.
+
+### Can I migrate from Rush to Nx incrementally?
+
+Yes. Nx discovers projects from package manager workspaces, so pointing your workspace globs at
+the existing project folders and running `npx nx init` gets task running and caching working
+without restructuring. Publishing workflows move from change files to
+[`nx release` version plans](/docs/guides/nx-release/file-based-versioning-version-plans), which
+follow the same record-intent-per-PR model.

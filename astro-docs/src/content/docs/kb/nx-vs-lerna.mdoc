@@ -1,0 +1,122 @@
+---
+title: 'Nx vs Lerna: Which Monorepo Tool Should You Use?'
+description: 'Nx vs Lerna compared by the team that maintains both: task running, caching, versioning and publishing with nx release, and when to use each.'
+filter: 'type:Guides'
+sidebar:
+  label: Nx vs Lerna
+topics:
+  - 'Comparisons'
+---
+
+The Nx team maintains both Nx and Lerna, so this comparison comes from the people who ship both
+tools. The short answer: start new workspaces with Nx. Lerna is actively maintained and keeps
+working where it already runs, but every core Lerna workflow (task running, versioning,
+publishing) has a direct Nx equivalent, and modern Lerna already delegates its task running to Nx
+under the hood.
+
+If you're weighing Nx against other task runners, see [Nx vs Turborepo](/docs/kb/nx-vs-turborepo).
+
+## What is Nx?
+
+Nx is a build system for [monorepos](/docs/kb/what-is-a-monorepo) that runs your
+`package.json` scripts with task scheduling and local and remote caching. Plugins configure tasks
+from your existing tool configs, `nx affected` scopes work to your change, and Nx Cloud
+distributes tasks across CI machines. It also versions and publishes packages through
+[`nx release`](/docs/features/manage-releases).
+
+## What is Lerna?
+
+[Lerna](https://lerna.js.org) is a tool for versioning and publishing multiple npm packages from
+one repository. It detects which packages changed, bumps their versions together or independently,
+generates changelogs, and publishes to npm. For running scripts across packages, Lerna hands the
+work to the Nx task runner.
+
+## Nx vs Lerna at a glance
+
+Lerna focuses on versioning and publishing npm packages, while Nx is a full build platform, and
+modern Lerna runs its tasks through Nx.
+
+| Topic                     | Nx                                                    | Lerna                                                 |
+| ------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| Primary focus             | Build platform: task running, caching, CI             | Versioning and publishing npm packages                |
+| Task running              | Native task graph with plugins and affected detection | `lerna run`, delegated to the Nx task runner          |
+| Caching                   | Local and remote (Nx Cloud)                           | Through the embedded Nx task runner                   |
+| Versioning and publishing | `nx release`                                          | `lerna version` and `lerna publish`                   |
+| Language support          | JS/TS, JVM, .NET, and more via plugins                | JavaScript and TypeScript packages                    |
+| Code generation           | Generators and automated migrations                   | Package scaffolding via `lerna create`, no migrations |
+| CI features               | Nx Cloud: distribution, self-healing, flaky detection | Remote caching via Nx Cloud                           |
+
+## Is Lerna still maintained?
+
+Yes. The Nx team has maintained Lerna since May 2022, and releases continue on Lerna 9. Reports
+that Lerna was dead date back to a repository disclaimer from the original maintainers in April
+2022, which the stewardship transfer resolved a month later.
+
+Since taking over, the Nx team has modernized the codebase and shipped every release, including
+five major versions (Lerna 5 through 9). Lerna 9 added zero-config OIDC trusted publishing, and
+critical bug fixes and security updates land on a regular cadence.
+
+## How modern Lerna uses Nx
+
+Lerna uses Nx to detect the packages in your workspace and the dependencies between them. When you
+run `lerna run build`, the Nx task runner executes the scripts (the default since Lerna 6,
+released in 2022), which is what gives Lerna parallel execution, task pipelines, and computation
+caching. Adding an `nx.json` to a Lerna workspace configures caching and task ordering, and
+connecting to Nx Cloud adds remote caching and distribution without changing any Lerna commands.
+
+For the full details, see [Lerna and Nx](https://lerna.js.org/docs/lerna-and-nx) on lerna.js.org.
+
+## When staying on Lerna makes sense
+
+If your repository already uses Lerna, there's no forced migration:
+
+- Your versioning and publishing setup works and your main need is coordinated npm releases.
+- Your packages are JS/TS only and task running through `lerna run` covers CI.
+- You already get caching and task pipelines through the embedded Nx task runner.
+
+Because Lerna runs on Nx, staying is a low-risk position: the day you need more, the migration is
+an incremental step rather than a rewrite.
+
+## Why new workspaces should start with Nx
+
+For a new workspace, Nx covers everything Lerna does and removes the second tool:
+
+- `nx release` covers versioning, changelogs, and publishing, for npm packages and also Rust
+  crates and Docker images.
+- `nx affected` and [remote caching](/docs/features/ci-features/remote-cache) cut CI times as the
+  repository grows.
+- Plugins infer tasks from tool configs (Vite, Jest, ESLint, and others) so you maintain fewer
+  scripts.
+- Generators and automated migrations keep many packages consistent over time.
+
+Every core Lerna workflow has a direct Nx equivalent, but not the other way around.
+
+## Migrate from Lerna to Nx
+
+If you're on a modern Lerna version, you already run Nx: `lerna run` executes through the Nx task
+runner, and any `nx.json` configuration carries over. Migrating means adopting the Nx commands
+directly, and `nx release` supports the same fixed and independent versioning modes and
+conventional commits workflow as Lerna.
+
+For the step-by-step walkthrough, including command equivalents and `lerna.json` to `nx.json`
+configuration mapping, see [Migrating from Lerna](/docs/guides/adopting-nx/from-lerna).
+
+## Frequently asked questions
+
+### Is Lerna dead?
+
+No. The Nx team took over Lerna stewardship in May 2022 and has shipped every release since,
+including Lerna 9 in September 2025. The "Lerna is dead" reports refer to an April 2022
+maintenance disclaimer that the transfer resolved.
+
+### Can Lerna and Nx be used together?
+
+Yes, and modern Lerna already does this by default: `lerna run` executes through the Nx task
+runner. A common hybrid keeps `lerna version` and `lerna publish` for releases while using `nx`
+commands for building and testing.
+
+### Should I migrate from Lerna to Nx?
+
+For new workspaces, start with Nx directly. For existing Lerna repositories, migrate when you want
+capabilities Lerna doesn't expose: affected-based CI, inferred tasks, generators, automated
+dependency migrations, or `nx release` features like Docker image publishing.
