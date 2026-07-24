@@ -147,7 +147,7 @@ export default defineConfig(() => ({
 exports[`application generator should set up project correctly for rsbuild 3`] = `
 [
   ".gitignore",
-  ".oxfmtrc.json",
+  ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",
   "eslint.config.mjs",
@@ -351,7 +351,7 @@ export default defineConfig({
 exports[`application generator should set up project correctly with given options 6`] = `
 [
   ".gitignore",
-  ".oxfmtrc.json",
+  ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",
   "eslint.config.mjs",
