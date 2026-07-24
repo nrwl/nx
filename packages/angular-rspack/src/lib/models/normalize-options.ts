@@ -166,8 +166,6 @@ export async function normalizeOptions(
         'The "appShell" option is not considered when "outputMode" is specified.'
       );
     }
-    // Build-time prerendering of RenderMode.Prerender routes is not
-    // implemented; those routes render at request time instead.
     console.warn(
       'Build-time prerendering of server routes is not supported by @nx/angular-rspack yet. Routes marked for prerendering are rendered at request time.'
     );

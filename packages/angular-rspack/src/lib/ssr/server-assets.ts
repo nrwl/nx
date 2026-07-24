@@ -19,43 +19,66 @@ interface ServerAsset {
  * embed stale index contents under output hashing).
  *
  * The table maps the emitted index html to the `index.server.html` and
- * `index.csr.html` names the `@angular/ssr` runtime looks up, plus every
- * top-level stylesheet, which the critical-CSS inliner fetches by file name.
+ * `index.csr.html` names the `@angular/ssr` runtime looks up. Top-level
+ * stylesheets are included only when critical CSS inlining is enabled: the
+ * inliner, which fetches them by file name, is their only consumer.
  */
 export function createBrowserOutputServerAssets(
   browserOutputPath: string,
-  indexOutputName: string | undefined
+  indexOutputName: string | undefined,
+  inlineCriticalCss: boolean
 ): Record<string, ServerAsset> {
   const assets: Record<string, ServerAsset> = {};
   let entries: string[];
   try {
     entries = readdirSync(browserOutputPath);
-  } catch {
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
     // Without a browser output there is nothing to serve; rendering reports
     // the missing asset.
     return assets;
   }
-  for (const entry of entries) {
-    if (extname(entry) === '.css') {
-      assets[entry] = createDiskAsset(join(browserOutputPath, entry));
+  if (inlineCriticalCss) {
+    for (const entry of entries) {
+      if (extname(entry) === '.css') {
+        const asset = createDiskAsset(join(browserOutputPath, entry));
+        if (asset) {
+          assets[entry] = asset;
+        }
+      }
     }
   }
   if (indexOutputName && entries.includes(indexOutputName)) {
     const indexAsset = createDiskAsset(
       join(browserOutputPath, indexOutputName)
     );
-    assets[indexOutputName] = indexAsset;
-    assets['index.server.html'] = indexAsset;
-    assets['index.csr.html'] = indexAsset;
+    if (indexAsset) {
+      assets[indexOutputName] = indexAsset;
+      assets['index.server.html'] = indexAsset;
+      assets['index.csr.html'] = indexAsset;
+    }
   }
   return assets;
 }
 
-function createDiskAsset(filePath: string): ServerAsset {
+function createDiskAsset(filePath: string): ServerAsset | undefined {
+  let size: number;
+  try {
+    size = statSync(filePath).size;
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+    // Removed between the listing and the stat by a concurrent rebuild;
+    // rendering reports the missing asset.
+    return undefined;
+  }
   let hash: string | undefined;
   let text: Promise<string> | undefined;
   return {
-    size: statSync(filePath).size,
+    size,
     // The hash only backs the engine's ETag handling; any stable
     // content-derived value works.
     get hash(): string {
