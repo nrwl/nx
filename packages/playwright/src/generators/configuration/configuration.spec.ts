@@ -1,6 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { Tree, updateJson, writeJson } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readJson,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import configGenerator from './configuration';
 
@@ -12,6 +18,44 @@ describe('Playwright e2e configuration', () => {
 
   afterAll(() => {
     jest.resetAllMocks();
+  });
+
+  describe('legacy .eslintrc stack', () => {
+    beforeEach(() => {
+      tree.write('.eslintrc.json', '{}');
+      addProjectConfiguration(tree, 'myapp-e2e', { root: 'apps/myapp-e2e' });
+    });
+
+    it('should set parserOptions.project when typed linting is enabled', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        directory: 'src',
+        linter: 'eslint',
+        enableTypedLinting: true,
+      });
+
+      const eslintConfig = readJson(tree, 'apps/myapp-e2e/.eslintrc.json');
+      const override = eslintConfig.overrides.find((o) =>
+        o.files?.includes('src/**/*.{ts,js,tsx,jsx}')
+      );
+      expect(override.parserOptions).toEqual({
+        project: 'apps/myapp-e2e/tsconfig.*?.json',
+      });
+      expect(tree.read('apps/myapp-e2e/.eslintrc.json', 'utf-8')).not.toContain(
+        'projectService'
+      );
+    });
+
+    it('should not set parserOptions when typed linting is disabled', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        directory: 'src',
+        linter: 'eslint',
+      });
+
+      const eslintConfig = readJson(tree, 'apps/myapp-e2e/.eslintrc.json');
+      expect(eslintConfig.overrides.some((o) => o.parserOptions)).toBe(false);
+    });
   });
 
   describe('TS Solution Setup', () => {

@@ -1,5 +1,6 @@
 import { ensureRootProjectName } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -251,7 +252,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
       updateProjectConfiguration(host, options.projectName, projectConfig);
     }
   }
-  if (!options.setParserOptionsProject) {
+  if (!isTypedLintingEnabled(options)) {
     host.delete(
       joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
     );

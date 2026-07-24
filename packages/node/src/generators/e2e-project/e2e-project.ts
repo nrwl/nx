@@ -258,7 +258,7 @@ export async function e2eProjectGeneratorInternal(
       tsConfigPaths: [
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),
       ],
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
       skipPackageJson: false,
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,

@@ -320,6 +320,41 @@ describe('Cypress e2e configuration', () => {
     assertCypressFiles(tree, 'libs/my-lib/src/e2e', 'js');
   });
 
+  it('should set parserOptions.project on the legacy .eslintrc stack when typed linting is enabled', async () => {
+    addProject(tree, { name: 'my-lib', type: 'libs' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      project: 'my-lib',
+      directory: 'cypress',
+      baseUrl: 'http://localhost:4200',
+      addPlugin: true,
+      enableTypedLinting: true,
+    });
+
+    const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
+    const override = eslintConfig.overrides.find((o) => o.parserOptions);
+    expect(override.parserOptions).toEqual({
+      project: 'libs/my-lib/tsconfig.*?.json',
+    });
+    expect(tree.read('libs/my-lib/.eslintrc.json', 'utf-8')).not.toContain(
+      'projectService'
+    );
+  });
+
+  it('should not set parserOptions on the legacy .eslintrc stack when typed linting is disabled', async () => {
+    addProject(tree, { name: 'my-lib', type: 'libs' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      project: 'my-lib',
+      directory: 'cypress',
+      baseUrl: 'http://localhost:4200',
+      addPlugin: true,
+    });
+
+    const eslintConfig = readJson(tree, 'libs/my-lib/.eslintrc.json');
+    expect(eslintConfig.overrides.some((o) => o.parserOptions)).toBe(false);
+  });
+
   it('should not override eslint settings if preset', async () => {
     addProject(tree, { name: 'my-lib', type: 'libs' });
     const ngEsLintContents = {
