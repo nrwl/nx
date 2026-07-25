@@ -911,8 +911,8 @@ mod tests {
     #[test]
     fn hardcoded_ignored_paths_never_reach_callback() {
         // Guards against the filterer regressing — node_modules,
-        // .git, .nx/cache, .nx/workspace-data, .yarn/cache must never
-        // surface events.
+        // .git, .nx/cache, .nx/workspace-data, .yarn/cache,
+        // .claude/worktrees must never surface events.
         let dir = tempdir().expect("tempdir");
 
         // Create dirs before the watcher starts.
@@ -922,6 +922,7 @@ mod tests {
             ".nx/cache",
             ".nx/workspace-data",
             ".yarn/cache",
+            ".claude/worktrees",
         ] {
             let d = dir.path().join(ignored);
             fs::create_dir_all(&d).expect("mkdir ignored");
@@ -936,6 +937,7 @@ mod tests {
             ".nx/cache",
             ".nx/workspace-data",
             ".yarn/cache",
+            ".claude/worktrees",
         ] {
             fs::write(dir.path().join(ignored).join("touched.txt"), "y")
                 .unwrap_or_else(|e| panic!("failed write in {ignored}: {e}"));
@@ -955,6 +957,7 @@ mod tests {
             ".nx/cache/",
             ".nx/workspace-data/",
             ".yarn/cache/",
+            ".claude/worktrees/",
         ] {
             let leaked: Vec<_> = events.iter().filter(|e| e.path.contains(ignored)).collect();
             assert!(

@@ -180,6 +180,7 @@ pub(crate) const HARDCODED_IGNORE_PATTERNS: &[&str] = &[
     "**/.nx/cache",
     "**/.nx/workspace-data",
     "**/.yarn/cache",
+    "**/.claude/worktrees",
 ];
 
 pub(crate) fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
@@ -272,6 +273,42 @@ mod test {
                 (temp_dir.join("foo.txt"), PathBuf::from("foo.txt")),
                 (temp_dir.join("test.txt"), PathBuf::from("test.txt")),
             ]
+        );
+    }
+
+    #[test]
+    fn it_skips_hardcoded_ignored_directories() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir.child("test.txt").write_str("content").unwrap();
+        for ignored in [
+            "node_modules",
+            ".git",
+            ".nx/cache",
+            ".nx/workspace-data",
+            ".yarn/cache",
+            ".claude/worktrees",
+        ] {
+            temp_dir
+                .child(ignored)
+                .child("file.txt")
+                .write_str("content")
+                .unwrap();
+        }
+        // Only worktrees are ignored under .claude, not the whole directory.
+        temp_dir
+            .child(".claude")
+            .child("settings.json")
+            .write_str("{}")
+            .unwrap();
+
+        let mut files = nx_walker(&temp_dir, true)
+            .map(|f| f.normalized_path)
+            .collect::<Vec<_>>();
+        files.sort();
+
+        assert_eq!(
+            files,
+            vec![".claude/settings.json".to_string(), "test.txt".to_string()]
         );
     }
 
