@@ -16,11 +16,25 @@ pub struct WatchFilterer {
     /// Per-directory gitignore instances, sorted deepest-first (most path components first).
     /// Each entry is (directory the .gitignore applies in, compiled Gitignore).
     git_ignores: Vec<(PathBuf, Gitignore)>,
+    /// Roots of linked worktrees resolved when the watcher booted. Matched as
+    /// path prefixes rather than compiled into the synthetic gitignore above,
+    /// so a worktree directory containing gitignore metacharacters can't
+    /// produce a bad pattern - or fail the watcher's construction outright.
+    worktrees: Vec<PathBuf>,
 }
 
 impl WatchFilterer {
     fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
         let path = dunce::simplified(path);
+
+        if self
+            .worktrees
+            .iter()
+            .any(|worktree| path.starts_with(worktree))
+        {
+            trace!(?path, "inside a linked worktree - blocked");
+            return false;
+        }
 
         // .nxignore takes precedence over .gitignore. Only consult it for
         // paths under the origin — gitignore-style matchers are scoped to
@@ -119,6 +133,7 @@ impl WatchFilterer {
 pub(super) fn create_filter(
     origin: &str,
     additional_globs: &[String],
+    worktrees: &[PathBuf],
     use_ignore: bool,
 ) -> anyhow::Result<WatchFilterer> {
     let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
@@ -188,5 +203,9 @@ pub(super) fn create_filter(
         origin: PathBuf::from(origin),
         git_ignores,
         nx_ignore,
+        worktrees: worktrees
+            .iter()
+            .map(|worktree| dunce::simplified(worktree).to_path_buf())
+            .collect(),
     })
 }
