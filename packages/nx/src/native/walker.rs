@@ -1,4 +1,5 @@
 use ignore::WalkBuilder;
+use std::collections::HashSet;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 
@@ -6,7 +7,10 @@ use crate::native::glob::build_glob_set;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::logger::enable_logger;
-use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
+use crate::native::utils::{
+    Normalize, get_mod_time,
+    git::{nested_linked_worktrees, parent_gitignore_files},
+};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -209,6 +213,16 @@ where
     walker.require_git(false);
     walker.hidden(false);
 
+    // Linked worktrees are full checkouts of the workspace nested inside it.
+    // Walking one multiplies the file set for no gain. Only resolved for
+    // workspace walks - `use_ignores: false` callers (cache output expansion)
+    // walk task outputs, which never contain a worktree.
+    let worktrees: HashSet<PathBuf> = if use_ignores {
+        nested_linked_worktrees(&directory).into_iter().collect()
+    } else {
+        HashSet::new()
+    };
+
     if use_ignores {
         // Handle parent .gitignore files based on git repository boundaries
         if let Some(gitignore_paths) = parent_gitignore_files(&directory) {
@@ -229,9 +243,24 @@ where
     }
 
     // We should make sure to always ignore node_modules and the .git folder
+    let walk_root = directory.clone();
     walker.filter_entry(move |entry| {
         let path = entry.path().to_string_lossy();
-        !ignore_glob_set.is_match(path.as_ref())
+        if ignore_glob_set.is_match(path.as_ref()) {
+            return false;
+        }
+
+        if worktrees.is_empty() {
+            return true;
+        }
+
+        // Entry paths are built from the walk root, so stripping it back off
+        // yields the same relative form the worktree roots were stored in.
+        entry
+            .path()
+            .strip_prefix(&walk_root)
+            .map(|relative| !worktrees.contains(relative))
+            .unwrap_or(true)
     });
     walker
 }
@@ -286,6 +315,65 @@ mod test {
                 (temp_dir.join("foo.txt"), PathBuf::from("foo.txt")),
                 (temp_dir.join("test.txt"), PathBuf::from("test.txt")),
             ]
+        );
+    }
+
+    /// Registers `relative_path` as a linked worktree of `repo`, mirroring
+    /// the on-disk layout `git worktree add` produces.
+    fn add_linked_worktree(repo: &Path, name: &str, relative_path: &str) {
+        use std::fs::{create_dir_all, write};
+
+        let worktree_root = repo.join(relative_path);
+        let metadata_dir = repo.join(".git").join("worktrees").join(name);
+        create_dir_all(&worktree_root).unwrap();
+        create_dir_all(&metadata_dir).unwrap();
+
+        // The worktree's gitfile points at its metadata directory...
+        write(
+            worktree_root.join(".git"),
+            format!("gitdir: {}\n", metadata_dir.display()),
+        )
+        .unwrap();
+        // ...and the metadata directory points back at that gitfile.
+        write(
+            metadata_dir.join("gitdir"),
+            format!("{}\n", worktree_root.join(".git").display()),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn it_skips_linked_worktrees_but_keeps_submodules() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child(".git/HEAD")
+            .write_str("ref: refs/heads/main")
+            .unwrap();
+        temp_dir.child("test.txt").write_str("content").unwrap();
+
+        // Agent tooling nests worktrees under `.claude/worktrees`, but a
+        // worktree is just as valid anywhere else - both have to be pruned.
+        for (name, path) in [("wt1", ".claude/worktrees/wt1"), ("wt2", "other/wt2")] {
+            add_linked_worktree(temp_dir.path(), name, path);
+            temp_dir.child(path).child("app.ts").write_str("x").unwrap();
+        }
+
+        // A submodule uses the very same gitfile mechanism, but its contents
+        // are real workspace files that must keep being scanned.
+        temp_dir
+            .child("libs/sub/.git")
+            .write_str("gitdir: ../../.git/modules/libs/sub\n")
+            .unwrap();
+        temp_dir.child("libs/sub/lib.ts").write_str("x").unwrap();
+
+        let mut files = nx_walker(&temp_dir, true)
+            .map(|f| f.normalized_path)
+            .collect::<Vec<_>>();
+        files.sort();
+
+        assert_eq!(
+            files,
+            vec!["libs/sub/lib.ts".to_string(), "test.txt".to_string()]
         );
     }
 
