@@ -2,6 +2,7 @@ import type { ChildProcess, Serializable } from 'child_process';
 import { killProcessTreeGraceful } from '../../native';
 import type { TaskResult } from '../../config/misc-interfaces';
 import { signalToCode } from '../../utils/exit-codes';
+import { shouldGroupBatchOutput } from '../../utils/output';
 import {
   BatchMessage,
   BatchMessageType,
@@ -15,6 +16,8 @@ export class BatchProcess {
     (task: string, result: TaskResult) => void
   > = [];
   private outputCallbacks: Array<(output: string) => void> = [];
+  /** stderr held back under log grouping, surfaced only if the batch crashes. */
+  private capturedError = '';
 
   constructor(
     private childProcess: ChildProcess,
@@ -59,8 +62,12 @@ export class BatchProcess {
       this.childProcess.stdout.on('data', (chunk) => {
         const output = chunk.toString();
 
-        // Maintain current terminal output behavior
-        process.stdout.write(chunk);
+        // The grouped per-task block is the canonical copy when batch output is
+        // being folded, so the live copy is suppressed to keep the group
+        // contiguous. Otherwise, maintain current terminal output behavior.
+        if (!shouldGroupBatchOutput()) {
+          process.stdout.write(chunk);
+        }
 
         // Notify callbacks for TUI
         for (const cb of this.outputCallbacks) {
@@ -74,8 +81,17 @@ export class BatchProcess {
       this.childProcess.stderr.on('data', (chunk) => {
         const output = chunk.toString();
 
-        // Maintain current terminal output behavior
-        process.stderr.write(chunk);
+        if (shouldGroupBatchOutput()) {
+          // Suppressed from the live stream like stdout, but retained: a
+          // crashed worker reports its fatal only here (never over IPC) and
+          // sends no per-task result, so without this the grouped block never
+          // fires and the crash is silent. Flushed by the orchestrator if the
+          // batch exits without results.
+          this.capturedError += output;
+        } else {
+          // Maintain current terminal output behavior
+          process.stderr.write(chunk);
+        }
 
         // Notify callbacks for TUI
         for (const cb of this.outputCallbacks) {
@@ -99,6 +115,15 @@ export class BatchProcess {
 
   onOutput(cb: (output: string) => void) {
     this.outputCallbacks.push(cb);
+  }
+
+  /**
+   * stderr that was held back from the live stream under log grouping. Empty
+   * unless the batch was being grouped; used to surface a crash whose output
+   * would otherwise be swallowed.
+   */
+  getCapturedErrorOutput(): string {
+    return this.capturedError;
   }
 
   async getResults(): Promise<BatchResults> {

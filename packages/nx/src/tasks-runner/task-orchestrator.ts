@@ -42,6 +42,7 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
+import { BatchProcess } from './running-tasks/batch-process';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { RunningTask } from './running-tasks/running-task';
@@ -843,14 +844,14 @@ export class TaskOrchestrator {
     groupId: number
   ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
+    let batchProcess: BatchProcess | undefined;
     try {
-      const batchProcess =
-        await this.forkedProcessTaskRunner.forkProcessForBatch(
-          batch,
-          this.projectGraph,
-          this.fullTaskGraph,
-          env
-        );
+      batchProcess = await this.forkedProcessTaskRunner.forkProcessForBatch(
+        batch,
+        this.projectGraph,
+        this.fullTaskGraph,
+        env
+      );
 
       // Stream output from batch process to the batch
       batchProcess.onOutput((output) => {
@@ -915,6 +916,22 @@ export class TaskOrchestrator {
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
+      // A batch-level crash sends no per-task result, so no grouped block was
+      // printed. If its output was held back under log grouping, surface it now
+      // so the failure is not silent; otherwise it already streamed live.
+      const capturedError = batchProcess?.getCapturedErrorOutput() ?? '';
+      const terminalOutput = capturedError || e.stack || e.message || '';
+      if (!isBatchStopping && capturedError) {
+        const [firstTaskId] = Object.keys(batch.taskGraph.tasks);
+        output.logCommandOutput(
+          getPrintableCommandArgsForTask(
+            this.taskGraph.tasks[firstTaskId]
+          ).join(' '),
+          'failure',
+          capturedError
+        );
+      }
+
       return Object.keys(batch.taskGraph.tasks).map((taskId) => {
         const task = this.taskGraph.tasks[taskId];
         if (isBatchStopping) {
@@ -924,7 +941,7 @@ export class TaskOrchestrator {
           task,
           code: 1,
           status: (isBatchStopping ? 'stopped' : 'failure') as TaskStatus,
-          terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
+          terminalOutput: isBatchStopping ? '' : terminalOutput,
         };
       });
     } finally {

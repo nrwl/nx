@@ -30,6 +30,19 @@ export function isLogGroupingEnabled(): boolean {
   );
 }
 
+/**
+ * Whether a batch task's output should be collapsed into its per-task log group
+ * rather than forwarded live. A batch worker writes its output to stdout/stderr
+ * live and also reports the same text back as each task's terminalOutput, which
+ * the grouped block prints; forwarding the live copy too would duplicate it
+ * outside the group and defeat the fold. This is only worth doing when grouping
+ * is on and the user has not asked to stream — an explicit stream style (which
+ * sets NX_STREAM_OUTPUT) wants the live copy, folds or not.
+ */
+export function shouldGroupBatchOutput(): boolean {
+  return isLogGroupingEnabled() && process.env.NX_STREAM_OUTPUT !== 'true';
+}
+
 export interface CLIErrorMessageConfig {
   title: string;
   bodyLines?: string[];
