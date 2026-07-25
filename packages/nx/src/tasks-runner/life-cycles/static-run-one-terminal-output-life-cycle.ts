@@ -18,6 +18,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   cachedTasks = [] as Task[];
   stoppedTasks = [] as Task[];
   allCompletedTasks = new Map<string, Task>();
+  private collapsedTasks = 0;
 
   constructor(
     private readonly initiatingProject: string,
@@ -39,6 +40,24 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     return this.args.verbose || this.args.outputStyle === 'static-full';
   }
 
+  /**
+   * Tells the reader that output was withheld, so a task that succeeded while
+   * printing something worth reading is not silently swallowed.
+   */
+  private hiddenOutputHint(): string[] {
+    if (this.printsFullOutput || this.collapsedTasks === 0) {
+      return [];
+    }
+    return [
+      '',
+      `${output.dim(
+        `Output of ${this.collapsedTasks} successful ${
+          this.collapsedTasks === 1 ? 'task was' : 'tasks were'
+        } not shown. Run with`
+      )} --verbose ${output.dim('to see it.')}`,
+    ];
+  }
+
   startCommand(): void {
     const numberOfDeps = this.tasks.length - 1;
     const title = `Running ${formatTargetsAndProjects(
@@ -58,7 +77,9 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   endCommand(): void {
     output.addNewline();
 
-    if (this.failedTasks.length === 0) {
+    // A stopped task was killed mid-flight, so the run did not complete even
+    // though nothing outright failed — matching run-many and didCommandComplete.
+    if (this.failedTasks.length === 0 && this.stoppedTasks.length === 0) {
       output.addVerticalSeparatorWithoutNewLines('green');
 
       const bodyLines =
@@ -70,6 +91,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
             ]
           : [];
       bodyLines.push(...this.tasksNotRunSummary());
+      bodyLines.push(...this.hiddenOutputHint());
 
       output.success({
         title: `Successfully ran ${formatTargetsAndProjects(
@@ -102,21 +124,30 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
           ''
         );
       }
+      if (this.failedTasks.length > 0) {
+        bodyLines.push(
+          output.dim('Failed tasks:'),
+          '',
+          ...this.failedTasks.map((task) => `${output.dim('-')} ${task.id}`),
+          ''
+        );
+      }
+      bodyLines.push(...this.hiddenOutputHint());
       bodyLines.push(
-        output.dim('Failed tasks:'),
-        '',
-        ...this.failedTasks.map((task) => `${output.dim('-')} ${task.id}`),
-        '',
         `${output.dim('Hint: run the command with')} --verbose ${output.dim(
           'for more details.'
         )}`
       );
+      const targets = formatTargetsAndProjects(
+        this.projectNames,
+        this.args.targets,
+        this.tasks
+      );
       output.error({
-        title: `Running ${formatTargetsAndProjects(
-          this.projectNames,
-          this.args.targets,
-          this.tasks
-        )} failed`,
+        title:
+          this.failedTasks.length > 0
+            ? `Running ${targets} failed`
+            : `Running ${targets} did not complete`,
         bodyLines,
       });
     }
@@ -206,6 +237,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
      * Dependency tasks collapse to a single line, so that a cache hit or a
      * success can still be traced without carrying its whole log.
      */
+    this.collapsedTasks++;
     output.logCommandSummary(args.join(' '), status);
   }
 }

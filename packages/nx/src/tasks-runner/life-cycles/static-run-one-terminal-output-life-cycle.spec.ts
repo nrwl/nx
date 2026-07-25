@@ -163,30 +163,22 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
   });
 
   describe('endCommand', () => {
-    it('summarizes skipped and stopped tasks as counts', () => {
-      const stopped = makeTask('stopped');
+    it('summarizes tasks that never ran as a count on success', () => {
       const neverRan = makeTask('never-ran');
-      const lifeCycle = createLifeCycle({}, [initiating, stopped, neverRan]);
+      const lifeCycle = createLifeCycle({}, [initiating, neverRan]);
 
-      lifeCycle.endTasks([
-        taskResult(initiating, 'success'),
-        taskResult(stopped, 'stopped'),
-      ]);
+      lifeCycle.endTasks([taskResult(initiating, 'success')]);
 
       const result = captureOutput(() => lifeCycle.endCommand());
 
-      expect(result).toContain('1 skipped, 1 stopped');
+      expect(result).toContain('Successfully ran');
+      expect(result).toContain('1 skipped');
       expect(result).not.toContain('never-ran:build');
     });
 
-    it('lists the skipped and stopped task names under --verbose', () => {
+    it('does not claim success when a task was stopped', () => {
       const stopped = makeTask('stopped');
-      const neverRan = makeTask('never-ran');
-      const lifeCycle = createLifeCycle({ verbose: true }, [
-        initiating,
-        stopped,
-        neverRan,
-      ]);
+      const lifeCycle = createLifeCycle({}, [initiating, stopped]);
 
       lifeCycle.endTasks([
         taskResult(initiating, 'success'),
@@ -195,9 +187,44 @@ describe('StaticRunOneTerminalOutputLifeCycle', () => {
 
       const result = captureOutput(() => lifeCycle.endCommand());
 
-      expect(result).toContain('1 skipped, 1 stopped');
-      expect(result).toContain('never-ran:build');
+      expect(result).not.toContain('Successfully ran');
+      expect(result).toContain('did not complete');
+      expect(result).toContain('Tasks stopped before they finished:');
       expect(result).toContain('stopped:build');
+      // Nothing outright failed, so there is no failure list to print.
+      expect(result).not.toContain('Failed tasks:');
+    });
+
+    it('lists the names of tasks that never ran under --verbose', () => {
+      const neverRan = makeTask('never-ran');
+      const lifeCycle = createLifeCycle({ verbose: true }, [
+        initiating,
+        neverRan,
+      ]);
+
+      lifeCycle.endTasks([taskResult(initiating, 'success')]);
+
+      const result = captureOutput(() => lifeCycle.endCommand());
+
+      expect(result).toContain('1 skipped');
+      expect(result).toContain('never-ran:build');
+    });
+
+    it('reports how much output was withheld on success', () => {
+      const dependency = makeTask('lib');
+      const lifeCycle = createLifeCycle({}, [initiating, dependency]);
+
+      // A collapsed dependency success.
+      lifeCycle.printTaskTerminalOutput(dependency, 'success', 'the lib body');
+      lifeCycle.endTasks([
+        taskResult(initiating, 'success'),
+        taskResult(dependency, 'success'),
+      ]);
+
+      const result = captureOutput(() => lifeCycle.endCommand());
+
+      expect(result).toContain('Output of 1 successful task was not shown');
+      expect(result).toContain('--verbose');
     });
 
     it('lists tasks that never ran when the run failed', () => {
