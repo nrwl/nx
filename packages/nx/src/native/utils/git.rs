@@ -116,6 +116,25 @@ fn common_git_dir(git_dir: &Path) -> PathBuf {
     }
 }
 
+/// Whether `path` is the root of a git linked worktree.
+///
+/// A worktree's gitfile points at `<git-dir>/worktrees/<name>`, while a
+/// submodule's points at `<git-dir>/modules/<name>` - the parent segment is
+/// what separates them. Costs one read, so it suits deciding about a single
+/// directory (a watch event) rather than scanning a whole workspace; use
+/// [`nested_linked_worktrees`] for that.
+pub fn is_linked_worktree_root<P: AsRef<Path>>(path: P) -> bool {
+    let path = path.as_ref();
+    let Some(git_dir) = read_gitfile(&path.join(".git"), path) else {
+        return false;
+    };
+
+    git_dir
+        .parent()
+        .and_then(Path::file_name)
+        .is_some_and(|segment| segment == "worktrees")
+}
+
 /// Roots of git's linked worktrees (`git worktree add`) that live inside
 /// `workspace_root`, relative to it.
 ///
@@ -192,6 +211,29 @@ mod test {
             format!("gitdir: {}\n", metadata_dir.display()),
         )
         .unwrap();
+    }
+
+    #[test]
+    fn identifies_linked_worktree_roots() {
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+
+        let worktree = temp.path().join("wt");
+        register_worktree(temp.path(), "wt", &worktree);
+        assert!(is_linked_worktree_root(&worktree));
+
+        // A submodule's gitfile is identical in shape - only the segment it
+        // points into differs.
+        let submodule = temp.path().join("libs/sub");
+        create_dir_all(&submodule).unwrap();
+        write(
+            submodule.join(".git"),
+            "gitdir: ../../.git/modules/libs/sub\n",
+        )
+        .unwrap();
+        assert!(!is_linked_worktree_root(&submodule));
+
+        assert!(!is_linked_worktree_root(temp.path().join("libs")));
     }
 
     #[test]

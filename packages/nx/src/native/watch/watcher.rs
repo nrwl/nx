@@ -12,6 +12,9 @@ use tracing::{debug, trace};
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
+#[cfg(not(target_os = "macos"))]
+use crate::native::utils::git::is_linked_worktree_root;
+use crate::native::utils::git::nested_linked_worktrees;
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 #[cfg(not(target_os = "macos"))]
 use crate::native::walker::create_walker;
@@ -126,8 +129,18 @@ impl WatchPipeline {
         additional_globs: &[String],
         use_ignore: bool,
     ) -> std::result::Result<Self, String> {
-        let filterer = watch_filterer::create_filter(&origin, additional_globs, use_ignore)
-            .map_err(|e| format!("failed to create watch filter: {e}"))?;
+        // Linked worktrees are full checkouts nested in the workspace. The
+        // walker prunes them from the initial registration, but the filterer
+        // needs them too: macOS watches the root recursively, so pruning the
+        // walk alone would not keep their events out.
+        let worktrees: Vec<PathBuf> = nested_linked_worktrees(&origin)
+            .into_iter()
+            .map(|relative| Path::new(&origin).join(relative))
+            .collect();
+
+        let filterer =
+            watch_filterer::create_filter(&origin, additional_globs, &worktrees, use_ignore)
+                .map_err(|e| format!("failed to create watch filter: {e}"))?;
 
         let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
         let mut watcher = notify::recommended_watcher(move |event| {
@@ -207,6 +220,10 @@ impl WatchPipeline {
             .paths()
             .filter(|(path, metadata)| meta_is_dir(metadata) && !self.ignore_globs.is_match(path))
             .map(|(path, _)| path.to_path_buf())
+            // The filterer only knows the worktrees that existed at boot, so
+            // a worktree created since would otherwise be registered here and
+            // backfilled file by file.
+            .filter(|path| !is_linked_worktree_root(path))
             .collect()
     }
 
@@ -905,6 +922,49 @@ mod tests {
             matches!(new_evt.r#type, EventType::create),
             "rename destination should classify as Create; got {:?}",
             new_evt.r#type
+        );
+    }
+
+    #[test]
+    fn linked_worktree_paths_never_reach_callback() {
+        // The walker keeps a worktree's directories out of the initial
+        // registration, but macOS watches the root recursively - the filterer
+        // has to block them on its own.
+        let dir = tempdir().expect("tempdir");
+        let root = dir.path().canonicalize().expect("canonicalize");
+
+        let worktree = root.join("other/wt");
+        let metadata_dir = root.join(".git/worktrees/wt");
+        fs::create_dir_all(&worktree).expect("mkdir worktree");
+        fs::create_dir_all(&metadata_dir).expect("mkdir worktree metadata");
+        fs::write(
+            worktree.join(".git"),
+            format!("gitdir: {}\n", metadata_dir.display()),
+        )
+        .expect("write gitfile");
+        fs::write(
+            metadata_dir.join("gitdir"),
+            format!("{}\n", worktree.join(".git").display()),
+        )
+        .expect("write gitdir");
+        fs::write(worktree.join("seed.txt"), "x").expect("seed write");
+
+        let (_watcher, captured) = start_watcher(&root);
+
+        fs::write(worktree.join("touched.txt"), "y").expect("worktree write");
+        // Un-ignored write proves the watcher is alive.
+        fs::write(root.join("alive.txt"), "z").expect("alive write");
+
+        let events = collect(&captured);
+        assert!(
+            events.iter().any(|e| e.path == "alive.txt"),
+            "expected an event for alive.txt; got {events:?}"
+        );
+
+        let leaked: Vec<_> = events.iter().filter(|e| e.path.contains("wt/")).collect();
+        assert!(
+            leaked.is_empty(),
+            "expected no events inside the worktree; got {leaked:?}"
         );
     }
 
