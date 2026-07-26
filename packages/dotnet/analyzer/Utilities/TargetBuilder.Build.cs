@@ -21,7 +21,8 @@ public static partial class TargetBuilder
         string productionInput,
         string defaultConfiguration,
         string description,
-        List<string> directoryBuildInputs)
+        List<string> directoryBuildInputs,
+        object? externalDependenciesInput = null)
     {
         var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
         var intermediatePath = GetIntermediateOutputPath(properties, projectName, projectDirectory, workspaceRoot);
@@ -59,6 +60,7 @@ public static partial class TargetBuilder
                 "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                .. AsInputs(externalDependenciesInput),
                 .. directoryBuildInputs
             ],
             Outputs = new[] { outputPath, intermediatePath }
@@ -82,7 +84,8 @@ public static partial class TargetBuilder
         string workspaceRoot,
         PluginOptions options,
         string productionInput,
-        List<string> directoryBuildInputs)
+        List<string> directoryBuildInputs,
+        object? externalDependenciesInput = null)
     {
         var targetName = options.BuildTargetName;
         targets[targetName] = CreateBuildTarget(
@@ -96,7 +99,8 @@ public static partial class TargetBuilder
             productionInput,
             "Debug",
             "Build the .NET project",
-            directoryBuildInputs);
+            directoryBuildInputs,
+            externalDependenciesInput);
     }
 
     private static void AddBuildReleaseTarget(
@@ -109,7 +113,8 @@ public static partial class TargetBuilder
         string workspaceRoot,
         PluginOptions options,
         string productionInput,
-        List<string> directoryBuildInputs)
+        List<string> directoryBuildInputs,
+        object? externalDependenciesInput = null)
     {
         var releaseTargetName = $"{options.BuildTargetName}:release";
         targets[releaseTargetName] = CreateBuildTarget(
@@ -123,6 +128,7 @@ public static partial class TargetBuilder
             productionInput,
             "Release",
             "Build the .NET project in Release configuration",
-            directoryBuildInputs);
+            directoryBuildInputs,
+            externalDependenciesInput);
     }
 }

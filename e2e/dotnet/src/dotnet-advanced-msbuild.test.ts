@@ -430,7 +430,14 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
       expect(buildInputs).toContain(
         '{workspaceRoot}/DirBuildInputsApp/Directory.Build.targets'
       );
-      expect(buildInputs).toContain('{workspaceRoot}/Directory.Packages.props');
+
+      // Central Package Management resolved every package (this project has none), so the
+      // whole-file manifest input is replaced by a per-package externalDependencies input —
+      // an empty one here, keeping the project immune to unrelated version bumps.
+      expect(buildInputs).not.toContain(
+        '{workspaceRoot}/Directory.Packages.props'
+      );
+      expect(buildInputs).toContainEqual({ externalDependencies: [] });
 
       // Files that do NOT exist anywhere must not be declared — that was the point
       // of moving from the always-declare design to exists-only inputs.
@@ -448,9 +455,10 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
       expect(publishInputs).toContain(
         '{workspaceRoot}/DirBuildInputsApp/Directory.Build.targets'
       );
-      expect(publishInputs).toContain(
+      expect(publishInputs).not.toContain(
         '{workspaceRoot}/Directory.Packages.props'
       );
+      expect(publishInputs).toContainEqual({ externalDependencies: [] });
 
       // Targets without a declared inputs array (e.g. restore) are left untouched
       // so we don't accidentally narrow Nx's default-input fallback.
