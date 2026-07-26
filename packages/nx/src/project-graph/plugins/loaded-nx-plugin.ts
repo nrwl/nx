@@ -11,10 +11,13 @@ import type {
   CreateMetadataContext,
   CreateNodesContext,
   CreateNodesResult,
+  CreateTouchedDependenciesContext,
   NxPlugin,
   PostTasksExecutionContext,
   PreTasksExecutionContext,
   ProjectsMetadata,
+  TouchedDependencies,
+  TouchedDependencyFile,
 } from './public-api';
 import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
@@ -44,6 +47,13 @@ export class LoadedNxPlugin {
     graph: ProjectGraph,
     context: CreateMetadataContext
   ) => Promise<ProjectsMetadata>;
+  readonly createTouchedDependencies?: [
+    manifestFilePattern: string,
+    fn: (
+      touchedFiles: TouchedDependencyFile[],
+      context: CreateTouchedDependenciesContext
+    ) => Promise<TouchedDependencies>,
+  ];
   readonly preTasksExecution?: (
     context: PreTasksExecutionContext
   ) => Promise<NodeJS.ProcessEnv>;
@@ -149,6 +159,16 @@ export class LoadedNxPlugin {
     if (plugin.createMetadata) {
       this.createMetadata = async (graph, context) =>
         plugin.createMetadata(graph, this.options, context);
+    }
+
+    if (plugin.createTouchedDependencies) {
+      const [manifestFilePattern, createTouchedDependenciesFn] =
+        plugin.createTouchedDependencies;
+      this.createTouchedDependencies = [
+        manifestFilePattern,
+        async (touchedFiles, context) =>
+          createTouchedDependenciesFn(touchedFiles, this.options, context),
+      ];
     }
 
     if (plugin.preTasksExecution) {

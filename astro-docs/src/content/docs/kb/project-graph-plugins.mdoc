@@ -315,6 +315,40 @@ Breaking down this example, we can see that it follows this flow:
 7. Pushes it into the located dependency array
 8. Returns the located dependencies
 
+## Attributing manifest changes to specific dependencies
+
+A centralized dependency manifest, such as a lock file or a .NET `Directory.Packages.props`, lists versions for many packages in one file.
+By default, a change to a file like this marks every project that declares it as an input as affected, even when only one package version moved.
+
+Plugins that add external nodes can narrow this with `createTouchedDependencies`.
+Like `createNodes`, it's a tuple of a file pattern and a function, exported from the plugin's entry point:
+
+```typescript
+export const createTouchedDependencies: CreateTouchedDependencies = [
+  '**/Directory.Packages.props',
+  (touchedFiles, options, context) => {
+    const changed = new Set<string>();
+    for (const { baseContent, headContent } of touchedFiles) {
+      if (baseContent === null || headContent === null) {
+        // The manifest was added, deleted, or unreadable.
+        return '*';
+      }
+      diffVersions(baseContent, headContent).forEach((id) => changed.add(id));
+    }
+    return Array.from(changed);
+  },
+];
+```
+
+When `nx affected` runs and a changed file matches the pattern, Nx calls the function with the file's contents at the base and head revisions.
+The function returns the identifiers of the dependencies that changed.
+Nx matches each identifier against external node names first and their `packageName` second, then walks the project graph in reverse to mark only the consuming projects as affected.
+
+Return `'*'` when the change can't be attributed to specific dependencies, such as a malformed manifest or a missing base revision.
+Nx then marks every project as affected, which is the same behavior as not implementing the hook at all.
+
+The pattern is matched before your plugin is invoked, so workspaces where no matching file changed don't pay any cost for the hook.
+
 ## Accepting plugin options
 
 When looking at `createNodesV2`, and `createDependencies` you may notice a parameter called `options`. This is the first parameter for `createDependencies` or the second parameter for `createDependencies`.

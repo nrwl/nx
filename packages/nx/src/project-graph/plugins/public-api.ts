@@ -128,6 +128,68 @@ export type CreateMetadata<T = unknown> = (
 ) => ProjectsMetadata | Promise<ProjectsMetadata>;
 
 /**
+ * A file matched by {@link CreateTouchedDependencies}' file pattern, with the contents on both
+ * sides of the comparison so the plugin can diff it.
+ */
+export type TouchedDependencyFile = {
+  /**
+   * Path of the changed file, relative to the workspace root.
+   */
+  readonly file: string;
+
+  /**
+   * Contents at the comparison base, or null when there is no base revision to read
+   * (e.g. the file is newly added, or the comparison is against the working tree).
+   */
+  readonly baseContent: string | null;
+
+  /**
+   * Contents at the current revision, or null when the file was deleted.
+   */
+  readonly headContent: string | null;
+};
+
+export type CreateTouchedDependenciesContext = {
+  readonly nxJsonConfiguration: NxJsonConfiguration;
+  readonly workspaceRoot: string;
+};
+
+/**
+ * Identifiers of the external dependencies a change touched. Each entry is matched against
+ * external node names first and their `data.packageName` second, mirroring how
+ * `externalDependencies` inputs are resolved.
+ *
+ * Return `'*'` when the change cannot be attributed to specific dependencies (e.g. a malformed
+ * manifest or an unreadable base revision); every project will be marked affected.
+ */
+export type TouchedDependencies = string[] | '*';
+
+/**
+ * A function which determines which external dependencies a set of changed files touched, so
+ * that `nx affected` can select only the projects consuming them rather than every project
+ * sharing the manifest.
+ *
+ * The context deliberately excludes the project graph, which would otherwise be serialized
+ * across the plugin worker boundary on every invocation; Nx maps the returned identifiers
+ * onto external nodes itself.
+ */
+export type CreateTouchedDependenciesFunction<T = unknown> = (
+  touchedFiles: TouchedDependencyFile[],
+  options: T | undefined,
+  context: CreateTouchedDependenciesContext
+) => TouchedDependencies | Promise<TouchedDependencies>;
+
+/**
+ * A file pattern paired with the function that attributes changes to those files to specific
+ * external dependencies. The pattern is matched in the main process, so a plugin worker is
+ * only woken when a matching file changed.
+ */
+export type CreateTouchedDependencies<T = unknown> = readonly [
+  manifestFilePattern: string,
+  createTouchedDependenciesFunction: CreateTouchedDependenciesFunction<T>,
+];
+
+/**
  * A plugin which enhances the behavior of Nx
  */
 export type NxPlugin<TOptions = unknown> = {
@@ -156,6 +218,16 @@ export type NxPlugin<TOptions = unknown> = {
    * Provides a function to create metadata for the {@link ProjectGraph}
    */
   createMetadata?: CreateMetadata<TOptions>;
+
+  /**
+   * Provides a file pattern and a function that attributes changes to those files to specific
+   * external dependencies, so `nx affected` can select only the projects that consume them.
+   *
+   * Intended for centralized dependency manifests — a lock file, a Central Package Management
+   * `Directory.Packages.props`, a Gradle version catalog — where one file's version list is
+   * shared by many projects.
+   */
+  createTouchedDependencies?: CreateTouchedDependencies<TOptions>;
 
   /**
    * Provides a function to run before the Nx runs tasks

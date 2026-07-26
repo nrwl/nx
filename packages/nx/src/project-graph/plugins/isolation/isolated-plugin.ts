@@ -21,6 +21,9 @@ import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
+  CreateTouchedDependenciesContext,
+  TouchedDependencies,
+  TouchedDependencyFile,
   CreateNodesContext,
   CreateNodesResult,
   PostTasksExecutionContext,
@@ -87,6 +90,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     graph: ProjectGraph,
     context: CreateMetadataContext
   ) => Promise<ProjectsMetadata>;
+  readonly createTouchedDependencies?: [
+    manifestFilePattern: string,
+    fn: (
+      touchedFiles: TouchedDependencyFile[],
+      context: CreateTouchedDependenciesContext
+    ) => Promise<TouchedDependencies>,
+  ];
   readonly preTasksExecution?: (
     context: PreTasksExecutionContext
   ) => Promise<NodeJS.ProcessEnv>;
@@ -295,6 +305,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       loadResult.createNodesPattern && 'createNodes',
       loadResult.hasCreateDependencies && 'createDependencies',
       loadResult.hasCreateMetadata && 'createMetadata',
+      !!loadResult.touchedDependenciesPattern && 'createTouchedDependencies',
       loadResult.hasPreTasksExecution && 'preTasksExecution',
       loadResult.hasPostTasksExecution && 'postTasksExecution'
     );
@@ -358,6 +369,26 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         }
         return result.metadata;
       });
+    }
+
+    if (loadResult.touchedDependenciesPattern) {
+      (
+        this as {
+          createTouchedDependencies: IsolatedPlugin['createTouchedDependencies'];
+        }
+      ).createTouchedDependencies = [
+        loadResult.touchedDependenciesPattern,
+        wrap('createTouchedDependencies', async (touchedFiles, ctx) => {
+          const result = await this.sendRequest('createTouchedDependencies', {
+            touchedFiles,
+            context: ctx,
+          });
+          if (result.success === false) {
+            throw result.error;
+          }
+          return result.touchedDependencies;
+        }),
+      ];
     }
 
     if (loadResult.hasPreTasksExecution) {
