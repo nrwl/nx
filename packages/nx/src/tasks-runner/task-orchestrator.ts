@@ -14,6 +14,7 @@ import { walkTaskGraph } from './task-graph-utils';
 import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
+  InvocationRecord,
   IS_WASM,
   TaskStatus as NativeTaskStatus,
   parseTaskStatus,
@@ -56,6 +57,7 @@ import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
   getForceColorForChild,
+  getInvocationAncestorPids,
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
@@ -107,7 +109,8 @@ export class TaskOrchestrator {
   private taskInvocationTracker = !IS_WASM
     ? new TaskInvocationTracker(
         getLocalDbConnection(),
-        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid)
+        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid),
+        getInvocationAncestorPids()
       )
     : null;
   // Tracks tasks registered by THIS process so that recursive code paths
@@ -443,38 +446,46 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Registers a task invocation and checks for loops across nested Nx processes.
-   * Uses the task_invocations DB table keyed by root PID. registerTask() throws
-   * on unique constraint violation when a parent Nx process already registered
-   * this task — indicating an infinite loop.
+   * Registers a task invocation and checks for loops across nested Nx
+   * processes. registerTask() returns the invocation chain only when an
+   * *ancestor* Nx process is already running this task — a genuine loop.
+   * Sibling processes running the same task are legitimate and register
+   * without complaint.
    */
   private detectTaskInvocationLoop(task: Task): void {
     if (!this.taskInvocationTracker) return;
     if (this.registeredInvocations.has(task.id)) return;
-    try {
-      this.taskInvocationTracker.registerTask(process.pid, task.id);
-      this.registeredInvocations.add(task.id);
-    } catch {
-      // Unique constraint violation — task already invoked by an ancestor Nx process
-      const chain = this.taskInvocationTracker.getInvocationChain();
-      const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
 
-      output.error({
-        title: 'Recursive task invocation detected',
-        bodyLines: [
-          `Nx detected a recursive loop of task invocations:`,
-          ``,
-          `  ${chainDisplay} -> ${task.id}`,
-          ``,
-          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
-          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
-          `triggers a chain of tasks that eventually re-invokes itself.`,
-          ``,
-          `To fix this, review the command configuration for the tasks in the chain above.`,
-        ],
-      });
-      process.exit(1);
+    let chain: InvocationRecord[] | null;
+    try {
+      chain = this.taskInvocationTracker.registerTask(process.pid, task.id);
+    } catch {
+      // Loop detection is diagnostic only; a DB failure must not fail the run
+      // or be mistaken for a loop.
+      return;
     }
+
+    if (!chain) {
+      this.registeredInvocations.add(task.id);
+      return;
+    }
+
+    const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
+    output.error({
+      title: 'Recursive task invocation detected',
+      bodyLines: [
+        `Nx detected a recursive loop of task invocations:`,
+        ``,
+        `  ${chainDisplay} -> ${task.id}`,
+        ``,
+        `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
+        `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
+        `triggers a chain of tasks that eventually re-invokes itself.`,
+        ``,
+        `To fix this, review the command configuration for the tasks in the chain above.`,
+      ],
+    });
+    process.exit(1);
   }
 
   // endregion Processing Scheduled Tasks
@@ -1778,7 +1789,7 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
-      this.taskInvocationTracker?.unregisterTask(task.id);
+      this.taskInvocationTracker?.unregisterTask(process.pid, task.id);
       this.registeredInvocations.delete(task.id);
 
       if (this.tuiEnabled) {
