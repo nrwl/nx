@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p nx vite react playwright @nx/oxlint eslint-plugin",
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p nx js vite react playwright @nx/oxlint eslint-plugin",
     "validate": "nx run-many -t lint,test,build,e2e"
   },
   "nx": {
@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@nx/eslint-plugin": "link:../../../packages/eslint-plugin",
+    "@nx/js": "link:../../../packages/js",
     "@nx/oxlint": "link:../../../packages/oxlint",
     "@nx/playwright": "link:../../../packages/playwright",
     "@nx/react": "link:../../../packages/react",

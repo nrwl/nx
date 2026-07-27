@@ -3,6 +3,7 @@ import {
   createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
+  getDependencyVersionFromPackageJson,
   readNxJson,
   runTasksInSerial,
   TargetConfiguration,
@@ -69,14 +70,20 @@ export async function initGeneratorInternal(
   ensureRootConfig(tree);
 
   if (!options.skipPackageJson) {
+    const devDependencies: Record<string, string> = { oxlint: oxlintVersion };
+    // Only declare ourselves when absent. `addDependenciesToPackageJson`
+    // compares versions and treats any non-semver range (`link:`, `file:`,
+    // `workspace:`) as lower than whatever it is given, so re-declaring would
+    // replace a deliberate local reference with a plain version.
+    if (!getDependencyVersionFromPackageJson(tree, '@nx/oxlint')) {
+      devDependencies['@nx/oxlint'] = nxVersion;
+    }
+
     tasks.push(
       addDependenciesToPackageJson(
         tree,
         {},
-        {
-          '@nx/oxlint': nxVersion,
-          oxlint: oxlintVersion,
-        },
+        devDependencies,
         undefined,
         options.keepExistingVersions
       )

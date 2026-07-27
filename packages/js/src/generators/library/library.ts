@@ -31,6 +31,7 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { addLintingToProject } from '../../utils/add-linting-to-project';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
@@ -397,6 +398,17 @@ export async function addLint(
   tree: Tree,
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
+  // Everything below reaches into `@nx/eslint`'s config utilities, which have
+  // no equivalent for other linters. Dispatch before touching any of it.
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(tree, {
+      linter: options.linter,
+      project: options.name,
+      addPlugin: options.addPlugin,
+      rootProject: options.rootProject,
+    });
+  }
+
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
   const {
     addOverrideToLintConfig,

@@ -18,6 +18,9 @@ importers:
       '@nx/eslint-plugin':
         specifier: link:../../../packages/eslint-plugin
         version: link:../../../packages/eslint-plugin
+      '@nx/js':
+        specifier: link:../../../packages/js
+        version: link:../../../packages/js
       '@nx/oxlint':
         specifier: link:../../../packages/oxlint
         version: link:../../../packages/oxlint
