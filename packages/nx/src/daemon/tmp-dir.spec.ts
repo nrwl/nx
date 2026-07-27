@@ -8,6 +8,15 @@ import {
   getSocketDir,
   InvalidSocketDirConfigured,
 } from './tmp-dir';
+import {
+  ensureOwnedPrivateDir,
+  relaxSharedRootToSticky,
+} from '../utils/owned-private-dir';
+
+jest.mock('../utils/owned-private-dir', () => ({
+  ensureOwnedPrivateDir: jest.fn(() => true),
+  relaxSharedRootToSticky: jest.fn(),
+}));
 
 jest.mock('node:fs', () => {
   const actual = jest.requireActual('node:fs');
@@ -77,7 +86,7 @@ describe('socket directories', () => {
 
     const dir = getSocketDir();
 
-    expect(mkdirSync).toHaveBeenCalledWith(dir, { mode: 0o700 });
+    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(dir);
     expect(mkdirSync).toHaveBeenCalledWith('/tmp/.nx/sockets', {
       recursive: true,
     });
@@ -92,7 +101,7 @@ describe('socket directories', () => {
 
     const dir = getPluginSocketDir();
 
-    expect(mkdirSync).toHaveBeenCalledWith(dir, { mode: 0o700 });
+    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(dir);
     expect(mkdirSync).toHaveBeenCalledWith('/tmp/.nx/sockets', {
       recursive: true,
     });
@@ -106,8 +115,10 @@ describe('socket directories', () => {
     // The individual socket dir is owner-only, but the shared root it lives
     // under is relaxed to 0o1777 (like /tmp) so other users on the machine can
     // create their own owner-only socket dirs alongside it.
-    expect(chmodSync).toHaveBeenCalledWith('/tmp/.nx', 0o1777);
-    expect(chmodSync).toHaveBeenCalledWith('/tmp/.nx/sockets', 0o1777);
+    // Each root is relaxed by its own call: sharing one try block meant a
+    // failure on the outer root skipped the inner one, locking other users out.
+    expect(relaxSharedRootToSticky).toHaveBeenCalledWith('/tmp/.nx');
+    expect(relaxSharedRootToSticky).toHaveBeenCalledWith('/tmp/.nx/sockets');
   });
 
   it('gives the daemon and plugin sockets distinct directories', () => {
@@ -137,9 +148,7 @@ describe('socket directories', () => {
     const dir = getSocketDir();
 
     expect(dir).toBe('/tmp/nx-custom-sock');
-    expect(mkdirSync).toHaveBeenCalledWith('/tmp/nx-custom-sock', {
-      mode: 0o700,
-    });
+    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith('/tmp/nx-custom-sock');
   });
 
   it('does not relax the shared root when an explicit socket dir is configured', () => {
@@ -149,8 +158,7 @@ describe('socket directories', () => {
     getSocketDir();
 
     // Only the configured dir is touched; the default stable root is left alone.
-    expect(chmodSync).not.toHaveBeenCalledWith('/tmp/.nx', 0o1777);
-    expect(chmodSync).not.toHaveBeenCalledWith('/tmp/.nx/sockets', 0o1777);
+    expect(relaxSharedRootToSticky).not.toHaveBeenCalled();
   });
 
   it('does not chmod on Windows (named pipes rely on their default DACL)', () => {

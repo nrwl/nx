@@ -1,4 +1,50 @@
-import { chmodSync, lstatSync, mkdirSync } from 'node:fs';
+import {
+  closeSync,
+  constants,
+  fchmodSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+} from 'node:fs';
+
+/**
+ * chmod a path without ever following a symlink at its final component.
+ *
+ * A plain `chmodSync` resolves symlinks, so calling it on a path another local
+ * user pre-created as a link retargets the mode change onto whatever the link
+ * points at. `O_NOFOLLOW` makes the kernel refuse to open a symlink at all
+ * (ELOOP), and the mode is then applied to the descriptor rather than the path,
+ * so there is no window in which the path could be swapped between the check
+ * and the change.
+ */
+function chmodNoFollow(path: string, mode: number): void {
+  const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  try {
+    fchmodSync(fd, mode);
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/**
+ * Best-effort relax a *shared* root to sticky + world-writable (0o1777, like
+ * /tmp) so that every user on the machine can create their own private
+ * directory beneath it. Only the shared root is relaxed; the per-user
+ * directories underneath are locked down by `ensureOwnedPrivateDir`.
+ *
+ * Failure is expected and ignored: chmod only succeeds for the user that
+ * created the root, and whoever got there first has already set the mode. Each
+ * root is handled independently so one failing does not skip the others — a
+ * root left un-relaxed locks every other user out of it.
+ */
+export function relaxSharedRootToSticky(dir: string): void {
+  if (process.platform === 'win32') {
+    return;
+  }
+  try {
+    chmodNoFollow(dir, 0o1777);
+  } catch {}
+}
 
 /**
  * Ensure `dir` exists, is owned by the current user, is a real directory (not a
@@ -46,11 +92,16 @@ export function ensureOwnedPrivateDir(dir: string): boolean {
     if (stats.uid !== myUid) {
       return false;
     }
-    // No write bits for group (0o020) or other (0o002).
-    if (stats.mode & 0o022) {
+    // Any group or other bit at all, not just write. Read and execute matter
+    // too: a plugin worker socket gets no mode of its own, so the directory is
+    // the only thing stopping another local user from reaching it, and search
+    // permission on the directory is all they need. The workspace-local
+    // fallback dir is created by a bare mkdirSync elsewhere in the daemon, so
+    // it is routinely 0755 and would otherwise be accepted as-is.
+    if (stats.mode & 0o077) {
       // Try to lock it down; if we can't, refuse.
       try {
-        chmodSync(dir, 0o700);
+        chmodNoFollow(dir, 0o700);
       } catch {
         return false;
       }
