@@ -465,12 +465,10 @@ describe('setup-ai-agents generator', () => {
           '/tmp/.nx/sockets',
         ]);
         expect(config.sandbox.filesystem.allowRead).toEqual(['/tmp/.nx']);
-        // Narrower than allowRead on purpose: /tmp/.nx also holds the native
-        // binary cache that Nx loads and executes a binding out of, and
-        // sandboxed code runs as the same uid.
-        expect(config.sandbox.filesystem.allowWrite).toEqual([
-          '/tmp/.nx/sockets',
-        ]);
+        // Covers the tmp root, not just the socket dir: the native binary cache
+        // lives under it, and without it a running daemon pins the binding
+        // inside node_modules.
+        expect(config.sandbox.filesystem.allowWrite).toEqual(['/tmp/.nx']);
       });
 
       it('should allow creating unix sockets, not only connecting to existing ones', async () => {
@@ -502,7 +500,7 @@ describe('setup-ai-agents generator', () => {
           JSON.stringify({
             sandbox: {
               filesystem: {
-                allowWrite: ['~/.gradle', '/tmp/.nx/sockets'],
+                allowWrite: ['~/.gradle', '/tmp/.nx'],
               },
               network: {
                 allowUnixSockets: ['/var/run/docker.sock', '/tmp/.nx/sockets'],
@@ -518,7 +516,7 @@ describe('setup-ai-agents generator', () => {
         );
         expect(config.sandbox.filesystem.allowWrite).toEqual([
           '~/.gradle',
-          '/tmp/.nx/sockets',
+          '/tmp/.nx',
         ]);
         expect(config.sandbox.filesystem.allowRead).toEqual(['/tmp/.nx']);
         expect(config.sandbox.network.allowUnixSockets).toEqual([

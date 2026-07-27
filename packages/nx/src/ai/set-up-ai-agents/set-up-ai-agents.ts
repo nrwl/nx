@@ -189,16 +189,15 @@ export async function setupAiAgentsGeneratorImpl(
             json.sandbox?.filesystem?.allowRead,
             NX_TMP_DIR_POSIX
           ),
-          // Deliberately narrower than allowRead. The Nx tmp root also holds
-          // the native binary cache, which Nx loads and *executes* a compiled
-          // binding out of. Sandboxed code runs as the same uid, so the cache's
-          // ownership check passes for it — granting write on the whole root
-          // would let anything in the sandbox plant a binary that the user's
-          // next un-sandboxed run executes. Scoped here, Nx refuses the cache
-          // inside the sandbox and loads the binding from node_modules instead.
+          // Covers the whole tmp root, not just the socket dir: the native
+          // binary cache lives under it too, and without the cache a running
+          // daemon keeps an open handle on the binding inside node_modules,
+          // which blocks reinstalling or rebuilding dependencies. What keeps
+          // users apart is not this allowlist but the 0700 per-uid directories
+          // Nx verifies on every use (see ensureOwnedPrivateDir).
           allowWrite: appendIfMissing(
             json.sandbox?.filesystem?.allowWrite,
-            NX_SOCKET_ROOT_POSIX
+            NX_TMP_DIR_POSIX
           ),
         },
         network: {
