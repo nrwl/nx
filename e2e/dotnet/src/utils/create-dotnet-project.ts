@@ -5,7 +5,7 @@ import { join } from 'path';
 
 export interface DotNetProjectOptions {
   name: string;
-  type: 'console' | 'classlib' | 'xunit' | 'webapi';
+  type: 'console' | 'classlib' | 'xunit' | 'webapi' | 'mstest';
   cwd?: string;
 }
 
