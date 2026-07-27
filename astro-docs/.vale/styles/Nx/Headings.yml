@@ -76,6 +76,8 @@ exceptions:
   - Turborepo
   - Lerna
   - Bazel
+  - Rush Stack
+  - Rush
   - Depot
   - Blacksmith
   - Buildkite
