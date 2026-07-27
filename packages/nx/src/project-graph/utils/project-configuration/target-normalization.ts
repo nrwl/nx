@@ -1,4 +1,8 @@
-import { NxJsonConfiguration, TargetDefaults } from '../../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  TargetDefaults,
+  TargetDefaultValue,
+} from '../../../config/nx-json';
 import {
   ProjectConfiguration,
   TargetConfiguration,
@@ -116,16 +120,12 @@ export function normalizeTarget(
 
 /**
  * Whether `target` is cacheable only by way of the legacy name-based fallback:
- * the exact target-name key of `targetDefaults` declares `cache: true`, but the
- * merged target never received it because another key — typically an executor
- * key — won target-default resolution instead.
+ * the exact target-name key of `targetDefaults` declares `cache: true`, but an
+ * executor key won target-default resolution instead, so the merged target never
+ * received it.
  *
  * A `true` result means the user's `cache: true` silently lost, so this doubles
  * as the condition for warning them that the name key is being shadowed.
- *
- * Only catch-all entries of the nested-array shape are considered — evaluating a
- * `filter` needs project/plugin context that isn't resolved at normalization
- * time — and later entries win, matching the in-key merge order.
  */
 function isLegacyCachedTarget(
   targetName: string,
@@ -137,24 +137,62 @@ function isLegacyCachedTarget(
     return false;
   }
 
-  // Continuous tasks are never cacheable, and setting `cache` here would trip
-  // the cache/continuous validation in `normalizeTargets`. The pre-23 inference
-  // skipped them too, via its `!longRunningTask(task)` guard.
-  if (target.continuous) {
+  if (isLongRunningTarget(targetName, target)) {
     return false;
   }
 
-  const value = targetDefaults?.[targetName];
+  // Scope to the case this restores. A name key can also lose by being dropped
+  // as incompatible (its entry declared a foreign executor), which is not
+  // shadowing and got no cacheability pre-23 either.
+  if (!findShadowingTargetDefaultKey(targetDefaults, target)) {
+    return false;
+  }
+
+  return declaresCacheTrue(targetDefaults?.[targetName]);
+}
+
+/**
+ * Whether the name key declares `cache: true` on an entry that always applies.
+ *
+ * Filters are deliberately not evaluated. They cannot express a pre-23 config
+ * (the filtered array shape postdates the behavior being restored), and a
+ * filtered entry declaring `cache` may or may not apply to this project — so
+ * rather than guess, a filtered `cache` declares the value unknowable and
+ * nothing is restored. Among unfiltered entries the last wins, matching the
+ * in-key merge order.
+ */
+function declaresCacheTrue(value: TargetDefaultValue | undefined): boolean {
   if (!value) {
     return false;
   }
-
   const entries = Array.isArray(value) ? value : [value];
-  for (let i = entries.length - 1; i >= 0; i--) {
-    if (entries[i].filter) continue;
-    if (entries[i].cache !== undefined) return entries[i].cache === true;
+  let declared: boolean | undefined;
+  for (const entry of entries) {
+    if (entry.cache === undefined) continue;
+    if (entry.filter) return false;
+    declared = entry.cache;
   }
-  return false;
+  return declared === true;
+}
+
+/**
+ * The normalization-time half of the pre-23 `longRunningTask` guard, which kept
+ * `cacheableOperations` from ever making these cacheable. Its remaining clause
+ * — `task.overrides['watch']` — is a runtime invocation override with no target
+ * equivalent, so it has no counterpart here.
+ */
+function isLongRunningTarget(
+  targetName: string,
+  target: TargetConfiguration
+): boolean {
+  return (
+    !!target.continuous ||
+    targetName.endsWith(':watch') ||
+    targetName.endsWith('-watch') ||
+    targetName === 'serve' ||
+    targetName === 'dev' ||
+    targetName === 'start'
+  );
 }
 
 /**
