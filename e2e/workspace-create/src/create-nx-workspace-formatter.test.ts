@@ -6,6 +6,7 @@ import {
   readFile,
   readJson,
   runCLI,
+  runCommandAsync,
   runCreateWorkspace,
   uniq,
   updateFile,
@@ -47,7 +48,7 @@ describe('create-nx-workspace --formatter', () => {
     expect(() => runCLI('format:check --all')).not.toThrow();
   });
 
-  it('should not fail format when no formatter is configured', () => {
+  it('should not fail format when no formatter is configured', async () => {
     const wsName = uniq('noformatter');
     runCreateWorkspace(wsName, {
       preset: 'ts',
@@ -57,10 +58,12 @@ describe('create-nx-workspace --formatter', () => {
 
     checkFilesDoNotExist('.oxfmtrc.json', '.prettierrc');
 
-    // Workspaces with no formatter must degrade to a warning. Exiting non-zero
-    // here is what broke `nx release` for non-prettier repos (#30403).
-    const output = runCLI('format:check --all', { silenceError: true });
-    expect(output).toContain('No formatter configured');
+    // Workspaces with no formatter must degrade to a warning rather than
+    // exiting non-zero - that failure is what broke `nx release` for
+    // non-prettier repos (#30403). The warning goes to stderr, so read the
+    // combined output rather than runCLI's stdout-only return value.
+    const { combinedOutput } = await runCommandAsync('nx format:check --all');
+    expect(combinedOutput).toContain('No formatter configured');
 
     expect(() => runCLI('format:write --all')).not.toThrow();
   });
