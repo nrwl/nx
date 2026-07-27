@@ -23,6 +23,10 @@ Federation:
 Nx provides the best experience for teams that want faster builds, but want to also minimize the downsides that come
 with Module Federation. Nx provides specialized generators, executors, and utilities that make Module Federation easy to set up and work with.
 
+{% aside type="caution" title="Walkthrough uses the legacy generators" %}
+The step-by-step example below is built on the `host` and `remote` generators and `withModuleFederation`, which are deprecated in Nx v23 and will be removed in v24. Existing workspaces on that setup keep working, and the caching and distribution benefits described here apply unchanged. For new workspaces, start from the `consumer` and `provider` generators instead. See [consumer and provider](/docs/kb/consumer-and-provider).
+{% /aside %}
+
 ## When should I use Module Federation?
 
 Whether Module Federation makes sense for your team depends on the size of your application. Although Nx hides most of
