@@ -23,7 +23,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["none", "eslint"],
+      "enum": ["none", "eslint", "oxlint"],
       "x-priority": "important"
     },
     "js": {

@@ -1,23 +1,24 @@
 import type { Tree } from '@nx/devkit';
 import { promptWhenInteractive } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from './typescript/ts-solution-setup';
+import type { LinterType } from './linter';
 
 export async function normalizeLinterOption(
   tree: Tree,
-  linter: undefined | 'none' | 'eslint'
-): Promise<'none' | 'eslint'> {
+  linter: undefined | LinterType
+): Promise<LinterType> {
   if (linter) {
     return linter;
   }
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   const choices = isTsSolutionSetup
-    ? [{ name: 'none' }, { name: 'eslint' }]
-    : [{ name: 'eslint' }, { name: 'none' }];
+    ? [{ name: 'none' }, { name: 'eslint' }, { name: 'oxlint' }]
+    : [{ name: 'eslint' }, { name: 'oxlint' }, { name: 'none' }];
   const defaultValue = isTsSolutionSetup ? 'none' : 'eslint';
 
   return await promptWhenInteractive<{
-    linter: 'none' | 'eslint';
+    linter: LinterType;
   }>(
     {
       type: 'autocomplete',
