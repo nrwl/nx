@@ -1,8 +1,9 @@
 import { userInfo } from 'os';
 import { join } from 'path';
-import { chmodSync, lstatSync, mkdirSync } from 'fs';
+import { chmodSync, mkdirSync } from 'fs';
 import { NX_TMP_DIR } from '../utils/nx-tmp-dir';
 import { nxVersion } from '../utils/versions';
+import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
 
 /**
  * Shared parent for every user's native binary cache. Like NX_TMP_DIR and the
@@ -12,14 +13,19 @@ import { nxVersion } from '../utils/versions';
  */
 const NATIVE_BINARIES_ROOT = join(NX_TMP_DIR, 'native-binaries');
 
+export { ensureOwnedPrivateDir };
+
 export function getNativeFileCacheLocation() {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
     return process.env.NX_NATIVE_FILE_CACHE_DIRECTORY;
   }
 
-  // /tmp/.nx/native-binaries/<uid>/<nxVersion>. The binary is identical for a
-  // given Nx version regardless of workspace, so the version is the only key
-  // needed under the per-user dir.
+  // /tmp/.nx/native-binaries/<uid>/<nxVersion>. For a published Nx the binary
+  // is identical for a given version regardless of workspace, so the version
+  // is enough to key the directory. That does NOT hold in a source checkout,
+  // where nxVersion is the placeholder 0.0.1 for every worktree — the loader
+  // additionally keys each cached file by a hash of the resolved binding path
+  // (see native/index.js) so checkouts cannot collide here.
   return join(NATIVE_BINARIES_ROOT, getUserSegment(), nxVersion);
 }
 
@@ -36,7 +42,13 @@ export function getNativeFileCacheLocation() {
  * symlink), and not be writable by group or other. If any of those fail we
  * refuse the cache and fall back to loading in place.
  */
-export function ensureSecureNativeFileCacheLocation(): string | null {
+export function ensureSecureNativeFileCacheLocation(
+  // Internal seam: production always uses NATIVE_BINARIES_ROOT. Tests override
+  // it so they can plant a hostile directory under a root they control, since
+  // the real one lives in /tmp and may be unwritable (sandboxes) or shared with
+  // a concurrently running Nx.
+  binariesRoot: string = NATIVE_BINARIES_ROOT
+): string | null {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
     // Caller-provided location; its safety is the caller's responsibility.
     const dir = process.env.NX_NATIVE_FILE_CACHE_DIRECTORY;
@@ -48,17 +60,17 @@ export function ensureSecureNativeFileCacheLocation(): string | null {
     }
   }
 
-  const userDir = join(NATIVE_BINARIES_ROOT, getUserSegment());
+  const userDir = join(binariesRoot, getUserSegment());
 
   try {
     // Create the shared root world-writable + sticky, like /tmp itself, so
     // peers can make their own per-uid dirs. chmod only succeeds for the
     // creating user, hence best-effort.
-    mkdirSync(NATIVE_BINARIES_ROOT, { recursive: true });
+    mkdirSync(binariesRoot, { recursive: true });
     if (canCheckOwnership()) {
       try {
         chmodSync(NX_TMP_DIR, 0o1777);
-        chmodSync(NATIVE_BINARIES_ROOT, 0o1777);
+        chmodSync(binariesRoot, 0o1777);
       } catch {}
     }
   } catch {
@@ -77,58 +89,6 @@ export function ensureSecureNativeFileCacheLocation(): string | null {
     return null;
   }
   return versionDir;
-}
-
-/**
- * Ensure `dir` exists, is owned by the current user, is a real directory (not a
- * symlink), and is not writable by group or other (mode 0700). Returns false if
- * it exists but fails any of those checks — i.e. it may have been planted by
- * another user through the world-writable parent.
- *
- * Exported for testing: this is the check that stops another local user from
- * planting a `.node` we would load and execute, so it is verified directly
- * rather than through the caller.
- */
-export function ensureOwnedPrivateDir(dir: string): boolean {
-  try {
-    mkdirSync(dir, { mode: 0o700 });
-    // We just created it, so it is ours and private.
-    return true;
-  } catch (e: any) {
-    if (e?.code !== 'EEXIST') {
-      return false;
-    }
-  }
-
-  // The dir already existed — verify it is safe to use.
-  if (typeof process.getuid !== 'function') {
-    // No POSIX ownership model (Windows). NX_TMP_DIR there is the per-user OS
-    // temp dir, not a shared /tmp, so cross-user planting is not a concern.
-    return true;
-  }
-  const myUid = process.getuid();
-
-  try {
-    const stats = lstatSync(dir);
-    if (!stats.isDirectory()) {
-      return false;
-    }
-    if (stats.uid !== myUid) {
-      return false;
-    }
-    // No write bits for group (0o020) or other (0o002).
-    if (stats.mode & 0o022) {
-      // Try to lock it down; if we can't, refuse.
-      try {
-        chmodSync(dir, 0o700);
-      } catch {
-        return false;
-      }
-    }
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function canCheckOwnership(): boolean {

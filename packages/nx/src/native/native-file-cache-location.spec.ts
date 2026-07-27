@@ -173,11 +173,44 @@ describe('native file cache location', () => {
       }
     });
 
-    // NOTE: this is an end-to-end sanity check of the contract, not branch
-    // coverage. The per-uid directory is derived from the fixed NX_TMP_DIR, so
-    // this test cannot plant a hostile directory to force the refusal path —
-    // every rejection branch is covered directly in the `ensureOwnedPrivateDir`
-    // suite above.
+    // The two tests below pin the *wiring*, which the `ensureOwnedPrivateDir`
+    // suite above cannot: those cover the guard's own branches, but reverting
+    // either call site here to a bare `mkdirSync` leaves them all green. They
+    // run against an injected root so they do not depend on /tmp/.nx being
+    // writable, which it is not under some sandboxes.
+    posixOnly('should refuse a per-uid directory planted as a symlink', () => {
+      const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+      try {
+        const victim = join(base, 'victim');
+        mkdirSync(victim, { mode: 0o755 });
+        // The per-uid dir is the first hop under the world-writable root.
+        symlinkSync(victim, join(base, String(process.getuid!())));
+
+        expect(ensureSecureNativeFileCacheLocation(base)).toBeNull();
+        expect(lstatSync(victim).mode & 0o777).toEqual(0o755);
+      } finally {
+        rmSync(base, { recursive: true, force: true });
+      }
+    });
+
+    posixOnly('should refuse a version directory planted as a symlink', () => {
+      const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+      try {
+        const userDir = join(base, String(process.getuid!()));
+        mkdirSync(userDir, { recursive: true, mode: 0o700 });
+        const victim = join(base, 'victim');
+        mkdirSync(victim, { mode: 0o755 });
+        // The version dir is the directory a `.node` is loaded out of, so it
+        // must be verified rather than created with `recursive: true`.
+        symlinkSync(victim, join(userDir, nxVersion));
+
+        expect(ensureSecureNativeFileCacheLocation(base)).toBeNull();
+        expect(lstatSync(victim).mode & 0o777).toEqual(0o755);
+      } finally {
+        rmSync(base, { recursive: true, force: true });
+      }
+    });
+
     posixOnly(
       'should either return a locked-down per-uid directory or refuse the cache',
       () => {
