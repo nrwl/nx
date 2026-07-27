@@ -1,13 +1,9 @@
 import { ExecutorContext } from '@nx/devkit';
-import {
-  rspack,
-  type Compiler,
-  type Configuration,
-  type MultiCompiler,
-} from '@rspack/core';
+import type { Compiler, Configuration, MultiCompiler } from '@rspack/core';
 
 import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
 import { getRspackConfigs } from '../executors/rspack/lib/config';
+import { loadRspackCore } from './load-rspack-core';
 
 export async function createCompiler(
   options: NormalizedRspackExecutorSchema & {
@@ -21,6 +17,12 @@ export async function createCompiler(
     validateConfig(config);
   }
 
+  // Lazy-require avoids loading @rspack/core (pure ESM in v2) at module
+  // parse time — this file is imported at the top of the `@nx/rspack:rspack`
+  // and `@nx/rspack:dev-server` executors, so a top-level value import here
+  // used to force-resolve @rspack/core as soon as the executor module was
+  // loaded, before any build actually ran. See load-rspack-core.ts.
+  const { rspack } = loadRspackCore();
   return rspack(config);
 }
 
