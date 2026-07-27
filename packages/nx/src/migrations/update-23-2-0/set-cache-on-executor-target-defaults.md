@@ -6,7 +6,9 @@ Target defaults resolve to a single key rather than merging them. When a target 
 
 This migration copies `cache` onto each executor key that applies to a target whose target name key enables it, so those targets remain cacheable.
 
-Executor keys that already set `cache` keep their existing value, and only executor keys that apply to a target in the workspace are updated.
+Because an executor key applies to every target that resolves through it, the migration only updates a key when all of those targets independently enable caching. It leaves the key unchanged when the key already sets `cache`, when any target through it is a long-running target such as `serve`, `dev`, or `start`, or when any target through it has no target name key enabling `cache`. Nx still resolves cacheability for those targets at run time and reports them as using a deprecated fallback.
+
+Targets are read from `project.json` and `package.json`. Targets inferred by a plugin are not visible to the migration, so if a workspace's targets come from inference, set `cache` on the executor key by hand. Nx warns at run time and names both keys involved.
 
 #### Sample code changes
 
