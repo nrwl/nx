@@ -1,9 +1,12 @@
 import { userInfo } from 'os';
 import { join } from 'path';
-import { chmodSync, mkdirSync } from 'fs';
+import { mkdirSync } from 'fs';
 import { NX_TMP_DIR } from '../utils/nx-tmp-dir';
 import { nxVersion } from '../utils/versions';
-import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
+import {
+  ensureOwnedPrivateDir,
+  relaxSharedRootToSticky,
+} from '../utils/owned-private-dir';
 
 /**
  * Shared parent for every user's native binary cache. Like NX_TMP_DIR and the
@@ -68,10 +71,11 @@ export function ensureSecureNativeFileCacheLocation(
     // creating user, hence best-effort.
     mkdirSync(binariesRoot, { recursive: true });
     if (canCheckOwnership()) {
-      try {
-        chmodSync(NX_TMP_DIR, 0o1777);
-        chmodSync(binariesRoot, 0o1777);
-      } catch {}
+      // Relaxed independently: a failure on the outer root must not skip the
+      // inner one, or the first user to get here locks everyone else out of
+      // the cache.
+      relaxSharedRootToSticky(NX_TMP_DIR);
+      relaxSharedRootToSticky(binariesRoot);
     }
   } catch {
     return null;
