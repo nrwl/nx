@@ -303,6 +303,13 @@
       }
     },
     {
+      "plugin": "@nx/oxlint/plugin",
+      "include": ["packages/oxlint/**"],
+      "options": {
+        "targetName": "oxlint"
+      }
+    },
+    {
       "plugin": "@nx/jest/plugin",
       "exclude": [
         "e2e/**/*",
