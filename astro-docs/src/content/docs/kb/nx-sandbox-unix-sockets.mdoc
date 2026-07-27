@@ -38,7 +38,7 @@ This grants Nx the ability to create and connect to Unix sockets, which it needs
 
 ## Scoped allowlisting with the Nx socket root
 
-Nx creates all of its sockets under a single stable directory on macOS and Linux: `/tmp/.nx/sockets`, unless overridden via `NX_SOCKET_DIR`. Allowlist that one directory instead of granting blanket socket access:
+Nx creates all of its sockets under a single stable directory on macOS and Linux: `/tmp/.nx/sockets`, unless overridden via `NX_SOCKET_DIR`. Allowlist that one directory, and grant read and write on its parent, instead of granting blanket socket access:
 
 ```json
 // .claude/settings.json
@@ -46,7 +46,7 @@ Nx creates all of its sockets under a single stable directory on macOS and Linux
   "sandbox": {
     "filesystem": {
       "allowRead": ["/tmp/.nx"],
-      "allowWrite": ["/tmp/.nx/sockets"]
+      "allowWrite": ["/tmp/.nx"]
     },
     "network": {
       "allowUnixSockets": ["/tmp/.nx/sockets"]
@@ -57,8 +57,12 @@ Nx creates all of its sockets under a single stable directory on macOS and Linux
 
 The path is identical on every machine, so the entries are safe to commit and share with your team.
 
-{% aside type="caution" title="Keep the write grant narrower than the read grant" %}
-Grant write on `/tmp/.nx/sockets`, not on `/tmp/.nx`. The parent also holds Nx's native binary cache, which Nx copies its compiled binding into and then loads and executes. Sandboxed code runs as your own user, so a write grant on `/tmp/.nx` lets anything in the sandbox replace that binary, and your next Nx run outside the sandbox would execute it. With write scoped to the socket directory, Nx simply skips the cache inside the sandbox and loads the binding from `node_modules` instead.
+The write grant covers `/tmp/.nx` rather than only the socket directory because Nx also copies its compiled native binding into a cache under that root before loading it. Without that cache a running daemon holds an open handle on the binding inside `node_modules`, which blocks reinstalling or rebuilding your dependencies until the daemon stops.
+
+{% aside type="note" title="What keeps these directories private" %}
+The allowlist decides which paths the sandbox can reach. It is not what separates users from each other. Every directory Nx creates under `/tmp/.nx` is created `0700` and re-checked on each use: owned by you, a real directory rather than a symlink, and not writable by group or other. Nx refuses a directory that fails any of those checks and falls back to a private location. The shared roots stay world-writable only so each user on the machine can create their own private directory beneath them.
+
+Code inside the sandbox runs as your user, so this grant does let it write that binary cache, in the same way it can already write your workspace's `node_modules`.
 {% /aside %}
 
 Claude Code's `allowUnixSockets` setting currently only allows _connecting_ to sockets, not _creating_ them. A scoped allowlist works when the daemon is already running (started outside the sandbox, for example from your own terminal), but processes inside the sandbox that need to create sockets, such as a fresh daemon, plugin workers, or forked tasks, still require `allowAllUnixSockets: true`.
