@@ -17,11 +17,7 @@ export async function createCompiler(
     validateConfig(config);
   }
 
-  // Lazy-require avoids loading @rspack/core (pure ESM in v2) at module
-  // parse time — this file is imported at the top of the `@nx/rspack:rspack`
-  // and `@nx/rspack:dev-server` executors, so a top-level value import here
-  // used to force-resolve @rspack/core as soon as the executor module was
-  // loaded, before any build actually ran. See load-rspack-core.ts.
+  // Lazy-loaded to avoid resolving @rspack/core (pure ESM) before a build runs; see load-rspack-core.ts.
   const { rspack } = loadRspackCore();
   return rspack(config);
 }
