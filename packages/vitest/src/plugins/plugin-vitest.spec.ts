@@ -105,6 +105,12 @@ describe('@nx/vitest', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
 
+  it('should discover named Vite and Vitest config files', () => {
+    expect(createNodesV2[0]).toEqual(
+      '**/{vite,vitest}.?(*.)config.{js,ts,mjs,mts,cjs,cts}'
+    );
+  });
+
   describe('root project', () => {
     beforeEach(async () => {
       context = {

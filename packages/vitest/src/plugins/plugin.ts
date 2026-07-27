@@ -85,7 +85,7 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
+const vitestConfigGlob = '**/{vite,vitest}.?(*.)config.{js,ts,mjs,mts,cjs,cts}';
 
 export const createNodes: CreateNodes<VitestPluginOptions> = [
   vitestConfigGlob,
