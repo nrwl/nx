@@ -83,7 +83,7 @@ fn read_path_file(file: &Path, base: &Path) -> Option<PathBuf> {
 /// Read a gitfile - the `gitdir: <path>` form git writes in place of a `.git`
 /// directory. Only the working tree side carries the prefix; the metadata
 /// side records a bare path.
-fn read_gitfile(gitfile: &Path, base: &Path) -> Option<PathBuf> {
+pub fn read_gitfile(gitfile: &Path, base: &Path) -> Option<PathBuf> {
     let contents = read_to_string(gitfile).ok()?;
     resolve_recorded_path(contents.trim().strip_prefix(GITDIR_PREFIX)?.trim(), base)
 }
@@ -103,7 +103,7 @@ fn resolve_git_dir(git_root: &Path) -> Option<PathBuf> {
 /// The git directory shared by every worktree of a repository. Walking from
 /// inside a linked worktree lands on `<main>/.git/worktrees/<name>`, whose
 /// `commondir` points back at the main `.git`.
-fn common_git_dir(git_dir: &Path) -> PathBuf {
+pub fn common_git_dir(git_dir: &Path) -> PathBuf {
     let Ok(contents) = read_to_string(git_dir.join("commondir")) else {
         return git_dir.to_path_buf();
     };
