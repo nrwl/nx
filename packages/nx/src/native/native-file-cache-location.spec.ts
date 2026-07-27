@@ -1,4 +1,4 @@
-import { chmodSync as mockedChmodSync } from 'fs';
+import { fchmodSync as mockedFchmodSync } from 'fs';
 import {
   chmodSync,
   lstatSync,
@@ -19,11 +19,13 @@ import {
 import { nxVersion } from '../utils/versions';
 
 // Real filesystem behavior is the point of these tests (actual symlinks, actual
-// modes), so only chmodSync is replaced, and only to simulate the one failure
+// modes), so only fchmodSync is replaced, and only to simulate the one failure
 // we cannot produce as the owning user: being unable to re-lock a loose dir.
+// The helper tightens through an O_NOFOLLOW descriptor, so fchmodSync rather
+// than chmodSync is the call that has to fail.
 jest.mock('fs', () => {
   const actual = jest.requireActual('fs');
-  return { ...actual, chmodSync: jest.fn(actual.chmodSync) };
+  return { ...actual, fchmodSync: jest.fn(actual.fchmodSync) };
 });
 
 // The ownership/permission hardening has no analogue on Windows, where the OS
@@ -149,7 +151,7 @@ describe('native file cache location', () => {
         const dir = join(base, 'stuck');
         mkdirSync(dir, { mode: 0o777 });
         chmodSync(dir, 0o777);
-        (mockedChmodSync as jest.Mock).mockImplementationOnce(() => {
+        (mockedFchmodSync as jest.Mock).mockImplementationOnce(() => {
           const error: NodeJS.ErrnoException = new Error('EPERM');
           error.code = 'EPERM';
           throw error;

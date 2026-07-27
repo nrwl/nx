@@ -3,10 +3,13 @@
  * location within the OS's tmp directory where we write log files for background processes
  * and where we create the actual unix socket/named pipe for the daemon.
  */
-import { chmodSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
-import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
+import {
+  ensureOwnedPrivateDir,
+  relaxSharedRootToSticky,
+} from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
 // The shared OS temp dir. Only used to *reject* it as a socket location (see
 // InvalidSocketDirConfigured); the sockets themselves live under NX_SOCKET_ROOT.
@@ -212,13 +215,13 @@ function createOwnerOnlySocketDir(
  * is a POSIX-only concern.
  */
 function restrictSharedRootToSticky() {
-  if (process.platform === 'win32') {
-    return;
-  }
-  try {
-    chmodSync(NX_TMP_DIR_POSIX, 0o1777);
-    chmodSync(NX_SOCKET_ROOT_POSIX, 0o1777);
-  } catch {}
+  // Relaxed independently. Sharing one try block meant a failure on the outer
+  // root skipped the inner one entirely, leaving it at its creation mode and
+  // locking every other user out of it — and the two are routinely created by
+  // different users, since the native binding loader creates the outer root at
+  // load time, before any socket code runs.
+  relaxSharedRootToSticky(NX_TMP_DIR_POSIX);
+  relaxSharedRootToSticky(NX_SOCKET_ROOT_POSIX);
 }
 
 export function removeSocketDir() {
