@@ -211,9 +211,15 @@ server.on('error', (err: NodeJS.ErrnoException) => {
 // A worker killed without running its 'end' handler leaves its socket file
 // behind, and the next worker to draw the same path fails to bind (EADDRINUSE).
 // The daemon clears its own path the same way (killSocketOrPath) before it
-// listens. Safe to remove unconditionally: the name embeds the host's pid and a
-// per-host counter, so an existing file can only be a leftover from an exited
-// process whose pid was reused, never a socket a live worker is serving.
+// listens, as does pseudo-ipc.
+//
+// The path embeds the host's pid, a per-host worker counter and a millisecond
+// timestamp, so drawing an existing one takes a recycled host pid landing on
+// the same counter and the same millisecond. The previous owner is normally
+// gone by then, since a worker exits once its host's socket closes, but that
+// is not guaranteed: workers are spawned detached and shutdown() never kills
+// them, and the path carries the host's pid rather than the worker's. The
+// same caveat applies across PID namespaces sharing a bind-mounted /tmp.
 try {
   unlinkSync(socketPath);
 } catch {}

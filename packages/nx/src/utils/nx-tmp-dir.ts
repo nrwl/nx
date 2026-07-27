@@ -7,8 +7,8 @@ import { join } from 'node:path';
  * is used instead of os.tmpdir() because tmpdir() honors $TMPDIR, which is
  * per-user on macOS, rewritten per-session by sandboxes, and stripped from the
  * daemon's environment — a literal path stays identical across machines,
- * processes and contexts, so it can live in committed, shared config files
- * (e.g. the sandbox allowances written by `nx configure-ai-agents`).
+ * processes and contexts, so a sandbox allowlist entry for it can be committed
+ * and shared across a team rather than regenerated per machine.
  *
  * This module must stay dependency-free (node builtins only): it is consumed
  * by the native binding loader, which runs before anything else in Nx.
