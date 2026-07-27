@@ -20,7 +20,7 @@ import {
 
 import { output, readJsonFile } from '@nx/devkit';
 import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
-import { typescriptVersion } from '@nx/js/src/utils/versions';
+import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -94,11 +94,14 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
   packages,
   preset = 'apps',
+  typescriptVersion = defaultTypescriptVersion,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   readonly packages?: Array<NxPackage>;
   preset?: string;
+  /** Override for suites pinned to an older TypeScript, e.g. Remix needs 5.x. */
+  typescriptVersion?: string;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
