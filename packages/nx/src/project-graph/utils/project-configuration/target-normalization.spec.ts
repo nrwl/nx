@@ -189,7 +189,10 @@ describe('target-name cache fallback', () => {
   it('should not override cache already resolved on the target', () => {
     const target = normalize(
       { executor: '@nx/angular:webpack-browser', cache: false },
-      { build: { cache: true } }
+      {
+        build: { cache: true },
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
+      }
     );
 
     expect(target.cache).toBe(false);
@@ -198,34 +201,84 @@ describe('target-name cache fallback', () => {
   it('should not apply to continuous targets', () => {
     const target = normalize(
       { executor: 'nx:run-commands', continuous: true },
-      { serve: { cache: true } },
+      { serve: { cache: true }, 'nx:run-commands': { inputs: ['default'] } },
       'serve'
     );
 
     expect(target.cache).toBeUndefined();
   });
 
-  it('should read the last matching entry of an array-shaped default', () => {
+  it.each(['serve', 'dev', 'start', 'build-watch', 'test:watch'])(
+    'should not apply to %s, which the pre-23 guard excluded by name',
+    (targetName) => {
+      const target = normalize(
+        { executor: 'nx:run-commands' },
+        {
+          [targetName]: { cache: true },
+          'nx:run-commands': { inputs: ['default'] },
+        },
+        targetName
+      );
+
+      expect(target.cache).toBeUndefined();
+    }
+  );
+
+  it('should read the last unfiltered entry of an array-shaped default', () => {
     const target = normalize(
       { executor: '@nx/angular:webpack-browser' },
       {
         build: [
+          { cache: false },
+          // Later unfiltered entry wins, matching the in-key merge order.
           { cache: true },
-          { filter: { projects: ['other-project'] }, cache: false },
         ],
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
       }
     );
 
     expect(target.cache).toBe(true);
   });
 
-  it('should not materialize cache when the target-name default opts out', () => {
+  it('should restore nothing when a filtered entry decides cache', () => {
+    // Whether the per-project opt-out applies can't be evaluated here, so the
+    // value is unknowable and nothing is restored.
     const target = normalize(
       { executor: '@nx/angular:webpack-browser' },
-      { build: { cache: false } }
+      {
+        build: [
+          { cache: true },
+          { filter: { projects: ['project'] }, cache: false },
+        ],
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
+      }
     );
 
     expect(target.cache).toBeUndefined();
+  });
+
+  it('should not materialize cache when the target-name default opts out', () => {
+    const target = normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      {
+        build: { cache: false },
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
+      }
+    );
+
+    expect(target.cache).toBeUndefined();
+  });
+
+  it('should not apply when no executor key shadowed the target name key', () => {
+    // The name key's entry declares a foreign executor, so it was dropped as
+    // incompatible rather than shadowed. Nothing to restore, nothing to warn.
+    const target = normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      { build: { cache: true, executor: '@nx/js:tsc' } }
+    );
+
+    expect(target.cache).toBeUndefined();
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('should warn naming the shadowing key and the key it was read from', () => {
