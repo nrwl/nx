@@ -1,4 +1,7 @@
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
+import type { NxJsonConfiguration } from '../../../config/nx-json';
+import type { TargetConfiguration } from '../../../config/workspace-json-project-json';
+import { output } from '../../../utils/output';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import {
   normalizeTarget,
@@ -137,5 +140,160 @@ describe('validateAndNormalizeProjectRootMap', () => {
     expect(() =>
       validateAndNormalizeProjectRootMap(tempFs.tempDir, projectRootMap, {})
     ).toThrow(AggregateError);
+  });
+});
+
+describe('target-name cache fallback', () => {
+  let warn: jest.SpyInstance;
+
+  beforeEach(() => {
+    warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warn.mockRestore();
+  });
+
+  function normalize(
+    target: TargetConfiguration,
+    targetDefaults: NxJsonConfiguration['targetDefaults'],
+    targetName = 'build'
+  ) {
+    const rootMap = {
+      'libs/project': {
+        name: 'project',
+        root: 'libs/project',
+        targets: { [targetName]: target },
+      },
+    };
+    validateAndNormalizeProjectRootMap(workspaceRoot, rootMap, {
+      targetDefaults,
+    });
+    return rootMap['libs/project'].targets[targetName];
+  }
+
+  it('should apply the target-name default when an executor default shadowed it', () => {
+    const target = normalize(
+      // The executor key won outright, so the merged target carries its
+      // `inputs` but never saw the `build` key's `cache`.
+      { executor: '@nx/angular:webpack-browser', inputs: ['production'] },
+      {
+        build: { cache: true, inputs: ['production', '^production'] },
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
+      }
+    );
+
+    expect(target.cache).toBe(true);
+  });
+
+  it('should not override cache already resolved on the target', () => {
+    const target = normalize(
+      { executor: '@nx/angular:webpack-browser', cache: false },
+      { build: { cache: true } }
+    );
+
+    expect(target.cache).toBe(false);
+  });
+
+  it('should not apply to continuous targets', () => {
+    const target = normalize(
+      { executor: 'nx:run-commands', continuous: true },
+      { serve: { cache: true } },
+      'serve'
+    );
+
+    expect(target.cache).toBeUndefined();
+  });
+
+  it('should read the last matching entry of an array-shaped default', () => {
+    const target = normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      {
+        build: [
+          { cache: true },
+          { filter: { projects: ['other-project'] }, cache: false },
+        ],
+      }
+    );
+
+    expect(target.cache).toBe(true);
+  });
+
+  it('should not materialize cache when the target-name default opts out', () => {
+    const target = normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      { build: { cache: false } }
+    );
+
+    expect(target.cache).toBeUndefined();
+  });
+
+  it('should warn naming the shadowing key and the key it was read from', () => {
+    normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      {
+        build: { cache: true },
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
+      }
+    );
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0].bodyLines.join('\n')).toContain(
+      '"@nx/angular:webpack-browser" does not set "cache", so it was read from "build"'
+    );
+  });
+
+  it('should group the warning across projects and targets', () => {
+    const rootMap = {
+      'libs/a': {
+        name: 'a',
+        root: 'libs/a',
+        targets: { build: { executor: '@nx/angular:webpack-browser' } },
+      },
+      'libs/b': {
+        name: 'b',
+        root: 'libs/b',
+        targets: {
+          build: { executor: '@nx/angular:webpack-browser' },
+          test: { executor: '@nx/jest:jest' },
+        },
+      },
+    };
+    validateAndNormalizeProjectRootMap(workspaceRoot, rootMap, {
+      targetDefaults: {
+        build: { cache: true },
+        test: { cache: true },
+        '@nx/angular:webpack-browser': { inputs: ['production'] },
+        '@nx/jest:jest': { inputs: ['default'] },
+      },
+    });
+
+    // Three shadowed targets across two projects, but only two distinct
+    // (executor key, target key) pairs — and one warning.
+    expect(warn).toHaveBeenCalledTimes(1);
+    const bodyLines: string[] = warn.mock.calls[0][0].bodyLines;
+    expect(
+      bodyLines.filter((line) => line.includes('does not set "cache"'))
+    ).toHaveLength(2);
+  });
+
+  it('should not warn when nothing was shadowed', () => {
+    normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      {
+        build: { cache: true },
+      }
+    );
+
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('should leave cache unset when no target-name default exists', () => {
+    const target = normalize(
+      { executor: '@nx/angular:webpack-browser' },
+      { '@nx/angular:webpack-browser': { inputs: ['production'] } }
+    );
+
+    expect(target.cache).toBeUndefined();
   });
 });
