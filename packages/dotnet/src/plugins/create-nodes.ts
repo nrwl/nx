@@ -8,13 +8,59 @@ import {
   analyzeProjects,
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
-import { mergeTargetConfigurations } from '@nx/devkit/internal';
+import {
+  deriveGroupNameFromTarget,
+  mergeTargetConfigurations,
+} from '@nx/devkit/internal';
 
 export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
   /**
    * The name of the target. Defaults to the target type (e.g., 'build', 'test', etc.)
    */
   targetName?: string;
+};
+
+/**
+ * Configuration for the test target, including the options that split it into
+ * one task per test unit.
+ */
+export type TestTargetConfiguration = TargetConfigurationWithName & {
+  /**
+   * Name of the target that runs the project's tests split across many tasks.
+   *
+   * Leave unset (the default) and nothing is split — the project keeps only its
+   * ordinary `test` target. Setting it turns on atomization for every project
+   * this plugin registration matches, so to split a single project, register
+   * `@nx/dotnet` a second time with an `include` pattern scoped to it.
+   *
+   * Requires Microsoft.Testing.Platform. Running the group needs Nx Cloud: Nx
+   * refuses the parent target without it, because expanding into every task on
+   * one machine is slower than not splitting at all. Individual tasks carry no
+   * such restriction and run locally.
+   */
+  ciTargetName?: string;
+
+  /**
+   * Overrides the name of the target group these tasks are collapsed into in Nx
+   * Console and the graph. Defaults to a name derived from `ciTargetName`
+   * (`test-ci` becomes `TEST (CI)`).
+   */
+  ciGroupName?: string;
+
+  /**
+   * Whether each task runs one test class or one test method. Defaults to
+   * `'class'`.
+   *
+   * `'method'` is worth opting into when each test method carries its own
+   * expensive fixture — spinning up a distributed application, a database, a
+   * browser — because then grouping methods into one task saves no setup work
+   * and only serializes tests that could have run on separate agents. For
+   * ordinary suites it multiplies the target count for no gain, since process
+   * startup dominates a fast test.
+   *
+   * `'method'` currently requires MSTest; see the plugin docs.
+   */
+  ciSplitBy?: 'class' | 'method';
 };
 
 /**
@@ -57,9 +103,11 @@ export interface DotNetPluginOptions {
   build?: TargetConfigurationWithName | false;
   /**
    * Configuration for the test target.
-   * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
+   * Use `targetName` to rename the target, `ciTargetName` to additionally split
+   * the tests across one task per test unit, and provide additional
+   * options/configurations to merge with the generated target.
    */
-  test?: TargetConfigurationWithName | false;
+  test?: TestTargetConfiguration | false;
   /**
    * Configuration for the clean target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
@@ -104,9 +152,53 @@ const dotnetProjectGlob =
   '**/{*.{csproj,fsproj,vbproj},Directory.Build.{props,targets,rsp},Directory.Solution.{props,targets},Directory.Packages.props}';
 
 /**
+ * Removes an atomized target group whose non-split target is being disabled.
+ *
+ * Without this, disabling `test` would leave its `test-ci` parent and every
+ * `test-ci--*` leaf behind, all pointing at a target that no longer exists.
+ * The group is located by its `nonAtomizedTarget` back-reference rather than by
+ * name, since the disabling option carries no `ciTargetName` to look up.
+ */
+function removeAtomizedTargetsFor(
+  targets: Record<string, TargetConfiguration>,
+  metadata: ProjectConfiguration['metadata'],
+  nonAtomizedTargetName: string
+): ProjectConfiguration['metadata'] {
+  const parentName = Object.keys(targets).find(
+    (name) =>
+      targets[name].metadata?.nonAtomizedTarget === nonAtomizedTargetName
+  );
+
+  if (!parentName) {
+    return metadata;
+  }
+
+  for (const name of Object.keys(targets)) {
+    if (name === parentName || name.startsWith(`${parentName}--`)) {
+      delete targets[name];
+    }
+  }
+
+  if (!metadata?.targetGroups) {
+    return metadata;
+  }
+
+  const targetGroups = Object.fromEntries(
+    Object.entries(metadata.targetGroups)
+      .map(
+        ([group, names]) =>
+          [group, names.filter((name) => name in targets)] as const
+      )
+      .filter(([, names]) => names.length > 0)
+  );
+
+  return { ...metadata, targetGroups };
+}
+
+/**
  * Merge user-specified target configurations with the generated targets from the analyzer
  */
-function mergeUserTargetConfigurations(
+export function mergeUserTargetConfigurations(
   node: ProjectConfiguration,
   options: DotNetPluginOptions
 ): ProjectConfiguration {
@@ -115,7 +207,7 @@ function mergeUserTargetConfigurations(
   }
 
   const targetMappings: Array<{
-    targetOption: TargetConfigurationWithName | false | undefined;
+    targetOption: TestTargetConfiguration | false | undefined;
     defaultTargetName: string;
   }> = [
     { targetOption: options.build, defaultTargetName: 'build' },
@@ -129,16 +221,33 @@ function mergeUserTargetConfigurations(
   ];
 
   const mergedTargets = { ...node.targets };
+  let mergedMetadata = node.metadata;
 
   for (const { targetOption, defaultTargetName } of targetMappings) {
     // Disabled target from user configuration
     if (targetOption === false) {
+      mergedMetadata = removeAtomizedTargetsFor(
+        mergedTargets,
+        mergedMetadata,
+        defaultTargetName
+      );
       delete mergedTargets[defaultTargetName];
       continue;
     }
 
-    // Use empty object as default when option is not provided
-    const { targetName, ...userSpecifiedConfig } = targetOption ?? {};
+    // Use empty object as default when option is not provided.
+    //
+    // The ci* keys configure how the analyzer generates targets rather than
+    // being target configuration themselves, so they are pulled out here
+    // alongside targetName — otherwise they would be merged onto the generated
+    // target as junk properties.
+    const {
+      targetName,
+      ciTargetName: _ciTargetName,
+      ciGroupName: _ciGroupName,
+      ciSplitBy: _ciSplitBy,
+      ...userSpecifiedConfig
+    } = targetOption ?? {};
     const actualTargetName = targetName ?? defaultTargetName;
 
     // Find the generated target - it might be under the default name or the user-specified name
@@ -172,6 +281,7 @@ function mergeUserTargetConfigurations(
   return {
     ...node,
     targets: mergedTargets,
+    ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
   };
 }
 
@@ -183,8 +293,25 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
       // Normalize options to handle undefined (when plugin is registered as string)
       const normalizedOptions = options ?? {};
 
+      const testOptions =
+        normalizedOptions.test === false ? undefined : normalizedOptions.test;
+      // Only meaningful when the test target itself is enabled; splitting a
+      // target that will be deleted would generate targets referring to it.
+      const ciTargetName = testOptions?.ciTargetName;
+
       // Extract target names from new format and create options for analyzer
       const analyzerOptions = {
+        // Derived here rather than in the analyzer so there is one
+        // implementation of the naming convention shared with every other Nx
+        // plugin that splits tests.
+        testCiTargetName: ciTargetName,
+        testCiGroupName: ciTargetName
+          ? (testOptions?.ciGroupName ??
+            deriveGroupNameFromTarget(ciTargetName))
+          : undefined,
+        testCiSplitBy: ciTargetName
+          ? (testOptions?.ciSplitBy ?? 'class')
+          : undefined,
         buildTargetName:
           (normalizedOptions.build && normalizedOptions.build.targetName) ||
           'build',
