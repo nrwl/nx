@@ -93,6 +93,7 @@
     "@nx/js": "23.2.0-beta.5",
     "@nx/key": "5.0.4",
     "@nx/next": "23.2.0-beta.5",
+    "@nx/oxlint": "workspace:*",
     "@nx/playwright": "23.2.0-beta.5",
     "@nx/plugin": "23.2.0-beta.5",
     "@nx/powerpack-license": "5.0.4",
