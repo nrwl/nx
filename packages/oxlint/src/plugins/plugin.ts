@@ -183,11 +183,11 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
         return [];
       }
       return await createNodesFromFiles(
-        (configFile, options, context) =>
+        (configFile, fileOptions, fileContext) =>
           internalCreateNodes(
             configFile,
-            options,
-            context,
+            fileOptions,
+            fileContext,
             projectRootsByOxlintRoots,
             lintableFilesPerProjectRoot,
             configChainsByConfig,

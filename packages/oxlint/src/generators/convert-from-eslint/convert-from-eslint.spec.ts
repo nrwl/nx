@@ -2,23 +2,23 @@ import { addProjectConfiguration, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertFromEslintGenerator } from './convert-from-eslint.js';
 
-describe('convertFromEslintGenerator', () => {
-  function createTreeWithEslintProject() {
-    const tree = createTreeWithEmptyWorkspace();
-    addProjectConfiguration(tree, 'lib-a', {
-      root: 'libs/lib-a',
-      sourceRoot: 'libs/lib-a/src',
-      projectType: 'library',
-      targets: {
-        lint: {
-          executor: '@nx/eslint:lint',
-          options: { lintFilePatterns: ['{projectRoot}'] },
-        },
+function createTreeWithEslintProject() {
+  const tree = createTreeWithEmptyWorkspace();
+  addProjectConfiguration(tree, 'lib-a', {
+    root: 'libs/lib-a',
+    sourceRoot: 'libs/lib-a/src',
+    projectType: 'library',
+    targets: {
+      lint: {
+        executor: '@nx/eslint:lint',
+        options: { lintFilePatterns: ['{projectRoot}'] },
       },
-    });
-    return tree;
-  }
+    },
+  });
+  return tree;
+}
 
+describe('convertFromEslintGenerator', () => {
   it('adds an oxlint target alongside the eslint target', async () => {
     const tree = createTreeWithEslintProject();
 

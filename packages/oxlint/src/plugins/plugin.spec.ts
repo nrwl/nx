@@ -148,11 +148,11 @@ describe('@nx/oxlint/plugin', () => {
   }
 
   async function invokeCreateNodesOnMatchingFiles(
-    context: CreateNodesContext,
+    ctx: CreateNodesContext,
     options: OxlintPluginOptions = {}
   ) {
     const aggregateProjects: Record<string, any> = {};
-    const results = await createNodesV2[1](configFiles, options, context);
+    const results = await createNodesV2[1](configFiles, options, ctx);
     for (const [, nodes] of results) {
       Object.assign(aggregateProjects, nodes.projects);
     }
