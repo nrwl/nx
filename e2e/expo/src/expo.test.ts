@@ -1,6 +1,7 @@
 import { ChildProcess } from 'child_process';
 import {
   runCLI,
+  runCommand,
   cleanupProject,
   newProject,
   uniq,
@@ -60,6 +61,18 @@ describe('@nx/expo', () => {
 
   it('should test, lint and build library', async () => {
     const componentName = uniq('Component');
+
+    // TEMP DEBUG (nx#35089): the component generator reports the library root
+    // is not under any project root. Capture whether the files exist and
+    // whether nx sees the project.
+    console.log(
+      'DEBUG ls:',
+      runCommand(`ls -la ${libName}`, { failOnError: false } as any)
+    );
+    console.log(
+      'DEBUG projects:',
+      runCLI('show projects', { silenceError: true })
+    );
 
     runCLI(
       `generate @nx/expo:component ${libName}/src/${componentName} --name ${componentName} --export --no-interactive`
