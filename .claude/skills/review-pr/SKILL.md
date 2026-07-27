@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(uname *), Bash(limactl *), Bash(docker context *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -44,6 +44,16 @@ mkdir -p "$TRIAGE_DIR"
 
 # Sandbox prerequisites (same checks as setup-review-sandbox)
 uname -s                                                              # Linux → runsc REQUIRED; Darwin → Docker VM is the sandbox
+
+# macOS: the daemon lives in a VM that is often merely stopped. Wake whichever backend is
+# installed before judging it missing — each of these is a no-op if it is already running.
+if [ "$(uname -s)" = Darwin ] && ! docker info >/dev/null 2>&1; then
+  if   command -v colima  >/dev/null 2>&1; then colima start
+  elif command -v limactl >/dev/null 2>&1; then limactl start docker -y && docker context use lima-docker
+  elif [ -d /Applications/Docker.app ];   then open -ga Docker && sleep 15
+  fi
+fi
+
 docker info >/dev/null 2>&1 && echo "docker OK" || echo "docker MISSING"
 docker info --format '{{range $k,$v := .Runtimes}}{{$k}} {{end}}' | grep -q runsc && echo "runsc OK" || echo "runsc ABSENT"
 test -n "$(docker images -q "$SANDBOX_IMAGE" 2>/dev/null)" && echo "image OK" || echo "image MISSING"
@@ -60,6 +70,16 @@ Use `docker images -q` (empty output ⇒ absent), **not** `docker image inspect`
 Never run `docker run` while `RUNTIME_FLAG` is still `UNSET`. This matters because an _unset_ variable expands to nothing, which is byte-identical to the correct macOS value — so a skipped or blocked `uname` would silently start the container under `runc` on Linux, running untrusted PR code with no gVisor and no error anywhere. The failure mode of this variable is "no isolation, reported as success", so it gets an explicit sentinel rather than a default.
 
 Fail fast with a clear message if: `gh` isn't authed; Docker is down; on Linux `runsc` is absent; or the image is missing. For the last three, point the user at the **`setup-review-sandbox`** skill (it installs Docker + gVisor + builds the image) — do not try to build it here.
+
+**On macOS, try to wake the VM before declaring Docker missing.** Any of Docker Desktop, Colima, Lima, or OrbStack is fine here — they all present the same `docker` CLI and the same VM isolation boundary, so the skill never needs to care which one it is. A stopped VM and an absent runtime look identical from `docker info` alone, and only the latter is a real setup failure:
+
+| Symptom                                          | Cause               | Fix                                                           |
+| ------------------------------------------------ | ------------------- | ------------------------------------------------------------- |
+| the backend's own status command reports stopped | VM merely stopped   | the wake block above                                          |
+| VM running but `docker info` still fails         | wrong/stale context | `docker context ls`, then `docker context use <the live one>` |
+| no backend installed at all                      | never set up        | run `setup-review-sandbox`                                    |
+
+Two traps worth knowing when the probe result looks self-contradictory. First, if Docker Desktop was ever installed and removed, it leaves `/usr/local/bin/docker` and `/var/run/docker.sock` as **dangling symlinks** into a deleted `/Applications/Docker.app` — `ls -l` shows both (reads as "installed") while `which docker` reports not-found, since zsh will not resolve a broken link; that contradiction is the tell, and the live CLI is whichever one actually precedes `/usr/local/bin` on `PATH`. Second, a removed Desktop also leaves `"credsStore": "desktop"` and `"currentContext": "desktop-linux"` in `~/.docker/config.json`, both naming deleted binaries; delete those keys, because the errors they raise never mention the VM backend.
 
 (If `docker images -q` still comes back empty right after the daemon wakes, give it a few seconds and re-probe once before concluding the image is gone — the daemon can lag briefly on wake. Only treat a persistently empty result as truly MISSING.)
 

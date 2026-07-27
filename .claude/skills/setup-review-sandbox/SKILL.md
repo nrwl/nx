@@ -1,7 +1,7 @@
 ---
 name: setup-review-sandbox
-description: One-time setup of the sandbox prerequisites used by the reproduce-issue skill and the reproduce-verifier agent — Docker, the isolation runtime (gVisor on Linux / Colima on macOS), healthy container networking, and the nx-review-sandbox toolchain image (built from the repo's mise.toml). Idempotent; re-run any time to verify or repair. Use when the user says "set up the review sandbox", "install the sandbox prereqs", "build the sandbox image", or a reproduce-issue preflight reports something MISSING.
-allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *)
+description: One-time setup of the sandbox prerequisites used by the reproduce-issue skill and the reproduce-verifier agent — Docker, the isolation runtime (gVisor on Linux / a container VM — Docker Desktop, Colima, Lima or OrbStack — on macOS), healthy container networking, and the nx-review-sandbox toolchain image (built from the repo's mise.toml). Idempotent; re-run any time to verify or repair. Use when the user says "set up the review sandbox", "install the sandbox prereqs", "build the sandbox image", or a reproduce-issue preflight reports something MISSING.
+allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(limactl *), Bash(docker context *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *)
 ---
 
 # Set up the review sandbox (one-time)
@@ -17,7 +17,32 @@ docker info >/dev/null 2>&1 && echo "docker OK" || echo "docker MISSING"
 ```
 
 - **MISSING, Linux:** install Docker Engine, then `sudo systemctl enable --now docker` and add yourself to the `docker` group (`sudo usermod -aG docker $USER`, then re-login).
-- **MISSING, macOS:** `brew install colima docker` then `colima start` (or install Docker Desktop).
+- **MISSING, macOS:** any VM backend works — Docker Desktop, Colima, Lima, and OrbStack all expose the same `docker` CLI and the same VM isolation boundary, so nothing else in these skills has to know which is in use. **Check what is already installed before installing anything** (`command -v colima limactl`, `ls -d /Applications/Docker.app /Applications/OrbStack.app`); if a backend is present it usually just needs starting, not replacing.
+
+  | Backend                   | Start it                                                                  |
+  | ------------------------- | ------------------------------------------------------------------------- |
+  | Docker Desktop / OrbStack | launch the app (`open -ga Docker`)                                        |
+  | Colima                    | `colima start`                                                            |
+  | Lima                      | `limactl start docker -y` (see recipe below if the VM does not exist yet) |
+
+  Only if none is installed, pick one — e.g. Colima (`brew install colima docker && colima start`) or Lima:
+
+  ```bash
+  brew install lima docker docker-buildx        # lima = VM; docker = CLI only; buildx = `docker build`
+  limactl start template://docker --name docker --cpus 6 --memory 12 --disk 100 -y
+  docker context create lima-docker --docker "host=unix://$HOME/.lima/docker/sock/docker.sock"
+  docker context use lima-docker
+  ```
+
+  Two notes that apply to the CLI-only backends (Colima/Lima), which Docker Desktop handles for you:
+  - **Size the VM above what the containers ask for.** `review-pr` runs them with `--memory 6g --cpus 4`, so a default 4 GiB VM cannot honour the limit. With Lima, `-y` (alias of `--tty=false`) is required for non-interactive use — without it `limactl` opens an editor and hangs.
+  - **Register Homebrew's `docker-buildx`**, which is not auto-discovered, or `docker build` in step 4 fails with `'buildx' is not a docker command`:
+
+    ```bash
+    node -e 'const f=require("fs"),p=process.env.HOME+"/.docker/config.json";const c=f.existsSync(p)?JSON.parse(f.readFileSync(p,"utf8")||"{}"):{};c.cliPluginsExtraDirs=[...new Set([...(c.cliPluginsExtraDirs||[]),"/opt/homebrew/lib/docker/cli-plugins"])];f.writeFileSync(p,JSON.stringify(c,null,2))'
+    ```
+
+  If Docker Desktop was previously installed and removed, it leaves `"credsStore": "desktop"` and `"currentContext": "desktop-linux"` in `~/.docker/config.json` plus dangling `/usr/local/bin/docker` and `/var/run/docker.sock` symlinks. Delete those two config keys — otherwise every `docker` call fails with a credential-helper or missing-context error that never mentions the backend you actually installed.
 
 ## 2. Isolation runtime
 
@@ -40,12 +65,20 @@ sudo systemctl restart docker
 
 Then re-check the runtime line above.
 
-### macOS — the Docker VM is the sandbox
+### macOS — the container VM is the sandbox
 
-No `runsc`. Just confirm the VM is up:
+No `runsc`; whichever VM backend you run is what isolates untrusted code, so `RUNTIME_FLAG` stays empty. Confirm the VM is up:
 
 ```bash
-docker info >/dev/null 2>&1 && echo "docker VM OK" || echo "start it: colima start"
+docker info >/dev/null 2>&1 && echo "docker VM OK" || echo "start it (see step 1 for your backend)"
+```
+
+The backend's own status command is the ground truth when that fails (`colima status`, `limactl list`, or the Docker Desktop/OrbStack menu bar item) — stopped means wake it, absent means create it with the step-1 recipe.
+
+If `docker info` reports `name=rootless` (Lima's `docker` template, Colima with `--rootless`), that is strictly _more_ isolation than a rootful daemon, not less. cgroup v2 delegation still honours the `--memory` / `--cpus` / `--pids-limit` caps `review-pr` sets, which is worth confirming once since a silently-ignored cap would let a runaway PR build starve the host:
+
+```bash
+docker run --rm --memory 6g alpine cat /sys/fs/cgroup/memory.max   # expect 6442450944
 ```
 
 ## 3. Container networking (catches the `veth` class of breakage)

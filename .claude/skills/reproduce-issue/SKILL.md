@@ -1,7 +1,7 @@
 ---
 name: reproduce-issue
 description: The single skill for reproducing an nx issue. Given a GitHub issue number (human entry) OR explicit repro parameters (agent entry), it runs the reproduction ENTIRELY inside an isolated Docker sandbox — gVisor on Linux, the Docker VM on macOS — so the untrusted repro's install scripts and commands never execute on the host, then reports whether it reproduces. Called by humans via "/reproduce-issue #N", "reproduce this bug", "does this reproduce", and by the reproduce-verifier agent (Level 2). Nothing lands on the host.
-allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(gh issue view *), Bash(gh issue list *), Bash(docker run *), Bash(docker cp *), Bash(docker rm *), Bash(docker info *), Bash(docker pull *)
+allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(limactl *), Bash(docker context *), Bash(gh issue view *), Bash(gh issue list *), Bash(docker run *), Bash(docker cp *), Bash(docker rm *), Bash(docker info *), Bash(docker pull *)
 ---
 
 # Reproduce an issue (sandboxed)
@@ -36,7 +36,7 @@ The caller passes these directly:
 Run `uname -s` once:
 
 - **Linux** → add `--runtime=runsc` to `docker run` (gVisor is the sandbox).
-- **macOS (`Darwin`)** → **omit `--runtime=runsc`** (the Docker VM is the sandbox). Verify `docker info` works; if not, tell the user to `colima start` (or start Docker Desktop / OrbStack).
+- **macOS (`Darwin`)** → **omit `--runtime=runsc`** (the container VM is the sandbox — Docker Desktop, Colima, Lima and OrbStack are all fine). Verify `docker info` works; if not, wake whichever backend is installed yourself rather than asking first — every wake command is a no-op when already running.
 
 The command below shows the Linux form — on macOS drop `--runtime=runsc`, keep the rest.
 
@@ -50,7 +50,7 @@ Before running anything, verify prerequisites in order and **stop at the first m
    docker info >/dev/null 2>&1 && echo up || echo MISSING
    ```
 
-   Miss → Linux: `sudo systemctl start docker`. macOS: `colima start` (or open Docker Desktop). Or run `setup-review-sandbox`.
+   Miss → Linux: `sudo systemctl start docker`. macOS: start the installed backend — `open -ga Docker` (Desktop/OrbStack), `colima start`, or `limactl start docker -y && docker context use lima-docker`. A merely-stopped VM is the usual cause; only if no backend is installed at all is this a real setup gap → run `setup-review-sandbox`.
 
 2. **Container networking works** (the check that would have caught the `veth` breakage):
 
@@ -67,7 +67,7 @@ Before running anything, verify prerequisites in order and **stop at the first m
      docker info --format '{{range $k,$v := .Runtimes}}{{$k}} {{end}}' | grep -q runsc && echo ok || echo MISSING
      ```
      Miss → run `setup-review-sandbox` (installs + registers `runsc`).
-   - **macOS** — the Docker VM (Colima / Docker Desktop) _is_ the sandbox; step 1 already covered it. No `runsc`.
+   - **macOS** — the Lima VM _is_ the sandbox; step 1 already covered it. No `runsc`.
 
 4. **(PR-build mode ONLY) the toolchain image exists:**
    ```bash
