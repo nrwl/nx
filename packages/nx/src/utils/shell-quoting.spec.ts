@@ -1,4 +1,4 @@
-import { needsShellQuoting } from './shell-quoting';
+import { isAlreadyQuoted, needsShellQuoting } from './shell-quoting';
 
 describe('needsShellQuoting', () => {
   it.each([
@@ -39,5 +39,35 @@ describe('needsShellQuoting', () => {
     ['empty string', ''],
   ])('returns false for %s: %j', (_, value) => {
     expect(needsShellQuoting(value)).toBe(false);
+  });
+});
+
+describe('isAlreadyQuoted', () => {
+  it.each([
+    ['double quoted value', '"@tag1|@tag2"'],
+    ['single quoted value', "'a&b'"],
+    ['double quoted with spaces', '"hello world"'],
+    ['double quoted variable', '"$HOME"'],
+    ['quoted JSON', '\'{"env":{"a":"b"}}\''],
+    ['single quotes inside double quotes', `"it's fine"`],
+  ])('returns true for %s: %j', (_, value) => {
+    expect(isAlreadyQuoted(value)).toBe(true);
+  });
+
+  it.each([
+    ['bare word', 'plain'],
+    ['unquoted metacharacters', 'a|b'],
+    ['empty string', ''],
+    ['a single quote character', '"'],
+    ['unterminated quote', '"abc'],
+    // Each of these starts and ends with a quote but is not one word.
+    ['two quoted words', '"a" "b"'],
+    ['quoted words around a bare word', '"a" b "c"'],
+    ['a command separated by &&', '"x" && echo hi ; echo "y"'],
+    ['a pipeline', '"a" | tee "b"'],
+    ['a redirect', '"a" > "out.txt"'],
+    ['an assignment prefix', 'FOO="a" "b"'],
+  ])('returns false for %s: %j', (_, value) => {
+    expect(isAlreadyQuoted(value)).toBe(false);
   });
 });
