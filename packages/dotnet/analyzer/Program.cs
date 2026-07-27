@@ -17,6 +17,7 @@ List<string> projectFiles;
 List<string> directoryFiles = new();
 PluginOptions? pluginOptions = null;
 
+
 var directoryFileNameSet = new HashSet<string>(
     ProjectUtilities.DirectoryBuildFileNames,
     StringComparer.OrdinalIgnoreCase
@@ -42,10 +43,7 @@ if (Console.IsInputRedirected)
     {
         try
         {
-            pluginOptions = JsonSerializer.Deserialize<PluginOptions>(args[1], new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            pluginOptions = JsonSerializer.Deserialize<PluginOptions>(args[1], AnalyzerJson.PluginOptions);
         }
         catch (Exception ex)
         {
@@ -161,14 +159,6 @@ catch (Exception ex)
     return 2;
 }
 
-// JSON serialization options (cached for reuse)
-var jsonOptions = new JsonSerializerOptions
-{
-    WriteIndented = false,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-};
-
 // Run the analyzer
 AnalysisResult result;
 using (var analyzePerf = PerfLogger.Start("analyze workspace"))
@@ -179,6 +169,6 @@ using (var analyzePerf = PerfLogger.Start("analyze workspace"))
 // Serialize and output results
 using (PerfLogger.Start("serialize results"))
 {
-    Console.WriteLine(JsonSerializer.Serialize(result, jsonOptions));
+    Console.WriteLine(JsonSerializer.Serialize(result, AnalyzerJson.Output));
 }
 return 0;
