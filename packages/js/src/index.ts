@@ -16,6 +16,11 @@ export { initGenerator } from './generators/init/init';
 export { setupPrettierGenerator } from './generators/setup-prettier/generator';
 export { setupVerdaccio } from './generators/setup-verdaccio/generator';
 export { isValidVariable } from './utils/is-valid-variable';
+export type { LinterType } from './utils/linter';
+export {
+  addLintingToProject,
+  type AddLintingToProjectOptions,
+} from './utils/add-linting-to-project';
 
 export { createLockFile, getLockFileName } from '@nx/devkit/internal';
 export { createPackageJson } from '@nx/devkit/internal';

@@ -9,7 +9,10 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "$default": { "$source": "argv", "index": 0 },
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
       "x-dropdown": "project",
       "x-prompt": "What project is this for?"
     },
@@ -36,7 +39,7 @@
     "linter": {
       "description": "Linter to be used for the E2E project",
       "type": "string",
-      "enum": ["eslint", "none"],
+      "enum": ["eslint", "oxlint", "none"],
       "default": "eslint"
     },
     "isNest": {

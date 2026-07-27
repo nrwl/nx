@@ -12,7 +12,9 @@ export async function generateStorybookConfiguration(
   return await configurationGenerator(tree, {
     project: options.project,
     uiFramework: '@storybook/angular',
-    linter: options.linter,
+    // Storybook's configuration generator only adds ESLint overrides for
+    // story files; there is no equivalent for other linters.
+    linter: options.linter === 'eslint' ? 'eslint' : 'none',
     tsConfiguration: options.tsConfiguration,
     interactionTests: options.interactionTests,
     configureStaticServe: options.configureStaticServe,
