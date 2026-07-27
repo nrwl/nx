@@ -8,6 +8,10 @@ topics:
   - 'Angular'
 ---
 
+{% aside type="caution" title="Deprecated: Angular Module Federation" %}
+The `@nx/angular` `host` and `remote` generators and Module Federation executors used on this page are deprecated in Nx v23 and will be removed in v24. Existing workspaces keep working in the meantime. For the supported Angular micro frontend path, see [Micro Frontends with Angular](/docs/kb/angular-micro-frontends).
+{% /aside %}
+
 Walk you through creating a Module Federated setup with Server Side Rendering (SSR) for Angular and React using Nx and its generators.
 
 ## Steps
@@ -151,6 +155,6 @@ npx nx serve store --devRemotes=checkout
 
 To learn more about Module Federation, we have some resources you might find useful:
 
-- [Concepts: Nx Module Federation Technical Overview](/docs/kb/nx-module-federation-technical-overview)
+- [Reference: NxModuleFederationPlugin](/docs/kb/nx-module-federation-plugin)
 - [Guide: Faster Builds with Module Federation](/docs/kb/faster-builds-with-module-federation)
 - [Video: Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)
