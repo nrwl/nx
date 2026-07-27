@@ -1,4 +1,5 @@
 import type { TargetDefaults, TargetDefaultValue } from '../../config/nx-json';
+import type { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import {
@@ -24,41 +25,80 @@ export default async function update(tree: Tree) {
     return;
   }
 
-  // Only executor keys that a real target actually resolves through — an
-  // unused executor key shadowed nothing, and adding `cache` to it would
-  // change behavior rather than preserve it.
-  const shadowingKeys = new Set<string>();
+  // `cache` on an executor key reaches every target that resolves through it,
+  // not just the one whose target name key enables caching. Collect all of them
+  // per key so the decision below can be made for the key as a whole.
+  const targetNamesByExecutorKey = new Map<string, Set<string>>();
   for (const [, project] of getProjects(tree)) {
     for (const [targetName, target] of Object.entries(project.targets ?? {})) {
       if (!target.executor || !targetDefaults[target.executor]) {
         continue;
       }
-      if (declaredCache(targetDefaults[target.executor]) !== undefined) {
-        continue;
-      }
-      if (declaredCache(targetDefaults[targetName]) === true) {
-        shadowingKeys.add(target.executor);
-      }
+      const targetNames =
+        targetNamesByExecutorKey.get(target.executor) ?? new Set();
+      targetNames.add(targetName);
+      targetNamesByExecutorKey.set(target.executor, targetNames);
     }
   }
 
-  if (shadowingKeys.size === 0) {
+  let changed = false;
+  for (const [key, targetNames] of targetNamesByExecutorKey) {
+    if (!canEnableCache(targetDefaults, key, targetNames)) {
+      continue;
+    }
+    catchAllConfig(targetDefaults[key]).cache = true;
+    changed = true;
+  }
+
+  if (!changed) {
     return;
   }
 
-  for (const key of shadowingKeys) {
-    enableCache(targetDefaults, key);
-  }
   updateNxJson(tree, nxJson);
-
   await formatChangedFilesWithPrettierIfAvailable(tree);
 }
 
 /**
+ * Whether `cache: true` can be written onto `key` without changing behavior for
+ * any target that resolves through it.
+ *
+ * The executor key outranks every target name key, so stamping it caches every
+ * one of `targetNames` — including a `serve` that would then be both cacheable
+ * and continuous, which makes `nx.json` fail graph construction outright. The
+ * key is only safe when every target through it independently wants caching.
+ * Anything else is left to the runtime fallback, which decides per target.
+ */
+function canEnableCache(
+  targetDefaults: TargetDefaults,
+  key: string,
+  targetNames: Set<string>
+): boolean {
+  // Already decided; never override the user's value.
+  if (declaredCache(targetDefaults[key]) !== undefined) {
+    return false;
+  }
+  // Only an unfiltered entry can be amended. Appending a catch-all to an
+  // all-filtered key would make it match targets that previously fell through
+  // to the target name key, silently dropping that key's `dependsOn`/`inputs`.
+  if (!catchAllConfig(targetDefaults[key])) {
+    return false;
+  }
+  for (const targetName of targetNames) {
+    if (declaredCache(targetDefaults[targetName]) !== true) {
+      return false;
+    }
+    if (isLongRunningTargetName(targetName)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
  * The `cache` a `targetDefaults` value declares, or undefined when it declares
- * none. Mirrors how the runtime fallback reads a value: filtered entries need
- * project context that isn't available here, so only catch-all entries count,
- * and later entries win.
+ * none. Mirrors {@link isLegacyCachedTarget} in `target-normalization.ts`: a
+ * filtered entry declaring `cache` makes the value unknowable without project
+ * context, so it reads as "declared" and blocks the rewrite.
  */
 function declaredCache(
   value: TargetDefaultValue | undefined
@@ -67,27 +107,42 @@ function declaredCache(
     return undefined;
   }
   const entries = Array.isArray(value) ? value : [value];
-  for (let i = entries.length - 1; i >= 0; i--) {
-    if (entries[i].filter) continue;
-    if (entries[i].cache !== undefined) return entries[i].cache;
+  let declared: boolean | undefined;
+  for (const entry of entries) {
+    if (entry.cache === undefined) continue;
+    // Unknowable here, so treat it as decided and leave the value alone.
+    if (entry.filter) return entry.cache;
+    declared = entry.cache;
   }
-  return undefined;
+  return declared;
 }
 
-/** Sets `cache: true` on whichever entry {@link declaredCache} would read. */
-function enableCache(targetDefaults: TargetDefaults, key: string) {
-  const value = targetDefaults[key];
+/**
+ * The unfiltered config block of a `targetDefaults` value, or undefined when the
+ * array form carries only filtered entries. Never creates one — see
+ * {@link canEnableCache}.
+ */
+function catchAllConfig(
+  value: TargetDefaultValue
+): TargetConfiguration | undefined {
   if (!Array.isArray(value)) {
-    value.cache = true;
-    return;
+    return value;
   }
+  return value.find((entry) => entry.filter === undefined);
+}
 
-  for (let i = value.length - 1; i >= 0; i--) {
-    if (!value[i].filter) {
-      value[i].cache = true;
-      return;
-    }
-  }
-  // Every entry is filtered, so there is no catch-all to amend.
-  value.push({ cache: true });
+/**
+ * Target names the pre-23 `longRunningTask` guard excluded from caching. Mirrors
+ * `isLongRunningTarget` in `target-normalization.ts`; `continuous` is not
+ * checked because it is resolved from the executor schema at graph construction
+ * and is not readable from `project.json` here.
+ */
+function isLongRunningTargetName(targetName: string): boolean {
+  return (
+    targetName.endsWith(':watch') ||
+    targetName.endsWith('-watch') ||
+    targetName === 'serve' ||
+    targetName === 'dev' ||
+    targetName === 'start'
+  );
 }
