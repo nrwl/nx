@@ -1,5 +1,6 @@
 const { join, basename } = require('path');
 const { copyFileSync, renameSync, statSync, unlinkSync } = require('fs');
+const { createHash } = require('crypto');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const {
@@ -109,18 +110,40 @@ Module._load = function (request, parent, isMain) {
       return originalLoad.apply(this, [nativeLocation, parent, isMain]);
     }
 
+    // The cache dir is keyed by nx version, which is NOT enough on its own:
+    // in a source checkout `nxVersion` is the placeholder 0.0.1 for every
+    // worktree on the machine, so without this every checkout would share one
+    // slot and a rebuild in one would be picked up by the others. Hashing the
+    // resolved binding path keeps each checkout (and each installed copy) in
+    // its own entry.
+    const cacheKey =
+      nxVersion +
+      '-' +
+      createHash('sha256')
+        .update(nativeLocation)
+        .digest('hex')
+        .substring(0, 12);
+
     // This is a path to copy to, not the one that gets loaded
     const tmpTmpFile = join(
       nativeFileCacheLocation,
-      nxVersion + '-' + Math.random() + fileName
+      cacheKey + '-' + Math.random() + fileName
     );
     // This is the path that will get loaded
-    const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
-    const expectedFileSize = statSync(nativeLocation).size;
+    const tmpFile = join(nativeFileCacheLocation, cacheKey + '-' + fileName);
+    const sourceStats = statSync(nativeLocation);
+    const expectedFileSize = sourceStats.size;
     const existingFileStats = statsOrNull(tmpFile);
 
-    // If the file to be loaded already exists, just load it
-    if (existingFileStats?.size === expectedFileSize) {
+    // Size alone does not detect a rebuilt binding: a small Rust edit routinely
+    // produces a byte-identical size. Treat a cache entry older than the source
+    // as stale so a rebuild is picked up rather than silently ignored.
+    const isFresh =
+      existingFileStats?.size === expectedFileSize &&
+      existingFileStats.mtimeMs >= sourceStats.mtimeMs;
+
+    // If the file to be loaded already exists and is current, just load it
+    if (isFresh) {
       try {
         return originalLoad.apply(this, [tmpFile, parent, isMain]);
       } catch (e) {
