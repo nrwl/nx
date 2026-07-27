@@ -4,8 +4,9 @@
  * and where we create the actual unix socket/named pipe for the daemon.
  */
 import { chmodSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
+import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
 // The shared OS temp dir. Only used to *reject* it as a socket location (see
 // InvalidSocketDirConfigured); the sockets themselves live under NX_SOCKET_ROOT.
@@ -165,51 +166,47 @@ function createOwnerOnlySocketDir(
   }
 
   try {
-    // `mode` only applies to directories mkdirSync actually creates; a
-    // pre-existing directory keeps its current permissions, so we still chmod
-    // it below to guarantee the sockets inside are reachable only by their
-    // owner.
-    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    // Create the parent chain first, then the leaf separately through
+    // ensureOwnedPrivateDir. Creating the whole path with `recursive: true` and
+    // chmod-ing it afterwards would adopt a pre-planted symlink: mkdirSync does
+    // not throw on one, and chmodSync follows it, which would both redirect
+    // where our sockets live and retarget the chmod at a directory someone else
+    // chose. The leaf is the plantable part — its name is a hash of the
+    // workspace root with no pid or uid salt, and the shared root is sticky, so
+    // we cannot delete a squatter's entry once it exists.
+    mkdirSync(dirname(dir), { recursive: true });
     if (usingDefaultRoot) {
       restrictSharedRootToSticky();
     }
-    restrictToOwner(dir);
+    if (!ensureOwnedPrivateDir(dir)) {
+      throw new Error(
+        `The Nx socket directory ${dir} is not a directory owned solely by the current user.`
+      );
+    }
     return dir;
   } catch (e) {
     // A genuine fs failure (e.g. we lack permission to create the configured
-    // dir) is recoverable: fall back to the owner-controlled workspace data dir
-    // rather than a shared location, and lock it down as well. The lockdown is
-    // best-effort so a chmod failure here never prevents the daemon from
-    // obtaining a socket directory.
+    // dir), or a leaf we refused above, is recoverable: fall back to the
+    // owner-controlled workspace data dir rather than a shared location. That
+    // path is not world-writable, but verify it the same way so the fallback is
+    // never weaker than what it replaces.
     try {
-      mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, {
-        recursive: true,
-        mode: 0o700,
-      });
-      restrictToOwner(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+      mkdirSync(dirname(DAEMON_DIR_FOR_CURRENT_WORKSPACE), { recursive: true });
+      ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
     } catch {}
     return DAEMON_DIR_FOR_CURRENT_WORKSPACE;
   }
 }
 
 /**
- * chmod a path to `0700` (owner-only) on POSIX. On Windows this is a no-op:
- * named pipes are secured via their default DACL, which does not grant write
- * access to other users, and Node exposes no API to adjust it.
- */
-function restrictToOwner(path: string) {
-  if (process.platform === 'win32') {
-    return;
-  }
-  chmodSync(path, 0o700);
-}
-
-/**
  * Make the shared socket root sticky + world-writable (0o1777, like /tmp
  * itself) so that other users on the machine can create their *own* owner-only
  * socket dirs beneath it. This only relaxes the shared *root*; each individual
- * socket dir underneath is still locked to its owner by restrictToOwner, so no
- * user can reach another user's sockets. Best-effort: chmod only succeeds for
+ * socket dir underneath is still created and verified owner-only by
+ * ensureOwnedPrivateDir, so no user can reach another user's sockets — and a
+ * squatted leaf is refused rather than adopted, which is what keeps the
+ * writable root from being useful to an attacker. Best-effort: chmod only
+ * succeeds for
  * the user that created the dir, and a failure must never stop us from
  * obtaining a socket dir. Windows named pipes are not filesystem-gated, so this
  * is a POSIX-only concern.

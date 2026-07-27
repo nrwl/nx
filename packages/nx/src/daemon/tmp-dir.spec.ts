@@ -68,28 +68,34 @@ describe('socket directories', () => {
     );
   });
 
-  it('creates the daemon socket directory owner-only and enforces it with chmod', () => {
+  // The leaf is created non-recursively with mode 0700 via
+  // ensureOwnedPrivateDir, and only its parent chain is created recursively.
+  // Creating the whole path recursively and chmod-ing it afterwards would adopt
+  // a pre-planted symlink; see owned-private-dir.spec.ts for that property.
+  it('creates the daemon socket directory owner-only, separately from its parents', () => {
     setPlatform('linux');
 
     const dir = getSocketDir();
 
-    expect(mkdirSync).toHaveBeenCalledWith(dir, {
+    expect(mkdirSync).toHaveBeenCalledWith(dir, { mode: 0o700 });
+    expect(mkdirSync).toHaveBeenCalledWith('/tmp/.nx/sockets', {
+      recursive: true,
+    });
+    expect(mkdirSync).not.toHaveBeenCalledWith(dir, {
       recursive: true,
       mode: 0o700,
     });
-    expect(chmodSync).toHaveBeenCalledWith(dir, 0o700);
   });
 
-  it('creates the plugin socket directory owner-only and enforces it with chmod', () => {
+  it('creates the plugin socket directory owner-only, separately from its parents', () => {
     setPlatform('linux');
 
     const dir = getPluginSocketDir();
 
-    expect(mkdirSync).toHaveBeenCalledWith(dir, {
+    expect(mkdirSync).toHaveBeenCalledWith(dir, { mode: 0o700 });
+    expect(mkdirSync).toHaveBeenCalledWith('/tmp/.nx/sockets', {
       recursive: true,
-      mode: 0o700,
     });
-    expect(chmodSync).toHaveBeenCalledWith(dir, 0o700);
   });
 
   it('makes the shared socket root sticky + world-writable so other users can coexist', () => {
@@ -131,7 +137,9 @@ describe('socket directories', () => {
     const dir = getSocketDir();
 
     expect(dir).toBe('/tmp/nx-custom-sock');
-    expect(chmodSync).toHaveBeenCalledWith('/tmp/nx-custom-sock', 0o700);
+    expect(mkdirSync).toHaveBeenCalledWith('/tmp/nx-custom-sock', {
+      mode: 0o700,
+    });
   });
 
   it('does not relax the shared root when an explicit socket dir is configured', () => {
