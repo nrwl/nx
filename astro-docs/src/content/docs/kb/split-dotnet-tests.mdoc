@@ -1,0 +1,197 @@
+---
+title: Split .NET Tests Across Tasks
+description: Run one Nx task per test class or test method so a slow .NET suite can be cached and distributed independently
+sidebar:
+  label: Split .NET Tests
+filter: 'type:Guides'
+topics:
+  - '.NET'
+---
+
+A long .NET test suite runs as one task, so it caches as one unit and lands on one agent. Splitting
+it gives you a task per test class, each cached separately and distributed across agents.
+
+Turn it on by naming a CI target for a test project:
+
+```json
+// nx.json
+{
+  "plugins": [
+    { "plugin": "@nx/dotnet" },
+    {
+      "plugin": "@nx/dotnet",
+      "include": ["apps/IntegrationTests/**"],
+      "options": { "test": { "ciTargetName": "test-ci" } }
+    }
+  ]
+}
+```
+
+`ciTargetName` applies to every project the registration matches, so the second entry with an
+`include` pattern is what scopes splitting to one project. Everything else keeps its ordinary `test`
+target.
+
+That project now has a `test-ci--<class>` target per test class, plus a `test-ci` target that
+depends on all of them:
+
+```shell
+nx show project IntegrationTests
+```
+
+Run `nx test-ci IntegrationTests` and Nx expands it into the individual tasks.
+
+## Requirements
+
+Your test project must use MSTest on [Microsoft.Testing
+Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro). Each
+task selects its tests with `--filter`, whose expression syntax MSTest contributes to the platform.
+Either use the `MSTest.Sdk` project SDK, or set these properties:
+
+```xml
+<PropertyGroup>
+  <EnableMSTestRunner>true</EnableMSTestRunner>
+  <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  <OutputType>Exe</OutputType>
+</PropertyGroup>
+```
+
+A project that asks to split without them gets a message explaining why, and keeps its ordinary
+`test` target. Other frameworks on the platform are left alone rather than given tasks that would
+fail when their runner rejects the option.
+
+Running the whole group needs [Nx Cloud](/docs/getting-started/intro). Nx refuses `nx test-ci` without
+it: on one machine you pay process startup for every task without gaining agents to spread them
+over. Use the `test` target for a full local run.
+
+Individual tasks have no such restriction, so you can always run one on its own while working on it:
+
+```shell
+nx run my-project:"test-ci--Acme.Integration.CheckoutTests"
+```
+
+## Choose class or method
+
+`ciSplitBy` defaults to `class`. One task per test class keeps the task count close to your file
+count, and each task pays process startup once for a whole class of tests.
+
+Switch to `method` when a single test method is expensive on its own:
+
+```json
+{
+  "plugin": "@nx/dotnet",
+  "include": ["apps/IntegrationTests/**"],
+  "options": { "test": { "ciTargetName": "test-ci", "ciSplitBy": "method" } }
+}
+```
+
+The case this exists for is a suite where each method builds and tears down its own fixture — a
+distributed application, a database, a browser. Grouping those methods into one task saves no setup
+work, since the fixture cost is paid per method either way, and it serializes tests that could have
+run on separate agents. A method that takes minutes makes the extra second of process startup
+irrelevant.
+
+For a fast unit suite, `method` is the wrong trade — a task graph with thousands of entries, each
+running a test measured in milliseconds.
+
+## What still runs in one task
+
+Nested and generic test classes are not split out, because their names have no stable command-line
+form to filter on. Generic test methods are excluded for the same reason under `ciSplitBy: method`.
+Those tests still run as part of the ordinary `test` target, and the plugin reports how many it left
+out while building the project graph, so the gap is visible up front.
+
+An abstract test class isn't split either, but that costs you nothing — the concrete classes that
+derive from it are what carry tests, and each of those gets its own task.
+
+Tests declared on a base class and inherited by a subclass that carries no `[TestClass]` of its own
+are also missed. If you rely on that pattern, keep the project on its `test` target.
+
+## Parallelism
+
+Three things decide how many tests run at once, and they multiply:
+
+| Level                                      | Controlled by                                              |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| How many agents the tasks spread across    | Nx Cloud                                                   |
+| How many tasks run at once on one agent    | `nx --parallel`, default 3                                 |
+| How many tests run at once inside one task | MSTest `[assembly: Parallelize(Workers = N, Scope = ...)]` |
+
+The plugin doesn't touch `Workers`. That stays your suite's lever, and it still applies to the
+ordinary `test` target exactly as before.
+
+What changes is how much it has to work with. Each split task is filtered down to one class or one
+method, so `Scope = ClassLevel` has nothing left to parallelize once the filter has picked a single
+class. `Scope = MethodLevel` still parallelizes that class's methods inside the task, which pairs
+well with `ciSplitBy: class` — Nx spreads classes across agents while MSTest runs each class's
+methods concurrently in one process, paying assembly setup once.
+
+Watch the multiplication if your tests are resource-hungry. A 16-core agent with the default
+`Workers = 0` and `--parallel 3` can have 48 tests in flight. Set `MSTestParallelizeWorkers` in the
+`.csproj` to cap it per project:
+
+```xml
+<PropertyGroup>
+  <MSTestParallelizeWorkers>2</MSTestParallelizeWorkers>
+</PropertyGroup>
+```
+
+For tests that must not overlap on one machine, `[DoNotParallelize]` on a class makes its task run
+on its own — Nx still distributes it to an agent, it just won't share that agent with another task.
+
+## Test reports
+
+Each task writes into its own directory under `TestResults`, named for the class or method it ran,
+so restoring one task from cache can't overwrite another's results.
+
+The plugin doesn't enable a reporter. Pick one in the project so the split and unsplit targets
+report the same way:
+
+```xml
+<PropertyGroup>
+  <TestingPlatformCommandLineArguments>--report-trx</TestingPlatformCommandLineArguments>
+</PropertyGroup>
+```
+
+TRX output requires the `Microsoft.Testing.Extensions.TrxReport` package, which the `MSTest`
+metapackage includes from version 3.8. Collect the results in CI with a glob, since there's no
+merge step:
+
+```shell
+**/TestResults/**/*.trx
+```
+
+## Code coverage
+
+Coverage is configured on the project and works the same whether or not you split, since the plugin
+passes nothing that interferes with it. `MSTest.Sdk` bundles the coverage extension, so `--coverage`
+is available without adding a package:
+
+```xml
+<PropertyGroup>
+  <TestingPlatformCommandLineArguments>--coverage --coverage-output-format cobertura</TestingPlatformCommandLineArguments>
+</PropertyGroup>
+```
+
+What changes is that each task covers only the tests it ran, so you get one report per task instead
+of one for the project. Merge them with `dotnet-coverage`, which ships from Microsoft:
+
+```shell
+dotnet tool install -g dotnet-coverage
+dotnet-coverage merge "**/TestResults/**/*.cobertura.xml" -f cobertura -o coverage.cobertura.xml
+```
+
+The merged report is the union, not a sum of percentages. A class covering four of seven lines and
+another covering two of the remaining three merge to six of seven.
+
+## Verify the split covers everything
+
+Every task fails if its filter matches no tests, which catches a class the plugin discovered but the
+platform can't find. To check for the opposite problem — tests running twice — compare the total
+across the split tasks against the unsplit run:
+
+```shell
+nx test IntegrationTests
+nx test-ci IntegrationTests
+```
+
+The counts should match.
