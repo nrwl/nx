@@ -74,6 +74,16 @@ describe('@nx/expo (legacy)', () => {
   it('should test and lint', async () => {
     const componentName = uniq('Component');
 
+    // TEMP DEBUG (nx#35089): see expo.test.ts
+    console.log(
+      'DEBUG ls:',
+      runCommand(`ls -la libs/${libName}`, { failOnError: false } as any)
+    );
+    console.log(
+      'DEBUG projects:',
+      runCLI('show projects', { silenceError: true })
+    );
+
     runCLI(
       `generate @nx/expo:component libs/${libName}/src/${componentName} --name ${componentName} --export --no-interactive`
     );
