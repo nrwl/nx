@@ -20,6 +20,7 @@ import {
 
 import { output, readJsonFile } from '@nx/devkit';
 import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
+import { typescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -152,6 +153,15 @@ export function newProject({
       if (packagesToInstall.length) {
         const packageInstallStart = performance.mark('packageInstall:start');
         packageInstall(packagesToInstall.join(` `), projScope);
+        // npm auto-installs @phenomnomnominal/tsquery's unbounded
+        // `typescript: >3.0.0` peer, landing TS 7 (which dropped the CJS
+        // `SyntaxKind` tsquery reads at load time) in the single hoisted slot.
+        // Installing typescript directly reclaims that slot. pnpm/yarn resolve
+        // peers per dependent, so they are unaffected.
+        // TODO: remove once tsquery bounds its peer or nx stops depending on it.
+        if (packageManager === 'npm') {
+          packageInstall('typescript', projScope, typescriptVersion);
+        }
         const packageInstallEnd = performance.mark('packageInstall:end');
         packageInstallMeasure = performance.measure(
           'packageInstall',
