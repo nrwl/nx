@@ -131,12 +131,12 @@
     "express": "^4.21.2",
     "http-proxy-middleware": "catalog:",
     "picocolors": "catalog:",
-    "tslib": "catalog:typescript",
-    "webpack": "catalog:"
+    "tslib": "catalog:typescript"
   },
   "peerDependencies": {
     "@module-federation/enhanced": "^2.0.0",
-    "@module-federation/node": "^2.0.0"
+    "@module-federation/node": "^2.0.0",
+    "webpack": "^5.0.0"
   },
   "peerDependenciesMeta": {
     "@module-federation/enhanced": {
@@ -144,10 +144,14 @@
     },
     "@module-federation/node": {
       "optional": true
+    },
+    "webpack": {
+      "optional": true
     }
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "webpack": "catalog:"
   },
   "nx-migrations": {
     "migrations": "./migrations.json",

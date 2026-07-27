@@ -2230,7 +2230,7 @@ importers:
         version: 2.3.0
       '@angular/build':
         specifier: catalog:angular-supported-versions
-        version: 22.0.1(b2f3e257ef1870bc9b8c76c3fa3c7ab8)
+        version: 22.0.1(cd4974f6894966ad10e467061487b3b3)
       '@angular/localize':
         specifier: catalog:angular-supported-versions
         version: 22.0.1(@angular/compiler-cli@22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3))(@angular/compiler@22.0.1)
@@ -2333,7 +2333,7 @@ importers:
     dependencies:
       '@angular/build':
         specifier: catalog:angular-supported-versions
-        version: 22.0.1(bd417b232286b9ec70e8c5a3a3501783)
+        version: 22.0.1(9415c92e86a7c8afc4fd3f2e0da3ef58)
       '@angular/compiler-cli':
         specifier: catalog:angular-supported-versions
         version: 22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3)
@@ -3000,13 +3000,13 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
-      webpack:
-        specifier: 'catalog:'
-        version: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
     devDependencies:
       nx:
         specifier: workspace:*
         version: link:../nx
+      webpack:
+        specifier: 'catalog:'
+        version: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
 
   packages/nest:
     dependencies:
@@ -3064,15 +3064,9 @@ importers:
       '@nx/web':
         specifier: workspace:*
         version: link:../web
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.2.0(typescript@6.0.3)
-      '@svgr/webpack':
-        specifier: 'catalog:'
-        version: 8.1.0(typescript@6.0.3)
       copy-webpack-plugin:
         specifier: ^14.0.0
         version: 14.0.0(webpack@5.105.2)
@@ -3098,6 +3092,9 @@ importers:
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3411,6 +3408,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@babel/preset-react':
+        specifier: ^7.22.5
+        version: 7.27.1(@babel/core@7.29.0)
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -3420,30 +3420,15 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
-      '@nx/rollup':
-        specifier: workspace:*
-        version: link:../rollup
       '@nx/web':
         specifier: workspace:*
         version: link:../web
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.2.0(typescript@6.0.3)
-      '@svgr/webpack':
-        specifier: 'catalog:'
-        version: 8.1.0(typescript@6.0.3)
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
-      express:
-        specifier: ^4.21.2
-        version: 4.21.2
-      http-proxy-middleware:
-        specifier: 'catalog:'
-        version: 3.0.5
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
@@ -3463,9 +3448,15 @@ importers:
       '@nx/cypress':
         specifier: workspace:*
         version: link:../cypress
+      '@nx/module-federation':
+        specifier: workspace:*
+        version: link:../module-federation
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
       '@nx/rsbuild':
         specifier: workspace:*
         version: link:../rsbuild
@@ -3478,6 +3469,12 @@ importers:
       '@nx/webpack':
         specifier: workspace:*
         version: link:../webpack
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      http-proxy-middleware:
+        specifier: 'catalog:'
+        version: 3.0.5
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3500,9 +3497,6 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       ajv:
         specifier: 'catalog:'
         version: 8.18.0
@@ -3537,6 +3531,9 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -27531,7 +27528,7 @@ snapshots:
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.2200.1(chokidar@5.0.0)
-      '@angular-devkit/build-webpack': 0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))
+      '@angular-devkit/build-webpack': 0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))
       '@angular-devkit/core': 22.0.1(chokidar@5.0.0)
       '@angular/build': 22.0.1(742645c8c883ac2cb2bb7fe388547190)
       '@angular/compiler-cli': 22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3)
@@ -27632,7 +27629,7 @@ snapshots:
     transitivePeerDependencies:
       - chokidar
 
-  '@angular-devkit/build-webpack@0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))':
+  '@angular-devkit/build-webpack@0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))':
     dependencies:
       '@angular-devkit/architect': 0.2200.1(chokidar@5.0.0)
       rxjs: 7.8.2
@@ -27992,10 +27989,10 @@ snapshots:
       - tsx
       - yaml
 
-  '@angular/build@22.0.1(b2f3e257ef1870bc9b8c76c3fa3c7ab8)':
+  '@angular/build@22.0.1(cd4974f6894966ad10e467061487b3b3)':
     dependencies:
       '@ampproject/remapping': 2.3.0
-      '@angular-devkit/architect': 0.2200.1(chokidar@3.6.0)
+      '@angular-devkit/architect': 0.2200.1(chokidar@5.0.0)
       '@angular/compiler': 22.0.1
       '@angular/compiler-cli': 22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3)
       '@babel/core': 7.29.0
@@ -28036,63 +28033,6 @@ snapshots:
       postcss: 8.5.15
       tailwindcss: 4.1.11
       vitest: 4.1.2(@types/node@24.12.2)(jsdom@26.1.0)(vite@8.0.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@24.12.2)(esbuild@0.27.3)(jiti@2.6.1)(less@4.5.1)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.46.2)(tsx@4.20.5)(yaml@2.9.0))
-    transitivePeerDependencies:
-      - '@types/node'
-      - chokidar
-      - jiti
-      - lightningcss
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
-
-  '@angular/build@22.0.1(bd417b232286b9ec70e8c5a3a3501783)':
-    dependencies:
-      '@ampproject/remapping': 2.3.0
-      '@angular-devkit/architect': 0.2200.1(chokidar@3.6.0)
-      '@angular/compiler': 22.0.1
-      '@angular/compiler-cli': 22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3)
-      '@babel/core': 7.29.0
-      '@babel/helper-annotate-as-pure': 7.27.3
-      '@babel/helper-split-export-declaration': 7.24.7
-      '@inquirer/confirm': 6.0.12(@types/node@24.12.2)
-      '@vitejs/plugin-basic-ssl': 2.3.0(vite@7.3.2(@types/node@24.12.2)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.99.0)(terser@5.46.2)(tsx@4.20.5)(yaml@2.9.0))
-      beasties: 0.4.2
-      browserslist: 4.28.1
-      esbuild: 0.28.0
-      https-proxy-agent: 9.0.0
-      jsonc-parser: 3.3.1
-      listr2: 10.2.1
-      magic-string: 0.30.21
-      mrmime: 2.0.1
-      parse5-html-rewriting-stream: 8.0.1
-      picomatch: 4.0.4
-      piscina: 5.1.4
-      rollup: 4.60.2
-      sass: 1.99.0
-      semver: 7.7.4
-      source-map-support: 0.5.21
-      tinyglobby: 0.2.16
-      tslib: 2.8.1
-      typescript: 6.0.3
-      vite: 7.3.2(@types/node@24.12.2)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.99.0)(terser@5.46.2)(tsx@4.20.5)(yaml@2.9.0)
-      watchpack: 2.5.1
-    optionalDependencies:
-      '@angular/core': 22.0.1(@angular/compiler@22.0.1)(rxjs@7.8.2)(zone.js@0.16.2)
-      '@angular/localize': 22.0.1(@angular/compiler-cli@22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3))(@angular/compiler@22.0.1)
-      '@angular/platform-browser': 22.0.1(@angular/common@22.0.1(@angular/core@22.0.1(@angular/compiler@22.0.1)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@22.0.1(@angular/compiler@22.0.1)(rxjs@7.8.2)(zone.js@0.16.2))
-      '@angular/platform-server': 22.0.1(@angular/common@22.0.1(@angular/core@22.0.1(@angular/compiler@22.0.1)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/compiler@22.0.1)(@angular/core@22.0.1(@angular/compiler@22.0.1)(rxjs@7.8.2)(zone.js@0.16.2))(@angular/platform-browser@22.0.1(@angular/common@22.0.1(@angular/core@22.0.1(@angular/compiler@22.0.1)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@22.0.1(@angular/compiler@22.0.1)(rxjs@7.8.2)(zone.js@0.16.2)))(rxjs@7.8.2)
-      '@angular/ssr': 22.0.1(73ec6ea6b69c2d745740f894b43590ff)
-      istanbul-lib-instrument: 6.0.3
-      less: 4.6.4
-      lmdb: 3.5.4
-      ng-packagr: 22.0.0(@angular/compiler-cli@22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3))(tailwindcss@4.1.11)(tslib@2.8.1)(typescript@6.0.3)
-      postcss: 8.5.15
-      tailwindcss: 4.1.11
-      vitest: 4.1.2(@types/node@24.12.2)(jsdom@26.1.0)(vite@8.0.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@24.12.2)(esbuild@0.27.3)(jiti@2.6.1)(less@4.6.4)(sass-embedded@1.97.2)(sass@1.99.0)(terser@5.46.2)(tsx@4.20.5)(yaml@2.9.0))
     transitivePeerDependencies:
       - '@types/node'
       - chokidar
