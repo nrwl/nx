@@ -38,7 +38,7 @@ This grants Nx the ability to create and connect to Unix sockets, which it needs
 
 ## Scoped allowlisting with the Nx socket root
 
-Nx creates all of its sockets under a single stable directory on macOS and Linux: `/tmp/.nx/sockets`, unless overridden via `NX_SOCKET_DIR`. Allowlist that one directory, and grant read/write access to its parent so Nx can create the socket files, instead of granting blanket socket access:
+Nx creates all of its sockets under a single stable directory on macOS and Linux: `/tmp/.nx/sockets`, unless overridden via `NX_SOCKET_DIR`. Allowlist that one directory instead of granting blanket socket access:
 
 ```json
 // .claude/settings.json
@@ -46,7 +46,7 @@ Nx creates all of its sockets under a single stable directory on macOS and Linux
   "sandbox": {
     "filesystem": {
       "allowRead": ["/tmp/.nx"],
-      "allowWrite": ["/tmp/.nx"]
+      "allowWrite": ["/tmp/.nx/sockets"]
     },
     "network": {
       "allowUnixSockets": ["/tmp/.nx/sockets"]
@@ -56,6 +56,10 @@ Nx creates all of its sockets under a single stable directory on macOS and Linux
 ```
 
 The path is identical on every machine, so the entries are safe to commit and share with your team.
+
+{% aside type="caution" title="Keep the write grant narrower than the read grant" %}
+Grant write on `/tmp/.nx/sockets`, not on `/tmp/.nx`. The parent also holds Nx's native binary cache, which Nx copies its compiled binding into and then loads and executes. Sandboxed code runs as your own user, so a write grant on `/tmp/.nx` lets anything in the sandbox replace that binary, and your next Nx run outside the sandbox would execute it. With write scoped to the socket directory, Nx simply skips the cache inside the sandbox and loads the binding from `node_modules` instead.
+{% /aside %}
 
 Claude Code's `allowUnixSockets` setting currently only allows _connecting_ to sockets, not _creating_ them. A scoped allowlist works when the daemon is already running (started outside the sandbox, for example from your own terminal), but processes inside the sandbox that need to create sockets, such as a fresh daemon, plugin workers, or forked tasks, still require `allowAllUnixSockets: true`.
 
