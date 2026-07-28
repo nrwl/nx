@@ -1,9 +1,11 @@
+import ignore = require('ignore');
 import { minimatch } from 'minimatch';
 import { execFile, execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Tree } from '../../generators/tree';
+import { readFileIfExisting } from '../fileutils';
 import { parseJson } from '../json';
 import { readModulePackageJson } from '../package-json';
 import { FORMATTER_MAX_BUFFER } from './shared';
@@ -198,6 +200,30 @@ function isJsonOxfmtConfig(name: string): boolean {
   return name.endsWith('.json') || name.endsWith('.jsonc');
 }
 
+/**
+ * oxfmt's CLI skips anything covered by the `.gitignore` and `.prettierignore`
+ * sitting next to the files it formats. Formatting from memory has to apply
+ * that itself, so that a generator writing to an ignored path leaves it alone.
+ */
+function readIgnoreMatcher(
+  workspaceRoot: string
+): ReturnType<typeof ignore> | undefined {
+  const patterns = ['.gitignore', '.prettierignore']
+    .map((name) => readFileIfExisting(path.join(workspaceRoot, name)))
+    .filter((contents) => contents.length > 0);
+
+  if (patterns.length === 0) {
+    return undefined;
+  }
+
+  const matcher = ignore();
+  for (const contents of patterns) {
+    matcher.add(contents);
+  }
+
+  return matcher;
+}
+
 type EditorConfigSection = { glob: string; properties: Record<string, string> };
 
 /**
@@ -389,10 +415,15 @@ export async function formatFilesWithOxfmt(
   // .editorconfig properties are matched per file, and every oxfmt option
   // overrides its .editorconfig counterpart.
   const editorConfigSections = readEditorConfigSections(workspaceRoot);
+  const ignoreMatcher = readIgnoreMatcher(workspaceRoot);
 
   let error: string | undefined;
   await Promise.all(
     files.map(async (file) => {
+      if (ignoreMatcher?.ignores(file.path)) {
+        return;
+      }
+
       try {
         const result = await format(
           path.join(workspaceRoot, file.path),
