@@ -1,11 +1,5 @@
 const { join, basename } = require('path');
-const {
-  copyFileSync,
-  renameSync,
-  statSync,
-  unlinkSync,
-  utimesSync,
-} = require('fs');
+const { copyFileSync, renameSync, statSync, unlinkSync } = require('fs');
 const { createHash } = require('crypto');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
@@ -105,23 +99,16 @@ Module._load = function (request, parent, isMain) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation);
 
-    // Securely resolve the per-user cache dir. Returns null when it cannot be
-    // created and *trusted* (e.g. a sandbox with no write allowance yet, or a
-    // per-uid dir another local user pre-created under the world-writable
-    // root). In that case load the binding in place from node_modules — that
-    // is strictly better than failing to load, and safer than loading a file
-    // from a directory we don't own.
+    // null when the cache dir cannot be created *and trusted*; loading in place
+    // from node_modules is safer than loading out of a directory we don't own.
     const nativeFileCacheLocation = ensureSecureNativeFileCacheLocation();
     if (!nativeFileCacheLocation) {
       return originalLoad.apply(this, [nativeLocation, parent, isMain]);
     }
 
-    // The cache dir is keyed by nx version, which is NOT enough on its own:
-    // in a source checkout `nxVersion` is the placeholder 0.0.1 for every
-    // worktree on the machine, so without this every checkout would share one
-    // slot and a rebuild in one would be picked up by the others. Hashing the
-    // resolved binding path keeps each checkout (and each installed copy) in
-    // its own entry.
+    // nxVersion alone is not enough: in a source checkout it is the placeholder
+    // 0.0.1 for every worktree, so hashing the resolved binding path keeps each
+    // checkout in its own entry.
     const cacheKey =
       nxVersion +
       '-' +
@@ -142,23 +129,8 @@ Module._load = function (request, parent, isMain) {
     const existingFileStats = statsOrNull(tmpFile);
 
     // Size alone does not detect a rebuilt binding: a small Rust edit routinely
-    // produces a byte-identical size. Treat a cache entry older than the source
-    // as stale so a rebuild is picked up rather than silently ignored.
-    //
-    // The copy's own creation time would normally answer this on its own: the
-    // copy happens after the build, so it lands above the source's mtime, and a
-    // later rebuild lands above the copy. That holds whenever both timestamps
-    // come from the same clock.
-    //
-    // It stops holding when the source is dated *ahead* of the cache
-    // filesystem's clock — bind mounts under WSL2/Docker/Colima, NFS skew, CI
-    // mtime restore. A copy stamped "now" can never reach a source stamped
-    // later, so the entry reads stale on every run and each process re-copies
-    // the whole binding. Never wrong, just permanently wasteful, on the
-    // pre-bootstrap path of every CLI, daemon, plugin worker and forked task.
-    //
-    // Carrying the source's mtime onto the copy (stamped below) keeps the same
-    // rule and removes that dependence on the two clocks agreeing.
+    // produces a byte-identical size. The copy is taken after the build, so a
+    // cache entry older than the source means the source was rebuilt since.
     const isFresh =
       existingFileStats?.size === expectedFileSize &&
       existingFileStats.mtimeMs >= sourceStats.mtimeMs;
@@ -185,9 +157,8 @@ Module._load = function (request, parent, isMain) {
       try {
         copyFileSync(nativeLocation, tmpTmpFile);
       } catch (e) {
-        // Permission errors won't heal on retry — use the load-in-place
-        // fallback below. A throwing copy can still have created a partial
-        // file, and nothing else will ever look at this unique name.
+        // Permission errors won't heal on retry, and a throwing copy can still
+        // have left a partial file behind.
         cacheError = e;
         removeIfPresent(tmpTmpFile);
         break;
@@ -196,37 +167,12 @@ Module._load = function (request, parent, isMain) {
       // Validate the copy - check file size matches expected
       const copiedFileStats = statsOrNull(tmpTmpFile);
       if (copiedFileStats?.size === expectedFileSize) {
-        // Carry the source's mtime onto the copy, before the rename so the
-        // published file never has the wrong one. copyFileSync does not
-        // preserve timestamps, so without this the copy carries the cache
-        // clock — which is fine until the source is dated ahead of that clock
-        // and the entry can never test as fresh again. See the freshness check
-        // above.
-        // Seconds-as-number, not the Date form: a Date carries only whole
-        // milliseconds, so it rounds the sub-millisecond part of the source
-        // mtime and can land just *below* it — which would make the freshness
-        // check fail immediately and re-copy on every single run. The numeric
-        // form round-trips exactly.
-        try {
-          utimesSync(
-            tmpTmpFile,
-            sourceStats.atimeMs / 1000,
-            sourceStats.mtimeMs / 1000
-          );
-        } catch {
-          // Best effort. Without it the copy keeps its creation time, which is
-          // the behaviour this replaced: still correct for an ordinary source,
-          // just unable to match one dated in the future.
-        }
         // Copy succeeded, rename to final location and load
         try {
           renameSync(tmpTmpFile, tmpFile);
         } catch (e) {
-          // The one unguarded fs call in this loop until now. A directory or a
-          // foreign-owned entry planted at tmpFile throws straight out of
-          // `require`, where native-bindings.js swallows it into loadErrors and
-          // reports "Cannot find native binding" — pointing at an npm optional
-          // dependency problem that does not exist, while leaking the copy.
+          // Unguarded, this throws out of `require` and native-bindings.js
+          // reports it as a missing optional dependency, which it is not.
           cacheError = e;
           removeIfPresent(tmpTmpFile);
           break;
@@ -246,9 +192,8 @@ Module._load = function (request, parent, isMain) {
       removeIfPresent(tmpTmpFile);
     }
 
-    // Copying failed - warn and load from original location. Name the errno:
-    // ENOSPC, EROFS, EACCES and EDQUOT are all actionable and all look
-    // identical without it.
+    // Name the errno: ENOSPC, EROFS, EACCES and EDQUOT are all actionable and
+    // otherwise indistinguishable.
     console.warn(
       `Warning: Failed to copy native module to cache after ${attemptsMade} attempt${
         attemptsMade === 1 ? '' : 's'
