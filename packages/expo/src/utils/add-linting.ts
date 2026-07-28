@@ -28,6 +28,7 @@ interface NormalizedSchema {
    */
   setParserOptionsProject?: boolean;
   tsConfigPaths: string[];
+  unitTestRunner?: string;
   skipPackageJson?: boolean;
   addPlugin?: boolean;
   buildable?: boolean;
@@ -40,6 +41,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   // need the linter registering, which the helper handles (including `none`).
   if (options.linter !== 'eslint') {
     return addLintingToProject(host, {
+      oxlintPlugins: ['react', 'react-perf'],
+      unitTestRunner: options.unitTestRunner,
       linter: options.linter as any,
       project: options.projectName,
       addPlugin: options.addPlugin,

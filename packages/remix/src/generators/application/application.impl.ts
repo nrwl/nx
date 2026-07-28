@@ -265,6 +265,8 @@ export async function remixApplicationGeneratorInternal(
   if (options.linter !== 'eslint' && options.linter !== 'none') {
     tasks.push(
       await addLintingToProject(tree, {
+        oxlintPlugins: ['react', 'react-perf', 'jsx-a11y'],
+        unitTestRunner: options.unitTestRunner,
         linter: options.linter,
         project: options.projectName,
         addPlugin: options.addPlugin,

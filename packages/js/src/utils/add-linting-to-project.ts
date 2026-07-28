@@ -10,7 +10,6 @@ export interface AddLintingToProjectOptions {
   addPlugin?: boolean;
   /** ESLint-only. Ignored by other linters. */
   tsConfigPaths?: string[];
-  /** ESLint-only. Ignored by other linters. */
   unitTestRunner?: string;
   /** ESLint-only. Ignored by other linters. */
   rootProject?: boolean;
@@ -18,6 +17,11 @@ export interface AddLintingToProjectOptions {
   enableTypedLinting?: boolean;
   /** ESLint-only. Ignored by other linters. */
   eslintConfigFormat?: 'mjs' | 'cjs';
+  /**
+   * Oxlint plugins to enable for this project, e.g. `['react', 'jsx-a11y']`.
+   * Ignored by other linters, which express framework presets differently.
+   */
+  oxlintPlugins?: string[];
 }
 
 /**
@@ -46,6 +50,10 @@ export async function addLintingToProject(
     const { lintProjectGenerator } = ensurePackage('@nx/oxlint', nxVersion);
     return lintProjectGenerator(tree, {
       project: options.project,
+      plugins: [
+        ...(options.oxlintPlugins ?? []),
+        ...oxlintTestPlugins(options.unitTestRunner),
+      ],
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       keepExistingVersions: options.keepExistingVersions,
@@ -67,4 +75,19 @@ export async function addLintingToProject(
     keepExistingVersions: options.keepExistingVersions,
     addPlugin: options.addPlugin,
   });
+}
+
+/**
+ * Oxlint's test-runner plugins are named after the runner, so the plugin comes
+ * straight from `unitTestRunner`. Matched loosely because runners arrive with
+ * suffixes, e.g. Angular's `vitest-analog`.
+ */
+function oxlintTestPlugins(unitTestRunner: string | undefined): string[] {
+  if (unitTestRunner?.includes('vitest')) {
+    return ['vitest'];
+  }
+  if (unitTestRunner?.includes('jest')) {
+    return ['jest'];
+  }
+  return [];
 }

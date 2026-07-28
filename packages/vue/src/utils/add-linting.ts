@@ -50,6 +50,8 @@ export async function addLinting(
   // need the linter registering, which the helper handles (including `none`).
   if (options.linter !== 'eslint') {
     return addLintingToProject(host, {
+      oxlintPlugins: ['vue'],
+      unitTestRunner: options.unitTestRunner,
       linter: options.linter as any,
       project: options.projectName,
       addPlugin: options.addPlugin,

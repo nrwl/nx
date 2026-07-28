@@ -27,6 +27,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await addLintingToProject(host, {
+      oxlintPlugins: ['react', 'react-perf', 'jsx-a11y'],
       linter: options.linter,
       project: options.name,
       tsConfigPaths: [
