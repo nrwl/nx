@@ -1,11 +1,27 @@
 import { execFile, execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { Tree } from '../../generators/tree';
+import { parseJson } from '../json';
 import { readModulePackageJson } from '../package-json';
 import { FORMATTER_MAX_BUFFER } from './shared';
+
+const dynamicImport = new Function('specifier', 'return import(specifier)') as (
+  specifier: string
+) => Promise<any>;
+
+/**
+ * oxfmt reports a file it has no parser for as an error rather than skipping
+ * it, and nx hands it every changed file.
+ */
+const UNSUPPORTED_FILE_TYPE = 'Unsupported file type';
+
+type OxfmtFormat = (
+  fileName: string,
+  sourceText: string,
+  options?: Record<string, unknown>
+) => Promise<{ code: string; errors?: { message: string }[] }>;
 
 /**
  * Config filenames oxfmt discovers, in its own precedence order.
@@ -151,15 +167,81 @@ export function formatContentWithOxfmt(
   });
 }
 
+let cachedOxfmtModule: Promise<{ format: OxfmtFormat }> | undefined;
+
 /**
- * Formats a batch of in-memory files in a single oxfmt invocation.
+ * oxfmt ships a programmatic API alongside its CLI, but only as ESM, so it
+ * cannot be `require`d from nx's CommonJS build. Going through `import()` via
+ * `new Function` keeps TypeScript from downlevelling it back to a `require`.
  *
- * oxfmt resolves its config by walking up from each file on disk, so files
- * held only in a virtual tree are staged into a scratch directory first. The
- * scratch directory is placed inside `workspaceRoot` when that exists so the
- * workspace's own config is still discovered by walking up; `seedConfig` (a
- * config the generator just created, which is not on disk yet) is written at
- * the scratch root where it takes precedence.
+ * The package is resolved the same way as the binary - from the workspace's own
+ * install - because nx does not depend on oxfmt itself.
+ */
+function loadOxfmtModule(): Promise<{ format: OxfmtFormat }> {
+  if (!cachedOxfmtModule) {
+    const { packageJson, path: packageJsonPath } =
+      readModulePackageJson('oxfmt');
+    const entryPoint = path.resolve(
+      path.dirname(packageJsonPath),
+      packageJson.main ?? 'dist/index.js'
+    );
+    cachedOxfmtModule = dynamicImport(pathToFileURL(entryPoint).href).then(
+      (imported) => (imported.format ? imported : imported.default)
+    );
+  }
+
+  return cachedOxfmtModule;
+}
+
+/**
+ * oxfmt's programmatic API takes options directly rather than discovering a
+ * config file, so the workspace's config is read here. A config the generator
+ * just created lives only in the tree, so it is passed in as `seedConfig` and
+ * takes precedence over whatever is on disk.
+ *
+ * Only the JSON forms can be read this way; a `oxfmt.config.{ts,js,...}` would
+ * have to be executed to be understood, so those workspaces fall back to
+ * oxfmt's defaults.
+ */
+function resolveOxfmtOptions(
+  workspaceRoot: string,
+  seedConfig?: { name: string; content: string }
+): Record<string, unknown> | undefined {
+  let source: { name: string; content: string } | undefined = seedConfig;
+
+  if (!source) {
+    for (const name of oxfmtConfigFiles) {
+      const configPath = path.join(workspaceRoot, name);
+      if (existsSync(configPath)) {
+        source = { name, content: readFileSync(configPath, 'utf-8') };
+        break;
+      }
+    }
+  }
+
+  if (
+    !source ||
+    (!source.name.endsWith('.json') && !source.name.endsWith('.jsonc'))
+  ) {
+    return undefined;
+  }
+
+  try {
+    return parseJson(source.content);
+  } catch {
+    // An unreadable config is oxfmt's to complain about, not formatting's.
+    return undefined;
+  }
+}
+
+/**
+ * Formats a batch of in-memory files through oxfmt's programmatic API.
+ *
+ * The files exist only in a virtual tree, and formatting them must not touch
+ * the workspace: staging copies of project files (project.json, package.json)
+ * inside a workspace races the daemon's file watcher and the project graph
+ * while a generator is running. oxfmt's `format` takes the content directly and
+ * only reads the file name to pick a parser, so nothing is written to disk.
  *
  * Returns the formatted content keyed by the original relative path. Paths
  * oxfmt does not handle are absent from the map, and callers should leave
@@ -176,79 +258,39 @@ export async function formatFilesWithOxfmt(
     return { formatted };
   }
 
+  const { format } = await loadOxfmtModule();
+  const options = resolveOxfmtOptions(workspaceRoot, seedConfig);
+
   let error: string | undefined;
-  const oxfmtBin = getOxfmtBinPath();
-  const baseDir = existsSync(workspaceRoot) ? workspaceRoot : tmpdir();
-  const scratch = mkdtempSync(path.join(baseDir, '.nx-oxfmt-'));
+  await Promise.all(
+    files.map(async (file) => {
+      try {
+        const result = await format(
+          path.join(workspaceRoot, file.path),
+          file.content,
+          options
+        );
 
-  try {
-    if (seedConfig) {
-      await writeFile(
-        path.join(scratch, seedConfig.name),
-        seedConfig.content,
-        'utf-8'
-      );
-    }
-
-    // Staged files sit outside the workspace tree, so oxfmt would not find the
-    // ignore files it normally honours. Copy them next to the staged content
-    // so ignored paths stay ignored, matching the prettier backend.
-    // .editorconfig comes along for the same reason: oxfmt reads it from the
-    // cwd, and the run is pinned to this directory.
-    await Promise.all(
-      ['.gitignore', '.prettierignore', '.editorconfig'].map(async (name) => {
-        const source = path.join(workspaceRoot, name);
-        if (existsSync(source)) {
-          await writeFile(
-            path.join(scratch, name),
-            await readFile(source, 'utf-8'),
-            'utf-8'
-          );
+        const failure = result.errors?.[0];
+        if (failure) {
+          // oxfmt is handed every changed file, most of which it has no parser
+          // for. Those are skipped rather than reported, matching the CLI's
+          // --no-error-on-unmatched-pattern; a real parse failure is reported
+          // but costs only its own file.
+          if (!failure.message.startsWith(UNSUPPORTED_FILE_TYPE)) {
+            error ??= failure.message;
+          }
+          return;
         }
-      })
-    );
 
-    await Promise.all(
-      files.map(async (file) => {
-        const staged = path.join(scratch, file.path);
-        await mkdir(path.dirname(staged), { recursive: true });
-        await writeFile(staged, file.content, 'utf-8');
-      })
-    );
-
-    // A parse failure in one file exits the whole run non-zero, but oxfmt has
-    // still written every file it could. Record the failure and keep going, so
-    // one unparseable file does not cost the batch its formatting.
-    error = await new Promise<string | undefined>((resolve) => {
-      execFile(
-        'node',
-        [oxfmtBin, '--no-error-on-unmatched-pattern', '--write', scratch],
-        {
-          // oxfmt resolves .editorconfig from the cwd rather than from the
-          // files it formats. Run it inside the scratch dir so it cannot reach
-          // out into the workspace for config the staged files should not use.
-          cwd: scratch,
-          encoding: 'utf-8' as const,
-          windowsHide: true,
-          maxBuffer: FORMATTER_MAX_BUFFER,
-        },
-        (execError, _stdout, stderr) => {
-          resolve(execError ? stderr?.trim() || execError.message : undefined);
+        if (result.code !== file.content) {
+          formatted.set(file.path, result.code);
         }
-      );
-    });
-
-    await Promise.all(
-      files.map(async (file) => {
-        const content = await readFile(path.join(scratch, file.path), 'utf-8');
-        if (content !== file.content) {
-          formatted.set(file.path, content);
-        }
-      })
-    );
-  } finally {
-    rmSync(scratch, { recursive: true, force: true });
-  }
+      } catch (e) {
+        error ??= e.message;
+      }
+    })
+  );
 
   return { formatted, error };
 }
