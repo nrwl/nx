@@ -330,6 +330,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       await addLintingToProject(host, {
         linter: options.linter,
         project: options.projectName,
+        unitTestRunner: options.unitTestRunner,
         addPlugin: options.addPlugin,
       })
     );

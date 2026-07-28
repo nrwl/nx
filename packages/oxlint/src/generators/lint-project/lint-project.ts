@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { hasOxlintPlugin } from '../../utils/plugin.js';
 import { initGenerator } from '../init/init.js';
+import { addPluginsToOxlintConfig } from '../../utils/oxlint-config.js';
 
 export interface LintProjectGeneratorSchema {
   project: string;
@@ -17,6 +18,8 @@ export interface LintProjectGeneratorSchema {
   keepExistingVersions?: boolean;
   addPlugin?: boolean;
   addExplicitTargets?: boolean;
+  /** Oxlint plugins to enable for this project, e.g. `['react', 'jsx-a11y']`. */
+  plugins?: string[];
 }
 
 export function lintProjectGenerator(
@@ -47,6 +50,10 @@ export async function lintProjectGeneratorInternal(
   );
 
   const projectConfig = readProjectConfiguration(tree, options.project);
+
+  if (options.plugins?.length) {
+    addPluginsToOxlintConfig(tree, projectConfig.root, options.plugins);
+  }
 
   const hasPlugin = hasOxlintPlugin(tree);
   if (!hasPlugin || options.addExplicitTargets) {

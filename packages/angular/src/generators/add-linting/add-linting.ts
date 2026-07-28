@@ -38,6 +38,7 @@ export async function addLintingGenerator(
     return addLintingToProject(tree, {
       linter: options.linter,
       project: options.projectName,
+      unitTestRunner: options.unitTestRunner,
       addPlugin: options.addPlugin,
       skipPackageJson: options.skipPackageJson,
     });

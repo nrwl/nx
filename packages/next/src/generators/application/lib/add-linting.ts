@@ -34,6 +34,8 @@ export async function addLinting(
   // need the linter registering, which the helper handles (including `none`).
   if (options.linter !== 'eslint') {
     return addLintingToProject(host, {
+      oxlintPlugins: ['nextjs', 'react', 'react-perf', 'jsx-a11y'],
+      unitTestRunner: options.unitTestRunner,
       linter: options.linter as any,
       project: options.projectName,
       addPlugin: options.addPlugin,

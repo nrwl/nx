@@ -406,6 +406,7 @@ export async function addLint(
       project: options.name,
       addPlugin: options.addPlugin,
       rootProject: options.rootProject,
+      unitTestRunner: options.unitTestRunner,
     });
   }
 
