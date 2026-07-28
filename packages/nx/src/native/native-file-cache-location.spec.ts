@@ -12,10 +12,10 @@ import {
 import { platform, tmpdir } from 'node:os';
 import { join } from 'path';
 import {
-  ensureOwnedPrivateDir,
   ensureSecureNativeFileCacheLocation,
   getNativeFileCacheLocation,
 } from './native-file-cache-location';
+import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
 import { nxVersion } from '../utils/versions';
 
 // Real filesystem behavior is the point of these tests (actual symlinks, actual
@@ -185,6 +185,7 @@ describe('native file cache location', () => {
       try {
         const victim = join(base, 'victim');
         mkdirSync(victim, { mode: 0o755 });
+        chmodSync(victim, 0o755); // mkdir's mode is subject to the umask
         // The per-uid dir is the first hop under the world-writable root.
         symlinkSync(victim, join(base, String(process.getuid!())));
 
@@ -202,6 +203,7 @@ describe('native file cache location', () => {
         mkdirSync(userDir, { recursive: true, mode: 0o700 });
         const victim = join(base, 'victim');
         mkdirSync(victim, { mode: 0o755 });
+        chmodSync(victim, 0o755); // mkdir's mode is subject to the umask
         // The version dir is the directory a `.node` is loaded out of, so it
         // must be verified rather than created with `recursive: true`.
         symlinkSync(victim, join(userDir, nxVersion));

@@ -1,10 +1,11 @@
 import { userInfo } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { mkdirSync } from 'fs';
 import { NX_TMP_DIR } from '../utils/nx-tmp-dir';
 import { nxVersion } from '../utils/versions';
 import {
   ensureOwnedPrivateDir,
+  isSafeSharedRoot,
   relaxSharedRootToSticky,
 } from '../utils/owned-private-dir';
 
@@ -15,8 +16,6 @@ import {
  * here, only from the owner-locked per-uid dir below.
  */
 const NATIVE_BINARIES_ROOT = join(NX_TMP_DIR, 'native-binaries');
-
-export { ensureOwnedPrivateDir };
 
 export function getNativeFileCacheLocation() {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
@@ -42,8 +41,10 @@ export function getNativeFileCacheLocation() {
  * another local user could pre-create our per-uid directory and plant a
  * malicious `.node` that we would otherwise load and *execute*. To prevent
  * that, the per-uid dir must be owned by us, be a real directory (not a
- * symlink), and not be writable by group or other. If any of those fail we
- * refuse the cache and fall back to loading in place.
+ * symlink), and carry no group or other bits at all — read and search are
+ * enough to reach what is inside, so a `0755` directory is re-locked to `0700`
+ * rather than accepted. If a check fails and cannot be repaired we refuse the
+ * cache and fall back to loading in place.
  */
 export function ensureSecureNativeFileCacheLocation(
   // Internal seam: production always uses NATIVE_BINARIES_ROOT. Tests override
@@ -66,6 +67,17 @@ export function ensureSecureNativeFileCacheLocation(
   const userDir = join(binariesRoot, getUserSegment());
 
   try {
+    // Verify the shared roots before creating anything beneath them. The
+    // O_NOFOLLOW inside relaxSharedRootToSticky only guards the component it is
+    // handed; every path built under a root still resolves that root, so a
+    // symlink planted one level up redirects the entire cache — including the
+    // directory we go on to load a `.node` out of.
+    if (
+      !isSafeSharedRoot(dirname(binariesRoot)) ||
+      !isSafeSharedRoot(binariesRoot)
+    ) {
+      return null;
+    }
     // Create the shared root world-writable + sticky, like /tmp itself, so
     // peers can make their own per-uid dirs. chmod only succeeds for the
     // creating user, hence best-effort.
@@ -73,9 +85,12 @@ export function ensureSecureNativeFileCacheLocation(
     if (canCheckOwnership()) {
       // Relaxed independently: a failure on the outer root must not skip the
       // inner one, or the first user to get here locks everyone else out of
-      // the cache.
-      relaxSharedRootToSticky(NX_TMP_DIR);
-      relaxSharedRootToSticky(binariesRoot);
+      // the cache. A *hostile* outer root is the one exception — the inner
+      // path resolves through it — so we stop rather than granting 0o1777
+      // inside a directory someone else chose.
+      if (relaxSharedRootToSticky(dirname(binariesRoot))) {
+        relaxSharedRootToSticky(binariesRoot);
+      }
     }
   } catch {
     return null;
