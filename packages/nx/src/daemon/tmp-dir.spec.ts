@@ -107,17 +107,15 @@ describe('socket directories', () => {
 
     const dir = getSocketDir();
 
-    // The shared roots are world-writable, so without this level whoever ran Nx
-    // first would own the parent of every other user's socket directory and
-    // could rename it aside. Verifying it is what makes a squatter fail closed.
+    // Without this level, whoever ran Nx first owns the parent of everyone
+    // else's socket directory and can rename it aside.
     expect(dir.startsWith(USER_SOCKET_ROOT + '/')).toBe(true);
     expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(USER_SOCKET_ROOT);
   });
 
   it('falls back when the per-uid directory is not ours', () => {
     setPlatform('linux');
-    // Another local user pre-created /tmp/.nx/sockets/<our-uid>. The uid check
-    // inside ensureOwnedPrivateDir is what detects it.
+    // A peer pre-created /tmp/.nx/sockets/<our-uid>; the uid check catches it.
     (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
@@ -192,9 +190,7 @@ describe('socket directories', () => {
 
   it('falls back rather than creating anything under a hostile shared root', () => {
     setPlatform('linux');
-    // A symlink planted at /tmp/.nx is resolved as a prefix by the recursive
-    // mkdirSync and by every path built underneath, so nothing may be created
-    // until the root itself is known to be a real directory.
+    // Nothing may be created until the root is known to be a real directory.
     (isRealDirectoryOrAbsent as jest.Mock).mockReturnValueOnce(false);
 
     const dir = getSocketDir();
@@ -209,8 +205,8 @@ describe('socket directories', () => {
 
   it('checks every shared root, not just the outer one', () => {
     setPlatform('linux');
-    // /tmp/.nx/sockets does not exist on a fresh machine, so it is the easy one
-    // to plant — and it is the direct parent of the per-uid directory.
+    // The inner root does not exist on a fresh machine, so it is the easier to
+    // plant, and it is the direct parent of the per-uid directory.
     (isRealDirectoryOrAbsent as jest.Mock).mockReturnValueOnce(true);
     (isRealDirectoryOrAbsent as jest.Mock).mockReturnValueOnce(false);
 
@@ -219,10 +215,8 @@ describe('socket directories', () => {
     expect(isRealDirectoryOrAbsent).toHaveBeenCalledWith('/tmp/.nx/sockets');
   });
 
-  // The Windows short-circuit itself now lives in relaxSharedRootToSticky,
-  // which this spec mocks out — asserting on chmodSync here could not fail,
-  // because tmp-dir.ts no longer calls it on any platform. The real property is
-  // covered against the live helper in utils/owned-private-dir.spec.ts.
+  // The win32 short-circuit lives in relaxSharedRootToSticky, which this spec
+  // mocks out; it is covered live in utils/owned-private-dir.spec.ts.
 });
 
 function escapeRegExp(str: string): string {

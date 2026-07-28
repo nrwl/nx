@@ -37,17 +37,11 @@ describe('ensureOwnedPrivateDir', () => {
   posixOnly(
     'should refuse a symlink planted where the directory should be, and leave its target alone',
     () => {
-      // The shared socket and cache roots are world-writable by design, so
-      // another local user can pre-create our path as a symlink. `mkdirSync`
-      // does not throw on one and `chmodSync` follows it, so creating and
-      // locking down in one step would both redirect where our files land and
-      // silently retarget the chmod at a directory the attacker chose.
+      // The shared roots are world-writable, so a peer can pre-create our path
+      // as a symlink; mkdirSync does not throw on one and chmod follows it.
       const victim = join(base, 'victim');
       mkdirSync(victim, { mode: 0o755 });
-      // mkdir's mode is a request masked by the umask; chmod is not. Without
-      // this the fixture is 0700 under a hardened umask and the assertion
-      // fails on entirely correct code.
-      chmodSync(victim, 0o755);
+      chmodSync(victim, 0o755); // mkdir's mode is masked by the umask, chmod is not
       const squatted = join(base, 'squatted');
       symlinkSync(victim, squatted);
 
@@ -56,22 +50,17 @@ describe('ensureOwnedPrivateDir', () => {
     }
   );
 
-  // Octal strings rather than numbers so the test name reads `mode 0705` — jest
-  // renders %s in decimal, which turned these into `at mode 453`.
+  // Octal strings so the name reads `mode 0705`; jest renders %s in decimal.
   posixOnly.each(['0755', '0750', '0711', '0705'])(
     'should tighten an existing directory of ours at mode %s to 0700',
     (octalMode: string) => {
       const mode = parseInt(octalMode, 8);
-      // Not just the write bits. A plugin worker socket is created with no mode
-      // of its own, so the directory is the only thing keeping another local
-      // user from reaching it, and search permission is all they need. The
-      // workspace-local fallback dir is created by a bare mkdirSync elsewhere
-      // in the daemon, so it is routinely 0755 in a real workspace.
+      // Not just the write bits: a plugin worker socket has no mode of its own,
+      // so search permission on the directory is all a peer needs.
       const dir = join(base, `loose-${mode.toString(8)}`);
       mkdirSync(dir, { mode });
-      // Required, not belt-and-braces: mkdir masks its mode against the umask,
-      // so under `umask 0077` all four fixtures are created 0700 and this table
-      // — the only mutation coverage for the 0o077 mask — passes vacuously.
+      // Required: under `umask 0077` all four are created 0700 and this table —
+      // the only coverage for the 0o077 mask — passes vacuously without it.
       chmodSync(dir, mode);
       expect(lstatSync(dir).mode & 0o777).toBe(mode);
 
@@ -94,10 +83,8 @@ describe('ensureOwnedPrivateDir', () => {
     );
 
     posixOnly('should not follow a symlink planted at a shared root', () => {
-      // chmod resolves symlinks, so without O_NOFOLLOW this call turns whatever
-      // the link points at world-writable — a local privilege escalation, since
-      // the sticky bit stops an attacker deleting existing files but not
-      // creating absent ones (an authorized_keys, a PATH shim).
+      // Without O_NOFOLLOW this turns whatever the link points at
+      // world-writable — the sticky bit stops deletions, not new files.
       const victim = join(base, 'victim');
       mkdirSync(victim, { mode: 0o700 });
       symlinkSync(victim, join(base, 'planted-root'));
@@ -128,17 +115,13 @@ describe('ensureOwnedPrivateDir', () => {
       ).not.toThrow();
     });
 
-    // Runs only on POSIX despite being about Windows, and deliberately so: it
-    // stubs `process.platform` to exercise the win32 branch while keeping a
-    // filesystem whose mode bits are real. On an actual Windows runner Node's
-    // chmod only honours the read-only bit, so the assertion below could not
-    // hold there even on correct code.
+    // POSIX-only despite being about Windows: it stubs process.platform while
+    // keeping real mode bits, which a Windows runner would not have.
     posixOnly(
       'does not chmod when the platform is Windows (named pipes rely on their default DACL)',
       () => {
-        // Asserted against the live helper rather than a mock: tmp-dir.ts calls
-        // this on every platform, so the win32 short-circuit is the only thing
-        // stopping the chmod, and deleting it turns 0700 into 1777 here.
+        // Against the live helper: the win32 short-circuit is the only thing
+        // stopping the chmod, so deleting it turns 0700 into 1777 here.
         const dir = join(base, 'win32-root');
         mkdirSync(dir, { mode: 0o700 });
         chmodSync(dir, 0o700);
