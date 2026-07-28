@@ -558,10 +558,8 @@ async function startPluginWorker(name: string) {
     [
       process.pid,
       global.nxPluginWorkerCount++,
-      // pid + counter already uniquely identify a worker within this process and
-      // keep the socket file readable; this timestamp only guards against a
-      // reused pid across process restarts. Floor + base36 keeps it a few chars
-      // so the full socket path stays within the OS length limit.
+      // pid + counter identify a worker within this process; the timestamp only
+      // guards a reused pid across restarts. Base36 keeps the path short.
       Math.floor(performance.now()).toString(36),
     ].join('-')
   );
@@ -576,13 +574,8 @@ async function startPluginWorker(name: string) {
       workerPath,
       ipcPath,
       name,
-      // The spawning host's workspace root. The worker validates incoming
-      // messages against this value (not one it re-resolves itself) so the
-      // owner and worker agree on identity by construction. Re-resolving in the
-      // worker is fragile: a host that set its root at runtime (e.g. tests via
-      // setWorkspaceRoot, which does not propagate to the child's env) would
-      // resolve a different root in the worker and drop every legitimate
-      // message as "foreign".
+      // The host's root. The worker validates against this rather than re-resolving,
+      // so the two agree by construction.
       workspaceRoot,
     ],
     {

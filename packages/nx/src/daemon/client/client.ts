@@ -1083,9 +1083,8 @@ export class DaemonClient {
           err.message.startsWith('connect EPERM') ||
           err.message.startsWith('connect EACCES')
         ) {
-          // The socket dir is created 0700 and the socket 0600, so a connect
-          // from anyone but the owning user is refused by the OS rather than
-          // silently succeeding.
+          // The 0700 dir and 0600 socket mean the OS refuses this rather than the
+          // connect silently succeeding.
           error = daemonProcessException(
             'The operating system refused the connection to the Nx Daemon socket.'
           );
@@ -1432,12 +1431,8 @@ function nxJsonIsNotPresent() {
  * failure degrades to a daemonless graph build or aborts the command.
  */
 export function daemonProcessException(message: string) {
-  // The daemon log is an enrichment, not the classifier. It is absent on the
-  // first run in a fresh environment (nothing has written it yet), and that is
-  // exactly when the daemon is most likely to fail to start — e.g. a sandbox
-  // denying the socket bind. Tagging the error only when the log could be read
-  // meant those failures fell through to a hard error instead of the daemonless
-  // fallback in createProjectGraphAndSourceMapsAsync.
+  // The log is an enrichment, not the classifier: it is absent on a first run,
+  // which is exactly when the daemon is most likely to fail to start.
   let body = message;
   try {
     let log = readFileSync(DAEMON_OUTPUT_LOG_FILE).toString().split('\n');

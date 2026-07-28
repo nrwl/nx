@@ -157,17 +157,10 @@ type PluginMessageDefs = DefineMessages<{
 // =============================================================================
 
 /**
- * Every message on the plugin-worker socket carries the sending process's
- * workspace root so the receiver can reject messages from a different
- * workspace, the same foreign-workspace protection the Nx daemon applies to
- * its socket (see `DaemonMessage.workspaceRoot`).
- *
- * It is OPTIONAL and stamped centrally in `sendMessageOverSocket`, exactly like
- * the daemon stamps it in `DaemonSocketMessenger.sendMessage`: the many message
- * constructors don't set it, and making it required would force each of them to
- * supply a value the transport layer immediately overwrites. An unstamped or
- * legacy message (undefined) is treated as "not foreign", consistent with the
- * daemon's `isForeignWorkspaceMessage`.
+ * The sender's workspace root, so the receiver can reject messages from a
+ * different workspace — the same protection the daemon applies to its socket.
+ * Optional and stamped centrally in `sendMessageOverSocket`, so the many
+ * message constructors need not set it; undefined is treated as not foreign.
  */
 export type WorkspaceStampedMessage = { workspaceRoot?: string };
 
@@ -312,10 +305,7 @@ export function sendMessageOverSocket(
   socket: Socket,
   message: PluginWorkerMessage | PluginWorkerResult | PluginWorkerNotification
 ): void {
-  // Stamp every outbound message with this process's workspace root so the
-  // receiver can reject messages from a different workspace. This mirrors
-  // `DaemonSocketMessenger.sendMessage`, which stamps `DaemonMessage`s the same
-  // way, and keeps the individual message constructors from having to set it.
+  // Stamped here rather than in each constructor, mirroring the daemon.
   message.workspaceRoot = workspaceRoot;
   socket.write(serialize(message));
   socket.write(MESSAGE_END_SEQ);

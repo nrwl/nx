@@ -17,19 +17,15 @@ export function isDaemonMessage(msg: unknown): msg is DaemonMessage {
 
 /**
  * Any message carrying the sender's workspace root. Structural so the checks
- * below serve both the daemon and the plugin worker without either module
- * importing the other's message type — `WorkspaceStampedMessage` in plugin
- * isolation is a separate declaration with a different shape, not an alias.
- *
- * `type` is required only so the type is not all-optional, which would accept
- * `{}`. It does not make the guard stricter at runtime.
+ * below serve the daemon and the plugin worker without either importing the
+ * other's message type. `type` is required only so the type is not all-optional,
+ * which would accept `{}`.
  */
 type WorkspaceScopedMessage = { type: string; workspaceRoot?: string };
 
 /**
- * A receiver is scoped to the workspace that launched it, so a message from a
- * different one — two workspaces sharing an `NX_SOCKET_DIR` — must not be
- * processed. Compared directly; both come from the same resolution.
+ * A message from a different workspace — two sharing an NX_SOCKET_DIR — must not
+ * be processed. Compared directly; both come from the same resolution.
  */
 export function isForeignWorkspaceMessage(
   msg: WorkspaceScopedMessage,
@@ -42,9 +38,8 @@ export function isForeignWorkspaceMessage(
 }
 
 /**
- * Throws when a message came from a different workspace. The daemon catches this
- * to respond with the mismatch; the plugin worker catches it to drop the
- * message. `receiverDescription` names whichever one raised it.
+ * Throws on a foreign message. The daemon responds with the mismatch; the plugin
+ * worker drops it. `receiverDescription` names whichever raised it.
  */
 export function assertNotForeignWorkspaceMessage(
   msg: WorkspaceScopedMessage,

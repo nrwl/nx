@@ -19,9 +19,8 @@ import { NX_TMP_DIR } from '../utils/nx-tmp-dir';
 import { workspaceRoot } from '../utils/workspace-root';
 
 /**
- * Thrown when the socket directory resolves to the shared system temp dir, which
- * every user on the machine can reach. Invalid configuration, not a recoverable
- * failure — substituting a default silently would hide it.
+ * Thrown when the socket dir resolves to the shared system temp dir, which every
+ * user can reach. Invalid configuration, not a recoverable failure.
  */
 export class InvalidSocketDirConfigured extends Error {
   constructor(public readonly dir: string) {
@@ -70,9 +69,8 @@ export function isDaemonDisabled() {
 }
 
 /**
- * One stable root for the daemon, forked process and plugin worker sockets, so a
- * sandbox can allow unix socket access with a single predictable rule. Windows
- * named pipes are not filesystem-gated, so the OS temp dir is fine there.
+ * One stable root so a sandbox can allow unix socket access with a single rule.
+ * Windows named pipes are not filesystem-gated, so the OS temp dir is fine.
  */
 export const NX_SOCKET_ROOT = join(NX_TMP_DIR, 'sockets');
 
@@ -85,13 +83,10 @@ export function getNxSocketRoot(): string {
 }
 
 /**
- * The per-user directory beneath the shared socket root. The roots above it are
- * world-writable, so without this level whoever runs Nx first owns the parent of
- * everyone else's socket directory and can rename it aside. It also stops two
- * users with the same checkout path (`/workspace` in containers) colliding.
- *
- * Not applied to an explicit NX_SOCKET_DIR, which names the socket directory
- * itself and is often set to escape a too-long default path.
+ * The per-user directory beneath the shared socket root. Without it, whoever runs
+ * Nx first owns the parent of everyone else's socket dir and can rename it aside;
+ * it also stops two users with the same checkout path colliding. Not applied to an
+ * explicit NX_SOCKET_DIR, which names the socket dir itself.
  */
 function userSocketRoot() {
   return join(getNxSocketRoot(), getUserSegment());
@@ -115,8 +110,8 @@ function pluginSocketDirName() {
 }
 
 /**
- * A socket dir under the common root, falling back to
- * DAEMON_DIR_FOR_CURRENT_WORKSPACE. Either way it is locked to the current user.
+ * A socket dir under the common root, falling back to the workspace data dir.
+ * Either way it is locked to the current user.
  */
 export function getSocketDir() {
   const configuredDir =
@@ -149,19 +144,16 @@ function createOwnerOnlySocketDir(
   dir: string,
   usingDefaultRoot: boolean
 ): string {
-  // Outside the try below so it propagates rather than being swallowed by the
-  // permission-failure fallback. Compares against the *bare* temp dir only, so
-  // the default root — a dedicated subdirectory of it — never trips this.
+  // Outside the try so it is not swallowed by the fallback. Compares against the
+  // bare temp dir only, so the default root never trips it.
   if (resolve(dir) === resolve(systemTmpDir)) {
     throw new InvalidSocketDirConfigured(dir);
   }
 
   try {
     if (usingDefaultRoot) {
-      // Every root, not just the outer one: paths built under them resolve each
-      // level normally, so a symlink planted at either tunnels our sockets
-      // elsewhere. The inner one does not exist on a fresh machine, which makes
-      // it the easier to plant.
+      // Every root: paths under them resolve each level, so a symlink at either
+      // tunnels our sockets elsewhere. The inner one is absent on a fresh machine.
       for (const root of [NX_TMP_DIR, NX_SOCKET_ROOT]) {
         if (!isRealDirectoryOrAbsent(root)) {
           throw new Error(
@@ -169,8 +161,7 @@ function createOwnerOnlySocketDir(
           );
         }
       }
-      // Deliberately world-writable so every user on the machine can create
-      // their own per-uid directory beneath them.
+      // World-writable so every user can create their own per-uid dir beneath.
       mkdirSync(NX_SOCKET_ROOT, { recursive: true });
       relaxSharedRootToSticky(NX_TMP_DIR);
       relaxSharedRootToSticky(NX_SOCKET_ROOT);
@@ -193,12 +184,11 @@ function createOwnerOnlySocketDir(
     }
     return dir;
   } catch (e) {
-    // A genuine fs failure, or a leaf we refused above, is recoverable: fall
-    // back to the owner-controlled workspace data dir rather than a shared one.
+    // Recoverable: fall back to the owner-controlled workspace data dir.
     if (!usingDefaultRoot) {
-      // Never swap out an explicitly configured directory in silence — the
-      // substitute is longer, and would resurface as assertValidSocketPath
-      // complaining about a path the user never set.
+      // Never swap out a configured directory silently — the substitute is longer and
+      // would resurface as assertValidSocketPath complaining about a path the user
+      // never set.
       console.warn(
         `Nx could not use the configured socket directory ${dir}: ${
           e instanceof Error ? e.message : e
