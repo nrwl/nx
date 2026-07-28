@@ -36,7 +36,7 @@ describe('@nx/module-federation v2 - Vite', () => {
       `apps/${provider}/tsconfig.json`
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const serve = await runCommandUntil(
         `serve ${provider}`,
         (output) => output.includes('Local:') || output.includes('ready in'),
@@ -66,7 +66,7 @@ describe('@nx/module-federation v2 - Vite', () => {
       `apps/${provider}/src/App.tsx`
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       // `nx serve <provider>` brings the consumer up via provider.serve.dependsOn.
       // Wait for both Vite "Local:" lines (one per app) to confirm the chain
       // is fully up before killing.
