@@ -81,7 +81,9 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 ### Splitting E2E tests
 
-The `targetName` task runs the complete Playwright suite and caches the configured test and reporter outputs. The `ciTargetName` task uses Nx Atomizer to create one cached task per test file, plus a report-merging task when the configured reporters produce mergeable output. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
+The `targetName` task runs the complete Playwright suite and caches the configured test and reporter
+outputs.
+The `ciTargetName` task uses the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
 
 Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
 

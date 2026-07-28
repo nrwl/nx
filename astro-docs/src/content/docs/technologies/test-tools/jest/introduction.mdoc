@@ -178,7 +178,9 @@ Configure the plugin in `nx.json`:
 
 `disableJestRuntime` defaults to `true` because the plugin treats it as enabled only when `options.disableJestRuntime !== false`. This reduces computation time for inferred tasks; set it to `false` if you need Jest runtime inference.
 
-The inferred test target is cached. Nx derives its inputs and coverage outputs from the Jest configuration. When `ciTargetName` is set, the plugin also creates one cached task per test file and a no-op CI orchestration task that depends on them.
+The inferred test target is cached.
+Nx derives its inputs and coverage outputs from the Jest configuration.
+Set `ciTargetName` to enable the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
 
 ### Unit and e2e configurations
 
@@ -207,7 +209,8 @@ Use two plugin entries to separate unit and E2E Jest tasks, and enable CI splitt
 }
 ```
 
-`ciTargetName` enables [split E2E tasks](/docs/features/ci-features/split-e2e-tasks) so each test file runs as its own CI task with better caching and retries. Use `ciGroupName` if you want a custom group label.
+Here `ciTargetName` atomizes only the E2E tasks.
+Use `ciGroupName` to set a custom group label.
 
 ### View inferred tasks
 

@@ -74,21 +74,9 @@ Configure the plugin in `nx.json`:
 | `buildDepsTargetName` | string | `build-deps` | Name of the task that builds project dependencies.  |
 | `watchDepsTargetName` | string | `watch-deps` | Name of the task that watches project dependencies. |
 
-Use `include` and `exclude` glob patterns on the plugin entry to scope inference. To apply [target defaults](/docs/reference/nx-json#target-defaults) only to Rollup-inferred tasks, filter by the exact plugin identifier:
-
-```json
-// nx.json
-{
-  "targetDefaults": {
-    "build": [
-      {
-        "filter": { "plugin": "@nx/rollup/plugin" },
-        "options": { "sourcemap": true }
-      }
-    ]
-  }
-}
-```
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference.
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact
+identifier `@nx/rollup/plugin`.
 
 ## Using @nx/rollup
 

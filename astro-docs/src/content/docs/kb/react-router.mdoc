@@ -44,10 +44,19 @@ There is no need to install any additional plugins to use React Router with Nx. 
 
 ## Configure inferred React Router tasks
 
-The `@nx/react/router-plugin` plugin looks for `react-router.config.js`, `react-router.config.ts`, `react-router.config.cjs`, `react-router.config.cts`, `react-router.config.mjs`, and `react-router.config.mts`. The same directory must also contain:
+The `@nx/react/router-plugin` plugin looks for any of these files:
 
-- a `vite.config.*` file; and
-- either a `package.json` or `project.json`.
+- `react-router.config.js`
+- `react-router.config.ts`
+- `react-router.config.cjs`
+- `react-router.config.cts`
+- `react-router.config.mjs`
+- `react-router.config.mts`
+
+The same directory must also contain:
+
+- A `vite.config.*` file
+- Either a `package.json` or `project.json` file
 
 Nx creates a cached `build` task with outputs derived from the React Router configuration, continuous `dev` and `start` tasks, and a cached `typecheck` task. The `start` task is omitted when the React Router configuration sets `ssr: false`.
 

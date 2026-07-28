@@ -194,7 +194,7 @@ There is no single "disable" flag for inference. Use `include` and `exclude` to 
 The inferred test target is cached and declares the configured coverage reports directory, or
 `coverage` by default, as its only cache output.
 Custom reporter output files are not inferred.
-When `ciTargetName` is set, the plugin creates one cached `vitest run` task per test file and a no-op CI orchestration task that depends on them.
+Set `ciTargetName` to enable the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
 
 A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/vitest`.
 

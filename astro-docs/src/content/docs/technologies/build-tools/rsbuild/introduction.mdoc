@@ -82,21 +82,9 @@ Configure the plugin in `nx.json`:
 | `buildDepsTargetName` | string | none        | Name of an optional dependency build task.         |
 | `watchDepsTargetName` | string | none        | Name of an optional dependency watch task.         |
 
-Use `include` and `exclude` glob patterns on the plugin entry to scope inference. To apply [target defaults](/docs/reference/nx-json#target-defaults) only to these tasks, use the exact plugin identifier:
-
-```json
-// nx.json
-{
-  "targetDefaults": {
-    "build": [
-      {
-        "filter": { "plugin": "@nx/rsbuild" },
-        "cache": true
-      }
-    ]
-  }
-}
-```
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference.
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact
+identifier `@nx/rsbuild`.
 
 ## Using @nx/rsbuild
 
