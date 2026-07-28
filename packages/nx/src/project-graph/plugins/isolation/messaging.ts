@@ -169,15 +169,15 @@ type PluginMessageDefs = DefineMessages<{
  * legacy message (undefined) is treated as "not foreign", consistent with the
  * daemon's `isForeignWorkspaceMessage`.
  */
-export type WorkspaceScopedMessage = { workspaceRoot?: string };
+export type WorkspaceStampedMessage = { workspaceRoot?: string };
 
 /** Union of all plugin worker message types */
 export type PluginWorkerMessage = AllMessages<PluginMessageDefs> &
-  WorkspaceScopedMessage;
+  WorkspaceStampedMessage;
 
 /** Union of all plugin worker result types */
 export type PluginWorkerResult = AllResults<PluginMessageDefs> &
-  WorkspaceScopedMessage;
+  WorkspaceStampedMessage;
 
 /** Result type for the load message */
 export type PluginWorkerLoadResult = ResultOf<PluginMessageDefs, 'load'>;
@@ -199,7 +199,7 @@ export type PluginWorkerEmitLogNotification = {
   type: 'emitLog';
   level: 'log' | 'warn' | 'error';
   message: string;
-} & WorkspaceScopedMessage;
+} & WorkspaceStampedMessage;
 
 export type PluginWorkerNotification = PluginWorkerEmitLogNotification;
 
