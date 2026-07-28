@@ -11,14 +11,11 @@ import { userInfo } from 'node:os';
 
 /**
  * chmod a path only if it is a real directory, never following a symlink at its
- * final component. `chmodSync` follows symlinks, so on a path another user
- * pre-created as a link it would retarget the mode change at whatever the link
- * points at.
+ * final component — `chmodSync` follows them, retargeting the mode change.
  *
- * The directory check is on the descriptor rather than the errno: an errno
- * deny-list fails open on codes it does not recognise, and the code for a
- * planted symlink varies by flag combination and kernel. `O_NONBLOCK` stops a
- * planted FIFO blocking `openSync` forever.
+ * The directory check is on the descriptor, not the errno: a deny-list fails open
+ * on codes it does not know, and the code for a planted symlink varies by flag
+ * combination and kernel. `O_NONBLOCK` stops a planted FIFO blocking openSync.
  */
 function chmodRealDirectory(path: string, mode: number): boolean {
   let fd: number;
@@ -86,13 +83,11 @@ export function getUserSegment(): string {
 }
 
 /**
- * Ensure `dir` exists, is a real directory, is owned by us, and carries no group
- * or other bits at all — read and search are enough to reach a socket inside it,
- * so a `0755` directory is re-locked rather than accepted. Returns false if it
- * fails a check that cannot be repaired, meaning another user planted it.
+ * Ensure `dir` exists, is a real directory owned by us, and carries no group or
+ * other bits at all — read and search alone reach a socket inside it, so 0755 is
+ * re-locked rather than accepted. False means another user planted it.
  *
- * Node builtins only: reached from the native binding loader, which runs before
- * anything else in Nx.
+ * Node builtins only: reached from the native binding loader.
  */
 export function ensureOwnedPrivateDir(dir: string): boolean {
   try {

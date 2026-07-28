@@ -43,17 +43,14 @@ let plugin: LoadedNxPlugin;
 
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
-// The workspace root of the host that spawned this worker, passed explicitly so
-// the foreign-workspace check compares against the owner's root rather than one
-// the worker re-resolves. The worker's own resolution can legitimately differ
-// from the host's (e.g. a host that overrode its root at runtime without
-// updating the child's env), which would drop every real message as "foreign".
+// The host's root, passed explicitly rather than re-resolved: a host that set
+// its root at runtime would resolve a different one here and drop every
+// legitimate message as foreign.
 const hostWorkspaceRoot = process.argv[4];
 
-// These are positional, so inserting an argument host-side shifts all of them.
-// The symptom is otherwise silent and total: an undefined hostWorkspaceRoot
-// makes every legitimate message look foreign, so the worker drops all traffic
-// while the host waits out a ten-minute timeout.
+// Positional, so inserting an argument host-side shifts all of them — and the
+// symptom is silent and total: an undefined hostWorkspaceRoot makes every
+// message look foreign while the host waits out a ten-minute timeout.
 if (!socketPath || !expectedPluginName || !hostWorkspaceRoot) {
   console.error(
     `[plugin-worker] started with an incomplete argument list ` +
@@ -99,15 +96,9 @@ const server = createServer((socket) => {
       if (!isPluginWorkerMessage(message)) {
         return;
       }
-      // Reject messages from a different workspace using the exact same check
-      // the daemon applies to its own socket. A message whose workspaceRoot
-      // differs from this worker's host root came from a process in another
-      // workspace (e.g. one that reached this worker's socket via a shared
-      // NX_SOCKET_DIR) and must not be processed. We catch and drop rather than
-      // let the assertion propagate: a stray foreign message must not crash a
-      // worker that is validly serving its host. The daemon, which has a
-      // response channel, instead surfaces the same assertion back to the
-      // client.
+      // Same check the daemon applies to its own socket. Dropped rather than thrown:
+      // a stray foreign message must not kill a worker serving its host. The daemon
+      // has a response channel and surfaces it to the client instead.
       try {
         assertNotForeignWorkspaceMessage(
           message,
@@ -212,27 +203,18 @@ const server = createServer((socket) => {
 });
 
 server.on('error', (err: NodeJS.ErrnoException) => {
-  // Without this handler the worker dies silently and the host only ever
-  // sees "exited before the connection was established" — surface the real
-  // failure, including the errno, which is what distinguishes a denied bind
-  // from a leftover socket (EADDRINUSE) or a reaped socket dir (ENOENT).
+  // Without this the host only sees "exited before the connection was
+  // established"; the errno distinguishes a denied bind from EADDRINUSE.
   console.error(
     `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) failed to listen on ${socketPath}: ${err.message}`
   );
   process.exit(1);
 });
-// A worker killed without running its 'end' handler leaves its socket file
-// behind, and the next worker to draw the same path fails to bind (EADDRINUSE).
-// The daemon clears its own path the same way (killSocketOrPath) before it
-// listens, as does pseudo-ipc.
-//
-// The path embeds the host's pid, a per-host worker counter and a millisecond
-// timestamp, so drawing an existing one takes a recycled host pid landing on
-// the same counter and the same millisecond. The previous owner is normally
-// gone by then, since a worker exits once its host's socket closes, but that
-// is not guaranteed: workers are spawned detached and shutdown() never kills
-// them, and the path carries the host's pid rather than the worker's. The
-// same caveat applies across PID namespaces sharing a bind-mounted /tmp.
+// A worker killed without its 'end' handler leaves the socket behind and the
+// next one to draw the path fails to bind. The daemon clears its own the same
+// way. Drawing an existing path needs a recycled host pid landing on the same
+// counter and millisecond — normally gone by then, but not guaranteed, since
+// workers are detached and the path carries the host pid, not the worker's.
 try {
   unlinkSync(socketPath);
 } catch {}
@@ -299,13 +281,10 @@ events.forEach((event) =>
     process.exit(0);
   })
 );
-// The 'exit' handler must only clean up — calling process.exit() inside it
-// would override the real exit code (e.g. a crash would be reported as 0,
-// hiding the failure from the plugin host).
+// Cleanup only: process.exit() here would override the real exit code.
 process.once('exit', cleanup);
 const fatalHandler = (error: unknown) => {
-  // Registering an 'uncaughtException' handler suppresses Node's default
-  // error reporting, so log the error explicitly before exiting.
+  // Registering this handler suppresses Node's default reporting.
   console.error(error);
   cleanup();
   process.exit(1);
