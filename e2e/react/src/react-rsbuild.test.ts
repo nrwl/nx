@@ -88,7 +88,7 @@ describe('Build React applications and libraries with Rsbuild', () => {
     await runCLIAsync(`build ${rsbuildApp}`);
     checkFilesExist(`apps/${rsbuildApp}/dist/index.html`);
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const result = runCLI(`e2e ${rsbuildApp}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${rsbuildApp}-e2e`

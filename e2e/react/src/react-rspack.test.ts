@@ -41,7 +41,7 @@ describe('Build React applications and libraries with Rspack', () => {
     const rspackConfig = readFile(`${appName}/rspack.config.js`);
     expect(rspackConfig).toContain(`port: ${customPort}`);
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });
@@ -78,7 +78,7 @@ describe('Build React applications and libraries with Rspack', () => {
 
     checkFilesExist(`dist/${appName}/index.html`);
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });

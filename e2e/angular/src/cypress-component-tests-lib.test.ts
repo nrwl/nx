@@ -14,13 +14,13 @@ describe('Angular Cypress Component Tests - Lib', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  it('should successfully component test lib being used in app', () => {
+  it('should successfully component test lib being used in app', async () => {
     const { usedInAppLibName } = setup;
 
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
-    if (runE2ETests('cypress')) {
+    if (await runE2ETests('cypress')) {
       expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
         'All specs passed!'
       );

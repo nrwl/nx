@@ -82,7 +82,7 @@ describe('Build React applications and libraries with Vite', () => {
     const viteConfig = readFile(`apps/${viteApp}/vite.config.mts`);
     expect(viteConfig).toContain(`port: ${customPort}`);
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const e2eResults = runCLI(`e2e ${viteApp}-e2e`, {
         verbose: true,
       });

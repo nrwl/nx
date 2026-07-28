@@ -25,7 +25,7 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
   afterAll(() => cleanupCypressComponentTests());
 
-  it('should test lib with implicit dep on buildTarget', () => {
+  it('should test lib with implicit dep on buildTarget', async () => {
     const { projectName, appName, buildableLibName, usedInAppLibName } = setup;
 
     // creates graph like buildableLib -> lib -> app
@@ -35,7 +35,7 @@ describe('Angular Cypress Component Tests - Implicit Dep', () => {
 
     updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
 
-    if (runE2ETests('cypress')) {
+    if (await runE2ETests('cypress')) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
