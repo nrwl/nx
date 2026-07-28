@@ -153,6 +153,6 @@ export default [
     },
   },
   {
-    ignores: ['**/__fixtures__/**/*', 'dist'],
+    ignores: ['**/__fixtures__/**/*', 'dist', 'native-packages/**/*'],
   },
 ];
