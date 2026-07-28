@@ -437,8 +437,14 @@ impl<'a> StatusBar<'a> {
             // emoji font, which ignores our foreground color and paints a near
             // white cloud — invisible against a light background. The text
             // glyph is monochrome and takes `icon_style`, so it stays legible
-            // in both themes. One space separates it from the counts.
-            spans.push(Span::styled("☁\u{fe0e} ", icon_style));
+            // in both themes.
+            //
+            // Two trailing spaces, not one: the emoji spanned two cells and
+            // used the second as slack, so a single space around the narrower
+            // text glyph reads cramped. This keeps the icon segment three
+            // cells wide, leaving the counts in the column they have always
+            // occupied.
+            spans.push(Span::styled("☁\u{fe0e}  ", icon_style));
         }
         spans.push(Span::styled(
             format!("{}/{}", props.completed_count, props.total_count),
@@ -855,9 +861,10 @@ mod tests {
                 .modifier
                 .contains(Modifier::UNDERLINED)
         );
-        // Icon (1 cell) + one space: the underlined counts start at col 3.
+        // Icon (1 cell) + two spaces: the underlined counts start at col 4,
+        // the same column the two-cell emoji used to leave them in.
         assert!(
-            terminal.backend().buffer()[(3, 0)]
+            terminal.backend().buffer()[(4, 0)]
                 .modifier
                 .contains(Modifier::UNDERLINED)
         );
