@@ -16,8 +16,16 @@ export class BatchProcess {
     (task: string, result: TaskResult) => void
   > = [];
   private outputCallbacks: Array<(output: string) => void> = [];
-  /** stderr held back under log grouping, surfaced only if the batch crashes. */
-  private capturedError = '';
+  /**
+   * All stdout/stderr held back from the live stream under log grouping. A
+   * successful batch is rendered from its per-task terminalOutput and this is
+   * discarded; a failed one is rendered from this as a single fold, so that a
+   * diagnostic no task claimed — a crash, a config-phase error, a runner's
+   * summary — is not lost. Tail-capped so a long-lived batch (Gradle runs one
+   * for the whole command) cannot grow it without bound.
+   */
+  private capturedOutput = '';
+  private static readonly CAPTURED_OUTPUT_CAP = 1_000_000;
 
   constructor(
     private childProcess: ChildProcess,
@@ -62,10 +70,13 @@ export class BatchProcess {
       this.childProcess.stdout.on('data', (chunk) => {
         const output = chunk.toString();
 
-        // The grouped per-task block is the canonical copy when batch output is
-        // being folded, so the live copy is suppressed to keep the group
-        // contiguous. Otherwise, maintain current terminal output behavior.
-        if (!shouldGroupBatchOutput()) {
+        // When batch output is being folded, the live copy is suppressed to
+        // keep each group contiguous; it is retained (see capturedOutput) so a
+        // failed batch can still surface everything. Otherwise, maintain
+        // current terminal output behavior.
+        if (shouldGroupBatchOutput()) {
+          this.capture(output);
+        } else {
           process.stdout.write(chunk);
         }
 
@@ -82,12 +93,7 @@ export class BatchProcess {
         const output = chunk.toString();
 
         if (shouldGroupBatchOutput()) {
-          // Suppressed from the live stream like stdout, but retained: a
-          // crashed worker reports its fatal only here (never over IPC) and
-          // sends no per-task result, so without this the grouped block never
-          // fires and the crash is silent. Flushed by the orchestrator if the
-          // batch exits without results.
-          this.capturedError += output;
+          this.capture(output);
         } else {
           // Maintain current terminal output behavior
           process.stderr.write(chunk);
@@ -117,13 +123,22 @@ export class BatchProcess {
     this.outputCallbacks.push(cb);
   }
 
+  private capture(output: string) {
+    this.capturedOutput += output;
+    if (this.capturedOutput.length > BatchProcess.CAPTURED_OUTPUT_CAP) {
+      this.capturedOutput = this.capturedOutput.slice(
+        -BatchProcess.CAPTURED_OUTPUT_CAP
+      );
+    }
+  }
+
   /**
-   * stderr that was held back from the live stream under log grouping. Empty
-   * unless the batch was being grouped; used to surface a crash whose output
-   * would otherwise be swallowed.
+   * All stdout/stderr held back from the live stream under log grouping. Empty
+   * unless the batch was being grouped; used to render a failed batch as one
+   * fold so output no task claimed is not lost. Tail-capped.
    */
-  getCapturedErrorOutput(): string {
-    return this.capturedError;
+  getCapturedOutput(): string {
+    return this.capturedOutput;
   }
 
   async getResults(): Promise<BatchResults> {
