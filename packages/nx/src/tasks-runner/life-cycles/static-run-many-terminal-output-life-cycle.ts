@@ -245,13 +245,14 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   ) {
     const args = getPrintableCommandArgsForTask(task);
     if (this.printsFullOutput || taskStatus === 'failure') {
-      // A stopped task was killed part way through, so its partial output is
-      // exactly what is wanted when diagnosing a hang — never drop it here.
+      // A stopped task was killed part way through; under --verbose or
+      // --output-style=static-full its partial output is shown, which is what
+      // diagnoses a hang. It is dropped on the default path below.
       output.logCommandOutput(args.join(' '), taskStatus, terminalOutput);
       return;
     }
 
-    // Counted in the end of run summary instead.
+    // Named in the end of run summary instead; output not shown by default.
     if (taskStatus === 'skipped' || taskStatus === 'stopped') {
       return;
     }

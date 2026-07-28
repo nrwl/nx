@@ -221,14 +221,15 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       /**
        * The task that was actually asked for always shows its full output, even
        * on success — printing nothing for `nx build myapp` would be surprising.
-       * A stopped task's partial output is kept for the same reason: it is what
-       * diagnoses a hang.
+       * A stopped task's partial output is shown under --verbose or
+       * --output-style=static-full (what diagnoses a hang); it is dropped on the
+       * default path below.
        */
       output.logCommandOutput(args.join(' '), status, terminalOutput);
       return;
     }
 
-    // Counted in the end of run summary instead.
+    // Named in the end of run summary instead; output not shown by default.
     if (status === 'skipped' || status === 'stopped') {
       return;
     }
