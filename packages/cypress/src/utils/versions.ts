@@ -11,7 +11,12 @@ export const minSupportedCypressVersion = '13.0.0';
 export const eslintPluginCypressVersion = '^3.5.0';
 export const typesNodeVersion = '^22.0.0';
 export const cypressViteDevServerVersion = '^7.3.1';
-export const cypressVersion = '^15.17.0';
+// Pinned to 15.18.x on purpose: Cypress 15.19.0 ships a broken/incomplete app
+// bundle that fails to unzip on install (missing files under the packaged
+// node_modules, e.g. zod/v4/locales/*.cjs). This breaks any generated project
+// that installs Cypress. See https://github.com/cypress-io/cypress/issues/34359.
+// Restore a caret range (^15.x) once a fixed Cypress release is published.
+export const cypressVersion = '~15.18.1';
 export const cypressWebpackVersion = '^5.4.1';
 export const viteVersion = '^6.0.0';
 export const htmlWebpackPluginVersion = '^5.5.0';
