@@ -8,12 +8,30 @@ importers:
 
   .:
     devDependencies:
+      '@nx/angular':
+        specifier: link:../../packages/angular
+        version: link:../../packages/angular
       '@nx/js':
         specifier: link:../../packages/js
         version: link:../../packages/js
       '@nx/oxlint':
         specifier: link:../../packages/oxlint
         version: link:../../packages/oxlint
+      '@nx/playwright':
+        specifier: link:../../packages/playwright
+        version: link:../../packages/playwright
+      '@nx/react':
+        specifier: link:../../packages/react
+        version: link:../../packages/react
+      '@nx/vite':
+        specifier: link:../../packages/vite
+        version: link:../../packages/vite
+      '@nx/vitest':
+        specifier: link:../../packages/vitest
+        version: link:../../packages/vitest
+      '@nx/vue':
+        specifier: link:../../packages/vue
+        version: link:../../packages/vue
       nx:
         specifier: link:../../packages/nx
         version: link:../../packages/nx
