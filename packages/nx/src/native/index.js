@@ -138,9 +138,16 @@ Module._load = function (request, parent, isMain) {
     // Size alone does not detect a rebuilt binding: a small Rust edit routinely
     // produces a byte-identical size. Treat a cache entry older than the source
     // as stale so a rebuild is picked up rather than silently ignored.
+    //
+    // The source mtime is clamped to now because copyFileSync does not preserve
+    // timestamps: the copy is stamped with the cache filesystem's clock, so a
+    // source dated in the future — bind mounts (WSL2/Docker/Colima), NFS skew,
+    // CI mtime restore — could never be caught up, and every Nx process would
+    // silently re-copy the whole binding forever.
+    const sourceMtimeMs = Math.min(sourceStats.mtimeMs, Date.now());
     const isFresh =
       existingFileStats?.size === expectedFileSize &&
-      existingFileStats.mtimeMs >= sourceStats.mtimeMs;
+      existingFileStats.mtimeMs >= sourceMtimeMs;
 
     // If the file to be loaded already exists and is current, just load it
     if (isFresh) {
@@ -157,15 +164,17 @@ Module._load = function (request, parent, isMain) {
 
     // Retry copying up to 3 times, validating after each copy
     let attemptsMade = 0;
+    let cacheError = null;
     for (let attempt = 1; attempt <= MAX_COPY_RETRIES; attempt++) {
       attemptsMade = attempt;
       // First copy to a unique location for each process
       try {
         copyFileSync(nativeLocation, tmpTmpFile);
-      } catch {
+      } catch (e) {
         // Permission errors won't heal on retry — use the load-in-place
         // fallback below. A throwing copy can still have created a partial
         // file, and nothing else will ever look at this unique name.
+        cacheError = e;
         removeIfPresent(tmpTmpFile);
         break;
       }
@@ -174,7 +183,18 @@ Module._load = function (request, parent, isMain) {
       const copiedFileStats = statsOrNull(tmpTmpFile);
       if (copiedFileStats?.size === expectedFileSize) {
         // Copy succeeded, rename to final location and load
-        renameSync(tmpTmpFile, tmpFile);
+        try {
+          renameSync(tmpTmpFile, tmpFile);
+        } catch (e) {
+          // The one unguarded fs call in this loop until now. A directory or a
+          // foreign-owned entry planted at tmpFile throws straight out of
+          // `require`, where native-bindings.js swallows it into loadErrors and
+          // reports "Cannot find native binding" — pointing at an npm optional
+          // dependency problem that does not exist, while leaking the copy.
+          cacheError = e;
+          removeIfPresent(tmpTmpFile);
+          break;
+        }
         try {
           return originalLoad.apply(this, [tmpFile, parent, isMain]);
         } catch (e) {
@@ -190,11 +210,13 @@ Module._load = function (request, parent, isMain) {
       removeIfPresent(tmpTmpFile);
     }
 
-    // Copying failed - warn and load from original location
+    // Copying failed - warn and load from original location. Name the errno:
+    // ENOSPC, EROFS, EACCES and EDQUOT are all actionable and all look
+    // identical without it.
     console.warn(
       `Warning: Failed to copy native module to cache after ${attemptsMade} attempt${
         attemptsMade === 1 ? '' : 's'
-      }. ` +
+      }${cacheError ? ` (${cacheError.code ?? cacheError.message})` : ''}. ` +
         `Loading from original location instead. ` +
         `This may cause file locking issues on Windows.`
     );
