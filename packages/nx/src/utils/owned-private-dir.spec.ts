@@ -11,7 +11,7 @@ import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   ensureOwnedPrivateDir,
-  isSafeSharedRoot,
+  isRealDirectoryOrAbsent,
   relaxSharedRootToSticky,
 } from './owned-private-dir';
 import { getSocketDir } from '../daemon/tmp-dir';
@@ -56,9 +56,12 @@ describe('ensureOwnedPrivateDir', () => {
     }
   );
 
-  posixOnly.each([0o755, 0o750, 0o711, 0o705])(
+  // Octal strings rather than numbers so the test name reads `mode 0705` — jest
+  // renders %s in decimal, which turned these into `at mode 453`.
+  posixOnly.each(['0755', '0750', '0711', '0705'])(
     'should tighten an existing directory of ours at mode %s to 0700',
-    (mode: number) => {
+    (octalMode: string) => {
+      const mode = parseInt(octalMode, 8);
       // Not just the write bits. A plugin worker socket is created with no mode
       // of its own, so the directory is the only thing keeping another local
       // user from reaching it, and search permission is all they need. The
@@ -104,32 +107,25 @@ describe('ensureOwnedPrivateDir', () => {
       expect(lstatSync(victim).mode & 0o777).toBe(0o700);
     });
 
+    posixOnly(
+      'should not chmod a regular file planted at a shared root',
+      () => {
+        // The mode is applied to a descriptor only after fstat proves it is a
+        // directory, so a planted file is refused rather than chmod-ed to 1777.
+        const file = join(base, 'planted-file');
+        writeFileSync(file, '');
+        chmodSync(file, 0o600);
+
+        relaxSharedRootToSticky(file);
+
+        expect(lstatSync(file).mode & 0o7777).toBe(0o600);
+      }
+    );
+
     posixOnly('should not throw when the root does not exist', () => {
       expect(() =>
         relaxSharedRootToSticky(join(base, 'missing'))
       ).not.toThrow();
-    });
-
-    posixOnly(
-      'should report a planted symlink as hostile so callers skip nested roots',
-      () => {
-        // O_NOFOLLOW guards only the final component, so a caller that went on
-        // to relax `<root>/sockets` would resolve through the link and grant
-        // 0o1777 inside a directory the attacker chose.
-        const victim = join(base, 'victim');
-        mkdirSync(victim, { mode: 0o700 });
-        const planted = join(base, 'planted-root');
-        symlinkSync(victim, planted);
-
-        expect(relaxSharedRootToSticky(planted)).toBe(false);
-      }
-    );
-
-    posixOnly('should report a real directory as safe to nest under', () => {
-      const dir = join(base, 'real-root');
-      mkdirSync(dir, { mode: 0o700 });
-
-      expect(relaxSharedRootToSticky(dir)).toBe(true);
     });
 
     // Runs only on POSIX despite being about Windows, and deliberately so: it
@@ -160,15 +156,15 @@ describe('ensureOwnedPrivateDir', () => {
     );
   });
 
-  describe('isSafeSharedRoot', () => {
+  describe('isRealDirectoryOrAbsent', () => {
     posixOnly('should accept a real directory', () => {
       const dir = join(base, 'real');
       mkdirSync(dir);
-      expect(isSafeSharedRoot(dir)).toBe(true);
+      expect(isRealDirectoryOrAbsent(dir)).toBe(true);
     });
 
     it('should accept an absent path, which we go on to create ourselves', () => {
-      expect(isSafeSharedRoot(join(base, 'missing'))).toBe(true);
+      expect(isRealDirectoryOrAbsent(join(base, 'missing'))).toBe(true);
     });
 
     posixOnly('should refuse a symlink planted at the root', () => {
@@ -177,14 +173,14 @@ describe('ensureOwnedPrivateDir', () => {
       const planted = join(base, 'planted');
       symlinkSync(victim, planted);
 
-      expect(isSafeSharedRoot(planted)).toBe(false);
+      expect(isRealDirectoryOrAbsent(planted)).toBe(false);
     });
 
     posixOnly('should refuse a regular file planted at the root', () => {
       const file = join(base, 'not-a-dir');
       writeFileSync(file, '');
 
-      expect(isSafeSharedRoot(file)).toBe(false);
+      expect(isRealDirectoryOrAbsent(file)).toBe(false);
     });
   });
 
