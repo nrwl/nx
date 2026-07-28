@@ -10,60 +10,75 @@ describe('addPluginsToOxlintConfig', () => {
     writeJson(tree, '.oxlintrc.json', { plugins: ['typescript'], rules: {} });
   });
 
-  it('should scope plugins to the project root', () => {
+  it('should write the plugins to the project config', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react', 'jsx-a11y']);
 
-    expect(readJson(tree, '.oxlintrc.json').overrides).toEqual([
-      { files: ['apps/my-app/**/*'], plugins: ['react', 'jsx-a11y'] },
-    ]);
+    expect(readJson(tree, 'apps/my-app/.oxlintrc.json')).toEqual({
+      extends: ['../../.oxlintrc.json'],
+      plugins: ['react', 'jsx-a11y'],
+    });
   });
 
-  it('should leave the top-level plugins untouched', () => {
+  it('should extend the root config, since a nested config replaces it', () => {
+    addPluginsToOxlintConfig(tree, 'apps/nested/deep/my-app', ['react']);
+
+    expect(
+      readJson(tree, 'apps/nested/deep/my-app/.oxlintrc.json').extends
+    ).toEqual(['../../../../.oxlintrc.json']);
+  });
+
+  it('should leave the root config untouched', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
 
-    expect(readJson(tree, '.oxlintrc.json').plugins).toEqual(['typescript']);
+    expect(readJson(tree, '.oxlintrc.json')).toEqual({
+      plugins: ['typescript'],
+      rules: {},
+    });
   });
 
-  it('should merge into an existing override for the same root', () => {
+  it('should merge into an existing project config', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react', 'react-perf']);
 
-    expect(readJson(tree, '.oxlintrc.json').overrides).toEqual([
-      { files: ['apps/my-app/**/*'], plugins: ['react', 'react-perf'] },
-    ]);
+    expect(readJson(tree, 'apps/my-app/.oxlintrc.json')).toEqual({
+      extends: ['../../.oxlintrc.json'],
+      plugins: ['react', 'react-perf'],
+    });
   });
 
-  it('should keep separate overrides for separate projects', () => {
+  it('should keep each project independent', () => {
     addPluginsToOxlintConfig(tree, 'apps/react-app', ['react']);
     addPluginsToOxlintConfig(tree, 'apps/vue-app', ['vue']);
 
-    expect(readJson(tree, '.oxlintrc.json').overrides).toEqual([
-      { files: ['apps/react-app/**/*'], plugins: ['react'] },
-      { files: ['apps/vue-app/**/*'], plugins: ['vue'] },
+    expect(readJson(tree, 'apps/react-app/.oxlintrc.json').plugins).toEqual([
+      'react',
+    ]);
+    expect(readJson(tree, 'apps/vue-app/.oxlintrc.json').plugins).toEqual([
+      'vue',
     ]);
   });
 
-  it('should use a bare glob for a root project', () => {
+  it('should add to the root config itself for a root project', () => {
     addPluginsToOxlintConfig(tree, '.', ['react']);
 
-    expect(readJson(tree, '.oxlintrc.json').overrides).toEqual([
-      { files: ['**/*'], plugins: ['react'] },
-    ]);
+    expect(readJson(tree, '.oxlintrc.json')).toEqual({
+      plugins: ['typescript', 'react'],
+      rules: {},
+    });
   });
 
   it('should no-op without plugins', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', []);
 
-    expect(readJson(tree, '.oxlintrc.json').overrides).toBeUndefined();
+    expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
   });
 
   it('should no-op when the workspace uses a TypeScript config', () => {
     tree.delete('.oxlintrc.json');
     tree.write('oxlint.config.ts', 'export default {};');
 
-    expect(() =>
-      addPluginsToOxlintConfig(tree, 'apps/my-app', ['react'])
-    ).not.toThrow();
-    expect(tree.exists('.oxlintrc.json')).toBe(false);
+    addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
+
+    expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
   });
 });
