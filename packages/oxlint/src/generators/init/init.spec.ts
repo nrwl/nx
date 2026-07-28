@@ -1,9 +1,9 @@
-import { readNxJson } from '@nx/devkit';
+import { readJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { initGeneratorInternal } from './init.js';
 
 describe('initGeneratorInternal', () => {
-  it('adds a root oxlint config', async () => {
+  it('adds a root oxlint config matching what `oxlint --init` scaffolds', async () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await initGeneratorInternal(tree, {
@@ -12,7 +12,14 @@ describe('initGeneratorInternal', () => {
       skipFormat: true,
     });
 
-    expect(tree.exists('.oxlintrc.json')).toBe(true);
+    expect(readJson(tree, '.oxlintrc.json')).toEqual({
+      // Resolved from node_modules so it tracks the installed version.
+      $schema: './node_modules/oxlint/configuration_schema.json',
+      plugins: ['typescript', 'unicorn', 'oxc'],
+      categories: { correctness: 'error' },
+      rules: {},
+      env: { builtin: true },
+    });
   });
 
   it('sets targetDefaults when the plugin is disabled', async () => {

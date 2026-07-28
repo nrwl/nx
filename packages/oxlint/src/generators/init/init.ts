@@ -134,10 +134,16 @@ function ensureRootConfig(tree: Tree) {
     return;
   }
 
+  // Mirrors what `oxlint --init` scaffolds. The schema is resolved from
+  // `node_modules` rather than a URL so it matches the installed Oxlint
+  // version and works offline; this is only ever written at the workspace
+  // root, where `oxlint` is a direct dependency.
   writeJson(tree, '.oxlintrc.json', {
-    $schema:
-      'https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json',
+    $schema: './node_modules/oxlint/configuration_schema.json',
+    plugins: ['typescript', 'unicorn', 'oxc'],
+    categories: { correctness: 'error' },
     rules: {},
+    env: { builtin: true },
   });
 }
 
