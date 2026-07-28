@@ -1,6 +1,21 @@
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { readTsConfigPaths, resolvePathsBaseUrl } from './ts-config';
+import { FsTree } from 'nx/src/generators/tree';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
+import { tmpdir } from 'os';
+import {
+  createTreeParseConfigHost,
+  readTsConfigPaths,
+  resolvePathsBaseUrl,
+  type TreeParseConfigHost,
+} from './ts-config';
 import { join } from 'path';
+import * as ts from 'typescript';
 
 describe('resolvePathsBaseUrl', () => {
   let tempFs: TempFs;
@@ -314,5 +329,119 @@ describe('readTsConfigPaths', () => {
     );
 
     expect(readTsConfigPaths(join(tempFs.tempDir, 'tsconfig.json'))).toBeNull();
+  });
+});
+
+describe('createTreeParseConfigHost', () => {
+  let root: string;
+  let outside: string;
+  let tree: FsTree;
+  let host: TreeParseConfigHost;
+  let originalCwd: string;
+
+  beforeEach(() => {
+    originalCwd = process.cwd();
+    root = realpathSync(mkdtempSync(join(tmpdir(), 'tree-host-root-')));
+    outside = realpathSync(mkdtempSync(join(tmpdir(), 'tree-host-out-')));
+    tree = new FsTree(root, false);
+    host = createTreeParseConfigHost(tree);
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+    rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  });
+
+  it('reads a file resolved outside the workspace root from disk', () => {
+    // A base reached through a pnpm store or link:/file: target lives outside
+    // tree.root; the fs fallback must still read it.
+    const file = join(outside, 'base.json');
+    writeFileSync(file, '{ "compilerOptions": { "strict": true } }');
+
+    expect(host.fileExists(file)).toBe(true);
+    expect(host.readFile(file)).toContain('strict');
+  });
+
+  it('treats an out-of-root directory as a non-file without throwing', () => {
+    // ts.sys gates fileExists/readFile on isFile; a bare existsSync would call
+    // it a file and readFileSync would throw EISDIR (TS5012), which the
+    // extends-failure guard does not catch.
+    const dir = join(outside, 'somedir');
+    mkdirSync(dir);
+
+    expect(host.fileExists(dir)).toBe(false);
+    expect(host.readFile(dir)).toBeUndefined();
+    expect(host.directoryExists(dir)).toBe(true);
+  });
+
+  it('treats an in-root directory as a non-file so an extension-less extends falls through to its .json sibling', () => {
+    // `tree.exists` answers true for a directory; without the `isFile` gate an
+    // extension-less `extends` ("./config") next to a `config/` directory would
+    // resolve to the directory, read as nothing, and drop the base options.
+    mkdirSync(join(root, 'config'));
+    writeFileSync(
+      join(root, 'config.json'),
+      '{ "compilerOptions": { "strict": true } }'
+    );
+
+    expect(host.fileExists(join(root, 'config'))).toBe(false);
+    expect(host.directoryExists(join(root, 'config'))).toBe(true);
+    expect(host.fileExists(join(root, 'config.json'))).toBe(true);
+  });
+
+  it('parses an extension-less extends to the .json sibling of a same-named directory', () => {
+    mkdirSync(join(root, 'config'));
+    tree.write(
+      'config.json',
+      JSON.stringify({ compilerOptions: { moduleResolution: 'node10' } })
+    );
+
+    const parsed = ts.parseJsonConfigFileContent(
+      { extends: './config', compilerOptions: {} },
+      host,
+      '.'
+    );
+
+    expect(parsed.options.moduleResolution).toBe(
+      ts.ModuleResolutionKind.Node10
+    );
+  });
+
+  it('resolves a package-form extends against the tree root, not the working directory', () => {
+    // TypeScript resolves the package as a relative path and hands it to
+    // realpath; ts.sys.realpath would anchor it to process.cwd(), so a
+    // same-named package sitting next to the process would win over the tree.
+    tree.write(
+      'node_modules/@tsconfig/base/package.json',
+      JSON.stringify({ name: '@tsconfig/base', version: '1.0.0' })
+    );
+    tree.write(
+      'node_modules/@tsconfig/base/base.json',
+      JSON.stringify({ compilerOptions: { moduleResolution: 'node10' } })
+    );
+    mkdirSync(join(outside, 'node_modules/@tsconfig/base'), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(outside, 'node_modules/@tsconfig/base/package.json'),
+      JSON.stringify({ name: '@tsconfig/base', version: '1.0.0' })
+    );
+    writeFileSync(
+      join(outside, 'node_modules/@tsconfig/base/base.json'),
+      JSON.stringify({ compilerOptions: { declaration: true } })
+    );
+    process.chdir(outside);
+
+    const parsed = ts.parseJsonConfigFileContent(
+      { extends: '@tsconfig/base/base.json', compilerOptions: {} },
+      host,
+      'libs/a'
+    );
+
+    expect(parsed.options.moduleResolution).toBe(
+      ts.ModuleResolutionKind.Node10
+    );
+    expect(parsed.options.declaration).toBeUndefined();
   });
 });
