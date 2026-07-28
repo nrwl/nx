@@ -19,6 +19,7 @@ import {
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
 import {
   getImportPath,
+  createTreeParseConfigHost,
   ensureTypescript,
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
@@ -309,11 +310,10 @@ function updateTsConfig(tree: Tree, options: RollupProjectSchema): void {
     ts = ensureTypescript();
   }
 
-  const parsedTsConfig = readTsConfig(tsconfigPath, {
-    ...ts.sys,
-    readFile: (p) => tree.read(p, 'utf-8'),
-    fileExists: (p) => tree.exists(p),
-  });
+  const parsedTsConfig = readTsConfig(
+    tsconfigPath,
+    createTreeParseConfigHost(tree)
+  );
 
   updateJson(tree, tsconfigPath, (json) => {
     if (parsedTsConfig.options.module === ts.ModuleKind.NodeNext) {
