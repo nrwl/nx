@@ -199,10 +199,12 @@ describe('target-name cache fallback', () => {
   });
 
   it('should not apply to continuous targets', () => {
+    // `api` is deliberately outside the long-running name list, so only the
+    // `continuous` clause can reject this.
     const target = normalize(
       { executor: 'nx:run-commands', continuous: true },
-      { serve: { cache: true }, 'nx:run-commands': { inputs: ['default'] } },
-      'serve'
+      { api: { cache: true }, 'nx:run-commands': { inputs: ['default'] } },
+      'api'
     );
 
     expect(target.cache).toBeUndefined();
@@ -241,14 +243,15 @@ describe('target-name cache fallback', () => {
   });
 
   it('should restore nothing when a filtered entry decides cache', () => {
-    // Whether the per-project opt-out applies can't be evaluated here, so the
-    // value is unknowable and nothing is restored.
+    // The filtered entry carries `cache: true` and the unfiltered one `false`,
+    // so ignoring filters would restore caching. Whether the filter applies
+    // can't be evaluated here, so the value is unknowable and nothing is done.
     const target = normalize(
       { executor: '@nx/angular:webpack-browser' },
       {
         build: [
-          { cache: true },
-          { filter: { projects: ['project'] }, cache: false },
+          { cache: false },
+          { filter: { projects: ['project'] }, cache: true },
         ],
         '@nx/angular:webpack-browser': { inputs: ['production'] },
       }

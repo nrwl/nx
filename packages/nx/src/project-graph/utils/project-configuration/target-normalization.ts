@@ -143,7 +143,7 @@ function isLegacyCachedTarget(
 
   // Scope to the case this restores. A name key can also lose by being dropped
   // as incompatible (its entry declared a foreign executor), which is not
-  // shadowing and got no cacheability pre-23 either.
+  // shadowing — there is no key to name, so nothing could be warned about.
   if (!findShadowingTargetDefaultKey(targetDefaults, target)) {
     return false;
   }
@@ -197,11 +197,10 @@ function isLongRunningTarget(
 
 /**
  * The `targetDefaults` key that beat the target-name key for `target`. Only an
- * executor key can: {@link isLegacyCachedTarget} ignores filtered entries, and
- * key precedence puts the exact target name ahead of every glob, so nothing
- * else outranks it. Undefined when the name key lost for another reason (e.g.
- * its entry declared a foreign executor and was dropped as incompatible), in
- * which case there is no key to name in the warning.
+ * executor key can: key precedence puts the exact target name ahead of every
+ * glob, so nothing else outranks it. Undefined when the name key lost for
+ * another reason (e.g. its entry declared a foreign executor and was dropped as
+ * incompatible), in which case there is no key to name in the warning.
  */
 function findShadowingTargetDefaultKey(
   targetDefaults: TargetDefaults | undefined,
@@ -235,6 +234,7 @@ function warnAboutLegacyCachedTargets(
   }
   bodyLines.push(
     '',
+    'An executor key applies to every target that resolves through it, so exclude any continuous target before setting "cache" on one — a target that is both cacheable and continuous is rejected.',
     'Target defaults resolve to a single key rather than merging, so an executor key hides the target name key entirely.',
     'Set "cache" on the executor key to keep these targets cacheable — reading it from the target name key is deprecated and will be removed.'
   );
@@ -273,26 +273,18 @@ function normalizeTargets(
 
     const target = project.targets[targetName];
 
-    // Target defaults resolve to a single key, so an executor key shadows the
-    // target-name key entirely. Before Nx 23, `cache: true` on the shadowed
-    // name key still made the task cacheable via the separate, name-based
-    // `cacheableOperations` inference; dropping that inference silently turned
-    // those tasks non-cacheable. Restore it here as a fallback so the name key
-    // keeps meaning what users read it to mean, without changing which key wins
-    // for every other field.
     const targetDefaults = nxJsonConfiguration.targetDefaults;
     if (isLegacyCachedTarget(targetName, targetDefaults, target)) {
       target.cache = true;
 
+      // Always defined: `isLegacyCachedTarget` returns false without it.
       const shadowingKey = findShadowingTargetDefaultKey(
         targetDefaults,
         target
       );
-      if (shadowingKey) {
-        const targetKeys = legacyCacheReads.get(shadowingKey) ?? new Set();
-        targetKeys.add(targetName);
-        legacyCacheReads.set(shadowingKey, targetKeys);
-      }
+      const targetKeys = legacyCacheReads.get(shadowingKey) ?? new Set();
+      targetKeys.add(targetName);
+      legacyCacheReads.set(shadowingKey, targetKeys);
     }
 
     if (
