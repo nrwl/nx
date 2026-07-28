@@ -147,6 +147,10 @@ const WAIT_FOR_SERVER_CONFIG = {
   maxAttempts: 6000, // 6000 * 10ms = 60 seconds
 };
 
+// Connecting to a live daemon's socket is near-instant, so this only ever
+// expires when the daemon can't accept the connection at all.
+const SERVER_AVAILABILITY_TIMEOUT_MS = 5_000;
+
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
 
@@ -979,13 +983,24 @@ export class DaemonClient {
           resolve(false);
           return;
         }
+        let timer: NodeJS.Timeout;
         const socket = connect(socketPath, () => {
+          clearTimeout(timer);
           socket.destroy();
           resolve(true);
         });
         socket.once('error', () => {
+          clearTimeout(timer);
           resolve(false);
         });
+        // Without this a socket that neither connects nor errors — a full listen
+        // backlog, a half-open socket left by a wedged daemon — leaves this
+        // promise pending forever.
+        timer = setTimeout(() => {
+          socket.destroy();
+          resolve(false);
+        }, SERVER_AVAILABILITY_TIMEOUT_MS);
+        timer.unref();
       } catch (err) {
         if (err instanceof VersionMismatchError) {
           reject(err); // Let version mismatch bubble up

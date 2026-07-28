@@ -619,12 +619,32 @@ export async function runCommandForTasks(
   }
 }
 
-async function printConfigureAiAgentsDisclaimer(): Promise<void> {
+/**
+ * A daemon that is alive but busy — common after a long-lived continuous task —
+ * answers this request only after the daemon's 20 minute message timeout, which
+ * reads as a hang because the run summary has already printed. The disclaimer is
+ * cosmetic, so give up rather than hold the command open.
+ */
+const CONFIGURE_AI_AGENTS_DISCLAIMER_TIMEOUT_MS = 2_000;
+
+export async function printConfigureAiAgentsDisclaimer(): Promise<void> {
   try {
     if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
       return;
     }
-    const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
+    const status = await Promise.race([
+      daemonClient.getConfigureAiAgentsStatus(),
+      new Promise<null>((resolve) => {
+        setTimeout(
+          () => resolve(null),
+          CONFIGURE_AI_AGENTS_DISCLAIMER_TIMEOUT_MS
+        ).unref();
+      }),
+    ]);
+    if (!status) {
+      return;
+    }
+    const { outdatedAgents } = status;
     if (
       !shouldPrintConfigureAiAgentsDisclaimer(outdatedAgents, workspaceRoot)
     ) {
