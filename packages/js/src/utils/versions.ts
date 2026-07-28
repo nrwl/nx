@@ -17,6 +17,4 @@ export const typescriptVersion = '~5.9.2';
  * that's supported by the lowest Angular supported version, e.g.
  * `npm view @angular/compiler-cli@18.0.0 peerDependencies.typescript`
  */
-// Upper bound excludes typescript@7, whose stub main entry lacks the
-// compiler API (`sys`/`readConfigFile`) and crashes plugin graph processing.
-export const supportedTypescriptVersions = '>=5.4.0 <7.0.0';
+export const supportedTypescriptVersions = '>=5.4.0';
