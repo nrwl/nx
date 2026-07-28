@@ -95,13 +95,14 @@ The options shown above control the names of the inferred Cypress tasks. The fol
 | `ciComponentTestingTargetName` | `undefined` (task is not inferred by default) |
 | `openTargetName`               | `"open-cypress"`                              |
 
-The e2e and component-test targets are cached and track Cypress screenshot and video outputs. The `openTargetName` task opens the interactive Cypress application. CI targets are no-op orchestration tasks that depend on one cached task per spec file.
+The e2e and component-test targets are cached and track Cypress screenshot and video outputs.
+The `openTargetName` task opens the interactive Cypress application.
+The `ciTargetName` task uses the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+Set `ciComponentTestingTargetName` to atomize component tests as well.
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/cypress/plugin`.
 
 ### Splitting E2E tasks by file
-
-The `@nx/cypress/plugin` will automatically split your e2e tasks by file. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
 
 To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
 
