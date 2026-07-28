@@ -362,6 +362,45 @@ class CLIOutput {
     this.writeToStream(`${icon}  ${command}${EOL}`);
   }
 
+  /**
+   * A one-line stand-in for a task whose full output is shown elsewhere — used
+   * for the tasks of a failed batch, which are rendered together in the batch's
+   * own log group. `note` points the reader at that group.
+   */
+  logCommandRedirect(message: string, taskStatus: TaskStatus, note: string) {
+    this.ensureLineStart();
+    const failed = taskStatus === 'failure' || taskStatus === 'stopped';
+    const icon = failed ? pc.red(figures.cross) : pc.green(figures.tick);
+    const command = this.formatCommand(this.normalizeMessage(message));
+    this.writeToStream(`${icon}  ${command}  ${pc.dim(note)}${EOL}`);
+  }
+
+  /**
+   * Prints a failed batch's combined output as one log group. A batch runner's
+   * diagnostics — a crash, a config-phase error, a runner summary — belong to no
+   * single task, so the group is labelled with the batch rather than a task.
+   */
+  logBatchFailureGroup(label: string, output: string) {
+    const grouped = isLogGroupingEnabled();
+    let header = `${pc.dim('> ')}${pc.bold(label)}`;
+    if (grouped) {
+      header = `${GH_GROUP_PREFIX}${this.getStatusIcon('failure')} ${header}`;
+    }
+
+    this.addNewline();
+    this.writeToStream(header);
+    this.addNewline();
+    this.addNewline();
+    this.writeToStream(output);
+
+    if (grouped) {
+      this.ensureLineStart();
+      this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
+    } else {
+      this.ensureLineStart();
+    }
+  }
+
   private getCommandWithStatus(
     message: string,
     taskStatus: TaskStatus

@@ -1,3 +1,4 @@
+import { stripVTControlCharacters } from 'util';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TaskOrchestrator } from './task-orchestrator';
@@ -388,6 +389,143 @@ describe('TaskOrchestrator', () => {
 
       expect(await orchestrator.resolveCachedTasksBulk()).toBe(false);
       expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('printGroupedBatchOutput', () => {
+    const originalGithubActions = process.env.GITHUB_ACTIONS;
+    const originalSkip = process.env.NX_SKIP_LOG_GROUPING;
+    const originalStream = process.env.NX_STREAM_OUTPUT;
+
+    beforeEach(() => {
+      // Put shouldGroupBatchOutput() into its folding state.
+      process.env.GITHUB_ACTIONS = 'true';
+      delete process.env.NX_SKIP_LOG_GROUPING;
+      delete process.env.NX_STREAM_OUTPUT;
+    });
+
+    afterEach(() => {
+      process.env.GITHUB_ACTIONS = originalGithubActions;
+      process.env.NX_SKIP_LOG_GROUPING = originalSkip;
+      process.env.NX_STREAM_OUTPUT = originalStream;
+    });
+
+    function makeTask(id: string): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: { __overrides_unparsed__: [] },
+        outputs: [],
+        parallelism: true,
+      } as Partial<Task> as Task;
+    }
+
+    function createOrchestrator() {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.options = {
+        lifeCycle: { printTaskTerminalOutput: jest.fn() },
+      };
+      // Object.create bypasses field initializers.
+      orchestrator.batchFailureGroupCount = 0;
+      return orchestrator;
+    }
+
+    function captureStdout(cb: () => void): string {
+      const original = process.stdout.write;
+      let out = '';
+      process.stdout.write = ((chunk: any) => {
+        out += chunk;
+        return true;
+      }) as any;
+      try {
+        cb();
+      } finally {
+        process.stdout.write = original;
+      }
+      return stripVTControlCharacters(out);
+    }
+
+    it('renders a successful batch as per-task folds, not a batch fold', () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build');
+      const b = makeTask('b:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        { task: b, status: 'local-cache', code: 0, terminalOutput: 'b body' },
+      ];
+
+      const out = captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          { id: 'batch', executorName: '@nx/js:tsc', taskGraph: {} },
+          taskResults,
+          'captured build log that should be ignored on success'
+        )
+      );
+
+      const print = orchestrator.options.lifeCycle.printTaskTerminalOutput;
+      expect(print).toHaveBeenCalledTimes(2);
+      expect(print).toHaveBeenCalledWith(a, 'success', 'a body');
+      expect(print).toHaveBeenCalledWith(b, 'local-cache', 'b body');
+      // The captured buffer is for failures only.
+      expect(out).not.toContain('captured build log');
+      expect(out).not.toContain('batch @nx/js:tsc');
+    });
+
+    it('renders a failed batch as one fold carrying the captured output', () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build');
+      const b = makeTask('b:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        { task: b, status: 'failure', code: 1, terminalOutput: 'b body' },
+      ];
+
+      const out = captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          { id: 'batch', executorName: '@nx/gradle:batch', taskGraph: {} },
+          taskResults,
+          'OutOfMemoryError: whole-batch diagnostic no task claimed'
+        )
+      );
+
+      // One fold, labelled with the executor and a run-unique id, carrying the
+      // diagnostic that no task's terminalOutput held.
+      expect(out).toContain('::group::');
+      expect(out).toContain('@nx/gradle:batch batch #1');
+      expect(out).toContain('OutOfMemoryError: whole-batch diagnostic');
+      expect(out).toContain('::endgroup::');
+      // Each task points at the group instead of re-printing its output.
+      expect(out).toContain('nx run a:build');
+      expect(out).toContain('nx run b:build');
+      expect(out).toContain('(output in "@nx/gradle:batch batch #1" above)');
+      // Not re-printed as per-task folds.
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).not.toHaveBeenCalled();
+    });
+
+    it('gives each failed batch a distinct id', () => {
+      const orchestrator = createOrchestrator();
+      const results = [
+        { task: makeTask('a:build'), status: 'failure', code: 1 },
+      ];
+
+      const out = captureStdout(() => {
+        orchestrator.printGroupedBatchOutput(
+          { executorName: '@nx/js:tsc' },
+          results,
+          'first crash'
+        );
+        orchestrator.printGroupedBatchOutput(
+          { executorName: '@nx/js:tsc' },
+          results,
+          'second crash'
+        );
+      });
+
+      expect(out).toContain('@nx/js:tsc batch #1');
+      expect(out).toContain('@nx/js:tsc batch #2');
     });
   });
 });

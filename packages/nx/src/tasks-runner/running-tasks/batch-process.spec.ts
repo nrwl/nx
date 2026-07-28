@@ -15,7 +15,7 @@ function fakeChildProcess() {
 
 /**
  * Captures what the batch process forwards to the parent's terminal, which is
- * separate from what it reports back as the task's terminalOutput.
+ * separate from what it captures internally for a failed batch.
  */
 function captureForwarded(cb: () => void): { stdout: string; stderr: string } {
   const originalStdout = process.stdout.write;
@@ -39,6 +39,12 @@ function captureForwarded(cb: () => void): { stdout: string; stderr: string } {
   return { stdout, stderr };
 }
 
+const FOLDING_ENV = {
+  GITHUB_ACTIONS: 'true',
+  NX_SKIP_LOG_GROUPING: undefined,
+  NX_STREAM_OUTPUT: undefined,
+};
+
 describe('BatchProcess', () => {
   it('forwards batch output live when grouping does not apply', () => {
     const child = fakeChildProcess();
@@ -61,51 +67,41 @@ describe('BatchProcess', () => {
   it('suppresses the live copy when batch output is being folded', () => {
     const child = fakeChildProcess();
 
-    const result = withEnvironmentVariables(
-      {
-        GITHUB_ACTIONS: 'true',
-        NX_SKIP_LOG_GROUPING: undefined,
-        NX_STREAM_OUTPUT: undefined,
-      },
-      () => {
-        new BatchProcess(child, '@nx/js:tsc');
-        return captureForwarded(() => {
-          (child as any).stdout.emit('data', Buffer.from('out chunk'));
-          (child as any).stderr.emit('data', Buffer.from('err chunk'));
-        });
-      }
-    );
+    const result = withEnvironmentVariables(FOLDING_ENV, () => {
+      new BatchProcess(child, '@nx/js:tsc');
+      return captureForwarded(() => {
+        (child as any).stdout.emit('data', Buffer.from('out chunk'));
+        (child as any).stderr.emit('data', Buffer.from('err chunk'));
+      });
+    });
 
-    // The grouped per-task block is the canonical copy here, so nothing is
-    // forwarded live — that would duplicate it outside the group.
+    // Rendered from per-task terminalOutput (success) or the captured buffer
+    // (failure) at batch end, never live — that would duplicate it outside the
+    // fold.
     expect(result.stdout).toEqual('');
     expect(result.stderr).toEqual('');
   });
 
-  it('retains folded stderr so a crash can still be surfaced', () => {
+  it('captures both streams while folding, so a failed batch can surface them', () => {
     const child = fakeChildProcess();
 
-    const batch = withEnvironmentVariables(
-      {
-        GITHUB_ACTIONS: 'true',
-        NX_SKIP_LOG_GROUPING: undefined,
-        NX_STREAM_OUTPUT: undefined,
-      },
-      () => {
-        const b = new BatchProcess(child, '@nx/js:tsc');
-        captureForwarded(() => {
-          (child as any).stderr.emit('data', Buffer.from('Fatal: worker died'));
-        });
-        return b;
-      }
-    );
+    const batch = withEnvironmentVariables(FOLDING_ENV, () => {
+      const b = new BatchProcess(child, '@nx/js:tsc');
+      captureForwarded(() => {
+        // Build log on stdout, the runner's own diagnostic on stderr — the
+        // failed batch needs both, and neither is in any task's terminalOutput.
+        (child as any).stdout.emit('data', Buffer.from('build log line\n'));
+        (child as any).stderr.emit('data', Buffer.from('OutOfMemoryError\n'));
+      });
+      return b;
+    });
 
-    // Held back from the live stream, but available for the orchestrator to
-    // print if the batch exits without per-task results.
-    expect(batch.getCapturedErrorOutput()).toContain('Fatal: worker died');
+    const captured = batch.getCapturedOutput();
+    expect(captured).toContain('build log line');
+    expect(captured).toContain('OutOfMemoryError');
   });
 
-  it('does not capture stderr when output is not being folded', () => {
+  it('does not capture anything when output is not being folded', () => {
     const child = fakeChildProcess();
 
     const batch = withEnvironmentVariables(
@@ -119,7 +115,31 @@ describe('BatchProcess', () => {
       }
     );
 
-    expect(batch.getCapturedErrorOutput()).toEqual('');
+    expect(batch.getCapturedOutput()).toEqual('');
+  });
+
+  it('caps the captured buffer so a long-lived batch cannot grow it without bound', () => {
+    const child = fakeChildProcess();
+
+    const batch = withEnvironmentVariables(FOLDING_ENV, () => {
+      const b = new BatchProcess(child, '@nx/gradle:batch');
+      captureForwarded(() => {
+        // 3 MB in, well over the ~1 MB cap; the tail (the fatal) is what matters.
+        for (let i = 0; i < 3; i++) {
+          (child as any).stdout.emit(
+            'data',
+            Buffer.from('x'.repeat(1_000_000))
+          );
+        }
+        (child as any).stderr.emit('data', Buffer.from('FINAL_FATAL'));
+      });
+      return b;
+    });
+
+    const captured = batch.getCapturedOutput();
+    expect(captured.length).toBeLessThanOrEqual(1_000_000);
+    // The most recent output — where the fatal lands — is retained.
+    expect(captured).toContain('FINAL_FATAL');
   });
 
   it('forwards live when the user explicitly asked to stream, even under grouping', () => {
@@ -164,20 +184,13 @@ describe('BatchProcess', () => {
     const child = fakeChildProcess();
     const seen: string[] = [];
 
-    withEnvironmentVariables(
-      {
-        GITHUB_ACTIONS: 'true',
-        NX_SKIP_LOG_GROUPING: undefined,
-        NX_STREAM_OUTPUT: undefined,
-      },
-      () => {
-        const batch = new BatchProcess(child, '@nx/js:tsc');
-        batch.onOutput((o) => seen.push(o));
-        captureForwarded(() => {
-          (child as any).stdout.emit('data', Buffer.from('out chunk'));
-        });
-      }
-    );
+    withEnvironmentVariables(FOLDING_ENV, () => {
+      const batch = new BatchProcess(child, '@nx/js:tsc');
+      batch.onOutput((o) => seen.push(o));
+      captureForwarded(() => {
+        (child as any).stdout.emit('data', Buffer.from('out chunk'));
+      });
+    });
 
     expect(seen).toEqual(['out chunk']);
   });
