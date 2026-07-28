@@ -27,7 +27,7 @@
     },
     "addPlugin": {
       "type": "boolean",
-      "description": "Add the `@nx/oxlint/plugin` inference plugin to `nx.json`."
+      "description": "Add the `@nx/oxlint` inference plugin to `nx.json`."
     }
   },
   "additionalProperties": false

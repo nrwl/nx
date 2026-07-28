@@ -1,4 +1,9 @@
 export {
+  createNodes,
+  createNodesV2,
+  type OxlintPluginOptions,
+} from './src/plugins/plugin.js';
+export {
   OxlintExecutorSchema,
   oxlintExecutor,
 } from './src/executors/lint/lint.impl.js';

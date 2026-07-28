@@ -9,7 +9,7 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   workspaceDataDirectory: 'tmp/oxlint-project-graph-cache',
 }));
 
-describe('@nx/oxlint/plugin', () => {
+describe('@nx/oxlint plugin', () => {
   let context: CreateNodesContext;
   let tempFs: TempFs;
   let configFiles: string[] = [];
