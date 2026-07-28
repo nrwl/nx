@@ -96,13 +96,10 @@ export const baseConfig = [
     },
   },
   {
-    files: ['**/*.json'],
+    files: ['**/executors/**/schema.json', '**/generators/**/schema.json'],
     languageOptions: {
       parser: jsoncEslintParser,
     },
-  },
-  {
-    files: ['**/executors/**/schema.json', '**/generators/**/schema.json'],
     rules: {
       '@nx/workspace-valid-schema-description': 'error',
     },
