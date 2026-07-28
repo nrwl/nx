@@ -1,6 +1,7 @@
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from 'nx/src/generators/tree';
 import { updateJson } from 'nx/src/generators/utils/json';
+import { addProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { join } from 'path';
 import { setCwd } from '../../internal-testing-utils';
@@ -286,6 +287,53 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
       })
     ).rejects.toThrow(/name should match/);
+  });
+
+  it('should throw when the derived name conflicts with an existing project', async () => {
+    addProjectConfiguration(tree, 'server', {
+      root: 'apps/server',
+    });
+
+    await expect(
+      determineProjectNameAndRootOptions(tree, {
+        directory: 'apps/nested/server',
+        projectType: 'application',
+      })
+    ).rejects.toThrow(
+      'The name "server" was derived from the provided directory "apps/nested/server", but it is already used by the project at "apps/server". Please provide a unique name for the new project with the "--name" option.'
+    );
+  });
+
+  it('should throw when the provided name conflicts with an existing project', async () => {
+    addProjectConfiguration(tree, 'server', {
+      root: 'apps/server',
+    });
+
+    await expect(
+      determineProjectNameAndRootOptions(tree, {
+        directory: 'apps/nested/api',
+        name: 'server',
+        projectType: 'application',
+      })
+    ).rejects.toThrow(
+      'The provided name "server" is already used by the project at "apps/server". Please provide a unique name for the new project.'
+    );
+  });
+
+  it('should not throw a name conflict error when the existing project is at the resolved project root', async () => {
+    // generating on top of an existing project is handled elsewhere with a
+    // more accurate error
+    addProjectConfiguration(tree, 'server', {
+      root: 'apps/server',
+    });
+
+    const result = await determineProjectNameAndRootOptions(tree, {
+      directory: 'apps/server',
+      projectType: 'application',
+    });
+
+    expect(result.projectName).toBe('server');
+    expect(result.projectRoot).toBe('apps/server');
   });
 
   it('should handle providing a path including multiple "@" as the project name', async () => {
