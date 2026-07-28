@@ -168,6 +168,13 @@ async function waitForInstallation(
 }
 
 export async function ensureCypressInstallation() {
+  // Nothing runs Cypress unless e2e tests are enabled, and the binary is not
+  // fetched while workspaces install in that case, so pulling it here would
+  // download and unzip ~100MB that no test is going to use.
+  if (process.env.NX_E2E_RUN_E2E !== 'true') {
+    return;
+  }
+
   // Only one process on the machine may unzip into the Cypress cache at a time,
   // for the same reason Playwright installs are serialized below.
   if (!tryAcquireLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE)) {
