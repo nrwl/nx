@@ -132,24 +132,32 @@ describe('ensureOwnedPrivateDir', () => {
       expect(relaxSharedRootToSticky(dir)).toBe(true);
     });
 
-    it('does not chmod on Windows (named pipes rely on their default DACL)', () => {
-      // Asserted against the live helper rather than a mock: tmp-dir.ts calls
-      // this on every platform, so the win32 short-circuit is the only thing
-      // stopping the chmod, and deleting it turns 0700 into 1777 here.
-      const dir = join(base, 'win32-root');
-      mkdirSync(dir, { mode: 0o700 });
-      chmodSync(dir, 0o700);
-      const original = process.platform;
-      Object.defineProperty(process, 'platform', { value: 'win32' });
+    // Runs only on POSIX despite being about Windows, and deliberately so: it
+    // stubs `process.platform` to exercise the win32 branch while keeping a
+    // filesystem whose mode bits are real. On an actual Windows runner Node's
+    // chmod only honours the read-only bit, so the assertion below could not
+    // hold there even on correct code.
+    posixOnly(
+      'does not chmod when the platform is Windows (named pipes rely on their default DACL)',
+      () => {
+        // Asserted against the live helper rather than a mock: tmp-dir.ts calls
+        // this on every platform, so the win32 short-circuit is the only thing
+        // stopping the chmod, and deleting it turns 0700 into 1777 here.
+        const dir = join(base, 'win32-root');
+        mkdirSync(dir, { mode: 0o700 });
+        chmodSync(dir, 0o700);
+        const original = process.platform;
+        Object.defineProperty(process, 'platform', { value: 'win32' });
 
-      try {
-        relaxSharedRootToSticky(dir);
-      } finally {
-        Object.defineProperty(process, 'platform', { value: original });
+        try {
+          relaxSharedRootToSticky(dir);
+        } finally {
+          Object.defineProperty(process, 'platform', { value: original });
+        }
+
+        expect(lstatSync(dir).mode & 0o7777).toBe(0o700);
       }
-
-      expect(lstatSync(dir).mode & 0o7777).toBe(0o700);
-    });
+    );
   });
 
   describe('isSafeSharedRoot', () => {
