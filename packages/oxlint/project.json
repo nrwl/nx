@@ -9,6 +9,33 @@
       "inputs": ["copyReadme"],
       "outputs": ["{projectRoot}/README.md"],
       "dependsOn": ["^build", "build-base"]
+    },
+    "lint": {
+      "command": "oxlint .",
+      "options": {
+        "cwd": "packages/oxlint"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/packages/oxlint/.oxlintrc.json",
+        {
+          "externalDependencies": ["oxlint"]
+        }
+      ],
+      "metadata": {
+        "technologies": ["oxlint"],
+        "description": "Runs Oxlint on project",
+        "help": {
+          "command": "pnpm exec oxlint --help",
+          "example": {
+            "options": {
+              "max-warnings": 0
+            }
+          }
+        }
+      }
     }
   }
 }
