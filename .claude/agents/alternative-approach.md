@@ -1,7 +1,7 @@
 ---
 name: alternative-approach
 description: Use this agent during PR review to independently design alternative solutions to the problem a PR solves and contrast them with the PR's chosen approach. It reports a finding only when an alternative is materially better (root-cause vs symptom fix, reuse of an existing utility, large complexity reduction) or when the chosen approach cannot fully solve the problem; otherwise it endorses the approach so the reviewer knows alternatives were considered and rejected. Read-only on the sandbox checkout.
-model: inherit
+model: opus
 tools: Read, Grep, Glob, Bash
 ---
 

@@ -165,10 +165,12 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
 (If the existing draft's `verdict` is `failed` **and its `## Review draft` body is empty or has no findings**, the prior attempt produced nothing usable — skip this step and review fresh. Do NOT discard it merely because the token says `failed`: since Step 7 now sets `failed` when any single agent fails its EVIDENCE check, a `failed` draft routinely still contains eight agents' worth of real findings, and throwing that away loses the reconciliation this step exists for. The file's history is preserved by Step 8 either way.)
 
-1. Read the existing triage file. Extract:
-   - The frontmatter `head_sha` (call it `$PRIOR_SHA`).
+1. Read the existing triage file **in full** — the whole `## Review draft` plus every entry under `## Prior reviews`. This is for **you**, the orchestrator: Step 5b reconciliation is explicitly yours to do ("don't dispatch another agent — you already have all the context"), so you need the complete history to sort findings into Addressed / Still concerning / New. Extract:
+   - The frontmatter `head_sha` (call it `$PRIOR_SHA`) and `verdict`.
    - The `## Review draft` section (the most recent review). This becomes "the prior review."
    - The full `## Prior reviews` section (older reviews, if any). All of them — no cap on history.
+
+   What you pass to the **agents** is a different, much smaller artifact — see step 3. Keep the two straight: full history in your head, distilled carry-forward on disk.
 
 2. Compute the incremental diff inside the container, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
 
@@ -185,20 +187,35 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 also clears these paths up front, so the two defenses are independent.)
 
-3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code):
+3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
+
+   **Distill; do not paste.** Every byte here is read by all nine agents, so its cost is multiplied ninefold — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
+
+   Write this shape instead, and keep the whole file **under ~150 lines**:
 
    ```markdown
    # Re-review context
 
-   This PR has been reviewed before. The prior review's verdict was: <PRIOR_VERDICT>.
+   Attempt <N-1> reviewed `$PRIOR_SHA` and returned **<PRIOR_VERDICT>**. This is attempt <N>.
+   Earlier attempts: <one line per attempt, oldest first — "attempt 2 (1046ace) lgtm — daemon now
+   rejects foreign-workspace messages">.
 
-   ## Most recent prior review (head_sha=$PRIOR_SHA)
+   ## Open items — verify whether these still hold
 
-   <PASTE THE PRIOR REVIEW DRAFT VERBATIM>
+   <Every unresolved Critical/Important finding from ANY prior attempt, one bullet each.
+   Quote the finding's own one-line summary verbatim where it has one; add the file:line and
+   the specific ask. These are load-bearing — see the budget rule below.>
 
-   ## All earlier reviews (oldest first)
+   ## Already fixed — do not re-raise
 
-   <PASTE THE FULL ## Prior reviews SECTION VERBATIM>
+   <One line per finding a prior attempt raised and a later attempt confirmed closed, with what
+   closed it. Agents need these so they neither re-report them nor mistake the fix for new code.>
+
+   ## Settled maintainer calls — do not re-litigate
+
+   <One line each: the decision, and that it was reviewed and accepted. An agent that does not
+   know a trade-off is settled will re-report it every single round; this section is the cheapest
+   part of the file and prevents the most repeat noise.>
 
    ## Diff since last review (`$PRIOR_SHA..<HEAD>`)
 
@@ -206,9 +223,18 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    ## Review focus
 
-   Focus on the diff since the last review. For unchanged code, only verify
-   whether the prior findings above still hold — do not re-analyze it from scratch.
+   Focus on the diff since the last review. For unchanged code, only verify whether the open
+   items above still hold — do not re-analyze it from scratch.
+
+   <Optionally: 2-4 specific questions this round should settle, phrased neutrally.>
    ```
+
+   Rules for the distillation:
+   - **The budget never evicts an open finding.** The ~150-line target governs _prose_, not the Open-items list. If open items alone exceed the budget, keep them all and cut elsewhere — dropping an unresolved finding silently converts it into a "new" finding next round, or into no finding at all, which is the one failure this file exists to prevent.
+   - **Compress by dropping sections, not by summarizing findings.** Prior Reproduction / Approach / Performance / Security narrative goes entirely; a finding's own wording is preserved. Never paraphrase a finding into something vaguer than the author wrote — the point of quoting is that the next agent can check the same claim.
+   - **Do not carry a prior verdict's reasoning as an instruction.** Say what was found, not what to conclude. An agent told "attempt 5 concluded this is sound" will confirm it; an agent told "attempt 5 found X at file:line" will check X.
+   - **Keep the questions neutral.** Asking "does the new suite actually exercise the rejection branches, and can it fail?" is fair; asking "confirm the new suite is good" is not.
+   - The full history is not lost — it stays in `$TRIAGE_DIR/<NUMBER>.md` (Step 8 keeps it uncapped) and in your own context from step 1. Only the agents' copy is trimmed.
 
 ## Step 4.5: Close-without-merge check
 
@@ -450,7 +476,10 @@ proof: it is in no prompt and in no prior-review text, so only opening the diff 
 or a `diff --git` header is derivable from this prompt and proves nothing. A report that does not
 verify is discarded and the agent recorded as failed — including a report that found no issues.
 <ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
-Also read /tmp/pr-<NUMBER>.review-context.md — the prior review of this PR. Focus on what changed since.
+Also read /tmp/pr-<NUMBER>.review-context.md — a distilled carry-forward from prior reviews of this
+PR: what is still open, what was already fixed, and which trade-offs are settled. Focus on what
+changed since. It is deliberately NOT the full prior reviews — it lists only what carries forward, so
+treat it as a checklist to verify, never as a statement that anything absent from it is fine.
 """
 )
 ```
@@ -859,7 +888,7 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
 5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`. Preserve `posted_at` / `posted_url` (the user fills those in).
 
-**No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top.
+**No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the nine agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
 
 Format:
 
