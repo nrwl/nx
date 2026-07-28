@@ -1,5 +1,11 @@
 const { join, basename } = require('path');
-const { copyFileSync, renameSync, statSync, unlinkSync } = require('fs');
+const {
+  copyFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  utimesSync,
+} = require('fs');
 const { createHash } = require('crypto');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
@@ -139,18 +145,16 @@ Module._load = function (request, parent, isMain) {
     // produces a byte-identical size. Treat a cache entry older than the source
     // as stale so a rebuild is picked up rather than silently ignored.
     //
-    // A source dated in the *future* cannot be compared at all: copyFileSync
-    // does not preserve timestamps, so the copy is stamped with the cache
-    // clock and can never reach the source. Clamping the threshold to `now`
-    // does not help either — the copy was stamped an instant *before* now, so
-    // it still loses, and every process re-copies the whole binding forever.
-    // Where the mtime is unusable, fall back to the size check rather than
-    // failing the comparison. Ordinary triggers are bind mounts
-    // (WSL2/Docker/Colima), NFS clock skew and CI mtime restore.
-    const sourceMtimeUsable = sourceStats.mtimeMs <= Date.now();
+    // That comparison is only meaningful because the copy carries the source's
+    // own mtime (stamped below), so this asks whether the source was rebuilt
+    // after the copy was taken — not whether it is older than the cache
+    // filesystem's clock. Comparing against the copy's creation time instead
+    // would mean a source dated in the future (bind mounts under
+    // WSL2/Docker/Colima, NFS clock skew, CI mtime restore) could never be
+    // matched, and every Nx process would re-copy the whole binding forever.
     const isFresh =
       existingFileStats?.size === expectedFileSize &&
-      (!sourceMtimeUsable || existingFileStats.mtimeMs >= sourceStats.mtimeMs);
+      existingFileStats.mtimeMs >= sourceStats.mtimeMs;
 
     // If the file to be loaded already exists and is current, just load it
     if (isFresh) {
@@ -185,6 +189,27 @@ Module._load = function (request, parent, isMain) {
       // Validate the copy - check file size matches expected
       const copiedFileStats = statsOrNull(tmpTmpFile);
       if (copiedFileStats?.size === expectedFileSize) {
+        // Carry the source's mtime onto the copy, before the rename so the
+        // published file never has the wrong one. This is what lets the
+        // freshness check above mean "was the source rebuilt after we copied
+        // it" rather than "is the source older than the cache clock" —
+        // copyFileSync does not preserve timestamps on its own.
+        // Seconds-as-number, not the Date form: a Date carries only whole
+        // milliseconds, so it rounds the sub-millisecond part of the source
+        // mtime and can land just *below* it — which would make the freshness
+        // check fail immediately and re-copy on every single run. The numeric
+        // form round-trips exactly.
+        try {
+          utimesSync(
+            tmpTmpFile,
+            sourceStats.atimeMs / 1000,
+            sourceStats.mtimeMs / 1000
+          );
+        } catch {
+          // Best effort. Without it the copy keeps its creation time, which is
+          // the behaviour this replaced: still correct for an ordinary source,
+          // just unable to match one dated in the future.
+        }
         // Copy succeeded, rename to final location and load
         try {
           renameSync(tmpTmpFile, tmpFile);
