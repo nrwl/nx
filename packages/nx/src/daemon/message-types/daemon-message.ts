@@ -22,15 +22,17 @@ export function isDaemonMessage(msg: unknown): msg is DaemonMessage {
 
 /**
  * Any message that carries the sending process's workspace root. The Nx daemon
- * (`DaemonMessage`) and the plugin-worker protocol (`WorkspaceScopedMessage` in
- * plugin isolation) both stamp this field so the receiver can reject messages
- * from a different workspace. Typed structurally here so the shared checks below
- * apply to both without either module depending on the other's message type.
+ * (`DaemonMessage`) and the plugin-worker protocol (`WorkspaceStampedMessage`
+ * in plugin isolation) both stamp this field so the receiver can reject
+ * messages from a different workspace. Typed structurally here so the shared
+ * checks below apply to both without either module depending on the other's
+ * message type — the two are separate declarations with deliberately different
+ * shapes, not aliases.
  *
- * `type` is required even though the checks never read it: without a required
- * member the type is all-optional, which makes `{}` a valid argument (so the
- * guard answers "not foreign" for anything) and makes every message literal
- * fail excess-property checking at the call site.
+ * `type` is required even though the checks never read it. It buys
+ * excess-property checking on fresh object literals at the call sites; it does
+ * NOT make the guard stricter at runtime, since a message carrying a `type` but
+ * no `workspaceRoot` is still answered "not foreign" (see below).
  */
 type WorkspaceScopedMessage = { type: string; workspaceRoot?: string };
 
