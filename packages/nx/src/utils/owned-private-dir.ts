@@ -16,13 +16,43 @@ import {
  * (ELOOP), and the mode is then applied to the descriptor rather than the path,
  * so there is no window in which the path could be swapped between the check
  * and the change.
+ *
+ * `O_DIRECTORY` is not redundant: without it a regular file planted at the path
+ * would be opened and chmod-ed, and a FIFO would block `openSync` forever
+ * waiting for a writer — a hang no `catch` can recover from. It also only
+ * guards the *final* component; an earlier component is still resolved
+ * normally, which is why callers must verify the shared root separately
+ * (`isSafeSharedRoot`). A trailing slash likewise defeats `O_NOFOLLOW`, so
+ * every path passed here is built with `join`, which never leaves one.
  */
 function chmodNoFollow(path: string, mode: number): void {
-  const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  const fd = openSync(
+    path,
+    constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_DIRECTORY
+  );
   try {
     fchmodSync(fd, mode);
   } finally {
     closeSync(fd);
+  }
+}
+
+/**
+ * Whether a shared root is safe to create paths underneath: either absent (we
+ * will create it) or a real directory. A symlink, a regular file, or anything
+ * else means another local user planted it.
+ *
+ * `chmodNoFollow` protects the component it is handed, but `mkdirSync(...,
+ * { recursive: true })` and every path built under the root still resolve the
+ * root itself, so an unvalidated root tunnels straight through to whatever the
+ * attacker aimed it at. Callers check this *before* creating anything.
+ */
+export function isSafeSharedRoot(dir: string): boolean {
+  try {
+    return lstatSync(dir).isDirectory();
+  } catch (e: any) {
+    // Absent is fine — we create it ourselves. Anything else is not.
+    return e?.code === 'ENOENT';
   }
 }
 
@@ -36,21 +66,33 @@ function chmodNoFollow(path: string, mode: number): void {
  * created the root, and whoever got there first has already set the mode. Each
  * root is handled independently so one failing does not skip the others — a
  * root left un-relaxed locks every other user out of it.
+ *
+ * Returns false only when the root is *hostile* — ELOOP (a planted symlink) or
+ * ENOTDIR (a planted file). The caller must not go on to relax a root nested
+ * under it, since that inner path resolves through this one. An EPERM, by
+ * contrast, just means another user legitimately owns the root, which is the
+ * normal shared-machine case and must not stop anything.
  */
-export function relaxSharedRootToSticky(dir: string): void {
+export function relaxSharedRootToSticky(dir: string): boolean {
   if (process.platform === 'win32') {
-    return;
+    return true;
   }
   try {
     chmodNoFollow(dir, 0o1777);
-  } catch {}
+    return true;
+  } catch (e: any) {
+    return e?.code !== 'ELOOP' && e?.code !== 'ENOTDIR';
+  }
 }
 
 /**
- * Ensure `dir` exists, is owned by the current user, is a real directory (not a
- * symlink), and is not writable by group or other (mode 0700). Returns false if
- * it exists but fails any of those checks — i.e. it may have been planted by
- * another user through a world-writable parent.
+ * Ensure `dir` exists, is a real directory (not a symlink), is owned by the
+ * current user, and carries no group or other bits at all — not merely no write
+ * bits. A `0755` directory is *not* group/other-writable yet is still re-locked
+ * to `0700`, because read and search permission are enough to reach a socket
+ * inside it. Returns false if it exists and fails any check that cannot be
+ * repaired — i.e. it may have been planted by another user through a
+ * world-writable parent.
  *
  * Both callers create directories under a shared, world-writable root (the Nx
  * socket root and the native binary cache root), which is exactly where another
@@ -77,19 +119,21 @@ export function ensureOwnedPrivateDir(dir: string): boolean {
   }
 
   // The dir already existed — verify it is safe to use.
-  if (typeof process.getuid !== 'function') {
-    // No POSIX ownership model (Windows). The roots there are per-user OS temp
-    // dirs, not a shared /tmp, so cross-user planting is not a concern.
-    return true;
-  }
-  const myUid = process.getuid();
-
   try {
     const stats = lstatSync(dir);
+    // Checked before the Windows short-circuit below: "is a real directory" is
+    // part of the contract on every platform, and the `mkdirSync(recursive)`
+    // this replaced used to enforce it for free by throwing EEXIST on a
+    // regular file.
     if (!stats.isDirectory()) {
       return false;
     }
-    if (stats.uid !== myUid) {
+    if (typeof process.getuid !== 'function') {
+      // No POSIX ownership model (Windows). The roots there are per-user OS
+      // temp dirs, not a shared /tmp, so cross-user planting is not a concern.
+      return true;
+    }
+    if (stats.uid !== process.getuid()) {
       return false;
     }
     // Any group or other bit at all, not just write. Read and execute matter

@@ -1,8 +1,9 @@
-import { chmodSync, mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { platform, tmpdir as osTmpdir } from 'node:os';
 import { join } from 'node:path';
 import { tmpdir as systemTmpDir } from 'tmp';
 import {
+  DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   getNxSocketRoot,
   getPluginSocketDir,
   getSocketDir,
@@ -10,12 +11,15 @@ import {
 } from './tmp-dir';
 import {
   ensureOwnedPrivateDir,
+  isSafeSharedRoot,
   relaxSharedRootToSticky,
 } from '../utils/owned-private-dir';
 
 jest.mock('../utils/owned-private-dir', () => ({
   ensureOwnedPrivateDir: jest.fn(() => true),
-  relaxSharedRootToSticky: jest.fn(),
+  isSafeSharedRoot: jest.fn(() => true),
+  // Returns true = "root is usable"; tmp-dir gates the nested root on it.
+  relaxSharedRootToSticky: jest.fn(() => true),
 }));
 
 jest.mock('node:fs', () => {
@@ -23,7 +27,6 @@ jest.mock('node:fs', () => {
   return {
     ...actual,
     mkdirSync: jest.fn(),
-    chmodSync: jest.fn(),
   };
 });
 
@@ -135,10 +138,10 @@ describe('socket directories', () => {
     process.env.NX_SOCKET_DIR = systemTmpDir;
 
     expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
-    // The shared temp dir must never be created or chmod-ed on the way to the
+    // The shared temp dir must never be created or relaxed on the way to the
     // throw.
     expect(mkdirSync).not.toHaveBeenCalled();
-    expect(chmodSync).not.toHaveBeenCalled();
+    expect(relaxSharedRootToSticky).not.toHaveBeenCalled();
   });
 
   it('restricts an explicit NX_SOCKET_DIR override', () => {
@@ -161,14 +164,37 @@ describe('socket directories', () => {
     expect(relaxSharedRootToSticky).not.toHaveBeenCalled();
   });
 
-  it('does not chmod on Windows (named pipes rely on their default DACL)', () => {
-    setPlatform('win32');
+  it('falls back rather than creating anything under a hostile shared root', () => {
+    setPlatform('linux');
+    // A symlink planted at /tmp/.nx is resolved as a prefix by the recursive
+    // mkdirSync and by every path built underneath, so nothing may be created
+    // until the root itself is known to be a real directory.
+    (isSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
+
+    const dir = getSocketDir();
+
+    expect(dir).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    expect(relaxSharedRootToSticky).not.toHaveBeenCalled();
+  });
+
+  it('does not relax the nested root when the outer one is hostile', () => {
+    setPlatform('linux');
+    // ELOOP on /tmp/.nx means /tmp/.nx/sockets resolves through an attacker's
+    // symlink; relaxing it would grant 0o1777 inside a directory they chose.
+    (relaxSharedRootToSticky as jest.Mock).mockReturnValueOnce(false);
 
     getSocketDir();
-    getPluginSocketDir();
 
-    expect(chmodSync).not.toHaveBeenCalled();
+    expect(relaxSharedRootToSticky).toHaveBeenCalledWith('/tmp/.nx');
+    expect(relaxSharedRootToSticky).not.toHaveBeenCalledWith(
+      '/tmp/.nx/sockets'
+    );
   });
+
+  // The Windows short-circuit itself now lives in relaxSharedRootToSticky,
+  // which this spec mocks out — asserting on chmodSync here could not fail,
+  // because tmp-dir.ts no longer calls it on any platform. The real property is
+  // covered against the live helper in utils/owned-private-dir.spec.ts.
 });
 
 function escapeRegExp(str: string): string {
