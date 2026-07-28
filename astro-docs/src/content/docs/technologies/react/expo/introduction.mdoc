@@ -52,7 +52,9 @@ The `@nx/expo` plugin will create a task for any project that has an app configu
 - `app.config.ts`
 - `app.json`
 
-The directory must contain both `package.json` and `metro.config.js`. Nx treats the project as Expo only when the app configuration has an `expo` key and `package.json` lists `expo` as a dependency or development dependency:
+The directory must contain both `package.json` and `metro.config.js`.
+Nx treats the project as Expo when the app configuration has an `expo` key or `package.json` lists
+`expo` as a dependency or development dependency:
 
 ```json
 // app.json

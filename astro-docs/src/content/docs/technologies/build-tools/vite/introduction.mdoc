@@ -157,7 +157,11 @@ Configure `@nx/vite/plugin` in the `plugins` array in `nx.json`:
 | `buildDepsTargetName`   | Name of the build-deps target for dependency builds  | none           |
 | `watchDepsTargetName`   | Name of the watch-deps target for dependency watches | none           |
 
-Build and typecheck tasks are cached with inputs and outputs derived from the Vite and TypeScript configuration. Development, preview, and static-server tasks are continuous. When `compiler` is omitted, Nx uses `vue-tsc` for Vue projects and `tsc` otherwise.
+Build and typecheck tasks are cached.
+Build tasks declare the resolved Vite build output directory.
+Typecheck tasks do not declare cache outputs.
+Development, preview, and static-server tasks are continuous.
+When `compiler` is omitted, Nx uses `vue-tsc` when it detects a Vite Vue plugin and `tsc` otherwise.
 
 ### Disable or scope inference
 

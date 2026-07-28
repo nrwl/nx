@@ -123,21 +123,7 @@ Configure the plugin in the `plugins` array in `nx.json`:
 
 Omit `targetNamePrefix` to keep the target names from `angular.json`. Use `include` and `exclude` glob patterns on the plugin entry to scope which `angular.json` files it processes.
 
-To apply [target defaults](/docs/reference/nx-json#target-defaults) only to tasks from this plugin, use a `plugin` filter with the exact plugin identifier:
-
-```json
-// nx.json
-{
-  "targetDefaults": {
-    "build": [
-      {
-        "filter": { "plugin": "@nx/angular/plugin" },
-        "cache": true
-      }
-    ]
-  }
-}
-```
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/angular/plugin`.
 
 ## Local development
 

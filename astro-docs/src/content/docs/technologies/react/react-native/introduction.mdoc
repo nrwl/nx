@@ -70,7 +70,10 @@ The `@nx/react-native` plugin will create a task for any project that has an app
 - `app.config.ts`
 - `app.json`
 
-The directory must contain both `package.json` and `metro.config.js`. React Native inference excludes projects whose app configuration has an `expo` key or whose package depends on `expo`. The `@nx/expo/plugin` handles projects that meet both Expo conditions.
+The directory must contain both `package.json` and `metro.config.js`.
+React Native inference excludes projects whose app configuration has an `expo` key or whose
+`package.json` lists `expo` as a dependency or development dependency.
+The `@nx/expo/plugin` handles those projects.
 
 ### View inferred tasks
 
