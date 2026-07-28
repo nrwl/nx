@@ -16,6 +16,15 @@ const LEFT_PAD = `   `;
 const SPACER = `  `;
 const EXTENDED_LEFT_PAD = `      `;
 
+/**
+ * Continuous tasks complete without a `terminalOutput`, so the `delete` in
+ * `endTasks` never fires for them and their chunks would otherwise accumulate
+ * for the whole run — a dev server left up for days both grows the heap without
+ * bound and dumps its entire history into the summary. Retain only the tail;
+ * the TUI's own scrollback is capped at 1000 rows regardless.
+ */
+const MAX_RETAINED_OUTPUT_BYTES = 1024 * 1024;
+
 export function getTuiTerminalSummaryLifeCycle({
   projectNames,
   tasks,
@@ -56,29 +65,57 @@ export function getTuiTerminalSummaryLifeCycle({
 
   // Chunks accumulated progressively during task execution
   const taskOutputChunks: Record<string, string[]> = {};
+  const retainedOutputBytes: Record<string, number> = {};
+  const truncatedTasks = new Set<string>();
   // Finalized output strings set on task completion — read by summary print functions
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToTaskStatus: Record<string, TaskStatus> = {};
 
   const taskIdsInTheOrderTheyStart: string[] = [];
 
-  const getTerminalOutput = (taskId: string): string =>
-    tasksToTerminalOutputs[taskId] ?? taskOutputChunks[taskId]?.join('') ?? '';
+  const getTerminalOutput = (taskId: string): string => {
+    const finalized = tasksToTerminalOutputs[taskId];
+    if (finalized !== undefined) {
+      return finalized;
+    }
+    const retained = taskOutputChunks[taskId]?.join('') ?? '';
+    if (!truncatedTasks.has(taskId)) {
+      return retained;
+    }
+    const notice = output.dim(
+      `... earlier output truncated, showing the last ${
+        MAX_RETAINED_OUTPUT_BYTES / 1024 / 1024
+      }MB ...`
+    );
+    return `${notice}${EOL}${EOL}${retained}`;
+  };
 
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
       taskOutputChunks[t.id] ??= [];
+      retainedOutputBytes[t.id] ??= 0;
       taskIdsInTheOrderTheyStart.push(t.id);
       inProgressTasks.add(t.id);
     }
   };
 
   lifeCycle.appendTaskOutput = (taskId, output) => {
+    const chunks = taskOutputChunks[taskId];
     // Task already completed and output was finalized by endTasks — discard late-arriving data
-    if (!taskOutputChunks[taskId]) {
+    if (!chunks) {
       return;
     }
-    taskOutputChunks[taskId].push(output);
+    chunks.push(output);
+    retainedOutputBytes[taskId] += output.length;
+    // Compact at twice the cap rather than on every append so the cost
+    // amortizes to O(1) per byte.
+    if (retainedOutputBytes[taskId] > MAX_RETAINED_OUTPUT_BYTES * 2) {
+      const tail = chunks.join('').slice(-MAX_RETAINED_OUTPUT_BYTES);
+      chunks.length = 0;
+      chunks.push(tail);
+      retainedOutputBytes[taskId] = tail.length;
+      truncatedTasks.add(taskId);
+    }
   };
 
   // TODO(@AgentEnder): The following 2 methods should be one but will need more refactoring
@@ -138,6 +175,8 @@ export function getTuiTerminalSummaryLifeCycle({
       if (terminalOutput !== undefined) {
         tasksToTerminalOutputs[task.id] = terminalOutput;
         delete taskOutputChunks[task.id];
+        delete retainedOutputBytes[task.id];
+        truncatedTasks.delete(task.id);
       }
     }
   };

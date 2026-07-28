@@ -802,7 +802,83 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       `);
     });
   });
+
+  describe('continuous task output retention', () => {
+    // A continuous task completes without a `terminalOutput`, so it never hits
+    // the `delete taskOutputChunks[task.id]` path that bounds discrete tasks.
+    const serve = {
+      id: 'myapp:serve',
+      continuous: true,
+    } as Partial<Task> as Task;
+
+    const buildLifeCycle = () =>
+      getTuiTerminalSummaryLifeCycle({
+        args: { targets: ['serve'] },
+        taskGraph: {
+          tasks: { 'myapp:serve': serve },
+          dependencies: { 'myapp:serve': [] },
+          continuousDependencies: { 'myapp:serve': [] },
+          roots: ['myapp:serve'],
+        },
+        initiatingProject: 'myapp',
+        initiatingTasks: [],
+        overrides: {},
+        projectNames: ['myapp'],
+        tasks: [serve],
+        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+      });
+
+    it('caps what a long-lived continuous task retains', () => {
+      const { lifeCycle, printSummary } = buildLifeCycle();
+      lifeCycle.startTasks?.([serve], null as unknown as TaskMetadata);
+
+      // 8MB, well past the 1MB retention cap.
+      const chunk = 'x'.repeat(1024) + '\n';
+      for (let i = 0; i < 8 * 1024; i++) {
+        lifeCycle.appendTaskOutput?.(serve.id, chunk, true);
+      }
+      lifeCycle.setTaskStatus?.(serve.id, NativeTaskStatus.Stopped);
+
+      const printed = getOutputBytes(printSummary);
+
+      // Without the cap this is the full 8MB in a single write.
+      expect(printed).toBeLessThan(2 * 1024 * 1024);
+      expect(printed).toBeGreaterThan(1024 * 1024);
+    });
+
+    it('leaves output below the cap untouched', () => {
+      const { lifeCycle, printSummary } = buildLifeCycle();
+      lifeCycle.startTasks?.([serve], null as unknown as TaskMetadata);
+      lifeCycle.appendTaskOutput?.(serve.id, 'listening on port 4200', true);
+      lifeCycle.setTaskStatus?.(serve.id, NativeTaskStatus.Stopped);
+
+      const lines = getOutputLines(printSummary);
+
+      expect(lines.join('\n')).toContain('listening on port 4200');
+      expect(lines.join('\n')).not.toContain('truncated');
+    });
+  });
 });
+
+function getOutputBytes(cb: () => void): number {
+  let bytes = 0;
+  const originalLog = console.log;
+  const originalStdout = process.stdout.write;
+  console.log = (...args) => {
+    bytes += args.join(' ').length;
+  };
+  process.stdout.write = ((chunk: string | Uint8Array): boolean => {
+    bytes += chunk.length;
+    return true;
+  }) as typeof process.stdout.write;
+  try {
+    cb();
+  } finally {
+    console.log = originalLog;
+    process.stdout.write = originalStdout;
+  }
+  return bytes;
+}
 
 function getOutputLines(cb: () => void): string[] {
   const lines: string[] = [];
