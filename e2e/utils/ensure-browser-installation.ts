@@ -20,6 +20,11 @@ import { isVerbose } from './get-env-info';
 const LOCK_DIR = join(tmpdir(), 'nx-e2e-locks');
 const PLAYWRIGHT_LOCK_FILE = join(LOCK_DIR, 'playwright-install.lock');
 const PLAYWRIGHT_STATUS_FILE = join(LOCK_DIR, 'playwright-install.status');
+// Cypress needs the same treatment: it unzips into one cache directory shared by
+// everything on the machine, and a second install clears that directory while the
+// first is still unzipping into it.
+const CYPRESS_LOCK_FILE = join(LOCK_DIR, 'cypress-install.lock');
+const CYPRESS_STATUS_FILE = join(LOCK_DIR, 'cypress-install.status');
 const POLL_INTERVAL_MS = 5000;
 const MAX_WAIT_MS = 5 * 60 * 1000;
 
@@ -131,28 +136,88 @@ async function waitForInstallation(
   );
 }
 
+/**
+ * Blocks the calling process. `ensureCypressInstallation` is synchronous, and
+ * every caller of `runE2ETests` relies on that, so the wait cannot be awaited.
+ */
+function sleepSync(ms: number) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function waitForInstallationSync(
+  lockFile: string,
+  statusFile: string,
+  toolName: string
+): void {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < MAX_WAIT_MS) {
+    if (!existsSync(lockFile)) {
+      const status = readInstallStatus(statusFile);
+
+      if (status?.status === 'success') {
+        e2eConsoleLogger(`${toolName} installed by process ${status.pid}`);
+        return;
+      }
+
+      if (status?.status === 'failed') {
+        const errorMsg = `${toolName} installation failed in process ${
+          status.pid
+        }: ${status.error || 'Unknown error'}`;
+        e2eConsoleLogger(errorMsg);
+        throw new Error(errorMsg);
+      }
+    }
+
+    sleepSync(POLL_INTERVAL_MS);
+  }
+
+  throw new Error(`Timeout waiting for ${toolName} installation to complete`);
+}
+
 export function ensureCypressInstallation() {
-  let cypressVerified = true;
+  // Only one process on the machine may unzip into the Cypress cache at a time,
+  // for the same reason Playwright installs are serialized below.
+  if (!tryAcquireLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE)) {
+    e2eConsoleLogger(
+      `Process ${process.pid} waiting for Cypress installation...`
+    );
+    waitForInstallationSync(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE, 'Cypress');
+    return;
+  }
+
   try {
-    const r = execSync('npx cypress verify', {
-      stdio: isVerbose() ? 'inherit' : 'pipe',
-      encoding: 'utf-8',
-      cwd: tmpProjPath(),
-    });
-    if (r.indexOf('Verified Cypress!') === -1) {
+    let cypressVerified = true;
+    try {
+      const r = execSync('npx cypress verify', {
+        stdio: isVerbose() ? 'inherit' : 'pipe',
+        encoding: 'utf-8',
+        cwd: tmpProjPath(),
+      });
+      if (r.indexOf('Verified Cypress!') === -1) {
+        cypressVerified = false;
+      }
+    } catch {
       cypressVerified = false;
     }
-  } catch {
-    cypressVerified = false;
-  } finally {
+
     if (!cypressVerified) {
       e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
       execSync('npx cypress install', {
         stdio: isVerbose() ? 'inherit' : 'pipe',
         encoding: 'utf-8',
         cwd: tmpProjPath(),
+        // The binary is skipped while workspaces are installed, so this call
+        // has to be allowed to fetch it.
+        env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
       });
     }
+
+    releaseLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE, true);
+  } catch (error) {
+    e2eConsoleLogger('Failed to install Cypress:', error);
+    releaseLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE, false, error.message);
+    throw error;
   }
 }
 
