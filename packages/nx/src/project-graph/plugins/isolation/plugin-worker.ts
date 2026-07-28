@@ -50,6 +50,21 @@ const expectedPluginName = process.argv[3];
 // updating the child's env), which would drop every real message as "foreign".
 const hostWorkspaceRoot = process.argv[4];
 
+// Fail loudly on a broken spawn contract. These are positional, so inserting an
+// argument on the host side shifts every one of them — and the symptom would
+// otherwise be silent and total: an undefined hostWorkspaceRoot makes every
+// legitimate message look foreign, so the worker drops 100% of its traffic and
+// says so only at `logger.verbose`, while the host waits out a ten-minute
+// timeout and blames itself.
+if (!socketPath || !expectedPluginName || !hostWorkspaceRoot) {
+  console.error(
+    `[plugin-worker] started with an incomplete argument list ` +
+      `(socketPath=${socketPath}, pluginName=${expectedPluginName}, hostWorkspaceRoot=${hostWorkspaceRoot}). ` +
+      `This is an Nx bug — please report it at https://github.com/nrwl/nx/issues.`
+  );
+  process.exit(1);
+}
+
 const CONNECT_TIMEOUT_MS = 30_000;
 
 let connectErrorTimeout = setErrorTimeout(
