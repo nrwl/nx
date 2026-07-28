@@ -1,4 +1,10 @@
-import { updateJson, type Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  offsetFromRoot,
+  updateJson,
+  writeJson,
+  type Tree,
+} from '@nx/devkit';
 import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
 /** Config files whose contents can be read and rewritten statically. */
@@ -6,14 +12,9 @@ const EDITABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
   /\.jsonc?$/.test(file)
 );
 
-interface OxlintOverride {
-  files?: string[];
-  plugins?: string[];
-}
-
 interface OxlintConfig {
+  extends?: string[];
   plugins?: string[];
-  overrides?: OxlintOverride[];
 }
 
 export function findRootOxlintConfig(tree: Tree): string | null {
@@ -21,14 +22,14 @@ export function findRootOxlintConfig(tree: Tree): string | null {
 }
 
 /**
- * Enables Oxlint plugins for a single project, via an `overrides` entry scoped
- * to its root.
+ * Enables Oxlint plugins for a single project, in that project's own config.
  *
- * Scoped rather than added to the top-level `plugins`, so a React plugin does
- * not start applying to a Vue project's `.tsx` files in a mixed workspace.
+ * A nested config *replaces* the root one for its subtree rather than merging
+ * into it, so the generated config extends the root explicitly. Without that
+ * `extends`, the root's `categories` and `rules` silently stop applying.
  *
- * No-op when the workspace uses a TypeScript config (`oxlint.config.ts`),
- * which cannot be rewritten statically.
+ * No-op when the workspace uses a TypeScript config (`oxlint.config.ts`), which
+ * cannot be rewritten statically.
  */
 export function addPluginsToOxlintConfig(
   tree: Tree,
@@ -39,26 +40,28 @@ export function addPluginsToOxlintConfig(
     return;
   }
 
-  const configPath = findRootOxlintConfig(tree);
-  if (!configPath) {
+  const rootConfigPath = findRootOxlintConfig(tree);
+  if (!rootConfigPath) {
     return;
   }
 
-  const files = projectRoot === '.' ? '**/*' : `${projectRoot}/**/*`;
+  // A root project has no config to nest — the root config is its own.
+  const projectConfigPath =
+    projectRoot === '.'
+      ? rootConfigPath
+      : joinPathFragments(projectRoot, '.oxlintrc.json');
 
-  updateJson<OxlintConfig>(tree, configPath, (json) => {
-    json.overrides ??= [];
-
-    const existing = json.overrides.find((override) =>
-      override.files?.includes(files)
-    );
-    if (existing) {
-      existing.plugins = union(existing.plugins ?? [], plugins);
+  if (tree.exists(projectConfigPath)) {
+    updateJson<OxlintConfig>(tree, projectConfigPath, (json) => {
+      json.plugins = union(json.plugins ?? [], plugins);
       return json;
-    }
+    });
+    return;
+  }
 
-    json.overrides.push({ files: [files], plugins: [...plugins] });
-    return json;
+  writeJson<OxlintConfig>(tree, projectConfigPath, {
+    extends: [joinPathFragments(offsetFromRoot(projectRoot), rootConfigPath)],
+    plugins: [...plugins],
   });
 }
 

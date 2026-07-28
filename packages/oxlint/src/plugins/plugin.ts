@@ -451,10 +451,15 @@ function getProjectUsingOxlintConfig(
     oxlintConfigs.unshift(rootConfig);
   }
 
-  const configInputs = oxlintConfigs.flatMap((config) => [
-    config,
-    ...(configChainsByConfig.get(config) ?? []),
-  ]);
+  // Deduped: a project config that extends the root names it a second time.
+  const configInputs = [
+    ...new Set(
+      oxlintConfigs.flatMap((config) => [
+        config,
+        ...(configChainsByConfig.get(config) ?? []),
+      ])
+    ),
+  ];
 
   const isRootProject = projectRoot === '.';
   const lintPath =
