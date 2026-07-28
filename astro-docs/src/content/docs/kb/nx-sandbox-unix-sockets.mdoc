@@ -38,7 +38,7 @@ This grants Nx the ability to create and connect to Unix sockets, which it needs
 
 ## Scoped allowlisting with the Nx socket root
 
-Nx creates all of its sockets under a single stable directory on macOS and Linux: `/tmp/.nx/sockets`, unless overridden via `NX_SOCKET_DIR`. Allowlist that one directory, and grant read and write on its parent, instead of granting blanket socket access:
+The daemon, forked task processes and plugin workers put their sockets under a single stable directory on macOS and Linux: `/tmp/.nx/sockets`, unless overridden via `NX_SOCKET_DIR`. Allowlist that one directory, and grant read and write on its parent, instead of granting blanket socket access:
 
 ```json
 // .claude/settings.json
@@ -60,7 +60,11 @@ The path is identical on every machine, so the entries are safe to commit and sh
 The write grant covers `/tmp/.nx` rather than only `/tmp/.nx/sockets` because a grant scoped to the socket directory cannot create `/tmp/.nx` itself, so the very first Nx run in a fresh sandbox fails before it reaches the socket. Nx also copies its compiled native binding into a cache under the same root before loading it, which the grant needs to cover for the same reason.
 
 {% aside type="note" title="What keeps these directories private" %}
-The allowlist decides which paths the sandbox can reach. It is not what separates users from each other. The per-user directories Nx creates under `/tmp/.nx` are created `0700` and re-checked on each use: owned by you, a real directory rather than a symlink, and carrying no group or other permissions at all — a `0755` directory is tightened back to `0700` rather than accepted. The shared roots themselves (`/tmp/.nx`, `/tmp/.nx/sockets`) are deliberately world-writable and sticky, like `/tmp`, so each user on the machine can create their own private directory beneath them; containment happens one level down, not at the root.
+The allowlist decides which paths the sandbox can reach. It is not what separates users from each other.
+
+Three directories are deliberately world-writable and sticky, like `/tmp` itself, so that every user logged in to the machine can create their own private directory beneath them: `/tmp/.nx`, `/tmp/.nx/sockets` and `/tmp/.nx/native-cache`. Nothing is ever read or executed directly from those.
+
+Containment happens one level down, in a per-user directory — `/tmp/.nx/sockets/<uid>` and `/tmp/.nx/native-cache/<uid>` — which Nx creates `0700` and re-checks on every use: owned by you, a real directory rather than a symlink, and carrying no group or other permissions at all (a `0755` directory is tightened back to `0700` rather than accepted). Because that level belongs to you rather than to whoever happened to run Nx first, no other user can own the parent of your sockets; if one has taken the name, Nx refuses it rather than nesting inside it.
 
 When a directory fails a check that cannot be repaired, Nx refuses it — sockets fall back to a private directory inside your workspace, and the native binding cache is skipped entirely, loading in place from `node_modules` instead.
 
