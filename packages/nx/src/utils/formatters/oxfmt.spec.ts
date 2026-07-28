@@ -164,6 +164,31 @@ describe('formatFilesWithOxfmt', () => {
     });
   });
 
+  describe('ignore files', () => {
+    it.each(['.gitignore', '.prettierignore'])(
+      'skips files covered by %s',
+      async (name) => {
+        writeFileSync(
+          join(workspaceRoot, name),
+          'dist/\ngenerated-*.ts\n',
+          'utf-8'
+        );
+
+        const { formatted, error } = await formatFilesWithOxfmt(
+          [
+            { path: 'dist/bundle.ts', content: 'const x =  1' },
+            { path: 'libs/lib1/generated-api.ts', content: 'const y =  1' },
+            { path: 'libs/lib1/src/index.ts', content: 'const z =  1' },
+          ],
+          workspaceRoot
+        );
+
+        expect(error).toBeUndefined();
+        expect([...formatted.keys()]).toEqual(['libs/lib1/src/index.ts']);
+      }
+    );
+  });
+
   it('leaves files it has no parser for alone without reporting an error', async () => {
     const { formatted, error } = await formatFilesWithOxfmt(
       [
