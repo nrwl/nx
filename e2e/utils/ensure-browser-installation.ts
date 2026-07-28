@@ -112,50 +112,6 @@ async function waitForInstallation(
       const status = readInstallStatus(statusFile);
 
       if (status?.status === 'success') {
-        e2eConsoleLogger(
-          `${toolName} browsers installed by process ${status.pid}`
-        );
-        return;
-      }
-
-      if (status?.status === 'failed') {
-        const errorMsg = `${toolName} browser installation failed in process ${
-          status.pid
-        }: ${status.error || 'Unknown error'}`;
-        e2eConsoleLogger(errorMsg);
-        throw new Error(errorMsg);
-      }
-    }
-
-    // Wait before polling again
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-  }
-
-  throw new Error(
-    `Timeout waiting for ${toolName} browser installation to complete`
-  );
-}
-
-/**
- * Blocks the calling process. `ensureCypressInstallation` is synchronous, and
- * every caller of `runE2ETests` relies on that, so the wait cannot be awaited.
- */
-function sleepSync(ms: number) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-}
-
-function waitForInstallationSync(
-  lockFile: string,
-  statusFile: string,
-  toolName: string
-): void {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < MAX_WAIT_MS) {
-    if (!existsSync(lockFile)) {
-      const status = readInstallStatus(statusFile);
-
-      if (status?.status === 'success') {
         e2eConsoleLogger(`${toolName} installed by process ${status.pid}`);
         return;
       }
@@ -169,20 +125,25 @@ function waitForInstallationSync(
       }
     }
 
-    sleepSync(POLL_INTERVAL_MS);
+    // Wait before polling again
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 
   throw new Error(`Timeout waiting for ${toolName} installation to complete`);
 }
 
-export function ensureCypressInstallation() {
+export async function ensureCypressInstallation() {
   // Only one process on the machine may unzip into the Cypress cache at a time,
   // for the same reason Playwright installs are serialized below.
   if (!tryAcquireLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE)) {
     e2eConsoleLogger(
       `Process ${process.pid} waiting for Cypress installation...`
     );
-    waitForInstallationSync(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE, 'Cypress');
+    await waitForInstallation(
+      CYPRESS_LOCK_FILE,
+      CYPRESS_STATUS_FILE,
+      'Cypress'
+    );
     return;
   }
 

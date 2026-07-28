@@ -12,7 +12,7 @@ import {
 
 describe('React Router Applications - TS paths', () => {
   const appName = uniq('app');
-  beforeAll(() => {
+  beforeAll(async () => {
     newProject({
       packages: [
         '@nx/react',
@@ -24,7 +24,7 @@ describe('React Router Applications - TS paths', () => {
         '@nx/eslint',
       ],
     });
-    ensurePlaywrightBrowsersInstallation();
+    await ensurePlaywrightBrowsersInstallation();
     runCLI(
       `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`
     );
@@ -72,8 +72,8 @@ describe('React Router Applications - TS paths', () => {
     expect(typeCheckResult).toContain('Successfully ran target typecheck');
   });
 
-  it('should execute e2e tests using playwright', () => {
-    if (runE2ETests()) {
+  it('should execute e2e tests using playwright', async () => {
+    if (await runE2ETests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
@@ -81,13 +81,13 @@ describe('React Router Applications - TS paths', () => {
     }
   });
 
-  it('should execute e2e tests using cypress', () => {
+  it('should execute e2e tests using cypress', async () => {
     const cypressAppName = uniq('cypress-app');
-    ensureCypressInstallation();
+    await ensureCypressInstallation();
     runCLI(
       `generate @nx/react:app ${cypressAppName} --use-react-router --routing --linter=eslint --unit-test-runner=none  --no-interactive`
     );
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const result = runCLI(`e2e ${cypressAppName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${cypressAppName}-e2e`

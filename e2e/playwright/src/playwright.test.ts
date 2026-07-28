@@ -30,7 +30,7 @@ describe('Playwright E2E Test runner', () => {
     'should test and lint example app',
 
     async () => {
-      ensurePlaywrightBrowsersInstallation();
+      await ensurePlaywrightBrowsersInstallation();
 
       const port = await reservePort();
       runCLI(
@@ -52,7 +52,7 @@ describe('Playwright E2E Test runner', () => {
   it(
     'should test and lint example app with js',
     async () => {
-      ensurePlaywrightBrowsersInstallation();
+      await ensurePlaywrightBrowsersInstallation();
 
       const port = await reservePort();
       runCLI(
@@ -95,7 +95,7 @@ describe('Playwright E2E Test Runner - legacy', () => {
     'should test and lint example app',
 
     async () => {
-      ensurePlaywrightBrowsersInstallation();
+      await ensurePlaywrightBrowsersInstallation();
 
       const pmc = getPackageManagerCommand();
       const port = await reservePort();
@@ -119,7 +119,7 @@ describe('Playwright E2E Test Runner - legacy', () => {
   it(
     'should test and lint example app with js',
     async () => {
-      ensurePlaywrightBrowsersInstallation();
+      await ensurePlaywrightBrowsersInstallation();
 
       const pmc = getPackageManagerCommand();
       const port = await reservePort();

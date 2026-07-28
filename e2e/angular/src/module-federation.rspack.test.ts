@@ -215,7 +215,7 @@ describe('Angular Module Federation', () => {
       `
     );
 
-    if (runE2ETests('playwright')) {
+    if (await runE2ETests('playwright')) {
       const e2eProcess = await runCommandUntil(
         `e2e ${hostApp}-e2e`,
         (output) => output.includes('Successfully ran target e2e for project'),

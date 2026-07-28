@@ -99,7 +99,7 @@ describe('React Rspack SSR Module Federation', () => {
         `;
       });
 
-      if (runE2ETests()) {
+      if (await runE2ETests()) {
         const hostE2eResults = await runCommandUntil(
           `e2e ${shell}-e2e --verbose`,
           (output) => output.includes('All specs passed!')

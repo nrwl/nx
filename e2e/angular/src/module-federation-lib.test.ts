@@ -86,7 +86,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const buildRemoteOutput = runCLI(`build ${remote}`);
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests('cypress')) {
+    if (await runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),
@@ -177,7 +177,7 @@ describe('Angular Module Federation - Federated Libraries', () => {
     const buildRemoteOutput = runCLI(`build ${remote}`);
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests('cypress')) {
+    if (await runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e`,
         (output) => output.includes('All specs passed!'),

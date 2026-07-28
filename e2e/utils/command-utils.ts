@@ -208,13 +208,15 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export function runE2ETests(runner?: 'cypress' | 'playwright') {
+export async function runE2ETests(runner?: 'cypress' | 'playwright') {
   if (process.env.NX_E2E_RUN_E2E === 'true') {
+    // Both installs take a lock, so a suite that has to wait for another one
+    // must not start running tests until the binaries are actually there.
     if (!runner || runner === 'cypress') {
-      ensureCypressInstallation();
+      await ensureCypressInstallation();
     }
     if (!runner || runner === 'playwright') {
-      ensurePlaywrightBrowsersInstallation();
+      await ensurePlaywrightBrowsersInstallation();
     }
     return true;
   }
