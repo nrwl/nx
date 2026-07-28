@@ -24,6 +24,7 @@ import {
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
 } from './versions';
+import { addLintingToProject } from '@nx/js';
 
 export async function addLinting(
   host: Tree,
@@ -44,6 +45,18 @@ export async function addLinting(
   },
   projectType: 'lib' | 'app'
 ) {
+  // Everything below configures ESLint — predefined configs, `extends`,
+  // ignore entries — which have no equivalent in other linters. They only
+  // need the linter registering, which the helper handles (including `none`).
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(host, {
+      linter: options.linter as any,
+      project: options.projectName,
+      addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
+    });
+  }
+
   if (options.linter === 'eslint') {
     const tasks: GeneratorCallback[] = [];
     const lintTask = await lintProjectGenerator(host, {

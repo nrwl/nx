@@ -28,6 +28,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import {
+  addLintingToProject,
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
@@ -324,6 +325,15 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   createApplicationFiles(host, options);
 
   let enableTypedLinting = false;
+  if (options.linter !== 'eslint' && options.linter !== 'none') {
+    tasks.push(
+      await addLintingToProject(host, {
+        linter: options.linter,
+        project: options.projectName,
+        addPlugin: options.addPlugin,
+      })
+    );
+  }
   if (options.linter === 'eslint') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',

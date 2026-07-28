@@ -8,6 +8,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     return;
   }
   await addLintingGenerator(host, {
+    linter: options.linter,
     projectName: options.name,
     projectRoot: options.appProjectRoot,
     prefix: options.prefix,

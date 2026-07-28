@@ -5,7 +5,6 @@ import {
   ensurePackage,
   readJson,
 } from '@nx/devkit';
-import { lintProjectGenerator } from '@nx/eslint';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -16,28 +15,35 @@ import {
 } from '@nx/eslint/internal';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 import { addSwcDependencies } from '@nx/js/internal';
+import { addLintingToProject } from '@nx/js';
 import { extraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
+  if (options.linter === 'none') {
+    return () => {};
+  }
+
   const tasks: GeneratorCallback[] = [];
-  if (options.linter === 'eslint') {
-    const lintTask = await lintProjectGenerator(host, {
+  tasks.push(
+    await addLintingToProject(host, {
       linter: options.linter,
       project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
       enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
+    })
+  );
 
+  // Predefined configs, `extends` and ignore entries are ESLint concepts with
+  // no equivalent in other linters.
+  if (options.linter === 'eslint') {
     if (isEslintConfigSupported(host)) {
       if (useFlatConfig(host)) {
         addPredefinedConfigToFlatLintConfig(

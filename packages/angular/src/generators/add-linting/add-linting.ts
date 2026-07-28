@@ -7,6 +7,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
+import { addLintingToProject } from '@nx/js';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   javaScriptOverride,
@@ -29,6 +30,19 @@ export async function addLintingGenerator(
   options: AddLintingGeneratorSchema
 ): Promise<GeneratorCallback> {
   assertSupportedAngularVersion(tree);
+
+  // Everything below configures angular-eslint presets and selector rules,
+  // which have no equivalent in other linters — Oxlint ships no Angular plugin.
+  // Those only need the linter registering, which the helper handles.
+  if (options.linter && options.linter !== 'eslint') {
+    return addLintingToProject(tree, {
+      linter: options.linter,
+      project: options.projectName,
+      addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
+    });
+  }
+
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
   const lintTask = await lintProjectGenerator(tree, {

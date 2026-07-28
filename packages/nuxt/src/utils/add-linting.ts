@@ -22,6 +22,7 @@ import {
   nuxtEslintConfigVersion,
   nuxtEslintConfigLegacyVersion,
 } from './versions';
+import { addLintingToProject } from '@nx/js';
 
 export async function addLinting(
   host: Tree,
@@ -38,6 +39,16 @@ export async function addLinting(
     setParserOptionsProject?: boolean;
   }
 ) {
+  // Everything below configures ESLint — predefined configs, `extends`,
+  // ignore entries — which have no equivalent in other linters. They only
+  // need the linter registering, which the helper handles (including `none`).
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(host, {
+      linter: options.linter as any,
+      project: options.projectName,
+    });
+  }
+
   const tasks: GeneratorCallback[] = [];
   if (options.linter === 'eslint') {
     const enableTypedLinting = isTypedLintingEnabled(options);
