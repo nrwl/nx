@@ -40,6 +40,19 @@ nx show project my-project --web
 
 Inferred tasks declare the Oxlint config, every config reachable through `extends`, and any `tsconfig.json` referenced from outside the project root. Changing any of them invalidates the cache.
 
+## Editor setup
+
+Install the official [Oxc extension](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) (`oxc.oxc-vscode`) for VS Code and Cursor. `nx add @nx/oxlint` appends it to `.vscode/extensions.json` when that file already exists.
+
+Oxc also ships extensions for Zed, JetBrains IDEs and Neovim. Any editor with LSP support can use `oxlint --lsp` as its language server.
+
+## Config file format
+
+Oxlint reads the first config it finds, and only one per directory. Prefer `.oxlintrc.json`:
+
+- `oxlint.config.ts` needs a Node runtime that executes TypeScript (Node 22.18 or later), and doesn't work with the standalone binary.
+- Only JSON configs get their `extends` chain tracked as task inputs. Nx can't read a TypeScript config statically.
+
 ## Task naming
 
 Oxlint is designed to run alongside ESLint during a migration, so the plugin claims the first available name from:

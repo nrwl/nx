@@ -8,6 +8,7 @@ import {
   runTasksInSerial,
   TargetConfiguration,
   Tree,
+  updateJson,
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
@@ -68,6 +69,7 @@ export async function initGeneratorInternal(
   }
 
   ensureRootConfig(tree);
+  updateVsCodeRecommendedExtensions(tree);
 
   if (!options.skipPackageJson) {
     const devDependencies: Record<string, string> = { oxlint: oxlintVersion };
@@ -127,6 +129,26 @@ function addTargetDefaults(tree: Tree) {
     });
     updateNxJson(tree, nxJson);
   }
+}
+
+/**
+ * Appends the official Oxc extension to existing VS Code recommendations.
+ * Only touches the file when it is already there — setting up a linter is not
+ * a reason to start dictating a workspace's editor config.
+ */
+function updateVsCodeRecommendedExtensions(tree: Tree) {
+  if (!tree.exists('.vscode/extensions.json')) {
+    return;
+  }
+
+  updateJson(tree, '.vscode/extensions.json', (json) => {
+    json.recommendations ??= [];
+    const extension = 'oxc.oxc-vscode';
+    if (!json.recommendations.includes(extension)) {
+      json.recommendations.push(extension);
+    }
+    return json;
+  });
 }
 
 function ensureRootConfig(tree: Tree) {

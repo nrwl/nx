@@ -1,4 +1,4 @@
-import { readJson, readNxJson } from '@nx/devkit';
+import { readJson, readNxJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { initGeneratorInternal } from './init.js';
 
@@ -20,6 +20,36 @@ describe('initGeneratorInternal', () => {
       rules: {},
       env: { builtin: true },
     });
+  });
+
+  it('recommends the Oxc VS Code extension when recommendations already exist', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    writeJson(tree, '.vscode/extensions.json', {
+      recommendations: ['esbenp.prettier-vscode'],
+    });
+
+    await initGeneratorInternal(tree, {
+      addPlugin: false,
+      skipPackageJson: true,
+      skipFormat: true,
+    });
+
+    expect(readJson(tree, '.vscode/extensions.json').recommendations).toEqual([
+      'esbenp.prettier-vscode',
+      'oxc.oxc-vscode',
+    ]);
+  });
+
+  it('does not create .vscode/extensions.json when absent', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+
+    await initGeneratorInternal(tree, {
+      addPlugin: false,
+      skipPackageJson: true,
+      skipFormat: true,
+    });
+
+    expect(tree.exists('.vscode/extensions.json')).toBe(false);
   });
 
   it('sets targetDefaults when the plugin is disabled', async () => {
