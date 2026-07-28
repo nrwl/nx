@@ -145,13 +145,20 @@ Module._load = function (request, parent, isMain) {
     // produces a byte-identical size. Treat a cache entry older than the source
     // as stale so a rebuild is picked up rather than silently ignored.
     //
-    // That comparison is only meaningful because the copy carries the source's
-    // own mtime (stamped below), so this asks whether the source was rebuilt
-    // after the copy was taken — not whether it is older than the cache
-    // filesystem's clock. Comparing against the copy's creation time instead
-    // would mean a source dated in the future (bind mounts under
-    // WSL2/Docker/Colima, NFS clock skew, CI mtime restore) could never be
-    // matched, and every Nx process would re-copy the whole binding forever.
+    // The copy's own creation time would normally answer this on its own: the
+    // copy happens after the build, so it lands above the source's mtime, and a
+    // later rebuild lands above the copy. That holds whenever both timestamps
+    // come from the same clock.
+    //
+    // It stops holding when the source is dated *ahead* of the cache
+    // filesystem's clock — bind mounts under WSL2/Docker/Colima, NFS skew, CI
+    // mtime restore. A copy stamped "now" can never reach a source stamped
+    // later, so the entry reads stale on every run and each process re-copies
+    // the whole binding. Never wrong, just permanently wasteful, on the
+    // pre-bootstrap path of every CLI, daemon, plugin worker and forked task.
+    //
+    // Carrying the source's mtime onto the copy (stamped below) keeps the same
+    // rule and removes that dependence on the two clocks agreeing.
     const isFresh =
       existingFileStats?.size === expectedFileSize &&
       existingFileStats.mtimeMs >= sourceStats.mtimeMs;
@@ -190,10 +197,11 @@ Module._load = function (request, parent, isMain) {
       const copiedFileStats = statsOrNull(tmpTmpFile);
       if (copiedFileStats?.size === expectedFileSize) {
         // Carry the source's mtime onto the copy, before the rename so the
-        // published file never has the wrong one. This is what lets the
-        // freshness check above mean "was the source rebuilt after we copied
-        // it" rather than "is the source older than the cache clock" —
-        // copyFileSync does not preserve timestamps on its own.
+        // published file never has the wrong one. copyFileSync does not
+        // preserve timestamps, so without this the copy carries the cache
+        // clock — which is fine until the source is dated ahead of that clock
+        // and the entry can never test as fresh again. See the freshness check
+        // above.
         // Seconds-as-number, not the Date form: a Date carries only whole
         // milliseconds, so it rounds the sub-millisecond part of the source
         // mtime and can land just *below* it — which would make the freshness
