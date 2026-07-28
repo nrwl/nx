@@ -123,9 +123,13 @@ class CLIOutput {
   dim = pc.dim;
 
   /**
-   * Whether stdout is positioned at the start of a line. Task output does not
-   * reliably end in a newline, so writers that must begin on a fresh line ask
-   * for one via {@link ensureLineStart} rather than guessing.
+   * Whether stdout is positioned at the start of a line, tracking only writes
+   * made through this class. Task output does not reliably end in a newline, so
+   * writers that must begin on a fresh line ask for one via
+   * {@link ensureLineStart} rather than guessing. Code that writes to
+   * `process.stdout` directly can leave this stale; it is relied on only where
+   * grouping suppresses those direct writes, so the value is authoritative
+   * there.
    */
   private atLineStart = true;
 
