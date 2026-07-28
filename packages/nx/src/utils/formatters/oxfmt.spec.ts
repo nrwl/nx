@@ -92,6 +92,78 @@ describe('formatFilesWithOxfmt', () => {
     expect(formatted.get('a.ts')).toEqual('const x = 1;\n');
   });
 
+  describe('.editorconfig', () => {
+    function writeEditorConfig(contents: string) {
+      writeFileSync(join(workspaceRoot, '.editorconfig'), contents, 'utf-8');
+    }
+
+    it('applies the properties oxfmt has an equivalent for', async () => {
+      writeEditorConfig(
+        'root = true\n\n[*]\nindent_size = 4\nquote_type = single\n'
+      );
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'function f() {\n  const x = "hi";\n}\n' }],
+        workspaceRoot
+      );
+
+      expect(formatted.get('a.ts')).toEqual(
+        "function f() {\n    const x = 'hi';\n}\n"
+      );
+    });
+
+    it('lets the oxfmt config override it', async () => {
+      writeEditorConfig('[*]\nquote_type = single\nindent_size = 4\n');
+      writeConfig({ singleQuote: false });
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'function f() {\n  const x = "hi";\n}\n' }],
+        workspaceRoot
+      );
+
+      // The indent still comes from .editorconfig, the quotes from oxfmt.
+      expect(formatted.get('a.ts')).toEqual(
+        'function f() {\n    const x = "hi";\n}\n'
+      );
+    });
+
+    it('only applies a section to the files it matches', async () => {
+      writeEditorConfig('[*]\nindent_size = 2\n\n[*.ts]\nindent_size = 8\n');
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          {
+            path: 'libs/lib1/deep.ts',
+            content: 'function f() {\n  const x = 1;\n}\n',
+          },
+          {
+            path: 'libs/lib1/other.js',
+            content: 'function g() {\n  const y = 1;\n}\n',
+          },
+        ],
+        workspaceRoot
+      );
+
+      // The nested .ts file still matches `[*.ts]`, the .js file does not.
+      expect(formatted.get('libs/lib1/deep.ts')).toEqual(
+        'function f() {\n        const x = 1;\n}\n'
+      );
+      expect(formatted.get('libs/lib1/other.js')).toBeUndefined();
+    });
+
+    it('ignores values it has no meaning for', async () => {
+      writeEditorConfig('[*]\nindent_size = unset\nmax_line_length = off\n');
+
+      const { formatted, error } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'function f() {\n  const x = 1;\n}\n' }],
+        workspaceRoot
+      );
+
+      expect(error).toBeUndefined();
+      expect(formatted.size).toBe(0);
+    });
+  });
+
   it('leaves files it has no parser for alone without reporting an error', async () => {
     const { formatted, error } = await formatFilesWithOxfmt(
       [
