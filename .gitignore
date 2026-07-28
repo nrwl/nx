@@ -103,6 +103,10 @@ node_modules/
 # Editor directories and files
 .idea
 .vscode
+# examples/* are fixture workspaces; they carry the editor config a real
+# workspace would have, so generators that append to it can be exercised.
+!examples/**/.vscode/
+!examples/**/.vscode/extensions.json
 *.suo
 *.ntvs*
 *.njsproj
