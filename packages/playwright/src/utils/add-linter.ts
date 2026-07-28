@@ -20,6 +20,7 @@ import {
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { eslintPluginPlaywrightVersion } from './versions';
+import { addLintingToProject } from '@nx/js';
 
 export interface PlaywrightLinterOptions {
   project: string;
@@ -43,8 +44,16 @@ export async function addLinterToPlaywrightProject(
   tree: Tree,
   options: PlaywrightLinterOptions
 ): Promise<GeneratorCallback> {
-  if (options.linter === 'none') {
-    return () => {};
+  // Everything below configures ESLint — predefined configs, `extends`,
+  // ignore entries — which have no equivalent in other linters. They only
+  // need the linter registering, which the helper handles (including `none`).
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(tree, {
+      linter: options.linter as any,
+      project: options.project,
+      addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
+    });
   }
 
   const tasks: GeneratorCallback[] = [];
@@ -65,10 +74,6 @@ export async function addLinterToPlaywrightProject(
         addPlugin: options.addPlugin,
       })
     );
-  }
-
-  if (!options.linter || options.linter !== 'eslint') {
-    return runTasksInSerial(...tasks);
   }
 
   tasks.push(

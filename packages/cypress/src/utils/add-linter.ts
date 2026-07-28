@@ -22,6 +22,7 @@ import {
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { versions } from './versions';
+import { addLintingToProject } from '@nx/js';
 
 export interface CyLinterOptions {
   project: string;
@@ -51,8 +52,16 @@ export async function addLinterToCyProject(
   tree: Tree,
   options: CyLinterOptions
 ) {
-  if (options.linter === 'none') {
-    return () => {};
+  // Everything below configures ESLint — predefined configs, `extends`,
+  // ignore entries — which have no equivalent in other linters. They only
+  // need the linter registering, which the helper handles (including `none`).
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(tree, {
+      linter: options.linter as any,
+      project: options.project,
+      addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
+    });
   }
 
   const tasks: GeneratorCallback[] = [];

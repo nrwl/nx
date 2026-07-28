@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
+import { addLintingToProject } from '@nx/js';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -249,6 +250,17 @@ export async function e2eProjectGeneratorInternal(
     {}
   );
   tasks.push(installTask);
+
+  if (options.linter !== 'eslint' && options.linter !== 'none') {
+    tasks.push(
+      await addLintingToProject(host, {
+        linter: options.linter,
+        project: options.e2eProjectName,
+        rootProject: options.rootProject,
+        addPlugin: options.addPlugin,
+      })
+    );
+  }
 
   if (options.linter === 'eslint') {
     const linterTask = await lintProjectGenerator(host, {

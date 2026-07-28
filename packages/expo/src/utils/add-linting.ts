@@ -16,6 +16,7 @@ import {
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
+import { addLintingToProject } from '@nx/js';
 
 interface NormalizedSchema {
   linter?: Linter | LinterType;
@@ -34,9 +35,18 @@ interface NormalizedSchema {
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === 'none') {
-    return () => {};
+  // Everything below configures ESLint — predefined configs, `extends`,
+  // ignore entries — which have no equivalent in other linters. They only
+  // need the linter registering, which the helper handles (including `none`).
+  if (options.linter !== 'eslint') {
+    return addLintingToProject(host, {
+      linter: options.linter as any,
+      project: options.projectName,
+      addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
+    });
   }
+
   const tasks: GeneratorCallback[] = [];
 
   const lintTask = await lintProjectGenerator(host, {
