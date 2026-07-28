@@ -7,7 +7,8 @@
     "next:build": {
       "dependsOn": ["^build", "^typecheck", "typecheck"],
       "inputs": [
-        "...",
+        "default",
+        "^default",
         { "dependentTasksOutputFiles": "**/*", "transitive": true },
         { "env": "NEXT_PUBLIC_ASTRO_URL" },
         { "env": "NX_DEV_URL" },
