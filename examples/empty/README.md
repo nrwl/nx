@@ -53,6 +53,10 @@ files:
 nx g @nx/js:lib packages/demo --linter oxlint
 ```
 
+`.vscode/extensions.json` mirrors what `create-nx-workspace` generates, so
+generators that append editor recommendations have something to append to. They
+skip workspaces without the file rather than creating one.
+
 ## Do not give the root a project
 
 The root `package.json` deliberately has no `nx` key. Adding one turns the root
