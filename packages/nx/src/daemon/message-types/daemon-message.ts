@@ -29,10 +29,11 @@ export function isDaemonMessage(msg: unknown): msg is DaemonMessage {
  * message type — the two are separate declarations with deliberately different
  * shapes, not aliases.
  *
- * `type` is required even though the checks never read it. It buys
- * excess-property checking on fresh object literals at the call sites; it does
- * NOT make the guard stricter at runtime, since a message carrying a `type` but
- * no `workspaceRoot` is still answered "not foreign" (see below).
+ * `type` is required even though the checks never read it. Without a required
+ * member the type is all-optional, and an all-optional type accepts `{}` — so
+ * anything at all could be passed to the guards below. It does NOT make the
+ * guard stricter at runtime: a message carrying a `type` but no
+ * `workspaceRoot` is still answered "not foreign" (see below).
  */
 type WorkspaceScopedMessage = { type: string; workspaceRoot?: string };
 
