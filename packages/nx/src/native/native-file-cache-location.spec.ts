@@ -183,10 +183,9 @@ describe('native file cache location', () => {
     posixOnly('should refuse a per-uid directory planted as a symlink', () => {
       const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
       try {
-        // Injected one level inside the fixture so `dirname(cacheRoot)` stays
-        // in it. Passing `base` made dirname() the machine's real os.tmpdir(),
-        // which the shared-root relax then chmodded to 1777 — on macOS that is
-        // the developer's private 0700 /var/folders directory, permanently.
+        // Inside the fixture so dirname() stays in it: passing `base` made
+        // dirname() the real os.tmpdir(), which then got relaxed to 1777 — on
+        // macOS that is the developer's private /var/folders directory.
         const cacheRoot = join(base, 'native-cache');
         mkdirSync(cacheRoot, { recursive: true });
         const victim = join(base, 'victim');
