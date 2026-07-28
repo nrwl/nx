@@ -193,45 +193,57 @@ function loadOxfmtModule(): Promise<{ format: OxfmtFormat }> {
   return cachedOxfmtModule;
 }
 
+function isJsonOxfmtConfig(name: string): boolean {
+  return name.endsWith('.json') || name.endsWith('.jsonc');
+}
+
 /**
  * oxfmt's programmatic API takes options directly rather than discovering a
  * config file, so the workspace's config is read here. A config the generator
  * just created lives only in the tree, so it is passed in as `seedConfig` and
- * takes precedence over whatever is on disk.
+ * takes precedence over whatever is on disk. Nx only ever generates the JSON
+ * form, so a seed is parsed rather than executed.
  *
- * Only the JSON forms can be read this way; a `oxfmt.config.{ts,js,...}` would
- * have to be executed to be understood, so those workspaces fall back to
- * oxfmt's defaults.
+ * A config that has to be executed to be understood is loaded the same way Nx
+ * loads any other config file: TypeScript through the workspace's transpiler,
+ * plain JavaScript through `import()`.
  */
-function resolveOxfmtOptions(
+async function resolveOxfmtOptions(
   workspaceRoot: string,
   seedConfig?: { name: string; content: string }
-): Record<string, unknown> | undefined {
-  let source: { name: string; content: string } | undefined = seedConfig;
+): Promise<Record<string, unknown> | undefined> {
+  try {
+    if (seedConfig) {
+      return isJsonOxfmtConfig(seedConfig.name)
+        ? parseJson(seedConfig.content)
+        : undefined;
+    }
 
-  if (!source) {
     for (const name of oxfmtConfigFiles) {
       const configPath = path.join(workspaceRoot, name);
-      if (existsSync(configPath)) {
-        source = { name, content: readFileSync(configPath, 'utf-8') };
-        break;
+      if (!existsSync(configPath)) {
+        continue;
       }
+
+      if (isJsonOxfmtConfig(name)) {
+        return parseJson(readFileSync(configPath, 'utf-8'));
+      }
+
+      // Required lazily so that reading a JSON config does not pull in the
+      // TypeScript transpiler machinery.
+      const loaded = /\.(ts|mts|cts)$/.test(name)
+        ? (
+            require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
+          ).loadTsFile(configPath)
+        : await dynamicImport(pathToFileURL(configPath).href);
+
+      return loaded?.default ?? loaded;
     }
-  }
-
-  if (
-    !source ||
-    (!source.name.endsWith('.json') && !source.name.endsWith('.jsonc'))
-  ) {
-    return undefined;
-  }
-
-  try {
-    return parseJson(source.content);
   } catch {
-    // An unreadable config is oxfmt's to complain about, not formatting's.
-    return undefined;
+    // An unusable config is oxfmt's to complain about, not formatting's.
   }
+
+  return undefined;
 }
 
 /**
@@ -259,7 +271,7 @@ export async function formatFilesWithOxfmt(
   }
 
   const { format } = await loadOxfmtModule();
-  const options = resolveOxfmtOptions(workspaceRoot, seedConfig);
+  const options = await resolveOxfmtOptions(workspaceRoot, seedConfig);
 
   let error: string | undefined;
   await Promise.all(
