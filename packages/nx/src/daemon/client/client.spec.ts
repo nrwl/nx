@@ -1,10 +1,8 @@
 import { rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-// Point the daemon log at a path this spec controls so both states — log
-// missing (first run in a fresh environment) and log present — are reachable.
-// The directory is unique per run so parallel jest workers cannot collide on it
-// and no other user can pre-plant the path on a shared machine.
+// Redirect the daemon log so both states — present and missing — are reachable.
+// Unique per run so parallel workers cannot collide.
 jest.mock('../tmp-dir', () => {
   const actual = jest.requireActual('../tmp-dir');
   const { join: joinPath } = require('node:path');
@@ -41,12 +39,9 @@ describe('daemonProcessException', () => {
     expect((error as any).internalDaemonError).toBe(true);
   });
 
-  // The regression this guards: the tag used to be set only inside the
-  // try-block that reads the log, so a daemon that failed before ever writing
-  // one produced an untagged error. createProjectGraphAndSourceMapsAsync keys
-  // its daemonless fallback off that tag, so the command aborted instead of
-  // degrading — worst exactly where the daemon is most likely to fail, such as
-  // a first run in a sandbox that denies the socket bind.
+  // The tag used to be set only inside the try that reads the log, so a daemon
+  // failing before writing one produced an untagged error and the daemonless
+  // fallback never fired.
   it('should still tag the error as internal when the daemon log is missing', () => {
     rmSync(logFile, { force: true });
 

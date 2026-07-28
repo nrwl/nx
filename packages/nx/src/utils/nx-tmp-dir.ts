@@ -2,16 +2,12 @@ import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 /**
- * Fixed root for Nx runtime artifacts that must live in a machine-wide tmp
- * location (unix sockets, the native binary file cache). A literal /tmp path
- * is used instead of os.tmpdir() because tmpdir() honors $TMPDIR, which is
- * per-user on macOS, rewritten per-session by sandboxes, and stripped from the
- * daemon's environment — a literal path stays identical across machines,
- * processes and contexts, so a sandbox allowlist entry for it can be committed
- * and shared across a team rather than regenerated per machine.
+ * Fixed root for Nx runtime artifacts that need a machine-wide tmp location.
+ * A literal /tmp rather than os.tmpdir(), which honors $TMPDIR — per-user on
+ * macOS, rewritten by sandboxes, stripped from the daemon env. A literal path
+ * is identical everywhere, so a sandbox allowlist entry can be committed.
  *
- * This module must stay dependency-free (node builtins only): it is consumed
- * by the native binding loader, which runs before anything else in Nx.
+ * Dependency-free (node builtins only): consumed by the native binding loader.
  */
 export const NX_TMP_DIR_POSIX = '/tmp/.nx';
 

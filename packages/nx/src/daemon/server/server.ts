@@ -260,10 +260,8 @@ async function handleMessage(socket: Socket, data: string) {
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
-  // Refuse messages from a different workspace without processing them any
-  // further. The daemon is scoped to the workspace that launched it; a mismatch
-  // means the client reached the wrong daemon (e.g. a shared NX_SOCKET_DIR). We
-  // respond with an error but keep the daemon alive for its own workspace.
+  // A mismatch means the client reached the wrong daemon (e.g. a shared
+  // NX_SOCKET_DIR). Respond, but stay alive for our own workspace.
   if (isDaemonMessage(payload)) {
     try {
       assertNotForeignWorkspaceMessage(payload, workspaceRoot);
@@ -758,18 +756,9 @@ export async function startServer(): Promise<Server> {
         try {
           serverLogger.log(`Started listening on: ${socketPath}`);
 
-          // Belt-and-suspenders: restrict the socket file itself to its owner so
-          // that only the daemon owner can connect. On Linux, connecting to a
-          // Unix socket requires write permission on the socket file; on
-          // macOS/BSD the (already-0700) socket directory is what gates access.
-          // Skipped on Windows, where `socketPath` is a named pipe.
-          //
-          // We chmod after `listen` rather than creating the socket with the
-          // mode up front: `net.Server.listen` exposes no mode option, and the
-          // only creation-time lever (`process.umask`) is process-global and
-          // would also affect the daemon log files written during bootstrap.
-          // The owning directory is already created owner-only (mkdirSync with
-          // mode 0o700), so this is the socket-file layer of the same control.
+          // Linux gates connect() on write permission to the socket file; macOS/BSD gate
+          // on the directory, which is already 0700. Done after listen because
+          // net.Server.listen takes no mode and umask is process-global.
           if (!isWindows) {
             try {
               chmodSync(socketPath, 0o600);
