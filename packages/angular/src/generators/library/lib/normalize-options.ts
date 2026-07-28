@@ -11,6 +11,7 @@ import {
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
+import { detectLinter } from '@nx/js/internal';
 
 export async function normalizeOptions(
   host: Tree,
@@ -65,7 +66,7 @@ export async function normalizeOptions(
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
     ...options,
-    linter: options.linter ?? 'eslint',
+    linter: options.linter ?? detectLinter(host),
     unitTestRunner,
     prefix: options.prefix ?? 'lib',
     name: projectName,
