@@ -62,6 +62,36 @@ describe('formatFilesWithOxfmt', () => {
     expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
   });
 
+  it.each([
+    ['oxfmt.config.cjs', 'module.exports = { singleQuote: true };'],
+    [
+      'oxfmt.config.ts',
+      'const config: { singleQuote: boolean } = { singleQuote: true };\nexport default config;\n',
+    ],
+  ])('honours a %s config, which has to be executed', async (name, content) => {
+    rmSync(join(workspaceRoot, '.oxfmtrc.json'), { force: true });
+    writeFileSync(join(workspaceRoot, name), content, 'utf-8');
+
+    const { formatted } = await formatFilesWithOxfmt(
+      [{ path: 'a.ts', content: 'const x =  "hi"' }],
+      workspaceRoot
+    );
+
+    expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
+  });
+
+  it('falls back to the defaults when the config cannot be read', async () => {
+    writeFileSync(join(workspaceRoot, '.oxfmtrc.json'), 'not json', 'utf-8');
+
+    const { formatted, error } = await formatFilesWithOxfmt(
+      [{ path: 'a.ts', content: 'const x =  1' }],
+      workspaceRoot
+    );
+
+    expect(error).toBeUndefined();
+    expect(formatted.get('a.ts')).toEqual('const x = 1;\n');
+  });
+
   it('leaves files it has no parser for alone without reporting an error', async () => {
     const { formatted, error } = await formatFilesWithOxfmt(
       [
