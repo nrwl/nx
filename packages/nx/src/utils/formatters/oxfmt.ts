@@ -171,6 +171,7 @@ export function formatContentWithOxfmt(
 }
 
 let cachedOxfmtModule: Promise<{ format: OxfmtFormat }> | undefined;
+let oxfmtImportCount = 0;
 
 /**
  * oxfmt ships a programmatic API alongside its CLI, but only as ESM, so it
@@ -182,15 +183,30 @@ let cachedOxfmtModule: Promise<{ format: OxfmtFormat }> | undefined;
  */
 function loadOxfmtModule(): Promise<{ format: OxfmtFormat }> {
   if (!cachedOxfmtModule) {
-    const { packageJson, path: packageJsonPath } =
-      readModulePackageJson('oxfmt');
-    const entryPoint = path.resolve(
-      path.dirname(packageJsonPath),
-      packageJson.main ?? 'dist/index.js'
-    );
-    cachedOxfmtModule = dynamicImport(pathToFileURL(entryPoint).href).then(
-      (imported) => (imported.format ? imported : imported.default)
-    );
+    cachedOxfmtModule = (async () => {
+      try {
+        // Node resolves an ESM-only package through `require` on its own, and
+        // going through the package name keeps the module mockable.
+        const required = require('oxfmt');
+        return required.format ? required : required.default;
+      } catch {
+        // Older runtimes cannot `require` an ESM package, so import the entry
+        // point the same way the binary is resolved - from the workspace's own
+        // install, because nx does not depend on oxfmt itself.
+        const { packageJson, path: packageJsonPath } =
+          readModulePackageJson('oxfmt');
+        const entryPoint = path.resolve(
+          path.dirname(packageJsonPath),
+          packageJson.main ?? 'dist/index.js'
+        );
+        const imported = await dynamicImport(pathToFileURL(entryPoint).href);
+        return imported.format ? imported : imported.default;
+      }
+    })().catch((error) => {
+      // Do not hold on to the failure - the next call gets to try again.
+      cachedOxfmtModule = undefined;
+      throw error;
+    });
   }
 
   return cachedOxfmtModule;
@@ -198,6 +214,18 @@ function loadOxfmtModule(): Promise<{ format: OxfmtFormat }> {
 
 function isJsonOxfmtConfig(name: string): boolean {
   return name.endsWith('.json') || name.endsWith('.jsonc');
+}
+
+/**
+ * `require` handles a CommonJS config directly, which keeps it out of the ESM
+ * loader; only a config that is really ESM needs to be imported.
+ */
+async function loadJsOxfmtConfig(configPath: string): Promise<any> {
+  try {
+    return require(configPath);
+  } catch {
+    return await dynamicImport(pathToFileURL(configPath).href);
+  }
 }
 
 /**
@@ -375,7 +403,7 @@ async function resolveOxfmtOptions(
         ? (
             require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
           ).loadTsFile(configPath)
-        : await dynamicImport(pathToFileURL(configPath).href);
+        : await loadJsOxfmtConfig(configPath);
 
       return loaded?.default ?? loaded;
     }
