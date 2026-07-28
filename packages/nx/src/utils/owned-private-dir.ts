@@ -2,87 +2,114 @@ import {
   closeSync,
   constants,
   fchmodSync,
+  fstatSync,
   lstatSync,
   mkdirSync,
   openSync,
 } from 'node:fs';
+import { userInfo } from 'node:os';
 
 /**
- * chmod a path without ever following a symlink at its final component.
+ * chmod a path, but only if it is a real directory, and without ever following
+ * a symlink at its final component.
  *
  * A plain `chmodSync` resolves symlinks, so calling it on a path another local
  * user pre-created as a link retargets the mode change onto whatever the link
- * points at. `O_NOFOLLOW` makes the kernel refuse to open a symlink at all
- * (ELOOP), and the mode is then applied to the descriptor rather than the path,
- * so there is no window in which the path could be swapped between the check
- * and the change.
+ * points at. `O_NOFOLLOW` makes the kernel refuse to open a symlink, and the
+ * mode is applied to the descriptor rather than the path, so nothing can be
+ * swapped between the check and the change.
  *
- * `O_DIRECTORY` is not redundant: without it a regular file planted at the path
- * would be opened and chmod-ed, and a FIFO would block `openSync` forever
- * waiting for a writer — a hang no `catch` can recover from. It also only
- * guards the *final* component; an earlier component is still resolved
- * normally, which is why callers must verify the shared root separately
- * (`isSafeSharedRoot`). A trailing slash likewise defeats `O_NOFOLLOW`, so
- * every path passed here is built with `join`, which never leaves one.
+ * Hostility is decided *positively*, by `fstat`-ing the descriptor we are about
+ * to chmod, rather than by classifying errnos. An errno deny-list fails open on
+ * every code it does not recognise, and the code for a planted symlink is not
+ * even stable: it differs between `O_NOFOLLOW` alone and
+ * `O_NOFOLLOW|O_DIRECTORY`, and between kernels. `O_NONBLOCK` is what stops a
+ * planted FIFO blocking `openSync` forever waiting for a writer — a hang no
+ * `catch` can recover from.
+ *
+ * `O_NOFOLLOW` guards only the *final* component; earlier ones resolve
+ * normally, which is why callers verify every shared root with
+ * `isRealDirectoryOrAbsent` before creating anything beneath it.
  */
-function chmodNoFollow(path: string, mode: number): void {
-  const fd = openSync(
-    path,
-    constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_DIRECTORY
-  );
+function chmodRealDirectory(path: string, mode: number): boolean {
+  let fd: number;
   try {
+    fd = openSync(
+      path,
+      constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK
+    );
+  } catch {
+    return false;
+  }
+  try {
+    if (!fstatSync(fd).isDirectory()) {
+      return false;
+    }
     fchmodSync(fd, mode);
+    return true;
+  } catch {
+    return false;
   } finally {
     closeSync(fd);
   }
 }
 
 /**
- * Whether a shared root is safe to create paths underneath: either absent (we
- * will create it) or a real directory. A symlink, a regular file, or anything
- * else means another local user planted it.
+ * Whether a path is safe to create things underneath: either absent (we create
+ * it ourselves) or a real directory. A symlink, a regular file or anything else
+ * means another local user planted it.
  *
- * `chmodNoFollow` protects the component it is handed, but `mkdirSync(...,
- * { recursive: true })` and every path built under the root still resolve the
- * root itself, so an unvalidated root tunnels straight through to whatever the
- * attacker aimed it at. Callers check this *before* creating anything.
+ * Named for exactly what it checks. It does **not** check ownership or mode — a
+ * world-writable directory belonging to another uid returns `true` — so it is
+ * only ever sufficient for the *shared* roots, which are world-writable by
+ * design. The per-uid level beneath them is what `ensureOwnedPrivateDir`
+ * verifies, and that is what stops another user owning the parent of your
+ * sockets.
  */
-export function isSafeSharedRoot(dir: string): boolean {
+export function isRealDirectoryOrAbsent(dir: string): boolean {
   try {
     return lstatSync(dir).isDirectory();
   } catch (e: any) {
-    // Absent is fine — we create it ourselves. Anything else is not.
     return e?.code === 'ENOENT';
   }
 }
 
 /**
  * Best-effort relax a *shared* root to sticky + world-writable (0o1777, like
- * /tmp) so that every user on the machine can create their own private
- * directory beneath it. Only the shared root is relaxed; the per-user
- * directories underneath are locked down by `ensureOwnedPrivateDir`.
+ * /tmp itself) so every user logged in to the machine can create their own
+ * private directory beneath it. Only the shared roots are relaxed; the per-uid
+ * directory under each one is locked to 0700 by `ensureOwnedPrivateDir`.
  *
- * Failure is expected and ignored: chmod only succeeds for the user that
- * created the root, and whoever got there first has already set the mode. Each
- * root is handled independently so one failing does not skip the others — a
- * root left un-relaxed locks every other user out of it.
- *
- * Returns false only when the root is *hostile* — ELOOP (a planted symlink) or
- * ENOTDIR (a planted file). The caller must not go on to relax a root nested
- * under it, since that inner path resolves through this one. An EPERM, by
- * contrast, just means another user legitimately owns the root, which is the
- * normal shared-machine case and must not stop anything.
+ * Failure is expected and ignored: chmod only succeeds for the user that created
+ * the root, and whoever got there first has already set the mode. Each root is
+ * relaxed independently so one failing does not skip the others — a root left
+ * un-relaxed locks every other user out of it.
  */
-export function relaxSharedRootToSticky(dir: string): boolean {
+export function relaxSharedRootToSticky(dir: string): void {
   if (process.platform === 'win32') {
-    return true;
+    return;
   }
+  chmodRealDirectory(dir, 0o1777);
+}
+
+/**
+ * The path segment that separates one user's Nx runtime state from another's
+ * beneath the shared roots. Shared by the socket tree and the native binary
+ * cache so both get the same containment.
+ */
+export function getUserSegment(): string {
   try {
-    chmodNoFollow(dir, 0o1777);
-    return true;
-  } catch (e: any) {
-    return e?.code !== 'ELOOP' && e?.code !== 'ENOTDIR';
-  }
+    if (typeof process.getuid === 'function') {
+      return String(process.getuid());
+    }
+  } catch {}
+  try {
+    const { username } = userInfo();
+    if (username) {
+      return username;
+    }
+  } catch {}
+  return 'unknown';
 }
 
 /**
@@ -144,9 +171,7 @@ export function ensureOwnedPrivateDir(dir: string): boolean {
     // it is routinely 0755 and would otherwise be accepted as-is.
     if (stats.mode & 0o077) {
       // Try to lock it down; if we can't, refuse.
-      try {
-        chmodNoFollow(dir, 0o700);
-      } catch {
+      if (!chmodRealDirectory(dir, 0o700)) {
         return false;
       }
     }
