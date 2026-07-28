@@ -139,15 +139,18 @@ Module._load = function (request, parent, isMain) {
     // produces a byte-identical size. Treat a cache entry older than the source
     // as stale so a rebuild is picked up rather than silently ignored.
     //
-    // The source mtime is clamped to now because copyFileSync does not preserve
-    // timestamps: the copy is stamped with the cache filesystem's clock, so a
-    // source dated in the future — bind mounts (WSL2/Docker/Colima), NFS skew,
-    // CI mtime restore — could never be caught up, and every Nx process would
-    // silently re-copy the whole binding forever.
-    const sourceMtimeMs = Math.min(sourceStats.mtimeMs, Date.now());
+    // A source dated in the *future* cannot be compared at all: copyFileSync
+    // does not preserve timestamps, so the copy is stamped with the cache
+    // clock and can never reach the source. Clamping the threshold to `now`
+    // does not help either — the copy was stamped an instant *before* now, so
+    // it still loses, and every process re-copies the whole binding forever.
+    // Where the mtime is unusable, fall back to the size check rather than
+    // failing the comparison. Ordinary triggers are bind mounts
+    // (WSL2/Docker/Colima), NFS clock skew and CI mtime restore.
+    const sourceMtimeUsable = sourceStats.mtimeMs <= Date.now();
     const isFresh =
       existingFileStats?.size === expectedFileSize &&
-      existingFileStats.mtimeMs >= sourceMtimeMs;
+      (!sourceMtimeUsable || existingFileStats.mtimeMs >= sourceStats.mtimeMs);
 
     // If the file to be loaded already exists and is current, just load it
     if (isFresh) {
