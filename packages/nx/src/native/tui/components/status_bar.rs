@@ -426,24 +426,14 @@ impl<'a> StatusBar<'a> {
         // A cloud icon marks a cloud-enabled run. Kept outside the underlined
         // span so the click affordance stays on the numbers themselves.
         if props.cloud_enabled || props.cloud_link.is_some() || props.cloud_message.is_some() {
-            // Same muted foreground as the counts it prefixes — the icon is a
-            // marker, not a call to action.
             let mut icon_style = Style::default().fg(THEME.secondary_fg);
             if props.is_dimmed {
                 icon_style = icon_style.add_modifier(Modifier::DIM);
             }
-            // U+2601 + VS15 forces the *text* presentation (one cell wide).
-            // The emoji presentation (VS16) is drawn by the terminal's color
-            // emoji font, which ignores our foreground color and paints a near
-            // white cloud — invisible against a light background. The text
-            // glyph is monochrome and takes `icon_style`, so it stays legible
-            // in both themes.
-            //
-            // Two trailing spaces, not one: the emoji spanned two cells and
-            // used the second as slack, so a single space around the narrower
-            // text glyph reads cramped. This keeps the icon segment three
-            // cells wide, leaving the counts in the column they have always
-            // occupied.
+            // U+2601 + VS15 forces the text glyph (one cell wide). The emoji
+            // form is drawn from the terminal's color emoji font, which
+            // ignores `icon_style` and vanishes on light backgrounds. Two
+            // trailing spaces keep the segment as wide as the emoji's was.
             spans.push(Span::styled("☁\u{fe0e}  ", icon_style));
         }
         spans.push(Span::styled(
@@ -861,8 +851,7 @@ mod tests {
                 .modifier
                 .contains(Modifier::UNDERLINED)
         );
-        // Icon (1 cell) + two spaces: the underlined counts start at col 4,
-        // the same column the two-cell emoji used to leave them in.
+        // Icon (1 cell) + two spaces: the underlined counts start at col 4.
         assert!(
             terminal.backend().buffer()[(4, 0)]
                 .modifier
