@@ -1,4 +1,5 @@
 import type { NxJsonConfiguration } from '../../config/nx-json';
+import * as executorUtils from '../../command-line/run/executor-utils';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../generators/tree';
 import {
@@ -96,7 +97,7 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     });
   });
 
-  it('should set cache on the last catch-all entry of an array-shaped default', async () => {
+  it('should set cache on the unfiltered entry of an array-shaped default', async () => {
     setup(
       {
         build: { cache: true },
@@ -148,13 +149,51 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     setup(
       {
         build: { cache: true },
-        serve: { cache: false },
-        'nx:run-commands': { inputs: ['default'] },
+        serve: { cache: true },
+        '@nx/js:tsc': { inputs: ['default'] },
       },
       {
-        build: { executor: 'nx:run-commands' },
-        serve: { executor: 'nx:run-commands' },
+        build: { executor: '@nx/js:tsc' },
+        serve: { executor: '@nx/js:tsc' },
       }
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+    });
+  });
+
+  it('should not enable cache on a key shared with an explicitly continuous target', async () => {
+    // `api` is outside the long-running name list, so only the `continuous`
+    // field on the target itself can reject this — and it is readable here.
+    setup(
+      {
+        build: { cache: true },
+        api: { cache: true },
+        '@nx/js:tsc': { inputs: ['default'] },
+      },
+      {
+        build: { executor: '@nx/js:tsc' },
+        api: { executor: '@nx/js:tsc', continuous: true },
+      }
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+    });
+  });
+
+  it('should never enable cache on the nx:run-commands key', async () => {
+    // `command` targets resolve through this key without declaring an executor,
+    // and plugins infer continuous ones that are invisible here, so the target
+    // list can never be trusted to be complete.
+    setup(
+      { build: { cache: true }, 'nx:run-commands': { inputs: ['default'] } },
+      { build: { executor: 'nx:run-commands' } }
     );
 
     await migration(tree);
@@ -162,7 +201,33 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     expect(readNxJson(tree).targetDefaults['nx:run-commands']).toEqual({
       inputs: ['default'],
     });
-    expect(readNxJson(tree).targetDefaults['serve']).toEqual({ cache: false });
+  });
+
+  it('should not enable cache on a key whose executor schema is continuous', async () => {
+    // Real executors such as @nx/js:verdaccio declare "continuous": true in
+    // their shipped schema, making every target through the key continuous
+    // after normalization. The schema is stubbed because the in-memory tree
+    // root has no node_modules to resolve against.
+    const getExecutorInformation = jest
+      .spyOn(executorUtils, 'getExecutorInformation')
+      .mockReturnValue({ schema: { continuous: true } } as any);
+
+    setup(
+      {
+        'local-registry': { cache: true },
+        '@nx/js:verdaccio': { inputs: ['default'] },
+      },
+      { 'local-registry': { executor: '@nx/js:verdaccio' } }
+    );
+
+    await migration(tree);
+
+    expect(getExecutorInformation).toHaveBeenCalled();
+    expect(readNxJson(tree).targetDefaults['@nx/js:verdaccio']).toEqual({
+      inputs: ['default'],
+    });
+
+    getExecutorInformation.mockRestore();
   });
 
   it('should not enable cache on a key shared with a target that does not want it', async () => {
@@ -207,13 +272,14 @@ describe('set-cache-on-executor-target-defaults migration', () => {
   });
 
   it('should leave the executor key alone when a filtered entry decides cache', async () => {
-    // Whether the per-project opt-out applies cannot be evaluated here, so the
-    // value is treated as already decided.
+    // "cache only for legacy-app, nobody else". Reading past the filter would
+    // resolve the key to `true` and widen it to every project through the
+    // executor key — the opposite of what the config says.
     setup(
       {
         build: [
-          { cache: true },
-          { filter: { projects: ['legacy-app'] }, cache: false },
+          { cache: false },
+          { filter: { projects: ['legacy-app'] }, cache: true },
         ],
         '@nx/angular:webpack-browser': { inputs: ['production'] },
       },
@@ -225,6 +291,28 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     expect(
       readNxJson(tree).targetDefaults['@nx/angular:webpack-browser']
     ).toEqual({ inputs: ['production'] });
+  });
+
+  it('should leave an executor key whose only cache declaration is filtered alone', async () => {
+    setup(
+      {
+        build: { cache: true },
+        '@nx/angular:webpack-browser': [
+          { inputs: ['production'] },
+          { filter: { projects: ['legacy-app'] }, cache: false },
+        ],
+      },
+      { build: { executor: '@nx/angular:webpack-browser' } }
+    );
+
+    await migration(tree);
+
+    expect(
+      readNxJson(tree).targetDefaults['@nx/angular:webpack-browser']
+    ).toEqual([
+      { inputs: ['production'] },
+      { filter: { projects: ['legacy-app'] }, cache: false },
+    ]);
   });
 
   it('should change nothing on a second run', async () => {

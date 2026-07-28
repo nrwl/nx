@@ -6,9 +6,11 @@ Target defaults resolve to a single key rather than merging them. When a target 
 
 This migration copies `cache` onto each executor key that applies to a target whose target name key enables it, so those targets remain cacheable.
 
-Because an executor key applies to every target that resolves through it, the migration only updates a key when all of those targets independently enable caching. It leaves the key unchanged when the key already sets `cache`, when any target through it is a long-running target such as `serve`, `dev`, or `start`, or when any target through it has no target name key enabling `cache`. Nx still resolves cacheability for those targets at run time and reports them as using a deprecated fallback.
+An executor key applies to every target that resolves through it, so the migration updates a key only when it can establish that caching is right for all of them. It leaves the key unchanged when the key already declares `cache`, when a target through it is continuous or is a long-running target such as `serve`, `dev`, or `start`, when the executor's own schema marks its targets continuous, or when a target through it has no target name key enabling `cache`. It never updates the `nx:run-commands` key, because targets written with `command` resolve through that key without naming it.
 
-Targets are read from `project.json` and `package.json`. Targets inferred by a plugin are not visible to the migration, so if a workspace's targets come from inference, set `cache` on the executor key by hand. Nx warns at run time and names both keys involved.
+Where the migration makes no change, Nx still applies the target name key's `cache` at run time and reports it as a deprecated fallback — except where the executor key already declares `cache`, which is a resolved value and needs no fallback.
+
+Targets are read from `project.json` and `package.json`. Targets inferred by a plugin are not visible to the migration, so a key that looks safe here may in fact serve an inferred target. Set `cache` on the executor key by hand only after checking that no target reaching it is continuous; Nx rejects a target that is both cacheable and continuous. Nx warns at run time and names both keys involved.
 
 #### Sample code changes
 
