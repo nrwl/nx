@@ -421,6 +421,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       autoInstallPeers: true
       allowBuilds:
         nx: true
+        '@swc/core': false
       "
     `);
     expect(tree.exists('proj/.npmrc')).toBeFalsy();

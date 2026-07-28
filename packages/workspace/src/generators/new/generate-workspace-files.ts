@@ -340,8 +340,10 @@ function addPnpmSettings(
   options: NormalizedSchema,
   packageManagerVersion: string
 ) {
+  // @swc/core is acknowledged (false) so pnpm 10.6+ doesn't fail the install on its
+  // ignored build script — its postinstall only checks the optional native binary.
   const buildAllowlist = gte(packageManagerVersion, '11.0.0')
-    ? `allowBuilds:\n  nx: true`
+    ? `allowBuilds:\n  nx: true\n  '@swc/core': false`
     : `onlyBuiltDependencies:\n  - nx`;
 
   tree.write(
