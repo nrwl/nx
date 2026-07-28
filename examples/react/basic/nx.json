@@ -14,7 +14,7 @@
     "@nx/vite/plugin",
     "@nx/vitest",
     "@nx/playwright/plugin",
-    "@nx/oxlint/plugin"
+    "@nx/oxlint"
   ],
   "analytics": false,
   "neverConnectToCloud": true

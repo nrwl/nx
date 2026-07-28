@@ -60,8 +60,7 @@ describe('Oxlint', () => {
     expect(
       nxJson.plugins.some(
         (p: string | { plugin: string }) =>
-          p === '@nx/oxlint/plugin' ||
-          (typeof p === 'object' && p.plugin === '@nx/oxlint/plugin')
+          (typeof p === 'string' ? p : p.plugin) === '@nx/oxlint'
       )
     ).toBe(true);
   });

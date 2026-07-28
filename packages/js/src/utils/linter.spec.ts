@@ -36,10 +36,13 @@ describe('detectLinter', () => {
     }
   );
 
-  it('should detect oxlint from the inference plugin', () => {
-    addPlugin('@nx/oxlint/plugin');
-    expect(detectLinter(tree)).toBe('oxlint');
-  });
+  it.each(['@nx/oxlint', '@nx/oxlint/plugin'])(
+    'should detect oxlint from the %s inference plugin',
+    (plugin) => {
+      addPlugin(plugin);
+      expect(detectLinter(tree)).toBe('oxlint');
+    }
+  );
 
   it.each(['@nx/eslint', 'eslint'])(
     'should detect eslint from the %s dependency',

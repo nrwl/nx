@@ -39,6 +39,7 @@ function hasAnyDependency(tree: Tree, packages: string[]): boolean {
  */
 export function detectLinter(tree: Tree): LinterType {
   if (
+    hasPlugin(tree, '@nx/oxlint') ||
     hasPlugin(tree, '@nx/oxlint/plugin') ||
     hasAnyDependency(tree, ['@nx/oxlint', 'oxlint'])
   ) {

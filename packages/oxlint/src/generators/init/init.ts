@@ -59,7 +59,7 @@ export async function initGeneratorInternal(
     await addPlugin(
       tree,
       await createProjectGraphAsync(),
-      '@nx/oxlint/plugin',
+      '@nx/oxlint',
       createNodes,
       { targetName: OXLINT_TARGET_NAMES },
       options.updatePackageScripts
