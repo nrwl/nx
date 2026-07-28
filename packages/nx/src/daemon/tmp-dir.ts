@@ -8,6 +8,7 @@ import { dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   ensureOwnedPrivateDir,
+  isSafeSharedRoot,
   relaxSharedRootToSticky,
 } from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
@@ -169,6 +170,16 @@ function createOwnerOnlySocketDir(
   }
 
   try {
+    // Verify the shared root before creating anything beneath it. O_NOFOLLOW
+    // only protects the component it is handed; the recursive mkdirSync below,
+    // and every path built under the root, still resolve the root itself — so a
+    // symlink planted at the root would tunnel our sockets into a directory the
+    // attacker chose and hand them a chmod target we just created for them.
+    if (usingDefaultRoot && !isSafeSharedRoot(NX_TMP_DIR_POSIX)) {
+      throw new Error(
+        `The Nx socket root ${NX_TMP_DIR_POSIX} exists but is not a real directory.`
+      );
+    }
     // Create the parent chain first, then the leaf separately through
     // ensureOwnedPrivateDir. Creating the whole path with `recursive: true` and
     // chmod-ing it afterwards would adopt a pre-planted symlink: mkdirSync does
@@ -190,13 +201,26 @@ function createOwnerOnlySocketDir(
   } catch (e) {
     // A genuine fs failure (e.g. we lack permission to create the configured
     // dir), or a leaf we refused above, is recoverable: fall back to the
-    // owner-controlled workspace data dir rather than a shared location. That
-    // path is not world-writable, but verify it the same way so the fallback is
-    // never weaker than what it replaces.
-    try {
-      mkdirSync(dirname(DAEMON_DIR_FOR_CURRENT_WORKSPACE), { recursive: true });
-      ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    } catch {}
+    // owner-controlled workspace data dir rather than a shared location.
+    if (!usingDefaultRoot) {
+      // Never substitute an explicitly configured directory in silence. The
+      // docs point users at NX_SOCKET_DIR to escape a too-long default path,
+      // and the substitute is longer — so a quiet swap surfaces later as
+      // assertValidSocketPath complaining about a path the user never set.
+      console.warn(
+        `Nx could not use the configured socket directory ${dir}: ${
+          e instanceof Error ? e.message : e
+        }\nFalling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`
+      );
+    }
+    mkdirSync(dirname(DAEMON_DIR_FOR_CURRENT_WORKSPACE), { recursive: true });
+    // Honour the verdict rather than adopting a directory we just refused —
+    // the fallback is only safe if it passes the same checks the primary did.
+    if (!ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE)) {
+      throw new Error(
+        `The Nx socket directory fallback ${DAEMON_DIR_FOR_CURRENT_WORKSPACE} is not a directory owned solely by the current user.`
+      );
+    }
     return DAEMON_DIR_FOR_CURRENT_WORKSPACE;
   }
 }
@@ -209,10 +233,9 @@ function createOwnerOnlySocketDir(
  * ensureOwnedPrivateDir, so no user can reach another user's sockets — and a
  * squatted leaf is refused rather than adopted, which is what keeps the
  * writable root from being useful to an attacker. Best-effort: chmod only
- * succeeds for
- * the user that created the dir, and a failure must never stop us from
- * obtaining a socket dir. Windows named pipes are not filesystem-gated, so this
- * is a POSIX-only concern.
+ * succeeds for the user that created the dir, and a failure must never stop us
+ * from obtaining a socket dir. Windows named pipes are not filesystem-gated, so
+ * this is a POSIX-only concern.
  */
 function restrictSharedRootToSticky() {
   // Relaxed independently. Sharing one try block meant a failure on the outer
@@ -220,7 +243,14 @@ function restrictSharedRootToSticky() {
   // locking every other user out of it — and the two are routinely created by
   // different users, since the native binding loader creates the outer root at
   // load time, before any socket code runs.
-  relaxSharedRootToSticky(NX_TMP_DIR_POSIX);
+  //
+  // The one failure that *must* stop us is a hostile outer root: the inner path
+  // resolves through it, so relaxing the inner one would grant 0o1777 inside a
+  // directory an attacker chose. An EPERM (another user legitimately owns the
+  // root) is the ordinary shared-machine case and does not stop anything.
+  if (!relaxSharedRootToSticky(NX_TMP_DIR_POSIX)) {
+    return;
+  }
   relaxSharedRootToSticky(NX_SOCKET_ROOT_POSIX);
 }
 

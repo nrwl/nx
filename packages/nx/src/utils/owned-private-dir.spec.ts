@@ -1,14 +1,17 @@
 import {
+  chmodSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
   rmSync,
   symlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   ensureOwnedPrivateDir,
+  isSafeSharedRoot,
   relaxSharedRootToSticky,
 } from './owned-private-dir';
 import { getSocketDir } from '../daemon/tmp-dir';
@@ -41,6 +44,10 @@ describe('ensureOwnedPrivateDir', () => {
       // silently retarget the chmod at a directory the attacker chose.
       const victim = join(base, 'victim');
       mkdirSync(victim, { mode: 0o755 });
+      // mkdir's mode is a request masked by the umask; chmod is not. Without
+      // this the fixture is 0700 under a hardened umask and the assertion
+      // fails on entirely correct code.
+      chmodSync(victim, 0o755);
       const squatted = join(base, 'squatted');
       symlinkSync(victim, squatted);
 
@@ -59,6 +66,11 @@ describe('ensureOwnedPrivateDir', () => {
       // in the daemon, so it is routinely 0755 in a real workspace.
       const dir = join(base, `loose-${mode.toString(8)}`);
       mkdirSync(dir, { mode });
+      // Required, not belt-and-braces: mkdir masks its mode against the umask,
+      // so under `umask 0077` all four fixtures are created 0700 and this table
+      // — the only mutation coverage for the 0o077 mask — passes vacuously.
+      chmodSync(dir, mode);
+      expect(lstatSync(dir).mode & 0o777).toBe(mode);
 
       expect(ensureOwnedPrivateDir(dir)).toBe(true);
       expect(lstatSync(dir).mode & 0o777).toBe(0o700);
@@ -97,6 +109,75 @@ describe('ensureOwnedPrivateDir', () => {
         relaxSharedRootToSticky(join(base, 'missing'))
       ).not.toThrow();
     });
+
+    posixOnly(
+      'should report a planted symlink as hostile so callers skip nested roots',
+      () => {
+        // O_NOFOLLOW guards only the final component, so a caller that went on
+        // to relax `<root>/sockets` would resolve through the link and grant
+        // 0o1777 inside a directory the attacker chose.
+        const victim = join(base, 'victim');
+        mkdirSync(victim, { mode: 0o700 });
+        const planted = join(base, 'planted-root');
+        symlinkSync(victim, planted);
+
+        expect(relaxSharedRootToSticky(planted)).toBe(false);
+      }
+    );
+
+    posixOnly('should report a real directory as safe to nest under', () => {
+      const dir = join(base, 'real-root');
+      mkdirSync(dir, { mode: 0o700 });
+
+      expect(relaxSharedRootToSticky(dir)).toBe(true);
+    });
+
+    it('does not chmod on Windows (named pipes rely on their default DACL)', () => {
+      // Asserted against the live helper rather than a mock: tmp-dir.ts calls
+      // this on every platform, so the win32 short-circuit is the only thing
+      // stopping the chmod, and deleting it turns 0700 into 1777 here.
+      const dir = join(base, 'win32-root');
+      mkdirSync(dir, { mode: 0o700 });
+      chmodSync(dir, 0o700);
+      const original = process.platform;
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+
+      try {
+        relaxSharedRootToSticky(dir);
+      } finally {
+        Object.defineProperty(process, 'platform', { value: original });
+      }
+
+      expect(lstatSync(dir).mode & 0o7777).toBe(0o700);
+    });
+  });
+
+  describe('isSafeSharedRoot', () => {
+    posixOnly('should accept a real directory', () => {
+      const dir = join(base, 'real');
+      mkdirSync(dir);
+      expect(isSafeSharedRoot(dir)).toBe(true);
+    });
+
+    it('should accept an absent path, which we go on to create ourselves', () => {
+      expect(isSafeSharedRoot(join(base, 'missing'))).toBe(true);
+    });
+
+    posixOnly('should refuse a symlink planted at the root', () => {
+      const victim = join(base, 'victim');
+      mkdirSync(victim);
+      const planted = join(base, 'planted');
+      symlinkSync(victim, planted);
+
+      expect(isSafeSharedRoot(planted)).toBe(false);
+    });
+
+    posixOnly('should refuse a regular file planted at the root', () => {
+      const file = join(base, 'not-a-dir');
+      writeFileSync(file, '');
+
+      expect(isSafeSharedRoot(file)).toBe(false);
+    });
   });
 
   describe('socket directory wiring', () => {
@@ -117,6 +198,7 @@ describe('ensureOwnedPrivateDir', () => {
         // chmods the victim directory to 0700 on the way out.
         const victim = join(base, 'victim');
         mkdirSync(victim, { mode: 0o755 });
+        chmodSync(victim, 0o755); // mkdir's mode is subject to the umask
         const squatted = join(base, 'squatted');
         symlinkSync(victim, squatted);
         process.env.NX_SOCKET_DIR = squatted;
