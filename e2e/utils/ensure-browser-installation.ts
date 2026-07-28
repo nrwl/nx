@@ -41,8 +41,40 @@ function ensureLockDir() {
   }
 }
 
+/**
+ * A process that is killed mid-install leaves its lock behind, and every later
+ * process would then wait out the full timeout for an install that is never
+ * coming. Treat a lock as abandoned once its holder is gone.
+ */
+function isStaleLock(statusFile: string): boolean {
+  const status = readInstallStatus(statusFile);
+  if (!status) {
+    return true;
+  }
+  if (status.status !== 'installing') {
+    return true;
+  }
+  try {
+    // Signal 0 checks that the process exists without touching it.
+    process.kill(status.pid, 0);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 function tryAcquireLock(lockFile: string, statusFile: string): boolean {
   ensureLockDir();
+
+  if (existsSync(lockFile) && isStaleLock(statusFile)) {
+    e2eConsoleLogger('Reclaiming an abandoned browser installation lock.');
+    try {
+      unlinkSync(lockFile);
+    } catch {
+      // Another process got there first, which is just as good.
+    }
+  }
+
   try {
     // Atomic operation - fails if file exists
     const fd = openSync(lockFile, 'wx');
@@ -103,7 +135,7 @@ async function waitForInstallation(
   lockFile: string,
   statusFile: string,
   toolName: string
-): Promise<void> {
+): Promise<'installed' | 'abandoned'> {
   const startTime = Date.now();
 
   while (Date.now() - startTime < MAX_WAIT_MS) {
@@ -113,7 +145,7 @@ async function waitForInstallation(
 
       if (status?.status === 'success') {
         e2eConsoleLogger(`${toolName} installed by process ${status.pid}`);
-        return;
+        return 'installed';
       }
 
       if (status?.status === 'failed') {
@@ -123,6 +155,9 @@ async function waitForInstallation(
         e2eConsoleLogger(errorMsg);
         throw new Error(errorMsg);
       }
+    } else if (isStaleLock(statusFile)) {
+      // Whoever held the lock is gone, so waiting on them is pointless.
+      return 'abandoned';
     }
 
     // Wait before polling again
@@ -139,12 +174,18 @@ export async function ensureCypressInstallation() {
     e2eConsoleLogger(
       `Process ${process.pid} waiting for Cypress installation...`
     );
-    await waitForInstallation(
+    const outcome = await waitForInstallation(
       CYPRESS_LOCK_FILE,
       CYPRESS_STATUS_FILE,
       'Cypress'
     );
-    return;
+    if (outcome === 'installed') {
+      return;
+    }
+    // The lock was abandoned, so try once more to do the install here.
+    if (!tryAcquireLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE)) {
+      return;
+    }
   }
 
   try {

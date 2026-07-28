@@ -25,7 +25,7 @@ describe('React Router Applications - TS Solution', () => {
         '@nx/eslint',
       ],
     });
-    await ensurePlaywrightBrowsersInstallation();
+    ensurePlaywrightBrowsersInstallation();
     runCLI(
       `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --no-interactive`
     );
