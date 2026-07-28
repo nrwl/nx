@@ -1,3 +1,4 @@
+import { minimatch } from 'minimatch';
 import { execFile, execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
@@ -197,6 +198,119 @@ function isJsonOxfmtConfig(name: string): boolean {
   return name.endsWith('.json') || name.endsWith('.jsonc');
 }
 
+type EditorConfigSection = { glob: string; properties: Record<string, string> };
+
+/**
+ * Reads the workspace's `.editorconfig`. Only the one at the root is read,
+ * which is what the CLI saw when these files were staged for it.
+ */
+function readEditorConfigSections(
+  workspaceRoot: string
+): EditorConfigSection[] | undefined {
+  let contents: string;
+  try {
+    contents = readFileSync(path.join(workspaceRoot, '.editorconfig'), 'utf-8');
+  } catch {
+    return undefined;
+  }
+
+  const sections: EditorConfigSection[] = [];
+  let current: EditorConfigSection | undefined;
+
+  for (const line of contents.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
+      continue;
+    }
+
+    const header = /^\[(.*)\]$/.exec(trimmed);
+    if (header) {
+      current = { glob: header[1], properties: {} };
+      sections.push(current);
+      continue;
+    }
+
+    // Anything before the first section is preamble (`root = true`).
+    const separator = trimmed.indexOf('=');
+    if (!current || separator === -1) {
+      continue;
+    }
+    current.properties[trimmed.slice(0, separator).trim().toLowerCase()] =
+      trimmed
+        .slice(separator + 1)
+        .trim()
+        .toLowerCase();
+  }
+
+  return sections.length > 0 ? sections : undefined;
+}
+
+function matchesEditorConfigGlob(glob: string, filePath: string): boolean {
+  // A pattern without a separator applies at any depth; a leading separator
+  // anchors it to the directory holding the .editorconfig.
+  const pattern = glob.startsWith('/')
+    ? glob.slice(1)
+    : glob.includes('/')
+      ? glob
+      : `**/${glob}`;
+
+  return minimatch(filePath, pattern, { dot: true });
+}
+
+/**
+ * Translates the `.editorconfig` properties that have an oxfmt equivalent. Any
+ * value oxfmt has no meaning for - including the spec's `unset` - is left out
+ * so that oxfmt's own default applies.
+ */
+function editorConfigOptionsForFile(
+  sections: EditorConfigSection[],
+  filePath: string
+): Record<string, unknown> {
+  const properties: Record<string, string> = {};
+  for (const section of sections) {
+    if (matchesEditorConfigGlob(section.glob, filePath)) {
+      // Later sections win, matching how editorconfig resolves a property.
+      Object.assign(properties, section.properties);
+    }
+  }
+
+  const options: Record<string, unknown> = {};
+
+  const indentStyle = properties['indent_style'];
+  if (indentStyle === 'tab' || indentStyle === 'space') {
+    options.useTabs = indentStyle === 'tab';
+  }
+
+  const indentSize = properties['indent_size'] ?? properties['tab_width'];
+  if (indentSize === 'tab') {
+    options.useTabs = true;
+  } else if (indentSize && /^\d+$/.test(indentSize)) {
+    options.tabWidth = Number(indentSize);
+  }
+
+  const maxLineLength = properties['max_line_length'];
+  if (maxLineLength && /^\d+$/.test(maxLineLength)) {
+    options.printWidth = Number(maxLineLength);
+  }
+
+  const quoteType = properties['quote_type'];
+  if (quoteType === 'single' || quoteType === 'double') {
+    options.singleQuote = quoteType === 'single';
+  }
+
+  const endOfLine = properties['end_of_line'];
+  if (endOfLine === 'lf' || endOfLine === 'crlf' || endOfLine === 'cr') {
+    options.endOfLine = endOfLine;
+  }
+
+  const insertFinalNewline = properties['insert_final_newline'];
+  if (insertFinalNewline === 'true' || insertFinalNewline === 'false') {
+    options.insertFinalNewline = insertFinalNewline === 'true';
+  }
+
+  return options;
+}
+
 /**
  * oxfmt's programmatic API takes options directly rather than discovering a
  * config file, so the workspace's config is read here. A config the generator
@@ -272,6 +386,9 @@ export async function formatFilesWithOxfmt(
 
   const { format } = await loadOxfmtModule();
   const options = await resolveOxfmtOptions(workspaceRoot, seedConfig);
+  // .editorconfig properties are matched per file, and every oxfmt option
+  // overrides its .editorconfig counterpart.
+  const editorConfigSections = readEditorConfigSections(workspaceRoot);
 
   let error: string | undefined;
   await Promise.all(
@@ -280,7 +397,12 @@ export async function formatFilesWithOxfmt(
         const result = await format(
           path.join(workspaceRoot, file.path),
           file.content,
-          options
+          editorConfigSections
+            ? {
+                ...editorConfigOptionsForFile(editorConfigSections, file.path),
+                ...options,
+              }
+            : options
         );
 
         const failure = result.errors?.[0];
