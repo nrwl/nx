@@ -13,7 +13,9 @@ import boundariesPlugin from './index.js';
  */
 describe('@nx/oxlint/boundaries-plugin', () => {
   it('exposes the enforce-module-boundaries rule under the @nx namespace', () => {
-    // Oxlint requires `meta.name` on the plugin — it throws without one.
+    // Without this Oxlint falls back to the package name, and the rule would
+    // register as `@nx/oxlint/enforce-module-boundaries` — not the id the docs
+    // tell users to configure.
     expect(boundariesPlugin.meta.name).toEqual('@nx');
     expect(Object.keys(boundariesPlugin.rules)).toContain(
       'enforce-module-boundaries'

@@ -362,10 +362,9 @@ function collectConfigChains(
         if (resolved.startsWith('..')) {
           continue; // escapes the workspace, cannot be a `{workspaceRoot}` input
         }
-        // Declared even when absent. A `{workspaceRoot}` input that does not
-        // exist contributes nothing to the hash, and is how Nx notices the file
-        // appearing — dropping it means creating the config later invalidates
-        // nothing, and neither do edits to it after that.
+        // Declared even when absent: a `{workspaceRoot}` input that matches no
+        // file contributes nothing to the hash, so declaring it costs nothing
+        // and keeps the target's `inputs` stable across the file appearing.
         extended.push(resolved);
         if (configExists(resolved)) {
           walk(resolved);
