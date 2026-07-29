@@ -43,7 +43,12 @@ describe('@nx/oxlint:lint executor', () => {
     expect(spawnSyncMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.arrayContaining(['oxlint', 'libs/lib-a']),
-      expect.objectContaining({ cwd: '/root' })
+      expect.objectContaining({
+        cwd: '/root',
+        // Only Windows needs a shell. Elsewhere it would re-expand the lint
+        // patterns through `sh`, which has no `globstar`.
+        shell: process.platform === 'win32',
+      })
     );
   });
 
@@ -52,6 +57,31 @@ describe('@nx/oxlint:lint executor', () => {
 
     const result = await oxlintExecutor(
       { lintFilePatterns: ['{projectRoot}'], quiet: true, maxWarnings: 0 },
+      mockContext
+    );
+
+    expect(result).toEqual({ success: false });
+  });
+
+  it('reports a failure to spawn rather than reading it as a lint failure', async () => {
+    spawnSyncMock.mockReturnValue({
+      status: null,
+      error: Object.assign(new Error('spawn ENOENT'), { code: 'ENOENT' }),
+    });
+
+    const result = await oxlintExecutor(
+      { lintFilePatterns: ['{projectRoot}'] },
+      mockContext
+    );
+
+    expect(result).toEqual({ success: false });
+  });
+
+  it('reports a termination signal', async () => {
+    spawnSyncMock.mockReturnValue({ status: null, signal: 'SIGKILL' });
+
+    const result = await oxlintExecutor(
+      { lintFilePatterns: ['{projectRoot}'] },
       mockContext
     );
 

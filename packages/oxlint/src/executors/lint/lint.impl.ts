@@ -37,15 +37,22 @@ export async function oxlintExecutor(
   const pmc = getPackageManagerCommand();
   const execParts = pmc.exec.split(' ');
   const args = createArgs(options, projectRoot, projectName);
+  // Windows only. `pmc.exec` is a `.cmd` shim there, which Node has refused to
+  // spawn directly since the CVE-2024-27980 fix. Everywhere else a shell would
+  // be actively harmful: Node joins the argv into one string without quoting,
+  // so `sh` re-expands every `lintFilePatterns` entry — and `sh` has no
+  // `globstar`, so `**` collapses to `*` and files below the first directory
+  // are silently never linted. It also swallows the spawn failures reported
+  // below, because the shell starts fine and reports the child's failure as its
+  // own exit code.
+  const useShell = process.platform === 'win32';
   const result = spawnSync(
     execParts[0],
     [...execParts.slice(1), 'oxlint', ...args],
     {
       cwd: context.root,
       stdio: 'inherit',
-      // `pmc.exec` is a `.cmd` shim on Windows, which Node refuses to spawn
-      // directly since the CVE-2024-27980 fix.
-      shell: true,
+      shell: useShell,
       env: process.env,
       windowsHide: true,
     }
@@ -58,6 +65,19 @@ export async function oxlintExecutor(
       title: `Could not run Oxlint for "${projectName}"`,
       bodyLines: [
         result.error.message,
+        `Command: ${pmc.exec} oxlint ${args.join(' ')}`,
+        'Check that `oxlint` is installed in this workspace.',
+      ],
+    });
+    return { success: false };
+  }
+
+  // Under a shell the child's own failure to start arrives as the shell's exit
+  // code rather than `result.error`, so `error` alone would never fire there.
+  if (useShell && result.status === 127) {
+    output.error({
+      title: `Could not run Oxlint for "${projectName}"`,
+      bodyLines: [
         `Command: ${pmc.exec} oxlint ${args.join(' ')}`,
         'Check that `oxlint` is installed in this workspace.',
       ],

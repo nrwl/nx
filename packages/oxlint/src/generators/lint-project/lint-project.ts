@@ -59,23 +59,37 @@ export async function lintProjectGeneratorInternal(
   const hasPlugin = hasOxlintPlugin(tree);
   if (!hasPlugin || options.addExplicitTargets) {
     projectConfig.targets ??= {};
-    // Prefer `lint`, the same name inference prefers, and step aside when
-    // another linter already owns it.
-    const targetName = projectConfig.targets['lint'] ? 'oxlint' : 'lint';
-    // Never clobber an existing Oxlint target — it may carry `typeAware`, a
-    // custom `tsconfig` or extra patterns the user set by hand.
-    if (projectConfig.targets[targetName]?.executor === '@nx/oxlint:lint') {
+
+    // Look for an Oxlint target under *any* name first. Choosing the name
+    // before checking ownership would step aside from our own `lint` target
+    // onto the free `oxlint`, writing a second identical target on a re-run.
+    const existing = Object.entries(projectConfig.targets).find(
+      ([, target]) => target.executor === '@nx/oxlint:lint'
+    );
+
+    if (existing) {
+      // It may carry `typeAware`, a custom `tsconfig` or extra patterns set by
+      // hand, so leave it exactly as it is.
       logger.info(
-        `Project "${options.project}" already has an Oxlint target "${targetName}"; leaving it as is.`
+        `Project "${options.project}" already has an Oxlint target "${existing[0]}"; leaving it as is.`
       );
     } else {
-      projectConfig.targets[targetName] = {
-        executor: '@nx/oxlint:lint',
-        options: {
-          lintFilePatterns: ['{projectRoot}'],
-        },
-      };
-      updateProjectConfiguration(tree, options.project, projectConfig);
+      // Prefer `lint`, the same name inference prefers, and step aside when
+      // anything else already owns it.
+      const targetName = projectConfig.targets['lint'] ? 'oxlint' : 'lint';
+      if (projectConfig.targets[targetName]) {
+        logger.info(
+          `Project "${options.project}" already has a "${targetName}" target; leaving it as is.`
+        );
+      } else {
+        projectConfig.targets[targetName] = {
+          executor: '@nx/oxlint:lint',
+          options: {
+            lintFilePatterns: ['{projectRoot}'],
+          },
+        };
+        updateProjectConfiguration(tree, options.project, projectConfig);
+      }
     }
   }
 
