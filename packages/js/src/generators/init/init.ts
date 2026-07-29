@@ -15,8 +15,7 @@ import { isUsingPrettierInTree } from 'nx/src/devkit-internals';
 import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
-import { generateOxfmtSetup } from '../../utils/oxfmt';
-import { generatePrettierSetup } from '../../utils/prettier';
+import { formatterSetups } from '../../utils/formatter-setup';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
@@ -25,8 +24,6 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
-  oxfmtVersion,
-  prettierVersion,
   swcHelpersVersion,
   tsLibVersion,
   typescriptVersion,
@@ -148,10 +145,8 @@ export async function initGeneratorInternal(
   // making the package resolvable further down. They were separate `if` chains
   // over the same union, forty lines apart, so a third formatter meant finding
   // both.
-  const formatterSetup = {
-    prettier: { setUp: generatePrettierSetup, version: prettierVersion },
-    oxfmt: { setUp: generateOxfmtSetup, version: oxfmtVersion },
-  }[schema.formatter as 'prettier' | 'oxfmt'];
+  const formatterSetup =
+    formatterSetups[schema.formatter as keyof typeof formatterSetups];
 
   if (formatterSetup) {
     tasks.push(
