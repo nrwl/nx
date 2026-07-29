@@ -91,10 +91,14 @@ type AngularUnitTestRunner =
   | 'vitest-angular'
   | 'vitest-analog';
 
+/** Keep in sync with the `formatter` enum in the generator schemas. */
+type Formatter = 'none' | 'prettier' | 'oxfmt';
+const FORMATTERS: Formatter[] = ['oxfmt', 'prettier', 'none'];
+
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
   linter?: 'none' | 'eslint';
-  formatter?: 'none' | 'prettier' | 'oxfmt';
+  formatter?: Formatter;
   workspaces?: boolean;
   useProjectJson?: boolean;
 }
@@ -244,6 +248,9 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
             type: 'string',
+            // Fail at the CLI on a typo rather than downstream in schema
+            // validation, where the message is much further from the cause.
+            choices: FORMATTERS,
           })
           .option('framework', {
             describe: chalk.dim`Framework option to be used with certain stacks.`,
@@ -1109,12 +1116,12 @@ async function determinePresetOptions(
 }
 
 async function determineFormatterOptions(args: {
-  formatter?: 'none' | 'prettier' | 'oxfmt';
+  formatter?: Formatter;
   interactive?: boolean;
 }) {
   if (args.formatter) return args.formatter;
   const reply = await enquirer.prompt<{
-    formatter: 'oxfmt' | 'prettier' | 'none';
+    formatter: Formatter;
   }>([
     {
       name: 'formatter',
@@ -1247,7 +1254,7 @@ async function determineReactOptions(
   let nextAppDir = false;
   let nextSrcDir = false;
   let linter: undefined | 'none' | 'eslint';
-  let formatter: undefined | 'none' | 'prettier' | 'oxfmt';
+  let formatter: undefined | Formatter;
 
   const workspaces = parsedArgs.workspaces;
 
@@ -1398,7 +1405,7 @@ async function determineVueOptions(
   let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let linter: undefined | 'none' | 'eslint';
-  let formatter: undefined | 'none' | 'prettier' | 'oxfmt';
+  let formatter: undefined | Formatter;
 
   const workspaces = parsedArgs.workspaces;
 
@@ -1504,7 +1511,7 @@ async function determineAngularOptions(
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
-  let formatter: undefined | 'none' | 'prettier' | 'oxfmt';
+  let formatter: undefined | Formatter;
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
@@ -1712,7 +1719,7 @@ async function determineNodeOptions(
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
   let linter: undefined | 'none' | 'eslint';
-  let formatter: undefined | 'none' | 'prettier' | 'oxfmt';
+  let formatter: undefined | Formatter;
   let unitTestRunner: undefined | 'none' | 'jest' = undefined;
   const workspaces = parsedArgs.workspaces;
 
