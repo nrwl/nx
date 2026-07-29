@@ -50,13 +50,13 @@ Verify the plugin is setup:
    nx report
    ```
 
-2. Ensure inferred project targets are working:
+2. Ensure inferred tasks are working:
 
    ```shell
    nx show projects --with-target=build
    ```
 
-3. Inspect a specific project configuration for the inferred targets:
+3. Inspect a specific project configuration for the inferred tasks:
 
    ```shell
    nx show project my-remix-app
@@ -203,7 +203,7 @@ Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
 | `buildDepsTargetName`   | Name of an optional dependency build task.       | none           |
 | `watchDepsTargetName`   | Name of an optional dependency watch task.       | none           |
 
-Nx selects the classic Remix or Vite commands from the matched configuration, derives build outputs from that configuration, and makes the production server tasks depend on the build task.
+The build and typecheck tasks are cached, with build outputs based on your Remix configuration. The production server tasks depend on the build task.
 
 ### Exclude or include specific projects
 

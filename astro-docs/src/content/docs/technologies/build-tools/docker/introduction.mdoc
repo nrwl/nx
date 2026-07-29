@@ -97,7 +97,7 @@ Configure `buildTarget` and `runTarget` as objects to pass custom arguments, set
 
 When using the object format, the following properties are available:
 
-- **`name`** (string, required): The name of the inferred target
+- **`name`** (string, required): The name of the task
 - **`args`** (string[], optional): Additional arguments to pass to the Docker command. Supports pattern interpolation.
 - **`env`** (object, optional): Environment variables to set when running the Docker command. Values support pattern interpolation.
 - **`envFile`** (string, optional): Path to an environment file to load
@@ -105,7 +105,7 @@ When using the object format, the following properties are available:
 - **`configurations`** (object, optional): Named Nx configurations that override `args`, `env`, `envFile`, `cwd`, or `skipDefaultTag`.
 - **`skipDefaultTag`** (boolean, default `false`): Do not add the default Nx `--tag` argument to build commands. Supply a tag in `args`; opting out also disables Nx Release versioning and publishing for that Docker project.
 
-The build task depends on the project's `build` task and dependency builds. The run task depends on the inferred Docker build task. Nx also adds an `nx-release-publish` target that uses the `@nx/docker:release-publish` executor.
+The build task depends on the project's `build` task and dependency builds. The run task depends on the Docker build task. Nx also adds an `nx-release-publish` task for publishing images with [Nx Release](/docs/features/manage-releases).
 
 #### Pattern interpolation
 

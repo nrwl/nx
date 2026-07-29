@@ -102,7 +102,7 @@ The `@nx/webpack/plugin` is configured in the `plugins` array in `nx.json`.
 | `buildDepsTargetName`   | `build-deps`   | Name of the dependency build task.                               |
 | `watchDepsTargetName`   | `watch-deps`   | Name of the dependency watch task.                               |
 
-The build target depends on builds of project dependencies. When TypeScript project references are enabled, the inferred targets also run the TypeScript sync generator.
+The build task depends on builds of project dependencies. When TypeScript project references are enabled, the tasks also run the TypeScript sync generator.
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/webpack/plugin`.
 

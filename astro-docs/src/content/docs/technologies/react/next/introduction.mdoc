@@ -46,7 +46,7 @@ Verify the plugin is setup:
    nx report
    ```
 
-2. Ensure inferred project targets are working:
+2. Ensure inferred tasks are working:
 
    ```shell
    nx show projects --with-target=build
@@ -179,7 +179,7 @@ Configure `@nx/next/plugin` in the `plugins` array in `nx.json`:
 | `buildDepsTargetName`   | Name of an optional dependency build task. | none           |
 | `watchDepsTargetName`   | Name of an optional dependency watch task. | none           |
 
-The build task reads `distDir` from the Next.js configuration to declare cache outputs and depends on builds of project dependencies. The start task depends on the build task.
+The build task is cached, with outputs based on your Next.js configuration, and depends on builds of project dependencies. The start task depends on the build task.
 
 ### Exclude or include specific projects
 
