@@ -80,9 +80,11 @@ describe('formatFilesWithOxfmt', () => {
     expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
   });
 
-  // `oxfmt.config.mts` is discovered too, but it can only be loaded through
-  // `import()`, which jest refuses without `--experimental-vm-modules`. Its
-  // fallback in `loadTsOxfmtConfig` is exercised in real Node only.
+  // `oxfmt.config.mts` is discovered too, but jest's module registry does not
+  // implement `require(esm)`, so `loadTsFile` cannot reach it here. Real Node
+  // (the `^20.19.0 || >=22.12.0` oxfmt supports) requires an ESM `.mts`
+  // directly - measured - so this is a limit of the test environment, not of
+  // the loader.
   it.each([
     [
       'oxfmt.config.ts',
@@ -262,6 +264,29 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.get('t.ts')).toEqual("const a = 'hi';\n");
       expect(formatted.get('a/t.ts')).toEqual('const b = "hi";\n');
       expect(formatted.get('a/b/t.ts')).toEqual("const c = 'hi';\n");
+    });
+
+    it('leaves a doubled leading globstar alone under negation', async () => {
+      // Measured: `!**/**/t.ts` matches nothing under the CLI, because only a
+      // *single* leading globstar gets collapsed. Rewriting this one would
+      // introduce a divergence rather than close it.
+      writeConfig({
+        singleQuote: false,
+        overrides: [{ files: ['!**/**/t.ts'], options: { singleQuote: true } }],
+      });
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 't.ts', content: 'const a =  "hi"' },
+          { path: 'a/t.ts', content: 'const b =  "hi"' },
+          { path: 'a/b/t.ts', content: 'const c =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('t.ts')).toEqual('const a = "hi";\n');
+      expect(formatted.get('a/t.ts')).toEqual('const b = "hi";\n');
+      expect(formatted.get('a/b/t.ts')).toEqual('const c = "hi";\n');
     });
 
     it('leaves an interior globstar alone under negation', async () => {

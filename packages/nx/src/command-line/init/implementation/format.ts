@@ -41,7 +41,12 @@ export function recordInitWrite(filePath: string): void {
  * formatter that cannot run costs the user a `nx format` they can run
  * themselves, not their setup.
  */
-export async function formatInitWrites(repoRoot: string): Promise<void> {
+export async function formatInitWrites(
+  repoRoot: string,
+  // `nx import` drains this set too, and a user who never ran `nx init` should
+  // not be told `nx init` failed.
+  command = 'nx init'
+): Promise<void> {
   const recorded = [...writtenFiles];
   // Cleared unconditionally: a second init in the same process must not
   // reformat the first one's files.
@@ -120,8 +125,8 @@ export async function formatInitWrites(repoRoot: string): Promise<void> {
   } catch (e) {
     output.warn({
       title: formatter
-        ? `Could not format the files nx init wrote with ${formatter}.`
-        : 'Could not work out which formatter to use for the files nx init wrote.',
+        ? `Could not format the files ${command} wrote with ${formatter}.`
+        : `Could not work out which formatter to use for the files ${command} wrote.`,
       bodyLines: [
         ...(e?.message ? [e.message] : []),
         'Run "nx format:write" to format them.',

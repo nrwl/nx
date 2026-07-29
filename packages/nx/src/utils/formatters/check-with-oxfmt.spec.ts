@@ -54,6 +54,34 @@ describe('checkWithOxfmt', () => {
     await expect(checkWithOxfmt(['.'])).rejects.toThrow('oxfmt failed');
   });
 
+  it('rejects on exit 2 even though oxfmt already printed differing files', async () => {
+    // oxfmt writes the differing paths to stdout *before* it reports an error,
+    // so a non-empty stdout does not mean the run succeeded. Reading this as a
+    // file list would report a formatter that failed outright as "these files
+    // differ" - a `format:check` that is wrong rather than red.
+    respondWith({ code: 2 }, 'libs/a.ts\n', 'oxfmt failed');
+
+    await expect(checkWithOxfmt(['.'])).rejects.toThrow('oxfmt failed');
+  });
+
+  it('passes the base args that keep an all-skipped run green', async () => {
+    // Without `--no-error-on-unmatched-pattern` oxfmt exits 2 when every path
+    // in a batch was skipped, and nx routinely hands it mixed file lists.
+    respondWith(null);
+
+    await checkWithOxfmt(['.']);
+
+    expect(execFile).toHaveBeenCalledWith(
+      'node',
+      expect.arrayContaining([
+        '--no-error-on-unmatched-pattern',
+        '--list-different',
+      ]),
+      expect.anything(),
+      expect.any(Function)
+    );
+  });
+
   it.each([
     [
       'the binary cannot be spawned',

@@ -14,7 +14,13 @@ export function generateOxfmtSetup(
   tree: Tree,
   options: { skipPackageJson?: boolean }
 ): GeneratorCallback {
-  if (oxfmtConfigFiles.every((name) => !tree.exists(name))) {
+  // `oxfmtConfigFiles` is new in this nx. `@nx/js` has no `nx` peer of its own, so it
+  // inherits devkit's `>= 22 <= 24` and can be paired with an nx that does not
+  // export it - where a bare `.every` would be a TypeError inside `@nx/js:init`.
+  // Falling back to the canonical name may write a redundant config on such a
+  // pairing, which is a better failure than a crash.
+  const configFiles = oxfmtConfigFiles ?? ['.oxfmtrc.json'];
+  if (configFiles.every((name) => !tree.exists(name))) {
     // Matches the style Nx has always generated. oxfmt's own defaults differ
     // from prettier's (printWidth 100 vs 80), so they are set explicitly to
     // keep generated code identical across the two formatters.

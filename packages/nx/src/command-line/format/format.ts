@@ -35,6 +35,17 @@ import { sortObjectByKeys } from '../../utils/object-sort';
 import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
 
+/**
+ * A table rather than a `switch`, because this lookup lives inside a `try` whose
+ * `catch` reports "configured but not installed" - a `never` arm would throw
+ * into that catch and be misreported. A missing member is a compile error here
+ * instead.
+ */
+const resolveFormatterBin = {
+  oxfmt: getOxfmtBinPath,
+  prettier: getPrettierPath,
+} satisfies Record<FormatterType, () => string>;
+
 export async function format(
   command: 'check' | 'write',
   args: yargs.Arguments
@@ -55,14 +66,7 @@ export async function format(
   // surface as a raw MODULE_NOT_FOUND (or, on the prettier path, an unrelated
   // TypeScript-stripping error) into something actionable.
   try {
-    switch (formatterType) {
-      case 'oxfmt':
-        getOxfmtBinPath();
-        break;
-      case 'prettier':
-        getPrettierPath();
-        break;
-    }
+    resolveFormatterBin[formatterType]();
   } catch {
     output.error({
       title: `${formatterType} is configured for this workspace but is not installed.`,
@@ -233,6 +237,13 @@ function write(formatterType: FormatterType, patterns: string[]): void {
     case 'prettier':
       writeWithPrettier(patterns);
       break;
+    default: {
+      // Without this, an unhandled formatter makes `nx format:write` exit 0
+      // having formatted nothing, while `check()` throws - the two halves of
+      // the same command disagreeing.
+      const unhandled: never = formatterType;
+      throw new Error(`Unhandled formatter: ${unhandled}`);
+    }
   }
 }
 
