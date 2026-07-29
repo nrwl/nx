@@ -385,6 +385,9 @@ async function runInit(
           'detecting',
           `Detected ${detectedPluginNames.length} plugin(s): ${detectedPluginNames.join(', ')}`
         );
+        // This path exits without reaching the drain below, and `nx.json` has
+        // already been written by now.
+        await formatInitWrites(repoRoot);
         writeAiOutput(buildNeedsInputResult(detectedPlugins));
         process.exit(0);
       }
@@ -492,6 +495,11 @@ async function runInit(
     },
   });
 
+  // Before the AI record, not after: the formatters write to stdout
+  // (`--list-different`, oxfmt's summary), which would otherwise land after the
+  // NDJSON result and corrupt the tail an agent parses.
+  await formatInitWrites(repoRoot);
+
   // Output success result for AI agents
   if (aiMode) {
     writeAiOutput(
@@ -501,8 +509,6 @@ async function runInit(
       })
     );
   }
-
-  await formatInitWrites(repoRoot);
 
   // Skip human-readable output for AI agents
   if (!aiMode) {

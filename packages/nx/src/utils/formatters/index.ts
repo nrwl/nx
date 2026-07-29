@@ -12,9 +12,13 @@ import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
  * folding null into this union - dispatch sites then handle only formatters
  * they can actually run, and the caller has to deal with "none" once, up front.
  *
- * Note this is a convention, not something the compiler enforces: the repo
- * builds with `strict: false`, so a `switch` that misses a member is not an
- * error. Adding a formatter means visiting every dispatch site by hand.
+ * The repo builds with `strict: false`, so a `switch` that merely omits a
+ * member is not an error by itself. The two dispatch sites that return a value
+ * carry a `never` assertion in their `default` arm, and that *is* enforced -
+ * adding a member here fails to compile there rather than returning `undefined`
+ * into a caller that iterates it. The remaining sites are `if`/`else` chains
+ * (devkit's `formatFiles`, `nx init`'s formatter pass) and still need visiting
+ * by hand.
  */
 export type FormatterType = 'prettier' | 'oxfmt';
 
