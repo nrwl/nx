@@ -8,24 +8,24 @@ import { dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   ensureOwnedPrivateDir,
+  ensureSafeSharedRoot,
   getUserSegment,
-  isRealDirectoryOrAbsent,
-  relaxSharedRootToSticky,
 } from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
 // Only used to *reject* it as a socket location; see InvalidSocketDirConfigured.
 import { tmpdir as systemTmpDir } from 'tmp';
+import { NATIVE_CACHE_ROOT } from '../native/native-file-cache-location';
 import { NX_TMP_DIR } from '../utils/nx-tmp-dir';
 import { workspaceRoot } from '../utils/workspace-root';
 
 /**
- * Thrown when the socket dir resolves to the shared system temp dir, which every
- * user can reach. Invalid configuration, not a recoverable failure.
+ * Thrown when the socket dir resolves to a directory shared with other users on
+ * the machine. Invalid configuration, not a recoverable failure.
  */
 export class InvalidSocketDirConfigured extends Error {
   constructor(public readonly dir: string) {
     super(
-      `The configured Nx socket directory ${dir} cannot be the shared system temp directory. Pointing the Nx socket directory there is unsafe as another local user could connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
+      `The configured Nx socket directory ${dir} is shared with the other users on this machine. Nx locks the socket directory to a single user, so pointing it at a shared one both shuts every other user out of it and — until it does — lets another local user connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
     );
     this.name = 'InvalidSocketDirConfigured';
   }
@@ -74,6 +74,19 @@ export function isDaemonDisabled() {
  */
 export const NX_SOCKET_ROOT = join(NX_TMP_DIR, 'sockets');
 
+/**
+ * Directories that may not *be* the socket directory. Every user can reach these,
+ * and Nx locks the socket directory to one user — so naming one here would strip
+ * a shared root of the world-writable, sticky mode the other users depend on.
+ * Nx's own per-user directories live *under* them, which is the intended layout.
+ */
+const DIRS_TOO_SHARED_FOR_SOCKETS = [
+  systemTmpDir,
+  NX_TMP_DIR,
+  NX_SOCKET_ROOT,
+  NATIVE_CACHE_ROOT,
+];
+
 export function getNxSocketRoot(): string {
   return configuredSocketDir() ?? NX_SOCKET_ROOT;
 }
@@ -94,17 +107,18 @@ function configuredSocketDir(): string | undefined {
 }
 
 /**
- * The per-user directory beneath the shared socket root. It does not stop
- * another user owning the shared root above it — whoever runs Nx first still
- * does, and can still replace what is under it. What it gives is detection:
- * the directory is re-verified on every resolve, so a substituted one is
- * refused rather than nested into. It also stops two users with the same
- * checkout path colliding, and covers all of a user's workspaces at once.
+ * The per-user directory beneath the shared socket root — the level everything
+ * else hangs off. Whoever runs Nx first on the machine owns the root above it,
+ * but that root is verified sticky, so they cannot rename this directory aside
+ * and substitute their own; and it is re-verified on every resolve, so one that
+ * did get replaced is refused rather than nested into. It also stops two users
+ * with the same checkout path colliding, and covers all of a user's workspaces
+ * at once.
  *
- * Skipped on Windows, where it would cost without buying anything:
- * `ensureOwnedPrivateDir` and `relaxSharedRootToSticky` are both no-ops there,
- * the OS temp dir is already per-user, and the username appears in it — so
- * repeating it overruns the socket path length guard for ordinary account names.
+ * Skipped on Windows, where it would cost without buying anything: there are no
+ * mode bits for `ensureOwnedPrivateDir` to check, the OS temp dir is already
+ * per-user, and the username appears in it — so repeating it overruns the socket
+ * path length guard for ordinary account names.
  *
  * Not applied to an explicit NX_SOCKET_DIR, which names the socket directory
  * itself and is often set to escape a too-long default path.
@@ -165,28 +179,25 @@ function createOwnerOnlySocketDir(
   dir: string,
   usingDefaultRoot: boolean
 ): string {
-  // Outside the try so it is not swallowed by the fallback. Compares against the
-  // bare temp dir only, so the default root never trips it.
-  if (resolve(dir) === resolve(systemTmpDir)) {
+  // Outside the try so it is not swallowed by the fallback. Exact matches only,
+  // so the per-user directories under those roots never trip it.
+  if (DIRS_TOO_SHARED_FOR_SOCKETS.some((d) => resolve(dir) === resolve(d))) {
     throw new InvalidSocketDirConfigured(dir);
   }
 
   try {
     if (usingDefaultRoot) {
-      // Every root: paths under them resolve each level, so a symlink at either
-      // tunnels our sockets elsewhere. The inner one is absent on a fresh machine.
+      // Outermost first, each on its own: paths under a root resolve every
+      // level, so a symlink — or a world-writable root without the sticky bit
+      // that stops a peer renaming entries out of it — compromises everything
+      // below. The inner root is absent on a fresh machine.
       for (const root of [NX_TMP_DIR, NX_SOCKET_ROOT]) {
-        if (!isRealDirectoryOrAbsent(root)) {
+        if (!ensureSafeSharedRoot(root)) {
           throw new Error(
-            `The Nx socket root ${root} exists but is not a real directory.`
+            `The Nx socket root ${root} is not a directory Nx can safely keep a private directory under.`
           );
         }
       }
-      mkdirSync(NX_SOCKET_ROOT, { recursive: true });
-      // Relaxed here, not at creation: world-writable so every user can make
-      // their own per-uid dir beneath them.
-      relaxSharedRootToSticky(NX_TMP_DIR);
-      relaxSharedRootToSticky(NX_SOCKET_ROOT);
       // The containment level: 0700 and ours, so a squatter is refused here
       // rather than becoming the parent of our socket directories.
       if (!ensureOwnedPrivateDir(userSocketRoot())) {

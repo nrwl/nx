@@ -4,10 +4,9 @@ import { NX_TMP_DIR } from '../utils/nx-tmp-dir';
 import { nxVersion } from '../utils/versions';
 import {
   ensureOwnedPrivateDir,
+  ensureSafeSharedRoot,
   getUserSegment,
   isOwnedRealDirectory,
-  isRealDirectoryOrAbsent,
-  relaxSharedRootToSticky,
 } from '../utils/owned-private-dir';
 
 /**
@@ -15,7 +14,7 @@ import {
  * each user can create their own per-uid subdirectory. Nothing is loaded from
  * here directly, only from the owner-locked per-uid dir beneath it.
  */
-const NATIVE_CACHE_ROOT = join(NX_TMP_DIR, 'native-cache');
+export const NATIVE_CACHE_ROOT = join(NX_TMP_DIR, 'native-cache');
 
 export function getNativeFileCacheLocation() {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
@@ -75,28 +74,16 @@ export function ensureSecureNativeFileCacheLocation(
     }
   }
 
-  const userDir = join(cacheRoot, getUserSegment());
-
-  try {
-    // Before creating anything beneath them: a symlink planted at either root
-    // redirects the whole cache, including the dir we load a `.node` from.
-    if (
-      !isRealDirectoryOrAbsent(dirname(cacheRoot)) ||
-      !isRealDirectoryOrAbsent(cacheRoot)
-    ) {
+  // Outermost first: a symlink at either root redirects the whole cache, and a
+  // world-writable one without the sticky bit lets a peer rename our per-uid
+  // directory aside — either way the `.node` we load comes from somewhere else.
+  for (const root of [dirname(cacheRoot), cacheRoot]) {
+    if (!ensureSafeSharedRoot(root)) {
       return null;
     }
-    mkdirSync(cacheRoot, { recursive: true });
-    if (canCheckOwnership()) {
-      // Independently: a failure on one must not skip the other, or the first
-      // user here locks everyone else out of the cache.
-      relaxSharedRootToSticky(dirname(cacheRoot));
-      relaxSharedRootToSticky(cacheRoot);
-    }
-  } catch {
-    return null;
   }
 
+  const userDir = join(cacheRoot, getUserSegment());
   if (!ensureOwnedPrivateDir(userDir)) {
     return null;
   }
@@ -107,8 +94,4 @@ export function ensureSecureNativeFileCacheLocation(
     return null;
   }
   return versionDir;
-}
-
-function canCheckOwnership(): boolean {
-  return typeof process.getuid === 'function';
 }
