@@ -35,7 +35,7 @@ export const getForkedProcessOsSocketPath = (id: string) => {
 };
 
 export const getPluginOsSocketPath = (id: string) => {
-  let path = resolve(join(getPluginSocketDir(), 'plugin' + id + '.sock'));
+  let path = resolve(join(getPluginSocketDir(), 'p' + id + '.sock'));
 
   assertValidSocketPath(path);
 

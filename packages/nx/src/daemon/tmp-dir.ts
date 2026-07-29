@@ -128,7 +128,7 @@ function pluginSocketDirName() {
     .update(workspaceRoot.toLowerCase())
     .digest('hex')
     .substring(0, 8);
-  return join(userSocketRoot(), `nx-${hash}`);
+  return join(userSocketRoot(), hash);
 }
 
 /**
