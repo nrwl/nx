@@ -64,7 +64,7 @@ The allowlist decides which paths the sandbox can reach. It is not what separate
 
 Three directories are deliberately world-writable and sticky, like `/tmp` itself, so that every user logged in to the machine can create their own private directory beneath them: `/tmp/.nx`, `/tmp/.nx/sockets` and `/tmp/.nx/native-cache`. Nothing is ever read or executed directly from those.
 
-Containment happens one level down, in a per-user directory — `/tmp/.nx/sockets/<uid>` and `/tmp/.nx/native-cache/<uid>` — which Nx creates `0700` and re-checks on every use: owned by you, a real directory rather than a symlink, and carrying no group or other permissions at all (a `0755` directory is tightened back to `0700` rather than accepted). Because that level belongs to you rather than to whoever happened to run Nx first, no other user can own the parent of your sockets; if one has taken the name, Nx refuses it rather than nesting inside it.
+Containment happens one level down, in a per-user directory — `/tmp/.nx/sockets/<uid>` and `/tmp/.nx/native-cache/<uid>` — which Nx creates `0700` and re-checks on every use: owned by you, a real directory rather than a symlink, and carrying no group or other permissions at all (a `0755` directory is tightened back to `0700` rather than accepted). That check runs on every resolve, so if another user has taken the name Nx refuses it and falls back rather than nesting inside it. Note the shared roots above it are still owned by whoever ran Nx first on the machine — the per-user directory is what makes a substitution detected, not prevented.
 
 When a directory fails a check that cannot be repaired, Nx refuses it — sockets fall back to a private directory inside your workspace, and the native binding cache is skipped entirely, loading in place from `node_modules` instead.
 
@@ -101,11 +101,11 @@ Both environment variables work around the symptom rather than fixing the root c
 
 For advanced use cases, Nx provides environment variables to override where socket files are created:
 
-| Variable                         | Description                                                                                                      |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin). Defaults to `/tmp/.nx/sockets`. |
-| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.              |
-| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                             |
+| Variable                         | Description                                                                                                                                                                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin). Defaults to `/tmp/.nx/sockets/<uid>/<workspace-hash>`. Must name a directory only your user can reach — not `/tmp/.nx/sockets` itself, which is a shared root. |
+| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.                                                                                                                                             |
+| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                                                                                                                                                            |
 
 These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.
 
