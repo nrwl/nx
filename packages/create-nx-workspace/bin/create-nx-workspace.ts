@@ -91,7 +91,6 @@ type AngularUnitTestRunner =
   | 'vitest-angular'
   | 'vitest-analog';
 
-/** Keep in sync with the `formatter` enum in the generator schemas. */
 // Kept in sync with the formatter enum in the generator schemas by hand - this
 // package deliberately has no `nx` dependency, so nx's `FormatterType` cannot
 // be imported here.

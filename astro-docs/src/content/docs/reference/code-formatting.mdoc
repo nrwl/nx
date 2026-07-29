@@ -83,7 +83,7 @@ the surrounding configuration itself.
 The two agree on the workspace root config, its `overrides` and `ignorePatterns`, the root
 `.editorconfig`, and the root `.gitignore` and `.prettierignore`.
 
-They differ in three cases, all of them about configuration that lives somewhere other than the
+They differ in four cases. Three are about configuration that lives somewhere other than the
 workspace root:
 
 - An `.oxfmtrc.json` in a subdirectory applies under `nx format:write` but not during generator
@@ -94,12 +94,17 @@ workspace root:
   it in, so one above the workspace root applies when the workspace root has none of its own.
   Generator formatting reads only the workspace root file.
 
+The fourth is at the root. An `.editorconfig` that sets `indent_size` without `indent_style` is
+honoured by generator formatting, which follows the EditorConfig spec, and ignored by
+`nx format:write`, which follows oxfmt. A workspace that relies on that shape gets generated files
+its own `nx format:check` rejects. Set `indent_style` alongside it to keep the two in agreement.
+
 Two things about `.editorconfig` may surprise you, and both come from oxfmt rather than from Nx: it
 does not merge the chain, and it does not consult `root = true`. Any `.editorconfig` at the
 workspace root stops the search, even an empty or comment-only one, and `root = true` in a parent
 does not stop that parent from applying. oxfmt also resolves `.editorconfig` once from the working
 directory rather than per formatted file, so a subdirectory's own file is ignored when you format it
-from the workspace root — but running `nx format:write` from inside that subdirectory picks it up
+from the workspace root. Running `nx format:write` from inside that subdirectory picks it up
 instead. Generator formatting always reads the workspace root file.
 
 ## Skip formatting

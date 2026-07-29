@@ -1,6 +1,6 @@
 import { exec, execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { extname, join, resolve, dirname } from 'node:path';
+import { basename, extname, join, resolve, dirname } from 'node:path';
 import { major } from 'semver';
 import type { Tree } from '../../generators/tree';
 import { readJson } from '../../generators/utils/json';
@@ -81,10 +81,16 @@ export async function filterToPrettierSupportedFiles(
     (await prettier.getSupportInfo()).languages
       .flatMap((language) => language.extensions)
       .filter((extension) => !!extension)
-      // Prettier supports ".swcrc" as a file, not an extension, so add it here.
-      .concat('.swcrc')
   );
-  return files.filter((f) => supportedExtensions.has(extname(f)));
+  // `.swcrc` is matched by filename, not extension: `extname('.swcrc')` is the
+  // empty string, so adding it to the extension set could only ever have
+  // matched a file called `something.swcrc`. `writeWithPrettier` has a
+  // `--parser json` branch for these, which was unreachable while they were
+  // being filtered out here.
+  return files.filter(
+    (file) =>
+      supportedExtensions.has(extname(file)) || basename(file) === '.swcrc'
+  );
 }
 
 export function writeWithPrettier(
