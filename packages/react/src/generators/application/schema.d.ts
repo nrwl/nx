@@ -1,5 +1,5 @@
 import type { names } from '@nx/devkit';
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -11,7 +11,7 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
-  linter: Linter | LinterType;
+  linter: LinterType;
   classComponent?: boolean;
   routing?: boolean;
   useReactRouter?: boolean;

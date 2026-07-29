@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -25,7 +25,7 @@ import { versions } from './versions';
 
 export interface CyLinterOptions {
   project: string;
-  linter: Linter | LinterType;
+  linter: LinterType;
   enableTypedLinting?: boolean;
   /**
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.

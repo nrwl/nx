@@ -1,6 +1,6 @@
 import type { ProjectNameAndRootOptions } from '@nx/devkit/internal';
 // nx-ignore-next-line
-const { Linter, LinterType } = require('@nx/eslint'); // use require to import to avoid circular dependency
+import type { LinterType } from '@nx/eslint'; // type-only, so it adds no runtime edge back to @nx/eslint
 import type { ProjectPackageManagerWorkspaceState } from '../../utils/package-manager-workspaces';
 
 export type Compiler = 'tsc' | 'swc';
@@ -15,7 +15,7 @@ export interface LibraryGeneratorSchema {
   skipPackageJson?: boolean;
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   testEnvironment?: 'jsdom' | 'node';
   importPath?: string;
   js?: boolean;

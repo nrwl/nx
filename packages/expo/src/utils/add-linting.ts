@@ -1,4 +1,4 @@
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -18,7 +18,7 @@ import {
 } from '@nx/eslint/internal';
 
 interface NormalizedSchema {
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   projectName: string;
   projectRoot: string;
   enableTypedLinting?: boolean;

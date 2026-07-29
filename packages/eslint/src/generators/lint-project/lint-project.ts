@@ -16,7 +16,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import { Linter as LinterEnum, LinterType } from '../utils/linter';
+import { LinterType } from '../utils/linter';
 import {
   determineEslintConfigFormat,
   findEslintFile,
@@ -47,7 +47,7 @@ import { getProjectType } from '@nx/js/internal';
 
 interface LintProjectOptions {
   project: string;
-  linter?: LinterEnum | LinterType;
+  linter?: LinterType;
   eslintFilePatterns?: string[];
   tsConfigPaths?: string[];
   skipFormat: boolean;

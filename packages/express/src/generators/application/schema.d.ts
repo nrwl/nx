@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 import type { UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
@@ -8,7 +8,7 @@ export interface Schema {
   skipPackageJson: boolean;
   unitTestRunner: UnitTestRunner;
   tags?: string;
-  linter: Linter | LinterType;
+  linter: LinterType;
   frontendProject?: string;
   swcJest?: boolean;
   /** @deprecated use `swcJest` instead */

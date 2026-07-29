@@ -9,7 +9,7 @@ import {
 
 import { join } from 'path';
 import { Preset } from '../utils/presets';
-import { Linter, LinterType } from '../../utils/lint';
+import { LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
@@ -28,7 +28,7 @@ interface Schema {
   js?: boolean;
   nextAppDir?: boolean;
   nextSrcDir?: boolean;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   bundler?: string;
   standaloneApi?: boolean;
   routing?: boolean;

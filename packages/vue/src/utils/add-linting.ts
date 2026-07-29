@@ -3,7 +3,7 @@ import {
   GeneratorCallback,
   runTasksInSerial,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -28,7 +28,7 @@ import {
 export async function addLinting(
   host: Tree,
   options: {
-    linter: Linter | LinterType;
+    linter: LinterType;
     name: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
