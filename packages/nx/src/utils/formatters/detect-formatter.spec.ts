@@ -46,6 +46,15 @@ describe('detectFormatterInTree', () => {
     expect(detectFormatterInTree(tree)).toBe('oxfmt');
   });
 
+  it('should detect oxfmt declared as a runtime dependency', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ dependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('oxfmt');
+  });
+
   it('should NOT treat an installed prettier as intent to use prettier', () => {
     // Workspaces formatting with biome/dprint routinely have prettier in the
     // dependency graph. Formatting them with prettier would be wrong (#30426).
@@ -108,6 +117,25 @@ describe('detectFormatter', () => {
     } finally {
       empty.cleanup();
     }
+  });
+
+  it('should detect oxfmt from a dependency when it has no config file', () => {
+    // The on-disk twin of the in-tree case: oxfmt runs on defaults, so a
+    // declared dependency is the only signal an unconfigured workspace gives.
+    fs.createFileSync(
+      'package.json',
+      JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
+  });
+
+  it('should detect prettier from a config format only the shared list knows', () => {
+    // The setup and detection lists have to agree; `prettier.config.ts` is one
+    // of the entries a hand-maintained copy had drifted past.
+    fs.createFileSync('prettier.config.ts', 'export default {};');
+
+    expect(detectFormatter(fs.tempDir)).toBe('prettier');
   });
 
   it('should NOT treat an installed prettier as intent to use prettier', () => {

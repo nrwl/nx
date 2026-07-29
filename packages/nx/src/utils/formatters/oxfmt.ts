@@ -410,14 +410,26 @@ type OxfmtOverride = {
   options: Record<string, unknown>;
 };
 
-type ResolvedOxfmtConfig = {
-  /** Options shaped the way `format()` accepts them. */
-  options?: Record<string, unknown>;
-  overrides?: OxfmtOverride[];
-  ignorePatterns?: string[];
-  /** Set when a config file exists but could not be read. */
-  error?: string;
-};
+/**
+ * Either a usable config or the reason there isn't one - never both. The two
+ * arms are separate so a caller cannot read options off a config that failed
+ * to load, which is the case that silently formats past a workspace's own
+ * `ignorePatterns`.
+ */
+type ResolvedOxfmtConfig =
+  | {
+      error: string;
+      options?: undefined;
+      overrides?: undefined;
+      ignorePatterns?: undefined;
+    }
+  | {
+      error?: undefined;
+      /** Options shaped the way `format()` accepts them. */
+      options?: Record<string, unknown>;
+      overrides?: OxfmtOverride[];
+      ignorePatterns?: string[];
+    };
 
 /**
  * `overrides` and `ignorePatterns` belong to oxfmt's *config file* schema, not
@@ -435,8 +447,8 @@ function splitOxfmtConfig(
 
   const { overrides, ignorePatterns, ...options } = config as {
     overrides?: {
-      files?: string[];
-      excludeFiles?: string[];
+      files?: string | string[];
+      excludeFiles?: string | string[];
       options?: object;
     }[];
     ignorePatterns?: string[];
@@ -461,11 +473,16 @@ function splitOxfmtConfig(
   };
 }
 
-function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
-  if (!Array.isArray(globs) || globs.length === 0) {
+function compileGlobSet(
+  globs: string | string[] | undefined
+): (p: string) => boolean {
+  // A prettier config allows a bare string here and `oxfmt --migrate=prettier`
+  // does not rewrite `overrides`, so a hand-carried config reaches us with one.
+  const list = typeof globs === 'string' ? [globs] : globs;
+  if (!Array.isArray(list) || list.length === 0) {
     return () => false;
   }
-  const matchers = globs.map((glob) => {
+  const matchers = list.map((glob) => {
     // oxfmt lifts a pattern with no separator to match at any depth, and reads
     // a leading `./` as "anchored to the config file's directory". minimatch
     // does neither on its own, so `*.md` would otherwise match only at the
@@ -657,20 +674,23 @@ export async function formatFilesWithOxfmt(
           }
         );
 
-        const failure = result.errors?.[0];
-        if (failure) {
+        if (result.errors?.length) {
           // oxfmt is handed every changed file, most of which it has no parser
           // for. Those are skipped rather than reported, matching the CLI's
           // --no-error-on-unmatched-pattern; a real parse failure is reported
           // but costs only its own file.
-          if (!failure.message.startsWith(UNSUPPORTED_FILE_TYPE)) {
+          //
+          // Every diagnostic is read, not just the first: a file can come back
+          // with an `Unsupported file type` entry ahead of a real one, and
+          // stopping at [0] would drop it.
+          for (const failure of result.errors) {
+            if (failure.message.startsWith(UNSUPPORTED_FILE_TYPE)) {
+              continue;
+            }
             // `message` alone is context-free ("Unexpected token"); the path
             // and line live in the codeframe.
             errors.push(
-              `${file.path}: ${
-                (failure as { codeframe?: string }).codeframe?.trim() ||
-                failure.message
-              }`
+              `${file.path}: ${failure.codeframe?.trim() || failure.message}`
             );
           }
           return;

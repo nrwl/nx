@@ -10,9 +10,12 @@ import { readModulePackageJson } from '../package-json';
 import { FORMATTER_MAX_BUFFER } from './shared';
 
 /**
- * Possible configuration files are taken from https://prettier.io/docs/configuration
+ * Config filenames prettier discovers. Exported because generator setup has to
+ * agree with detection on this list - a workspace whose config format is
+ * missing from one side gets a second, redundant config written next to it.
+ * https://prettier.io/docs/configuration
  */
-const configFiles = [
+export const prettierConfigFiles = [
   '.prettierrc',
   '.prettierrc.json',
   '.prettierrc.yml',
@@ -34,7 +37,7 @@ const configFiles = [
 ];
 
 export function isUsingPrettier(root: string): boolean {
-  for (const file of configFiles) {
+  for (const file of prettierConfigFiles) {
     if (existsSync(join(root, file))) {
       return true;
     }
@@ -51,7 +54,7 @@ export function isUsingPrettier(root: string): boolean {
 }
 
 export function isUsingPrettierInTree(tree: Tree): boolean {
-  for (const file of configFiles) {
+  for (const file of prettierConfigFiles) {
     if (tree.exists(file)) {
       return true;
     }
@@ -128,8 +131,25 @@ export function checkWithPrettier(patterns: string[]): Promise<string[]> {
       { encoding: 'utf-8', windowsHide: true, maxBuffer: FORMATTER_MAX_BUFFER },
       (error, stdout) => {
         if (error) {
+          // Same shape as the oxfmt sibling: a failure that never produced an
+          // exit code - could not spawn, killed, stdout over maxBuffer -
+          // reports a string `code` or none. Prettier's own "files differ"
+          // signal is a numeric exit code, so those never reach here, and
+          // treating them as a file list would pass `format:check` on a
+          // formatter that never ran.
+          if (typeof error['code'] !== 'number') {
+            reject(
+              new Error(
+                `prettier could not be run to completion (${
+                  error['code'] ?? error.signal ?? 'unknown'
+                }): ${error.message}`
+              )
+            );
+            return;
+          }
           if (stdout.length === 0) {
             reject(error);
+            return;
           }
           resolve(stdout.trim().split('\n'));
         } else {

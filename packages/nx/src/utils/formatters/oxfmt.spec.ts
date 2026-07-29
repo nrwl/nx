@@ -110,6 +110,23 @@ describe('formatFilesWithOxfmt', () => {
     expect(formatted.size).toBe(0);
   });
 
+  it('reports a generated config it cannot parse without falling back to disk', async () => {
+    // Unlike the on-disk lookup, a seed the generator just wrote is the config
+    // the batch is meant to use - quietly formatting to the previous one would
+    // mismatch the file it just shipped.
+    writeConfig({ singleQuote: true });
+
+    const { formatted, errors } = await formatFilesWithOxfmt(
+      [{ path: 'a.ts', content: 'const x =  "hi"' }],
+      workspaceRoot,
+      { name: '.oxfmtrc.json', content: '{ "singleQuote": ' }
+    );
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain('.oxfmtrc.json');
+    expect(formatted.size).toBe(0);
+  });
+
   it('skips a batch whose ignorePatterns cannot be read rather than formatting past them', async () => {
     writeFileSync(
       join(workspaceRoot, '.oxfmtrc.json'),
@@ -149,6 +166,20 @@ describe('formatFilesWithOxfmt', () => {
 
       expect(formatted.get('libs/lib1/a.ts')).toEqual("const x = 'hi';\n");
       expect(formatted.get('root.ts')).toEqual('const y = "hi";\n');
+    });
+
+    it('accepts a bare string for files, as a carried-over prettier config has', async () => {
+      writeConfig({
+        singleQuote: false,
+        overrides: [{ files: '*.ts', options: { singleQuote: true } }],
+      });
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [{ path: 'libs/lib1/a.ts', content: 'const x =  "hi"' }],
+        workspaceRoot
+      );
+
+      expect(formatted.get('libs/lib1/a.ts')).toEqual("const x = 'hi';\n");
     });
 
     it('matches a glob with no separator at any depth, as the CLI does', async () => {
