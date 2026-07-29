@@ -43,7 +43,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     return addLintingToProject(host, {
       oxlintPlugins: ['react', 'react-perf'],
       unitTestRunner: options.unitTestRunner,
-      linter: options.linter as any,
+      linter: options.linter,
       project: options.projectName,
       addPlugin: options.addPlugin,
       skipPackageJson: options.skipPackageJson,

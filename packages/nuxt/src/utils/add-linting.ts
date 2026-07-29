@@ -46,7 +46,7 @@ export async function addLinting(
     return addLintingToProject(host, {
       oxlintPlugins: ['vue'],
       unitTestRunner: options.unitTestRunner,
-      linter: options.linter as any,
+      linter: options.linter,
       project: options.projectName,
     });
   }

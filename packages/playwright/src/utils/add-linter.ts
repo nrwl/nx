@@ -49,7 +49,7 @@ export async function addLinterToPlaywrightProject(
   // need the linter registering, which the helper handles (including `none`).
   if (options.linter && options.linter !== 'eslint') {
     return addLintingToProject(tree, {
-      linter: options.linter as any,
+      linter: options.linter,
       project: options.project,
       addPlugin: options.addPlugin,
       skipPackageJson: options.skipPackageJson,
