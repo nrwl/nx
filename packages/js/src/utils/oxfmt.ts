@@ -16,15 +16,9 @@ export function generateOxfmtSetup(
 ): GeneratorCallback {
   if (oxfmtConfigFiles.every((name) => !tree.exists(name))) {
     // Matches the style Nx has always generated. oxfmt's own defaults differ
-    // from prettier's, so they are set explicitly to keep generated code
-    // identical across the two formatters: printWidth (100 vs 80), and
-    // sortPackageJson, which is on by default and reorders the keys of every
-    // package.json it touches - including the manifests `nx release` writes.
-    writeJson(tree, '.oxfmtrc.json', {
-      singleQuote: true,
-      printWidth: 80,
-      sortPackageJson: false,
-    });
+    // from prettier's (printWidth 100 vs 80), so they are set explicitly to
+    // keep generated code identical across the two formatters.
+    writeJson(tree, '.oxfmtrc.json', { singleQuote: true, printWidth: 80 });
   }
 
   return options.skipPackageJson
