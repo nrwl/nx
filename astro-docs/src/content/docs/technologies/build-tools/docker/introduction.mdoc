@@ -59,7 +59,7 @@ The `buildTarget` and `runTarget` options control the names of the inferred Dock
 
 ### Advanced plugin configuration
 
-The `buildTarget` and `runTarget` options can be configured as objects to provide additional customization beyond just naming the targets. This allows you to pass custom arguments, set environment variables, and use pattern interpolation.
+Configure `buildTarget` and `runTarget` as objects to pass custom arguments, set environment variables, and use pattern interpolation.
 
 ```json
 // nx.json
@@ -104,6 +104,10 @@ When using the object format, the following properties are available:
 - **`env`** (object, optional): Environment variables to set when running the Docker command. Values support pattern interpolation.
 - **`envFile`** (string, optional): Path to an environment file to load
 - **`cwd`** (string, optional): Working directory for the command. Supports pattern interpolation.
+- **`configurations`** (object, optional): Named Nx configurations that override `args`, `env`, `envFile`, `cwd`, or `skipDefaultTag`.
+- **`skipDefaultTag`** (boolean, default `false`): Do not add the default Nx `--tag` argument to build commands. Supply a tag in `args`; opting out also disables Nx Release versioning and publishing for that Docker project.
+
+The build task depends on the project's `build` task and dependency builds. The run task depends on the inferred Docker build task. Nx also adds an `nx-release-publish` target that uses the `@nx/docker:release-publish` executor.
 
 #### Pattern interpolation
 
@@ -179,6 +183,8 @@ This configuration:
 - Tags images with a calendar version and commit SHA (e.g., `my-app:250130.abc1234`)
 - Enables Docker BuildKit for improved build performance
 - Injects build arguments and environment variables from the CI/CD pipeline
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/docker`.
 
 ## Set up CI
 

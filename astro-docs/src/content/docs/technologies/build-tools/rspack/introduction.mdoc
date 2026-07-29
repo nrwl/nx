@@ -77,14 +77,27 @@ The `@nx/rspack/plugin` is configured in the `plugins` array in `nx.json`.
         "buildTargetName": "build",
         "previewTargetName": "preview",
         "serveTargetName": "serve",
-        "serveStaticTargetName": "serve-static"
+        "serveStaticTargetName": "serve-static",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Rspack tasks. The default names are `build`, `preview`, `serve` and `serve-static`.
+| Option                  | Default        | Inferred behavior                                           |
+| ----------------------- | -------------- | ----------------------------------------------------------- |
+| `buildTargetName`       | `build`        | Runs and caches `rspack build` with its configured outputs. |
+| `serveTargetName`       | `serve`        | Runs `rspack serve` continuously in development mode.       |
+| `previewTargetName`     | `preview`      | Runs `rspack serve` continuously in production mode.        |
+| `serveStaticTargetName` | `serve-static` | Serves the build output continuously after the build task.  |
+| `buildDepsTargetName`   | none           | Name of an optional dependency build task.                  |
+| `watchDepsTargetName`   | none           | Name of an optional dependency watch task.                  |
+
+The build target depends on builds of project dependencies. When TypeScript project references are enabled, the inferred targets also run the TypeScript sync generator.
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/rspack/plugin`.
 
 ## Using @nx/rspack
 

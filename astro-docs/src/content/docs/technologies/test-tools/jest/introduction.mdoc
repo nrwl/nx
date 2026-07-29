@@ -148,6 +148,8 @@ The `@nx/jest` plugin infers tasks for any project with a Jest configuration fil
 - `jest.config.cjs`
 - `jest.config.cts`
 
+The configuration directory must also contain a `project.json` or a workspace-package `package.json`. Root Jest configurations that only aggregate projects with `getJestProjectsAsync()` are not registered as projects.
+
 ### Plugin options
 
 Configure the plugin in `nx.json`:
@@ -176,6 +178,10 @@ Configure the plugin in `nx.json`:
 
 `disableJestRuntime` defaults to `true` because the plugin treats it as enabled only when `options.disableJestRuntime !== false`. This reduces computation time for inferred tasks; set it to `false` if you need Jest runtime inference.
 
+The inferred test target is cached.
+Nx derives its inputs and coverage outputs from the Jest configuration.
+Set `ciTargetName` to enable the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+
 ### Unit and e2e configurations
 
 Use two plugin entries to separate unit and E2E Jest tasks, and enable CI splitting for E2E:
@@ -203,7 +209,8 @@ Use two plugin entries to separate unit and E2E Jest tasks, and enable CI splitt
 }
 ```
 
-`ciTargetName` enables [split E2E tasks](/docs/features/ci-features/split-e2e-tasks) so each test file runs as its own CI task with better caching and retries. Use `ciGroupName` if you want a custom group label.
+Here `ciTargetName` atomizes only the E2E tasks.
+Use `ciGroupName` to set a custom group label.
 
 ### View inferred tasks
 
@@ -212,6 +219,8 @@ Open the project details view in Nx Console or run:
 ```shell
 nx show project my-app
 ```
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/jest/plugin`.
 
 ## Set up CI
 
