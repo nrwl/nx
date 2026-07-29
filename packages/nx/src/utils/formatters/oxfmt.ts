@@ -252,10 +252,7 @@ function readIgnoreMatcher(
     matcher.add(contents);
   }
   if (ignorePatterns?.length) {
-    // Filtered rather than passed straight through: `ignore` throws on a
-    // non-string entry, and this runs once for the whole batch, so a single
-    // bad line in a hand-written config would cost every file its formatting.
-    matcher.add(ignorePatterns.filter((p) => typeof p === 'string'));
+    matcher.add(ignorePatterns);
   }
 
   return matcher;
@@ -454,9 +451,23 @@ function splitOxfmtConfig(
     ignorePatterns?: string[];
   } & Record<string, unknown>;
 
+  // Shapes oxfmt refuses to load are reported rather than dropped. Quietly
+  // ignoring them would leave the batch formatting past exclusions the config
+  // asked for, while `nx format` on the same workspace fails outright.
+  if (
+    ignorePatterns !== undefined &&
+    (!Array.isArray(ignorePatterns) ||
+      ignorePatterns.some((pattern) => typeof pattern !== 'string'))
+  ) {
+    return { error: '"ignorePatterns" must be an array of strings' };
+  }
+  if (overrides !== undefined && !Array.isArray(overrides)) {
+    return { error: '"overrides" must be an array' };
+  }
+
   return {
     options,
-    ignorePatterns: Array.isArray(ignorePatterns) ? ignorePatterns : undefined,
+    ignorePatterns,
     overrides: Array.isArray(overrides)
       ? overrides.map((override) => {
           // oxfmt matches these against paths relative to the config file,
@@ -494,9 +505,12 @@ function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
         ? glob
         : `**/${glob}`;
 
-    // oxfmt matches with fast-glob, which has no negation syntax, so a leading
-    // `!` is a literal character rather than an inversion.
-    return new Minimatch(pattern, { dot: true, nonegate: true });
+    // minimatch's own `!` handling is left on: oxfmt normalizes the pattern and
+    // then matches with fast-glob, whose `glob_match` treats a leading `!` as
+    // an inversion too, so `!sub/*.ts` selects everything outside `sub/` on
+    // both sides. (A separator-less `!*.ts` is lifted to `**/!*.ts` above, so
+    // the `!` stops being leading and neither side inverts.)
+    return new Minimatch(pattern, { dot: true });
   });
   return (filePath) => matchers.some((matcher) => matcher.match(filePath));
 }
