@@ -35,22 +35,16 @@ function hasAnyDependency(tree: Tree, packages: string[]): boolean {
  * direction of travel rather than the setup being migrated away from.
  *
  * Falls back to `eslint` when nothing is detected, preserving the historical
- * default for fresh workspaces.
+ * default for fresh workspaces. Never returns `none` — detection answers "which
+ * linter", not "whether to lint", so callers keep that decision.
  */
-export function detectLinter(tree: Tree): LinterType {
+export function detectLinter(tree: Tree): Exclude<LinterType, 'none'> {
   if (
     hasPlugin(tree, '@nx/oxlint') ||
     hasPlugin(tree, '@nx/oxlint/plugin') ||
     hasAnyDependency(tree, ['@nx/oxlint', 'oxlint'])
   ) {
     return 'oxlint';
-  }
-
-  if (
-    hasPlugin(tree, '@nx/eslint/plugin') ||
-    hasAnyDependency(tree, ['@nx/eslint', 'eslint'])
-  ) {
-    return 'eslint';
   }
 
   return 'eslint';
