@@ -68,7 +68,13 @@ describe('js init generator', () => {
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
 
     const oxfmtrc = readJson(tree, '.oxfmtrc.json');
-    expect(oxfmtrc).toEqual({ singleQuote: true, printWidth: 80 });
+    expect(oxfmtrc).toEqual({
+      singleQuote: true,
+      printWidth: 80,
+      // On by default in oxfmt, and prettier has no equivalent - leaving it on
+      // reorders the keys of every package.json Nx formats.
+      sortPackageJson: false,
+    });
   });
 
   describe('default formatter', () => {
