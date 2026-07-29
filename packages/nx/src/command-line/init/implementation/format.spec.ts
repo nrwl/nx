@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { formatInitWrites, recordInitWrite } from './format';
 import { markPackageJsonAsNxProject } from './utils';
+import { output } from '../../../utils/output';
 
 // `filterToPrettierSupportedFiles` reaches prettier through a dynamic import,
 // which jest refuses without `--experimental-vm-modules`. Only that lookup is
@@ -17,19 +18,23 @@ jest.mock('../../../utils/formatters/prettier', () => ({
 describe('formatInitWrites', () => {
   let repoRoot: string;
   let skipFormatBackup: string | undefined;
+  let warn: jest.SpyInstance;
 
   const UNFORMATTED = '{"name":"x",\n    "private":   true}';
   const FORMATTED = '{\n  "name": "x",\n  "private": true\n}\n';
+  const FORMATTED_TABS = '{\n\t"name": "x",\n\t"private": true\n}\n';
 
   beforeEach(() => {
     repoRoot = mkdtempSync(join(tmpdir(), 'nx-init-format-'));
     skipFormatBackup = process.env.NX_SKIP_FORMAT;
     delete process.env.NX_SKIP_FORMAT;
+    warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
   });
 
   afterEach(async () => {
     // Every test records something; drain it so state cannot leak between them.
     await formatInitWrites(repoRoot);
+    warn.mockRestore();
     rmSync(repoRoot, { recursive: true, force: true });
     if (skipFormatBackup === undefined) delete process.env.NX_SKIP_FORMAT;
     else process.env.NX_SKIP_FORMAT = skipFormatBackup;
@@ -43,18 +48,25 @@ describe('formatInitWrites', () => {
 
   const read = (name: string) => readFileSync(join(repoRoot, name), 'utf-8');
 
+  // `useTabs` rather than a default-valued option, and each formatter gets a
+  // config only it reads. On the shared default both formatters emit
+  // byte-identical `package.json`, so the rows could not tell "oxfmt ran" from
+  // "prettier ran" - dispatching every oxfmt workspace to prettier would pass.
   it.each([
-    ['prettier', '.prettierrc', '{}'],
-    ['oxfmt', '.oxfmtrc.json', '{}'],
-  ])('formats what init wrote with %s', async (_formatter, config, content) => {
-    write(config, content);
-    const packageJson = write('package.json');
+    ['prettier', '.prettierrc'],
+    ['oxfmt', '.oxfmtrc.json'],
+  ])(
+    'formats what init wrote with %s, using its own config',
+    async (_formatter, config) => {
+      write(config, JSON.stringify({ useTabs: true }));
+      const packageJson = write('package.json');
 
-    recordInitWrite(packageJson);
-    await formatInitWrites(repoRoot);
+      recordInitWrite(packageJson);
+      await formatInitWrites(repoRoot);
 
-    expect(read('package.json')).toEqual(FORMATTED);
-  });
+      expect(read('package.json')).toEqual(FORMATTED_TABS);
+    }
+  );
 
   it('formats a file a real init helper wrote', async () => {
     // Guards the wiring, not just this module: `writeJsonFile` hardcodes
@@ -143,5 +155,12 @@ describe('formatInitWrites', () => {
 
     await expect(formatInitWrites(repoRoot)).resolves.toBeUndefined();
     expect(read('broken.json')).toEqual('{ this is not json');
+    // Non-fatal must not mean silent: deleting the warn entirely would
+    // otherwise leave this test green.
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('Could not format'),
+      })
+    );
   });
 });

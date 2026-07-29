@@ -55,9 +55,13 @@ exports.format = async function format(fileName, sourceText, options) {
     const stderr = (e.stderr || '').toString().trim();
     const message = stderr || e.message;
     // The real API returns a `codeframe` carrying the path and line, and
-    // production prefers it over `message`. The CLI prints that frame to
-    // stderr, so pass it through under the same key - otherwise the branch
-    // production actually takes is unreachable from this suite.
+    // production prefers it over `message`. Passed through under the same key
+    // so the shapes match.
+    //
+    // Note this does not actually reach production's codeframe branch: under
+    // `--stdin-filepath` the CLI emits a single stderr line, so the newline
+    // test below is always false. Exercising that branch needs the file-path
+    // invocation, which does emit a frame.
     const codeframe = stderr.includes('\n') ? stderr : undefined;
     return { code: sourceText, errors: [{ message, codeframe }] };
   } finally {

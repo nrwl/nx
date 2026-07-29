@@ -34,6 +34,7 @@ export async function initHandler(options: InitArgs) {
   }
   if (options.useDotNxInstallation === true) {
     setupDotNxInstallation(version);
+    await formatInitWrites(process.cwd());
   } else if (existsSync('package.json')) {
     const packageJson: PackageJson = readJsonFile('package.json');
     if (existsSync('angular.json')) {
@@ -76,6 +77,7 @@ export async function initHandler(options: InitArgs) {
       })) === 'true';
     if (useDotNxFolder) {
       setupDotNxInstallation(version);
+      await formatInitWrites(process.cwd());
     } else {
       execSync(`npx --yes create-nx-workspace@${version} ${args}`, {
         stdio: [0, 1, 2],

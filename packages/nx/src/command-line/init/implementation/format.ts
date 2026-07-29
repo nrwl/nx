@@ -13,9 +13,9 @@ import { output } from '../../../utils/output';
 /**
  * Paths `nx init` has created or modified.
  *
- * Module state because init is a single-shot command whose flows write from a
- * dozen call sites across six files, several behind early returns. The only
- * alternative is threading a collector through every one of them.
+ * Module state because init is a single-shot command whose flows write from
+ * many call sites across several files, a number of them behind early returns.
+ * The only alternative is threading a collector through every one of them.
  */
 const writtenFiles = new Set<string>();
 
@@ -52,38 +52,50 @@ export async function formatInitWrites(repoRoot: string): Promise<void> {
     return;
   }
 
-  // Repo-relative, and both writers are given `repoRoot` as their cwd. That
-  // keeps the paths short in the output and pins oxfmt's config and
-  // `.editorconfig` lookup to the repo root, which it resolves from the
-  // working directory rather than per file.
-  const files = recorded
-    .map((file) =>
-      path
-        .relative(repoRoot, path.resolve(repoRoot, file))
-        .split(path.sep)
-        .join('/')
-    )
-    .filter(
-      (file) =>
-        file &&
-        !file.startsWith('../') &&
-        !path.isAbsolute(file) &&
-        existsSync(path.join(repoRoot, file))
-    );
+  // Repo-relative, and both writers are given `repoRoot` as their cwd, so the
+  // paths stay short in the output and resolve against the repo rather than
+  // wherever the command was invoked. That also pins oxfmt's `.editorconfig`
+  // lookup, which it does once from the working directory. It does *not* pin
+  // config discovery: oxfmt still finds a nested `.oxfmtrc.json` for files
+  // under it, the same as the CLI does.
+  // De-duplicated *after* normalising, not by the Set alone: the same file is
+  // routinely recorded both ways - `'nx.json'` by one helper and
+  // `join(repoRoot, 'nx.json')` by another - which are two Set keys for one
+  // file and would otherwise be handed to the formatter twice.
+  const files = [
+    ...new Set(
+      recorded.map((file) =>
+        path
+          .relative(repoRoot, path.resolve(repoRoot, file))
+          .split(path.sep)
+          .join('/')
+      )
+    ),
+  ].filter(
+    (file) =>
+      file &&
+      !file.startsWith('../') &&
+      !path.isAbsolute(file) &&
+      existsSync(path.join(repoRoot, file))
+  );
   if (files.length === 0) {
     return;
   }
 
-  const formatter = detectFormatter(repoRoot);
-  if (!formatter) {
-    return;
-  }
-
+  // `detectFormatter` reads package.json, so it belongs inside the try as much
+  // as the formatter run does - a workspace whose package.json cannot be parsed
+  // must not fail an init that has already finished.
+  //
   // Chunked for the same reason `nx format` chunks: the Angular flow records a
   // `project.json` per project, so a large workspace can record more paths than
   // one command line holds. The prettier path quotes on its way to the shell,
   // so it is sized against that; oxfmt goes through execFile and gets them raw.
+  let formatter: ReturnType<typeof detectFormatter> = null;
   try {
+    formatter = detectFormatter(repoRoot);
+    if (!formatter) {
+      return;
+    }
     if (formatter === 'oxfmt') {
       for (const chunk of chunkify(files)) {
         if (chunk.length) {
@@ -106,7 +118,9 @@ export async function formatInitWrites(repoRoot: string): Promise<void> {
     }
   } catch (e) {
     output.warn({
-      title: `Could not format the files nx init wrote with ${formatter}.`,
+      title: formatter
+        ? `Could not format the files nx init wrote with ${formatter}.`
+        : 'Could not work out which formatter to use for the files nx init wrote.',
       bodyLines: [
         ...(e?.message ? [e.message] : []),
         'Run "nx format:write" to format them.',
