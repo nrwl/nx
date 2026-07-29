@@ -104,7 +104,9 @@ export function getUserSegment(): string {
 /**
  * Ensure `dir` exists, is a real directory owned by us, and carries no group or
  * other bits at all — read and search alone reach a socket inside it, so 0755 is
- * re-locked rather than accepted. False means another user planted it.
+ * re-locked rather than accepted. False means it could not be established —
+ * usually a directory another user planted, but also a plain filesystem error
+ * or one we could not re-lock.
  *
  * Node builtins only: reached from the native binding loader.
  */
