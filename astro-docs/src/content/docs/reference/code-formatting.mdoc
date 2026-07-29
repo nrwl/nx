@@ -68,30 +68,39 @@ npm add -D oxfmt
 Those two values are what `@nx/js:init` writes, and they match the Prettier setup Nx generates.
 The oxfmt defaults differ, so set them explicitly if you want your existing formatting to stay put.
 
-Then delete `.prettierrc` and `.prettierignore`, and run `nx format:write` to reformat everything in
-one commit.
+Then delete `.prettierrc`, and run `nx format:write` to reformat everything in one commit.
+
+Keep `.prettierignore` if you have one. oxfmt reads it too, so deleting it starts formatting files
+you had excluded.
 
 ## Generator formatting and `nx format` differ
 
 `nx format:write` runs the formatter's own CLI.
 Generators format files that exist only in memory, so they call the oxfmt API directly and Nx applies
 the surrounding configuration itself.
-The two agree on the workspace root config, `overrides`, `ignorePatterns`, the root `.editorconfig`,
-`.gitignore`, and `.prettierignore`.
+The two agree on the workspace root config, its `overrides` and `ignorePatterns`, the root
+`.editorconfig`, and the root `.gitignore` and `.prettierignore`.
 
-They differ in two cases:
+They differ in three cases, all of them about configuration that lives somewhere other than the
+workspace root:
 
-- Config files in subdirectories apply under `nx format:write` but not during generator formatting.
-- `.editorconfig` files in subdirectories, and the `root = true` walk-up, apply under
-  `nx format:write` but not during generator formatting.
+- An `.oxfmtrc.json` in a subdirectory applies under `nx format:write` but not during generator
+  formatting.
+- A `.gitignore` in a subdirectory applies under `nx format:write` but not during generator
+  formatting.
+- `nx format:write` resolves `.editorconfig` by walking up from the directory you run it in, so a
+  file above the workspace root can apply unless one of them sets `root = true`. Generator
+  formatting reads only the workspace root file.
 
-Both differences only matter if you keep formatter configuration outside the workspace root.
+Subdirectory `.editorconfig` files apply under neither: oxfmt resolves `.editorconfig` once from the
+working directory, not per formatted file.
 
 ## Skip formatting
 
 Set [`NX_SKIP_FORMAT=true`](/docs/reference/environment-variables) to stop generators and migrations
 from formatting.
-TypeScript path sorting still runs, since it isn't formatting.
+It does not turn off TypeScript path sorting, which is a separate concern controlled by the
+`sortRootTsconfigPaths` option and `NX_FORMAT_SORT_TSCONFIG_PATHS`, and is off by default.
 
 ```shell
 NX_SKIP_FORMAT=true nx g @nx/react:app my-app
