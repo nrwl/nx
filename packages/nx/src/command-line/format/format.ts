@@ -249,6 +249,13 @@ async function check(
       return checkWithOxfmt(patterns);
     case 'prettier':
       return checkWithPrettier(patterns);
+    default: {
+      // `strict: false` does not make a missing case an error on its own, but
+      // it does reject this assignment - so adding a formatter fails to compile
+      // here instead of returning undefined into a caller that spreads it.
+      const unhandled: never = formatterType;
+      throw new Error(`Unhandled formatter: ${unhandled}`);
+    }
   }
 }
 

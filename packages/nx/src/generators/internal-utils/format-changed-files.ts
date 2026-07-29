@@ -101,6 +101,13 @@ function formatDetectedFiles(
       return formatFilesWithPrettier(files, root, options);
     case 'oxfmt':
       return runOxfmtBatch(files, root, options);
+    default: {
+      // See the same arm in `command-line/format/format.ts`: this is the one
+      // piece of compile-time help `strict: false` still allows, and without it
+      // an unhandled formatter returns undefined into callers that iterate it.
+      const unhandled: never = formatterType;
+      throw new Error(`Unhandled formatter: ${unhandled}`);
+    }
   }
 }
 

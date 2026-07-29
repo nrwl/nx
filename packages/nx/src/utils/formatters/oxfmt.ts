@@ -235,9 +235,14 @@ async function loadJsOxfmtConfig(configPath: string): Promise<any> {
 
 /**
  * `loadTsFile` loads through `require`, which throws `Unexpected token 'export'`
- * on the ESM-only `.mts` form. Node strips types on `import()` as well, so that
- * is the fallback: oxfmt discovers `.mts`, and reporting it as unreadable would
+ * on the ESM-only `.mts` form. Node strips types on `import()` too, so that is
+ * the fallback: oxfmt discovers `.mts`, and reporting it as unreadable would
  * leave every generator refusing to format a workspace `nx format` handles.
+ *
+ * Type stripping on `import()` needs Node >=22.18 / >=23.6. Below that the
+ * fallback throws `ERR_UNKNOWN_FILE_EXTENSION` and the config is reported as
+ * unreadable - the same outcome as before this fallback existed, not a worse
+ * one.
  *
  * `register` is required lazily so that reading a JSON config does not pull in
  * the TypeScript transpiler machinery.
@@ -434,10 +439,16 @@ type OxfmtOverride = {
 };
 
 /**
- * Either a usable config or the reason there isn't one - never both. The two
- * arms are separate so a caller cannot read options off a config that failed
- * to load, which is the case that silently formats past a workspace's own
- * `ignorePatterns`.
+ * Either a usable config or the reason there isn't one - never both. That half
+ * *is* enforced: the error arm types every payload key as `undefined`, so a
+ * value cannot be attached to it.
+ *
+ * Reading `options` *without* checking `error` first is not enforced, because
+ * `strict: false` erases the `| undefined` that would make it an error. Callers
+ * must check `error` first - `formatFilesWithOxfmt` does - and the case that
+ * matters is the one that would otherwise format past a workspace's own
+ * `ignorePatterns`. Making it a compile error needs a required discriminant on
+ * both arms.
  */
 type ResolvedOxfmtConfig =
   | {
@@ -574,6 +585,11 @@ function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
     // an inversion too, so `!sub/*.ts` selects everything outside `sub/` on
     // both sides. (A separator-less `!*.ts` is lifted to `**/!*.ts` above, so
     // the `!` stops being leading and neither side inverts.)
+    //
+    // Known exception: a negated *leading* globstar. oxfmt reads the `**` in
+    // `!**/t.ts` as exactly one segment and matches `t.ts` and `a/b/t.ts`;
+    // minimatch keeps zero-or-more and matches nothing. Every other negated
+    // form measured agrees. Rare enough to document rather than special-case.
     return new Minimatch(pattern, { dot: true });
   });
   return (filePath) => matchers.some((matcher) => matcher.match(filePath));

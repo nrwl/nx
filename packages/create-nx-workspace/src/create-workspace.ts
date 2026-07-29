@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'path';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
@@ -274,29 +274,23 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       // carries that reason into the warning.
       await execAndWait(`${pmc.exec} nx format --all`, directory);
     } catch (e) {
-      // When the command produced no output of its own, `execAndWait` builds a
-      // message that only points at the log file - which this block deletes a
-      // few lines below. Read it into the warning instead, so the reason
-      // survives the cleanup. When the message already carries stderr there is
-      // nothing to add.
-      let logContents: string | undefined;
-      if (
-        e?.logFile &&
-        e?.message?.includes(e.logFile) &&
-        existsSync(e.logFile)
-      ) {
-        try {
-          logContents = readFileSync(e.logFile, 'utf-8').trim() || undefined;
-        } catch {
-          // Unreadable log: the pointer in `e.message` is still printed below.
-        }
-      }
+      // `execAndWait` falls back to a "see <logFile> for details" message only
+      // when the command produced no output at all - and it writes that log as
+      // `${stdout}\n${stderr}`, so in exactly that case the file holds "\n".
+      // Pointing at it would be useless twice over: it is empty, and the
+      // cleanup below deletes it. Say what happened instead. Every other
+      // message already carries the real stderr or stdout.
+      const reason =
+        e?.logFile && e?.message?.includes(e.logFile)
+          ? `The command failed with exit code ${
+              e.exitCode ?? 'unknown'
+            } and produced no output.`
+          : e?.message;
       output.warn({
         title: 'Could not format the new workspace.',
         bodyLines: [
           'The workspace was created successfully, but its files are not formatted.',
-          ...(e?.message ? [e.message] : []),
-          ...(logContents ? [logContents] : []),
+          ...(reason ? [reason] : []),
           'Run "nx format:write" inside the workspace to format them.',
         ],
       });
