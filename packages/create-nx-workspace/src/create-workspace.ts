@@ -258,19 +258,27 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   // This is the only formatting pass a new workspace gets, so a failure here
   // leaves the workspace failing its own `nx format:check`. It stays
   // non-fatal, but it does not stay silent.
-  delete process.env.NX_SKIP_FORMAT;
-  if (!skipFormatRequested) {
+  if (skipFormatRequested) {
+    process.env.NX_SKIP_FORMAT = 'true';
+  } else {
+    delete process.env.NX_SKIP_FORMAT;
     try {
       const pmc = getPackageManagerCommand(packageManager);
       // `--all` explicitly: git has not been initialised yet, so file-based
       // pattern resolution has no repo to diff against and would only reach
       // the all-files pattern through its error path.
-      await execAndWait(`${pmc.exec} nx format --all`, directory, true);
-    } catch {
+      //
+      // Errors are not silenced: `nx format` is the one place a formatter
+      // problem becomes visible ("oxfmt is configured but is not installed",
+      // an unreadable config, a file it cannot parse), and silencing also
+      // suppresses the error.log that a bug report would otherwise carry.
+      await execAndWait(`${pmc.exec} nx format --all`, directory);
+    } catch (e) {
       output.warn({
         title: 'Could not format the new workspace.',
         bodyLines: [
           'The workspace was created successfully, but its files are not formatted.',
+          ...(e?.message ? [e.message] : []),
           'Run "nx format:write" inside the workspace to format them.',
         ],
       });

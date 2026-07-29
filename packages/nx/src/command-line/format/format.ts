@@ -54,7 +54,14 @@ export async function format(
   // surface as a raw MODULE_NOT_FOUND (or, on the prettier path, an unrelated
   // TypeScript-stripping error) into something actionable.
   try {
-    formatterType === 'oxfmt' ? getOxfmtBinPath() : getPrettierPath();
+    switch (formatterType) {
+      case 'oxfmt':
+        getOxfmtBinPath();
+        break;
+      case 'prettier':
+        getPrettierPath();
+        break;
+    }
   } catch {
     output.error({
       title: `${formatterType} is configured for this workspace but is not installed.`,
