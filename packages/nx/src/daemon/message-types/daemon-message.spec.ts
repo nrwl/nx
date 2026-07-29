@@ -1,5 +1,5 @@
 import {
-  assertNotForeignWorkspaceMessage,
+  assertValidDaemonMessage,
   isForeignWorkspaceMessage,
 } from './daemon-message';
 
@@ -40,12 +40,12 @@ describe('isForeignWorkspaceMessage', () => {
   });
 });
 
-describe('assertNotForeignWorkspaceMessage', () => {
+describe('assertValidDaemonMessage', () => {
   const receiverRoot = '/Users/me/workspace';
 
   it('does not throw when the workspace roots match', () => {
     expect(() =>
-      assertNotForeignWorkspaceMessage(
+      assertValidDaemonMessage(
         { type: 'PING', workspaceRoot: receiverRoot },
         receiverRoot
       )
@@ -54,13 +54,13 @@ describe('assertNotForeignWorkspaceMessage', () => {
 
   it('does not throw when the message has no workspace root', () => {
     expect(() =>
-      assertNotForeignWorkspaceMessage({ type: 'PING' }, receiverRoot)
+      assertValidDaemonMessage({ type: 'PING' }, receiverRoot)
     ).not.toThrow();
   });
 
   it('throws with both workspace roots when they differ', () => {
     expect(() =>
-      assertNotForeignWorkspaceMessage(
+      assertValidDaemonMessage(
         { type: 'PING', workspaceRoot: '/Users/me/other-workspace' },
         receiverRoot
       )
@@ -70,7 +70,7 @@ describe('assertNotForeignWorkspaceMessage', () => {
   it('names the Nx Daemon in the error by default', () => {
     // The daemon relies on the default description; keep that wording stable.
     expect(() =>
-      assertNotForeignWorkspaceMessage(
+      assertValidDaemonMessage(
         { type: 'PING', workspaceRoot: '/Users/me/other-workspace' },
         receiverRoot
       )
@@ -81,7 +81,7 @@ describe('assertNotForeignWorkspaceMessage', () => {
     // The plugin worker passes its own description; the shared assertion must
     // surface it instead of the daemon wording.
     expect(() =>
-      assertNotForeignWorkspaceMessage(
+      assertValidDaemonMessage(
         { type: 'load', workspaceRoot: '/Users/me/other-workspace' },
         receiverRoot,
         'The Nx plugin worker "my-plugin" (pid: 123)'
