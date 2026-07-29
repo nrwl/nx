@@ -6,8 +6,9 @@ import { writeJsonFile, type JsonWriteOptions } from './fileutils';
 import { workspaceRoot } from './workspace-root';
 
 /**
- * Writes a JSON file, formatting with Prettier if available, otherwise
- * falling back to standard JSON serialization.
+ * Writes a JSON file, formatting it with whichever formatter the workspace is
+ * configured for, and falling back to standard JSON serialization when there
+ * is none or it cannot format the file.
  */
 export async function writeFormattedJsonFile<T extends object = object>(
   filePath: string,

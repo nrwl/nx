@@ -6,9 +6,10 @@ import {
   detectFormatterInTree,
   type FormatterType,
 } from '../../utils/formatters';
-import { formatFilesWithOxfmt as batchFormatWithOxfmt } from '../../utils/formatters/oxfmt';
+import { formatFilesWithOxfmt } from '../../utils/formatters/oxfmt';
 import type { Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
+import { output } from '../../utils/output';
 
 /**
  * Formats all the created or updated files using the configured formatter
@@ -16,8 +17,8 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
  *
  * @remarks
  * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip
- * formatting. This is useful for repositories that have custom formatting
- * requirements.
+ * formatting. This is useful for repositories that format with a tool Nx does
+ * not drive (Biome, dprint) or that have custom formatting requirements.
  */
 export async function formatChangedFilesWithPrettierIfAvailable(
   tree: Tree,
@@ -95,9 +96,12 @@ function formatDetectedFiles(
   root: string,
   options?: { silent?: boolean }
 ): Promise<Map<string, string>> {
-  return formatterType === 'prettier'
-    ? formatFilesWithPrettier(files, root, options)
-    : formatFilesWithOxfmt(files, root, options);
+  switch (formatterType) {
+    case 'prettier':
+      return formatFilesWithPrettier(files, root, options);
+    case 'oxfmt':
+      return runOxfmtBatch(files, root, options);
+  }
 }
 
 async function formatFilesWithPrettier(
@@ -149,7 +153,10 @@ async function formatFilesWithPrettier(
         );
       } catch (e) {
         if (!options?.silent) {
-          console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
+          output.warn({
+            title: `Could not format ${file.path}`,
+            bodyLines: [e.message],
+          });
         }
       }
     })
@@ -158,7 +165,7 @@ async function formatFilesWithPrettier(
   return results;
 }
 
-async function formatFilesWithOxfmt(
+async function runOxfmtBatch(
   files: { path: string; content: string | Buffer }[],
   root: string,
   options?: { silent?: boolean }
@@ -166,20 +173,26 @@ async function formatFilesWithOxfmt(
   try {
     // A single oxfmt invocation for the whole batch - the binary costs
     // ~100ms to start, so one process per file does not scale.
-    const { formatted, error } = await batchFormatWithOxfmt(
+    const { formatted, errors } = await formatFilesWithOxfmt(
       files.map((file) => ({
         path: file.path,
         content: file.content.toString('utf-8'),
       })),
       root
     );
-    if (error && !options?.silent) {
-      console.warn(`Could not format some files with oxfmt. Error: "${error}"`);
+    if (errors?.length && !options?.silent) {
+      output.warn({
+        title: 'Could not format some files with oxfmt',
+        bodyLines: errors,
+      });
     }
     return formatted;
   } catch (e) {
     if (!options?.silent) {
-      console.warn(`Could not format files with oxfmt. Error: "${e.message}"`);
+      output.warn({
+        title: 'Could not format files with oxfmt',
+        bodyLines: [e.message],
+      });
     }
     return new Map<string, string>();
   }

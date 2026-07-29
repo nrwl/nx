@@ -6,11 +6,14 @@ import { readJsonFile } from '../fileutils';
 import { isUsingOxfmt, isUsingOxfmtInTree } from './oxfmt';
 import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
 
-export type FormatterType = 'prettier' | 'oxfmt' | null;
+/**
+ * A formatter Nx can actually dispatch to. "No formatter configured" is the
+ * absence of one, so detection returns `FormatterType | null` rather than
+ * folding null into this union - that keeps every dispatch site exhaustive.
+ */
+export type FormatterType = 'prettier' | 'oxfmt';
 
-export { FORMATTER_MAX_BUFFER } from './shared';
-
-export function detectFormatter(root: string): FormatterType {
+export function detectFormatter(root: string): FormatterType | null {
   if (isUsingOxfmt(root)) {
     return 'oxfmt';
   }
@@ -34,7 +37,7 @@ export function detectFormatter(root: string): FormatterType {
   return null;
 }
 
-export function detectFormatterInTree(tree: Tree): FormatterType {
+export function detectFormatterInTree(tree: Tree): FormatterType | null {
   if (isUsingOxfmtInTree(tree)) {
     return 'oxfmt';
   }
