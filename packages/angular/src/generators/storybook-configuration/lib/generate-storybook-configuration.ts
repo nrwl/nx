@@ -12,8 +12,11 @@ export async function generateStorybookConfiguration(
   return await configurationGenerator(tree, {
     project: options.project,
     uiFramework: '@storybook/angular',
-    // Storybook's configuration generator only adds ESLint overrides for
-    // story files; there is no equivalent for other linters.
+    // `@nx/storybook`'s schema types `linter` from the *published* `@nx/eslint`,
+    // whose `LinterType` predates oxlint, so `'oxlint'` does not typecheck here
+    // until that version ships. Coercing is safe: the storybook generator never
+    // reads this option — it decides what to do from `findEslintFile` instead —
+    // so all three values produce identical output.
     linter: options.linter === 'eslint' ? 'eslint' : 'none',
     tsConfiguration: options.tsConfiguration,
     interactionTests: options.interactionTests,
