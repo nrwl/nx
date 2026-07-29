@@ -75,7 +75,6 @@ export { isUsingPrettierInTree } from './utils/formatters/prettier';
 export { detectFormatter, detectFormatterInTree } from './utils/formatters';
 export type { FormatterType } from './utils/formatters';
 export {
-  formatContentWithOxfmt,
   formatFilesWithOxfmt,
   oxfmtConfigFiles,
 } from './utils/formatters/oxfmt';
