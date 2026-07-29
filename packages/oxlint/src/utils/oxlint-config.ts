@@ -55,10 +55,18 @@ export function addPluginsToOxlintConfig(
   }
 
   // A root project has no config to nest — the root config is its own.
+  // Otherwise reuse whichever editable config the project already has: writing
+  // `.oxlintrc.json` beside an existing `.oxlintrc.jsonc` is a hard error in
+  // Oxlint, not an override.
+  const existingProjectConfig = EDITABLE_CONFIG_FILENAMES.map((file) =>
+    joinPathFragments(projectRoot, file)
+  ).find((path) => tree.exists(path));
+
   const projectConfigPath =
     projectRoot === '.'
       ? rootConfigPath
-      : joinPathFragments(projectRoot, '.oxlintrc.json');
+      : (existingProjectConfig ??
+        joinPathFragments(projectRoot, '.oxlintrc.json'));
 
   if (tree.exists(projectConfigPath)) {
     updateJson<OxlintConfig>(tree, projectConfigPath, (json) => {

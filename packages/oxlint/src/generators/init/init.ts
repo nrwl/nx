@@ -42,7 +42,7 @@ export interface InitGeneratorSchema {
 const OXLINT_TARGET_NAMES = ['lint', 'oxlint', 'oxlint:lint', 'oxlint-lint'];
 
 /**
- * Picks the first target name nothing in the workspace already uses.
+ * The candidate target names nothing in the workspace already uses.
  *
  * `addPlugin` can resolve this itself, but it does so by running our own
  * `createNodes` against the real filesystem — where the root config does not
@@ -51,7 +51,7 @@ const OXLINT_TARGET_NAMES = ['lint', 'oxlint', 'oxlint:lint', 'oxlint-lint'];
  * conflicts and take `lint` even in a workspace where ESLint owns it. Reading
  * the existing graph answers the same question without that dependency.
  */
-function resolveTargetName(graph: ProjectGraph): string {
+function resolveTargetNames(graph: ProjectGraph): string[] {
   const taken = new Set<string>();
   for (const node of Object.values(graph.nodes ?? {})) {
     for (const target of Object.keys(node.data?.targets ?? {})) {
@@ -59,10 +59,18 @@ function resolveTargetName(graph: ProjectGraph): string {
     }
   }
 
-  return (
-    OXLINT_TARGET_NAMES.find((name) => !taken.has(name)) ??
-    OXLINT_TARGET_NAMES[OXLINT_TARGET_NAMES.length - 1]
-  );
+  const available = OXLINT_TARGET_NAMES.filter((name) => !taken.has(name));
+  if (!available.length) {
+    throw new Error(
+      `Could not add the @nx/oxlint plugin: every candidate target name is already in use (${OXLINT_TARGET_NAMES.join(
+        ', '
+      )}). Rename one of them, or pass \`--targetName\` to choose your own.`
+    );
+  }
+
+  // Hand `addPlugin` the whole remaining list rather than one name, so it keeps
+  // its own fallback chain if its per-project probe disagrees with this one.
+  return available;
 }
 
 export async function initGeneratorInternal(
@@ -87,7 +95,7 @@ export async function initGeneratorInternal(
       graph,
       '@nx/oxlint',
       createNodes,
-      { targetName: [resolveTargetName(graph)] },
+      { targetName: resolveTargetNames(graph) },
       options.updatePackageScripts
     );
   } else {

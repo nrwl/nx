@@ -251,7 +251,11 @@ export async function e2eProjectGeneratorInternal(
   );
   tasks.push(installTask);
 
-  if (options.linter !== 'eslint' && options.linter !== 'none') {
+  if (
+    options.linter &&
+    options.linter !== 'eslint' &&
+    options.linter !== 'none'
+  ) {
     tasks.push(
       await addLintingToProject(host, {
         linter: options.linter,
