@@ -20,6 +20,9 @@ describe('formatFiles', () => {
   describe('NX_SKIP_FORMAT', () => {
     it('should skip formatting when NX_SKIP_FORMAT is true', async () => {
       process.env.NX_SKIP_FORMAT = 'true';
+      // Without a configured formatter this test passes through the
+      // no-formatter path and would stay green with the env check deleted.
+      tree.write('.oxfmtrc.json', '{}');
 
       // Create a file with intentionally bad formatting
       const unformattedContent = 'const   x   =   1;';

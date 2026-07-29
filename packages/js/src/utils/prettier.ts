@@ -68,7 +68,13 @@ export function generatePrettierSetup(
   // missing from this copy gets a second, redundant `.prettierrc` written next
   // to the one it already has. This copy was missing the `.ts`/`.mts`/`.cts`
   // forms.
-  if (prettierConfigFiles.every((name) => !tree.exists(name))) {
+  // `prettierConfigFiles` is new in this nx. `@nx/js` has no `nx` peer of its own, so it
+  // inherits devkit's `>= 22 <= 24` and can be paired with an nx that does not
+  // export it - where a bare `.every` would be a TypeError inside `@nx/js:init`.
+  // Falling back to the canonical name may write a redundant config on such a
+  // pairing, which is a better failure than a crash.
+  const configFiles = prettierConfigFiles ?? ['.prettierrc'];
+  if (configFiles.every((name) => !tree.exists(name))) {
     writeJson(tree, '.prettierrc', { singleQuote: true });
   }
 

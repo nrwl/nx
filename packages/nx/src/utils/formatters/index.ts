@@ -13,12 +13,16 @@ import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
  * they can actually run, and the caller has to deal with "none" once, up front.
  *
  * The repo builds with `strict: false`, so a `switch` that merely omits a
- * member is not an error by itself. The two dispatch sites that return a value
- * carry a `never` assertion in their `default` arm, and that *is* enforced -
- * adding a member here fails to compile there rather than returning `undefined`
- * into a caller that iterates it. The remaining sites are `if`/`else` chains
- * (devkit's `formatFiles`, `nx init`'s formatter pass) and still need visiting
- * by hand.
+ * member is not an error by itself. Adding a member here is therefore made to
+ * fail compilation at every dispatch site that can be made to: `check()` and
+ * `write()` in `command-line/format/format.ts` and `formatDetectedFiles` in
+ * `generators/internal-utils/format-changed-files.ts` each carry a `never`
+ * assertion in their `default` arm, and `format.ts`'s binary-resolution table
+ * is keyed by this type.
+ *
+ * What still needs visiting by hand: the `formatterType === 'prettier'`
+ * ternary and `if` in `format.ts`, devkit's `formatFiles`, and `nx init`'s
+ * formatter pass - all `if`/`else` shapes with no exhaustiveness to assert.
  */
 export type FormatterType = 'prettier' | 'oxfmt';
 

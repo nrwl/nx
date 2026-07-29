@@ -27,7 +27,9 @@ type OxfmtFormat = (
 ) => Promise<{
   code: string;
   // `codeframe` carries the path and line; `message` on its own does not.
-  // Nullable, not optional - that is what oxfmt's own `dist/index.d.ts` says.
+  // oxfmt's own `dist/index.d.ts` has both `errors` and `codeframe` required
+  // (`codeframe: string | null`); they are widened to optional here so the
+  // jest mock's shape fits.
   errors?: { message: string; codeframe?: string | null }[];
 }>;
 
@@ -226,36 +228,19 @@ function isJsonOxfmtConfig(name: string): boolean {
  * `require` handles a CommonJS config directly, which keeps it out of the ESM
  * loader; only a config that is really ESM needs to be imported.
  */
-async function loadJsOxfmtConfig(configPath: string): Promise<any> {
-  try {
-    return require(configPath);
-  } catch {
-    return await dynamicImport(pathToFileURL(configPath).href);
-  }
-}
-
 /**
- * `loadTsFile` loads through `require`, which throws `Unexpected token 'export'`
- * on the ESM-only `.mts` form. Node strips types on `import()` too, so that is
- * the fallback: oxfmt discovers `.mts`, and reporting it as unreadable would
- * leave every generator refusing to format a workspace `nx format` handles.
- *
- * Type stripping on `import()` needs Node >=22.18 / >=23.6. Below that the
- * fallback throws `ERR_UNKNOWN_FILE_EXTENSION` and the config is reported as
- * unreadable - the same outcome as before this fallback existed, not a worse
- * one.
- *
  * `register` is required lazily so that reading a JSON config does not pull in
  * the TypeScript transpiler machinery.
+ *
+ * No `import()` fallback: `loadTsFile` already recovers from `ERR_REQUIRE_ESM`
+ * and from Node parsing an ESM `.ts` as CJS, and on every runtime oxfmt
+ * supports (`^20.19.0 || >=22.12.0`) `require` handles an ESM `.mts` directly.
+ * Measured - `require` of an ESM `.mts` returns the config rather than throwing.
  */
-async function loadTsOxfmtConfig(configPath: string): Promise<any> {
-  try {
-    return (
-      require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
-    ).loadTsFile(configPath);
-  } catch {
-    return await dynamicImport(pathToFileURL(configPath).href);
-  }
+function loadTsOxfmtConfig(configPath: string): unknown {
+  return (
+    require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
+  ).loadTsFile(configPath);
 }
 
 /**
@@ -476,8 +461,17 @@ type ResolvedOxfmtConfig =
 function splitOxfmtConfig(
   config: Record<string, unknown> | undefined
 ): ResolvedOxfmtConfig {
-  if (!config || typeof config !== 'object') {
+  if (config === undefined) {
     return {};
+  }
+  // Anything that is not a plain object is a config oxfmt refuses to load:
+  // measured, `123` / `"x"` / `[]` / `null` / `true` each exit 1 with
+  // "invalid type: ... expected struct Oxfmtrc" and format nothing. Returning
+  // `{}` here would instead format the batch on oxfmt's bare defaults - the
+  // divergence the `error` arm below exists to prevent. Note `[]` needs the
+  // explicit check: `typeof [] === 'object'`.
+  if (config === null || typeof config !== 'object' || Array.isArray(config)) {
+    return { error: 'the config must be an object' };
   }
 
   const {
@@ -581,14 +575,18 @@ function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
         ? glob
         : `**/${glob}`;
 
-    // Under negation oxfmt collapses a *leading* globstar to exactly one
+    // Under negation oxfmt collapses a *single* leading globstar to exactly one
     // segment: `!**/t.ts` selects the same set as `!*/t.ts` (matching `t.ts`
     // and `a/b/t.ts`, not `a/t.ts`), while minimatch's zero-or-more `**` would
-    // select nothing. An interior `**` is unaffected on both sides
-    // (`!a/**/t.ts` agrees as written). Measured against oxfmt 0.60.0.
-    const pattern = lifted.startsWith('!**/')
-      ? `!*/${lifted.slice(4)}`
-      : lifted;
+    // exclude every `t.ts` including the two oxfmt still matches. An interior
+    // `**` is unaffected on both sides
+    // (`!a/**/t.ts` agrees as written), and so is a *doubled* leading one -
+    // measured, `!**/**/t.ts` matches nothing on either side, so rewriting it
+    // would introduce the divergence rather than close it. Against oxfmt 0.60.0.
+    const pattern =
+      lifted.startsWith('!**/') && !lifted.startsWith('!**/**/')
+        ? `!*/${lifted.slice(4)}`
+        : lifted;
 
     // minimatch's own `!` handling is left on: oxfmt normalizes the pattern and
     // then matches with fast-glob, whose `glob_match` treats a leading `!` as
@@ -632,8 +630,8 @@ function overrideOptionsForFile(
  * defaults.
  *
  * A config that has to be executed to be understood is loaded the same way Nx
- * loads any other config file: TypeScript through the workspace's transpiler,
- * plain JavaScript through `import()`.
+ * loads any other config file, through the workspace's TypeScript transpiler.
+ * There is no JavaScript branch: oxfmt does not discover `oxfmt.config.js`.
  *
  * Unlike the CLI, only the workspace-root config is read - nested configs
  * (which the CLI discovers unless given `--disable-nested-config`) are not.
@@ -661,11 +659,13 @@ async function resolveOxfmtConfig(
         return splitOxfmtConfig(parseJson(readFileSync(configPath, 'utf-8')));
       }
 
-      const loaded = /\.(ts|mts|cts)$/.test(name)
-        ? await loadTsOxfmtConfig(configPath)
-        : await loadJsOxfmtConfig(configPath);
+      // Every discovered name is JSON above or TypeScript here - there is no
+      // JavaScript branch, because oxfmt does not discover `oxfmt.config.js`.
+      const loaded = loadTsOxfmtConfig(configPath) as
+        | { default?: unknown }
+        | undefined;
 
-      return splitOxfmtConfig(loaded?.default ?? loaded);
+      return splitOxfmtConfig((loaded?.default ?? loaded) as any);
     } catch (e) {
       // Unlike the CLI, oxfmt never sees this file - it is handed options in
       // memory - so nothing else will report that the config is unusable.
