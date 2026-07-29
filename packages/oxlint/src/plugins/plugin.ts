@@ -147,6 +147,12 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
     const { oxlintConfigFiles, projectRoots, projectRootsByOxlintRoots } =
       splitConfigFiles(configFiles);
 
+    // The glob also matches `**/package.json`, so this callback runs in every
+    // workspace, Oxlint or not. Bail before the chain walks and the hashing.
+    if (oxlintConfigFiles.length === 0) {
+      return [];
+    }
+
     // Globbing every lintable file in the workspace is the most expensive thing
     // this plugin does, and it is only consulted on a cache miss. Keep it lazy
     // so a warm graph computation skips it, and memoize the promise so the
@@ -181,16 +187,26 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
       options,
       context,
       projectRoots.map((root) => {
-        const parentConfigs = oxlintConfigFiles.filter((oxlintConfig) =>
-          isSubDir(root, dirname(oxlintConfig))
-        );
+        // Configs that govern this project: the one in its own directory, and
+        // every ancestor's. Configs *below* the project root are already
+        // covered by the `{projectRoot}/**/*` glob the hasher adds, and it is
+        // the ancestors whose edits would otherwise go unnoticed.
+        const governingConfigs = oxlintConfigFiles.filter((oxlintConfig) => {
+          const configDir = dirname(oxlintConfig);
+          return configDir === root || isSubDir(configDir, root);
+        });
+        // Deduped: with a config per project every chain resolves to the same
+        // root config, and each duplicate is another glob for the hasher to
+        // evaluate against the whole workspace.
         return [
-          ...parentConfigs,
-          ...parentConfigs.flatMap(
-            (config) => configChainsByConfig.get(config) ?? []
-          ),
-          lockFilePattern,
-          ...(tsconfigChainsByProjectRoot.get(root) ?? []),
+          ...new Set([
+            ...governingConfigs,
+            ...governingConfigs.flatMap(
+              (config) => configChainsByConfig.get(config) ?? []
+            ),
+            lockFilePattern,
+            ...(tsconfigChainsByProjectRoot.get(root) ?? []),
+          ]),
         ];
       })
     );
@@ -199,9 +215,6 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
     );
 
     try {
-      if (oxlintConfigFiles.length === 0) {
-        return [];
-      }
       return await createNodesFromFiles(
         (configFile, fileOptions, fileContext) =>
           internalCreateNodes(
@@ -280,6 +293,46 @@ function collectConfigChains(
   workspaceRoot: string
 ): Map<string, string[]> {
   const result = new Map<string, string[]>();
+  // Shared across configs, not per config: with a config per project every
+  // chain ends at the same root config, so without this each project re-reads
+  // and re-parses it. `null` records "read failed", so a bad file is not
+  // retried once per referrer either.
+  const jsonCache = new Map<string, { extends?: string[] } | null>();
+  const existsCache = new Map<string, boolean>();
+
+  const configExists = (relativeConfigPath: string): boolean => {
+    let exists = existsCache.get(relativeConfigPath);
+    if (exists === undefined) {
+      exists = existsSync(join(workspaceRoot, relativeConfigPath));
+      existsCache.set(relativeConfigPath, exists);
+    }
+    return exists;
+  };
+
+  const readConfig = (
+    relativeConfigPath: string
+  ): { extends?: string[] } | null => {
+    if (jsonCache.has(relativeConfigPath)) {
+      return jsonCache.get(relativeConfigPath);
+    }
+
+    let json: { extends?: string[] } | null = null;
+    if (configExists(relativeConfigPath)) {
+      try {
+        json = readJsonFile(join(workspaceRoot, relativeConfigPath), {
+          expectComments: true,
+          allowTrailingComma: true,
+        });
+      } catch {
+        // A malformed config drops its chain from the task inputs rather than
+        // failing graph construction, matching `readCachedJson` in @nx/js.
+        json = null;
+      }
+    }
+
+    jsonCache.set(relativeConfigPath, json);
+    return json;
+  };
 
   for (const configFile of oxlintConfigFiles) {
     const extended: string[] = [];
@@ -295,20 +348,7 @@ function collectConfigChains(
         return;
       }
 
-      const absolutePath = join(workspaceRoot, relativeConfigPath);
-      if (!existsSync(absolutePath)) {
-        return;
-      }
-
-      let json: { extends?: string[] };
-      try {
-        json = readJsonFile(absolutePath, {
-          expectComments: true,
-          allowTrailingComma: true,
-        });
-      } catch {
-        return;
-      }
+      const json = readConfig(relativeConfigPath);
 
       if (!Array.isArray(json?.extends)) {
         return;
@@ -321,6 +361,9 @@ function collectConfigChains(
         const resolved = normalize(join(dirname(relativeConfigPath), entry));
         if (resolved.startsWith('..')) {
           continue; // escapes the workspace, cannot be a `{workspaceRoot}` input
+        }
+        if (!configExists(resolved)) {
+          continue; // typo or not generated yet — declaring it would be a lie
         }
         extended.push(resolved);
         walk(resolved);
@@ -426,7 +469,7 @@ async function collectLintableFilesByProjectRoot(
 function getRootForDirectory(
   directory: string,
   roots: Map<string, string[]>
-): string {
+): string | null {
   let currentPath = normalize(directory);
 
   while (currentPath !== dirname(currentPath)) {
