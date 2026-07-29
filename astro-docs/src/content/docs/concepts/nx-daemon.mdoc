@@ -51,7 +51,7 @@ To see information about the running Nx Daemon (such as its background process I
 The Nx Daemon uses a unix socket to communicate between the daemon and the Nx processes. By default this socket gets placed in a temp directory. Set the `NX_SOCKET_DIR` environment variable to override that location. This is primarily a workaround for file-permission issues with the default temp directory, such as an environment that restricts access to it or a socket path that exceeds the OS length limit.
 
 {% aside type="caution" title="Never share the socket directory" %}
-The socket is a remote for code execution: any process that reaches it can run code inside your long-lived daemon. Do not point `NX_SOCKET_DIR` (or `NX_DAEMON_SOCKET_DIR`) at a directory that other users, workspaces, or containers can access, such as a world-writable temp directory. Use a directory that only your user can access. As a second layer, the daemon rejects messages whose workspace root does not match its own.
+The socket is a remote for code execution: any process that reaches it can run code inside your long-lived daemon. Do not point `NX_SOCKET_DIR` (or `NX_DAEMON_SOCKET_DIR`) at a directory that other users, workspaces, or containers can access, such as a world-writable temp directory. Use a directory that only your user can access. The daemon also rejects messages stamped with a different workspace root, which detects two workspaces accidentally sharing a socket directory.
 {% /aside %}
 
 ## Daemon behavior in containers
