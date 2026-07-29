@@ -189,7 +189,16 @@ export async function initGeneratorInternal(
     // Not when `skipPackageJson` is set: that asks this generator not to manage
     // dependencies at all, and an out-of-band install is still an install. The
     // formatter may already be present, and if it is not, formatFiles warns.
-    if (formatterSetup && !schema.skipPackageJson) {
+    //
+    // Not when NX_SKIP_FORMAT is set either - the same condition formatFiles
+    // returns on. `create-nx-workspace` sets it for the whole run and formats
+    // once at the end, so installing here would be a network round trip whose
+    // result is never read.
+    if (
+      formatterSetup &&
+      !schema.skipPackageJson &&
+      process.env.NX_SKIP_FORMAT !== 'true'
+    ) {
       ensurePackage(schema.formatter, formatterSetup.version);
     }
     await formatFiles(tree);
