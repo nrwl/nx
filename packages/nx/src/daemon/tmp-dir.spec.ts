@@ -108,6 +108,16 @@ describe('socket directories', () => {
     expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(USER_SOCKET_ROOT);
   });
 
+  it('omits the per-uid segment on Windows', () => {
+    setPlatform('win32');
+    // The OS temp dir is already per-user there and both lockdown helpers are
+    // no-ops, so the segment only spends path length — and the username is
+    // already in %TMP%, which overran the 95-char guard for ordinary accounts.
+    expect(getSocketDir()).not.toContain(`${USER_SOCKET_ROOT}/`);
+    expect(getPluginSocketDir()).not.toContain(`${USER_SOCKET_ROOT}/`);
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_SOCKET_ROOT);
+  });
+
   it('falls back when the per-uid directory is not ours', () => {
     setPlatform('linux');
     (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);

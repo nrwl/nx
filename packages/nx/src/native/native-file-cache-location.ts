@@ -5,6 +5,7 @@ import { nxVersion } from '../utils/versions';
 import {
   ensureOwnedPrivateDir,
   getUserSegment,
+  isOwnedRealDirectory,
   isRealDirectoryOrAbsent,
   relaxSharedRootToSticky,
 } from '../utils/owned-private-dir';
@@ -25,6 +26,21 @@ export function getNativeFileCacheLocation() {
   // for a published Nx; source checkouts all report 0.0.1, so the loader also
   // keys each file by a hash of the binding path (see native/index.js).
   return join(NATIVE_CACHE_ROOT, getUserSegment(), nxVersion);
+}
+
+/**
+ * The cache directory to delete on `nx reset`, or `null` if it is not safe to
+ * delete through. The per-uid component sits under a world-writable root, so
+ * another user can plant a symlink there and have the delete follow it into a
+ * directory of their choosing — the same component `ensureSecureNativeFileCacheLocation`
+ * refuses to load from.
+ */
+export function getNativeFileCacheLocationToDelete(): string | null {
+  if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
+    return process.env.NX_NATIVE_FILE_CACHE_DIRECTORY;
+  }
+  const userDir = join(NATIVE_CACHE_ROOT, getUserSegment());
+  return isOwnedRealDirectory(userDir) ? join(userDir, nxVersion) : null;
 }
 
 /**
