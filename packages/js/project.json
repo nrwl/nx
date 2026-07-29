@@ -23,6 +23,7 @@
   },
   "implicitDependencies": [
     "eslint",
+    "oxlint",
     "jest",
     "rollup",
     "vite",
