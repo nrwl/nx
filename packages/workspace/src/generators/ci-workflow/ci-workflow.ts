@@ -172,6 +172,7 @@ export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   }
 
   generateFiles(tree, join(__dirname, 'files', ci), '', options);
+  generateFiles(tree, join(__dirname, 'files-ci-config'), '', options);
 
   addWorkflowFileToSharedGlobals(nxJson, schema.ci, options.workflowFileName);
 
