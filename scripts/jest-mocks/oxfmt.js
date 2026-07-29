@@ -52,8 +52,14 @@ exports.format = async function format(fileName, sourceText, options) {
 
     return { code, errors: [] };
   } catch (e) {
-    const message = (e.stderr || '').toString().trim() || e.message;
-    return { code: sourceText, errors: [{ message }] };
+    const stderr = (e.stderr || '').toString().trim();
+    const message = stderr || e.message;
+    // The real API returns a `codeframe` carrying the path and line, and
+    // production prefers it over `message`. The CLI prints that frame to
+    // stderr, so pass it through under the same key - otherwise the branch
+    // production actually takes is unreachable from this suite.
+    const codeframe = stderr.includes('\n') ? stderr : undefined;
+    return { code: sourceText, errors: [{ message, codeframe }] };
   } finally {
     rmSync(configDir, { recursive: true, force: true });
   }
