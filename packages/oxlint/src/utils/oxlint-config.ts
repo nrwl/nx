@@ -1,5 +1,6 @@
 import {
   joinPathFragments,
+  logger,
   offsetFromRoot,
   updateJson,
   writeJson,
@@ -42,6 +43,14 @@ export function addPluginsToOxlintConfig(
 
   const rootConfigPath = findRootOxlintConfig(tree);
   if (!rootConfigPath) {
+    // A TypeScript config cannot be rewritten statically. Say so — otherwise
+    // the generator reports success and the plugins silently never run.
+    logger.warn(
+      `Could not enable the Oxlint plugin(s) ${plugins.join(
+        ', '
+      )} for "${projectRoot}": only JSON Oxlint configs can be updated automatically. ` +
+        `Add them to the "plugins" array of your Oxlint config manually.`
+    );
     return;
   }
 
