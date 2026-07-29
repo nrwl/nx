@@ -447,8 +447,8 @@ function splitOxfmtConfig(
 
   const { overrides, ignorePatterns, ...options } = config as {
     overrides?: {
-      files?: string | string[];
-      excludeFiles?: string | string[];
+      files?: string[];
+      excludeFiles?: string[];
       options?: object;
     }[];
     ignorePatterns?: string[];
@@ -473,16 +473,16 @@ function splitOxfmtConfig(
   };
 }
 
-function compileGlobSet(
-  globs: string | string[] | undefined
-): (p: string) => boolean {
-  // A prettier config allows a bare string here and `oxfmt --migrate=prettier`
-  // does not rewrite `overrides`, so a hand-carried config reaches us with one.
-  const list = typeof globs === 'string' ? [globs] : globs;
-  if (!Array.isArray(list) || list.length === 0) {
+function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
+  // Deliberately not lenient about a bare string here, even though a prettier
+  // config allows one: oxfmt's own type is `GlobSet = string[]`, and its CLI
+  // rejects the whole config with "invalid type: string, expected a sequence".
+  // Accepting it would make a generator apply an override that `nx format`
+  // refuses to run at all.
+  if (!Array.isArray(globs) || globs.length === 0) {
     return () => false;
   }
-  const matchers = list.map((glob) => {
+  const matchers = globs.map((glob) => {
     // oxfmt lifts a pattern with no separator to match at any depth, and reads
     // a leading `./` as "anchored to the config file's directory". minimatch
     // does neither on its own, so `*.md` would otherwise match only at the
