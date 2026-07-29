@@ -206,8 +206,11 @@ It reads the project graph and takes the options documented for ESLint, so your 
 The bridge depends on the Oxlint JavaScript plugin API. Oxlint excludes that API from its semantic versioning policy, so it can change in any release.
 {% /aside %}
 
+`nx add` takes one package at a time, and `@nx/eslint-plugin` is an optional peer of `@nx/oxlint`, so install it explicitly:
+
 ```shell
-nx add @nx/oxlint @nx/eslint-plugin
+nx add @nx/oxlint
+npm install --save-dev @nx/eslint-plugin
 ```
 
 Register the bridge and configure the rule in `.oxlintrc.json`:
