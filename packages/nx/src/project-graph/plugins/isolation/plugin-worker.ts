@@ -210,11 +210,10 @@ server.on('error', (err: NodeJS.ErrnoException) => {
   );
   process.exit(1);
 });
-// A worker killed without its 'end' handler leaves the socket behind and the
-// next one to draw the path fails to bind. The daemon clears its own the same
-// way. Drawing an existing path needs a recycled host pid landing on the same
-// counter and millisecond — normally gone by then, but not guaranteed, since
-// workers are detached and the path carries the host pid, not the worker's.
+// A worker killed without its 'end' handler leaves the socket behind. The name
+// is drawn at random per worker, so an existing file at ours is a leftover
+// rather than something live — but that rests on the draw, not on a guarantee,
+// and a failed bind now surfaces through the error handler above.
 try {
   unlinkSync(socketPath);
 } catch {}
