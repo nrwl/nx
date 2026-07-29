@@ -49,6 +49,31 @@ describe('preset', () => {
       }
     );
 
+    it.each([
+      ['prettier', '.prettierrc', '.oxfmtrc.json'],
+      ['oxfmt', '.oxfmtrc.json', '.prettierrc'],
+    ])(
+      'should honour --formatter=%s on the npm preset',
+      async (formatter, expected, notExpected) => {
+        // The npm preset generates no project either, so it had been dropping
+        // --formatter the same way the apps preset did.
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'npm-preset',
+          preset: Preset.NPM,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(tree.exists(expected)).toBe(true);
+        expect(tree.exists(notExpected)).toBe(false);
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
     it('should configure nothing when the formatter is none', async () => {
       tree.delete('.prettierrc');
 

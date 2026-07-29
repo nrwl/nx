@@ -19,11 +19,11 @@ async function createPreset(tree: Tree, options: Schema) {
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
-  if (options.preset === Preset.Apps) {
-    // An empty workspace generates no project, so nothing downstream would set
-    // the formatter up and the choice would be dropped. Only the formatter is
+  if (options.preset === Preset.Apps || options.preset === Preset.NPM) {
+    // These presets generate no project, so nothing downstream would set the
+    // formatter up and the choice would be dropped. Only the formatter is
     // configured here - `@nx/js:init` would also add TypeScript and a root
-    // tsconfig, which this preset deliberately leaves out.
+    // tsconfig, which both presets deliberately leave out.
     const { setUpFormatter } = require('@nx' + '/js');
     return setUpFormatter(tree, options.formatter);
   } else if (options.preset === Preset.AngularMonorepo) {
