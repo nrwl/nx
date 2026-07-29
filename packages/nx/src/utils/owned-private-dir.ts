@@ -66,6 +66,25 @@ export function relaxSharedRootToSticky(dir: string): void {
   chmodRealDirectory(dir, 0o1777);
 }
 
+/**
+ * Whether `dir` is an existing real directory owned by us. Unlike
+ * `ensureOwnedPrivateDir` it creates nothing and repairs nothing — for callers
+ * that only want to know whether a path is safe to act on, such as deleting.
+ */
+export function isOwnedRealDirectory(dir: string): boolean {
+  try {
+    const stats = lstatSync(dir);
+    if (!stats.isDirectory()) {
+      return false;
+    }
+    return (
+      typeof process.getuid !== 'function' || stats.uid === process.getuid()
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** The path segment separating one user's Nx runtime state from another's. */
 export function getUserSegment(): string {
   try {
