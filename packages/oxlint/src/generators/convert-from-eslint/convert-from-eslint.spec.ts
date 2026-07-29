@@ -1,4 +1,8 @@
-import { addProjectConfiguration, readProjectConfiguration } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readJson,
+  readProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertFromEslintGenerator } from './convert-from-eslint.js';
 
@@ -50,14 +54,27 @@ describe('convertFromEslintGenerator', () => {
     });
   });
 
-  it('returns the install callback so oxlint actually gets installed', async () => {
+  it('adds oxlint and @nx/oxlint to devDependencies', async () => {
     const tree = createTreeWithEslintProject();
 
-    const task = await convertFromEslintGenerator(tree, {
+    await convertFromEslintGenerator(tree, {
       skipFormat: true,
       addExplicitTargets: true,
     });
 
-    expect(typeof task).toEqual('function');
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['oxlint']).toBeDefined();
+    expect(devDependencies['@nx/oxlint']).toBeDefined();
+  });
+
+  it('throws when the requested project does not exist', async () => {
+    const tree = createTreeWithEslintProject();
+
+    await expect(
+      convertFromEslintGenerator(tree, {
+        project: 'does-not-exist',
+        skipFormat: true,
+      })
+    ).rejects.toThrow(/does-not-exist/);
   });
 });
