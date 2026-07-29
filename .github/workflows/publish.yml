@@ -594,10 +594,19 @@ jobs:
             channel: "C024JCL7TST",
             thread_ts: $ts,
             text: "✅ Approved — publishing now.",
-            blocks: [
+            attachments: [
               {
-                type: "section",
-                text: { type: "mrkdwn", text: "✅ *Approved* — publishing now." }
+                color: "good",
+                blocks: [
+                  {
+                    type: "header",
+                    text: { type: "plain_text", text: "✅ Publish Approved" }
+                  },
+                  {
+                    type: "section",
+                    text: { type: "mrkdwn", text: "✅ *Approved* — publishing now." }
+                  }
+                ]
               }
             ]
           }')
@@ -736,27 +745,39 @@ jobs:
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [ -n "$PR_NUMBER" ]; then
+            TITLE_TEXT="📦 PR #${PR_NUMBER} Publish Pending Review"
             MAIN_TEXT="📦 *Version ${VERSION}* from PR #${PR_NUMBER} by @${PR_AUTHOR} is being published to NPM - manual review is required ${MENTIONS}"
           else
+            TITLE_TEXT="📦 Publish Pending Review"
             MAIN_TEXT="📦 *Version ${VERSION}* is being published to NPM - manual review is required ${MENTIONS}"
           fi
           FALLBACK_TEXT="📦 Version ${VERSION} is being published to NPM"
           PAYLOAD=$(jq -nc \
             --arg text "$FALLBACK_TEXT" \
+            --arg title "$TITLE_TEXT" \
             --arg main "$MAIN_TEXT" \
             --arg run_url "$RUN_URL" \
             '{
               channel: "C024JCL7TST",
               text: $text,
-              blocks: [
+              attachments: [
                 {
-                  type: "section",
-                  text: { type: "mrkdwn", text: $main }
-                },
-                {
-                  type: "context",
-                  elements: [
-                    { type: "mrkdwn", text: ("<" + $run_url + "|View Workflow Run>") }
+                  color: "good",
+                  blocks: [
+                    {
+                      type: "header",
+                      text: { type: "plain_text", text: $title }
+                    },
+                    {
+                      type: "section",
+                      text: { type: "mrkdwn", text: $main }
+                    },
+                    {
+                      type: "context",
+                      elements: [
+                        { type: "mrkdwn", text: ("<" + $run_url + "|View Workflow Run>") }
+                      ]
+                    }
                   ]
                 }
               ]
@@ -810,15 +831,24 @@ jobs:
               channel: "C024JCL7TST",
               thread_ts: $ts,
               text: $text,
-              blocks: [
+              attachments: [
                 {
-                  type: "section",
-                  text: { type: "mrkdwn", text: $main }
-                },
-                {
-                  type: "context",
-                  elements: [
-                    { type: "mrkdwn", text: ("<" + $run_url + "|View Workflow Run>") }
+                  color: "good",
+                  blocks: [
+                    {
+                      type: "header",
+                      text: { type: "plain_text", text: "🎉 Published Successfully" }
+                    },
+                    {
+                      type: "section",
+                      text: { type: "mrkdwn", text: $main }
+                    },
+                    {
+                      type: "context",
+                      elements: [
+                        { type: "mrkdwn", text: ("<" + $run_url + "|View Workflow Run>") }
+                      ]
+                    }
                   ]
                 }
               ]
