@@ -1,5 +1,5 @@
 import { writeFileSync } from 'node:fs';
-import { formatFilesWithPrettierIfAvailable } from '../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatFileContents } from '../generators/internal-utils/format-changed-files';
 import { serializeJson } from './json';
 import type { JsonSerializeOptions } from './json';
 import { writeJsonFile, type JsonWriteOptions } from './fileutils';
@@ -15,7 +15,7 @@ export async function writeFormattedJsonFile<T extends object = object>(
   content: T,
   options?: JsonWriteOptions
 ): Promise<void> {
-  const formattedContent = await formatFilesWithPrettierIfAvailable(
+  const formattedContent = await formatFileContents(
     [{ path: filePath, content: serializeJson(content) }],
     workspaceRoot,
     { silent: true }

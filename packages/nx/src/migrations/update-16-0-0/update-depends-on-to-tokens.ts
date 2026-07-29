@@ -6,7 +6,7 @@ import {
 } from '../../generators/utils/project-configuration';
 import type { TargetConfiguration } from '../../config/workspace-json-project-json';
 import { Tree } from '../../generators/tree';
-import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { targetDefaultConfigs } from '../utils/target-defaults';
 
 export default async function (tree: Tree) {
@@ -29,7 +29,7 @@ export default async function (tree: Tree) {
     }
   }
 
-  await formatChangedFilesWithPrettierIfAvailable(tree);
+  await formatChangedFiles(tree);
 }
 
 function updateDependsOnAndInputsInsideNxJson(tree: Tree) {
