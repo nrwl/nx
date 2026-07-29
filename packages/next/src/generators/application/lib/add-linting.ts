@@ -36,7 +36,7 @@ export async function addLinting(
     return addLintingToProject(host, {
       oxlintPlugins: ['nextjs', 'react', 'react-perf', 'jsx-a11y'],
       unitTestRunner: options.unitTestRunner,
-      linter: options.linter as any,
+      linter: options.linter,
       project: options.projectName,
       addPlugin: options.addPlugin,
       skipPackageJson: options.skipPackageJson,

@@ -24,7 +24,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   // need the linter registering, which the helper handles (including `none`).
   if (options.linter && options.linter !== 'eslint') {
     return addLintingToProject(host, {
-      linter: options.linter as any,
+      linter: options.linter,
       project: options.e2eProjectName,
       addPlugin: options.addPlugin,
     });
