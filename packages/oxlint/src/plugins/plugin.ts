@@ -88,12 +88,12 @@ const internalCreateNodes = async (
       //
       // The right-hand side globs the whole workspace, so it stays behind the
       // `||` and behind the cache check above: a warm run never pays for it.
-      const hasLintableFiles =
+      const shouldInferTarget =
         (configDir === projectRoot && projectRoot !== '.') ||
         ((await getLintableFilesPerProjectRoot()).get(projectRoot)?.length ??
           0) > 0;
 
-      if (!hasLintableFiles) {
+      if (!shouldInferTarget) {
         projectsCache.set(hash, {});
         return null;
       }
@@ -362,11 +362,14 @@ function collectConfigChains(
         if (resolved.startsWith('..')) {
           continue; // escapes the workspace, cannot be a `{workspaceRoot}` input
         }
-        if (!configExists(resolved)) {
-          continue; // typo or not generated yet — declaring it would be a lie
-        }
+        // Declared even when absent. A `{workspaceRoot}` input that does not
+        // exist contributes nothing to the hash, and is how Nx notices the file
+        // appearing — dropping it means creating the config later invalidates
+        // nothing, and neither do edits to it after that.
         extended.push(resolved);
-        walk(resolved);
+        if (configExists(resolved)) {
+          walk(resolved);
+        }
       }
     };
 
