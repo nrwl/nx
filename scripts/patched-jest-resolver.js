@@ -120,12 +120,25 @@ module.exports = function (modulePath, options) {
       return enhancedResolver(basedir, modulePath);
     } catch (err) {
       // An ESM package under NodeNext imports its siblings with a `.js`
-      // extension that only exists after a build. Retry against the TypeScript
-      // source, so such a package is loadable from any consumer's tests rather
+      // extension that only exists after a build. Map that onto the TypeScript
+      // source so such a package is loadable from any consumer's tests, rather
       // than only its own via a per-package `moduleNameMapper`.
+      //
+      // Only an adjacent `.ts`/`.tsx` counts. Handing the extensionless
+      // specifier back to the resolver would also accept `./foo.json` and
+      // `./foo/index.ts`, neither of which NodeNext resolves for `./foo.js` —
+      // a test would pass on an import that fails in the published package.
       if (/^\.{1,2}\//.test(modulePath) && modulePath.endsWith('.js')) {
-        return enhancedResolver(basedir, modulePath.slice(0, -'.js'.length));
+        const withoutExt = modulePath.slice(0, -'.js'.length);
+        for (const ext of ['.ts', '.tsx']) {
+          const candidate = path.resolve(basedir, withoutExt + ext);
+          if (isWorkspaceFile(candidate)) {
+            return candidate;
+          }
+        }
       }
+      // Rethrow the original: the retry's own error names the stripped
+      // specifier, which appears nowhere in the source.
       throw err;
     }
   }
