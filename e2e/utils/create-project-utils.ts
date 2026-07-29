@@ -20,6 +20,7 @@ import {
 
 import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
+import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -91,11 +92,13 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
   packages,
   preset = 'apps',
+  typescriptVersion = defaultTypescriptVersion,
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   readonly packages?: Array<NxPackage>;
   preset?: string;
+  typescriptVersion?: string;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -140,6 +143,13 @@ export function newProject({
 
       if (packagesToInstall.length) {
         const packageInstallStart = performance.mark('packageInstall:start');
+        // Seed typescript before the plugins so their unbounded typescript peers
+        // (tsquery >3.0.0, @rollup/plugin-typescript >=3.7.0) dedup to it, not the
+        // API-less TypeScript 7 native stub. Must run before the plugin install —
+        // pnpm freezes peers per-dependent and won't re-dedup a peer added after.
+        if (packageManager === 'npm' || packageManager === 'pnpm') {
+          packageInstall('typescript', projScope, typescriptVersion);
+        }
         packageInstall(packagesToInstall.join(` `), projScope);
         const packageInstallEnd = performance.mark('packageInstall:end');
         packageInstallMeasure = performance.measure(
