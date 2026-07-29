@@ -157,8 +157,9 @@ type PluginMessageDefs = DefineMessages<{
 // =============================================================================
 
 /**
- * The sender's workspace root, so the receiver can reject messages from a
- * different workspace — the same protection the daemon applies to its socket.
+ * The sender's workspace root. Only the *worker* asserts on it, for host→worker
+ * messages; results and notifications carry the field but the host does not
+ * check it, so this is not the symmetric protection the daemon applies.
  * Optional and stamped centrally in `sendMessageOverSocket`, so the many
  * message constructors need not set it; undefined is treated as not foreign.
  */
