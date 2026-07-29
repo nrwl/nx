@@ -600,7 +600,7 @@ jobs:
                 blocks: [
                   {
                     type: "section",
-                    text: { type: "mrkdwn", text: "✅ *Approved* — publishing now." }
+                    text: { type: "mrkdwn", text: "*Approved* — publishing now." }
                   }
                 ]
               }
@@ -742,10 +742,10 @@ jobs:
         run: |
           if [ -n "$PR_NUMBER" ]; then
             TITLE_TEXT="📦 PR #${PR_NUMBER} Publish Pending Review"
-            MAIN_TEXT="📦 *Version ${VERSION}* from PR #${PR_NUMBER} by @${PR_AUTHOR} is being published to NPM - manual review is required ${MENTIONS}"
+            MAIN_TEXT="*Version ${VERSION}* from PR #${PR_NUMBER} by @${PR_AUTHOR} is being published to NPM - manual review is required ${MENTIONS}"
           else
             TITLE_TEXT="📦 Publish Pending Review"
-            MAIN_TEXT="📦 *Version ${VERSION}* is being published to NPM - manual review is required ${MENTIONS}"
+            MAIN_TEXT="*Version ${VERSION}* is being published to NPM - manual review is required ${MENTIONS}"
           fi
           PAYLOAD=$(jq -nc \
             --arg title "$TITLE_TEXT" \
@@ -810,7 +810,7 @@ jobs:
           THREAD_TS: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          MAIN_TEXT="🎉 *Version ${VERSION}* was published to NPM successfully."
+          MAIN_TEXT="*Version ${VERSION}* was published to NPM successfully."
           PAYLOAD=$(jq -nc \
             --arg main "$MAIN_TEXT" \
             --arg ts "$THREAD_TS" \
