@@ -18,6 +18,15 @@ use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
 
 #[napi(object)]
+#[derive(Clone, Debug)]
+pub struct TerminalOutputRecord {
+    pub hash: String,
+    /// Byte length of the terminal output written for this hash, so these
+    /// files are counted against `maxCacheSize` like any other cache content.
+    pub size: i64,
+}
+
+#[napi(object)]
 #[derive(Default, Clone, Debug)]
 pub struct CachedResult {
     pub code: i16,
@@ -71,11 +80,16 @@ impl NxCache {
     }
 
     fn setup(&self) -> anyhow::Result<()> {
+        // `has_artifacts` distinguishes a real cache entry, which owns a
+        // `<cacheDir>/<hash>` directory, from a row that exists only so the
+        // terminal output of an uncacheable run is reachable by the GC. Only
+        // the former may be served as a cache hit — see `get`/`fetch_cache_rows`.
         let query = if self.link_task_details {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                 hash    TEXT PRIMARY KEY NOT NULL,
                 code   INTEGER NOT NULL,
                 size   INTEGER NOT NULL,
+                has_artifacts INTEGER NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (hash) REFERENCES task_details (hash)
@@ -86,6 +100,7 @@ impl NxCache {
                 hash    TEXT PRIMARY KEY NOT NULL,
                 code   INTEGER NOT NULL,
                 size   INTEGER NOT NULL,
+                has_artifacts INTEGER NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
@@ -114,7 +129,7 @@ impl NxCache {
             .query_row(
                 "UPDATE cache_outputs
                     SET accessed_at = CURRENT_TIMESTAMP
-                    WHERE hash = ?1
+                    WHERE hash = ?1 AND has_artifacts = 1
                     RETURNING code, size",
                 params![hash],
                 |row| Ok((row.get::<_, i16>(0)?, row.get::<_, i64>(1)?)),
@@ -183,7 +198,7 @@ impl NxCache {
             .unwrap()
             .query_map(
                 "UPDATE cache_outputs SET accessed_at = CURRENT_TIMESTAMP
-                 WHERE hash IN rarray(?1)
+                 WHERE hash IN rarray(?1) AND has_artifacts = 1
                  RETURNING hash, code, size",
                 [values],
                 |row| {
@@ -299,6 +314,53 @@ impl NxCache {
         Ok(())
     }
 
+    /// Register terminal outputs that were written without a cache entry —
+    /// uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
+    ///
+    /// Without a row the file is invisible to `remove_old_cache_records`,
+    /// which only ever walks hashes it finds in the database, so these files
+    /// would accumulate forever. The row carries `has_artifacts = 0` so it can
+    /// never be served as a cache hit.
+    ///
+    /// On conflict only `accessed_at` moves. Nothing else ever touches these
+    /// rows — the reads filter them out, so they would otherwise age from the
+    /// first write and be collected out from under a task that is still being
+    /// run daily. Leaving `has_artifacts` and `size` alone keeps a rewrite
+    /// from demoting a real entry written by `put`, or from replacing its size
+    /// (which covers artifacts) with the size of the terminal output alone.
+    #[napi]
+    pub fn record_terminal_outputs(
+        &mut self,
+        records: Vec<TerminalOutputRecord>,
+    ) -> anyhow::Result<()> {
+        if records.is_empty() {
+            return Ok(());
+        }
+        trace!("RECORD_TERMINAL_OUTPUTS {}", records.len());
+
+        {
+            let mut db = self.db.lock().unwrap();
+            db.transaction(|conn| {
+                for record in records.iter() {
+                    // `code` is meaningless for a row that can't be replayed;
+                    // the reads all filter it out before it could be read.
+                    conn.execute(
+                        "INSERT INTO cache_outputs (hash, code, size, has_artifacts)
+                         VALUES (?1, 0, ?2, 0)
+                         ON CONFLICT(hash) DO UPDATE SET accessed_at = CURRENT_TIMESTAMP",
+                        params![record.hash, record.size],
+                    )?;
+                }
+                Ok(())
+            })?;
+        }
+
+        if self.max_cache_size != 0 {
+            self.ensure_cache_size_within_limit()?;
+        }
+        Ok(())
+    }
+
     fn get_task_outputs_path_internal(&self, hash: &str) -> PathBuf {
         self.cache_path.join("terminalOutputs").join(hash)
     }
@@ -311,9 +373,12 @@ impl NxCache {
 
     fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {
         trace!("Recording to cache: {}, {}, {}", &hash, code, size);
+        // `has_artifacts` is forced back to 1 on conflict: an earlier
+        // uncacheable run of the same hash (`--skip-nx-cache`) may have left a
+        // terminal-output-only row, and this run did write the artifacts.
         self.db.lock().unwrap().execute(
-            "INSERT INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)
-             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
+            "INSERT INTO cache_outputs (hash, code, size, has_artifacts) VALUES (?1, ?2, ?3, 1)
+             ON CONFLICT(hash) DO UPDATE SET code = excluded.code, size = excluded.size, has_artifacts = 1, created_at = CURRENT_TIMESTAMP, accessed_at = CURRENT_TIMESTAMP",
             params![hash, code, size],
         )?;
         if self.max_cache_size != 0 {
@@ -369,7 +434,13 @@ impl NxCache {
                     if let Ok((hash, size)) = row {
                         cache_size -= size;
                         db.execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
-                        remove_items(&[self.cache_path.join(&hash)])?;
+                        // Both paths, matching remove_old_cache_records. Dropping
+                        // the row without the terminal output file would strand
+                        // that file with nothing left to point the GC at it.
+                        remove_items(&[
+                            self.cache_path.join(&hash),
+                            self.get_task_outputs_path_internal(&hash),
+                        ])?;
                     }
                     // We've deleted enough cache entries to be under the
                     // target cache size, stop looking for more.
@@ -437,10 +508,16 @@ impl NxCache {
             .db
             .lock()
             .unwrap()
-            .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
-                let exists: bool = row.get(0)?;
-                Ok(exists)
-            })?
+            .query_row(
+                // Only real cache entries own a `<hash>` directory, so only
+                // those can be out of sync with the filesystem.
+                "SELECT EXISTS (SELECT 1 FROM cache_outputs WHERE has_artifacts = 1)",
+                [],
+                |row| {
+                    let exists: bool = row.get(0)?;
+                    Ok(exists)
+                },
+            )?
             .unwrap_or(false);
 
         if !cache_records_exist {
