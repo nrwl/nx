@@ -146,6 +146,8 @@ The `@nx/next` plugin creates tasks for any project that has a Next.js configura
 - `next.config.mjs`
 - `next.config.ts`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### Plugin options
 
 Configure `@nx/next/plugin` in the `plugins` array in `nx.json`:
@@ -160,19 +162,24 @@ Configure `@nx/next/plugin` in the `plugins` array in `nx.json`:
         "buildTargetName": "build",
         "devTargetName": "dev",
         "startTargetName": "start",
-        "serveStaticTargetName": "serve-static"
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-| Option                  | Description                          | Default        |
-| ----------------------- | ------------------------------------ | -------------- |
-| `buildTargetName`       | Name of the production build task    | `build`        |
-| `devTargetName`         | Name of the development server task  | `dev`          |
-| `startTargetName`       | Name of the production server task   | `start`        |
-| `serveStaticTargetName` | Name of the static export serve task | `serve-static` |
+| Option                  | Description                                | Default        |
+| ----------------------- | ------------------------------------------ | -------------- |
+| `buildTargetName`       | Name of the cached `next build` task.      | `build`        |
+| `devTargetName`         | Name of the continuous `next dev` task.    | `dev`          |
+| `startTargetName`       | Name of the continuous `next start` task.  | `start`        |
+| `serveStaticTargetName` | Deprecated alias for `startTargetName`.    | `serve-static` |
+| `buildDepsTargetName`   | Name of an optional dependency build task. | none           |
+| `watchDepsTargetName`   | Name of an optional dependency watch task. | none           |
+
+The build task reads `distDir` from the Next.js configuration to declare cache outputs and depends on builds of project dependencies. The start task depends on the build task.
 
 ### Exclude or include specific projects
 
@@ -190,7 +197,8 @@ Use `include`/`exclude` glob patterns in the plugin configuration to scope which
         "buildTargetName": "build",
         "devTargetName": "dev",
         "startTargetName": "start",
-        "serveStaticTargetName": "serve-static"
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
@@ -206,6 +214,8 @@ nx show project my-app
 ```
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/next/plugin`.
 
 ## Set up CI for your Next.js monorepo
 

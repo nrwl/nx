@@ -167,6 +167,8 @@ The `@nx/remix` plugin creates tasks for any project that has a Remix configurat
 
 **Remix with Vite** -- looks for `vite.config.{js,ts,mjs,mts,cjs,cts}` files that import the Remix plugin from `@remix-run/dev`.
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### Plugin options
 
 Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
@@ -181,19 +183,27 @@ Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
         "buildTargetName": "build",
         "devTargetName": "dev",
         "startTargetName": "start",
-        "typecheckTargetName": "typecheck"
+        "typecheckTargetName": "typecheck",
+        "serveStaticTargetName": "serve-static",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-| Option                | Description                         | Default     |
-| --------------------- | ----------------------------------- | ----------- |
-| `buildTargetName`     | Name of the production build task   | `build`     |
-| `devTargetName`       | Name of the development server task | `dev`       |
-| `startTargetName`     | Name of the production server task  | `start`     |
-| `typecheckTargetName` | Name of the typecheck task          | `typecheck` |
+| Option                  | Description                                      | Default        |
+| ----------------------- | ------------------------------------------------ | -------------- |
+| `buildTargetName`       | Name of the cached production build task.        | `build`        |
+| `devTargetName`         | Name of the continuous development server task.  | `dev`          |
+| `startTargetName`       | Name of the continuous production server task.   | `start`        |
+| `typecheckTargetName`   | Name of the cached TypeScript typecheck task.    | `typecheck`    |
+| `serveStaticTargetName` | Name of an alias for the production server task. | `serve-static` |
+| `buildDepsTargetName`   | Name of an optional dependency build task.       | none           |
+| `watchDepsTargetName`   | Name of an optional dependency watch task.       | none           |
+
+Nx selects the classic Remix or Vite commands from the matched configuration, derives build outputs from that configuration, and makes the production server tasks depend on the build task.
 
 ### Exclude or include specific projects
 
@@ -211,7 +221,10 @@ Use `include`/`exclude` glob patterns in the plugin configuration:
         "buildTargetName": "build",
         "devTargetName": "dev",
         "startTargetName": "start",
-        "typecheckTargetName": "typecheck"
+        "typecheckTargetName": "typecheck",
+        "serveStaticTargetName": "serve-static",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
@@ -227,6 +240,8 @@ nx show project my-app
 ```
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/remix/plugin`.
 
 ## Set up CI for your Remix monorepo
 
