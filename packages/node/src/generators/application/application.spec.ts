@@ -431,6 +431,40 @@ describe('app', () => {
     });
   });
 
+  describe('--linter', () => {
+    // The lint block used to be gated on `=== 'eslint'`, so asking for oxlint
+    // skipped it entirely and produced an app with no linter and no error.
+    // `@nx/nest:app` and `@nx/express:app` delegate here, so they broke too.
+    it('should set up oxlint when asked for it', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        linter: 'oxlint',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['oxlint']).toBeDefined();
+      expect(devDependencies['@nx/oxlint']).toBeDefined();
+      expect(tree.exists('.oxlintrc.json')).toBe(true);
+    });
+
+    it('should set up no linter for none', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        linter: 'none',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+      });
+
+      const { devDependencies = {} } = readJson(tree, 'package.json');
+      expect(devDependencies['oxlint']).toBeUndefined();
+      expect(devDependencies['eslint']).toBeUndefined();
+    });
+  });
+
   describe('--frontendProject', () => {
     it('should configure proxy', async () => {
       await angularApplicationGenerator(tree, {
