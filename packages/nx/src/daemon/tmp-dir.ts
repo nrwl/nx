@@ -190,7 +190,7 @@ function createOwnerOnlySocketDir(
       // rather than becoming the parent of our socket directories.
       if (!ensureOwnedPrivateDir(userSocketRoot())) {
         throw new Error(
-          `The Nx socket directory ${userSocketRoot()} is not a directory owned solely by the current user.`
+          `Nx could not establish ${userSocketRoot()} as a private directory owned by the current user.`
         );
       }
     } else {
@@ -200,7 +200,7 @@ function createOwnerOnlySocketDir(
     // symlink, so creating and locking down in one step would adopt it.
     if (!ensureOwnedPrivateDir(dir)) {
       throw new Error(
-        `The Nx socket directory ${dir} is not a directory owned solely by the current user.`
+        `Nx could not establish ${dir} as a private directory owned by the current user.`
       );
     }
     return dir;
@@ -220,7 +220,7 @@ function createOwnerOnlySocketDir(
     // The fallback is only safe if it passes the same checks the primary did.
     if (!ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE)) {
       throw new Error(
-        `The Nx socket directory fallback ${DAEMON_DIR_FOR_CURRENT_WORKSPACE} is not a directory owned solely by the current user.`,
+        `Nx could not establish the fallback socket directory ${DAEMON_DIR_FOR_CURRENT_WORKSPACE} as a private directory owned by the current user.`,
         { cause: e }
       );
     }
