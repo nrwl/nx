@@ -152,6 +152,8 @@ The `@nx/vitest` plugin creates a target for any project that has a Vitest or Vi
 - `vite.config.cjs` (with `test` configuration)
 - `vite.config.cts` (with `test` configuration)
 
+The configuration directory must also contain a `package.json` or `project.json`. A root Vitest workspace configuration that only orchestrates child projects is not registered as its own project.
+
 To view inferred tasks, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-app`.
 
 ### Plugin options
@@ -188,6 +190,13 @@ When `discoverTestFiles` is `glob`, configs that a glob cannot reproduce faithfu
 The `glob` path reads the Nx workspace file index, so it never enumerates specs ignored by `.gitignore` or `.nxignore`, even ones Vitest itself would run. Set `discoverTestFiles` to `vitest` if you need those specs atomized.
 
 There is no single "disable" flag for inference. Use `include` and `exclude` to scope which projects each plugin instance applies to.
+
+The inferred test target is cached and declares the configured coverage reports directory, or
+`coverage` by default, as its only cache output.
+Custom reporter output files are not inferred.
+Set `ciTargetName` to enable the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/vitest`.
 
 ### Configure unit and e2e separately
 

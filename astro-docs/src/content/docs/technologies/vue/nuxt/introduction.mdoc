@@ -56,6 +56,8 @@ The `@nx/nuxt` plugin will create a task for any project that has an Nuxt config
 - `nuxt.config.cjs`
 - `nuxt.config.cts`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
@@ -72,19 +74,27 @@ The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
       "plugin": "@nx/nuxt/plugin",
       "options": {
         "buildTargetName": "build",
-        "testTargetName": "test",
         "serveTargetName": "serve",
         "buildStaticTargetName": "build-static",
-        "serveStaticTargetName": "serve-static"
+        "serveStaticTargetName": "serve-static",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Nuxt tasks. The default names are `build`, `test` and `serve`.
+| Option                  | Type   | Default        | Inferred behavior                                              |
+| ----------------------- | ------ | -------------- | -------------------------------------------------------------- |
+| `buildTargetName`       | string | `build`        | Runs and caches `nuxt build`, including `.nuxt` and `.output`. |
+| `serveTargetName`       | string | `serve`        | Runs `nuxt dev` continuously.                                  |
+| `buildStaticTargetName` | string | `build-static` | Runs and caches `nuxt build --prerender`.                      |
+| `serveStaticTargetName` | string | `serve-static` | Serves `dist` continuously after the static build task.        |
+| `buildDepsTargetName`   | string | none           | Name of an optional dependency build task.                     |
+| `watchDepsTargetName`   | string | none           | Name of an optional dependency watch task.                     |
 
-The `buildStaticTargetName` and `serveStaticTargetName` options control the names of the inferred Nuxt static tasks. The default names are `build-static` and `serve-static`.
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/nuxt/plugin`.
 
 ## Using Nuxt
 
