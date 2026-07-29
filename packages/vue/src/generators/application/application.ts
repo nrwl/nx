@@ -59,7 +59,6 @@ export async function applicationGeneratorInternal(
         : 'tsconfig.base.json',
       skipFormat: true,
       addTsPlugin,
-      formatter: _options.formatter,
       platform: 'web',
     })
   );
