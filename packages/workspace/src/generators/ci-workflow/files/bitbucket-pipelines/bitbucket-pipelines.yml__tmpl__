@@ -21,7 +21,7 @@ pipelines:
             <% } %>
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Agents and distribution are configured in .nx/ci-config.yaml
+            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
             <% if (connectedToCloud) { %># Uncomment this line to enable task distribution<% } else { %># Connect your workspace by running "nx connect" and uncomment this line to enable task distribution<% } %>
             # - <%= packageManagerPreInstallPrefix %> nx start-nx-agents
@@ -49,7 +49,7 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Agents and distribution are configured in .nx/ci-config.yaml
+            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
             <% if (connectedToCloud) { %>- <%= packageManagerPreInstallPrefix %> nx start-nx-agents
             <% } else { %># Connect your workspace by running "nx connect" and uncomment this

@@ -336,7 +336,8 @@ describe('CI Workflow generator', () => {
       expect(tree.read('.nx/ci-config.yaml', 'utf-8')).toMatchInlineSnapshot(`
         "# Nx Cloud reads this file to configure your CI Pipeline Executions.
         # Uncomment the "nx start-nx-agents" line in your CI workflow to distribute tasks across agents.
-        # Learn more at https://nx.dev/ci/reference/nx-cloud/ci-config
+        # Learn how to start Nx Agents at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+        # Learn how to configure this file at https://nx.dev/ci/reference/nx-cloud/ci-config
         dte:
           distribute-on: 3 linux-medium-js
         lifecycle:
@@ -407,8 +408,11 @@ describe('CI Workflow generator', () => {
     it('should generate github config with typecheck task', async () => {
       await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
 
-      expect(tree.read('.github/workflows/ci.yml', 'utf-8'))
-        .toMatchInlineSnapshot(`
+      const workflow = tree.read('.github/workflows/ci.yml', 'utf-8');
+      expect(workflow).toContain(
+        '# Configure Nx Agents and task distribution in .nx/ci-config.yaml'
+      );
+      expect(workflow).toMatchInlineSnapshot(`
         "name: CI
 
         on:
@@ -432,7 +436,7 @@ describe('CI Workflow generator', () => {
 
               # This enables task distribution via Nx Cloud
               # Run this command as early as possible, before dependencies are installed
-              # Agents and distribution are configured in .nx/ci-config.yaml
+              # Configure Nx Agents and task distribution in .nx/ci-config.yaml
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
               # - run: npx nx start-nx-agents
@@ -474,7 +478,7 @@ describe('CI Workflow generator', () => {
 
               # This enables task distribution via Nx Cloud
               # Run this command as early as possible, before dependencies are installed
-              # Agents and distribution are configured in .nx/ci-config.yaml
+              # Configure Nx Agents and task distribution in .nx/ci-config.yaml
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
               # - run: npx nx start-nx-agents
@@ -552,7 +556,7 @@ describe('CI Workflow generator', () => {
 
               # This enables task distribution via Nx Cloud
               # Run this command as early as possible, before dependencies are installed
-              # Agents and distribution are configured in .nx/ci-config.yaml
+              # Configure Nx Agents and task distribution in .nx/ci-config.yaml
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
               # - script: npx nx start-nx-agents
@@ -594,7 +598,7 @@ describe('CI Workflow generator', () => {
 
                     # This enables task distribution via Nx Cloud
                     # Run this command as early as possible, before dependencies are installed
-                    # Agents and distribution are configured in .nx/ci-config.yaml
+                    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
                     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
                     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
                     # - npx nx start-nx-agents
@@ -617,7 +621,7 @@ describe('CI Workflow generator', () => {
                     - export NX_BRANCH=$BITBUCKET_BRANCH
                     # This enables task distribution via Nx Cloud
                     # Run this command as early as possible, before dependencies are installed
-                    # Agents and distribution are configured in .nx/ci-config.yaml
+                    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
                     # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
                     # Connect your workspace by running "nx connect" and uncomment this
                     # - npx nx start-nx-agents
@@ -649,7 +653,7 @@ describe('CI Workflow generator', () => {
           script:
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Agents and distribution are configured in .nx/ci-config.yaml
+            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
             # - npx nx start-nx-agents
