@@ -35,8 +35,8 @@
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
-      "plugin": [
-        "dist/plugin.d.ts"
+      "generators": [
+        "dist/generators.d.ts"
       ],
       "boundaries-plugin": [
         "dist/src/boundaries-plugin/index.d.ts"
@@ -53,10 +53,10 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./plugin": {
-      "@nx/nx-source": "./plugin.ts",
-      "types": "./dist/plugin.d.ts",
-      "default": "./dist/plugin.js"
+    "./generators": {
+      "@nx/nx-source": "./generators.ts",
+      "types": "./dist/generators.d.ts",
+      "default": "./dist/generators.js"
     },
     "./boundaries-plugin": {
       "@nx/nx-source": "./src/boundaries-plugin/index.ts",

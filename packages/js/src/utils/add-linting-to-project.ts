@@ -47,7 +47,15 @@ export async function addLintingToProject(
   }
 
   if (options.linter === 'oxlint') {
-    const { lintProjectGenerator } = ensurePackage('@nx/oxlint', nxVersion);
+    // `ensurePackage` installs by package name, so the subpath is required
+    // separately. `nx-ignore-next-line` keeps the edge out of the graph — oxlint
+    // depends on js, so a real one would be a cycle. `implicitDependencies` in
+    // packages/js/project.json carries the hashing relationship instead.
+    ensurePackage('@nx/oxlint', nxVersion);
+    const {
+      lintProjectGenerator,
+      // nx-ignore-next-line
+    } = require('@nx/oxlint/generators');
     return lintProjectGenerator(tree, {
       project: options.project,
       plugins: [

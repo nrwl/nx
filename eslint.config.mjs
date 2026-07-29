@@ -166,6 +166,7 @@ export const baseConfig = [
           // `dependsOn` overrides on the relevant build-base targets.
           ignoredCircularDependencies: [
             ['js', 'workspace'],
+            ['js', '@nx/oxlint'],
             ['angular', 'workspace'],
             ['express', 'node'],
             ['nest', 'node'],
