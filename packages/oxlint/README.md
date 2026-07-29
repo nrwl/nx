@@ -16,7 +16,6 @@
 
 </div>
 
-
 <hr>
 
 # Nx: Smart Monorepos · Fast Builds
@@ -64,4 +63,3 @@ npx nx@latest init
 
 <p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-courses-and-videos.svg" 
 width="100%" alt="Nx - Smart Monorepos · Fast Builds"></a></p>
-
