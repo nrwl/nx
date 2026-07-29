@@ -1,4 +1,8 @@
-import { ExecutorContext, getPackageManagerCommand } from '@nx/devkit';
+import {
+  getPackageManagerCommand,
+  output,
+  type ExecutorContext,
+} from '@nx/devkit';
 import { spawnSync } from 'node:child_process';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 
@@ -39,14 +43,39 @@ export async function oxlintExecutor(
     {
       cwd: context.root,
       stdio: 'inherit',
+      // `pmc.exec` is a `.cmd` shim on Windows, which Node refuses to spawn
+      // directly since the CVE-2024-27980 fix.
+      shell: true,
       env: process.env,
       windowsHide: true,
     }
   );
 
+  // `stdio: 'inherit'` means a failure to spawn prints nothing of its own, so
+  // report it here rather than letting it read as a lint failure.
+  if (result.error) {
+    output.error({
+      title: `Could not run Oxlint for "${projectName}"`,
+      bodyLines: [
+        result.error.message,
+        `Command: ${pmc.exec} oxlint ${args.join(' ')}`,
+        'Check that `oxlint` is installed in this workspace.',
+      ],
+    });
+    return { success: false };
+  }
+
+  if (result.signal) {
+    output.error({
+      title: `Oxlint was terminated by ${result.signal} while linting "${projectName}"`,
+      bodyLines: ['This usually means the process ran out of memory.'],
+    });
+    return { success: false };
+  }
+
   // Oxlint only ever exits 0 or 1 — lint errors, `--max-warnings` breaches and
   // config errors are indistinguishable without parsing `--format json`.
-  return { success: (result.status ?? 1) === 0 };
+  return { success: result.status === 0 };
 }
 
 function createArgs(
