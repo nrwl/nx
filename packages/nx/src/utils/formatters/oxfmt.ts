@@ -31,18 +31,19 @@ type OxfmtFormat = (
 }>;
 
 /**
- * Config filenames oxfmt discovers, in its own precedence order.
- * See apps/oxfmt/src/core/config in oxc-project/oxc.
+ * Config filenames oxfmt *discovers*. This is narrower than the set `-c`
+ * accepts: measured against oxfmt 0.60.0, `oxfmt.config.{js,cjs,mjs,cts}` load
+ * fine when named explicitly but are never searched for, so treating one as a
+ * config would have a generator format on options oxfmt itself ignores.
+ *
+ * These have no precedence order - oxfmt refuses to guess, failing with
+ * "Both '<a>' and '<b>' found in <dir>" when a directory holds two.
  */
 export const oxfmtConfigFiles = [
   '.oxfmtrc.json',
   '.oxfmtrc.jsonc',
   'oxfmt.config.ts',
   'oxfmt.config.mts',
-  'oxfmt.config.cts',
-  'oxfmt.config.js',
-  'oxfmt.config.mjs',
-  'oxfmt.config.cjs',
 ];
 
 export function isUsingOxfmt(root: string): boolean {
@@ -221,6 +222,25 @@ function isJsonOxfmtConfig(name: string): boolean {
 async function loadJsOxfmtConfig(configPath: string): Promise<any> {
   try {
     return require(configPath);
+  } catch {
+    return await dynamicImport(pathToFileURL(configPath).href);
+  }
+}
+
+/**
+ * `loadTsFile` loads through `require`, which throws `Unexpected token 'export'`
+ * on the ESM-only `.mts` form. Node strips types on `import()` as well, so that
+ * is the fallback: oxfmt discovers `.mts`, and reporting it as unreadable would
+ * leave every generator refusing to format a workspace `nx format` handles.
+ *
+ * `register` is required lazily so that reading a JSON config does not pull in
+ * the TypeScript transpiler machinery.
+ */
+async function loadTsOxfmtConfig(configPath: string): Promise<any> {
+  try {
+    return (
+      require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
+    ).loadTsFile(configPath);
   } catch {
     return await dynamicImport(pathToFileURL(configPath).href);
   }
@@ -442,7 +462,11 @@ function splitOxfmtConfig(
     return {};
   }
 
-  const { overrides, ignorePatterns, ...options } = config as {
+  const {
+    overrides: rawOverrides,
+    ignorePatterns: rawIgnorePatterns,
+    ...options
+  } = config as {
     overrides?: {
       files?: string[];
       excludeFiles?: string[];
@@ -450,6 +474,12 @@ function splitOxfmtConfig(
     }[];
     ignorePatterns?: string[];
   } & Record<string, unknown>;
+
+  // oxfmt reads an explicit `null` as an absent key and formats without
+  // complaint, so it is normalised rather than rejected - erroring here would
+  // skip the whole batch over a config `nx format` accepts.
+  const overrides = rawOverrides ?? undefined;
+  const ignorePatterns = rawIgnorePatterns ?? undefined;
 
   // Shapes oxfmt refuses to load are reported rather than dropped. Quietly
   // ignoring them would leave the batch formatting past exclusions the config
@@ -466,12 +496,18 @@ function splitOxfmtConfig(
     (!Array.isArray(overrides) ||
       overrides.some(
         (override) =>
-          !isGlobSet(override?.files) || !isGlobSet(override?.excludeFiles)
+          override === null ||
+          typeof override !== 'object' ||
+          // `files` is required by oxfmt, not merely typed: an override that
+          // omits it fails the whole config with "missing field `files`".
+          override.files === undefined ||
+          !isGlobSet(override.files) ||
+          !isGlobSet(override.excludeFiles)
       ))
   ) {
     return {
       error:
-        '"overrides" must be an array of { files, excludeFiles } string arrays',
+        '"overrides" must be an array of { files, excludeFiles } string arrays, each with "files"',
     };
   }
 
@@ -494,7 +530,11 @@ function splitOxfmtConfig(
   };
 }
 
-/** oxfmt's `GlobSet` is `string[]`; absent is allowed, anything else is not. */
+/**
+ * oxfmt's `GlobSet` is `string[]`; anything else is not one. Absent passes here
+ * because it is legal for `excludeFiles` - `files` is required, and its caller
+ * checks for that separately.
+ */
 function isGlobSet(globs: unknown): boolean {
   return (
     globs === undefined ||
@@ -593,12 +633,8 @@ async function resolveOxfmtConfig(
         return splitOxfmtConfig(parseJson(readFileSync(configPath, 'utf-8')));
       }
 
-      // Required lazily so that reading a JSON config does not pull in the
-      // TypeScript transpiler machinery.
       const loaded = /\.(ts|mts|cts)$/.test(name)
-        ? (
-            require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
-          ).loadTsFile(configPath)
+        ? await loadTsOxfmtConfig(configPath)
         : await loadJsOxfmtConfig(configPath);
 
       return splitOxfmtConfig(loaded?.default ?? loaded);

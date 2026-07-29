@@ -40,14 +40,16 @@ describe('formatFilesWithOxfmt', () => {
   });
 
   it('honours the workspace config', async () => {
-    writeConfig({ singleQuote: false });
+    // Deliberately not `singleQuote: false`: that is oxfmt's own default, so
+    // the assertion would hold just as well if the config were never read.
+    writeConfig({ useTabs: true });
 
     const { formatted } = await formatFilesWithOxfmt(
-      [{ path: 'a.ts', content: "const x =  'hi'" }],
+      [{ path: 'a.ts', content: 'function f() {\nif (a) {\nb();\n}\n}' }],
       workspaceRoot
     );
 
-    expect(formatted.get('a.ts')).toEqual('const x = "hi";\n');
+    expect(formatted.get('a.ts')).toContain('\tif (a) {');
   });
 
   it('prefers a config the generator just created over the one on disk', async () => {
@@ -63,20 +65,25 @@ describe('formatFilesWithOxfmt', () => {
   });
 
   it('falls through to the config on disk when the generated config is not JSON', async () => {
-    writeConfig({ singleQuote: false });
+    // `singleQuote: true` rather than `false` so the assertion distinguishes
+    // the disk config from oxfmt's defaults - with `false` this test passes
+    // even when the fall-through is removed entirely.
+    writeConfig({ singleQuote: true });
 
     const { formatted } = await formatFilesWithOxfmt(
-      [{ path: 'a.ts', content: "const x =  'hi'" }],
+      [{ path: 'a.ts', content: 'const x =  "hi"' }],
       workspaceRoot,
-      { name: 'oxfmt.config.js', content: 'module.exports = {};' }
+      { name: 'oxfmt.config.ts', content: 'export default {};' }
     );
 
     // Not the bare oxfmt defaults - the workspace's own config still applies.
-    expect(formatted.get('a.ts')).toEqual('const x = "hi";\n');
+    expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
   });
 
+  // `oxfmt.config.mts` is discovered too, but it can only be loaded through
+  // `import()`, which jest refuses without `--experimental-vm-modules`. Its
+  // fallback in `loadTsOxfmtConfig` is exercised in real Node only.
   it.each([
-    ['oxfmt.config.cjs', 'module.exports = { singleQuote: true };'],
     [
       'oxfmt.config.ts',
       'const config: { singleQuote: boolean } = { singleQuote: true };\nexport default config;\n',
@@ -91,6 +98,26 @@ describe('formatFilesWithOxfmt', () => {
 
     expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
   });
+
+  it.each(['oxfmt.config.cjs', 'oxfmt.config.js', 'oxfmt.config.cts'])(
+    'ignores %s, which oxfmt accepts via -c but never discovers',
+    async (name) => {
+      writeFileSync(
+        join(workspaceRoot, name),
+        'module.exports = { singleQuote: true };',
+        'utf-8'
+      );
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [{ path: 'a.ts', content: 'const x =  "hi"' }],
+        workspaceRoot
+      );
+
+      // Double quotes - oxfmt's defaults. Treating the file as a config would
+      // format on options `nx format` itself ignores.
+      expect(formatted.get('a.ts')).toEqual('const x = "hi";\n');
+    }
+  );
 
   it('reports a config it cannot read and formats nothing', async () => {
     writeFileSync(join(workspaceRoot, '.oxfmtrc.json'), 'not json', 'utf-8');
@@ -227,6 +254,54 @@ describe('formatFilesWithOxfmt', () => {
       expect(errors[0]).toContain('ignorePatterns');
       expect(formatted.size).toBe(0);
     });
+
+    it.each([
+      ['a bare string for files', { files: 'libs/**/*.ts' }],
+      [
+        'a bare string for excludeFiles',
+        { files: ['**/*.ts'], excludeFiles: 'x.ts' },
+      ],
+      ['a non-string glob', { files: ['**/*.ts', 7] }],
+      // oxfmt's `OxfmtOverrideConfig` marks `files` required, so an override
+      // that omits it - a typo'd `include`, say - fails the whole config with
+      // "missing field `files`" rather than matching nothing.
+      ['no files at all', { options: { singleQuote: true } }],
+      ['a null entry', null],
+    ])(
+      'reports an overrides shape oxfmt would refuse to load: %s',
+      async (_name, override) => {
+        writeConfig({ overrides: [override] });
+
+        const { formatted, errors } = await formatFilesWithOxfmt(
+          [{ path: 'a.ts', content: 'const x =  1' }],
+          workspaceRoot
+        );
+
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toContain('overrides');
+        // Formatting on the base options instead would apply a config `nx format`
+        // refuses to load at all.
+        expect(formatted.size).toBe(0);
+      }
+    );
+
+    it.each(['ignorePatterns', 'overrides'])(
+      'treats an explicit null %s the way oxfmt does, as absent',
+      async (key) => {
+        // serde maps JSON null onto `Option<T>` as absent, so the CLI formats
+        // this config without complaint. Rejecting it would strand every
+        // generator in a workspace `nx format` handles fine.
+        writeConfig({ singleQuote: true, [key]: null });
+
+        const { formatted, errors } = await formatFilesWithOxfmt(
+          [{ path: 'a.ts', content: 'const x =  "hi"' }],
+          workspaceRoot
+        );
+
+        expect(errors).toBeUndefined();
+        expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
+      }
+    );
 
     it('honours a separator-less excludeFiles at any depth', async () => {
       writeConfig({

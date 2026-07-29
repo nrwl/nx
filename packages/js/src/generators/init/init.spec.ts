@@ -1,7 +1,11 @@
 import { writeJson, readJson, Tree, updateJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import init from './init';
-import { typescriptVersion } from '../../utils/versions';
+import {
+  oxfmtVersion,
+  prettierVersion,
+  typescriptVersion,
+} from '../../utils/versions';
 
 // `ensurePackage` performs a real out-of-band install, so the only way to
 // assert *whether* it runs is to intercept it.
@@ -26,15 +30,18 @@ describe('js init generator', () => {
     // The install task is queued, not run, so without this the formatter the
     // generator just added is still missing when formatFiles tries to load it.
 
-    it.each(['oxfmt', 'prettier'] as const)(
+    // The version is asserted exactly, not as `expect.any(String)`: pairing each
+    // formatter with its own version is the reason the setup table exists, and a
+    // swapped pair would only surface as a failed install for users.
+    it.each([
+      ['oxfmt', oxfmtVersion],
+      ['prettier', prettierVersion],
+    ] as const)(
       'should ensure %s is installed before formatting',
-      async (formatter) => {
+      async (formatter, version) => {
         await init(tree, { formatter });
 
-        expect(ensurePackage).toHaveBeenCalledWith(
-          formatter,
-          expect.any(String)
-        );
+        expect(ensurePackage).toHaveBeenCalledWith(formatter, version);
       }
     );
 
@@ -136,7 +143,7 @@ describe('js init generator', () => {
   });
 
   it('should not create .oxfmtrc.json if another oxfmt config format exists', async () => {
-    tree.write('oxfmt.config.js', 'module.exports = {};');
+    tree.write('oxfmt.config.ts', 'export default {};');
 
     await init(tree, { formatter: 'oxfmt' });
 
