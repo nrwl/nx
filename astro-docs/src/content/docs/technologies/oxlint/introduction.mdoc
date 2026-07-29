@@ -1,14 +1,17 @@
 ---
-title: Oxlint Plugin for Nx
+title: Nx with Oxlint
 description: Set up and use the @nx/oxlint plugin with inferred tasks, hybrid ESLint migration, and experimental module-boundary enforcement.
 sidebar:
   label: Introduction
+weight: 2
+filter: 'type:References'
 ---
 
-The `@nx/oxlint` plugin runs [Oxlint](https://oxc.rs/docs/guide/usage/linter/) as a cached Nx task.
+[Oxlint](https://oxc.rs/docs/guide/usage/linter/) is a linter written in Rust.
+The `@nx/oxlint` plugin runs it as a cached Nx task, so a change re-lints only the projects it affects.
 
 {% aside type="caution" title="Experimental" %}
-`@nx/oxlint` is experimental. The module boundaries bridge depends on Oxlint's JavaScript plugin API, which Oxlint excludes from its semantic versioning policy and can change in any release.
+`@nx/oxlint` is experimental. The module boundaries bridge depends on the Oxlint JavaScript plugin API, which Oxlint excludes from its semantic versioning policy and can change in any release.
 {% /aside %}
 
 ## Set up
@@ -44,7 +47,7 @@ Inferred tasks declare the Oxlint config, every config reachable through `extend
 
 Install the official [Oxc extension](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) (`oxc.oxc-vscode`) for VS Code and Cursor. `nx add @nx/oxlint` appends it to `.vscode/extensions.json` when that file already exists.
 
-Oxc also ships extensions for Zed, JetBrains IDEs and Neovim. Any editor with LSP support can use `oxlint --lsp` as its language server.
+Oxc also ships extensions for Zed, JetBrains IDEs, and Neovim. Any editor with LSP support can use `oxlint --lsp` as its language server.
 
 ## Config file format
 
@@ -91,7 +94,7 @@ This adds an `oxlint` task to every project that has an ESLint task and leaves t
 
 ## Type-aware linting
 
-Oxlint's type-aware rules need the `oxlint-tsgolint` package and TypeScript 7. Enable them per task with the `typeAware` option, and point `tsconfig` at the project's TypeScript config.
+The Oxlint type-aware rules need the `oxlint-tsgolint` package and TypeScript 7. Enable them per task with the `typeAware` option, and point `tsconfig` at the project's TypeScript config.
 
 ## Module boundaries
 
@@ -111,7 +114,9 @@ Oxlint's type-aware rules need the `oxlint-tsgolint` package and TypeScript 7. E
 }
 ```
 
-The rule runs as JavaScript rather than native Rust, so it's slower than Oxlint's built-in rules.
+The rule runs as JavaScript rather than native Rust, so it's slower than the built-in Oxlint rules.
+
+`depConstraints` takes the same syntax as it does under ESLint. To tag projects and write constraints, see [enforce module boundaries](/docs/features/enforce-module-boundaries).
 
 {% aside type="note" title="Dependency checks aren't available" %}
 Oxlint doesn't lint JSON files, so the `@nx/dependency-checks` rule cannot run on Oxlint. Keep ESLint for that check.
