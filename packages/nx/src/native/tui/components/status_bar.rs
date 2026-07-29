@@ -430,9 +430,11 @@ impl<'a> StatusBar<'a> {
             if props.is_dimmed {
                 icon_style = icon_style.add_modifier(Modifier::DIM);
             }
-            // U+2601 + VS16 forces the filled emoji glyph (two cells wide),
-            // followed by a single space before the counts.
-            spans.push(Span::styled("☁\u{fe0f} ", icon_style));
+            // U+2601 + VS15 forces the text glyph (one cell wide). The emoji
+            // form is drawn from the terminal's color emoji font, which
+            // ignores `icon_style` and vanishes on light backgrounds. Two
+            // trailing spaces keep the segment as wide as the emoji's was.
+            spans.push(Span::styled("☁\u{fe0e}  ", icon_style));
         }
         spans.push(Span::styled(
             format!("{}/{}", props.completed_count, props.total_count),
@@ -843,13 +845,13 @@ mod tests {
             registry.hit_test(1, 0),
             Some("https://nx.app/runs/KnGk4A47qk")
         );
-        assert_eq!(terminal.backend().buffer()[(1, 0)].symbol(), "☁\u{fe0f}");
+        assert_eq!(terminal.backend().buffer()[(1, 0)].symbol(), "☁\u{fe0e}");
         assert!(
             !terminal.backend().buffer()[(1, 0)]
                 .modifier
                 .contains(Modifier::UNDERLINED)
         );
-        // Icon (2 cells) + one space: the underlined counts start at col 4.
+        // Icon (1 cell) + two spaces: the underlined counts start at col 4.
         assert!(
             terminal.backend().buffer()[(4, 0)]
                 .modifier
