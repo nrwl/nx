@@ -91,9 +91,12 @@ type AngularUnitTestRunner =
   | 'vitest-angular'
   | 'vitest-analog';
 
+/** Mirrors `LinterType` in `@nx/js`, which this package cannot depend on. */
+type Linter = 'none' | 'eslint' | 'oxlint';
+
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
-  linter?: 'none' | 'eslint';
+  linter?: Linter;
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
   useProjectJson?: boolean;
@@ -1135,27 +1138,21 @@ async function determineFormatterOptions(
 }
 
 async function determineLinterOptions(
-  args: { interactive?: boolean },
+  args: { linter?: Linter; interactive?: boolean },
   opts?: { preferEslint?: boolean }
-) {
-  const reply = await enquirer.prompt<{ eslint: 'Yes' | 'No' }>([
+): Promise<Linter> {
+  if (args.linter) return args.linter;
+  const reply = await enquirer.prompt<{ linter: Linter }>([
     {
-      name: 'eslint',
-      message: `Would you like to use ESLint?`,
+      name: 'linter',
+      message: `Which linter would you like to use?`,
       type: 'autocomplete',
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: opts?.preferEslint ? 0 : 1,
+      choices: [{ name: 'eslint' }, { name: 'oxlint' }, { name: 'none' }],
+      initial: opts?.preferEslint ? 0 : 2,
       skip: !args.interactive || isCI(),
     },
   ]);
-  return reply.eslint === 'Yes' ? 'eslint' : 'none';
+  return reply.linter;
 }
 
 async function determineNoneOptions(
@@ -1239,7 +1236,7 @@ async function determineReactOptions(
   let routing = true;
   let nextAppDir = false;
   let nextSrcDir = false;
-  let linter: undefined | 'none' | 'eslint';
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
@@ -1363,7 +1360,7 @@ async function determineReactOptions(
       preferPrettier: true,
     });
   } else {
-    linter = 'eslint';
+    linter = parsedArgs.linter ?? 'eslint';
     formatter = 'prettier';
   }
 
@@ -1392,7 +1389,7 @@ async function determineVueOptions(
   let appName: string;
   let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let linter: undefined | 'none' | 'eslint';
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
@@ -1475,7 +1472,7 @@ async function determineVueOptions(
       preferPrettier: true,
     });
   } else {
-    linter = 'eslint';
+    linter = parsedArgs.linter ?? 'eslint';
     formatter = 'prettier';
   }
 
@@ -1698,7 +1695,7 @@ async function determineNodeOptions(
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
-  let linter: undefined | 'none' | 'eslint';
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
   let unitTestRunner: undefined | 'none' | 'jest' = undefined;
   const workspaces = parsedArgs.workspaces;
@@ -1771,7 +1768,7 @@ async function determineNodeOptions(
       preferPrettier: true,
     });
   } else {
-    linter = 'eslint';
+    linter = parsedArgs.linter ?? 'eslint';
     formatter = 'prettier';
   }
 
