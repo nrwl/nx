@@ -252,7 +252,10 @@ function readIgnoreMatcher(
     matcher.add(contents);
   }
   if (ignorePatterns?.length) {
-    matcher.add(ignorePatterns);
+    // Filtered rather than passed straight through: `ignore` throws on a
+    // non-string entry, and this runs once for the whole batch, so a single
+    // bad line in a hand-written config would cost every file its formatting.
+    matcher.add(ignorePatterns.filter((p) => typeof p === 'string'));
   }
 
   return matcher;
@@ -278,7 +281,13 @@ function readEditorConfigSections(
   let contents: string;
   try {
     contents = readFileSync(path.join(workspaceRoot, '.editorconfig'), 'utf-8');
-  } catch {
+  } catch (e) {
+    // Not having one is the common case. Anything else - unreadable, a
+    // directory, a broken mount - would otherwise look identical to that and
+    // silently format to different widths than `nx format` produces.
+    if (e.code !== 'ENOENT') {
+      throw new Error(`Could not read .editorconfig: ${e.message}`);
+    }
     return undefined;
   }
 
@@ -357,9 +366,15 @@ function editorConfigOptionsForFile(
   }
 
   // The spec makes `indent_size` the indentation width and `tab_width` only a
-  // fallback for it, so `indent_size` wins here. Note oxfmt's CLI resolves the
-  // pair the other way around, so a workspace setting both to different values
-  // gets a different width from `nx format` than from a generator.
+  // fallback for it, which is also what oxfmt's CLI does *when `indent_style`
+  // is set* - the shape essentially every .editorconfig has, and the one the
+  // two paths therefore agree on.
+  //
+  // Measured divergence, left alone deliberately: with no `indent_style` at
+  // all, the CLI ignores `indent_size` and uses `tab_width` (or its own
+  // default of 2 when there is none), while this follows the spec and honours
+  // `indent_size`. Matching the quirk would mean dropping a width the user
+  // asked for, so the spec wins here.
   const indentSize = properties['indent_size'] ?? properties['tab_width'];
   if (indentSize === 'tab') {
     options.useTabs = true;
@@ -450,16 +465,35 @@ function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
   if (!Array.isArray(globs) || globs.length === 0) {
     return () => false;
   }
-  const matchers = globs.map((glob) => new Minimatch(glob, { dot: true }));
+  const matchers = globs.map((glob) => {
+    // oxfmt lifts a pattern with no separator to match at any depth, and reads
+    // a leading `./` as "anchored to the config file's directory". minimatch
+    // does neither on its own, so `*.md` would otherwise match only at the
+    // root - the shape `oxfmt migrate-prettier` emits most often.
+    // See GlobSet::new in crates/oxc_config/src/glob_set.rs.
+    const pattern = glob.startsWith('./')
+      ? glob.slice(2)
+      : glob.includes('/')
+        ? glob
+        : `**/${glob}`;
+
+    // oxfmt matches with fast-glob, which has no negation syntax, so a leading
+    // `!` is a literal character rather than an inversion.
+    return new Minimatch(pattern, { dot: true, nonegate: true });
+  });
   return (filePath) => matchers.some((matcher) => matcher.match(filePath));
 }
 
-/** Options from every override matching this file; later overrides win. */
+/**
+ * Options from every override matching this file; later overrides win.
+ * Override globs are rooted at the workspace, so a path that could not be made
+ * relative to it matches nothing.
+ */
 function overrideOptionsForFile(
   overrides: OxfmtOverride[] | undefined,
-  filePath: string
+  filePath: string | undefined
 ): Record<string, unknown> | undefined {
-  if (!overrides?.length) {
+  if (!overrides?.length || filePath === undefined) {
     return undefined;
   }
   let options: Record<string, unknown> | undefined;
@@ -532,8 +566,13 @@ async function resolveOxfmtConfig(
 /**
  * `ignore` rejects anything that is not already a relative path, and callers
  * pass both workspace-relative paths (from a tree) and absolute ones (from
- * `writeFormattedJsonFile`). Returns undefined for a path outside the
- * workspace, which the workspace's ignore files could not cover anyway.
+ * `writeFormattedJsonFile`).
+ *
+ * Returns undefined for a path that is not under the workspace root, including
+ * the root itself. The caller treats that as "no ignore rules apply" rather
+ * than passing the raw path on - that is the shape `ignore` throws for. On
+ * Windows a path on another drive comes back looking relative (`D:/…`), which
+ * is a wrong answer rather than an undefined one; no shipped caller does that.
  */
 function toWorkspaceRelative(
   workspaceRoot: string,
@@ -574,22 +613,35 @@ export async function formatFilesWithOxfmt(
 
   const { format } = await loadOxfmtModule();
   const config = await resolveOxfmtConfig(workspaceRoot, seedConfig);
+  if (config.error) {
+    // An unreadable config costs us the workspace's style *and* its
+    // `ignorePatterns`. Formatting on oxfmt's bare defaults would then rewrite
+    // files the config asks to skip, and `tree.write` is not undone by a
+    // warning - so report and leave the batch alone.
+    return { formatted, errors: [config.error] };
+  }
   // .editorconfig properties are matched per file. Precedence runs
   // .editorconfig < the config's own options < a matching override, which is
   // the order the CLI resolves them in.
   const editorConfigSections = readEditorConfigSections(workspaceRoot);
   const ignoreMatcher = readIgnoreMatcher(workspaceRoot, config.ignorePatterns);
 
-  const errors: string[] = config.error ? [config.error] : [];
+  const errors: string[] = [];
   await Promise.all(
     files.map(async (file) => {
       try {
-        // Inside the try: `ignores()` throws on a path it considers
+        // Still inside the try: `ignores()` throws on a path it considers
         // non-relative, and an unhandled rejection here would discard the
         // formatting of every other file in the batch.
-        const relativePath =
-          toWorkspaceRelative(workspaceRoot, file.path) ?? file.path;
-        if (ignoreMatcher?.ignores(relativePath)) {
+        const relativePath = toWorkspaceRelative(workspaceRoot, file.path);
+
+        // A path that is not under the workspace root cannot be covered by the
+        // workspace's own ignore files, and handing the un-normalised path to
+        // the matcher anyway is exactly what it rejects. Nothing to check.
+        if (
+          relativePath !== undefined &&
+          ignoreMatcher?.ignores(relativePath)
+        ) {
           return;
         }
 
@@ -598,6 +650,7 @@ export async function formatFilesWithOxfmt(
           file.content,
           {
             ...(editorConfigSections &&
+              relativePath !== undefined &&
               editorConfigOptionsForFile(editorConfigSections, relativePath)),
             ...config.options,
             ...overrideOptionsForFile(config.overrides, relativePath),
