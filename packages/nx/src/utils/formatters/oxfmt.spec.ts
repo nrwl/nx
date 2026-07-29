@@ -189,6 +189,45 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.get('root.ts')).toEqual("const y = 'hi';\n");
     });
 
+    it('treats a leading bang as a negation, as the CLI does', async () => {
+      // oxfmt normalizes the pattern and then matches with fast-glob, whose
+      // glob_match inverts on a leading `!` - so this override applies to
+      // everything *outside* libs/.
+      writeConfig({
+        singleQuote: false,
+        overrides: [
+          { files: ['!libs/**/*.ts'], options: { singleQuote: true } },
+        ],
+      });
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 'root.ts', content: 'const x =  "hi"' },
+          { path: 'libs/lib1/a.ts', content: 'const y =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('root.ts')).toEqual("const x = 'hi';\n");
+      expect(formatted.get('libs/lib1/a.ts')).toEqual('const y = "hi";\n');
+    });
+
+    it('reports a config shape oxfmt would refuse to load', async () => {
+      // The CLI fails with "invalid type: integer, expected a string" and
+      // formats nothing; dropping the bad entry instead would format past the
+      // exclusions the config asked for.
+      writeConfig({ ignorePatterns: ['libs/generated/**', 123] });
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: 'libs/generated/api.ts', content: 'const x =  1' }],
+        workspaceRoot
+      );
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('ignorePatterns');
+      expect(formatted.size).toBe(0);
+    });
+
     it('honours a separator-less excludeFiles at any depth', async () => {
       writeConfig({
         singleQuote: false,
