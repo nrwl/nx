@@ -3,6 +3,7 @@ import {
   GeneratorCallback,
   getProjects,
   ProjectConfiguration,
+  readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateProjectConfiguration,
@@ -25,6 +26,13 @@ export async function convertFromEslintGenerator(
   // Sits beside an existing ESLint `lint` target, so it never claims `lint`.
   options.targetName ??= 'oxlint';
   options.addExplicitTargets ??= true;
+
+  // Throws the standard devkit "Cannot find configuration for ..." error. Without
+  // it a typo'd name matches nothing, every iteration below is skipped, and the
+  // generator reports success having done nothing.
+  if (options.project) {
+    readProjectConfiguration(tree, options.project);
+  }
 
   const tasks: GeneratorCallback[] = [];
   tasks.push(

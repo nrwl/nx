@@ -1,6 +1,7 @@
 import {
   formatFiles,
   GeneratorCallback,
+  logger,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -61,13 +62,21 @@ export async function lintProjectGeneratorInternal(
     // Prefer `lint`, the same name inference prefers, and step aside when
     // another linter already owns it.
     const targetName = projectConfig.targets['lint'] ? 'oxlint' : 'lint';
-    projectConfig.targets[targetName] = {
-      executor: '@nx/oxlint:lint',
-      options: {
-        lintFilePatterns: ['{projectRoot}'],
-      },
-    };
-    updateProjectConfiguration(tree, options.project, projectConfig);
+    // Never clobber an existing Oxlint target — it may carry `typeAware`, a
+    // custom `tsconfig` or extra patterns the user set by hand.
+    if (projectConfig.targets[targetName]?.executor === '@nx/oxlint:lint') {
+      logger.info(
+        `Project "${options.project}" already has an Oxlint target "${targetName}"; leaving it as is.`
+      );
+    } else {
+      projectConfig.targets[targetName] = {
+        executor: '@nx/oxlint:lint',
+        options: {
+          lintFilePatterns: ['{projectRoot}'],
+        },
+      };
+      updateProjectConfiguration(tree, options.project, projectConfig);
+    }
   }
 
   if (!options.skipFormat) {

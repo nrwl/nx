@@ -8,6 +8,7 @@ import {
   runTasksInSerial,
   TargetConfiguration,
   Tree,
+  type ProjectGraph,
   updateJson,
   updateNxJson,
   writeJson,
@@ -35,10 +36,34 @@ export interface InitGeneratorSchema {
 }
 
 /**
- * `lint` first so greenfield workspaces get the natural name; `addPlugin`
- * falls through the rest when ESLint already owns `lint`.
+ * `lint` first so greenfield workspaces get the natural name, falling through
+ * the rest when something else already owns it.
  */
 const OXLINT_TARGET_NAMES = ['lint', 'oxlint', 'oxlint:lint', 'oxlint-lint'];
+
+/**
+ * Picks the first target name nothing in the workspace already uses.
+ *
+ * `addPlugin` can resolve this itself, but it does so by running our own
+ * `createNodes` against the real filesystem — where the root config does not
+ * exist yet on a first install, because the `Tree` has not been flushed. Our
+ * plugin returns no projects without a config, so `addPlugin` would see zero
+ * conflicts and take `lint` even in a workspace where ESLint owns it. Reading
+ * the existing graph answers the same question without that dependency.
+ */
+function resolveTargetName(graph: ProjectGraph): string {
+  const taken = new Set<string>();
+  for (const node of Object.values(graph.nodes ?? {})) {
+    for (const target of Object.keys(node.data?.targets ?? {})) {
+      taken.add(target);
+    }
+  }
+
+  return (
+    OXLINT_TARGET_NAMES.find((name) => !taken.has(name)) ??
+    OXLINT_TARGET_NAMES[OXLINT_TARGET_NAMES.length - 1]
+  );
+}
 
 export async function initGeneratorInternal(
   tree: Tree,
@@ -56,12 +81,13 @@ export async function initGeneratorInternal(
   options.addPlugin ??= addPluginDefault;
 
   if (options.addPlugin) {
+    const graph = await createProjectGraphAsync();
     await addPlugin(
       tree,
-      await createProjectGraphAsync(),
+      graph,
       '@nx/oxlint',
       createNodes,
-      { targetName: OXLINT_TARGET_NAMES },
+      { targetName: [resolveTargetName(graph)] },
       options.updatePackageScripts
     );
   } else {
