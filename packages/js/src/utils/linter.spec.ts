@@ -36,13 +36,10 @@ describe('detectLinter', () => {
     }
   );
 
-  it.each(['@nx/oxlint', '@nx/oxlint/plugin'])(
-    'should detect oxlint from the %s inference plugin',
-    (plugin) => {
-      addPlugin(plugin);
-      expect(detectLinter(tree)).toBe('oxlint');
-    }
-  );
+  it('should detect oxlint from the inference plugin', () => {
+    addPlugin('@nx/oxlint');
+    expect(detectLinter(tree)).toBe('oxlint');
+  });
 
   // ESLint is also the fallback, so these pin that an ESLint workspace is not
   // mistaken for an Oxlint one — they cannot distinguish detection from the
@@ -63,7 +60,7 @@ describe('detectLinter', () => {
   it('should prefer oxlint in a hybrid workspace', () => {
     addPlugin('@nx/eslint/plugin');
     addDevDependency('eslint');
-    addPlugin('@nx/oxlint/plugin');
+    addPlugin('@nx/oxlint');
     addDevDependency('oxlint');
 
     expect(detectLinter(tree)).toBe('oxlint');
@@ -72,7 +69,7 @@ describe('detectLinter', () => {
   it('should read expanded plugin registrations', () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins = [
-      { plugin: '@nx/oxlint/plugin', options: { targetName: 'lint' } },
+      { plugin: '@nx/oxlint', options: { targetName: 'lint' } },
     ];
     updateNxJson(tree, nxJson);
 

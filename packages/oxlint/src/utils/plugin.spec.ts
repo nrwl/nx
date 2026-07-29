@@ -15,24 +15,25 @@ describe('hasOxlintPlugin', () => {
     updateNxJson(tree, nxJson);
   }
 
-  it.each(['@nx/oxlint', '@nx/oxlint/plugin'])(
-    'should recognise the %s string entry',
-    (plugin) => {
-      addPlugin(plugin);
-      expect(hasOxlintPlugin(tree)).toBe(true);
-    }
-  );
+  it('should recognise the string entry', () => {
+    addPlugin('@nx/oxlint');
+    expect(hasOxlintPlugin(tree)).toBe(true);
+  });
 
-  it.each(['@nx/oxlint', '@nx/oxlint/plugin'])(
-    'should recognise the %s object entry',
-    (plugin) => {
-      addPlugin({ plugin });
-      expect(hasOxlintPlugin(tree)).toBe(true);
-    }
-  );
+  it('should recognise the object entry', () => {
+    addPlugin({ plugin: '@nx/oxlint' });
+    expect(hasOxlintPlugin(tree)).toBe(true);
+  });
 
   it('should not match an unrelated plugin', () => {
     addPlugin('@nx/eslint/plugin');
+    expect(hasOxlintPlugin(tree)).toBe(false);
+  });
+
+  // The package exposes no `./plugin` subpath, so such an entry would fail to
+  // resolve. Matching it would report a plugin that cannot load.
+  it('should not match a @nx/oxlint subpath', () => {
+    addPlugin('@nx/oxlint/plugin');
     expect(hasOxlintPlugin(tree)).toBe(false);
   });
 });
