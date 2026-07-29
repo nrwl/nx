@@ -27,16 +27,17 @@ generators skip formatting.
 A workspace using Biome, dprint, or any other formatter lands here, which is what keeps Nx from
 reformatting files it doesn't own.
 
-The oxfmt config files Nx looks for, in order:
+The oxfmt config files Nx looks for:
 
 - `.oxfmtrc.json`
 - `.oxfmtrc.jsonc`
 - `oxfmt.config.ts`
 - `oxfmt.config.mts`
-- `oxfmt.config.cts`
-- `oxfmt.config.js`
-- `oxfmt.config.mjs`
-- `oxfmt.config.cjs`
+
+These are the names oxfmt itself searches for. It accepts other extensions when you point at one
+explicitly with `-c`, but it never goes looking for them, so Nx doesn't either. Keep one config per
+directory: oxfmt refuses to choose between two and fails with `Both '.oxfmtrc.json' and
+'.oxfmtrc.jsonc' found`.
 
 Step 3 has no Prettier equivalent, and that asymmetry is deliberate.
 Prettier shows up in `node_modules` as a transitive dependency of all sorts of packages, so treating
@@ -95,8 +96,10 @@ workspace root:
 Two things about `.editorconfig` may surprise you, and both come from oxfmt rather than from Nx: it
 does not merge the chain, and it does not consult `root = true`. Any `.editorconfig` at the
 workspace root stops the search, even an empty or comment-only one, and `root = true` in a parent
-does not stop that parent from applying. Subdirectory files apply under neither path, because oxfmt
-resolves `.editorconfig` once from the working directory rather than per formatted file.
+does not stop that parent from applying. oxfmt also resolves `.editorconfig` once from the working
+directory rather than per formatted file, so a subdirectory's own file is ignored when you format it
+from the workspace root — but running `nx format:write` from inside that subdirectory picks it up
+instead. Generator formatting always reads the workspace root file.
 
 ## Skip formatting
 
