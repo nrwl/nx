@@ -27,7 +27,8 @@ type OxfmtFormat = (
 ) => Promise<{
   code: string;
   // `codeframe` carries the path and line; `message` on its own does not.
-  errors?: { message: string; codeframe?: string }[];
+  // Nullable, not optional - that is what oxfmt's own `dist/index.d.ts` says.
+  errors?: { message: string; codeframe?: string | null }[];
 }>;
 
 /**

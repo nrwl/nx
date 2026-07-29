@@ -3,7 +3,7 @@
     <% if(cliCommand === 'ng') { %>
     "angular.ng-template",<% }
     %>
-    "nrwl.angular-console",
-    "esbenp.prettier-vscode"
+    "nrwl.angular-console"<% if(formatter === 'prettier') { %>,
+    "esbenp.prettier-vscode"<% } %>
   ]
 }
