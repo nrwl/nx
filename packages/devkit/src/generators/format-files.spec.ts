@@ -233,12 +233,14 @@ describe('formatFiles', () => {
       // The config exists only in the tree, so oxfmt cannot discover it on
       // disk - it has to be handed over, or the files a generator ships come
       // out formatted differently from the config it ships with them.
-      tree.write('.oxfmtrc.json', JSON.stringify({ singleQuote: false }));
-      tree.write('test.ts', "const   x   =   'hi'");
+      // `useTabs` rather than `singleQuote: false`, which is oxfmt's default
+      // and so cannot tell "config applied" apart from "config ignored".
+      tree.write('.oxfmtrc.json', JSON.stringify({ useTabs: true }));
+      tree.write('test.ts', 'function f() {\nif (a) {\nb();\n}\n}');
 
       await formatFiles(tree);
 
-      expect(tree.read('test.ts', 'utf-8')).toBe('const x = "hi";\n');
+      expect(tree.read('test.ts', 'utf-8')).toContain('\tif (a) {');
     });
 
     it('should still format when the generator deleted an oxfmt config', async () => {

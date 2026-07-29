@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { presetGenerator } from './preset';
 import { Preset } from '../utils/presets';
@@ -41,6 +41,11 @@ describe('preset', () => {
 
         expect(tree.exists(expected)).toBe(true);
         expect(tree.exists(notExpected)).toBe(false);
+        // The config alone is not enough: a workspace configured for a
+        // formatter it never installed fails `nx format` outright.
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
       }
     );
 
