@@ -582,6 +582,27 @@ jobs:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
+      # Built here (rather than inline in the payload below) to keep the Block Kit
+      # construction consistent with the other two Slack-posting jobs.
+      - name: Build Slack message payload
+        id: approved-message
+        if: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
+        env:
+          THREAD_TS: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
+        run: |
+          PAYLOAD=$(jq -nc --arg ts "$THREAD_TS" '{
+            channel: "C024JCL7TST",
+            thread_ts: $ts,
+            text: "✅ Approved — publishing now.",
+            blocks: [
+              {
+                type: "section",
+                text: { type: "mrkdwn", text: "✅ *Approved* — publishing now." }
+              }
+            ]
+          }')
+          echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
+
       # Best-effort threaded confirmation that the manual review gate has been passed and the
       # publish is proceeding. Requires the SLACK_BOT_TOKEN secret and a valid thread to reply to;
       # if either is missing this step no-ops without affecting the actual publish below.
@@ -594,8 +615,7 @@ jobs:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           errors: true
-          payload: |
-            {"channel": "C024JCL7TST", "thread_ts": "${{ needs.report-pending-publish.outputs.slack_thread_ts }}", "text": "✅ Approved — publishing now."}
+          payload: ${{ steps.approved-message.outputs.payload }}
 
       - name: Set verbose logging from debug mode
         if: runner.debug == '1'
@@ -716,11 +736,31 @@ jobs:
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [ -n "$PR_NUMBER" ]; then
-            TEXT="📦 Version ${VERSION} from PR #${PR_NUMBER} by @${PR_AUTHOR} is being published to NPM - manual review is required ${MENTIONS} <${RUN_URL}|View Workflow Run>"
+            MAIN_TEXT="📦 *Version ${VERSION}* from PR #${PR_NUMBER} by @${PR_AUTHOR} is being published to NPM - manual review is required ${MENTIONS}"
           else
-            TEXT="📦 Version ${VERSION} is being published to NPM - manual review is required ${MENTIONS} <${RUN_URL}|View Workflow Run>"
+            MAIN_TEXT="📦 *Version ${VERSION}* is being published to NPM - manual review is required ${MENTIONS}"
           fi
-          PAYLOAD=$(jq -nc --arg text "$TEXT" '{channel: "C024JCL7TST", text: $text}')
+          FALLBACK_TEXT="📦 Version ${VERSION} is being published to NPM"
+          PAYLOAD=$(jq -nc \
+            --arg text "$FALLBACK_TEXT" \
+            --arg main "$MAIN_TEXT" \
+            --arg run_url "$RUN_URL" \
+            '{
+              channel: "C024JCL7TST",
+              text: $text,
+              blocks: [
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: $main }
+                },
+                {
+                  type: "context",
+                  elements: [
+                    { type: "mrkdwn", text: ("<" + $run_url + "|View Workflow Run>") }
+                  ]
+                }
+              ]
+            }')
           echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
 
       # Uses the bot-token based slack-github-action (rather than the incoming-webhook
@@ -759,8 +799,30 @@ jobs:
           THREAD_TS: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          TEXT="🎉 Version ${VERSION} was published to NPM successfully. <${RUN_URL}|View Workflow Run>"
-          PAYLOAD=$(jq -nc --arg text "$TEXT" --arg ts "$THREAD_TS" '{channel: "C024JCL7TST", thread_ts: $ts, text: $text}')
+          FALLBACK_TEXT="🎉 Version ${VERSION} was published to NPM successfully."
+          MAIN_TEXT="🎉 *Version ${VERSION}* was published to NPM successfully."
+          PAYLOAD=$(jq -nc \
+            --arg text "$FALLBACK_TEXT" \
+            --arg main "$MAIN_TEXT" \
+            --arg ts "$THREAD_TS" \
+            --arg run_url "$RUN_URL" \
+            '{
+              channel: "C024JCL7TST",
+              thread_ts: $ts,
+              text: $text,
+              blocks: [
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: $main }
+                },
+                {
+                  type: "context",
+                  elements: [
+                    { type: "mrkdwn", text: ("<" + $run_url + "|View Workflow Run>") }
+                  ]
+                }
+              ]
+            }')
           echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
 
       - name: Send Slack notification
