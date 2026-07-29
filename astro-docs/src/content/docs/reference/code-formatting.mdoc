@@ -7,9 +7,10 @@ sidebar:
 filter: 'type:References'
 ---
 
-Nx formats code in two places: when you run `nx format:write` or `nx format:check`, and at the end of
-most generators.
-Both use the same formatter, and Nx works out which one that is by looking at your workspace.
+Nx formats code when you run `nx format:write` or `nx format:check`, at the end of most generators,
+over the files `nx init` writes, and once over a workspace `create-nx-workspace` has just created.
+All of them use the same formatter, and Nx works out which one that is by looking at your
+workspace.
 
 Two formatters are supported: [oxfmt](https://oxc.rs) and [Prettier](https://prettier.io).
 New workspaces created with `create-nx-workspace` default to oxfmt.
