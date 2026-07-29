@@ -31,6 +31,42 @@ describe('js init generator', () => {
     expect(oxfmtrc).toEqual({ singleQuote: true, printWidth: 80 });
   });
 
+  describe('default formatter', () => {
+    // The default resolves three ways and each arm is user-visible, so none of
+    // them may rely on a caller passing `formatter` explicitly.
+
+    it('should default to oxfmt when the workspace has no formatter configured', async () => {
+      await init(tree, {});
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['oxfmt']).toBeDefined();
+      expect(packageJson.devDependencies['prettier']).toBeUndefined();
+      expect(tree.exists('.oxfmtrc.json')).toBe(true);
+    });
+
+    it('should keep prettier when the workspace already uses it', async () => {
+      writeJson(tree, '.prettierrc', { singleQuote: true });
+
+      await init(tree, {});
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['prettier']).toBeDefined();
+      expect(packageJson.devDependencies['oxfmt']).toBeUndefined();
+      // A stray .oxfmtrc.json here would win detection over the .prettierrc
+      // and silently switch the workspace's formatter.
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+    });
+
+    it('should default to no formatter under the TS solution setup', async () => {
+      await init(tree, { addTsPlugin: true });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies['oxfmt']).toBeUndefined();
+      expect(packageJson.devDependencies['prettier']).toBeUndefined();
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+    });
+  });
+
   it('should not overwrite existing .oxfmtrc.json', async () => {
     writeJson(tree, '.oxfmtrc.json', { singleQuote: false });
 

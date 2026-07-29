@@ -4,18 +4,11 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+// Imported rather than copied: detection ("is this workspace using oxfmt?")
+// and setup ("should a config be written?") have to agree on the same list, or
+// a workspace that already has a config gets a second, redundant one.
+import { oxfmtConfigFiles } from 'nx/src/devkit-internals';
 import { oxfmtVersion } from './versions';
-
-const oxfmtConfigFiles = [
-  '.oxfmtrc.json',
-  '.oxfmtrc.jsonc',
-  'oxfmt.config.ts',
-  'oxfmt.config.mts',
-  'oxfmt.config.cts',
-  'oxfmt.config.js',
-  'oxfmt.config.mjs',
-  'oxfmt.config.cjs',
-];
 
 export function generateOxfmtSetup(
   tree: Tree,
