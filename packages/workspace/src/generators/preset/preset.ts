@@ -161,6 +161,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.unitTestRunner ?? 'vitest',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.Nuxt) {
     const { applicationGenerator: nuxtApplicationGenerator } = require(
@@ -195,6 +196,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.unitTestRunner ?? 'vitest',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require(
@@ -246,6 +248,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require(
@@ -329,6 +332,7 @@ async function createPreset(tree: Tree, options: Schema) {
       js: options.js,
       rootProject: true,
       addPlugin,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NodeStandalone) {
     const { applicationGenerator: nodeApplicationGenerator } = require(
@@ -346,6 +350,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       unitTestRunner: options.unitTestRunner,
       addPlugin,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NodeMonorepo) {
     const { applicationGenerator: nodeApplicationGenerator } = require(
