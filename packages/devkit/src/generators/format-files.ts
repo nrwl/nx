@@ -215,7 +215,9 @@ async function formatWithOxfmt(
  * ships with.
  */
 function getGeneratedOxfmtConfig(
-  configFiles: string[] | undefined,
+  // `readonly` because this only iterates: nx's `oxfmtConfigFiles` is a plain
+  // array today, and marking it `as const` there should not break devkit here.
+  configFiles: readonly string[] | undefined,
   // The caller's already-filtered set, rather than a second `listChanges()`:
   // that walk stats every recorded change, and deletions are excluded from it
   // for us. A deleted config is not one the generator "just created", and

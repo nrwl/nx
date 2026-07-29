@@ -42,7 +42,7 @@ interface Schema {
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
   analytics?: boolean;
-  formatter?: string;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
   useProjectJson?: boolean;
