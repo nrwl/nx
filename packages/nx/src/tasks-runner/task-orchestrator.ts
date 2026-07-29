@@ -1,5 +1,5 @@
 import { defaultMaxListeners } from 'events';
-import { writeFileSync } from 'fs';
+import { existsSync, statSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
 import * as pc from 'picocolors';
@@ -1633,6 +1633,9 @@ export class TaskOrchestrator {
       new Promise<void>((resolve) => {
         childProcess.onExit(async (code) => {
           await this.handleContinuousTaskExit(code, task, groupId, true);
+          // Registered after the runner's own exit handler, which is what
+          // wrote the file.
+          this.recordContinuousTerminalOutput(task);
           resolve();
         });
       })
@@ -1763,8 +1766,13 @@ export class TaskOrchestrator {
    * recorded in `tasksWithPersistedOutput`, and tasks `cache.put` is about to
    * write are skipped here. Cache replays are skipped too — their output was
    * read from this very file. Skipped tasks never ran, so there is nothing to
-   * write and no reason to leave an empty file behind for the cache's
-   * age-based GC to never collect.
+   * write.
+   *
+   * Every file written without a cache entry behind it is then registered with
+   * the cache, because `removeOldCacheRecords` only collects hashes it finds in
+   * the database — an unregistered file would never be cleaned up. That covers
+   * files this method wrote AND ones a runner wrote, which are equally
+   * invisible to the GC.
    */
   private persistTerminalOutputs(
     results: {
@@ -1775,6 +1783,7 @@ export class TaskOrchestrator {
     resultsToCache: { task: Task }[]
   ) {
     const writtenByCache = new Set(resultsToCache.map(({ task }) => task.id));
+    const toRecord: { hash: string; size: number }[] = [];
     for (const { task, status, terminalOutput } of results) {
       if (
         terminalOutput === undefined ||
@@ -1784,14 +1793,39 @@ export class TaskOrchestrator {
         status === 'local-cache' ||
         status === 'local-cache-kept-existing' ||
         status === 'remote-cache' ||
-        writtenByCache.has(task.id) ||
-        this.tasksWithPersistedOutput.has(task.id)
+        // `cache.put` writes the file and records the hash itself.
+        writtenByCache.has(task.id)
       ) {
         continue;
       }
-      this.tasksWithPersistedOutput.add(task.id);
-      writeFileSync(this.cache.temporaryOutputPath(task), terminalOutput);
+      if (!this.tasksWithPersistedOutput.has(task.id)) {
+        this.tasksWithPersistedOutput.add(task.id);
+        writeFileSync(this.cache.temporaryOutputPath(task), terminalOutput);
+      }
+      toRecord.push({
+        hash: task.hash,
+        size: Buffer.byteLength(terminalOutput),
+      });
     }
+    if (toRecord.length > 0) {
+      this.cache.recordTerminalOutputs(toRecord);
+    }
+  }
+
+  /**
+   * Register a continuous task's terminal output with the cache so the GC can
+   * collect it. Continuous tasks never reach postRunSteps — their file is
+   * written by whichever runner ran them, as the process exits — so this is
+   * the only place their hash gets recorded. Read off disk rather than from a
+   * result, because a continuous task completes without one.
+   */
+  private recordContinuousTerminalOutput(task: Task) {
+    if (!task.hash) return;
+    const path = this.cache.temporaryOutputPath(task);
+    if (!existsSync(path)) return;
+    this.cache.recordTerminalOutputs([
+      { hash: task.hash, size: statSync(path).size },
+    ]);
   }
 
   private async scheduleNextTasksAndReleaseThreads() {
