@@ -8,6 +8,15 @@ import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { NOTHING_IGNORED } from '../utils/nx-ignore-internals';
 
+/**
+ * Types for the symbols this module bridges from nx at runtime. They come from
+ * the in-repo nx through devkit's project reference, so a signature change
+ * there is a compile error here rather than a silent mismatch. Type-only, so it
+ * erases: devkit supports nx +/- 1 major, and the runtime presence checks below
+ * are what handle an older nx that lacks these exports.
+ */
+type Internals = typeof import('nx/src/devkit-internals');
+
 // Prettier v3 (ESM) exposes its API as named exports; v2 (CJS) exposes it under
 // `.default` when loaded via `import()`. Return whichever carries the API, or
 // null if prettier isn't installed.
@@ -57,9 +66,13 @@ export async function formatFiles(
     return;
   }
 
+  // `FormatterType` is a type export, so it is not on `typeof import(...)`.
   let formatterType: import('nx/src/devkit-internals').FormatterType | null =
     null;
-  let detectFormatterInTree: ((tree: Tree) => typeof formatterType) | undefined;
+  // Derived rather than hand-written, for the same reason as the two symbols
+  // in formatWithOxfmt: a signature change in nx should be a compile error
+  // here, not a runtime surprise.
+  let detectFormatterInTree: Internals['detectFormatterInTree'] | undefined;
   try {
     detectFormatterInTree =
       require('nx/src/devkit-internals').detectFormatterInTree;
@@ -158,11 +171,6 @@ async function formatWithOxfmt(
   tree: Tree,
   files: Set<{ path: string; content: Buffer }>
 ) {
-  // Types come from the in-repo nx through devkit's project reference, so they
-  // track the real signature and a drift is a compile error rather than a
-  // silent mismatch. The *runtime* guard below is the one that matters:
-  // devkit supports nx +/- 1 major, and an older nx has neither export.
-  type Internals = typeof import('nx/src/devkit-internals');
   let formatFilesWithOxfmt: Internals['formatFilesWithOxfmt'];
   let oxfmtConfigFiles: Internals['oxfmtConfigFiles'];
   try {

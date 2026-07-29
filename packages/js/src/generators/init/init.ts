@@ -145,8 +145,7 @@ export async function initGeneratorInternal(
   // making the package resolvable further down. They were separate `if` chains
   // over the same union, forty lines apart, so a third formatter meant finding
   // both.
-  const formatterSetup =
-    formatterSetups[schema.formatter as keyof typeof formatterSetups];
+  const formatterSetup = formatterSetups[schema.formatter];
 
   if (formatterSetup) {
     tasks.push(
