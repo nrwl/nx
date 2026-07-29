@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  logger,
   readJson,
   readProjectConfiguration,
 } from '@nx/devkit';
@@ -65,6 +66,29 @@ describe('convertFromEslintGenerator', () => {
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['oxlint']).toBeDefined();
     expect(devDependencies['@nx/oxlint']).toBeDefined();
+  });
+
+  it('warns when no project has an explicit ESLint target', async () => {
+    // The modern default: lint targets come from `@nx/eslint/plugin`, which
+    // `getProjects` cannot see, so nothing matches and nothing is added.
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'lib-a', {
+      root: 'libs/lib-a',
+      sourceRoot: 'libs/lib-a/src',
+      projectType: 'library',
+      targets: {},
+    });
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    await convertFromEslintGenerator(tree, {
+      skipFormat: true,
+      addExplicitTargets: true,
+    });
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('Did not add any explicit Oxlint targets')
+    );
+    warn.mockRestore();
   });
 
   it('throws when the requested project does not exist', async () => {

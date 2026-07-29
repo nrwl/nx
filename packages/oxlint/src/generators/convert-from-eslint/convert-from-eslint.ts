@@ -2,6 +2,7 @@ import {
   formatFiles,
   GeneratorCallback,
   getProjects,
+  logger,
   ProjectConfiguration,
   readProjectConfiguration,
   runTasksInSerial,
@@ -46,15 +47,31 @@ export async function convertFromEslintGenerator(
 
   if (options.addExplicitTargets) {
     const projects = getProjects(tree);
+    let converted = 0;
     for (const [projectName, projectConfig] of projects) {
       if (options.project && options.project !== projectName) {
         continue;
       }
-      maybeAddOxlintTarget(
-        tree,
-        projectName,
-        projectConfig,
-        options.targetName
+      if (
+        maybeAddOxlintTarget(
+          tree,
+          projectName,
+          projectConfig,
+          options.targetName
+        )
+      ) {
+        converted++;
+      }
+    }
+
+    if (!converted) {
+      // `getProjects` reads the tree, so it never sees targets that come from
+      // `@nx/eslint/plugin` inference — which is the default. Saying nothing
+      // here reports success for a run that added no targets at all.
+      logger.warn(
+        `Did not add any explicit Oxlint targets: no project has an explicit @nx/eslint:lint target. ` +
+          `Projects that get their lint target from @nx/eslint/plugin will get an inferred Oxlint target instead, ` +
+          `now that @nx/oxlint is registered.`
       );
     }
   }
@@ -71,9 +88,9 @@ function maybeAddOxlintTarget(
   projectName: string,
   projectConfig: ProjectConfiguration,
   targetName: string
-) {
+): boolean {
   if (projectConfig.targets?.[targetName]) {
-    return;
+    return false;
   }
 
   const eslintTarget =
@@ -86,7 +103,7 @@ function maybeAddOxlintTarget(
         );
 
   if (!eslintTarget) {
-    return;
+    return false;
   }
 
   const lintFilePatterns = eslintTarget.options?.lintFilePatterns ?? [
@@ -102,6 +119,7 @@ function maybeAddOxlintTarget(
   };
 
   updateProjectConfiguration(tree, projectName, projectConfig);
+  return true;
 }
 
 export default convertFromEslintGenerator;
