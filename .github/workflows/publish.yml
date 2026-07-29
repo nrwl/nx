@@ -592,16 +592,12 @@ jobs:
         run: |
           PAYLOAD=$(jq -nc --arg ts "$THREAD_TS" '{
             channel: "C024JCL7TST",
+            text: "✅ Publish Approved",
             thread_ts: $ts,
             attachments: [
               {
-                fallback: "✅ Approved — publishing now.",
                 color: "good",
                 blocks: [
-                  {
-                    type: "header",
-                    text: { type: "plain_text", text: "✅ Publish Approved" }
-                  },
                   {
                     type: "section",
                     text: { type: "mrkdwn", text: "✅ *Approved* — publishing now." }
@@ -751,23 +747,17 @@ jobs:
             TITLE_TEXT="📦 Publish Pending Review"
             MAIN_TEXT="📦 *Version ${VERSION}* is being published to NPM - manual review is required ${MENTIONS}"
           fi
-          FALLBACK_TEXT="📦 Version ${VERSION} is being published to NPM"
           PAYLOAD=$(jq -nc \
-            --arg text "$FALLBACK_TEXT" \
             --arg title "$TITLE_TEXT" \
             --arg main "$MAIN_TEXT" \
             --arg run_url "$RUN_URL" \
             '{
               channel: "C024JCL7TST",
+              text: $title,
               attachments: [
                 {
-                  fallback: $text,
                   color: "good",
                   blocks: [
-                    {
-                      type: "header",
-                      text: { type: "plain_text", text: $title }
-                    },
                     {
                       type: "section",
                       text: { type: "mrkdwn", text: $main }
@@ -820,25 +810,19 @@ jobs:
           THREAD_TS: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          FALLBACK_TEXT="🎉 Version ${VERSION} was published to NPM successfully."
           MAIN_TEXT="🎉 *Version ${VERSION}* was published to NPM successfully."
           PAYLOAD=$(jq -nc \
-            --arg text "$FALLBACK_TEXT" \
             --arg main "$MAIN_TEXT" \
             --arg ts "$THREAD_TS" \
             --arg run_url "$RUN_URL" \
             '{
               channel: "C024JCL7TST",
+              text: "🎉 Published Successfully",
               thread_ts: $ts,
               attachments: [
                 {
-                  fallback: $text,
                   color: "good",
                   blocks: [
-                    {
-                      type: "header",
-                      text: { type: "plain_text", text: "🎉 Published Successfully" }
-                    },
                     {
                       type: "section",
                       text: { type: "mrkdwn", text: $main }
