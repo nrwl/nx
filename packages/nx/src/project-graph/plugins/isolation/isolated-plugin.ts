@@ -1,5 +1,5 @@
 import { ChildProcess, spawn } from 'child_process';
-import { randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 import { Socket } from 'net';
 import { Readable, Writable } from 'stream';
 import path = require('path');
@@ -528,6 +528,8 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
 // --- Worker Spawning Utilities ---
 
+global.nxPluginWorkerCount ??= 0;
+
 async function startPluginWorker(name: string) {
   performance.mark(`start-plugin-worker:${name}`);
 
@@ -553,11 +555,18 @@ async function startPluginWorker(name: string) {
       : {}),
   };
 
-  // A random token rather than pid + counter + timestamp: those encoded who
-  // owned the socket, which the worker's own argv already carries, and they
-  // cost path length against assertValidSocketPath's limit. Drawn fresh per
-  // worker, so a name is not reused across pid recycling either.
-  const ipcPath = getPluginOsSocketPath(randomBytes(4).toString('hex'));
+  // The host pid stays readable at the front — it is what you look for when
+  // matching a socket to a process. The rest is hashed down to keep the path
+  // under assertValidSocketPath's limit, which bites on Windows: the worker's
+  // own argv already carries the full socket path and the plugin it loaded, so
+  // the components do not need to be legible here too.
+  const ipcPath = getPluginOsSocketPath(
+    `${process.pid}-${createHash('sha256')
+      .update(workspaceRoot)
+      .update(String(global.nxPluginWorkerCount++))
+      .digest('hex')
+      .substring(0, 10)}`
+  );
 
   const worker = spawn(
     process.execPath,
