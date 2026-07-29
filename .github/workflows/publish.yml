@@ -593,6 +593,7 @@ jobs:
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
           payload: |
             {"channel": "C024JCL7TST", "thread_ts": "${{ needs.report-pending-publish.outputs.slack_thread_ts }}", "text": "✅ Approved — publishing now."}
 
@@ -735,6 +736,7 @@ jobs:
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
           payload: ${{ steps.message.outputs.payload }}
 
   report-published:
@@ -767,6 +769,7 @@ jobs:
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
           payload: ${{ steps.message.outputs.payload }}
 
   pr_failure_comment:
