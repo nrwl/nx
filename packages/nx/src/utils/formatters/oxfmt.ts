@@ -461,8 +461,18 @@ function splitOxfmtConfig(
   ) {
     return { error: '"ignorePatterns" must be an array of strings' };
   }
-  if (overrides !== undefined && !Array.isArray(overrides)) {
-    return { error: '"overrides" must be an array' };
+  if (
+    overrides !== undefined &&
+    (!Array.isArray(overrides) ||
+      overrides.some(
+        (override) =>
+          !isGlobSet(override?.files) || !isGlobSet(override?.excludeFiles)
+      ))
+  ) {
+    return {
+      error:
+        '"overrides" must be an array of { files, excludeFiles } string arrays',
+    };
   }
 
   return {
@@ -482,6 +492,14 @@ function splitOxfmtConfig(
         })
       : undefined,
   };
+}
+
+/** oxfmt's `GlobSet` is `string[]`; absent is allowed, anything else is not. */
+function isGlobSet(globs: unknown): boolean {
+  return (
+    globs === undefined ||
+    (Array.isArray(globs) && globs.every((g) => typeof g === 'string'))
+  );
 }
 
 function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {

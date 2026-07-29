@@ -282,6 +282,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
           'Run "nx format:write" inside the workspace to format them.',
         ],
       });
+      // The reason is in the warning above, so the log file has served its
+      // purpose. Leaving it behind would put an error.log in the workspace's
+      // very first commit - `initializeGitRepo` runs `git add .` below, and
+      // the generated .gitignore templates do not cover it.
+      if (e?.logFile && existsSync(e.logFile)) {
+        unlinkSync(e.logFile);
+      }
     }
   }
 

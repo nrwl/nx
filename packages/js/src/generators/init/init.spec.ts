@@ -51,6 +51,25 @@ describe('js init generator', () => {
 
       expect(ensurePackage).not.toHaveBeenCalled();
     });
+
+    it('should not install anything when NX_SKIP_FORMAT is set', async () => {
+      // formatFiles returns immediately on this, so the install would be a
+      // network round trip whose result is never read. create-nx-workspace
+      // sets it for the whole run and formats once at the end.
+      const previous = process.env.NX_SKIP_FORMAT;
+      process.env.NX_SKIP_FORMAT = 'true';
+      try {
+        await init(tree, { formatter: 'oxfmt' });
+
+        expect(ensurePackage).not.toHaveBeenCalled();
+      } finally {
+        if (previous === undefined) {
+          delete process.env.NX_SKIP_FORMAT;
+        } else {
+          process.env.NX_SKIP_FORMAT = previous;
+        }
+      }
+    });
   });
 
   it('should install prettier package', async () => {
