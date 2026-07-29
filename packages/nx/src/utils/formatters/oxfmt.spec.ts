@@ -92,7 +92,7 @@ describe('formatFilesWithOxfmt', () => {
     expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
   });
 
-  it('reports a config it cannot read instead of silently using the defaults', async () => {
+  it('reports a config it cannot read and formats nothing', async () => {
     writeFileSync(join(workspaceRoot, '.oxfmtrc.json'), 'not json', 'utf-8');
 
     const { formatted, errors } = await formatFilesWithOxfmt(
@@ -104,8 +104,26 @@ describe('formatFilesWithOxfmt', () => {
     // else would tell the user their config is unusable.
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain('.oxfmtrc.json');
-    // Formatting still happens, on oxfmt's defaults.
-    expect(formatted.get('a.ts')).toEqual('const x = 1;\n');
+    // An unreadable config costs the workspace's style *and* its
+    // ignorePatterns, so formatting on defaults would rewrite files the config
+    // asks to skip - and tree.write is not undone by a warning.
+    expect(formatted.size).toBe(0);
+  });
+
+  it('skips a batch whose ignorePatterns cannot be read rather than formatting past them', async () => {
+    writeFileSync(
+      join(workspaceRoot, '.oxfmtrc.json'),
+      '{ "ignorePatterns": ["libs/generated/**"], ',
+      'utf-8'
+    );
+
+    const { formatted, errors } = await formatFilesWithOxfmt(
+      [{ path: 'libs/generated/api.ts', content: 'const x =  1' }],
+      workspaceRoot
+    );
+
+    expect(errors).toHaveLength(1);
+    expect(formatted.size).toBe(0);
   });
 
   describe('config keys the programmatic API does not accept', () => {
@@ -131,6 +149,53 @@ describe('formatFilesWithOxfmt', () => {
 
       expect(formatted.get('libs/lib1/a.ts')).toEqual("const x = 'hi';\n");
       expect(formatted.get('root.ts')).toEqual('const y = "hi";\n');
+    });
+
+    it('matches a glob with no separator at any depth, as the CLI does', async () => {
+      // oxfmt lifts a separator-less pattern to `**/<pattern>`. This is the
+      // shape a prettier config carries over (`"files": "*.spec.ts"`), so
+      // anchoring it at the root would silently skip every nested match.
+      writeConfig({
+        singleQuote: false,
+        overrides: [{ files: ['*.ts'], options: { singleQuote: true } }],
+      });
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 'libs/lib1/deep.ts', content: 'const x =  "hi"' },
+          { path: 'root.ts', content: 'const y =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('libs/lib1/deep.ts')).toEqual("const x = 'hi';\n");
+      expect(formatted.get('root.ts')).toEqual("const y = 'hi';\n");
+    });
+
+    it('honours a separator-less excludeFiles at any depth', async () => {
+      writeConfig({
+        singleQuote: false,
+        overrides: [
+          {
+            files: ['**/*.ts'],
+            excludeFiles: ['skip-*.ts'],
+            options: { singleQuote: true },
+          },
+        ],
+      });
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 'libs/lib1/a.ts', content: 'const x =  "hi"' },
+          { path: 'libs/lib1/skip-me.ts', content: 'const y =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('libs/lib1/a.ts')).toEqual("const x = 'hi';\n");
+      expect(formatted.get('libs/lib1/skip-me.ts')).toEqual(
+        'const y = "hi";\n'
+      );
     });
 
     it('honours excludeFiles on an override', async () => {
@@ -352,7 +417,7 @@ describe('formatFilesWithOxfmt', () => {
     it('still applies ignore files to an absolute path', async () => {
       writeFileSync(join(workspaceRoot, '.gitignore'), 'dist/\n', 'utf-8');
 
-      const { formatted } = await formatFilesWithOxfmt(
+      const { formatted, errors } = await formatFilesWithOxfmt(
         [
           {
             path: join(workspaceRoot, 'dist/bundle.ts'),
@@ -362,7 +427,27 @@ describe('formatFilesWithOxfmt', () => {
         workspaceRoot
       );
 
+      // `errors` matters as much as the empty map: an un-normalised path makes
+      // the matcher throw, which would also leave the file unformatted and so
+      // satisfy the size assertion on its own.
+      expect(errors).toBeUndefined();
       expect(formatted.size).toBe(0);
+    });
+
+    it('formats a path outside the workspace instead of erroring on it', async () => {
+      // The workspace's ignore files cannot cover it, so there is nothing to
+      // check - but the matcher rejects any path it cannot read as relative,
+      // so this must not reach it.
+      writeFileSync(join(workspaceRoot, '.gitignore'), 'dist/\n', 'utf-8');
+      const outside = join(workspaceRoot, '..', 'outside.ts');
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [{ path: outside, content: 'const x =  1' }],
+        workspaceRoot
+      );
+
+      expect(errors).toBeUndefined();
+      expect(formatted.get(outside)).toEqual('const x = 1;\n');
     });
   });
 
