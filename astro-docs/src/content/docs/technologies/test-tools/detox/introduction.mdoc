@@ -60,12 +60,14 @@ This will install the correct version of `@nx/detox`.
 
 ### How @nx/detox infers tasks
 
-The `@nx/detox` plugin will create a task for any project that has an ESLint configuration file present. Any of the following files will be recognized as an ESLint configuration file:
+The `@nx/detox/plugin` plugin creates tasks for projects with one of these Detox configuration files:
 
 - `.detoxrc.js`
 - `.detoxrc.json`
 - `detox.config.js`
 - `detox.config.json`
+
+It creates cached `build` and `test` tasks and a continuous `start` task. The cache inputs include the project and its dependencies together with the installed `detox` package.
 
 ### View inferred tasks
 
@@ -84,14 +86,24 @@ The `@nx/detox/plugin` is configured in the `plugins` array in `nx.json`.
       "options": {
         "buildTargetName": "build",
         "startTargetName": "start",
-        "testTargetName": "test"
+        "testTargetName": "test",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-Once a Detox configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `startTargetName` or `testTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `build` and `test`.
+| Option                | Type   | Default | Description                                |
+| --------------------- | ------ | ------- | ------------------------------------------ |
+| `buildTargetName`     | string | `build` | Name of the cached `detox build` task.     |
+| `startTargetName`     | string | `start` | Name of the continuous `detox start` task. |
+| `testTargetName`      | string | `test`  | Name of the cached `detox test` task.      |
+| `buildDepsTargetName` | string | none    | Name of an optional dependency build task. |
+| `watchDepsTargetName` | string | none    | Name of an optional dependency watch task. |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/detox/plugin`.
 
 ## Using detox
 

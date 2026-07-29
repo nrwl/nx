@@ -64,6 +64,8 @@ The `@nx/webpack` plugin will create a task for any project that has a Webpack c
 - `webpack.config.mjs`
 - `webpack.config.cjs`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
@@ -82,14 +84,27 @@ The `@nx/webpack/plugin` is configured in the `plugins` array in `nx.json`.
         "buildTargetName": "build",
         "previewTargetName": "preview",
         "serveTargetName": "serve",
-        "serveStaticTargetName": "serve-static"
+        "serveStaticTargetName": "serve-static",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Webpack tasks. The default names are `build`, `preview`, `serve` and `serve-static`.
+| Option                  | Default        | Inferred behavior                                                |
+| ----------------------- | -------------- | ---------------------------------------------------------------- |
+| `buildTargetName`       | `build`        | Runs and caches `webpack-cli build` with its configured outputs. |
+| `serveTargetName`       | `serve`        | Runs `webpack-cli serve` continuously in development mode.       |
+| `previewTargetName`     | `preview`      | Runs `webpack-cli serve` continuously in production mode.        |
+| `serveStaticTargetName` | `serve-static` | Serves the build output continuously after the build task.       |
+| `buildDepsTargetName`   | `build-deps`   | Name of the dependency build task.                               |
+| `watchDepsTargetName`   | `watch-deps`   | Name of the dependency watch task.                               |
+
+The build target depends on builds of project dependencies. When TypeScript project references are enabled, the inferred targets also run the TypeScript sync generator.
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/webpack/plugin`.
 
 ## Generate a new project using Webpack
 
