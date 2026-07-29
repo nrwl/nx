@@ -8,6 +8,7 @@ import { getAgentRulesWrapped } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
+import * as native from '../../native';
 
 jest.mock('fs', () => {
   const actual = jest.requireActual('fs');
@@ -404,6 +405,53 @@ describe('setup-ai-agents generator', () => {
           },
         });
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
+      });
+
+      it('should keep sandbox settings local and allow access to shared worktree data', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+        const getMainWorktreeRootSpy = jest
+          .spyOn(native, 'getMainWorktreeRoot')
+          .mockReturnValue('/path/to/main-worktree');
+
+        tree.write(
+          '.claude/settings.local.json',
+          JSON.stringify({
+            sandbox: {
+              filesystem: {
+                allowRead: ['/existing/read'],
+                allowWrite: ['/existing/write'],
+              },
+            },
+          })
+        );
+
+        try {
+          await setupAiAgentsGenerator(tree, options);
+        } finally {
+          getMainWorktreeRootSpy.mockRestore();
+        }
+
+        const sharedConfig = readJson(tree, '.claude/settings.json');
+        const localConfig = readJson(tree, '.claude/settings.local.json');
+
+        expect(sharedConfig.sandbox).toBeUndefined();
+        expect(localConfig.sandbox.filesystem.allowRead).toEqual([
+          '/existing/read',
+          '/tmp/.nx',
+          '/path/to/main-worktree/.nx',
+        ]);
+        expect(localConfig.sandbox.filesystem.allowWrite).toEqual([
+          '/existing/write',
+          '/tmp/.nx',
+          '/path/to/main-worktree/.nx',
+        ]);
+        expect(localConfig.sandbox.network.allowUnixSockets).toEqual([
+          '/tmp/.nx/sockets',
+        ]);
+        expect(localConfig.sandbox.network.allowAllUnixSockets).toBe(true);
       });
 
       it('should allow analytics requests through the sandbox network filter', async () => {
