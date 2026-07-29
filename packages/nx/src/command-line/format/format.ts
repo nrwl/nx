@@ -18,10 +18,15 @@ import {
 } from '../../utils/command-line-utils';
 import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { detectFormatter, type FormatterType } from '../../utils/formatters';
-import { checkWithOxfmt, writeWithOxfmt } from '../../utils/formatters/oxfmt';
+import {
+  checkWithOxfmt,
+  getOxfmtBinPath,
+  writeWithOxfmt,
+} from '../../utils/formatters/oxfmt';
 import {
   checkWithPrettier,
   filterToPrettierSupportedFiles,
+  getPrettierPath,
   writeWithPrettier,
 } from '../../utils/formatters/prettier';
 import { getIgnoreObject } from '../../utils/ignore';
@@ -41,6 +46,23 @@ export async function format(
       bodyLines: ['Install oxfmt or prettier to enable formatting.'],
     });
     return;
+  }
+
+  // Detection only looks at configuration, so a workspace can be configured for
+  // a formatter that is not installed - a fresh clone, an `--omit=dev` CI job,
+  // a pruned node_modules. Resolving the binary now turns what would otherwise
+  // surface as a raw MODULE_NOT_FOUND (or, on the prettier path, an unrelated
+  // TypeScript-stripping error) into something actionable.
+  try {
+    formatterType === 'oxfmt' ? getOxfmtBinPath() : getPrettierPath();
+  } catch {
+    output.error({
+      title: `${formatterType} is configured for this workspace but is not installed.`,
+      bodyLines: [
+        `Install "${formatterType}" and try again, or remove its configuration to disable "nx format:${command}".`,
+      ],
+    });
+    process.exit(1);
   }
 
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
@@ -125,6 +147,7 @@ async function getPatterns(
       patterns = await filterToPrettierSupportedFiles(patterns);
     }
 
+    // exclude patterns in .nxignore or .gitignore
     const nonIgnoredPatterns = getIgnoreObject().filter(patterns);
 
     if (args.libsAndApps) {
@@ -187,10 +210,13 @@ function write(formatterType: FormatterType, patterns: string[]): void {
     return;
   }
 
-  if (formatterType === 'oxfmt') {
-    writeWithOxfmt(patterns);
-  } else {
-    writeWithPrettier(patterns);
+  switch (formatterType) {
+    case 'oxfmt':
+      writeWithOxfmt(patterns);
+      break;
+    case 'prettier':
+      writeWithPrettier(patterns);
+      break;
   }
 }
 
@@ -202,10 +228,11 @@ async function check(
     return [];
   }
 
-  if (formatterType === 'oxfmt') {
-    return checkWithOxfmt(patterns);
-  } else {
-    return checkWithPrettier(patterns);
+  switch (formatterType) {
+    case 'oxfmt':
+      return checkWithOxfmt(patterns);
+    case 'prettier':
+      return checkWithPrettier(patterns);
   }
 }
 

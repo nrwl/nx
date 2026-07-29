@@ -142,7 +142,7 @@ export function checkWithPrettier(patterns: string[]): Promise<string[]> {
 
 let prettierPath: string;
 
-function getPrettierPath(): string {
+export function getPrettierPath(): string {
   if (prettierPath) {
     return prettierPath;
   }
