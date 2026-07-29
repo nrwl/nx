@@ -1,4 +1,4 @@
-import { existsSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'path';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
@@ -270,24 +270,48 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       //
       // Errors are not silenced: `nx format` is the one place a formatter
       // problem becomes visible ("oxfmt is configured but is not installed",
-      // an unreadable config, a file it cannot parse), and silencing also
-      // suppresses the error.log that a bug report would otherwise carry.
+      // an unreadable config, a file it cannot parse), and the catch below
+      // carries that reason into the warning.
       await execAndWait(`${pmc.exec} nx format --all`, directory);
     } catch (e) {
+      // When the command produced no output of its own, `execAndWait` builds a
+      // message that only points at the log file - which this block deletes a
+      // few lines below. Read it into the warning instead, so the reason
+      // survives the cleanup. When the message already carries stderr there is
+      // nothing to add.
+      let logContents: string | undefined;
+      if (
+        e?.logFile &&
+        e?.message?.includes(e.logFile) &&
+        existsSync(e.logFile)
+      ) {
+        try {
+          logContents = readFileSync(e.logFile, 'utf-8').trim() || undefined;
+        } catch {
+          // Unreadable log: the pointer in `e.message` is still printed below.
+        }
+      }
       output.warn({
         title: 'Could not format the new workspace.',
         bodyLines: [
           'The workspace was created successfully, but its files are not formatted.',
           ...(e?.message ? [e.message] : []),
+          ...(logContents ? [logContents] : []),
           'Run "nx format:write" inside the workspace to format them.',
         ],
       });
       // The reason is in the warning above, so the log file has served its
       // purpose. Leaving it behind would put an error.log in the workspace's
       // very first commit - `initializeGitRepo` runs `git add .` below, and
-      // the generated .gitignore templates do not cover it.
+      // the generated .gitignore templates do not cover it. The workspace was
+      // created successfully either way, so a log that will not delete (a
+      // locked file on Windows) is left in place rather than failing the run.
       if (e?.logFile && existsSync(e.logFile)) {
-        unlinkSync(e.logFile);
+        try {
+          unlinkSync(e.logFile);
+        } catch {
+          // Nothing actionable: the warning above already carried the reason.
+        }
       }
     }
   }
