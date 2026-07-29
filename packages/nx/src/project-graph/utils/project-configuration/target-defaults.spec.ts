@@ -42,6 +42,95 @@ describe('normalizeTargetDefaults', () => {
       normalizeTargetDefaults({ test: [{ cache: false }] })
     );
   });
+
+  // The Nx 23 beta migration `23-0-0-convert-target-defaults-to-array`
+  // rewrote nx.json into a top-level array of `target`/`executor`-keyed
+  // entries before stable settled on the map form. Reading that array as a
+  // record produced integer keys that never matched a target, silently
+  // dropping every default.
+  describe('legacy top-level array form (#36489)', () => {
+    it('keys a target entry by its target name', () => {
+      expect(
+        normalizeTargetDefaults([
+          { target: 'docker:build', dependsOn: ['build', 'prune'] },
+        ])
+      ).toEqual({
+        'docker:build': [{ dependsOn: ['build', 'prune'] }],
+      });
+    });
+
+    it('keys an entry with no target by its executor, keeping the executor out of the config', () => {
+      expect(
+        normalizeTargetDefaults([
+          { executor: '@nx/js:tsc', cache: true, dependsOn: ['^build'] },
+        ])
+      ).toEqual({
+        '@nx/js:tsc': [{ cache: true, dependsOn: ['^build'] }],
+      });
+    });
+
+    it('keeps an executor alongside a target as a config value, matching the record form', () => {
+      expect(
+        normalizeTargetDefaults([
+          {
+            target: 'prune-lockfile',
+            executor: '@nx/js:prune-lockfile',
+            cache: true,
+          },
+        ])
+      ).toEqual({
+        'prune-lockfile': [{ executor: '@nx/js:prune-lockfile', cache: true }],
+      });
+    });
+
+    it('moves projects and plugin matchers into the filter namespace', () => {
+      expect(
+        normalizeTargetDefaults([
+          {
+            target: 'test',
+            projects: 'tag:test-runner:vite',
+            plugin: '@nx/vite',
+            inputs: ['vite.config.ts'],
+          },
+        ])
+      ).toEqual({
+        test: [
+          {
+            filter: {
+              projects: ['tag:test-runner:vite'],
+              plugin: '@nx/vite',
+            },
+            inputs: ['vite.config.ts'],
+          },
+        ],
+      });
+    });
+
+    it('accumulates repeated keys in document order', () => {
+      expect(
+        normalizeTargetDefaults([
+          { target: 'test', cache: true },
+          { target: 'test', plugin: '@nx/vite', inputs: ['vite.config.ts'] },
+        ])
+      ).toEqual({
+        test: [
+          { cache: true },
+          { filter: { plugin: '@nx/vite' }, inputs: ['vite.config.ts'] },
+        ],
+      });
+    });
+
+    it('skips entries with neither a target nor an executor', () => {
+      expect(
+        normalizeTargetDefaults([
+          { cache: true },
+          { target: 'build', dependsOn: ['^build'] },
+        ])
+      ).toEqual({
+        build: [{ dependsOn: ['^build'] }],
+      });
+    });
+  });
 });
 
 describe('readTargetDefaultsForTarget (nested-array)', () => {
@@ -55,6 +144,15 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
     expect(
       readTargetDefaultsForTarget('lint', { build: { cache: true } })
     ).toBeNull();
+  });
+
+  it('resolves defaults written in the legacy top-level array form (#36489)', () => {
+    expect(
+      readTargetDefaultsForTarget('docker:build', [
+        { target: 'lint', dependsOn: ['build'] },
+        { target: 'docker:build', dependsOn: ['build', 'prune'] },
+      ] as any)
+    ).toEqual({ dependsOn: ['build', 'prune'] });
   });
 
   describe('inner accumulate-and-merge', () => {

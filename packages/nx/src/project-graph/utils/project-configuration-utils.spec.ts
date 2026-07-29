@@ -1538,6 +1538,95 @@ describe('project-configuration-utils', () => {
       expect(errors).toEqual([]);
     });
 
+    it('should apply legacy array-form targetDefaults to an inferred target that project.json does not redeclare (#36489)', () => {
+      // Repro for #36489: nx.json still carries the top-level-array
+      // `targetDefaults` shape written by the Nx 23 beta migration
+      // (`23-0-0-convert-target-defaults-to-array`). @nx/docker infers
+      // `docker:build` with its own `dependsOn`, and project.json declares
+      // `build` and `prune` but never redeclares `docker:build`. Before the
+      // fix the array was read as a record, so its integer keys matched no
+      // target and the `docker:build` default was silently dropped — the
+      // resolved target kept only the plugin's `['build', '^build']`.
+      const specifiedResults = [
+        [
+          [
+            '@nx/docker',
+            'apps/api/Dockerfile',
+            {
+              projects: {
+                'apps/api': {
+                  root: 'apps/api',
+                  targets: {
+                    'docker:build': {
+                      dependsOn: ['build', '^build'],
+                      command: 'docker build .',
+                      options: {
+                        cwd: 'apps/api',
+                        args: ['--tag', 'api:latest'],
+                      },
+                      inputs: ['default', '^default'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'apps/api/project.json',
+            {
+              projects: {
+                'apps/api': {
+                  name: 'api',
+                  root: 'apps/api',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      options: { command: 'echo build' },
+                    },
+                    prune: {
+                      executor: 'nx:run-commands',
+                      options: { command: 'echo prune' },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: [
+            { target: 'lint', dependsOn: ['build'] },
+            { target: 'docker:build', dependsOn: ['build', 'prune'] },
+          ] as any,
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const dockerBuild =
+        result.projectRootMap['apps/api'].targets!['docker:build'];
+      // The targetDefaults contribution replaces the inferred dependsOn.
+      expect(dockerBuild.dependsOn).toEqual(['build', 'prune']);
+      // The inferred target's identity is untouched.
+      expect(dockerBuild.executor).toEqual('nx:run-commands');
+      expect(dockerBuild.options).toEqual(
+        expect.objectContaining({ command: 'docker build .' })
+      );
+      expect(errors).toEqual([]);
+    });
+
     it('should merge multiple specified plugins contributing to the same project', () => {
       const specifiedResults = [
         [
