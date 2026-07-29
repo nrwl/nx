@@ -85,7 +85,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   );
   const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
-    formatter: schema.formatter,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin,
