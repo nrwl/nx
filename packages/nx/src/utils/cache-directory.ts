@@ -1,8 +1,8 @@
 import { existsSync } from 'fs';
 import { isAbsolute, join } from 'path';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { getMainWorktreeRoot } from '../native';
 import { readJsonFile } from './fileutils';
+import { getWorktreeDataRoot } from './worktree-data-root';
 import { workspaceRoot } from './workspace-root';
 
 function readCacheDirectoryProperty(root: string): string | undefined {
@@ -68,7 +68,7 @@ function defaultWorkspaceDataDirectory(root: string) {
 /**
  * Path to the directory where Nx stores its cache and daemon-related files.
  * In a git worktree this resolves to the main repo's cache dir so all
- * worktrees share the same cache.
+ * worktrees share the same cache, unless a non-Claude agent is sandboxed.
  */
 export const cacheDir = sharedCacheDirectory(workspaceRoot);
 
@@ -77,15 +77,7 @@ export function cacheDirectoryForWorkspace(root: string) {
 }
 
 function sharedCacheDirectory(root: string): string {
-  try {
-    const mainRoot = getMainWorktreeRoot(root);
-    if (mainRoot) {
-      return cacheDirectoryForWorkspace(mainRoot);
-    }
-  } catch {
-    // Fall back to local cache if worktree detection fails
-  }
-  return cacheDirectoryForWorkspace(root);
+  return cacheDirectoryForWorkspace(getWorktreeDataRoot(root));
 }
 
 export const workspaceDataDirectory =

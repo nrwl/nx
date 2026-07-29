@@ -1,3 +1,8 @@
+import {
+  NX_INTERNAL_USE_LOCAL_WORKTREE_DATA,
+  shouldUseLocalWorktreeData,
+} from '../../utils/worktree-data-root';
+
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
@@ -154,6 +159,9 @@ export function getDaemonEnv() {
       env[key] = process.env[key];
     }
   }
+  env[NX_INTERNAL_USE_LOCAL_WORKTREE_DATA] = shouldUseLocalWorktreeData()
+    ? 'true'
+    : 'false';
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
 }
 
