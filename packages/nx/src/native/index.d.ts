@@ -122,6 +122,23 @@ export declare class NxCache {
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): Array<string>
   applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
+  /**
+   * Register terminal outputs that were written without a cache entry —
+   * uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.
+   *
+   * Without a row the file is invisible to `remove_old_cache_records`,
+   * which only ever walks hashes it finds in the database, so these files
+   * would accumulate forever. The row carries `has_artifacts = 0` so it can
+   * never be served as a cache hit.
+   *
+   * On conflict only `accessed_at` moves. Nothing else ever touches these
+   * rows — the reads filter them out, so they would otherwise age from the
+   * first write and be collected out from under a task that is still being
+   * run daily. Leaving `has_artifacts` and `size` alone keeps a rewrite
+   * from demoting a real entry written by `put`, or from replacing its size
+   * (which covers artifacts) with the size of the terminal output alone.
+   */
+  recordTerminalOutputs(records: Array<TerminalOutputRecord>): void
   getTaskOutputsPath(hash: string): string
   getCacheSize(): number
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
@@ -809,6 +826,15 @@ export interface TaskTarget {
   target: string
   /** The configuration of the target which the task invokes */
   configuration?: string
+}
+
+export interface TerminalOutputRecord {
+  hash: string
+  /**
+   * Byte length of the terminal output written for this hash, so these
+   * files are counted against `maxCacheSize` like any other cache content.
+   */
+  size: number
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
