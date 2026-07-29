@@ -108,7 +108,7 @@ First migration in a plugin? Also check:
 ### Common canon (every migration)
 
 - `export default async function update(tree: Tree)` and nothing else. Migrations take no options; the runner calls them with `(tree, {})`.
-- Import helpers from `@nx/devkit` and, for the semi-private ones (`forEachExecutorOptions`, target-default helpers), from `@nx/devkit/internal`. Exception: migrations inside `packages/nx` itself use relative imports and `formatChangedFilesWithPrettierIfAvailable`.
+- Import helpers from `@nx/devkit` and, for the semi-private ones (`forEachExecutorOptions`, target-default helpers), from `@nx/devkit/internal`. Exception: migrations inside `packages/nx` itself use relative imports and `formatChangedFiles`.
 - Tree APIs only, never `fs`. All existence/content checks via `tree.exists` / `tree.read` / `readJson`.
 - Build tree paths with `joinPathFragments` or `node:path`'s `posix` helpers, matching what the Tree returns (always slash-separated). Plain `join`/`dirname` emit backslashes on Windows; the Tree normalizes them on API calls, but any string-level use of such a path (comparison with a tree-provided path, a visited-set key, log output) silently mismatches.
 - End with `await formatFiles(tree)` (skip only when the migration touches no JS/TS/JSON surface).
