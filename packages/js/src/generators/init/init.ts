@@ -42,6 +42,11 @@ export async function initGenerator(
   // Keep prettier when the workspace already uses it; only a workspace with no
   // formatter configured falls back to the oxfmt default. Otherwise a prettier
   // workspace would gain a stray .oxfmtrc.json that then wins detection.
+  //
+  // This resolves for *programmatic* callers only. `schema.json` sets
+  // `"default": "none"`, which the generator runner applies before this runs,
+  // so `nx g @nx/js:init` never reaches it - unchanged from how the previous
+  // prettier default behaved.
   schema.formatter ??= isUsingNewTsSetup
     ? 'none'
     : isUsingPrettierInTree(tree)

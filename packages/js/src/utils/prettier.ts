@@ -7,6 +7,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { prettierConfigFiles } from 'nx/src/devkit-internals';
 import type { Options } from 'prettier';
 import { prettierVersion } from './versions';
 
@@ -62,23 +63,12 @@ export function generatePrettierSetup(
   tree: Tree,
   options: { skipPackageJson?: boolean }
 ): GeneratorCallback {
-  // https://prettier.io/docs/en/configuration.html
-  const prettierrcNameOptions = [
-    '.prettierrc',
-    '.prettierrc.json',
-    '.prettierrc.yml',
-    '.prettierrc.yaml',
-    '.prettierrc.json5',
-    '.prettierrc.js',
-    '.prettierrc.cjs',
-    '.prettierrc.mjs',
-    '.prettierrc.toml',
-    'prettier.config.js',
-    'prettier.config.cjs',
-    'prettier.config.mjs',
-  ];
-
-  if (prettierrcNameOptions.every((name) => !tree.exists(name))) {
+  // Imported rather than copied, for the same reason as the oxfmt list:
+  // detection and setup have to agree, or a workspace whose config format is
+  // missing from this copy gets a second, redundant `.prettierrc` written next
+  // to the one it already has. This copy was missing the `.ts`/`.mts`/`.cts`
+  // forms.
+  if (prettierConfigFiles.every((name) => !tree.exists(name))) {
     writeJson(tree, '.prettierrc', { singleQuote: true });
   }
 
