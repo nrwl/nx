@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, output } from '@nx/devkit';
 import * as childProcess from 'node:child_process';
 import { oxlintExecutor } from './lint.impl.js';
 
@@ -7,8 +7,18 @@ jest.mock('node:child_process', () => ({
   spawnSync: jest.fn(),
 }));
 
+/** Restores `process.platform` after a test overrides it. */
+function withPlatform(platform: NodeJS.Platform, fn: () => Promise<void>) {
+  const original = Object.getOwnPropertyDescriptor(process, 'platform');
+  Object.defineProperty(process, 'platform', { value: platform });
+  return fn().finally(() =>
+    Object.defineProperty(process, 'platform', original)
+  );
+}
+
 describe('@nx/oxlint:lint executor', () => {
   const spawnSyncMock = childProcess.spawnSync as jest.Mock;
+  let outputErrorSpy: jest.SpyInstance;
   const mockContext: ExecutorContext = {
     root: '/root',
     cwd: '/root',
@@ -29,6 +39,11 @@ describe('@nx/oxlint:lint executor', () => {
 
   beforeEach(() => {
     spawnSyncMock.mockReset();
+    outputErrorSpy = jest.spyOn(output, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    outputErrorSpy.mockRestore();
   });
 
   it('returns success when the process exits with 0', async () => {
@@ -43,12 +58,43 @@ describe('@nx/oxlint:lint executor', () => {
     expect(spawnSyncMock).toHaveBeenCalledWith(
       expect.any(String),
       expect.arrayContaining(['oxlint', 'libs/lib-a']),
-      expect.objectContaining({
-        cwd: '/root',
-        // Only Windows needs a shell. Elsewhere it would re-expand the lint
-        // patterns through `sh`, which has no `globstar`.
-        shell: process.platform === 'win32',
-      })
+      expect.objectContaining({ cwd: '/root' })
+    );
+  });
+
+  // Asserted as literals rather than by re-deriving `process.platform === 'win32'`,
+  // which would mirror the implementation and pass however it changed.
+  it('does not use a shell off Windows, which would re-expand the lint globs', async () => {
+    spawnSyncMock.mockReturnValue({ status: 0 });
+
+    await withPlatform('linux', async () => {
+      await oxlintExecutor(
+        { lintFilePatterns: ['{projectRoot}'] },
+        mockContext
+      );
+    });
+
+    expect(spawnSyncMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.anything(),
+      expect.objectContaining({ shell: false })
+    );
+  });
+
+  it('uses a shell on Windows, where the package manager is a `.cmd` shim', async () => {
+    spawnSyncMock.mockReturnValue({ status: 0 });
+
+    await withPlatform('win32', async () => {
+      await oxlintExecutor(
+        { lintFilePatterns: ['{projectRoot}'] },
+        mockContext
+      );
+    });
+
+    expect(spawnSyncMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.anything(),
+      expect.objectContaining({ shell: true })
     );
   });
 
@@ -63,6 +109,8 @@ describe('@nx/oxlint:lint executor', () => {
     expect(result).toEqual({ success: false });
   });
 
+  // `{ success: false }` alone cannot distinguish these branches from an ordinary
+  // lint failure — the fallthrough produces it too. The report is the behaviour.
   it('reports a failure to spawn rather than reading it as a lint failure', async () => {
     spawnSyncMock.mockReturnValue({
       status: null,
@@ -75,6 +123,42 @@ describe('@nx/oxlint:lint executor', () => {
     );
 
     expect(result).toEqual({ success: false });
+    expect(outputErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Could not run Oxlint for "lib-a"',
+        bodyLines: expect.arrayContaining(['spawn ENOENT']),
+      })
+    );
+  });
+
+  it('reports a shell that could not find the command', async () => {
+    // cmd.exe reports command-not-found as 9009; a POSIX shell would say 127.
+    spawnSyncMock.mockReturnValue({ status: 9009 });
+
+    await withPlatform('win32', async () => {
+      const result = await oxlintExecutor(
+        { lintFilePatterns: ['{projectRoot}'] },
+        mockContext
+      );
+      expect(result).toEqual({ success: false });
+    });
+
+    expect(outputErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Could not run Oxlint for "lib-a"' })
+    );
+  });
+
+  it('does not mistake an ordinary lint failure for a missing command', async () => {
+    spawnSyncMock.mockReturnValue({ status: 1 });
+
+    await withPlatform('win32', async () => {
+      await oxlintExecutor(
+        { lintFilePatterns: ['{projectRoot}'] },
+        mockContext
+      );
+    });
+
+    expect(outputErrorSpy).not.toHaveBeenCalled();
   });
 
   it('reports a termination signal', async () => {
@@ -83,6 +167,12 @@ describe('@nx/oxlint:lint executor', () => {
     const result = await oxlintExecutor(
       { lintFilePatterns: ['{projectRoot}'] },
       mockContext
+    );
+
+    expect(outputErrorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('SIGKILL'),
+      })
     );
 
     expect(result).toEqual({ success: false });
