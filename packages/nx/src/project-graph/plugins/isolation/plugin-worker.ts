@@ -211,9 +211,11 @@ server.on('error', (err: NodeJS.ErrnoException) => {
   process.exit(1);
 });
 // A worker killed without its 'end' handler leaves the socket behind. The name
-// is drawn at random per worker, so an existing file at ours is a leftover
-// rather than something live — but that rests on the draw, not on a guarantee,
-// and a failed bind now surfaces through the error handler above.
+// is the host pid plus a hash of the workspace and a per-host counter, so
+// drawing an existing one takes a recycled host pid landing on the same
+// counter. The previous owner is normally gone by then, but not guaranteed —
+// workers are detached and the name carries the host's pid, not the worker's.
+// A failed bind surfaces through the error handler above.
 try {
   unlinkSync(socketPath);
 } catch {}
