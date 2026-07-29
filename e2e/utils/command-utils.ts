@@ -23,6 +23,7 @@ import {
   getPublishedVersion,
   getStrippedEnvironmentVariables,
   getYarnMajorVersion,
+  isVerbose,
   isVerboseE2ERun,
 } from './get-env-info';
 import { logError, logInfo } from './log-utils';
@@ -360,7 +361,7 @@ export function runCLIAsync(
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   const pm = getPackageManagerCommand();
   const commandToRun = `${opts.silent ? pm.runNxSilent : pm.runNx} ${command} ${
-    (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
+    (opts.verbose ?? isVerbose()) ? ' --verbose' : ''
   }${opts.redirectStderr ? ' 2>&1' : ''}`;
 
   return runCommandAsync(commandToRun, opts);
@@ -453,7 +454,9 @@ export function runCLI(
   try {
     const pm = getPackageManagerCommand();
     const commandToRun = `${pm.runNxSilent} ${command} ${
-      (opts.verbose ?? isVerboseE2ERun()) ? ' --verbose' : ''
+      // NX_E2E_VERBOSE_LOGGING controls harness echoing only. Adding --verbose to
+      // the command under test changes the output snapshots were recorded against.
+      (opts.verbose ?? isVerbose()) ? ' --verbose' : ''
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
     logInfo(`Run Command: ${command}`);
     const startTime = performance.now();
