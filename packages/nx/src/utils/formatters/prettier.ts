@@ -206,8 +206,12 @@ function shouldUseListDifferent(): boolean {
 /**
  * Quote a pattern for the shell-based exec calls used by prettier. oxfmt is
  * invoked via execFile and must receive raw paths instead.
+ *
+ * Exported so `nx format` can size its chunks against the quoted length. The
+ * patterns are chunked before they get here, and quoting afterwards grows each
+ * one, which would otherwise eat into the headroom `chunkify` leaves.
  */
-function quoteForShell(pattern: string): string {
+export function quoteForShell(pattern: string): string {
   // On non-Windows, escape $ to prevent shell variable interpolation
   // (the shell consumes one \, so \\$ becomes \$ which the shell treats as literal $)
   // On Windows (cmd.exe), $ is not a special character, so escaping it would

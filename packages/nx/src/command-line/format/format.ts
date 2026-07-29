@@ -27,6 +27,7 @@ import {
   checkWithPrettier,
   filterToPrettierSupportedFiles,
   getPrettierPath,
+  quoteForShell,
   writeWithPrettier,
 } from '../../utils/formatters/prettier';
 import { getIgnoreObject } from '../../utils/ignore';
@@ -87,8 +88,16 @@ export async function format(
     ...nxArgs,
   } as any);
 
-  // Chunkify the patterns array to prevent crashing the windows terminal
-  const chunkList: string[][] = chunkify(patterns);
+  // Chunkify the patterns array to prevent crashing the windows terminal.
+  // The prettier path quotes each pattern on its way to the shell, so size the
+  // chunks against that; oxfmt goes through execFile and gets them raw.
+  const chunkList: string[][] = chunkify(
+    patterns,
+    undefined,
+    formatterType === 'prettier'
+      ? (pattern) => quoteForShell(pattern).length
+      : undefined
+  );
 
   switch (command) {
     case 'write':
