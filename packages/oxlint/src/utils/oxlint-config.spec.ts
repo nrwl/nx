@@ -81,4 +81,31 @@ describe('addPluginsToOxlintConfig', () => {
 
     expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
   });
+
+  it('should not write a second config beside an existing .oxlintrc.jsonc', () => {
+    tree.write(
+      'apps/my-app/.oxlintrc.jsonc',
+      '{\n  // keep this\n  "plugins": ["vue"]\n}\n'
+    );
+
+    addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
+
+    // Two configs in one directory is a hard error in Oxlint, not an override.
+    expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
+  });
+
+  it('should keep comments in an existing .oxlintrc.jsonc', () => {
+    tree.write(
+      'apps/my-app/.oxlintrc.jsonc',
+      '{\n  // keep this\n  "plugins": ["vue"]\n}\n'
+    );
+
+    addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
+
+    // `updateJson` parses comments away and re-serializes, which would silently
+    // discard the one thing the .jsonc format exists for.
+    expect(tree.read('apps/my-app/.oxlintrc.jsonc', 'utf-8')).toContain(
+      '// keep this'
+    );
+  });
 });

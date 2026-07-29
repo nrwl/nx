@@ -9,7 +9,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { hasOxlintPlugin } from '../../utils/plugin.js';
-import { initGenerator } from '../init/init.js';
+import { initGenerator, OXLINT_TARGET_NAMES } from '../init/init.js';
 import { addPluginsToOxlintConfig } from '../../utils/oxlint-config.js';
 
 export interface LintProjectGeneratorSchema {
@@ -74,12 +74,18 @@ export async function lintProjectGeneratorInternal(
         `Project "${options.project}" already has an Oxlint target "${existing[0]}"; leaving it as is.`
       );
     } else {
-      // Prefer `lint`, the same name inference prefers, and step aside when
-      // anything else already owns it.
-      const targetName = projectConfig.targets['lint'] ? 'oxlint' : 'lint';
-      if (projectConfig.targets[targetName]) {
-        logger.info(
-          `Project "${options.project}" already has a "${targetName}" target; leaving it as is.`
+      // `lint` first, the name inference prefers, then the same fallbacks the
+      // plugin registration walks. Declining to add a target at all would be a
+      // silent no-op on a generator the user explicitly asked for.
+      const targetName = OXLINT_TARGET_NAMES.find(
+        (name) => !projectConfig.targets[name]
+      );
+
+      if (!targetName) {
+        logger.warn(
+          `Did not add an Oxlint target to "${options.project}": every candidate name ` +
+            `(${OXLINT_TARGET_NAMES.join(', ')}) is already taken. Rename one of them, ` +
+            `then re-run this generator.`
         );
       } else {
         projectConfig.targets[targetName] = {

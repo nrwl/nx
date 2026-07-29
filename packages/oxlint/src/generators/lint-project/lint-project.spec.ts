@@ -74,6 +74,36 @@ describe('lintProjectGeneratorInternal', () => {
     expect(oxlintTargets.map(([name]) => name)).toEqual(['lint']);
   });
 
+  it('falls through to a further name when lint and oxlint are both taken', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'lib-a', {
+      root: 'libs/lib-a',
+      sourceRoot: 'libs/lib-a/src',
+      projectType: 'library',
+      targets: {
+        lint: { executor: '@nx/eslint:lint' },
+        oxlint: { executor: 'nx:run-commands' },
+      },
+    });
+
+    await lintProjectGeneratorInternal(tree, {
+      project: 'lib-a',
+      addPlugin: false,
+      skipPackageJson: true,
+      skipFormat: true,
+    });
+
+    const { targets } = readProjectConfiguration(tree, 'lib-a');
+    // The user asked for an Oxlint target; declining to add one at all would be
+    // a silent no-op reported as success.
+    const oxlintTargets = Object.entries(targets)
+      .filter(([, t]) => t.executor === '@nx/oxlint:lint')
+      .map(([name]) => name);
+    expect(oxlintTargets).toEqual(['oxlint:lint']);
+    expect(targets.lint.executor).toEqual('@nx/eslint:lint');
+    expect(targets.oxlint.executor).toEqual('nx:run-commands');
+  });
+
   it('leaves a hand-tuned Oxlint target alone', async () => {
     const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'lib-a', {
