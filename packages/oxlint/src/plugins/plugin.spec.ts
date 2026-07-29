@@ -140,6 +140,23 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
+  it('should not create a node for a package.json the workspaces do not cover', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'package.json': `{"name":"root","private":true,"workspaces":["packages/*"]}`,
+      'packages/a/package.json': `{"name":"a"}`,
+      'packages/a/index.ts': `export const value = 1;`,
+      // A bundler marker, not a project. It has no name, so promoting it to a
+      // project root fails the whole graph with ProjectsWithNoNameError.
+      'packages/a/src/runtime/polyfill/package.json': `{"sideEffects":true}`,
+      'packages/a/src/runtime/polyfill/index.ts': `export const p = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(Object.keys(results.projects)).toEqual(['packages/a']);
+  });
+
   function createFiles(fileSys: Record<string, string>) {
     tempFs.createFilesSync(fileSys);
     configFiles = Object.keys(fileSys).filter((file) =>
