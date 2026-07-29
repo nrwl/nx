@@ -105,9 +105,10 @@ export function writeMinimalNxJson(host: Tree, version: string) {
         version: normalizeVersionForNxJson('nx', version),
       },
     });
-    // The wrapper scripts and `.nx/nxw.js` are deliberately not recorded: they
-    // are vendored artifacts, and two of them have no formatter at all.
     recordInitWrite('nx.json');
+    // Only this file. The wrapper scripts written by `generateDotNxSetup`
+    // above (`.nx/nxw.js`, `nx`, `nx.bat`) are deliberately left out: they are
+    // vendored artifacts, and two of them have no formatter at all.
   }
 }
 

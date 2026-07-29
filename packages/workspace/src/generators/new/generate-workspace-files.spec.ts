@@ -170,37 +170,32 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     `);
   });
 
-  it('should recommend vscode extensions', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.Apps,
-      defaultBase: 'main',
-      isCustomPreset: false,
-    });
-    const recommendations = readJson<{ recommendations: string[] }>(
-      tree,
-      'proj/.vscode/extensions.json'
-    ).recommendations;
+  // Asserted rather than snapshotted: which extension is recommended now
+  // depends on `--formatter`, and a snapshot would not say why it changed.
+  it.each([
+    ['prettier', true],
+    ['oxfmt', false],
+    ['none', false],
+  ])(
+    'should recommend the prettier extension only for --formatter=prettier (%s)',
+    async (formatter, expected) => {
+      await generateWorkspaceFiles(tree, {
+        name: 'proj',
+        directory: 'proj',
+        preset: Preset.Apps,
+        defaultBase: 'main',
+        isCustomPreset: false,
+        formatter,
+      } as any);
+      const recommendations = readJson<{ recommendations: string[] }>(
+        tree,
+        'proj/.vscode/extensions.json'
+      ).recommendations;
 
-    expect(recommendations).toMatchSnapshot();
-  });
-
-  it('should recommend vscode extensions (angular)', async () => {
-    await generateWorkspaceFiles(tree, {
-      name: 'proj',
-      directory: 'proj',
-      preset: Preset.Apps,
-      defaultBase: 'main',
-      isCustomPreset: false,
-    });
-    const recommendations = readJson<{ recommendations: string[] }>(
-      tree,
-      'proj/.vscode/extensions.json'
-    ).recommendations;
-
-    expect(recommendations).toMatchSnapshot();
-  });
+      expect(recommendations).toContain('nrwl.angular-console');
+      expect(recommendations.includes('esbenp.prettier-vscode')).toBe(expected);
+    }
+  );
 
   it('should create a workspace using NPM preset (npm package manager)', async () => {
     tree.write('/proj/package.json', JSON.stringify({}));

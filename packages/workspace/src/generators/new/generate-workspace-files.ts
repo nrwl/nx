@@ -293,6 +293,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     ...(options as object),
     nxVersion,
     packageManager: options.packageManager,
+    // After the spread and always defined: `formatter` is optional on the
+    // schema, and EJS throws a ReferenceError on a key that is absent rather
+    // than treating it as undefined.
+    formatter: options.formatter ?? 'none',
   });
 }
 
