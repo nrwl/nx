@@ -83,13 +83,35 @@ export function getNxSocketRoot(): string {
 }
 
 /**
- * The per-user directory beneath the shared socket root. Without it, whoever runs
- * Nx first owns the parent of everyone else's socket dir and can rename it aside;
- * it also stops two users with the same checkout path colliding. Not applied to an
- * explicit NX_SOCKET_DIR, which names the socket dir itself.
+ * The per-user directory beneath the shared socket root. It does not stop
+ * another user owning the shared root above it — whoever runs Nx first still
+ * does, and can still replace what is under it. What it gives is detection:
+ * the directory is re-verified on every resolve, so a substituted one is
+ * refused rather than nested into. It also stops two users with the same
+ * checkout path colliding, and covers all of a user's workspaces at once.
+ *
+ * Skipped on Windows, where it would cost without buying anything:
+ * `ensureOwnedPrivateDir` and `relaxSharedRootToSticky` are both no-ops there,
+ * the OS temp dir is already per-user, and the username appears in it — so
+ * repeating it overruns the socket path length guard for ordinary account names.
+ *
+ * Not applied to an explicit NX_SOCKET_DIR, which names the socket directory
+ * itself and is often set to escape a too-long default path.
  */
+/**
+ * The configured socket dir, normalized. `resolve` strips a trailing slash,
+ * which would otherwise defeat the `O_NOFOLLOW` guard downstream — this is the
+ * one path built from user input rather than by `join`.
+ */
+function configuredSocketDir(): string | undefined {
+  const dir = process.env.NX_SOCKET_DIR ?? process.env.NX_DAEMON_SOCKET_DIR;
+  return dir === undefined ? undefined : resolve(dir);
+}
+
 function userSocketRoot() {
-  return join(getNxSocketRoot(), getUserSegment());
+  return process.platform === 'win32'
+    ? getNxSocketRoot()
+    : join(getNxSocketRoot(), getUserSegment());
 }
 
 function socketDirName() {
@@ -114,8 +136,7 @@ function pluginSocketDirName() {
  * Either way it is locked to the current user.
  */
 export function getSocketDir() {
-  const configuredDir =
-    process.env.NX_SOCKET_DIR ?? process.env.NX_DAEMON_SOCKET_DIR;
+  const configuredDir = configuredSocketDir();
   return createOwnerOnlySocketDir(
     configuredDir ?? socketDirName(),
     configuredDir === undefined
@@ -127,8 +148,7 @@ export function getSocketDir() {
  * sitting in the shared system temp dir, which cannot be locked down.
  */
 export function getPluginSocketDir() {
-  const configuredDir =
-    process.env.NX_SOCKET_DIR ?? process.env.NX_DAEMON_SOCKET_DIR;
+  const configuredDir = configuredSocketDir();
   return createOwnerOnlySocketDir(
     configuredDir ?? pluginSocketDirName(),
     configuredDir === undefined
@@ -161,8 +181,9 @@ function createOwnerOnlySocketDir(
           );
         }
       }
-      // World-writable so every user can create their own per-uid dir beneath.
       mkdirSync(NX_SOCKET_ROOT, { recursive: true });
+      // Relaxed here, not at creation: world-writable so every user can make
+      // their own per-uid dir beneath them.
       relaxSharedRootToSticky(NX_TMP_DIR);
       relaxSharedRootToSticky(NX_SOCKET_ROOT);
       // The containment level: 0700 and ours, so a squatter is refused here
