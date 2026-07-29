@@ -20,6 +20,45 @@ describe('preset', () => {
     else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
+  describe('formatter', () => {
+    // The apps preset generates no project, so nothing downstream configures
+    // the formatter and the choice the user passed would be dropped - the next
+    // generator to run would then pick the default instead.
+    it.each([
+      ['prettier', '.prettierrc', '.oxfmtrc.json'],
+      ['oxfmt', '.oxfmtrc.json', '.prettierrc'],
+    ])(
+      'should honour --formatter=%s on the apps preset',
+      async (formatter, expected, notExpected) => {
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'apps-preset',
+          preset: Preset.Apps,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(tree.exists(expected)).toBe(true);
+        expect(tree.exists(notExpected)).toBe(false);
+      }
+    );
+
+    it('should configure nothing when the formatter is none', async () => {
+      tree.delete('.prettierrc');
+
+      await presetGenerator(tree, {
+        name: 'apps-preset',
+        preset: Preset.Apps,
+        linter: 'eslint',
+        formatter: 'none',
+      } as any);
+
+      expect(tree.exists('.prettierrc')).toBe(false);
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+    });
+  });
+
   it(`should create files (preset = angular-monorepo)`, async () => {
     const name = `angular-preset-monorepo`;
     await presetGenerator(tree, {
