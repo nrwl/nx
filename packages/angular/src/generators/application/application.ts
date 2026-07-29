@@ -56,7 +56,6 @@ export async function applicationGenerator(
 
   await jsInitGenerator(tree, {
     ...options,
-    formatter: options.formatter,
     tsConfigName: options.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     js: false,
     skipFormat: true,
