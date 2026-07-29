@@ -188,7 +188,9 @@ describe('ensureOwnedPrivateDir', () => {
         chmodSync(victim, 0o755); // mkdir's mode is subject to the umask
         const squatted = join(base, 'squatted');
         symlinkSync(victim, squatted);
-        process.env.NX_SOCKET_DIR = squatted;
+        // Trailing slash: without the resolve() in configuredSocketDir it
+        // defeats O_NOFOLLOW and the victim gets chmod-ed.
+        process.env.NX_SOCKET_DIR = squatted + '/';
 
         const dir = getSocketDir();
 

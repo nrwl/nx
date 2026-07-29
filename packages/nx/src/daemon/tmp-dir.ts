@@ -75,11 +75,22 @@ export function isDaemonDisabled() {
 export const NX_SOCKET_ROOT = join(NX_TMP_DIR, 'sockets');
 
 export function getNxSocketRoot(): string {
-  return (
-    process.env.NX_SOCKET_DIR ??
-    process.env.NX_DAEMON_SOCKET_DIR ??
-    NX_SOCKET_ROOT
-  );
+  return configuredSocketDir() ?? NX_SOCKET_ROOT;
+}
+
+/**
+ * The configured socket dir, normalized. `resolve` strips a trailing slash,
+ * which would otherwise defeat the `O_NOFOLLOW` guard downstream — this is the
+ * one socket path built from user input rather than by `join`.
+ *
+ * `||` rather than `??`: an empty value means unset. An empty string survives
+ * `??`, and `resolve('')` is the working directory — which `removeSocketDir`
+ * then deletes recursively. `NX_SOCKET_DIR=` with no value is ordinary in a
+ * .env file or a compose environment list.
+ */
+function configuredSocketDir(): string | undefined {
+  const dir = process.env.NX_SOCKET_DIR || process.env.NX_DAEMON_SOCKET_DIR;
+  return dir ? resolve(dir) : undefined;
 }
 
 /**
@@ -98,16 +109,6 @@ export function getNxSocketRoot(): string {
  * Not applied to an explicit NX_SOCKET_DIR, which names the socket directory
  * itself and is often set to escape a too-long default path.
  */
-/**
- * The configured socket dir, normalized. `resolve` strips a trailing slash,
- * which would otherwise defeat the `O_NOFOLLOW` guard downstream — this is the
- * one path built from user input rather than by `join`.
- */
-function configuredSocketDir(): string | undefined {
-  const dir = process.env.NX_SOCKET_DIR ?? process.env.NX_DAEMON_SOCKET_DIR;
-  return dir === undefined ? undefined : resolve(dir);
-}
-
 function userSocketRoot() {
   return process.platform === 'win32'
     ? getNxSocketRoot()
