@@ -155,7 +155,11 @@ export function createTargetDefaultsResults(
   // layers a key's entries in document order, later winning.
   const results: CreateNodesResultEntry[] = [];
   for (const key of Object.keys(syntheticProjectsByKeyIndex)) {
-    const isArrayForm = Array.isArray(targetDefaultsConfig[key]);
+    // The legacy top-level array form normalizes every key to an entry array,
+    // so its source locations are indexed like the map shape's array values.
+    const isArrayForm =
+      Array.isArray(targetDefaultsConfig) ||
+      Array.isArray(targetDefaultsConfig[key]);
     const indices = Object.keys(syntheticProjectsByKeyIndex[key])
       .map(Number)
       .sort((a, b) => a - b);
@@ -535,17 +539,75 @@ function stripFilter(
 }
 
 /**
+ * The top-level-array `targetDefaults` shape from the Nx 23 beta cycle. Each
+ * entry carries its own matcher: a `target` name/glob (or, when absent, its
+ * `executor`), plus optional `projects`/`plugin` matchers. The
+ * `23-0-0-convert-target-defaults-to-array` migration rewrote workspaces into
+ * this shape before the stable release replaced it with the map form, so
+ * migrated workspaces may still carry it in nx.json.
+ */
+type LegacyArrayTargetDefaultEntry = {
+  target?: string;
+  projects?: string | string[];
+  plugin?: string;
+} & Partial<TargetConfiguration>;
+
+/**
  * Normalize the public `targetDefaults` map to the internal shape: every
  * key's value becomes an array of entries (a bare object → a single catch-all
  * entry).
  */
 export function normalizeTargetDefaults(
-  raw: TargetDefaults | undefined
+  raw: TargetDefaults | LegacyArrayTargetDefaultEntry[] | undefined
 ): NormalizedTargetDefaults {
   if (!raw) return {};
+  // The Nx 23 betas stored `targetDefaults` as a top-level array (the
+  // `23-0-0-convert-target-defaults-to-array` migration rewrote workspaces
+  // into that shape before stable settled on the map form). Reading that
+  // array as a record would produce integer keys that never match a target,
+  // silently dropping every default (#36489) — convert it instead.
+  if (Array.isArray(raw)) {
+    return normalizeLegacyArrayTargetDefaults(raw);
+  }
   const normalized: NormalizedTargetDefaults = {};
   for (const key of Object.keys(raw)) {
     normalized[key] = normalizeTargetDefaultValue(raw[key]);
+  }
+  return normalized;
+}
+
+/**
+ * Converts the legacy top-level array form to the internal map shape — the
+ * inverse of the beta migration's `legacyKeyToEntries`: an entry's `target`
+ * becomes the map key (an entry may also set `executor` as a config value,
+ * matching the record form's target-name keys); with no `target`, the
+ * `executor` is the key itself and is not part of the config, matching the
+ * record form's executor keys. `projects`/`plugin` matchers move into the
+ * entry's `filter` namespace. Entries with no usable key cannot match any
+ * target and are skipped. Repeated keys accumulate in document order, which
+ * the in-key merge already resolves last-match-wins.
+ */
+function normalizeLegacyArrayTargetDefaults(
+  entries: LegacyArrayTargetDefaultEntry[]
+): NormalizedTargetDefaults {
+  const normalized: NormalizedTargetDefaults = {};
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') continue;
+    const { target, projects, plugin, ...config } = entry;
+    const key = target ?? config.executor;
+    if (typeof key !== 'string' || key === '') continue;
+    if (target === undefined) {
+      delete config.executor;
+    }
+    const filterProjects = typeof projects === 'string' ? [projects] : projects;
+    const normalizedEntry: TargetDefaultArrayEntry = { ...config };
+    if (filterProjects?.length || plugin) {
+      normalizedEntry.filter = {
+        ...(filterProjects?.length ? { projects: filterProjects } : {}),
+        ...(plugin ? { plugin } : {}),
+      };
+    }
+    (normalized[key] ??= []).push(normalizedEntry);
   }
   return normalized;
 }
