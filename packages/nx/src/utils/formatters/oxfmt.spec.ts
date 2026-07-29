@@ -239,6 +239,54 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.get('libs/lib1/a.ts')).toEqual('const y = "hi";\n');
     });
 
+    it('collapses a negated leading globstar to one segment, as the CLI does', async () => {
+      // Measured against oxfmt 0.60.0: `!**/t.ts` selects the same set as
+      // `!*/t.ts` - it matches `t.ts` and `a/b/t.ts` but not `a/t.ts`.
+      // minimatch's zero-or-more `**` would invert to nothing, so the override
+      // would apply to no file at all under a generator while `nx format`
+      // applied it to most of them.
+      writeConfig({
+        singleQuote: false,
+        overrides: [{ files: ['!**/t.ts'], options: { singleQuote: true } }],
+      });
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 't.ts', content: 'const a =  "hi"' },
+          { path: 'a/t.ts', content: 'const b =  "hi"' },
+          { path: 'a/b/t.ts', content: 'const c =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('t.ts')).toEqual("const a = 'hi';\n");
+      expect(formatted.get('a/t.ts')).toEqual('const b = "hi";\n');
+      expect(formatted.get('a/b/t.ts')).toEqual("const c = 'hi';\n");
+    });
+
+    it('leaves an interior globstar alone under negation', async () => {
+      // `!a/**/t.ts` agrees between oxfmt and minimatch as written - only the
+      // *leading* globstar needed rewriting, so the rewrite must not reach
+      // this shape.
+      writeConfig({
+        singleQuote: false,
+        overrides: [{ files: ['!a/**/t.ts'], options: { singleQuote: true } }],
+      });
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 't.ts', content: 'const a =  "hi"' },
+          { path: 'a/t.ts', content: 'const b =  "hi"' },
+          { path: 'a/b/t.ts', content: 'const c =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('t.ts')).toEqual("const a = 'hi';\n");
+      expect(formatted.get('a/t.ts')).toEqual('const b = "hi";\n');
+      expect(formatted.get('a/b/t.ts')).toEqual('const c = "hi";\n');
+    });
+
     it('reports a config shape oxfmt would refuse to load', async () => {
       // The CLI fails with "invalid type: integer, expected a string" and
       // formats nothing; dropping the bad entry instead would format past the

@@ -574,22 +574,27 @@ function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
     // does neither on its own, so `*.md` would otherwise match only at the
     // root - the shape `oxfmt migrate-prettier` emits most often.
     // See GlobSet::new in crates/oxc_config/src/glob_set.rs.
-    const pattern = glob.startsWith('./')
+    const lifted = glob.startsWith('./')
       ? glob.slice(2)
       : glob.includes('/')
         ? glob
         : `**/${glob}`;
 
+    // Under negation oxfmt collapses a *leading* globstar to exactly one
+    // segment: `!**/t.ts` selects the same set as `!*/t.ts` (matching `t.ts`
+    // and `a/b/t.ts`, not `a/t.ts`), while minimatch's zero-or-more `**` would
+    // select nothing. An interior `**` is unaffected on both sides
+    // (`!a/**/t.ts` agrees as written). Measured against oxfmt 0.60.0.
+    const pattern = lifted.startsWith('!**/')
+      ? `!*/${lifted.slice(4)}`
+      : lifted;
+
     // minimatch's own `!` handling is left on: oxfmt normalizes the pattern and
     // then matches with fast-glob, whose `glob_match` treats a leading `!` as
     // an inversion too, so `!sub/*.ts` selects everything outside `sub/` on
     // both sides. (A separator-less `!*.ts` is lifted to `**/!*.ts` above, so
-    // the `!` stops being leading and neither side inverts.)
-    //
-    // Known exception: a negated *leading* globstar. oxfmt reads the `**` in
-    // `!**/t.ts` as exactly one segment and matches `t.ts` and `a/b/t.ts`;
-    // minimatch keeps zero-or-more and matches nothing. Every other negated
-    // form measured agrees. Rare enough to document rather than special-case.
+    // the `!` stops being leading and neither side inverts.) The one form that
+    // needed rewriting is handled just above.
     return new Minimatch(pattern, { dot: true });
   });
   return (filePath) => matchers.some((matcher) => matcher.match(filePath));
