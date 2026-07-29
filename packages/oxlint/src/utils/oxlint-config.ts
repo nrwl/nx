@@ -68,6 +68,18 @@ export function addPluginsToOxlintConfig(
       : (existingProjectConfig ??
         joinPathFragments(projectRoot, '.oxlintrc.json'));
 
+  // `updateJson` parses comments away and re-serializes, so rewriting a `.jsonc`
+  // would discard the one thing that format is for.
+  if (projectConfigPath.endsWith('.jsonc')) {
+    logger.warn(
+      `Could not enable the Oxlint plugin(s) ${plugins.join(
+        ', '
+      )} for "${projectRoot}": rewriting ${projectConfigPath} would strip its comments. ` +
+        `Add them to its "plugins" array manually.`
+    );
+    return;
+  }
+
   if (tree.exists(projectConfigPath)) {
     updateJson<OxlintConfig>(tree, projectConfigPath, (json) => {
       json.plugins = union(json.plugins ?? [], plugins);

@@ -39,7 +39,12 @@ export interface InitGeneratorSchema {
  * `lint` first so greenfield workspaces get the natural name, falling through
  * the rest when something else already owns it.
  */
-const OXLINT_TARGET_NAMES = ['lint', 'oxlint', 'oxlint:lint', 'oxlint-lint'];
+export const OXLINT_TARGET_NAMES = [
+  'lint',
+  'oxlint',
+  'oxlint:lint',
+  'oxlint-lint',
+];
 
 /**
  * The candidate target names nothing in the workspace already uses.
@@ -64,7 +69,8 @@ function resolveTargetNames(graph: ProjectGraph): string[] {
     throw new Error(
       `Could not add the @nx/oxlint plugin: every candidate target name is already in use (${OXLINT_TARGET_NAMES.join(
         ', '
-      )}). Rename one of them, or pass \`--targetName\` to choose your own.`
+      )}). Rename one of them, or register the plugin yourself in nx.json with ` +
+        `{ "plugin": "@nx/oxlint", "options": { "targetName": "<name>" } }.`
     );
   }
 
