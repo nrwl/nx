@@ -9,7 +9,13 @@ import { oxfmtVersion, prettierVersion } from './versions';
  * version to install. `@nx/js:init` reads both halves - the config now, and the
  * version to make the package resolvable before it formats.
  */
-type FormatterSetup = {
+type FormatterSetup<K extends FormatterType = FormatterType> = {
+  /**
+   * The npm package to install. Tied to the table key by the mapped type
+   * below, so the two cannot drift - the alternative is the call site
+   * re-deriving one from the other and trusting they match.
+   */
+  packageName: K;
   setUp: (
     tree: Tree,
     options: { skipPackageJson?: boolean }
@@ -23,9 +29,17 @@ type FormatterSetup = {
  * compile-time help available: the repo builds with `strict: false`, so an
  * untyped lookup would silently yield `any` rather than flag a missing member.
  */
-const formatterSetups: Record<FormatterType, FormatterSetup> = {
-  prettier: { setUp: generatePrettierSetup, version: prettierVersion },
-  oxfmt: { setUp: generateOxfmtSetup, version: oxfmtVersion },
+const formatterSetups: { [K in FormatterType]: FormatterSetup<K> } = {
+  prettier: {
+    packageName: 'prettier',
+    setUp: generatePrettierSetup,
+    version: prettierVersion,
+  },
+  oxfmt: {
+    packageName: 'oxfmt',
+    setUp: generateOxfmtSetup,
+    version: oxfmtVersion,
+  },
 };
 
 /**

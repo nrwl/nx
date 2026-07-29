@@ -193,7 +193,9 @@ export async function initGeneratorInternal(
       !schema.skipPackageJson &&
       process.env.NX_SKIP_FORMAT !== 'true'
     ) {
-      ensurePackage(schema.formatter, formatterSetup.version);
+      // `packageName` rather than `schema.formatter`: the table is what ties
+      // the npm package to the setup, so the install cannot drift from it.
+      ensurePackage(formatterSetup.packageName, formatterSetup.version);
     }
     await formatFiles(tree);
   }
