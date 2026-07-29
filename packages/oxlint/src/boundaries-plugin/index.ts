@@ -10,20 +10,13 @@
  * Oxlint's JS-plugin API is excluded from its semver policy and may change in
  * any release.
  */
-import * as nxEslintPluginModule from '@nx/eslint-plugin/nx';
+// Imported from `/internal` rather than the `/nx` plugin entry: that entry
+// spreads `workspaceRules`, whose module-level initializer compiles the
+// consuming workspace's `tools/eslint-rules` directory just to hand back one
+// rule.
+import { enforceModuleBoundaries } from '@nx/eslint-plugin/internal';
 
 const RULE_NAME = 'enforce-module-boundaries';
-
-type EslintRule = { meta?: Record<string, unknown> };
-type NxEslintPlugin = { rules: Record<string, EslintRule> };
-
-// `@nx/eslint-plugin/nx` is CJS with both `export default` and
-// `module.exports =`, so the shape differs between the ESM namespace and the
-// interop default.
-const ns = nxEslintPluginModule as unknown as NxEslintPlugin & {
-  default?: NxEslintPlugin;
-};
-const enforceModuleBoundaries = (ns.default ?? ns).rules[RULE_NAME];
 
 // Annotated rather than inferred: the inferred type names `Options` /
 // `MessageIds` from a non-portable deep path in `@nx/eslint-plugin` (TS2883).
