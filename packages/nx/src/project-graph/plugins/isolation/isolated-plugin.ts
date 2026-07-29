@@ -1,4 +1,5 @@
 import { ChildProcess, spawn } from 'child_process';
+import { randomBytes } from 'crypto';
 import { Socket } from 'net';
 import { Readable, Writable } from 'stream';
 import path = require('path');
@@ -527,8 +528,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
 // --- Worker Spawning Utilities ---
 
-global.nxPluginWorkerCount ??= 0;
-
 async function startPluginWorker(name: string) {
   performance.mark(`start-plugin-worker:${name}`);
 
@@ -554,15 +553,11 @@ async function startPluginWorker(name: string) {
       : {}),
   };
 
-  const ipcPath = getPluginOsSocketPath(
-    [
-      process.pid,
-      global.nxPluginWorkerCount++,
-      // pid + counter identify a worker within this process; the timestamp only
-      // guards a reused pid across restarts. Base36 keeps the path short.
-      Math.floor(performance.now()).toString(36),
-    ].join('-')
-  );
+  // A random token rather than pid + counter + timestamp: those encoded who
+  // owned the socket, which the worker's own argv already carries, and they
+  // cost path length against assertValidSocketPath's limit. Drawn fresh per
+  // worker, so a name is not reused across pid recycling either.
+  const ipcPath = getPluginOsSocketPath(randomBytes(4).toString('hex'));
 
   const worker = spawn(
     process.execPath,
