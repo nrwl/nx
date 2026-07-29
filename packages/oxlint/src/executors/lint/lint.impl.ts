@@ -37,14 +37,14 @@ export async function oxlintExecutor(
   const pmc = getPackageManagerCommand();
   const execParts = pmc.exec.split(' ');
   const args = createArgs(options, projectRoot, projectName);
-  // Windows only. `pmc.exec` is a `.cmd` shim there, which Node has refused to
-  // spawn directly since the CVE-2024-27980 fix. Everywhere else a shell would
-  // be actively harmful: Node joins the argv into one string without quoting,
-  // so `sh` re-expands every `lintFilePatterns` entry — and `sh` has no
-  // `globstar`, so `**` collapses to `*` and files below the first directory
-  // are silently never linted. It also swallows the spawn failures reported
-  // below, because the shell starts fine and reports the child's failure as its
-  // own exit code.
+  // Windows only. `execParts[0]` is a bare `npx`/`pnpm`/`yarn` name that resolves
+  // to a `.cmd` shim there, and libuv's PATH search probes only `.com`/`.exe`, so
+  // a direct spawn is ENOENT. (Naming the `.cmd` explicitly is not the way out —
+  // that throws EINVAL since the CVE-2024-27980 fix.)
+  //
+  // Elsewhere a shell is actively harmful: Node joins the argv into one string
+  // without quoting, and `sh` has no `globstar`, so a `**` in `lintFilePatterns`
+  // collapses to `*` and files below the first directory go silently unlinted.
   const useShell = process.platform === 'win32';
   const result = spawnSync(
     execParts[0],
@@ -66,20 +66,22 @@ export async function oxlintExecutor(
       bodyLines: [
         result.error.message,
         `Command: ${pmc.exec} oxlint ${args.join(' ')}`,
-        'Check that `oxlint` is installed in this workspace.',
+        `Check that ${execParts[0]} is on your PATH.`,
       ],
     });
     return { success: false };
   }
 
-  // Under a shell the child's own failure to start arrives as the shell's exit
-  // code rather than `result.error`, so `error` alone would never fire there.
-  if (useShell && result.status === 127) {
+  // A shell starts fine and reports the child's failure as its own exit code, so
+  // `result.error` cannot fire under one. cmd.exe — the shell Node uses on
+  // Windows — says 9009; a POSIX shell reached through a `ComSpec` override
+  // would say 127.
+  if (useShell && (result.status === 9009 || result.status === 127)) {
     output.error({
       title: `Could not run Oxlint for "${projectName}"`,
       bodyLines: [
         `Command: ${pmc.exec} oxlint ${args.join(' ')}`,
-        'Check that `oxlint` is installed in this workspace.',
+        `Check that ${execParts[0]} is on your PATH.`,
       ],
     });
     return { success: false };
