@@ -6,7 +6,7 @@ export interface Schema {
   preset: Preset;
   style?: string;
   linter?: string;
-  formatter?: string;
+  formatter?: 'none' | 'prettier' | 'oxfmt';
   workspaces?: boolean;
   framework?: string;
   packageManager?: string;

@@ -92,8 +92,24 @@ type AngularUnitTestRunner =
   | 'vitest-analog';
 
 /** Keep in sync with the `formatter` enum in the generator schemas. */
-type Formatter = 'none' | 'prettier' | 'oxfmt';
-const FORMATTERS: Formatter[] = ['oxfmt', 'prettier', 'none'];
+// Kept in sync with the formatter enum in the generator schemas by hand - this
+// package deliberately has no `nx` dependency, so nx's `FormatterType` cannot
+// be imported here.
+type Formatter = 'oxfmt' | 'prettier' | 'none';
+
+// Order is the prompt order; oxfmt is the default. `satisfies` stops a typo
+// getting in, and the coverage assertion below stops a member being dropped -
+// on its own the array would happily be a subset, and the prompt would then
+// reject a value the generator schemas still accept.
+const FORMATTERS = [
+  'oxfmt',
+  'prettier',
+  'none',
+] as const satisfies readonly Formatter[];
+
+type MissingFormatter = Exclude<Formatter, (typeof FORMATTERS)[number]>;
+const _formattersAreExhaustive: MissingFormatter extends never ? true : never =
+  true;
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;

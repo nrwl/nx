@@ -192,7 +192,7 @@ async function formatWithOxfmt(
     const { formatted, errors } = await formatFilesWithOxfmt(
       staged,
       tree.root,
-      getGeneratedOxfmtConfig(tree, oxfmtConfigFiles, files)
+      getGeneratedOxfmtConfig(oxfmtConfigFiles, files)
     );
     for (const [filePath, content] of formatted) {
       tree.write(filePath, content);
@@ -215,19 +215,23 @@ async function formatWithOxfmt(
  * ships with.
  */
 function getGeneratedOxfmtConfig(
-  tree: Tree,
   configFiles: string[] | undefined,
   // The caller's already-filtered set, rather than a second `listChanges()`:
   // that walk stats every recorded change, and deletions are excluded from it
-  // for us. A deleted config is not one the generator "just created" - reading
-  // it back would yield null, which the seed parser then reports as an
-  // unreadable config and skips formatting the batch over.
+  // for us. A deleted config is not one the generator "just created", and
+  // treating it as one would report an unreadable config and skip the batch.
   files: Set<{ path: string; content: Buffer }>
 ): { name: string; content: string } | undefined {
-  const changed = new Set(Array.from(files, (file) => file.path));
+  // Keyed by path so the content comes from that same set. Re-reading through
+  // `tree.read` would reintroduce a `string | null` the filtering already
+  // rules out.
+  const changed = new Map(
+    Array.from(files, (file) => [file.path, file.content] as const)
+  );
   for (const name of configFiles ?? []) {
-    if (changed.has(name)) {
-      return { name, content: tree.read(name, 'utf-8') };
+    const content = changed.get(name);
+    if (content !== undefined) {
+      return { name, content: content.toString('utf-8') };
     }
   }
   return undefined;
