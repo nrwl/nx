@@ -84,6 +84,24 @@ describe('formatInitWrites', () => {
     expect(read('package.json')).toContain('\t"name"');
   });
 
+  it('drops a recorded file prettier has no parser for, and stays quiet', async () => {
+    // Measured: prettier still formats the rest of the batch, but exits 2 and
+    // prints `No parser could be inferred`. So without the filter a successful
+    // init ends in a spurious "could not format" warning plus prettier's own
+    // stderr - which is what the filter actually buys.
+    write('.prettierrc', JSON.stringify({ useTabs: true }));
+    const packageJson = write('package.json');
+    const binary = write('logo.bin', 'not source code');
+
+    recordInitWrite(packageJson);
+    recordInitWrite(binary);
+    await formatInitWrites(repoRoot);
+
+    expect(read('package.json')).toEqual(FORMATTED_TABS);
+    expect(read('logo.bin')).toEqual('not source code');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('leaves files init did not write alone', async () => {
     write('.prettierrc', '{}');
     const packageJson = write('package.json');
