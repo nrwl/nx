@@ -61,8 +61,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     skipPackageJson: schema.skipPackageJson,
     skipFormat: true,
     addTsPlugin,
-    // The published @nx/js types predate 'oxfmt'; it is accepted at runtime.
-    formatter: schema.formatter as 'none' | 'prettier',
+    formatter: schema.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);
