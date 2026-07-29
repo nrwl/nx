@@ -53,7 +53,7 @@ Oxc also ships extensions for Zed, JetBrains IDEs, and Neovim. Any editor with L
 
 Oxlint walks up from each file to the nearest config. Two configs in one directory is an error, not a precedence, so pick one format per directory. Prefer `.oxlintrc.json`:
 
-- `oxlint.config.ts` needs a Node runtime that executes TypeScript (Node 22.18 or later, or Node 20.19 or later), and doesn't work with the standalone binary.
+- `oxlint.config.ts` needs a Node runtime that executes TypeScript (Node 22.18 or later), and doesn't work with the standalone binary.
 - Only JSON configs get their `extends` chain tracked as task inputs. Nx can't read a TypeScript config statically.
 - Framework generators can't register Oxlint plugins for you under a TypeScript config. `nx g @nx/react:app --linter=oxlint` warns and leaves the `plugins` array to you.
 
@@ -95,9 +95,9 @@ This adds an `oxlint` task to every project that has an ESLint task and leaves t
 
 ## Type-aware linting
 
-The Oxlint type-aware rules need the `oxlint-tsgolint` package and TypeScript 7.
+The Oxlint type-aware rules need the `oxlint-tsgolint` package, which bundles its own TypeScript compiler. Your workspace's TypeScript version doesn't matter.
 
-The `typeAware` and `tsconfig` options live on the `@nx/oxlint:lint` executor, so they need an explicit task rather than an inferred one. See [explicit tasks](#explicit-tasks) above. On an inferred task, pass `--type-aware` through to the command instead.
+The `typeAware` option lives on the `@nx/oxlint:lint` executor, so it needs an explicit task rather than an inferred one. Generate one with `nx g @nx/oxlint:lint-project --addExplicitTargets`, or pass `--type-aware` through to the command on an inferred task.
 
 ## Module boundaries
 

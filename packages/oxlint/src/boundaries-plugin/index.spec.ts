@@ -1,25 +1,32 @@
 import boundariesPlugin from './index.js';
 
 /**
- * The bridge resolves the rule at module-evaluation time out of an optional
- * peer dependency whose CJS/ESM shape it has to guess. If that shape ever
- * shifts, the failure surfaces inside Oxlint's `(await import(url)).default`,
- * where the error is opaque. These assertions turn that into a unit failure.
+ * Checks the shape Oxlint requires of a JS plugin: a namespaced `meta.name`,
+ * the rule under its own key, a schema, and a callable `create`.
+ *
+ * Scope, so this isn't mistaken for more than it is: jest transforms to CJS
+ * (`module: { type: 'commonjs' }` in `jest.preset.js`), so these run through
+ * SWC's interop while Oxlint loads the bridge through Node's ESM loader. The
+ * two diverge on exactly the `export default` / `module.exports` shape the
+ * bridge has to guess, so a change there can break Oxlint at runtime while
+ * these stay green. Covering that needs the real loader.
  */
 describe('@nx/oxlint/boundaries-plugin', () => {
   it('exposes the enforce-module-boundaries rule under the @nx namespace', () => {
+    // Oxlint requires `meta.name` on the plugin — it throws without one.
     expect(boundariesPlugin.meta.name).toEqual('@nx');
     expect(Object.keys(boundariesPlugin.rules)).toContain(
       'enforce-module-boundaries'
     );
   });
 
-  it('carries the rule name in meta, which Oxlint requires', () => {
+  it('carries the rule name in meta so the rule is self-describing', () => {
     const rule = boundariesPlugin.rules['enforce-module-boundaries'] as {
       meta?: { name?: string; schema?: unknown };
       create?: unknown;
     };
 
+    // Oxlint itself takes the name from the rules key above, not from here.
     expect(rule.meta?.name).toEqual('enforce-module-boundaries');
   });
 
