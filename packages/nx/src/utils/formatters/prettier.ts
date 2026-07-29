@@ -225,11 +225,20 @@ function shouldUseListDifferent(): boolean {
  * one, which would otherwise eat into the headroom `chunkify` leaves.
  */
 export function quoteForShell(pattern: string): string {
-  // On non-Windows, escape $ to prevent shell variable interpolation
-  // (the shell consumes one \, so \\$ becomes \$ which the shell treats as literal $)
-  // On Windows (cmd.exe), $ is not a special character, so escaping it would
-  // cause prettier to look for a file with a literal \$ in the name
-  // prettier-ignore
-  const escaped = process.platform !== 'win32' ? pattern.replace(/\$/g, '\\\$') : pattern;
+  // These patterns are interpolated into a command string, so every character
+  // the shell treats specially *inside double quotes* has to be escaped, not
+  // just `$`: a backtick is command substitution, a `"` closes the quoting, and
+  // a backslash escapes whatever follows it. The shell consumes one level, so
+  // `\$` reaches prettier as a literal `$`. Backslash is replaced first by
+  // virtue of being in the same character class - a second pass would re-escape
+  // the escapes.
+  //
+  // Windows is left alone: cmd.exe treats none of `$`, backtick or backslash as
+  // special, escaping them would make prettier look for a file with the
+  // backslash in its name, and `"` cannot occur in a Windows path at all.
+  const escaped =
+    process.platform !== 'win32'
+      ? pattern.replace(/([\\"`$])/g, '\\$1')
+      : pattern;
   return `"${escaped}"`;
 }
