@@ -11,14 +11,12 @@ import {
 } from './tmp-dir';
 import {
   ensureOwnedPrivateDir,
-  isRealDirectoryOrAbsent,
-  relaxSharedRootToSticky,
+  ensureSafeSharedRoot,
 } from '../utils/owned-private-dir';
 
 jest.mock('../utils/owned-private-dir', () => ({
   ensureOwnedPrivateDir: jest.fn(() => true),
-  isRealDirectoryOrAbsent: jest.fn(() => true),
-  relaxSharedRootToSticky: jest.fn(),
+  ensureSafeSharedRoot: jest.fn(() => true),
   getUserSegment: jest.fn(() => '501'),
 }));
 
@@ -89,9 +87,7 @@ describe('socket directories', () => {
     const dir = getSocketDir();
 
     expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(dir);
-    expect(mkdirSync).toHaveBeenCalledWith('/tmp/.nx/sockets', {
-      recursive: true,
-    });
+    expect(ensureSafeSharedRoot).toHaveBeenCalledWith('/tmp/.nx/sockets');
     expect(mkdirSync).not.toHaveBeenCalledWith(dir, {
       recursive: true,
       mode: 0o700,
@@ -131,22 +127,20 @@ describe('socket directories', () => {
     const dir = getPluginSocketDir();
 
     expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(dir);
-    expect(mkdirSync).toHaveBeenCalledWith('/tmp/.nx/sockets', {
-      recursive: true,
-    });
+    expect(ensureSafeSharedRoot).toHaveBeenCalledWith('/tmp/.nx/sockets');
   });
 
-  it('makes the shared socket root sticky + world-writable so other users can coexist', () => {
+  it('establishes every shared root as sticky + world-writable so other users can coexist', () => {
     setPlatform('linux');
 
     getSocketDir();
 
-    // Relaxed so other users can create their own dirs alongside; each by its own
-    // call, since one failing must not skip the other.
-    expect(relaxSharedRootToSticky).toHaveBeenCalledWith('/tmp/.nx');
-    expect(relaxSharedRootToSticky).toHaveBeenCalledWith('/tmp/.nx/sockets');
+    // Outermost first: the outer root is the parent of the inner one, so a
+    // symlink there redirects it before it is ever checked.
+    expect(ensureSafeSharedRoot).toHaveBeenNthCalledWith(1, '/tmp/.nx');
+    expect(ensureSafeSharedRoot).toHaveBeenNthCalledWith(2, '/tmp/.nx/sockets');
     // ...but never the per-uid directory, which must stay 0700.
-    expect(relaxSharedRootToSticky).not.toHaveBeenCalledWith(USER_SOCKET_ROOT);
+    expect(ensureSafeSharedRoot).not.toHaveBeenCalledWith(USER_SOCKET_ROOT);
   });
 
   it('gives the daemon and plugin sockets distinct directories', () => {
@@ -155,15 +149,41 @@ describe('socket directories', () => {
     expect(getSocketDir()).not.toBe(getPluginSocketDir());
   });
 
-  it('throws InvalidSocketDirConfigured when the socket dir resolves to the system temp dir', () => {
-    setPlatform('linux');
-    // Every user can reach the system temp dir, so this must fail loudly rather
-    // than silently substituting a default.
-    process.env.NX_SOCKET_DIR = systemTmpDir;
+  // Each is reachable by every user, and Nx locks the socket dir to one of them —
+  // so naming a shared root here would strip it of the sticky, world-writable
+  // mode the others depend on. Loud, rather than a silently substituted default.
+  it.each([
+    ['the system temp dir', () => systemTmpDir],
+    ['the Nx tmp root', () => '/tmp/.nx'],
+    ['the shared socket root', () => '/tmp/.nx/sockets'],
+    ['the shared native cache root', () => '/tmp/.nx/native-cache'],
+    // Documented as invalid, so it has to be rejected however it is spelled.
+    // These cover the normalization on the way in rather than the comparison
+    // itself, which sees an already-resolved path.
+    ['the shared socket root with a trailing slash', () => '/tmp/.nx/sockets/'],
+    [
+      'the shared socket root reached via ..',
+      () => '/tmp/.nx/native-cache/../sockets',
+    ],
+  ])(
+    'throws InvalidSocketDirConfigured when the socket dir is %s',
+    (_name: string, dir: () => string) => {
+      setPlatform('linux');
+      process.env.NX_SOCKET_DIR = dir();
 
-    expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
-    expect(mkdirSync).not.toHaveBeenCalled();
-    expect(relaxSharedRootToSticky).not.toHaveBeenCalled();
+      expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
+      expect(mkdirSync).not.toHaveBeenCalled();
+      expect(ensureSafeSharedRoot).not.toHaveBeenCalled();
+    }
+  );
+
+  it('still accepts a directory that merely sits under a shared root', () => {
+    setPlatform('linux');
+    // Only exact matches are rejected; the per-user layout Nx builds itself lives
+    // under these roots, so a prefix test would reject the default too.
+    process.env.NX_SOCKET_DIR = '/tmp/.nx/sockets/mine';
+
+    expect(getSocketDir()).toBe('/tmp/.nx/sockets/mine');
   });
 
   // An empty value must mean unset. Left as `??`, the empty string survives and
@@ -209,34 +229,31 @@ describe('socket directories', () => {
     getSocketDir();
 
     // Only the configured dir is touched; the default stable root is left alone.
-    expect(relaxSharedRootToSticky).not.toHaveBeenCalled();
+    expect(ensureSafeSharedRoot).not.toHaveBeenCalled();
   });
 
-  it('falls back rather than creating anything under a hostile shared root', () => {
+  it('falls back rather than creating anything under an unsafe shared root', () => {
     setPlatform('linux');
-    (isRealDirectoryOrAbsent as jest.Mock).mockReturnValueOnce(false);
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
 
     const dir = getSocketDir();
 
     expect(dir).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    expect(relaxSharedRootToSticky).not.toHaveBeenCalled();
-    expect(mkdirSync).not.toHaveBeenCalledWith('/tmp/.nx/sockets', {
-      recursive: true,
-    });
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_SOCKET_ROOT);
   });
 
-  it('checks every shared root, not just the outer one', () => {
+  it('stops at the first unsafe root rather than creating the one below it', () => {
     setPlatform('linux');
     // The inner root is absent on a fresh machine, so it is the easier to plant.
-    (isRealDirectoryOrAbsent as jest.Mock).mockReturnValueOnce(true);
-    (isRealDirectoryOrAbsent as jest.Mock).mockReturnValueOnce(false);
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(true);
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    expect(isRealDirectoryOrAbsent).toHaveBeenCalledWith('/tmp/.nx');
-    expect(isRealDirectoryOrAbsent).toHaveBeenCalledWith('/tmp/.nx/sockets');
+    expect(ensureSafeSharedRoot).toHaveBeenCalledWith('/tmp/.nx');
+    expect(ensureSafeSharedRoot).toHaveBeenCalledWith('/tmp/.nx/sockets');
   });
 
-  // The win32 short-circuit lives in relaxSharedRootToSticky, mocked out here;
+  // The win32 short-circuit lives in ensureSafeSharedRoot, mocked out here;
   // covered live in utils/owned-private-dir.spec.ts.
 });
 
