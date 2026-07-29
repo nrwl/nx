@@ -10,7 +10,7 @@ import {
 } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
 import { getNativeFileCacheLocationToDelete } from '../../native/native-file-cache-location';
-import { getMainWorktreeRoot } from '../../native';
+import { getWorktreeDataRoot } from '../../utils/worktree-data-root';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ResetCommandOptions } from './command-object';
 import { getCloudClient } from '../../nx-cloud/utilities/client';
@@ -184,18 +184,13 @@ function cleanupWorkspaceData() {
     () => {
       rmSync(workspaceDataDirectory, { recursive: true, force: true });
 
-      // If in a worktree, also clean the shared workspace data directory
-      // in the main repo where the DB actually lives
-      try {
-        const mainRoot = getMainWorktreeRoot(workspaceRoot);
-        if (mainRoot) {
-          const sharedDir = workspaceDataDirectoryForWorkspace(mainRoot);
-          if (sharedDir !== workspaceDataDirectory) {
-            rmSync(sharedDir, { recursive: true, force: true });
-          }
-        }
-      } catch {
-        // Worktree detection is best-effort during reset
+      // If this process is sharing worktree data, also clean the main repo
+      // directory where the DB actually lives. Sandboxed non-Claude agents
+      // resolve to the local root and must not cross that boundary.
+      const dataRoot = getWorktreeDataRoot(workspaceRoot);
+      const sharedDir = workspaceDataDirectoryForWorkspace(dataRoot);
+      if (sharedDir !== workspaceDataDirectory) {
+        rmSync(sharedDir, { recursive: true, force: true });
       }
     }
   );

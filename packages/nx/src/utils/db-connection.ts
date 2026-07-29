@@ -1,10 +1,6 @@
-import {
-  closeDbConnection,
-  connectToNxDb,
-  ExternalObject,
-  getMainWorktreeRoot,
-} from '../native';
+import { closeDbConnection, connectToNxDb, ExternalObject } from '../native';
 import { workspaceDataDirectoryForWorkspace } from './cache-directory';
+import { getWorktreeDataRoot } from './worktree-data-root';
 import { workspaceRoot } from './workspace-root';
 
 const dbConnectionMap = new Map<string, ExternalObject<any>>();
@@ -12,21 +8,12 @@ const dbConnectionMap = new Map<string, ExternalObject<any>>();
 /**
  * Shared workspace-data directory, resolved once per process.
  * In a git worktree this points to the main repo's workspace-data dir
- * so all worktrees share the same DB.
+ * so all worktrees share the same DB, unless a non-Claude agent is sandboxed.
  */
 let _sharedDir: string | undefined;
 function sharedWorkspaceDataDirectory(root: string): string {
   if (_sharedDir) return _sharedDir;
-  try {
-    const mainRoot = getMainWorktreeRoot(root);
-    if (mainRoot) {
-      _sharedDir = workspaceDataDirectoryForWorkspace(mainRoot);
-      return _sharedDir;
-    }
-  } catch {
-    // Fall back to local workspace data if worktree detection fails
-  }
-  _sharedDir = workspaceDataDirectoryForWorkspace(root);
+  _sharedDir = workspaceDataDirectoryForWorkspace(getWorktreeDataRoot(root));
   return _sharedDir;
 }
 

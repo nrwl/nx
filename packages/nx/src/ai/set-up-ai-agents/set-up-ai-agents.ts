@@ -198,26 +198,20 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.sandbox,
         filesystem: {
           ...json.sandbox?.filesystem,
-          allowRead: appendAllMissing(
-            json.sandbox?.filesystem?.allowRead,
-            [
-              ...NX_ALLOWLIST_ROOTS,
-              ...(mainWorktreeNxPath ? [mainWorktreeNxPath] : []),
-            ]
-          ),
+          allowRead: appendAllMissing(json.sandbox?.filesystem?.allowRead, [
+            ...NX_ALLOWLIST_ROOTS,
+            ...(mainWorktreeNxPath ? [mainWorktreeNxPath] : []),
+          ]),
           // Covers the whole tmp root, not just the socket dir: the native
           // binary cache lives under it too, and without the cache a running
           // daemon keeps an open handle on the binding inside node_modules,
           // which blocks reinstalling or rebuilding dependencies. What keeps
           // users apart is not this allowlist but the 0700 per-uid directories
           // Nx verifies on every use (see ensureOwnedPrivateDir).
-          allowWrite: appendAllMissing(
-            json.sandbox?.filesystem?.allowWrite,
-            [
-              ...NX_ALLOWLIST_ROOTS,
-              ...(mainWorktreeNxPath ? [mainWorktreeNxPath] : []),
-            ]
-          ),
+          allowWrite: appendAllMissing(json.sandbox?.filesystem?.allowWrite, [
+            ...NX_ALLOWLIST_ROOTS,
+            ...(mainWorktreeNxPath ? [mainWorktreeNxPath] : []),
+          ]),
         },
         network: {
           ...json.sandbox?.network,
