@@ -29,6 +29,7 @@ import {
 } from '@nx/devkit';
 import {
   addLintingToProject,
+  detectLinter,
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
@@ -708,7 +709,7 @@ async function normalizeOptions(
     : [];
 
   options.style = options.style || 'css';
-  options.linter = options.linter || 'eslint';
+  options.linter = options.linter || detectLinter(host);
   options.unitTestRunner = options.unitTestRunner || 'jest';
   options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 

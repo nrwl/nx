@@ -96,7 +96,9 @@ async function addPresetGenerator(
       path: join(projectRoot, 'src/generators/preset/generator'),
       unitTestRunner: schema.unitTestRunner,
       skipFormat: true,
-      skipLintChecks: schema.linter === 'none',
+      // Lint checks are an ESLint-only feature; asking for them under any other
+      // linter makes `pluginLintCheckGenerator` log an error and do nothing.
+      skipLintChecks: schema.linter !== 'eslint',
     });
   }
 

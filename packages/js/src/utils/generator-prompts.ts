@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { promptWhenInteractive } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from './typescript/ts-solution-setup';
-import type { LinterType } from './linter';
+import { detectLinter, type LinterType } from './linter';
 
 export async function normalizeLinterOption(
   tree: Tree,
@@ -12,10 +12,22 @@ export async function normalizeLinterOption(
   }
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  // Offer the linter the workspace already uses first, so a workspace that has
+  // adopted Oxlint is not pushed back onto ESLint by the prompt's own ordering.
+  const detected = detectLinter(tree);
+  const others = (['eslint', 'oxlint'] as const).filter((l) => l !== detected);
   const choices = isTsSolutionSetup
-    ? [{ name: 'none' }, { name: 'eslint' }, { name: 'oxlint' }]
-    : [{ name: 'eslint' }, { name: 'oxlint' }, { name: 'none' }];
-  const defaultValue = isTsSolutionSetup ? 'none' : 'eslint';
+    ? [
+        { name: 'none' },
+        { name: detected },
+        ...others.map((name) => ({ name })),
+      ]
+    : [
+        { name: detected },
+        ...others.map((name) => ({ name })),
+        { name: 'none' },
+      ];
+  const defaultValue = isTsSolutionSetup ? 'none' : detected;
 
   return await promptWhenInteractive<{
     linter: LinterType;

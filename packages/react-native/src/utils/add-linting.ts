@@ -39,7 +39,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   // Everything below configures ESLint — predefined configs, `extends`,
   // ignore entries — which have no equivalent in other linters. They only
   // need the linter registering, which the helper handles (including `none`).
-  if (options.linter !== 'eslint') {
+  if (options.linter && options.linter !== 'eslint') {
     return addLintingToProject(host, {
       oxlintPlugins: ['react', 'react-perf'],
       unitTestRunner: options.unitTestRunner,

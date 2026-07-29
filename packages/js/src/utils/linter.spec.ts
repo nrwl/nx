@@ -44,15 +44,18 @@ describe('detectLinter', () => {
     }
   );
 
+  // ESLint is also the fallback, so these pin that an ESLint workspace is not
+  // mistaken for an Oxlint one — they cannot distinguish detection from the
+  // fallthrough, and are not meant to.
   it.each(['@nx/eslint', 'eslint'])(
-    'should detect eslint from the %s dependency',
+    'should stay on eslint with the %s dependency present',
     (pkg) => {
       addDevDependency(pkg);
       expect(detectLinter(tree)).toBe('eslint');
     }
   );
 
-  it('should detect eslint from the inference plugin', () => {
+  it('should stay on eslint with the inference plugin present', () => {
     addPlugin('@nx/eslint/plugin');
     expect(detectLinter(tree)).toBe('eslint');
   });

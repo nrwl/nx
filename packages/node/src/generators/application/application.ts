@@ -170,7 +170,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   updateTsConfigOptions(tree, options);
 
-  if (options.linter === 'eslint') {
+  if (options.linter !== 'none') {
     const lintTask = await addLintingToApplication(tree, options);
     tasks.push(lintTask);
   }

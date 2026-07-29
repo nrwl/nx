@@ -16,7 +16,7 @@ export { initGenerator } from './generators/init/init';
 export { setupPrettierGenerator } from './generators/setup-prettier/generator';
 export { setupVerdaccio } from './generators/setup-verdaccio/generator';
 export { isValidVariable } from './utils/is-valid-variable';
-export type { LinterType } from './utils/linter';
+export { detectLinter, type LinterType } from './utils/linter';
 export {
   addLintingToProject,
   type AddLintingToProjectOptions,

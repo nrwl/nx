@@ -32,7 +32,7 @@ export async function addLinting(
   // Everything below configures ESLint — predefined configs, `extends`,
   // ignore entries — which have no equivalent in other linters. They only
   // need the linter registering, which the helper handles (including `none`).
-  if (options.linter !== 'eslint') {
+  if (options.linter && options.linter !== 'eslint') {
     return addLintingToProject(host, {
       oxlintPlugins: ['nextjs', 'react', 'react-perf', 'jsx-a11y'],
       unitTestRunner: options.unitTestRunner,
@@ -42,8 +42,6 @@ export async function addLinting(
       skipPackageJson: options.skipPackageJson,
     });
   }
-
-  if (options.linter !== 'eslint') return () => {};
 
   const tasks: GeneratorCallback[] = [];
 
