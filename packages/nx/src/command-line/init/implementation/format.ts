@@ -1,9 +1,11 @@
 import { existsSync } from 'node:fs';
 import * as path from 'node:path';
+import { chunkify } from '../../../utils/chunkify';
 import { detectFormatter } from '../../../utils/formatters';
 import { writeWithOxfmt } from '../../../utils/formatters/oxfmt';
 import {
   filterToPrettierSupportedFiles,
+  quoteForShell,
   writeWithPrettier,
 } from '../../../utils/formatters/prettier';
 import { output } from '../../../utils/output';
@@ -19,8 +21,14 @@ const writtenFiles = new Set<string>();
 
 /**
  * Records a file for `formatInitWrites` to format. Only worth calling for
- * files a formatter handles - `.gitignore` and friends are deliberately left
- * out rather than filtered later.
+ * files a formatter handles - `.gitignore` and the vendored `.nx` wrapper
+ * scripts are deliberately left out rather than filtered later.
+ *
+ * Two of the recording helpers (`configure-plugins`, `check-compatible-with-
+ * plugins`) are shared with `nx import`, which records but never drains. That
+ * is inert - the process exits - but it means those writes are not formatted
+ * there. Draining in `nx import` would be a behavior change for a different
+ * command, so it is left alone deliberately.
  */
 export function recordInitWrite(filePath: string): void {
   writtenFiles.add(filePath);
@@ -71,15 +79,29 @@ export async function formatInitWrites(repoRoot: string): Promise<void> {
     return;
   }
 
+  // Chunked for the same reason `nx format` chunks: the Angular flow records a
+  // `project.json` per project, so a large workspace can record more paths than
+  // one command line holds. The prettier path quotes on its way to the shell,
+  // so it is sized against that; oxfmt goes through execFile and gets them raw.
   try {
     if (formatter === 'oxfmt') {
-      writeWithOxfmt(files, repoRoot);
+      for (const chunk of chunkify(files)) {
+        if (chunk.length) {
+          writeWithOxfmt(chunk, repoRoot);
+        }
+      }
     } else {
       // oxfmt needs no equivalent filter - it silently skips file types it
       // does not handle, while prettier fails the batch on one.
       const supported = await filterToPrettierSupportedFiles(files);
-      if (supported.length) {
-        writeWithPrettier(supported, repoRoot);
+      for (const chunk of chunkify(
+        supported,
+        undefined,
+        (pattern) => quoteForShell(pattern).length
+      )) {
+        if (chunk.length) {
+          writeWithPrettier(chunk, repoRoot);
+        }
       }
     }
   } catch (e) {
