@@ -48,7 +48,7 @@ The `@nx/rollup/plugin` plugin looks for these Rollup configuration files:
 - `rollup.config.cts`
 - `rollup.config.mts`
 
-A configuration file is associated with a project when its directory also contains a `package.json` or `project.json`. Nx reads the Rollup outputs and creates a cached build task that runs `rollup -c`, depends on the same task in dependency projects, and records the configured output paths for cache restoration.
+A configuration file is associated with a project when its directory also contains a `package.json` or `project.json`. Nx creates a cached build task that runs `rollup -c`, with outputs based on your Rollup configuration, and depends on the same task in dependency projects.
 
 Configure the plugin in `nx.json`:
 
