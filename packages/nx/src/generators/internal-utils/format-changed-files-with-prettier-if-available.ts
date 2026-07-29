@@ -171,8 +171,9 @@ async function runOxfmtBatch(
   options?: { silent?: boolean }
 ): Promise<Map<string, string>> {
   try {
-    // A single oxfmt invocation for the whole batch - the binary costs
-    // ~100ms to start, so one process per file does not scale.
+    // The whole batch goes through one call: oxfmt's ESM API is loaded once and
+    // each file is formatted in memory, so no process is spawned per file and a
+    // file oxfmt cannot parse costs only itself.
     const { formatted, errors } = await formatFilesWithOxfmt(
       files.map((file) => ({
         path: file.path,
