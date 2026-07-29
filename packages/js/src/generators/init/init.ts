@@ -15,7 +15,7 @@ import { isUsingPrettierInTree } from 'nx/src/devkit-internals';
 import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
-import { formatterSetups } from '../../utils/formatter-setup';
+import { getFormatterSetup } from '../../utils/formatter-setup';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
@@ -145,7 +145,7 @@ export async function initGeneratorInternal(
   // making the package resolvable further down. They were separate `if` chains
   // over the same union, forty lines apart, so a third formatter meant finding
   // both.
-  const formatterSetup = formatterSetups[schema.formatter];
+  const formatterSetup = getFormatterSetup(schema.formatter);
 
   if (formatterSetup) {
     tasks.push(

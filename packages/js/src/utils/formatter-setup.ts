@@ -1,4 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
+import type { FormatterType } from 'nx/src/devkit-internals';
 import { generateOxfmtSetup } from './oxfmt';
 import { generatePrettierSetup } from './prettier';
 import { oxfmtVersion, prettierVersion } from './versions';
@@ -17,16 +18,32 @@ type FormatterSetup = {
 };
 
 /**
- * Typed as a partial record over the formatters rather than inferred, so an
- * entry left out is a compile error at the lookup instead of a silent
- * "no formatter configured" at runtime.
+ * Keyed by nx's own `FormatterType` and deliberately *not* `Partial`, so adding
+ * a formatter there fails to compile here until it is set up. That is the only
+ * compile-time help available: the repo builds with `strict: false`, so an
+ * untyped lookup would silently yield `any` rather than flag a missing member.
  */
-export const formatterSetups: Partial<
-  Record<'prettier' | 'oxfmt', FormatterSetup>
-> = {
+const formatterSetups: Record<FormatterType, FormatterSetup> = {
   prettier: { setUp: generatePrettierSetup, version: prettierVersion },
   oxfmt: { setUp: generateOxfmtSetup, version: oxfmtVersion },
 };
+
+/**
+ * The setup for a formatter name that came from a schema, or `undefined` for
+ * `'none'` and anything unrecognised. Callers get a typed result instead of the
+ * `any` a bare index would produce under `strict: false`.
+ *
+ * `hasOwnProperty` rather than `in`, which would answer `true` for inherited
+ * members like `'constructor'` and hand back an `Object.prototype` function.
+ */
+export function getFormatterSetup(
+  formatter: string | undefined
+): FormatterSetup | undefined {
+  return formatter !== undefined &&
+    Object.prototype.hasOwnProperty.call(formatterSetups, formatter)
+    ? formatterSetups[formatter as FormatterType]
+    : undefined;
+}
 
 /**
  * Writes the chosen formatter's config and queues its install.
@@ -40,6 +57,6 @@ export function setUpFormatter(
   formatter: string | undefined,
   options: { skipPackageJson?: boolean } = {}
 ): GeneratorCallback {
-  const setup = formatterSetups[formatter as 'prettier' | 'oxfmt'];
+  const setup = getFormatterSetup(formatter);
   return setup ? setup.setUp(tree, options) : () => {};
 }
