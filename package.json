@@ -1,6 +1,6 @@
 {
   "name": "@nx/nx-source",
-  "description": "Smart Monorepos \u00b7 Fast Builds",
+  "description": "Smart Monorepos · Fast Builds",
   "homepage": "https://nx.dev",
   "private": true,
   "packageManager": "pnpm@11.2.2",
