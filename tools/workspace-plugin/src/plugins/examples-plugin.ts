@@ -73,8 +73,9 @@ export const createNodes: CreateNodes = [
                     'default',
                     '^default',
                     '{workspaceRoot}/tsconfig.json',
-                    // Formatters (oxfmt/prettier) walk ancestors from the
-                    // example up to the repo root for editor config.
+                    // The oxfmt and prettier CLIs both resolve .editorconfig by
+                    // walking up from the file being formatted, so an example
+                    // nested in this repo picks up the root one.
                     '{workspaceRoot}/.editorconfig',
                     {
                       dependentTasksOutputFiles: '**/*',

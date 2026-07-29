@@ -46,8 +46,9 @@ module.exports = {
     '^chalk$': '<rootDir>/../../scripts/jest-mocks/chalk.js',
     '^yargs-parser$': '<rootDir>/../../scripts/jest-mocks/yargs-parser.js',
     '^prettier$': '<rootDir>/../../scripts/jest-mocks/prettier.js',
-    // Mock oxfmt for the same reason - it is ESM-only, and Jest cannot hand the
-    // same ESM module to more than one test environment in a worker.
+    // oxfmt is ESM-only, and Jest cannot hand the same ESM module to more than
+    // one test environment in a worker. The mock runs the real binary, so
+    // formatting assertions still exercise real oxfmt.
     '^oxfmt$': '<rootDir>/../../scripts/jest-mocks/oxfmt.js',
   },
 };

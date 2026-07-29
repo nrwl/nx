@@ -5,6 +5,13 @@
 // module and rejects it with "Provided module is not an instance of Module".
 // Running the binary sidesteps that: it is the same formatter, so the tests
 // still exercise real formatting rather than a stub.
+//
+// It is not, however, the same *entry point*. Production calls oxfmt's
+// programmatic `format()`, which accepts only `FormatConfig`; this wrapper
+// hands the options to the CLI, which also understands the config-file-only
+// keys (`overrides`, `ignorePatterns`). Anything that relies on that
+// difference has to be covered outside this suite - the mock is more capable
+// than the API it stands in for.
 const { execFileSync } = require('child_process');
 const { mkdtempSync, rmSync, writeFileSync } = require('fs');
 const { tmpdir } = require('os');
@@ -43,8 +50,7 @@ exports.format = async function format(fileName, sourceText, options) {
       }
     );
 
-    // oxfmt exits 0 for a file it has no parser for, and says so on stderr.
-    return { code: code || sourceText, errors: [] };
+    return { code, errors: [] };
   } catch (e) {
     const message = (e.stderr || '').toString().trim() || e.message;
     return { code: sourceText, errors: [{ message }] };
