@@ -5,6 +5,15 @@
   command = "npx nx run nx-dev:deploy-build:netlify --skip-nx-cache"
   publish = "nx-dev/nx-dev/.next"
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
 

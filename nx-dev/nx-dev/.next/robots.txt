@@ -1,9 +1,4 @@
-# *
+# This is a non-production deployment (canary, versioned, preview, etc.)
+# All crawling is disallowed to prevent duplicate content in search results.
 User-agent: *
-Allow: /
-
-# Host
-Host: https://nx.dev
-
-# Sitemaps
-Sitemap: https://nx.dev/sitemap-index.xml
+Disallow: /
