@@ -36,6 +36,14 @@
       "type": "boolean",
       "description": "Always add an explicit `@nx/oxlint:lint` target instead of relying on inferred tasks.",
       "default": false
+    },
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Oxlint plugins to enable for this project, such as `react` or `jsx-a11y`.",
+      "default": []
     }
   },
   "required": ["project"],
