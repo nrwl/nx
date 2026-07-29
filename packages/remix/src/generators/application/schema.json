@@ -26,6 +26,11 @@
       "enum": ["eslint", "oxlint", "none"],
       "x-priority": "important"
     },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier", "oxfmt"]
+    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["vitest", "jest", "none"],
