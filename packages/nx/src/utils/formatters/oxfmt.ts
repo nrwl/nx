@@ -97,12 +97,18 @@ export function getOxfmtBinPath(): string {
   return cachedOxfmtBin;
 }
 
-export function writeWithOxfmt(patterns: string[]): void {
+export function writeWithOxfmt(
+  patterns: string[],
+  // Defaults to the caller's cwd. `nx init` sets it so it can pass paths
+  // relative to the repo root rather than absolute ones the user has to read.
+  cwd?: string
+): void {
   const oxfmtPath = getOxfmtBinPath();
   execFileSync(
     'node',
     [oxfmtPath, ...OXFMT_BASE_ARGS, '--write', ...patterns],
     {
+      cwd,
       stdio: [0, 1, 2],
       windowsHide: true,
     }
