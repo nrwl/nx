@@ -3,6 +3,14 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import init from './init';
 import { typescriptVersion } from '../../utils/versions';
 
+// `ensurePackage` performs a real out-of-band install, so the only way to
+// assert *whether* it runs is to intercept it.
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  ensurePackage: jest.fn(),
+}));
+const { ensurePackage } = jest.requireMock('@nx/devkit');
+
 describe('js init generator', () => {
   let tree: Tree;
 
@@ -11,6 +19,38 @@ describe('js init generator', () => {
     // Remove files that should be part of the init generator
     tree.delete('tsconfig.base.json');
     tree.delete('.prettierrc');
+    (ensurePackage as jest.Mock).mockClear();
+  });
+
+  describe('making the formatter resolvable before it formats', () => {
+    // The install task is queued, not run, so without this the formatter the
+    // generator just added is still missing when formatFiles tries to load it.
+
+    it.each(['oxfmt', 'prettier'] as const)(
+      'should ensure %s is installed before formatting',
+      async (formatter) => {
+        await init(tree, { formatter });
+
+        expect(ensurePackage).toHaveBeenCalledWith(
+          formatter,
+          expect.any(String)
+        );
+      }
+    );
+
+    it('should not install anything when skipPackageJson is set', async () => {
+      // That option asks this generator not to manage dependencies, and an
+      // out-of-band install is still an install.
+      await init(tree, { formatter: 'oxfmt', skipPackageJson: true });
+
+      expect(ensurePackage).not.toHaveBeenCalled();
+    });
+
+    it('should not install anything when there is no formatter', async () => {
+      await init(tree, { formatter: 'none' });
+
+      expect(ensurePackage).not.toHaveBeenCalled();
+    });
   });
 
   it('should install prettier package', async () => {
