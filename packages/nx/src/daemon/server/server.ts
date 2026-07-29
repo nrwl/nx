@@ -5,19 +5,22 @@ import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { deserialize, serialize } from 'v8';
 import { startAnalytics } from '../../analytics';
+import { readNxJson } from '../../config/nx-json';
 import { hashArray } from '../../hasher/file-hasher';
 import { hashFile } from '../../native';
+import { getPlugins } from '../../project-graph/plugins/get-plugins';
 import {
   consumeMessagesFromSocket,
   isJsonMessage,
 } from '../../utils/consume-messages-from-socket';
+import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import '../../utils/perf-logging';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
+import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import { isNxVersionMismatch } from '../is-nx-version-mismatch';
-import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { serverLogger } from '../logger';
 import {
   GET_CONFIGURE_AI_AGENTS_STATUS,
@@ -96,13 +99,13 @@ import {
   killSocketOrPath,
 } from '../socket-utils';
 import { registerFileChangeListener } from './file-watching/file-change-events';
-import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   hasRegisteredFileWatcherSockets,
   notifyFileWatcherSocketsOfError,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
+import { routeWorkspaceChanges } from './file-watching/route-workspace-changes';
 import {
   handleGetConfigureAiAgentsStatus,
   handleResetConfigureAiAgentsStatus,
@@ -721,7 +724,7 @@ export async function startServer(): Promise<Server> {
         });
       }
     }
-  }, 20).unref();
+  }, 500).unref();
 
   return new Promise(async (resolve, reject) => {
     // `listen` reports a failed bind asynchronously on the server, which the
