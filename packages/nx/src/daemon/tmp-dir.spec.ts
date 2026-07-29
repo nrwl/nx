@@ -166,6 +166,32 @@ describe('socket directories', () => {
     expect(relaxSharedRootToSticky).not.toHaveBeenCalled();
   });
 
+  // An empty value must mean unset. Left as `??`, the empty string survives and
+  // `resolve('')` is the working directory — which removeSocketDir deletes
+  // recursively. `NX_SOCKET_DIR=` with no value is ordinary in a .env file.
+  it.each(['NX_SOCKET_DIR', 'NX_DAEMON_SOCKET_DIR'])(
+    'treats an empty %s as unset rather than the working directory',
+    (variable: string) => {
+      setPlatform('linux');
+      process.env[variable] = '';
+
+      const dir = getSocketDir();
+
+      expect(dir).not.toBe(process.cwd());
+      expect(dir.startsWith(USER_SOCKET_ROOT + '/')).toBe(true);
+      expect(getNxSocketRoot()).toBe('/tmp/.nx/sockets');
+    }
+  );
+
+  it('ignores an empty NX_SOCKET_DIR shadowing a valid legacy value', () => {
+    setPlatform('linux');
+    // What a half-finished migration to the new variable name looks like.
+    process.env.NX_SOCKET_DIR = '';
+    process.env.NX_DAEMON_SOCKET_DIR = '/tmp/nx-legacy-sock';
+
+    expect(getSocketDir()).toBe('/tmp/nx-legacy-sock');
+  });
+
   it('restricts an explicit NX_SOCKET_DIR override', () => {
     setPlatform('linux');
     process.env.NX_SOCKET_DIR = '/tmp/nx-custom-sock';
