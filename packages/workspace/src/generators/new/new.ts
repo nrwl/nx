@@ -98,7 +98,18 @@ export async function newGenerator(tree: Tree, opts: Schema) {
       );
     }
     // TODO: move all of these into create-nx-workspace
-    if (options.preset !== Preset.NPM && !options.isCustomPreset) {
+    // The npm preset normally skips the preset generator entirely, which is why
+    // `--formatter` used to be dropped for it. Run it when there is a formatter
+    // to set up - and only then, so a plain `--preset=npm` still avoids the
+    // extra fork and install.
+    const npmPresetNeedsFormatter =
+      options.preset === Preset.NPM &&
+      !!options.formatter &&
+      options.formatter !== 'none';
+    if (
+      (options.preset !== Preset.NPM || npmPresetNeedsFormatter) &&
+      !options.isCustomPreset
+    ) {
       await generatePreset(tree, options);
     }
     // if we move this into create-nx-workspace, we can also easily log things out like nx console install success
