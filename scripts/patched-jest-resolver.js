@@ -115,7 +115,19 @@ module.exports = function (modulePath, options) {
       return options.defaultResolver(modulePath, options);
     }
 
-    return enhancedResolver(path.resolve(options.basedir), modulePath);
+    const basedir = path.resolve(options.basedir);
+    try {
+      return enhancedResolver(basedir, modulePath);
+    } catch (err) {
+      // An ESM package under NodeNext imports its siblings with a `.js`
+      // extension that only exists after a build. Retry against the TypeScript
+      // source, so such a package is loadable from any consumer's tests rather
+      // than only its own via a per-package `moduleNameMapper`.
+      if (/^\.{1,2}\//.test(modulePath) && modulePath.endsWith('.js')) {
+        return enhancedResolver(basedir, modulePath.slice(0, -'.js'.length));
+      }
+      throw err;
+    }
   }
 
   const ext = path.extname(modulePath);
