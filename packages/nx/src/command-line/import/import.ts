@@ -31,6 +31,7 @@ import {
   configurePlugins,
   installPluginPackages,
 } from '../init/configure-plugins';
+import { formatInitWrites } from '../init/implementation/format';
 import {
   checkCompatibleWithPlugins,
   updatePluginsInNxJson,
@@ -423,6 +424,7 @@ export async function importHandler(options: ImportOptions) {
       const incompatiblePlugins = await checkCompatibleWithPlugins();
       if (Object.keys(incompatiblePlugins).length > 0) {
         updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
+        await formatInitWrites(workspaceRoot);
         await destinationGitClient.amendCommit();
       }
     }
@@ -437,6 +439,7 @@ export async function importHandler(options: ImportOptions) {
           verbose
         );
         if (succeededPlugins.length > 0) {
+          await formatInitWrites(workspaceRoot);
           await destinationGitClient.amendCommit();
         }
       }
@@ -638,6 +641,7 @@ async function handlePluginOnlyMode(
         verbose
       );
       if (succeededPlugins.length > 0) {
+        await formatInitWrites(workspaceRoot);
         await destinationGitClient.amendCommit();
       }
     }
@@ -688,6 +692,7 @@ async function runInstallDestinationRepo(
       packageManager,
       getPackageManagerCommand(packageManager)
     );
+    await formatInitWrites(workspaceRoot);
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;
@@ -708,6 +713,7 @@ async function runPluginsInstall(
   output.log({ title: 'Installing Plugins' });
   try {
     installPluginPackages(workspaceRoot, pmc, plugins);
+    await formatInitWrites(workspaceRoot);
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;
@@ -794,6 +800,7 @@ async function handleMissingWorkspacesEntry(
     }
 
     addPackagePathToWorkspaces(pkgPath, pm, workspaces, workspaceRoot);
+    await formatInitWrites(workspaceRoot);
     await destinationGitClient.amendCommit();
     output.success({
       title: `Project added in workspaces`,

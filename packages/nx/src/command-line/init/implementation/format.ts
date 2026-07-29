@@ -25,10 +25,9 @@ const writtenFiles = new Set<string>();
  * scripts are deliberately left out rather than filtered later.
  *
  * Two of the recording helpers (`configure-plugins`, `check-compatible-with-
- * plugins`) are shared with `nx import`, which records but never drains. That
- * is inert - the process exits - but it means those writes are not formatted
- * there. Draining in `nx import` would be a behavior change for a different
- * command, so it is left alone deliberately.
+ * plugins`) are shared with `nx import`, which drains before each of its commit
+ * amends - draining after one would leave the formatting uncommitted. The drain
+ * is a no-op on an empty set, so calling it before every amend is safe.
  */
 export function recordInitWrite(filePath: string): void {
   writtenFiles.add(filePath);
@@ -104,7 +103,9 @@ export async function formatInitWrites(repoRoot: string): Promise<void> {
       }
     } else {
       // oxfmt needs no equivalent filter - it silently skips file types it
-      // does not handle, while prettier fails the batch on one.
+      // does not handle and exits 0. prettier still formats the rest of the
+      // batch, but exits 2 on one unsupported file, which would end a
+      // successful init with a spurious warning and prettier's own stderr.
       const supported = await filterToPrettierSupportedFiles(files);
       for (const chunk of chunkify(
         supported,
