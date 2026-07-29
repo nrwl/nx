@@ -38,10 +38,11 @@ export function isForeignWorkspaceMessage(
 }
 
 /**
- * Throws on a foreign message. The daemon responds with the mismatch; the plugin
- * worker drops it. `receiverDescription` names whichever raised it.
+ * Throws on a message this receiver must not act on. The daemon catches it and
+ * responds with the mismatch; the plugin worker catches it and drops the
+ * message. `receiverDescription` names whichever raised it.
  */
-export function assertNotForeignWorkspaceMessage(
+export function assertValidDaemonMessage(
   msg: WorkspaceScopedMessage,
   receiverWorkspaceRoot: string,
   receiverDescription = `The Nx Daemon for '${receiverWorkspaceRoot}'`
