@@ -8,6 +8,7 @@ import { generateFiles } from '../../generators/utils/generate-files';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import {
   canInstallNxConsoleForEditor,
+  getMainWorktreeRoot,
   installNxConsoleForEditor,
   isEditorInstalled,
   SupportedEditor,
@@ -176,8 +177,8 @@ export async function setupAiAgentsGeneratorImpl(
       },
     }));
 
-    // Sandbox allowances are machine-specific, so keep them in Claude's
-    // ignored, machine-local settings file.
+    // Sandbox allowances can include the absolute path to the main worktree,
+    // so keep them in Claude's ignored, machine-local settings file.
     const claudeLocalSettingsPath = join(
       options.directory,
       '.claude',
@@ -186,17 +187,23 @@ export async function setupAiAgentsGeneratorImpl(
     if (!tree.exists(claudeLocalSettingsPath)) {
       writeJson(tree, claudeLocalSettingsPath, {});
     }
+    const mainWorktreeNxPath = getMainWorktreeNxPath();
     updateJson(tree, claudeLocalSettingsPath, (json) => ({
       ...json,
       // Allow Nx analytics requests and Nx unix socket usage (daemon, plugin
-      // workers, forked processes) through Claude Code's sandbox.
+      // workers, forked processes) through Claude Code's sandbox. Worktrees
+      // share cache and workspace data with the main checkout, so its .nx
+      // directory also needs to be reachable from the sandbox.
       sandbox: {
         ...json.sandbox,
         filesystem: {
           ...json.sandbox?.filesystem,
           allowRead: appendAllMissing(
             json.sandbox?.filesystem?.allowRead,
-            NX_ALLOWLIST_ROOTS
+            [
+              ...NX_ALLOWLIST_ROOTS,
+              ...(mainWorktreeNxPath ? [mainWorktreeNxPath] : []),
+            ]
           ),
           // Covers the whole tmp root, not just the socket dir: the native
           // binary cache lives under it too, and without the cache a running
@@ -206,7 +213,10 @@ export async function setupAiAgentsGeneratorImpl(
           // Nx verifies on every use (see ensureOwnedPrivateDir).
           allowWrite: appendAllMissing(
             json.sandbox?.filesystem?.allowWrite,
-            NX_ALLOWLIST_ROOTS
+            [
+              ...NX_ALLOWLIST_ROOTS,
+              ...(mainWorktreeNxPath ? [mainWorktreeNxPath] : []),
+            ]
           ),
         },
         network: {
@@ -467,9 +477,26 @@ export async function setupAiAgentsGeneratorImpl(
 
 function appendIfMissing(
   existing: string[] | undefined,
-  value: string
+  ...values: string[]
 ): string[] {
-  return existing?.includes(value) ? existing : [...(existing ?? []), value];
+  const result = [...(existing ?? [])];
+  for (const value of values) {
+    if (!result.includes(value)) {
+      result.push(value);
+    }
+  }
+  return result;
+}
+
+function getMainWorktreeNxPath(): string | undefined {
+  try {
+    const mainWorktreeRoot = getMainWorktreeRoot(workspaceRoot);
+    return mainWorktreeRoot ? join(mainWorktreeRoot, '.nx') : undefined;
+  } catch {
+    // Worktree detection is best-effort. The current workspace remains
+    // writable through Claude's normal workspace sandbox grant.
+    return undefined;
+  }
 }
 
 function appendAllMissing(
