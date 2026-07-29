@@ -2,6 +2,7 @@ import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -24,6 +25,8 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
+  oxfmtVersion,
+  prettierVersion,
   swcHelpersVersion,
   tsLibVersion,
   typescriptVersion,
@@ -170,8 +173,18 @@ export async function initGeneratorInternal(
   tasks.push(installTask);
 
   if (!schema.skipFormat) {
-    // even if skipPackageJson === true, we can safely run formatFiles, prettier might
-    // have been installed earlier and if not, the formatFiles function still handles it
+    // `installTask` has not run yet, so a formatter this generator just added
+    // to package.json is not on disk and `formatFiles` would find nothing to
+    // load. ensurePackage installs it out of band and puts it on NODE_PATH so
+    // the load below resolves.
+    //
+    // Safe when skipPackageJson is set too: the formatter may already be
+    // installed, and formatFiles is a no-op when no formatter is configured.
+    if (schema.formatter === 'prettier') {
+      ensurePackage('prettier', prettierVersion);
+    } else if (schema.formatter === 'oxfmt') {
+      ensurePackage('oxfmt', oxfmtVersion);
+    }
     await formatFiles(tree);
   }
 
