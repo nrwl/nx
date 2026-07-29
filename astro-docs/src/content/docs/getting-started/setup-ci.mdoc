@@ -105,15 +105,23 @@ See [Affected](/docs/features/ci-features/affected) for more information.
 
 ## Distributing tasks across machines
 
-With [Nx Agents](/docs/features/ci-features/distribute-task-execution), you can distribute tasks across multiple machines with a single line of code in your CI workflow. No complicated configuration required.
+With [Nx Agents](/docs/features/ci-features/distribute-task-execution), you can distribute tasks across multiple machines.
+Add a `.nx/ci-config.yaml` file that says how many agents to use, then start the run with `start-nx-agents`.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-medium-js
+```
 
 ```yaml {% meta="{2}" %}
 # .github/workflows/ci.yml
-- run: npx nx start-ci-run --distribute-on="3 linux-medium-js"
+- run: npx nx-cloud start-nx-agents
 - run: npx nx affected -t lint test build
 ```
 
-It works seamlessly with [remote caching](#remote-caching) and enables [task splitting](/docs/features/ci-features/split-e2e-tasks) for Playwright, Vitest, etc. across machines.
+Distribution works with [remote caching](#remote-caching) and enables [task splitting](/docs/features/ci-features/split-e2e-tasks) for Playwright, Vitest, and other tools across machines.
+For every configuration option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
 ## Self-healing CI
 

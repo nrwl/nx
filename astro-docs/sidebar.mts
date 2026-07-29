@@ -583,6 +583,10 @@ const referenceGroups: SidebarItems = [
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
       { label: 'Nx Console settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
+      {
+        label: 'CI configuration file',
+        link: 'reference/nx-cloud/ci-config',
+      },
       { label: 'Telemetry', link: 'reference/telemetry' },
       {
         label: 'TypeScript',
