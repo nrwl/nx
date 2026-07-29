@@ -109,6 +109,16 @@ describe('js init generator', () => {
     expect(prettierignore).toContain('# custom ignore file');
   });
 
+  it('should not write .prettierrc next to a prettier.config.ts', async () => {
+    // The setup list is shared with detection now; it previously omitted the
+    // .ts/.mts/.cts forms, so a workspace using one got a second config.
+    tree.write('prettier.config.ts', 'export default { singleQuote: true };');
+
+    await init(tree, { formatter: 'prettier' });
+
+    expect(tree.exists('.prettierrc')).toBe(false);
+  });
+
   it('should not overwrite prettier configuration specified in other formats', async () => {
     tree.delete('.prettierrc');
     tree.delete('.prettierignore');
