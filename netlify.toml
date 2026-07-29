@@ -11,6 +11,7 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    X-Robots-Tag = "noindex"
     X-Frame-Options = "DENY"
     Content-Security-Policy = "frame-ancestors 'none'"
     Referrer-Policy = "strict-origin-when-cross-origin"
