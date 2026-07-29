@@ -719,7 +719,7 @@ jobs:
           else
             TEXT="📦 Version ${VERSION} is being published to NPM - manual review is required ${MENTIONS} <${RUN_URL}|View Workflow Run>"
           fi
-          PAYLOAD=$(jq -n --arg text "$TEXT" '{channel: "C024JCL7TST", text: $text}')
+          PAYLOAD=$(jq -nc --arg text "$TEXT" '{channel: "C024JCL7TST", text: $text}')
           echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
 
       # Uses the bot-token based slack-github-action (rather than the incoming-webhook
@@ -758,7 +758,7 @@ jobs:
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           TEXT="🎉 Version ${VERSION} was published to NPM successfully. <${RUN_URL}|View Workflow Run>"
-          PAYLOAD=$(jq -n --arg text "$TEXT" --arg ts "$THREAD_TS" '{channel: "C024JCL7TST", thread_ts: $ts, text: $text}')
+          PAYLOAD=$(jq -nc --arg text "$TEXT" --arg ts "$THREAD_TS" '{channel: "C024JCL7TST", thread_ts: $ts, text: $text}')
           echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
 
       - name: Send Slack notification
