@@ -58,8 +58,7 @@ export async function reactNativeApplicationGeneratorInternal(
     ...schema,
     skipFormat: true,
     addTsPlugin,
-    // The published @nx/js types predate 'oxfmt'; it is accepted at runtime.
-    formatter: schema.formatter as 'none' | 'prettier',
+    formatter: schema.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);

@@ -79,8 +79,7 @@ export async function remixApplicationGeneratorInternal(
     await jsInitGenerator(tree, {
       skipFormat: true,
       addTsPlugin,
-      // The published @nx/js types predate 'oxfmt'; it is accepted at runtime.
-      formatter: _options.formatter as 'none' | 'prettier',
+      formatter: _options.formatter,
       platform: 'web',
     }),
   ];
