@@ -13,6 +13,7 @@ import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { isMonorepo, printFinalMessage } from './implementation/utils';
+import { formatInitWrites } from './implementation/format';
 
 export interface InitArgs {
   integrated: boolean;
@@ -38,23 +39,27 @@ export async function initHandler(options: InitArgs) {
     if (existsSync('angular.json')) {
       await addNxToAngularCliRepo(options);
 
+      await formatInitWrites(process.cwd());
       printFinalMessage({
         learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
       });
       return;
     } else if (isNestCLI(packageJson)) {
       await addNxToNest(options, packageJson);
+      await formatInitWrites(process.cwd());
       printFinalMessage({
         learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
       });
       return;
     } else if (isMonorepo(packageJson)) {
       await addNxToMonorepo({ ...options, legacy: true });
+      await formatInitWrites(process.cwd());
       printFinalMessage({
         learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
       });
     } else {
       await addNxToNpmRepo({ ...options, legacy: true });
+      await formatInitWrites(process.cwd());
       printFinalMessage({
         learnMoreLink:
           'https://nx.dev/recipes/adopting-nx/adding-to-existing-project',

@@ -23,6 +23,7 @@ import { configurePlugins, installPluginPackages } from './configure-plugins';
 import { determineAiAgents } from './ai-agent-prompts';
 import { setupAiAgentsGenerator } from '../../ai/set-up-ai-agents/set-up-ai-agents';
 import { FsTree, flushChanges } from '../../generators/tree';
+import { formatInitWrites, recordInitWrite } from './implementation/format';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
@@ -213,6 +214,7 @@ async function runInit(
       integrated: !!options.integrated,
     });
 
+    await formatInitWrites(process.cwd());
     printFinalMessage({
       learnMoreLink: 'https://nx.dev/technologies/angular/migration/angular',
     });
@@ -250,6 +252,7 @@ async function runInit(
         version: '0.0.0',
         private: true,
       });
+      recordInitWrite('package.json');
     } else {
       options.useDotNxInstallation = true;
     }
@@ -285,6 +288,7 @@ async function runInit(
     await addNxToTurborepo({
       interactive: options.interactive,
     });
+    await formatInitWrites(process.cwd());
     printFinalMessage({
       learnMoreLink: 'https://nx.dev/recipes/adopting-nx/from-turborepo',
     });
@@ -495,6 +499,8 @@ async function runInit(
       })
     );
   }
+
+  await formatInitWrites(repoRoot);
 
   // Skip human-readable output for AI agents
   if (!aiMode) {

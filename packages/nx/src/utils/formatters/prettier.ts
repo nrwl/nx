@@ -87,7 +87,12 @@ export async function filterToPrettierSupportedFiles(
   return files.filter((f) => supportedExtensions.has(extname(f)));
 }
 
-export function writeWithPrettier(patterns: string[]): void {
+export function writeWithPrettier(
+  patterns: string[],
+  // Defaults to the caller's cwd. `nx init` sets it so it can pass paths
+  // relative to the repo root rather than absolute ones the user has to read.
+  cwd?: string
+): void {
   const [swcrcPatterns, regularPatterns] = patterns.reduce(
     (result, pattern) => {
       result[pattern.includes('.swcrc') ? 0 : 1].push(pattern);
@@ -103,6 +108,7 @@ export function writeWithPrettier(patterns: string[]): void {
       .map(quoteForShell)
       .join(' ')}`,
     {
+      cwd,
       stdio: [0, 1, 2],
       windowsHide: true,
     }
@@ -114,6 +120,7 @@ export function writeWithPrettier(patterns: string[]): void {
         .map(quoteForShell)
         .join(' ')} --parser json`,
       {
+        cwd,
         stdio: [0, 1, 2],
         windowsHide: true,
       }

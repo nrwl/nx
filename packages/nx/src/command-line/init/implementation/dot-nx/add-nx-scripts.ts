@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { recordInitWrite } from '../format';
 import { readFileSync, constants as FsConstants } from 'fs';
 import * as path from 'path';
 import { valid } from 'semver';
@@ -104,6 +105,9 @@ export function writeMinimalNxJson(host: Tree, version: string) {
         version: normalizeVersionForNxJson('nx', version),
       },
     });
+    // The wrapper scripts and `.nx/nxw.js` are deliberately not recorded: they
+    // are vendored artifacts, and two of them have no formatter at all.
+    recordInitWrite('nx.json');
   }
 }
 
