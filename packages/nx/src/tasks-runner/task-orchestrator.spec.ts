@@ -1,4 +1,10 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { stripVTControlCharacters } from 'util';
@@ -392,6 +398,198 @@ describe('TaskOrchestrator', () => {
 
       expect(await orchestrator.resolveCachedTasksBulk()).toBe(false);
       expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('terminal output persistence', () => {
+    let terminalOutputsDir: string;
+
+    beforeEach(() => {
+      terminalOutputsDir = mkdtempSync(join(tmpdir(), 'nx-terminal-outputs-'));
+    });
+
+    afterEach(() => {
+      rmSync(terminalOutputsDir, { recursive: true, force: true });
+    });
+
+    function makeTask(id: string, overrides: Partial<Task> = {}): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: true,
+        parallelism: true,
+        hash: `${id}-hash`,
+        ...overrides,
+      } as Task;
+    }
+
+    function createOrchestrator() {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      // Object.create bypasses field initializers.
+      orchestrator.tasksWithPersistedOutput = new Set<string>();
+      orchestrator.stopRequested = false;
+      orchestrator.cache = {
+        temporaryOutputPath: (task: Task) =>
+          join(terminalOutputsDir, task.hash),
+        put: jest.fn(async (task: Task, terminalOutput: string) => {
+          // The real cache writes the same file this backstop targets.
+          writeFileSync(join(terminalOutputsDir, task.hash), terminalOutput);
+        }),
+      };
+      orchestrator.recordOutputsHashBatch = jest.fn();
+      orchestrator.complete = jest.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = jest.fn();
+      return orchestrator;
+    }
+
+    function readOutput(task: Task): string | null {
+      const path = join(terminalOutputsDir, task.hash);
+      return existsSync(path) ? readFileSync(path, 'utf-8') : null;
+    }
+
+    it('writes the terminal output of an uncacheable task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'batch body' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('batch body');
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+    });
+
+    it('writes the terminal output of a failed cacheable task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:test');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'failure', terminalOutput: 'assertion failed' }],
+        true,
+        0
+      );
+
+      // Failures aren't cached (without NX_CACHE_FAILURES), so the cache would
+      // never have written this one.
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+      expect(readOutput(task)).toBe('assertion failed');
+    });
+
+    it('writes the terminal output of a stopped task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'stopped', terminalOutput: 'partial output' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('partial output');
+    });
+
+    it('leaves the write to the cache when the task is cached', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+      const writes: string[] = [];
+      orchestrator.cache.put = jest.fn(
+        async (t: Task, terminalOutput: string) => {
+          writes.push(terminalOutput);
+          writeFileSync(join(terminalOutputsDir, t.hash), terminalOutput);
+        }
+      );
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'cached body' }],
+        true,
+        0
+      );
+
+      // Written once, by the cache — not twice.
+      expect(writes).toEqual(['cached body']);
+      expect(readOutput(task)).toBe('cached body');
+      expect(orchestrator.tasksWithPersistedOutput.has(task.id)).toBe(false);
+    });
+
+    it('does not rewrite output a runner already persisted', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+      // The runner wrote the real PTY bytes when the process exited.
+      writeFileSync(join(terminalOutputsDir, task.hash), 'from the runner');
+      orchestrator.tasksWithPersistedOutput.add(task.id);
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'from the result' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('from the runner');
+    });
+
+    it('does not rewrite output replayed from the cache', async () => {
+      const orchestrator = createOrchestrator();
+      const local = makeTask('app:build');
+      const remote = makeTask('app:test');
+
+      await orchestrator.postRunSteps(
+        [
+          { task: local, status: 'local-cache', terminalOutput: 'replayed' },
+          { task: remote, status: 'remote-cache', terminalOutput: 'replayed' },
+        ],
+        false,
+        0
+      );
+
+      // The replayed output was read from these very files.
+      expect(readOutput(local)).toBeNull();
+      expect(readOutput(remote)).toBeNull();
+    });
+
+    it('writes nothing for a skipped task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'skipped', terminalOutput: '' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBeNull();
+    });
+
+    it('writes nothing when the result carries no terminal output', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps([{ task, status: 'success' }], true, 0);
+
+      expect(readOutput(task)).toBeNull();
+    });
+
+    it('writes every task of a batch that could not be cached', async () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build', { cache: false });
+      const b = makeTask('b:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [
+          { task: a, status: 'success', terminalOutput: 'a body' },
+          { task: b, status: 'failure', terminalOutput: 'b body' },
+        ],
+        true,
+        0
+      );
+
+      expect(readOutput(a)).toBe('a body');
+      expect(readOutput(b)).toBe('b body');
     });
   });
 
