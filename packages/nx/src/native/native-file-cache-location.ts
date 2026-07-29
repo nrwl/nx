@@ -62,7 +62,15 @@ export function ensureSecureNativeFileCacheLocation(
     try {
       mkdirSync(dir, { recursive: true });
       return dir;
-    } catch {
+    } catch (e: any) {
+      // Never discard a configured directory silently — the socket directory
+      // follows the same rule. A typo, EACCES or EROFS is otherwise
+      // indistinguishable from a working cache.
+      console.warn(
+        `Nx could not use the configured native file cache directory ${dir} (${
+          e?.code ?? e?.message ?? e
+        }). Loading the native binding in place instead.`
+      );
       return null;
     }
   }
