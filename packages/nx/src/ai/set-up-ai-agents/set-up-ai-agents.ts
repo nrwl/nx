@@ -174,12 +174,22 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.enabledPlugins,
         'nx@nx-claude-plugins': true,
       },
+    }));
+
+    // Sandbox allowances are machine-specific, so keep them in Claude's
+    // ignored, machine-local settings file.
+    const claudeLocalSettingsPath = join(
+      options.directory,
+      '.claude',
+      'settings.local.json'
+    );
+    if (!tree.exists(claudeLocalSettingsPath)) {
+      writeJson(tree, claudeLocalSettingsPath, {});
+    }
+    updateJson(tree, claudeLocalSettingsPath, (json) => ({
+      ...json,
       // Allow Nx analytics requests and Nx unix socket usage (daemon, plugin
-      // workers, forked processes) through Claude Code's sandbox. Nx also
-      // copies its native binary into a cache under the same fixed tmp root
-      // before loading it, so the read/write grants cover that too. The root
-      // is a fixed /tmp path on macOS and Linux, so these entries are
-      // machine-independent and safe to commit.
+      // workers, forked processes) through Claude Code's sandbox.
       sandbox: {
         ...json.sandbox,
         filesystem: {
