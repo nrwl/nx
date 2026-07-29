@@ -168,20 +168,6 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.get('root.ts')).toEqual('const y = "hi";\n');
     });
 
-    it('accepts a bare string for files, as a carried-over prettier config has', async () => {
-      writeConfig({
-        singleQuote: false,
-        overrides: [{ files: '*.ts', options: { singleQuote: true } }],
-      });
-
-      const { formatted } = await formatFilesWithOxfmt(
-        [{ path: 'libs/lib1/a.ts', content: 'const x =  "hi"' }],
-        workspaceRoot
-      );
-
-      expect(formatted.get('libs/lib1/a.ts')).toEqual("const x = 'hi';\n");
-    });
-
     it('matches a glob with no separator at any depth, as the CLI does', async () => {
       // oxfmt lifts a separator-less pattern to `**/<pattern>`. This is the
       // shape a prettier config carries over (`"files": "*.spec.ts"`), so
