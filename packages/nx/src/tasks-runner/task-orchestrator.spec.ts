@@ -439,6 +439,7 @@ describe('TaskOrchestrator', () => {
           // The real cache writes the same file this backstop targets.
           writeFileSync(join(terminalOutputsDir, task.hash), terminalOutput);
         }),
+        recordTerminalOutputs: jest.fn(),
       };
       orchestrator.recordOutputsHashBatch = jest.fn();
       orchestrator.complete = jest.fn();
@@ -572,6 +573,86 @@ describe('TaskOrchestrator', () => {
       await orchestrator.postRunSteps([{ task, status: 'success' }], true, 0);
 
       expect(readOutput(task)).toBeNull();
+    });
+
+    it('registers an uncacheable output with the cache so the GC can collect it', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'batch body' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'batch body'.length },
+      ]);
+    });
+
+    it('registers output a runner wrote, which the GC cannot see either', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+      writeFileSync(join(terminalOutputsDir, task.hash), 'from the runner');
+      orchestrator.tasksWithPersistedOutput.add(task.id);
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'from the runner' }],
+        true,
+        0
+      );
+
+      // Skipping the write must not skip the bookkeeping.
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'from the runner'.length },
+      ]);
+    });
+
+    it('does not register output the cache recorded itself', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'cached body' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.cache.put).toHaveBeenCalled();
+      expect(orchestrator.cache.recordTerminalOutputs).not.toHaveBeenCalled();
+    });
+
+    it('does not register output replayed from the cache', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'local-cache', terminalOutput: 'replayed' }],
+        false,
+        0
+      );
+
+      // That hash is already recorded — it is what the replay read.
+      expect(orchestrator.cache.recordTerminalOutputs).not.toHaveBeenCalled();
+    });
+
+    it('registers a cacheable task run with --skip-nx-cache', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      // shouldCache false is how --skip-nx-cache reaches postRunSteps: the
+      // output lands on disk but no artifacts do.
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'uncached body' }],
+        false,
+        0
+      );
+
+      expect(readOutput(task)).toBe('uncached body');
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'uncached body'.length },
+      ]);
     });
 
     it('writes every task of a batch that could not be cached', async () => {

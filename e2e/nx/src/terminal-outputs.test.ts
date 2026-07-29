@@ -139,6 +139,27 @@ describe('terminal outputs on disk', () => {
     expect(terminalOutputContains(marker)).toBe(true);
   }, 120000);
 
+  it('should not replay a task whose output was written without artifacts', () => {
+    const lib = uniq('skipcache');
+    const marker = `skipcache-marker-${lib}`;
+    createRunCommandsProject(lib, marker, true);
+
+    // --skip-nx-cache leaves a terminal output file, and a record of it so the
+    // GC can collect it, but writes no cache entry.
+    const skipped = runCLI(`echo ${lib} --skip-nx-cache`);
+    expect(skipped).not.toContain('read the output from the cache');
+    expect(terminalOutputContains(marker)).toBe(true);
+
+    // That record must never be served as a hit — there are no outputs behind
+    // it, so replaying it would restore nothing while reporting success.
+    const firstRealRun = runCLI(`echo ${lib}`);
+    expect(firstRealRun).not.toContain('read the output from the cache');
+
+    // ...and the real entry it just wrote supersedes the record.
+    const replay = runCLI(`echo ${lib}`);
+    expect(replay).toContain('read the output from the cache');
+  }, 120000);
+
   it('should keep the cached path intact so a replay still reads its output', () => {
     const lib = uniq('cached');
     const marker = `cached-marker-${lib}`;
