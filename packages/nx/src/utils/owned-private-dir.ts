@@ -41,29 +41,80 @@ function chmodRealDirectory(path: string, mode: number): boolean {
 }
 
 /**
- * Whether a path is safe to create things underneath: absent, or a real
- * directory. Checks neither ownership nor mode, so it is only sufficient for the
- * shared roots, which are world-writable by design.
+ * Sticky. Restricts rename and unlink in a writable directory to the owner of
+ * each entry — plus the directory's own owner, which is why the ownership check
+ * below is not redundant with this one.
  */
-export function isRealDirectoryOrAbsent(dir: string): boolean {
+const S_ISVTX = 0o1000;
+
+/**
+ * Whether a shared root is safe to keep a private directory under. Two things
+ * have to hold, because either alone still leaves a peer able to rename our
+ * verified directory aside so the next open by path lands in theirs:
+ *
+ * - Owned by us or by root. Sticky permits rename and unlink by the *directory's*
+ *   owner as well as by each entry's owner, so a root belonging to another
+ *   unprivileged user is unsafe at any mode. This is the invariant `/tmp` itself
+ *   rests on: root owns it.
+ * - Sticky, if anyone beyond that owner can write to it — which is what stops
+ *   everybody else renaming entries they do not own.
+ *
+ * Whoever runs Nx first on a shared machine owns these, so several users only
+ * share one root when it was created by root: an image, an admin, or a
+ * `RUN mkdir -m 1777 /tmp/.nx`. Otherwise the later users fall back, which is
+ * safe but unshared.
+ */
+export function isSafeSharedRoot(dir: string): boolean {
   try {
-    return lstatSync(dir).isDirectory();
-  } catch (e: any) {
-    return e?.code === 'ENOENT';
+    const stats = lstatSync(dir);
+    if (!stats.isDirectory()) {
+      return false;
+    }
+    if (
+      typeof process.getuid === 'function' &&
+      stats.uid !== process.getuid() &&
+      stats.uid !== 0
+    ) {
+      return false;
+    }
+    return !(stats.mode & 0o022) || !!(stats.mode & S_ISVTX);
+  } catch {
+    return false;
   }
 }
 
 /**
- * Relax a shared root to sticky + world-writable (like /tmp) so every user on
- * the machine can create their own private directory beneath it. Best-effort:
- * chmod only succeeds for whoever created the root, and they have already set
- * the mode.
+ * Create a shared root as sticky + world-writable (like /tmp) so every user on
+ * the machine can create their own private directory beneath it, and report
+ * whether the result is safe to use.
+ *
+ * The chmod is best-effort — only the root's owner can, and on a shared machine
+ * that is often someone else — so the verdict comes from `isSafeSharedRoot`
+ * afterwards rather than from whether the chmod worked.
+ *
+ * Pass roots outermost first. Each level is created non-recursively so a symlink
+ * at any of them is caught here rather than resolved through.
  */
-export function relaxSharedRootToSticky(dir: string): void {
+export function ensureSafeSharedRoot(dir: string): boolean {
   if (process.platform === 'win32') {
-    return;
+    // A per-user OS temp dir, with no mode bits to reason about.
+    try {
+      mkdirSync(dir, { recursive: true });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  try {
+    mkdirSync(dir, { mode: 0o1777 });
+  } catch (e: any) {
+    if (e?.code !== 'EEXIST') {
+      return false;
+    }
   }
   chmodRealDirectory(dir, 0o1777);
+  return isSafeSharedRoot(dir);
 }
 
 /**
