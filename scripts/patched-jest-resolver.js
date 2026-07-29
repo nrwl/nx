@@ -137,8 +137,8 @@ module.exports = function (modulePath, options) {
           }
         }
       }
-      // Rethrow the original: the retry's own error names the stripped
-      // specifier, which appears nowhere in the source.
+      // The original names the `.js` specifier that actually appears in the
+      // source, which is what a developer greps for.
       throw err;
     }
   }
