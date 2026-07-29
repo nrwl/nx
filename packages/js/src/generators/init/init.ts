@@ -144,16 +144,19 @@ export async function initGeneratorInternal(
     devDependencies['typescript'] = typescriptVersion;
   }
 
-  if (schema.formatter === 'prettier') {
-    const prettierTask = generatePrettierSetup(tree, {
-      skipPackageJson: schema.skipPackageJson,
-    });
-    tasks.push(prettierTask);
-  } else if (schema.formatter === 'oxfmt') {
-    const oxfmtTask = generateOxfmtSetup(tree, {
-      skipPackageJson: schema.skipPackageJson,
-    });
-    tasks.push(oxfmtTask);
+  // One table drives both halves of formatter setup - writing the config and
+  // making the package resolvable further down. They were separate `if` chains
+  // over the same union, forty lines apart, so a third formatter meant finding
+  // both.
+  const formatterSetup = {
+    prettier: { setUp: generatePrettierSetup, version: prettierVersion },
+    oxfmt: { setUp: generateOxfmtSetup, version: oxfmtVersion },
+  }[schema.formatter as 'prettier' | 'oxfmt'];
+
+  if (formatterSetup) {
+    tasks.push(
+      formatterSetup.setUp(tree, { skipPackageJson: schema.skipPackageJson })
+    );
   }
 
   const rootTsConfigFileName = getRootTsConfigFileName(tree);
@@ -178,17 +181,16 @@ export async function initGeneratorInternal(
   tasks.push(installTask);
 
   if (!schema.skipFormat) {
-    // `installTask` has not run yet, so a formatter this generator just added
-    // to package.json is not on disk and `formatFiles` would find nothing to
-    // load. ensurePackage installs it out of band and puts it on NODE_PATH so
-    // the load below resolves.
+    // `installTask` is queued, not run, so a formatter this generator just
+    // added to package.json is not on disk yet and `formatFiles` would find
+    // nothing to load. ensurePackage installs it out of band and puts it on
+    // NODE_PATH so the load below resolves.
     //
-    // Safe when skipPackageJson is set too: the formatter may already be
-    // installed, and formatFiles is a no-op when no formatter is configured.
-    if (schema.formatter === 'prettier') {
-      ensurePackage('prettier', prettierVersion);
-    } else if (schema.formatter === 'oxfmt') {
-      ensurePackage('oxfmt', oxfmtVersion);
+    // Not when `skipPackageJson` is set: that asks this generator not to manage
+    // dependencies at all, and an out-of-band install is still an install. The
+    // formatter may already be present, and if it is not, formatFiles warns.
+    if (formatterSetup && !schema.skipPackageJson) {
+      ensurePackage(schema.formatter, formatterSetup.version);
     }
     await formatFiles(tree);
   }
