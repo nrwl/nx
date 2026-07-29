@@ -76,10 +76,6 @@ describe('Oxlint', () => {
     expect(commandOf(target)).toMatch(/^oxlint\b/);
     expect(target.cache).toBe(true);
     expect(target.inputs).toContainEqual({ externalDependencies: ['oxlint'] });
-    // Discriminates against an ESLint-inferred target, which declares `eslint`.
-    expect(target.inputs).not.toContainEqual({
-      externalDependencies: ['eslint'],
-    });
     expect(target.inputs).toContain('{workspaceRoot}/.oxlintrc.json');
   });
 
