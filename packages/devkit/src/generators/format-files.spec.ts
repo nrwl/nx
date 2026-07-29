@@ -1,5 +1,6 @@
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
-import type { Tree } from 'nx/src/generators/tree';
+import { FsTree, type Tree } from 'nx/src/generators/tree';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { formatFiles } from './format-files';
 
 describe('formatFiles', () => {
@@ -17,7 +18,7 @@ describe('formatFiles', () => {
   });
 
   describe('NX_SKIP_FORMAT', () => {
-    it('should skip Prettier formatting when NX_SKIP_FORMAT is true', async () => {
+    it('should skip formatting when NX_SKIP_FORMAT is true', async () => {
       process.env.NX_SKIP_FORMAT = 'true';
 
       // Create a file with intentionally bad formatting
@@ -215,6 +216,61 @@ describe('formatFiles', () => {
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       const pathKeys = Object.keys(tsconfig.compilerOptions.paths);
       expect(pathKeys).toEqual(['@a/lib', '@z/lib']);
+    });
+  });
+
+  describe('oxfmt', () => {
+    it('should format with oxfmt when the workspace is configured for it', async () => {
+      tree.write('.oxfmtrc.json', JSON.stringify({ singleQuote: true }));
+      tree.write('test.ts', 'const   x   =   "hi"');
+
+      await formatFiles(tree);
+
+      expect(tree.read('test.ts', 'utf-8')).toBe("const x = 'hi';\n");
+    });
+
+    it('should use a config the generator just created rather than the defaults', async () => {
+      // The config exists only in the tree, so oxfmt cannot discover it on
+      // disk - it has to be handed over, or the files a generator ships come
+      // out formatted differently from the config it ships with them.
+      tree.write('.oxfmtrc.json', JSON.stringify({ singleQuote: false }));
+      tree.write('test.ts', "const   x   =   'hi'");
+
+      await formatFiles(tree);
+
+      expect(tree.read('test.ts', 'utf-8')).toBe('const x = "hi";\n');
+    });
+
+    it('should still format when the generator deleted an oxfmt config', async () => {
+      // A DELETE change only exists for a file that is on disk - writing and
+      // deleting within one tree cancels out - so this needs a real FsTree.
+      const fs = new TempFs('format-files-oxfmt');
+      try {
+        fs.createFileSync(
+          '.oxfmtrc.json',
+          JSON.stringify({ singleQuote: true })
+        );
+        fs.createFileSync('.oxfmtrc.jsonc', '{}');
+        const fsTree = new FsTree(fs.tempDir, false);
+
+        // Deleting a JSON config is what exposes the filter: unfiltered it is
+        // picked up as the "generated" seed, read back as null, and parsed -
+        // which reports an unreadable config and skips the batch. The workspace
+        // still has `.oxfmtrc.json`, so a formatter is configured either way.
+        fsTree.delete('.oxfmtrc.jsonc');
+        fsTree.write('test.ts', 'const   x   =   "hi"');
+        expect(fsTree.listChanges().some((c) => c.type === 'DELETE')).toBe(
+          true
+        );
+
+        await formatFiles(fsTree);
+
+        // A deleted config reads back as null; treating it as the generated
+        // seed would report an unreadable config and skip the whole batch.
+        expect(fsTree.read('test.ts', 'utf-8')).toBe("const x = 'hi';\n");
+      } finally {
+        fs.cleanup();
+      }
     });
   });
 });

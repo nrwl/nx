@@ -57,7 +57,8 @@ export async function formatFiles(
     return;
   }
 
-  let formatterType: 'prettier' | 'oxfmt' | null = null;
+  let formatterType: import('nx/src/devkit-internals').FormatterType | null =
+    null;
   let detectFormatterInTree: ((tree: Tree) => typeof formatterType) | undefined;
   try {
     detectFormatterInTree =
@@ -107,6 +108,12 @@ async function formatWithPrettier(
 ) {
   const prettier = await importPrettier();
   if (!prettier) {
+    // Detection said this workspace formats with prettier, so silence here
+    // would leave a generator's files unformatted for no stated reason. The
+    // oxfmt path reports the same situation.
+    console.warn(
+      'Could not format files with prettier: prettier is configured for this workspace but is not installed.'
+    );
     return;
   }
 
@@ -151,14 +158,13 @@ async function formatWithOxfmt(
   tree: Tree,
   files: Set<{ path: string; content: Buffer }>
 ) {
-  // Declared locally rather than via `typeof import('nx/src/devkit-internals')`:
-  // devkit type-checks against the published nx, which predates these exports.
-  let formatFilesWithOxfmt: (
-    files: { path: string; content: string }[],
-    workspaceRoot: string,
-    seedConfig?: { name: string; content: string }
-  ) => Promise<{ formatted: Map<string, string>; errors?: string[] }>;
-  let oxfmtConfigFiles: string[];
+  // Types come from the in-repo nx through devkit's project reference, so they
+  // track the real signature and a drift is a compile error rather than a
+  // silent mismatch. The *runtime* guard below is the one that matters:
+  // devkit supports nx +/- 1 major, and an older nx has neither export.
+  type Internals = typeof import('nx/src/devkit-internals');
+  let formatFilesWithOxfmt: Internals['formatFilesWithOxfmt'];
+  let oxfmtConfigFiles: Internals['oxfmtConfigFiles'];
   try {
     ({
       formatFilesWithOxfmt,
@@ -178,7 +184,7 @@ async function formatWithOxfmt(
     const { formatted, errors } = await formatFilesWithOxfmt(
       staged,
       tree.root,
-      getGeneratedOxfmtConfig(tree, oxfmtConfigFiles)
+      getGeneratedOxfmtConfig(tree, oxfmtConfigFiles, files)
     );
     for (const [filePath, content] of formatted) {
       tree.write(filePath, content);
@@ -202,17 +208,15 @@ async function formatWithOxfmt(
  */
 function getGeneratedOxfmtConfig(
   tree: Tree,
-  configFiles: string[] | undefined
+  configFiles: string[] | undefined,
+  // The caller's already-filtered set, rather than a second `listChanges()`:
+  // that walk stats every recorded change, and deletions are excluded from it
+  // for us. A deleted config is not one the generator "just created" - reading
+  // it back would yield null, which the seed parser then reports as an
+  // unreadable config and skips formatting the batch over.
+  files: Set<{ path: string; content: Buffer }>
 ): { name: string; content: string } | undefined {
-  // A deleted config is not one the generator "just created" - reading it back
-  // would yield null, which the seed parser then reports as an unreadable
-  // config and skips formatting the batch over.
-  const changed = new Set(
-    tree
-      .listChanges()
-      .filter((change) => change.type !== 'DELETE')
-      .map((change) => change.path)
-  );
+  const changed = new Set(Array.from(files, (file) => file.path));
   for (const name of configFiles ?? []) {
     if (changed.has(name)) {
       return { name, content: tree.read(name, 'utf-8') };
