@@ -31,12 +31,12 @@ async function importPrettier(): Promise<typeof Prettier | null> {
  *
  * @remarks
  * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip
- * formatting. This is useful for repositories that use alternative formatters
- * or have custom formatting requirements.
+ * formatting. This is useful for repositories that format with a tool Nx does
+ * not drive (Biome, dprint) or that have custom formatting requirements.
  *
- * Note: `NX_SKIP_FORMAT` only skips formatting. TSConfig path sorting
- * (controlled by `sortRootTsconfigPaths` option or `NX_FORMAT_SORT_TSCONFIG_PATHS`)
- * will still occur.
+ * Note: `NX_SKIP_FORMAT` skips formatting only - it does not skip TSConfig
+ * path sorting, which is controlled by the `sortRootTsconfigPaths` option or
+ * `NX_FORMAT_SORT_TSCONFIG_PATHS`.
  */
 export async function formatFiles(
   tree: Tree,
@@ -157,7 +157,7 @@ async function formatWithOxfmt(
     files: { path: string; content: string }[],
     workspaceRoot: string,
     seedConfig?: { name: string; content: string }
-  ) => Promise<{ formatted: Map<string, string>; error?: string }>;
+  ) => Promise<{ formatted: Map<string, string>; errors?: string[] }>;
   let oxfmtConfigFiles: string[];
   try {
     ({
@@ -175,7 +175,7 @@ async function formatWithOxfmt(
   }));
 
   try {
-    const { formatted, error } = await formatFilesWithOxfmt(
+    const { formatted, errors } = await formatFilesWithOxfmt(
       staged,
       tree.root,
       getGeneratedOxfmtConfig(tree, oxfmtConfigFiles)
@@ -183,11 +183,14 @@ async function formatWithOxfmt(
     for (const [filePath, content] of formatted) {
       tree.write(filePath, content);
     }
-    if (error) {
-      console.warn(`Could not format some files with oxfmt. Error: "${error}"`);
+    if (errors?.length) {
+      // One warning for the batch, but every failing file is named - oxfmt's
+      // `message` alone ("Unexpected token") says nothing about which file.
+      console.warn(
+        [`Could not format some files with oxfmt:`, ...errors].join('\n  ')
+      );
     }
   } catch (e) {
-    // One message for the batch - a per-file warning would be a wall of noise.
     console.warn(`Could not format files with oxfmt. Error: "${e.message}"`);
   }
 }
@@ -199,9 +202,16 @@ async function formatWithOxfmt(
  */
 function getGeneratedOxfmtConfig(
   tree: Tree,
-  configFiles: string[]
+  configFiles: string[] | undefined
 ): { name: string; content: string } | undefined {
-  const changed = new Set(tree.listChanges().map((change) => change.path));
+  // A deleted config is not one the generator "just created" - reading it back
+  // would yield null and take the whole config resolution down with it.
+  const changed = new Set(
+    tree
+      .listChanges()
+      .filter((change) => change.type !== 'DELETE')
+      .map((change) => change.path)
+  );
   for (const name of configFiles ?? []) {
     if (changed.has(name)) {
       return { name, content: tree.read(name, 'utf-8') };
