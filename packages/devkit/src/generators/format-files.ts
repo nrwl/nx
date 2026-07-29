@@ -205,7 +205,8 @@ function getGeneratedOxfmtConfig(
   configFiles: string[] | undefined
 ): { name: string; content: string } | undefined {
   // A deleted config is not one the generator "just created" - reading it back
-  // would yield null and take the whole config resolution down with it.
+  // would yield null, which the seed parser then reports as an unreadable
+  // config and skips formatting the batch over.
   const changed = new Set(
     tree
       .listChanges()

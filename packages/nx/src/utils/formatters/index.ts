@@ -9,7 +9,12 @@ import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
 /**
  * A formatter Nx can actually dispatch to. "No formatter configured" is the
  * absence of one, so detection returns `FormatterType | null` rather than
- * folding null into this union - that keeps every dispatch site exhaustive.
+ * folding null into this union - dispatch sites then handle only formatters
+ * they can actually run, and the caller has to deal with "none" once, up front.
+ *
+ * Note this is a convention, not something the compiler enforces: the repo
+ * builds with `strict: false`, so a `switch` that misses a member is not an
+ * error. Adding a formatter means visiting every dispatch site by hand.
  */
 export type FormatterType = 'prettier' | 'oxfmt';
 
