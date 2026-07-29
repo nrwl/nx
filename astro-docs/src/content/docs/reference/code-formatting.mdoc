@@ -88,12 +88,15 @@ workspace root:
   formatting.
 - A `.gitignore` in a subdirectory applies under `nx format:write` but not during generator
   formatting.
-- `nx format:write` resolves `.editorconfig` by walking up from the directory you run it in, so a
-  file above the workspace root can apply unless one of them sets `root = true`. Generator
-  formatting reads only the workspace root file.
+- `nx format:write` uses the nearest `.editorconfig` found by walking up from the directory you run
+  it in, so one above the workspace root applies when the workspace root has none of its own.
+  Generator formatting reads only the workspace root file.
 
-Subdirectory `.editorconfig` files apply under neither: oxfmt resolves `.editorconfig` once from the
-working directory, not per formatted file.
+Two things about `.editorconfig` may surprise you, and both come from oxfmt rather than from Nx: it
+does not merge the chain, and it does not consult `root = true`. Any `.editorconfig` at the
+workspace root stops the search, even an empty or comment-only one, and `root = true` in a parent
+does not stop that parent from applying. Subdirectory files apply under neither path, because oxfmt
+resolves `.editorconfig` once from the working directory rather than per formatted file.
 
 ## Skip formatting
 
