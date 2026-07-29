@@ -593,9 +593,9 @@ jobs:
           PAYLOAD=$(jq -nc --arg ts "$THREAD_TS" '{
             channel: "C024JCL7TST",
             thread_ts: $ts,
-            text: "✅ Approved — publishing now.",
             attachments: [
               {
+                fallback: "✅ Approved — publishing now.",
                 color: "good",
                 blocks: [
                   {
@@ -759,9 +759,9 @@ jobs:
             --arg run_url "$RUN_URL" \
             '{
               channel: "C024JCL7TST",
-              text: $text,
               attachments: [
                 {
+                  fallback: $text,
                   color: "good",
                   blocks: [
                     {
@@ -830,9 +830,9 @@ jobs:
             '{
               channel: "C024JCL7TST",
               thread_ts: $ts,
-              text: $text,
               attachments: [
                 {
+                  fallback: $text,
                   color: "good",
                   blocks: [
                     {
