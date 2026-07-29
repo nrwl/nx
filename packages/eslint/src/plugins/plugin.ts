@@ -21,6 +21,11 @@ import { existsSync } from 'node:fs';
 import { relative as nativeRelative, sep as nativeSep } from 'node:path';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import {
+  buildPackageJsonPatterns,
+  buildPackageJsonWorkspacesMatcher,
+} from 'nx/src/plugins/package-json/create-nodes';
+import { readJsonFile } from 'nx/src/utils/fileutils';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -167,7 +172,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     const targetsCache = new PluginCache<EslintProjects>(cachePath);
 
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
-      splitConfigFiles(configFiles);
+      splitConfigFiles(configFiles, context.workspaceRoot);
     const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
       projectRoots,
       options,
@@ -240,19 +245,51 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 
 export const createNodesV2 = createNodes;
 
-function splitConfigFiles(configFiles: readonly string[]): {
+function splitConfigFiles(
+  configFiles: readonly string[],
+  workspaceRoot: string
+): {
   eslintConfigFiles: string[];
   projectRoots: string[];
   projectRootsByEslintRoots: Map<string, string[]>;
 } {
   const eslintConfigFiles: string[] = [];
-  const projectRoots = new Set<string>();
+  const packageJsonFiles: string[] = [];
+  const projectJsonRoots = new Set<string>();
 
   for (const configFile of configFiles) {
-    if (PROJECT_CONFIG_FILENAMES.includes(basename(configFile))) {
-      projectRoots.add(dirname(configFile));
+    const fileName = basename(configFile);
+    if (fileName === 'package.json') {
+      packageJsonFiles.push(configFile);
+    } else if (fileName === 'project.json') {
+      projectJsonRoots.add(dirname(configFile));
     } else {
       eslintConfigFiles.push(configFile);
+    }
+  }
+
+  // A package.json outside the package manager's workspaces is not a project —
+  // nested marker files (`{"sideEffects": false}` next to a bundle, say) have no
+  // `name`, and promoting one to a project root fails the whole graph with
+  // ProjectsWithNoNameError. Nx core's own package-json plugin applies the same
+  // filter. An empty `positive` means no workspaces are declared at all, i.e. a
+  // standalone repo whose root package.json *is* the project — filtering there
+  // would reject even that root, so skip the check entirely.
+  const patterns = buildPackageJsonPatterns(workspaceRoot, (f) =>
+    readJsonFile(join(workspaceRoot, f))
+  );
+  const isInPackageManagerWorkspaces = patterns.positive.length
+    ? buildPackageJsonWorkspacesMatcher(patterns)
+    : () => true;
+
+  const projectRoots = new Set<string>(projectJsonRoots);
+  for (const packageJsonFile of packageJsonFiles) {
+    // Next to a project.json it is a project regardless of the workspaces globs.
+    if (
+      isInPackageManagerWorkspaces(packageJsonFile) ||
+      projectJsonRoots.has(dirname(packageJsonFile))
+    ) {
+      projectRoots.add(dirname(packageJsonFile));
     }
   }
 

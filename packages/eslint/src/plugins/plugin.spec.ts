@@ -371,6 +371,23 @@ describe('@nx/eslint/plugin', () => {
       `);
     });
 
+    it('should not create a node for a package.json the package manager workspaces do not cover', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'package.json': `{"name":"root","private":true,"workspaces":["packages/*"]}`,
+        'packages/a/package.json': `{"name":"a"}`,
+        'packages/a/index.ts': `console.log('hello world')`,
+        // A bundler marker, not a project. It has no name, so promoting it to a
+        // project root fails the whole graph with ProjectsWithNoNameError.
+        'packages/a/src/runtime/polyfill/package.json': `{"sideEffects":true}`,
+        'packages/a/src/runtime/polyfill/index.ts': `console.log('polyfill')`,
+      });
+      const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      expect(Object.keys(projects)).toEqual(['packages/a']);
+    });
+
     it('should not create a node for a nested project (with a package.json and no lintable files) which does not have its own eslint config if accompanied by a root level eslint config', async () => {
       createFiles({
         '.eslintrc.json': `{}`,
