@@ -58,12 +58,13 @@ const internalCreateNodes = async (
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   projectRootsByOxlintRoots: Map<string, string[]>,
-  lintableFilesPerProjectRoot: Map<string, string[]>,
+  getLintableFilesPerProjectRoot: () => Promise<Map<string, string[]>>,
   configChainsByConfig: Map<string, string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
   projectsCache: PluginCache<OxlintProjects>,
   hashByRoot: Map<string, string>,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  rootConfig: string | undefined
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
 
@@ -84,9 +85,13 @@ const internalCreateNodes = async (
       // every other project, only infer a target when there is something to
       // lint. Without this, docs-only and non-JS projects sprout Oxlint
       // targets that lint nothing.
+      //
+      // The right-hand side globs the whole workspace, so it stays behind the
+      // `||` and behind the cache check above: a warm run never pays for it.
       const hasLintableFiles =
         (configDir === projectRoot && projectRoot !== '.') ||
-        (lintableFilesPerProjectRoot.get(projectRoot)?.length ?? 0) > 0;
+        ((await getLintableFilesPerProjectRoot()).get(projectRoot)?.length ??
+          0) > 0;
 
       if (!hasLintableFiles) {
         projectsCache.set(hash, {});
@@ -100,7 +105,8 @@ const internalCreateNodes = async (
         context,
         pmc,
         configChainsByConfig,
-        tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+        tsconfigChainsByProjectRoot.get(projectRoot) ?? [],
+        rootConfig
       );
 
       if (project) {
@@ -140,11 +146,25 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
 
     const { oxlintConfigFiles, projectRoots, projectRootsByOxlintRoots } =
       splitConfigFiles(configFiles);
-    const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
-      projectRoots,
-      options,
-      context
+
+    // Globbing every lintable file in the workspace is the most expensive thing
+    // this plugin does, and it is only consulted on a cache miss. Keep it lazy
+    // so a warm graph computation skips it, and memoize the promise so the
+    // concurrent per-config calls below share one glob.
+    let lintableFilesPerProjectRoot: Promise<Map<string, string[]>> | undefined;
+    const getLintableFilesPerProjectRoot = () =>
+      (lintableFilesPerProjectRoot ??= collectLintableFilesByProjectRoot(
+        projectRoots,
+        options,
+        context
+      ));
+
+    // Workspace-global and invariant for the whole run, so it is resolved once
+    // here rather than re-stat'ed for every project.
+    const rootConfig = OXLINT_CONFIG_FILENAMES.find((file) =>
+      existsSync(join(context.workspaceRoot, file))
     );
+
     const configChainsByConfig = collectConfigChains(
       oxlintConfigFiles,
       context.workspaceRoot
@@ -189,12 +209,13 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
             fileOptions,
             fileContext,
             projectRootsByOxlintRoots,
-            lintableFilesPerProjectRoot,
+            getLintableFilesPerProjectRoot,
             configChainsByConfig,
             tsconfigChainsByProjectRoot,
             targetsCache,
             hashByRoot,
-            pmc
+            pmc,
+            rootConfig
           ),
         oxlintConfigFiles,
         options,
@@ -425,7 +446,8 @@ function getProjectUsingOxlintConfig(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   configChainsByConfig: Map<string, string[]>,
-  tsconfigChainOutsideProjectRoot: string[]
+  tsconfigChainOutsideProjectRoot: string[],
+  rootConfig: string | undefined
 ): CreateNodesResult['projects'][string] | null {
   let standaloneSrcPath: string | undefined;
   if (
@@ -444,9 +466,6 @@ function getProjectUsingOxlintConfig(
   }
 
   const oxlintConfigs = [configFilePath];
-  const rootConfig = OXLINT_CONFIG_FILENAMES.find((file) =>
-    existsSync(join(context.workspaceRoot, file))
-  );
   if (rootConfig && !oxlintConfigs.includes(rootConfig)) {
     oxlintConfigs.unshift(rootConfig);
   }
