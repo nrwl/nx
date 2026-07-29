@@ -309,6 +309,7 @@ module.exports = {...nxPreset};
 `,
       'utf8'
     );
+    recordInitWrite(jestPresetPath);
     return true;
   }
 
@@ -349,6 +350,7 @@ function addJestTargets(
     `export default ${JSON.stringify(e2eTestOptions, null, 2)}`,
     'utf8'
   );
+  recordInitWrite(e2eTestConfigPath);
 
   projectJson.targets['test'] = {
     executor: '@nx/jest:jest',
