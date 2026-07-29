@@ -48,8 +48,9 @@ module.exports = {
     '^prettier$': '<rootDir>/../../scripts/jest-mocks/prettier.js',
     // magic-string@1 is ESM-only and @angular-devkit/schematics@22.1 pulls it in
     '^magic-string$': '<rootDir>/../../scripts/jest-mocks/magic-string.js',
-    // Mock oxfmt for the same reason - it is ESM-only, and Jest cannot hand the
-    // same ESM module to more than one test environment in a worker.
+    // oxfmt is ESM-only, and Jest cannot hand the same ESM module to more than
+    // one test environment in a worker. The mock runs the real binary, so
+    // formatting assertions still exercise real oxfmt.
     '^oxfmt$': '<rootDir>/../../scripts/jest-mocks/oxfmt.js',
   },
 };
