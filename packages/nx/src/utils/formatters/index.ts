@@ -14,11 +14,13 @@ import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
  *
  * The repo builds with `strict: false`, so a `switch` that merely omits a
  * member is not an error by itself. Adding a member here is therefore made to
- * fail compilation at every dispatch site that can be made to: `check()` and
- * `write()` in `command-line/format/format.ts` and `formatDetectedFiles` in
- * `generators/internal-utils/format-changed-files.ts` each carry a `never`
- * assertion in their `default` arm, and `format.ts`'s binary-resolution table
- * is keyed by this type.
+ * fail compilation at all five dispatch sites that can be made to: `check()`
+ * and `write()` in `command-line/format/format.ts` and `formatDetectedFiles`
+ * in `generators/internal-utils/format-changed-files.ts` each carry a `never`
+ * assertion in their `default` arm, and both `format.ts`'s binary-resolution
+ * table and `@nx/js`'s `formatterSetups` are keyed by this type. The last one
+ * reads the type from nx's *emitted* declarations, so it only fails once
+ * `packages/nx` has been rebuilt.
  *
  * What still needs visiting by hand: the `formatterType === 'prettier'`
  * ternary and `if` in `format.ts`, devkit's `formatFiles`, and `nx init`'s
