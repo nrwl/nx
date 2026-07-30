@@ -4,7 +4,6 @@ import {
   newProject,
   readJson,
   runCLI,
-  runCLIAsync,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
@@ -77,6 +76,10 @@ describe('Oxlint', () => {
     expect(target.cache).toBe(true);
     expect(target.inputs).toContainEqual({ externalDependencies: ['oxlint'] });
     expect(target.inputs).toContain('{workspaceRoot}/.oxlintrc.json');
+    // Oxlint reports to stdout and has no output-file flag, so the task
+    // declares no outputs — the cache replays terminal output only. Declaring
+    // one would make Nx expect a file that never appears.
+    expect(target.outputs).toBeUndefined();
   });
 
   it('should not infer a task for a project with no lintable files', () => {
@@ -87,10 +90,16 @@ describe('Oxlint', () => {
     expect(getOxlintTarget(docs)).toBeNull();
   });
 
-  it('should pass on clean source and report the violated rule on dirty source', async () => {
+  it('should pass, serve a re-run from cache, fail on a violation, then pass once fixed', () => {
     const lib = uniq('oxlintrules');
     runCLI(
       `generate @nx/js:lib packages/${lib} --linter=none --no-interactive`
+    );
+    // Written before the first run so every step below shares one config, and
+    // the cache hit in step 2 is not just a config change being picked up.
+    updateFile(
+      '.oxlintrc.json',
+      JSON.stringify({ rules: { 'no-debugger': 'error' } })
     );
     updateFile(
       `packages/${lib}/src/index.ts`,
@@ -98,29 +107,41 @@ describe('Oxlint', () => {
     );
 
     const { name: targetName } = requireOxlintTarget(lib);
+    const run = () =>
+      runCLI(`run ${lib}:${targetName}`, { silenceError: true });
 
-    expect(runCLI(`run ${lib}:${targetName}`)).toContain(
-      `Successfully ran target ${targetName}`
-    );
+    // 1. clean source passes
+    expect(run()).toContain(`Successfully ran target ${targetName}`);
+    expect(runCLI.lastExitCode).toBe(0);
 
-    updateFile(
-      '.oxlintrc.json',
-      JSON.stringify({ rules: { 'no-debugger': 'error' } })
-    );
+    // 2. nothing changed, so the second run is replayed from the cache. Nx
+    // reports that per task as `[existing outputs match the cache, left as is]`
+    // even for a target with no declared outputs, which this one is — Oxlint
+    // writes no files, so terminal output is all the cache holds.
+    expect(run()).toContain('existing outputs match the cache');
+    expect(runCLI.lastExitCode).toBe(0);
+
+    // 3. a violation fails the task, with Oxlint's own diagnostic rather than a
+    // generic task error. Asserted on the exit code, not on the absence of nx's
+    // success string: a linter that reports a violation and still exits 0 would
+    // let CI go green on it.
     updateFile(
       `packages/${lib}/src/index.ts`,
       `export function boom() {\n  debugger;\n}\n`
     );
+    expect(run()).toContain('no-debugger');
+    expect(runCLI.lastExitCode).toBe(1);
 
-    const { stdout, stderr } = await runCLIAsync(
-      `run ${lib}:${targetName} --skip-nx-cache`,
-      { silenceError: true }
+    // 4. fixing it passes again. Deliberately not the step-1 content — that
+    // would be a cache hit, which would prove the cache replays a success, not
+    // that Oxlint passes on the fixed source.
+    updateFile(
+      `packages/${lib}/src/index.ts`,
+      `export function fixed() {\n  return 2;\n}\n`
     );
-
-    const output = `${stdout}${stderr}`;
-    // Oxlint's own diagnostic (`error eslint(no-debugger): ...`), not a
-    // generic task failure, and the task must actually fail on it.
-    expect(output).toContain('no-debugger');
-    expect(output).not.toContain(`Successfully ran target ${targetName}`);
+    const afterFix = run();
+    expect(afterFix).toContain(`Successfully ran target ${targetName}`);
+    expect(afterFix).not.toContain('existing outputs match the cache');
+    expect(runCLI.lastExitCode).toBe(0);
   });
 });
