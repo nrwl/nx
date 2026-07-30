@@ -27,7 +27,8 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   'NX_FORKED_TASK_EXECUTOR',
   'NX_SET_CLI',
   'NX_INVOKED_BY_RUNNER',
-  'NX_LOAD_DOT_ENV_FILES',
+  // NX_LOAD_DOT_ENV_FILES is intentionally NOT excluded: it must reach the
+  // daemon so graph-time dotenv resolution honors the user's opt-out.
   'NX_SKIP_NX_CACHE',
   'NX_CACHE_FAILURES',
   'NX_REJECT_UNKNOWN_LOCAL_CACHE',

@@ -70,6 +70,42 @@ export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
   return env;
 }
 
+/**
+ * Computes the env a task will run with, at graph-construction time.
+ *
+ * `createNodes` runs before any task, so the per-task dotenv files
+ * (`.env.<target>`, project-scoped `.env`, ...) that `getTaskSpecificEnv` loads
+ * at run time are not in `process.env` yet. A plugin inferring targets from a
+ * config that reads `process.env` needs those values to resolve the config the
+ * way the task will. This mirrors `loadDotEnvFilesForTask` but takes the target
+ * coordinates directly (there is no `Task`/graph yet) and gates on `!== 'false'`
+ * rather than `=== 'true'`: the `'true'` marker is only stamped once the graph
+ * exists (`run-command.ts`), which is after this runs.
+ */
+export function getGraphTimeEnvForTask(
+  projectRoot: string,
+  target: string,
+  configuration?: string,
+  nonAtomizedTarget?: string
+): NodeJS.ProcessEnv {
+  // Unload the root dotenv files loaded on init of Nx so the task-scoped files win.
+  const env = unloadDotEnvFiles({ ...process.env });
+  if (process.env.NX_LOAD_DOT_ENV_FILES === 'false') {
+    return env;
+  }
+  const dotEnvFiles = getEnvPathsForTask(
+    projectRoot,
+    target,
+    configuration,
+    nonAtomizedTarget
+  );
+  loadAndExpandDotEnvFile(
+    dotEnvFiles.map((file) => join(workspaceRoot, file)),
+    env
+  );
+  return env;
+}
+
 export function getEnvVariablesForTask(
   task: Task,
   taskSpecificEnv: NodeJS.ProcessEnv,
