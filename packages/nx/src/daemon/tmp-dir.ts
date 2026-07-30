@@ -6,13 +6,16 @@
 import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
-import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
+import {
+  ensureOwnedPrivateDir,
+  ensureSafeSharedRoot,
+} from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
 // Only used to *reject* it as a socket location; see InvalidSocketDirConfigured.
 import { tmpdir as systemTmpDir } from 'tmp';
 import { NATIVE_CACHE_ROOT } from '../native/native-file-cache-location';
 import { logger } from '../utils/logger';
-import { NX_TMP_DIR } from '../utils/nx-tmp-dir';
+import { NX_TMP_DIR, NX_USER_TMP_DIR } from '../utils/nx-tmp-dir';
 import { workspaceRoot } from '../utils/workspace-root';
 
 /**
@@ -66,8 +69,9 @@ export function isDaemonDisabled() {
 }
 
 /**
- * One short, per-user root so a POSIX sandbox can allow unix socket access
- * without exposing the sockets to another local user.
+ * One short root beneath the current user's owner-only runtime directory. The
+ * stable `/tmp/.nx` ancestor lets a POSIX sandbox allow unix socket access with
+ * one team-wide rule, while the uid boundary keeps peers out.
  *
  * Neither reason applies on Windows: named pipes are not filesystem objects, so
  * there is nothing to allowlist or to lock down, and the OS temp dir is already
@@ -79,12 +83,7 @@ export function isDaemonDisabled() {
 function defaultSocketRoot(): string {
   return process.platform === 'win32'
     ? systemTmpDir
-    : join(NX_TMP_DIR, 'sockets');
-}
-
-/** Owner-only roots to establish before creating a socket directory beneath them. */
-function defaultSocketRoots(): string[] {
-  return process.platform === 'win32' ? [] : [NX_TMP_DIR, defaultSocketRoot()];
+    : join(NX_USER_TMP_DIR, 'sockets');
 }
 
 /**
@@ -93,7 +92,13 @@ function defaultSocketRoots(): string[] {
  * socket directories. Nx's actual socket directories live under these roots.
  */
 function dirsTooSharedForSockets(): string[] {
-  return [systemTmpDir, NX_TMP_DIR, defaultSocketRoot(), NATIVE_CACHE_ROOT];
+  return [
+    systemTmpDir,
+    NX_TMP_DIR,
+    NX_USER_TMP_DIR,
+    defaultSocketRoot(),
+    NATIVE_CACHE_ROOT,
+  ];
 }
 
 export function getNxSocketRoot(): string {
@@ -165,7 +170,8 @@ export function getSocketDirFallbackCause(): unknown {
 /**
  * @param dir the resolved socket directory to create and lock down.
  * @param usingDefaultRoot whether `dir` sits under the default root, in which
- *        case Nx establishes its owner-only temp and socket roots first.
+ *        case Nx verifies the stable shared container and establishes the
+ *        current user's owner-only roots first.
  */
 function createOwnerOnlySocketDir(
   dir: string,
@@ -181,15 +187,22 @@ function createOwnerOnlySocketDir(
 
   try {
     if (usingDefaultRoot) {
-      // Outermost first, each on its own. `/tmp` itself is root-owned + sticky;
-      // putting the uid in the first Nx-owned path means every user can create
-      // and verify their own root without an administrator provisioning shared
-      // directories first.
-      for (const root of defaultSocketRoots()) {
-        if (!ensureOwnedPrivateDir(root)) {
+      if (process.platform !== 'win32') {
+        // `/tmp/.nx` is the only shared level. A root-owned sticky instance lets
+        // every user create their uid directory directly beneath it; if the first
+        // user created it instead, it remains safe for that user and later users
+        // refuse it rather than trusting a peer-owned parent.
+        if (!ensureSafeSharedRoot(NX_TMP_DIR)) {
           throw new Error(
-            `Nx could not establish ${root} as a private directory owned by the current user.`
+            `The Nx temp root ${NX_TMP_DIR} is not a directory Nx can safely keep a private directory under.`
           );
+        }
+        for (const root of [NX_USER_TMP_DIR, defaultSocketRoot()]) {
+          if (!ensureOwnedPrivateDir(root)) {
+            throw new Error(
+              `Nx could not establish ${root} as a private directory owned by the current user.`
+            );
+          }
         }
       }
     } else {

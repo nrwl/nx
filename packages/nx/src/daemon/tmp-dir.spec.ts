@@ -9,11 +9,15 @@ import {
   getSocketDirFallbackCause,
   InvalidSocketDirConfigured,
 } from './tmp-dir';
-import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
+import {
+  ensureOwnedPrivateDir,
+  ensureSafeSharedRoot,
+} from '../utils/owned-private-dir';
 import { logger } from '../utils/logger';
 
 jest.mock('../utils/owned-private-dir', () => ({
   ensureOwnedPrivateDir: jest.fn(() => true),
+  ensureSafeSharedRoot: jest.fn(() => true),
   getUserSegment: jest.fn(() => '501'),
 }));
 
@@ -31,7 +35,8 @@ jest.mock('node:fs', () => {
   };
 });
 
-const USER_TMP_ROOT = '/tmp/.nx-501';
+const SHARED_TMP_ROOT = '/tmp/.nx';
+const USER_TMP_ROOT = `${SHARED_TMP_ROOT}/501`;
 const SOCKET_ROOT = `${USER_TMP_ROOT}/sockets`;
 
 describe('socket directories', () => {
@@ -48,7 +53,7 @@ describe('socket directories', () => {
   });
 
   describe('getNxSocketRoot', () => {
-    it('defaults to a short per-user root on POSIX', () => {
+    it('defaults beneath the stable sandbox root and per-user boundary on POSIX', () => {
       setPlatform('linux');
       expect(getNxSocketRoot()).toEqual(SOCKET_ROOT);
     });
@@ -88,11 +93,12 @@ describe('socket directories', () => {
     );
   });
 
-  it('establishes every default root owner-only, outermost first', () => {
+  it('establishes the shared container and every owner-only root outermost first', () => {
     setPlatform('linux');
 
     const dir = getSocketDir();
 
+    expect(ensureSafeSharedRoot).toHaveBeenCalledWith(SHARED_TMP_ROOT);
     expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(1, USER_TMP_ROOT);
     expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(2, SOCKET_ROOT);
     expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(3, dir);
@@ -102,7 +108,16 @@ describe('socket directories', () => {
     });
   });
 
-  it('falls back before creating a socket root beneath a top-level root that is not ours', () => {
+  it('falls back before creating user roots beneath an unsafe shared container', () => {
+    setPlatform('linux');
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+  });
+
+  it('falls back before creating the socket root when the per-user root is not ours', () => {
     setPlatform('linux');
     (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);
 
@@ -112,7 +127,7 @@ describe('socket directories', () => {
 
   it('logs the default-root failure at verbose level and retains it as the fallback cause', () => {
     setPlatform('linux');
-    (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
 
@@ -149,6 +164,7 @@ describe('socket directories', () => {
 
     expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
     expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+    expect(ensureSafeSharedRoot).not.toHaveBeenCalled();
   });
 
   it('creates the plugin socket directory owner-only', () => {
@@ -170,6 +186,7 @@ describe('socket directories', () => {
   // permissions or mixing sockets with the native binding cache.
   it.each([
     ['the system temp dir', () => systemTmpDir],
+    ['the Nx shared tmp root', () => SHARED_TMP_ROOT],
     ['the Nx user tmp root', () => USER_TMP_ROOT],
     ['the Nx socket root', () => SOCKET_ROOT],
     ['the native cache root', () => `${USER_TMP_ROOT}/native-cache`],
@@ -244,6 +261,7 @@ describe('socket directories', () => {
 
     expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
     expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+    expect(ensureSafeSharedRoot).not.toHaveBeenCalled();
   });
 
   it('does not label an explicit socket-directory failure as a default-root fallback', () => {
