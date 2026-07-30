@@ -1,6 +1,7 @@
-import { homedir } from 'os';
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { homedir, tmpdir } from 'os';
 import { join } from 'path';
-import { getPnpmConfigDir } from './pnpm-config';
+import { getPnpmConfigDir, readPnpmYamlConfig } from './pnpm-config';
 
 jest.mock('os', () => ({
   ...jest.requireActual('os'),
@@ -68,4 +69,47 @@ describe('getPnpmConfigDir', () => {
       expect(getPnpmConfigDir({})).toBe(join('/home/me', '.config/pnpm'));
     });
   });
+});
+
+describe('readPnpmYamlConfig', () => {
+  let dir: string;
+  const path = () => join(dir, 'pnpm-workspace.yaml');
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'nx-pnpm-cfg-'));
+  });
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('returns null for an absent file and the object for a map', () => {
+    expect(readPnpmYamlConfig(path())).toBeNull();
+    writeFileSync(path(), 'registries:\n  default: https://reg.example.com/\n');
+    expect(readPnpmYamlConfig(path())).toEqual({
+      registries: { default: 'https://reg.example.com/' },
+    });
+  });
+
+  it('returns an empty object for an empty file', () => {
+    writeFileSync(path(), '');
+    expect(readPnpmYamlConfig(path())).toEqual({});
+  });
+
+  it('reports a file that does not parse as invalid', () => {
+    writeFileSync(path(), 'registries:\n\tdefault: tab-indented\n');
+    expect(readPnpmYamlConfig(path())).toBe('invalid');
+  });
+
+  it.each([
+    ['a bare scalar', 'just-a-string\n'],
+    // The scalar spelling the sentinel uses must not read as a success value.
+    ['the scalar `invalid`', 'invalid\n'],
+    ['a sequence', '- a\n- b\n'],
+  ])(
+    'reports non-object content (%s) as invalid, the way pnpm dies on it',
+    (_label, contents) => {
+      writeFileSync(path(), contents);
+      expect(readPnpmYamlConfig(path())).toBe('invalid');
+    }
+  );
 });
