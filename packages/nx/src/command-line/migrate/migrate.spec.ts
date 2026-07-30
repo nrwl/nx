@@ -4494,6 +4494,89 @@ module.exports = {
     });
   });
 
+  describe('fetching migrations config from the registry', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it("accepts a registry.yarnpkg.com tarball (npmjs' CNAME serves the same metadata)", async () => {
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('2.0.1');
+      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify({
+          dist: {
+            tarball:
+              'https://registry.yarnpkg.com/mypackage/-/mypackage-2.0.1.tgz',
+          },
+        })
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+        version: '2.0.1',
+      });
+      expect(fetch.stats).toMatchObject({
+        registryCount: 1,
+        installCount: 0,
+      });
+    });
+
+    it('skips the tarball-host check when the package declares migration config', async () => {
+      // The host allowlist only guards packuments that carry no migration
+      // config at all (other registries may serve incomplete metadata); a
+      // declared nx-migrations proves the metadata came through.
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('2.0.1');
+      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify({
+          'nx-migrations': { packageGroup: ['mypackage-plugin'] },
+          dist: {
+            tarball:
+              'https://registry.corp.example.com/mypackage/-/mypackage-2.0.1.tgz',
+          },
+        })
+      );
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+        version: '2.0.1',
+      });
+      expect(fetch.stats).toMatchObject({
+        registryCount: 1,
+        installCount: 0,
+      });
+    });
+
+    it('falls back to install for a migration-less packument from an unsupported registry', async () => {
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('2.0.1');
+      jest.spyOn(packageMgrUtils, 'packageRegistryView').mockResolvedValue(
+        JSON.stringify({
+          dist: {
+            tarball:
+              'https://registry.corp.example.com/mypackage/-/mypackage-2.0.1.tgz',
+          },
+        })
+      );
+      jest.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir: join(tmpdir(), 'nx-migrate-spec-does-not-exist'),
+        cleanup: async () => {},
+      });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+      // The install itself fails in this harness; the assertion is that the
+      // fetcher classified the registry refusal and routed to install (which
+      // retries the original spec, not the resolved version).
+      await expect(fetch('mypackage', 'latest')).rejects.toThrow(
+        'Failed to fetch migrations for mypackage@latest'
+      );
+      expect(fetch.stats).toMatchObject({
+        installCount: 1,
+        fallbackReason: 'unsupported-registry',
+      });
+    });
+  });
+
   describe('multi-major migration prompt', () => {
     let originalCi: string | undefined;
     const originalTtyDescriptor = Object.getOwnPropertyDescriptor(
