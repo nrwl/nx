@@ -116,11 +116,12 @@ function readGlobalBunInstall(): BunInstallConfig | 'error' {
 
 function readBunInstall(path: string): BunInstallConfig | 'error' {
   const parsed = readBunfigRaw(path);
-  if (parsed === null) {
+  // bun skips a bunfig it cannot read and resolves on, so its settings simply
+  // do not apply; only a parse failure makes bun's install die.
+  if (parsed === null || parsed === 'unreadable') {
     return {};
   }
   if (parsed === 'invalid') {
-    // Unparseable bunfig makes bun's install die; treat as a hard error.
     return 'error';
   }
   const install = parsed.install;
