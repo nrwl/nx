@@ -54,7 +54,7 @@ describe('native file cache location', () => {
       const root =
         platform() === 'win32'
           ? join(tmpdir(), '.nx', 'native-cache')
-          : `/tmp/.nx-${userSegment}/native-cache`;
+          : `/tmp/.nx/${userSegment}/native-cache`;
 
       expect(location.startsWith(root)).toBe(true);
       expect(location).toEqual(join(root, nxVersion));
@@ -175,8 +175,28 @@ describe('native file cache location', () => {
     // The tests below pin the *wiring*, which the `ensureOwnedPrivateDir`
     // suite above cannot: those cover the guard's own branches, but reverting
     // either call site here to a bare `mkdirSync` leaves them all green. They
-    // run against an injected root so they do not depend on /tmp/.nx-<uid> being
+    // run against an injected root so they do not depend on /tmp/.nx/<uid> being
     // writable, which it is not under some sandboxes.
+    posixOnly(
+      'should refuse the stable shared root planted as a symlink',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          const victim = join(base, 'victim');
+          mkdirSync(victim, { mode: 0o700 });
+          chmodSync(victim, 0o700);
+          const sharedRoot = join(base, 'shared');
+          symlinkSync(victim, sharedRoot);
+          const cacheRoot = join(sharedRoot, '501', 'native-cache');
+
+          expect(ensureSecureNativeFileCacheLocation(cacheRoot)).toBeNull();
+          expect(lstatSync(victim).mode & 0o7777).toEqual(0o700);
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
+      }
+    );
+
     posixOnly(
       'should refuse the per-user temp root planted as a symlink',
       () => {
@@ -251,9 +271,12 @@ describe('native file cache location', () => {
         expect(location).toEqual(getNativeFileCacheLocation());
         expect(getNativeFileCacheLocationToDelete()).toEqual(location);
         const cacheRoot = join(location, '..');
+        const userRoot = join(cacheRoot, '..');
         expect(lstatSync(cacheRoot).isDirectory()).toBe(true);
         expect(lstatSync(cacheRoot).uid).toEqual(process.getuid!());
         expect(lstatSync(cacheRoot).mode & 0o077).toEqual(0);
+        expect(lstatSync(userRoot).uid).toEqual(process.getuid!());
+        expect(lstatSync(userRoot).mode & 0o077).toEqual(0);
       }
     );
   });
