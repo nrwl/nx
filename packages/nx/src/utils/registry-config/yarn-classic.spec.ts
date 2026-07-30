@@ -1,7 +1,5 @@
 // os.homedir() ignores a runtime process.env.HOME override under jest, and a
-// spyOn does not affect a module's named import either, so replace both modules
-// (matching how yarn resolves the home dir) and drive every surface off an
-// in-memory file map for full isolation from the real filesystem.
+// spyOn does not reach a module's named import either.
 jest.mock('os', () => ({
   ...jest.requireActual('os'),
   homedir: jest.fn(() => '/home/user'),
@@ -24,7 +22,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   const ROOT = '/repo/workspace';
   const HOME = '/home/user';
   const PREFIX = '/prefix';
-  // files keyed by absolute path; absent paths read as missing.
   let files: Record<string, string>;
   const managedEnvKeys = [
     'npm_config_registry',
@@ -70,11 +67,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       savedEnv[key] = process.env[key];
       delete process.env[key];
     }
-    // Anchor the <globalPrefix>/etc tier at a controlled directory.
     process.env.PREFIX = PREFIX;
     // Deleting FAKEROOTKEY above puts production on its root home tier whenever
-    // the run itself is uid 0 (container CI), so pin the uid the cases below
-    // assume and let the root ones opt in.
+    // the run itself is uid 0 (container CI).
     if (process.platform !== 'win32') {
       jest.spyOn(process, 'getuid' as any).mockReturnValue(501 as any);
     }
@@ -155,7 +150,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('lets <prefix>/etc/npmrc (npm-native) shadow an ancestor .npmrc without bridging', () => {
-    // yarn ranks etc above ancestors; etc/npmrc is npm-native, so neither is bridged.
     files[`${PREFIX}/etc/npmrc`] = 'registry=https://reg-etc.example.com/';
     files['/repo/.npmrc'] = 'registry=https://reg-d.example.com/';
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
@@ -255,7 +249,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
-  // process.getuid only exists on POSIX, where the root home tier applies.
   const itPosix = process.platform === 'win32' ? it.skip : it;
   itPosix('reads the root /usr/local/share home when running as root', () => {
     (process.getuid as jest.Mock).mockReturnValue(0);
@@ -308,7 +301,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
 
   it('bridges an unscoped registry auth token when a bare always-auth flag is set', () => {
     // ini reads a valueless `always-auth` as true, so yarn authenticates the
-    // unscoped fetch and the token must be bridged, same as `always-auth=true`.
+    // unscoped fetch.
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_authToken=ancestor-token',
@@ -333,8 +326,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('ignores .yarnrc when resolving always-auth', () => {
-    // The gate reads NpmRegistry's config, which loadConfig fills from the npmrc
-    // chain alone, so a .yarnrc `false` cannot turn off an .npmrc `true`.
+    // always-auth comes from NpmRegistry's config, which loadConfig fills from
+    // the npmrc chain alone.
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_authToken=ancestor-token',
@@ -352,8 +345,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'NPM_CONFIG_ALWAYS_AUTH',
     'YARN_ALWAYS_AUTH',
   ])('resolves always-auth from the %s env var', (envKey) => {
-    // BaseRegistry merges both env prefixes before any file is read, and an
-    // npmrc never overwrites what the env already set.
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_authToken=ancestor-token',
@@ -370,8 +361,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'yarn_//localhost:4873/:always-auth',
   ])('resolves a registry-scoped always-auth from the %s env var', (envKey) => {
     // mergeEnv stores an env key through objectPath, which splits on `.`, while
-    // every read is flat, so a dot-free registry-scoped key is one yarn does
-    // find (verified on 1.22.22: this authenticates an unscoped fetch).
+    // every read is flat, so only a dot-free registry-scoped key reaches yarn.
     files['/repo/.npmrc'] = [
       'registry=http://localhost:4873/',
       '//localhost:4873/:_authToken=ancestor-token',
@@ -384,8 +374,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('ignores a registry-scoped always-auth env var for a dotted host', () => {
-    // objectPath nests `//reg-d.example.com/:always-auth` under `//reg-d`, so
-    // yarn's flat read never sees it and the fetch stays anonymous.
+    // objectPath nests this key under `//reg-d`, so yarn's flat read never sees
+    // it.
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_authToken=ancestor-token',
@@ -410,8 +400,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('falls through to the global always-auth when a registry-scoped env var disables it', () => {
-    // yarn's getRegistryOrGlobalOption ORs the two tiers, so a falsy
-    // registry-scoped value does not veto a global one.
+    // yarn's getRegistryOrGlobalOption ORs the two tiers.
     files['/repo/.npmrc'] = [
       'registry=http://localhost:4873/',
       '//localhost:4873/:_authToken=ancestor-token',
@@ -438,8 +427,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('bridges no auth for an unscoped fetch without always-auth', () => {
-    // yarn stays anonymous here, so nothing is bridged whether or not npm reads
-    // the file itself; the native-file guard is covered separately below.
     files[`${ROOT}/.npmrc`] = [
       'registry=https://reg-b.example.com/',
       '//reg-b.example.com/:_authToken=project-token',
@@ -448,9 +435,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('bridges a yarn-only auth token for a scoped fetch even without always-auth', () => {
-    // The scoped registry is project-native (npm reads it), but the token lives
-    // only in an ancestor .npmrc. A scoped fetch always authenticates, so npm
-    // would hit the registry unauthenticated without the bridge.
+    // npm reads the project .npmrc itself, so its scoped registry needs no
+    // bridge.
     files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-b.example.com/';
     files['/repo/.npmrc'] = '//reg-b.example.com/:_authToken=ancestor-token';
     expect(getYarnClassicSpawnRegistryEnv('@types/node', ROOT)).toEqual({
@@ -460,8 +446,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
 
   it('expands ${VAR} in a yarn-only ancestor .npmrc auth token before bridging', () => {
     // yarn classic env-replaces .npmrc values, so the bridged token carries the
-    // secret yarn resolved rather than whatever npm's own grammar would make of
-    // the reference.
+    // secret yarn resolved.
     process.env.NX_TEST_YARN_TOKEN = 'real-token';
     try {
       files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-b.example.com/';
@@ -476,8 +461,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('bridges yarn-only nerf-darted _auth, username, and _password for a scoped fetch', () => {
-    // All three credential forms live only in an ancestor .npmrc (yarn-only); a
-    // scoped fetch authenticates, so they bridge for the spawned npm.
     files['/repo/.npmrc'] = [
       '@sc:registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_auth=ZmFrZS1iYXNlNjQ=',
@@ -493,8 +476,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('re-keys yarn-only bare _auth, username, and _password onto the default registry dart when always-auth is set', () => {
-    // npm honors auth only in the nerf-darted form; with no registry configured
-    // the spawned npm queries its own default, so the bare creds target it.
+    // With no registry configured the spawned npm queries its own default, so
+    // the creds dart onto npmjs rather than yarn's default.
     files['/repo/.npmrc'] = [
       '_auth=ZmFrZS1iYXNlNjQ=',
       'username=alice',
@@ -521,8 +504,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('re-keys a yarn-only bare _authToken onto the scoped registry dart for a scoped fetch', () => {
-    // yarn attaches a bare global token to the registry it resolves for the
-    // package, which for a scoped fetch is the scoped registry, not the default.
     files['/repo/.npmrc'] = [
       '@sc:registry=https://reg-d.example.com/',
       '_authToken=ancestor-token',
@@ -534,8 +515,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('prefers a yarn-only nerf-darted token over a bare one for the same registry', () => {
-    // yarn's getRegistryOrGlobalOption takes the registry-scoped key first, so
-    // the bare token must not overwrite it.
+    // yarn's getRegistryOrGlobalOption takes the registry-scoped key first.
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_authToken=scoped-token',
@@ -549,9 +529,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('re-keys a bare _authToken from the workspace .npmrc onto the resolved registry dart', () => {
-    // npm honors bare auth from no source, so even a native bare token (which
-    // yarn sends via getOption) must be darted for the spawned npm. The registry
-    // itself is npm-native, so only the token is bridged.
+    // npm ignores a bare auth key even in its own .npmrc, so a native bare
+    // token still needs darting; its registry is npm-native, so only the token
+    // bridges.
     files[`${ROOT}/.npmrc`] = [
       'registry=https://reg-b.example.com/',
       '_authToken=project-token',
@@ -579,8 +559,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('outranks npm_config_cafile', () => {
-      // YarnRegistry.getOption reads yarn's own config before npm's, so the
-      // yarn_ tier wins and npm has to be moved off the value it would pick.
+      // YarnRegistry.getOption reads yarn's own config before npm's.
       process.env.npm_config_cafile = './certs/npm-ca.pem';
       process.env.YARN_CAFILE = './certs/env-ca.pem';
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
@@ -589,8 +568,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('defers to npm_config_cafile below the .yarnrc tier', () => {
-      // Nothing on the yarn side declares it, so yarn falls through to npm's
-      // own config and reaches the same value npm resolves for itself.
+      // Yarn declares no cafile of its own, so it falls through to npm's
+      // config, where the env tier npm reads itself shadows the ancestor
+      // .npmrc.
       files['/repo/.npmrc'] = 'cafile=./certs/ancestor-ca.pem';
       process.env.npm_config_cafile = './certs/npm-ca.pem';
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
@@ -610,9 +590,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
 
   it('keeps TLS verification on for npm where an .npmrc would turn it off', () => {
     // yarn's DEFAULTS carry strict-ssl, so getOption never reaches npm's config
-    // and this .npmrc cannot disable verification for yarn. Left alone the
-    // spawned npm would read the same file and stop verifying, which is the one
-    // direction of this divergence that fails open.
+    // and this .npmrc cannot turn verification off for yarn.
     files[`${ROOT}/.npmrc`] = 'strict-ssl=false';
     files[`${ROOT}/.yarnrc`] = 'strict-ssl true\n';
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
@@ -626,17 +604,15 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('does not bridge a strict-ssl that only an .npmrc declares', () => {
-    // yarn reads strict-ssl off its own config, which no .npmrc feeds, so
-    // bridging an ancestor one would disable TLS verification for the spawned
-    // npm where yarn keeps it on.
+    // No .npmrc feeds yarn's strict-ssl, so bridging this one would turn
+    // verification off for npm where yarn keeps it on.
     files['/repo/.npmrc'] = 'strict-ssl=false';
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
   });
 
   it('authenticates an unscoped fetch on a registry-scoped always-auth', () => {
-    // yarn reads always-auth for the registry it is about to query, so a bare
-    // global token is sent even though the always-auth key names the registry
-    // rather than the credential.
+    // always-auth is read for the registry being queried, not for the key the
+    // credential came from, so the bare global token is sent.
     files['/repo/.npmrc'] = [
       'registry=https://reg-b.example.com/',
       '_authToken=ancestor-token',
@@ -664,22 +640,17 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('drops the whole file on an unquoted URL value', () => {
-      // The `://` tokenizes into three tokens, which throws in yarn's parser and
-      // costs the file every setting, not just the offending line. The YAML
-      // retry loads it as one plain scalar, not a mapping, so it declares
-      // nothing either (verified on 1.22.22: yarn resolves its own default).
+      // The `://` splits into three tokens, so yarn's parser throws and the
+      // retry loads the file as one scalar, not a mapping, which declares
+      // nothing.
       files[`${ROOT}/.yarnrc`] =
         'registry https://reg-a.example.com/\ncafile "./certs/ca.pem"\n';
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
     });
 
     it('honors a YAML-shaped file the lockfile parser rejects', () => {
-      // A YAML-shaped .yarnrc.yml is the file habit produces even for classic:
-      // yarn's parser throws on the `://`, the js-yaml retry accepts the file,
-      // and yarn honors every key in it (verified on 1.22.22: `yarn config get
-      // registry` returns reg-a and yarn goes on to open the cafile). Dropping
-      // it would send npm to the default registry, the failure this bridging
-      // exists to prevent.
+      // Berry habits put YAML in a classic .yarnrc, and the retry accepts it,
+      // so yarn honors every key (verified on 1.22.22).
       files[`${ROOT}/.yarnrc`] = [
         'registry: https://reg-a.example.com/',
         'cafile: ./certs/ca.pem',
@@ -691,10 +662,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('leaves a scalar the YAML retry loaded a string', () => {
-      // The retry runs under the failsafe schema, where every scalar is a
-      // string, and yarn Boolean()-coerces what it reads: `false` arrives
-      // truthy and verification stays on. Typing it as a boolean here would
-      // turn TLS verification off for npm where yarn leaves it on.
+      // The retry's failsafe schema makes every scalar a string, and yarn
+      // Boolean()-coerces it, so this `false` stays truthy and verification
+      // stays on.
       files[`${ROOT}/.yarnrc`] = [
         'registry: https://reg-a.example.com/',
         'strict-ssl: false',
@@ -705,20 +675,14 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('reads a file the retry loads as one scalar as declaring nothing', () => {
-      // The lockfile parser rejects the `@@@` line and the retry loads the whole
-      // file as a plain scalar, so yarn honors none of it (verified on 1.22.22:
-      // `yarn config list` prints the file spread by character index, `cafile`
-      // reads undefined and the registry stays yarn's default).
       files[`${ROOT}/.yarnrc`] = 'cafile "./certs/ca.pem"\n@@@ !!!\n';
       expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
     });
 
     it('fails on a duplicate key (classic passes no json flag)', () => {
-      // berry's parser sets `json: true`, which makes a repeated key last-wins;
-      // classic passes the schema alone, so js-yaml throws, and with both
-      // parsers rejecting yarn rethrows the first error and exits 1 (verified
-      // on 1.22.22). Resolving on without the file would send npm to the
-      // default registry while yarn refuses to run at all.
+      // classic passes js-yaml the schema alone (berry adds `json: true`, which
+      // makes a repeated key last-wins), so yarn rethrows and exits 1 on this
+      // file.
       files[`${ROOT}/.yarnrc`] = [
         'registry: https://reg-a.example.com/',
         'registry: https://reg-b.example.com/',
@@ -729,8 +693,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('fails on a .yarnrc that cannot be opened', () => {
-      // yarn propagates the EACCES and exits 1 (verified on 1.22.22 with a
-      // chmod 000 file), so there is nothing left to reproduce here either.
+      // yarn propagates the EACCES and exits 1 (verified on 1.22.22), so there
+      // is no resolution left to reproduce.
       files[`${ROOT}/.yarnrc`] = 'registry "https://reg-a.example.com/"\n';
       const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
       (fs.readFileSync as jest.Mock).mockImplementation(
@@ -747,10 +711,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
 
     it('fails on an .npmrc in the chain that cannot be opened', () => {
-      // yarn dies the same way on its .npmrc chain (verified on 1.22.22:
-      // EACCES on the workspace .npmrc fails config get and install with exit
-      // 1). Resolving on without the file would silently promote an ancestor
-      // or default registry over the one the workspace pins.
+      // yarn dies the same way on its .npmrc chain (verified on 1.22.22: EACCES
+      // on the workspace .npmrc fails both config get and install).
       files[`${ROOT}/.npmrc`] = 'registry=https://reg-a.example.com/';
       const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
       (fs.readFileSync as jest.Mock).mockImplementation(
@@ -798,9 +760,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('keeps a native nerf-darted token over a yarn-only bare one for the same registry', () => {
-    // npm reads the project nerf-darted key itself; the ancestor bare token must
-    // not shadow it via the env tier, matching yarn's registry-scoped-over-global
-    // order.
     files[`${ROOT}/.npmrc`] = [
       'registry=https://reg-b.example.com/',
       '//reg-b.example.com/:_authToken=project-token',

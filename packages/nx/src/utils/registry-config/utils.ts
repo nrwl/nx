@@ -2,7 +2,7 @@ import { dirname } from 'path';
 import { gte, parse } from 'semver';
 import { logger } from '../logger';
 
-// Type-only import: a value import would create a cycle with package-manager.ts.
+// A value import would create a cycle with package-manager.ts.
 import type { PackageManager } from '../package-manager';
 
 /**
@@ -25,8 +25,7 @@ export function getPackageScope(packageName: string): string | null {
 
 /**
  * Converts a registry URL into npm's nerf-dart key prefix (host + directory
- * path), e.g. `https://r.example.com/npm/` -> `//r.example.com/npm/`. Returns
- * null for unparseable URLs.
+ * path), e.g. `https://r.example.com/npm/` -> `//r.example.com/npm/`.
  * See https://github.com/npm/cli/blob/bb056c85059cfb39514614e31abba09f20ac1612/workspaces/config/lib/nerf-dart.js#L12-L17
  */
 export function nerfDart(registryUrl: string): string | null {
@@ -42,9 +41,8 @@ export function nerfDart(registryUrl: string): string | null {
 }
 
 /**
- * The setting name npm resolves an environment key to: a case-insensitive
- * `npm_config_` prefix and a positional slice, then `_` -> `-` and lowercase
- * for every key but a nerf-darted one. Null for a key npm does not read.
+ * The setting name npm resolves an environment key to, null for a key npm does
+ * not read.
  * See https://github.com/npm/cli/blob/bb056c85059cfb39514614e31abba09f20ac1612/workspaces/config/lib/index.js#L345-L356
  */
 function npmConfigSetting(envKey: string): string | null {
@@ -61,11 +59,9 @@ export function normalizeNpmConfigKey(key: string): string {
 }
 
 /**
- * The value npm resolves for `setting` out of an environment: every
- * `npm_config_*` spelling maps onto the same setting and the last one read
- * wins, and an empty value is skipped outright (loadEnv). `setting` is the name
- * npm looks the value up under, so a scope npm rewrites (`@my_scope`) finds
- * nothing, exactly as it does for npm itself.
+ * The value npm resolves for `setting` out of an environment: the last non-empty
+ * `npm_config_*` spelling wins (loadEnv). `setting` is the name npm looks the
+ * value up under, so a scope npm rewrites (`@my_scope`) finds nothing.
  */
 export function readNpmConfigEnv(
   env: NodeJS.ProcessEnv,
@@ -80,7 +76,6 @@ export function readNpmConfigEnv(
   return value;
 }
 
-/** The registry, TLS and proxy settings this module resolves for a package manager. */
 const BRIDGED_SETTINGS = new Set([
   'registry',
   'ca',
@@ -94,11 +89,10 @@ const BRIDGED_SETTINGS = new Set([
 ]);
 
 /**
- * Whether `setting` is one this module resolves on the package manager's behalf,
- * covering the nerf-darted credential/TLS keys and any `@scope:registry` as
- * well as the flat names above. `userconfig` is deliberately absent: it selects
- * npm's own config file rather than a value the package manager resolves, and
- * npm reading its own .npmrc is outside what the overlay reproduces.
+ * Whether `setting` is one this module resolves on the package manager's behalf.
+ * `userconfig` is deliberately absent: it selects npm's own config file rather
+ * than a value the package manager resolves, and npm reading its own .npmrc is
+ * outside what the overlay reproduces.
  */
 function isBridgedSetting(setting: string): boolean {
   return (
@@ -109,20 +103,18 @@ function isBridgedSetting(setting: string): boolean {
 }
 
 /**
- * Merges an npm_config_* overlay into the environment for a spawned npm,
- * leaving one spelling per setting: the overlay's where it carries the setting,
+ * Merges an npm_config_* overlay into the environment for a spawned npm, leaving
+ * one non-empty spelling per setting: the overlay's where it carries the setting,
  * otherwise the ambient one npm itself would resolve. npm reads its env tier
- * last-write-wins over the received key order, and both macOS `/bin/sh` and
- * npm's own shell launcher rebuild that order, so a setting left spelled two
- * ways (`NPM_CONFIG_REGISTRY` beside `npm_config_registry`) goes to whichever
- * one they happen to emit last instead of to the value resolved here.
+ * last-write-wins over the received key order, and both macOS `/bin/sh` and npm's
+ * own shell launcher rebuild that order, so a setting left spelled two ways
+ * (`NPM_CONFIG_REGISTRY` beside `npm_config_registry`) goes to whichever one they
+ * emit last instead of to the value resolved here.
  *
- * `managerIgnoresEnv` says which of the settings above the package manager
- * resolves without reading `npm_config_*`, so an ambient one is a value it
- * would never have seen. Those are dropped even where the overlay claims
- * nothing: npm's env tier sits above every file, so leaving one in place does
- * not just add a value, it stops npm from reaching the .npmrc chain that the
- * package manager itself resolved from.
+ * `managerIgnoresEnv` says which settings the package manager resolves without
+ * reading `npm_config_*`. Those ambient entries are dropped even where the overlay
+ * claims nothing: npm's env tier sits above every file, so leaving one in place
+ * stops npm from reaching the .npmrc chain the package manager itself resolved from.
  */
 export function mergeNpmConfigEnv(
   baseEnv: NodeJS.ProcessEnv,
@@ -164,37 +156,27 @@ export function mergeNpmConfigEnv(
   return { ...merged, ...overlay };
 }
 
-/**
- * Whether the package manager resolves `setting` without reading its ambient
- * `npm_config_*` spelling, so an ambient one is a value it would never have seen.
- */
 export type IgnoresNpmConfigEnv = (setting: string) => boolean;
 
 const IGNORES_NONE: IgnoresNpmConfigEnv = () => false;
 const IGNORES_ALL: IgnoresNpmConfigEnv = () => true;
-// pnpm 11.6.0 restored the URL-scoped tier alone (readUrlScopedEnvConfig):
-// a `p?npm_config_//<dart>:<key>` entry is read from the environment again,
-// except `:tokenHelper`, which pnpm refuses to take from it. Named settings
-// stay on pnpm's own `PNPM_CONFIG_*` prefix.
+// pnpm 11.6.0's readUrlScopedEnvConfig reads a `p?npm_config_//<dart>:<key>`
+// entry from the environment again, except `:tokenHelper`, which it refuses to
+// take from there. Named settings stay on pnpm's own `PNPM_CONFIG_*` prefix.
 const IGNORES_ALL_BUT_URL_SCOPED: IgnoresNpmConfigEnv = (setting) =>
   !setting.startsWith('//') || setting.endsWith(':tokenHelper');
 
 /**
  * The settings the package manager resolves without reading `npm_config_*`, as
- * a predicate over setting names. pnpm reads them all up to 10.x and stops at
- * 11.0.0 (which switched to its own `PNPM_CONFIG_*` prefix), except that 11.6.0
- * restored the URL-scoped credential keys; yarn berry has never read any; npm
- * reads them by definition, and bun reads them for the settings this module
- * bridges.
- *
- * Callers pass it to `mergeNpmConfigEnv`, which then drops those ambient entries
- * rather than letting npm's env tier resolve one the package manager ignored.
- * A resolver reasoning about what npm sees uses it the same way: an ambient
- * value it returns true for is one the spawned npm never receives.
+ * a predicate over setting names. An ambient value it returns true for is one the
+ * spawned npm never receives. pnpm reads them all up to 10.x and stops at 11.0.0,
+ * which switched to its own `PNPM_CONFIG_*` prefix, except that 11.6.0 restored
+ * the URL-scoped credential keys; yarn berry has never read any; npm reads them by
+ * definition, and bun reads them for the settings this module bridges.
  *
  * An undetermined or unparseable version answers false for every setting:
  * bridging is skipped or falls open there anyway, so the ambient environment
- * stays as it is today.
+ * stays as it is.
  */
 export function ignoresNpmConfigEnv(
   packageManager: PackageManager,
@@ -247,7 +229,7 @@ export function setAuthToken(
   }
 }
 
-/** `_auth` carries base64(user:pass); callers must pass it pre-encoded. */
+/** `_auth` carries base64(user:pass). */
 export function setAuthIdent(
   env: NpmConfigEnv,
   registryUrl: string,
@@ -282,7 +264,6 @@ export function setCafile(env: NpmConfigEnv, path: string): void {
 }
 
 export function setStrictSsl(env: NpmConfigEnv, value: boolean): void {
-  // npm's env parser maps npm_config_strict_ssl -> strict-ssl.
   env['npm_config_strict_ssl'] = String(value);
 }
 
@@ -302,10 +283,9 @@ export function setProxies(
 }
 
 /**
- * Directories above `root` (exclusive), nearest first, up to the filesystem
- * root. yarn classic and berry both read rc files from ancestor directories,
- * which npm never sees because its project-config walk stops at the first
- * package.json (the workspace root).
+ * Directories above `root` (exclusive), nearest first. yarn classic and berry
+ * both read rc files from ancestor directories, which npm never sees because
+ * its project-config walk stops at the first package.json.
  */
 export function ancestorDirectories(root: string): string[] {
   const dirs: string[] = [];
@@ -330,8 +310,7 @@ function replaceEnvExpr(
   return value.replace(ENV_EXPR, (orig: string, esc: string, name: string) => {
     // An odd run of backslashes escapes the reference. Leave the whole match
     // verbatim: npm applies the same escape rule to the env values we hand it,
-    // so it consumes the backslashes and lands on the literal the workspace
-    // package manager resolved. Consuming them here would expand it twice.
+    // so consuming them here would expand the reference twice.
     if (esc.length % 2) {
       return orig;
     }
@@ -405,7 +384,6 @@ export function expandPnpmEnvVars(
   });
 }
 
-/** Case-tolerant read of an environment variable (exact, lower, upper). */
 export function readEnvVar(
   env: NodeJS.ProcessEnv,
   name: string
@@ -417,8 +395,7 @@ export function readEnvVar(
  * Reads `map` under `setting`, matching how npm and pnpm both expand a `${VAR}`
  * in an .npmrc key before they look a value up under it; `setting` is already
  * the resolved form to match. Both readers assign in file order, so the last key
- * that `expand` turns into `setting` wins, a literal one included. A raw key with
- * no reference is compared as-is.
+ * that `expand` turns into `setting` wins, a literal one included.
  */
 export function readExpandedKey(
   map: Map<string, string>,
@@ -453,8 +430,7 @@ export function registryKeysFor(dart: string): string[] {
 
 /**
  * Whether npm would find a credential for `dart` among the values `read`
- * exposes: a token, a basic `_auth`, a username/password pair, or a
- * client-certificate pair, at the dart or at any parent of it.
+ * exposes, at the dart or at any parent of it.
  * See https://github.com/npm/npm-registry-fetch/blob/v18.0.2/lib/auth.js#L34-L49
  */
 export function hasCredentialFor(
@@ -475,10 +451,10 @@ let warnedNativeCredential = false;
 /**
  * npm reads the user's own .npmrc chain and the overlay cannot switch that off,
  * so npm can authenticate on a registry the package manager resolved but would
- * have queried anonymously. The fetch still succeeds, so nothing else reports
- * it. Say it once, and only where the overlay is what sent npm to that registry:
- * left to itself npm would have used its own resolution and the same
- * credentials, which is what the user gets from npm anywhere else.
+ * have queried anonymously. The fetch still succeeds, so nothing else reports it.
+ * Warn only where the overlay is what sent npm to that registry: left to itself
+ * npm would have used its own resolution and the same credentials, which is what
+ * the user gets from npm anywhere else.
  *
  * `remediation` closes the message, because what the user can safely do about it
  * depends on whether the package manager reads .npmrc at all.

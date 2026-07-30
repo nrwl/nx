@@ -504,9 +504,7 @@ export function copyPackageManagerConfigurationFiles(
 }
 
 /**
- * Root whose package manager configuration (.npmrc, pnpm-workspace.yaml,
- * .yarnrc(.yml), bunfig.toml) governs registry, auth and TLS resolution. A
- * non-JS workspace has no root package.json and keeps its package manager
+ * A non-JS workspace has no root package.json and keeps its package manager
  * files under the Nx installation directory instead.
  */
 function getPackageManagerConfigRoot(): string {
@@ -514,9 +512,8 @@ function getPackageManagerConfigRoot(): string {
     return workspaceRoot;
   }
   const installationPath = getNxInstallationPath(workspaceRoot);
-  // The installation directory may be missing (nothing installed yet) or a
-  // stray non-directory, and spawning with such a cwd fails outright
-  // (ENOENT/ENOTDIR), so fall back to the workspace root.
+  // The installation directory can be missing or not a directory, and spawning
+  // with such a cwd fails outright (ENOENT/ENOTDIR).
   try {
     return statSync(installationPath).isDirectory()
       ? installationPath
@@ -603,10 +600,8 @@ export async function resolvePackageVersionUsingRegistry(
 
     return finalResolvedVersion;
   } catch (e) {
-    // `{ cause }` keeps the underlying registry failure (e.g. a TLS error)
-    // recoverable under --verbose; redact URL credentials first because a
-    // `(p)npm view` fetch error can echo a token in the registry URL, which the
-    // tool masks only in the password position.
+    // npm masks a URL credential only in the password position, so a bare token
+    // in the registry URL survives into the error kept as the cause.
     throw new Error(`Unable to resolve version ${packageName}@${version}.`, {
       cause: redactErrorCause(e),
     });
@@ -621,7 +616,7 @@ function redactUrlCredentials(text: string): string {
 function redactErrorCause(error: unknown): unknown {
   if (error && typeof error === 'object') {
     const e = error as Record<string, unknown>;
-    // stdout and cmd matter for an exec error, whose message also embeds both.
+    // An exec error carries the command and both output streams as fields.
     for (const field of ['message', 'stack', 'stderr', 'stdout', 'cmd']) {
       if (typeof e[field] === 'string') {
         e[field] = redactUrlCredentials(e[field] as string);
@@ -711,12 +706,9 @@ export async function packageRegistryView(
     workspacePm,
     configRoot
   );
-  // cwd anchors the project .npmrc / pnpm-workspace.yaml discovery to the
-  // workspace; the env overlay reproduces registry config npm cannot read
-  // itself (pnpm >= 11 resolves natively instead of from npm_config_*).
-  // npm_config_force downgrades npm's `devEngines.packageManager` enforcement
-  // (which aborts even a read-only `view` in a yarn/bun workspace whose pin sets
-  // `onFail: error`) to a warning; scoped to npm so a `pnpm view` is untouched.
+  // npm_config_force downgrades npm's `devEngines.packageManager` enforcement,
+  // which otherwise aborts even a read-only `view` when the pin sets
+  // `onFail: error`. Only set for npm so a `pnpm view` is untouched.
   try {
     const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
       windowsHide: true,
@@ -737,8 +729,6 @@ export async function packageRegistryView(
     });
     return stdout.toString().trim();
   } catch (e) {
-    // A view fetch error can echo a token embedded in the registry URL; redact
-    // before the error reaches any caller's log.
     throw redactErrorCause(e);
   }
 }
@@ -775,12 +765,9 @@ export async function packageRegistryPack(
     workspacePm,
     configRoot
   );
-  // Run from the config root (not the temp dir) so npm reads the workspace
-  // .npmrc natively, the same registry/auth packageRegistryView picks up;
-  // --pack-destination keeps the tarball in the temp dir. For non-npm package
-  // managers the env overlay reproduces the config npm cannot read
-  // (pnpm-workspace.yaml, .yarnrc(.yml), bunfig.toml). npm prints the tarball
-  // basename to stdout.
+  // Run from the config root, not the temp dir, so npm reads the workspace
+  // .npmrc natively; --pack-destination still writes the tarball to the temp
+  // dir. npm prints the tarball basename to stdout.
   try {
     const { stdout } = await execAsync(
       `${pm} pack "${pkg}@${version}" --pack-destination "${packDestination}"`,
@@ -810,19 +797,16 @@ export async function packageRegistryPack(
     const tarballPath = stdout.trim();
     return { tarballPath };
   } catch (e) {
-    // A pack fetch error can echo a token embedded in the registry URL; redact
-    // before the error reaches any caller's log.
     throw redactErrorCause(e);
   }
 }
 
-// `packageRegistryView`/`packageRegistryPack` are called in tight resolution
-// loops; cache the version probe (it shells out when the packageManager field
-// is absent).
+// The version probe shells out when the packageManager field is absent, and
+// packageRegistryView/packageRegistryPack run in tight resolution loops.
 const packageManagerVersionCache = new Map<string, string | null>();
 /**
- * Returns null when the version cannot be determined. What that means is per
- * package manager: pnpm and yarn skip bridging, bun assumes a current version.
+ * A null version is tolerated per package manager: pnpm and yarn skip bridging,
+ * bun assumes a current version.
  */
 function getPackageManagerVersionSafe(
   packageManager: PackageManager,
@@ -834,9 +818,6 @@ function getPackageManagerVersionSafe(
     try {
       version = getPackageManagerVersion(packageManager, root);
     } catch (e) {
-      // What a null version costs the caller is per package manager (see
-      // above), and none of it is visible on stdout, so leave the cause
-      // recoverable.
       logger.verbose(
         `Failed to determine the ${packageManager} version in "${root}".`,
         e
@@ -847,8 +828,7 @@ function getPackageManagerVersionSafe(
   return packageManagerVersionCache.get(key);
 }
 
-// Drops the per-process version cache. Only tests need this, to force a fresh
-// resolution; production never re-reads a version mid-run.
+// Test-only: production never re-resolves a version mid-run.
 export function clearPackageManagerVersionCache(): void {
   packageManagerVersionCache.clear();
 }

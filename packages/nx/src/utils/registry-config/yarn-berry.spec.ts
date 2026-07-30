@@ -1,6 +1,5 @@
 // os.homedir() ignores a runtime process.env.HOME override under jest, and a
-// spyOn does not affect a module's named import either; replace both modules so
-// the home lookup and the ancestor-walk file reads stay off the real FS.
+// spyOn does not affect a module's named import either.
 jest.mock('os', () => ({
   ...jest.requireActual('os'),
   homedir: jest.fn(() => '/home/user'),
@@ -22,7 +21,6 @@ import { getYarnBerrySpawnRegistryEnv } from './yarn-berry';
 describe('getYarnBerrySpawnRegistryEnv', () => {
   const ROOT = '/repo/workspace';
   const HOME = '/home/user';
-  // .yarnrc.yml contents keyed by absolute path; absent paths read as missing.
   let files: Record<string, string>;
   const managedEnvKeys = [
     'YARN_NPM_REGISTRY_SERVER',
@@ -156,9 +154,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('routes a configured-but-registry-less scope to the yarnpkg default, not the top-level registry', () => {
-    // berry seeds an omitted scope npmRegistryServer to registry.yarnpkg.com and
-    // returns it directly, so an auth-only scope does NOT inherit the custom
-    // top-level registry.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -175,9 +170,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('does not treat a scope named after an Object.prototype member as configured', () => {
-    // npmScopes is a plain parsed-YAML object, so an `in` check would find
-    // `constructor` on the prototype chain, route @constructor to the yarnpkg
-    // default and nerf-dart the global token onto that public registry.
+    // An `in` check would find `constructor` on the prototype chain and dart the
+    // global token onto the public registry.yarnpkg.com default.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -215,7 +209,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('translates a global npmAuthToken to a nerf-darted key for the effective registry', () => {
-    // npmAlwaysAuth so the unscoped fetch authenticates (berry gates it).
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -241,10 +234,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
   });
 
-  // Berry coerces a Boolean setting through miscUtils.parseBoolean, and the
-  // failsafe YAML parse delivers every scalar as a string, so '1' and 'true'
-  // are the two truthy shapes that reach the check (a bare 1 or a quoted '1'
-  // both arrive as '1').
+  // The failsafe rc parse makes every scalar a string, so a bare 1 and a quoted
+  // '1' are one input, and '1'/'true' are berry's whole truthy set.
   it.each(['npmAlwaysAuth: 1', `npmAlwaysAuth: 'true'`])(
     'authenticates an unscoped fetch for a berry-truthy %s',
     (setting) => {
@@ -492,7 +483,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('fills each networkSettings key from a different matching glob', () => {
-    // Berry merges across all matching globs per key.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -511,8 +501,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('emits no auth when an npmRegistries entry exists without credentials', () => {
-    // A present-but-credential-less entry stops berry's auth search; it must NOT
-    // fall back to the global npmAuthToken.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -567,7 +555,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
         '    npmAuthToken: SECRET',
       ].join('\n')
     );
-    // v3 does a whole-entry merge, not a per-key merge like v4.
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.8.7')).toEqual({
       npm_config_registry: 'https://reg-a.example.com/',
       'npm_config_//reg-a.example.com/:_auth':
@@ -576,8 +563,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('expands ${VAR} in npmRegistryServer before nerf-darting its auth', () => {
-    // Without expansion the registry stays `${BERRY_TEST_REGISTRY}`, which fails
-    // to parse as a URL, so no auth key is ever emitted for the real host.
     process.env.BERRY_TEST_REGISTRY = 'https://reg-env.example.com/';
     projectRc(
       [
@@ -697,8 +682,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('expands an underscore-leading ${_VAR} for berry < 4.13 (legacy parser)', () => {
-    // Berry <= 4.12 accepts [\d\w_]+ env names, so ${_VAR} resolves the way yarn
-    // would; the registry auth then darts to the expanded host.
     process.env._BERRY_TEST_REGISTRY = 'https://reg-legacy.example.com/';
     projectRc(
       [
@@ -714,9 +697,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('leaves an underscore-leading ${_VAR} literal for berry >= 4.13 (regex tightened)', () => {
-    // 4.13 rewrote the parser to [a-zA-Z]\w*, so ${_VAR} is malformed (berry
-    // itself throws). The reference is left literal, which fails to parse as a
-    // registry URL, so no auth is darted.
+    // The literal reference fails to parse as a URL, so no auth key is darted for
+    // the rc's token.
     process.env._BERRY_TEST_REGISTRY = 'https://reg-legacy.example.com/';
     projectRc(
       [
@@ -772,9 +754,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
   });
 
-  // Berry aborts on either shape, so dropping the file and carrying on would
-  // aim the injected credential at registry.yarnpkg.com, a host the workspace
-  // never configured. The caller turns the throw into no bridging at all.
+  // Dropping the file and carrying on would aim the home file's token at
+  // registry.yarnpkg.com, a host the workspace never configured.
   it('fails on an rc file that does not parse', () => {
     projectRc(
       [
@@ -806,8 +787,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     expect(message).not.toContain('ghp_ShortTok99');
   });
 
-  // yarn reads a repeated key as last-wins (@yarnpkg/parsers loads with
-  // json: true), so a file yarn 4.15.0 accepts must resolve here too.
+  // yarn reads a repeated key as last-wins, so a file yarn 4.15.0 accepts must
+  // resolve here too.
   it('reads an rc file that repeats a key, the last one winning', () => {
     projectRc(
       [
@@ -872,8 +853,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('treats a null npmScopes entry as a configured scope with defaults', () => {
-    // Berry seeds a configured scope's registry to its own default rather than
-    // to the top-level npmRegistryServer.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -917,8 +896,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('prefers an exact npmRegistries key over a scheme-less one in a closer file', () => {
-    // Berry looks the registry up in the merged map by exact key first, so the
-    // home file's exact key wins over the project file's scheme-less key.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -942,8 +919,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('reads a networkSettings glob the way micromatch does, not minimatch', () => {
-    // A bare (a|b) is an alternation for berry, and a leading ! opens an extglob
-    // rather than negating the whole pattern.
+    // A bare (a|b) is an alternation for berry, and a leading `!(` opens an
+    // extglob rather than negating the whole pattern.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -961,8 +938,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('resolves equal-length networkSettings globs lowest rc file first', () => {
-    // Berry builds the merged map from the lowest-priority file up and sorts it
-    // stably by key length, so the home file's glob is consulted first.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -1012,8 +987,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('ignores the CA env var and setting the running major rejects', () => {
-    // v4 renamed caFilePath to httpsCaFilePath, and berry aborts on the name it
-    // does not know, under YARN_* just as much as in the rc file.
     process.env.YARN_CA_FILE_PATH = '/etc/ssl/v3-env-ca.pem';
     projectRc('caFilePath: ./certs/v3-ca.pem\n');
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
@@ -1085,8 +1058,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
 
     it('lets a per-host entry re-enable the network globally turned off', () => {
-      // getNetworkSettings reads the matching host entry before the global
-      // value, so the narrower setting is the one that applies.
       const messages = warnOnce(
         [
           'npmRegistryServer: https://reg-a.example.com/',
@@ -1140,8 +1111,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   it('fills the client certificate per host and the key globally', () => {
-    // getNetworkSettings fills each key independently, so a per-host cert and a
-    // global key are the one pair berry ends up presenting.
     projectRc(
       [
         'npmRegistryServer: https://reg-a.example.com/',
@@ -1191,8 +1160,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   });
 
   describe('reporting a credential berry would not send', () => {
-    // berry never reads an .npmrc, so a credential one holds for the registry
-    // berry resolved is one berry itself would never send.
     const warnFor = (packages: string[]): string[] => {
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
@@ -1215,7 +1182,6 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       const warnings = warnFor(['is-even', 'is-odd']);
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toContain('//reg-a.example.com/');
-      // Safe advice here only because berry reads no .npmrc at all.
       expect(warnings[0]).toContain('Remove that credential from .npmrc');
     });
 
@@ -1243,8 +1209,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
 
     it('does not count an ambient credential the berry spawn strips', () => {
-      // berry ignores npm_config_*, so the spawn drops this ambient token before
-      // npm runs; the .npmrc holds nothing for reg-a, so npm fetches it anonymously.
+      // berry ignores npm_config_*, so the spawn strips this ambient token before
+      // npm runs.
       files[`${ROOT}/.npmrc`] =
         '//other.example.com/:_authToken=native-token\n';
       process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
@@ -1252,8 +1218,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
 
     it('counts a native credential whose key holds an env reference', () => {
-      // npm expands ${VAR} in an .npmrc key, so this token authenticates reg-a,
-      // and berry, reading no .npmrc, would not send it.
+      // npm expands ${VAR} in an .npmrc key, so this token authenticates reg-a.
       process.env.NX_TEST_HOST = 'reg-a.example.com';
       files[`${ROOT}/.npmrc`] = '//${NX_TEST_HOST}/:_authToken=native-token\n';
       const warnings = warnFor(['is-even']);

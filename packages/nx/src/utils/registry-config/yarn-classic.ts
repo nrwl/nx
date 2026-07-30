@@ -29,8 +29,8 @@ import {
  *   reads /usr/local/share first and the real home second. <globalPrefix> is
  *   $PREFIX, else dirname(dirname(process.execPath)) (dirname on Windows).
  *
- * Unscoped registry: a `--registry`/`--install.registry` line in any .yarnrc
- * (yarn injects it as a default CLI arg) > npm_config_registry env >
+ * Unscoped registry: a `--registry`/`--install.registry` line in a CLI-rc
+ * .yarnrc (yarn injects it as a default CLI arg) > npm_config_registry env >
  * YARN_REGISTRY env > .npmrc registry (the npm-config chain is exhausted first)
  * > .yarnrc registry > https://registry.yarnpkg.com.
  *
@@ -39,17 +39,10 @@ import {
  *
  * Option keys (cafile, strict-ssl, proxy) resolve the other way around, and off
  * the env first: `yarn_<key>` > .yarnrc > `npm_config_<key>` > .npmrc > yarn's
- * DEFAULTS. YarnRegistry.getOption reads yarn's own config before npm's, and
- * loadConfig folds DEFAULTS into that config, so a key DEFAULTS carries never
- * reaches the npm tier at all: `strict-ssl` is one of them, which is why no
- * npm-config source (env or .npmrc) can turn TLS verification off for yarn.
- * It is Boolean()-coerced, so only a bare `false` (yaml/lockfile boolean, or the
- * env string yarn coerces the same way) disables TLS; a quoted `"false"` in a
- * file stays the truthy string 'false' and keeps verification on. A `cafile`
- * value is tilde-expanded (`~/`) then resolved against the cwd. `always-auth` is
- * not one of these: it is read off the npm registry's own config (npmrc chain
- * plus the `yarn_`/`npm_config_` env prefixes), not .yarnrc, and for the
- * registry being queried rather than for the key the credential came from.
+ * DEFAULTS. A key DEFAULTS carries never reaches the npm tier at all, which is
+ * why no npm-config source can turn TLS verification off for yarn. `always-auth`
+ * is not one of these: it is read off the npm registry's own config for the
+ * registry being queried, not off .yarnrc.
  *
  * npm natively reads the project, home, and <globalPrefix>/etc .npmrc plus env
  * vars identically, so bridging is only needed when a yarn-only surface wins
@@ -62,8 +55,8 @@ import {
 const YARN_CLASSIC_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';
 
 // A parsed .yarnrc value mirrors yarn's lockfile tokenizer: a bare `true`/
-// `false` is a boolean, a bare integer is a number, and everything else
-// (quoted, or a bare word/URL) is a string.
+// `false` is a boolean, a bare integer a number, everything else (quoted, or a
+// bare word) a string.
 type YarnValue = string | number | boolean;
 
 interface RcFile {
@@ -85,9 +78,8 @@ export function getYarnClassicSpawnRegistryEnv(
   const ancestors = ancestorDirectories(root);
   const etcDir = globalEtcDir();
 
-  // [project, primary home, etc, (root secondary home), ...ancestors]. yarn
-  // ranks <prefix>/etc above the real home it adds under root, so the secondary
-  // home tier follows etc. The etc tier uses dotless `npmrc`/`yarnrc` names.
+  // yarn ranks <prefix>/etc above the real home it adds under root, so the
+  // secondary home tier follows etc.
   const sources: {
     npmrcPath: string;
     yarnrcPath: string;
@@ -108,14 +100,13 @@ export function getYarnClassicSpawnRegistryEnv(
     map: toYarnValueMap(readChainNpmrcMap(s.npmrcPath)),
   }));
   const yarnrcChain: RcFile[] = sources.map((s) => ({
-    // npm never reads .yarnrc, so every entry is a yarn-only surface.
+    // npm never reads .yarnrc.
     npmNative: false,
     map: readYarnrcMap(s.yarnrcPath),
   }));
-  // `--registry`/`--install.registry` CLI default args resolve through yarn's
-  // separate rc path set, merged last-wins, so ~/.yarnrc beats the project
-  // .yarnrc which beats ancestors. <prefix>/etc, system /etc and XDG
-  // ~/.config/yarn lines live at paths this set does not cover and are skipped.
+  // yarn resolves these CLI default args through a separate rc path set, merged
+  // last-wins, so ~/.yarnrc beats the project .yarnrc which beats ancestors.
+  // <prefix>/etc, system /etc and XDG ~/.config/yarn are not in that set.
   const cliRegistryChain: RcFile[] = [
     { npmNative: false, map: readYarnrcMap(join(realHome, '.yarnrc')) },
     { npmNative: false, map: readYarnrcMap(join(root, '.yarnrc')) },
@@ -138,15 +129,10 @@ export function getYarnClassicSpawnRegistryEnv(
   return env;
 }
 
-// yarn reads registry auth only from the .npmrc chain (never .yarnrc), with the
-// same project > home > etc > ancestors precedence. Its getRegistryOrGlobalOption
-// takes a registry-scoped (nerf-darted) key first, else the bare global key. It
-// attaches that auth only on a scoped fetch, or on an unscoped one when
-// always-auth is set for the registry (registry-scoped key, else global). npm
-// reads the native files itself, so a yarn-only winner is bridged, but only when
-// yarn would send it; bridging unconditionally would make npm authenticate where
-// yarn stays anonymous and 401 on a registry that serves the package without
-// credentials.
+// yarn reads registry auth only from the .npmrc chain, never .yarnrc. Bridge a
+// yarn-only winner only where yarn would send it: bridging unconditionally makes
+// npm authenticate where yarn stays anonymous, and 401 on a registry that serves
+// the package without credentials.
 function resolveAuth(
   env: NpmConfigEnv,
   npmrcChain: RcFile[],
@@ -164,25 +150,19 @@ function resolveAuth(
       }
     }
   }
-  // npm honors auth only in the nerf-darted form, so a bare global key
-  // (_authToken/_auth/username/_password) is re-keyed onto the registry yarn
-  // would send it to, from any source: npm ignores a bare key even in its own
-  // .npmrc, while yarn's getOption reads it from the whole chain. Values carry
-  // over as-is: npm consumes the _auth/_password base64 the way yarn reads it.
+  // npm ignores a bare key even in its own .npmrc, while yarn's getOption reads
+  // one from the whole chain, so a bare global key is re-keyed onto the dart from
+  // any source, npm-native files included. The _auth/_password base64 carries
+  // over as-is.
   const dart = nerfDart(authRegistry);
-  // yarn authenticates a scoped fetch unconditionally; an unscoped one only when
-  // always-auth is set for the registry it is about to query, whichever key the
-  // credential itself came from. Skip the bridge where yarn would send nothing.
+  // always-auth is read for the registry yarn is about to query, not for the
+  // dart the credential came from.
   const authenticates = scope !== null || alwaysAuthFor(dart, npmrcChain);
   if (!authenticates && dart) {
-    // The gate stops the bridge, not npm's own read of the same files, so say
-    // so where npm is about to authenticate on a registry yarn resolved.
     warnNativeCredential(
       env,
       dart,
       'yarn',
-      // Not "remove it": yarn reads the same file and sends that credential for
-      // every scoped package, so deleting it would break those installs.
       'yarn does send it for scoped packages, and for any registry with always-auth set, so removing it from .npmrc would stop those from authenticating too.',
       (key) => {
         const match = firstString(npmrcChain, key);
@@ -200,7 +180,6 @@ function resolveAuth(
       continue;
     }
     if (key.startsWith('//')) {
-      // Already nerf-darted: npm reads the native ones itself.
       if (!winner.npmNative) {
         env[`npm_config_${key}`] = winner.value;
       }
@@ -209,9 +188,9 @@ function resolveAuth(
     }
   }
   for (const { key, value } of bareBridges) {
-    // yarn's getRegistryOrGlobalOption takes a registry-scoped key over the bare
-    // global one, and npm reads a native scoped key itself, so a matching
-    // nerf-darted key (from any tier) must not be shadowed by the bare value.
+    // yarn takes a registry-scoped key over the bare global one, and npm reads a
+    // native one itself, so the bare value must not be bridged over a darted key
+    // from any tier.
     if (firstString(npmrcChain, `${dart}:${key}`)) {
       continue;
     }
@@ -219,19 +198,16 @@ function resolveAuth(
   }
 }
 
-// yarn's getRegistryOrGlobalOption(registry, 'always-auth'): a registry-scoped
-// `//host/:always-auth` for the registry being queried wins, else the global
-// `always-auth`, then Boolean()-coerced. Both come from NpmRegistry's own
-// config, which .yarnrc never feeds: loadConfig reads the npmrc chain only.
-// Unlike resolveOption this returns the value regardless of whether npm reads it
-// natively, since it drives the auth gate rather than a bridge.
+// .yarnrc never feeds always-auth: yarn reads it from NpmRegistry's own config,
+// registry-scoped key first, else the global one. Unlike resolveOption this
+// ignores npmNative, since it drives the auth gate rather than a bridge.
 function alwaysAuthFor(dart: string | null, npmrcChain: RcFile[]): boolean {
   const registryScoped = dart
     ? registryScopedAlwaysAuth(dart, npmrcChain)
     : undefined;
-  // BaseRegistry.init merges the `yarn_` env prefix and loadConfig then merges
-  // `npm_config_` over it, before any file is read; loadConfig's Object.assign
-  // keeps the config it already has, so an env value beats every npmrc.
+  // yarn merges the `yarn_` env prefix before any rc file is read and then
+  // `npm_config_` over it, so an env value beats every npmrc and npm's spelling
+  // beats yarn's.
   const globalFromEnv =
     readEnvVar(process.env, 'npm_config_always_auth') ??
     readEnvVar(process.env, 'yarn_always_auth');
@@ -242,14 +218,10 @@ function alwaysAuthFor(dart: string | null, npmrcChain: RcFile[]): boolean {
   return Boolean(registryScoped || global);
 }
 
-// The registry-scoped tier of that lookup. mergeEnv lowercases an env key,
-// rewrites `__` to `.` and `_` to `-`, then stores it with objectPath, which
-// splits on `.` into nested objects, while every read is flat. So a
-// registry-scoped env key reaches yarn's own read only when the whole key is
-// dot-free, which for a fixed `:always-auth` suffix means the dart itself is
-// (verified on 1.22.22: an env key for //localhost:PORT/ authenticates an
-// unscoped fetch, the same key for //127.0.0.1:PORT/ does not). Consulting one
-// that yarn cannot see would authenticate where yarn sends nothing.
+// mergeEnv stores an env key with objectPath, which splits on `.` into nested
+// objects while every read is flat, so a registry-scoped env key only reaches
+// yarn when the dart is dot-free (a key for //localhost:PORT/ authenticates an
+// unscoped fetch, the same key for //127.0.0.1:PORT/ does not).
 function registryScopedAlwaysAuth(
   dart: string,
   npmrcChain: RcFile[]
@@ -265,7 +237,7 @@ function registryScopedAlwaysAuth(
   return firstDefined(npmrcChain, `${dart}:always-auth`)?.value;
 }
 
-/** yarn's BaseRegistry.normalizeConfigOption: only the bare booleans coerce. */
+/** Mirrors yarn's BaseRegistry.normalizeConfigOption. */
 function normalizeYarnConfigValue(value: string): YarnValue {
   return value === 'true' ? true : value === 'false' ? false : value;
 }
@@ -284,10 +256,6 @@ function isAuthKey(key: string): boolean {
   return BARE_AUTH_KEYS.has(key);
 }
 
-// Bridges the registry surfaces yarn resolves that npm cannot see, and returns
-// the registry the spawned npm will query for the package (yarn's getRegistry
-// order: a scoped registry first, else the unscoped one, else npm's own
-// default). That registry's nerf-dart is where bare global auth is re-keyed.
 function resolveRegistry(
   env: NpmConfigEnv,
   npmrcChain: RcFile[],
@@ -304,8 +272,8 @@ function resolveRegistry(
     yarnrcChain,
     cliYarnrcChain
   );
-  // npm's own default when nothing is configured (yarn's default is npmjs' CNAME
-  // and npm stays on registry.npmjs.org), so the dart lands where npm queries.
+  // yarn's default is npmjs' CNAME and npm stays on registry.npmjs.org, so the
+  // dart lands where npm queries.
   return scopedRegistry ?? unscopedRegistry ?? 'https://registry.npmjs.org/';
 }
 
@@ -356,8 +324,8 @@ function resolveUnscopedRegistry(
   return undefined;
 }
 
-// Bridges the scoped registry when a yarn-only surface wins, and returns the
-// scoped registry yarn resolves (native or not) so auth can dart onto it.
+// Returns the scoped registry yarn resolves even when npm reads it natively, so
+// auth can dart onto it.
 function resolveScopedRegistry(
   env: NpmConfigEnv,
   npmrcChain: RcFile[],
@@ -392,9 +360,6 @@ function resolveOptions(
   root: string,
   home: string
 ): void {
-  // Option keys resolve .yarnrc first, then the full .npmrc chain. npm reads
-  // its native .npmrc entries on its own, so a value is bridged only when the
-  // winner is a .yarnrc entry or a yarn-only .npmrc entry.
   const cafile =
     yarnEnvOption('cafile') ??
     resolveOption(firstString, npmrcChain, yarnrcChain, 'cafile');
@@ -402,15 +367,13 @@ function resolveOptions(
     setCafile(env, resolveYarnPath(cafile, root, home));
   }
 
-  // Only the yarn side declares this one: DEFAULTS carries `strict-ssl`, so no
-  // npm-config source reaches it (verified on 1.22.22, where both an .npmrc
-  // `strict-ssl=false` and `npm_config_strict_ssl=false` leave verification on).
-  // That cuts both ways, so a declared value is bridged in either direction:
-  // npm has to be told to keep verifying where its own config would stop, not
-  // just told to stop where yarn does.
-  // An env value arrives as a string; yarn coerces the bare booleans out of it
-  // before the Boolean() check, so `YARN_STRICT_SSL=false` really does turn
-  // verification off where a quoted `"false"` in a file does not.
+  // DEFAULTS carries `strict-ssl`, so no npm-config source reaches yarn's value
+  // (an .npmrc `strict-ssl=false` and `npm_config_strict_ssl=false` both leave
+  // verification on). That cuts both ways: npm also has to be told to keep
+  // verifying where its own config would stop, so a declared value is bridged in
+  // either direction. An env value arrives as a string and yarn coerces the bare
+  // booleans out of it first, so `YARN_STRICT_SSL=false` does turn verification
+  // off where a quoted `"false"` in a file does not.
   const strictSslEnv = yarnEnvOption('strict-ssl');
   const strictSsl =
     strictSslEnv !== undefined
@@ -434,22 +397,19 @@ function resolveOptions(
 }
 
 /**
- * The `yarn_`-prefixed env tier for an option key (YARN_CAFILE, YARN_STRICT_SSL,
- * YARN_PROXY, ...). BaseRegistry.init merges it before any rc file is read and
- * loadConfig keeps what it already has, so it outranks every file, and
- * YarnRegistry.getOption consults yarn's own config before npm's, so it also
- * outranks a `npm_config_` value (verified on 1.22.22: with both YARN_CAFILE and
- * npm_config_cafile set, `yarn config get cafile` returns the YARN_ one). npm
- * cannot see it under that name, so it has to be bridged.
+ * The `yarn_` env tier for an option key (YARN_CAFILE, YARN_STRICT_SSL, ...).
+ * yarn merges it before any rc file is read and getOption consults yarn's own
+ * config before npm's, so it outranks every file and a `npm_config_` value of
+ * the same key (with both YARN_CAFILE and npm_config_cafile set, `yarn config
+ * get cafile` returns the YARN_ one). npm cannot see it under that name.
  */
 function yarnEnvOption(key: string): string | undefined {
   return readEnvVar(process.env, `yarn_${key.replace(/-/g, '_')}`);
 }
 
-// Resolves an option key the way yarn does below its own env tier (.yarnrc,
-// then npm's config), and returns the value to bridge: the .yarnrc value when
-// present, otherwise the first .npmrc value but only if npm cannot read it
-// natively.
+// Yarn's option resolution below its own env tier: .yarnrc, then npm's config.
+// Returns only a value that needs bridging, so a native .npmrc winner comes back
+// undefined.
 function resolveOption<T extends YarnValue>(
   lookup: (chain: RcFile[], key: string) => Match<T> | undefined,
   npmrcChain: RcFile[],
@@ -460,9 +420,8 @@ function resolveOption<T extends YarnValue>(
   if (yarnrc) {
     return yarnrc.value;
   }
-  // Under .yarnrc yarn falls through to npm's own config, where the
-  // `npm_config_` env tier outranks every .npmrc. npm reads that tier itself,
-  // so a value there needs no bridge and shadows the file chain below it.
+  // The `npm_config_` env tier outranks every .npmrc and npm reads it itself, so
+  // a value there needs no bridge and shadows the file chain below it.
   if (readNpmConfigEnv(process.env, key) !== undefined) {
     return undefined;
   }
@@ -486,11 +445,10 @@ interface HomeTier {
   npmNative: boolean;
 }
 
-// yarn's userHomeDir.default is /usr/local/share when running as root (uid 0,
-// no FAKEROOTKEY) and the real home otherwise; under root yarn ALSO reads the
-// real home as a secondary tier (ranked below <prefix>/etc). The primary is the
-// tilde-expansion base. npm reads only the real home natively (its userconfig),
-// so /usr/local/share is npm-invisible.
+// yarn's userHomeDir.default is /usr/local/share when running as root (uid 0, no
+// FAKEROOTKEY) and the real home otherwise; under root the real home stays on as
+// a second tier. The primary is the tilde-expansion base, and npm reads only the
+// real home natively.
 function yarnHomeTiers(home: string): {
   primary: HomeTier;
   secondary?: HomeTier;
@@ -509,8 +467,7 @@ function yarnHomeTiers(home: string): {
   return { primary: { dir: home, npmNative: true } };
 }
 
-// yarn's getGlobalPrefix: $PREFIX, else the directory two levels above the node
-// binary (one level on Windows). Hosts the etc/{npmrc,yarnrc} files.
+// Mirrors yarn's getGlobalPrefix.
 function globalEtcDir(): string {
   const prefix =
     process.env.PREFIX ??
@@ -538,8 +495,8 @@ function firstDefined(
   return undefined;
 }
 
-// String-typed lookup: yarn stores a bare `false`/number as a non-string, which
-// is never a valid registry/path/proxy value, so skip those entries.
+// yarn stores a bare `false`/number as a non-string, never a valid
+// registry/path/proxy value, so skip those entries rather than coercing.
 function firstString(chain: RcFile[], key: string): Match<string> | undefined {
   for (const file of chain) {
     const value = file.map?.get(key);
@@ -550,15 +507,14 @@ function firstString(chain: RcFile[], key: string): Match<string> | undefined {
   return undefined;
 }
 
-// yarn computes strictSSL = Boolean(getOption('strict-ssl')); the string
-// 'false' (a quoted value) is truthy, only a bare boolean false / 0 / '' isn't.
+// yarn computes strictSSL as Boolean(getOption('strict-ssl')), so a quoted
+// `"false"` (a string) keeps verification on.
 function truthyStrictSsl(value: YarnValue): boolean {
   return Boolean(value);
 }
 
-// What the spawned npm resolves for strict-ssl on its own: its env tier over the
-// .npmrc files it reads natively, defaulting to verification on. Only a literal
-// `false` turns it off, which toYarnValueMap has already typed as a boolean.
+// Only a literal `false` turns npm's own strict-ssl off, and toYarnValueMap has
+// already typed that as a boolean.
 function npmVerifiesTls(npmrcChain: RcFile[]): boolean {
   const fromEnv = readNpmConfigEnv(process.env, 'strict-ssl');
   if (fromEnv !== undefined) {
@@ -584,11 +540,10 @@ function resolveYarnPath(value: string, root: string, home: string): string {
   return resolve(root, value);
 }
 
-// yarn dies on an .npmrc in its chain that it cannot open, the same way it
-// does on a .yarnrc (verified on 1.22.22: the EACCES propagates and yarn exits
-// 1), so there is no resolution left to reproduce. Continuing without the file
-// instead would resolve from the remaining ones, which is how a workspace
-// registry silently becomes an ancestor's or the default.
+// yarn itself dies on an .npmrc in its chain it cannot open, so there is no
+// resolution left to reproduce. Reading on without the file would resolve the
+// registry from the remaining ones, silently landing on an ancestor's or the
+// default.
 function readChainNpmrcMap(path: string): Map<string, string> | null {
   const map = readNpmrcMap(path);
   if (map === 'unreadable') {
@@ -603,11 +558,10 @@ function toYarnValueMap(
   if (!map) {
     return null;
   }
-  // yarn classic env-replaces ${VAR} in .npmrc values via normalizeConfig, so
-  // resolve them here rather than leaving the spawned npm to apply its own
-  // grammar to whatever we bridge.
-  // npm's ini parser yields strings; coerce the booleans npm itself recognizes
-  // so option semantics line up with the .yarnrc side.
+  // yarn env-replaces `${VAR}` in .npmrc values itself, so expand here rather
+  // than leaving the spawned npm to apply its own grammar to what we bridge.
+  // The ini reader yields strings; coercing the bare booleans lines these values
+  // up with the .yarnrc side.
   const result = new Map<string, YarnValue>();
   for (const [key, value] of map) {
     result.set(key, normalizeYarnConfigValue(expandEnvVars(value)));
@@ -616,13 +570,11 @@ function toYarnValueMap(
 }
 
 /**
- * Parses yarn classic's .yarnrc into a last-write-wins map, or null when the
- * file is missing. Yarn reads it with its lockfile parser first, so a single
- * line that parser rejects costs the whole file rather than just that line, and
- * then retries the whole file with js-yaml. A file the retry accepts is honored
- * in full, which is how
- * `registry: https://host/` works despite the lockfile grammar throwing on it
- * (verified on 1.22.22).
+ * Parses yarn classic's .yarnrc into a last-write-wins map. Yarn reads it with
+ * its lockfile parser first, so one rejected line costs the whole file rather
+ * than just that line, then retries the whole file with js-yaml and honors what
+ * the retry accepts, which is how `registry: https://host/` works despite the
+ * lockfile grammar throwing on it.
  * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/lockfile/parse.js#L384-L397
  *
  * @yarnpkg/lockfile on npm is a 2018 snapshot of that parser and has since
@@ -637,10 +589,9 @@ function readYarnrcMap(path: string): Map<string, YarnValue> | null {
   try {
     raw = readFileSync(path, 'utf-8');
   } catch {
-    // yarn dies on a .yarnrc it cannot open (verified on 1.22.22: the EACCES
-    // propagates and yarn exits 1), so there is no resolution left to
-    // reproduce. Skipping the file instead would resolve from the remaining
-    // ones, which is how a workspace registry silently becomes the default.
+    // yarn itself dies on a .yarnrc it cannot open, so there is no resolution
+    // left to reproduce. Skipping the file would resolve from the remaining
+    // ones, silently landing a workspace registry on the default.
     throw new Error(`The .yarnrc at ${path} could not be read.`);
   }
   try {
@@ -651,33 +602,33 @@ function readYarnrcMap(path: string): Map<string, YarnValue> | null {
 }
 
 /**
- * Yarn's fallback for a .yarnrc its lockfile parser rejects: js-yaml under the
- * failsafe schema, which makes every scalar a string. Classic passes the schema
- * alone, where berry's parser also passes `json: true`, so a duplicate key
- * throws here rather than resolving last-wins.
+ * Yarn's own fallback for a .yarnrc its lockfile parser rejects. The failsafe
+ * schema makes every scalar a string, and classic passes the schema alone where
+ * berry also passes `json: true`, so a duplicate key throws here rather than
+ * resolving last-wins.
  */
 function parseYarnrcAsYaml(path: string): Map<string, YarnValue> {
   let loaded: unknown;
   try {
     loaded = readYamlFile(path, { failsafe: true });
   } catch {
-    // Rejected by both parsers, which is where yarn rethrows the first error
-    // and dies rather than reading on without the file (verified on 1.22.22
-    // with a duplicate key: exit 1). The message stays off the parse error,
-    // which quotes the lines around the fault: credential material here.
+    // Rejected by both parsers, where yarn rethrows the first error and dies
+    // rather than reading on without the file. Keep the parse error out of the
+    // message: it quotes the lines around the fault, which here can be
+    // credential material.
     throw new Error(`The .yarnrc at ${path} could not be read.`);
   }
   const map = new Map<string, YarnValue>();
-  // A document that is not a mapping (a bare scalar, a list) loads fine and
-  // declares nothing, which is how yarn ends up ignoring an unquoted
-  // `registry https://host/`: every lookup on it misses.
+  // Yarn ignores a document that is not a mapping rather than failing, which is
+  // how an unquoted `registry https://host/` (one bare scalar to YAML) ends up
+  // declaring nothing.
   if (!loaded || typeof loaded !== 'object' || Array.isArray(loaded)) {
     return map;
   }
   for (const [key, value] of Object.entries(loaded)) {
-    // The failsafe schema yields a string for every scalar, so anything else is
-    // a nested block, and nothing read here is one. A quoted or plain `false`
-    // arriving as the truthy string 'false' is yarn's own behavior, not a loss.
+    // Anything the failsafe schema did not make a string is a nested block, and
+    // nothing read here is one. A `false` arriving as the truthy string 'false'
+    // is yarn's own behavior, not a loss.
     if (typeof value === 'string') {
       map.set(key, value);
     }
@@ -691,8 +642,7 @@ type YarnToken =
   | { type: 'colon' | 'comma' | 'newline' | 'eof' | 'invalid'; value?: never };
 
 /**
- * Yarn's lockfile tokenizer. A bare word runs until `:`, a space, a comma or a
- * newline and starts with a letter, `/`, `.` or `-`, which is why an unquoted
+ * Yarn's lockfile tokenizer. A bare word stops at `:`, which is why an unquoted
  * URL value breaks the file: its `://` splits into three tokens.
  */
 function* tokenizeYarnrc(input: string): Generator<YarnToken> {
@@ -834,7 +784,6 @@ function parseYarnrc(raw: string): Map<string, YarnValue> {
           }
           token = next();
         } else if (wasColon) {
-          // A nested block: parsed for its tokens, dropped from the flat map.
           parseLevel(indent + 1, false);
           if (indent && token.type !== 'indent') {
             return;

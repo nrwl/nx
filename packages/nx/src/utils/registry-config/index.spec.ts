@@ -1,6 +1,5 @@
-// os.homedir() ignores a runtime process.env.HOME override under jest, and a
-// spyOn does not affect a module's named import either; replace both modules so
-// every resolver's home/ancestor lookup stays off the real filesystem.
+// Under jest, os.homedir() ignores a process.env.HOME override and a spyOn does
+// not reach a module's named import; mock both to stay off the real filesystem.
 jest.mock('os', () => ({
   ...jest.requireActual('os'),
   homedir: jest.fn(() => '/home/user'),
@@ -29,8 +28,8 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   const ROOT = '/repo/workspace';
   const HOME = '/home/user';
   let files: Record<string, string>;
-  // Every env var any resolver consults, so the dispatch tests are stable on a
-  // developer machine that happens to set one of them.
+  // Cleared so a developer machine that sets one of these cannot change what
+  // the dispatch tests resolve.
   const managedEnvKeys = [
     'npm_config_registry',
     'NPM_CONFIG_REGISTRY',
@@ -109,9 +108,9 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   });
 
   it('warns once (not per package) when the yarn version is unknown', () => {
-    // isolateModules gives a fresh index (the once-flag resets) but shares the
-    // logger mock, so clear it first; the yarn-unknown branch returns before
-    // touching the filesystem, so no file mocks are needed.
+    // isolateModules resets the once-flag but shares the logger mock, so clear
+    // it first; this branch returns before touching the filesystem, so no file
+    // fixtures.
     const { logger } = require('../logger');
     (logger.warn as jest.Mock).mockClear();
     jest.isolateModules(() => {
@@ -159,7 +158,6 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     expect(
       getNpmSpawnRegistryEnv('is-even', undefined as any, 'pnpm', '11.5.0')
     ).toEqual({});
-    // Falling open is silent on stdout, so the cause has to stay recoverable.
     expect(logger.verbose).toHaveBeenCalledTimes(1);
   });
 
@@ -173,8 +171,8 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
       fresh('is-even', ROOT, 'yarn', '4.16.0');
       fresh('is-odd', ROOT, 'yarn', '4.16.0');
     });
-    // Verbose is off by default, so a workspace nx knows is misconfigured would
-    // otherwise fall back to npm's own resolution with no output at all.
+    // Verbose is off by default, so without this warning the fallback to npm's
+    // own resolution is silent.
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
       'Could not read the yarn configuration'
@@ -187,8 +185,8 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     files[`${ROOT}/.yarnrc.yml`] =
       'npmRegistryServer: "https://reg-a.example.com/\n  bad: [unclosed\n';
     files[`${HOME}/.yarnrc.yml`] = 'npmAuthToken: home-token\n';
-    // Not the yarnpkg default plus the home token, which is where skipping the
-    // unreadable file would have sent the credential.
+    // Skipping the unparsable file would have sent the home token to the
+    // yarnpkg default.
     expect(getNpmSpawnRegistryEnv('@acme/pkg', ROOT, 'yarn', '4.16.0')).toEqual(
       {}
     );
@@ -208,9 +206,9 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
         return readFile(p, ...rest);
       }
     );
-    // Resolving from the remaining files instead would silently promote a
-    // registry yarn itself never reaches (it exits 1 on the unreadable file).
-    // isolateModules so the warn-once flag is fresh for this case.
+    // yarn itself exits 1 on the unreadable file, so resolving from the rest
+    // would promote a registry it never reaches. isolateModules keeps the
+    // warn-once flag fresh.
     jest.isolateModules(() => {
       const { getNpmSpawnRegistryEnv: fresh } = require('./index');
       expect(fresh('is-even', ROOT, 'yarn', '1.22.22')).toEqual({});
@@ -221,9 +219,8 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
   });
 
   it('points the default registry at a bridged scoped registry for an underscore scope', () => {
-    // npm normalizes the @my_scope:registry env key to @my-scope:registry but
-    // looks it up verbatim, so the scoped override is lost; the view/pack target
-    // is this exact package, so the default must carry the scoped registry.
+    // npm rewrites @my_scope to @my-scope but looks the key up verbatim, so the
+    // scoped override alone would be lost; the target is this exact package.
     files[`${ROOT}/bunfig.toml`] =
       '[install.scopes]\n"@my_scope" = "https://reg-underscore.example.com/"\n';
     expect(
@@ -282,7 +279,7 @@ describe('ignoresNpmConfigEnv', () => {
     expect(ignoresNpmConfigEnv('yarn', '1.22.22')('registry')).toBe(false);
     expect(ignoresNpmConfigEnv('yarn', '2.4.3')('registry')).toBe(true);
     expect(ignoresNpmConfigEnv('yarn', '4.15.0')('registry')).toBe(true);
-    // Berry has no URL-scoped env tier; the dart keys stay ignored.
+    // Berry has no URL-scoped env tier.
     expect(ignoresNpmConfigEnv('yarn', '4.15.0')(dartKey)).toBe(true);
   });
 

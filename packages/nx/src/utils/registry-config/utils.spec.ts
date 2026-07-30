@@ -54,14 +54,10 @@ describe('expandEnvVars', () => {
   });
 
   it('does not honor a ${VAR:-default} fallback (npm has no default operator)', () => {
-    // npm's ${VAR} substitution has no `:-default` form, so the whole token is
-    // one unknown var name and stays verbatim (unlike berry's nested defaults).
     expect(expandEnvVars('${TOKEN:-fallback}', {})).toBe('${TOKEN:-fallback}');
   });
 
   it('leaves an escaped \\${VAR} unexpanded', () => {
-    // npm applies the same escape rule to the values we hand it, so the
-    // backslashes stay and npm consumes them.
     expect(expandEnvVars('\\${TOKEN}', { TOKEN: 'secret' })).toBe('\\${TOKEN}');
   });
 
@@ -70,8 +66,7 @@ describe('expandEnvVars', () => {
   });
 
   it('stops a name at a nested ${ rather than spanning it', () => {
-    // Verified against npm's and pnpm's own env-replace: the outer `${A` never
-    // forms a reference, and the inner one expands in place.
+    // Verified against npm's and pnpm's own env-replace.
     expect(expandEnvVars('${A${B}', { B: 'x' })).toBe('${Ax');
   });
 });
@@ -99,8 +94,6 @@ describe('expandPnpmEnvVars', () => {
   });
 
   it('drops an unresolvable reference instead of keeping it verbatim', () => {
-    // pnpm's reader has substituted an empty string here since 11.2.0; keeping
-    // the reference would hand npm a literal ${MISSING} to send as a credential.
     expect(expandPnpmEnvVars('${MISSING}', {})).toBe('');
     expect(expandPnpmEnvVars('pre-${MISSING}-post', {})).toBe('pre--post');
   });
@@ -264,7 +257,6 @@ describe('mergeNpmConfigEnv', () => {
   });
 
   it('keeps only the last ambient spelling of a setting it does not carry', () => {
-    // Two spellings would otherwise leave the winner to the reordering shell.
     expect(
       mergeNpmConfigEnv(
         {
@@ -286,8 +278,6 @@ describe('mergeNpmConfigEnv', () => {
   });
 
   it('drops an ambient setting the package manager never reads', () => {
-    // npm's env tier sits above every .npmrc, so an ambient cafile pnpm 11 or
-    // berry ignored would still displace the chain they resolved from.
     expect(
       mergeNpmConfigEnv(
         { NPM_CONFIG_CAFILE: '/ca.pem', PATH: '/usr/bin' },
@@ -314,8 +304,6 @@ describe('mergeNpmConfigEnv', () => {
   });
 
   it('keeps a setting the predicate says the package manager reads', () => {
-    // pnpm >= 11.6 reads a URL-scoped credential from the environment again
-    // while still ignoring the named settings, so only the latter are dropped.
     expect(
       mergeNpmConfigEnv(
         {
@@ -331,8 +319,6 @@ describe('mergeNpmConfigEnv', () => {
   });
 
   it('keeps an ambient setting outside the ones it resolves', () => {
-    // Only registry, auth and TLS are resolved on the package manager's behalf;
-    // everything else is npm's own and the package manager has no say in it.
     expect(
       mergeNpmConfigEnv(
         { npm_config_cache: '/cache', npm_config_userconfig: '/user/.npmrc' },
@@ -346,8 +332,6 @@ describe('mergeNpmConfigEnv', () => {
   });
 
   it('drops even an empty ambient twin of an overlaid setting', () => {
-    // A Windows environment is case-insensitive and passes on only the first
-    // spelling, so an empty twin left in place can displace the overlay.
     expect(
       mergeNpmConfigEnv(
         { NPM_CONFIG_REGISTRY: '' },

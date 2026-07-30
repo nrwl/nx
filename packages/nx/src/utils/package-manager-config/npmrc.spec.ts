@@ -26,15 +26,12 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
   });
 
   it('returns null for a path through a non-directory', () => {
-    // ENOTDIR is another shape of "no such file", not an unreadable one.
     writeFileSync(path, '');
     expect(readNpmrcEntries(join(path, '.npmrc'))).toBeNull();
   });
 
   it("returns 'unreadable' for a file that exists but cannot be read", () => {
-    // A directory in the file's place reads as EISDIR on every platform;
-    // callers must be able to tell this from a missing file because package
-    // managers diverge on it (pnpm warns and continues, yarn classic dies).
+    // A directory in the file's place is the portable way to make the read fail.
     mkdirSync(path);
     expect(readNpmrcEntries(path)).toBe('unreadable');
     expect(readNpmrcMap(path)).toBe('unreadable');
@@ -71,15 +68,10 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
   });
 
   it('returns a double-quoted value verbatim when it is not valid JSON', () => {
-    // ini's unsafe() JSON-decodes double-quoted values; an invalid escape makes
-    // JSON.parse throw, so the raw value (quotes included) is returned as-is.
     expect(read('key="bad\\escape"')?.get('key')).toBe('"bad\\escape"');
   });
 
   it('reads a bare key with no = as a boolean flag set to true (ini)', () => {
-    // ini's regex leaves the value group unmatched for a valueless line, so its
-    // valueRaw defaults to true; the pipeline coerces the string back where a
-    // boolean is needed. Dropping the line loses a bare always-auth/strict-ssl.
     expect(read('always-auth')?.get('always-auth')).toBe('true');
     expect(readNpmrcEntries(path)).toEqual([
       { key: 'always-auth', value: 'true' },
@@ -99,9 +91,8 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
   });
 
   it('breaks lines on a bare CR the way ini does', () => {
-    // ini splits on /[\r\n]+/, so the comment ends at the CR and the registry is
-    // a line of its own. Reading only /\r?\n/ would hide it inside the comment
-    // while the spawned npm still honors it.
+    // Reading only `\r?\n` would hide the registry inside the comment while the
+    // spawned npm still honors it.
     const map = read('; note\rregistry=https://r/');
     expect(map?.get('registry')).toBe('https://r/');
   });
@@ -124,8 +115,6 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
   });
 
   it('drops a [section] header and every key after it (ini nests them)', () => {
-    // ini nests all entries following a section header under that section, and
-    // npm's flat config lookup never reads a nested key.
     const map = read(
       [
         'registry=https://top.example.com/',
@@ -140,8 +129,6 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
   });
 
   it('keeps a bracketed line as a literal key when it is not exactly a section header', () => {
-    // ini matches the section form on the raw line, so leading whitespace or
-    // trailing text turns the bracketed form back into a bare-flag key.
     const map = read(['  [indented]', '[trailing] x', 'key=v'].join('\n'));
     expect(map?.get('[indented]')).toBe('true');
     expect(map?.get('[trailing] x')).toBe('true');

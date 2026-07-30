@@ -28,8 +28,7 @@ import {
 } from './utils';
 
 /*
- * pnpm registry resolution, by version line (behavior verified against the
- * published binaries):
+ * pnpm registry resolution, by version line:
  *
  * - < 10.6.0: registry config lives only in the .npmrc chain and npm_config_*
  *   env vars, which a spawned npm resolves identically on its own. Nothing to
@@ -52,7 +51,6 @@ import {
  */
 
 const DEFAULT_REGISTRY = 'https://registry.npmjs.org/';
-/** Credential keys pnpm accepts without a nerf-dart prefix. */
 const BARE_AUTH_KEYS = [
   '_authToken',
   '_auth',
@@ -66,10 +64,8 @@ interface PnpmWorkspaceSettings {
   proxy?: string;
   httpsProxy?: string;
   noProxy?: string;
-  // The one key on this surface that pnpm also answers to in npm's own
-  // spelling. Its siblings are camelCase-only (verified on 11.2.2 and 11.9.0
-  // against a proxy: `httpsproxy`, `HTTPSPROXY` and `https-proxy` are all
-  // ignored), so nothing else here needs an alias.
+  // The one key here pnpm also answers to in npm's spelling. Its siblings are
+  // camelCase-only, so nothing else needs an alias.
   noproxy?: string;
 }
 
@@ -79,29 +75,25 @@ export function getPnpmSpawnRegistryEnv(
   pnpmVersion: string | null
 ): NpmConfigEnv {
   const env: NpmConfigEnv = {};
-  // Without a version we cannot reason about which surfaces this pnpm honors;
-  // leave npm's own resolution untouched.
+  // Which surfaces this pnpm honors depends on the version, so an undetermined
+  // one bridges nothing.
   if (!pnpmVersion || lt(pnpmVersion, '10.6.0')) {
     return env;
   }
 
   const settings = readPnpmWorkspaceSettings(root);
   const scope = getPackageScope(packageName);
-  // The spawn drops the ambient npm_config_* spellings this answers true for
-  // (mergeNpmConfigEnv), so a resolver here reads the environment npm receives
-  // only where it answers false. Kept identical to the caller's spawn-time
-  // argument.
+  // Kept identical to the predicate the caller hands mergeNpmConfigEnv at spawn
+  // time, which drops every ambient npm_config_* this answers true for.
   const managerIgnoresEnv = ignoresNpmConfigEnv('pnpm', pnpmVersion);
 
   if (lt(pnpmVersion, '11.0.0')) {
-    // Wholesale semantics: the map replaces the npmrc/env/CLI registry
-    // selection outright, so the default has to be forced to the yaml default
-    // and the scoped key to whichever entry pnpm would pick, even when that is
-    // the yaml default shadowing a scoped key the workspace .npmrc declares.
-    // A scoped-only map leaves pnpm no default at all, which crashes it on an
-    // unscoped target (the replace wipes registries.default) but resolves a
-    // scoped one fine, so npm's own default is left in place there rather than
-    // aimed at a registry pnpm only uses for that scope.
+    // The replace wipes the npmrc/env/CLI selection outright, so the scoped key
+    // is forced to the yaml default when the map has no entry for the scope. A
+    // scoped-only map leaves pnpm no default at all, which crashes it on an
+    // unscoped target but resolves a scoped one fine, so npm's own default is
+    // left in place rather than aimed at a registry pnpm uses only for that
+    // scope.
     if (settings.registries?.default) {
       setRegistry(env, settings.registries.default);
     }
@@ -115,8 +107,8 @@ export function getPnpmSpawnRegistryEnv(
     // bypass list can need re-spelling here.
     bridgeNoProxy(env, root);
     applyYamlNetworkSettings(env, settings);
-    // This line has no auth.ini and no npmrcAuthFile: pnpm's user config is
-    // npm's own, always a file npm reads for itself.
+    // On this version line pnpm's user config is npm's own (no auth.ini, no
+    // npmrcAuthFile), always a file npm reads for itself.
     reportTokenHelper(
       env,
       root,
@@ -128,11 +120,10 @@ export function getPnpmSpawnRegistryEnv(
     return env;
   }
 
-  // >= 11: per-key bridging. The yaml-only keys are injected at npm's env tier;
-  // npm's per-key chain then reproduces pnpm's ordering: a project .npmrc
-  // @scope:registry still beats an injected default (matching pnpm), while an
-  // injected @scope:registry beats the project .npmrc scoped key (matching
-  // yaml @scope > npmrc @scope).
+  // The yaml-only keys go in at npm's env tier, where npm's per-key chain
+  // reproduces pnpm's ordering: a project .npmrc @scope:registry still beats an
+  // injected default, while an injected @scope:registry beats the project
+  // .npmrc scoped key (yaml @scope > npmrc @scope in pnpm).
   if (scope && settings.registries?.[scope]) {
     setScopedRegistry(env, scope, settings.registries[scope]);
   }
@@ -154,8 +145,8 @@ export function getPnpmSpawnRegistryEnv(
     managerIgnoresEnv
   );
 
-  // The bypass list resolves across all of these at once (resolveNoProxy), so
-  // the yaml does not get to write it on its own here.
+  // resolveNoProxy takes the bypass list across every layer below, so the yaml
+  // does not write it here.
   applyYamlNetworkSettings(env, settings, false);
   applyEnvNetworkSettings(env, pnpmVersion);
   const noProxy = resolveNoProxy(settings, root, authIniPath, pnpmVersion);
@@ -166,10 +157,8 @@ export function getPnpmSpawnRegistryEnv(
 }
 
 /**
- * pnpm's own env reader: the lowercase prefix, then the uppercase one, with an
- * empty value counting as undeclared. The uppercase spelling only arrived in
- * 11.0.6 (measured: 11.0.5 reads pnpm_config_registry and ignores
- * PNPM_CONFIG_REGISTRY, 11.0.6 reads both).
+ * pnpm's own env reader: the lowercase prefix, then the uppercase one (which
+ * only arrived in 11.0.6), with an empty value counting as undeclared.
  * See readEnvVar in pnpm's config reader.
  */
 function readPnpmEnvVar(key: string, pnpmVersion: string): string | undefined {
@@ -209,16 +198,15 @@ function applyUrlScopedEnvConfig(env: NpmConfigEnv, pnpmVersion: string): void {
 
 /**
  * The TLS and proxy settings pnpm >= 11 takes from its own `PNPM_CONFIG_*`
- * prefix. They outrank pnpm-workspace.yaml (measured on 11.9.0 in both
- * directions for each key), so they are applied after it. `cafile` is left out
- * on purpose: pnpm accepts it and then never uses it for the fetch, the same
- * dead config as the yaml key.
+ * prefix. They outrank pnpm-workspace.yaml, so they are applied after it.
+ * `cafile` is left out on purpose: pnpm accepts it and then never uses it for
+ * the fetch, the same dead config as the yaml key.
  */
 function applyEnvNetworkSettings(env: NpmConfigEnv, pnpmVersion: string): void {
   const strictSsl = readPnpmEnvVar('strict_ssl', pnpmVersion);
   if (strictSsl !== undefined) {
-    // parseField types this setting Boolean, so only an explicit 'false' turns
-    // verification off; every other value leaves it on.
+    // parseField types this Boolean, so only an explicit 'false' turns
+    // verification off.
     setStrictSsl(env, strictSsl !== 'false');
   }
   setProxies(env, {
@@ -232,7 +220,7 @@ function applyEnvNetworkSettings(env: NpmConfigEnv, pnpmVersion: string): void {
  * spelling and only falls back to `noproxy`, so the spelling decides before the
  * layer does: a workspace .npmrc `no-proxy` beats a pnpm-workspace.yaml
  * `noproxy`. Within one spelling the env sits above the yaml, which sits above
- * the files. Every pair below was measured on 11.9.0 in both directions.
+ * the files.
  * See createPackageManagerNetworkConfig in pnpm's config reader.
  */
 function resolveNoProxy(
@@ -263,9 +251,8 @@ function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
   }
   if (doc === 'invalid') {
     // pnpm aborts on a file it cannot parse, so there is no resolution left to
-    // reproduce. Propagate to the caller's fall-open rather than continuing as
-    // though the workspace declared no registry, which is what an unreadable
-    // file most often hides.
+    // reproduce. Propagating to the caller's fall-open warns instead of
+    // silently treating the workspace as declaring no registry.
     throw new Error(`The pnpm workspace file at ${path} could not be read.`);
   }
   return doc as PnpmWorkspaceSettings;
@@ -276,9 +263,7 @@ function getAuthIniPath(): string {
 }
 
 // pnpm warns and resolves on from the remaining layers when an npmrc-family
-// file exists but cannot be read (verified on 10.33.2 and 11.5.0, EACCES and
-// EISDIR both: auth.ini registry, strict-ssl, and no-proxy all still apply
-// with the workspace .npmrc unreadable), so mirror it: warn, absent semantics.
+// file exists but cannot be read, so mirror it: warn, absent semantics.
 const warnedUnreadableFiles = new Set<string>();
 function readPnpmNpmrcMap(path: string): Map<string, string> | null {
   const map = readNpmrcMap(path);
@@ -309,9 +294,8 @@ function bridgeAuthIni(
   // parseField decides a Boolean-typed setting from the literal value, before it
   // expands any `${VAR}`, so strict-ssl has to be read pre-expansion.
   const rawStrictSsl = authIni.get('strict-ssl');
-  // pnpm's @pnpm/npm-conf runs envReplace on every auth.ini value. npm expands
-  // env-tier values too, but only with its own grammar, so expand here to get
-  // pnpm's (`${VAR:-default}` resolves, `${VAR?}` does not).
+  // pnpm's @pnpm/npm-conf runs envReplace on every auth.ini value, and npm's own
+  // env-tier expansion uses a different grammar, so expand with pnpm's here.
   for (const [key, value] of authIni) {
     authIni.set(key, expandPnpmEnvVars(value));
   }
@@ -323,8 +307,8 @@ function bridgeAuthIni(
     authIni.get(key) || undefined;
 
   const authIniRegistry = declared('registry');
-  // A registry already injected from the yaml/env (env has the key set) or
-  // defined in the workspace .npmrc keeps winning, matching pnpm's layer order.
+  // A registry already injected from the yaml/env or defined in the workspace
+  // .npmrc outranks auth.ini in pnpm, so it keeps winning here.
   if (
     !env['npm_config_registry'] &&
     !projectNpmrc.has('registry') &&
@@ -357,12 +341,11 @@ function bridgeAuthIni(
     ) {
       continue;
     }
-    // A tokenHelper names a command to run for the token. npm has no such
-    // setting and pnpm skips the key when it arrives through the environment,
-    // so passing it on would put a command line in the child's environment that
-    // neither tool ever reads. pnpm runs a helper only out of its user auth
-    // file, and refuses to run at all when one reaches it from anywhere else,
-    // so a helper here does not stand for a credential the fetch would have had.
+    // npm has no tokenHelper setting and pnpm ignores one that arrives through
+    // the environment, so bridging it would only put a command line in the
+    // child's environment. pnpm also refuses to run a helper from any file but
+    // its user auth config, so one here stands for no credential the fetch
+    // would have had.
     if (key.endsWith(':tokenHelper')) {
       continue;
     }
@@ -428,14 +411,13 @@ function bridgeAuthIni(
     // file that declared it, not the workspace root; before that its only reader
     // is loadCAFile, a bare readFileSync on the raw value, so it lands on the
     // cwd the command runs in (the workspace root for a migrate). Neither
-    // expands a leading `~` (verified on 11.9.0: `~/ca.pem` reads
-    // <config dir>/~/ca.pem). npm ignores a cafile it cannot open, so getting
-    // the base wrong drops the trust anchor with no diagnostic at all.
+    // expands a leading `~`. npm ignores a cafile it cannot open, so getting the
+    // base wrong drops the trust anchor with no diagnostic at all.
     const base = gte(pnpmVersion, '11.2.0') ? dirname(authIniPath) : root;
     setCafile(env, resolve(base, cafile));
   }
-  // Inline `ca` PEM material: npm reads it only as a flat (global) key, and pnpm
-  // deliberately does not source-scope trust anchors, so it needs no pin check.
+  // npm reads inline `ca` PEM only as a flat (global) key, and pnpm does not
+  // source-scope trust anchors, so it needs no pin check.
   if (unbridged('ca')) {
     env['npm_config_ca'] = authIni.get('ca');
   }
@@ -467,14 +449,14 @@ function bridgeAuthIni(
 }
 
 /**
- * The proxy-bypass list is the one npmrc key whose spelling differs. Measured
- * against a logging proxy: pnpm 11 honors `no-proxy` and ignores `noproxy`,
- * where npm does the exact opposite (it warns about `no-proxy` as an unknown
- * config and moves on). pnpm 10.x honors both, so only the spelling npm cannot
- * read needs bridging on either line. Either way pnpm's `no-proxy` never
- * reaches the spawned npm from any file, the workspace .npmrc included, and the
- * layer that wins in pnpm has to be re-spelled. A `noProxy` in
- * pnpm-workspace.yaml outranks both files and is applied after this.
+ * The proxy-bypass list is the one npmrc key whose spelling differs. In these
+ * files pnpm 11 honors `no-proxy` and ignores `noproxy`, where npm does the
+ * exact opposite (it warns about `no-proxy` as an unknown config and moves on).
+ * pnpm 10.x honors both, so only the spelling npm cannot read needs bridging on
+ * either line. Either way pnpm's `no-proxy` never reaches the spawned npm from
+ * any file, the workspace .npmrc included, and the layer that wins in pnpm has
+ * to be re-spelled. A `noProxy` in pnpm-workspace.yaml outranks both files and
+ * is applied after this.
  */
 function bridgeNoProxy(env: NpmConfigEnv, root: string): void {
   const value = fileNoProxy(root);
@@ -483,7 +465,6 @@ function bridgeNoProxy(env: NpmConfigEnv, root: string): void {
   }
 }
 
-/** The `no-proxy` the npmrc-family files declare. */
 function fileNoProxy(root: string, authIniPath?: string): string | undefined {
   const projectNpmrc = readPnpmNpmrcMap(join(root, '.npmrc'));
   // The workspace .npmrc outranks auth.ini, and declaring the key empty there
@@ -492,20 +473,16 @@ function fileNoProxy(root: string, authIniPath?: string): string | undefined {
     ? projectNpmrc.get('no-proxy')
     : authIniPath && readPnpmNpmrcMap(authIniPath)?.get('no-proxy');
   // npm ignores `no-proxy` in the file it does read, so the value never goes
-  // through npm's own expansion under that key; expand it with pnpm's grammar
-  // (`${VAR:-default}` resolves, `${VAR?}` does not).
+  // through npm's own expansion under that key; expand it with pnpm's grammar.
   return value ? expandPnpmEnvVars(value) : undefined;
 }
 
 /**
- * The registry the spawned npm will contact, as far as this process can see, in
- * npm's own precedence: the registry bridged into the env overlay, else one
- * already in the environment, else the one the workspace .npmrc declares, else
- * npm's default. npm reads the last two itself, so their values are expanded
- * with npm's grammar rather than pnpm's. A registry declared only in a
- * user-level ~/.npmrc is not visible here, which leaves the comparison covering
- * the sources that can redirect the request to a host the user never
- * configured.
+ * The registry the spawned npm will contact, as far as this process can see: a
+ * scoped registry for the package, else the default, else npm's own. A registry
+ * declared only in a user-level ~/.npmrc is not visible here, which leaves the
+ * comparison covering the sources that can redirect the request to a host the
+ * user never configured.
  */
 function contactedRegistry(
   env: NpmConfigEnv,
@@ -524,36 +501,27 @@ function contactedRegistry(
   );
 }
 
-/** The value npm resolves for `key`, as far as this process can see. */
 function npmResolved(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
   key: string,
   managerIgnoresEnv: IgnoresNpmConfigEnv
 ): string | undefined {
-  // npm's env tier outranks the .npmrc, but a spawn that strips an ambient
-  // npm_config_* (mergeNpmConfigEnv where the manager ignores it) leaves npm
-  // only the overlay and the file, so an ambient value the manager never saw is
-  // not counted here either.
+  // npm's env tier outranks the .npmrc, but the spawn strips every ambient
+  // npm_config_* the manager ignores (mergeNpmConfigEnv), so a value it never
+  // saw is not counted here either.
   const ambient = managerIgnoresEnv(key)
     ? undefined
     : readNpmConfigEnv(process.env, key);
   const declared =
     env[`npm_config_${key}`] ??
     ambient ??
-    // npm expands `${VAR}` in an .npmrc key before it looks a value up under it,
-    // so a value keyed on `//${HOST}/` is found under the resolved dart.
     readExpandedKey(projectNpmrc, key, expandNpmEnvVars);
   // npm trims a value before it expands one (parseField), so a blank value
   // collapses while a padded reference still resolves.
   return declared === undefined ? undefined : expandNpmEnvVars(declared.trim());
 }
 
-/**
- * Whether npm finds credentials for `dart`, following its own lookup: a token,
- * an ident, or a complete user/password or client-certificate pair, at the dart
- * or at any parent of it (npm-registry-fetch regFromURI/hasAuth).
- */
 function hasCredentials(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
@@ -565,14 +533,13 @@ function hasCredentials(
   );
 }
 
-/** pnpm reads a leading `~` on every platform; npm only takes `~\` on Windows. */
+/** pnpm accepts `~/` and `~\` on every platform; npm accepts `~\` on Windows only. */
 const PNPM_HOME_PATH = /^~[/\\]/;
 const NPM_HOME_PATH = process.platform === 'win32' ? /^~[/\\]/ : /^~\//;
 
-/** Both tools normalize a config path this way: a leading `~` for the home
- *  directory, else resolved against the cwd the command runs in. That cwd is the
- *  config root the spawn uses, not this process's cwd (which a migrate from a
- *  workspace subdirectory would differ from). An absolute value is unaffected. */
+/** Both tools normalize a config path this way: `~` for the home directory,
+ *  else the cwd the command runs in. That cwd is the config root the spawn
+ *  uses, not this process's, which a migrate from a subdirectory differs from. */
 function resolveConfigPath(
   value: string,
   homePattern: RegExp,
@@ -693,7 +660,6 @@ function reportTokenHelper(
     if (declared !== undefined || !npmReadsUserConfig) {
       return declared;
     }
-    // npm expands `${VAR}` in this file's keys too, so match the resolved dart.
     const fromUserConfig = readExpandedKey(userConfig, key, expandNpmEnvVars);
     return fromUserConfig === undefined
       ? undefined
@@ -705,20 +671,17 @@ function reportTokenHelper(
 }
 
 /**
- * Whether the credential pnpm would present at `dart` comes from a token
- * helper: one keyed on that registry or a parent of it, or the unscoped one
- * `pinnedDart` says pnpm aims there. A helper outranks every other credential
- * for that registry, whichever layer those came from (credsToHeader), so it is
- * what pnpm sends.
+ * Whether the credential pnpm presents at `dart` comes from a token helper. A
+ * helper outranks every other credential for that registry, whichever layer
+ * those came from (credsToHeader), so finding one settles what pnpm sends.
  */
 function declaresTokenHelper(
   userConfig: Map<string, string>,
   dart: string,
   pinnedDart: string | null
 ): boolean {
-  // pnpm expands `${VAR}` in this file, in a key before it reads the value under
-  // it (so `//${HOST}/:tokenHelper` is found under the resolved dart) and in the
-  // value (a reference resolving to nothing declares no helper at all).
+  // pnpm expands `${VAR}` in this file's values as well as its keys, and a value
+  // resolving to nothing declares no helper at all.
   const declared = (key: string): string =>
     expandPnpmEnvVars(
       readExpandedKey(userConfig, key, expandPnpmEnvVars) ?? ''
@@ -757,15 +720,10 @@ function warnUnscopedCredential(dart: string, keys: string[]): void {
 }
 
 /**
- * Network settings pnpm honors from pnpm-workspace.yaml. `strictSsl` is
- * verified applied from the yaml (10.16 and 11.5); `caFile`/`cafile` in the
- * YAML is dead config in pnpm itself (it loads CA material from the
- * npmrc-family files only: .npmrc, which npm reads natively, and auth.ini,
- * bridged in bridgeAuthIni), so the YAML key is deliberately not bridged.
- * Proxy keys follow the same yaml surface (source-verified).
- *
- * `applyNoProxy` is off where a caller resolves the bypass list across more
- * layers than the yaml itself.
+ * Network settings pnpm honors from pnpm-workspace.yaml. `caFile`/`cafile` is
+ * dead config there (pnpm loads CA material from the npmrc-family files only:
+ * .npmrc, which npm reads natively, and auth.ini, bridged in bridgeAuthIni), so
+ * the YAML key is deliberately not bridged.
  */
 function applyYamlNetworkSettings(
   env: NpmConfigEnv,
@@ -778,9 +736,7 @@ function applyYamlNetworkSettings(
   setProxies(env, {
     httpProxy: settings.proxy,
     httpsProxy: settings.httpsProxy,
-    // pnpm honors either spelling and prefers noProxy when both are set
-    // (verified on 11.2.2 and 11.9.0: with noProxy naming another host, a
-    // noproxy bypass for the registry stops applying).
+    // pnpm honors either spelling and prefers noProxy when both are set.
     noProxy: applyNoProxy ? (settings.noProxy ?? settings.noproxy) : undefined,
   });
 }

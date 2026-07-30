@@ -56,8 +56,8 @@ interface YamlReadOptions {
    */
   json?: boolean;
   /**
-   * Resolves only the tags every YAML parser must support, which keeps every
-   * scalar a string instead of typing `true` or `12` for the caller.
+   * Resolves only the tags every YAML parser must support, so every scalar stays
+   * a string instead of `true` or `12`.
    */
   failsafe?: boolean;
 }

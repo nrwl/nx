@@ -4,8 +4,8 @@ import { join } from 'path';
 import { readYamlFile } from '../fileutils';
 
 /**
- * pnpm's getConfigDir: XDG_CONFIG_HOME, else the per-platform default. Hosts
- * pnpm's global config.yaml and (v11+) auth.ini.
+ * Mirrors pnpm's getConfigDir. Hosts pnpm's global config.yaml and (v11+)
+ * auth.ini.
  * See https://github.com/pnpm/pnpm/blob/b7195db5c8469c80908d625c648302b26c2f9977/config/reader/src/dirs.ts#L73-L92
  */
 export function getPnpmConfigDir(env: NodeJS.ProcessEnv): string {
@@ -27,12 +27,11 @@ export function getPnpmConfigDir(env: NodeJS.ProcessEnv): string {
 /**
  * Reads a pnpm YAML config file (pnpm-workspace.yaml or the global
  * config.yaml). An absent file returns null so callers can fall through to
- * lower surfaces; a corrupt or non-object one returns 'invalid' so a caller
- * can tell malformed config from an absent file instead of silently falling
- * through (pnpm dies on both alike: "Expected object but found - string",
- * measured on 11.2.2). The object requirement also keeps the sentinel out of
- * the success domain: a yaml whose whole content is the scalar `invalid`
- * reports as malformed, not as that string.
+ * lower surfaces; a corrupt or non-object one returns 'invalid' so a caller can
+ * tell malformed config from an absent file (pnpm dies on both alike).
+ * Requiring an object also keeps the sentinel out of the success domain, so a
+ * yaml whose whole content is the scalar `invalid` reports as malformed rather
+ * than as that string.
  */
 export function readPnpmYamlConfig(
   path: string
