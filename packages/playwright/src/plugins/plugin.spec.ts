@@ -1007,6 +1007,45 @@ describe('@nx/playwright/plugin', () => {
     );
   });
 
+  it('does not infer a wait-for-webserver task when waitForWebServer is false', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({
+      'tests/run-me.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+        waitForWebServer: false,
+      },
+      context
+    );
+    const project = results[0][1].projects['.'];
+    const { targets } = project;
+
+    // No gate is inferred; the serve dependency stays so the tests still start
+    // the server, but readiness falls back to Playwright's own probe.
+    expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+    expect(targets['e2e'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+    ]);
+    expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+    ]);
+    expect(project.metadata.targetGroups['E2E (CI)']).not.toContain(
+      'e2e--wait-for-webserver'
+    );
+  });
+
   it('should infer a wait-for-webserver task using the url when the webServer defines a url', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
