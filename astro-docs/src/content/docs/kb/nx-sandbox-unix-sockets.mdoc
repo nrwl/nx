@@ -38,43 +38,35 @@ This grants Nx the ability to create and connect to Unix sockets, which it needs
 
 ## Scoped allowlisting with the Nx socket root
 
-The daemon, forked task processes and plugin workers put their sockets under a single stable directory on macOS and Linux: `/tmp/.nx/sockets`, unless overridden via `NX_SOCKET_DIR`. Allowlist that one directory, and grant read and write on its parent, instead of granting blanket socket access:
+The daemon, forked task processes and plugin workers put their sockets under a short per-user directory on macOS and Linux: `/tmp/.nx-<uid>/sockets`, unless overridden via `NX_SOCKET_DIR`. Find your numeric user ID with `id -u`, then use it in your user-level sandbox settings. For example, a user with uid `1000` can allowlist:
 
 ```json
-// .claude/settings.json
+// ~/.claude/settings.json
 {
   "sandbox": {
     "filesystem": {
-      "allowRead": ["/tmp/.nx"],
-      "allowWrite": ["/tmp/.nx"]
+      "allowRead": ["/tmp/.nx-1000"],
+      "allowWrite": ["/tmp/.nx-1000"]
     },
     "network": {
-      "allowUnixSockets": ["/tmp/.nx/sockets"]
+      "allowUnixSockets": ["/tmp/.nx-1000/sockets"]
     }
   }
 }
 ```
 
-The path is identical on every machine, so the entries are safe to commit and share with your team.
+The uid makes this setting user-specific, so keep the concrete path in your user settings rather than committing it as a team-wide project setting.
 
-The write grant covers `/tmp/.nx` rather than only `/tmp/.nx/sockets` because a grant scoped to the socket directory cannot create `/tmp/.nx` itself, so the very first Nx run in a fresh sandbox fails before it reaches the socket. Nx also copies its compiled native binding into a cache under the same root before loading it, which the grant needs to cover for the same reason.
+The write grant covers `/tmp/.nx-1000` rather than only its `sockets` directory because the very first Nx run also has to create the root. Nx copies its compiled native binding into a cache under the same root before loading it, which the grant needs to cover too.
 
 {% aside type="note" title="What keeps these directories private" %}
 The allowlist decides which paths the sandbox can reach. It is not what separates users from each other.
 
-Three directories are deliberately world-writable and sticky, like `/tmp` itself, so that every user logged in to the machine can create their own private directory beneath them: `/tmp/.nx`, `/tmp/.nx/sockets`, and `/tmp/.nx/native-cache`. Nothing is ever read or executed directly from those.
+Nx puts the user ID in the first path it creates: `/tmp/.nx-<uid>`. Each user can therefore create their own root without an administrator provisioning shared directories.
 
-Nx checks two things about each of those roots before it puts anything beneath them, and refuses the root if either fails.
+`/tmp` itself is owned by `root` and sticky. The sticky bit prevents another regular user from renaming or deleting your `/tmp/.nx-<uid>` entry after you create it. Nx creates that entry and every directory beneath it with mode `0700`, then re-checks each one before use: it must be owned by the current user, be a real directory rather than a symlink, and carry no group or other permissions.
 
-The root has to carry the sticky bit whenever anyone beyond its owner can write to it. Sticky restricts renaming and deleting an entry to that entry's own owner, which is what stops another user moving your directory aside and putting theirs in its place.
-
-The root also has to belong to you or to `root`. Sticky never restricts the directory's _own_ owner, so a root belonging to another regular user stays unsafe no matter how its mode reads. That user could move your directory out of it whenever they liked. Root-owned and sticky is the same shape `/tmp` itself uses.
-
-Whoever runs Nx first on a machine owns the roots they create, so several people share one root only when something trusted made it first, such as a container image or an administrator running `mkdir -m 1777 /tmp/.nx`. Otherwise everyone after the first falls back, which is safe but unshared.
-
-Containment then happens one level down, in a per-user directory, `/tmp/.nx/sockets/<uid>` and `/tmp/.nx/native-cache/<uid>`. Nx creates those `0700` and re-checks them on every use: owned by you, a real directory rather than a symlink, and carrying no group or other permissions at all (a `0755` directory is tightened back to `0700` rather than accepted). Because that runs on every resolve, Nx refuses a directory another user has taken and falls back rather than nesting inside it.
-
-When a directory fails a check that cannot be repaired, Nx refuses it — sockets fall back to a private directory inside your workspace, and the native binding cache is skipped entirely, loading in place from `node_modules` instead.
+If another user pre-creates the predictable path before you, the ownership check refuses it. Socket setup falls back to a private directory inside your workspace, and the native binding cache is skipped entirely, loading in place from `node_modules` instead.
 
 Code inside the sandbox runs as your user, so this grant does let it write that binary cache, in the same way it can already write your workspace's `node_modules`.
 {% /aside %}
@@ -109,11 +101,11 @@ Both environment variables work around the symptom rather than fixing the root c
 
 For advanced use cases, Nx provides environment variables to override where socket files are created:
 
-| Variable                         | Description                                                                                                                                                                                                                                                                |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin). Defaults to a per-user, per-run directory beneath `/tmp/.nx/sockets`. Must name a directory only your user can reach. Nx rejects the shared roots and the system temp directory outright. |
-| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.                                                                                                                                                                        |
-| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                                                                                                                                                                                       |
+| Variable                         | Description                                                                                                                                                                                                                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin). Defaults to a per-run directory beneath `/tmp/.nx-<uid>/sockets`. Must name a directory only your user can reach. Nx rejects the system temp directory and its own container/cache roots outright. |
+| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.                                                                                                                                                                                 |
+| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                                                                                                                                                                                                |
 
 These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.
 
