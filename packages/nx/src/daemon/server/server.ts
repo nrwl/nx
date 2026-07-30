@@ -146,7 +146,9 @@ import {
   scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
   invalidateGraphCache,
+  currentProjectGraph,
 } from './project-graph-incremental-recomputation';
+import { outputsChangeInvalidatesGraphEnv } from './dotenv-graph-changes';
 import {
   hasRegisteredProjectGraphListenerSockets,
   registeredProjectGraphListenerSockets,
@@ -664,6 +666,15 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
       disableOutputsTracking();
       return;
     }
+
+    // A dotenv change that a task chain loads must invalidate the graph cache so
+    // createNodes re-resolves config reading process.env. This runs above the
+    // outputsWatcherError guard: the two concerns are independent, and a
+    // disabled outputs tracker must not leave the graph stale on a dotenv edit.
+    if (outputsChangeInvalidatesGraphEnv(changeEvents, currentProjectGraph)) {
+      invalidateGraphCache();
+    }
+
     if (outputsWatcherError) {
       return;
     }
