@@ -14,6 +14,7 @@ import { join } from 'path';
 import {
   ensureSecureNativeFileCacheLocation,
   getNativeFileCacheLocation,
+  getNativeFileCacheLocationToDelete,
 } from './native-file-cache-location';
 import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
 import { nxVersion } from '../utils/versions';
@@ -45,7 +46,7 @@ describe('native file cache location', () => {
   });
 
   describe('getNativeFileCacheLocation', () => {
-    it('should isolate the cache per user id and Nx version', () => {
+    it('should isolate the cache under a per-user root and by Nx version', () => {
       const location = getNativeFileCacheLocation();
       const userSegment =
         typeof process.getuid === 'function' ? String(process.getuid()) : null;
@@ -53,13 +54,10 @@ describe('native file cache location', () => {
       const root =
         platform() === 'win32'
           ? join(tmpdir(), '.nx', 'native-cache')
-          : '/tmp/.nx/native-cache';
+          : `/tmp/.nx-${userSegment}/native-cache`;
 
       expect(location.startsWith(root)).toBe(true);
-      expect(location.endsWith(nxVersion)).toBe(true);
-      if (userSegment) {
-        expect(location).toEqual(join(root, userSegment, nxVersion));
-      }
+      expect(location).toEqual(join(root, nxVersion));
     });
 
     it('should honor NX_NATIVE_FILE_CACHE_DIRECTORY', () => {
@@ -103,9 +101,8 @@ describe('native file cache location', () => {
     posixOnly(
       'should refuse a symlink planted where the directory belongs',
       () => {
-        // The attack: the shared parent is world-writable, so a peer can drop a
-        // symlink here that points at a directory they control. lstat (not
-        // stat) is what makes this detectable.
+        // A peer can pre-create a predictable path as a symlink that points at
+        // a directory they control. lstat (not stat) makes this detectable.
         const planted = join(base, 'planted');
         mkdirSync(planted, { mode: 0o700 });
         const dir = join(base, 'link');
@@ -175,44 +172,64 @@ describe('native file cache location', () => {
       }
     });
 
-    // The two tests below pin the *wiring*, which the `ensureOwnedPrivateDir`
+    // The tests below pin the *wiring*, which the `ensureOwnedPrivateDir`
     // suite above cannot: those cover the guard's own branches, but reverting
     // either call site here to a bare `mkdirSync` leaves them all green. They
-    // run against an injected root so they do not depend on /tmp/.nx being
+    // run against an injected root so they do not depend on /tmp/.nx-<uid> being
     // writable, which it is not under some sandboxes.
-    posixOnly('should refuse a per-uid directory planted as a symlink', () => {
-      const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
-      try {
-        // Inside the fixture so dirname() stays in it: passing `base` made
-        // dirname() the real os.tmpdir(), which then got relaxed to 1777 — on
-        // macOS that is the developer's private /var/folders directory.
-        const cacheRoot = join(base, 'native-cache');
-        mkdirSync(cacheRoot, { recursive: true });
-        const victim = join(base, 'victim');
-        mkdirSync(victim, { mode: 0o755 });
-        chmodSync(victim, 0o755); // mkdir's mode is subject to the umask
-        // The per-uid dir is the first hop under the world-writable root.
-        symlinkSync(victim, join(cacheRoot, String(process.getuid!())));
+    posixOnly(
+      'should refuse the per-user temp root planted as a symlink',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          const nxRoot = join(base, 'nx-user');
+          const victim = join(base, 'victim');
+          mkdirSync(victim, { mode: 0o755 });
+          chmodSync(victim, 0o755); // mkdir's mode is subject to the umask
+          symlinkSync(victim, nxRoot);
 
-        expect(ensureSecureNativeFileCacheLocation(cacheRoot)).toBeNull();
-        expect(lstatSync(victim).mode & 0o777).toEqual(0o755);
-      } finally {
-        rmSync(base, { recursive: true, force: true });
+          expect(
+            ensureSecureNativeFileCacheLocation(join(nxRoot, 'native-cache'))
+          ).toBeNull();
+          expect(lstatSync(victim).mode & 0o777).toEqual(0o755);
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
       }
-    });
+    );
+
+    posixOnly(
+      'should refuse the native cache root planted as a symlink',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          const nxRoot = join(base, 'nx-user');
+          mkdirSync(nxRoot, { mode: 0o700 });
+          const victim = join(base, 'victim');
+          mkdirSync(victim, { mode: 0o755 });
+          chmodSync(victim, 0o755);
+          const cacheRoot = join(nxRoot, 'native-cache');
+          symlinkSync(victim, cacheRoot);
+
+          expect(ensureSecureNativeFileCacheLocation(cacheRoot)).toBeNull();
+          expect(lstatSync(victim).mode & 0o777).toEqual(0o755);
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
+      }
+    );
 
     posixOnly('should refuse a version directory planted as a symlink', () => {
       const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
       try {
-        const cacheRoot = join(base, 'native-cache');
-        const userDir = join(cacheRoot, String(process.getuid!()));
-        mkdirSync(userDir, { recursive: true, mode: 0o700 });
+        const cacheRoot = join(base, 'nx-user', 'native-cache');
+        mkdirSync(cacheRoot, { recursive: true, mode: 0o700 });
         const victim = join(base, 'victim');
         mkdirSync(victim, { mode: 0o755 });
         chmodSync(victim, 0o755); // mkdir's mode is subject to the umask
         // The version dir is the directory a `.node` is loaded out of, so it
         // must be verified rather than created with `recursive: true`.
-        symlinkSync(victim, join(userDir, nxVersion));
+        symlinkSync(victim, join(cacheRoot, nxVersion));
 
         expect(ensureSecureNativeFileCacheLocation(cacheRoot)).toBeNull();
         expect(lstatSync(victim).mode & 0o777).toEqual(0o755);
@@ -222,7 +239,7 @@ describe('native file cache location', () => {
     });
 
     posixOnly(
-      'should either return a locked-down per-uid directory or refuse the cache',
+      'should either return a locked-down version directory or refuse the cache',
       () => {
         // The contract is binary: a usable location is always owner-only, and
         // anything else yields null so the caller loads the binding in place.
@@ -232,10 +249,11 @@ describe('native file cache location', () => {
           return;
         }
         expect(location).toEqual(getNativeFileCacheLocation());
-        const userDir = join(location, '..');
-        expect(lstatSync(userDir).isDirectory()).toBe(true);
-        expect(lstatSync(userDir).uid).toEqual(process.getuid!());
-        expect(lstatSync(userDir).mode & 0o022).toEqual(0);
+        expect(getNativeFileCacheLocationToDelete()).toEqual(location);
+        const cacheRoot = join(location, '..');
+        expect(lstatSync(cacheRoot).isDirectory()).toBe(true);
+        expect(lstatSync(cacheRoot).uid).toEqual(process.getuid!());
+        expect(lstatSync(cacheRoot).mode & 0o077).toEqual(0);
       }
     );
   });
