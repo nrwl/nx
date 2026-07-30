@@ -588,8 +588,9 @@ function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
     // exclude every `t.ts` including the two oxfmt still matches. An interior
     // `**` is unaffected on both sides
     // (`!a/**/t.ts` agrees as written), and so is a *doubled* leading one -
-    // measured, `!**/**/t.ts` matches nothing on either side, so rewriting it
-    // would introduce the divergence rather than close it. Against oxfmt 0.60.0.
+    // measured, `!**/**/t.ts` selects every path that is *not* a `t.ts` at any
+    // depth, identically on both sides, so rewriting it would introduce the
+    // divergence rather than close it. Against oxfmt 0.60.0.
     const pattern =
       lifted.startsWith('!**/') && !lifted.startsWith('!**/**/')
         ? `!*/${lifted.slice(4)}`
