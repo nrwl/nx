@@ -109,7 +109,7 @@ export function writeWithOxfmt(
   const oxfmtPath = getOxfmtBinPath();
   execFileSync(
     'node',
-    [oxfmtPath, ...OXFMT_BASE_ARGS, '--write', ...patterns],
+    [oxfmtPath, ...OXFMT_BASE_ARGS, '--write', '--', ...patterns],
     {
       cwd,
       stdio: [0, 1, 2],
@@ -123,7 +123,7 @@ export function checkWithOxfmt(patterns: string[]): Promise<string[]> {
   return new Promise((resolve, reject) => {
     execFile(
       'node',
-      [oxfmtPath, ...OXFMT_BASE_ARGS, '--list-different', ...patterns],
+      [oxfmtPath, ...OXFMT_BASE_ARGS, '--list-different', '--', ...patterns],
       {
         encoding: 'utf-8' as const,
         windowsHide: true,
@@ -225,22 +225,29 @@ function isJsonOxfmtConfig(name: string): boolean {
 }
 
 /**
- * `require` handles a CommonJS config directly, which keeps it out of the ESM
- * loader; only a config that is really ESM needs to be imported.
- */
-/**
  * `register` is required lazily so that reading a JSON config does not pull in
  * the TypeScript transpiler machinery.
  *
- * No `import()` fallback: `loadTsFile` already recovers from `ERR_REQUIRE_ESM`
- * and from Node parsing an ESM `.ts` as CJS, and on every runtime oxfmt
- * supports (`^20.19.0 || >=22.12.0`) `require` handles an ESM `.mts` directly.
- * Measured - `require` of an ESM `.mts` returns the config rather than throwing.
+ * `loadTsFile` deliberately does *not* handle two error codes - its own JSDoc
+ * says they "bubble unchanged … so async-aware callers can dispatch to
+ * `import()`". This is that caller. `ERR_REQUIRE_ASYNC_MODULE` is the one that
+ * matters: a config using top-level await cannot be `require`d at all, on any
+ * runtime. Redispatching only on those two keeps every other failure - a syntax
+ * error, a missing module - reported as itself rather than replaced by whatever
+ * `import()` says about it.
  */
-function loadTsOxfmtConfig(configPath: string): unknown {
-  return (
-    require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
-  ).loadTsFile(configPath);
+async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
+  try {
+    return (
+      require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
+    ).loadTsFile(configPath);
+  } catch (e) {
+    const code = (e as { code?: string })?.code;
+    if (code !== 'ERR_REQUIRE_ESM' && code !== 'ERR_REQUIRE_ASYNC_MODULE') {
+      throw e;
+    }
+    return await dynamicImport(pathToFileURL(configPath).href);
+  }
 }
 
 /**
@@ -661,7 +668,7 @@ async function resolveOxfmtConfig(
 
       // Every discovered name is JSON above or TypeScript here - there is no
       // JavaScript branch, because oxfmt does not discover `oxfmt.config.js`.
-      const loaded = loadTsOxfmtConfig(configPath) as
+      const loaded = (await loadTsOxfmtConfig(configPath)) as
         | { default?: unknown }
         | undefined;
 

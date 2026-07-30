@@ -77,19 +77,23 @@ export async function filterToPrettierSupportedFiles(
   files: string[]
 ): Promise<string[]> {
   const prettier = await handleImport<typeof import('prettier')>('prettier');
+  const supportInfo = await prettier.getSupportInfo();
   const supportedExtensions = new Set(
-    (await prettier.getSupportInfo()).languages
+    supportInfo.languages
       .flatMap((language) => language.extensions)
       .filter((extension) => !!extension)
   );
-  // `.swcrc` is matched by filename, not extension: `extname('.swcrc')` is the
-  // empty string, so adding it to the extension set could only ever have
-  // matched a file called `something.swcrc`. `writeWithPrettier` has a
-  // `--parser json` branch for these, which was unreachable while they were
-  // being filtered out here.
+  // Prettier matches some files by *name* rather than extension - `.swcrc`,
+  // `.babelrc`, `Jakefile` and ~30 others, all of which report an empty
+  // `extname`. It publishes that list next to the extensions, so read it rather
+  // than hardcoding: filtering on extension alone silently dropped every one.
+  const supportedFilenames = new Set(
+    supportInfo.languages.flatMap((language) => language.filenames ?? [])
+  );
   return files.filter(
     (file) =>
-      supportedExtensions.has(extname(file)) || basename(file) === '.swcrc'
+      supportedExtensions.has(extname(file)) ||
+      supportedFilenames.has(basename(file))
   );
 }
 
@@ -99,18 +103,20 @@ export function writeWithPrettier(
   // relative to the repo root rather than absolute ones the user has to read.
   cwd?: string
 ): void {
-  const [swcrcPatterns, regularPatterns] = patterns.reduce(
-    (result, pattern) => {
-      result[pattern.includes('.swcrc') ? 0 : 1].push(pattern);
-      return result;
-    },
-    [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
-  );
+  if (patterns.length === 0) {
+    // Prettier with no file arguments exits 2 with "No parser and no file path
+    // given", which `execSync` turns into a thrown error.
+    return;
+  }
   const prettierPath = getPrettierPath();
   const listDifferentArg = shouldUseListDifferent() ? '--list-different ' : '';
 
+  // No `--parser json` special case for `.swcrc`: prettier's own language table
+  // maps it to the json parser, so it formats correctly on its own (measured).
+  // Splitting the batch also meant one of the two spawns could receive zero
+  // files, which is the error above.
   execSync(
-    `node "${prettierPath}" --write ${listDifferentArg}${regularPatterns
+    `node ${quoteForShell(prettierPath)} --write ${listDifferentArg}-- ${patterns
       .map(quoteForShell)
       .join(' ')}`,
     {
@@ -119,26 +125,13 @@ export function writeWithPrettier(
       windowsHide: true,
     }
   );
-
-  if (swcrcPatterns.length > 0) {
-    execSync(
-      `node "${prettierPath}" --write ${listDifferentArg}${swcrcPatterns
-        .map(quoteForShell)
-        .join(' ')} --parser json`,
-      {
-        cwd,
-        stdio: [0, 1, 2],
-        windowsHide: true,
-      }
-    );
-  }
 }
 
 export function checkWithPrettier(patterns: string[]): Promise<string[]> {
   const prettierPath = getPrettierPath();
   return new Promise((resolve, reject) => {
     exec(
-      `node "${prettierPath}" --list-different ${patterns
+      `node ${quoteForShell(prettierPath)} --list-different -- ${patterns
         .map(quoteForShell)
         .join(' ')}`,
       { encoding: 'utf-8', windowsHide: true, maxBuffer: FORMATTER_MAX_BUFFER },
@@ -229,9 +222,9 @@ export function quoteForShell(pattern: string): string {
   // the shell treats specially *inside double quotes* has to be escaped, not
   // just `$`: a backtick is command substitution, a `"` closes the quoting, and
   // a backslash escapes whatever follows it. The shell consumes one level, so
-  // `\$` reaches prettier as a literal `$`. Backslash is replaced first by
-  // virtue of being in the same character class - a second pass would re-escape
-  // the escapes.
+  // `\$` reaches prettier as a literal `$`. One pass over the original string
+  // rather than a replace per character: `String.replace` never re-scans what it
+  // inserted, so an escape cannot itself be escaped.
   //
   // Windows is left alone: cmd.exe treats none of `$`, backtick or backslash as
   // special, escaping them would make prettier look for a file with the

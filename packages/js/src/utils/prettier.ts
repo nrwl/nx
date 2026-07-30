@@ -6,6 +6,7 @@ import {
   writeJson,
   type GeneratorCallback,
   type Tree,
+  logger,
 } from '@nx/devkit';
 import { prettierConfigFiles } from 'nx/src/devkit-internals';
 import type { Options } from 'prettier';
@@ -59,6 +60,30 @@ export async function resolveUserExistingPrettierConfig(): Promise<ExistingPrett
   }
 }
 
+// A copy of nx's `prettierConfigFiles`, used only when the installed nx is too
+// old to export it. Kept whole so the "never write a second config" invariant
+// survives the fallback.
+const PRETTIER_CONFIG_FILES_FALLBACK = [
+  '.prettierrc',
+  '.prettierrc.json',
+  '.prettierrc.yml',
+  '.prettierrc.yaml',
+  '.prettierrc.json5',
+  '.prettierrc.js',
+  'prettier.config.js',
+  '.prettierrc.ts',
+  'prettier.config.ts',
+  '.prettierrc.mjs',
+  'prettier.config.mjs',
+  '.prettierrc.mts',
+  'prettier.config.mts',
+  '.prettierrc.cjs',
+  'prettier.config.cjs',
+  '.prettierrc.cts',
+  'prettier.config.cts',
+  '.prettierrc.toml',
+];
+
 export function generatePrettierSetup(
   tree: Tree,
   options: { skipPackageJson?: boolean }
@@ -69,11 +94,18 @@ export function generatePrettierSetup(
   // to the one it already has. This copy was missing the `.ts`/`.mts`/`.cts`
   // forms.
   // `prettierConfigFiles` is new in this nx. `@nx/js` has no `nx` peer of its own, so it
-  // inherits devkit's `>= 22 <= 24` and can be paired with an nx that does not
-  // export it - where a bare `.every` would be a TypeError inside `@nx/js:init`.
-  // Falling back to the canonical name may write a redundant config on such a
-  // pairing, which is a better failure than a crash.
-  const configFiles = prettierConfigFiles ?? ['.prettierrc'];
+  // inherits devkit's and can be paired with an nx that does not export it.
+  // The fallback repeats the *whole* list rather than the canonical name:
+  // a one-name fallback would miss an existing config under any other name
+  // and write a second one - which for oxfmt is not redundant but fatal
+  // ("Both '<a>' and '<b>' found"), and for prettier silently outranks the
+  // user's own file.
+  const configFiles = prettierConfigFiles ?? PRETTIER_CONFIG_FILES_FALLBACK;
+  if (!prettierConfigFiles) {
+    logger.warn(
+      `This @nx/js is paired with an nx that does not export \`prettierConfigFiles\`; using a built-in list. Align the nx and @nx/js versions if a duplicate prettier config appears.`
+    );
+  }
   if (configFiles.every((name) => !tree.exists(name))) {
     writeJson(tree, '.prettierrc', { singleQuote: true });
   }
