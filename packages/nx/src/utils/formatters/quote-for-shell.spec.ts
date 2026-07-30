@@ -15,7 +15,10 @@ posixOnly('quoteForShell', () => {
     ['a bare variable', 'apps/$HOME'],
     ['a backtick', 'apps/`id`'],
     ['a double quote', 'apps/a"b'],
-    ['a backslash', 'apps/a\\b'],
+    // `\b` is already literal inside sh double quotes, so a row like `apps/a\\b`
+    // passes with or without `\\` in the escape class. These two do not.
+    ['a backslash before a dollar', 'apps/a\\$b'],
+    ['a backslash before a quote', 'apps/a\\"b'],
     ['a single quote', "apps/it's"],
     ['a space', 'apps/my app'],
     ['several at once', 'apps/`id`$(id)"\\'],

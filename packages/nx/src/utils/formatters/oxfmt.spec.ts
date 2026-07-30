@@ -267,9 +267,11 @@ describe('formatFilesWithOxfmt', () => {
     });
 
     it('leaves a doubled leading globstar alone under negation', async () => {
-      // Measured: `!**/**/t.ts` matches nothing under the CLI, because only a
-      // *single* leading globstar gets collapsed. Rewriting this one would
-      // introduce a divergence rather than close it.
+      // Measured: `!**/**/t.ts` selects every path that is *not* a `t.ts`,
+      // identically under the CLI and minimatch, because only a *single*
+      // leading globstar gets collapsed. `other.ts` is what pins that - without
+      // it this asserts only the negative half and would pass even if the
+      // override were inert.
       writeConfig({
         singleQuote: false,
         overrides: [{ files: ['!**/**/t.ts'], options: { singleQuote: true } }],
@@ -280,6 +282,7 @@ describe('formatFilesWithOxfmt', () => {
           { path: 't.ts', content: 'const a =  "hi"' },
           { path: 'a/t.ts', content: 'const b =  "hi"' },
           { path: 'a/b/t.ts', content: 'const c =  "hi"' },
+          { path: 'other.ts', content: 'const d =  "hi"' },
         ],
         workspaceRoot
       );
@@ -287,6 +290,9 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.get('t.ts')).toEqual('const a = "hi";\n');
       expect(formatted.get('a/t.ts')).toEqual('const b = "hi";\n');
       expect(formatted.get('a/b/t.ts')).toEqual('const c = "hi";\n');
+      // The override *does* apply here - it selects everything that is not a
+      // `t.ts`.
+      expect(formatted.get('other.ts')).toEqual("const d = 'hi';\n");
     });
 
     it('leaves an interior globstar alone under negation', async () => {
