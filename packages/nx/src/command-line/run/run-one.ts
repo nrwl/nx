@@ -20,9 +20,9 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { output } from '../../utils/output';
 import { splitTarget } from '../../utils/split-target';
 import {
-  findClosestMatches,
   isWithinSuggestionThreshold,
   rankByDistance,
+  rankSuggestions,
 } from '../../utils/string-similarity';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
@@ -196,10 +196,12 @@ function getProjectTargetIds(projectGraph: ProjectGraph): string[] {
  * trailing segment(s) as separate parts (e.g. `nx:zzcustom:variantt` becomes
  * project `nx`, target `zzcustom`, configuration `variantt`).
  *
- * To match the real name we therefore try the fully-rejoined specifier first,
- * then progressively shorter forms. Rejoining wins for colon-containing names,
- * while the shorter forms keep matching genuine `target` + `configuration`
- * typos (where the real target name does not carry the configuration suffix).
+ * To match the real name we therefore score the fully-rejoined specifier and
+ * every progressively shorter form, and keep whichever produced the closest
+ * candidate. Rejoining wins for colon-containing names, while the shorter forms
+ * keep matching genuine `target` + `configuration` typos (where the real target
+ * name does not carry the configuration suffix). Ties go to the longer form,
+ * which is the one that reproduces the name the user actually typed.
  */
 function findClosestSpecifier(
   parts: (string | undefined)[],
@@ -207,27 +209,31 @@ function findClosestSpecifier(
   limit = 1
 ): string[] {
   const present = parts.filter((part): part is string => !!part);
+  let best: { candidate: string; distance: number }[] = [];
   for (let end = present.length; end >= 1; end--) {
-    const matches = findClosestMatches(
+    const matches = rankSuggestions(
       present.slice(0, end).join(':'),
-      candidates,
-      limit
+      candidates
     );
-    if (matches.length) {
-      return matches;
+    if (
+      matches.length &&
+      (!best.length || matches[0].distance < best[0].distance)
+    ) {
+      best = matches;
     }
   }
-  return [];
+  return best.slice(0, limit).map(({ candidate }) => candidate);
 }
 
 /**
  * Finds the closest available target to what the user typed, staying
  * config-aware. When a configuration was parsed off the specifier, the rejoined
- * `target:configuration` is tried first so a colon-containing real target name
- * (e.g. `zzcustom:variant`) still matches. The bare-`target` tier reuses the
+ * `target:configuration` is scored too, so a colon-containing real target name
+ * (e.g. `zzcustom:variant`) still matches. Both forms are scored and the closest
+ * candidate wins, ties going to the rejoined form -- mirroring
+ * `findClosestSpecifier`'s preference order. The bare-`target` tier reuses the
  * precomputed `ranked` list (its head, gated by the suggestion threshold)
- * instead of recomputing distances, matching `findClosestSpecifier`'s
- * progressive-join preference order for these two tiers.
+ * instead of recomputing distances.
  */
 function findClosestTarget(
   target: string,
@@ -235,20 +241,19 @@ function findClosestTarget(
   availableTargets: readonly string[],
   ranked: { candidate: string; distance: number }[]
 ): string | undefined {
+  let best: { candidate: string; distance: number } | undefined;
   if (configuration) {
-    const [rejoined] = findClosestMatches(
-      `${target}:${configuration}`,
-      availableTargets,
-      1
-    );
-    if (rejoined) {
-      return rejoined;
-    }
+    [best] = rankSuggestions(`${target}:${configuration}`, availableTargets);
   }
   const nearest = ranked[0];
-  return nearest && isWithinSuggestionThreshold(target, nearest.distance)
-    ? nearest.candidate
-    : undefined;
+  if (
+    nearest &&
+    isWithinSuggestionThreshold(target, nearest.candidate, nearest.distance) &&
+    (!best || nearest.distance < best.distance)
+  ) {
+    best = nearest;
+  }
+  return best?.candidate;
 }
 
 /**
@@ -257,7 +262,9 @@ function findClosestTarget(
  * alphabetically) so the most likely intended targets surface first.
  * `closestMatch` is dropped because it is already surfaced separately as the
  * "Did you mean" suggestion. Appends a "...and N more" line when the project has
- * more targets than we show.
+ * more targets than we show, and returns no lines at all when the suggestion was
+ * the project's only target -- a bare "Available targets:" header reads as "this
+ * project has none".
  */
 function formatAvailableTargets(
   ranked: { candidate: string; distance: number }[],
@@ -266,6 +273,9 @@ function formatAvailableTargets(
   const targets = ranked
     .map(({ candidate }) => candidate)
     .filter((candidate) => candidate !== closestMatch);
+  if (!targets.length) {
+    return [];
+  }
   const shown = targets.slice(0, MAX_LISTED_TARGETS);
   const lines = ['Available targets:', ...shown.map((t) => `  - ${t}`)];
   if (targets.length > shown.length) {
@@ -332,15 +342,21 @@ export function getRunOneTargetError(
     ranked
   );
   if (closestMatch) {
-    bodyLines.push(`Did you mean "${closestMatch}"?`, '');
+    bodyLines.push(`Did you mean "${closestMatch}"?`);
   }
 
-  if (availableTargets.length) {
-    bodyLines.push(...formatAvailableTargets(ranked, closestMatch));
-  } else {
+  if (!availableTargets.length) {
     bodyLines.push(
       `The project "${project.name}" does not have any targets configured.`
     );
+  } else {
+    const targetLines = formatAvailableTargets(ranked, closestMatch);
+    if (targetLines.length) {
+      if (bodyLines.length) {
+        bodyLines.push('');
+      }
+      bodyLines.push(...targetLines);
+    }
   }
 
   return {

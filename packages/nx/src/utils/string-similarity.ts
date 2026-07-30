@@ -55,42 +55,77 @@ export function rankByDistance(
 }
 
 /**
+ * The number of edits tolerated before `candidate` stops being a useful
+ * suggestion for `input`.
+ *
+ * The tolerance scales with length so longer words allow for more typos, but it
+ * scales with the length of the part that actually *differs* — the shared
+ * prefix and suffix are stripped first. Scaling on the raw length lets text the
+ * user typed correctly buy a bigger budget for the part they got wrong, which
+ * matters because these inputs are joined `project:target[:configuration]`
+ * specifiers: `zzz:build` and `api:build` are 3 edits apart, but the shared
+ * `:build` inflates the raw-length budget to 4 and a project name with no
+ * character in common gets suggested.
+ *
+ * Stripping a common prefix and suffix does not change the Levenshtein
+ * distance, so a caller's precomputed `distance` remains directly comparable.
+ */
+function suggestionThreshold(input: string, candidate: string): number {
+  const shortest = Math.min(input.length, candidate.length);
+  let prefix = 0;
+  while (prefix < shortest && input[prefix] === candidate[prefix]) {
+    prefix++;
+  }
+  let suffix = 0;
+  while (
+    suffix < shortest - prefix &&
+    input[input.length - 1 - suffix] ===
+      candidate[candidate.length - 1 - suffix]
+  ) {
+    suffix++;
+  }
+  return Math.max(2, Math.ceil((input.length - prefix - suffix) * 0.4));
+}
+
+/**
  * Whether a candidate at edit `distance` from `input` is close enough to be a
- * useful suggestion. The tolerance scales with the length of `input` so that
- * longer words allow for more typos. Exposed so callers that already have a
- * distance (e.g. from `rankByDistance`) can gate on it without recomputing.
+ * useful suggestion. Exposed so callers that already have a distance (e.g. from
+ * `rankByDistance`) can gate on it without recomputing.
  */
 export function isWithinSuggestionThreshold(
   input: string,
+  candidate: string,
   distance: number
 ): boolean {
-  return distance <= Math.max(2, Math.ceil(input.length * 0.4));
+  return distance <= suggestionThreshold(input, candidate);
+}
+
+/**
+ * Ranks the candidates that are similar enough to `input` to be worth
+ * suggesting, closest first (ties broken alphabetically). Each entry keeps its
+ * distance so callers can compare suggestions found for different forms of the
+ * same input without recomputing.
+ */
+export function rankSuggestions(
+  input: string,
+  candidates: readonly string[]
+): { candidate: string; distance: number }[] {
+  return rankByDistance(input, candidates).filter(({ candidate, distance }) =>
+    isWithinSuggestionThreshold(input, candidate, distance)
+  );
 }
 
 /**
  * Returns up to `limit` candidates that most closely resemble `input`, sorted
  * from closest to furthest. Candidates that are not similar enough to be a
- * useful suggestion are excluded. The tolerance scales with the length of
- * `input` so that longer words allow for more typos.
+ * useful suggestion are excluded.
  */
 export function findClosestMatches(
   input: string,
   candidates: readonly string[],
   limit = 3
 ): string[] {
-  return rankByDistance(input, candidates)
-    .filter(({ distance }) => isWithinSuggestionThreshold(input, distance))
+  return rankSuggestions(input, candidates)
     .slice(0, limit)
     .map(({ candidate }) => candidate);
-}
-
-/**
- * Returns the candidate that most closely resembles `input`, or `undefined`
- * when no candidate is similar enough to be a useful suggestion.
- */
-export function findClosestMatch(
-  input: string,
-  candidates: readonly string[]
-): string | undefined {
-  return findClosestMatches(input, candidates, 1)[0];
 }
