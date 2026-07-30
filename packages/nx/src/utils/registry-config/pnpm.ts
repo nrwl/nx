@@ -476,12 +476,8 @@ function bridgeAuthIni(
  * layer that wins in pnpm has to be re-spelled. A `noProxy` in
  * pnpm-workspace.yaml outranks both files and is applied after this.
  */
-function bridgeNoProxy(
-  env: NpmConfigEnv,
-  root: string,
-  authIniPath?: string
-): void {
-  const value = fileNoProxy(root, authIniPath);
+function bridgeNoProxy(env: NpmConfigEnv, root: string): void {
+  const value = fileNoProxy(root);
   if (value) {
     setProxies(env, { noProxy: value });
   }

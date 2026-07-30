@@ -699,11 +699,8 @@ export async function packageRegistryView(
 
   // Deferred so the registry resolvers load only for the commands that spawn a
   // view/pack, not with every package-manager.ts import.
-  const {
-    getNpmSpawnRegistryEnv,
-    ignoresNpmConfigEnv,
-    mergeNpmConfigEnv,
-  } = require('./registry-config');
+  const { getNpmSpawnRegistryEnv, ignoresNpmConfigEnv, mergeNpmConfigEnv } =
+    require('./registry-config') as typeof import('./registry-config');
 
   // An empty version means we want the full packument; omit the trailing `@`.
   // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
@@ -770,11 +767,8 @@ export async function packageRegistryPack(
 ): Promise<{ tarballPath: string }> {
   const pm = 'npm';
 
-  const {
-    getNpmSpawnRegistryEnv,
-    ignoresNpmConfigEnv,
-    mergeNpmConfigEnv,
-  } = require('./registry-config');
+  const { getNpmSpawnRegistryEnv, ignoresNpmConfigEnv, mergeNpmConfigEnv } =
+    require('./registry-config') as typeof import('./registry-config');
   const workspacePm = detectPackageManager();
   const configRoot = getPackageManagerConfigRoot();
   const workspacePmVersion = getPackageManagerVersionSafe(

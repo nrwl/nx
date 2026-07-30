@@ -501,8 +501,10 @@ function applyTls(
   }
 
   if (gte(yarnVersion, BERRY_CLIENT_CERT_SETTINGS)) {
-    // Berry presents a client certificate only when both halves resolve, and
-    // npm reads the pair the same way, so a lone half stays out of the overlay.
+    // Berry forwards each half to Node's TLS options independently (httpUtils
+    // sets cert and key with no joint gate); a lone half only fails there
+    // because Node cannot present a certificate without its key. npm needs the
+    // pair the same way, so a lone half stays out of the overlay.
     const certfile = resolvePath(
       'httpsCertFilePath',
       'YARN_HTTPS_CERT_FILE_PATH'
