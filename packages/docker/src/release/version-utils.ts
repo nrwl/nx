@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { prompt } from 'enquirer';
@@ -125,7 +125,9 @@ function updateProjectVersion(
   const fullImageRef =
     nxDockerImageRefEnvOverride ?? `${newImageRef}:${newVersion}`;
   if (!isDryRun) {
-    execSync(`docker tag ${imageRef} ${fullImageRef}`, {
+    // argv array, not a shell string - the image ref is assembled from workspace
+    // config, CLI flags and env, so it can't be trusted as shell input.
+    execFileSync('docker', ['tag', imageRef, fullImageRef], {
       windowsHide: true,
     });
   }
