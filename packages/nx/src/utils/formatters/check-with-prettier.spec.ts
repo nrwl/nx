@@ -32,13 +32,28 @@ describe('checkWithPrettier', () => {
     await expect(checkWithPrettier(['.'])).resolves.toEqual([]);
   });
 
-  it('reports the differing files when prettier exits non-zero with output', async () => {
+  it('reports the differing files when prettier exits 1 with output', async () => {
     respondWith({ code: 1 }, 'libs/a.ts\nlibs/b.ts\n');
 
     await expect(checkWithPrettier(['.'])).resolves.toEqual([
       'libs/a.ts',
       'libs/b.ts',
     ]);
+  });
+
+  it('rejects when prettier exits 2 even though it listed files first', async () => {
+    // Measured: a batch of one differing file plus one unparseable file exits
+    // 2 with the differing file already on stdout. Reading that as the file
+    // list reports the diff and loses the syntax error - the file nobody can
+    // format never gets mentioned.
+    respondWith(
+      Object.assign(new Error('SyntaxError: Unexpected token'), { code: 2 }),
+      'libs/a.ts\n'
+    );
+
+    await expect(checkWithPrettier(['.'])).rejects.toThrow(
+      'SyntaxError: Unexpected token'
+    );
   });
 
   it('rejects when prettier exits non-zero without output', async () => {
