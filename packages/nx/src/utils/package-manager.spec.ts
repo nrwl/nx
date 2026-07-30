@@ -865,8 +865,6 @@ describe('package-manager', () => {
     let execMock: jest.SpyInstance;
 
     beforeEach(() => {
-      // The version cache is module-scoped and outlives a test; clear it so each
-      // test resolves through its own execSync mock rather than a prior test's.
       clearPackageManagerVersionCache();
       // jest.clearAllMocks keeps implementations, so pin the default here or a
       // test's statSync stub would leak into its neighbors.
@@ -944,13 +942,11 @@ describe('package-manager', () => {
     });
 
     it('resolves the package manager version once per root and reuses it across calls', async () => {
-      // Guards the module-scoped cache: without it, a stale/mis-keyed entry
-      // would let a later call see a different version than the one resolved.
       jest
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'bun' } });
       // No package.json on disk, so the version resolves through execSync, which
-      // this spy owns; keeps the test deterministic regardless of order.
+      // this spy owns.
       (existsSync as jest.Mock).mockReturnValue(false);
       const versionSpy = jest
         .spyOn(childProcess, 'execSync')
@@ -960,7 +956,7 @@ describe('package-manager', () => {
         .mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', '--json');
-      // A changed mock must not reach the second call: it hits the cache.
+      // The second call hits the cache, so the changed mock must not reach it.
       versionSpy.mockReturnValue('9.9.9' as any);
       await packageRegistryView('nx', 'latest', '--json');
 
@@ -972,9 +968,9 @@ describe('package-manager', () => {
     });
 
     it('should drop an ambient npm config key that spells an overlaid setting differently', async () => {
-      // npm reads its env tier last-write-wins over the key order it receives,
-      // and the shells in the spawn path reorder it, so both spellings surviving
-      // means the ambient one can win.
+      // npm's env tier is last-write-wins over the key order it receives and the
+      // spawn path's shells rebuild that order, so both spellings surviving would
+      // let the ambient one win.
       jest
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'bun' } });
@@ -1003,8 +999,8 @@ describe('package-manager', () => {
     });
 
     it('should drop an ambient credential the workspace pnpm 11.0-11.5 ignores', async () => {
-      // The overlay does not carry the setting, so only the third
-      // mergeNpmConfigEnv argument (ignoresNpmConfigEnv) removes it here.
+      // The overlay does not carry the setting, so only mergeNpmConfigEnv's third
+      // argument (ignoresNpmConfigEnv) drops it here.
       jest
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'pnpm' } });
@@ -1055,8 +1051,6 @@ describe('package-manager', () => {
     });
 
     it('redacts a credential embedded in a registry URL from a view failure', async () => {
-      // The error propagates to migrate's fetcher catch and can be logged
-      // there, so it must already arrive redacted.
       jest
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'npm' } });
@@ -1090,8 +1084,6 @@ describe('package-manager', () => {
     });
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
-      // A non-JS workspace has no root package.json; its .npmrc and package
-      // manager files live under .nx/installation.
       const installationPath = join(workspaceRoot, '.nx', 'installation');
       (existsSync as jest.Mock).mockReturnValue(false);
       (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
@@ -1107,8 +1099,6 @@ describe('package-manager', () => {
     });
 
     it('should fall back to the workspace root when the Nx installation directory does not exist', async () => {
-      // Spawning with a nonexistent cwd fails with ENOENT before npm even
-      // runs, surfacing as an unrelated "Unable to resolve version" error.
       (existsSync as jest.Mock).mockReturnValue(false);
       (statSync as jest.Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
@@ -1122,8 +1112,6 @@ describe('package-manager', () => {
     });
 
     it('should fall back to the workspace root when the Nx installation path is not a directory', async () => {
-      // A stray file at .nx/installation exists but would fail with ENOTDIR as
-      // the spawn cwd, so existence alone must not select it.
       const installationPath = join(workspaceRoot, '.nx', 'installation');
       (existsSync as jest.Mock).mockImplementation(
         (p: string) => p === installationPath
@@ -1142,8 +1130,6 @@ describe('package-manager', () => {
     let execMock: jest.SpyInstance;
 
     beforeEach(() => {
-      // The version cache is module-scoped and outlives a test; clear it so each
-      // test resolves through its own execSync mock rather than a prior test's.
       clearPackageManagerVersionCache();
       // jest.clearAllMocks keeps implementations, so pin the default here or a
       // test's statSync stub would leak into its neighbors.
@@ -1223,8 +1209,8 @@ describe('package-manager', () => {
     });
 
     it('should drop an ambient credential the workspace pnpm 11.0-11.5 ignores', async () => {
-      // Same wiring as the view side: only the third mergeNpmConfigEnv
-      // argument (ignoresNpmConfigEnv) removes an un-overlaid ambient setting.
+      // The overlay does not carry the setting, so only mergeNpmConfigEnv's third
+      // argument (ignoresNpmConfigEnv) drops it here.
       jest
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'pnpm' } });
@@ -1279,9 +1265,6 @@ describe('package-manager', () => {
     });
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
-      // Config must resolve against .nx/installation's own directory even though
-      // packing runs from the workspace root, or a non-JS workspace loses its
-      // registry auth.
       const installationPath = join(workspaceRoot, '.nx', 'installation');
       (existsSync as jest.Mock).mockReturnValue(false);
       (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
@@ -1317,9 +1300,8 @@ describe('package-manager', () => {
     });
 
     it('redacts a credential embedded in a registry URL from the error cause', async () => {
-      // npm masks only the password half of URL userinfo, so a token in the
-      // username position (or a `pnpm view` failure) would otherwise reach the
-      // --verbose output through the preserved cause.
+      // npm masks only the password half of URL userinfo, so the token sits in the
+      // username position here.
       const leakyUrl = 'https://SECRET-TOKEN-123@reg.example.com/nx';
       jest.spyOn(childProcess, 'exec').mockImplementation(((
         _cmd: string,

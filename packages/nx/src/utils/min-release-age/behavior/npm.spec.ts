@@ -463,8 +463,6 @@ describe('npm min-release-age behavior', () => {
       });
 
       it('scans an unreadable .npmrc as though it were absent (npm reads it that way)', async () => {
-        // Both npmrc surfaces read 'unreadable': the key scan must neither
-        // throw nor rank a key from them, leaving both undetectable.
         readNpmrcEntriesMock.mockReturnValue('unreadable');
         mockConfig({ 'min-release-age': 7, before: BEFORE });
         const result = await readNpmPolicy('/root', '11.16.0', {});

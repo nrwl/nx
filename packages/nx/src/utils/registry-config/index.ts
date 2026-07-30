@@ -11,7 +11,7 @@ import {
   type NpmConfigEnv,
 } from './utils';
 
-// Type-only import: a value import would create a cycle with package-manager.ts.
+// A value import would create a cycle with package-manager.ts.
 import type { PackageManager } from '../package-manager';
 
 export type { NpmConfigEnv } from './utils';
@@ -20,14 +20,10 @@ export { mergeNpmConfigEnv, ignoresNpmConfigEnv } from './utils';
 /**
  * Computes the npm_config_* environment entries a spawned `npm view`/`npm pack`
  * (or a pre-v11 `pnpm view`, which passes through to npm) needs so its registry,
- * auth, and TLS resolution faithfully reproduces what the workspace's package
- * manager would do for `packageName`. Returns an empty object when nothing
- * needs bridging (npm workspaces, or config that npm already resolves
- * identically on its own).
- *
- * The caller provides the detected package manager and its version
- * (null when the version cannot be determined); resolution errors degrade to
- * no bridging.
+ * auth and TLS resolution reproduces what the workspace's package manager would
+ * do for `packageName`. Returns an empty object when nothing needs bridging (npm
+ * workspaces, or config npm already resolves identically on its own) and when
+ * resolution fails, which is warned about rather than thrown.
  */
 export function getNpmSpawnRegistryEnv(
   packageName: string,
@@ -45,10 +41,7 @@ export function getNpmSpawnRegistryEnv(
     reconcileScopedRegistryKey(env, packageName);
     return env;
   } catch (e) {
-    // Falling open to npm's own resolution keeps the command running, but it can
-    // silently reach a different registry than the workspace configures. Say
-    // that much unconditionally, the way an undetermined version already does,
-    // and leave the cause itself recoverable: an rc parse error quotes the lines
+    // The warning omits the cause because an rc parse error quotes the lines
     // around the fault, which in these files is credential material.
     warnUnreadableConfig(packageManager);
     logger.verbose(
@@ -71,8 +64,7 @@ function resolveSpawnRegistryEnv(
       return {};
     case 'pnpm':
       if (!packageManagerVersion) {
-        // Which surfaces pnpm honors depends on its version, so without one
-        // there is nothing to reproduce.
+        // Which surfaces pnpm honors depends on its version.
         warnUnknownVersion(
           'pnpm',
           'a registry configured only in pnpm-workspace.yaml'
@@ -82,8 +74,7 @@ function resolveSpawnRegistryEnv(
       return getPnpmSpawnRegistryEnv(packageName, root, packageManagerVersion);
     case 'yarn':
       if (!packageManagerVersion) {
-        // Without the version we cannot tell classic from berry, so we cannot
-        // reproduce yarn's registry resolution.
+        // Without the version we cannot tell classic from berry.
         warnUnknownVersion('yarn', 'a registry configured only in .yarnrc.yml');
         return {};
       }
@@ -93,21 +84,16 @@ function resolveSpawnRegistryEnv(
     case 'bun':
       return getBunSpawnRegistryEnv(packageName, root, packageManagerVersion);
     default: {
-      // A new PackageManager member fails typecheck here until it is classified
-      // above; getNpmSpawnRegistryEnv catches the throw and falls open to no
-      // bridging.
+      // getNpmSpawnRegistryEnv catches this and falls open to no bridging.
       const _exhaustive: never = packageManager;
       throw new Error(`Unhandled package manager: ${_exhaustive}`);
     }
   }
 }
 
-// npm's loadEnv lowercases a non-`//` env-config key and rewrites its
-// non-leading `_` to `-`, but resolves @scope:registry verbatim, so a scoped
-// registry bridged for an underscore/uppercase scope is stored under a name the
-// lookup never finds and the override is dropped. The view/pack command targets
-// exactly this package, so point the default registry at the bridged scoped
-// registry npm would otherwise miss.
+// npm's loadEnv lowercases an env key and rewrites its non-leading `_` to `-`,
+// but looks @scope:registry up verbatim, so a bridged override for such a scope
+// is never found. The command targets this package, so redirect the default.
 function reconcileScopedRegistryKey(
   env: NpmConfigEnv,
   packageName: string
@@ -137,8 +123,6 @@ function warnUnreadableConfig(packageManager: PackageManager): void {
   );
 }
 
-// Warn once per package manager so a silent revert to npm's default registry is
-// diagnosable without repeating the message for every package fetched.
 const warnedUnknownVersions = new Set<PackageManager>();
 function warnUnknownVersion(
   packageManager: PackageManager,

@@ -7,11 +7,6 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { getPnpmSpawnRegistryEnv } from './pnpm';
 
-/**
- * Each case mirrors a cell verified against the real pnpm binaries: registries
- * map honored from 10.6.0, wholesale-wins through 10.x, per-key specific-wins
- * plus pnpm_config_registry env and auth.ini from 11.0.0.
- */
 describe('getPnpmSpawnRegistryEnv', () => {
   let root: string;
   let configHome: string;
@@ -60,10 +55,10 @@ describe('getPnpmSpawnRegistryEnv', () => {
       savedEnv[key] = process.env[key];
       delete process.env[key];
     }
-    // Point pnpm's config dir (auth.ini location) at a controlled directory.
+    // pnpm derives its config dir, which holds auth.ini, from this.
     process.env.XDG_CONFIG_HOME = configHome;
-    // The last link of pnpm's user-auth-file chain, and npm's own user config:
-    // pin both at one controlled path so no test reads the real ~/.npmrc.
+    // npm's user config and the last link of pnpm's user-auth-file chain, pinned so
+    // no test reads the real ~/.npmrc.
     process.env.NPM_CONFIG_USERCONFIG = join(configHome, 'user.npmrc');
   });
 
@@ -90,7 +85,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
   function writeUserConfig(contents: string): void {
     writeFileSync(join(configHome, 'user.npmrc'), contents);
   }
-  /** A user auth file pnpm is pointed at on its own, which npm never opens. */
   function writePnpmOnlyUserConfig(contents: string): void {
     const path = join(configHome, 'pnpm-only.npmrc');
     writeFileSync(path, contents);
@@ -103,9 +97,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
   });
 
   it('fails on a pnpm-workspace.yaml that does not parse', () => {
-    // pnpm aborts on it, so there is no resolution left to reproduce. Reading it
-    // as an empty document instead would silently drop the registry it holds and
-    // send the spawned npm to npmjs.
+    // pnpm aborts on it, so there is no resolution left to reproduce. Reading it as
+    // an empty document would silently drop the registry and send npm to npmjs.
     writeYaml('registries:\n\tdefault: https://reg-a.example.com/\n');
     expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
       /pnpm workspace file at .* could not be read/
@@ -120,9 +113,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
 
   describe('10.6.0 - 10.x (yaml settings wholesale-replace the npmrc config)', () => {
     it('forces the yaml default registry', () => {
-      // Setting the key is what makes the yaml pick win: it overrides whatever
-      // npm_config_registry the spawned npm would otherwise inherit and honor
-      // at its native env tier, which is pnpm's wholesale behavior here.
       writeYaml('registries:\n  default: https://reg-a.example.com/\n');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
@@ -195,10 +185,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it("bridges a yaml noproxy in npm's own spelling", () => {
-      // pnpm answers to both spellings here, unlike its siblings (verified on
-      // 11.2.2 and 11.9.0 against a proxy: `noproxy` is honored, `httpsproxy`
-      // and `https-proxy` ignored). Reading only the camelCase key sent npm
-      // through a proxy pnpm bypasses.
+      // pnpm answers to both spellings here, unlike its siblings (verified on 11.2.2
+      // and 11.9.0: `noproxy` is honored, `httpsproxy` and `https-proxy` ignored).
+      // Reading only the camelCase key would send npm through a proxy pnpm bypasses.
       writeYaml(
         [
           'registries:',
@@ -215,8 +204,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('prefers a yaml noProxy over noproxy when both are set', () => {
-      // pnpm's own precedence (verified on 11.2.2 and 11.9.0: with noProxy
-      // naming another host, a noproxy bypass for the registry stops applying).
+      // pnpm's own precedence (verified on 11.2.2 and 11.9.0).
       writeYaml(
         [
           'registries:',
@@ -297,9 +285,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('counts an ambient credential npm keeps on this line', () => {
-      // pnpm 10.x reads npm_config_*, so the spawn keeps this ambient token and
-      // npm authenticates with it; the helper is not worth reporting. On >= 11
-      // the same token is dropped and would be.
+      // pnpm 10.x reads npm_config_*, so the spawn keeps this token and npm
+      // authenticates with it. On 11.0-11.5 it is dropped and the helper is reported.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeYaml('registries:\n  default: https://reg-a.example.com/\n');
@@ -462,9 +449,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('leaves a workspace .npmrc credential ahead of a bare auth.ini one', () => {
-      // The re-key lands at npm's env tier, which outranks the file npm reads
-      // for itself, so the user-level credential would displace the workspace
-      // one that pnpm prefers.
+      // The re-key lands at npm's env tier, which outranks the file npm reads for
+      // itself, so bridging it would displace the workspace credential pnpm prefers.
       writeFileSync(
         join(root, '.npmrc'),
         '//reg-a.example.com/:_authToken=project-token'
@@ -517,8 +503,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('stays quiet when the workspace .npmrc already authenticates that registry', () => {
-      // npm reads that credential itself, so the request is authenticated and
-      // there is nothing to report.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -537,8 +521,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('stays quiet when a parent registry path carries the credential', () => {
-      // npm walks up the nerf dart, so a credential on the host covers a
-      // registry served from a path below it.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -557,11 +539,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('does not count an ambient credential the spawn strips on 11.0-11.5', () => {
-      // This pnpm line ignores npm_config_* entirely, so the spawn drops this
-      // ambient token (mergeNpmConfigEnv) before npm runs. npm then fetches
-      // reg-b with no credential, so the auth.ini bare token pinned to npmjs is
-      // still missing. From 11.6.0 the URL-scoped tier is read again; see the
-      // inverse case above.
+      // This pnpm line ignores npm_config_* entirely, so the spawn drops this ambient
+      // token (mergeNpmConfigEnv) before npm runs. npm then fetches reg-b with no
+      // credential, so the auth.ini bare token pinned to npmjs is still missing.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       process.env['npm_config_//reg-b.example.com/:_authToken'] = 'env-token';
@@ -578,8 +558,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('still warns when the credential npm would find is incomplete', () => {
-      // npm needs username and _password together, so a lone username leaves
-      // the request unauthenticated after all.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       writeFileSync(
@@ -708,10 +686,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('resolves an auth.ini cafile against the workspace root below 11.2.0', () => {
-      // The npmrc-dir base landed in 11.2.0; before it the only reader is
-      // loadCAFile, a bare readFileSync on the raw value, so the path is
-      // relative to the cwd. npm ignores a cafile it cannot open, so using the
-      // wrong base here drops the trust anchor with no diagnostic.
+      // Before 11.2.0 the only reader is loadCAFile, a bare readFileSync on the raw
+      // value, so the path is cwd-relative. npm ignores a cafile it cannot open, so
+      // the wrong base drops the trust anchor with no diagnostic.
       writeAuthIni('cafile=./ca.pem');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.1.0')).toEqual({
         npm_config_cafile: join(root, 'ca.pem'),
@@ -804,9 +781,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
 
     it('ignores an ambient npm registry on >= 11 and keeps cert/key at the default', () => {
       // pnpm >= 11 ignores npm_config_*, so the spawn drops this ambient registry
-      // (mergeNpmConfigEnv) rather than let npm contact it. npm falls back to its
-      // default, which is where these client-cert halves are pinned, so they are
-      // bridged rather than withheld against a redirect that never happens.
+      // (mergeNpmConfigEnv) and npm falls back to its default, which is the registry
+      // these client-cert halves are pinned to.
       process.env.NPM_CONFIG_REGISTRY = 'https://reg-b.example.com/';
       writeAuthIni(['cert=CERTPEM', 'key=KEYPEM'].join('\n'));
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
@@ -838,10 +814,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    // pnpm accepts both `no-proxy` (which wins) and `noproxy`; npm knows only
-    // `noproxy` and warns about `no-proxy` as an unknown config, so the bypass
-    // list has to be re-spelled from whichever npmrc-family file pnpm takes it
-    // from, plus from auth.ini under either spelling since npm cannot read it.
+    // npm knows only `noproxy` and warns about `no-proxy` as an unknown config, so
+    // whichever layer pnpm takes the bypass list from has to be re-spelled.
     it("bridges an auth.ini no-proxy under npm's noproxy spelling", () => {
       writeAuthIni(
         [
@@ -890,10 +864,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('falls through to the auth.ini no-proxy when the workspace .npmrc cannot be read', () => {
-      // A directory in its place: the file exists and reads as an error. pnpm
-      // itself warns and resolves the bypass list from the remaining layers
-      // (verified on 11.5.0 against a dead proxy: the auth.ini no-proxy still
-      // applies), so the bridge does the same.
       writeAuthIni('no-proxy=ini.example.com');
       mkdirSync(join(root, '.npmrc'));
       const { logger } = require('../logger');
@@ -907,11 +877,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('keeps bridging the auth.ini registry and TLS mode when the workspace .npmrc cannot be read', () => {
-      // pnpm warns and continues on an .npmrc it cannot read (verified on
-      // 10.33.2 and 11.5.0, EACCES and EISDIR: a live fetch still used the
-      // auth.ini registry, and its strict-ssl=false was still applied at the
-      // TLS layer), so an unreadable file must not collapse the bridge into
-      // npm's own resolution.
+      // pnpm warns and continues on an .npmrc it cannot read (verified on 10.33.2 and
+      // 11.5.0, EACCES and EISDIR), so an unreadable file must not collapse the bridge
+      // into npm's own resolution.
       writeAuthIni(
         ['registry=https://reg-a.example.com/', 'strict-ssl=false'].join('\n')
       );
@@ -940,10 +908,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     describe('URL-scoped env tier (>= 11.6.0)', () => {
-      // 11.6.0 added readUrlScopedEnvConfig: `p?npm_config_//<dart>:<key>`
-      // entries are read from the environment again, minus `:tokenHelper`.
-      // The `npm_config_` spellings reach the spawned npm ambiently; only the
-      // `pnpm_config_` ones need re-spelling onto the overlay.
+      // 11.6.0 added readUrlScopedEnvConfig: `p?npm_config_//<dart>:<key>` entries are
+      // read from the environment again.
       it('re-spells a pnpm_config_ URL-scoped credential onto the overlay', () => {
         process.env['pnpm_config_//reg-a.example.com/:_authToken'] =
           'pnpm-env-token';
@@ -979,10 +945,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
 
       it('counts an ambient credential the spawn keeps from 11.6.0 on', () => {
-        // The inverse of the 11.0-11.5 strip case below: the spawn keeps the
-        // ambient URL-scoped token (mergeNpmConfigEnv), npm authenticates with
-        // it, and the withheld-credential warning would name a failure that
-        // does not happen.
+        // The spawn keeps the ambient URL-scoped token (mergeNpmConfigEnv), so npm
+        // authenticates with it and there is no withheld credential to warn about.
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
         process.env['npm_config_//reg-b.example.com/:_authToken'] = 'env-token';
@@ -1051,9 +1015,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     describe('token helpers', () => {
-      // pnpm runs the command and sends what it prints (verified on 11.9.0: a
-      // helper in the user .npmrc put `Bearer helper-token-123` on the wire).
-      // npm has no equivalent setting.
+      // pnpm runs the command and sends what it prints (verified on 11.9.0). npm has
+      // no equivalent setting.
       it('keeps a tokenHelper out of the overlay, and its siblings in', () => {
         writeAuthIni(
           [
@@ -1068,11 +1031,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
         });
       });
 
-      // pnpm accepts a helper only from its user auth file: the key and its
-      // value have to be in that file, or the command aborts with
-      // TOKEN_HELPER_IN_PROJECT_CONFIG (verified on 11.9.0: the same helper line
-      // in auth.ini or in the project .npmrc failed the run before any request
-      // went out).
+      // pnpm runs a helper only from its user auth file; the same line in auth.ini or
+      // a project .npmrc aborts the command with TOKEN_HELPER_IN_PROJECT_CONFIG
+      // (verified on 11.9.0).
       function warnFor(pkg = 'is-even'): jest.Mock {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
@@ -1110,8 +1071,6 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
 
       it('reports an unscoped helper against the registry that file pins it to', () => {
-        // rescopeUnscopedCreds runs per file, so the pin follows the registry
-        // the user auth file declares, not the one that wins overall.
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig(
           [
@@ -1217,8 +1176,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
 
       it('resolves a relative auth-file path against the config root', () => {
         // Both tools resolve a relative userconfig against the cwd they run in,
-        // which is the config root the spawn uses, not this process's cwd. The
-        // wrong base reads a different file and misses the helper it holds.
+        // which is the config root the spawn uses, not this process's cwd.
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeFileSync(
           join(root, 'pnpm-auth.npmrc'),
@@ -1231,10 +1189,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
 
       it('does not count an ambient credential the spawn strips on 11.0-11.5', () => {
-        // The helper's registry has an ambient token, but this pnpm line makes
-        // the spawn drop npm_config_* (mergeNpmConfigEnv), so npm never
-        // receives it and fetches unauthenticated. The helper is still worth
-        // reporting.
+        // This pnpm line makes the spawn drop npm_config_* (mergeNpmConfigEnv), so npm
+        // never receives the ambient token and fetches unauthenticated.
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig(
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'
@@ -1246,8 +1202,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
 
       it('detects a helper whose key holds an env reference', () => {
-        // pnpm expands ${VAR} in a key before reading the value under it, so a
-        // helper keyed on //${HOST}/ authenticates //reg-a.example.com/.
+        // pnpm expands ${VAR} in a key before reading the value under it.
         process.env.NX_TEST_HOST = 'reg-a.example.com';
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writePnpmOnlyUserConfig(
@@ -1259,8 +1214,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
 
       it('counts a project .npmrc credential whose key holds an env reference', () => {
-        // npm expands ${VAR} in an .npmrc key too, so this token authenticates
-        // //reg-a.example.com/ and the helper is not worth reporting.
+        // npm expands ${VAR} in an .npmrc key too, so it finds this token.
         process.env.NX_TEST_HOST = 'reg-a.example.com';
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig(
@@ -1274,9 +1228,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
 
       it('lets a later env-keyed registry override an earlier literal one', () => {
-        // Both readers expand each key and assign in file order, so the env-keyed
-        // scoped registry below overrides the literal above it; npm contacts
-        // reg-b, where the helper is.
+        // Both readers expand each key and assign in file order, so the later one wins.
         process.env.NX_TEST_SCOPE = 'nx-test';
         writeFileSync(
           join(root, '.npmrc'),
@@ -1312,8 +1264,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     describe('PNPM_CONFIG_* network settings', () => {
-      // Measured on 11.9.0 against a self-signed registry and two logging
-      // proxies, each pairing in both directions.
+      // Every pairing below was measured on 11.9.0 in both directions.
       it('bridges a strict-ssl the env turns off, over the yaml', () => {
         writeYaml('strictSsl: true\n');
         process.env.PNPM_CONFIG_STRICT_SSL = 'false';

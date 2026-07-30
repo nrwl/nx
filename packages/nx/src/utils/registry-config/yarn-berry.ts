@@ -54,14 +54,12 @@ import {
 const BERRY_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';
 
 // Berry rewrote its env-var expander in 4.13.0, tightening the variable-name
-// class from [\d\w_]+ (a leading _ or digit is valid) to [a-zA-Z]\w*. Below this
-// version the legacy parser applies.
+// class from [\d\w_]+ (a leading _ or digit is valid) to [a-zA-Z]\w*.
 const BERRY_ENV_PARSER_REWRITE = '4.13.0';
 
 // httpsCertFilePath/httpsKeyFilePath landed in 3.2.0, as an rc setting and
-// inside networkSettings at once (@yarnpkg/cli-dist 3.1.1 carries neither name,
-// 3.2.0 both). Below it berry aborts on the setting the way it does on the
-// wrong major's CA name, so there is no resolution left to reproduce.
+// inside networkSettings at once. Below it berry aborts on the setting, so
+// there is no resolution left to reproduce.
 const BERRY_CLIENT_CERT_SETTINGS = '3.2.0';
 
 interface BerryRcFile {
@@ -69,11 +67,6 @@ interface BerryRcFile {
   config: BerryConfig;
 }
 
-/**
- * A berry Boolean setting as it reaches us: YAML yields `true`/`false` but also
- * `1`/`0` and the quoted forms, and an env-sourced value is always a string.
- * Berry coerces at read time (miscUtils.parseBoolean), so the raw shape is kept.
- */
 type BerryBoolean = boolean | number | string;
 
 interface BerryScopeEntry {
@@ -129,10 +122,9 @@ export function getYarnBerrySpawnRegistryEnv(
   const scope = getPackageScope(packageName);
   const rcFiles = collectRcFiles(root);
   // berry v4 deep-merges map settings (npmScopes/npmRegistries/networkSettings)
-  // per sub-key across rc files; v2/v3 merge them whole-entry (the highest-
-  // priority file that defines a key contributes its entire entry, omitted
-  // sub-keys included as their defaults), so a split-across-files entry never
-  // mixes. resolveMapEntry honors that difference.
+  // per sub-key across rc files; v2/v3 take the whole entry from the highest-
+  // priority file that defines the key, omitted sub-keys included as their
+  // defaults.
   const deepMerge = major(yarnVersion) >= 4;
   const resolveMapEntry = (
     pick: (c: BerryConfig) => BerryScopeEntry | undefined
@@ -157,11 +149,10 @@ export function getYarnBerrySpawnRegistryEnv(
     return any ? (merged as BerryScopeEntry) : undefined;
   };
 
-  // Berry env-expands ${VAR}/${VAR-default}/${VAR:-default} in every string
-  // setting at parse time, so expand before any URL parse / nerf-dart / base64
-  // (e.g. `npmRegistryServer: "${MY_REGISTRY}"` must resolve to the real host or
-  // its auth/TLS keys are never emitted). The 4.13 parser rewrite changed which
-  // names are valid, so pick the parser that matches the running version.
+  // Berry expands env vars in every string setting at parse time, so expand
+  // before the URL parse and nerf-dart. An unexpanded
+  // `npmRegistryServer: "${MY_REGISTRY}"` has no parseable host, so its auth
+  // and TLS keys are never emitted.
   const legacy = lt(yarnVersion, BERRY_ENV_PARSER_REWRITE);
   const defaultRegistry = expandBerryEnvVars(
     process.env['YARN_NPM_REGISTRY_SERVER'] ??
@@ -174,11 +165,10 @@ export function getYarnBerrySpawnRegistryEnv(
   const scopeEntry = scopeName
     ? resolveMapEntry((c) => c.npmScopes?.[scopeName])
     : undefined;
-  // A *configured* scope (its key is present in npmScopes, even auth-only or
-  // empty) whose npmRegistryServer is omitted routes to berry's SHAPE default
-  // (registry.yarnpkg.com), NOT the top-level npmRegistryServer. Berry seeds
-  // the scope's npmRegistryServer to that default and returns it directly. An
-  // unconfigured scope falls through to the top-level default.
+  // A scope configured in npmScopes (even auth-only or empty) with no
+  // npmRegistryServer routes to berry's shape default (registry.yarnpkg.com),
+  // not the top-level npmRegistryServer. Berry seeds the scope entry with that
+  // default and returns it directly.
   const scopeConfigured =
     scopeName !== undefined &&
     rcFiles.some(
@@ -188,7 +178,6 @@ export function getYarnBerrySpawnRegistryEnv(
         // scope named after one of its members (@constructor) is not configured.
         Object.hasOwn(f.config.npmScopes, scopeName)
     );
-  // berry >= 4.9.0 seeds an unconfigured `jsr` scope to https://npm.jsr.io.
   const jsrDefault =
     scopeName === 'jsr' && !scopeConfigured && gte(yarnVersion, '4.9.0');
   const effectiveRegistry = scopeConfigured
@@ -205,17 +194,13 @@ export function getYarnBerrySpawnRegistryEnv(
     setScopedRegistry(env, scope, effectiveRegistry);
   }
 
-  // Auth: berry's getAuthConfiguration selects ONE config object by specificity
-  // (scope if it carries a token OR ident, else the npmRegistries entry for the
-  // effective registry IF one EXISTS, else the global config which folds in the
-  // YARN_NPM_AUTH_* env), then reads token-then-ident from that single object.
-  // A present-but-credential-less npmRegistries entry stops the search: berry
-  // emits no auth rather than falling back to the global/env credentials.
+  // berry's getAuthConfiguration picks ONE config object by specificity and
+  // reads token-then-ident from that object alone, so the tiers never mix. A
+  // present-but-credential-less npmRegistries entry therefore emits no auth
+  // rather than falling back to the global or env credentials.
   const registryKey = selectNpmRegistriesKey(rcFiles, effectiveRegistry);
   let authToken: string | undefined;
   let authIdent: string | undefined;
-  // npmAlwaysAuth (default false) of the SELECTED auth config object; it gates
-  // whether an unscoped fetch authenticates at all.
   let alwaysAuth = false;
   if (
     scopeEntry?.npmAuthToken !== undefined ||
@@ -243,9 +228,9 @@ export function getYarnBerrySpawnRegistryEnv(
         firstDefinedIn(rcFiles, (c) => c.npmAlwaysAuth)
     );
   }
-  // Expand ${VAR} before use so the npmAuthIdent base64 decision (made on the
-  // presence of a `:`) and the bridged value are computed on the real
-  // credentials, matching berry. Env-sourced values are literal (no-op).
+  // Expand ${VAR} before use so the npmAuthIdent base64 decision and the
+  // bridged value are computed on the real credentials, matching berry.
+  // Env-sourced values are literal (no-op).
   authToken = expandBerryValue(authToken, legacy);
   authIdent = expandBerryValue(authIdent, legacy);
 
@@ -260,18 +245,14 @@ export function getYarnBerrySpawnRegistryEnv(
     }
   }
 
-  // berry never reads an .npmrc, so any credential one holds for the registry
-  // berry resolved is one berry itself would never send. Unlike yarn classic
-  // there is no gate to consult: whatever berry would send is already in the
-  // overlay, which the warning checks for.
+  // Unlike yarn classic there is no gate to consult here. Everything berry
+  // would send is already in the overlay, which the warning checks against.
   const dart = nerfDart(effectiveRegistry);
   if (dart) {
     warnNativeCredential(
       env,
       dart,
       'yarn',
-      // Safe to say outright here: berry reads no .npmrc, so nothing yarn does
-      // depends on that credential.
       'Remove that credential from .npmrc if npm should not authenticate there; yarn never reads that file.',
       npmrcReader(root)
     );
@@ -284,12 +265,11 @@ export function getYarnBerrySpawnRegistryEnv(
 /**
  * Reads a key the way the spawned npm would from the .npmrc files berry ignores.
  * The env tier is left out on purpose: berry never reads npm_config_*, so the
- * spawn strips every ambient one (mergeNpmConfigEnv), and what berry does send is
- * in the overlay the warning checks separately. npm also reads a
+ * spawn strips every ambient one (mergeNpmConfigEnv), and what berry does send
+ * is in the overlay the warning checks separately. npm also reads a
  * <globalPrefix>/etc npmrc and its own builtin one, which are not enumerated
- * here: missing one only means the warning stays silent. npm expands a `${VAR}`
- * in a key before the lookup, so match on the resolved key. The maps are read
- * once because the caller probes dozens of keys walking npm's credential ladder.
+ * here: missing one only means the warning stays silent. The maps are read once
+ * because the caller probes dozens of keys walking npm's credential ladder.
  */
 function npmrcReader(root: string): (key: string) => string | undefined {
   const maps = [join(root, '.npmrc'), join(homedir(), '.npmrc')].map((path) => {
@@ -355,14 +335,13 @@ function collectRcFiles(root: string): BerryRcFile[] {
  * rejects the wrong shape before it resolves anything: a null is tolerated (that
  * level keeps its defaults) but any other non-object aborts yarn with "must be
  * an object". Reproduce both, so a config berry refuses to run on never reads as
- * if berry had accepted it, and the tolerated shape stops reaching the lookups
- * below as a null. Verified on 3.8.7 and 4.15.0.
+ * if berry had accepted it. Verified on 3.8.7 and 4.15.0.
  */
 function normalizeMapSettings(config: BerryConfig, path: string): void {
   config.npmScopes = normalizeMapSetting(config.npmScopes, 'npmScopes', path);
   // npmRegistries is declared with normalizeKeys, so berry strips the trailing
-  // slash off each key as it loads the map; do it here rather than at every
-  // lookup, and let a colliding key win last the way berry's Map does.
+  // slash off each key as it loads the map, and lets a colliding key win last
+  // the way berry's Map does.
   const registries = normalizeMapSetting(
     config.npmRegistries,
     'npmRegistries',
@@ -461,10 +440,9 @@ function applyTls(
 ): void {
   const legacy = lt(yarnVersion, BERRY_ENV_PARSER_REWRITE);
   const v4 = major(yarnVersion) >= 4;
-  // v2/v3 name the CA setting caFilePath, v4 renamed it to httpsCaFilePath. The
-  // other major's name aborts berry, as an rc setting and as a YARN_* env var
-  // alike, so only the name the running major accepts has anything left to
-  // reproduce.
+  // The other major's CA-setting name aborts berry, as an rc setting and as a
+  // YARN_* env var alike, so only the name the running major accepts has
+  // anything left to reproduce.
   const caKey = v4 ? 'httpsCaFilePath' : 'caFilePath';
   const caEnvKey = v4 ? 'YARN_HTTPS_CA_FILE_PATH' : 'YARN_CA_FILE_PATH';
 
@@ -473,12 +451,9 @@ function applyTls(
     host = new URL(effectiveRegistry).hostname;
   } catch {}
 
-  // Berry's getNetworkSettings fills each key independently from every glob that
-  // matches the host (longest key first, first non-null wins) and only then
-  // falls back to the global setting, so a per-host entry outranks the YARN_*
-  // env vars while those still outrank the rc files. v4 merges a per-host-key
-  // block across rc files per sub-key; v2/v3 keep the highest-priority file's
-  // whole block.
+  // Berry's getNetworkSettings falls back to a global setting only after the
+  // matching per-host entries, so a per-host value outranks the YARN_* env vars
+  // while those still outrank the rc files.
   const network = resolveNetworkSettings(rcFiles, host, v4);
 
   // Berry expands env vars in path settings, then resolves an rc-sourced path
@@ -501,10 +476,9 @@ function applyTls(
   }
 
   if (gte(yarnVersion, BERRY_CLIENT_CERT_SETTINGS)) {
-    // Berry forwards each half to Node's TLS options independently (httpUtils
-    // sets cert and key with no joint gate); a lone half only fails there
-    // because Node cannot present a certificate without its key. npm needs the
-    // pair the same way, so a lone half stays out of the overlay.
+    // Berry sets cert and key independently (httpUtils has no joint gate); a
+    // lone half only fails there because Node cannot present a certificate
+    // without its key, so it stays out of the overlay.
     const certfile = resolvePath(
       'httpsCertFilePath',
       'YARN_HTTPS_CERT_FILE_PATH'
@@ -584,7 +558,6 @@ function firstPathIn(
   return undefined;
 }
 
-/** The berry settings that name a file, resolvable per host and globally. */
 const BERRY_PATH_KEYS = [
   'caFilePath',
   'httpsCaFilePath',
@@ -603,10 +576,8 @@ type ResolvedNetwork = Partial<Record<BerryPathKey, NetworkPath>> & {
   httpsProxy?: string;
 };
 
-// Reproduces berry getNetworkSettings: each network key is filled from the first
-// (longest-glob-first) matching host entry that defines it; per-host-key blocks
-// are themselves merged across rc files. Berry builds that merged map lowest
-// priority first, and its sort is stable, so two globs of equal length are
+// Reproduces berry getNetworkSettings. Berry builds the merged map lowest
+// priority first and its sort is stable, so two globs of equal length are
 // consulted in that same order.
 function resolveNetworkSettings(
   rcFiles: BerryRcFile[],
@@ -676,11 +647,10 @@ function matchesHostGlob(host: string, key: string): boolean {
 }
 
 // Berry's miscUtils.replaceEnvVariables, applied to every string setting:
-// ${VAR}, ${VAR-default} (default when unset), and ${VAR:-default} (default
-// when unset or empty), then bridged. Berry throws on an undefined bare ${VAR}
-// (which aborts berry itself, so a working workspace never has one); we leave
-// such a reference literal rather than failing the migrate. 4.13.0 rewrote the
-// parser, so dispatch to the one matching the running version.
+// ${VAR}, ${VAR-default} (default when unset) and ${VAR:-default} (default when
+// unset or empty). Berry throws on an undefined bare ${VAR}, which aborts berry
+// itself, so a working workspace never has one; we leave the reference literal
+// rather than failing the migrate.
 // see https://github.com/yarnpkg/berry/blob/c5857bdee5737425b879492db5e2732a5e6e14f2/packages/yarnpkg-core/sources/miscUtils.ts#L473
 function expandBerryEnvVars(
   value: string,
@@ -692,8 +662,7 @@ function expandBerryEnvVars(
     : scanBerryEnv(value, 0, env, false).text;
 }
 
-// Berry < 4.13 expanded env vars with a single regex, where one leading
-// backslash escapes the reference.
+// Berry's pre-4.13 miscUtils.replaceEnvVariables.
 // See https://github.com/yarnpkg/berry/blob/%40yarnpkg/cli/4.12.0/packages/yarnpkg-core/sources/miscUtils.ts
 function expandBerryEnvVarsLegacy(
   value: string,
@@ -754,10 +723,9 @@ function scanBerryEnv(
   return { text, end: i };
 }
 
-// Parses one ${NAME} / ${NAME-default} / ${NAME:-default} at `start` (where
-// input[start] === '$' and input[start + 1] === '{'). The default is parsed
-// brace-balanced so a nested ${...} is captured whole. Returns null when the
-// reference is malformed (invalid name or no operator/close).
+// Parses one ${NAME} / ${NAME-default} / ${NAME:-default} at `start`, which
+// must be the `${`. The default is scanned brace-balanced so a nested ${...} is
+// captured whole.
 function parseBerryRef(
   input: string,
   start: number,
@@ -811,7 +779,6 @@ function isBerryTrueBoolean(value: unknown): boolean {
   return value === true || value === 1 || value === 'true' || value === '1';
 }
 
-/** Expands ${VAR} in an optional berry string value, passing undefined through. */
 function expandBerryValue(
   value: string | undefined,
   legacy: boolean

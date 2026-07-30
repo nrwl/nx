@@ -4500,9 +4500,8 @@ module.exports = {
     });
 
     it('skips the tarball-host check when the package declares migration config', async () => {
-      // The host allowlist only guards packuments that carry no migration
-      // config at all (other registries may serve incomplete metadata); a
-      // declared nx-migrations proves the metadata came through.
+      // The tarball host is off the allowlist on purpose, so only the declared
+      // nx-migrations can skip the check.
       jest
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
         .mockResolvedValue('2.0.1');
@@ -4542,9 +4541,9 @@ module.exports = {
         cleanup: async () => {},
       });
       const fetch = createFetcher({ add: 'npm-add' } as any);
-      // The install itself fails in this harness; the assertion is that the
-      // fetcher classified the registry refusal and routed to install (which
-      // retries the original spec, not the resolved version).
+      // The install fails in this harness; the assertion is that the fetcher routed
+      // to install after the registry refusal, retrying the original spec rather
+      // than the resolved version.
       await expect(fetch('mypackage', 'latest')).rejects.toThrow(
         'Failed to fetch migrations for mypackage@latest'
       );

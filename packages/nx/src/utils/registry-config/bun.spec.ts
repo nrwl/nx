@@ -4,12 +4,8 @@ import { join, resolve } from 'path';
 import { getBunSpawnRegistryEnv } from './bun';
 
 /**
- * Each case mirrors a cell verified against bun 1.2.23 / 1.3.14 (gates
- * bisected at 1.1.18 for .npmrc and 1.1.31 for ca/cafile): CLI >
- * BUN_CONFIG_REGISTRY > NPM_CONFIG_REGISTRY > npm_config_registry > project
- * .npmrc > global ($XDG_CONFIG_HOME else $HOME)/.npmrc > project bunfig >
- * global bunfig > npmjs. The final pick is always injected because bun does
- * not read npm-only surfaces.
+ * Each case mirrors behavior verified against bun 1.2.23 and 1.3.14; the
+ * 1.1.18 (.npmrc) and 1.1.31 (ca/cafile) gates were bisected.
  */
 describe('getBunSpawnRegistryEnv', () => {
   let base: string;
@@ -81,9 +77,8 @@ describe('getBunSpawnRegistryEnv', () => {
   });
 
   it('resolves as though an unreadable project .npmrc were absent (bun semantics)', () => {
-    // bun silently falls through to the next layer on an .npmrc it cannot
-    // read (verified on 1.3.13, EACCES and EISDIR). A directory in the file's
-    // place reads as EISDIR.
+    // A directory in the .npmrc's place reads as EISDIR, the same unreadable
+    // state as a permission error.
     writeBunfig('[install]\nregistry = "https://reg-a.example.com/"\n');
     mkdirSync(join(root, '.npmrc'));
     expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
@@ -92,11 +87,6 @@ describe('getBunSpawnRegistryEnv', () => {
   });
 
   it('resolves as though an unreadable project bunfig were absent (bun semantics)', () => {
-    // bun skips a bunfig it cannot read and still reads the next config file
-    // (verified on 1.3.13, EACCES and EISDIR: with the project bunfig a
-    // directory, a parse error in the global bunfig still aborted, and with
-    // both readable the global registry was contacted). Only a parse error
-    // aborts, which the cases below pin.
     mkdirSync(join(root, 'bunfig.toml'));
     writeBunfig('[install]\nregistry = "https://reg-f.example.com/"\n', home);
     expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
@@ -338,8 +328,6 @@ describe('getBunSpawnRegistryEnv', () => {
   });
 
   it('expands a whole-value $VAR in an .npmrc registry', () => {
-    // bun's scope builder resolves a `$`-prefixed registry value whatever file
-    // it came from, so the .npmrc form is honored just like the bunfig one.
     process.env.BUN_TEST_REGISTRY = 'https://reg-var.example.com/';
     try {
       writeFileSync(join(root, '.npmrc'), 'registry=$BUN_TEST_REGISTRY');
@@ -385,8 +373,6 @@ describe('getBunSpawnRegistryEnv', () => {
   });
 
   it('keeps a credentials-only bunfig scope on the default registry', () => {
-    // bun accepts a scope table with no url and leaves the enclosing registry
-    // in place, so the token has to be darted to that registry.
     writeBunfig(
       [
         '[install]',
@@ -403,9 +389,8 @@ describe('getBunSpawnRegistryEnv', () => {
   });
 
   it('darts a credentials-only bunfig scope onto an .npmrc-derived default registry', () => {
-    // The enclosing registry can come from another file entirely. Measured on
-    // 1.3.13 against a logging registry: the scoped manifest request went to
-    // the .npmrc default with the bunfig scope token as its bearer.
+    // Measured on bun 1.3.13 against a logging registry: the scoped request
+    // went to the .npmrc default carrying the bunfig scope token.
     writeFileSync(join(root, '.npmrc'), 'registry=https://reg-b.example.com/');
     writeBunfig(
       ['[install.scopes]', '"@acme" = { token = "acme-token" }'].join('\n')
@@ -434,9 +419,6 @@ describe('getBunSpawnRegistryEnv', () => {
   });
 
   it('fails on a bunfig that does not parse, the same as one bun type-rejects', () => {
-    // bun aborts on both, so there is no resolution left to reproduce and the
-    // caller has to fall open. Treating this one as an absent file instead would
-    // pin npm to the default registry as though the workspace configured none.
     writeBunfig('[install\nregistry = "https://reg-a.example.com/"\n');
     expect(() => getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toThrow(
       /bunfig at .* could not be parsed/
