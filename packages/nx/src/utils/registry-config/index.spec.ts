@@ -252,25 +252,42 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
 
 describe('ignoresNpmConfigEnv', () => {
   it('reports npm and bun as reading the env tier', () => {
-    expect(ignoresNpmConfigEnv('npm', '11.16.0')).toBe(false);
-    expect(ignoresNpmConfigEnv('bun', '1.3.13')).toBe(false);
+    expect(ignoresNpmConfigEnv('npm', '11.16.0')('registry')).toBe(false);
+    expect(ignoresNpmConfigEnv('bun', '1.3.13')('registry')).toBe(false);
   });
 
   it('reports pnpm as ignoring it from 11.0.0 on', () => {
     // 11.0.0 moved pnpm off npm_config_* onto its own PNPM_CONFIG_* prefix.
-    expect(ignoresNpmConfigEnv('pnpm', '10.15.0')).toBe(false);
-    expect(ignoresNpmConfigEnv('pnpm', '11.0.0')).toBe(true);
-    expect(ignoresNpmConfigEnv('pnpm', '11.9.0')).toBe(true);
+    expect(ignoresNpmConfigEnv('pnpm', '10.15.0')('registry')).toBe(false);
+    expect(ignoresNpmConfigEnv('pnpm', '11.0.0')('registry')).toBe(true);
+    expect(ignoresNpmConfigEnv('pnpm', '11.9.0')('registry')).toBe(true);
+  });
+
+  it('reports pnpm as reading a URL-scoped key again from 11.6.0 on', () => {
+    // 11.6.0 added readUrlScopedEnvConfig: `npm_config_//<dart>:<key>` entries
+    // are read from the environment, except `:tokenHelper`.
+    const dartKey = '//reg.example.com/:_authToken';
+    expect(ignoresNpmConfigEnv('pnpm', '11.5.0')(dartKey)).toBe(true);
+    expect(ignoresNpmConfigEnv('pnpm', '11.6.0')(dartKey)).toBe(false);
+    expect(ignoresNpmConfigEnv('pnpm', '11.9.0')(dartKey)).toBe(false);
+    expect(
+      ignoresNpmConfigEnv('pnpm', '11.6.0')('//reg.example.com/:tokenHelper')
+    ).toBe(true);
+    expect(ignoresNpmConfigEnv('pnpm', '11.6.0')('registry')).toBe(true);
+    expect(ignoresNpmConfigEnv('pnpm', '11.6.0')('@myorg:registry')).toBe(true);
   });
 
   it('reports yarn berry as ignoring it, classic as reading it', () => {
-    expect(ignoresNpmConfigEnv('yarn', '1.22.22')).toBe(false);
-    expect(ignoresNpmConfigEnv('yarn', '2.4.3')).toBe(true);
-    expect(ignoresNpmConfigEnv('yarn', '4.15.0')).toBe(true);
+    const dartKey = '//reg.example.com/:_authToken';
+    expect(ignoresNpmConfigEnv('yarn', '1.22.22')('registry')).toBe(false);
+    expect(ignoresNpmConfigEnv('yarn', '2.4.3')('registry')).toBe(true);
+    expect(ignoresNpmConfigEnv('yarn', '4.15.0')('registry')).toBe(true);
+    // Berry has no URL-scoped env tier; the dart keys stay ignored.
+    expect(ignoresNpmConfigEnv('yarn', '4.15.0')(dartKey)).toBe(true);
   });
 
   it('leaves the environment alone for a version it cannot read', () => {
-    expect(ignoresNpmConfigEnv('pnpm', null)).toBe(false);
-    expect(ignoresNpmConfigEnv('yarn', 'stable')).toBe(false);
+    expect(ignoresNpmConfigEnv('pnpm', null)('registry')).toBe(false);
+    expect(ignoresNpmConfigEnv('yarn', 'stable')('registry')).toBe(false);
   });
 });

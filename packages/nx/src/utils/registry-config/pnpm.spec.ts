@@ -35,6 +35,10 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'PNPM_CONFIG_CAFILE',
     'npm_config_//reg-a.example.com/:_authToken',
     'npm_config_//reg-b.example.com/:_authToken',
+    'pnpm_config_//reg-a.example.com/:_authToken',
+    'PNPM_CONFIG_//reg-b.example.com/:_authToken',
+    'pnpm_config_//reg-a.example.com/:tokenHelper',
+    'pnpm_config_//reg-a.example.com/:username',
     'PNPM_TEST_NOPROXY',
     'PNPM_TEST_HELPER',
     'NX_TEST_HOST',
@@ -552,10 +556,12 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(logger.warn).not.toHaveBeenCalled();
     });
 
-    it('does not count an ambient credential the spawn strips on >= 11', () => {
-      // pnpm >= 11 ignores npm_config_*, so the spawn drops this ambient token
-      // (mergeNpmConfigEnv) before npm runs. npm then fetches reg-b with no
-      // credential, so the auth.ini bare token pinned to npmjs is still missing.
+    it('does not count an ambient credential the spawn strips on 11.0-11.5', () => {
+      // This pnpm line ignores npm_config_* entirely, so the spawn drops this
+      // ambient token (mergeNpmConfigEnv) before npm runs. npm then fetches
+      // reg-b with no credential, so the auth.ini bare token pinned to npmjs is
+      // still missing. From 11.6.0 the URL-scoped tier is read again; see the
+      // inverse case above.
       const { logger } = require('../logger');
       (logger.warn as jest.Mock).mockClear();
       process.env['npm_config_//reg-b.example.com/:_authToken'] = 'env-token';
@@ -933,6 +939,117 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    describe('URL-scoped env tier (>= 11.6.0)', () => {
+      // 11.6.0 added readUrlScopedEnvConfig: `p?npm_config_//<dart>:<key>`
+      // entries are read from the environment again, minus `:tokenHelper`.
+      // The `npm_config_` spellings reach the spawned npm ambiently; only the
+      // `pnpm_config_` ones need re-spelling onto the overlay.
+      it('re-spells a pnpm_config_ URL-scoped credential onto the overlay', () => {
+        process.env['pnpm_config_//reg-a.example.com/:_authToken'] =
+          'pnpm-env-token';
+        // The prefix matches case-insensitively; the dart keeps its case.
+        process.env['PNPM_CONFIG_//reg-b.example.com/:_authToken'] =
+          'pnpm-env-token-b';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+          'npm_config_//reg-a.example.com/:_authToken': 'pnpm-env-token',
+          'npm_config_//reg-b.example.com/:_authToken': 'pnpm-env-token-b',
+        });
+      });
+
+      it('does not read the tier before 11.6.0', () => {
+        process.env['pnpm_config_//reg-a.example.com/:_authToken'] =
+          'pnpm-env-token';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+      });
+
+      it('skips a tokenHelper and an empty value the way pnpm does', () => {
+        process.env['pnpm_config_//reg-a.example.com/:tokenHelper'] =
+          '/usr/local/bin/get-token';
+        process.env['pnpm_config_//reg-a.example.com/:username'] = '';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({});
+      });
+
+      it('lets the env tier beat the same auth.ini key', () => {
+        writeAuthIni('//reg-a.example.com/:_authToken=ini-token');
+        process.env['pnpm_config_//reg-a.example.com/:_authToken'] =
+          'pnpm-env-token';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+          'npm_config_//reg-a.example.com/:_authToken': 'pnpm-env-token',
+        });
+      });
+
+      it('counts an ambient credential the spawn keeps from 11.6.0 on', () => {
+        // The inverse of the 11.0-11.5 strip case below: the spawn keeps the
+        // ambient URL-scoped token (mergeNpmConfigEnv), npm authenticates with
+        // it, and the withheld-credential warning would name a failure that
+        // does not happen.
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        process.env['npm_config_//reg-b.example.com/:_authToken'] = 'env-token';
+        writeFileSync(
+          join(root, '.npmrc'),
+          'registry=https://reg-b.example.com/'
+        );
+        writeAuthIni('_authToken=ini-token');
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh('is-even', root, '11.6.0');
+        });
+        expect(logger.warn).not.toHaveBeenCalled();
+      });
+
+      it('leaves an ambient npm_config_ credential ahead of the same auth.ini key', () => {
+        // Bridging the auth.ini value would put the key on the overlay, and
+        // the merge then drops the ambient spelling npm would have read.
+        writeAuthIni('//reg-a.example.com/:_authToken=ini-token');
+        process.env['npm_config_//reg-a.example.com/:_authToken'] =
+          'ambient-token';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({});
+      });
+
+      it('still bridges auth.ini over an ambient credential before 11.6.0', () => {
+        writeAuthIni('//reg-a.example.com/:_authToken=ini-token');
+        process.env['npm_config_//reg-a.example.com/:_authToken'] =
+          'ambient-token';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+        });
+      });
+
+      it('prefers the pnpm_config_ spelling over the ambient and auth.ini ones', () => {
+        writeAuthIni('//reg-a.example.com/:_authToken=ini-token');
+        process.env['npm_config_//reg-a.example.com/:_authToken'] =
+          'ambient-token';
+        process.env['pnpm_config_//reg-a.example.com/:_authToken'] =
+          'pnpm-env-token';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+          'npm_config_//reg-a.example.com/:_authToken': 'pnpm-env-token',
+        });
+      });
+
+      it('does not re-key a bare auth.ini credential over an ambient one', () => {
+        writeAuthIni(
+          ['registry=https://reg-a.example.com/', '_authToken=ini-token'].join(
+            '\n'
+          )
+        );
+        process.env['npm_config_//reg-a.example.com/:_authToken'] =
+          'ambient-token';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
+      });
+
+      it('lets auth.ini through when the ambient spelling is empty', () => {
+        // npm skips an empty env value, so it suppresses nothing.
+        writeAuthIni('//reg-a.example.com/:_authToken=ini-token');
+        process.env['npm_config_//reg-a.example.com/:_authToken'] = '';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+          'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+        });
+      });
+    });
+
     describe('token helpers', () => {
       // pnpm runs the command and sends what it prints (verified on 11.9.0: a
       // helper in the user .npmrc put `Bearer helper-token-123` on the wire).
@@ -1113,10 +1230,11 @@ describe('getPnpmSpawnRegistryEnv', () => {
         expect(warn.mock.calls[0][0]).toContain('//reg-a.example.com/');
       });
 
-      it('does not count an ambient credential the spawn strips on >= 11', () => {
-        // The helper's registry has an ambient token, but pnpm >= 11 makes the
-        // spawn drop npm_config_* (mergeNpmConfigEnv), so npm never receives it
-        // and fetches unauthenticated. The helper is still worth reporting.
+      it('does not count an ambient credential the spawn strips on 11.0-11.5', () => {
+        // The helper's registry has an ambient token, but this pnpm line makes
+        // the spawn drop npm_config_* (mergeNpmConfigEnv), so npm never
+        // receives it and fetches unauthenticated. The helper is still worth
+        // reporting.
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         writeUserConfig(
           '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token'

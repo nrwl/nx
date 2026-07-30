@@ -1002,6 +1002,58 @@ describe('package-manager', () => {
       );
     });
 
+    it('should drop an ambient credential the workspace pnpm 11.0-11.5 ignores', async () => {
+      // The overlay does not carry the setting, so only the third
+      // mergeNpmConfigEnv argument (ignoresNpmConfigEnv) removes it here.
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      (existsSync as jest.Mock).mockReturnValue(false);
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.5.0' as any);
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      const key = 'npm_config_//reg.example.com/:_authToken';
+      const saved = process.env[key];
+      process.env[key] = 'ambient-token';
+
+      try {
+        await packageRegistryView('nx', 'latest', '--json');
+      } finally {
+        if (saved === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = saved;
+        }
+      }
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.env[key]).toBeUndefined();
+    });
+
+    it('should keep an ambient URL-scoped credential pnpm reads from 11.6.0 on', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      (existsSync as jest.Mock).mockReturnValue(false);
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.6.0' as any);
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      const key = 'npm_config_//reg.example.com/:_authToken';
+      const saved = process.env[key];
+      process.env[key] = 'ambient-token';
+
+      try {
+        await packageRegistryView('nx', 'latest', '--json');
+      } finally {
+        if (saved === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = saved;
+        }
+      }
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.env[key]).toBe('ambient-token');
+    });
+
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
       // A non-JS workspace has no root package.json; its .npmrc and package
       // manager files live under .nx/installation.
@@ -1133,6 +1185,33 @@ describe('package-manager', () => {
         'bun',
         '1.2.0'
       );
+    });
+
+    it('should drop an ambient credential the workspace pnpm 11.0-11.5 ignores', async () => {
+      // Same wiring as the view side: only the third mergeNpmConfigEnv
+      // argument (ignoresNpmConfigEnv) removes an un-overlaid ambient setting.
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+      (existsSync as jest.Mock).mockReturnValue(false);
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('11.5.0' as any);
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+      const key = 'npm_config_//reg.example.com/:_authToken';
+      const saved = process.env[key];
+      process.env[key] = 'ambient-token';
+
+      try {
+        await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+      } finally {
+        if (saved === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = saved;
+        }
+      }
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.env[key]).toBeUndefined();
     });
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {

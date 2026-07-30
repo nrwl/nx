@@ -3,6 +3,7 @@ import {
   expandNpmEnvVars,
   expandPnpmEnvVars,
   getPackageScope,
+  ignoresNpmConfigEnv,
   mergeNpmConfigEnv,
   nerfDart,
   readEnvVar,
@@ -291,7 +292,7 @@ describe('mergeNpmConfigEnv', () => {
       mergeNpmConfigEnv(
         { NPM_CONFIG_CAFILE: '/ca.pem', PATH: '/usr/bin' },
         { npm_config_registry: 'https://overlay.example.com/' },
-        true
+        () => true
       )
     ).toEqual({
       PATH: '/usr/bin',
@@ -307,9 +308,26 @@ describe('mergeNpmConfigEnv', () => {
           'npm_config_@myorg:registry': 'https://ambient.example.com/',
         },
         {},
-        true
+        () => true
       )
     ).toEqual({});
+  });
+
+  it('keeps a setting the predicate says the package manager reads', () => {
+    // pnpm >= 11.6 reads a URL-scoped credential from the environment again
+    // while still ignoring the named settings, so only the latter are dropped.
+    expect(
+      mergeNpmConfigEnv(
+        {
+          'npm_config_//reg.example.com/:_authToken': 'ambient-token',
+          NPM_CONFIG_REGISTRY: 'https://ambient.example.com/',
+        },
+        {},
+        ignoresNpmConfigEnv('pnpm', '11.6.0')
+      )
+    ).toEqual({
+      'npm_config_//reg.example.com/:_authToken': 'ambient-token',
+    });
   });
 
   it('keeps an ambient setting outside the ones it resolves', () => {
@@ -319,7 +337,7 @@ describe('mergeNpmConfigEnv', () => {
       mergeNpmConfigEnv(
         { npm_config_cache: '/cache', npm_config_userconfig: '/user/.npmrc' },
         {},
-        true
+        () => true
       )
     ).toEqual({
       npm_config_cache: '/cache',
