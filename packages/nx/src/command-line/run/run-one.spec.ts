@@ -556,7 +556,48 @@ describe('parseRunOneOptions', () => {
       expect(error.title).toBe(
         'Cannot find target "zzcustom" for project "colon-proj"'
       );
-      expect(error.bodyLines).toContain('Did you mean "zzcustom:variant"?');
+      // The only target is the suggestion, so there is nothing left to list --
+      // the "Available targets:" header must not be printed on its own.
+      expect(error.bodyLines).toEqual(['Did you mean "zzcustom:variant"?']);
+    });
+
+    it('should omit the available targets block when the suggestion was the only target', () => {
+      const error = getRunOneTargetError(
+        {
+          name: 'solo',
+          type: 'lib',
+          data: { root: 'libs/solo', targets: { build: {} } },
+        },
+        'buld'
+      )!;
+
+      expect(error.bodyLines).toEqual(['Did you mean "build"?']);
+    });
+
+    it('should prefer a closer bare-target match over a further rejoined one', () => {
+      // `nx run app:buld:storybook` splits to target "buld" + configuration
+      // "storybook". The rejoined form matches "build-storybook" at distance 2,
+      // but the bare target matches "build" at distance 1 -- the closer of the
+      // two must win rather than whichever form is tried first.
+      const error = getRunOneTargetError(
+        {
+          name: 'app',
+          type: 'app',
+          data: {
+            root: 'apps/app',
+            targets: { build: {}, 'build-storybook': {} },
+          },
+        },
+        'buld',
+        'storybook'
+      )!;
+
+      expect(error.bodyLines).toEqual([
+        'Did you mean "build"?',
+        '',
+        'Available targets:',
+        '  - build-storybook',
+      ]);
     });
 
     it('should still suggest the target for a genuine target + configuration typo', () => {
@@ -632,6 +673,68 @@ describe('parseRunOneOptions', () => {
 
       expect(error.title).toBe("Cannot find project 'colon-pro'");
       expect(error.bodyLines).toContain('  - colon-proj:zzcustom:variant');
+    });
+
+    it('should prefer a closer shorter-form specifier over a further rejoined one', () => {
+      // `nx run shp:build:production` -> project "shp" (typo), target "build",
+      // configuration "production". The rejoined specifier matches
+      // "shop:build-production" at distance 2, but dropping the configuration
+      // matches "shop:build" at distance 1.
+      const graph: ProjectGraph = {
+        nodes: {
+          shop: {
+            name: 'shop',
+            type: 'app',
+            data: {
+              root: 'apps/shop',
+              targets: { build: {}, 'build-production': {} },
+            },
+          },
+          'shop-e2e': {
+            name: 'shop-e2e',
+            type: 'e2e',
+            data: { root: 'apps/shop-e2e', targets: { e2e: {} } },
+          },
+        },
+        dependencies: {},
+      };
+
+      const error = getCannotFindProjectError(
+        graph,
+        'shp',
+        'build',
+        'production'
+      );
+
+      expect(error.bodyLines).toEqual([
+        'Did you mean one of these?',
+        '  - shop:build',
+      ]);
+    });
+
+    it('should not suggest task ids that only match on the target the user typed correctly', () => {
+      // "zzz" shares no character with any project, but the correctly typed
+      // ":build" suffix must not buy the project segment a bigger typo budget.
+      const graph: ProjectGraph = {
+        nodes: Object.fromEntries(
+          ['web', 'api', 'docs', 'admin', 'mobile'].map((name) => [
+            name,
+            {
+              name,
+              type: 'app' as const,
+              data: {
+                root: `apps/${name}`,
+                targets: { build: {}, test: {}, lint: {} },
+              },
+            },
+          ])
+        ),
+        dependencies: {},
+      };
+
+      const error = getCannotFindProjectError(graph, 'zzz', 'build');
+
+      expect(error.bodyLines).toEqual([]);
     });
   });
 
