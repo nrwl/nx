@@ -210,9 +210,7 @@ interface UrlResponse {
   href: string;
   status: number;
   failure?: string;
-  // The proxy the status came back through, if any. A proxy that answers in the
-  // server's place produces one that reads as the server's own until the
-  // message says otherwise.
+  // The proxy the status came back through, if any.
   via?: string;
 }
 

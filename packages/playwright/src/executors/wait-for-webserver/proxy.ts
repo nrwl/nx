@@ -83,10 +83,9 @@ export function resolveProxyForUrl(url: URL): ProxyResolution {
   return { kind: 'proxy', proxy };
 }
 
-// Probing both routes and taking whichever answers would avoid porting this,
-// but `no_proxy` is a directive about where traffic may go, not a hint: sending
-// the target URL to an excluded proxy would disclose it even when the direct
-// probe is the one that succeeds.
+// `no_proxy` is a directive about where traffic may go, not a hint: sending the
+// target URL to an excluded proxy would disclose it even when the direct probe
+// is the one that succeeds.
 function shouldProxy(hostname: string, port: number): boolean {
   const noProxy = readEnv('no_proxy').value.toLowerCase();
   if (!noProxy) {
