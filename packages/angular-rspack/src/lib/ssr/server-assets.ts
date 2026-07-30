@@ -79,8 +79,8 @@ function createDiskAsset(filePath: string): ServerAsset | undefined {
   let text: Promise<string> | undefined;
   return {
     size,
-    // The hash only backs the engine's ETag handling; any stable
-    // content-derived value works.
+    // Backs only the engine's ETag on prerender-route serves; lazy so the
+    // prerender workers, which also evaluate this bundle, never pay for it.
     get hash(): string {
       hash ??= createHash('sha256')
         .update(readFileSync(filePath))
