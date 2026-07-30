@@ -70,6 +70,16 @@ const directNxImportPattern = {
 
 // Escape hatch for non-published projects (e2e suites, the graph client)
 // that legitimately reach into nx internals. Append AFTER baseConfig.
+//
+// WARNING: this object deliberately carries no `files` key, so it matches every
+// linted file in whichever config appends it. Flat config *replaces* a rule's
+// options rather than merging them, so appending this after a config that
+// redefines `@typescript-eslint/no-restricted-imports` for a narrower set of
+// files silently discards that narrower configuration. The failure is invisible
+// in CI, because the result is *fewer* lint errors, not more. Spread it with a
+// `files` key — `{ files: ['**/*.spec.ts'], ...allowDirectNxImports }` — in any
+// project that defines its own `no-restricted-imports` overrides (see
+// packages/nx/eslint.config.mjs).
 export const allowDirectNxImports = {
   rules: {
     '@typescript-eslint/no-restricted-imports': [
