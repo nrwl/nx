@@ -388,7 +388,7 @@ impl NxCache {
         cached_result: CachedResult,
         outputs: Vec<String>,
     ) -> anyhow::Result<i64> {
-        let restore_start = std::time::Instant::now();
+        let restore_start = crate::native::profiler::start();
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
