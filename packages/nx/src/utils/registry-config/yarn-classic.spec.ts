@@ -107,6 +107,13 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
   });
 
+  it('bridges a BOM-prefixed project .yarnrc (yarn strips the BOM)', () => {
+    files[`${ROOT}/.yarnrc`] = '\uFEFFregistry "https://reg-a.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
   it('lets a project .npmrc beat the project .yarnrc (npm reads it natively)', () => {
     files[`${ROOT}/.npmrc`] = 'registry=https://reg-b.example.com/';
     files[`${ROOT}/.yarnrc`] = 'registry "https://reg-a.example.com/"\n';

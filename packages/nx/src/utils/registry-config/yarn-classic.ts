@@ -778,6 +778,12 @@ function* tokenizeYarnrc(input: string): Generator<YarnToken> {
  * yarn's parser rejects.
  */
 function parseYarnrc(raw: string): Map<string, YarnValue> {
+  // Yarn strips a UTF-8 BOM before tokenising (parse.js stripBOM); left in
+  // place it breaks the first name token, dropping the file to the YAML retry,
+  // which declares nothing for the yarn-grammar shape.
+  if (raw.charCodeAt(0) === 0xfeff) {
+    raw = raw.slice(1);
+  }
   const tokens = tokenizeYarnrc(raw);
   const map = new Map<string, YarnValue>();
   const next = (): YarnToken => tokens.next().value as YarnToken;
