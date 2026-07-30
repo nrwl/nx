@@ -24,7 +24,8 @@ public static class Analyzer
         List<string> projectFiles,
         List<string> directoryFiles,
         string workspaceRoot,
-        PluginOptions pluginOptions)
+        PluginOptions pluginOptions,
+        bool roslynAvailable = true)
     {
         // Index Directory.Build.* / Directory.Solution.* matches by their containing directory
         // (workspace-root-relative, forward-slashed; "." for the workspace root itself). Built
@@ -107,6 +108,8 @@ public static class Analyzer
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
         var referencesByRoot = new Dictionary<string, ReferencesInfo>();
         var evaluationInputs = new SortedSet<string>(StringComparer.Ordinal);
+        var atomizedRoots = new List<string>();
+        var atomizedExternalSources = new SortedSet<string>(StringComparer.Ordinal);
 
         // Group nodes by project file path to handle multi-targeting projects.
         // Multi-targeting projects (using TargetFrameworks plural) create multiple nodes:
@@ -215,7 +218,7 @@ public static class Analyzer
                     evaluationInputs.Add(relativeProjectFile);
                     evaluationInputs.UnionWith(ProjectUtilities.GetWorkspaceRelativePaths(workspaceRoot, importPaths));
 
-                    var targets = TargetBuilder.BuildTargets(
+                    var buildResult = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
                         isTest,
@@ -226,17 +229,30 @@ public static class Analyzer
                         workspaceRoot,
                         pluginOptions,
                         nxJson,
-                        directoryBuildInputs
+                        directoryBuildInputs,
+                        SupportsTestSplitting(properties),
+                        // Passed as a callback so the sources are only read and
+                        // parsed for projects that actually opt into splitting.
+                        splitBy => TestClassScanner.Scan(
+                            primaryNode.ProjectInstance!, splitBy, projectDirectory, workspaceRoot),
+                        roslynAvailable
                     );
+
+                    if (buildResult.DerivedFromSources)
+                    {
+                        atomizedRoots.Add(projectRoot);
+                        atomizedExternalSources.UnionWith(buildResult.ExternalSources);
+                    }
 
                     nodesByFile[relativeProjectFile] = new NxProjectGraphNode
                     {
                         Name = projectName,
                         Root = projectRoot,
-                        Targets = targets,
+                        Targets = buildResult.Targets,
                         Metadata = new Models.ProjectMetadata
                         {
-                            Technologies = ProjectUtilities.GetTechnologies(projectPath)
+                            Technologies = ProjectUtilities.GetTechnologies(projectPath),
+                            TargetGroups = buildResult.TargetGroups
                         }
                     };
 
@@ -260,7 +276,13 @@ public static class Analyzer
         {
             NodesByFile = nodesByFile,
             ReferencesByRoot = referencesByRoot,
-            EvaluationInputs = evaluationInputs.ToList()
+            EvaluationInputs = evaluationInputs.ToList(),
+            // Left null rather than empty when nothing split, so the plugin can
+            // skip hashing C# sources entirely.
+            AtomizedRoots = atomizedRoots.Count > 0 ? atomizedRoots : null,
+            AtomizedExternalSources = atomizedExternalSources.Count > 0
+                ? [.. atomizedExternalSources]
+                : null
         };
     }
 
@@ -343,4 +365,20 @@ public static class Analyzer
 
         return properties;
     }
+
+    /// <summary>
+    /// Whether a test project can have its tests split into separate tasks.
+    /// </summary>
+    /// <remarks>
+    /// Requires MSTest on Microsoft.Testing.Platform. The platform alone is not
+    /// enough: its <c>--treenode-filter</c> is only registered by frameworks
+    /// that opt in, and MSTest is not one, so the filters use <c>--filter</c>,
+    /// whose syntax comes from MSTest. Short of both properties
+    /// <c>dotnet test</c> routes through the VSTest bridge, which accepts the
+    /// split arguments and ignores them, so every task would silently run the
+    /// whole suite. <c>MSTest.Sdk</c> sets both, which is also how that SDK is
+    /// detected.
+    /// </remarks>
+    internal static bool SupportsTestSplitting(EvaluatedProperties properties) =>
+        properties.EnableMSTestRunner && properties.TestingPlatformDotnetTestSupport;
 }

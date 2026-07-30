@@ -25,7 +25,7 @@ public class TargetBuilderTestResultsOutputTests
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
             nxJson: null,
-            directoryBuildInputs: new List<string>())["test"];
+            directoryBuildInputs: new List<string>()).Targets["test"];
 
     [Fact]
     public void Test_DeclaresProjectRelativeResultsDirectoryOptionOutput()
