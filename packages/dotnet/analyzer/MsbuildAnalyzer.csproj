@@ -9,6 +9,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!--
+      Roslyn ships localized diagnostic resources in 13 satellite assemblies,
+      ~6.5MB, which are shipped in the @nx/dotnet npm package. The analyzer only
+      parses syntax and never reports a Roslyn diagnostic, so none of them are
+      ever loaded.
+    -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +25,21 @@
     <PackageReference Include="Microsoft.Build" Version="17.0.0" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Framework" Version="17.0.0" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.8.1" />
+    <!--
+      Used to enumerate test classes/methods when a project opts into test
+      atomization. Syntax-only: no compilation, no semantic model, no assembly
+      resolution. Unlike the Microsoft.Build packages this cannot be excluded at
+      runtime, since MSBuildLocator does not supply it. The assemblies load
+      lazily on first use, so workspaces that never atomize pay only the on-disk
+      size, not startup time.
+    -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lets the test project reach internal helpers without widening the
+         analyzer's public surface. -->
+    <InternalsVisibleTo Include="MsbuildAnalyzer.Tests" />
   </ItemGroup>
 
   <PropertyGroup>
