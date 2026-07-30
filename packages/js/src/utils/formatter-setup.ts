@@ -25,8 +25,12 @@ type FormatterSetup<K extends FormatterType = FormatterType> = {
 
 /**
  * Keyed by nx's own `FormatterType` and deliberately *not* `Partial`, so adding
- * a formatter there fails to compile here until it is set up. That is the only
- * compile-time help available: the repo builds with `strict: false`, so an
+ * a formatter there fails to compile here until it is set up. This is one of
+ * the five guarded sites listed on `FormatterType` itself, and the only one
+ * outside `packages/nx` - it reads the type from nx's emitted declarations, so
+ * it fails only once `packages/nx` has been rebuilt.
+ *
+ * The guard has to be structural: the repo builds with `strict: false`, so an
  * untyped lookup would silently yield `any` rather than flag a missing member.
  */
 const formatterSetups: { [K in FormatterType]: FormatterSetup<K> } = {

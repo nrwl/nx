@@ -469,9 +469,7 @@ type ResolvedOxfmtConfig =
  * differently from `nx format`. They are split out here and applied per file by
  * `formatFilesWithOxfmt` instead.
  */
-function splitOxfmtConfig(
-  config: Record<string, unknown> | undefined
-): ResolvedOxfmtConfig {
+function splitOxfmtConfig(config: unknown): ResolvedOxfmtConfig {
   if (config === undefined) {
     return {};
   }
@@ -481,6 +479,10 @@ function splitOxfmtConfig(
   // `{}` here would instead format the batch on oxfmt's bare defaults - the
   // divergence the `error` arm below exists to prevent. Note `[]` needs the
   // explicit check: `typeof [] === 'object'`.
+  //
+  // `config` is `unknown` so this stays a live check. A narrower parameter
+  // would reject these shapes at the type level while they still arrive at
+  // runtime, leaving the guard looking dead to anyone reading it.
   if (config === null || typeof config !== 'object' || Array.isArray(config)) {
     return { error: 'the config must be an object' };
   }
@@ -677,7 +679,7 @@ async function resolveOxfmtConfig(
         | { default?: unknown }
         | undefined;
 
-      return splitOxfmtConfig((loaded?.default ?? loaded) as any);
+      return splitOxfmtConfig(loaded?.default ?? loaded);
     } catch (e) {
       // Unlike the CLI, oxfmt never sees this file - it is handed options in
       // memory - so nothing else will report that the config is unusable.
