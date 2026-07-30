@@ -690,8 +690,11 @@ async function resolveChainWebserver(
         taskEnv
       );
     } catch (e) {
+      // Nx's createNodes error formatter renders `message`/`stack` but not
+      // `cause`, so fold the child's failure into the message to surface it.
+      const detail = e instanceof Error ? e.message : String(e);
       throw new Error(
-        `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server readiness address.`,
+        `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server readiness address.\n${detail}`,
         { cause: e }
       );
     }
@@ -793,8 +796,10 @@ function toReadinessServer(
   }
   // Carry each server's own `webServer.timeout` (the budget Playwright waits
   // for a server it starts) so a slow server is not cut short and a fast one
-  // is not given another server's budget.
-  if (task.timeout != null) {
+  // is not given another server's budget. Guard the type like `port`/`url`
+  // above: an unchecked `.js` config can carry a non-number the gate task's
+  // schema would then reject at run time.
+  if (typeof task.timeout === 'number' && Number.isFinite(task.timeout)) {
     server.timeout = task.timeout;
   }
 
