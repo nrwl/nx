@@ -253,7 +253,7 @@
     "minimatch": "catalog:",
     "next-sitemap": "^3.1.10",
     "ng-packagr": "catalog:angular",
-    "nuxt": "^3.21.1",
+    "nuxt": "^3.21.10",
     "nx": "23.2.0-beta.4",
     "octokit": "^2.0.14",
     "open": "^8.4.0",
