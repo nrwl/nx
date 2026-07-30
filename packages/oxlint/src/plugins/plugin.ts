@@ -274,18 +274,19 @@ function splitConfigFiles(
   // `name`, and promoting one to a project root fails the whole graph with
   // ProjectsWithNoNameError.
   //
-  // `positive` comes back empty whenever the root package.json declares no
-  // `workspaces` and there is no pnpm-workspace.yaml or lerna.json. That covers
-  // the integrated, project.json-based layout as much as a standalone repo, so
-  // the filter must not be skipped wholesale — only the root itself is kept,
-  // since that is the project in the standalone case. A package.json beside a
-  // project.json is admitted by the `projectJsonRoots` clause below regardless.
+  // Applied unconditionally, matching Nx core's package-json plugin. There is no
+  // empty-globs escape hatch on purpose: core appends the root package.json to
+  // the globs only when it carries an `nx` key (which `nx init` writes), so a
+  // root that is genuinely a project already comes through this matcher. Empty
+  // globs mean core creates no root project, and inferring one anyway either
+  // invents a project the rest of the graph lacks or fails it outright. A
+  // package.json beside a project.json is admitted by `projectJsonRoots` below
+  // regardless.
   const patterns = buildPackageJsonPatterns(workspaceRoot, (f) =>
     readJsonFile(join(workspaceRoot, f))
   );
-  const isInPackageManagerWorkspaces = patterns.positive.length
-    ? buildPackageJsonWorkspacesMatcher(patterns)
-    : (packageJsonFile: string) => packageJsonFile === 'package.json';
+  const isInPackageManagerWorkspaces =
+    buildPackageJsonWorkspacesMatcher(patterns);
 
   const projectRoots = new Set<string>(projectJsonRoots);
   for (const packageJsonFile of packageJsonFiles) {

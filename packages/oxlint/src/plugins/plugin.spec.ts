@@ -126,10 +126,14 @@ describe('@nx/oxlint plugin', () => {
     expect(results.projects['libs/a'].targets.oxlint).toBeDefined();
   });
 
+  // The `nx` key is what makes Nx core treat a root package.json as a project
+  // (`create-nodes.ts` appends it to the workspaces globs only then, and
+  // `nx init` writes it). Without it there is no root project to add a target
+  // to — see the test below.
   it('should point a root project at ./src', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
-      'package.json': `{"name":"root-workspace"}`,
+      'package.json': `{"name":"root-workspace","nx":{}}`,
       'src/index.ts': `export const value = 1;`,
     });
 
@@ -138,6 +142,24 @@ describe('@nx/oxlint plugin', () => {
     expect(results.projects['.'].targets.lint).toMatchObject({
       command: 'oxlint ./src',
     });
+  });
+
+  it('should not invent a root project that Nx itself does not create', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      // No `workspaces` and no `nx` key: Nx core creates no project for this
+      // root, so inferring one here either invents a project the rest of the
+      // graph does not have, or — with no `name` — fails the graph outright
+      // with ProjectsWithNoNameError.
+      'package.json': `{"name":"root-workspace","private":true}`,
+      'src/index.ts': `export const value = 1;`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(Object.keys(results.projects)).toEqual(['libs/a']);
   });
 
   it('should not create a node for a package.json the workspaces do not cover', async () => {
