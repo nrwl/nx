@@ -21,8 +21,8 @@ export interface RegisteredFileWatcherConfig {
   watchProjects: string[] | 'all';
   includeGlobalWorkspaceFiles: boolean;
   includeDependencies: boolean;
-  include?: string[];
-  exclude?: string[];
+  includeFiles?: string[];
+  excludeFiles?: string[];
 }
 
 interface RegisteredFileWatcherSocket {
@@ -52,8 +52,14 @@ export function registerFileWatcherSocket(watcher: {
   registeredFileWatcherSockets.push({
     socket: watcher.socket,
     config: watcher.config,
-    includeMatchers: compileGlobs(watcher.config.include ?? [], '--include'),
-    excludeMatchers: compileGlobs(watcher.config.exclude ?? [], '--exclude'),
+    includeMatchers: compileGlobs(
+      watcher.config.includeFiles ?? [],
+      '--includeFiles'
+    ),
+    excludeMatchers: compileGlobs(
+      watcher.config.excludeFiles ?? [],
+      '--excludeFiles'
+    ),
     warnedAboutDroppedBatch: false,
   });
 }
@@ -220,11 +226,11 @@ function reportFilterDroppedEntireBatch(
   consideredFileCount: number
 ) {
   const details =
-    `include=${JSON.stringify(watcher.config.include ?? [])} ` +
-    `exclude=${JSON.stringify(watcher.config.exclude ?? [])}`;
+    `includeFiles=${JSON.stringify(watcher.config.includeFiles ?? [])} ` +
+    `excludeFiles=${JSON.stringify(watcher.config.excludeFiles ?? [])}`;
 
   serverLogger.watcherLog(
-    `Include/exclude filter dropped all ${consideredFileCount} changed file(s); no command will run. ${details}`
+    `File filter dropped all ${consideredFileCount} changed file(s); no command will run. ${details}`
   );
 
   if (watcher.warnedAboutDroppedBatch) {
@@ -234,7 +240,7 @@ function reportFilterDroppedEntireBatch(
 
   sendEmitLogMessageToSocket(
     watcher.socket,
-    `nx watch: the --include/--exclude filter dropped all ${consideredFileCount} changed file(s), so the command did not run. ${details}. ` +
+    `nx watch: the --includeFiles/--excludeFiles filter dropped all ${consideredFileCount} changed file(s), so the command did not run. ${details}. ` +
       `Patterns are matched against workspace-root-relative paths, so use "**/*.ts" rather than "*.ts" to match nested files. ` +
       `(Only reported once per watch.)`,
     'warn'

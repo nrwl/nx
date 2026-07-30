@@ -6,7 +6,7 @@ import type { ChangedFile } from './changed-projects';
 const GLOB_OPTIONS = { dot: true };
 
 /** The CLI flag a set of patterns came from, used to build error messages. */
-export type WatchGlobFlag = '--include' | '--exclude';
+export type WatchGlobFlag = '--includeFiles' | '--excludeFiles';
 
 /**
  * Validates and normalizes a single raw watch glob.
@@ -18,8 +18,9 @@ export type WatchGlobFlag = '--include' | '--exclude';
  *   pattern's own result, and both filters combine their patterns with OR, so
  *   a negated pattern can only ever widen the set it lives in. That makes the
  *   familiar gitignore/eslint idiom mean the opposite of how it reads:
- *   `--include "**\/*.ts" "!**\/*.spec.ts"` would *keep* the spec files, and
- *   `--exclude "!**\/*.spec.ts"` would drop everything that is *not* a spec.
+ *   `--includeFiles "**\/*.ts" "!**\/*.spec.ts"` would *keep* the spec files,
+ *   and `--excludeFiles "!**\/*.spec.ts"` would drop everything that is *not* a
+ *   spec.
  *   Negation already has a first-class spelling here — the other flag.
  * - An empty (or whitespace-only) pattern, which matches nothing. It is what
  *   an unset shell variable expands to, so it is always a mistake.
@@ -37,7 +38,7 @@ export function normalizeWatchGlob(
       `Invalid ${flag} pattern ${JSON.stringify(
         pattern
       )}: negated patterns are not supported. Use ${
-        flag === '--include' ? '--exclude' : '--include'
+        flag === '--includeFiles' ? '--excludeFiles' : '--includeFiles'
       } to express the opposite set.`
     );
   }
@@ -56,9 +57,9 @@ export function normalizeWatchGlob(
 /**
  * Validates and normalizes the patterns for one flag as they enter the system
  * from the CLI. Unlike {@link compileGlobs} this also rejects a flag that was
- * passed with no value at all (`nx watch --all --include -- ...`), which yargs
- * parses as `[]` and which would otherwise disable the filter entirely — the
- * opposite of what was asked for.
+ * passed with no value at all (`nx watch --all --includeFiles -- ...`), which
+ * yargs parses as `[]` and which would otherwise disable the filter entirely —
+ * the opposite of what was asked for.
  */
 export function normalizeWatchGlobs(
   patterns: string[] | undefined,

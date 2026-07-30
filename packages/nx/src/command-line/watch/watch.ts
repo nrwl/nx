@@ -29,9 +29,9 @@ export interface WatchArguments {
    * Patterns are anchored at the workspace root and matched against
    * workspace-root-relative paths, so `**\/*.ts` matches anywhere while
    * `*.ts` only matches the workspace root itself. Negated (`!`) patterns are
-   * rejected — use {@link WatchArguments.exclude} instead.
+   * rejected — use {@link WatchArguments.excludeFiles} instead.
    */
-  include?: string[];
+  includeFiles?: string[];
   /**
    * Glob patterns for changed file paths that should never re-trigger the
    * watched command. A file matching any exclude pattern is always ignored,
@@ -40,9 +40,9 @@ export interface WatchArguments {
    * These are file globs, not project names — use
    * {@link WatchArguments.projects} to choose which projects are watched.
    * Anchoring and negation follow the same rules as
-   * {@link WatchArguments.include}.
+   * {@link WatchArguments.includeFiles}.
    */
-  exclude?: string[];
+  excludeFiles?: string[];
   verbose?: boolean;
   command?: string;
   initialRun?: boolean;
@@ -215,11 +215,11 @@ export async function watch(args: WatchArguments) {
     process.exit(1);
   }
 
-  let include: string[] | undefined;
-  let exclude: string[] | undefined;
+  let includeFiles: string[] | undefined;
+  let excludeFiles: string[] | undefined;
   try {
-    include = normalizeWatchGlobs(args.include, '--include');
-    exclude = normalizeWatchGlobs(args.exclude, '--exclude');
+    includeFiles = normalizeWatchGlobs(args.includeFiles, '--includeFiles');
+    excludeFiles = normalizeWatchGlobs(args.excludeFiles, '--excludeFiles');
   } catch (e) {
     output.error({ title: e.message });
     process.exit(1);
@@ -254,15 +254,15 @@ export async function watch(args: WatchArguments) {
   // silent forever. Seeing the patterns as the daemon received them, next to
   // the anchoring rule, is what turns "nx watch is hung" into "I typed
   // `*.ts`".
-  if (include?.length || exclude?.length) {
+  if (includeFiles?.length || excludeFiles?.length) {
     output.note({
       title: 'Watching with file filters',
       bodyLines: [
-        ...(include?.length
-          ? [`include: ${include.map((p) => `"${p}"`).join(' ')}`]
+        ...(includeFiles?.length
+          ? [`includeFiles: ${includeFiles.map((p) => `"${p}"`).join(' ')}`]
           : []),
-        ...(exclude?.length
-          ? [`exclude: ${exclude.map((p) => `"${p}"`).join(' ')}`]
+        ...(excludeFiles?.length
+          ? [`excludeFiles: ${excludeFiles.map((p) => `"${p}"`).join(' ')}`]
           : []),
         'Patterns are matched against workspace-root-relative paths, so use "**/*.ts" rather than "*.ts" to match nested files.',
       ],
@@ -275,8 +275,8 @@ export async function watch(args: WatchArguments) {
       includeDependencies:
         args.includeDependencies ?? args.includeDependentProjects,
       includeGlobalWorkspaceFiles: args.includeGlobalWorkspaceFiles,
-      include,
-      exclude,
+      includeFiles,
+      excludeFiles,
     },
     async (err, data) => {
       if (err === 'reconnecting') {
