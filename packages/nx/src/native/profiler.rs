@@ -5,7 +5,9 @@
 //! `getNativeTimings()` and includes it in the combined profile report.
 //!
 //! Design goals:
-//!   - Zero overhead when disabled (single atomic load per call-site)
+//!   - Zero overhead when disabled: call-sites open spans with `start()`, which
+//!     performs a single relaxed atomic load and only reads the clock when
+//!     profiling is on
 //!   - No allocation on the hot path beyond the String key
 //!   - Callable from any thread without blocking
 
@@ -24,8 +26,12 @@ struct Event {
 static EVENTS: Lazy<Mutex<Vec<Event>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 /// Call once at process start (or first use). Reads `NX_NATIVE_PROFILE` env var.
+///
+/// The variable is a boolean: only `1` and `true` enable profiling. Presence
+/// alone is not enough, so `NX_NATIVE_PROFILE=0` and `=false` turn it off as a
+/// user would expect.
 pub fn init() {
-    if std::env::var("NX_NATIVE_PROFILE").is_ok() {
+    if std::env::var("NX_NATIVE_PROFILE").is_ok_and(|v| v == "1" || v == "true") {
         ENABLED.store(true, Ordering::Relaxed);
     }
 }
@@ -36,10 +42,20 @@ pub fn enabled() -> bool {
     ENABLED.load(Ordering::Relaxed)
 }
 
-/// Record a span that just completed. `start` is the `Instant` captured at entry.
-/// No-op if profiling is disabled.
-pub fn record(name: &str, start: Instant) {
-    record_ms(name, start.elapsed().as_secs_f64() * 1000.0);
+/// Opens a span. Returns `Some(Instant::now())` only when profiling is active,
+/// so a disabled profiler costs one relaxed atomic load and never reads the
+/// clock. Pair with [`record`].
+#[inline]
+pub fn start() -> Option<Instant> {
+    enabled().then(Instant::now)
+}
+
+/// Record a span opened with [`start`]. No-op if profiling is disabled — in
+/// that case `start` returned `None` and no elapsed time is ever computed.
+pub fn record(name: &str, start: Option<Instant>) {
+    if let Some(start) = start {
+        record_ms(name, start.elapsed().as_secs_f64() * 1000.0);
+    }
 }
 
 /// Record a span using a pre-computed duration (useful when a `Duration` is already
@@ -59,6 +75,11 @@ pub fn record_ms(name: &str, duration_ms: f64) {
 /// Returns a JSON array of `{ name, durationMs }` objects, or `null` if
 /// profiling was not enabled. Called from the JS layer on process exit.
 ///
+/// Draining: the returned spans are removed from the store, so a second call
+/// reports only what was recorded since the first. This keeps a long-lived
+/// process (e.g. the daemon) from growing the list without bound and stops
+/// repeat calls from double-reporting the same span.
+///
 /// ```js
 /// // TypeScript
 /// import { getNativeTimings } from './native';
@@ -70,7 +91,12 @@ pub fn get_native_timings() -> Option<String> {
     if !ENABLED.load(Ordering::Relaxed) {
         return None;
     }
-    let events = EVENTS.lock().ok()?;
+    // A poisoned lock means some thread panicked while pushing a span; the Vec
+    // itself is still intact. Recover it rather than returning `None`, which the
+    // caller cannot tell apart from "profiling was off".
+    let mut guard = EVENTS.lock().unwrap_or_else(|e| e.into_inner());
+    let events = std::mem::take(&mut *guard);
+    drop(guard);
     // Manually build JSON to avoid requiring serde derive feature
     let mut buf = String::with_capacity(events.len() * 64);
     buf.push('[');
