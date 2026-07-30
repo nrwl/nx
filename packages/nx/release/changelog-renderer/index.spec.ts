@@ -185,6 +185,64 @@ describe('ChangelogRenderer', () => {
               `);
       });
 
+      it('should not collect empty author emails (which would otherwise be attributed to the "find" user via ungh)', async () => {
+        const applyUsernameSpy = jest
+          .spyOn(remoteReleaseClient, 'applyUsernameToAuthors')
+          .mockResolvedValue(undefined);
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [
+                {
+                  name: 'Test User',
+                  email: '',
+                },
+              ],
+              body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+              description: 'a change with no author email',
+              type: 'fix',
+              scope: 'pkg-a',
+              githubReferences: [{ value: 'abc1234', type: 'hash' }],
+              isBreaking: false,
+              revertedHashes: [],
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+            applyUsernameToAuthors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+
+        expect(applyUsernameSpy).toHaveBeenCalledTimes(1);
+        const passedAuthors = applyUsernameSpy.mock.calls[0][0];
+        // The empty email must not have been collected, so there is nothing to
+        // look up against ungh and no chance of attributing it to the "find" user.
+        expect([...passedAuthors.get('Test User').email]).toEqual([]);
+        // The author is still credited, just without an @handle.
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - **pkg-a:** a change with no author email
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+
+        applyUsernameSpy.mockRestore();
+      });
+
       it('should not generate a Thank You section when changelogRenderOptions.authors is false', async () => {
         const renderer = new DefaultChangelogRenderer({
           changes,
