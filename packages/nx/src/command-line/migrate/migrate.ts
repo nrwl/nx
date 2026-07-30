@@ -1960,15 +1960,11 @@ async function getPackageMigrationsConfigFromRegistry(
       .hostname;
 
     // Registries other than npmjs and the local registry may not support full metadata via npm view
-    // so throw error so that fetcher falls back to getting config via install.
-    // registry.yarnpkg.com is npmjs' CNAME, so it serves the same metadata.
+    // so throw error so that fetcher falls back to getting config via install
     if (
-      ![
-        'registry.npmjs.org',
-        'registry.yarnpkg.com',
-        'localhost',
-        'artifactory',
-      ].some((v) => registry.includes(v))
+      !['registry.npmjs.org', 'localhost', 'artifactory'].some((v) =>
+        registry.includes(v)
+      )
     ) {
       throw new Error(
         `Getting migration config from registry is not supported from ${registry}`
