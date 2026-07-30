@@ -26,14 +26,12 @@
     <PackageReference Include="Microsoft.Build.Framework" Version="17.0.0" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.8.1" />
     <!--
-      Used to enumerate test classes/methods when a project opts into test
-      atomization. Syntax-only: no compilation, no semantic model, no assembly
-      resolution. Unlike the Microsoft.Build packages this cannot be excluded at
-      runtime, since MSBuildLocator does not supply it. The assemblies load
-      lazily on first use, so workspaces that never atomize pay only the on-disk
-      size, not startup time.
+      Used to enumerate test classes and methods when a project opts into test
+      splitting. Parsing only: no compilation and no semantic model.
+      ExcludeAssets="runtime" for the same reason as the MSBuild packages above,
+      with RoslynResolver loading the SDK's copy at startup.
     -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <ItemGroup>
