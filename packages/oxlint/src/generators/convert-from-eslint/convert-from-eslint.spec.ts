@@ -3,6 +3,7 @@ import {
   logger,
   readJson,
   readProjectConfiguration,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertFromEslintGenerator } from './convert-from-eslint.js';
@@ -87,6 +88,62 @@ describe('convertFromEslintGenerator', () => {
 
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('Did not add any explicit Oxlint targets')
+    );
+    warn.mockRestore();
+  });
+
+  it('warns naming the project when the target name is taken by something else', async () => {
+    const tree = createTreeWithEslintProject();
+    const config = readProjectConfiguration(tree, 'lib-a');
+    config.targets.oxlint = {
+      executor: 'nx:run-commands',
+      options: { command: 'echo hi' },
+    };
+    updateProjectConfiguration(tree, 'lib-a', config);
+    // A second project converts cleanly, so the aggregate "nothing converted"
+    // warning cannot be what reports lib-a being skipped.
+    addProjectConfiguration(tree, 'lib-b', {
+      root: 'libs/lib-b',
+      projectType: 'library',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: { lintFilePatterns: ['{projectRoot}'] },
+        },
+      },
+    });
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    await convertFromEslintGenerator(tree, {
+      skipPackageJson: true,
+      skipFormat: true,
+      addExplicitTargets: true,
+    });
+
+    expect(warn.mock.calls.flat().join('\n')).toContain('lib-a');
+    // lib-a's hand-written target must survive untouched.
+    expect(readProjectConfiguration(tree, 'lib-a').targets.oxlint).toEqual({
+      executor: 'nx:run-commands',
+      options: { command: 'echo hi' },
+    });
+    warn.mockRestore();
+  });
+
+  it('does not claim there was no ESLint target when re-run on a converted tree', async () => {
+    const tree = createTreeWithEslintProject();
+    const run = () =>
+      convertFromEslintGenerator(tree, {
+        skipPackageJson: true,
+        skipFormat: true,
+        addExplicitTargets: true,
+      });
+
+    await run();
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    await run();
+
+    expect(warn.mock.calls.flat().join('\n')).not.toContain(
+      'no project has an explicit @nx/eslint:lint target'
     );
     warn.mockRestore();
   });
