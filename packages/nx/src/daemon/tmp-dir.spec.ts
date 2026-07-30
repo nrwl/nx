@@ -1,6 +1,6 @@
 import { mkdirSync } from 'node:fs';
-import { platform, tmpdir as osTmpdir } from 'node:os';
-import { join } from 'node:path';
+
+import { dirname, join } from 'node:path';
 import { tmpdir as systemTmpDir } from 'tmp';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
@@ -45,12 +45,17 @@ describe('socket directories', () => {
   });
 
   describe('getNxSocketRoot', () => {
-    it('defaults to a stable common directory', () => {
-      const expected =
-        platform() === 'win32'
-          ? join(osTmpdir(), '.nx', 'sockets')
-          : '/tmp/.nx/sockets';
-      expect(getNxSocketRoot()).toEqual(expected);
+    it('defaults to one stable shared root on POSIX', () => {
+      setPlatform('linux');
+      expect(getNxSocketRoot()).toEqual('/tmp/.nx/sockets');
+    });
+
+    it('defaults to the bare OS temp dir on Windows', () => {
+      setPlatform('win32');
+      // Named pipes are not filesystem objects, so there is nothing to allowlist
+      // or lock down there, and `%TMP%` is already per-user. A `\.nx\sockets`
+      // segment would only spend path length — see the budget test below.
+      expect(getNxSocketRoot()).toEqual(systemTmpDir);
     });
 
     it('is overridable via NX_SOCKET_DIR', () => {
@@ -102,6 +107,19 @@ describe('socket directories', () => {
     // Otherwise whoever ran Nx first owns the parent of everyone else's socket dir.
     expect(dir.startsWith(USER_SOCKET_ROOT + '/')).toBe(true);
     expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(USER_SOCKET_ROOT);
+  });
+
+  // assertValidSocketPath (socket-utils.ts) throws above 95 chars and has no
+  // platform guard, so it gates Windows too, and `%TMP%` already contains the
+  // username. Every segment added here comes straight off the budget for long
+  // account names, so the Windows layout stays flat: <TMP>\<hash>\<file>.
+  it('adds no directory segments beyond the OS temp dir on Windows', () => {
+    setPlatform('win32');
+
+    for (const dir of [getSocketDir(), getPluginSocketDir()]) {
+      expect(dirname(dir)).toBe(systemTmpDir);
+      expect(dir).not.toContain('.nx');
+    }
   });
 
   it('omits the per-uid segment on Windows', () => {

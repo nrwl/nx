@@ -69,10 +69,28 @@ export function isDaemonDisabled() {
 }
 
 /**
- * One stable root so a sandbox can allow unix socket access with a single rule.
- * Windows named pipes are not filesystem-gated, so the OS temp dir is fine.
+ * One stable root so a POSIX sandbox can allow unix socket access with a single
+ * rule, and so a shared /tmp can hold a per-uid directory for each user.
+ *
+ * Neither reason applies on Windows: named pipes are not filesystem objects, so
+ * there is nothing to allowlist or to lock down, and the OS temp dir is already
+ * per-user. The extra `\.nx\sockets` would only spend 12 characters of the
+ * 95-char budget `assertValidSocketPath` enforces — which it does on Windows too
+ * — and the temp dir already contains the username, so long account names would
+ * newly overrun it. Sockets go straight in the OS temp dir there, as before.
  */
-export const NX_SOCKET_ROOT = join(NX_TMP_DIR, 'sockets');
+function defaultSocketRoot(): string {
+  return process.platform === 'win32'
+    ? systemTmpDir
+    : join(NX_TMP_DIR, 'sockets');
+}
+
+/** The roots to establish before creating anything beneath them, outermost first. */
+function sharedSocketRoots(): string[] {
+  return process.platform === 'win32'
+    ? [defaultSocketRoot()]
+    : [NX_TMP_DIR, defaultSocketRoot()];
+}
 
 /**
  * Directories that may not *be* the socket directory. Every user can reach these,
@@ -80,15 +98,12 @@ export const NX_SOCKET_ROOT = join(NX_TMP_DIR, 'sockets');
  * a shared root of the world-writable, sticky mode the other users depend on.
  * Nx's own per-user directories live *under* them, which is the intended layout.
  */
-const DIRS_TOO_SHARED_FOR_SOCKETS = [
-  systemTmpDir,
-  NX_TMP_DIR,
-  NX_SOCKET_ROOT,
-  NATIVE_CACHE_ROOT,
-];
+function dirsTooSharedForSockets(): string[] {
+  return [systemTmpDir, NX_TMP_DIR, defaultSocketRoot(), NATIVE_CACHE_ROOT];
+}
 
 export function getNxSocketRoot(): string {
-  return configuredSocketDir() ?? NX_SOCKET_ROOT;
+  return configuredSocketDir() ?? defaultSocketRoot();
 }
 
 /**
@@ -181,7 +196,7 @@ function createOwnerOnlySocketDir(
 ): string {
   // Outside the try so it is not swallowed by the fallback. Exact matches only,
   // so the per-user directories under those roots never trip it.
-  if (DIRS_TOO_SHARED_FOR_SOCKETS.some((d) => resolve(dir) === resolve(d))) {
+  if (dirsTooSharedForSockets().some((d) => resolve(dir) === resolve(d))) {
     throw new InvalidSocketDirConfigured(dir);
   }
 
@@ -191,7 +206,7 @@ function createOwnerOnlySocketDir(
       // level, so a symlink — or a world-writable root without the sticky bit
       // that stops a peer renaming entries out of it — compromises everything
       // below. The inner root is absent on a fresh machine.
-      for (const root of [NX_TMP_DIR, NX_SOCKET_ROOT]) {
+      for (const root of sharedSocketRoots()) {
         if (!ensureSafeSharedRoot(root)) {
           throw new Error(
             `The Nx socket root ${root} is not a directory Nx can safely keep a private directory under.`
