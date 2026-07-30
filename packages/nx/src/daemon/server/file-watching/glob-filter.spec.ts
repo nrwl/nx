@@ -10,39 +10,39 @@ import type { ChangedFile } from './changed-projects';
 // Convenience: the filter helpers take precompiled matchers, so tests compile
 // their raw patterns up front (mirroring how the daemon compiles once at
 // registration).
-const globs = (patterns: string[]) => compileGlobs(patterns, '--include');
+const globs = (patterns: string[]) => compileGlobs(patterns, '--includeFiles');
 
 describe('compileGlobs', () => {
   // A negated pattern used to be compiled and handed straight to minimatch,
   // where it inverted its own result inside an OR-list — so
-  // `--include "**/*.ts" "!**/*.spec.ts"` *kept* spec files and
-  // `--exclude "!**/*.spec.ts"` dropped everything that was not a spec. Both
-  // read as the exact opposite of what they did, so they are rejected.
+  // `--includeFiles "**/*.ts" "!**/*.spec.ts"` *kept* spec files and
+  // `--excludeFiles "!**/*.spec.ts"` dropped everything that was not a spec.
+  // Both read as the exact opposite of what they did, so they are rejected.
   it('rejects a negated pattern and points at the other flag', () => {
-    expect(() => compileGlobs(['!**/*.spec.ts'], '--include')).toThrow(
-      /negated patterns are not supported.*--exclude/s
+    expect(() => compileGlobs(['!**/*.spec.ts'], '--includeFiles')).toThrow(
+      /negated patterns are not supported.*--excludeFiles/s
     );
-    expect(() => compileGlobs(['!**/*.spec.ts'], '--exclude')).toThrow(
-      /negated patterns are not supported.*--include/s
+    expect(() => compileGlobs(['!**/*.spec.ts'], '--excludeFiles')).toThrow(
+      /negated patterns are not supported.*--includeFiles/s
     );
   });
 
   it('rejects an empty pattern (what an unset shell variable expands to)', () => {
-    expect(() => compileGlobs([''], '--include')).toThrow(
+    expect(() => compileGlobs([''], '--includeFiles')).toThrow(
       /the pattern is empty/
     );
-    expect(() => compileGlobs(['   '], '--exclude')).toThrow(
+    expect(() => compileGlobs(['   '], '--excludeFiles')).toThrow(
       /the pattern is empty/
     );
   });
 
   it('strips a leading ./ so a tsconfig-style pattern still matches', () => {
-    const matchers = compileGlobs(['./src/**/*.ts'], '--include');
+    const matchers = compileGlobs(['./src/**/*.ts'], '--includeFiles');
     expect(fileMatchesGlobFilter('src/app/main.ts', matchers, [])).toBe(true);
   });
 
   it('leaves a valid pattern untouched', () => {
-    const matchers = compileGlobs(['**/*.ts'], '--include');
+    const matchers = compileGlobs(['**/*.ts'], '--includeFiles');
     expect(fileMatchesGlobFilter('src/app/main.ts', matchers, [])).toBe(true);
     expect(fileMatchesGlobFilter('src/app/main.css', matchers, [])).toBe(false);
   });
@@ -50,26 +50,25 @@ describe('compileGlobs', () => {
 
 describe('normalizeWatchGlobs', () => {
   it('passes undefined through (the flag was not used)', () => {
-    expect(normalizeWatchGlobs(undefined, '--include')).toBeUndefined();
+    expect(normalizeWatchGlobs(undefined, '--includeFiles')).toBeUndefined();
   });
 
   it('rejects a flag passed with no patterns, which would disable the filter', () => {
-    expect(() => normalizeWatchGlobs([], '--include')).toThrow(
-      /--include was passed without any glob patterns/
+    expect(() => normalizeWatchGlobs([], '--includeFiles')).toThrow(
+      /--includeFiles was passed without any glob patterns/
     );
   });
 
   it('normalizes each pattern', () => {
-    expect(normalizeWatchGlobs(['./src/**', '**/*.ts'], '--include')).toEqual([
-      'src/**',
-      '**/*.ts',
-    ]);
+    expect(
+      normalizeWatchGlobs(['./src/**', '**/*.ts'], '--includeFiles')
+    ).toEqual(['src/**', '**/*.ts']);
   });
 
   it('rejects a negated pattern', () => {
-    expect(() => normalizeWatchGlobs(['!**/*.spec.ts'], '--exclude')).toThrow(
-      /negated patterns are not supported/
-    );
+    expect(() =>
+      normalizeWatchGlobs(['!**/*.spec.ts'], '--excludeFiles')
+    ).toThrow(/negated patterns are not supported/);
   });
 });
 
