@@ -1,27 +1,27 @@
 import { mkdirSync } from 'node:fs';
-
-import { dirname, join } from 'node:path';
+import { basename, dirname } from 'node:path';
 import { tmpdir as systemTmpDir } from 'tmp';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   getNxSocketRoot,
   getPluginSocketDir,
   getSocketDir,
+  getSocketDirFallbackCause,
   InvalidSocketDirConfigured,
 } from './tmp-dir';
-import {
-  ensureOwnedPrivateDir,
-  ensureSafeSharedRoot,
-} from '../utils/owned-private-dir';
+import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
+import { logger } from '../utils/logger';
 
 jest.mock('../utils/owned-private-dir', () => ({
   ensureOwnedPrivateDir: jest.fn(() => true),
-  ensureSafeSharedRoot: jest.fn(() => true),
   getUserSegment: jest.fn(() => '501'),
 }));
 
-// The per-uid level between the shared root and the socket directories.
-const USER_SOCKET_ROOT = '/tmp/.nx/sockets/501';
+jest.mock('../utils/logger', () => ({
+  logger: {
+    verbose: jest.fn(),
+  },
+}));
 
 jest.mock('node:fs', () => {
   const actual = jest.requireActual('node:fs');
@@ -30,6 +30,9 @@ jest.mock('node:fs', () => {
     mkdirSync: jest.fn(),
   };
 });
+
+const USER_TMP_ROOT = '/tmp/.nx-501';
+const SOCKET_ROOT = `${USER_TMP_ROOT}/sockets`;
 
 describe('socket directories', () => {
   const originalPlatform = process.platform;
@@ -45,16 +48,15 @@ describe('socket directories', () => {
   });
 
   describe('getNxSocketRoot', () => {
-    it('defaults to one stable shared root on POSIX', () => {
+    it('defaults to a short per-user root on POSIX', () => {
       setPlatform('linux');
-      expect(getNxSocketRoot()).toEqual('/tmp/.nx/sockets');
+      expect(getNxSocketRoot()).toEqual(SOCKET_ROOT);
     });
 
     it('defaults to the bare OS temp dir on Windows', () => {
       setPlatform('win32');
       // Named pipes are not filesystem objects, so there is nothing to allowlist
-      // or lock down there, and `%TMP%` is already per-user. A `\.nx\sockets`
-      // segment would only spend path length — see the budget test below.
+      // or lock down there, and `%TMP%` is already per-user.
       expect(getNxSocketRoot()).toEqual(systemTmpDir);
     });
 
@@ -69,7 +71,7 @@ describe('socket directories', () => {
     });
   });
 
-  it('places workspace-unique socket dirs under the common root', () => {
+  it('places workspace-unique socket dirs under the user socket root', () => {
     setPlatform('linux');
 
     expect(getSocketDir()).toMatch(
@@ -78,7 +80,7 @@ describe('socket directories', () => {
     expect(getSocketDir()).not.toEqual(getNxSocketRoot());
   });
 
-  it('places plugin socket dirs under the common root too', () => {
+  it('places plugin socket dirs under the user socket root too', () => {
     setPlatform('linux');
 
     expect(getPluginSocketDir()).toMatch(
@@ -86,79 +88,75 @@ describe('socket directories', () => {
     );
   });
 
-  it('creates the daemon socket directory owner-only, separately from its parents', () => {
+  it('establishes every default root owner-only, outermost first', () => {
     setPlatform('linux');
 
     const dir = getSocketDir();
 
-    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(dir);
-    expect(ensureSafeSharedRoot).toHaveBeenCalledWith('/tmp/.nx/sockets');
+    expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(1, USER_TMP_ROOT);
+    expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(2, SOCKET_ROOT);
+    expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(3, dir);
     expect(mkdirSync).not.toHaveBeenCalledWith(dir, {
       recursive: true,
       mode: 0o700,
     });
   });
 
-  it('puts the socket directories under a per-uid directory it owns', () => {
-    setPlatform('linux');
-
-    const dir = getSocketDir();
-
-    // Otherwise whoever ran Nx first owns the parent of everyone else's socket dir.
-    expect(dir.startsWith(USER_SOCKET_ROOT + '/')).toBe(true);
-    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(USER_SOCKET_ROOT);
-  });
-
-  // assertValidSocketPath (socket-utils.ts) throws above 95 chars and has no
-  // platform guard, so it gates Windows too, and `%TMP%` already contains the
-  // username. Every segment added here comes straight off the budget for long
-  // account names, so the Windows layout stays flat: <TMP>\<hash>\<file>.
-  it('adds no directory segments beyond the OS temp dir on Windows', () => {
-    setPlatform('win32');
-
-    for (const dir of [getSocketDir(), getPluginSocketDir()]) {
-      expect(dirname(dir)).toBe(systemTmpDir);
-      expect(dir).not.toContain('.nx');
-    }
-  });
-
-  it('omits the per-uid segment on Windows', () => {
-    setPlatform('win32');
-    // The OS temp dir is already per-user there and both lockdown helpers are
-    // no-ops, so the segment only spends path length — and the username is
-    // already in %TMP%, which overran the 95-char guard for ordinary accounts.
-    expect(getSocketDir()).not.toContain(`${USER_SOCKET_ROOT}/`);
-    expect(getPluginSocketDir()).not.toContain(`${USER_SOCKET_ROOT}/`);
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_SOCKET_ROOT);
-  });
-
-  it('falls back when the per-uid directory is not ours', () => {
+  it('falls back before creating a socket root beneath a top-level root that is not ours', () => {
     setPlatform('linux');
     (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
   });
 
-  it('creates the plugin socket directory owner-only, separately from its parents', () => {
+  it('logs the default-root failure at verbose level and retains it as the fallback cause', () => {
+    setPlatform('linux');
+    (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+
+    const cause = getSocketDirFallbackCause();
+    expect(cause).toBeInstanceOf(Error);
+    expect(logger.verbose).toHaveBeenCalledWith(
+      expect.stringContaining('could not use the default socket directory'),
+      cause
+    );
+  });
+
+  // assertValidSocketPath (socket-utils.ts) currently applies its 95-character
+  // guard on Windows too. Keep the layout flat and pin the short directory names
+  // so ordinary account names cannot silently consume that budget again.
+  it('pins the flat Windows socket directory budget', () => {
+    setPlatform('win32');
+
+    const daemonDir = getSocketDir();
+    const pluginDir = getPluginSocketDir();
+
+    for (const dir of [daemonDir, pluginDir]) {
+      expect(dirname(dir)).toBe(systemTmpDir);
+      expect(dir).not.toContain('.nx');
+    }
+    expect(basename(daemonDir)).toMatch(/^[0-9a-f]{20}$/);
+    expect(basename(pluginDir)).toMatch(/^[0-9a-f]{8}$/);
+  });
+
+  it('does not establish POSIX-only roots on Windows', () => {
+    setPlatform('win32');
+
+    getSocketDir();
+    getPluginSocketDir();
+
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+  });
+
+  it('creates the plugin socket directory owner-only', () => {
     setPlatform('linux');
 
     const dir = getPluginSocketDir();
 
     expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(dir);
-    expect(ensureSafeSharedRoot).toHaveBeenCalledWith('/tmp/.nx/sockets');
-  });
-
-  it('establishes every shared root as sticky + world-writable so other users can coexist', () => {
-    setPlatform('linux');
-
-    getSocketDir();
-
-    // Outermost first: the outer root is the parent of the inner one, so a
-    // symlink there redirects it before it is ever checked.
-    expect(ensureSafeSharedRoot).toHaveBeenNthCalledWith(1, '/tmp/.nx');
-    expect(ensureSafeSharedRoot).toHaveBeenNthCalledWith(2, '/tmp/.nx/sockets');
-    // ...but never the per-uid directory, which must stay 0700.
-    expect(ensureSafeSharedRoot).not.toHaveBeenCalledWith(USER_SOCKET_ROOT);
   });
 
   it('gives the daemon and plugin sockets distinct directories', () => {
@@ -167,21 +165,20 @@ describe('socket directories', () => {
     expect(getSocketDir()).not.toBe(getPluginSocketDir());
   });
 
-  // Each is reachable by every user, and Nx locks the socket dir to one of them —
-  // so naming a shared root here would strip it of the sticky, world-writable
-  // mode the others depend on. Loud, rather than a silently substituted default.
+  // These are either shared with every user or internal Nx roots rather than
+  // socket directories. Loud rejection is safer than silently changing their
+  // permissions or mixing sockets with the native binding cache.
   it.each([
     ['the system temp dir', () => systemTmpDir],
-    ['the Nx tmp root', () => '/tmp/.nx'],
-    ['the shared socket root', () => '/tmp/.nx/sockets'],
-    ['the shared native cache root', () => '/tmp/.nx/native-cache'],
-    // Documented as invalid, so it has to be rejected however it is spelled.
-    // These cover the normalization on the way in rather than the comparison
-    // itself, which sees an already-resolved path.
-    ['the shared socket root with a trailing slash', () => '/tmp/.nx/sockets/'],
+    ['the Nx user tmp root', () => USER_TMP_ROOT],
+    ['the Nx socket root', () => SOCKET_ROOT],
+    ['the native cache root', () => `${USER_TMP_ROOT}/native-cache`],
+    // These cover normalization on the way in rather than the comparison itself,
+    // which sees an already-resolved path.
+    ['the socket root with a trailing slash', () => `${SOCKET_ROOT}/`],
     [
-      'the shared socket root reached via ..',
-      () => '/tmp/.nx/native-cache/../sockets',
+      'the socket root reached via ..',
+      () => `${USER_TMP_ROOT}/native-cache/../sockets`,
     ],
   ])(
     'throws InvalidSocketDirConfigured when the socket dir is %s',
@@ -191,17 +188,17 @@ describe('socket directories', () => {
 
       expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
       expect(mkdirSync).not.toHaveBeenCalled();
-      expect(ensureSafeSharedRoot).not.toHaveBeenCalled();
+      expect(ensureOwnedPrivateDir).not.toHaveBeenCalled();
     }
   );
 
-  it('still accepts a directory that merely sits under a shared root', () => {
+  it('still accepts a directory beneath an internal Nx root', () => {
     setPlatform('linux');
-    // Only exact matches are rejected; the per-user layout Nx builds itself lives
-    // under these roots, so a prefix test would reject the default too.
-    process.env.NX_SOCKET_DIR = '/tmp/.nx/sockets/mine';
+    // Only exact matches are rejected; the default socket directories Nx builds
+    // itself live beneath these roots.
+    process.env.NX_SOCKET_DIR = `${SOCKET_ROOT}/mine`;
 
-    expect(getSocketDir()).toBe('/tmp/.nx/sockets/mine');
+    expect(getSocketDir()).toBe(`${SOCKET_ROOT}/mine`);
   });
 
   // An empty value must mean unset. Left as `??`, the empty string survives and
@@ -216,14 +213,13 @@ describe('socket directories', () => {
       const dir = getSocketDir();
 
       expect(dir).not.toBe(process.cwd());
-      expect(dir.startsWith(USER_SOCKET_ROOT + '/')).toBe(true);
-      expect(getNxSocketRoot()).toBe('/tmp/.nx/sockets');
+      expect(dir.startsWith(SOCKET_ROOT + '/')).toBe(true);
+      expect(getNxSocketRoot()).toBe(SOCKET_ROOT);
     }
   );
 
   it('ignores an empty NX_SOCKET_DIR shadowing a valid legacy value', () => {
     setPlatform('linux');
-    // What a half-finished migration to the new variable name looks like.
     process.env.NX_SOCKET_DIR = '';
     process.env.NX_DAEMON_SOCKET_DIR = '/tmp/nx-legacy-sock';
 
@@ -240,39 +236,31 @@ describe('socket directories', () => {
     expect(ensureOwnedPrivateDir).toHaveBeenCalledWith('/tmp/nx-custom-sock');
   });
 
-  it('does not relax the shared root when an explicit socket dir is configured', () => {
+  it('does not establish the default roots when an explicit socket dir is configured', () => {
     setPlatform('linux');
     process.env.NX_SOCKET_DIR = '/tmp/nx-custom-sock';
 
     getSocketDir();
 
-    // Only the configured dir is touched; the default stable root is left alone.
-    expect(ensureSafeSharedRoot).not.toHaveBeenCalled();
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
   });
 
-  it('falls back rather than creating anything under an unsafe shared root', () => {
+  it('does not label an explicit socket-directory failure as a default-root fallback', () => {
     setPlatform('linux');
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
-
-    const dir = getSocketDir();
-
-    expect(dir).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_SOCKET_ROOT);
+    process.env.NX_SOCKET_DIR = '/tmp/nx-custom-sock';
+    (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);
+    const warn = jest.spyOn(console, 'warn').mockImplementation();
+    try {
+      expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+      expect(getSocketDirFallbackCause()).toBeUndefined();
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('configured socket directory')
+      );
+    } finally {
+      warn.mockRestore();
+    }
   });
-
-  it('stops at the first unsafe root rather than creating the one below it', () => {
-    setPlatform('linux');
-    // The inner root is absent on a fresh machine, so it is the easier to plant.
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(true);
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
-
-    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    expect(ensureSafeSharedRoot).toHaveBeenCalledWith('/tmp/.nx');
-    expect(ensureSafeSharedRoot).toHaveBeenCalledWith('/tmp/.nx/sockets');
-  });
-
-  // The win32 short-circuit lives in ensureSafeSharedRoot, mocked out here;
-  // covered live in utils/owned-private-dir.spec.ts.
 });
 
 function escapeRegExp(str: string): string {
