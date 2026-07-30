@@ -47,7 +47,7 @@ public class TargetBuilderOutputPathsTests
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
             nxJson: null,
-            directoryBuildInputs: directoryBuildInputs ?? new List<string>());
+            directoryBuildInputs: directoryBuildInputs ?? new List<string>()).Targets;
 
     // --- Original #33971: Microsoft.NET.Sdk.Web ---------------------------
 

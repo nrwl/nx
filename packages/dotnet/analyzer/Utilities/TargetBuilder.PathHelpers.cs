@@ -296,4 +296,64 @@ public static partial class TargetBuilder
 
         return "{projectRoot}/TestResults";
     }
+
+    /// <summary>
+    /// Gets the shared base every split test task's results directory is
+    /// built from, as both the Nx-prefixed output path and the path to
+    /// resolve <c>--results-directory</c> against. Each task appends its own
+    /// unit id to these.
+    /// </summary>
+    /// <remarks>
+    /// Each task needs its own subdirectory. If they all shared the project's
+    /// TestResults directory, every task would declare the whole directory as
+    /// its output and replaying one from cache would restore the others' results
+    /// too.
+    ///
+    /// The two paths differ because the CLI argument is resolved against the
+    /// task's working directory (the project root) while the Nx output may be
+    /// anchored at the workspace root — which is what the artifacts-output and
+    /// custom-TestResultsDirectory layouts produce.
+    ///
+    /// Returns null when the base results directory lies outside the workspace,
+    /// matching <see cref="GetTestResultsDirectory"/>. This is a property of the
+    /// project, not any individual unit — resolved once here rather than
+    /// recomputed (and always agreeing with itself) once per unit.
+    /// </remarks>
+    private static (string NxBaseDirectory, string CwdRelativeBase)? GetAtomizedTestResultsBase(
+        Dictionary<string, string> properties,
+        string projectName,
+        string projectDirectory,
+        string workspaceRoot)
+    {
+        var baseDirectory = GetTestResultsDirectory(properties, projectName, projectDirectory, workspaceRoot);
+        if (baseDirectory is null)
+        {
+            return null;
+        }
+
+        // The common case: results live under the project, so the argument is
+        // just the tail of the same path.
+        const string projectRootToken = "{projectRoot}/";
+        if (baseDirectory.StartsWith(projectRootToken, StringComparison.Ordinal))
+        {
+            return (baseDirectory, baseDirectory[projectRootToken.Length..]);
+        }
+
+        // Otherwise the directory is workspace-anchored; walk back up to the
+        // workspace root from the project directory to reach it.
+        const string workspaceRootToken = "{workspaceRoot}/";
+        if (baseDirectory.StartsWith(workspaceRootToken, StringComparison.Ordinal))
+        {
+            var projectRelativeToWorkspace = Path
+                .GetRelativePath(workspaceRoot, projectDirectory)
+                .Replace('\\', '/');
+            var upToWorkspaceRoot = projectRelativeToWorkspace is "." or ""
+                ? string.Empty
+                : string.Concat(Enumerable.Repeat("../", projectRelativeToWorkspace.Split('/').Length));
+
+            return (baseDirectory, $"{upToWorkspaceRoot}{baseDirectory[workspaceRootToken.Length..]}");
+        }
+
+        return null;
+    }
 }

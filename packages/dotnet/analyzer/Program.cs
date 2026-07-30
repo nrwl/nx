@@ -103,6 +103,8 @@ if (projectFiles.Count == 0)
 // Use default plugin options if not provided
 pluginOptions ??= new PluginOptions();
 
+var roslynAvailable = false;
+
 // Register MSBuild BEFORE any MSBuild types are referenced
 try
 {
@@ -152,6 +154,10 @@ try
     }
 
     MSBuildLocator.RegisterInstance(selectedInstance);
+
+    // Roslyn is resolved from the same SDK, so it has to be wired up while the
+    // instance is in hand and before any syntax type is touched.
+    roslynAvailable = RoslynResolver.TryRegister(selectedInstance.MSBuildPath);
 }
 catch (Exception ex)
 {
@@ -163,7 +169,7 @@ catch (Exception ex)
 AnalysisResult result;
 using (var analyzePerf = PerfLogger.Start("analyze workspace"))
 {
-    result = Analyzer.AnalyzeWorkspace(projectFiles, directoryFiles, workspaceRoot, pluginOptions);
+    result = Analyzer.AnalyzeWorkspace(projectFiles, directoryFiles, workspaceRoot, pluginOptions, roslynAvailable);
 }
 
 // Serialize and output results
