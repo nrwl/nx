@@ -9,6 +9,7 @@ import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
+  sharedRootRemedy,
 } from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
 // Only used to *reject* it as a socket location; see InvalidSocketDirConfigured.
@@ -194,7 +195,12 @@ function createOwnerOnlySocketDir(
         // refuse it rather than trusting a peer-owned parent.
         if (!ensureSafeSharedRoot(NX_TMP_DIR)) {
           throw new Error(
-            `The Nx temp root ${NX_TMP_DIR} is not a directory Nx can safely keep a private directory under.`
+            [
+              `The Nx temp root ${NX_TMP_DIR} is not a directory Nx can safely keep a private directory under.`,
+              sharedRootRemedy(NX_TMP_DIR),
+            ]
+              .filter(Boolean)
+              .join(' ')
           );
         }
         for (const root of [NX_USER_TMP_DIR, defaultSocketRoot()]) {

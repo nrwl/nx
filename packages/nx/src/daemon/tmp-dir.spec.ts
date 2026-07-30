@@ -12,12 +12,14 @@ import {
 import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
+  sharedRootRemedy,
 } from '../utils/owned-private-dir';
 import { logger } from '../utils/logger';
 
 jest.mock('../utils/owned-private-dir', () => ({
   ensureOwnedPrivateDir: jest.fn(() => true),
   ensureSafeSharedRoot: jest.fn(() => true),
+  sharedRootRemedy: jest.fn(() => undefined),
   getUserSegment: jest.fn(() => '501'),
 }));
 
@@ -137,6 +139,31 @@ describe('socket directories', () => {
       expect.stringContaining('could not use the default socket directory'),
       cause
     );
+  });
+
+  it('carries the chown remedy in the fallback cause when the container is another user’s', () => {
+    setPlatform('linux');
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
+    (sharedRootRemedy as jest.Mock).mockReturnValueOnce(
+      `${SHARED_TMP_ROOT} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${SHARED_TMP_ROOT} && sudo chmod 1777 ${SHARED_TMP_ROOT}\`; every user can then keep their own directory under it.`
+    );
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    expect(sharedRootRemedy).toHaveBeenCalledWith(SHARED_TMP_ROOT);
+    expect((getSocketDirFallbackCause() as Error).message).toContain(
+      `sudo chown root ${SHARED_TMP_ROOT}`
+    );
+  });
+
+  it('omits the remedy when the container is unsafe for a reason the user cannot chown away', () => {
+    setPlatform('linux');
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    const message = (getSocketDirFallbackCause() as Error).message;
+    expect(message).toContain('is not a directory Nx can safely keep');
+    expect(message).not.toContain('chown');
+    expect(message.endsWith('under.')).toBe(true);
   });
 
   // assertValidSocketPath (socket-utils.ts) currently applies its 95-character
