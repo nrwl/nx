@@ -5,6 +5,7 @@ import {
   getSelectedPackageManager,
   readFile,
   readJson,
+  removeFile,
   runCLI,
   runCommandAsync,
   runCreateWorkspace,
@@ -46,6 +47,40 @@ describe('create-nx-workspace --formatter', () => {
     );
 
     expect(() => runCLI('format:check --all')).not.toThrow();
+  });
+
+  it('should format generated files with an oxfmt.config.mts', () => {
+    const wsName = uniq('oxfmtmts');
+    runCreateWorkspace(wsName, {
+      preset: 'ts',
+      packageManager,
+      formatter: 'oxfmt',
+    });
+
+    // Generators format through oxfmt's programmatic API, so Nx - not the
+    // oxfmt CLI - has to read the config. `oxfmt.config.mts` is the only
+    // discovered name that `require()` cannot load, and a top-level await
+    // makes that certain: Nx has to fall back to `import()`. Nothing below
+    // e2e covers this, because jest's module registry cannot `require(esm)`.
+    removeFile('.oxfmtrc.json');
+    updateFile(
+      'oxfmt.config.mts',
+      [
+        `const printWidth = await Promise.resolve(80);`,
+        `export default { singleQuote: true, printWidth, semi: false };`,
+        ``,
+      ].join('\n')
+    );
+
+    runCLI(
+      `generate @nx/js:lib packages/mylib --bundler=none --linter=none --unitTestRunner=none --no-interactive`
+    );
+
+    // `semi: false` is neither oxfmt's default nor what the template writes,
+    // so a config Nx failed to read shows up either way: an unreadable config
+    // skips the batch, and a config read as empty formats on bare defaults.
+    // Both leave the semicolon in place.
+    expect(readFile('packages/mylib/src/index.ts')).not.toContain(';');
   });
 
   it('should not fail format when no formatter is configured', async () => {
