@@ -36,6 +36,13 @@ export const prettierConfigFiles = [
   '.prettierrc.toml',
 ];
 
+/** Measured against prettier 3.6.2; same three codes as oxfmt's. */
+const enum PrettierExitCode {
+  Success = 0,
+  Mismatch = 1,
+  Failure = 2,
+}
+
 export function isUsingPrettier(root: string): boolean {
   for (const file of prettierConfigFiles) {
     if (existsSync(join(root, file))) {
@@ -153,7 +160,16 @@ export function checkWithPrettier(patterns: string[]): Promise<string[]> {
             );
             return;
           }
-          if (stdout.length === 0) {
+          // Only `Mismatch` means "files differ", the same rule
+          // `checkWithOxfmt` applies. `Failure` still prints the files
+          // prettier got through first - measured: one differing file plus one
+          // unparseable file exits 2 with the differing file on stdout - so
+          // reading stdout as the file list reports the diff and swallows the
+          // syntax error.
+          if (
+            error['code'] !== PrettierExitCode.Mismatch ||
+            stdout.length === 0
+          ) {
             reject(error);
             return;
           }
