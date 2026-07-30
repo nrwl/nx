@@ -389,6 +389,21 @@ describe('getBunSpawnRegistryEnv', () => {
     });
   });
 
+  it('darts a credentials-only bunfig scope onto an .npmrc-derived default registry', () => {
+    // The enclosing registry can come from another file entirely. Measured on
+    // 1.3.13 against a logging registry: the scoped manifest request went to
+    // the .npmrc default with the bunfig scope token as its bearer.
+    writeFileSync(join(root, '.npmrc'), 'registry=https://reg-b.example.com/');
+    writeBunfig(
+      ['[install.scopes]', '"@acme" = { token = "acme-token" }'].join('\n')
+    );
+    expect(getBunSpawnRegistryEnv('@acme/pkg', root, '1.3.14')).toEqual({
+      npm_config_registry: 'https://reg-b.example.com/',
+      'npm_config_@acme:registry': 'https://reg-b.example.com/',
+      'npm_config_//reg-b.example.com/:_authToken': 'acme-token',
+    });
+  });
+
   it.each([
     ['registry = 1234', /install\.registry that is neither/],
     [

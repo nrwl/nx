@@ -1251,6 +1251,29 @@ describe('getPnpmSpawnRegistryEnv', () => {
         });
       });
 
+      it('bridges a yaml noProxy on its own', () => {
+        writeYaml('noProxy: yaml.example.com\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_noproxy: 'yaml.example.com',
+        });
+      });
+
+      it('keeps a yaml noProxy ahead of the files (yaml sits above them within the spelling)', () => {
+        writeFileSync(join(root, '.npmrc'), 'no-proxy=project.example.com');
+        writeAuthIni('no-proxy=ini.example.com');
+        writeYaml('noProxy: yaml.example.com\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_noproxy: 'yaml.example.com',
+        });
+      });
+
+      it('bridges a yaml noproxy on its own (the tail of the chain)', () => {
+        writeYaml('noproxy: yaml.example.com\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_noproxy: 'yaml.example.com',
+        });
+      });
+
       it('bridges PNPM_CONFIG_NOPROXY over a yaml noproxy', () => {
         writeYaml('noproxy: yaml.example.com\n');
         process.env.PNPM_CONFIG_NOPROXY = 'env.example.com';
