@@ -1,37 +1,38 @@
 import {
-  findClosestMatch,
   findClosestMatches,
   isWithinSuggestionThreshold,
   rankByDistance,
 } from './string-similarity';
 
-describe('findClosestMatch', () => {
+describe('findClosestMatches', () => {
   it('should return the closest candidate for a small typo', () => {
-    expect(findClosestMatch('biuld', ['build', 'serve', 'test'])).toBe('build');
+    expect(findClosestMatches('biuld', ['build', 'serve', 'test'], 1)).toEqual([
+      'build',
+    ]);
   });
 
   it('should return the closest candidate for a missing character', () => {
-    expect(findClosestMatch('serv', ['build', 'serve', 'test'])).toBe('serve');
+    expect(findClosestMatches('serv', ['build', 'serve', 'test'], 1)).toEqual([
+      'serve',
+    ]);
   });
 
-  it('should return undefined when nothing is reasonably close', () => {
-    expect(findClosestMatch('xyz', ['build', 'serve', 'test'])).toBeUndefined();
-  });
-
-  it('should return undefined when there are no candidates', () => {
-    expect(findClosestMatch('build', [])).toBeUndefined();
+  it('should return nothing when nothing is reasonably close', () => {
+    expect(findClosestMatches('xyz', ['build', 'serve', 'test'], 1)).toEqual(
+      []
+    );
   });
 
   it('should return an exact match', () => {
-    expect(findClosestMatch('build', ['build', 'serve'])).toBe('build');
+    expect(findClosestMatches('build', ['build', 'serve'], 1)).toEqual([
+      'build',
+    ]);
   });
 
   it('should prefer the closer of two candidates', () => {
-    expect(findClosestMatch('tes', ['test', 'lint'])).toBe('test');
+    expect(findClosestMatches('tes', ['test', 'lint'], 1)).toEqual(['test']);
   });
-});
 
-describe('findClosestMatches', () => {
   it('should match the right project:target task id despite a project typo', () => {
     expect(
       findClosestMatches('webpai:build', [
@@ -54,6 +55,14 @@ describe('findClosestMatches', () => {
 
   it('should return an empty array when there are no candidates', () => {
     expect(findClosestMatches('build', [])).toEqual([]);
+  });
+
+  it('should not suggest task ids that differ only in the segment the user typed correctly', () => {
+    // "zzz" has nothing in common with any of the projects; the shared ":build"
+    // must not buy the project segment a bigger typo budget.
+    expect(
+      findClosestMatches('zzz:build', ['api:build', 'web:build', 'docs:build'])
+    ).toEqual([]);
   });
 });
 
@@ -81,14 +90,48 @@ describe('rankByDistance', () => {
 
 describe('isWithinSuggestionThreshold', () => {
   it('accepts distances up to the length-scaled threshold', () => {
-    // "biuld" (length 5) -> threshold = max(2, ceil(5 * 0.4)) = 2.
-    expect(isWithinSuggestionThreshold('biuld', 2)).toBe(true);
-    expect(isWithinSuggestionThreshold('biuld', 3)).toBe(false);
+    // "biuld"/"build" share "b" and "ld", leaving 2 differing characters ->
+    // threshold = max(2, ceil(2 * 0.4)) = 2.
+    expect(isWithinSuggestionThreshold('biuld', 'build', 2)).toBe(true);
+    expect(isWithinSuggestionThreshold('biuld', 'build', 3)).toBe(false);
+  });
+
+  it('scales the tolerance with the length of the differing part', () => {
+    // Nothing is shared at either end, so the whole 18-character input differs
+    // -> threshold = max(2, ceil(18 * 0.4)) = 8.
+    expect(
+      isWithinSuggestionThreshold(
+        'documentation-site',
+        'legacy-admin-portal',
+        8
+      )
+    ).toBe(true);
+    expect(
+      isWithinSuggestionThreshold(
+        'documentation-site',
+        'legacy-admin-portal',
+        9
+      )
+    ).toBe(false);
+  });
+
+  it('sizes the tolerance from the differing part, not the whole input', () => {
+    // "zzz:build" and "api:build" are 3 edits apart, but only the 3-character
+    // project segment differs. Budgeting on the full 9-character length would
+    // allow 4 edits and suggest a project with no character in common.
+    expect(isWithinSuggestionThreshold('zzz:build', 'api:build', 3)).toBe(
+      false
+    );
+    // Same input, same distance, but now nothing is shared at either end, so
+    // the length-scaled tolerance genuinely applies.
+    expect(isWithinSuggestionThreshold('zzz:build', 'qwertyuio', 3)).toBe(true);
   });
 
   it('never drops below a floor of 2 for short inputs', () => {
-    // "ab" (length 2) -> ceil(0.8) = 1, but the floor keeps it at 2.
-    expect(isWithinSuggestionThreshold('ab', 2)).toBe(true);
+    // "ab"/"cd" differ over 2 characters -> ceil(0.8) = 1, but the floor keeps
+    // it at 2.
+    expect(isWithinSuggestionThreshold('ab', 'cd', 2)).toBe(true);
+    expect(isWithinSuggestionThreshold('ab', 'cd', 3)).toBe(false);
   });
 });
 
@@ -111,9 +154,10 @@ describe('suggestion performance', () => {
     const ranked = rankByDistance('project-1234:biuld', candidates);
     const durationMs = performance.now() - start;
 
-    // Generous bound: the computation is trivial in practice (well under
-    // 100ms), so approaching this bound signals a real algorithmic regression
-    // rather than a loaded CI machine.
+    // Generous bound. The ranking itself takes ~60ms of real work, but under
+    // the test runner's transpiled/instrumented execution the same call is
+    // measured at ~1s, so the bound has to leave room for that overhead --
+    // do not tighten it towards the raw number.
     expect(durationMs).toBeLessThan(2000);
     // Sanity check that the intended task id ranks first at scale.
     expect(ranked[0].candidate).toBe('project-1234:build');
