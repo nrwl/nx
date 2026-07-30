@@ -272,16 +272,20 @@ function splitConfigFiles(
   // A package.json outside the package manager's workspaces is not a project —
   // nested marker files (`{"sideEffects": false}` next to a bundle, say) have no
   // `name`, and promoting one to a project root fails the whole graph with
-  // ProjectsWithNoNameError. Nx core's own package-json plugin applies the same
-  // filter. An empty `positive` means no workspaces are declared at all, i.e. a
-  // standalone repo whose root package.json *is* the project — filtering there
-  // would reject even that root, so skip the check entirely.
+  // ProjectsWithNoNameError.
+  //
+  // `positive` comes back empty whenever the root package.json declares no
+  // `workspaces` and there is no pnpm-workspace.yaml or lerna.json. That covers
+  // the integrated, project.json-based layout as much as a standalone repo, so
+  // the filter must not be skipped wholesale — only the root itself is kept,
+  // since that is the project in the standalone case. A package.json beside a
+  // project.json is admitted by the `projectJsonRoots` clause below regardless.
   const patterns = buildPackageJsonPatterns(workspaceRoot, (f) =>
     readJsonFile(join(workspaceRoot, f))
   );
   const isInPackageManagerWorkspaces = patterns.positive.length
     ? buildPackageJsonWorkspacesMatcher(patterns)
-    : () => true;
+    : (packageJsonFile: string) => packageJsonFile === 'package.json';
 
   const projectRoots = new Set<string>(projectJsonRoots);
   for (const packageJsonFile of packageJsonFiles) {
