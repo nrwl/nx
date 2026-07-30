@@ -82,12 +82,25 @@ describe('getBunSpawnRegistryEnv', () => {
 
   it('resolves as though an unreadable project .npmrc were absent (bun semantics)', () => {
     // bun silently falls through to the next layer on an .npmrc it cannot
-    // read (verified on 1.3.13, EACCES and EISDIR), unlike its own bunfig,
-    // where it aborts. A directory in the file's place reads as EISDIR.
+    // read (verified on 1.3.13, EACCES and EISDIR). A directory in the file's
+    // place reads as EISDIR.
     writeBunfig('[install]\nregistry = "https://reg-a.example.com/"\n');
     mkdirSync(join(root, '.npmrc'));
     expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
       npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
+  it('resolves as though an unreadable project bunfig were absent (bun semantics)', () => {
+    // bun skips a bunfig it cannot read and still reads the next config file
+    // (verified on 1.3.13, EACCES and EISDIR: with the project bunfig a
+    // directory, a parse error in the global bunfig still aborted, and with
+    // both readable the global registry was contacted). Only a parse error
+    // aborts, which the cases below pin.
+    mkdirSync(join(root, 'bunfig.toml'));
+    writeBunfig('[install]\nregistry = "https://reg-f.example.com/"\n', home);
+    expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+      npm_config_registry: 'https://reg-f.example.com/',
     });
   });
 
@@ -426,7 +439,7 @@ describe('getBunSpawnRegistryEnv', () => {
     // pin npm to the default registry as though the workspace configured none.
     writeBunfig('[install\nregistry = "https://reg-a.example.com/"\n');
     expect(() => getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toThrow(
-      /bunfig at .* could not be read/
+      /bunfig at .* could not be parsed/
     );
   });
 
@@ -434,7 +447,7 @@ describe('getBunSpawnRegistryEnv', () => {
     writeBunfig('[install\n', home);
     writeFileSync(join(root, '.npmrc'), 'registry=https://reg-b.example.com/');
     expect(() => getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toThrow(
-      /bunfig at .* could not be read/
+      /bunfig at .* could not be parsed/
     );
   });
 

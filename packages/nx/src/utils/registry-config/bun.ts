@@ -262,15 +262,19 @@ function applyBunAuth(env: NpmConfigEnv, value: BunRegistryValue): void {
 
 function readBunfigInstall(path: string): BunfigInstall | null {
   const parsed = readBunfigRaw(path);
-  if (parsed === null) {
+  // bun silently resolves as though a bunfig it cannot read were absent
+  // (verified on 1.3.13, EACCES and EISDIR both: the next config file is still
+  // read), so collapse that state the same way readBunNpmrcMap does for its
+  // .npmrc.
+  if (parsed === null || parsed === 'unreadable') {
     return null;
   }
   if (parsed === 'invalid') {
-    // bun aborts on a bunfig it cannot read or parse, so there is no resolution
-    // left to reproduce; it propagates to the caller's fall-open. Skipping the
-    // file instead would pin npm to the default registry as though the workspace
+    // bun aborts on a bunfig it cannot parse, so there is no resolution left to
+    // reproduce; it propagates to the caller's fall-open. Skipping the file
+    // instead would pin npm to the default registry as though the workspace
     // configured none, overriding a registry npm resolves from a file of its own.
-    throw new Error(`The bunfig at ${path} could not be read.`);
+    throw new Error(`The bunfig at ${path} could not be parsed.`);
   }
   const install = parsed.install;
   if (!install || typeof install !== 'object' || Array.isArray(install)) {
