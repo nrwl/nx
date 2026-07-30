@@ -671,7 +671,19 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
     // createNodes re-resolves config reading process.env. This runs above the
     // outputsWatcherError guard: the two concerns are independent, and a
     // disabled outputs tracker must not leave the graph stale on a dotenv edit.
-    if (outputsChangeInvalidatesGraphEnv(changeEvents, currentProjectGraph)) {
+    // Its own try/catch so a fault here cannot trip the outputs-tracking kill
+    // switch below, which belongs to an unrelated subsystem. It fails safe by
+    // invalidating: a stale graph on a dotenv edit is the bug this prevents, and
+    // invalidateGraphCache only clears the cached promise (idempotent, lazy).
+    try {
+      if (outputsChangeInvalidatesGraphEnv(changeEvents, currentProjectGraph)) {
+        invalidateGraphCache();
+      }
+    } catch (e) {
+      serverLogger.watcherLog(
+        'Failed to evaluate dotenv changes for graph invalidation; invalidating the graph cache to be safe',
+        e instanceof Error ? e.message : String(e)
+      );
       invalidateGraphCache();
     }
 
