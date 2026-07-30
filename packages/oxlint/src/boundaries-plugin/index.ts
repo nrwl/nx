@@ -28,11 +28,13 @@ const nxOxlintBoundariesPlugin: {
   rules: {
     [RULE_NAME]: {
       ...enforceModuleBoundaries,
-      // Oxlint takes the rule's name from this object's key, not from `meta` —
-      // it is `meta.name` on the *plugin* above that it requires. Carrying the
-      // name here anyway keeps the rule self-describing, since
-      // `ESLintUtils.RuleCreator` keeps `name` as a sibling of `meta` rather
-      // than inside it.
+      // Oxlint takes the rule's name from this object's key, not from `meta`.
+      // `meta.name` on the *plugin* above is not required either — without it
+      // Oxlint falls back to the package name and the rule registers as
+      // `@nx/oxlint/enforce-module-boundaries` instead of the id the docs tell
+      // users to configure. Carrying the name here anyway keeps the rule
+      // self-describing, since `ESLintUtils.RuleCreator` keeps `name` as a
+      // sibling of `meta` rather than inside it.
       meta: { ...enforceModuleBoundaries.meta, name: RULE_NAME },
     },
   },

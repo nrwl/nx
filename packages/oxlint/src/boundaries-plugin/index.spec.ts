@@ -1,15 +1,15 @@
 import boundariesPlugin from './index.js';
 
 /**
- * Checks the shape Oxlint requires of a JS plugin: a namespaced `meta.name`,
- * the rule under its own key, a schema, and a callable `create`.
+ * Checks the shape Oxlint expects of a JS plugin: a namespaced `meta.name`, the
+ * rule under its own key, a schema, and a callable `create`.
  *
- * Scope, so this isn't mistaken for more than it is: jest transforms to CJS
- * (`module: { type: 'commonjs' }` in `jest.preset.js`), so these run through
- * SWC's interop while Oxlint loads the bridge through Node's ESM loader. The
- * two diverge on exactly the `export default` / `module.exports` shape the
- * bridge has to guess, so a change there can break Oxlint at runtime while
- * these stay green. Covering that needs the real loader.
+ * Scope, so this isn't mistaken for more than it is: these run under jest, which
+ * resolves `@nx/eslint-plugin/internal` through the `@nx/nx-source` condition to
+ * TypeScript source, while Oxlint resolves it to the emitted `dist/internal.js`
+ * and imports it across a CJS/ESM boundary. So the export *names* crossing that
+ * boundary are not exercised here — `internal.spec.ts` in `@nx/eslint-plugin`
+ * pins the emit shape they depend on.
  */
 describe('@nx/oxlint/boundaries-plugin', () => {
   it('exposes the enforce-module-boundaries rule under the @nx namespace', () => {
