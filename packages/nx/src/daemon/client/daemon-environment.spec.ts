@@ -22,9 +22,7 @@ describe('daemon environment', () => {
     });
 
     it('is cleared when a later client omits it (last-client-wins)', () => {
-      // While it was excluded, a prior client's value stuck around; now a
-      // client that does not set it must clear it so its graph does not use
-      // the previous client's opt-out.
+      // Or the new client's graph would run with the previous client's opt-out.
       process.env.NX_LOAD_DOT_ENV_FILES = 'false';
       const changed = applyDaemonEnvFromClient({});
       expect(process.env.NX_LOAD_DOT_ENV_FILES).toBeUndefined();
