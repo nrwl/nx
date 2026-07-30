@@ -228,25 +228,29 @@ function isJsonOxfmtConfig(name: string): boolean {
  * `register` is required lazily so that reading a JSON config does not pull in
  * the TypeScript transpiler machinery.
  *
- * `loadTsFile` deliberately does *not* handle two error codes - its own JSDoc
- * says they "bubble unchanged … so async-aware callers can dispatch to
- * `import()`". This is that caller. `ERR_REQUIRE_ASYNC_MODULE` is the one that
- * matters: a config using top-level await cannot be `require`d at all, on any
- * runtime. Redispatching only on those two keeps every other failure - a syntax
- * error, a missing module - reported as itself rather than replaced by whatever
- * `import()` says about it.
+ * `loadTsFile` deliberately does not handle the ESM-redispatch codes - its own
+ * JSDoc says they "bubble unchanged … so async-aware callers can dispatch to
+ * `import()`". This is that caller, and a config using top-level await cannot be
+ * `require`d on any runtime.
+ *
+ * The retry is not gated on those codes. Depending on whether swc/ts-node ends
+ * up registered, the same config can surface as `ERR_REQUIRE_ASYNC_MODULE` or
+ * as a transpile artifact like `exports is not defined` - both mean "this is
+ * ESM, import it". Any failure is retried, and if `import()` fails too the
+ * *original* error is thrown, so a genuine syntax error is still reported as
+ * itself rather than as whatever `import()` says about it.
  */
 async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
   try {
     return (
       require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
     ).loadTsFile(configPath);
-  } catch (e) {
-    const code = (e as { code?: string })?.code;
-    if (code !== 'ERR_REQUIRE_ESM' && code !== 'ERR_REQUIRE_ASYNC_MODULE') {
-      throw e;
+  } catch (loadError) {
+    try {
+      return await dynamicImport(pathToFileURL(configPath).href);
+    } catch {
+      throw loadError;
     }
-    return await dynamicImport(pathToFileURL(configPath).href);
   }
 }
 
