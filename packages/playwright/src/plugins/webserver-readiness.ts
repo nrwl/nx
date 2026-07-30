@@ -56,14 +56,17 @@ type ChildEval = (
   env: NodeJS.ProcessEnv
 ) => Promise<ResolvedWebServer[]>;
 
-// A forked config evaluation holds a full config module graph in memory
-// (hundreds of MB for a large config), so cap how many run at once.
+// A forked config evaluation holds a full config module graph in memory, so cap
+// how many run at once.
 const MAX_CONCURRENT_EVALS = Math.max(1, Math.min(cpus().length, 8));
 const CHILD_EVAL_TIMEOUT = 30_000;
+// Cap the worker stderr buffered to fold into a failure message.
+const MAX_STDERR = 8192;
 
 let activeEvals = 0;
 const evalQueue: Array<() => void> = [];
 let childEval: ChildEval = forkChildEval;
+let workerScriptPath = join(__dirname, 'webserver-config-worker.js');
 
 /**
  * Evaluates `configFilePath`'s `webServer` addresses under `taskEnv`, bounded by
@@ -92,11 +95,23 @@ function forkChildEval(
   env: NodeJS.ProcessEnv
 ): Promise<ResolvedWebServer[]> {
   return new Promise((resolve, reject) => {
-    const child = fork(
-      join(__dirname, 'webserver-config-worker.js'),
-      [configFilePath, workspaceRoot],
-      { env, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] }
-    );
+    const child = fork(workerScriptPath, [configFilePath, workspaceRoot], {
+      env,
+      stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+    });
+    let stderr = '';
+    child.stderr?.on('data', (chunk: Buffer) => {
+      if (stderr.length < MAX_STDERR) {
+        stderr += chunk.toString().slice(0, MAX_STDERR - stderr.length);
+      }
+    });
+    // Fold the worker's stderr into a failure so a crash before it can report
+    // over IPC (a missing module, a syntax error, a signal kill) is not
+    // surfaced as a bare exit code.
+    const withStderr = (message: string) => {
+      const tail = stderr.trim();
+      return tail ? `${message}\n${tail}` : message;
+    };
     let settled = false;
     const finish = (fn: () => void) => {
       if (settled) {
@@ -113,24 +128,36 @@ function forkChildEval(
     const timer = setTimeout(() => {
       child.kill();
       finish(() =>
-        reject(new Error('Timed out evaluating the Playwright config'))
+        reject(
+          new Error(withStderr('Timed out evaluating the Playwright config'))
+        )
       );
     }, CHILD_EVAL_TIMEOUT);
 
     child.on('message', (message: ResolvedWebServer[] | { error: string }) => {
-      if (!Array.isArray(message) && message?.error) {
-        finish(() => reject(new Error(message.error)));
+      if (!Array.isArray(message) && message && 'error' in message) {
+        finish(() => reject(new Error(withStderr(message.error))));
       } else {
         finish(() => resolve(message as ResolvedWebServer[]));
       }
     });
     child.on('error', (error) => finish(() => reject(error)));
-    child.on('exit', (code) => {
-      if (code !== 0) {
-        finish(() =>
-          reject(new Error(`Config evaluation worker exited with code ${code}`))
-        );
-      }
+    // `close` rather than `exit` so the stderr the failure folds in has fully
+    // flushed before the message is built. A worker that closes before sending a
+    // result (even with code 0, e.g. an IPC delivery failure) rejects here
+    // rather than hanging to the timeout; finish() no-ops once a result settled.
+    child.on('close', (code) => {
+      finish(() =>
+        reject(
+          new Error(
+            withStderr(
+              code
+                ? `Config evaluation worker exited with code ${code}`
+                : 'Config evaluation worker exited without resolving the web server address'
+            )
+          )
+        )
+      );
     });
   });
 }
@@ -140,4 +167,10 @@ function forkChildEval(
 // is safe there because the harness evaluates a single config at a time.
 export function _setChildEval(impl: ChildEval | null): void {
   childEval = impl ?? forkChildEval;
+}
+
+// Test seam: point the fork at a fixture worker so forkChildEval's own timeout,
+// exit and stderr handling can be exercised without the compiled worker.
+export function _setWorkerScriptPath(path: string | null): void {
+  workerScriptPath = path ?? join(__dirname, 'webserver-config-worker.js');
 }
