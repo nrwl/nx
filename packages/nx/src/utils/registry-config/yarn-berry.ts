@@ -182,7 +182,11 @@ export function getYarnBerrySpawnRegistryEnv(
   const scopeConfigured =
     scopeName !== undefined &&
     rcFiles.some(
-      (f) => f.config.npmScopes !== undefined && scopeName in f.config.npmScopes
+      (f) =>
+        f.config.npmScopes !== undefined &&
+        // Own keys only: the parsed-YAML object carries Object.prototype, and a
+        // scope named after one of its members (@constructor) is not configured.
+        Object.hasOwn(f.config.npmScopes, scopeName)
     );
   // berry >= 4.9.0 seeds an unconfigured `jsr` scope to https://npm.jsr.io.
   const jsrDefault =

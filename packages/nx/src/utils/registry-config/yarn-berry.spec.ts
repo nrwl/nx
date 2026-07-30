@@ -174,6 +174,28 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
   });
 
+  it('does not treat a scope named after an Object.prototype member as configured', () => {
+    // npmScopes is a plain parsed-YAML object, so an `in` check would find
+    // `constructor` on the prototype chain, route @constructor to the yarnpkg
+    // default and nerf-dart the global token onto that public registry.
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmAuthToken: secret-token',
+        'npmScopes:',
+        '  acme:',
+        '    npmRegistryServer: https://reg-acme.example.com/',
+      ].join('\n')
+    );
+    expect(
+      getYarnBerrySpawnRegistryEnv('@constructor/pkg', ROOT, '4.16.0')
+    ).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_@constructor:registry': 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': 'secret-token',
+    });
+  });
+
   it('routes an unconfigured @jsr scope to npm.jsr.io on yarn >= 4.9.0', () => {
     expect(
       getYarnBerrySpawnRegistryEnv('@jsr/std__foo', ROOT, '4.9.0')
@@ -219,10 +241,11 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
   });
 
-  // Berry coerces a Boolean setting through miscUtils.parseBoolean, so 1, '1'
-  // and 'true' all enable it; a literal `=== true` check sees only the first
-  // YAML form and silently drops the credential from an unscoped fetch.
-  it.each(['npmAlwaysAuth: 1', `npmAlwaysAuth: '1'`, `npmAlwaysAuth: 'true'`])(
+  // Berry coerces a Boolean setting through miscUtils.parseBoolean, and the
+  // failsafe YAML parse delivers every scalar as a string, so '1' and 'true'
+  // are the two truthy shapes that reach the check (a bare 1 or a quoted '1'
+  // both arrive as '1').
+  it.each(['npmAlwaysAuth: 1', `npmAlwaysAuth: 'true'`])(
     'authenticates an unscoped fetch for a berry-truthy %s',
     (setting) => {
       projectRc(
