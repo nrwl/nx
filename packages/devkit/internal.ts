@@ -17,6 +17,7 @@ export {
   // ship to external plugins under the +/- 1 tolerance, so they must keep
   // importing nx/src/utils/catalog directly. See packages/devkit/CLAUDE.md.
   getCatalogManager,
+  getGraphTimeEnvForTask,
 } from 'nx/src/devkit-internals';
 
 // Formatter detection and setup. `@nx/js` needs these to write and detect a
