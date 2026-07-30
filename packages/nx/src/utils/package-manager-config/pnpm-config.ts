@@ -27,8 +27,12 @@ export function getPnpmConfigDir(env: NodeJS.ProcessEnv): string {
 /**
  * Reads a pnpm YAML config file (pnpm-workspace.yaml or the global
  * config.yaml). An absent file returns null so callers can fall through to
- * lower surfaces; a corrupt one returns 'invalid' so a caller can tell
- * malformed config from an absent file instead of silently falling through.
+ * lower surfaces; a corrupt or non-object one returns 'invalid' so a caller
+ * can tell malformed config from an absent file instead of silently falling
+ * through (pnpm dies on both alike: "Expected object but found - string",
+ * measured on 11.2.2). The object requirement also keeps the sentinel out of
+ * the success domain: a yaml whose whole content is the scalar `invalid`
+ * reports as malformed, not as that string.
  */
 export function readPnpmYamlConfig(
   path: string
@@ -36,9 +40,18 @@ export function readPnpmYamlConfig(
   if (!existsSync(path)) {
     return null;
   }
+  let doc: unknown;
   try {
-    return readYamlFile<Record<string, unknown>>(path) ?? {};
+    doc = readYamlFile(path);
   } catch {
     return 'invalid';
   }
+  // An empty file declares nothing; pnpm accepts it.
+  if (doc === null || doc === undefined) {
+    return {};
+  }
+  if (typeof doc !== 'object' || Array.isArray(doc)) {
+    return 'invalid';
+  }
+  return doc as Record<string, unknown>;
 }
