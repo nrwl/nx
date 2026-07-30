@@ -82,41 +82,35 @@ export { default as runCommandsExecutor } from './executors/run-commands/run-com
 export type { TaskResult } from './config/misc-interfaces';
 export { toNewFormat, toOldFormat } from './adapter/angular-json';
 export { setupAiAgentsGenerator } from './ai/set-up-ai-agents/set-up-ai-agents';
-export { Agent } from './ai/utils';
-export {
-  GeneratorInformation,
-  getGeneratorInformation,
-} from './command-line/generate/generator-utils';
+export type { Agent } from './ai/utils';
+export type { GeneratorInformation } from './command-line/generate/generator-utils';
+export { getGeneratorInformation } from './command-line/generate/generator-utils';
 // Type-only: a value re-export would eagerly require release-graph (which pulls
 // in the project graph) during nx's own graph construction, creating a cycle.
 export type { FinalConfigForProject } from './command-line/release/utils/release-graph';
 export { BatchFunctionRunner } from './command-line/watch/watch';
-export { BatchExecutorTaskResult } from './config/misc-interfaces';
+export type { BatchExecutorTaskResult } from './config/misc-interfaces';
 export type { NxReleaseVersionConfiguration } from './config/nx-json';
+export type { FileDataDependency } from './config/project-graph';
 export {
-  FileDataDependency,
   fileDataDepTarget,
   fileDataDepType,
   isProjectGraphExternalNode,
   isProjectGraphProjectNode,
 } from './config/project-graph';
-export { InputDefinition } from './config/workspace-json-project-json';
-export {
-  ChangedFile,
-  UnregisterCallback,
-  daemonClient,
-} from './daemon/client/client';
-export {
-  LARGE_BUFFER,
-  RunCommandsOptions,
-} from './executors/run-commands/run-commands.impl';
+export type { InputDefinition } from './config/workspace-json-project-json';
+export type { ChangedFile, UnregisterCallback } from './daemon/client/client';
+export { daemonClient } from './daemon/client/client';
+export type { RunCommandsOptions } from './executors/run-commands/run-commands.impl';
+export { LARGE_BUFFER } from './executors/run-commands/run-commands.impl';
 export { FsTree } from './generators/tree';
 export { getRelativeProjectJsonSchemaPath } from './generators/utils/project-configuration';
 export { hashFile } from './hasher/file-hasher';
 export { filterUsingGlobPatterns, getTargetInputs } from './hasher/task-hasher';
-export { JsonInput, killProcessTreeGraceful } from './native';
+export type { JsonInput } from './native';
+export { killProcessTreeGraceful } from './native';
 export { connectToNxCloud } from './nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-export { NxCloudOnBoardingStatus } from './nx-cloud/models/onboarding-status';
+export type { NxCloudOnBoardingStatus } from './nx-cloud/models/onboarding-status';
 export {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
@@ -137,10 +131,14 @@ export {
 export { getWorkspacePackagesFromGraph } from './plugins/js/utils/get-workspace-packages-from-graph';
 export { registerTsConfigPaths } from './plugins/js/utils/register';
 export { getGlobPatternsFromPackageManagerWorkspaces } from './plugins/package-json';
+// NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts), which
+// describes a pending Tree write ({ path, type: 'CREATE' | 'DELETE' | 'UPDATE',
+// content }). This one describes a per-file diff ({ file, getChanges }). The two
+// barrels are routinely imported side by side, so an editor auto-import can
+// silently pick the wrong — but structurally plausible — FileChange.
+export type { Change, FileChange } from './project-graph/file-utils';
 export {
-  Change,
   DeletedFileChange,
-  FileChange,
   LockFileChange,
   TEN_MEGABYTES,
   WholeFileChange,
@@ -151,7 +149,8 @@ export {
   isWholeFileChange,
   readPackageJson,
 } from './project-graph/file-utils';
-export { FileMapCache, readFileMapCache } from './project-graph/nx-deps-cache';
+export type { FileMapCache } from './project-graph/nx-deps-cache';
+export { readFileMapCache } from './project-graph/nx-deps-cache';
 export { isNpmProject } from './project-graph/operators';
 export {
   buildProjectGraphAndSourceMapsWithoutDaemon,
@@ -160,24 +159,20 @@ export {
   preventRecursionInGraphConstruction,
   readCachedProjectConfiguration,
 } from './project-graph/project-graph';
-export { ProjectRootMappings } from './project-graph/utils/find-project-for-path';
-export { BatchResults } from './tasks-runner/batch/batch-messages';
-export {
-  Cache,
-  CachedResult,
-  TaskWithCachedResult,
-} from './tasks-runner/cache';
+export type { ProjectRootMappings } from './project-graph/utils/find-project-for-path';
+export type { BatchResults } from './tasks-runner/batch/batch-messages';
+export type { CachedResult, TaskWithCachedResult } from './tasks-runner/cache';
+export { Cache } from './tasks-runner/cache';
 export { RemoteCacheV2 } from './tasks-runner/default-tasks-runner';
-export {
-  CompositeLifeCycle,
-  LifeCycle,
-  TaskMetadata,
-} from './tasks-runner/life-cycle';
+export type { LifeCycle, TaskMetadata } from './tasks-runner/life-cycle';
+export { CompositeLifeCycle } from './tasks-runner/life-cycle';
 export { createRunManyDynamicOutputRenderer } from './tasks-runner/life-cycles/dynamic-run-many-terminal-output-life-cycle';
-export { TaskStatus, TasksRunner } from './tasks-runner/tasks-runner';
-export {
+export type { TaskStatus, TasksRunner } from './tasks-runner/tasks-runner';
+export type {
   DependsOnEntryLocation,
   NormalizedTargetDependencyConfig,
+} from './tasks-runner/utils';
+export {
   calculateReverseDeps,
   createTaskId,
   expandDependencyConfigSyntaxSugar,
@@ -220,27 +215,28 @@ export { getLatestCommitSha } from './utils/git-utils';
 export { combineGlobPatterns } from './utils/globs';
 export { getNxRequirePaths } from './utils/installation-directory';
 export { NX_PREFIX } from './utils/logger';
-export {
+export type {
   CLIErrorMessageConfig,
   CLINoteMessageConfig,
   CLISuccessMessageConfig,
   CLIWarnMessageConfig,
-  orange,
 } from './utils/output';
+export { orange } from './utils/output';
 export { getNxCloudUrl, isNxCloudUsed } from './utils/nx-cloud-utils';
-export {
+export type {
   PackageJson,
   PackageJsonDependencySection,
-  readNxMigrateConfig,
 } from './utils/package-json';
-export { PackageManagerCommands } from './utils/package-manager';
+export { readNxMigrateConfig } from './utils/package-json';
+export type { PackageManagerCommands } from './utils/package-manager';
 export { deriveGroupNameFromTarget } from './utils/plugins';
 export { findInstalledPlugins } from './utils/plugins/installed-plugins';
 export {
   findAllProjectNodeDependencies,
   getSourceDirOfDependentProjects,
 } from './utils/project-graph-utils';
-export { SyncError, SyncGeneratorResult } from './utils/sync-generators';
+export type { SyncGeneratorResult } from './utils/sync-generators';
+export { SyncError } from './utils/sync-generators';
 export { nxVersion } from './utils/versions';
 export {
   getFilesInDirectoryUsingContext,

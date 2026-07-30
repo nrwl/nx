@@ -88,6 +88,8 @@ export {
 // Re-exported for first-party plugins in this repo.
 export {
   runCommandsExecutor,
+  // NOTE: distinct from @nx/devkit's TaskResult (tasks-runner/life-cycle) —
+  // this is the batch-executor result shape.
   type TaskResult,
   Agent,
   BatchExecutorTaskResult,
@@ -251,5 +253,7 @@ export {
 // intentionally NOT re-exported here: this barrel is imported by plugin graph
 // hooks, and eagerly loading nx's release command module during graph
 // construction creates a require cycle. Consumers import those from the public
-// `nx/release` entry point directly. Only the erased type is re-exported.
+// `nx/release` entry point directly. Only erased types are re-exported —
+// `AfterAllProjectsVersioned` below, and `FinalConfigForProject` via
+// nx/src/devkit-internals.
 export type { AfterAllProjectsVersioned } from 'nx/release';
