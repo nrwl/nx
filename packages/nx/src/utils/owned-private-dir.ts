@@ -84,6 +84,31 @@ export function isSafeSharedRoot(dir: string): boolean {
 }
 
 /**
+ * The remedy for a container `isSafeSharedRoot` refused, or `undefined` when
+ * there is nothing the user can do about it. Only a container owned by another
+ * unprivileged user has an actionable fix, and it is to hand it to root: Nx
+ * cannot chown it, and refusing it is what keeps that user from renaming our
+ * directory aside. Returns the message rather than a boolean so it cannot be
+ * swapped with the guards above.
+ */
+export function sharedRootRemedy(dir: string): string | undefined {
+  try {
+    const stats = lstatSync(dir);
+    if (
+      !stats.isDirectory() ||
+      typeof process.getuid !== 'function' ||
+      stats.uid === process.getuid() ||
+      stats.uid === 0
+    ) {
+      return undefined;
+    }
+  } catch {
+    return undefined;
+  }
+  return `${dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${dir} && sudo chmod 1777 ${dir}\`; every user can then keep their own directory under it.`;
+}
+
+/**
  * Create a shared container as sticky + world-writable, without following a
  * symlink at its final component, and report whether the resulting path is safe
  * for the current user.
