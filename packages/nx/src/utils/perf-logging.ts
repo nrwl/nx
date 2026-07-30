@@ -61,15 +61,12 @@ if (PROFILE_OUT) {
   eldMonitor = monitorEventLoopDelay({ resolution: 10 });
   eldMonitor.enable();
 
+  let flushed = false;
   const flushProfile = () => {
-    if (profileEntries.length === 0) return;
+    // `getNativeTimings()` drains the native store, so flushing twice (SIGTERM
+    // then 'exit') would emit a second, native-less report over the first.
+    if (flushed) return;
     try {
-      // Lazily import to avoid pulling in fs/markdown-factory at startup for
-      // every nx invocation.
-      const { buildReport, writePidReport } =
-        require('./perf-report') as typeof import('./perf-report');
-      const { dirname } = require('path') as typeof import('path');
-
       let nativeJson: string | null = null;
       try {
         const native = require('../native') as {
@@ -79,6 +76,19 @@ if (PROFILE_OUT) {
       } catch {
         // native module not built / function not yet exposed — skip
       }
+
+      // A process can have native timings and no JS measures (e.g. a
+      // cache-restore-heavy task worker), so both have to be empty before we
+      // skip the report — otherwise the missing file is indistinguishable from
+      // "that process never ran".
+      if (profileEntries.length === 0 && !nativeJson) return;
+      flushed = true;
+
+      // Lazily import to avoid pulling in fs/markdown-factory at startup for
+      // every nx invocation.
+      const { buildReport, writePidReport } =
+        require('./perf-report') as typeof import('./perf-report');
+      const { dirname } = require('path') as typeof import('path');
 
       const role = getProcessRole();
       const report = buildReport(
@@ -106,12 +116,31 @@ if (PROFILE_OUT) {
   };
 
   // 'exit' fires synchronously before the process terminates.
-  // SIGTERM handler ensures the report is written on graceful kills too.
   process.on('exit', flushProfile);
-  process.on('SIGTERM', () => {
-    flushProfile();
-    process.exit(0);
-  });
+
+  // SIGTERM needs care: registering *any* listener suppresses Node's default
+  // termination, so we must not simply return (the process would become
+  // unkillable by SIGTERM). Equally we must not `process.exit()` here — this
+  // listener registers at module load, so it runs before every other SIGTERM
+  // handler in the process, and exiting would starve them: the orchestrator's
+  // task cleanup (task-orchestrator.ts), the daemon's shutdown (server.ts) and
+  // the plugin worker's socket unlink would all be skipped, and a signalled
+  // death would report exit code 0.
+  //
+  // So: defer to any other handler if one exists — they own shutdown, and the
+  // 'exit' flush above will still run (and will capture measures emitted during
+  // their cleanup). Only when we are the sole handler do we flush and re-raise,
+  // which restores the default action and a genuine signalled exit.
+  const onSigterm = () => {
+    process.removeListener('SIGTERM', onSigterm);
+    if (process.listenerCount('SIGTERM') === 0) {
+      // No one else is handling this; re-raising terminates immediately, so
+      // 'exit' will not fire. Flush now.
+      flushProfile();
+      process.kill(process.pid, 'SIGTERM');
+    }
+  };
+  process.on('SIGTERM', onSigterm);
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
