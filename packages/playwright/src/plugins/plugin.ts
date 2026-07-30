@@ -74,6 +74,36 @@ interface ChainWebserver {
   readinessServers: WebserverReadinessServer[];
 }
 
+// getGraphTimeEnvForTask reads dotenv files from disk, and within one config's
+// createNodes the cache-key digest and each consumer chain resolve the same task
+// envs. Memoize by target coordinates in a cache scoped to that single config
+// eval, so a dotenv snapshot is never shared across concurrent createNodes
+// passes. Callers only read/spread the returned env.
+type GraphTimeEnvCache = Map<string, NodeJS.ProcessEnv>;
+
+function getCachedGraphTimeEnvForTask(
+  cache: GraphTimeEnvCache,
+  projectRoot: string,
+  target: string,
+  configuration?: string,
+  nonAtomizedTarget?: string
+): NodeJS.ProcessEnv {
+  const key = `${projectRoot}\0${target}\0${configuration ?? ''}\0${
+    nonAtomizedTarget ?? ''
+  }`;
+  let env = cache.get(key);
+  if (!env) {
+    env = getGraphTimeEnvForTask(
+      projectRoot,
+      target,
+      configuration,
+      nonAtomizedTarget
+    );
+    cache.set(key, env);
+  }
+  return env;
+}
+
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
 export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
   playwrightConfigGlob,
@@ -152,12 +182,19 @@ async function createNodesInternal(
   hash: string
 ) {
   const projectRoot = dirname(configFilePath);
+  // Scoped to this single config eval so the memoized task envs are never shared
+  // across concurrent createNodes passes.
+  const graphTimeEnvCache: GraphTimeEnvCache = new Map();
 
   // The createNodes hash covers projectRoot files, the lockfile, and tsconfig,
   // but a workspace-root dotenv a nested project loads is outside it. Fold the
   // task dotenv overlay into the cache key so a dotenv change (which the daemon
   // invalidates the graph on) rebuilds the gate instead of returning a stale one.
-  const cacheKey = `${hash}-${dotEnvOverlayDigest(projectRoot, normalizedOptions)}`;
+  const cacheKey = `${hash}-${dotEnvOverlayDigest(
+    projectRoot,
+    normalizedOptions,
+    graphTimeEnvCache
+  )}`;
 
   if (!pluginCache.has(cacheKey)) {
     pluginCache.set(
@@ -168,7 +205,8 @@ async function createNodesInternal(
         normalizedOptions,
         context,
         pmc,
-        externalTsconfigInputs
+        externalTsconfigInputs,
+        graphTimeEnvCache
       )
     );
   }
@@ -191,7 +229,8 @@ async function buildPlaywrightTargets(
   options: NormalizedOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  externalTsconfigInputs: string[]
+  externalTsconfigInputs: string[],
+  graphTimeEnvCache: GraphTimeEnvCache
 ): Promise<PlaywrightTargets> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
@@ -232,7 +271,9 @@ async function buildPlaywrightTargets(
     projectRoot,
     context.workspaceRoot,
     ambientWebServers,
-    options.targetName
+    options.targetName,
+    undefined,
+    graphTimeEnvCache
   );
   const ciChain = options.ciTargetName
     ? await resolveChainWebserver(
@@ -241,7 +282,8 @@ async function buildPlaywrightTargets(
         context.workspaceRoot,
         ambientWebServers,
         options.ciTargetName,
-        options.targetName
+        options.targetName,
+        graphTimeEnvCache
       )
     : e2eChain;
 
@@ -632,12 +674,20 @@ function addSubfolderToOutput(output: string, subfolder: string): string {
 // dotenv change the createNodes hash does not cover still rebuilds the gate.
 function dotEnvOverlayDigest(
   projectRoot: string,
-  options: NormalizedOptions
+  options: NormalizedOptions,
+  graphTimeEnvCache: GraphTimeEnvCache
 ): string {
   return hashObject({
-    e2e: dotEnvOverlay(getGraphTimeEnvForTask(projectRoot, options.targetName)),
+    e2e: dotEnvOverlay(
+      getCachedGraphTimeEnvForTask(
+        graphTimeEnvCache,
+        projectRoot,
+        options.targetName
+      )
+    ),
     'e2e-ci': dotEnvOverlay(
-      getGraphTimeEnvForTask(
+      getCachedGraphTimeEnvForTask(
+        graphTimeEnvCache,
         projectRoot,
         options.ciTargetName,
         undefined,
@@ -673,10 +723,12 @@ async function resolveChainWebserver(
   workspaceRoot: string,
   ambientWebServers: ResolvedWebServer[],
   target: string,
-  nonAtomizedTarget?: string
+  nonAtomizedTarget: string | undefined,
+  graphTimeEnvCache: GraphTimeEnvCache
 ): Promise<ChainWebserver> {
   let webServers = ambientWebServers;
-  const taskEnv = getGraphTimeEnvForTask(
+  const taskEnv = getCachedGraphTimeEnvForTask(
+    graphTimeEnvCache,
     projectRoot,
     target,
     undefined,
