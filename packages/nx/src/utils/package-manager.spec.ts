@@ -3,12 +3,20 @@ jest.mock('fs', () => {
     ...jest.requireActual('fs'),
     existsSync: jest.fn(),
     readFileSync: jest.fn(),
+    statSync: jest.fn(),
   };
 });
 jest.mock('child_process');
 
 import * as fs from 'fs';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
 import { join } from 'path';
 import * as childProcess from 'child_process';
 import { tmpdir } from 'os';
@@ -860,6 +868,11 @@ describe('package-manager', () => {
       // The version cache is module-scoped and outlives a test; clear it so each
       // test resolves through its own execSync mock rather than a prior test's.
       clearPackageManagerVersionCache();
+      // jest.clearAllMocks keeps implementations, so pin the default here or a
+      // test's statSync stub would leak into its neighbors.
+      (statSync as jest.Mock).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
       execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
         _cmd: string,
         options: any,
@@ -992,17 +1005,49 @@ describe('package-manager', () => {
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
       // A non-JS workspace has no root package.json; its .npmrc and package
       // manager files live under .nx/installation.
+      const installationPath = join(workspaceRoot, '.nx', 'installation');
       (existsSync as jest.Mock).mockReturnValue(false);
+      (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
       const overlaySpy = jest
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
         .mockReturnValue({});
 
       await packageRegistryView('nx', 'latest', '--json');
 
-      const installationPath = join(workspaceRoot, '.nx', 'installation');
       const [, options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(installationPath);
       expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
+    });
+
+    it('should fall back to the workspace root when the Nx installation directory does not exist', async () => {
+      // Spawning with a nonexistent cwd fails with ENOENT before npm even
+      // runs, surfacing as an unrelated "Unable to resolve version" error.
+      (existsSync as jest.Mock).mockReturnValue(false);
+      (statSync as jest.Mock).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.cwd).toBe(workspaceRoot);
+    });
+
+    it('should fall back to the workspace root when the Nx installation path is not a directory', async () => {
+      // A stray file at .nx/installation exists but would fail with ENOTDIR as
+      // the spawn cwd, so existence alone must not select it.
+      const installationPath = join(workspaceRoot, '.nx', 'installation');
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === installationPath
+      );
+      (statSync as jest.Mock).mockReturnValue({ isDirectory: () => false });
+      jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.cwd).toBe(workspaceRoot);
     });
   });
 
@@ -1013,6 +1058,11 @@ describe('package-manager', () => {
       // The version cache is module-scoped and outlives a test; clear it so each
       // test resolves through its own execSync mock rather than a prior test's.
       clearPackageManagerVersionCache();
+      // jest.clearAllMocks keeps implementations, so pin the default here or a
+      // test's statSync stub would leak into its neighbors.
+      (statSync as jest.Mock).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
       execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
         _cmd: string,
         options: any,
@@ -1089,14 +1139,15 @@ describe('package-manager', () => {
       // Config must resolve against .nx/installation's own directory even though
       // packing runs from the workspace root, or a non-JS workspace loses its
       // registry auth.
+      const installationPath = join(workspaceRoot, '.nx', 'installation');
       (existsSync as jest.Mock).mockReturnValue(false);
+      (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
       const overlaySpy = jest
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
         .mockReturnValue({});
 
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
-      const installationPath = join(workspaceRoot, '.nx', 'installation');
       const [, options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(installationPath);
       expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
@@ -1110,6 +1161,9 @@ describe('package-manager', () => {
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'npm' } });
       (existsSync as jest.Mock).mockReturnValue(false);
+      (statSync as jest.Mock).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
       jest.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0' as any);
       jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
     });

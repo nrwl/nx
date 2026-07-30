@@ -1,5 +1,11 @@
 import { exec, execFile, execSync } from 'child_process';
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
+import {
+  copyFileSync,
+  existsSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
@@ -509,9 +515,20 @@ export function copyPackageManagerConfigurationFiles(
  * files under the Nx installation directory instead.
  */
 function getPackageManagerConfigRoot(): string {
-  return existsSync(join(workspaceRoot, 'package.json'))
-    ? workspaceRoot
-    : getNxInstallationPath(workspaceRoot);
+  if (existsSync(join(workspaceRoot, 'package.json'))) {
+    return workspaceRoot;
+  }
+  const installationPath = getNxInstallationPath(workspaceRoot);
+  // The installation directory may be missing (nothing installed yet) or a
+  // stray non-directory, and spawning with such a cwd fails outright
+  // (ENOENT/ENOTDIR), so fall back to the workspace root.
+  try {
+    return statSync(installationPath).isDirectory()
+      ? installationPath
+      : workspaceRoot;
+  } catch {
+    return workspaceRoot;
+  }
 }
 
 /**
