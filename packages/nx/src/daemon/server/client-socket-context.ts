@@ -118,3 +118,23 @@ export function sendEmitLogMessageToTopic(
     writeStreamingMessage(socket, payload, 'emit log message to ' + topic);
   }
 }
+
+/**
+ * Sends a log line to one specific client socket, so it surfaces in that
+ * client's terminal instead of being lost to the daemon log file.
+ *
+ * Use this instead of a {@link ProgressTopic} broadcast when the daemon
+ * already knows exactly which client the message is about — a topic would fan
+ * the message out to every other subscribed client as well.
+ *
+ * Must only be invoked from inside the Nx daemon process.
+ */
+export function sendEmitLogMessageToSocket(
+  socket: Socket,
+  message: string,
+  level: EmitLogLevel
+): void {
+  assertOnDaemon('sendEmitLogMessageToSocket');
+  const payload: EmitLogMessage = { type: EMIT_LOG, message, level };
+  writeStreamingMessage(socket, payload, 'emit log message to socket');
+}

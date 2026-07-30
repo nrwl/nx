@@ -32,19 +32,24 @@ describe('watch command-object argument parsing', () => {
     expect(parsed.include).toEqual(['a', 'b']);
   });
 
-  it('collects repeated --include flags into an array', () => {
+  it('collects repeated --include flags into an array of strings', () => {
     const parsed = parse([
       'watch',
       '--all',
       '--include',
-      'a',
+      '2024',
       '--include',
       'b',
       '--',
       'echo',
       'hi',
     ]);
-    expect(parsed.include).toEqual(['a', 'b']);
+    // The numeric-looking value is what makes this a real guard: yargs collects
+    // repeated flags into an array all on its own, so the array part alone
+    // would pass with the option declaration deleted. `string: true` is what
+    // keeps `2024` from arriving as the number 2024 and blowing up in
+    // `new Minimatch`.
+    expect(parsed.include).toEqual(['2024', 'b']);
   });
 
   it('collects space-delimited --exclude values into an array', () => {
