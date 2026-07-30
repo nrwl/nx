@@ -48,7 +48,7 @@ To see information about the running Nx Daemon (such as its background process I
 
 ## Customizing the socket location
 
-The Nx Daemon uses a unix socket to communicate between the daemon and the Nx processes. By default this socket, along with the forked process and plugin worker sockets, is placed in a per-user, per-workspace directory beneath `/tmp/.nx/sockets` on macOS and Linux, and beneath `%TMP%/.nx/sockets` on Windows.
+The Nx Daemon uses a unix socket to communicate between the daemon and the Nx processes. By default this socket, along with the forked process and plugin worker sockets, is placed in a per-user, per-workspace directory beneath `/tmp/.nx/sockets` on macOS and Linux. Windows named pipes are not files, so there is no shared directory to separate users in, and Nx puts them straight in a per-workspace directory under `%TMP%` instead. That keeps Windows paths as short as possible, because named pipe paths are also subject to a length limit.
 
 Set the `NX_SOCKET_DIR` environment variable to override that location. This is primarily a workaround for file-permission issues with the default directory, such as an environment that restricts access to it or a socket path that exceeds the OS length limit. The value becomes the socket directory itself, so it has to name a directory only your user can reach. Nx rejects the system temp directory, along with its own shared roots: `/tmp/.nx`, `/tmp/.nx/sockets`, and `/tmp/.nx/native-cache`. Locking one of those to a single user would shut everyone else on the machine out of it, so name a directory beneath them instead. `NX_SOCKET_DIR` takes precedence over the older `NX_DAEMON_SOCKET_DIR`.
 
