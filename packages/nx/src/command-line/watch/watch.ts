@@ -5,6 +5,7 @@ import {
   WatcherFailedError,
 } from '../../daemon/client/client';
 import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
+import { normalizeWatchGlobs } from '../../daemon/server/file-watching/glob-filter';
 import { output } from '../../utils/output';
 
 export interface WatchArguments {
@@ -24,12 +25,22 @@ export interface WatchArguments {
    * Glob patterns for changed file paths that should re-trigger the watched
    * command. A changed file must match at least one include pattern to count.
    * When omitted, all files are included.
+   *
+   * Patterns are anchored at the workspace root and matched against
+   * workspace-root-relative paths, so `**\/*.ts` matches anywhere while
+   * `*.ts` only matches the workspace root itself. Negated (`!`) patterns are
+   * rejected — use {@link WatchArguments.exclude} instead.
    */
   include?: string[];
   /**
    * Glob patterns for changed file paths that should never re-trigger the
    * watched command. A file matching any exclude pattern is always ignored,
    * even if it matched an include pattern.
+   *
+   * These are file globs, not project names — use
+   * {@link WatchArguments.projects} to choose which projects are watched.
+   * Anchoring and negation follow the same rules as
+   * {@link WatchArguments.include}.
    */
   exclude?: string[];
   verbose?: boolean;
@@ -204,6 +215,16 @@ export async function watch(args: WatchArguments) {
     process.exit(1);
   }
 
+  let include: string[] | undefined;
+  let exclude: string[] | undefined;
+  try {
+    include = normalizeWatchGlobs(args.include, '--include');
+    exclude = normalizeWatchGlobs(args.exclude, '--exclude');
+  } catch (e) {
+    output.error({ title: e.message });
+    process.exit(1);
+  }
+
   args.verbose &&
     output.logSingleLine('running with args: ' + JSON.stringify(args));
   args.verbose && output.logSingleLine('starting watch process');
@@ -228,14 +249,34 @@ export async function watch(args: WatchArguments) {
     await batchQueue.enqueue(initialProjects, []);
   }
 
+  // Echoed unconditionally, not behind --verbose: when a pattern matches
+  // nothing the command simply never runs, and the terminal is otherwise
+  // silent forever. Seeing the patterns as the daemon received them, next to
+  // the anchoring rule, is what turns "nx watch is hung" into "I typed
+  // `*.ts`".
+  if (include?.length || exclude?.length) {
+    output.note({
+      title: 'Watching with file filters',
+      bodyLines: [
+        ...(include?.length
+          ? [`include: ${include.map((p) => `"${p}"`).join(' ')}`]
+          : []),
+        ...(exclude?.length
+          ? [`exclude: ${exclude.map((p) => `"${p}"`).join(' ')}`]
+          : []),
+        'Patterns are matched against workspace-root-relative paths, so use "**/*.ts" rather than "*.ts" to match nested files.',
+      ],
+    });
+  }
+
   await daemonClient.registerFileWatcher(
     {
       watchProjects: whatToWatch,
       includeDependencies:
         args.includeDependencies ?? args.includeDependentProjects,
       includeGlobalWorkspaceFiles: args.includeGlobalWorkspaceFiles,
-      include: args.include,
-      exclude: args.exclude,
+      include,
+      exclude,
     },
     async (err, data) => {
       if (err === 'reconnecting') {
