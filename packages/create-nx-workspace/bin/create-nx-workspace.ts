@@ -1147,7 +1147,14 @@ async function determineLinterOptions(
       name: 'linter',
       message: `Which linter would you like to use?`,
       type: 'autocomplete',
-      choices: [{ name: 'eslint' }, { name: 'oxlint' }, { name: 'none' }],
+      // `name` is the value returned; `message` is what the list shows. Oxlint
+      // is labelled so it isn't presented as an equal of ESLint here while the
+      // docs and the package both call it experimental.
+      choices: [
+        { name: 'eslint' },
+        { name: 'oxlint', message: 'oxlint (experimental)' },
+        { name: 'none' },
+      ],
       initial: opts?.preferEslint ? 0 : 2,
       skip: !args.interactive || isCI(),
     },
