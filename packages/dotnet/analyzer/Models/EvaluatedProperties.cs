@@ -93,6 +93,16 @@ public sealed class EvaluatedProperties
     /// </summary>
     public bool IsTestingPlatformApplication => IsTrue(nameof(IsTestingPlatformApplication));
 
+    /// <summary>
+    /// Puts MSTest on Microsoft.Testing.Platform rather than VSTest.
+    /// </summary>
+    public bool EnableMSTestRunner => IsTrue(nameof(EnableMSTestRunner));
+
+    /// <summary>
+    /// Routes <c>dotnet test</c> at the platform in its VSTest mode.
+    /// </summary>
+    public bool TestingPlatformDotnetTestSupport => IsTrue(nameof(TestingPlatformDotnetTestSupport));
+
     public bool UsesArtifactsOutput => IsTrue(nameof(UseArtifactsOutput));
     public bool IsExecutable =>
         string.Equals(OutputType, "Exe", StringComparison.OrdinalIgnoreCase);
