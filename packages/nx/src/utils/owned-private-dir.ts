@@ -41,6 +41,79 @@ function chmodRealDirectory(path: string, mode: number): boolean {
 }
 
 /**
+ * Sticky. Restricts rename and unlink in a writable directory to the owner of
+ * each entry — plus the directory's own owner, which is why the ownership check
+ * below is not redundant with this one.
+ */
+const S_ISVTX = 0o1000;
+
+/**
+ * Whether a shared container is safe to keep an owner-only directory under.
+ *
+ * A container writable by other users must be sticky, and it must be owned by
+ * either root or the current user. Sticky directories still let the directory
+ * owner rename entries, so accepting a container owned by another unprivileged
+ * user would let that user replace a previously verified private directory.
+ *
+ * A current-user-owned container is safe for that user but is deliberately
+ * refused by other users. For cross-user use, an administrator only needs to
+ * create the single top-level container as root-owned mode 1777; every user can
+ * create their own private subtree directly beneath it.
+ */
+export function isSafeSharedRoot(dir: string): boolean {
+  try {
+    const stats = lstatSync(dir);
+    if (!stats.isDirectory()) {
+      return false;
+    }
+    if (process.platform === 'win32') {
+      // The OS temp root is already scoped to the current Windows user.
+      return true;
+    }
+    if (
+      typeof process.getuid === 'function' &&
+      stats.uid !== process.getuid() &&
+      stats.uid !== 0
+    ) {
+      return false;
+    }
+    return !(stats.mode & 0o022) || !!(stats.mode & S_ISVTX);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Create a shared container as sticky + world-writable, without following a
+ * symlink at its final component, and report whether the resulting path is safe
+ * for the current user.
+ *
+ * The chmod is best-effort: a later user cannot change a container owned by
+ * root or by the first user, so the verdict always comes from
+ * `isSafeSharedRoot`.
+ */
+export function ensureSafeSharedRoot(dir: string): boolean {
+  if (process.platform === 'win32') {
+    try {
+      mkdirSync(dir, { recursive: true });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  try {
+    mkdirSync(dir, { mode: 0o1777 });
+  } catch (e: any) {
+    if (e?.code !== 'EEXIST') {
+      return false;
+    }
+  }
+  chmodRealDirectory(dir, 0o1777);
+  return isSafeSharedRoot(dir);
+}
+
+/**
  * Whether `dir` is an existing real directory owned by us. Unlike
  * `ensureOwnedPrivateDir` it creates nothing and repairs nothing — for callers
  * that only want to know whether a path is safe to act on, such as deleting.

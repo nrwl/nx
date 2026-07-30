@@ -8,12 +8,22 @@ import {
 } from 'node:fs';
 import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ensureOwnedPrivateDir } from './owned-private-dir';
+import {
+  ensureOwnedPrivateDir,
+  ensureSafeSharedRoot,
+  isSafeSharedRoot,
+} from './owned-private-dir';
 import { getSocketDir } from '../daemon/tmp-dir';
 
-// Real filesystem, no mocks. What is verified here is the property that cannot
-// be mocked convincingly: a planted symlink is refused rather than followed,
-// and the socket directory is actually wired through the guard.
+jest.mock('node:fs', () => {
+  const actual = jest.requireActual('node:fs');
+  return { ...actual, lstatSync: jest.fn(actual.lstatSync) };
+});
+
+// Real filesystem behavior is used throughout except for the foreign-owner
+// result that cannot be staged without another uid. What is verified here is
+// the property that cannot be mocked convincingly: a planted symlink is refused
+// rather than followed, and the socket directory is wired through the guard.
 const posixOnly = platform() === 'win32' ? it.skip : it;
 
 describe('ensureOwnedPrivateDir', () => {
@@ -80,6 +90,71 @@ describe('ensureOwnedPrivateDir', () => {
       }
     }
   );
+
+  describe('shared container validation', () => {
+    posixOnly(
+      'should refuse a sticky root owned by another unprivileged user',
+      () => {
+        const currentUid = process.getuid!();
+        const foreignUid = currentUid === 1 ? 2 : 1;
+        (lstatSync as jest.Mock).mockReturnValueOnce({
+          isDirectory: () => true,
+          uid: foreignUid,
+          mode: 0o41777,
+        });
+
+        // Stub the stat result rather than changing getuid: a real fixture is
+        // root-owned when the suite runs as root, and uid 0 is intentionally
+        // accepted by the predicate.
+        expect(isSafeSharedRoot('/tmp/.nx')).toBe(false);
+      }
+    );
+
+    posixOnly('should accept a root-owned sticky container', () => {
+      const getuid = jest.spyOn(process, 'getuid').mockReturnValue(501);
+      (lstatSync as jest.Mock).mockReturnValueOnce({
+        isDirectory: () => true,
+        uid: 0,
+        mode: 0o41777,
+      });
+      try {
+        expect(isSafeSharedRoot('/tmp/.nx')).toBe(true);
+      } finally {
+        getuid.mockRestore();
+      }
+    });
+
+    posixOnly(
+      'should refuse a peer-writable container without the sticky bit',
+      () => {
+        const dir = join(base, 'unsticky');
+        mkdirSync(dir);
+        chmodSync(dir, 0o777);
+
+        expect(isSafeSharedRoot(dir)).toBe(false);
+      }
+    );
+
+    posixOnly('should refuse a symlink planted at the shared root', () => {
+      const victim = join(base, 'victim-root');
+      mkdirSync(victim);
+      chmodSync(victim, 0o1777);
+      const planted = join(base, 'planted-root');
+      symlinkSync(victim, planted);
+
+      expect(isSafeSharedRoot(planted)).toBe(false);
+    });
+
+    posixOnly(
+      'should create the one shared container sticky and world-writable',
+      () => {
+        const dir = join(base, 'shared');
+
+        expect(ensureSafeSharedRoot(dir)).toBe(true);
+        expect(lstatSync(dir).mode & 0o7777).toBe(0o1777);
+      }
+    );
+  });
 
   describe('socket directory wiring', () => {
     const originalEnv = process.env;
