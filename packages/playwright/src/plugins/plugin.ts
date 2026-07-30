@@ -2,6 +2,7 @@ import {
   calculateHashesForCreateNodes,
   loadConfigFile,
   getNamedInputs,
+  getGraphTimeEnvForTask,
   hashObject,
   workspaceDataDirectory,
   PluginCache,
@@ -29,6 +30,12 @@ import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, parse, relative, resolve, sep } from 'node:path';
 import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
+import {
+  normalizeWebServers,
+  resolveWebServersUnderEnv,
+  taskEnvDivergesFromAmbient,
+  type ResolvedWebServer,
+} from './webserver-readiness';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -61,6 +68,11 @@ interface WebserverCommandTask {
 }
 
 type WebserverReadinessServer = WaitForWebserverSchema['servers'][number];
+
+interface ChainWebserver {
+  commandTasks: WebserverCommandTask[];
+  readinessServers: WebserverReadinessServer[];
+}
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
 export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
@@ -141,9 +153,15 @@ async function createNodesInternal(
 ) {
   const projectRoot = dirname(configFilePath);
 
-  if (!pluginCache.has(hash)) {
+  // The createNodes hash covers projectRoot files, the lockfile, and tsconfig,
+  // but a workspace-root dotenv a nested project loads is outside it. Fold the
+  // task dotenv overlay into the cache key so a dotenv change (which the daemon
+  // invalidates the graph on) rebuilds the gate instead of returning a stale one.
+  const cacheKey = `${hash}-${dotEnvOverlayDigest(projectRoot, normalizedOptions)}`;
+
+  if (!pluginCache.has(cacheKey)) {
     pluginCache.set(
-      hash,
+      cacheKey,
       await buildPlaywrightTargets(
         configFilePath,
         projectRoot,
@@ -154,7 +172,7 @@ async function createNodesInternal(
       )
     );
   }
-  const { targets, metadata } = pluginCache.get(hash);
+  const { targets, metadata } = pluginCache.get(cacheKey);
 
   return {
     projects: {
@@ -196,19 +214,47 @@ async function buildPlaywrightTargets(
 
   const testOutput = getTestOutput(playwrightConfig);
   const reporterOutputs = getReporterOutputs(playwrightConfig);
-  const webserverCommandTasks = getWebserverCommandTasks(playwrightConfig);
+  const ambientWebServers = normalizeWebServers(playwrightConfig.webServer);
 
   // When an inferred web server exposes a port/url, add a task that waits for
   // it to be ready. Playwright's `reuseExistingServer` probe
   // otherwise races the server boot, misses, and spawns its own nested server
   // command whose I/O then leaks into the task. Both the `e2e` task and the
   // atomized CI tasks depend on it.
-  const webserverReadinessServers = webserverCommandTasks
-    .map(toReadinessServer)
-    .filter(Boolean);
-  const webserverReadyTargetName =
-    webserverReadinessServers.length > 0
+  //
+  // The address can be read from process.env, but createNodes evaluates the
+  // config without the e2e task's dotenv loaded. Resolve each consumer chain's
+  // servers under that chain's task env so the gate probes the address the task
+  // will actually serve. `e2e` and the atomized `e2e-ci` tasks can load
+  // different dotenv, so a distinct resolved address gets its own gate.
+  const e2eChain = await resolveChainWebserver(
+    configFilePath,
+    projectRoot,
+    context.workspaceRoot,
+    ambientWebServers,
+    options.targetName
+  );
+  const ciChain = options.ciTargetName
+    ? await resolveChainWebserver(
+        configFilePath,
+        projectRoot,
+        context.workspaceRoot,
+        ambientWebServers,
+        options.ciTargetName,
+        options.targetName
+      )
+    : e2eChain;
+
+  const e2eReadyTargetName =
+    e2eChain.readinessServers.length > 0
       ? `${options.targetName}--wait-for-webserver`
+      : undefined;
+  const chainsShareGate = sameChain(e2eChain, ciChain);
+  const ciReadyTargetName =
+    ciChain.readinessServers.length > 0
+      ? chainsShareGate
+        ? e2eReadyTargetName
+        : `${options.ciTargetName}--wait-for-webserver`
       : undefined;
 
   const baseTargetConfig: TargetConfiguration = {
@@ -230,13 +276,10 @@ async function buildPlaywrightTargets(
     },
   };
 
-  if (webserverCommandTasks.length) {
-    baseTargetConfig.dependsOn = webserverReadyTargetName
-      ? [
-          ...getDependsOn(webserverCommandTasks),
-          { target: webserverReadyTargetName },
-        ]
-      : getDependsOn(webserverCommandTasks);
+  if (e2eChain.commandTasks.length) {
+    baseTargetConfig.dependsOn = e2eReadyTargetName
+      ? [...getDependsOn(e2eChain.commandTasks), { target: e2eReadyTargetName }]
+      : getDependsOn(e2eChain.commandTasks);
   } else {
     baseTargetConfig.parallelism = false;
   }
@@ -259,23 +302,17 @@ async function buildPlaywrightTargets(
     ),
   };
 
-  if (webserverReadyTargetName) {
-    targets[webserverReadyTargetName] = {
-      executor: '@nx/playwright:wait-for-webserver',
-      cache: false,
-      options: {
-        servers: webserverReadinessServers,
-        ...(options.webServerTimeout != null
-          ? { timeout: options.webServerTimeout }
-          : {}),
-      },
-      dependsOn: getDependsOn(webserverCommandTasks),
-      metadata: {
-        technologies: ['playwright'],
-        description:
-          'Waits for the E2E web server(s) to be ready before the Playwright test tasks run.',
-      },
-    };
+  if (e2eReadyTargetName) {
+    targets[e2eReadyTargetName] = buildWaitForWebserverTarget(
+      e2eChain,
+      options.webServerTimeout
+    );
+  }
+  if (ciReadyTargetName && ciReadyTargetName !== e2eReadyTargetName) {
+    targets[ciReadyTargetName] = buildWaitForWebserverTarget(
+      ciChain,
+      options.webServerTimeout
+    );
   }
 
   if (options.ciTargetName) {
@@ -304,6 +341,22 @@ async function buildPlaywrightTargets(
         projectRoot
       ),
     };
+
+    // The atomized tasks inherit the e2e chain's dependsOn. When the CI chain
+    // resolves a different address it has its own gate, so point them at it.
+    if (!chainsShareGate) {
+      if (ciChain.commandTasks.length) {
+        ciBaseTargetConfig.dependsOn = ciReadyTargetName
+          ? [
+              ...getDependsOn(ciChain.commandTasks),
+              { target: ciReadyTargetName },
+            ]
+          : getDependsOn(ciChain.commandTasks);
+      } else {
+        delete ciBaseTargetConfig.dependsOn;
+        ciBaseTargetConfig.parallelism = false;
+      }
+    }
 
     const groupName = 'E2E (CI)';
     metadata = { targetGroups: { [groupName]: [] } };
@@ -414,12 +467,12 @@ async function buildPlaywrightTargets(
       },
     };
 
-    if (!webserverCommandTasks.length) {
+    if (!ciChain.commandTasks.length) {
       targets[options.ciTargetName].parallelism = false;
     }
     ciTargetGroup.push(options.ciTargetName);
-    if (webserverReadyTargetName) {
-      ciTargetGroup.push(webserverReadyTargetName);
+    if (ciReadyTargetName) {
+      ciTargetGroup.push(ciReadyTargetName);
     }
 
     // infer the task to merge the reports from the atomized tasks
@@ -572,6 +625,111 @@ function addSubfolderToOutput(output: string, subfolder: string): string {
     return joinPathFragments(parts.dir, subfolder, parts.base);
   }
   return joinPathFragments(output, subfolder);
+}
+
+// Digest of the task dotenv overlay (the keys that differ from the graph-time
+// ambient env) for the consumer chains, folded into the PluginCache key so a
+// dotenv change the createNodes hash does not cover still rebuilds the gate.
+function dotEnvOverlayDigest(
+  projectRoot: string,
+  options: NormalizedOptions
+): string {
+  return hashObject({
+    e2e: dotEnvOverlay(getGraphTimeEnvForTask(projectRoot, options.targetName)),
+    'e2e-ci': dotEnvOverlay(
+      getGraphTimeEnvForTask(
+        projectRoot,
+        options.ciTargetName,
+        undefined,
+        options.targetName
+      )
+    ),
+  });
+}
+
+function dotEnvOverlay(taskEnv: NodeJS.ProcessEnv): Record<string, string> {
+  const overlay: Record<string, string> = {};
+  for (const key of new Set([
+    ...Object.keys(process.env),
+    ...Object.keys(taskEnv),
+  ])) {
+    if (process.env[key] !== taskEnv[key]) {
+      overlay[key] = taskEnv[key];
+    }
+  }
+  return overlay;
+}
+
+// Resolves the web server command tasks and readiness servers a consumer chain
+// (`e2e` or the atomized `e2e-ci`) would see. When the chain's task env differs
+// from the graph-time ambient env, the config is re-evaluated in a child under
+// that env so an env-derived address resolves the way the task will; otherwise
+// the ambient config is reused. A failed re-evaluation throws: the daemon caches
+// the resulting graph, so a silent fallback would bake a wrong gate that no
+// retry corrects until the graph is invalidated.
+async function resolveChainWebserver(
+  configFilePath: string,
+  projectRoot: string,
+  workspaceRoot: string,
+  ambientWebServers: ResolvedWebServer[],
+  target: string,
+  nonAtomizedTarget?: string
+): Promise<ChainWebserver> {
+  let webServers = ambientWebServers;
+  const taskEnv = getGraphTimeEnvForTask(
+    projectRoot,
+    target,
+    undefined,
+    nonAtomizedTarget
+  );
+  if (taskEnvDivergesFromAmbient(taskEnv)) {
+    try {
+      webServers = await resolveWebServersUnderEnv(
+        configFilePath,
+        workspaceRoot,
+        taskEnv
+      );
+    } catch (e) {
+      throw new Error(
+        `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server readiness address.`,
+        { cause: e }
+      );
+    }
+  }
+
+  const commandTasks = getWebserverCommandTasks({
+    webServer: webServers as PlaywrightTestConfig['webServer'],
+  });
+  const readinessServers = commandTasks
+    .map(toReadinessServer)
+    .filter(Boolean) as WebserverReadinessServer[];
+  return { commandTasks, readinessServers };
+}
+
+// Two chains share a gate only when both the readiness servers and the serve
+// command tasks (which become the gate's and the tasks' dependsOn) match.
+function sameChain(a: ChainWebserver, b: ChainWebserver): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function buildWaitForWebserverTarget(
+  chain: ChainWebserver,
+  webServerTimeout: number | undefined
+): TargetConfiguration {
+  return {
+    executor: '@nx/playwright:wait-for-webserver',
+    cache: false,
+    options: {
+      servers: chain.readinessServers,
+      ...(webServerTimeout != null ? { timeout: webServerTimeout } : {}),
+    },
+    dependsOn: getDependsOn(chain.commandTasks),
+    metadata: {
+      technologies: ['playwright'],
+      description:
+        'Waits for the E2E web server(s) to be ready before the Playwright test tasks run.',
+    },
+  };
 }
 
 function getWebserverCommandTasks(
