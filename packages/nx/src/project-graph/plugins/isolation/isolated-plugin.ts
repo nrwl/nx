@@ -166,7 +166,6 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private async spawnAndConnect(): Promise<LoadResultPayload> {
     const { worker, socket } = await startPluginWorker(
       this.name,
-      this.plugin,
       this.root,
       this.pluginPath,
       this.shouldRegisterTSTranspiler
@@ -545,7 +544,6 @@ export function getPluginWorkerSocketId(): string {
 
 async function startPluginWorker(
   name: string,
-  plugin: PluginConfiguration,
   root: string,
   pluginPath: string,
   shouldRegisterTSTranspiler: boolean
@@ -609,8 +607,13 @@ async function startPluginWorker(
       // The host's root. The worker validates against this rather than re-resolving,
       // so the two agree by construction.
       workspaceRoot,
+      // Enough for the worker to start importing the plugin module before we
+      // connect. The plugin's configuration is deliberately NOT passed here:
+      // `PluginConfiguration.options` is arbitrary user JSON from nx.json, and
+      // a command line is readable by any local user via `ps -ww` (and would be
+      // recorded verbatim into the NX_PROFILE_OUT report). It stays on the
+      // socket, in the `load` message.
       pluginPath,
-      JSON.stringify(plugin),
       shouldRegisterTSTranspiler ? '1' : '0',
     ],
     {
