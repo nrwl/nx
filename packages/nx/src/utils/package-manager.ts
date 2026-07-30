@@ -32,11 +32,6 @@ import {
 import { getNxInstallationPath } from './installation-directory';
 import { logger } from './logger';
 import { PackageJson, readModulePackageJson } from './package-json';
-import {
-  getNpmSpawnRegistryEnv,
-  ignoresNpmConfigEnv,
-  mergeNpmConfigEnv,
-} from './registry-config';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -705,6 +700,14 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
+  // Deferred so the registry resolvers load only for the commands that spawn a
+  // view/pack, not with every package-manager.ts import.
+  const {
+    getNpmSpawnRegistryEnv,
+    ignoresNpmConfigEnv,
+    mergeNpmConfigEnv,
+  } = require('./registry-config');
+
   // An empty version means we want the full packument; omit the trailing `@`.
   // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
   // redirections.
@@ -764,6 +767,11 @@ export async function packageRegistryPack(
 ): Promise<{ tarballPath: string }> {
   const pm = 'npm';
 
+  const {
+    getNpmSpawnRegistryEnv,
+    ignoresNpmConfigEnv,
+    mergeNpmConfigEnv,
+  } = require('./registry-config');
   const workspacePm = detectPackageManager();
   const configRoot = getPackageManagerConfigRoot();
   const workspacePmVersion = getPackageManagerVersionSafe(
