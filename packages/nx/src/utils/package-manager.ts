@@ -620,15 +620,12 @@ function redactUrlCredentials(text: string): string {
 
 function redactErrorCause(error: unknown): unknown {
   if (error && typeof error === 'object') {
-    const e = error as { message?: unknown; stack?: unknown; stderr?: unknown };
-    if (typeof e.message === 'string') {
-      e.message = redactUrlCredentials(e.message);
-    }
-    if (typeof e.stack === 'string') {
-      e.stack = redactUrlCredentials(e.stack);
-    }
-    if (typeof e.stderr === 'string') {
-      e.stderr = redactUrlCredentials(e.stderr);
+    const e = error as Record<string, unknown>;
+    // stdout and cmd matter for an exec error, whose message also embeds both.
+    for (const field of ['message', 'stack', 'stderr', 'stdout', 'cmd']) {
+      if (typeof e[field] === 'string') {
+        e[field] = redactUrlCredentials(e[field] as string);
+      }
     }
   }
   return error;
@@ -723,24 +720,30 @@ export async function packageRegistryView(
   // npm_config_force downgrades npm's `devEngines.packageManager` enforcement
   // (which aborts even a read-only `view` in a yarn/bun workspace whose pin sets
   // `onFail: error`) to a warning; scoped to npm so a `pnpm view` is untouched.
-  const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
-    windowsHide: true,
-    cwd: configRoot,
-    env: mergeNpmConfigEnv(
-      process.env,
-      {
-        ...getNpmSpawnRegistryEnv(
-          pkg,
-          configRoot,
-          workspacePm,
-          workspacePmVersion
-        ),
-        ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
-      },
-      ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
-    ),
-  });
-  return stdout.toString().trim();
+  try {
+    const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
+      windowsHide: true,
+      cwd: configRoot,
+      env: mergeNpmConfigEnv(
+        process.env,
+        {
+          ...getNpmSpawnRegistryEnv(
+            pkg,
+            configRoot,
+            workspacePm,
+            workspacePmVersion
+          ),
+          ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+        },
+        ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+      ),
+    });
+    return stdout.toString().trim();
+  } catch (e) {
+    // A view fetch error can echo a token embedded in the registry URL; redact
+    // before the error reaches any caller's log.
+    throw redactErrorCause(e);
+  }
 }
 
 /**
@@ -784,34 +787,39 @@ export async function packageRegistryPack(
   // managers the env overlay reproduces the config npm cannot read
   // (pnpm-workspace.yaml, .yarnrc(.yml), bunfig.toml). npm prints the tarball
   // basename to stdout.
-  const { stdout } = await execAsync(
-    `${pm} pack "${pkg}@${version}" --pack-destination "${packDestination}"`,
-    {
-      cwd: configRoot,
-      windowsHide: true,
-      env: mergeNpmConfigEnv(
-        process.env,
-        {
-          ...getNpmSpawnRegistryEnv(
-            pkg,
-            configRoot,
-            workspacePm,
-            workspacePmVersion
-          ),
-          // downgrade npm's devEngines.packageManager enforcement (onFail:
-          // error) to a warning so pack still runs in a non-npm workspace
-          npm_config_force: 'true',
-          ...(options?.bypassMinReleaseAge
-            ? { npm_config_min_release_age: '0' }
-            : {}),
-        },
-        ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
-      ),
-    }
-  );
-
-  const tarballPath = stdout.trim();
-  return { tarballPath };
+  try {
+    const { stdout } = await execAsync(
+      `${pm} pack "${pkg}@${version}" --pack-destination "${packDestination}"`,
+      {
+        cwd: configRoot,
+        windowsHide: true,
+        env: mergeNpmConfigEnv(
+          process.env,
+          {
+            ...getNpmSpawnRegistryEnv(
+              pkg,
+              configRoot,
+              workspacePm,
+              workspacePmVersion
+            ),
+            // downgrade npm's devEngines.packageManager enforcement (onFail:
+            // error) to a warning so pack still runs in a non-npm workspace
+            npm_config_force: 'true',
+            ...(options?.bypassMinReleaseAge
+              ? { npm_config_min_release_age: '0' }
+              : {}),
+          },
+          ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+        ),
+      }
+    );
+    const tarballPath = stdout.trim();
+    return { tarballPath };
+  } catch (e) {
+    // A pack fetch error can echo a token embedded in the registry URL; redact
+    // before the error reaches any caller's log.
+    throw redactErrorCause(e);
+  }
 }
 
 // `packageRegistryView`/`packageRegistryPack` are called in tight resolution

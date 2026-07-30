@@ -1054,6 +1054,41 @@ describe('package-manager', () => {
       expect(options.env[key]).toBe('ambient-token');
     });
 
+    it('redacts a credential embedded in a registry URL from a view failure', async () => {
+      // The error propagates to migrate's fetcher catch and can be logged
+      // there, so it must already arrive redacted.
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'npm' } });
+      const leakyUrl = 'https://SECRET-TOKEN-123@reg.example.com/nx';
+      execMock.mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        const err: any = new Error(
+          `Command failed: npm view\nnpm error request to ${leakyUrl} failed`
+        );
+        err.stderr = `npm error request to ${leakyUrl} failed`;
+        err.stdout = `request to ${leakyUrl}`;
+        cb(err);
+        return undefined;
+      }) as any);
+
+      let caught: any;
+      try {
+        await packageRegistryView('nx', 'latest', '--json');
+      } catch (e) {
+        caught = e;
+      }
+
+      expect(caught).toBeDefined();
+      const text = [caught.message, caught.stderr, caught.stdout].join('\n');
+      expect(text).not.toContain('SECRET-TOKEN-123');
+      expect(text).toContain('https://***@reg.example.com/nx');
+    });
+
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
       // A non-JS workspace has no root package.json; its .npmrc and package
       // manager files live under .nx/installation.
@@ -1212,6 +1247,35 @@ describe('package-manager', () => {
 
       const [, options] = execMock.mock.calls[0];
       expect(options.env[key]).toBeUndefined();
+    });
+
+    it('redacts a credential embedded in a registry URL from a pack failure', async () => {
+      const leakyUrl = 'https://SECRET-TOKEN-123@reg.example.com/nx';
+      execMock.mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        const err: any = new Error(
+          `Command failed: npm pack\nnpm error request to ${leakyUrl} failed`
+        );
+        err.stderr = `npm error request to ${leakyUrl} failed`;
+        cb(err);
+        return undefined;
+      }) as any);
+
+      let caught: any;
+      try {
+        await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+      } catch (e) {
+        caught = e;
+      }
+
+      expect(caught).toBeDefined();
+      const text = [caught.message, caught.stderr].join('\n');
+      expect(text).not.toContain('SECRET-TOKEN-123');
+      expect(text).toContain('https://***@reg.example.com/nx');
     });
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
