@@ -1,5 +1,11 @@
-//! Benchmarks the hot path in _copy: copying a small file to a target where
-//! the parent directory already exists (the common case during cache restore).
+//! Benchmarks the `boundary: None` arm of `_copy_impl`: copying a small file to
+//! a target whose parent directory already exists.
+//!
+//! Note this is NOT the cache-restore path. Cache restore goes through
+//! `copy_outputs_into_workspace`, which passes `Some(workspace_root)` and so
+//! takes the `create_dir_all_within` arm (unmodified). The `None` arm is
+//! reached only via the public `copy()` NAPI export. The benchmark exists to
+//! justify dropping the `exists()` guard there, not to model cache restore.
 
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::fs;
@@ -31,7 +37,7 @@ const LOREM_MD: &str = include_str!("../../../benchmarks/lorem.md");
 fn bench_copy_parent_exists(c: &mut Criterion) {
     let mut group = c.benchmark_group("file_copy_parent_exists");
 
-    // Scenario: parent directory already exists (hot path — cache restore)
+    // Scenario: parent directory already exists (the common case)
     let src_dir = TempDir::new().unwrap();
     let src_file = src_dir.path().join("output.md");
     fs::write(&src_file, LOREM_MD).unwrap();
