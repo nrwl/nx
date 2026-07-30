@@ -370,21 +370,32 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       mode
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
-    registerFileWatcherSocket({ socket, config: payload.config });
-    // A client must not announce readiness until this socket is subscribed.
-    // Older clients do not request an acknowledgement and expect only changes.
-    if (payload.registrationId) {
-      await handleResult(
+    // Registration throws on an invalid include/exclude glob. The error
+    // response surfaces it in the terminal of the client that sent it rather
+    // than rejecting unhandled and taking the daemon down with no explanation.
+    try {
+      registerFileWatcherSocket({ socket, config: payload.config });
+      // A client must not announce readiness until this socket is subscribed.
+      // Older clients do not request an acknowledgement and expect only changes.
+      if (payload.registrationId) {
+        await handleResult(
+          socket,
+          'REGISTER_FILE_WATCHER',
+          async () => ({
+            description: 'File watcher registered',
+            response: {
+              type: 'FILE_WATCHER_REGISTERED',
+              registrationId: payload.registrationId,
+            },
+          }),
+          mode
+        );
+      }
+    } catch (error) {
+      await respondWithErrorAndExit(
         socket,
-        'REGISTER_FILE_WATCHER',
-        async () => ({
-          description: 'File watcher registered',
-          response: {
-            type: 'FILE_WATCHER_REGISTERED',
-            registrationId: payload.registrationId,
-          },
-        }),
-        mode
+        '[REGISTER_FILE_WATCHER]',
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   } else if (isRegisterProjectGraphListenerMessage(payload)) {

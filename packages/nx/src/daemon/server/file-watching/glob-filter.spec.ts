@@ -2,6 +2,7 @@ import {
   compileGlobs,
   fileMatchesGlobFilter,
   filterChangedFiles,
+  normalizeWatchGlobs,
   selectChangedProjectsAndFiles,
 } from './glob-filter';
 import type { ChangedFile } from './changed-projects';
@@ -9,7 +10,68 @@ import type { ChangedFile } from './changed-projects';
 // Convenience: the filter helpers take precompiled matchers, so tests compile
 // their raw patterns up front (mirroring how the daemon compiles once at
 // registration).
-const globs = (patterns: string[]) => compileGlobs(patterns);
+const globs = (patterns: string[]) => compileGlobs(patterns, '--include');
+
+describe('compileGlobs', () => {
+  // A negated pattern used to be compiled and handed straight to minimatch,
+  // where it inverted its own result inside an OR-list — so
+  // `--include "**/*.ts" "!**/*.spec.ts"` *kept* spec files and
+  // `--exclude "!**/*.spec.ts"` dropped everything that was not a spec. Both
+  // read as the exact opposite of what they did, so they are rejected.
+  it('rejects a negated pattern and points at the other flag', () => {
+    expect(() => compileGlobs(['!**/*.spec.ts'], '--include')).toThrow(
+      /negated patterns are not supported.*--exclude/s
+    );
+    expect(() => compileGlobs(['!**/*.spec.ts'], '--exclude')).toThrow(
+      /negated patterns are not supported.*--include/s
+    );
+  });
+
+  it('rejects an empty pattern (what an unset shell variable expands to)', () => {
+    expect(() => compileGlobs([''], '--include')).toThrow(
+      /the pattern is empty/
+    );
+    expect(() => compileGlobs(['   '], '--exclude')).toThrow(
+      /the pattern is empty/
+    );
+  });
+
+  it('strips a leading ./ so a tsconfig-style pattern still matches', () => {
+    const matchers = compileGlobs(['./src/**/*.ts'], '--include');
+    expect(fileMatchesGlobFilter('src/app/main.ts', matchers, [])).toBe(true);
+  });
+
+  it('leaves a valid pattern untouched', () => {
+    const matchers = compileGlobs(['**/*.ts'], '--include');
+    expect(fileMatchesGlobFilter('src/app/main.ts', matchers, [])).toBe(true);
+    expect(fileMatchesGlobFilter('src/app/main.css', matchers, [])).toBe(false);
+  });
+});
+
+describe('normalizeWatchGlobs', () => {
+  it('passes undefined through (the flag was not used)', () => {
+    expect(normalizeWatchGlobs(undefined, '--include')).toBeUndefined();
+  });
+
+  it('rejects a flag passed with no patterns, which would disable the filter', () => {
+    expect(() => normalizeWatchGlobs([], '--include')).toThrow(
+      /--include was passed without any glob patterns/
+    );
+  });
+
+  it('normalizes each pattern', () => {
+    expect(normalizeWatchGlobs(['./src/**', '**/*.ts'], '--include')).toEqual([
+      'src/**',
+      '**/*.ts',
+    ]);
+  });
+
+  it('rejects a negated pattern', () => {
+    expect(() => normalizeWatchGlobs(['!**/*.spec.ts'], '--exclude')).toThrow(
+      /negated patterns are not supported/
+    );
+  });
+});
 
 describe('fileMatchesGlobFilter', () => {
   describe('no filters (empty include and exclude)', () => {
@@ -178,7 +240,7 @@ describe('selectChangedProjectsAndFiles (project-drop gate)', () => {
 
     const { changedProjects, changedFiles, consideredFileCount } =
       selectChangedProjectsAndFiles(
-        projects,
+        Object.entries(projects),
         globs(['**/*.ts']),
         globs(['**/*.spec.ts'])
       );
@@ -196,7 +258,7 @@ describe('selectChangedProjectsAndFiles (project-drop gate)', () => {
     };
 
     const { changedProjects, changedFiles, consideredFileCount } =
-      selectChangedProjectsAndFiles(projects, [], []);
+      selectChangedProjectsAndFiles(Object.entries(projects), [], []);
 
     expect(changedProjects).toEqual(['proj-a', 'proj-b']);
     expect(changedFiles.map((f) => f.path)).toEqual([
@@ -213,12 +275,33 @@ describe('selectChangedProjectsAndFiles (project-drop gate)', () => {
     };
 
     const { changedProjects, changedFiles, consideredFileCount } =
-      selectChangedProjectsAndFiles(projects, [], globs(['**/*.spec.ts']));
+      selectChangedProjectsAndFiles(
+        Object.entries(projects),
+        [],
+        globs(['**/*.spec.ts'])
+      );
 
     expect(changedProjects).toEqual([]);
     expect(changedFiles).toEqual([]);
     // Nothing survived, but two files were considered — the caller uses this to
     // tell "entire batch filtered out" apart from "nothing changed".
     expect(consideredFileCount).toBe(2);
+  });
+
+  it('reports projects in the order the caller supplied them', () => {
+    // Taking entries rather than an object is what makes this hold: a plain
+    // object hoists the integer-like key `2024` to the front.
+    const projects = new Map([
+      ['zebra', [makeFile('zebra/x.ts')]],
+      ['2024', [makeFile('2024/y.ts')]],
+    ]);
+
+    const { changedProjects } = selectChangedProjectsAndFiles(
+      projects,
+      globs(['**/*.ts']),
+      []
+    );
+
+    expect(changedProjects).toEqual(['zebra', '2024']);
   });
 });
