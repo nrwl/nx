@@ -13,11 +13,14 @@ import {
 } from '../../command-line/run/executor-utils';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
+import { readJson } from '../../generators/utils/json';
 import {
   getProjects,
   readNxJson,
   updateNxJson,
 } from '../../generators/utils/project-configuration';
+import type { PackageJson } from '../../utils/package-json';
+import { joinPathFragments } from '../../utils/path';
 
 /**
  * Target defaults resolve to a single key rather than merging, so an executor
@@ -40,20 +43,31 @@ export default async function update(tree: Tree) {
   const projectsMap: Record<string, ProjectConfiguration> = {};
   // `cache` on an executor key reaches every target that resolves through it,
   // not just the one whose target name key enables caching. Collect them all
-  // per key so the decision below can be made for the key as a whole.
+  // per key so the decision below can be made for the key as a whole. The
+  // collection is a list rather than a map keyed by target name: two projects
+  // routinely declare the same target name through the same executor, and only
+  // one of them may be continuous.
   const targetsByExecutorKey = new Map<
     string,
-    Map<string, TargetConfiguration>
+    Array<[string, TargetConfiguration]>
   >();
+  const collect = (targetName: string, target: TargetConfiguration) => {
+    if (!target.executor || !targetDefaults[target.executor]) {
+      return;
+    }
+    const targets = targetsByExecutorKey.get(target.executor) ?? [];
+    targets.push([targetName, target]);
+    targetsByExecutorKey.set(target.executor, targets);
+  };
   for (const [projectName, project] of projects) {
     projectsMap[projectName] = project;
     for (const [targetName, target] of Object.entries(project.targets ?? {})) {
-      if (!target.executor || !targetDefaults[target.executor]) {
-        continue;
-      }
-      const targets = targetsByExecutorKey.get(target.executor) ?? new Map();
-      targets.set(targetName, target);
-      targetsByExecutorKey.set(target.executor, targets);
+      collect(targetName, target);
+    }
+    for (const [targetName, target] of Object.entries(
+      packageJsonTargets(tree, project.root)
+    )) {
+      collect(targetName, target);
     }
   }
 
@@ -88,21 +102,30 @@ export default async function update(tree: Tree) {
 function canEnableCache(
   targetDefaults: TargetDefaults,
   key: string,
-  targets: Map<string, TargetConfiguration>,
+  targets: Array<[string, TargetConfiguration]>,
   workspaceRoot: string,
   projectsMap: Record<string, ProjectConfiguration>
 ): boolean {
-  // `command` targets are rewritten to this executor before key selection, and
-  // plugins infer continuous ones (`watch-deps`, dev servers) into projects
-  // whose config never mentions them — so the target list here can never be
-  // trusted to be complete for this key.
-  if (key === 'nx:run-commands') {
+  // Targets written with `command` are rewritten to `nx:run-commands` and
+  // `package.json` scripts to `nx:run-script` before key selection, so neither
+  // names the key it resolves through. Plugins also infer continuous targets
+  // (`watch-deps`, dev servers) into projects whose config never mentions them.
+  // The target list here can never be trusted to be complete for these keys.
+  if (key === 'nx:run-commands' || key === 'nx:run-script') {
     return false;
   }
 
   // Already decided; never override the user's value. A filtered entry counts
   // as decided because its value can't be evaluated without project context.
   if (declaresAnyCache(targetDefaults[key])) {
+    return false;
+  }
+
+  // `continuous` is a valid field on a target default, and this key applies it
+  // to every target that resolves through it. Adding `cache` would make each of
+  // them both cacheable and continuous, which fails graph construction — so no
+  // target list can make this key safe.
+  if (declaresAnyContinuous(targetDefaults[key])) {
     return false;
   }
 
@@ -165,8 +188,44 @@ function declaresAnyCache(value: TargetDefaultValue | undefined): boolean {
   return configEntries(value).some((entry) => entry.cache !== undefined);
 }
 
+/**
+ * Whether any entry declares `continuous: true`. Filtered entries count: which
+ * projects the filter matches is unknowable here, and the only case that
+ * matters is the one where it matches.
+ */
+function declaresAnyContinuous(value: TargetDefaultValue | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+  return configEntries(value).some((entry) => entry.continuous === true);
+}
+
 function configEntries(value: TargetDefaultValue): TargetDefaultArrayEntry[] {
   return Array.isArray(value) ? value : [value];
+}
+
+/**
+ * The targets a project's `package.json` contributes to the graph.
+ *
+ * {@link getProjects} builds a root's configuration from its `project.json`
+ * alone whenever one exists, but the package.json plugin still creates the
+ * sibling `package.json`'s targets — it accepts any `package.json` that is
+ * either in the package manager workspaces or next to a `project.json`
+ * (`plugins/package-json/create-nodes.ts`). Those targets resolve through the
+ * same executor keys, so they belong in this decision.
+ *
+ * Targets derived from `scripts` are still not covered; they resolve through
+ * `nx:run-script`, which is never stamped for exactly that reason.
+ */
+function packageJsonTargets(
+  tree: Tree,
+  projectRoot: string
+): Record<string, TargetConfiguration> {
+  const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
+  if (!tree.exists(packageJsonPath)) {
+    return {};
+  }
+  return readJson<PackageJson>(tree, packageJsonPath).nx?.targets ?? {};
 }
 
 /**
@@ -184,10 +243,17 @@ function catchAllConfig(
 }
 
 /**
- * Whether the executor's schema marks its targets continuous, the way
- * `normalizeTarget` reads it at graph construction. Mirrors that function's
- * fail-open behavior: an unresolvable executor yields no continuity there
- * either.
+ * Whether the executor's schema marks its targets continuous, resolved through
+ * the same `getExecutorInformation` call `normalizeTarget` makes at graph
+ * construction, so the two cannot drift on what continuous means.
+ *
+ * An executor that cannot be resolved is read as not continuous. That is the
+ * same answer `normalizeTarget` gives, but not the same trade: its lookup is
+ * repeated on every graph construction, so a failure there corrects itself,
+ * whereas this one decides a permanent edit to `nx.json`. An executor that is
+ * unresolvable while the migration runs and resolvable afterwards therefore
+ * keeps its stamped `cache` while the runtime starts marking its targets
+ * continuous.
  */
 function executorDeclaresContinuous(
   executor: string,

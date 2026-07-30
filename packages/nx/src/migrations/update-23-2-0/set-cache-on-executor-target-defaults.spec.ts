@@ -1,4 +1,5 @@
 import type { NxJsonConfiguration } from '../../config/nx-json';
+import type { TargetConfiguration } from '../../config/workspace-json-project-json';
 import * as executorUtils from '../../command-line/run/executor-utils';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../generators/tree';
@@ -16,10 +17,7 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  function setup(
-    targetDefaults: NxJsonConfiguration['targetDefaults'],
-    targets: Record<string, { executor: string }>
-  ) {
+  function setDefaults(targetDefaults: NxJsonConfiguration['targetDefaults']) {
     // createTreeWithEmptyWorkspace seeds its own targetDefaults; replace them
     // outright so each fixture is exactly what the test declares.
     const nxJson = readNxJson(tree);
@@ -28,7 +26,21 @@ describe('set-cache-on-executor-target-defaults migration', () => {
       ...nxJson,
       ...(targetDefaults ? { targetDefaults } : {}),
     });
-    addProjectConfiguration(tree, 'app', { root: 'apps/app', targets });
+  }
+
+  function addProject(
+    name: string,
+    targets: Record<string, TargetConfiguration>
+  ) {
+    addProjectConfiguration(tree, name, { root: `apps/${name}`, targets });
+  }
+
+  function setup(
+    targetDefaults: NxJsonConfiguration['targetDefaults'],
+    targets: Record<string, TargetConfiguration>
+  ) {
+    setDefaults(targetDefaults);
+    addProject('app', targets);
   }
 
   it('should set cache on the executor key that shadowed the target name key', async () => {
@@ -65,17 +77,20 @@ describe('set-cache-on-executor-target-defaults migration', () => {
   });
 
   it('should not touch executor keys whose target name key does not enable cache', async () => {
+    // `package` is outside the long-running name list and its executor's schema
+    // is not continuous, so the explicit `cache: false` on the target name key
+    // is the only thing that can reject this fixture.
     setup(
       {
-        serve: { cache: false },
-        '@nx/angular:dev-server': { inputs: ['production'] },
+        package: { cache: false },
+        '@nx/js:tsc': { inputs: ['production'] },
       },
-      { serve: { executor: '@nx/angular:dev-server' } }
+      { package: { executor: '@nx/js:tsc' } }
     );
 
     await migration(tree);
 
-    expect(readNxJson(tree).targetDefaults['@nx/angular:dev-server']).toEqual({
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
       inputs: ['production'],
     });
   });
@@ -183,6 +198,148 @@ describe('set-cache-on-executor-target-defaults migration', () => {
     await migration(tree);
 
     expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+    });
+  });
+
+  // Two projects routinely declare the same target name through the same
+  // executor key, and only one of them may be continuous. Which of the two is
+  // discovered last is not something the user controls, so the answer has to be
+  // the same in both orders — hence the pair.
+  it('should not enable cache when a later project makes the same target name continuous', async () => {
+    setDefaults({
+      build: { cache: true },
+      '@nx/js:tsc': { inputs: ['default'] },
+    });
+    addProject('plain', { build: { executor: '@nx/js:tsc' } });
+    addProject('continuous', {
+      build: { executor: '@nx/js:tsc', continuous: true },
+    });
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+    });
+  });
+
+  it('should not enable cache when an earlier project makes the same target name continuous', async () => {
+    setDefaults({
+      build: { cache: true },
+      '@nx/js:tsc': { inputs: ['default'] },
+    });
+    addProject('continuous', {
+      build: { executor: '@nx/js:tsc', continuous: true },
+    });
+    addProject('plain', { build: { executor: '@nx/js:tsc' } });
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+    });
+  });
+
+  it('should not enable cache on a key that declares continuous itself', async () => {
+    // The key gives every target through it `continuous: true`; adding `cache`
+    // makes each of them fail graph construction.
+    setup(
+      {
+        build: { cache: true },
+        '@nx/js:tsc': { inputs: ['default'], continuous: true },
+      },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+      continuous: true,
+    });
+  });
+
+  it('should not enable cache on a key whose only continuous declaration is filtered', async () => {
+    setup(
+      {
+        build: { cache: true },
+        '@nx/js:tsc': [
+          { inputs: ['default'] },
+          { filter: { projects: ['app'] }, continuous: true },
+        ],
+      },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual([
+      { inputs: ['default'] },
+      { filter: { projects: ['app'] }, continuous: true },
+    ]);
+  });
+
+  it('should see targets declared in a package.json next to a project.json', async () => {
+    // The package.json plugin creates a node for any package.json that sits
+    // next to a project.json, but getProjects builds that root from the
+    // project.json alone — so `api` is only reachable by reading the
+    // package.json directly.
+    setup(
+      { build: { cache: true }, '@nx/js:tsc': { inputs: ['default'] } },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+    tree.write(
+      'apps/app/package.json',
+      JSON.stringify({
+        name: 'app',
+        nx: { targets: { api: { executor: '@nx/js:tsc', continuous: true } } },
+      })
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+    });
+  });
+
+  it('should still enable cache when the sibling package.json targets also opt in', async () => {
+    setup(
+      {
+        build: { cache: true },
+        package: { cache: true },
+        '@nx/js:tsc': { inputs: ['default'] },
+      },
+      { build: { executor: '@nx/js:tsc' } }
+    );
+    tree.write(
+      'apps/app/package.json',
+      JSON.stringify({
+        name: 'app',
+        nx: { targets: { package: { executor: '@nx/js:tsc' } } },
+      })
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['@nx/js:tsc']).toEqual({
+      inputs: ['default'],
+      cache: true,
+    });
+  });
+
+  it('should never enable cache on the nx:run-script key', async () => {
+    // Targets derived from `package.json` scripts resolve through this key
+    // without declaring it, so the target list here is never complete —
+    // stamping it would make every script in the workspace cacheable.
+    setup(
+      { build: { cache: true }, 'nx:run-script': { inputs: ['default'] } },
+      { build: { executor: 'nx:run-script' } }
+    );
+
+    await migration(tree);
+
+    expect(readNxJson(tree).targetDefaults['nx:run-script']).toEqual({
       inputs: ['default'],
     });
   });
