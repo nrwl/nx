@@ -124,13 +124,15 @@ describe('installPackageToTmp', () => {
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
-    // npm: peers are omitted via `--omit=peer`
+    // npm: `--legacy-peer-deps`, not `--omit=peer`. npm marks a package as a peer
+    // if anything in the tree peer-depends on it, so `--omit=peer` also prunes
+    // packages that are real dependencies of the installed package.
     installPackageToTmp('@nx/cypress', '1.0.0', 'npm');
     expect(execSyncSpy.mock.calls[0][0]).toBe(
-      'npm install -D @nx/cypress@1.0.0 --omit=peer --ignore-scripts'
+      'npm install -D @nx/cypress@1.0.0 --legacy-peer-deps --ignore-scripts'
     );
 
-    // bun: also accepts `--omit=peer`
+    // bun: `--omit=peer` is safe here, bun does not over-prune the way npm does
     execSyncSpy.mockClear();
     jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
       addDev: 'bun add -D',
