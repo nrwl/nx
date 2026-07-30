@@ -12,6 +12,7 @@ import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isSafeSharedRoot,
+  sharedRootRemedy,
 } from './owned-private-dir';
 import { getSocketDir } from '../daemon/tmp-dir';
 
@@ -109,6 +110,48 @@ describe('ensureOwnedPrivateDir', () => {
         expect(isSafeSharedRoot('/tmp/.nx')).toBe(false);
       }
     );
+
+    posixOnly(
+      'should tell the user to chown a container owned by another unprivileged user to root',
+      () => {
+        const currentUid = process.getuid!();
+        (lstatSync as jest.Mock).mockReturnValueOnce({
+          isDirectory: () => true,
+          uid: currentUid === 1 ? 2 : 1,
+          mode: 0o41777,
+        });
+
+        // Refusing is not actionable on its own: only root can take the
+        // container over, and until someone does every other user falls back.
+        expect(sharedRootRemedy('/tmp/.nx')).toContain(
+          'sudo chown root /tmp/.nx'
+        );
+      }
+    );
+
+    posixOnly.each([
+      ['root-owned', 0],
+      ['ours', 501],
+    ])(
+      'should offer no remedy for a container that is %s',
+      (_label: string, uid: number) => {
+        const getuid = jest.spyOn(process, 'getuid').mockReturnValue(501);
+        (lstatSync as jest.Mock).mockReturnValueOnce({
+          isDirectory: () => true,
+          uid,
+          mode: 0o41777,
+        });
+        try {
+          expect(sharedRootRemedy('/tmp/.nx')).toBeUndefined();
+        } finally {
+          getuid.mockRestore();
+        }
+      }
+    );
+
+    posixOnly('should offer no remedy for a container that is absent', () => {
+      expect(sharedRootRemedy(join(base, 'missing'))).toBeUndefined();
+    });
 
     posixOnly('should accept a root-owned sticky container', () => {
       const getuid = jest.spyOn(process, 'getuid').mockReturnValue(501);
