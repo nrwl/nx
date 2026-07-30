@@ -23,6 +23,7 @@ import {
   setRegistry,
   setScopedRegistry,
   setStrictSsl,
+  type IgnoresNpmConfigEnv,
   type NpmConfigEnv,
 } from './utils';
 
@@ -40,9 +41,10 @@ import {
  *   npmrc/env/CLI registry selection.
  * - >= 11.0.0: the config reader merges per key: registries =
  *   {...fromNpmrc, ...fromYaml}, then `pnpm_config_registry` env overrides
- *   only `registries.default`. npm_config_* env vars are no longer read, and
- *   .npmrc is restricted to auth/registry/network keys. The per-package lookup
- *   is registries[scope] ?? registries.default. An `auth.ini` file in pnpm's
+ *   only `registries.default`. npm_config_* env vars are no longer read (11.6.0
+ *   restores the URL-scoped `//<dart>:<key>` ones alone), and .npmrc is
+ *   restricted to auth/registry/network keys. The per-package lookup is
+ *   registries[scope] ?? registries.default. An `auth.ini` file in pnpm's
  *   config dir layers between the user and workspace .npmrc. Because pnpm
  *   ignores npm_config_* here, the overlay this builds is consumed by the
  *   spawned `npm pack` (and a forced `npm view`), not by `pnpm view`, which
@@ -85,9 +87,10 @@ export function getPnpmSpawnRegistryEnv(
 
   const settings = readPnpmWorkspaceSettings(root);
   const scope = getPackageScope(packageName);
-  // The spawn drops ambient npm_config_* on the same lines this returns true for
+  // The spawn drops the ambient npm_config_* spellings this answers true for
   // (mergeNpmConfigEnv), so a resolver here reads the environment npm receives
-  // only when it is false. Kept identical to the caller's spawn-time argument.
+  // only where it answers false. Kept identical to the caller's spawn-time
+  // argument.
   const managerIgnoresEnv = ignoresNpmConfigEnv('pnpm', pnpmVersion);
 
   if (lt(pnpmVersion, '11.0.0')) {
@@ -140,6 +143,7 @@ export function getPnpmSpawnRegistryEnv(
   }
 
   const authIniPath = getAuthIniPath();
+  applyUrlScopedEnvConfig(env, pnpmVersion);
   bridgeAuthIni(env, root, scope, authIniPath, pnpmVersion, managerIgnoresEnv);
   reportTokenHelper(
     env,
@@ -175,6 +179,32 @@ function readPnpmEnvVar(key: string, pnpmVersion: string): string | undefined {
       ? process.env[`PNPM_CONFIG_${key.toUpperCase()}`]
       : undefined);
   return value || undefined;
+}
+
+/**
+ * The URL-scoped entries pnpm >= 11.6.0 reads from the environment
+ * (readUrlScopedEnvConfig): `p?npm_config_//<dart>:<key>`, case-insensitive
+ * prefix, minus `:tokenHelper`, which pnpm refuses to take from it. The
+ * `npm_config_` spellings reach the spawned npm ambiently (mergeNpmConfigEnv
+ * keeps them for these versions); the `pnpm_config_` spellings are invisible to
+ * npm, so re-spell those onto the overlay, which also reproduces pnpm merging
+ * its own prefix above npm's for the same dart.
+ */
+function applyUrlScopedEnvConfig(env: NpmConfigEnv, pnpmVersion: string): void {
+  if (lt(pnpmVersion, '11.6.0')) {
+    return;
+  }
+  for (const [key, value] of Object.entries(process.env)) {
+    // pnpm skips a null or empty value outright, matching npm's env tier.
+    if (!value) {
+      continue;
+    }
+    const match = /^pnpm_config_(\/\/.+)$/i.exec(key);
+    if (!match || match[1].endsWith(':tokenHelper')) {
+      continue;
+    }
+    env[`npm_config_${match[1]}`] = value;
+  }
 }
 
 /**
@@ -270,7 +300,7 @@ function bridgeAuthIni(
   scope: string | null,
   authIniPath: string,
   pnpmVersion: string,
-  managerIgnoresEnv: boolean
+  managerIgnoresEnv: IgnoresNpmConfigEnv
 ): void {
   const authIni = readPnpmNpmrcMap(authIniPath);
   if (!authIni) {
@@ -314,7 +344,17 @@ function bridgeAuthIni(
     setScopedRegistry(env, scope, authIniScopedRegistry);
   }
   for (const [key, value] of authIni) {
-    if (!key.startsWith('//') || projectNpmrc.has(key)) {
+    // The env checks keep the URL-scoped env tier above this file, matching
+    // pnpm's merge order: pnpm_config_ spellings are already in the overlay
+    // (applyUrlScopedEnvConfig); ambient npm_config_ ones pnpm reads must stay
+    // unbridged, or the overlaid value would shadow them out of the merge.
+    if (
+      !key.startsWith('//') ||
+      env[`npm_config_${key}`] !== undefined ||
+      (!managerIgnoresEnv(key) &&
+        readNpmConfigEnv(process.env, key) !== undefined) ||
+      projectNpmrc.has(key)
+    ) {
       continue;
     }
     // A tokenHelper names a command to run for the token. npm has no such
@@ -344,8 +384,12 @@ function bridgeAuthIni(
   if (credentialDart) {
     for (const bareKey of bareKeys) {
       const dartKey = `${credentialDart}:${bareKey}`;
+      // Same URL-scoped env precedence as the dart loop above: an ambient
+      // credential pnpm reads at that dart outranks the rescoped bare one.
       if (
         env[`npm_config_${dartKey}`] === undefined &&
+        (managerIgnoresEnv(dartKey) ||
+          readNpmConfigEnv(process.env, dartKey) === undefined) &&
         !projectNpmrc.has(dartKey)
       ) {
         env[`npm_config_${dartKey}`] = authIni.get(bareKey);
@@ -471,7 +515,7 @@ function contactedRegistry(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
   scope: string | null,
-  managerIgnoresEnv: boolean
+  managerIgnoresEnv: IgnoresNpmConfigEnv
 ): string {
   // npm's pickRegistry falls through on a falsy value, so a setting that
   // expanded to nothing lands on the next one rather than on an empty host.
@@ -489,13 +533,13 @@ function npmResolved(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
   key: string,
-  managerIgnoresEnv: boolean
+  managerIgnoresEnv: IgnoresNpmConfigEnv
 ): string | undefined {
-  // npm's env tier outranks the .npmrc, but a spawn that strips the ambient
-  // npm_config_* (mergeNpmConfigEnv when the manager ignores it) leaves npm only
-  // the overlay and the file, so an ambient value the manager never saw is not
-  // counted here either.
-  const ambient = managerIgnoresEnv
+  // npm's env tier outranks the .npmrc, but a spawn that strips an ambient
+  // npm_config_* (mergeNpmConfigEnv where the manager ignores it) leaves npm
+  // only the overlay and the file, so an ambient value the manager never saw is
+  // not counted here either.
+  const ambient = managerIgnoresEnv(key)
     ? undefined
     : readNpmConfigEnv(process.env, key);
   const declared =
@@ -518,7 +562,7 @@ function hasCredentials(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
   dart: string,
-  managerIgnoresEnv: boolean
+  managerIgnoresEnv: IgnoresNpmConfigEnv
 ): boolean {
   return hasCredentialFor(dart, (key) =>
     npmResolved(env, projectNpmrc, key, managerIgnoresEnv)
@@ -615,7 +659,7 @@ function reportTokenHelper(
   scope: string | null,
   userConfigPath: string | null,
   unscopedPin: UnscopedHelperPin,
-  managerIgnoresEnv: boolean
+  managerIgnoresEnv: IgnoresNpmConfigEnv
 ): void {
   const userConfig = userConfigPath ? readPnpmNpmrcMap(userConfigPath) : null;
   if (!userConfig) {

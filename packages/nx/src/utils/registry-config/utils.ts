@@ -1,5 +1,5 @@
 import { dirname } from 'path';
-import { parse } from 'semver';
+import { gte, parse } from 'semver';
 import { logger } from '../logger';
 
 // Type-only import: a value import would create a cycle with package-manager.ts.
@@ -117,17 +117,17 @@ function isBridgedSetting(setting: string): boolean {
  * ways (`NPM_CONFIG_REGISTRY` beside `npm_config_registry`) goes to whichever
  * one they happen to emit last instead of to the value resolved here.
  *
- * `managerIgnoresEnv` says the package manager resolves the settings above
- * without reading `npm_config_*` at all, so an ambient one is a value it would
- * never have seen. Those are dropped even where the overlay claims nothing:
- * npm's env tier sits above every file, so leaving one in place does not just
- * add a value, it stops npm from reaching the .npmrc chain that the package
- * manager itself resolved from.
+ * `managerIgnoresEnv` says which of the settings above the package manager
+ * resolves without reading `npm_config_*`, so an ambient one is a value it
+ * would never have seen. Those are dropped even where the overlay claims
+ * nothing: npm's env tier sits above every file, so leaving one in place does
+ * not just add a value, it stops npm from reaching the .npmrc chain that the
+ * package manager itself resolved from.
  */
 export function mergeNpmConfigEnv(
   baseEnv: NodeJS.ProcessEnv,
   overlay: NpmConfigEnv,
-  managerIgnoresEnv = false
+  managerIgnoresEnv: IgnoresNpmConfigEnv = IGNORES_NONE
 ): NodeJS.ProcessEnv {
   const overlaid = new Set(
     Object.keys(overlay).map(npmConfigSetting).filter(Boolean)
@@ -146,7 +146,7 @@ export function mergeNpmConfigEnv(
     if (overlaid.has(setting)) {
       continue;
     }
-    if (managerIgnoresEnv && isBridgedSetting(setting)) {
+    if (managerIgnoresEnv(setting) && isBridgedSetting(setting)) {
       continue;
     }
     // npm skips an empty value, so it neither overrides nor competes.
@@ -165,41 +165,61 @@ export function mergeNpmConfigEnv(
 }
 
 /**
- * Whether the package manager resolves registry, auth and TLS settings without
- * reading `npm_config_*`, so an ambient one is a value it would never have seen.
- * pnpm reads them up to 10.x and stops at 11.0.0 (which switched to its own
- * `PNPM_CONFIG_*` prefix), and yarn berry has never read them; npm reads them by
- * definition, and bun reads them for the settings this module bridges.
+ * Whether the package manager resolves `setting` without reading its ambient
+ * `npm_config_*` spelling, so an ambient one is a value it would never have seen.
+ */
+export type IgnoresNpmConfigEnv = (setting: string) => boolean;
+
+const IGNORES_NONE: IgnoresNpmConfigEnv = () => false;
+const IGNORES_ALL: IgnoresNpmConfigEnv = () => true;
+// pnpm 11.6.0 restored the URL-scoped tier alone (readUrlScopedEnvConfig):
+// a `p?npm_config_//<dart>:<key>` entry is read from the environment again,
+// except `:tokenHelper`, which pnpm refuses to take from it. Named settings
+// stay on pnpm's own `PNPM_CONFIG_*` prefix.
+const IGNORES_ALL_BUT_URL_SCOPED: IgnoresNpmConfigEnv = (setting) =>
+  !setting.startsWith('//') || setting.endsWith(':tokenHelper');
+
+/**
+ * The settings the package manager resolves without reading `npm_config_*`, as
+ * a predicate over setting names. pnpm reads them all up to 10.x and stops at
+ * 11.0.0 (which switched to its own `PNPM_CONFIG_*` prefix), except that 11.6.0
+ * restored the URL-scoped credential keys; yarn berry has never read any; npm
+ * reads them by definition, and bun reads them for the settings this module
+ * bridges.
  *
  * Callers pass it to `mergeNpmConfigEnv`, which then drops those ambient entries
  * rather than letting npm's env tier resolve one the package manager ignored.
  * A resolver reasoning about what npm sees uses it the same way: an ambient
  * value it returns true for is one the spawned npm never receives.
  *
- * An undetermined or unparseable version answers false: bridging is skipped or
- * falls open there anyway, so the ambient environment stays as it is today.
+ * An undetermined or unparseable version answers false for every setting:
+ * bridging is skipped or falls open there anyway, so the ambient environment
+ * stays as it is today.
  */
 export function ignoresNpmConfigEnv(
   packageManager: PackageManager,
   packageManagerVersion: string | null
-): boolean {
+): IgnoresNpmConfigEnv {
   const version = packageManagerVersion ? parse(packageManagerVersion) : null;
   if (!version) {
-    return false;
+    return IGNORES_NONE;
   }
   switch (packageManager) {
     case 'npm':
     case 'bun':
-      return false;
+      return IGNORES_NONE;
     case 'pnpm':
-      return version.major >= 11;
+      if (version.major < 11) {
+        return IGNORES_NONE;
+      }
+      return gte(version, '11.6.0') ? IGNORES_ALL_BUT_URL_SCOPED : IGNORES_ALL;
     case 'yarn':
-      return version.major >= 2;
+      return version.major >= 2 ? IGNORES_ALL : IGNORES_NONE;
     default: {
       // A new PackageManager member fails typecheck here until classified above;
       // callers outside a fall-open catch keep the ambient env instead of throwing.
       const _exhaustive: never = packageManager;
-      return false;
+      return IGNORES_NONE;
     }
   }
 }

@@ -719,7 +719,7 @@ export async function packageRegistryView(
   );
   // cwd anchors the project .npmrc / pnpm-workspace.yaml discovery to the
   // workspace; the env overlay reproduces registry config npm cannot read
-  // itself (pnpm >= 11 ignores npm_config_* and resolves natively instead).
+  // itself (pnpm >= 11 resolves natively instead of from npm_config_*).
   // npm_config_force downgrades npm's `devEngines.packageManager` enforcement
   // (which aborts even a read-only `view` in a yarn/bun workspace whose pin sets
   // `onFail: error`) to a warning; scoped to npm so a `pnpm view` is untouched.
