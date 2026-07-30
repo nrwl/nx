@@ -48,9 +48,12 @@ export async function addLintingToProject(
 
   if (options.linter === 'oxlint') {
     // `ensurePackage` installs by package name, so the subpath is required
-    // separately. `nx-ignore-next-line` keeps the edge out of the graph — oxlint
-    // depends on js, so a real one would be a cycle. `implicitDependencies` in
-    // packages/js/project.json carries the hashing relationship instead.
+    // separately. `nx-ignore-next-line` keeps this out of the import graph so
+    // `@nx/dependency-checks` does not demand `@nx/oxlint` in this package's
+    // package.json — it is installed on demand, not depended on. The deliberate
+    // `js` <-> `@nx/oxlint` graph cycle comes from `implicitDependencies` in
+    // packages/js/project.json and is recorded in `ignoredCircularDependencies`
+    // in the root eslint config.
     ensurePackage('@nx/oxlint', nxVersion);
     const {
       lintProjectGenerator,
