@@ -26,9 +26,9 @@ export function getForceColorForChild(): string {
 }
 
 // ── .env parse cache ──────────────────────────────────────────────────────────
-// Keyed by the joined file path(s). Invalidated when any file's mtime changes
-// (the signature encodes every file's path + mtime). We cache only the raw
-// parsed key=value pairs (pre-expansion). Variable expansion (${FOO}
+// Keyed by the joined file path(s). Invalidated when any file changes (the
+// signature encodes every file's path + mtime + size + inode). We cache only
+// the raw parsed key=value pairs (pre-expansion). Variable expansion (${FOO}
 // substitutions) still runs live because it depends on the per-task processEnv
 // context which differs between tasks.
 interface DotEnvCacheEntry {
@@ -265,8 +265,15 @@ export function loadAndExpandDotEnvFile(
   const cacheKey = files.join('\0');
   let signature: string;
   try {
-    // Encode every file's path + mtime so the entry invalidates if any change.
-    signature = files.map((f) => `${f}:${statSync(f).mtimeMs}`).join('|');
+    // Encode every file's path + mtime + size + inode so the entry invalidates
+    // if any change. mtimeMs alone would miss a same-millisecond rewrite, and
+    // long-lived processes (watch mode) live long enough to hit that.
+    signature = files
+      .map((f) => {
+        const { mtimeMs, size, ino } = statSync(f);
+        return `${f}:${mtimeMs}:${size}:${ino}`;
+      })
+      .join('|');
   } catch {
     // Could not stat a file (e.g. it does not exist). Fall back to dotenv's own
     // handling — which returns `{ error }` for a missing file — so callers that
@@ -283,8 +290,13 @@ export function loadAndExpandDotEnvFile(
   const cached = dotEnvParseCache.get(cacheKey);
   if (cached && cached.signature === signature) {
     // Cache hit: apply pre-parsed content to environmentVariables, then expand.
+    // `expand` mutates the `parsed` object it is given in place, so it must
+    // never see the cached object itself — hand it a copy.
     applyParsedToEnv(cached.parsed, environmentVariables, override);
-    return expand({ parsed: cached.parsed, processEnv: environmentVariables });
+    return expand({
+      parsed: { ...cached.parsed },
+      processEnv: environmentVariables,
+    });
   }
 
   // Cache miss: let dotenv read + parse the file(s), then store the parsed result.
@@ -294,7 +306,10 @@ export function loadAndExpandDotEnvFile(
     override,
   });
   if (myEnv.parsed) {
-    dotEnvParseCache.set(cacheKey, { signature, parsed: myEnv.parsed });
+    // Snapshot before expanding: the `expand` call below mutates `myEnv.parsed`
+    // in place with this caller's substitutions, and the cache must hold the
+    // raw, unexpanded pairs.
+    dotEnvParseCache.set(cacheKey, { signature, parsed: { ...myEnv.parsed } });
   }
   return expand({ ...myEnv, processEnv: environmentVariables });
 }
