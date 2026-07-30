@@ -1017,6 +1017,51 @@ describe('@nx/playwright/plugin', () => {
     ]);
   });
 
+  it('resolves the task dotenv env before baking the wait-for-webserver gate', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    // Isolate the .env as the only source of BASE_URL; a value left in the
+    // ambient env would satisfy the config on its own and mask the dotenv load.
+    delete process.env.BASE_URL;
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env': 'BASE_URL=http://localhost:4301\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver'].options).toEqual({
+        servers: [{ url: 'http://localhost:4301' }],
+      });
+    } finally {
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
   it('should not infer a wait-for-webserver task when the webServer has no port or url', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
