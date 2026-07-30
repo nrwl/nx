@@ -10,6 +10,7 @@ import {
   getForceColorForChild,
   getGraphTimeDotEnvForTask,
   loadAndExpandDotEnvFile,
+  unloadDotEnvFile,
 } from './task-env';
 
 describe('NX_INVOCATION_ROOT_PID', () => {
@@ -130,6 +131,56 @@ describe(loadAndExpandDotEnvFile.name, () => {
       BASE_URL: 'https://nx.dev',
       API_URL: 'https://nx.dev/api',
       FULL_URL: 'https://nx.dev/api/v1',
+    });
+  });
+
+  // The parse cache must hold the *raw* (pre-expansion) key=value pairs.
+  // `dotenv-expand` mutates the `parsed` object it is handed in place, so
+  // handing it the cached object would bake the first caller's substitutions
+  // into every subsequent read of the same file.
+  it('should expand against each callers env when the same file is read twice', () => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
+    const envFile = join(tempDir, '.env');
+    writeFileSync(
+      envFile,
+      'GREETING=hello-${WHO}\nENDPOINT=http://${HOST}:3000\n'
+    );
+
+    const first: NodeJS.ProcessEnv = { WHO: 'alice', HOST: 'alpha' };
+    loadAndExpandDotEnvFile(envFile, first);
+
+    // Second call hits the parse cache (same path, unchanged mtime).
+    const second: NodeJS.ProcessEnv = { WHO: 'bob', HOST: 'beta' };
+    loadAndExpandDotEnvFile(envFile, second);
+
+    expect(first).toMatchObject({
+      GREETING: 'hello-alice',
+      ENDPOINT: 'http://alpha:3000',
+    });
+    expect(second).toMatchObject({
+      GREETING: 'hello-bob',
+      ENDPOINT: 'http://beta:3000',
+    });
+  });
+
+  // Mirrors `run-commands`' `loadEnvVarsFile`, which unloads then loads the same
+  // file. `unloadDotEnvFile` expands against a throwaway empty env, so a cache
+  // that stored expanded values would leave every `${...}` resolved to ''.
+  it('should expand correctly when a file is unloaded and then loaded (envFile)', () => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-task-env-'));
+    const envFile = join(tempDir, '.env');
+    writeFileSync(
+      envFile,
+      'GREETING=hello-${WHO}\nENDPOINT=http://${HOST}:3000\n'
+    );
+
+    const env: NodeJS.ProcessEnv = { WHO: 'alice', HOST: 'alpha' };
+    unloadDotEnvFile(envFile, env);
+    loadAndExpandDotEnvFile(envFile, env);
+
+    expect(env).toMatchObject({
+      GREETING: 'hello-alice',
+      ENDPOINT: 'http://alpha:3000',
     });
   });
 });
