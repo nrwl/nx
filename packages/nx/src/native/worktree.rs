@@ -47,13 +47,15 @@ fn resolve_main_worktree_root(workspace_root: &str) -> Option<String> {
 
 #[cfg(test)]
 mod test {
-    use std::fs::{create_dir_all, write};
+    use std::fs::{create_dir_all, remove_dir_all};
     use std::path::PathBuf;
 
     use assert_fs::TempDir;
 
-    use super::*;
     use crate::native::utils::command::create_command;
+    use crate::native::utils::git::test_support::{register_submodule, register_worktree};
+
+    use super::*;
 
     fn git(dir: &Path, args: &[&str]) {
         let output = create_command("git")
@@ -86,26 +88,6 @@ mod test {
         );
     }
 
-    /// Builds `<repo>/.git` plus a linked worktree at `worktree_root`, the
-    /// way `git worktree add` lays it out.
-    fn add_worktree(repo: &Path, name: &str, worktree_root: &Path) {
-        let metadata_dir = repo.join(".git").join("worktrees").join(name);
-        create_dir_all(&metadata_dir).unwrap();
-        create_dir_all(worktree_root).unwrap();
-        write(
-            worktree_root.join(".git"),
-            format!("gitdir: {}\n", metadata_dir.display()),
-        )
-        .unwrap();
-        write(
-            metadata_dir.join("gitdir"),
-            format!("{}\n", worktree_root.join(".git").display()),
-        )
-        .unwrap();
-        // `commondir` is how a worktree finds the repository it belongs to.
-        write(metadata_dir.join("commondir"), "../..\n").unwrap();
-    }
-
     #[test]
     fn main_repo_has_no_main_worktree_root() {
         let temp = TempDir::new().unwrap();
@@ -123,7 +105,7 @@ mod test {
         let repo = temp.path().join("repo");
         create_dir_all(repo.join(".git")).unwrap();
         let worktree = repo.join("other/wt");
-        add_worktree(&repo, "wt", &worktree);
+        register_worktree(&repo, "wt", &worktree);
 
         let resolved = resolve_main_worktree_root(worktree.to_str().unwrap()).unwrap();
 
@@ -136,21 +118,51 @@ mod test {
     #[test]
     fn a_submodule_is_not_a_worktree() {
         let temp = TempDir::new().unwrap();
-        create_dir_all(temp.path().join(".git/modules/libs/sub")).unwrap();
-        let submodule = temp.path().join("libs/sub");
-        create_dir_all(&submodule).unwrap();
-        write(
-            submodule.join(".git"),
-            "gitdir: ../../.git/modules/libs/sub\n",
-        )
-        .unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+        register_submodule(temp.path(), "libs/sub");
 
         // A submodule is its own repository - colocating its cache under the
         // superproject's `.git/modules` would be wrong.
         assert_eq!(
-            resolve_main_worktree_root(submodule.to_str().unwrap()),
+            resolve_main_worktree_root(temp.path().join("libs/sub").to_str().unwrap()),
             None
         );
+    }
+
+    #[test]
+    fn a_submodule_under_a_worktrees_path_is_not_a_worktree() {
+        // `.git/modules/packages/worktrees/foo` has `worktrees` as its parent
+        // segment, exactly like a real worktree's metadata directory. Reading
+        // it as one would put this submodule workspace's cache and SQLite
+        // database inside the superproject's git directory.
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+        register_submodule(temp.path(), "packages/worktrees/foo");
+
+        assert_eq!(
+            resolve_main_worktree_root(
+                temp.path().join("packages/worktrees/foo").to_str().unwrap()
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn a_dangling_worktree_has_no_main_root() {
+        // `git worktree add` records an absolute path, so moving or deleting
+        // the main clone dangles every worktree it created. Guessing a root
+        // here lands Nx's cache and workspace-data under
+        // `<main>/.git/worktrees/.nx` - a path `git worktree prune` (and so
+        // `git gc`) deletes, taking the database with it.
+        let temp = TempDir::new().unwrap();
+        let repo = temp.path().join("repo");
+        create_dir_all(repo.join(".git")).unwrap();
+        let worktree = repo.join("other/wt");
+        register_worktree(&repo, "wt", &worktree);
+
+        remove_dir_all(repo.join(".git")).unwrap();
+
+        assert_eq!(resolve_main_worktree_root(worktree.to_str().unwrap()), None);
     }
 
     #[test]
@@ -159,7 +171,7 @@ mod test {
         let repo = temp.path().join("repo");
         create_dir_all(repo.join(".git")).unwrap();
         let worktree = repo.join("wt");
-        add_worktree(&repo, "wt", &worktree);
+        register_worktree(&repo, "wt", &worktree);
 
         // The main repo answers None while the worktree answers the repo
         // root; a cache shared across roots would return one for both.

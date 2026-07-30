@@ -103,24 +103,33 @@ fn resolve_git_dir(git_root: &Path) -> Option<PathBuf> {
 /// The git directory shared by every worktree of a repository. Walking from
 /// inside a linked worktree lands on `<main>/.git/worktrees/<name>`, whose
 /// `commondir` points back at the main `.git`.
+///
+/// Only a linked worktree's metadata directory carries `commondir`. Anywhere
+/// else (the main repository's own `.git`, a submodule's `.git/modules/<..>`)
+/// its absence is git's way of saying this *is* the common directory, which
+/// is what the fallback returns. Call this only for a git dir already known
+/// to belong to a worktree ([`is_linked_worktree_root`]), or that fallback
+/// answers a different question than the caller asked.
 pub fn common_git_dir(git_dir: &Path) -> PathBuf {
-    let Ok(contents) = read_to_string(git_dir.join("commondir")) else {
-        return git_dir.to_path_buf();
-    };
-
-    let target = Path::new(contents.trim());
-    if target.is_absolute() {
-        target.to_path_buf()
-    } else {
-        canonicalize_or_own(&git_dir.join(target))
-    }
+    read_path_file(&git_dir.join("commondir"), git_dir).unwrap_or_else(|| git_dir.to_path_buf())
 }
 
 /// Whether `path` is the root of a git linked worktree.
 ///
-/// A worktree's gitfile points at `<git-dir>/worktrees/<name>`, while a
-/// submodule's points at `<git-dir>/modules/<name>` - the parent segment is
-/// what separates them. Costs one read, so it suits deciding about a single
+/// A worktree and a submodule both replace `.git` with a gitfile, so the
+/// gitfile alone can't separate them - what does is that git writes
+/// `commondir` into a worktree's metadata directory and never into a
+/// submodule's. The path a gitfile points *at* is not a reliable
+/// discriminator: a submodule at `packages/worktrees/foo` is registered under
+/// `.git/modules/packages/worktrees/foo`, whose parent segment is
+/// `worktrees` too.
+///
+/// A dangling worktree - one whose main clone has been moved or deleted,
+/// which the absolute path in the gitfile does nothing to survive - answers
+/// `false`, because the metadata directory it names isn't there to hold a
+/// `commondir`.
+///
+/// Costs one read plus one stat, so it suits deciding about a single
 /// directory (a watch event) rather than scanning a whole workspace; use
 /// [`nested_linked_worktrees`] for that.
 pub fn is_linked_worktree_root<P: AsRef<Path>>(path: P) -> bool {
@@ -129,19 +138,17 @@ pub fn is_linked_worktree_root<P: AsRef<Path>>(path: P) -> bool {
         return false;
     };
 
-    git_dir
-        .parent()
-        .and_then(Path::file_name)
-        .is_some_and(|segment| segment == "worktrees")
+    git_dir.join("commondir").is_file()
 }
 
 /// Roots of git's linked worktrees (`git worktree add`) that live inside
 /// `workspace_root`, relative to it.
 ///
 /// Git records every linked worktree under `<git-dir>/worktrees/<name>`, so
-/// reading that directory costs one `read_dir` plus a tiny file per worktree
-/// - no per-directory probing of the workspace, and no subprocess. Worktrees
-/// outside `workspace_root` are dropped: the walker never reaches them.
+/// reading that directory costs one `read_dir` plus a tiny file per worktree,
+/// with no per-directory probing of the workspace and no subprocess.
+/// Worktrees outside `workspace_root` are dropped: the walker never reaches
+/// them.
 ///
 /// Submodules are deliberately not included. They use the same gitfile
 /// mechanism but are registered under `<git-dir>/modules/`, and their
@@ -182,22 +189,30 @@ pub fn nested_linked_worktrees<P: AsRef<Path>>(workspace_root: P) -> Vec<PathBuf
             let worktree_root = canonicalize_or_own(gitfile.parent()?);
 
             let relative = worktree_root.strip_prefix(&canonical_root).ok()?;
-            // An empty path means the workspace root *is* the worktree.
-            // Pruning that would discard the whole walk.
+            // An empty path means the workspace root *is* the worktree -
+            // running Nx from inside one is ordinary. The watcher joins these
+            // onto its origin and blocks every path under them, so an empty
+            // entry would silence the watcher permanently. (The walker is
+            // unharmed on its own: `ignore` never applies `filter_entry` to
+            // the walk root.)
             (!relative.as_os_str().is_empty()).then(|| relative.to_path_buf())
         })
         .collect()
 }
 
+/// Fixtures shared by every test module that needs a repository laid out the
+/// way git lays one out. Kept in one place because the layout is exactly what
+/// the production code reads: a fixture that omits `commondir` or `gitdir`
+/// silently stops exercising the real discriminators.
 #[cfg(test)]
-mod test {
+pub(crate) mod test_support {
     use std::fs::{create_dir_all, write};
+    use std::path::Path;
 
-    use assert_fs::TempDir;
-
-    use super::*;
-
-    fn register_worktree(repo: &Path, name: &str, worktree_root: &Path) {
+    /// Registers `worktree_root` as a linked worktree of `repo`, byte-for-byte
+    /// the way `git worktree add` does: an absolute path in each of the two
+    /// gitfiles, and a relative `commondir` pointing back at the main `.git`.
+    pub fn register_worktree(repo: &Path, name: &str, worktree_root: &Path) {
         let metadata_dir = repo.join(".git").join("worktrees").join(name);
         create_dir_all(&metadata_dir).unwrap();
         create_dir_all(worktree_root).unwrap();
@@ -211,7 +226,37 @@ mod test {
             format!("gitdir: {}\n", metadata_dir.display()),
         )
         .unwrap();
+        // `commondir` is how a worktree finds the repository it belongs to,
+        // and the marker that separates it from a submodule.
+        write(metadata_dir.join("commondir"), "../..\n").unwrap();
     }
+
+    /// Registers `submodule_path` (relative to `repo`) as a submodule, the way
+    /// `git submodule add` does: a *relative* gitfile pointing into
+    /// `<git-dir>/modules/<submodule-path>`, and no `commondir`.
+    pub fn register_submodule(repo: &Path, submodule_path: &str) {
+        let git_dir = repo.join(".git").join("modules").join(submodule_path);
+        create_dir_all(&git_dir).unwrap();
+        let submodule_root = repo.join(submodule_path);
+        create_dir_all(&submodule_root).unwrap();
+
+        let up = "../".repeat(Path::new(submodule_path).components().count());
+        write(
+            submodule_root.join(".git"),
+            format!("gitdir: {up}.git/modules/{submodule_path}\n"),
+        )
+        .unwrap();
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::fs::{create_dir_all, remove_dir_all, write};
+
+    use assert_fs::TempDir;
+
+    use super::test_support::{register_submodule, register_worktree};
+    use super::*;
 
     #[test]
     fn identifies_linked_worktree_roots() {
@@ -222,18 +267,46 @@ mod test {
         register_worktree(temp.path(), "wt", &worktree);
         assert!(is_linked_worktree_root(&worktree));
 
-        // A submodule's gitfile is identical in shape - only the segment it
-        // points into differs.
-        let submodule = temp.path().join("libs/sub");
-        create_dir_all(&submodule).unwrap();
-        write(
-            submodule.join(".git"),
-            "gitdir: ../../.git/modules/libs/sub\n",
-        )
-        .unwrap();
-        assert!(!is_linked_worktree_root(&submodule));
+        // A submodule's gitfile is identical in shape - only the directory it
+        // points at differs, and only by what git writes inside it.
+        register_submodule(temp.path(), "libs/sub");
+        assert!(!is_linked_worktree_root(temp.path().join("libs/sub")));
 
         assert!(!is_linked_worktree_root(temp.path().join("libs")));
+    }
+
+    #[test]
+    fn a_submodule_under_a_worktrees_path_is_not_a_worktree() {
+        // Git registers a submodule at `<git-dir>/modules/<its path>`, so a
+        // submodule anywhere below a directory named `worktrees` resolves to
+        // `.git/modules/packages/worktrees/foo` - whose parent segment is
+        // `worktrees`. Misreading that as a worktree drops a real project's
+        // files from the watcher.
+        let temp = TempDir::new().unwrap();
+        create_dir_all(temp.path().join(".git")).unwrap();
+        register_submodule(temp.path(), "packages/worktrees/foo");
+
+        assert!(!is_linked_worktree_root(
+            temp.path().join("packages/worktrees/foo")
+        ));
+    }
+
+    #[test]
+    fn a_dangling_worktree_is_not_a_worktree_root() {
+        // `git worktree add` writes an *absolute* path into the worktree's
+        // gitfile, so moving or deleting the main clone leaves the worktree
+        // pointing at nothing. Answering `true` here would send callers on to
+        // resolve a repository root out of a directory that isn't there.
+        let temp = TempDir::new().unwrap();
+        let repo = temp.path().join("repo");
+        create_dir_all(repo.join(".git")).unwrap();
+        let worktree = repo.join("other/wt");
+        register_worktree(&repo, "wt", &worktree);
+        assert!(is_linked_worktree_root(&worktree));
+
+        remove_dir_all(repo.join(".git")).unwrap();
+
+        assert!(!is_linked_worktree_root(&worktree));
     }
 
     #[test]
@@ -260,10 +333,10 @@ mod test {
         // reaches it, so it must not turn into a bogus relative path.
         register_worktree(&workspace, "outside", &temp.path().join("elsewhere"));
 
-        assert_eq!(
-            nested_linked_worktrees(&workspace),
-            vec![PathBuf::from("nested/wt")]
-        );
+        // `read_dir` order is not defined, so compare as a set.
+        let mut found = nested_linked_worktrees(&workspace);
+        found.sort();
+        assert_eq!(found, vec![PathBuf::from("nested/wt")]);
     }
 
     #[test]
@@ -272,7 +345,7 @@ mod test {
         create_dir_all(temp.path().join(".git")).unwrap();
         register_worktree(temp.path(), "gone", &temp.path().join("wt"));
         // Worktree deleted by hand, before `git worktree prune` ran.
-        std::fs::remove_dir_all(temp.path().join("wt")).unwrap();
+        remove_dir_all(temp.path().join("wt")).unwrap();
 
         assert!(nested_linked_worktrees(temp.path()).is_empty());
 
