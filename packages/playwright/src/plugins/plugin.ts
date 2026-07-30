@@ -47,6 +47,13 @@ export interface PlaywrightPluginOptions {
    * or 60000 when neither is set.
    */
   webServerTimeout?: number;
+  /**
+   * Whether to infer a task that waits for the web server to be ready before the
+   * Playwright test tasks run. When false, no readiness task is inferred and the
+   * tests fall back to Playwright's own `reuseExistingServer` probe. Defaults to
+   * true.
+   */
+  waitForWebServer?: boolean;
 }
 
 interface NormalizedOptions {
@@ -54,6 +61,7 @@ interface NormalizedOptions {
   ciTargetName: string;
   mergeReportsTargetName: string;
   webServerTimeout?: number;
+  waitForWebServer: boolean;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -190,11 +198,14 @@ async function createNodesInternal(
   // but a workspace-root dotenv a nested project loads is outside it. Fold the
   // task dotenv overlay into the cache key so a dotenv change (which the daemon
   // invalidates the graph on) rebuilds the gate instead of returning a stale one.
-  const cacheKey = `${hash}-${dotEnvOverlayDigest(
-    projectRoot,
-    normalizedOptions,
-    graphTimeEnvCache
-  )}`;
+  // Only when a gate is inferred does a dotenv change affect the output.
+  const cacheKey = normalizedOptions.waitForWebServer
+    ? `${hash}-${dotEnvOverlayDigest(
+        projectRoot,
+        normalizedOptions,
+        graphTimeEnvCache
+      )}`
+    : hash;
 
   if (!pluginCache.has(cacheKey)) {
     pluginCache.set(
@@ -273,7 +284,8 @@ async function buildPlaywrightTargets(
     ambientWebServers,
     options.targetName,
     undefined,
-    graphTimeEnvCache
+    graphTimeEnvCache,
+    options.waitForWebServer
   );
   const ciChain = options.ciTargetName
     ? await resolveChainWebserver(
@@ -283,7 +295,8 @@ async function buildPlaywrightTargets(
         ambientWebServers,
         options.ciTargetName,
         options.targetName,
-        graphTimeEnvCache
+        graphTimeEnvCache,
+        options.waitForWebServer
       )
     : e2eChain;
 
@@ -589,6 +602,7 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     targetName: options?.targetName ?? 'e2e',
     ciTargetName,
     mergeReportsTargetName: `${ciTargetName}--merge-reports`,
+    waitForWebServer: options?.waitForWebServer ?? true,
   };
 }
 
@@ -711,12 +725,14 @@ function dotEnvOverlay(taskEnv: NodeJS.ProcessEnv): Record<string, string> {
 }
 
 // Resolves the web server command tasks and readiness servers a consumer chain
-// (`e2e` or the atomized `e2e-ci`) would see. When the chain's task env differs
-// from the graph-time ambient env, the config is re-evaluated in a child under
-// that env so an env-derived address resolves the way the task will; otherwise
-// the ambient config is reused. A failed re-evaluation throws: the daemon caches
-// the resulting graph, so a silent fallback would bake a wrong gate that no
-// retry corrects until the graph is invalidated.
+// (`e2e` or the atomized `e2e-ci`) would see. When `inferReadiness` is false the
+// gate is opted out: this skips the task-env resolution, keeps the ambient
+// command tasks, and returns no readiness servers. Otherwise, when the chain's
+// task env differs from the graph-time ambient env, the config is re-evaluated
+// in a child under that env so an env-derived address resolves the way the task
+// will; a matching env reuses the ambient config. A failed re-evaluation throws:
+// the daemon caches the resulting graph, so a silent fallback would bake a wrong
+// gate that no retry corrects until the graph is invalidated.
 async function resolveChainWebserver(
   configFilePath: string,
   projectRoot: string,
@@ -724,40 +740,49 @@ async function resolveChainWebserver(
   ambientWebServers: ResolvedWebServer[],
   target: string,
   nonAtomizedTarget: string | undefined,
-  graphTimeEnvCache: GraphTimeEnvCache
+  graphTimeEnvCache: GraphTimeEnvCache,
+  inferReadiness: boolean
 ): Promise<ChainWebserver> {
   let webServers = ambientWebServers;
-  const taskEnv = getCachedGraphTimeEnvForTask(
-    graphTimeEnvCache,
-    projectRoot,
-    target,
-    undefined,
-    nonAtomizedTarget
-  );
-  if (taskEnvDivergesFromAmbient(taskEnv)) {
-    try {
-      webServers = await resolveWebServersUnderEnv(
-        configFilePath,
-        workspaceRoot,
-        taskEnv
-      );
-    } catch (e) {
-      // Nx's createNodes error formatter renders `message`/`stack` but not
-      // `cause`, so fold the child's failure into the message to surface it.
-      const detail = e instanceof Error ? e.message : String(e);
-      throw new Error(
-        `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server readiness address.\n${detail}`,
-        { cause: e }
-      );
+  // Only resolve under the task env when a gate will be inferred. The task env
+  // matters solely for the readiness address, so skipping it (and the readiness
+  // servers below) restores the pre-inference behavior when the gate is opted
+  // out.
+  if (inferReadiness) {
+    const taskEnv = getCachedGraphTimeEnvForTask(
+      graphTimeEnvCache,
+      projectRoot,
+      target,
+      undefined,
+      nonAtomizedTarget
+    );
+    if (taskEnvDivergesFromAmbient(taskEnv)) {
+      try {
+        webServers = await resolveWebServersUnderEnv(
+          configFilePath,
+          workspaceRoot,
+          taskEnv
+        );
+      } catch (e) {
+        // Nx's createNodes error formatter renders `message`/`stack` but not
+        // `cause`, so fold the child's failure into the message to surface it.
+        const detail = e instanceof Error ? e.message : String(e);
+        throw new Error(
+          `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server readiness address.\n${detail}`,
+          { cause: e }
+        );
+      }
     }
   }
 
   const commandTasks = getWebserverCommandTasks({
     webServer: webServers as PlaywrightTestConfig['webServer'],
   });
-  const readinessServers = commandTasks
-    .map(toReadinessServer)
-    .filter(Boolean) as WebserverReadinessServer[];
+  const readinessServers = inferReadiness
+    ? (commandTasks
+        .map(toReadinessServer)
+        .filter(Boolean) as WebserverReadinessServer[])
+    : [];
   return { commandTasks, readinessServers };
 }
 
