@@ -12,7 +12,7 @@ The `@nx/enforce-module-boundaries` ESLint rule enables you to define strict rul
 different projects in the repository. Enforcing strict boundaries helps to prevent unplanned cross-dependencies.
 
 {% aside type="note" %}
-This rule only works for JavaScript/TypeScript projects. It runs on ESLint, and experimentally on [Oxlint](/docs/technologies/oxlint/introduction). For language-agnostic boundary enforcement across all project dependencies, see the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/conformance).
+This rule only works for JavaScript/TypeScript projects. It runs on ESLint, and experimentally on [Oxlint](/docs/technologies/oxlint/introduction) — where it reports nothing and still passes if no cached project graph is available, so don't rely on it as your only boundary check. For language-agnostic boundary enforcement across all project dependencies, see the [Conformance plugin's Enforce Project Boundaries rule](/docs/enterprise/conformance).
 {% /aside %}
 
 ## Usage
