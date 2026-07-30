@@ -109,10 +109,11 @@ function computeWallClockMs(
 /** Extract a human-readable label from a process's command string. */
 function shortCommand(role: ProcessRole, command: string): string {
   if (role === 'plugin-worker') {
-    // command is "<socket-path> <plugin-script-path>"
-    // e.g. "/tmp/plugin5122-0.sock /path/to/nx/dist/src/plugins/js"
+    // command is "<socket-path> <plugin-name> <plugin-script-path> <0|1>"
+    // (see startPluginWorker in isolated-plugin.ts), e.g.
+    // "/tmp/plugin5122-0.sock @nx/js /path/to/nx/dist/src/plugins/js 0"
     const parts = command.trim().split(/\s+/);
-    const scriptPath = parts[1] ?? parts[0];
+    const scriptPath = parts[2] ?? parts[0];
     // Extract the meaningful part after the last src/ segment
     const srcMatch = scriptPath.match(/src\/(.+)$/);
     return srcMatch ? srcMatch[1] : (scriptPath.split('/').pop() ?? command);
