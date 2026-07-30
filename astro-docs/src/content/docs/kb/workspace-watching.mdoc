@@ -176,3 +176,31 @@ nx watch --projects=my-app --includeDependencies -- nx run-many -t build -p \$NX
 ```
 
 `--includeDependencies` ensures that any changes to projects your application depends on trigger a rebuild, while `--exclude=my-app` skips rebuilding the app itself since it's already being served by the development server.
+
+{% callout type="note" title="That `--exclude` belongs to `run-many`" %}
+Everything after `--` is the command being run, so the `--exclude=my-app` above is `run-many`'s project filter. `nx watch` has its own `--exclude`, which takes file globs rather than project names — see [Filtering which file changes trigger the command](#filtering-which-file-changes-trigger-the-command) below.
+{% /callout %}
+
+### Filtering which file changes trigger the command
+
+By default any change inside a watched project re-runs the command. `--include` and `--exclude` narrow that down to the files you actually care about:
+
+```shell
+nx watch --projects=my-app --include "**/*.ts" "**/*.html" -- nx run my-app:build
+```
+
+```shell
+nx watch --all --exclude "**/*.spec.ts" "**/*.md" -- nx affected -t test
+```
+
+Both flags take one or more globs, either space-delimited after a single flag as above, or by repeating the flag. Each value is one whole glob, so a brace glob such as `**/*.{ts,tsx}` stays intact — the values are never split on commas, and `--include "**/*.ts,**/*.js"` is a single pattern that matches nothing.
+
+Things worth knowing:
+
+- **Patterns are anchored at the workspace root** and matched against workspace-root-relative paths. `**/*.ts` matches TypeScript files anywhere; `*.ts` matches only the ones directly in the workspace root; a leading `./` is ignored.
+- **`--exclude` wins over `--include`.** A file matching both is skipped.
+- **`--exclude` here filters files, not projects.** Use `--projects` to choose which projects are watched.
+- **Negated patterns are rejected.** `!**/*.spec.ts` errors rather than being accepted with surprising semantics; use the other flag instead.
+- **Filtering happens after the daemon has already processed the change**, so these flags decide whether your command re-runs — they don't reduce the daemon's own work.
+
+If a filter drops every changed file, `nx watch` tells you once in the terminal instead of silently doing nothing.
