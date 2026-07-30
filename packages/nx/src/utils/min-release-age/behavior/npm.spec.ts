@@ -462,6 +462,19 @@ describe('npm min-release-age behavior', () => {
         }
       });
 
+      it('scans an unreadable .npmrc as though it were absent (npm reads it that way)', async () => {
+        // Both npmrc surfaces read 'unreadable': the key scan must neither
+        // throw nor rank a key from them, leaving both undetectable.
+        readNpmrcEntriesMock.mockReturnValue('unreadable');
+        mockConfig({ 'min-release-age': 7, before: BEFORE });
+        const result = await readNpmPolicy('/root', '11.16.0', {});
+        expect(readNpmrcEntriesMock).toHaveBeenCalled();
+        expect(result.outcome).toBe('active');
+        if (result.outcome === 'active') {
+          expect(result.policy.cutoffMs).toBe(Date.parse(BEFORE));
+        }
+      });
+
       it('before in a lower source than min-release-age -> min-release-age wins', async () => {
         // before from user .npmrc (rank 1) < min-release-age from env (rank 3).
         mockConfig({ 'min-release-age': 7, before: BEFORE });

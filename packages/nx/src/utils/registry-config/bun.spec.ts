@@ -80,6 +80,17 @@ describe('getBunSpawnRegistryEnv', () => {
     });
   });
 
+  it('resolves as though an unreadable project .npmrc were absent (bun semantics)', () => {
+    // bun silently falls through to the next layer on an .npmrc it cannot
+    // read (verified on 1.3.13, EACCES and EISDIR), unlike its own bunfig,
+    // where it aborts. A directory in the file's place reads as EISDIR.
+    writeBunfig('[install]\nregistry = "https://reg-a.example.com/"\n');
+    mkdirSync(join(root, '.npmrc'));
+    expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
   it('lets even the user-level .npmrc beat the project bunfig', () => {
     writeBunfig('[install]\nregistry = "https://reg-a.example.com/"\n');
     writeFileSync(join(home, '.npmrc'), 'registry=https://reg-g.example.com/');

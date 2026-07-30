@@ -177,7 +177,10 @@ function readNpmrcKeys(
   fallback: string
 ): NpmrcCooldownKeys {
   const present: NpmrcCooldownKeys = { minReleaseAge: false, before: false };
-  for (const { key } of readNpmrcEntries(override ?? fallback) ?? []) {
+  // npm silently treats an .npmrc it cannot read as absent, so both non-array
+  // states scan nothing.
+  const entries = readNpmrcEntries(override ?? fallback);
+  for (const { key } of Array.isArray(entries) ? entries : []) {
     if (key === 'min-release-age') {
       present.minReleaseAge = true;
     } else if (key === 'before') {

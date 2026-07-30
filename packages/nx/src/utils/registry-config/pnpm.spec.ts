@@ -883,12 +883,42 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
     });
 
-    it('bridges no no-proxy when the workspace .npmrc cannot be read', () => {
+    it('falls through to the auth.ini no-proxy when the workspace .npmrc cannot be read', () => {
+      // A directory in its place: the file exists and reads as an error. pnpm
+      // itself warns and resolves the bypass list from the remaining layers
+      // (verified on 11.5.0 against a dead proxy: the auth.ini no-proxy still
+      // applies), so the bridge does the same.
       writeAuthIni('no-proxy=ini.example.com');
-      // A directory in its place: the file exists and reads as an error, so the
-      // layer that outranks auth.ini is unknown rather than absent.
       mkdirSync(join(root, '.npmrc'));
-      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_noproxy: 'ini.example.com',
+      });
+      expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+        'Could not read'
+      );
+    });
+
+    it('keeps bridging the auth.ini registry and TLS mode when the workspace .npmrc cannot be read', () => {
+      // pnpm warns and continues on an .npmrc it cannot read (verified on
+      // 10.33.2 and 11.5.0, EACCES and EISDIR: a live fetch still used the
+      // auth.ini registry, and its strict-ssl=false was still applied at the
+      // TLS layer), so an unreadable file must not collapse the bridge into
+      // npm's own resolution.
+      writeAuthIni(
+        ['registry=https://reg-a.example.com/', 'strict-ssl=false'].join('\n')
+      );
+      mkdirSync(join(root, '.npmrc'));
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_strict_ssl: 'false',
+      });
+      expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+        'Could not read'
+      );
     });
 
     it('expands a no-proxy env reference with pnpm grammar', () => {

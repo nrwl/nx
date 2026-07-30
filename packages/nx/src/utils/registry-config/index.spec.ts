@@ -195,6 +195,31 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     expect(logger.verbose).toHaveBeenCalledTimes(1);
   });
 
+  it('degrades to no bridging when yarn classic hits an unreadable .npmrc (yarn itself dies on it)', () => {
+    const { logger } = require('../logger');
+    (logger.warn as jest.Mock).mockClear();
+    files[`${ROOT}/.npmrc`] = 'registry=https://reg-a.example.com/';
+    const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+    (fs.readFileSync as jest.Mock).mockImplementation(
+      (p: any, ...rest: any[]) => {
+        if (p === `${ROOT}/.npmrc`) {
+          throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
+        }
+        return readFile(p, ...rest);
+      }
+    );
+    // Resolving from the remaining files instead would silently promote a
+    // registry yarn itself never reaches (it exits 1 on the unreadable file).
+    // isolateModules so the warn-once flag is fresh for this case.
+    jest.isolateModules(() => {
+      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
+      expect(fresh('is-even', ROOT, 'yarn', '1.22.22')).toEqual({});
+    });
+    expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+      'Could not read the yarn configuration'
+    );
+  });
+
   it('points the default registry at a bridged scoped registry for an underscore scope', () => {
     // npm normalizes the @my_scope:registry env key to @my-scope:registry but
     // looks it up verbatim, so the scoped override is lost; the view/pack target

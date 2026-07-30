@@ -739,6 +739,26 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       );
     });
 
+    it('fails on an .npmrc in the chain that cannot be opened', () => {
+      // yarn dies the same way on its .npmrc chain (verified on 1.22.22:
+      // EACCES on the workspace .npmrc fails config get and install with exit
+      // 1). Resolving on without the file would silently promote an ancestor
+      // or default registry over the one the workspace pins.
+      files[`${ROOT}/.npmrc`] = 'registry=https://reg-a.example.com/';
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === `${ROOT}/.npmrc`) {
+            throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
+          }
+          return readFile(p, ...rest);
+        }
+      );
+      expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+        /\.npmrc at .* could not be read/
+      );
+    });
+
     it('keeps a trailing comment out of the value', () => {
       files[`${ROOT}/.yarnrc`] =
         'registry "https://reg-a.example.com/" # the mirror\n';

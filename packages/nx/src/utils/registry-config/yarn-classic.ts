@@ -105,7 +105,7 @@ export function getYarnClassicSpawnRegistryEnv(
   ];
   const npmrcChain: RcFile[] = sources.map((s) => ({
     npmNative: s.npmNative,
-    map: toYarnValueMap(readNpmrcMap(s.npmrcPath)),
+    map: toYarnValueMap(readChainNpmrcMap(s.npmrcPath)),
   }));
   const yarnrcChain: RcFile[] = sources.map((s) => ({
     // npm never reads .yarnrc, so every entry is a yarn-only surface.
@@ -582,6 +582,19 @@ function resolveYarnPath(value: string, root: string, home: string): string {
     return resolve(home, value.slice(2));
   }
   return resolve(root, value);
+}
+
+// yarn dies on an .npmrc in its chain that it cannot open, the same way it
+// does on a .yarnrc (verified on 1.22.22: the EACCES propagates and yarn exits
+// 1), so there is no resolution left to reproduce. Continuing without the file
+// instead would resolve from the remaining ones, which is how a workspace
+// registry silently becomes an ancestor's or the default.
+function readChainNpmrcMap(path: string): Map<string, string> | null {
+  const map = readNpmrcMap(path);
+  if (map === 'unreadable') {
+    throw new Error(`The .npmrc at ${path} could not be read.`);
+  }
+  return map;
 }
 
 function toYarnValueMap(

@@ -65,11 +65,11 @@ export function getBunSpawnRegistryEnv(
 
   const globalConfigBase = getBunGlobalConfigBase(process.env);
   const projectNpmrc = npmrcSupported
-    ? readNpmrcMap(join(root, '.npmrc'))
+    ? readBunNpmrcMap(join(root, '.npmrc'))
     : null;
   const globalNpmrc =
     npmrcSupported && globalConfigBase
-      ? readNpmrcMap(join(globalConfigBase, '.npmrc'))
+      ? readBunNpmrcMap(join(globalConfigBase, '.npmrc'))
       : null;
   const projectBunfig = readBunfigInstall(join(root, 'bunfig.toml'));
   const globalBunfig = globalConfigBase
@@ -169,6 +169,14 @@ export function getBunSpawnRegistryEnv(
   }
 
   return env;
+}
+
+// bun silently resolves as though an .npmrc it cannot read were absent
+// (verified on 1.3.13, EACCES and EISDIR both), so collapse that state the
+// same way rather than warning or aborting.
+function readBunNpmrcMap(path: string): Map<string, string> | null {
+  const map = readNpmrcMap(path);
+  return map === 'unreadable' ? null : map;
 }
 
 /**
