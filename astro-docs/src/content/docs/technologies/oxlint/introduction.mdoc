@@ -91,7 +91,7 @@ When `useInferencePlugins` is disabled, use the executor directly:
 nx g @nx/oxlint:convert-from-eslint
 ```
 
-This adds an `oxlint` task to every project that has an ESLint task and leaves the ESLint configuration in place. It doesn't translate ESLint rules into Oxlint rules. To generate an `.oxlintrc.json` from an existing ESLint config, run [`@oxlint/migrate`](https://github.com/oxc-project/oxlint-migrate) separately. To stop ESLint from re-reporting what Oxlint already covers, add [`eslint-plugin-oxlint`](https://www.npmjs.com/package/eslint-plugin-oxlint) to the ESLint config.
+This adds an `oxlint` task to every project that has an explicit `@nx/eslint:lint` target and leaves the ESLint configuration in place. Projects whose lint target comes from `@nx/eslint/plugin` inference — the default — get an inferred `oxlint` target instead, and the generator says so when it converts nothing. It doesn't translate ESLint rules into Oxlint rules. To generate an `.oxlintrc.json` from an existing ESLint config, run [`@oxlint/migrate`](https://github.com/oxc-project/oxlint-migrate) separately. To stop ESLint from re-reporting what Oxlint already covers, add [`eslint-plugin-oxlint`](https://www.npmjs.com/package/eslint-plugin-oxlint) to the ESLint config.
 
 ## Type-aware linting
 
@@ -101,7 +101,13 @@ The `typeAware` option lives on the `@nx/oxlint:lint` executor, so it needs an e
 
 ## Module boundaries
 
-`@nx/oxlint` exposes the project-graph-aware `enforce-module-boundaries` rule as an Oxlint JavaScript plugin. Install `@nx/eslint-plugin`, then register the bridge in `.oxlintrc.json`:
+`@nx/oxlint` exposes the project-graph-aware `enforce-module-boundaries` rule as an Oxlint JavaScript plugin. `@nx/eslint-plugin` is an optional peer, so no package manager installs it for you:
+
+```shell
+nx add @nx/eslint-plugin
+```
+
+Then register the bridge in `.oxlintrc.json`:
 
 ```json
 {
@@ -120,7 +126,7 @@ The `typeAware` option lives on the `@nx/oxlint:lint` executor, so it needs an e
 The rule runs as JavaScript rather than native Rust, so it's slower than the built-in Oxlint rules. It also reloads the project graph for every file it checks, so the gap widens with workspace size.
 
 {% aside type="caution" title="It skips silently without a project graph" %}
-When no cached project graph is available, the rule reports nothing and the task still passes. Run it behind `nx lint` rather than invoking `oxlint` directly, and don't rely on it as your only boundary check until that's fixed.
+When no cached project graph is available, the rule reports nothing and the task still passes. The notice it prints is not a lint diagnostic, so `--deny-warnings` and `--max-warnings` don't catch it either. Run it behind `nx lint` rather than invoking `oxlint` directly, and don't rely on it as your only boundary check until that's fixed.
 {% /aside %}
 
 `depConstraints` takes the same syntax as it does under ESLint. To tag projects and write constraints, see [enforce module boundaries](/docs/features/enforce-module-boundaries).

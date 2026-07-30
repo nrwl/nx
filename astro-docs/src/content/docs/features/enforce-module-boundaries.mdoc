@@ -206,6 +206,10 @@ It reads the project graph and takes the options documented for ESLint, so your 
 The bridge depends on the Oxlint JavaScript plugin API. Oxlint excludes that API from its semantic versioning policy, so it can change in any release.
 {% /aside %}
 
+{% aside type="caution" title="It skips silently without a project graph" %}
+When no cached project graph is available, the rule reports nothing and the task still passes. The notice it prints is not a lint diagnostic, so `--deny-warnings` and `--max-warnings` don't catch it either. Run it behind `nx lint` rather than invoking `oxlint` directly, and don't rely on it as your only boundary check until that's fixed.
+{% /aside %}
+
 `@nx/eslint-plugin` is an optional peer of `@nx/oxlint`, so no package manager installs it for you. `nx add` takes one package at a time, so add both:
 
 ```shell
