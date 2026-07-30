@@ -3001,13 +3001,13 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
-      webpack:
-        specifier: 'catalog:'
-        version: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
     devDependencies:
       nx:
         specifier: workspace:*
         version: link:../nx
+      webpack:
+        specifier: 'catalog:'
+        version: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
 
   packages/nest:
     dependencies:
@@ -3065,15 +3065,9 @@ importers:
       '@nx/web':
         specifier: workspace:*
         version: link:../web
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.2.0(typescript@6.0.3)
-      '@svgr/webpack':
-        specifier: 'catalog:'
-        version: 8.1.0(typescript@6.0.3)
       copy-webpack-plugin:
         specifier: ^14.0.0
         version: 14.0.0(webpack@5.105.2)
@@ -3099,6 +3093,9 @@ importers:
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3409,6 +3406,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@babel/preset-react':
+        specifier: ^7.22.5
+        version: 7.27.1(@babel/core@7.29.0)
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -3418,30 +3418,15 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../module-federation
-      '@nx/rollup':
-        specifier: workspace:*
-        version: link:../rollup
       '@nx/web':
         specifier: workspace:*
         version: link:../web
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.2.0(typescript@6.0.3)
-      '@svgr/webpack':
-        specifier: 'catalog:'
-        version: 8.1.0(typescript@6.0.3)
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
-      express:
-        specifier: ^4.21.2
-        version: 4.21.2
-      http-proxy-middleware:
-        specifier: 'catalog:'
-        version: 3.0.5
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
@@ -3461,9 +3446,15 @@ importers:
       '@nx/cypress':
         specifier: workspace:*
         version: link:../cypress
+      '@nx/module-federation':
+        specifier: workspace:*
+        version: link:../module-federation
       '@nx/playwright':
         specifier: workspace:*
         version: link:../playwright
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
       '@nx/rsbuild':
         specifier: workspace:*
         version: link:../rsbuild
@@ -3476,6 +3467,12 @@ importers:
       '@nx/webpack':
         specifier: workspace:*
         version: link:../webpack
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      http-proxy-middleware:
+        specifier: 'catalog:'
+        version: 3.0.5
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3498,9 +3495,6 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
-      '@nx/webpack':
-        specifier: workspace:*
-        version: link:../webpack
       ajv:
         specifier: 'catalog:'
         version: 8.18.0
@@ -3535,6 +3529,9 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx

@@ -68,7 +68,6 @@ export default [
             '@nx/vite',
             '@nx/vitest',
             '@nx/webpack',
-            '@babel/preset-react',
             '@module-federation/node',
             '@phenomnomnominal/tsquery',
             '@pmmmwh/react-refresh-webpack-plugin',

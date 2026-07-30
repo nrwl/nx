@@ -31,6 +31,8 @@ import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs'
 import { isValidVariable } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {
+  expressVersion,
+  httpProxyMiddlewareVersion,
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
@@ -181,6 +183,14 @@ export async function hostGenerator(
     {
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
+      // The webpack path also generates a `serve-static` target running the
+      // `module-federation-static-server` executor, which proxies via express.
+      ...(options.bundler !== 'rspack'
+        ? {
+            express: expressVersion,
+            'http-proxy-middleware': httpProxyMiddlewareVersion,
+          }
+        : {}),
     },
     undefined,
     true

@@ -4,19 +4,27 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { startRemoteIterators } from '@nx/module-federation/internal';
 import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
-import { devServerExecutor } from '@nx/webpack';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import { normalizeOptions, startRemotes } from './lib';
 import { ModuleFederationDevServerOptions } from './schema';
+import { assertPackageIsInstalled } from '../../utils/assert-package';
 import { warnReactMfDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
+
+const executorName = '@nx/react:module-federation-dev-server';
 
 export default async function* moduleFederationDevServer(
   schema: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
+  assertPackageIsInstalled('@nx/module-federation', executorName);
+  assertPackageIsInstalled('@nx/webpack', executorName);
+  const { startRemoteIterators } = await import(
+    '@nx/module-federation/internal'
+  );
+  const { devServerExecutor } = await import('@nx/webpack');
+
   warnReactMfDevServerExecutorDeprecation();
   const options = normalizeOptions(schema);
   const currIter = options.static
