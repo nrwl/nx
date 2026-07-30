@@ -894,7 +894,12 @@ if (benchmarks.length > 1) {
 }
 
 console.log(`[profile] done → ${runDir}/`);
-process.exit(
-  allBenchmarkResults[allBenchmarkResults.length - 1]?.results.at(-1)
-    ?.exitStatus ?? 0
+// Fail if *any* scenario failed — reporting only the last one's status would
+// let a run where most scenarios errored still exit 0.
+const failed = allBenchmarkResults.flatMap((b) =>
+  b.results.filter((r) => r.exitStatus !== 0)
 );
+for (const f of failed) {
+  console.error(`[profile] scenario "${f.def.name}" exited ${f.exitStatus}`);
+}
+process.exit(failed[0]?.exitStatus ?? 0);
