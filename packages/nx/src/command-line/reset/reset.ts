@@ -167,7 +167,7 @@ function cleanupNativeFileCache() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      // Null when the per-uid component is not a real directory we own, which
+      // Null when the native cache root is not a real directory we own, which
       // would mean deleting through a path another user planted.
       const cacheDir = getNativeFileCacheLocationToDelete();
       if (cacheDir) {
