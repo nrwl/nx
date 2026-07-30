@@ -1,4 +1,3 @@
-import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { gte, lt } from 'semver';
@@ -220,11 +219,6 @@ function resolveNoProxy(
     return settings.noProxy;
   }
   const fromFiles = fileNoProxy(root, authIniPath);
-  if (fromFiles === 'unreadable') {
-    // The layer that would have won is unreadable, so the `noproxy` spelling
-    // below it cannot be applied either: it only wins when no `no-proxy` exists.
-    return undefined;
-  }
   if (fromFiles) {
     return fromFiles;
   }
@@ -251,6 +245,25 @@ function getAuthIniPath(): string {
   return join(getPnpmConfigDir(process.env), 'auth.ini');
 }
 
+// pnpm warns and resolves on from the remaining layers when an npmrc-family
+// file exists but cannot be read (verified on 10.33.2 and 11.5.0, EACCES and
+// EISDIR both: auth.ini registry, strict-ssl, and no-proxy all still apply
+// with the workspace .npmrc unreadable), so mirror it: warn, absent semantics.
+const warnedUnreadableFiles = new Set<string>();
+function readPnpmNpmrcMap(path: string): Map<string, string> | null {
+  const map = readNpmrcMap(path);
+  if (map !== 'unreadable') {
+    return map;
+  }
+  if (!warnedUnreadableFiles.has(path)) {
+    warnedUnreadableFiles.add(path);
+    logger.warn(
+      `Could not read ${path}; resolving the pnpm registry configuration without it, the way pnpm itself does.`
+    );
+  }
+  return null;
+}
+
 function bridgeAuthIni(
   env: NpmConfigEnv,
   root: string,
@@ -259,7 +272,7 @@ function bridgeAuthIni(
   pnpmVersion: string,
   managerIgnoresEnv: boolean
 ): void {
-  const authIni = readNpmrcMap(authIniPath);
+  const authIni = readPnpmNpmrcMap(authIniPath);
   if (!authIni) {
     return;
   }
@@ -272,7 +285,7 @@ function bridgeAuthIni(
   for (const [key, value] of authIni) {
     authIni.set(key, expandPnpmEnvVars(value));
   }
-  const projectNpmrc = readNpmrcMap(join(root, '.npmrc')) ?? new Map();
+  const projectNpmrc = readPnpmNpmrcMap(join(root, '.npmrc')) ?? new Map();
   // An empty value declares nothing: pnpm's own readers re-check for an empty
   // registry, and npm skips an empty env value outright. Deriving from one is
   // what does damage (an empty cafile resolves to auth.ini's own directory).
@@ -425,31 +438,19 @@ function bridgeNoProxy(
   authIniPath?: string
 ): void {
   const value = fileNoProxy(root, authIniPath);
-  if (value && value !== 'unreadable') {
+  if (value) {
     setProxies(env, { noProxy: value });
   }
 }
 
-/**
- * The `no-proxy` the npmrc-family files declare, or 'unreadable' when the layer
- * that would have won cannot be read.
- */
-function fileNoProxy(
-  root: string,
-  authIniPath?: string
-): string | 'unreadable' | undefined {
-  const npmrcPath = join(root, '.npmrc');
-  const projectNpmrc = readNpmrcMap(npmrcPath);
-  // With the higher layer unreadable there is no telling which one wins, and
-  // bridging auth.ini's value could reinstate a list the workspace clears.
-  if (!projectNpmrc && existsSync(npmrcPath)) {
-    return 'unreadable';
-  }
+/** The `no-proxy` the npmrc-family files declare. */
+function fileNoProxy(root: string, authIniPath?: string): string | undefined {
+  const projectNpmrc = readPnpmNpmrcMap(join(root, '.npmrc'));
   // The workspace .npmrc outranks auth.ini, and declaring the key empty there
   // is pnpm's way of clearing an inherited bypass list.
   const value = projectNpmrc?.has('no-proxy')
     ? projectNpmrc.get('no-proxy')
-    : authIniPath && readNpmrcMap(authIniPath)?.get('no-proxy');
+    : authIniPath && readPnpmNpmrcMap(authIniPath)?.get('no-proxy');
   // npm ignores `no-proxy` in the file it does read, so the value never goes
   // through npm's own expansion under that key; expand it with pnpm's grammar
   // (`${VAR:-default}` resolves, `${VAR?}` does not).
@@ -616,11 +617,11 @@ function reportTokenHelper(
   unscopedPin: UnscopedHelperPin,
   managerIgnoresEnv: boolean
 ): void {
-  const userConfig = userConfigPath ? readNpmrcMap(userConfigPath) : null;
+  const userConfig = userConfigPath ? readPnpmNpmrcMap(userConfigPath) : null;
   if (!userConfig) {
     return;
   }
-  const projectNpmrc = readNpmrcMap(join(root, '.npmrc')) ?? new Map();
+  const projectNpmrc = readPnpmNpmrcMap(join(root, '.npmrc')) ?? new Map();
   const contactedDart = nerfDart(
     contactedRegistry(env, projectNpmrc, scope, managerIgnoresEnv)
   );

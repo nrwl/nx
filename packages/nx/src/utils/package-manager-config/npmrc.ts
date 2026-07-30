@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 
 export interface NpmrcEntry {
   key: string;
@@ -11,20 +11,24 @@ export interface NpmrcEntry {
  * Parses an .npmrc file into its `key = value` entries the way npm/yarn/pnpm do
  * (via the `ini` package): skip blank lines and `#`/`;` comment lines, split on
  * the first `=` (a valueless line is a bare flag ini reads as `true`), then run
- * both sides through ini's `unsafe()` so surrounding quotes are stripped, an
- * unescaped inline `#`/`;` comment is truncated, and backslash escapes are
- * honored. Returns null when the file is missing or unreadable so callers can
- * distinguish "no file" from "file with no entries".
+ * both sides through ini's `unsafe()`
+ * so surrounding quotes are stripped, an unescaped inline `#`/`;` comment is
+ * truncated, and backslash escapes are honored. Returns null when the file is
+ * missing, and 'unreadable' when it exists but cannot be read (permissions, a
+ * directory): package managers diverge on that state, so each caller decides
+ * whether to skip, warn, or abort rather than having it collapsed into
+ * "absent" here.
  */
-export function readNpmrcEntries(path: string): NpmrcEntry[] | null {
-  if (!existsSync(path)) {
-    return null;
-  }
+export function readNpmrcEntries(
+  path: string
+): NpmrcEntry[] | 'unreadable' | null {
   let raw: string;
   try {
     raw = readFileSync(path, 'utf-8');
-  } catch {
-    return null;
+  } catch (e) {
+    // A missing file, or a path whose parent is not a directory, is absent;
+    // any other failure means the file exists and cannot be read.
+    return e?.code === 'ENOENT' || e?.code === 'ENOTDIR' ? null : 'unreadable';
   }
   return parseNpmrcContent(raw);
 }
@@ -60,12 +64,15 @@ export function parseNpmrcContent(raw: string): NpmrcEntry[] {
 
 /**
  * Reads an .npmrc-format file into a last-write-wins map (ini semantics for
- * repeated keys). Returns null when the file is missing or unreadable.
+ * repeated keys). Null and 'unreadable' pass through from
+ * {@link readNpmrcEntries}.
  */
-export function readNpmrcMap(path: string): Map<string, string> | null {
+export function readNpmrcMap(
+  path: string
+): Map<string, string> | 'unreadable' | null {
   const entries = readNpmrcEntries(path);
-  if (!entries) {
-    return null;
+  if (!Array.isArray(entries)) {
+    return entries;
   }
   const map = new Map<string, string>();
   for (const { key, value, array } of entries) {

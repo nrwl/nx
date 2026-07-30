@@ -288,9 +288,12 @@ export function getYarnBerrySpawnRegistryEnv(
  * once because the caller probes dozens of keys walking npm's credential ladder.
  */
 function npmrcReader(root: string): (key: string) => string | undefined {
-  const maps = [join(root, '.npmrc'), join(homedir(), '.npmrc')].map((path) =>
-    readNpmrcMap(path)
-  );
+  const maps = [join(root, '.npmrc'), join(homedir(), '.npmrc')].map((path) => {
+    const map = readNpmrcMap(path);
+    // npm silently treats an .npmrc it cannot read as absent; this reader only
+    // mirrors npm's own view, so an unreadable file keeps the warning silent.
+    return map === 'unreadable' ? null : map;
+  });
   return (key) => {
     for (const map of maps) {
       const value = map && readExpandedKey(map, key, expandNpmEnvVars);

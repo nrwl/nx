@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { readNpmrcEntries, readNpmrcMap } from './npmrc';
@@ -23,6 +23,21 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
   it('returns null for a missing file', () => {
     expect(readNpmrcEntries(join(dir, 'nope'))).toBeNull();
     expect(readNpmrcMap(join(dir, 'nope'))).toBeNull();
+  });
+
+  it('returns null for a path through a non-directory', () => {
+    // ENOTDIR is another shape of "no such file", not an unreadable one.
+    writeFileSync(path, '');
+    expect(readNpmrcEntries(join(path, '.npmrc'))).toBeNull();
+  });
+
+  it("returns 'unreadable' for a file that exists but cannot be read", () => {
+    // A directory in the file's place reads as EISDIR on every platform;
+    // callers must be able to tell this from a missing file because package
+    // managers diverge on it (pnpm warns and continues, yarn classic dies).
+    mkdirSync(path);
+    expect(readNpmrcEntries(path)).toBe('unreadable');
+    expect(readNpmrcMap(path)).toBe('unreadable');
   });
 
   it('strips surrounding double quotes (ini unsafe)', () => {
