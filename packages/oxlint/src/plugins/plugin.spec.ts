@@ -157,6 +157,30 @@ describe('@nx/oxlint plugin', () => {
     expect(Object.keys(results.projects)).toEqual(['packages/a']);
   });
 
+  // The workspaces globs are empty for an integrated, project.json-based
+  // workspace too — not only for a standalone repo — so this pins the shape the
+  // "workspaces do not cover" test above cannot: that one declares
+  // `workspaces`, so it stays green even if the empty-globs path admits
+  // everything.
+  it('should not create a node for a nameless nested package.json when no workspaces are declared', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'package.json': `{"name":"root","private":true}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/index.ts': `export const value = 1;`,
+      // A bundler marker, not a project. It has no name, so promoting it to a
+      // project root fails the whole graph with ProjectsWithNoNameError.
+      'libs/a/src/runtime/polyfill/package.json': `{"sideEffects":true}`,
+      'libs/a/src/runtime/polyfill/index.ts': `export const p = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const roots = Object.keys(results.projects);
+
+    expect(roots).toContain('libs/a');
+    expect(roots).not.toContain('libs/a/src/runtime/polyfill');
+  });
+
   function createFiles(fileSys: Record<string, string>) {
     tempFs.createFilesSync(fileSys);
     configFiles = Object.keys(fileSys).filter((file) =>
