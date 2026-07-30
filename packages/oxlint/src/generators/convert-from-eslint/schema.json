@@ -16,7 +16,7 @@
     },
     "addExplicitTargets": {
       "type": "boolean",
-      "description": "Add explicit `@nx/oxlint:lint` targets for projects that have an ESLint target.",
+      "description": "Add explicit `@nx/oxlint:lint` targets for projects that have an explicit `@nx/eslint:lint` target. Projects with an inferred ESLint target get an inferred Oxlint target instead.",
       "default": true
     },
     "skipFormat": {
