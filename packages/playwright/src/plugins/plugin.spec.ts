@@ -2,8 +2,28 @@ import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as jsUtils from '@nx/js';
 import { PlaywrightTestConfig } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { setWorkspaceRoot, workspaceRoot } from 'nx/src/utils/workspace-root';
 import { createNodesV2 } from './plugin';
+import { _setChildEval, normalizeWebServers } from './webserver-readiness';
+
+// The production resolver forks a child whose worker only exists in dist. In
+// tests, mirror the child by evaluating the config source in a fresh scope under
+// the task env; the in-process module cache would otherwise return the ambient
+// evaluation. Only handles the simple CJS configs the env tests use.
+function installFreshConfigEval(): void {
+  _setChildEval(async (configFilePath, wsRoot, env) => {
+    const source = readFileSync(join(wsRoot, configFilePath), 'utf8');
+    const moduleShim: { exports: PlaywrightTestConfig } = { exports: {} };
+    new Function('module', 'exports', 'process', source)(
+      moduleShim,
+      moduleShim.exports,
+      { ...process, env }
+    );
+    return normalizeWebServers(moduleShim.exports.webServer);
+  });
+}
 
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -1019,9 +1039,13 @@ describe('@nx/playwright/plugin', () => {
 
   it('resolves the task dotenv env before baking the wait-for-webserver gate', async () => {
     const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
     // Isolate the .env as the only source of BASE_URL; a value left in the
     // ambient env would satisfy the config on its own and mask the dotenv load.
     delete process.env.BASE_URL;
+    // getGraphTimeEnvForTask resolves dotenv relative to the workspace root.
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
 
     try {
       await mockPlaywrightConfig(
@@ -1054,6 +1078,115 @@ describe('@nx/playwright/plugin', () => {
         servers: [{ url: 'http://localhost:4301' }],
       });
     } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
+  it('creates a separate gate per chain when e2e and e2e-ci resolve different addresses', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BASE_URL;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      // The e2e-ci chain also loads .env.e2e-ci, which wins over .env.e2e, so
+      // the two chains resolve different addresses and each gets its own gate.
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e': 'BASE_URL=http://localhost:4301\n',
+        '.env.e2e-ci': 'BASE_URL=http://localhost:4302\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4301' },
+      ]);
+      expect(targets['e2e-ci--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4302' },
+      ]);
+      expect(targets['e2e'].dependsOn).toContainEqual({
+        target: 'e2e--wait-for-webserver',
+      });
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toContainEqual({
+        target: 'e2e-ci--wait-for-webserver',
+      });
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
+  it('fails createNodes when the config cannot be evaluated under the task env', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BASE_URL;
+    setWorkspaceRoot(tempFs.tempDir);
+    // A failed evaluation must surface, not bake a wrong gate into the graph.
+    _setChildEval(async () => {
+      throw new Error('boom');
+    });
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env': 'BASE_URL=http://localhost:4301\n',
+      });
+
+      const error = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      ).catch((e) => e);
+      const innerMessages = (error.errors ?? [])
+        .map(([, e]: [unknown, Error]) => e.message)
+        .join('\n');
+      expect(innerMessages).toMatch(/could not evaluate/);
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
       if (originalBaseUrl === undefined) {
         delete process.env.BASE_URL;
       } else {
