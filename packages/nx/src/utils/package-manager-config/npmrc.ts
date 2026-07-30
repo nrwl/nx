@@ -9,9 +9,10 @@ export interface NpmrcEntry {
 
 /**
  * Parses an .npmrc file into its `key = value` entries the way npm/yarn/pnpm do
- * (via the `ini` package): skip blank lines and `#`/`;` comment lines, split on
- * the first `=` (a valueless line is a bare flag ini reads as `true`), then run
- * both sides through ini's `unsafe()`
+ * (via the `ini` package): skip blank lines and `#`/`;` comment lines, stop at
+ * a `[section]` header (ini nests everything after one, out of the flat lookup
+ * npm resolves config from), split on the first `=` (a valueless line is a
+ * bare flag ini reads as `true`), then run both sides through ini's `unsafe()`
  * so surrounding quotes are stripped, an unescaped inline `#`/`;` comment is
  * truncated, and backslash escapes are honored. Returns null when the file is
  * missing, and 'unreadable' when it exists but cannot be read (permissions, a
@@ -43,6 +44,13 @@ export function parseNpmrcContent(raw: string): NpmrcEntry[] {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
       continue;
+    }
+    // ini's section header, matched on the raw line (leading whitespace makes
+    // it a literal bare-flag key instead). Every entry after one nests under a
+    // section, and npm's flat config lookup never reads a nested key, so
+    // nothing further contributes an entry.
+    if (/^\[[^\]]*\]\s*$/.test(line)) {
+      break;
     }
     // A line with no `=` is a bare flag, which ini reads as `true`, not a
     // dropped line. Skipping it loses a bare `always-auth`/`strict-ssl` and

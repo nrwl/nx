@@ -123,6 +123,31 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
     ]);
   });
 
+  it('drops a [section] header and every key after it (ini nests them)', () => {
+    // ini nests all entries following a section header under that section, and
+    // npm's flat config lookup never reads a nested key.
+    const map = read(
+      [
+        'registry=https://top.example.com/',
+        '[section]',
+        'registry=https://nested.example.com/',
+        'always-auth=true',
+      ].join('\n')
+    );
+    expect(map?.get('registry')).toBe('https://top.example.com/');
+    expect(map?.has('[section]')).toBe(false);
+    expect(map?.has('always-auth')).toBe(false);
+  });
+
+  it('keeps a bracketed line as a literal key when it is not exactly a section header', () => {
+    // ini matches the section form on the raw line, so leading whitespace or
+    // trailing text turns the bracketed form back into a bare-flag key.
+    const map = read(['  [indented]', '[trailing] x', 'key=v'].join('\n'));
+    expect(map?.get('[indented]')).toBe('true');
+    expect(map?.get('[trailing] x')).toBe('true');
+    expect(map?.get('key')).toBe('v');
+  });
+
   it('strips a [] array suffix to the bare key (ini bracketedArray)', () => {
     const map = read('ca[]=/etc/ssl/ca.pem');
     expect(map?.get('ca')).toBe('/etc/ssl/ca.pem');
