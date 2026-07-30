@@ -302,7 +302,9 @@ describe('createConfig', () => {
       expect(serverExportsRule.options.engineWiring).toMatchObject({
         mainServerEntry: join(root, 'src', 'main.server.ts'),
         baseHref: '/app/',
-        browserOutputRelativePath: join('..', 'browser'),
+        // Posix-normalized by the config, so a native join would fail on
+        // Windows.
+        browserOutputRelativePath: '../browser',
         indexOutputName: 'index.html',
         allowedHosts: ['example.com'],
       });

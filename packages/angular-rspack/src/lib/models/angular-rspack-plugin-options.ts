@@ -297,7 +297,8 @@ export interface AngularRspackPluginOptions {
    * it requires the `server` and `ssr.entry` options and the `@angular/ssr`
    * package, and disables build-time prerendering (`prerender`/`appShell`).
    * The `@angular/ssr` application engine wiring itself is active for any
-   * SSR build with `@angular/ssr` installed, with or without this option.
+   * SSR build with `@angular/ssr` installed, with or without this option,
+   * except when locale inlining is enabled.
    * 'static' (build-time prerendering of the full application) is not
    * supported yet and is rejected.
    */
