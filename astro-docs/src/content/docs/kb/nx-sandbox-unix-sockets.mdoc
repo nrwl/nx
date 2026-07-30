@@ -62,15 +62,17 @@ The allowlist decides which paths the sandbox can reach. It is not what separate
 
 Nx puts the user ID directly beneath the stable container: `/tmp/.nx/<uid>`. It creates that user directory and every directory beneath it with mode `0700`, then re-checks each one before use: it must be owned by the current user, be a real directory rather than a symlink, and carry no group or other permissions.
 
-Nx also verifies `/tmp/.nx` before using anything beneath it. It accepts a container owned by the current user, which requires no setup on a single-user machine. For a shared machine, the container must instead be owned by `root` and sticky so no regular user can replace another user's directory:
+Nx also verifies the `/tmp/.nx` container itself, and accepts it when either you or `root` owns it. On a single-user machine, in a container, or in a sandbox, that's already true: the first Nx run creates the container and you own it, so none of this needs setting up.
+
+Machines with more than one user are the exception. Whoever runs Nx first owns the container, and a directory's owner can rename the entries inside it whatever its permissions say. So Nx does not put your private directory beneath a container someone else owns. An administrator can create the container up front to cover everyone:
 
 ```shell
 sudo install -d -m 1777 -o root -g root /tmp/.nx
 ```
 
-Only that one container needs administrator provisioning. Each user creates their own `/tmp/.nx/<uid>`, `sockets`, and `native-cache` directories beneath it.
+That one command is the entire setup. Each user then creates their own `/tmp/.nx/<uid>`, `sockets`, and `native-cache` directories beneath it.
 
-If another user pre-creates the predictable path before you, the ownership check refuses it. Socket setup falls back to a private directory inside your workspace, and the native binding cache is skipped entirely, loading in place from `node_modules` instead.
+Without it, the first person to run Nx on the machine gets the shared layout and everyone after them falls back. Usually that's because a colleague got there first, though the same check is what refuses a container someone claimed deliberately. Falling back is safe rather than broken. Socket setup moves to a private directory inside your workspace, and the native binding cache is skipped entirely, loading in place from `node_modules` instead.
 
 Code inside the sandbox runs as your user, so this grant does let it write that binary cache, in the same way it can already write your workspace's `node_modules`.
 {% /aside %}
