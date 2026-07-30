@@ -84,8 +84,9 @@ function graphTimeDotEnvRoots(
 /**
  * If `path` is a dotenv file that getEnvPathsForTask would load from the
  * workspace root or a project root, returns its name relative to that root;
- * otherwise null. The deepest matching root wins (nested projects), and the
- * relative name may contain `/` because a target/configuration identifier can.
+ * otherwise null. The deepest root that yields a dotenv name wins, so a nested
+ * project root does not shadow a parent's slash-identifier dotenv. The relative
+ * name may contain `/` because a target/configuration identifier can.
  */
 function dotEnvNameUnderRoot(path: string, roots: Set<string>): string | null {
   for (
@@ -94,9 +95,8 @@ function dotEnvNameUnderRoot(path: string, roots: Set<string>): string | null {
     slash = path.lastIndexOf('/', slash - 1)
   ) {
     const dir = path.slice(0, slash);
-    // A root closer to the file is checked first, but a non-match there must
-    // keep walking: the same path can be a slash-identifier dotenv for a
-    // shallower (parent) root.
+    // Keep walking past a closer root that yields no dotenv name: the same path
+    // can still be a slash-identifier dotenv for a shallower (parent) root.
     if (roots.has(dir)) {
       const name = path.slice(slash + 1);
       if (isDotEnvName(name)) {
