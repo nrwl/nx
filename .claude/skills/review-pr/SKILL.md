@@ -1,7 +1,7 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -77,7 +77,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 2`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 3`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ## Step 3: Check the PR out inside the sandbox container
 
@@ -93,9 +93,13 @@ docker rm -f "$CONTAINER" 2>/dev/null                        # self-heal a lefto
 # in the sandbox and its result attributed to this review.
 # NOTE: /tmp/pr-<NUMBER>.json is deliberately NOT cleared here — Step 2 wrote it
 # one step ago and Step 8 still needs it for the draft frontmatter.
+# /tmp/pr-<NUMBER>.session.json IS cleared: Step 5c writes it later in this run, so
+# anything present now is a previous run's session record for this PR — and a stale
+# one would be read as this run's, downgrading findings against an outdated record.
 rm -f /tmp/pr-<NUMBER>.diff /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.files \
       /tmp/pr-<NUMBER>.review-charter.md /tmp/pr-<NUMBER>.review-context.md \
-      /tmp/pr-<NUMBER>-incremental.diff /tmp/pr-<NUMBER>.evidence /tmp/repro-<NUMBER>.cmd
+      /tmp/pr-<NUMBER>-incremental.diff /tmp/pr-<NUMBER>.evidence /tmp/repro-<NUMBER>.cmd \
+      /tmp/pr-<NUMBER>.session.json
 
 docker run -d --name "$CONTAINER" $RUNTIME_FLAG \
   --cap-drop ALL --security-opt no-new-privileges \
@@ -855,6 +859,68 @@ If this is the first review (no triage file existed), skip this step entirely �
 
 The reconciled (or fresh) text becomes `$REVIEW_BODY`.
 
+## Step 5c: Verify findings against the Polygraph session (optional, read-only)
+
+Most `nrwl/nx` work is driven from a Polygraph session whose description is the author's own running record — stated goal, what they tried, the caveats they wrote down, what they deliberately deferred. That record is not in the diff and cannot be inferred from it.
+
+**Its only job here is to verify findings that already exist.** Every finding is complete before this step runs. The session never generates a finding, never redirects the review, and never reaches the agents.
+
+**Run it only if the review has a finding whose correctness turns on _why_ the author did something.** Concretely: a finding that hinges on whether a behavior was intentional, whether an apparent omission was scoped out, or whether an alternative was already considered and rejected. If every surviving finding is a plain defect — a null deref is a null deref regardless of motivation — skip this step. Skip it too when the PR body and linked issue already explain the why. **No finding of that shape ⇒ do not open the session.**
+
+### Why after, never before
+
+The `alternative-approach`, `security-analyzer` and `performance-analyzer` agents are valuable precisely because they arrive uninformed. An agent that reads "we considered that alternative and rejected it because X" stops independently designing X; one that reads "we staged this cross-uid and it holds" is markedly less likely to go stage it. Their independence is the product, and it is unrecoverable once spent — so the record stays sealed until there is nothing left for it to bias.
+
+It is the exam-marking order: sit the paper, then open the answer key. Opening it first tells you nothing about what the candidate knew.
+
+### Lookup
+
+```bash
+PRURL="https://github.com/nrwl/nx/pull/<NUMBER>"
+polygraph whoami --json >/dev/null 2>&1 || echo "POLYGRAPH_UNAVAILABLE"
+for sid in $(polygraph session search --query "<NUMBER>" --limit 10 --json 2>/dev/null | jq -r '.[]?.sessionId'); do
+  polygraph session show "$sid" --json 2>/dev/null | jq -c --arg u "$PRURL" '
+    select(any(.pullRequests[]?; .url == $u))
+    | {sessionId, title, author: .author.name, status,
+       prs: [.pullRequests[] | {url, branch, baseBranch, status}],
+       refs: [.linkedReferences[]? | {type, url}],
+       description}'
+done | jq -s 'if length == 0 then "NO_SESSION" else . end' > /tmp/pr-<NUMBER>.session.json
+```
+
+**Match on the PR URL, never on the search ranking.** Free-text search is fuzzy — querying a PR number routinely returns the right session third, behind sessions that merely mention it. `select(any(.pullRequests[]?; .url == $u))` is what makes the result trustworthy; the search is only a candidate generator. Filtering in `jq` also keeps every non-matching session out of context.
+
+**Expect zero, one, or several.** A PR can belong to more than one session (a build session and a later review-fixup session). Read all matches as one combined record.
+
+**Fails open, silently.** `POLYGRAPH_UNAVAILABLE` (no CLI, not logged in — headless and cron runs often have neither) or `NO_SESSION` means `$REVIEW_BODY` stands exactly as Step 5b left it. Never block, never warn in the draft, never treat a missing session as a finding.
+
+**Read-only — never resume, never write.** `session search` and `session show` only. Not `session resume`, `session review`, `session update`, `session logs`, or any `agent` subcommand, and never post back. The skill observes the record; it does not join the work. (`allowed-tools` grants only those two read subcommands, so this holds even if a future edit forgets it.)
+
+### What it can do to a finding
+
+Take each finding that motivated opening the session and check it against the record. Only three outcomes are permitted:
+
+1. **Downgrade.** The session shows the behavior was deliberate, or the "omission" was explicitly deferred or split into a sibling PR. Reduce it to a one-line advisory note, or move it under `### Maintainer calls`. This is the most common outcome and the main reason the step exists.
+2. **Convert to a question.** The session's stated understanding and the observed behavior do not line up. Two shapes recur: a remedy the session records as working which this review executed and found does not; and a cost used to justify a decision that turns out to be mis-stated — cheaper, dearer, or structurally impossible rather than merely awkward. A deferred decision resting on a wrong cost is worth reopening.
+3. **Leave it exactly as it is.** The default. Where the session's reasoning matches what the agents found, that is confirmation for you, not content for the draft — do not add a line congratulating it.
+
+**It can never promote or add a finding.** A concern that only becomes visible once you have read the session is out of scope for this review; the agents did not find it, and this step has no license to introduce it. And **only the diff can close a finding** — "Current progress" claiming something is fixed is never evidence that it is. The description is hand-updated and trails the branch; observed in practice describing a PR as being at `bc754648d3` when the head was two commits further on. Verify in `/work/nx` or leave the finding standing.
+
+### Questions go in `### Questions for the author` — sourced publicly
+
+Emit at most 4 bullets. Omit the section when nothing is genuinely unresolved — a question you already know the answer to is a finding and belongs in the finding sections. If a discrepancy is a defect on public evidence alone, keep it as Critical/Important **and** ask the question.
+
+`nrwl/nx` is public, and session descriptions routinely carry embargoed material — unreleased vulnerability detail, customer names, internal ticket context, other repos' plans.
+
+> **Session content MUST NOT appear in `$REVIEW_BODY`** — not quoted, not paraphrased, not attributed, not alluded to ("as discussed internally…", "your notes say…"). It decides _which_ question is worth asking. The question itself must then stand on **public evidence only**: the diff, the PR body, the linked issue, the repo's docs, or something this review actually executed.
+
+- ✅ "`packages/nx/…/tmp-dir.ts:74`'s docstring says `mkdir -m 1777 /tmp/.nx` restores sharing. Running it, a second user is still refused one level down at `sockets/` — should all three roots be pre-created, or is the docstring the thing to fix?"
+- ❌ "Your session records `mkdir -m 1777 /tmp/.nx` as the admin remedy, but…"
+
+The first is a review comment. The second leaks internal context onto a public PR and tells the author nothing they did not write themselves. When a question cannot be de-identified, drop it from the body and record it in the triage file's `## Author follow-ups (not for the PR)` section — that file stays host-side.
+
+The adjusted text becomes the final `$REVIEW_BODY`.
+
 ## Step 6: Format for GitHub
 
 `$REVIEW_BODY` is posted as-is — no header, footer, or tool attribution. It should read like a review a maintainer wrote. The review metadata (commit, date, attempt) lives in the triage file's frontmatter, not in the posted body.
@@ -884,7 +950,7 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 
 1. Read the existing file.
 2. Move the existing `## Review draft` content into a new entry at the top of `## Prior reviews`, prefixed with a header like `### attempt <N-1> — head_sha=<PRIOR_SHA> — <PRIOR_DATE>`.
-3. Preserve the `## Posted` and `## Failures` sections verbatim.
+3. Preserve the `## Author follow-ups (not for the PR)`, `## Posted` and `## Failures` sections verbatim.
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
 5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`. Preserve `posted_at` / `posted_url` (the user fills those in).
 
@@ -926,6 +992,12 @@ HEAD: `<HEAD_SHA_SHORT>` · base: `<BASE_REF>`
 
 <and so on — oldest at the bottom>
 
+## Author follow-ups (not for the PR)
+
+(omit unless Step 5c matched a session and produced a question that could not be
+de-identified — this file is host-side, so embargoed context may be named here, and
+must not be copied into the posted body)
+
 ## Posted
 
 (none yet, or whatever was already there)
@@ -934,6 +1006,8 @@ HEAD: `<HEAD_SHA_SHORT>` · base: `<BASE_REF>`
 
 (none, or whatever was already there)
 ```
+
+Carry `## Author follow-ups (not for the PR)` forward verbatim on re-review, alongside `## Posted` and `## Failures` — an unanswered question stays open across attempts.
 
 ## Step 9: Cleanup
 
