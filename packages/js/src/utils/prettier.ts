@@ -6,7 +6,6 @@ import {
   writeJson,
   type GeneratorCallback,
   type Tree,
-  logger,
 } from '@nx/devkit';
 import { prettierConfigFiles } from '@nx/devkit/internal';
 import type { Options } from 'prettier';
@@ -60,52 +59,14 @@ export async function resolveUserExistingPrettierConfig(): Promise<ExistingPrett
   }
 }
 
-// A copy of nx's `prettierConfigFiles`, used only when the installed nx is too
-// old to export it. Kept whole so the "never write a second config" invariant
-// survives the fallback.
-const PRETTIER_CONFIG_FILES_FALLBACK = [
-  '.prettierrc',
-  '.prettierrc.json',
-  '.prettierrc.yml',
-  '.prettierrc.yaml',
-  '.prettierrc.json5',
-  '.prettierrc.js',
-  'prettier.config.js',
-  '.prettierrc.ts',
-  'prettier.config.ts',
-  '.prettierrc.mjs',
-  'prettier.config.mjs',
-  '.prettierrc.mts',
-  'prettier.config.mts',
-  '.prettierrc.cjs',
-  'prettier.config.cjs',
-  '.prettierrc.cts',
-  'prettier.config.cts',
-  '.prettierrc.toml',
-];
-
 export function generatePrettierSetup(
   tree: Tree,
   options: { skipPackageJson?: boolean }
 ): GeneratorCallback {
-  // Imported rather than copied, for the same reason as the oxfmt list:
-  // detection and setup have to agree, or a workspace whose config format is
-  // missing from this copy gets a second, redundant `.prettierrc` written next
-  // to the one it already has. This copy was missing the `.ts`/`.mts`/`.cts`
-  // forms.
-  // `prettierConfigFiles` is new in this nx. `@nx/js` has no `nx` peer of its
-  // own, so it inherits devkit's `nx` peer range and can be paired with an nx
-  // that does not export it. The fallback repeats the *whole* list rather than
-  // the canonical name: a one-name fallback would miss an existing config under
-  // any other name and write a second one, which silently outranks the user's
-  // own file.
-  const configFiles = prettierConfigFiles ?? PRETTIER_CONFIG_FILES_FALLBACK;
-  if (!prettierConfigFiles) {
-    logger.warn(
-      `This @nx/js is paired with an nx that does not export \`prettierConfigFiles\`; using a built-in list. Align the nx and @nx/js versions if a duplicate prettier config appears.`
-    );
-  }
-  if (configFiles.every((name) => !tree.exists(name))) {
+  // Imported rather than copied: detection and setup have to agree on this
+  // list, or a workspace whose config format is missing from one side gets a
+  // second, redundant `.prettierrc` written beside the one it already has.
+  if (prettierConfigFiles.every((name) => !tree.exists(name))) {
     writeJson(tree, '.prettierrc', { singleQuote: true });
   }
 
@@ -154,24 +115,11 @@ export async function resolvePrettierConfigPath(
     return null;
   }
 
-  // if we haven't find a config file in the file system, we try to find it in the virtual tree
-  // https://prettier.io/docs/en/configuration.html
-  const prettierrcNameOptions = [
-    '.prettierrc',
-    '.prettierrc.json',
-    '.prettierrc.yml',
-    '.prettierrc.yaml',
-    '.prettierrc.json5',
-    '.prettierrc.js',
-    '.prettierrc.cjs',
-    '.prettierrc.mjs',
-    '.prettierrc.toml',
-    'prettier.config.js',
-    'prettier.config.cjs',
-    'prettier.config.mjs',
-  ];
-
-  const filePath = prettierrcNameOptions.find((file) => tree.exists(file));
+  // Same shared list as the setup above, so a config this can't see is one the
+  // setup would overwrite. The copy this replaced was missing the `.ts`,
+  // `.mts` and `.cts` forms.
+  // https://prettier.io/docs/configuration
+  const filePath = prettierConfigFiles.find((file) => tree.exists(file));
   if (filePath) {
     return filePath;
   }
