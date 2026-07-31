@@ -8,9 +8,9 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { lintProjectGeneratorInternal } from './lint-project.js';
+import { configurationGeneratorInternal } from './configuration.js';
 
-describe('lintProjectGeneratorInternal', () => {
+describe('configurationGeneratorInternal', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('lintProjectGeneratorInternal', () => {
   });
 
   it('registers the plugin', async () => {
-    await lintProjectGeneratorInternal(tree, {
+    await configurationGeneratorInternal(tree, {
       project: 'lib-a',
       skipPackageJson: true,
       skipFormat: true,
@@ -39,7 +39,7 @@ describe('lintProjectGeneratorInternal', () => {
   // The inference-only invariant. Writing a target here would produce a second
   // way to run Oxlint that has to be kept in sync with the inferred one.
   it('writes no target', async () => {
-    await lintProjectGeneratorInternal(tree, {
+    await configurationGeneratorInternal(tree, {
       project: 'lib-a',
       skipPackageJson: true,
       skipFormat: true,
@@ -49,7 +49,7 @@ describe('lintProjectGeneratorInternal', () => {
   });
 
   it("enables the project's plugins in its own config", async () => {
-    await lintProjectGeneratorInternal(tree, {
+    await configurationGeneratorInternal(tree, {
       project: 'lib-a',
       plugins: ['react', 'jsx-a11y'],
       skipPackageJson: true,
@@ -63,7 +63,7 @@ describe('lintProjectGeneratorInternal', () => {
   });
 
   it('writes no project config when no plugins are requested', async () => {
-    await lintProjectGeneratorInternal(tree, {
+    await configurationGeneratorInternal(tree, {
       project: 'lib-a',
       skipPackageJson: true,
       skipFormat: true,
@@ -79,8 +79,8 @@ describe('lintProjectGeneratorInternal', () => {
       skipPackageJson: true,
       skipFormat: true,
     };
-    await lintProjectGeneratorInternal(tree, options);
-    await lintProjectGeneratorInternal(tree, options);
+    await configurationGeneratorInternal(tree, options);
+    await configurationGeneratorInternal(tree, options);
 
     const plugins = readNxJson(tree).plugins?.filter((p) =>
       typeof p === 'string' ? p === '@nx/oxlint' : p.plugin === '@nx/oxlint'

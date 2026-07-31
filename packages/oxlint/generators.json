@@ -9,10 +9,10 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
-    "lint-project": {
-      "factory": "./dist/src/generators/lint-project/lint-project#lintProjectGeneratorInternal",
-      "schema": "./dist/src/generators/lint-project/schema.json",
-      "description": "Add Oxlint to an existing project."
+    "configuration": {
+      "factory": "./dist/src/generators/configuration/configuration#configurationGeneratorInternal",
+      "schema": "./dist/src/generators/configuration/schema.json",
+      "description": "Configure Oxlint for a project."
     }
   }
 }

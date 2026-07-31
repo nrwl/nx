@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "NxOxlintLintProject",
-  "title": "Add Oxlint to a project",
-  "description": "Add Oxlint to an existing project.",
+  "$id": "NxOxlintConfiguration",
+  "title": "Configure Oxlint for a project",
+  "description": "Register `@nx/oxlint` and enable this project\u2019s Oxlint plugins.",
   "type": "object",
   "properties": {
     "project": {
@@ -37,8 +37,6 @@
       "default": []
     }
   },
-  "required": [
-    "project"
-  ],
+  "required": ["project"],
   "additionalProperties": false
 }
