@@ -120,10 +120,12 @@ NX_SKIP_FORMAT=true nx g @nx/react:app my-app
 
 ## Choose a formatter at workspace creation
 
-`create-nx-workspace` asks which formatter you want when the workspace uses package manager
-workspaces, which is the default.
-With `--no-workspaces` it picks oxfmt without asking.
-Pass `--formatter` to skip the prompt:
+`create-nx-workspace` asks which formatter you want when you pick a stack (React, Vue, Angular, or
+Node) or the default TypeScript monorepo.
+The workspace also has to use package manager workspaces, which is the default.
+Every other path defaults to oxfmt without asking, including `--no-workspaces` and the `apps`,
+`npm`, and `ts-standalone` presets.
+Pass `--formatter` on any path to choose explicitly:
 
 ```shell
 npx create-nx-workspace@latest my-workspace --formatter=prettier
