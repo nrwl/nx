@@ -74,6 +74,40 @@ describe('addLintingToProject', () => {
     expect(devDependencies['oxlint']).toBeUndefined();
   });
 
+  // The plugin names come from the runner packages, so these also assert that
+  // `@nx/jest` and `@nx/vitest` are reachable through `ensurePackage` here.
+  it.each([
+    ['jest', 'jest'],
+    ['vitest', 'vitest'],
+    // Angular ships a suffixed runner; it still needs the vitest plugin.
+    ['vitest-analog', 'vitest'],
+  ])('enables the oxlint %s plugin for %s', async (unitTestRunner, plugin) => {
+    await addLintingToProject(tree, {
+      linter: 'oxlint',
+      project: 'my-lib',
+      addPlugin: true,
+      unitTestRunner,
+    });
+
+    expect(readJson(tree, 'libs/my-lib/.oxlintrc.json').plugins).toContain(
+      plugin
+    );
+  });
+
+  it('enables no test plugin when there is no unit test runner', async () => {
+    await addLintingToProject(tree, {
+      linter: 'oxlint',
+      project: 'my-lib',
+      addPlugin: true,
+      unitTestRunner: 'none',
+    });
+
+    const projectConfig = 'libs/my-lib/.oxlintrc.json';
+    if (tree.exists(projectConfig)) {
+      expect(readJson(tree, projectConfig).plugins ?? []).toEqual([]);
+    }
+  });
+
   it('configures nothing for none', async () => {
     await addLintingToProject(tree, {
       linter: 'none',

@@ -116,16 +116,31 @@ export async function addLintingToProject(
 }
 
 /**
- * Oxlint's test-runner plugins are named after the runner, so the plugin comes
- * straight from `unitTestRunner`. Matched loosely because runners arrive with
- * suffixes, e.g. Angular's `vitest-analog`.
+ * Which Oxlint plugins a test runner needs is the runner package's knowledge,
+ * so it is read from there rather than hardcoded here — this only maps the
+ * runner name to its package. Matched loosely because runners arrive with
+ * suffixes, e.g. Angular's `vitest-analog`. Both packages are already installed
+ * by the time the runner's own generator runs; `ensurePackage` keeps them out
+ * of the import graph, since both depend on `@nx/js`.
  */
 function oxlintTestPlugins(unitTestRunner: string | undefined): string[] {
-  if (unitTestRunner?.includes('vitest')) {
-    return ['vitest'];
+  const pkg = unitTestRunner?.includes('vitest')
+    ? '@nx/vitest'
+    : unitTestRunner?.includes('jest')
+      ? '@nx/jest'
+      : undefined;
+
+  if (!pkg) {
+    return [];
   }
-  if (unitTestRunner?.includes('jest')) {
-    return ['jest'];
-  }
-  return [];
+
+  // `ensurePackage` installs by package name, so the `internal` subpath is
+  // required separately. It is a semi-private entry — this is a first-party
+  // consumer, which is what that surface is for.
+  ensurePackage(pkg, nxVersion);
+  const { oxlintPlugins }: { oxlintPlugins?: string[] } = require(
+    `${pkg}/internal`
+  );
+
+  return oxlintPlugins ?? [];
 }
