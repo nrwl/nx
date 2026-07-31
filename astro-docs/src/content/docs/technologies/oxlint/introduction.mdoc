@@ -84,18 +84,20 @@ To change how one project is linted, add arguments to the inferred target in its
 }
 ```
 
-To change it everywhere, pass options to the plugin in `nx.json`. `targetName` overrides the automatic choice described above, and `extensions` controls which files count as lintable:
+The plugin itself takes one option, `targetName`. `nx add @nx/oxlint` already writes it into `nx.json` with the name it picked from the list above, so edit that entry when you want a different one:
 
 ```json
 {
   "plugins": [
     {
       "plugin": "@nx/oxlint",
-      "options": { "targetName": "oxlint", "extensions": ["ts", "tsx"] }
+      "options": { "targetName": "oxlint" }
     }
   ]
 }
 ```
+
+Which files Oxlint lints is not an Nx setting. Oxlint selects those itself; narrow them with `ignorePatterns` in `.oxlintrc.json`, or scope individual rules with `overrides`.
 
 ## Type-aware linting
 
