@@ -401,6 +401,76 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    it('expands ${VAR} references in auth.ini keys the way pnpm does', () => {
+      process.env.NX_TEST_HOST = 'reg-a.example.com';
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//${NX_TEST_HOST}/:_authToken=host-token',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'host-token',
+      });
+    });
+
+    it('lets a later auth.ini key win over an earlier one that expands to it', () => {
+      process.env.NX_TEST_HOST = 'reg-a.example.com';
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//${NX_TEST_HOST}/:_authToken=expanded-first',
+          '//reg-a.example.com/:_authToken=literal-last',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'literal-last',
+      });
+    });
+
+    it('leaves an ambient credential ahead of an auth.ini key spelled through ${VAR}', () => {
+      process.env.NX_TEST_HOST = 'reg-a.example.com';
+      process.env['npm_config_//reg-a.example.com/:_authToken'] = 'ambient';
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//${NX_TEST_HOST}/:_authToken=file-token',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+      });
+    });
+
+    it('bridges an auth.ini scoped registry declared through a ${VAR} key', () => {
+      process.env.NX_TEST_SCOPE = 'myscope';
+      writeAuthIni('@${NX_TEST_SCOPE}:registry=https://reg-c.example.com/');
+      expect(
+        getPnpmSpawnRegistryEnv('@myscope/is-even', root, '11.5.0')
+      ).toEqual({
+        'npm_config_@myscope:registry': 'https://reg-c.example.com/',
+      });
+    });
+
+    it('keeps pnpm lossy semantics for a key whose ${VAR} cannot be resolved', () => {
+      // pnpm substitutes an empty string for the unresolved reference, so the
+      // key degrades to `///:_authToken` rather than staying literal the way
+      // npm's own grammar would keep it.
+      delete process.env.NX_TEST_UNSET_HOST;
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//${NX_TEST_UNSET_HOST}/:_authToken=orphan',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_///:_authToken': 'orphan',
+      });
+    });
+
     it('treats a registry that expanded to nothing as unset', () => {
       // npm skips an empty env value, and pnpm re-checks for an empty registry,
       // so neither reads one as a destination.
