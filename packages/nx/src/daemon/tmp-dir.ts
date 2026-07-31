@@ -100,8 +100,8 @@ function defaultSocketRoot(): string {
     : join(NX_USER_TMP_DIR, 'sockets');
 }
 
-function homeSocketRoot(): string {
-  return join(NX_HOME_TMP_DIR, 'sockets');
+function homeSocketRoot(): string | undefined {
+  return NX_HOME_TMP_DIR ? join(NX_HOME_TMP_DIR, 'sockets') : undefined;
 }
 
 /**
@@ -133,15 +133,21 @@ function socketRootTiers(): { root: string; establish: () => boolean }[] {
           ensureOwnedPrivateDir(d)
         ),
     },
-    {
-      root: homeSocketRoot(),
-      // No shared level to verify: the home directory is the user's own, so
-      // there is no container another user could have created first.
-      establish: () =>
-        [NX_HOME_TMP_DIR, homeSocketRoot()].every((d) =>
-          ensureOwnedPrivateDir(d)
-        ),
-    },
+    // Omitted entirely when there is no home directory to use, rather than
+    // offered and then failing its guards.
+    ...(NX_HOME_TMP_DIR && homeSocketRoot()
+      ? [
+          {
+            root: homeSocketRoot(),
+            // No shared level to verify: the home directory is the user's own,
+            // so there is no container another user could have created first.
+            establish: () =>
+              [NX_HOME_TMP_DIR, homeSocketRoot()].every((d) =>
+                ensureOwnedPrivateDir(d)
+              ),
+          },
+        ]
+      : []),
   ];
 }
 
@@ -170,8 +176,12 @@ function dirsUnusableAsSocketDir(): { dir: string; shared: boolean }[] {
     { dir: NX_TMP_DIR, shared: true },
     { dir: NX_USER_TMP_DIR, shared: false },
     { dir: defaultSocketRoot(), shared: false },
-    { dir: NX_HOME_TMP_DIR, shared: false },
-    { dir: homeSocketRoot(), shared: false },
+    ...(NX_HOME_TMP_DIR
+      ? [
+          { dir: NX_HOME_TMP_DIR, shared: false },
+          { dir: homeSocketRoot(), shared: false },
+        ]
+      : []),
     { dir: NATIVE_CACHE_ROOT, shared: false },
   ];
 }
