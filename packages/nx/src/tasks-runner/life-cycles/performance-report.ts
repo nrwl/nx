@@ -31,7 +31,9 @@ let remoteCacheLink = NX_REMOTE_CACHE_LINK;
 
 // Give up on the short URL after this long so a slow/hung Cloud API never
 // lingers past the exit report. Covers two sequential round trips (features
-// GET, onboarding POST); the 30s CTA floor leaves room.
+// GET, onboarding POST); the 30s CTA floor leaves room. Timing out also aborts
+// the request - Promise.race alone would leave the socket holding the event
+// loop open, which strands programmatic callers that never process.exit.
 const ONBOARDING_URL_TIMEOUT = 5000;
 
 /**
@@ -53,12 +55,24 @@ export async function prefetchRemoteCacheOnboardingUrl(
   if (getVcsRemoteInfo()?.domain !== 'github.com') {
     return;
   }
+  const abortController = new AbortController();
   try {
     const url = await Promise.race([
-      createNxCloudOnboardingURL('nx-cli-perf-report'),
+      createNxCloudOnboardingURL(
+        'nx-cli-perf-report',
+        undefined,
+        undefined,
+        false,
+        false,
+        undefined,
+        abortController.signal
+      ),
       new Promise<null>((resolve) => {
         // unref so the pending timer never keeps the CLI alive on its own.
-        setTimeout(() => resolve(null), ONBOARDING_URL_TIMEOUT).unref();
+        setTimeout(() => {
+          abortController.abort();
+          resolve(null);
+        }, ONBOARDING_URL_TIMEOUT).unref();
       }),
     ]);
     // createNxCloudOnboardingURL never throws - on an unreachable API it returns a

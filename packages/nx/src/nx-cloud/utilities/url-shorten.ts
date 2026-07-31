@@ -11,13 +11,19 @@ export async function createNxCloudOnboardingURL(
   meta?: string,
   forceManual = false,
   forceGithub = false,
-  directory?: string
+  directory?: string,
+  // Aborting tears down the in-flight request; without it a caller that stops
+  // waiting (see prefetchRemoteCacheOnboardingUrl) leaves the socket holding
+  // the event loop open, since axios has no default timeout.
+  signal?: AbortSignal
 ) {
   const remoteInfo = getVcsRemoteInfo(directory);
   const apiUrl = getCloudUrl();
 
-  const installationSupportsGitHub =
-    await getInstallationSupportsGitHub(apiUrl);
+  const installationSupportsGitHub = await getInstallationSupportsGitHub(
+    apiUrl,
+    signal
+  );
 
   let usesGithub = false;
   if (forceGithub) {
@@ -39,7 +45,8 @@ export async function createNxCloudOnboardingURL(
         selectedRepositoryName: remoteInfo?.slug ?? null,
         repositoryDomain: remoteInfo?.domain ?? null,
         meta,
-      }
+      },
+      { signal }
     );
 
     if (!response?.data || response.data.message) {
@@ -93,10 +100,14 @@ export function getURLifShortenFailed(
   return `${apiUrl}/setup/connect-workspace/manual?accessToken=${accessToken}&source=${source}`;
 }
 
-async function getInstallationSupportsGitHub(apiUrl: string): Promise<boolean> {
+async function getInstallationSupportsGitHub(
+  apiUrl: string,
+  signal?: AbortSignal
+): Promise<boolean> {
   try {
     const response = await require('axios').get(
-      `${apiUrl}/nx-cloud/system/features`
+      `${apiUrl}/nx-cloud/system/features`,
+      { signal }
     );
     if (!response?.data || response.data.message) {
       throw new Error(
