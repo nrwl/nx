@@ -1,19 +1,14 @@
 import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
+import type { FormatterType } from 'nx/src/devkit-internals';
 import {
+  detectFormatterInTree,
+  formatFilesWithOxfmt,
   isUsingPrettierInTree,
+  oxfmtConfigFiles,
   sortObjectByKeys,
 } from 'nx/src/devkit-internals';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-
-/**
- * Types for the symbols this module bridges from nx at runtime. They come from
- * the in-repo nx through devkit's project reference, so a signature change
- * there is a compile error here rather than a silent mismatch. Type-only, so it
- * erases: devkit supports nx +/- 1 major, and the runtime presence checks below
- * are what handle an older nx that lacks these exports.
- */
-type Internals = typeof import('nx/src/devkit-internals');
 
 // Prettier v3 (ESM) exposes its API as named exports; v2 (CJS) exposes it under
 // `.default` when loaded via `import()`. Return whichever carries the API, or
@@ -62,18 +57,10 @@ export async function formatFiles(
     return;
   }
 
-  // `FormatterType` is a type export, so it is not on `typeof import(...)`.
-  let formatterType: import('nx/src/devkit-internals').FormatterType | null =
-    null;
-  // Derived rather than hand-written, for the same reason as the two symbols
-  // in formatWithOxfmt: a signature change in nx should be a compile error
-  // here, not a runtime surprise.
-  let detectFormatterInTree: Internals['detectFormatterInTree'] | undefined;
-  try {
-    detectFormatterInTree =
-      require('nx/src/devkit-internals').detectFormatterInTree;
-  } catch {}
-
+  let formatterType: FormatterType | null = null;
+  // devkit supports nx +/- 1 major and these exports do not exist in older
+  // versions. A missing CommonJS named export is `undefined` rather than a
+  // throw, so a presence check is what handles it - not a try/catch.
   if (detectFormatterInTree) {
     formatterType = detectFormatterInTree(tree);
   } else {
@@ -157,17 +144,7 @@ async function formatWithOxfmt(
   tree: Tree,
   files: Set<{ path: string; content: Buffer }>
 ) {
-  let formatFilesWithOxfmt: Internals['formatFilesWithOxfmt'];
-  let oxfmtConfigFiles: Internals['oxfmtConfigFiles'];
-  try {
-    ({
-      formatFilesWithOxfmt,
-      oxfmtConfigFiles,
-    } = require('nx/src/devkit-internals'));
-    if (!formatFilesWithOxfmt) return;
-  } catch {
-    return;
-  }
+  if (!formatFilesWithOxfmt) return;
 
   const staged = Array.from(files).map((file) => ({
     path: file.path,
