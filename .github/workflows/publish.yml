@@ -582,45 +582,37 @@ jobs:
           repository: ${{ needs.resolve-required-data.outputs.repo || github.repository }}
           ref: ${{ needs.resolve-required-data.outputs.ref || github.ref }}
 
-      # Built here (rather than inline in the payload below) to keep the Block Kit
-      # construction consistent with the other two Slack-posting jobs.
-      - name: Build Slack message payload
-        id: approved-message
+      # Built here (rather than inline in the `with:` block below) to keep the construction
+      # style consistent with the other Slack-posting steps in this file.
+      - name: Build Slack reaction payload
+        id: approved-reaction
         if: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
         env:
           THREAD_TS: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
         run: |
           PAYLOAD=$(jq -nc --arg ts "$THREAD_TS" '{
             channel: "C024JCL7TST",
-            text: "✅ Publish Approved",
-            thread_ts: $ts,
-            attachments: [
-              {
-                color: "good",
-                blocks: [
-                  {
-                    type: "section",
-                    text: { type: "mrkdwn", text: "*Approved* — publishing now." }
-                  }
-                ]
-              }
-            ]
+            timestamp: $ts,
+            name: "white_check_mark"
           }')
           echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
 
-      # Best-effort threaded confirmation that the manual review gate has been passed and the
-      # publish is proceeding. Requires the SLACK_BOT_TOKEN secret and a valid thread to reply to;
-      # if either is missing this step no-ops without affecting the actual publish below.
-      - name: Notify Slack thread that publish was approved
+      # Best-effort acknowledgement that the manual review gate has been passed and the
+      # publish is proceeding, expressed as a ✅ reaction on the original pending-review
+      # message (rather than a threaded reply) so the approval doesn't add extra noise to
+      # the channel. Requires the SLACK_BOT_TOKEN secret to carry the `reactions:write`
+      # scope and a valid ts to react to; if either is missing this step no-ops without
+      # affecting the actual publish below.
+      - name: React to Slack message to indicate publish was approved
         id: notify-approved
         if: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
         continue-on-error: true
         uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
         with:
-          method: chat.postMessage
+          method: reactions.add
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           errors: true
-          payload: ${{ steps.approved-message.outputs.payload }}
+          payload: ${{ steps.approved-reaction.outputs.payload }}
 
       - name: Set verbose logging from debug mode
         if: runner.debug == '1'
