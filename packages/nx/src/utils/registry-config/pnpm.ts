@@ -87,7 +87,8 @@ export function getPnpmSpawnRegistryEnv(
   const settings = readPnpmWorkspaceSettings(root);
   const scope = getPackageScope(packageName);
   // Kept identical to the predicate the caller hands mergeNpmConfigEnv at spawn
-  // time, which drops every ambient npm_config_* this answers true for.
+  // time, which drops the bridged ambient npm_config_* this answers true for
+  // (settings outside the bridged set stay ambient either way).
   const managerIgnoresEnv = ignoresNpmConfigEnv('pnpm', pnpmVersion);
 
   if (lt(pnpmVersion, '11.0.0')) {
@@ -254,7 +255,7 @@ function readJsonAuthTier(pnpmVersion: string): JsonAuthTier | null {
   const merged = new Map<string, JsonAuthTier['auth'][number]>();
   for (const tier of [yamlTier, envTier]) {
     for (const entry of tier?.auth ?? []) {
-      merged.set(`${entry.scope} ${entry.dart}`, entry);
+      merged.set(`${entry.scope}\0${entry.dart}`, entry);
     }
   }
   return {
@@ -781,9 +782,9 @@ function npmResolved(
   key: string,
   managerIgnoresEnv: IgnoresNpmConfigEnv
 ): string | undefined {
-  // npm's env tier outranks the .npmrc, but the spawn strips every ambient
-  // npm_config_* the manager ignores (mergeNpmConfigEnv), so a value it never
-  // saw is not counted here either.
+  // npm's env tier outranks the .npmrc, but the spawn strips a bridged ambient
+  // npm_config_* the manager ignores (mergeNpmConfigEnv), and every key read
+  // here is bridged, so a value npm never sees is not counted either.
   const ambient = managerIgnoresEnv(key)
     ? undefined
     : readNpmConfigEnv(process.env, key);

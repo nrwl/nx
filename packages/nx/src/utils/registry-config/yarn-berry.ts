@@ -265,7 +265,8 @@ export function getYarnBerrySpawnRegistryEnv(
 /**
  * Reads a key the way the spawned npm would from the .npmrc files berry ignores.
  * The env tier is left out on purpose: berry never reads npm_config_*, so the
- * spawn strips every ambient one (mergeNpmConfigEnv), and what berry does send
+ * spawn strips every bridged ambient one (mergeNpmConfigEnv), the nerf-darted
+ * keys this reader is probed with are all bridged, and what berry does send
  * is in the overlay the warning checks separately. npm also reads a
  * <globalPrefix>/etc npmrc and its own builtin one, which are not enumerated
  * here: missing one only means the warning stays silent. The maps are read once
