@@ -4,13 +4,9 @@
 // internal consumers and may change without semver protection. Mirrors
 // `@nx/devkit/internal`.
 
-export { versions, getInstalledJestMajorVersion } from './src/utils/versions';
-
-export { findRootJestPreset } from './src/utils/config/config-file';
-
 /**
- * The Oxlint plugins a Jest-tested project needs. Declared here so the linter
+ * The Oxlint plugins a Vitest-tested project needs. Declared here so the linter
  * does not have to know what a test runner requires; `@nx/js`'s
  * `addLintingToProject` reads it through `ensurePackage`.
  */
-export const oxlintPlugins = ['jest'];
+export const oxlintPlugins = ['vitest'];
