@@ -76,6 +76,8 @@ Both read the workspace root config, its `overrides` and `ignorePatterns`, and t
 Generator formatting reads only the workspace root.
 An `.oxfmtrc.json` or `.gitignore` in a subdirectory, or an `.editorconfig` above the root, applies
 under `nx format:write` and not during generator formatting.
+When a subdirectory config differs from the root one, generated files come out matching the root and
+fail `nx format:check` until you run `nx format:write`.
 
 One root-level case leaves the two disagreeing: an `.editorconfig` that sets `indent_size` without
 `indent_style`.
