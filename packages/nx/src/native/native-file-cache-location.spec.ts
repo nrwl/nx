@@ -172,6 +172,73 @@ describe('native file cache location', () => {
       }
     });
 
+    posixOnly(
+      'should refuse an override directory that is not owner-only',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          // A `.node` is loaded out of here, so being configured does not
+          // exempt it: a directory other users can write to is the
+          // vulnerability this module exists to close.
+          const target = join(base, 'loose');
+          mkdirSync(target, { mode: 0o777 });
+          chmodSync(target, 0o777);
+          const getuid = jest
+            .spyOn(process, 'getuid')
+            .mockReturnValue(process.getuid!() + 1);
+          process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = target;
+          try {
+            expect(ensureSecureNativeFileCacheLocation()).toBeNull();
+          } finally {
+            getuid.mockRestore();
+          }
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
+      }
+    );
+
+    posixOnly(
+      'should refuse a symlink planted at the override directory',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          const victim = join(base, 'victim');
+          mkdirSync(victim, { mode: 0o700 });
+          const planted = join(base, 'planted');
+          symlinkSync(victim, planted);
+          process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = planted;
+
+          expect(ensureSecureNativeFileCacheLocation()).toBeNull();
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
+      }
+    );
+
+    posixOnly(
+      'should not hand an override we do not own to the delete path',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          const target = join(base, 'foreign');
+          mkdirSync(target, { mode: 0o700 });
+          const getuid = jest
+            .spyOn(process, 'getuid')
+            .mockReturnValue(process.getuid!() + 1);
+          process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = target;
+          try {
+            // rmSync(recursive, force) is the sink here.
+            expect(getNativeFileCacheLocationToDelete()).toBeNull();
+          } finally {
+            getuid.mockRestore();
+          }
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
+      }
+    );
+
     // The tests below pin the *wiring*, which the `ensureOwnedPrivateDir`
     // suite above cannot: those cover the guard's own branches, but reverting
     // either call site here to a bare `mkdirSync` leaves them all green. They

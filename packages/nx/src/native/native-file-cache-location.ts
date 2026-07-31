@@ -32,7 +32,11 @@ export function getNativeFileCacheLocation() {
  */
 export function getNativeFileCacheLocationToDelete(): string | null {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
-    return process.env.NX_NATIVE_FILE_CACHE_DIRECTORY;
+    // Checked before it is handed to a recursive delete, for the same reason
+    // the default location is: being configured does not make it ours.
+    return isOwnedRealDirectory(process.env.NX_NATIVE_FILE_CACHE_DIRECTORY)
+      ? process.env.NX_NATIVE_FILE_CACHE_DIRECTORY
+      : null;
   }
   return isSafeSharedRoot(NX_TMP_DIR) &&
     isOwnedRealDirectory(NX_USER_TMP_DIR) &&
@@ -55,10 +59,18 @@ export function ensureSecureNativeFileCacheLocation(
   cacheRoot: string = NATIVE_CACHE_ROOT
 ): string | null {
   if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
-    // Caller-provided location; its safety is the caller's responsibility.
     const dir = process.env.NX_NATIVE_FILE_CACHE_DIRECTORY;
     try {
-      mkdirSync(dir, { recursive: true });
+      // Held to the same bar as the default location rather than trusted for
+      // being configured: a `.node` is loaded out of here, so a directory
+      // another user can write to is the vulnerability this module exists to
+      // close. NX_SOCKET_DIR is validated and refused the same way.
+      mkdirSync(dirname(dir), { recursive: true });
+      if (!ensureOwnedPrivateDir(dir)) {
+        throw new Error(
+          'it is not a directory owned by the current user with no group or other access'
+        );
+      }
       return dir;
     } catch (e: any) {
       // Never discard a configured directory silently — the socket directory
