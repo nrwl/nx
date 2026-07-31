@@ -79,7 +79,7 @@
     "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
   },
   "peerDependencies": {
-    "oxlint": "^1.0.0"
+    "oxlint": "^1.43.0"
   },
   "peerDependenciesMeta": {
     "oxlint": {
