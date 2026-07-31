@@ -42,11 +42,19 @@ export async function addLintingToProject(
   tree: Tree,
   options: AddLintingToProjectOptions
 ): Promise<GeneratorCallback> {
-  if (options.linter === 'none') {
+  // `linter` is typed as required, but `tsconfig.base.json` sets
+  // `"strict": false` and several generator schemas (detox, expo,
+  // react-native) declare it optional, so `undefined` does reach here through
+  // a `...options` spread. It has always meant ESLint; naming that here keeps
+  // it from being an implicit fallthrough and lets the union below be
+  // exhaustive.
+  const linter = options.linter ?? 'eslint';
+
+  if (linter === 'none') {
     return () => {};
   }
 
-  if (options.linter === 'oxlint') {
+  if (linter === 'oxlint') {
     // `ensurePackage` installs by package name, so the subpath is required
     // separately. `nx-ignore-next-line` keeps this out of the import graph so
     // `@nx/dependency-checks` does not demand `@nx/oxlint` in this package's
@@ -72,20 +80,28 @@ export async function addLintingToProject(
     });
   }
 
-  const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
-  return lintProjectGenerator(tree, {
-    linter: options.linter,
-    project: options.project,
-    tsConfigPaths: options.tsConfigPaths,
-    unitTestRunner: options.unitTestRunner,
-    rootProject: options.rootProject,
-    enableTypedLinting: options.enableTypedLinting,
-    eslintConfigFormat: options.eslintConfigFormat,
-    skipFormat: true,
-    skipPackageJson: options.skipPackageJson,
-    keepExistingVersions: options.keepExistingVersions,
-    addPlugin: options.addPlugin,
-  });
+  if (linter === 'eslint') {
+    const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
+    return lintProjectGenerator(tree, {
+      linter,
+      project: options.project,
+      tsConfigPaths: options.tsConfigPaths,
+      unitTestRunner: options.unitTestRunner,
+      rootProject: options.rootProject,
+      enableTypedLinting: options.enableTypedLinting,
+      eslintConfigFormat: options.eslintConfigFormat,
+      skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
+      keepExistingVersions: options.keepExistingVersions,
+      addPlugin: options.addPlugin,
+    });
+  }
+
+  // Spelling ESLint out as its own branch rather than letting it be the
+  // fallthrough: a new `LinterType` member then fails to compile here instead of
+  // silently getting an ESLint setup.
+  const unhandled: never = linter;
+  throw new Error(`Unsupported linter: ${unhandled}`);
 }
 
 /**

@@ -91,8 +91,12 @@ type AngularUnitTestRunner =
   | 'vitest-angular'
   | 'vitest-analog';
 
-/** Mirrors `LinterType` in `@nx/js`, which this package cannot depend on. */
-type Linter = 'none' | 'eslint' | 'oxlint';
+/**
+ * Mirrors `LinterType` in `@nx/js`, which this package cannot depend on.
+ * One array so the type and the yargs `choices` gate below cannot drift apart.
+ */
+const LINTERS = ['eslint', 'oxlint', 'none'] as const;
+type Linter = (typeof LINTERS)[number];
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
@@ -254,7 +258,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           // silently scaffold ESLint.
           .option('linter', {
             describe: chalk.dim`Linter to use.`,
-            choices: ['eslint', 'oxlint', 'none'],
+            choices: [...LINTERS],
             type: 'string',
           })
           .option('framework', {

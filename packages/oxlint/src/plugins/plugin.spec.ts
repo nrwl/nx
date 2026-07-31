@@ -100,6 +100,35 @@ describe('@nx/oxlint plugin', () => {
     );
   });
 
+  // Target `inputs` only. The separate per-project list that feeds the plugin's
+  // cache key is computed elsewhere and is not observable here — mutating it
+  // leaves this test green.
+  it('should declare ancestor configs as inputs but not ones below the project', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+      'libs/a/src/nested/.oxlintrc.json': `{"rules":{}}`,
+      // A sibling whose path is a string prefix of the project's must not count.
+      'libs/ab/.oxlintrc.json': `{"rules":{}}`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+    const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+    expect(inputs).toEqual(
+      expect.arrayContaining([
+        '{workspaceRoot}/.oxlintrc.json',
+        '{workspaceRoot}/libs/.oxlintrc.json',
+      ])
+    );
+    expect(inputs).not.toContain(
+      '{workspaceRoot}/libs/a/src/nested/.oxlintrc.json'
+    );
+    expect(inputs).not.toContain('{workspaceRoot}/libs/ab/.oxlintrc.json');
+  });
+
   it('should create a target when using oxlint.config.mts', async () => {
     createFiles({
       'oxlint.config.mts': `export default { rules: {} };`,

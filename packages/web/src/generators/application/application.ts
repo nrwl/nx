@@ -29,7 +29,6 @@ import {
 } from '@nx/devkit';
 import {
   addLintingToProject,
-  detectLinter,
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
@@ -37,6 +36,7 @@ import {
   swcCoreVersion,
   getNpmScope,
   addProjectToTsSolutionWorkspace,
+  detectLinter,
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';

@@ -99,7 +99,7 @@ describe('lintProjectGeneratorInternal', () => {
     const oxlintTargets = Object.entries(targets)
       .filter(([, t]) => t.executor === '@nx/oxlint:lint')
       .map(([name]) => name);
-    expect(oxlintTargets).toEqual(['oxlint:lint']);
+    expect(oxlintTargets).toEqual(['oxlint-lint']);
     expect(targets.lint.executor).toEqual('@nx/eslint:lint');
     expect(targets.oxlint.executor).toEqual('nx:run-commands');
   });

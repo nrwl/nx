@@ -57,6 +57,23 @@ describe('addLintingToProject', () => {
     expect(devDependencies['@nx/eslint']).toBeUndefined();
   });
 
+  // detox, expo and react-native declare `linter` optional and forward it with
+  // `...options`, so undefined reaches here. It has always meant ESLint, and the
+  // exhaustiveness check added alongside this must not turn that into a throw.
+  it('falls back to eslint when no linter is given', async () => {
+    await expect(
+      addLintingToProject(tree, {
+        linter: undefined,
+        project: 'my-lib',
+        addPlugin: true,
+      })
+    ).resolves.toBeDefined();
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/eslint']).toBeDefined();
+    expect(devDependencies['oxlint']).toBeUndefined();
+  });
+
   it('configures nothing for none', async () => {
     await addLintingToProject(tree, {
       linter: 'none',

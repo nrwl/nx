@@ -5,7 +5,6 @@
     { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
     { "glob": "src/migrations/**/*.md" },
-    { "glob": "PLUGIN.md" },
     "LICENSE"
   ]
 }
