@@ -51,7 +51,7 @@ describe('ensureOwnedPrivateDir', () => {
       const squatted = join(base, 'squatted');
       symlinkSync(victim, squatted);
 
-      expect(ensureOwnedPrivateDir(squatted)).toBe(false);
+      expect(ensureOwnedPrivateDir(squatted)).toBeNull();
       expect(lstatSync(victim).mode & 0o777).toBe(0o755);
     }
   );
@@ -70,7 +70,7 @@ describe('ensureOwnedPrivateDir', () => {
       chmodSync(dir, mode);
       expect(lstatSync(dir).mode & 0o777).toBe(mode);
 
-      expect(ensureOwnedPrivateDir(dir)).toBe(true);
+      expect(ensureOwnedPrivateDir(dir)).not.toBeNull();
       expect(lstatSync(dir).mode & 0o777).toBe(0o700);
     }
   );
@@ -87,7 +87,7 @@ describe('ensureOwnedPrivateDir', () => {
         .spyOn(process, 'getuid')
         .mockReturnValue(process.getuid!() + 1);
       try {
-        expect(ensureOwnedPrivateDir(dir)).toBe(false);
+        expect(ensureOwnedPrivateDir(dir)).toBeNull();
       } finally {
         getuid.mockRestore();
       }
@@ -109,7 +109,7 @@ describe('ensureOwnedPrivateDir', () => {
         // Stub the stat result rather than changing getuid: a real fixture is
         // root-owned when the suite runs as root, and uid 0 is intentionally
         // accepted by the predicate.
-        expect(isSafeSharedRoot('/tmp/.nx')).toBe(false);
+        expect(isSafeSharedRoot('/tmp/.nx')).toBeNull();
       }
     );
 
@@ -163,7 +163,7 @@ describe('ensureOwnedPrivateDir', () => {
         mode: 0o41777,
       });
       try {
-        expect(isSafeSharedRoot('/tmp/.nx')).toBe(true);
+        expect(isSafeSharedRoot('/tmp/.nx')).not.toBeNull();
       } finally {
         getuid.mockRestore();
       }
@@ -176,7 +176,7 @@ describe('ensureOwnedPrivateDir', () => {
         mkdirSync(dir);
         chmodSync(dir, 0o777);
 
-        expect(isSafeSharedRoot(dir)).toBe(false);
+        expect(isSafeSharedRoot(dir)).toBeNull();
       }
     );
 
@@ -187,7 +187,7 @@ describe('ensureOwnedPrivateDir', () => {
       const planted = join(base, 'planted-root');
       symlinkSync(victim, planted);
 
-      expect(isSafeSharedRoot(planted)).toBe(false);
+      expect(isSafeSharedRoot(planted)).toBeNull();
     });
 
     posixOnly(
@@ -195,7 +195,7 @@ describe('ensureOwnedPrivateDir', () => {
       () => {
         const dir = join(base, 'shared');
 
-        expect(ensureSafeSharedRoot(dir)).toBe(true);
+        expect(ensureSafeSharedRoot(dir)).not.toBeNull();
         expect(lstatSync(dir).mode & 0o7777).toBe(0o1777);
       }
     );
@@ -211,7 +211,7 @@ describe('ensureOwnedPrivateDir', () => {
       plant(planted);
       const before = lstatSync(planted).mode & 0o7777;
 
-      expect(ensureSafeSharedRoot(planted)).toBe(false);
+      expect(ensureSafeSharedRoot(planted)).toBeNull();
       expect(lstatSync(planted).mode & 0o7777).toBe(before);
     });
 
@@ -223,7 +223,7 @@ describe('ensureOwnedPrivateDir', () => {
       mkdirSync(dir);
       chmodSync(dir, 0o702);
 
-      expect(isSafeSharedRoot(dir)).toBe(false);
+      expect(isSafeSharedRoot(dir)).toBeNull();
     });
   });
 

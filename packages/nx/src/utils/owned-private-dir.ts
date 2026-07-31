@@ -10,6 +10,36 @@ import {
 import { userInfo } from 'node:os';
 
 /**
+ * Each guard returns its own branded path rather than a bare boolean, so the
+ * four cannot be substituted for one another. They take the same argument and
+ * differ only in what they establish, and the substitutions are silent in the
+ * direction that opens a hole: `ensureSafeSharedRoot` in place of
+ * `ensureOwnedPrivateDir` creates the directory `1777` instead of `0700` and
+ * still returns something truthy, so the caller proceeds believing it holds a
+ * private directory. `null` is the single failure value throughout, so callers
+ * that only test truthiness are unaffected.
+ */
+declare const safeSharedRootBrand: unique symbol;
+declare const sharedRootEstablishedBrand: unique symbol;
+declare const ownedRealDirBrand: unique symbol;
+declare const ownedPrivateDirBrand: unique symbol;
+
+/** Verified safe to keep an owner-only directory under. Not created. */
+export type SafeSharedRoot = string & {
+  readonly [safeSharedRootBrand]: true;
+};
+/** Created if absent, then verified safe as above. */
+export type EstablishedSharedRoot = string & {
+  readonly [sharedRootEstablishedBrand]: true;
+};
+/** An existing real directory owned by us. Mode is *not* checked. */
+export type OwnedRealDir = string & { readonly [ownedRealDirBrand]: true };
+/** Created if absent, owned by us, and re-locked to `0700`. */
+export type OwnedPrivateDir = string & {
+  readonly [ownedPrivateDirBrand]: true;
+};
+
+/**
  * chmod a path only if it is a real directory, never following a symlink at its
  * final component — `chmodSync` follows them, retargeting the mode change.
  *
@@ -60,26 +90,28 @@ const S_ISVTX = 0o1000;
  * create the single top-level container as root-owned mode 1777; every user can
  * create their own private subtree directly beneath it.
  */
-export function isSafeSharedRoot(dir: string): boolean {
+export function isSafeSharedRoot(dir: string): SafeSharedRoot | null {
   try {
     const stats = lstatSync(dir);
     if (!stats.isDirectory()) {
-      return false;
+      return null;
     }
     if (process.platform === 'win32') {
       // The OS temp root is already scoped to the current Windows user.
-      return true;
+      return dir as SafeSharedRoot;
     }
     if (
       typeof process.getuid === 'function' &&
       stats.uid !== process.getuid() &&
       stats.uid !== 0
     ) {
-      return false;
+      return null;
     }
-    return !(stats.mode & 0o022) || !!(stats.mode & S_ISVTX);
+    return !(stats.mode & 0o022) || !!(stats.mode & S_ISVTX)
+      ? (dir as SafeSharedRoot)
+      : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -117,13 +149,15 @@ export function sharedRootRemedy(dir: string): string | undefined {
  * root or by the first user, so the verdict always comes from
  * `isSafeSharedRoot`.
  */
-export function ensureSafeSharedRoot(dir: string): boolean {
+export function ensureSafeSharedRoot(
+  dir: string
+): EstablishedSharedRoot | null {
   if (process.platform === 'win32') {
     try {
       mkdirSync(dir, { recursive: true });
-      return true;
+      return dir as EstablishedSharedRoot;
     } catch {
-      return false;
+      return null;
     }
   }
 
@@ -131,11 +165,11 @@ export function ensureSafeSharedRoot(dir: string): boolean {
     mkdirSync(dir, { mode: 0o1777 });
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
-      return false;
+      return null;
     }
   }
   chmodRealDirectory(dir, 0o1777);
-  return isSafeSharedRoot(dir);
+  return isSafeSharedRoot(dir) === null ? null : (dir as EstablishedSharedRoot);
 }
 
 /**
@@ -143,17 +177,18 @@ export function ensureSafeSharedRoot(dir: string): boolean {
  * `ensureOwnedPrivateDir` it creates nothing and repairs nothing — for callers
  * that only want to know whether a path is safe to act on, such as deleting.
  */
-export function isOwnedRealDirectory(dir: string): boolean {
+export function isOwnedRealDirectory(dir: string): OwnedRealDir | null {
   try {
     const stats = lstatSync(dir);
     if (!stats.isDirectory()) {
-      return false;
+      return null;
     }
-    return (
-      typeof process.getuid !== 'function' || stats.uid === process.getuid()
-    );
+    return typeof process.getuid !== 'function' ||
+      stats.uid === process.getuid()
+      ? (dir as OwnedRealDir)
+      : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -182,13 +217,13 @@ export function getUserSegment(): string {
  *
  * Node builtins only: reached from the native binding loader.
  */
-export function ensureOwnedPrivateDir(dir: string): boolean {
+export function ensureOwnedPrivateDir(dir: string): OwnedPrivateDir | null {
   try {
     mkdirSync(dir, { mode: 0o700 });
-    return true;
+    return dir as OwnedPrivateDir;
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
-      return false;
+      return null;
     }
   }
 
@@ -197,22 +232,22 @@ export function ensureOwnedPrivateDir(dir: string): boolean {
     // Before the Windows short-circuit: "is a real directory" holds on every
     // platform.
     if (!stats.isDirectory()) {
-      return false;
+      return null;
     }
     if (typeof process.getuid !== 'function') {
       // Windows: the roots there are per-user OS temp dirs, not a shared /tmp.
-      return true;
+      return dir as OwnedPrivateDir;
     }
     if (stats.uid !== process.getuid()) {
-      return false;
+      return null;
     }
     if (stats.mode & 0o077) {
       if (!chmodRealDirectory(dir, 0o700)) {
-        return false;
+        return null;
       }
     }
-    return true;
+    return dir as OwnedPrivateDir;
   } catch {
-    return false;
+    return null;
   }
 }
