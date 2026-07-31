@@ -232,12 +232,14 @@ export default [
   {
     ignores: ['**/__fixtures__/**/*', 'dist', 'native-packages/**/*'],
   },
-  // Scoped to spec files on purpose. `allowDirectNxImports` carries no `files`
-  // key, so an unscoped append would match every file and *replace* (flat config
-  // does not merge rule options) the `@typescript-eslint/no-restricted-imports`
-  // configurations above — silently dropping the `typescript` optional-dependency
-  // ban and the `nx/*` circular-import ban for all of packages/nx.
-  // Spec files are the only ones the root rule newly reaches here: the `**/*.ts`
-  // block above redefines the rule and carries `ignores: ['**/*.spec.ts']`.
-  { files: ['**/*.spec.ts'], ...allowDirectNxImports },
+  // Scoped to spec files on purpose. `allowDirectNxImports` defaults to matching
+  // every file, so an unscoped append would *replace* (flat config does not merge
+  // rule options) the `@typescript-eslint/no-restricted-imports` configurations
+  // above — silently dropping the `typescript` optional-dependency ban and the
+  // `nx/*` circular-import ban for all of packages/nx. `files` must come AFTER
+  // the spread to win.
+  // Spec files are the only TypeScript files the root rule newly reaches here:
+  // the `**/*.ts` block above redefines the rule and carries
+  // `ignores: ['**/*.spec.ts']`.
+  { ...allowDirectNxImports, files: ['**/*.spec.ts'] },
 ];

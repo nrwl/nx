@@ -52,18 +52,19 @@ const restrictedImportPatterns = [
 // packages/nx and packages/devkit redefine this rule in their own configs.
 //
 // Anchored regex rather than a `['nx', 'nx/**']` glob: eslint matches import
-// groups with gitignore semantics, so `nx/**` also matches any local path with
-// an `nx/` segment (e.g. create-nx-workspace's `./utils/nx/nx-cloud`). The regex
-// matches only the real package — `nx` and `nx/…` — while leaving relative paths
-// and the `@nx/*` scope alone.
+// groups with gitignore semantics, so the slash-less `nx` entry needed to catch
+// the bare specifier is unanchored and also matches any local path with an `nx`
+// segment (e.g. create-nx-workspace's `./utils/nx/nx-cloud`). `nx/**` itself is
+// fine — it contains a slash, so it is anchored. The regex matches only the real
+// package — `nx` and `nx/…` — while leaving relative paths and `@nx/*` alone.
 //
 // `nx/release` is exempt: it is a public, stable entry point whose runtime API
 // (VersionActions, releasePublish, releaseVersion) transitively pulls in the
-// project graph, so routing it through the devkit barrels — which nx core and
-// plugin graph hooks load — creates a require cycle. Release-extension plugins
-// import it directly.
+// project graph, so routing it through the devkit barrels — which plugin graph
+// hooks load in every plugin worker — would add ~73 modules to the closure they
+// eagerly load. Release-extension plugins import it directly.
 const directNxImportPattern = {
-  regex: '^nx($|/(?!release$))',
+  regex: '^nx($|/(?!release($|/)))',
   message:
     "Import from '@nx/devkit' or '@nx/devkit/internal' instead of 'nx' — devkit is the version-compatibility boundary (see packages/devkit/CLAUDE.md).",
 };
@@ -71,16 +72,16 @@ const directNxImportPattern = {
 // Escape hatch for non-published projects (e2e suites, the graph client)
 // that legitimately reach into nx internals. Append AFTER baseConfig.
 //
-// WARNING: this object deliberately carries no `files` key, so it matches every
-// linted file in whichever config appends it. Flat config *replaces* a rule's
-// options rather than merging them, so appending this after a config that
+// WARNING: this matches every linted file by default. Flat config *replaces* a
+// rule's options rather than merging them, so appending this after a config that
 // redefines `@typescript-eslint/no-restricted-imports` for a narrower set of
 // files silently discards that narrower configuration. The failure is invisible
-// in CI, because the result is *fewer* lint errors, not more. Spread it with a
-// `files` key — `{ files: ['**/*.spec.ts'], ...allowDirectNxImports }` — in any
-// project that defines its own `no-restricted-imports` overrides (see
-// packages/nx/eslint.config.mjs).
+// in CI, because the result is *fewer* lint errors, not more. Narrow it by
+// overriding `files` AFTER the spread — `{ ...allowDirectNxImports, files:
+// ['**/*.spec.ts'] }` — in any project that defines its own
+// `no-restricted-imports` overrides (see packages/nx/eslint.config.mjs).
 export const allowDirectNxImports = {
+  files: ['**/*'],
   rules: {
     '@typescript-eslint/no-restricted-imports': [
       'error',
