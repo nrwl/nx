@@ -827,14 +827,8 @@ describe('lib', () => {
             imports: [
               BrowserModule,
               RouterModule.forRoot([
-                {
-                  path: 'my-lib',
-                  loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
-                },
-                {
-                  path: 'my-lib2',
-                  loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module),
-                },
+                { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule) },
+                { path: 'my-lib2', loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module) },
               ]),
             ],
             declarations: [App],

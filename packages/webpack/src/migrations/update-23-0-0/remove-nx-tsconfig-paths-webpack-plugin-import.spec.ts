@@ -64,9 +64,7 @@ describe('remove-nx-tsconfig-paths-webpack-plugin-import migration', () => {
     // prettier wraps the long symbol name to multi-line
     expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const {
-        NxTsconfigPathsWebpackPlugin,
-      } = require('@nx/webpack/tsconfig-paths-plugin');
+      "const { NxTsconfigPathsWebpackPlugin } = require('@nx/webpack/tsconfig-paths-plugin');
       "
     `);
   });
@@ -83,9 +81,7 @@ describe('remove-nx-tsconfig-paths-webpack-plugin-import migration', () => {
     // prettier wraps the long symbol name to multi-line
     expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const {
-        NxTsconfigPathsWebpackPlugin,
-      } = require('@nx/webpack/tsconfig-paths-plugin');
+      "const { NxTsconfigPathsWebpackPlugin } = require('@nx/webpack/tsconfig-paths-plugin');
       const { NxAppWebpackPlugin } = require('@nx/webpack');
       "
     `);
@@ -149,9 +145,7 @@ module.exports = { plugins: [new NxAppWebpackPlugin()] };
 
     expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const {
-        NxTsconfigPathsWebpackPlugin: Plugin,
-      } = require('@nx/webpack/tsconfig-paths-plugin');
+      "const { NxTsconfigPathsWebpackPlugin: Plugin } = require('@nx/webpack/tsconfig-paths-plugin');
       const { NxAppWebpackPlugin } = require('@nx/webpack');
       "
     `);
@@ -173,9 +167,7 @@ import { NxTsconfigPathsWebpackPlugin as P3, NxAppWebpackPlugin } from '@nx/webp
       .toMatchInlineSnapshot(`
       "import { NxTsconfigPathsWebpackPlugin as P3 } from '@nx/webpack/tsconfig-paths-plugin';
       import { NxTsconfigPathsWebpackPlugin } from '@nx/webpack/tsconfig-paths-plugin';
-      const {
-        NxTsconfigPathsWebpackPlugin: P2,
-      } = require('@nx/webpack/tsconfig-paths-plugin');
+      const { NxTsconfigPathsWebpackPlugin: P2 } = require('@nx/webpack/tsconfig-paths-plugin');
       import { NxAppWebpackPlugin } from '@nx/webpack';
       "
     `);
@@ -209,16 +201,16 @@ import { NxTsconfigPathsWebpackPlugin as P3, NxAppWebpackPlugin } from '@nx/webp
 
     expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const {
-        NxTsconfigPathsWebpackPlugin,
-      } = require('@nx/webpack/tsconfig-paths-plugin');
+      "const { NxTsconfigPathsWebpackPlugin } = require('@nx/webpack/tsconfig-paths-plugin');
       const { NxAppWebpackPlugin } = require('@nx/webpack');
       "
     `);
   });
 
   it('does not modify files already using the correct sub-path import', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    // No formatter: this asserts the file is byte-identical afterwards, so
+    // reformatting would defeat the very thing under test.
+    const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     // Use the already-prettier-formatted form so formatFiles does not change it
     const original = `const {
   NxTsconfigPathsWebpackPlugin,

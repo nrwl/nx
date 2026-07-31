@@ -19,10 +19,11 @@ describe('js init generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    // No formatter: this suite is about which one init picks and sets up, so a
+    // pre-seeded config would answer the question before the generator runs.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     // Remove files that should be part of the init generator
     tree.delete('tsconfig.base.json');
-    tree.delete('.prettierrc');
     (ensurePackage as jest.Mock).mockClear();
   });
 

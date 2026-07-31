@@ -95,8 +95,7 @@ export const Heading: Story = {
 exports[`StorybookConfiguration generator should generate in the correct folder 1`] = `
 [
   ".gitignore",
-  ".prettierignore",
-  ".prettierrc",
+  ".oxfmtrc.json",
   "apps/.gitignore",
   "eslint.config.mjs",
   "jest.config.ts",
@@ -205,8 +204,7 @@ exports[`StorybookConfiguration generator should generate in the correct folder 
 exports[`StorybookConfiguration generator should generate the right files 1`] = `
 [
   ".gitignore",
-  ".prettierignore",
-  ".prettierrc",
+  ".oxfmtrc.json",
   "apps/.gitignore",
   "eslint.config.mjs",
   "jest.config.ts",
