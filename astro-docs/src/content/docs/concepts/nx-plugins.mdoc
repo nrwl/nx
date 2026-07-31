@@ -1,5 +1,5 @@
 ---
-title: Nx plugins
+title: How Nx plugins work
 description: Learn how Nx plugins integrate tools and frameworks through task inference, code generation, migrations, and executors.
 sidebar:
   order: 1
@@ -21,8 +21,8 @@ For example, plugins can:
 - Update configuration when a dependency changes.
   Plugin migrations keep generated configuration aligned with supported tool versions.
 - Provide specialized task implementations.
-  The [`@nx/js:tsc` executor](/docs/technologies/typescript/executors#tsc) supports TypeScript batch
-  mode across projects.
+  The [`@nx/js:node` executor](/docs/technologies/typescript/executors#node) coordinates a build target
+  with a running Node.js process and restarts it when source files change.
 
 ## Plugin features
 
@@ -37,7 +37,7 @@ Nx maintains plugins for frameworks and tools across frontend, backend, testing,
 Community plugins extend that ecosystem with additional technologies.
 
 {% aside type="tip" title="Learn by doing" %}
-Use the [reducing configuration boilerplate tutorial](/docs/getting-started/tutorials/reducing-configuration-boilerplate)
+Follow the [reducing configuration boilerplate tutorial](/docs/getting-started/tutorials/reducing-configuration-boilerplate)
 to add a plugin and inspect its inferred tasks.
 {% /aside %}
 

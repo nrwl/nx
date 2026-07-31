@@ -1,6 +1,6 @@
 ---
 title: How caching works
-description: Learn how Nx calculates task hashes and uses local and remote caches to avoid repeated work.
+description: Learn how Nx caching reuses task results locally and across machines to avoid repeated work.
 sidebar:
   order: 1
 filter: 'type:Concepts'
@@ -14,7 +14,7 @@ A task hash can include:
 - Project source files and files from project dependencies.
 - Relevant workspace configuration.
 - Versions of external dependencies.
-- Runtime values, such as the Node.js version.
+- Runtime values, such as the operating system and CPU architecture.
 - Command-line arguments passed to the task.
 
 ![Inputs used to calculate a task hash](../../../assets/concepts/caching/nx-hashing.svg)
@@ -27,12 +27,12 @@ might depend on generated declaration files from its dependencies.
 
 Nx checks the local cache after calculating the hash.
 If it doesn't find a result and remote caching is configured, Nx checks the remote cache.
-On a cache hit, Nx restores the declared output files and prints the stored terminal output.
+On a cache hit, Nx restores the cached output files and prints the stored terminal output.
 
 ![Nx checking local and remote caches](../../../assets/concepts/caching/cache.svg)
 
-On a cache miss, Nx runs the task and stores its terminal output and declared artifacts in the local
-cache.
+On a cache miss, Nx runs the task and stores its terminal output and configured output files in the
+local cache.
 Nx also stores the result in the remote cache when remote caching is configured and the current
 authentication settings permit writes.
 
@@ -96,9 +96,11 @@ workspace:
 }
 ```
 
-Nx uses an executor's `outputPath` option as a backward-compatible fallback when `outputs` isn't
-configured.
-For reliable caching, prefer outputs inferred by a plugin or declare `outputs` explicitly.
+When `outputs` isn't configured, Nx uses an executor's `outputPath` option as a backward-compatible
+fallback.
+For `build` and `prepare` targets without an `outputPath`, Nx checks common `dist`, `build`, and
+`public` directories.
+For reliable caching, prefer outputs inferred by a plugin or configure `outputs` explicitly.
 
 {% aside type="note" title="Output paths and executor options" %}
 An executor's `outputPath` option doesn't automatically become part of `outputs` when `outputs` is
@@ -137,7 +139,7 @@ For example, these commands produce different hashes:
 
 ```shell
 nx build myapp
-nx build myapp -- --sourcemap
+nx build myapp --sourcemap
 ```
 
 Different Nx command forms that create the same task with the same task arguments produce the same
@@ -153,7 +155,7 @@ When you run a target for multiple projects, Nx calculates a separate hash for e
 One project can be restored from cache while another project runs.
 
 {% aside type="tip" title="Learn by doing" %}
-Use the [caching tutorial](/docs/getting-started/tutorials/caching) to inspect cache hits in a
+Follow the [caching tutorial](/docs/getting-started/tutorials/caching) to inspect cache hits in a
 workspace.
 {% /aside %}
 

@@ -21,10 +21,10 @@ Configuration varies along two dimensions:
 
 A workspace might contain these files:
 
-| Scope     | Nx configuration               | Tool configuration               |
-| --------- | ------------------------------ | -------------------------------- |
-| Workspace | `/nx.json`                     | `/tsconfig.base.json`            |
-| Project   | `/packages/myapp/package.json` | `/packages/myapp/vite.config.ts` |
+| Scope     | Nx configuration               | TypeScript configuration        |
+| --------- | ------------------------------ | ------------------------------- |
+| Workspace | `/nx.json`                     | `/tsconfig.base.json`           |
+| Project   | `/packages/myapp/package.json` | `/packages/myapp/tsconfig.json` |
 
 Projects can store Nx-specific settings in the `nx` section of `package.json`.
 `project.json` is also supported for project configuration, but most task settings don't need to be
@@ -85,8 +85,8 @@ nx show target myapp:build --verbose
 ```
 
 {% aside type="tip" title="Learn by doing" %}
-Use the [configuring tasks tutorial](/docs/getting-started/tutorials/configuring-tasks) to inspect and
-override inferred configuration.
+Follow the [configuring tasks tutorial](/docs/getting-started/tutorials/configuring-tasks) to inspect
+and override inferred configuration.
 {% /aside %}
 
 For configuration schemas, see [`nx.json` reference](/docs/reference/nx-json) and

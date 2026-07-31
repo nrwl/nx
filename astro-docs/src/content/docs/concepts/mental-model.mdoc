@@ -1,14 +1,14 @@
 ---
 title: Mental model
-description: Understand how Nx uses project graphs, task graphs, affected projects, and caching to run work efficiently in a monorepo.
+description: Understand how Nx creates project and task graphs to coordinate affected projects, caching, and task execution in a workspace.
 sidebar:
   order: 1
 filter: 'type:Concepts'
 ---
 
-Nx analyzes your workspace before it runs tasks.
-That analysis produces project and task metadata that Nx uses for task orchestration, affected
-calculations, caching, and integrations with coding agents and IDEs.
+Think of Nx as a coordinator for the tools in your workspace.
+Vite, Jest, and other tools still do their own work, while Nx maps how projects and tasks relate and
+then decides what to run, in what order, and whether previous work can be reused.
 
 ## The project graph
 
@@ -50,8 +50,9 @@ If `app1` depends on `lib`, the `app1:test` task doesn't depend on `lib:test` un
 contains that relationship.
 Without a dependency, Nx can run both test tasks in parallel.
 
-Use `dependsOn` to define relationships between tasks.
-This configuration makes each `build` task depend on the `build` tasks of its project dependencies:
+Builds commonly need a different relationship because an application may consume the built output of
+its libraries.
+Use `dependsOn` to make each `build` task depend on the `build` tasks of its project dependencies:
 
 ```jsonc title="nx.json"
 {

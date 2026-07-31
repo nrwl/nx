@@ -14,14 +14,15 @@ A CI pipeline runs tasks such as `build`, `test`, `lint`, and `e2e`.
 The tools behind those tasks set the minimum execution time for a cache miss.
 Use current tools and configuration before adding more CI machines.
 
-Nx plugins support build tools such as
+Nx can run tasks for any technology.
+Plugins provide deeper integrations for build tools such as
 [Vite](/docs/technologies/build-tools/vite/introduction) and
 [Rspack](/docs/technologies/build-tools/rspack/introduction), along with frameworks and test tools.
 Plugin migrations can update tool configuration when recommended settings change.
 The common plugin interface also makes it practical to compare tools without replacing Nx task
 orchestration.
 
-Browse the [plugin registry](/docs/plugin-registry) for supported technologies.
+Browse the [plugin registry](/docs/plugin-registry) for prebuilt integrations.
 
 ## Reduce unnecessary work
 
@@ -41,12 +42,13 @@ For a scenario-by-scenario explanation, see [reduce waste in CI](/docs/kb/reduce
 
 Nx runs independent tasks in parallel while respecting
 [task pipeline](/docs/concepts/task-pipeline-configuration) dependencies.
-The `parallel` setting in `nx.json` limits how many tasks run concurrently on one machine.
+Set a workspace-wide concurrency limit with `parallel` in `nx.json`, or use a command-line option such
+as `nx affected -t test --parallel=4` for one run.
 
 A single machine eventually becomes the bottleneck.
 [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute the task graph across
 multiple machines and dynamically assign ready tasks to available agents.
 Remote caching transfers task artifacts between machines, including back to the main job.
 
-For the tradeoffs between one machine, manual distribution, and Nx Agents, see
+For the tradeoffs between parallelization and distribution in CI, see
 [parallelization and distribution](/docs/concepts/ci-concepts/parallelization-distribution).

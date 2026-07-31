@@ -38,8 +38,7 @@ Register inference plugins in `nx.json`:
 Each plugin has tool-specific logic, but task inference follows the same general sequence:
 
 1. The plugin searches for configuration files that match its file patterns.
-   `@nx/vite/plugin`, for example, searches for `vite.config` files with supported JavaScript and
-   TypeScript extensions.
+   `@nx/vite/plugin`, for example, searches for Vite configuration files.
 1. The plugin identifies the project associated with each configuration file.
 1. It reads the tool configuration and creates targets with the names configured in `nx.json`.
 1. Nx merges those targets with `targetDefaults` and any project-level configuration.
@@ -102,16 +101,16 @@ target names or options.
 
 ## View inferred tasks
 
-Run `nx show project` to inspect the resolved targets for a project:
+Run `nx show project` in an interactive terminal to open the project details view in your browser:
 
 ```shell
 nx show project myapp
 ```
 
-Add `--web` to open the project details view in your browser:
+To inspect the resolved configuration as JSON instead, add `--json`:
 
 ```shell
-nx show project myapp --web
+nx show project myapp --json
 ```
 
 A build target inferred by `@nx/vite/plugin` contains configuration like this:
@@ -184,6 +183,6 @@ For common overrides, see [configure inputs](/docs/kb/configure-inputs),
 [define a task pipeline](/docs/kb/defining-task-pipeline).
 
 {% aside type="tip" title="Learn by doing" %}
-Use the [reducing configuration boilerplate tutorial](/docs/getting-started/tutorials/reducing-configuration-boilerplate)
+Follow the [reducing configuration boilerplate tutorial](/docs/getting-started/tutorials/reducing-configuration-boilerplate)
 to compare explicit and inferred tasks.
 {% /aside %}
