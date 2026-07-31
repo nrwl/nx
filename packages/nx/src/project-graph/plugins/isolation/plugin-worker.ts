@@ -10,6 +10,7 @@ import {
 } from '../../../utils/consume-messages-from-socket';
 import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
+import { assertValidDaemonMessage } from '../../../daemon/message-types/daemon-message';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { setPluginWorkerHostSocket } from './worker-streaming';
@@ -42,6 +43,22 @@ let plugin: LoadedNxPlugin;
 
 const socketPath = process.argv[2];
 const expectedPluginName = process.argv[3];
+// The host's root, passed explicitly rather than re-resolved: a host that set
+// its root at runtime would resolve a different one here and drop every
+// legitimate message as foreign.
+const hostWorkspaceRoot = process.argv[4];
+
+// Positional, so inserting an argument host-side shifts all of them — and the
+// symptom is silent and total: an undefined hostWorkspaceRoot makes every
+// message look foreign while the host waits out a ten-minute timeout.
+if (!socketPath || !expectedPluginName || !hostWorkspaceRoot) {
+  console.error(
+    `[plugin-worker] started with an incomplete argument list ` +
+      `(socketPath=${socketPath}, pluginName=${expectedPluginName}, hostWorkspaceRoot=${hostWorkspaceRoot}). ` +
+      `This is an Nx bug — please report it at https://github.com/nrwl/nx/issues.`
+  );
+  process.exit(1);
+}
 
 const CONNECT_TIMEOUT_MS = 30_000;
 
@@ -77,6 +94,23 @@ const server = createServer((socket) => {
     consumeMessagesFromSocket((raw) => {
       const message = parseMessage<any>(raw);
       if (!isPluginWorkerMessage(message)) {
+        return;
+      }
+      // Same check the daemon applies to its own socket. Dropped rather than thrown:
+      // a stray foreign message must not kill a worker serving its host. The daemon
+      // has a response channel and surfaces it to the client instead.
+      try {
+        assertValidDaemonMessage(
+          message,
+          hostWorkspaceRoot,
+          `The Nx plugin worker "${expectedPluginName}" (pid: ${process.pid})`
+        );
+      } catch (e) {
+        logger.verbose(
+          `[plugin-worker] ignored a "${message.type}" message: ${
+            e instanceof Error ? e.message : e
+          }`
+        );
         return;
       }
       return consumeMessage(socket, message, {
@@ -168,10 +202,32 @@ const server = createServer((socket) => {
   });
 });
 
-server.listen(socketPath);
-logger.verbose(
-  `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
-);
+server.on('error', (err: NodeJS.ErrnoException) => {
+  // Without this the host only sees "exited before the connection was
+  // established"; the errno distinguishes a denied bind from EADDRINUSE.
+  console.error(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) failed to listen on ${socketPath}: ${err.message}`
+  );
+  process.exit(1);
+});
+// A worker killed without its 'end' handler leaves the socket behind. The name
+// is the host pid, a per-host counter and 4 random bytes, so drawing an existing
+// one takes a recycled host pid landing on the same counter *and* the same
+// random draw. The previous owner is normally gone by then, but not guaranteed —
+// workers are detached and the name carries the host's pid, not the worker's.
+// A failed bind surfaces through the error handler above.
+//
+// The random component is what this unlink rests on, and on Windows it is the
+// only barrier of any kind: both directory guards are no-ops there and the
+// endpoint is a global namespace object the filesystem does not gate.
+try {
+  unlinkSync(socketPath);
+} catch {}
+server.listen(socketPath, () => {
+  logger.verbose(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
+  );
+});
 
 async function withErrorHandling(
   cb: () => void | Promise<void>
@@ -215,16 +271,28 @@ function setErrorTimeout(
   };
 }
 
-const exitHandler = (exitCode: number) => () => {
+const cleanup = () => {
   server.close();
   try {
     unlinkSync(socketPath);
   } catch (e) {}
-  process.exit(exitCode);
 };
 
-const events = ['SIGINT', 'SIGTERM', 'SIGQUIT', 'exit'];
+const events = ['SIGINT', 'SIGTERM', 'SIGQUIT'];
 
-events.forEach((event) => process.once(event, exitHandler(0)));
-process.once('uncaughtException', exitHandler(1));
-process.once('unhandledRejection', exitHandler(1));
+events.forEach((event) =>
+  process.once(event, () => {
+    cleanup();
+    process.exit(0);
+  })
+);
+// Cleanup only: process.exit() here would override the real exit code.
+process.once('exit', cleanup);
+const fatalHandler = (error: unknown) => {
+  // Registering this handler suppresses Node's default reporting.
+  console.error(error);
+  cleanup();
+  process.exit(1);
+};
+process.once('uncaughtException', fatalHandler);
+process.once('unhandledRejection', fatalHandler);

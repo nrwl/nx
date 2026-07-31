@@ -1079,6 +1079,15 @@ export class DaemonClient {
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
           error = daemonProcessException('The Daemon Server is not running');
+        } else if (
+          err.message.startsWith('connect EPERM') ||
+          err.message.startsWith('connect EACCES')
+        ) {
+          // The 0700 dir and 0600 socket mean the OS refuses this rather than the
+          // connect silently succeeding.
+          error = daemonProcessException(
+            'The operating system refused the connection to the Nx Daemon socket.'
+          );
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
           error = daemonProcessException(
             `A server instance had not been fully shut down. Please try running the command again.`
@@ -1417,25 +1426,30 @@ function nxJsonIsNotPresent() {
   return !hasNxJson(workspaceRoot);
 }
 
-function daemonProcessException(message: string) {
+/**
+ * Exported for testing: the `internalDaemonError` tag decides whether a daemon
+ * failure degrades to a daemonless graph build or aborts the command.
+ */
+export function daemonProcessException(message: string) {
+  // The log is an enrichment, not the classifier: it is absent on a first run,
+  // which is exactly when the daemon is most likely to fail to start.
+  let body = message;
   try {
     let log = readFileSync(DAEMON_OUTPUT_LOG_FILE).toString().split('\n');
     if (log.length > 20) {
       log = log.slice(log.length - 20);
     }
-    const error = new Error(
-      [
-        message,
-        '',
-        'Messages from the log:',
-        ...log,
-        '\n',
-        `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
-      ].join('\n')
-    );
-    (error as any).internalDaemonError = true;
-    return error;
-  } catch (e) {
-    return new Error(message);
-  }
+    body = [
+      message,
+      '',
+      'Messages from the log:',
+      ...log,
+      '\n',
+      `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
+    ].join('\n');
+  } catch {}
+
+  const error = new Error(body);
+  (error as any).internalDaemonError = true;
+  return error;
 }

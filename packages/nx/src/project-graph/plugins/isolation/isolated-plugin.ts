@@ -1,4 +1,5 @@
 import { ChildProcess, spawn } from 'child_process';
+import { randomBytes } from 'crypto';
 import { Socket } from 'net';
 import { Readable, Writable } from 'stream';
 import path = require('path');
@@ -16,6 +17,7 @@ import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
@@ -528,6 +530,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
 
 global.nxPluginWorkerCount ??= 0;
 
+export function getPluginWorkerSocketId(): string {
+  const counter = global.nxPluginWorkerCount++;
+  return `${process.pid}-${counter.toString(36)}-${randomBytes(4).toString(
+    'hex'
+  )}`;
+}
+
 async function startPluginWorker(name: string) {
   performance.mark(`start-plugin-worker:${name}`);
 
@@ -553,9 +562,11 @@ async function startPluginWorker(name: string) {
       : {}),
   };
 
-  const ipcPath = getPluginOsSocketPath(
-    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
-  );
+  // Keep the host pid readable for diagnostics, the counter collision-free
+  // within this process, and entropy for a reused pid across process runs. A
+  // one-character base36 counter plus eight random hex characters consumes the
+  // same path budget as the previous ten-character hash.
+  const ipcPath = getPluginOsSocketPath(getPluginWorkerSocketId());
 
   const worker = spawn(
     process.execPath,
@@ -567,6 +578,9 @@ async function startPluginWorker(name: string) {
       workerPath,
       ipcPath,
       name,
+      // The host's root. The worker validates against this rather than re-resolving,
+      // so the two agree by construction.
+      workspaceRoot,
     ],
     {
       stdio: ['ignore', 'pipe', 'pipe'],
