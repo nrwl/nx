@@ -8,20 +8,19 @@ import {
 // Imported rather than copied: detection ("is this workspace using oxfmt?")
 // and setup ("should a config be written?") have to agree on the same list, or
 // a workspace that already has a config gets a second, redundant one.
-import { oxfmtConfigFiles } from 'nx/src/devkit-internals';
+import { oxfmtConfigFiles } from '@nx/devkit/internal';
 import { oxfmtVersion } from './versions';
 
 export function generateOxfmtSetup(
   tree: Tree,
   options: { skipPackageJson?: boolean }
 ): GeneratorCallback {
-  // `oxfmtConfigFiles` is new in this nx. `@nx/js` has no `nx` peer of its own, so it
-  // inherits devkit's and can be paired with an nx that does not export it.
-  // The fallback repeats the *whole* list rather than the canonical name:
-  // a one-name fallback would miss an existing config under any other name
-  // and write a second one - which for oxfmt is not redundant but fatal
-  // ("Both '<a>' and '<b>' found"), and for prettier silently outranks the
-  // user's own file.
+  // `oxfmtConfigFiles` is new in this nx. `@nx/js` has no `nx` peer of its own,
+  // so it inherits devkit's `nx` peer range and can be paired with an nx that
+  // does not export it. The fallback repeats the *whole* list rather than the
+  // canonical name: a one-name fallback would miss an existing config under any
+  // other name and write a second one, which for oxfmt is not redundant but
+  // fatal ("Both '<a>' and '<b>' found").
   const configFiles = oxfmtConfigFiles ?? [
     '.oxfmtrc.json',
     '.oxfmtrc.jsonc',

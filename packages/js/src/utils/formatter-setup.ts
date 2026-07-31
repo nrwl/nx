@@ -1,5 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import type { FormatterType } from 'nx/src/devkit-internals';
+import type { FormatterType } from '@nx/devkit/internal';
 import { generateOxfmtSetup } from './oxfmt';
 import { generatePrettierSetup } from './prettier';
 import { oxfmtVersion, prettierVersion } from './versions';

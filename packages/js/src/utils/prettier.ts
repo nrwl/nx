@@ -8,7 +8,7 @@ import {
   type Tree,
   logger,
 } from '@nx/devkit';
-import { prettierConfigFiles } from 'nx/src/devkit-internals';
+import { prettierConfigFiles } from '@nx/devkit/internal';
 import type { Options } from 'prettier';
 import { prettierVersion } from './versions';
 
@@ -93,13 +93,12 @@ export function generatePrettierSetup(
   // missing from this copy gets a second, redundant `.prettierrc` written next
   // to the one it already has. This copy was missing the `.ts`/`.mts`/`.cts`
   // forms.
-  // `prettierConfigFiles` is new in this nx. `@nx/js` has no `nx` peer of its own, so it
-  // inherits devkit's and can be paired with an nx that does not export it.
-  // The fallback repeats the *whole* list rather than the canonical name:
-  // a one-name fallback would miss an existing config under any other name
-  // and write a second one - which for oxfmt is not redundant but fatal
-  // ("Both '<a>' and '<b>' found"), and for prettier silently outranks the
-  // user's own file.
+  // `prettierConfigFiles` is new in this nx. `@nx/js` has no `nx` peer of its
+  // own, so it inherits devkit's `nx` peer range and can be paired with an nx
+  // that does not export it. The fallback repeats the *whole* list rather than
+  // the canonical name: a one-name fallback would miss an existing config under
+  // any other name and write a second one, which silently outranks the user's
+  // own file.
   const configFiles = prettierConfigFiles ?? PRETTIER_CONFIG_FILES_FALLBACK;
   if (!prettierConfigFiles) {
     logger.warn(
