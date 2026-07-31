@@ -19,6 +19,17 @@ export {
   getCatalogManager,
 } from 'nx/src/devkit-internals';
 
+// Formatter detection and setup. `@nx/js` needs these to write and detect a
+// workspace's formatter config, and it depends on `@nx/devkit` rather than on
+// `nx`, so this is its declared route to them. Against an older nx they are
+// `undefined` rather than absent, which is what the callers' fallbacks check.
+export {
+  isUsingPrettierInTree,
+  prettierConfigFiles,
+  oxfmtConfigFiles,
+} from 'nx/src/devkit-internals';
+export type { FormatterType } from 'nx/src/devkit-internals';
+
 // Generators
 export {
   determineArtifactNameAndDirectoryOptions,
