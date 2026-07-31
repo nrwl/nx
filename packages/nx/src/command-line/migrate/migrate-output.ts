@@ -51,6 +51,38 @@ export function logAgenticSuccessOutcome(
 }
 
 /**
+ * Logs the skip line for a migration that waived its AI step through
+ * `skipAgentic`, plus a verbose note for any `agentContext` the waiver
+ * dropped. A hybrid waives its paired prompt; a generator-only migration
+ * waives the validation pass, so callers must reach here only once they know
+ * one was on the table. Under `inside-agent` only a hybrid can, so the
+ * hand-off dropped alongside is always a prompt's; a waived generator-only
+ * migration keeps its own. The note is author-facing, hence `--verbose`.
+ */
+export function logWaivedAgenticStep(
+  migration: {
+    package: string;
+    name: string;
+    prompt?: string;
+    implementation?: string;
+    factory?: string;
+  },
+  agentContext: string[]
+): void {
+  logger.info(
+    pc.dim(
+      isHybridMigration(migration)
+        ? '↷ Prompt phase skipped. The migration reported nothing left for the AI step to do.'
+        : '↷ Validation skipped. The migration reported its changes need no AI review.'
+    )
+  );
+  if (agentContext.length === 0) return;
+  logger.verbose(
+    `${migration.package}: ${migration.name} returned skipAgentic: true alongside agentContext, which was dropped. agentContext exists to feed the AI step this migration waived.`
+  );
+}
+
+/**
  * Per-migration outcome record consumed by the failure recap. One entry is
  * appended per iteration that returned without throwing; the failing migration
  * has no record.

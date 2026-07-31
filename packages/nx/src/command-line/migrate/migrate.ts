@@ -150,6 +150,7 @@ import {
   logAgenticSuccessOutcome,
   logFailureRecap,
   logMigrationBoundary,
+  logWaivedAgenticStep,
   retainedMigrations,
   type CommitState,
   type MigrationOutcome,
@@ -2629,20 +2630,6 @@ export async function executeMigrations(
         ).printDroppedAgentContextForOuterAgent
       : undefined;
 
-  // Both call sites fire only where an AI step was genuinely waived. Under
-  // `inside-agent` only the hybrid one can, so the hand-off dropped alongside
-  // is always a prompt's; a waived generator-only migration keeps its own.
-  // Author-facing, so it stays behind `--verbose`.
-  const noteWaivedAgentContext = (
-    m: PlannedMigration,
-    agentContext: string[]
-  ): void => {
-    if (agentContext.length === 0) return;
-    logger.verbose(
-      `${m.package}: ${m.name} returned skipAgentic: true alongside agentContext, which was dropped. agentContext exists to feed the AI step this migration waived.`
-    );
-  };
-
   logger.info(`Running the following migrations:`);
   sortedMigrations.forEach((m) =>
     logger.info(
@@ -2842,12 +2829,7 @@ export async function executeMigrations(
           // The generator reported the prompt half unnecessary, so nothing is
           // owed: no agent run, and no next-steps entry telling the user to
           // run the prompt themselves. Runs in all three agentic modes.
-          logger.info(
-            pc.dim(
-              '↷ Prompt phase skipped. The migration reported nothing left for the AI step to do.'
-            )
-          );
-          noteWaivedAgentContext(m, agentContext);
+          logWaivedAgenticStep(m, agentContext);
           waivedAgenticStep = true;
           commit = await commitOrRecordNoChanges(m, madeChanges);
           outcome = madeChanges ? 'applied' : 'no-changes';
@@ -2960,13 +2942,8 @@ export async function executeMigrations(
           outcome = 'applied';
         } else {
           if (skipAgentic && validationApplies) {
-            logger.info(
-              pc.dim(
-                '↷ Validation skipped. The migration reported its changes need no AI review.'
-              )
-            );
+            logWaivedAgenticStep(m, agentContext);
             waivedAgenticStep = true;
-            noteWaivedAgentContext(m, agentContext);
           } else if (printDroppedAgentContext && agentContext.length > 0) {
             // Inner validation step didn't run. Surface `agentContext` under
             // `inside-agent` so the outer driving agent can ingest it.
