@@ -100,10 +100,10 @@ the field, so duplicate anything a person needs into `nextSteps`.
 
 ### Skip the AI step
 
-Two kinds of entry get an AI step during an agentic run. A hybrid entry, one
-with both `implementation` and `prompt`, runs its prompt after the generator. A
-generator-only entry that changed files gets a review pass unless you pass
-`--no-validate`.
+An entry with a generator half gets an AI step during an agentic run in one of
+two shapes. A hybrid entry, one with both `implementation` and `prompt`, runs
+its prompt after the generator. A generator-only entry that changed files gets a
+review pass unless you pass `--no-validate`.
 
 Return `skipAgentic: true` when the deterministic run already handled
 everything, and Nx skips that step:

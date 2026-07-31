@@ -2629,10 +2629,10 @@ export async function executeMigrations(
         ).printDroppedAgentContextForOuterAgent
       : undefined;
 
-  // Both call sites fire only where an AI step was genuinely waived. That
-  // invariant is what makes dropping the `inside-agent` stdout hand-off
-  // correct: the prompt it would hand an outer agent is the one this migration
-  // just declared moot. Author-facing, so it stays behind `--verbose`.
+  // Both call sites fire only where an AI step was genuinely waived. Under
+  // `inside-agent` only the hybrid one can, so the hand-off dropped alongside
+  // is always a prompt's; a waived generator-only migration keeps its own.
+  // Author-facing, so it stays behind `--verbose`.
   const noteWaivedAgentContext = (
     m: PlannedMigration,
     agentContext: string[]

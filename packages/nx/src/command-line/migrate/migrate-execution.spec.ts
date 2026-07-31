@@ -1026,12 +1026,17 @@ describe('executeMigrations', () => {
         .mockImplementation(() => undefined);
 
       let written: string;
+      // Read before restoring: `mockRestore` also resets the recorded calls, so
+      // asserting on the spy afterwards would pass no matter what fired.
+      let verboseCalls: number;
       let result: Awaited<ReturnType<typeof executeMigrations>>;
       try {
         result = await runInsideAgent(m);
         written = stdoutSpy.mock.calls.map((args) => String(args[0])).join('');
+        verboseCalls = verboseSpy.mock.calls.length;
       } finally {
         stdoutSpy.mockRestore();
+        verboseSpy.mockRestore();
       }
 
       expect(written).toContain(
@@ -1042,8 +1047,7 @@ describe('executeMigrations', () => {
       // and neither the user-facing line nor the author-facing note applies.
       expect(result.waivedAgenticStepsCount).toBe(0);
       expect(logged()).not.toContain('Validation skipped');
-      expect(verboseSpy).not.toHaveBeenCalled();
-      verboseSpy.mockRestore();
+      expect(verboseCalls).toBe(0);
     });
 
     it('drops the outer-agent hand-off for a waived hybrid under inside-agent', async () => {

@@ -91,7 +91,8 @@ export type PackageJsonUpdates = {
  *   everything, so `nx migrate` skips the AI step it would otherwise run: the
  *   paired prompt of a hybrid migration, or the generic validation step of a
  *   generator-only one. Omitting it keeps the AI step, so this is opt-in.
- *   `agentContext` is dropped along with the step it was meant for.
+ *   Where the waiver takes effect, `agentContext` is dropped along with the
+ *   step it was meant for.
  */
 export interface MigrationReturnObject {
   nextSteps?: string[];

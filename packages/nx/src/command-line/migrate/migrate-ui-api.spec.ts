@@ -227,13 +227,36 @@ describe('migrate-ui-api git invocations', () => {
       expect(record.skipAgentic).toBeUndefined();
     });
 
-    it('keeps an acknowledgement the user made across a rerun', async () => {
+    it('keeps an acknowledgement the user made across a rerun that never waived', async () => {
       await run(hybrid, { skipAgentic: false });
       acknowledgeMigrationPrompt('/workspace', hybrid);
 
       const record = await run(hybrid, { skipAgentic: false });
 
       expect(record.acknowledgedPrompt).toBe(true);
+    });
+
+    // A waiving run rewrites the whole record, so the ack it leaves behind is
+    // indistinguishable from one the user made. Both orderings below therefore
+    // re-ask rather than trust it; pinned so the next reader does not read the
+    // guard as preserving user acks.
+    it('drops an acknowledgement the user made before a waiving rerun', async () => {
+      await run(hybrid, { skipAgentic: false });
+      acknowledgeMigrationPrompt('/workspace', hybrid);
+      await run(hybrid, { skipAgentic: true });
+
+      const record = await run(hybrid, { skipAgentic: false });
+
+      expect(record.acknowledgedPrompt).toBeUndefined();
+    });
+
+    it('drops an acknowledgement the user made on an already waived record', async () => {
+      await run(hybrid, { skipAgentic: true });
+      acknowledgeMigrationPrompt('/workspace', hybrid);
+
+      const record = await run(hybrid, { skipAgentic: false });
+
+      expect(record.acknowledgedPrompt).toBeUndefined();
     });
   });
 });
