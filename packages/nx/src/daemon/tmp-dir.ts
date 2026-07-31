@@ -187,18 +187,6 @@ function dirsUnusableAsSocketDir(): { dir: string; shared: boolean }[] {
 }
 
 /**
- * The root sockets will actually live under. Establishes containment as a side
- * effect, since which tier wins is only known by trying them.
- */
-export function getNxSocketRoot(): string {
-  return (
-    configuredSocketDir() ??
-    establishSocketRoot() ??
-    DAEMON_DIR_FOR_CURRENT_WORKSPACE
-  );
-}
-
-/**
  * The configured socket dir, normalized. `resolve` strips a trailing slash,
  * which would otherwise defeat the `O_NOFOLLOW` guard downstream — this is the
  * one socket path built from user input rather than by `join`.
@@ -274,9 +262,15 @@ export function getPluginSocketDir() {
 }
 
 let socketDirFallbackCause: unknown;
+let refusedConfiguredSocketDir: string | undefined;
 
 export function getSocketDirFallbackCause(): unknown {
   return socketDirFallbackCause;
+}
+
+/** The NX_SOCKET_DIR that was refused, if that is why we are in the fallback. */
+export function getRefusedConfiguredSocketDir(): string | undefined {
+  return refusedConfiguredSocketDir;
 }
 
 /**
@@ -290,6 +284,7 @@ function createOwnerOnlySocketDir(
   usingDefaultRoot: boolean
 ): string {
   socketDirFallbackCause = undefined;
+  refusedConfiguredSocketDir = undefined;
 
   // Outside the try so it is not swallowed by the fallback. Exact matches only,
   // so the per-user directories under those roots never trip it.
@@ -327,6 +322,11 @@ function createOwnerOnlySocketDir(
         e instanceof Error ? e.message : e
       }\nFalling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`
     );
+    // Tracked separately from socketDirFallbackCause: this is not a default-root
+    // fallback, and describing it as one would be false. It exists so the length
+    // error can stop telling someone to set a shorter NX_SOCKET_DIR when the one
+    // they set was refused for a reason that has nothing to do with length.
+    refusedConfiguredSocketDir = dir;
     return establishWorkspaceSocketDir(e);
   }
 }

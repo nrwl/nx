@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'path';
 import {
   getDaemonSocketDir,
   getPluginSocketDir,
+  getRefusedConfiguredSocketDir,
   getSocketDir,
   getSocketDirFallbackCause,
 } from './tmp-dir';
@@ -50,6 +51,7 @@ export function getPluginSocketFileName(id: string): string {
 function assertValidSocketPath(path: string) {
   if (path.length > 95) {
     const fallbackCause = getSocketDirFallbackCause();
+    const refusedConfiguredSocketDir = getRefusedConfiguredSocketDir();
     throw new Error(
       [
         'Attempted to open socket that exceeds the maximum socket length.',
@@ -62,9 +64,18 @@ function assertValidSocketPath(path: string) {
               'Run the command with --verbose to see why the default directory was rejected.',
             ]),
         '',
-        `Set NX_SOCKET_DIR to a shorter path (e.g. ${
-          isWindows ? '%TMP%/nx-tmp' : '/tmp/nx-tmp'
-        }) to avoid this issue.`,
+        ...(refusedConfiguredSocketDir === undefined
+          ? [
+              `Set NX_SOCKET_DIR to a shorter path (e.g. ${
+                isWindows ? '%TMP%/nx-tmp' : '/tmp/nx-tmp'
+              }) to avoid this issue.`,
+            ]
+          : [
+              // Saying "set a shorter path" here would be advice they already
+              // followed: they set one, and it was refused for another reason.
+              `The directory set in NX_SOCKET_DIR (${refusedConfiguredSocketDir}) could not be used — see the warning above — so Nx fell back to a longer path.`,
+              'Point NX_SOCKET_DIR at a short directory your user owns.',
+            ]),
       ].join('\n'),
       fallbackCause === undefined ? undefined : { cause: fallbackCause }
     );
