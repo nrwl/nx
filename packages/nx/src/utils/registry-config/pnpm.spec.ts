@@ -111,6 +111,51 @@ describe('getPnpmSpawnRegistryEnv', () => {
     );
   });
 
+  it('fails on a yaml registry of the wrong shape, the way pnpm dies picking it', () => {
+    writeYaml('registries:\n  default:\n    nested: true\n');
+    expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
+      /declares a registries\["default"\] that is not a string/
+    );
+  });
+
+  it('tolerates a wrong-shaped registry for a scope the fetch never picks', () => {
+    // pnpm only dies on the registry it picks for the fetched package, so a
+    // fatal here would drop a resolution pnpm carries out fine.
+    writeYaml(
+      'registries:\n  default: https://reg-a.example.com/\n  "@other":\n    nested: true\n'
+    );
+    expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
+  it('treats a null or non-map registries as declaring nothing, the way pnpm does', () => {
+    writeYaml('registries:\n');
+    expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+    writeYaml('registries:\n  - https://reg-a.example.com/\n');
+    expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+  });
+
+  it('fails on a proxy of the wrong shape, the way pnpm dies building its agent', () => {
+    writeYaml('proxy:\n  nested: true\n');
+    expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
+      /declares a proxy that is not a string/
+    );
+    writeYaml('httpsProxy:\n  nested: true\n');
+    expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
+      /declares an httpsProxy that is not a string/
+    );
+  });
+
+  it('drops a wrong-shaped noProxy instead of failing, the way pnpm survives it', () => {
+    writeYaml(
+      'registries:\n  default: https://reg-a.example.com/\nnoProxy:\n  nested: true\n'
+    );
+    expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
   it('returns nothing below 10.6.0 (registries map not honored by pnpm)', () => {
     writeYaml('registries:\n  default: https://reg-a.example.com/\n');
     expect(getPnpmSpawnRegistryEnv('is-even', root, '9.15.9')).toEqual({});
