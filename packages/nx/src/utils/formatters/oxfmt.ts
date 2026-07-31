@@ -236,9 +236,17 @@ function isJsonOxfmtConfig(name: string): boolean {
  * The retry is not gated on those codes. Depending on whether swc/ts-node ends
  * up registered, the same config can surface as `ERR_REQUIRE_ASYNC_MODULE` or
  * as a transpile artifact like `exports is not defined` - both mean "this is
- * ESM, import it". Any failure is retried, and if `import()` fails too the
- * *original* error is thrown, so a genuine syntax error is still reported as
- * itself rather than as whatever `import()` says about it.
+ * ESM, import it".
+ *
+ * Which error survives a failed retry depends on what the `require` attempt
+ * actually learned. The two ESM-redispatch codes are raised before the module
+ * body is evaluated, so they say nothing about the config and the `import()`
+ * failure is the only real diagnostic; anything else - a syntax error, a
+ * transpile artifact - is reported as itself.
+ *
+ * No unit test pins that split: for a `.ts` config both paths surface the same
+ * transpile error, and the case where they differ (`.mts` with top-level await)
+ * is unreachable from jest. `create-nx-workspace-formatter.test.ts` covers it.
  */
 async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
   try {
@@ -248,8 +256,11 @@ async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
   } catch (loadError) {
     try {
       return await dynamicImport(pathToFileURL(configPath).href);
-    } catch {
-      throw loadError;
+    } catch (importError) {
+      const code = loadError?.['code'];
+      throw code === 'ERR_REQUIRE_ESM' || code === 'ERR_REQUIRE_ASYNC_MODULE'
+        ? importError
+        : loadError;
     }
   }
 }
