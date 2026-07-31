@@ -41,6 +41,21 @@ describe('IsolatedPlugin', () => {
         new RegExp(`^${process.pid}-1-[0-9a-f]{8}$`)
       );
     });
+
+    it('draws the tail fresh each time rather than deriving it', () => {
+      // The shape above is satisfied by any constant and by a hash of the
+      // workspace root — which is exactly the determinism this replaced, so
+      // without this the fix can be reverted with the suite green. On Windows
+      // the name is the only barrier there is.
+      const tails = new Set(
+        Array.from({ length: 16 }, () => {
+          const parts = getPluginWorkerSocketId().split('-');
+          return parts[parts.length - 1];
+        })
+      );
+
+      expect(tails.size).toBeGreaterThan(1);
+    });
   });
 
   // Helper to create a mock load result
