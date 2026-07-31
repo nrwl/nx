@@ -18,15 +18,17 @@ jest.mock('../tmp-dir', () => {
 });
 
 import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
-import { daemonProcessException } from './client';
+import { daemonPermissionException, daemonProcessException } from './client';
+
+// Both suites share the mocked log path, so the directory is torn down once at
+// the end rather than by whichever suite finishes first.
+afterAll(() => {
+  rmSync(dirname(logFile), { recursive: true, force: true });
+});
 
 describe('daemonProcessException', () => {
   afterEach(() => {
     rmSync(logFile, { force: true });
-  });
-
-  afterAll(() => {
-    rmSync(dirname(logFile), { recursive: true, force: true });
   });
 
   it('should append the tail of the daemon log when one exists', () => {
@@ -50,5 +52,42 @@ describe('daemonProcessException', () => {
     expect(error.message).toContain('Daemon failed');
     expect(error.message).not.toContain('Messages from the log');
     expect((error as any).internalDaemonError).toBe(true);
+  });
+});
+
+describe('daemonPermissionException', () => {
+  const socketPath = '/tmp/.nx/1001/sockets/abc123/d.sock';
+
+  afterEach(() => {
+    rmSync(logFile, { force: true });
+  });
+
+  // The 0700 directory turns "connected to someone else's daemon" into a
+  // refused connect, so this is the fix working. Tagging it internal would tell
+  // the user to file an issue and disable the daemon until `nx reset`, which
+  // outlives the stale socket that caused it.
+  it('should not classify a refused connection as an internal daemon error', () => {
+    const error = daemonPermissionException(socketPath, 'connect EPERM');
+
+    expect((error as any).daemonPermissionError).toBe(true);
+    expect((error as any).internalDaemonError).toBeUndefined();
+  });
+
+  it('should name the socket and both ways out of it', () => {
+    const error = daemonPermissionException(socketPath, 'connect EACCES');
+
+    expect(error.message).toContain(socketPath);
+    expect(error.message).toContain('connect EACCES');
+    expect(error.message).toContain('different user');
+    expect(error.message).toContain('NX_SOCKET_DIR');
+  });
+
+  it('should not quote our daemon log, which belongs to a different process', () => {
+    writeFileSync(logFile, 'something went wrong in the daemon');
+
+    const error = daemonPermissionException(socketPath, 'connect EPERM');
+
+    expect(error.message).not.toContain('Messages from the log');
+    expect(error.message).not.toContain('something went wrong in the daemon');
   });
 });

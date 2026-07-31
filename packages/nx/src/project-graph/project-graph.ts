@@ -445,6 +445,19 @@ export async function createProjectGraphAndSourceMapsAsync(
         return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
+      if (e.daemonPermissionError) {
+        // Deliberately not disabled: unlike the inotify limit above, a socket
+        // owned by someone else stops being there when it is removed or the
+        // machine reboots, and disabling until `nx reset` would outlive the
+        // cause and hide the fix from anyone who followed the advice.
+        output.note({
+          title:
+            'The operating system refused the connection to the Nx Daemon, continuing without it.',
+          bodyLines: e.message.split('\n').slice(1),
+        });
+        return buildProjectGraphAndSourceMapsWithoutDaemon();
+      }
+
       if (e.internalDaemonError) {
         const errorLogFile = writeDaemonLogs(e.message);
         output.warn({
