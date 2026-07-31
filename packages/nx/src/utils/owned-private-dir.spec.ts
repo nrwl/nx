@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   chmodSync,
   lstatSync,
@@ -5,6 +6,7 @@ import {
   mkdtempSync,
   rmSync,
   symlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -197,6 +199,32 @@ describe('ensureOwnedPrivateDir', () => {
         expect(lstatSync(dir).mode & 0o7777).toBe(0o1777);
       }
     );
+
+    // The chmod is `1777`, so a non-directory reached here is handed group and
+    // other write. Without this, dropping chmodRealDirectory's isDirectory()
+    // check survives the suite.
+    posixOnly.each([
+      ['a regular file', (p: string) => writeFileSync(p, '')],
+      ['a FIFO', (p: string) => execFileSync('mkfifo', [p])],
+    ])('should not chmod %s planted at the shared root', (_label, plant) => {
+      const planted = join(base, 'not-a-dir');
+      plant(planted);
+      const before = lstatSync(planted).mode & 0o7777;
+
+      expect(ensureSafeSharedRoot(planted)).toBe(false);
+      expect(lstatSync(planted).mode & 0o7777).toBe(before);
+    });
+
+    // 0o022 is group-write plus other-write. Narrowing it to 0o020 accepts a
+    // container the whole world can write to, which the sticky clause then
+    // waves through.
+    posixOnly('should treat other-write alone as peer-writable', () => {
+      const dir = join(base, 'other-writable');
+      mkdirSync(dir);
+      chmodSync(dir, 0o702);
+
+      expect(isSafeSharedRoot(dir)).toBe(false);
+    });
   });
 
   describe('socket directory wiring', () => {
