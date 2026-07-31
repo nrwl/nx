@@ -13,8 +13,8 @@ import { platform, tmpdir } from 'node:os';
 import { join } from 'path';
 import {
   ensureSecureNativeFileCacheLocation,
-  getNativeFileCacheLocation,
   getNativeFileCacheLocationToDelete,
+  NATIVE_CACHE_ROOT,
 } from './native-file-cache-location';
 import { ensureOwnedPrivateDir } from '../utils/owned-private-dir';
 import { nxVersion } from '../utils/versions';
@@ -45,25 +45,19 @@ describe('native file cache location', () => {
     process.env = originalEnv;
   });
 
-  describe('getNativeFileCacheLocation', () => {
-    it('should isolate the cache under a per-user root and by Nx version', () => {
-      const location = getNativeFileCacheLocation();
-      const userSegment =
-        typeof process.getuid === 'function' ? String(process.getuid()) : null;
+  // Asserted through NATIVE_CACHE_ROOT rather than a location accessor: the
+  // accessor returned a path without establishing or checking it, so it could
+  // name a directory the loader would refuse.
+  it('should isolate the cache under a per-user root and by Nx version', () => {
+    const userSegment =
+      typeof process.getuid === 'function' ? String(process.getuid()) : null;
 
-      const root =
-        platform() === 'win32'
-          ? join(tmpdir(), '.nx', 'native-cache')
-          : `/tmp/.nx/${userSegment}/native-cache`;
+    const root =
+      platform() === 'win32'
+        ? join(tmpdir(), '.nx', 'native-cache')
+        : `/tmp/.nx/${userSegment}/native-cache`;
 
-      expect(location.startsWith(root)).toBe(true);
-      expect(location).toEqual(join(root, nxVersion));
-    });
-
-    it('should honor NX_NATIVE_FILE_CACHE_DIRECTORY', () => {
-      process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = '/custom/native/cache';
-      expect(getNativeFileCacheLocation()).toEqual('/custom/native/cache');
-    });
+    expect(NATIVE_CACHE_ROOT).toEqual(root);
   });
 
   // This is the check that stops another local user from planting a `.node`
@@ -335,7 +329,7 @@ describe('native file cache location', () => {
         if (location === null) {
           return;
         }
-        expect(location).toEqual(getNativeFileCacheLocation());
+        expect(location).toEqual(join(NATIVE_CACHE_ROOT, nxVersion));
         expect(getNativeFileCacheLocationToDelete()).toEqual(location);
         const cacheRoot = join(location, '..');
         const userRoot = join(cacheRoot, '..');
