@@ -358,17 +358,35 @@ describe('CI Workflow generator', () => {
 
       await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
 
-      const content = tree.read('.nx/ci-config.yaml', 'utf-8');
-      expect(content).toContain('- e2e-ci');
-      expect(content).not.toContain('- build');
+      expect(tree.read('.nx/ci-config.yaml', 'utf-8')).toMatchInlineSnapshot(`
+        "# Nx Cloud reads this file to configure your CI Pipeline Executions.
+        # Uncomment the "nx start-nx-agents" line in your CI workflow to distribute tasks across agents.
+        # Learn how to start Nx Agents at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+        # Learn how to configure this file at https://nx.dev/ci/reference/nx-cloud/ci-config
+        dte:
+          distribute-on: 3 linux-medium-js
+        lifecycle:
+          stop-after:
+            - e2e-ci
+        "
+      `);
     });
 
     it('should generate the same ci-config regardless of the CI provider', async () => {
       await ciWorkflowGenerator(tree, { ci: 'gitlab', name: 'CI' });
 
-      expect(tree.read('.nx/ci-config.yaml', 'utf-8')).toContain(
-        'distribute-on: 3 linux-medium-js'
-      );
+      expect(tree.read('.nx/ci-config.yaml', 'utf-8')).toMatchInlineSnapshot(`
+        "# Nx Cloud reads this file to configure your CI Pipeline Executions.
+        # Uncomment the "nx start-nx-agents" line in your CI workflow to distribute tasks across agents.
+        # Learn how to start Nx Agents at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+        # Learn how to configure this file at https://nx.dev/ci/reference/nx-cloud/ci-config
+        dte:
+          distribute-on: 3 linux-medium-js
+        lifecycle:
+          stop-after:
+            - build
+        "
+      `);
     });
   });
 
