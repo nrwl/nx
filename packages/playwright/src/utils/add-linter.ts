@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { Linter, LinterType } from '@nx/eslint';
+import { LinterType } from '@nx/eslint';
 import {
   javaScriptOverride,
   addExtendsToLintConfig,
@@ -24,7 +24,7 @@ import { addLintingToProject } from '@nx/js';
 
 export interface PlaywrightLinterOptions {
   project: string;
-  linter: Linter | LinterType;
+  linter: LinterType;
   enableTypedLinting?: boolean;
   /**
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.

@@ -1,9 +1,9 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 
 export interface Schema {
   directory: string;
   name?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   formatter?: 'none' | 'prettier';
   skipFormat?: boolean;
   unitTestRunner?: 'vitest' | 'none';
