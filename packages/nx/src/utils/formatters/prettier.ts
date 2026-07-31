@@ -91,9 +91,10 @@ export async function filterToPrettierSupportedFiles(
       .filter((extension) => !!extension)
   );
   // Prettier matches some files by *name* rather than extension - `.swcrc`,
-  // `.babelrc`, `Jakefile` and ~30 others, all of which report an empty
-  // `extname`. It publishes that list next to the extensions, so read it rather
-  // than hardcoding: filtering on extension alone silently dropped every one.
+  // `.babelrc`, `Jakefile` and ~30 others. Most report an empty `extname` and
+  // were dropped; a few (`package.json`, `composer.json`) happened to survive on
+  // their extension. Prettier publishes the list next to the extensions, so read
+  // it rather than hardcoding.
   const supportedFilenames = new Set(
     supportInfo.languages.flatMap((language) => language.filenames ?? [])
   );
@@ -111,8 +112,9 @@ export function writeWithPrettier(
   cwd?: string
 ): void {
   if (patterns.length === 0) {
-    // Prettier with no file arguments exits 2 with "No parser and no file path
-    // given", which `execSync` turns into a thrown error.
+    // Prettier with no file arguments reads stdin. At EOF it prints "No parser
+    // and no file path given" and exits 0, but `stdio: [0, 1, 2]` hands it nx's
+    // own stdin, so from a terminal it blocks forever with nothing on screen.
     return;
   }
   const prettierPath = getPrettierPath();
