@@ -8,12 +8,11 @@ filter: 'type:References'
 ---
 
 Nx formats code when you run `nx format:write` or `nx format:check`, at the end of most generators,
-over the files `nx init` writes, and once over a workspace `create-nx-workspace` has just created.
-All of them use the same formatter, and Nx works out which one that is by looking at your
-workspace.
+over the files `nx init` writes, and once over a newly created workspace.
+All of them use the same formatter, which Nx detects from your workspace.
 
 Two formatters are supported: [oxfmt](https://oxc.rs) and [Prettier](https://prettier.io).
-New workspaces created with `create-nx-workspace` default to oxfmt.
+New workspaces default to oxfmt.
 
 ## How Nx picks a formatter
 
@@ -23,10 +22,11 @@ Detection runs in this order, and the first match wins:
 2. A Prettier config file exists at the workspace root, or `package.json` has a `prettier` key.
 3. `package.json` declares an `oxfmt` dependency.
 
-If nothing matches, `nx format:write` and `nx format:check` print a warning and exit `0`, and
-generators skip formatting.
-A workspace using Biome, dprint, or any other formatter lands here, which is what keeps Nx from
-reformatting files it doesn't own.
+An installed Prettier is not enough on its own, because Prettier is a common transitive dependency.
+
+If nothing matches, `nx format:write` and `nx format:check` warn and exit `0`, and generators skip
+formatting.
+That is what keeps Nx from reformatting a workspace that uses Biome, dprint, or anything else.
 
 The oxfmt config files Nx looks for:
 
@@ -35,15 +35,8 @@ The oxfmt config files Nx looks for:
 - `oxfmt.config.ts`
 - `oxfmt.config.mts`
 
-These are the names oxfmt itself searches for. It accepts other extensions when you point at one
-explicitly with `-c`, but it never goes looking for them, so Nx doesn't either. Keep one config per
-directory: oxfmt refuses to choose between two and fails with `Both '.oxfmtrc.json' and
-'.oxfmtrc.jsonc' found`.
-
-Step 3 has no Prettier equivalent, and that asymmetry is deliberate.
-Prettier shows up in `node_modules` as a transitive dependency of all sorts of packages, so treating
-its presence as intent would reformat workspaces that never asked for it.
-oxfmt is rare enough as a transitive dependency that depending on it reads as a choice.
+Keep one per directory.
+Given two, oxfmt fails with `Both '.oxfmtrc.json' and '.oxfmtrc.jsonc' found` rather than choosing.
 
 ### When both are configured
 
@@ -53,8 +46,6 @@ workspace over, including generator formatting.
 To go back, delete the oxfmt config.
 
 ## Switch an existing workspace to oxfmt
-
-Install oxfmt, add a config file, and remove the Prettier one:
 
 ```shell
 npm add -D oxfmt
@@ -67,52 +58,36 @@ npm add -D oxfmt
 }
 ```
 
-Those two values are what `@nx/js:init` writes, and they match the Prettier setup Nx generates.
-The oxfmt defaults differ, so set them explicitly if you want your existing formatting to stay put.
+oxfmt's defaults differ from Prettier's, so set these two explicitly if you want your existing
+formatting to stay put.
 
-Then delete `.prettierrc`, and run `nx format:write` to reformat everything in one commit.
+Then delete `.prettierrc` and run `nx format:write` to reformat everything in one commit.
 
-Keep `.prettierignore` if you have one. oxfmt reads it too, so deleting it starts formatting files
-you had excluded.
+Keep `.prettierignore` if you have one.
+oxfmt reads it too, so deleting it starts formatting files you had excluded.
 
 ## Generator formatting and `nx format` differ
 
 `nx format:write` runs the formatter's own CLI.
-Generators format files that exist only in memory, so they call the oxfmt API directly and Nx applies
-the surrounding configuration itself.
-The two agree on the workspace root config, its `overrides` and `ignorePatterns`, the root
-`.editorconfig`, and the root `.gitignore` and `.prettierignore`.
+Generators format files that exist only in memory, so Nx applies the configuration itself.
+Both read the workspace root config, its `overrides` and `ignorePatterns`, and the root
+`.editorconfig`, `.gitignore`, and `.prettierignore`.
 
-They differ in four cases. Three are about configuration that lives somewhere other than the
-workspace root:
+Generator formatting reads only the workspace root.
+An `.oxfmtrc.json` or `.gitignore` in a subdirectory, or an `.editorconfig` above the root, applies
+under `nx format:write` and not during generator formatting.
 
-- An `.oxfmtrc.json` in a subdirectory applies under `nx format:write` but not during generator
-  formatting.
-- A `.gitignore` in a subdirectory applies under `nx format:write` but not during generator
-  formatting.
-- `nx format:write` uses the nearest `.editorconfig` found by walking up from the directory you run
-  it in, so one above the workspace root applies when the workspace root has none of its own.
-  Generator formatting reads only the workspace root file.
-
-The fourth is at the root. An `.editorconfig` that sets `indent_size` without `indent_style` is
-honoured by generator formatting, which follows the EditorConfig spec, and ignored by
-`nx format:write`, which follows oxfmt. A workspace that relies on that shape gets generated files
-its own `nx format:check` rejects. Set `indent_style` alongside it to keep the two in agreement.
-
-Two things about `.editorconfig` may surprise you, and both come from oxfmt rather than from Nx: it
-does not merge the chain, and it does not consult `root = true`. Any `.editorconfig` at the
-workspace root stops the search, even an empty or comment-only one, and `root = true` in a parent
-does not stop that parent from applying. oxfmt also resolves `.editorconfig` once from the working
-directory rather than per formatted file, so a subdirectory's own file is ignored when you format it
-from the workspace root. Running `nx format:write` from inside that subdirectory picks it up
-instead. Generator formatting always reads the workspace root file.
+One root-level case leaves the two disagreeing: an `.editorconfig` that sets `indent_size` without
+`indent_style`.
+Generator formatting applies it and `nx format:write` ignores it, so your generated files fail your
+own `nx format:check`.
+Set `indent_style` alongside it.
 
 ## Skip formatting
 
 Set [`NX_SKIP_FORMAT=true`](/docs/reference/environment-variables) to stop generators and migrations
 from formatting.
-It does not turn off TypeScript path sorting, which is a separate concern controlled by the
-`sortRootTsconfigPaths` option and `NX_FORMAT_SORT_TSCONFIG_PATHS`, and is off by default.
+TypeScript path sorting is separate and stays off by default.
 
 ```shell
 NX_SKIP_FORMAT=true nx g @nx/react:app my-app
@@ -121,8 +96,8 @@ NX_SKIP_FORMAT=true nx g @nx/react:app my-app
 ## Choose a formatter at workspace creation
 
 `create-nx-workspace` asks which formatter you want when you pick a stack (React, Vue, Angular, or
-Node) or the default TypeScript monorepo.
-The workspace also has to use package manager workspaces, which is the default.
+Node) or the default TypeScript monorepo, and the workspace uses package manager workspaces, which
+is the default.
 Every other path defaults to oxfmt without asking, including `--no-workspaces` and the `apps`,
 `npm`, and `ts-standalone` presets.
 Pass `--formatter` on any path to choose explicitly:
