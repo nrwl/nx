@@ -1,0 +1,107 @@
+const mockRunNxOrAngularMigration = jest.fn();
+const mockInstallDepsIfChanged = jest.fn();
+jest.mock('./migrate', () => ({
+  runNxOrAngularMigration: (...args: unknown[]) =>
+    mockRunNxOrAngularMigration(...args),
+  ChangedDepInstaller: class {
+    installDepsIfChanged = mockInstallDepsIfChanged;
+  },
+}));
+
+const mockCommitMigrationIfRequested = jest.fn();
+jest.mock('./migrate-commits', () => ({
+  commitMigrationIfRequested: (...args: unknown[]) =>
+    mockCommitMigrationIfRequested(...args),
+}));
+
+jest.mock('child_process', () => ({
+  ...jest.requireActual('child_process'),
+  execSync: () => 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\n',
+}));
+
+// The single-migration child that Nx Console spawns hand-builds its JSON
+// payload, so a unit test on the parent's record writer stays green even when
+// the child never serializes a field. These execute the real script against a
+// mocked `runNxOrAngularMigration` and assert the payload it writes.
+describe('run-migration-process', () => {
+  let written: string[];
+  let argvBackup: string[];
+  let writeSpy: jest.SpyInstance;
+  let exitSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    written = [];
+    argvBackup = process.argv;
+    process.argv = [
+      'node',
+      'run-migration-process.js',
+      '/workspace',
+      'pkg#mig',
+      'pkg',
+      'mig',
+      '1.0.0',
+      'false',
+      'chore: ',
+    ];
+    writeSpy = jest
+      .spyOn(process.stdout, 'write')
+      .mockImplementation((chunk: string | Uint8Array) => {
+        written.push(String(chunk));
+        return true;
+      });
+    exitSpy = jest
+      .spyOn(process, 'exit')
+      .mockImplementation((() => undefined) as never);
+    mockInstallDepsIfChanged.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    process.argv = argvBackup;
+    writeSpy.mockRestore();
+    exitSpy.mockRestore();
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  const runScript = async (): Promise<Record<string, unknown>> => {
+    jest.isolateModules(() => {
+      require('./run-migration-process.js');
+    });
+    // The script's top-level call is fire-and-forget; let its awaits settle.
+    for (let i = 0; i < 5; i++) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    return JSON.parse(written.join(''));
+  };
+
+  it('forwards skipAgentic from the migration return value to the success payload', async () => {
+    mockRunNxOrAngularMigration.mockResolvedValue({
+      changes: [{ path: 'a.ts', type: 'UPDATE', content: Buffer.from('x') }],
+      nextSteps: ['do a thing'],
+      skipAgentic: true,
+      logs: '',
+      madeChanges: true,
+    });
+
+    const payload = await runScript();
+
+    expect(payload.type).toBe('success');
+    expect(payload.skipAgentic).toBe(true);
+    expect(payload.nextSteps).toEqual(['do a thing']);
+    expect(payload.fileChanges).toEqual([{ path: 'a.ts', type: 'UPDATE' }]);
+  });
+
+  it('reports skipAgentic: false for a migration that did not waive its AI step', async () => {
+    mockRunNxOrAngularMigration.mockResolvedValue({
+      changes: [],
+      nextSteps: [],
+      skipAgentic: false,
+      logs: '',
+      madeChanges: false,
+    });
+
+    const payload = await runScript();
+
+    expect(payload.skipAgentic).toBe(false);
+  });
+});

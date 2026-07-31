@@ -5927,10 +5927,15 @@ module.exports = {
             nextSteps: ['a'],
             agentContext: ['b', 'c'],
           })
-        ).toEqual({ nextSteps: ['a'], agentContext: ['b', 'c'] });
+        ).toEqual({
+          nextSteps: ['a'],
+          agentContext: ['b', 'c'],
+          skipAgentic: false,
+        });
         expect(parseMigrationReturn({ agentContext: ['x'] })).toEqual({
           nextSteps: [],
           agentContext: ['x'],
+          skipAgentic: false,
         });
       });
 
@@ -5938,6 +5943,7 @@ module.exports = {
         expect(parseMigrationReturn(['a', 'b'])).toEqual({
           nextSteps: ['a', 'b'],
           agentContext: [],
+          skipAgentic: false,
         });
       });
 
@@ -5947,10 +5953,28 @@ module.exports = {
             nextSteps: ['ok', 1, null] as any,
             agentContext: [true, 'ok'] as any,
           })
-        ).toEqual({ nextSteps: ['ok'], agentContext: ['ok'] });
+        ).toEqual({
+          nextSteps: ['ok'],
+          agentContext: ['ok'],
+          skipAgentic: false,
+        });
         expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
           nextSteps: ['ok'],
           agentContext: [],
+          skipAgentic: false,
+        });
+      });
+
+      it('opts out of the AI step only on a literal true', () => {
+        expect(parseMigrationReturn({ skipAgentic: true })).toEqual({
+          nextSteps: [],
+          agentContext: [],
+          skipAgentic: true,
+        });
+        expect(parseMigrationReturn({ skipAgentic: 'true' } as any)).toEqual({
+          nextSteps: [],
+          agentContext: [],
+          skipAgentic: false,
         });
       });
     });

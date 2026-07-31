@@ -87,10 +87,16 @@ export type PackageJsonUpdates = {
  *   agent as part of its outer prompt. When no agent runs, this bucket is
  *   silently dropped — it is agent-only by contract. Content meant for the
  *   human in any scenario belongs in `nextSteps`.
+ * - `skipAgentic`: set to `true` to declare that the deterministic run handled
+ *   everything, so `nx migrate` skips the AI step it would otherwise run: the
+ *   paired prompt of a hybrid migration, or the generic validation step of a
+ *   generator-only one. Omitting it keeps the AI step, so this is opt-in.
+ *   `agentContext` is dropped along with the step it was meant for.
  */
 export interface MigrationReturnObject {
   nextSteps?: string[];
   agentContext?: string[];
+  skipAgentic?: boolean;
 }
 
 export type Migration = (
