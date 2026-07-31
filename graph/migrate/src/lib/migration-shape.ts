@@ -37,14 +37,13 @@ export function isHybridShape(m: MigrationShape): boolean {
 }
 
 // TODO(nxc-4477): drop these augmentations once the installed `nx` baseline in
-// this workspace (currently 23.2.0-beta.2) includes `skipAgentic` on
-// `SuccessfulMigration`, and switch call sites back to importing these types
-// directly from `nx/src/command-line/migrate/migrate-ui-api`. graph-migrate has
-// no real `nx` dep (would close a graph cycle via nx → graph-client →
-// graph-migrate), so its type imports resolve against the installed-nx
-// baseline; the local augmentation surfaces the new field without forcing a
-// workspace-level nx dep. Older runtime nx versions never write it, so no
-// phase is rendered as waived.
+// this workspace includes `skipAgentic` on `SuccessfulMigration`, and switch
+// call sites back to importing these types directly from
+// `nx/src/command-line/migrate/migrate-ui-api`. graph-migrate has no real `nx`
+// dep (would close a graph cycle via nx → graph-client → graph-migrate), so its
+// type imports resolve against the installed-nx baseline; the local
+// augmentation surfaces the new field without forcing a workspace-level nx dep.
+// Older runtime nx versions never write it, so no phase is rendered as waived.
 //
 // `MigrationsJsonMetadata` is also mirrored so the augmented `SuccessfulMigration`
 // flows through `completedMigrations` narrowing — call sites get the new field
