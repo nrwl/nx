@@ -40,7 +40,7 @@ export interface SyntheticPluginOptions {
  */
 export function defaultInferredTarget(
   root: string,
-  targetName: string
+  targetName?: string
 ): TargetConfiguration {
   return {
     command: 'acme-build',
@@ -58,7 +58,9 @@ export function defaultInferredTarget(
 export type InferredTargetFactory = (
   root: string,
   targetName: string,
-  options: SyntheticPluginOptions | undefined
+  options: SyntheticPluginOptions | undefined,
+  /** 1-based count of whole-workspace inference passes so far (this one included). */
+  invocation: number
 ) => TargetConfiguration;
 
 export interface SyntheticPlugin {
@@ -82,6 +84,7 @@ export function createSyntheticPlugin(
     SYNTHETIC_CONFIG_GLOB,
     (configFiles, options) => {
       count++;
+      const invocation = count;
       const targetName = options?.targetName ?? 'build';
       return configFiles.map((file) => {
         const dir = dirname(file);
@@ -92,7 +95,12 @@ export function createSyntheticPlugin(
             projects: {
               [root]: {
                 targets: {
-                  [targetName]: inferredTargetFor(root, targetName, options),
+                  [targetName]: inferredTargetFor(
+                    root,
+                    targetName,
+                    options,
+                    invocation
+                  ),
                 },
               },
             },

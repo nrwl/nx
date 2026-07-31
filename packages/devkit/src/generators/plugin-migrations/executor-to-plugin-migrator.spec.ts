@@ -12,12 +12,15 @@ import {
 import {
   addExecutorProject,
   createSyntheticPlugin,
+  defaultInferredTarget,
   setupFixture,
   teardownFixture,
   SYNTHETIC_CONFIG_FILE,
   SYNTHETIC_EXECUTOR,
+  SYNTHETIC_PLUGIN_PATH,
   type FixtureContext,
 } from './executor-to-plugin-migrator.test-utils';
+import type { ExpandedPluginConfiguration } from 'nx/src/devkit-exports';
 
 function uniformExecutorTarget() {
   return {
@@ -543,5 +546,116 @@ describe('Phase 3 — strict-common hoist', () => {
     expect(readJson(ctx.tree, 'app2/project.json').targets.build.executor).toBe(
       SYNTHETIC_EXECUTOR
     );
+  });
+});
+
+describe('Phase 4 — verify + equivalence oracle + fallback', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  it('falls back a project whose centralized config cannot be verified, warning once', async () => {
+    ctx = setupFixture('fallback');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // app3 infers a DIVERGENT target on the verification pass (invocation >= 2),
+    // so its real post-migration config no longer matches the baseline.
+    const plugin = createSyntheticPlugin(
+      (root, targetName, _options, invocation) => {
+        const target = defaultInferredTarget(root, targetName);
+        if (root === 'app3' && invocation >= 2) {
+          target.outputs = ['{projectRoot}/divergent'];
+        }
+        return target;
+      }
+    );
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // app1 / app2 stay centralized (deviation empty)
+    expect(
+      readJson(ctx.tree, 'app1/project.json').targets.build
+    ).toBeUndefined();
+    expect(
+      readJson(ctx.tree, 'app2/project.json').targets.build
+    ).toBeUndefined();
+    // app3 kept a full override
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build).toEqual({
+      options: { mode: 'production' },
+    });
+    // the shared default still exists for the others
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({
+      cache: true,
+      options: { mode: 'production' },
+    });
+    // exactly one warn, naming only the fallback project
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('app3 > build');
+    expect(warn.mock.calls[0][0]).not.toContain('app1');
+    expect(warn.mock.calls[0][0]).not.toContain('app2');
+  });
+
+  it('scopes the plugin include to the migrated subset (root project -> "*")', async () => {
+    ctx = setupFixture('partial-include');
+    // app1 (root) + app2 migrate; app3 is inferrable (has a config file) but
+    // uses a different executor, so it is NOT migrated.
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: '.',
+      targetName: 'build',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'app2',
+      root: 'app2',
+      targetName: 'build',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'app3',
+      root: 'app3',
+      targetName: 'build',
+      executor: '@other/tool:build',
+    });
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    const registration = readNxJson(ctx.tree).plugins?.find(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+    expect(registration).toBeTruthy();
+    // app3 is inferrable but not covered, so the include is required and scopes
+    // to exactly the migrated roots — the root project as '*'.
+    expect(registration.include).toEqual(['*', 'app2/**/*']);
   });
 });

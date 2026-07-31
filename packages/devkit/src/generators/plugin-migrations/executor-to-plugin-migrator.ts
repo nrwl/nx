@@ -963,6 +963,82 @@ async function runVerificationPass<T>(
 }
 
 /**
+ * Phase 4 — run the single verification inference pass, then apply the
+ * equivalence oracle. `retrieveProjectConfigurations` already merges
+ * `targetDefaults` into the inferred targets, so the real post-migration
+ * effective config for a target is `merge(project.json deviation, verified
+ * inferred+targetDefaults)`. It must deep-equal `baselineFinal` (the previous
+ * engine's migrated effective config, from Phase 2). Any project that fails —
+ * or that the intended target no longer infers for at all — falls back to a
+ * full project.json override (dropping only its hoist), and every fallback is
+ * summarized in a single `logger.warn`.
+ */
+async function verifyAndFallback<T>(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  pluginPath: string,
+  createNodes: CreateNodes<T> | undefined,
+  createNodesV2: CreateNodes<T> | undefined,
+  residualByProject: ResidualByProject,
+  singleProjectMode: boolean,
+  logger: typeof devkitLogger | undefined
+): Promise<void> {
+  const verifyResult = await runVerificationPass(
+    tree,
+    pluginPath,
+    createNodes,
+    createNodesV2
+  );
+
+  // Single-project mode never hoists, so there is nothing to reconcile.
+  if (singleProjectMode || !verifyResult) {
+    return;
+  }
+
+  const fallbacks: string[] = [];
+
+  for (const [projectName, targetMap] of residualByProject) {
+    const root = projectGraph.nodes[projectName]?.data?.root;
+    for (const [targetName, entry] of targetMap) {
+      const verifiedInferred = verifyResult.projects?.[root]?.targets?.[
+        targetName
+      ] as TargetConfiguration | undefined;
+
+      let equivalent = false;
+      if (verifiedInferred) {
+        const projectConfig = readProjectConfiguration(tree, projectName);
+        const deviation = projectConfig.targets?.[targetName] ?? {};
+        const postMigrationFinal = mergeTargetConfigurations(
+          structuredClone(deviation),
+          structuredClone(verifiedInferred)
+        );
+        equivalent = isDeepEqual(postMigrationFinal, entry.baselineFinal);
+      }
+
+      if (!equivalent) {
+        // Drop this project's hoist: restore its full residual as an explicit
+        // project.json override (which wins over the shared targetDefaults).
+        writeResidualTarget(
+          tree,
+          projectName,
+          targetName,
+          structuredClone(entry.residual)
+        );
+        fallbacks.push(`${projectName} > ${targetName}`);
+      }
+    }
+  }
+
+  if (fallbacks.length > 0) {
+    (logger ?? devkitLogger).warn(
+      `convert-to-inferred kept a full project.json override for ${fallbacks.length} target(s) whose centralized configuration could not be verified as equivalent: ${fallbacks.join(
+        ', '
+      )}. Their behavior is preserved; the shared nx.json targetDefaults do not apply to them.`
+    );
+  }
+}
+
+/**
  * Recover the default option keys a plugin fills into its options object during
  * `createNodes` (Phase 1 mutated each option-set object in place if the plugin
  * does so). A key qualifies only if it is not one of our own
@@ -1106,8 +1182,19 @@ async function migrateProjects<T>(
     matchedConfigFiles
   );
 
-  // Phase 4 — single verification inference pass over the whole workspace.
-  await runVerificationPass(tree, pluginPath, createNodes, createNodesV2);
+  // Phase 4 — single verification inference pass + equivalence oracle. Any
+  // project whose centralized config cannot be verified as equivalent falls
+  // back to a full project.json override (summarized in one logger.warn).
+  await verifyAndFallback(
+    tree,
+    projectGraph,
+    pluginPath,
+    createNodes,
+    createNodesV2,
+    residualByProject,
+    Boolean(specificProjectToMigrate),
+    logger
+  );
 
   spinner.succeed(`Migrated configuration for ${projects.size} project(s).\n`);
 
