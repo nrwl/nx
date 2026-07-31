@@ -8,6 +8,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { FsTree } from 'nx/src/generators/tree';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { initGeneratorInternal } from './init.js';
 
 describe('initGeneratorInternal', () => {
@@ -78,36 +80,60 @@ describe('initGeneratorInternal', () => {
     ).toBeUndefined();
   });
 
-  // `addPlugin` resolves the target name by running our own `createNodes`
-  // against the real filesystem, where the root config does not exist yet on a
-  // first install because the Tree has not been flushed. It would therefore see
-  // no conflicts and take `lint`, even where ESLint already owns it. The
-  // candidate list is pre-filtered against the existing graph to prevent that.
-  it('should step aside when another linter already owns lint', async () => {
-    const tree = createTreeWithEmptyWorkspace();
-    (createProjectGraphAsync as jest.Mock).mockResolvedValueOnce({
-      nodes: {
-        'lib-a': {
-          name: 'lib-a',
-          type: 'lib',
-          data: {
-            root: 'libs/lib-a',
-            targets: { lint: { executor: '@nx/eslint:lint' } },
+  // Real filesystem on purpose. `addPlugin` probes `tree.root`, so a virtual
+  // tree would find nothing whatever the oxlint config situation, and this
+  // would pass for the wrong reason. Here the workspace is fully on disk and
+  // the *only* thing missing is `.oxlintrc.json` — which `init` writes to the
+  // Tree afterwards, so the probe cannot see it. Our plugin therefore reports
+  // no projects, `addPlugin` finds no conflict for any candidate, and without
+  // the pre-filter it would take `lint` straight out of ESLint's hands.
+  describe('target name resolution against a real workspace', () => {
+    let tempFs: TempFs;
+    let cwd: string;
+
+    beforeEach(() => {
+      tempFs = new TempFs('oxlint-init');
+      cwd = process.cwd();
+      process.chdir(tempFs.tempDir);
+      tempFs.createFilesSync({
+        'nx.json': JSON.stringify({ plugins: [] }),
+        'package.json': JSON.stringify({ name: 'ws', devDependencies: {} }),
+        'libs/lib-a/project.json': JSON.stringify({ name: 'lib-a' }),
+        'libs/lib-a/src/index.ts': 'export const a = 1;',
+      });
+    });
+
+    afterEach(() => {
+      process.chdir(cwd);
+      tempFs.cleanup();
+    });
+
+    it('should step aside when another linter already owns lint', async () => {
+      const tree = new FsTree(tempFs.tempDir, false);
+      (createProjectGraphAsync as jest.Mock).mockResolvedValueOnce({
+        nodes: {
+          'lib-a': {
+            name: 'lib-a',
+            type: 'lib',
+            data: {
+              root: 'libs/lib-a',
+              targets: { lint: { executor: '@nx/eslint:lint' } },
+            },
           },
         },
-      },
-      dependencies: {},
-    });
+        dependencies: {},
+      });
 
-    await initGeneratorInternal(tree, {
-      skipPackageJson: true,
-      skipFormat: true,
-    });
+      await initGeneratorInternal(tree, {
+        skipPackageJson: true,
+        skipFormat: true,
+      });
 
-    const plugin = readNxJson(tree).plugins?.find((p) =>
-      typeof p === 'string' ? false : p.plugin === '@nx/oxlint'
-    ) as { plugin: string; options?: { targetName?: string } };
-    expect(plugin.options?.targetName).toBe('oxlint');
+      const plugin = readNxJson(tree).plugins?.find((p) =>
+        typeof p === 'string' ? false : p.plugin === '@nx/oxlint'
+      ) as { plugin: string; options?: { targetName?: string } };
+      expect(plugin.options?.targetName).toBe('oxlint');
+    });
   });
 
   it.each([
