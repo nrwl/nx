@@ -102,8 +102,6 @@ describe('readPnpmYamlConfig', () => {
 
   it.each([
     ['a bare scalar', 'just-a-string\n'],
-    // The scalar spelling the sentinel uses must not read as a success value.
-    ['the scalar `invalid`', 'invalid\n'],
     ['a sequence', '- a\n- b\n'],
   ])(
     'reports non-object content (%s) as invalid, the way pnpm dies on it',

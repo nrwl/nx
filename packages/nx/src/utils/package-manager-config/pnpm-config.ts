@@ -29,9 +29,8 @@ export function getPnpmConfigDir(env: NodeJS.ProcessEnv): string {
  * config.yaml). An absent file returns null so callers can fall through to
  * lower surfaces; a corrupt or non-object one returns 'invalid' so a caller can
  * tell malformed config from an absent file (pnpm dies on both alike).
- * Requiring an object also keeps the sentinel out of the success domain, so a
- * yaml whose whole content is the scalar `invalid` reports as malformed rather
- * than as that string.
+ * Requiring an object also keeps the sentinel out of the success domain: a
+ * returned string can only ever mean malformed.
  */
 export function readPnpmYamlConfig(
   path: string

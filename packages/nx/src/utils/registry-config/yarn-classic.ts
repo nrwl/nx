@@ -150,10 +150,12 @@ function resolveAuth(
       }
     }
   }
-  // npm ignores a bare key even in its own .npmrc, while yarn's getOption reads
-  // one from the whole chain, so a bare global key is re-keyed onto the dart from
-  // any source, npm-native files included. The _auth/_password base64 carries
-  // over as-is.
+  // yarn's getOption reads a bare key from the whole chain and npm honors auth
+  // only in the nerf-darted form, so a bare global key is re-keyed onto the
+  // dart. From a file npm reads for itself the re-key is moot: npm refuses to
+  // run on a bare auth key in its own config (ERR_INVALID_AUTH, --force
+  // included) before any overlay matters, so only the yarn-only ancestor files
+  // consume it. The _auth/_password base64 carries over as-is.
   const dart = nerfDart(authRegistry);
   // always-auth is read for the registry yarn is about to query, not for the
   // dart the credential came from.

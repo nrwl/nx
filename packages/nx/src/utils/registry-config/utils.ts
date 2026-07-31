@@ -112,9 +112,11 @@ function isBridgedSetting(setting: string): boolean {
  * emit last instead of to the value resolved here.
  *
  * `managerIgnoresEnv` says which settings the package manager resolves without
- * reading `npm_config_*`. Those ambient entries are dropped even where the overlay
- * claims nothing: npm's env tier sits above every file, so leaving one in place
- * stops npm from reaching the .npmrc chain the package manager itself resolved from.
+ * reading `npm_config_*`. Bridged settings it answers true for are dropped even
+ * where the overlay claims nothing: npm's env tier sits above every file, so
+ * leaving one in place stops npm from reaching the .npmrc chain the package
+ * manager itself resolved from. Settings outside the bridged set stay ambient
+ * either way.
  */
 export function mergeNpmConfigEnv(
   baseEnv: NodeJS.ProcessEnv,
@@ -168,8 +170,9 @@ const IGNORES_ALL_BUT_URL_SCOPED: IgnoresNpmConfigEnv = (setting) =>
 
 /**
  * The settings the package manager resolves without reading `npm_config_*`, as
- * a predicate over setting names. An ambient value it returns true for is one the
- * spawned npm never receives. pnpm reads them all up to 10.x and stops at 11.0.0,
+ * a predicate over setting names. A bridged setting it returns true for is one
+ * the spawned npm never receives from the ambient environment; settings outside
+ * the bridged set it has no say over. pnpm reads them all up to 10.x and stops at 11.0.0,
  * which switched to its own `PNPM_CONFIG_*` prefix, except that 11.6.0 restored
  * the URL-scoped credential keys; yarn berry has never read any; npm reads them by
  * definition, and bun reads them for the settings this module bridges.
