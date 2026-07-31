@@ -8,7 +8,11 @@ import {
 } from '@nx/devkit';
 import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
-/** Config files whose contents can be read and rewritten statically. */
+/**
+ * Config files whose contents can be read statically. Not all of them can be
+ * rewritten — `addPluginsToOxlintConfig` below refuses `.jsonc`, because
+ * `updateJson` would strip its comments.
+ */
 const EDITABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
   /\.jsonc?$/.test(file)
 );

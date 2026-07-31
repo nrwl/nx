@@ -1,8 +1,9 @@
 import boundariesPlugin from './index.js';
 
 /**
- * Checks the shape Oxlint expects of a JS plugin: a namespaced `meta.name`, the
- * rule under its own key, a schema, and a callable `create`.
+ * Checks the shape Oxlint expects of a JS plugin: the rule under its own key, a
+ * schema, and a callable `create` — plus a `meta.name` that keeps the rule id
+ * stable, which Oxlint does not require but which decides the namespace.
  *
  * Scope, so this isn't mistaken for more than it is: these run under jest, which
  * resolves `@nx/eslint-plugin/internal` through the `@nx/nx-source` condition to

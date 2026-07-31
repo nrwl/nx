@@ -1,4 +1,9 @@
-import type { Linter, LinterType } from '@nx/eslint';
+// `LinterType` comes from `@nx/js`, not `@nx/eslint`: this package is the one
+// `@nx/eslint` importer that does not declare it as a dependency, so the
+// specifier resolves to the published tarball, whose `LinterType` predates
+// `oxlint` and would contradict the enum in schema.json.
+import type { Linter } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
