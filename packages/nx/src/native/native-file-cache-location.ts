@@ -14,17 +14,6 @@ import {
  */
 export const NATIVE_CACHE_ROOT = join(NX_USER_TMP_DIR, 'native-cache');
 
-export function getNativeFileCacheLocation() {
-  if (process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
-    return process.env.NX_NATIVE_FILE_CACHE_DIRECTORY;
-  }
-
-  // /tmp/.nx/<uid>/native-cache/<nxVersion>. The binary is identical per version
-  // for a published Nx; source checkouts all report 0.0.1, so the loader also
-  // keys each file by a hash of the binding path (see native/index.js).
-  return join(NATIVE_CACHE_ROOT, nxVersion);
-}
-
 /**
  * The cache directory to delete on `nx reset`, or `null` if it is not safe to
  * delete through. The cache root is checked before deleting through it, just as

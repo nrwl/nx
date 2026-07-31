@@ -4,7 +4,6 @@ import { basename, dirname, join } from 'node:path';
 import { tmpdir as systemTmpDir } from 'tmp';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
-  getNxSocketRoot,
   getPluginSocketDir,
   getSocketDir,
   getSocketDirFallbackCause,
@@ -73,27 +72,35 @@ describe('socket directories', () => {
     setPlatform(originalPlatform);
   });
 
-  describe('getNxSocketRoot', () => {
+  // Asserted through getSocketDir rather than a root accessor: the accessor
+  // resolved the root without applying the refusal list, so it could report a
+  // location the socket path would never actually use.
+  describe('socket root resolution', () => {
     it('defaults beneath the stable sandbox root and per-user boundary on POSIX', () => {
       setPlatform('linux');
-      expect(getNxSocketRoot()).toEqual(SOCKET_ROOT);
+      expect(getSocketDir()).toMatch(
+        new RegExp(`^${escapeRegExp(SOCKET_ROOT)}/`)
+      );
     });
 
     it('defaults to the bare OS temp dir on Windows', () => {
       setPlatform('win32');
       // Named pipes are not filesystem objects, so there is nothing to allowlist
       // or lock down there, and `%TMP%` is already per-user.
-      expect(getNxSocketRoot()).toEqual(systemTmpDir);
+      expect(getSocketDir()).toMatch(
+        new RegExp(`^${escapeRegExp(systemTmpDir)}`)
+      );
     });
 
     it('is overridable via NX_SOCKET_DIR', () => {
       process.env.NX_SOCKET_DIR = '/custom/socket/dir';
-      expect(getNxSocketRoot()).toEqual('/custom/socket/dir');
+      // Used as given: a configured value names the socket directory itself.
+      expect(getSocketDir()).toEqual('/custom/socket/dir');
     });
 
     it('falls back to the legacy NX_DAEMON_SOCKET_DIR variable', () => {
       process.env.NX_DAEMON_SOCKET_DIR = '/legacy/socket/dir';
-      expect(getNxSocketRoot()).toEqual('/legacy/socket/dir');
+      expect(getSocketDir()).toEqual('/legacy/socket/dir');
     });
   });
 
@@ -101,16 +108,16 @@ describe('socket directories', () => {
     setPlatform('linux');
 
     expect(getSocketDir()).toMatch(
-      new RegExp(`^${escapeRegExp(getNxSocketRoot())}`)
+      new RegExp(`^${escapeRegExp(SOCKET_ROOT)}/`)
     );
-    expect(getSocketDir()).not.toEqual(getNxSocketRoot());
+    expect(getSocketDir()).not.toEqual(SOCKET_ROOT);
   });
 
   it('places plugin socket dirs under the user socket root too', () => {
     setPlatform('linux');
 
     expect(getPluginSocketDir()).toMatch(
-      new RegExp(`^${escapeRegExp(getNxSocketRoot())}`)
+      new RegExp(`^${escapeRegExp(SOCKET_ROOT)}/`)
     );
   });
 
@@ -342,7 +349,6 @@ describe('socket directories', () => {
 
       expect(dir).not.toBe(process.cwd());
       expect(dir.startsWith(SOCKET_ROOT + '/')).toBe(true);
-      expect(getNxSocketRoot()).toBe(SOCKET_ROOT);
     }
   );
 
