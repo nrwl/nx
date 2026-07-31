@@ -1,4 +1,4 @@
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { Linter, LinterType } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -36,34 +36,26 @@ interface NormalizedSchema {
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  // Everything below configures ESLint — predefined configs, `extends`,
-  // ignore entries — which have no equivalent in other linters. They only
-  // need the linter registering, which the helper handles (including `none`).
-  if (options.linter && options.linter !== 'eslint') {
-    return addLintingToProject(host, {
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
       oxlintPlugins: ['react', 'react-perf'],
-      unitTestRunner: options.unitTestRunner,
       linter: options.linter,
       project: options.projectName,
-      addPlugin: options.addPlugin,
+      tsConfigPaths: options.tsConfigPaths,
+      unitTestRunner: options.unitTestRunner,
       skipPackageJson: options.skipPackageJson,
-    });
+      enableTypedLinting: isTypedLintingEnabled(options),
+      addPlugin: options.addPlugin,
+      addPackageJsonDependencyChecks: options.buildable,
+    })
+  );
+
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter && options.linter !== 'eslint') {
+    return runTasksInSerial(...tasks);
   }
-
-  const tasks: GeneratorCallback[] = [];
-
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.projectName,
-    tsConfigPaths: options.tsConfigPaths,
-    skipFormat: true,
-    skipPackageJson: options.skipPackageJson,
-    enableTypedLinting: isTypedLintingEnabled(options),
-    addPlugin: options.addPlugin,
-    addPackageJsonDependencyChecks: options.buildable,
-  });
-
-  tasks.push(lintTask);
 
   // Add ignored dependencies and files to dependency-checks rule
   if (isEslintConfigSupported(host)) {

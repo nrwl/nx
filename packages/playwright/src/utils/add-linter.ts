@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { Linter, LinterType } from '@nx/eslint';
 import {
   javaScriptOverride,
   addExtendsToLintConfig,
@@ -44,16 +44,8 @@ export async function addLinterToPlaywrightProject(
   tree: Tree,
   options: PlaywrightLinterOptions
 ): Promise<GeneratorCallback> {
-  // Everything below configures ESLint — predefined configs, `extends`,
-  // ignore entries — which have no equivalent in other linters. They only
-  // need the linter registering, which the helper handles (including `none`).
-  if (options.linter && options.linter !== 'eslint') {
-    return addLintingToProject(tree, {
-      linter: options.linter,
-      project: options.project,
-      addPlugin: options.addPlugin,
-      skipPackageJson: options.skipPackageJson,
-    });
+  if (options.linter === 'none') {
+    return () => {};
   }
 
   const tasks: GeneratorCallback[] = [];
@@ -61,12 +53,14 @@ export async function addLinterToPlaywrightProject(
 
   const eslintFile = findEslintFile(tree, projectConfig.root);
   const enableTypedLinting = isTypedLintingEnabled(options);
-  if (!eslintFile) {
+
+  // An existing ESLint config means the project is already registered, so skip
+  // straight to the Playwright-specific shaping below.
+  if (options.linter !== 'eslint' || !eslintFile) {
     tasks.push(
-      await lintProjectGenerator(tree, {
+      await addLintingToProject(tree, {
         project: options.project,
         linter: options.linter,
-        skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
         enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
@@ -74,6 +68,12 @@ export async function addLinterToPlaywrightProject(
         addPlugin: options.addPlugin,
       })
     );
+  }
+
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter !== 'eslint') {
+    return runTasksInSerial(...tasks);
   }
 
   tasks.push(

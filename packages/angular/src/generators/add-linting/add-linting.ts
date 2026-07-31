@@ -6,7 +6,6 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { lintProjectGenerator } from '@nx/eslint';
 import { addLintingToProject } from '@nx/js';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
@@ -31,36 +30,29 @@ export async function addLintingGenerator(
 ): Promise<GeneratorCallback> {
   assertSupportedAngularVersion(tree);
 
-  // Everything below configures angular-eslint presets and selector rules,
-  // which have no equivalent in other linters — Oxlint ships no Angular plugin.
-  // Those only need the linter registering, which the helper handles.
-  if (options.linter && options.linter !== 'eslint') {
-    return addLintingToProject(tree, {
-      linter: options.linter,
-      project: options.projectName,
-      unitTestRunner: options.unitTestRunner,
-      addPlugin: options.addPlugin,
-      skipPackageJson: options.skipPackageJson,
-    });
-  }
-
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
-  const lintTask = await lintProjectGenerator(tree, {
-    linter: 'eslint',
-    project: options.projectName,
-    tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    enableTypedLinting: isTypedLintingEnabled(options),
-    skipFormat: true,
-    rootProject: rootProject,
-    addPlugin: options.addPlugin ?? false,
-    addExplicitTargets: true,
-    skipPackageJson: options.skipPackageJson,
-  });
-  tasks.push(lintTask);
+  tasks.push(
+    await addLintingToProject(tree, {
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      enableTypedLinting: isTypedLintingEnabled(options),
+      rootProject: rootProject,
+      addPlugin: options.addPlugin ?? false,
+      addExplicitTargets: true,
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
+
+  // Everything below configures angular-eslint presets and selector rules,
+  // which have no equivalent in other linters — Oxlint ships no Angular plugin.
+  if (options.linter && options.linter !== 'eslint') {
+    return runTasksInSerial(...tasks);
+  }
 
   if (isEslintConfigSupported(tree)) {
     if (useFlatConfig(tree)) {

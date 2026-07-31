@@ -1,4 +1,3 @@
-import { lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -19,29 +18,24 @@ import {
 import { addLintingToProject } from '@nx/js';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  // Everything below configures ESLint — predefined configs, `extends`,
-  // ignore entries — which have no equivalent in other linters. They only
-  // need the linter registering, which the helper handles (including `none`).
-  if (options.linter && options.linter !== 'eslint') {
-    return addLintingToProject(host, {
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
       linter: options.linter,
       project: options.e2eProjectName,
+      tsConfigPaths: [
+        joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
+      ],
+      enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
-    });
-  }
+    })
+  );
 
-  const tasks: GeneratorCallback[] = [];
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.e2eProjectName,
-    tsConfigPaths: [
-      joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
-    ],
-    skipFormat: true,
-    enableTypedLinting: isTypedLintingEnabled(options),
-    addPlugin: options.addPlugin,
-  });
-  tasks.push(lintTask);
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter && options.linter !== 'eslint') {
+    return runTasksInSerial(...tasks);
+  }
 
   if (isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
