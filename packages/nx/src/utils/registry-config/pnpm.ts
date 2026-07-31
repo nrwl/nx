@@ -287,15 +287,21 @@ function bridgeAuthIni(
   pnpmVersion: string,
   managerIgnoresEnv: IgnoresNpmConfigEnv
 ): void {
-  const authIni = readPnpmNpmrcMap(authIniPath);
-  if (!authIni) {
+  const rawAuthIni = readPnpmNpmrcMap(authIniPath);
+  if (!rawAuthIni) {
     return;
+  }
+  // pnpm's reader runs envReplace on every auth.ini key as well as every value,
+  // and npm's own env-tier expansion uses a different grammar, so expand with
+  // pnpm's here. Rebuilding in file order lets a later key that resolves to the
+  // same setting win, the way both readers assign.
+  const authIni = new Map<string, string>();
+  for (const [key, value] of rawAuthIni) {
+    authIni.set(expandPnpmEnvVars(key), value);
   }
   // parseField decides a Boolean-typed setting from the literal value, before it
   // expands any `${VAR}`, so strict-ssl has to be read pre-expansion.
   const rawStrictSsl = authIni.get('strict-ssl');
-  // pnpm's @pnpm/npm-conf runs envReplace on every auth.ini value, and npm's own
-  // env-tier expansion uses a different grammar, so expand with pnpm's here.
   for (const [key, value] of authIni) {
     authIni.set(key, expandPnpmEnvVars(value));
   }
