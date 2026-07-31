@@ -249,8 +249,9 @@ describe('formatFiles', () => {
     });
 
     it('should still format when the generator deleted an oxfmt config', async () => {
-      // A DELETE change only exists for a file that is on disk - writing and
-      // deleting within one tree cancels out - so this needs a real FsTree.
+      // `listChanges` reports a DELETE only when the file exists on disk, so in
+      // a tree rooted at `/virtual` a write and a delete leave no change at all
+      // and this branch is unreachable. Hence a root that really exists.
       const fs = new TempFs('format-files-oxfmt');
       try {
         fs.createFileSync(
