@@ -236,6 +236,37 @@ describe('socket directories', () => {
     }
   );
 
+  it.each([
+    ['the system temp dir', () => systemTmpDir],
+    ['the Nx shared tmp root', () => SHARED_TMP_ROOT],
+  ])(
+    'blames other users on this machine only for %s, which they can reach',
+    (_name: string, dir: () => string) => {
+      setPlatform('linux');
+      process.env.NX_SOCKET_DIR = dir();
+
+      expect(() => getSocketDir()).toThrow(/shared with the other users/);
+    }
+  );
+
+  it.each([
+    ['the Nx user tmp root', () => USER_TMP_ROOT],
+    ['the Nx socket root', () => SOCKET_ROOT],
+    ['the native cache root', () => `${USER_TMP_ROOT}/native-cache`],
+  ])(
+    'does not claim a local attacker can reach %s, which is the user’s own 0700 dir',
+    (_name: string, dir: () => string) => {
+      setPlatform('linux');
+      process.env.NX_SOCKET_DIR = dir();
+
+      // Refusing these is right, but they are per-user; telling someone a peer
+      // could execute code in their own directory would send them chasing a
+      // compromise that has not happened.
+      expect(() => getSocketDir()).toThrow(/Nx manages for its own runtime/);
+      expect(() => getSocketDir()).not.toThrow(/shared with the other users/);
+    }
+  );
+
   it('still accepts a directory beneath an internal Nx root', () => {
     setPlatform('linux');
     // Only exact matches are rejected; the default socket directories Nx builds
