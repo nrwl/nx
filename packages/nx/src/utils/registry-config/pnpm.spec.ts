@@ -41,6 +41,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'XDG_CONFIG_HOME',
     'pnpm_config_npmrc_auth_file',
     'PNPM_CONFIG_NPMRC_AUTH_FILE',
+    'pnpm_config__auth',
+    'PNPM_CONFIG__AUTH',
     'pnpm_config_userconfig',
     'PNPM_CONFIG_USERCONFIG',
     'npm_config_userconfig',
@@ -80,6 +82,10 @@ describe('getPnpmSpawnRegistryEnv', () => {
   function writeAuthIni(contents: string): void {
     mkdirSync(join(configHome, 'pnpm'), { recursive: true });
     writeFileSync(join(configHome, 'pnpm', 'auth.ini'), contents);
+  }
+  function writeGlobalConfigYaml(contents: string): void {
+    mkdirSync(join(configHome, 'pnpm'), { recursive: true });
+    writeFileSync(join(configHome, 'pnpm', 'config.yaml'), contents);
   }
   /** The file both pnpm and npm resolve as the user config. */
   function writeUserConfig(contents: string): void {
@@ -1082,6 +1088,247 @@ describe('getPnpmSpawnRegistryEnv', () => {
           'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
         });
       });
+    });
+
+    describe('pnpm_config__auth JSON tier (>= 11.10.0)', () => {
+      it('bridges the registry and credential from pnpm_config__auth', () => {
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com': { '@': { authToken: 'json-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'json-token',
+        });
+      });
+
+      it('does not read the tier before 11.10.0', () => {
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com': { '@': { authToken: 'json-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.9.0')).toEqual({});
+      });
+
+      it('nerf-darts a pathed registry URL the way pnpm does', () => {
+        // Without a trailing slash the last path segment scopes the token to
+        // its parent directory, per the shared npm/pnpm nerf-dart convention
+        // (verified against pnpm 11.10.0).
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com/npm': { '@': { authToken: 'dir-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/npm',
+          'npm_config_//reg-a.example.com/:_authToken': 'dir-token',
+        });
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com/npm/': { '@': { authToken: 'dir-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/npm/',
+          'npm_config_//reg-a.example.com/npm/:_authToken': 'dir-token',
+        });
+      });
+
+      it('falls back to the uppercase spelling past an empty lowercase one', () => {
+        process.env.pnpm_config__auth = '';
+        process.env.PNPM_CONFIG__AUTH = JSON.stringify({
+          'https://reg-a.example.com': { '@': { authToken: 'upper-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'upper-token',
+        });
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com': { '@': { authToken: 'lower-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'lower-token',
+        });
+      });
+
+      it('lets the JSON registry beat the yaml default and lose to the env registry', () => {
+        writeYaml('registries:\n  default: https://reg-b.example.com/\n');
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com': { '@': { authToken: 'json-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'json-token',
+        });
+        process.env.pnpm_config_registry = 'https://reg-d.example.com/';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-d.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'json-token',
+        });
+      });
+
+      it('lets the JSON credential beat the URL-scoped env tier and auth.ini', () => {
+        process.env['pnpm_config_//reg-a.example.com/:_authToken'] =
+          'env-scoped';
+        writeAuthIni(
+          [
+            'registry=https://reg-a.example.com/',
+            '//reg-a.example.com/:_authToken=file-token',
+          ].join('\n')
+        );
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com': { '@': { authToken: 'json-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'json-token',
+        });
+      });
+
+      it('bridges a scoped credential onto the plain dart for the fetched scope only', () => {
+        // npm has no scope-qualified auth key, so the matching scope's token
+        // lands on the plain dart, over the registry-wide one; entries for
+        // other scopes stay out, since pnpm would not send them for this
+        // package.
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com': {
+            '@': { authToken: 'wide-token' },
+            '@myscope': { authToken: 'scoped-token' },
+          },
+          'https://reg-b.example.com': {
+            '@other': { authToken: 'other-token' },
+          },
+        });
+        expect(
+          getPnpmSpawnRegistryEnv('@myscope/is-even', root, '11.10.0')
+        ).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_@myscope:registry': 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'scoped-token',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'wide-token',
+        });
+      });
+
+      it('reads _auth from the global config.yaml', () => {
+        writeGlobalConfigYaml(
+          [
+            '_auth:',
+            '  "https://reg-a.example.com":',
+            '    "@":',
+            '      authToken: yaml-token',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'yaml-token',
+        });
+      });
+
+      it('merges the env tier over the global config.yaml per entry', () => {
+        writeGlobalConfigYaml(
+          [
+            '_auth:',
+            '  "https://reg-a.example.com":',
+            '    "@":',
+            '      authToken: yaml-token',
+          ].join('\n')
+        );
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-a.example.com': { '@': { authToken: 'env-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'env-token',
+        });
+        process.env.pnpm_config__auth = JSON.stringify({
+          'https://reg-b.example.com': { '@': { authToken: 'env-token' } },
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-b.example.com/',
+          'npm_config_//reg-a.example.com/:_authToken': 'yaml-token',
+          'npm_config_//reg-b.example.com/:_authToken': 'env-token',
+        });
+      });
+
+      it('fails on a pnpm_config__auth that is not valid JSON', () => {
+        process.env.pnpm_config__auth = '{not json';
+        expect(() =>
+          getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')
+        ).toThrow();
+      });
+
+      it.each([
+        [
+          'a non-object document',
+          JSON.stringify(['https://reg-a.example.com']),
+        ],
+        [
+          'a non-http registry key',
+          JSON.stringify({
+            'ftp://reg-a.example.com': { '@': { authToken: 't' } },
+          }),
+        ],
+        [
+          'a registry key with credentials',
+          JSON.stringify({
+            'https://user:pass@reg-a.example.com': { '@': { authToken: 't' } },
+          }),
+        ],
+        [
+          'a bad scope',
+          JSON.stringify({
+            'https://reg-a.example.com': { org: { authToken: 't' } },
+          }),
+        ],
+        [
+          'an unsupported auth field',
+          JSON.stringify({
+            'https://reg-a.example.com': { '@': { username: 'u' } },
+          }),
+        ],
+        [
+          'a non-string token',
+          JSON.stringify({
+            'https://reg-a.example.com': { '@': { authToken: 42 } },
+          }),
+        ],
+      ])('fails on %s, the way pnpm dies on it', (_label, value) => {
+        process.env.pnpm_config__auth = value;
+        expect(() =>
+          getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')
+        ).toThrow();
+      });
+
+      it.each([
+        ['a corrupt', '_auth: [unclosed\n'],
+        ['a non-object', 'just-a-string\n'],
+      ])(
+        'fails on %s global config.yaml, the way pnpm dies on it',
+        (_label, contents) => {
+          writeGlobalConfigYaml(contents);
+          expect(() =>
+            getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')
+          ).toThrow();
+        }
+      );
+
+      it('treats an empty global config.yaml as declaring nothing', () => {
+        writeGlobalConfigYaml('');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({});
+      });
+    });
+
+    it('fails on a global config.yaml it cannot read even before the JSON auth tier (pnpm dies on it)', () => {
+      writeGlobalConfigYaml('npmrcAuthFile: [unclosed\n');
+      expect(() =>
+        getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')
+      ).toThrow();
+    });
+
+    it('fails on a global config.yaml it cannot read even when the env names the auth file (pnpm still dies on it)', () => {
+      writePnpmOnlyUserConfig('');
+      writeGlobalConfigYaml('npmrcAuthFile: [unclosed\n');
+      expect(() =>
+        getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')
+      ).toThrow();
     });
 
     describe('token helpers', () => {

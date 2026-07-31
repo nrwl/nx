@@ -179,6 +179,21 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     );
   });
 
+  it('degrades to no bridging when the pnpm global config.yaml does not parse (pnpm dies on it)', () => {
+    const { logger } = require('../logger');
+    (logger.warn as jest.Mock).mockClear();
+    process.env.XDG_CONFIG_HOME = '/xdg';
+    files['/xdg/pnpm/config.yaml'] = '_auth: [unclosed\n';
+    jest.isolateModules(() => {
+      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
+      expect(fresh('is-even', ROOT, 'pnpm', '11.10.0')).toEqual({});
+    });
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+      'Could not read the pnpm configuration'
+    );
+  });
+
   it('degrades to no bridging when a yarn rc file does not parse', () => {
     const { logger } = require('../logger');
     (logger.verbose as jest.Mock).mockClear();
