@@ -31,7 +31,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B\s+dist\//g, 'XXB dist/')
         .replaceAll(/total files:\s+\d*/g, 'total files: X')
         .replaceAll(/\d*B\s+README.md/g, 'XXB README.md')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/\b[a-fA-F0-9]{7}\b/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
         // Normalize the version title date.
