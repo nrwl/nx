@@ -1,4 +1,4 @@
-import type { LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 /**
  * Same as the @nx/react library schema, except it removes keys: style, component, routing, appProject

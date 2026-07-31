@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { LinterType } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   javaScriptOverride,
   addExtendsToLintConfig,
