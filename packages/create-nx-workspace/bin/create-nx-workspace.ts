@@ -248,6 +248,15 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Code formatter to use.`,
             type: 'string',
           })
+          // `choices` is load-bearing, not documentation: `determineLinterOptions`
+          // returns `--linter` as-is, and any value that is not 'oxlint' or
+          // 'none' routes into the ESLint arm — so an unregistered typo would
+          // silently scaffold ESLint.
+          .option('linter', {
+            describe: chalk.dim`Linter to use.`,
+            choices: ['eslint', 'oxlint', 'none'],
+            type: 'string',
+          })
           .option('framework', {
             describe: chalk.dim`Framework option to be used with certain stacks.`,
             type: 'string',
