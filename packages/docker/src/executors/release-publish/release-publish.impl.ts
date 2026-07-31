@@ -5,7 +5,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import type { DockerReleasePublishSchema } from './schema';
 import { existsSync, readFileSync } from 'fs';
 import { getDockerVersionPath } from '../../release/version-utils';
@@ -86,8 +86,11 @@ async function checkDockerImageExistsLocally(imageRef: string) {
       const normalizedImageRef = imageRef.startsWith('docker.io/')
         ? imageRef.split('docker.io/')[1]
         : imageRef;
-      const childProcess = exec(
-        `docker images --filter "reference=${normalizedImageRef}" --quiet`,
+      // Pass args as an array (no shell) so the reference read back from the
+      // .docker-version file can't break out into command injection.
+      const childProcess = execFile(
+        'docker',
+        ['images', '--filter', `reference=${normalizedImageRef}`, '--quiet'],
         { encoding: 'utf8', windowsHide: true }
       );
       let result = '';
@@ -113,8 +116,9 @@ async function checkDockerImageExistsLocally(imageRef: string) {
 async function dockerPush(imageReference: string, quiet: boolean) {
   try {
     return await new Promise((res, rej) => {
-      const childProcess = exec(
-        `docker push ${imageReference}${quiet ? ' --quiet' : ''}`,
+      const childProcess = execFile(
+        'docker',
+        ['push', imageReference, ...(quiet ? ['--quiet'] : [])],
         {
           encoding: 'utf8',
           maxBuffer: LARGE_BUFFER,

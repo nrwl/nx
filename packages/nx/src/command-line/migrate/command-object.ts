@@ -9,7 +9,8 @@ export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
   describe: `Creates a migrations file or runs migrations from the migrations file.
   - Migrate packages and create migrations.json (e.g., nx migrate @nx/workspace@latest)
-  - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.`,
+  - Run migrations (e.g., nx migrate --run-migrations=migrations.json). Use flag --if-exists to run migrations only if the migrations file exists.
+  - Run a single migration from migrations.json by id (e.g., nx migrate --run-migration=@nx/js:my-migration).`,
   builder: (yargs) =>
     linkToNxDevAndExamples(withMigrationOptions(yargs), 'migrate'),
   handler: async () =>
@@ -48,6 +49,7 @@ export type MultiMajorMode = (typeof MULTI_MAJOR_MODES)[number];
 export interface MigrateArgs {
   packageAndVersion?: string;
   runMigrations?: string;
+  runMigration?: string;
   include?: MigrateInclude;
   /**
    * nx.json `migrate.include` default. Consumed by `resolveInclude` only when the
@@ -61,6 +63,8 @@ export interface MigrateArgs {
   commitPrefix?: string;
   agentic?: AgenticArg;
   validate?: boolean;
+  ifExists?: boolean;
+  interactive?: boolean;
   // The rest of the yargs args bag flows through untyped.
   [key: string]: any;
 }
@@ -98,6 +102,11 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('runMigrations', {
       describe: `Execute migrations from a file (when the file isn't provided, execute migrations from migrations.json).`,
+      type: 'string',
+    })
+    .option('runMigration', {
+      describe:
+        "Run a single migration from migrations.json by id. The id is '<package>:<name>'; a bare '<name>' is accepted when it matches exactly one migration. A name that contains ':' must use the full '<package>:<name>' form.",
       type: 'string',
     })
     .option('ifExists', {

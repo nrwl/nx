@@ -10,6 +10,7 @@ import type {
 } from '@rspack/core';
 import { getRootTsConfigPath } from '@nx/js';
 import { getRspackCoreMajorVersion } from '../../utils/version-utils';
+import { loadRspackCore } from '../../utils/load-rspack-core';
 
 import { StatsJsonPlugin } from './plugins/stats-json-plugin';
 import { GeneratePackageJsonPlugin } from './plugins/generate-package-json-plugin';
@@ -60,10 +61,8 @@ export function applyBaseConfig(
   options.outputHashing ??= 'all';
 
   // Lazy-require avoids loading @rspack/core (pure ESM in v2) at module
-  // parse time, so Jest can still load this file.
-  const rspackCore: typeof import('@rspack/core') = compiler
-    ? (compiler.rspack as unknown as typeof import('@rspack/core'))
-    : require('@rspack/core');
+  // parse time, so Jest can still load this file. See load-rspack-core.ts.
+  const rspackCore = loadRspackCore(compiler);
 
   applyNxIndependentConfig(options, config, rspackCore);
 

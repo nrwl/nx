@@ -1,7 +1,7 @@
 ---
 name: security-analyzer
 description: Use this agent during PR review to hunt injection-class vulnerabilities in a PR's changes - command injection, zip-slip and path traversal, prototype pollution, SSRF, credential leakage, and unsafe deserialization. It reports a finding only when untrusted data actually crosses a trust boundary into a dangerous sink; code that merely handles trusted workspace config is endorsed as sound so the reviewer knows security was checked. Read-only on the sandbox checkout.
-model: inherit
+model: opus
 tools: Read, Grep, Glob, Bash
 ---
 

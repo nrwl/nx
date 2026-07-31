@@ -86,7 +86,6 @@
     "tslib": "catalog:typescript"
   },
   "devDependencies": {
-    "@nx/cypress": "workspace:*",
     "@nx/vitest": "workspace:*",
     "nx": "workspace:*"
   },
@@ -95,6 +94,8 @@
     "@angular-devkit/build-angular": "catalog:angular-supported-versions",
     "@angular-devkit/core": "catalog:angular-supported-versions",
     "@angular-devkit/schematics": "catalog:angular-supported-versions",
+    "@nx/cypress": "workspace:*",
+    "@nx/playwright": "workspace:*",
     "@schematics/angular": "catalog:angular-supported-versions",
     "@nx/module-federation": "workspace:*",
     "@nx/rspack": "workspace:*",
@@ -108,6 +109,12 @@
       "optional": true
     },
     "@angular-devkit/build-angular": {
+      "optional": true
+    },
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/playwright": {
       "optional": true
     },
     "@nx/module-federation": {

@@ -14,10 +14,8 @@ import {
   tryCommitChanges,
 } from '../../../utils/git-utils';
 import { logger } from '../../../utils/logger';
-import {
-  applyAgenticHandoffGitignoreFallback,
-  isHandoffGitignoreMigration,
-} from './handoff-gitignore';
+import { applyAgenticHandoffGitignoreFallback } from './handoff-gitignore';
+import { isHandoffGitignoreMigration } from './types';
 
 const mockHas = hasUncommittedChanges as jest.Mock;
 const mockTry = tryCommitChanges as jest.Mock;

@@ -3,7 +3,8 @@ title: 'Bun Workspaces: Setup, Commands, and Best Practices'
 description: 'Learn Bun workspaces: setup, linking packages with workspace:*, running scripts with --filter, and best practices for fast monorepos.'
 filter: 'type:Guides'
 topics:
-  - 'Recipes'
+  - 'Package managers'
+  - 'Dependencies'
 ---
 
 Bun workspaces let you manage multiple packages in a single repository (or a monorepo) using the same `workspaces` field npm and Yarn read. `bun install` resolves every package in a single pass, dedupes shared dependencies to the root `node_modules`, and links local packages declared with the `workspace:` protocol.
@@ -74,6 +75,43 @@ bun install --filter 'pkg-*'      # install deps only for matching packages
 ```
 
 Filters accept globs and compose: pass `--filter` multiple times, and prefix a pattern with `!` to exclude it, as in `bun install --filter 'pkg-*' --filter '!pkg-c'`.
+
+## Share dependency versions with Bun catalogs
+
+Catalogs define a dependency version once and reference it from every package, so packages can't drift onto different versions of the same dependency. Bun reads catalogs from the root `package.json`: the `catalog` field holds the default catalog, and `catalogs` holds named catalogs. Nx resolves these references (`catalog:` in generators, migrations, release versioning, and the `@nx/dependency-checks` lint rule) starting in Nx 23.2.
+
+```jsonc
+// package.json
+{
+  "catalog": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+  },
+  "catalogs": {
+    "testing": {
+      "vitest": "^3.0.0",
+    },
+  },
+}
+```
+
+```jsonc
+// apps/web/package.json
+{
+  "name": "web",
+  "dependencies": {
+    "react": "catalog:",
+    "vitest": "catalog:testing",
+  },
+}
+```
+
+`catalog:` points at the `catalog` field and `catalog:testing` at a named catalog. Two Bun behaviors differ from pnpm:
+
+- **`default` is not a special name.** `catalog:` resolves only against the `catalog` field, and `catalog:default` addresses a named catalog literally called `default`. Bun does not treat `catalogs.default` as the default catalog.
+- **Definition locations are all-or-nothing.** You can also nest `catalog`/`catalogs` under the object form of the `workspaces` field. If either field exists there, Bun ignores the top-level fields entirely rather than merging the two locations.
+
+The same `catalog` vs `catalogs.default` distinction applies to [Yarn catalogs](/docs/kb/yarn-workspaces#share-dependency-versions-with-yarn-catalogs) (Yarn 4.10+).
 
 ## How mature are Bun workspaces?
 

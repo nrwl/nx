@@ -57,6 +57,8 @@ The `@nx/cypress` plugin will create a task for any project that has a Cypress c
 - `cypress.config.mjs`
 - `cypress.config.cjs`
 
+The configuration directory must also contain a `package.json` or `project.json`.
+
 ### View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
@@ -93,9 +95,14 @@ The options shown above control the names of the inferred Cypress tasks. The fol
 | `ciComponentTestingTargetName` | `undefined` (task is not inferred by default) |
 | `openTargetName`               | `"open-cypress"`                              |
 
-### Splitting E2E tasks by file
+The e2e and component-test tasks are cached and track Cypress screenshot and video outputs.
+The `openTargetName` task opens the interactive Cypress application.
+The `ciTargetName` task uses the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+Set `ciComponentTestingTargetName` to atomize component tests as well.
 
-The `@nx/cypress/plugin` will automatically split your e2e tasks by file. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/cypress/plugin`.
+
+### Splitting E2E tasks by file
 
 To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
 

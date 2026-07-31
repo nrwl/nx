@@ -14,7 +14,9 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   findEslintFile,
+  inspectTypedLinting,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   replaceOverridesInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
@@ -36,7 +38,7 @@ export async function addLintingGenerator(
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
     skipFormat: true,
     rootProject: rootProject,
     addPlugin: options.addPlugin ?? false,
@@ -46,12 +48,6 @@ export async function addLintingGenerator(
   tasks.push(lintTask);
 
   if (isEslintConfigSupported(tree)) {
-    const eslintFile = findEslintFile(tree, options.projectRoot);
-    // keep parser options if they exist
-    const hasParserOptions = tree
-      .read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
-      .includes(`${options.projectRoot}/tsconfig.*?.json`);
-
     if (useFlatConfig(tree)) {
       addPredefinedConfigToFlatLintConfig(
         tree,
@@ -91,11 +87,28 @@ export async function addLintingGenerator(
         rules: {},
       });
     } else {
+      // Legacy `.eslintrc` overrides are fully replaced below, which would drop
+      // an existing `parserOptions.project`. Detect it first so we can carry it
+      // over. (Flat configs keep typed linting via `lintProjectGenerator`, so
+      // this is only needed on the legacy stack.)
+      const eslintFile = findEslintFile(tree, options.projectRoot);
+      const eslintFileContent = eslintFile
+        ? tree.read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
+        : null;
+      const typedLinting = eslintFileContent
+        ? inspectTypedLinting(eslintFileContent)
+        : null;
+      // Only a `project` needs carrying over. A config running the project
+      // service needs no glob and typescript-eslint rejects one next to it.
+      const carryOverProject =
+        !!typedLinting?.project && !typedLinting.projectService;
       replaceOverridesInLintConfig(tree, options.projectRoot, [
         ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),
         {
           files: ['*.ts'],
-          ...(hasParserOptions
+          // Legacy `.eslintrc` is JSON, which can't express the `__dirname`
+          // that `tsconfigRootDir` needs, so it keeps `parserOptions.project`.
+          ...(carryOverProject
             ? {
                 parserOptions: {
                   project: [`${options.projectRoot}/tsconfig.*?.json`],

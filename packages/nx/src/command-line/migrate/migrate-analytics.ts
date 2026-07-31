@@ -276,6 +276,21 @@ export function reportMigrateRunError(opts: {
   });
 }
 
+/**
+ * Counts invocations, not completions: emitted as soon as the migration id
+ * resolves, while the worker can still stop before running anything.
+ */
+export function reportMigrateSingleMigrationInvocation(opts: {
+  migrationType: 'generator' | 'prompt' | 'hybrid';
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_invocation', {
+      [customDimensions.promptChoice]: opts.migrationType,
+    });
+  });
+}
+
 // `_migrate` runs either from a temp install of the latest CLI or from the
 // workspace-local installation; same signal as the run-phase re-dispatch
 // check in migrate.ts.

@@ -1,7 +1,7 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -77,7 +77,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 2`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 4`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ## Step 3: Check the PR out inside the sandbox container
 
@@ -93,9 +93,13 @@ docker rm -f "$CONTAINER" 2>/dev/null                        # self-heal a lefto
 # in the sandbox and its result attributed to this review.
 # NOTE: /tmp/pr-<NUMBER>.json is deliberately NOT cleared here — Step 2 wrote it
 # one step ago and Step 8 still needs it for the draft frontmatter.
+# /tmp/pr-<NUMBER>.session.json IS cleared: Step 5c writes it later in this run, so
+# anything present now is a previous run's session record for this PR — and a stale
+# one would be read as this run's, downgrading findings against an outdated record.
 rm -f /tmp/pr-<NUMBER>.diff /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.files \
       /tmp/pr-<NUMBER>.review-charter.md /tmp/pr-<NUMBER>.review-context.md \
-      /tmp/pr-<NUMBER>-incremental.diff /tmp/pr-<NUMBER>.evidence /tmp/repro-<NUMBER>.cmd
+      /tmp/pr-<NUMBER>-incremental.diff /tmp/pr-<NUMBER>.evidence /tmp/repro-<NUMBER>.cmd \
+      /tmp/pr-<NUMBER>.session.json
 
 docker run -d --name "$CONTAINER" $RUNTIME_FLAG \
   --cap-drop ALL --security-opt no-new-privileges \
@@ -116,7 +120,34 @@ docker exec "$CONTAINER" bash -lc '
   git worktree add --detach /work/base "origin/<BASE_REF_NAME>"
   git rev-parse HEAD          # HEAD_SHA
 '
+
+# Install the workspace ONCE, here, before any agent is dispatched. Agents run test
+# suites, mutate sources to prove a test can fail, and execute the repo's own eslint
+# and tsc — all of which need node_modules. Installing on demand instead means several
+# agents racing `pnpm install` in the same directory, which can corrupt node_modules,
+# and gives them whatever versions they happen to pick rather than the repo's pinned ones.
+# The image bakes the mise toolchain but no node_modules, so nothing is installed until this runs.
+# cwd must sit under a mise.toml or the shims report "No version is set for shim: npm".
+# No `mise trust` needed: the image sets MISE_YES=1, which auto-trusts the PR's mise.toml on first
+# use. Without it, a PR that edits mise.toml fails with "Config files ... are not trusted".
+docker exec "$CONTAINER" bash -lc '
+  cd /work/nx
+  mise install >/dev/null 2>&1                    # installs any tool version the PR bumped
+  if   pnpm install --frozen-lockfile >/dev/null 2>&1; then
+    echo "workspace install OK"
+  elif pnpm install >/dev/null 2>&1; then
+    echo "workspace install OK — but only WITHOUT --frozen-lockfile: the lockfile is out of sync with package.json (a review signal; note it)"
+  else
+    echo "workspace install FAILED — agents cannot run tests or the repo eslint"
+  fi
+'
 ```
+
+This is the slowest step in the skill, but the image ships a warm pnpm store, so it mostly links rather than downloads. It buys correctness as much as speed: one deterministic install instead of N racing ones, at the versions the repo pins. Skip it only for a diff with nothing runnable (docs-only), and say so in the charter so agents don't discover it one failed command at a time.
+
+If it is unexpectedly slow, the image predates the warm store — rebuild it via `setup-review-sandbox`.
+
+`/work/base` is deliberately left uninstalled. Only the reproduce-verifier executes base-side, and pnpm's content-addressable store makes that second install cheap when it does.
 
 Use `origin/<BASE_REF_NAME>` here, **not** `FETCH_HEAD`. `FETCH_HEAD` is a per-worktree pseudoref written into the main worktree's git dir, so it is invisible from a linked worktree — any later command that re-points `/work/base` via `FETCH_HEAD` fails, and git compounds it by reinterpreting the unresolvable token as a pathspec (`--detach does not take a path argument`), which points nowhere near the real cause. Remote-tracking refs live in the common git dir and resolve from every worktree.
 
@@ -124,7 +155,9 @@ Notes:
 
 - **No `-v` host mounts** — the checkout must live only in the container. All caps dropped, no privilege escalation, resources bounded.
 - **Efficiency:** the gh-only close-without-merge signals (Step 4.5, signals 1–4 and 6–8) need no container. For a **first** review, you may run those cheap signals first and only start the container if no strong close signal fired — a superseded/unnecessary PR then costs no sandbox. For a **re-review**, Step 4's incremental diff needs the container, so start it before Step 4. Either way, once created it must be torn down in Step 9.
-- The image carries the repo toolchain (node/java/dotnet/rust/bun via mise) baked from `mise.toml`, and `mise` auto-installs the PR's _pinned_ toolchain on first exec, so in-container execution (repro, builds) works without host help.
+- The image carries the repo toolchain (node/java/dotnet/rust/bun via mise) baked from `mise.toml`, and `mise` auto-installs the PR's _pinned_ toolchain on first exec, so in-container execution (repro, builds) works without host help. It bakes **no** `node_modules` — that is what the install step above is for.
+- `tsc` and `eslint` come from the workspace install, so agents get the versions the repo pins rather than an arbitrary latest. Report the install's outcome in the charter (Step 5).
+- **Run every in-container command with cwd inside `/work/nx`.** mise resolves tool versions by walking up from cwd, so a command run from `/tmp` (or any path outside a `mise.toml` tree) fails with `No version is set for shim: npm` even though `node` happens to resolve — a confusing error with nothing to do with the PR.
 - The `--depth 1` PR-head fetch gives the full working tree at HEAD — enough for reading every changed and surrounding file. This step also adds the base ref as a second worktree at `/work/base` in the same container, before any agent is dispatched — one container per PR holds everything. The agents never create, move, or re-point either checkout; they only read them (only the reproduce-verifier also runs things).
 - **Read base state from `/work/base`, not from a host clone.** It is fetched fresh from the remote on every run, so it is always the PR's actual base. A maintainer's local clone can be weeks stale, which would silently answer "was this behavior already there?" against the wrong tree — the question calibration 7 exists to settle.
 
@@ -165,10 +198,12 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
 (If the existing draft's `verdict` is `failed` **and its `## Review draft` body is empty or has no findings**, the prior attempt produced nothing usable — skip this step and review fresh. Do NOT discard it merely because the token says `failed`: since Step 7 now sets `failed` when any single agent fails its EVIDENCE check, a `failed` draft routinely still contains eight agents' worth of real findings, and throwing that away loses the reconciliation this step exists for. The file's history is preserved by Step 8 either way.)
 
-1. Read the existing triage file. Extract:
-   - The frontmatter `head_sha` (call it `$PRIOR_SHA`).
+1. Read the existing triage file **in full** — the whole `## Review draft` plus every entry under `## Prior reviews`. This is for **you**, the orchestrator: Step 5b reconciliation is explicitly yours to do ("don't dispatch another agent — you already have all the context"), so you need the complete history to sort findings into Addressed / Still concerning / New. Extract:
+   - The frontmatter `head_sha` (call it `$PRIOR_SHA`) and `verdict`.
    - The `## Review draft` section (the most recent review). This becomes "the prior review."
    - The full `## Prior reviews` section (older reviews, if any). All of them — no cap on history.
+
+   What you pass to the **agents** is a different, much smaller artifact — see step 3. Keep the two straight: full history in your head, distilled carry-forward on disk.
 
 2. Compute the incremental diff inside the container, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
 
@@ -185,20 +220,35 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 also clears these paths up front, so the two defenses are independent.)
 
-3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code):
+3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
+
+   **Distill; do not paste.** Every byte here is read by all nine agents, so its cost is multiplied ninefold — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
+
+   Write this shape instead, and keep the whole file **under ~150 lines**:
 
    ```markdown
    # Re-review context
 
-   This PR has been reviewed before. The prior review's verdict was: <PRIOR_VERDICT>.
+   Attempt <N-1> reviewed `$PRIOR_SHA` and returned **<PRIOR_VERDICT>**. This is attempt <N>.
+   Earlier attempts: <one line per attempt, oldest first — "attempt 2 (1046ace) lgtm — daemon now
+   rejects foreign-workspace messages">.
 
-   ## Most recent prior review (head_sha=$PRIOR_SHA)
+   ## Open items — verify whether these still hold
 
-   <PASTE THE PRIOR REVIEW DRAFT VERBATIM>
+   <Every unresolved Critical/Important finding from ANY prior attempt, one bullet each.
+   Quote the finding's own one-line summary verbatim where it has one; add the file:line and
+   the specific ask. These are load-bearing — see the budget rule below.>
 
-   ## All earlier reviews (oldest first)
+   ## Already fixed — do not re-raise
 
-   <PASTE THE FULL ## Prior reviews SECTION VERBATIM>
+   <One line per finding a prior attempt raised and a later attempt confirmed closed, with what
+   closed it. Agents need these so they neither re-report them nor mistake the fix for new code.>
+
+   ## Settled maintainer calls — do not re-litigate
+
+   <One line each: the decision, and that it was reviewed and accepted. An agent that does not
+   know a trade-off is settled will re-report it every single round; this section is the cheapest
+   part of the file and prevents the most repeat noise.>
 
    ## Diff since last review (`$PRIOR_SHA..<HEAD>`)
 
@@ -206,9 +256,18 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    ## Review focus
 
-   Focus on the diff since the last review. For unchanged code, only verify
-   whether the prior findings above still hold — do not re-analyze it from scratch.
+   Focus on the diff since the last review. For unchanged code, only verify whether the open
+   items above still hold — do not re-analyze it from scratch.
+
+   <Optionally: 2-4 specific questions this round should settle, phrased neutrally.>
    ```
+
+   Rules for the distillation:
+   - **The budget never evicts an open finding.** The ~150-line target governs _prose_, not the Open-items list. If open items alone exceed the budget, keep them all and cut elsewhere — dropping an unresolved finding silently converts it into a "new" finding next round, or into no finding at all, which is the one failure this file exists to prevent.
+   - **Compress by dropping sections, not by summarizing findings.** Prior Reproduction / Approach / Performance / Security narrative goes entirely; a finding's own wording is preserved. Never paraphrase a finding into something vaguer than the author wrote — the point of quoting is that the next agent can check the same claim.
+   - **Do not carry a prior verdict's reasoning as an instruction.** Say what was found, not what to conclude. An agent told "attempt 5 concluded this is sound" will confirm it; an agent told "attempt 5 found X at file:line" will check X.
+   - **Keep the questions neutral.** Asking "does the new suite actually exercise the rejection branches, and can it fail?" is fair; asking "confirm the new suite is good" is not.
+   - The full history is not lost — it stays in `$TRIAGE_DIR/<NUMBER>.md` (Step 8 keeps it uncapped) and in your own context from step 1. Only the agents' copy is trimmed.
 
 ## Step 4.5: Close-without-merge check
 
@@ -337,6 +396,65 @@ If all signals are cheap-negative, skip emitting the section entirely (no noise 
 
 If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, security-analyzer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
 
+## Step 4.7: Measure shared load-bearing claims ONCE, before dispatching
+
+Some PRs turn on a single mechanical fact that **every** agent would otherwise re-derive
+independently: what a module graph actually loads, what a changed lint config actually blocks,
+whether a deleted user-facing message is still emitted somewhere else. These are expensive to
+establish (install a toolchain, compile, instrument, run a matrix) and cheap to check once you have
+the answer.
+
+Left alone, the pipeline pays for that establishment once per agent, and every one of them reaches
+the same answer. So: measure first, then hand the result to the agents **as a claim to attack**.
+
+### When this step applies
+
+Only when the diff makes a **mechanical, globally-relevant assertion** that more than one agent's
+dimension depends on. Signals that it does:
+
+- A comment or PR-body claim about **module load order or laziness** ("non-agentic runs never load
+  X", "this import is deferred").
+- A changed **lint / CI / build config** whose effect is the point of the change.
+- A **removed** log, warning, or error, justified as "the sink already reports it".
+- A claimed **behavioral parity** between two code paths ("the worker mirrors the classic loop").
+
+If the diff makes no such claim, skip this step entirely — most PRs will.
+
+### How to do it
+
+1. **Snapshot first.** Copy the tree inside the container (`cp -a /work/nx/packages /snap/packages`)
+   and measure against the snapshot. Agents run concurrently and some mutate `/work/nx` (the test
+   analyzer mutates source deliberately to prove tests can fail); measuring the live checkout makes
+   your result a race.
+2. **Use the workspace install** from Step 3 — `cd /work/nx` first so mise resolves the toolchain.
+3. **Prefer the method that reproduces the real build.** For "is this import lazy?", transpile the
+   entry module with `tsc --module commonjs` and walk `require()` calls at **column 0** of the emit
+   (indented ⇒ inside a function ⇒ lazy). Only TypeScript's own emit applies its real elision rules,
+   so a hand-written import parser over-approximates and a grep is simply wrong.
+4. **Measure the comparison points too** — the base (`/work/base`) and, on a re-review, the prior
+   SHA (`git worktree add --detach /work/prior <PRIOR_SHA>`). A number without its baseline cannot
+   answer "is this net-new?", which is calibration 7's question.
+5. **Record the method, not just the number.** The charter entry must let an agent re-run it.
+
+### How to write it into the charter
+
+Add an `## Established measurements` section (see the Step 5 template). Frame every entry as a
+**measured claim the agent is invited to falsify** — never as settled truth:
+
+> Measured, not asserted. Do NOT re-derive these from scratch; that duplication is the single
+> largest avoidable cost in this pipeline. DO challenge any of them if your own reading of the
+> code contradicts it — say so explicitly and show what you saw. A contradiction is a finding.
+
+That phrasing is load-bearing. "Here is the answer" makes agents incurious; "here is my
+measurement, break it if you can" keeps the adversarial value at a fraction of the cost. The
+independence that matters — `alternative-approach`, `security-analyzer` and `performance-analyzer`
+arriving uninformed about the _author's reasoning_ — is untouched, because a mechanical measurement
+is not a rationale. Keep giving them the measurement; keep withholding the Polygraph session until
+Step 5c.
+
+**Never put a conclusion here that you did not personally run.** This section is trusted by nine
+agents at once, so an error in it is nine wrong reviews rather than one.
+
 ## Step 5: Run the review toolkit
 
 First, write a review charter at `/tmp/pr-<NUMBER>.review-charter.md` (host-side) so the agents self-filter up front instead of generating findings that get trimmed later. **The charter must open with the sandbox reading protocol** so every downstream agent knows where the code is and never runs it on the host:
@@ -350,7 +468,8 @@ The PR is checked out at `/work/nx` **inside a sandbox container named `nx-revie
 NOT on the host filesystem. Your native Read/Grep/Glob tools will NOT find the PR source. Reach it
 only with `docker exec` against that container:
 
-- Primary review surface — the diff — is on the host at `/tmp/pr-<NUMBER>.diff`; read it with `Read`.
+- Primary review surface — a diff — is on the host; your dispatch prompt names it as REVIEW TARGET
+  (`/tmp/pr-<NUMBER>.diff`, or the incremental diff on a re-review). Read it with `Read`.
 - To read any PR source file for context:
   - `docker exec nx-review-pr-<NUMBER> cat /work/nx/<path>`
   - `docker exec nx-review-pr-<NUMBER> grep -rn "<pattern>" /work/nx/<subdir>`
@@ -360,6 +479,38 @@ only with `docker exec` against that container:
   the reproduction) MUST go through
   `docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && <cmd>'`.
   Running it bare on the host is a protocol violation.
+
+## Toolchain (already installed — do not install your own)
+
+The workspace is installed at `/work/nx`, so `tsc`, `eslint`, `jest` and the repo's own scripts are
+available at the versions the repo pins. Do not install your own copies — you would get different
+versions and could corrupt `node_modules` for the agents running alongside you.
+
+**Always `cd /work/nx` first.** mise resolves tool versions by walking up from cwd, so a command run
+from elsewhere fails with `No version is set for shim: npm` even though `node` resolves:
+
+    docker exec nx-review-pr-<NUMBER> bash -lc 'cd /work/nx && pnpm --version'
+
+<IF the Step 3 install did not report OK, REPLACE the first paragraph with what actually happened —
+"the workspace install failed, so you cannot run tests or eslint; restrict yourself to reading" —
+rather than leaving agents to discover it one failed command at a time.>
+
+## Established measurements
+
+<OMIT THIS SECTION ENTIRELY unless Step 4.7 ran. When it did, paste its results here.>
+
+Measured by the caller before you were dispatched — **not asserted, and not the author's word.**
+
+Do NOT re-derive these from scratch — that duplication is the single largest avoidable cost in this
+pipeline.
+
+DO challenge any of them if your own reading of the code contradicts what is written here. Say so
+explicitly and show what you saw — a contradiction between this section and the code is itself a
+finding, and a valuable one. Reuse these as a _starting point_ for your own dimension's questions,
+not as a place to stop.
+
+<For each measurement: the claim, the method (specific enough to re-run), and the result —
+including the base and, on a re-review, the prior SHA, so "is this net-new?" is answerable.>
 
 ## Review methodology (mandatory)
 
@@ -380,6 +531,26 @@ only with `docker exec` against that container:
   this same change where the same class of defect could occur. A fix that closes a hole at the
   sink routinely leaves the identical class open one hop upstream.
 
+## Proof of work (every agent, every report)
+
+Open your report with exactly these three plain-text lines — not markdown headings, and do NOT wrap
+the evidence in a code span or backticks:
+
+    REVIEWED: <how many changed files you actually opened>
+    EVIDENCE_LINE: <the line number in <EVIDENCE_FILE> of the line you quote below>
+    EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after
+                    the sign, and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
+
+`<EVIDENCE_FILE>` is named in your dispatch prompt. The caller reads that file at EVIDENCE_LINE and
+checks it equals EVIDENCE_TEXT.
+
+The line **number** is the proof: it appears in no prompt and in no prior-review text, so only
+opening the file yields it. A filename or a `diff --git` header is derivable from the prompt and
+proves nothing. A report that does not verify is discarded and the agent recorded as failed —
+**including a report that found no issues**, and including an endorsement verdict (`*_SOUND`,
+`NOT_ATTEMPTED`). An endorsement asserts "I checked and found nothing", which is exactly the claim
+an agent that read nothing produces most fluently, so it costs more evidence, not less.
+
 ## What to report
 
 Report **critical** and **important** findings, plus **strengths**. Concrete,
@@ -395,7 +566,11 @@ these is advisory at most and not worth writing up:
 <COPY THE FULL "Nx-specific calibration" LIST FROM THIS SKILL, VERBATIM>
 ```
 
-Substitute the real PR number for **every** `<NUMBER>` in the template — do not work from a count, and do not assume they are all inside `docker exec` commands. They are not: one is the container-name sentence and one is `/tmp/pr-<NUMBER>.diff`, the primary review surface. Leaving that last one literal points every agent at a nonexistent file, so no agent can produce a verifiable EVIDENCE line and the whole run degrades to all-agents-failed. (There is deliberately no `<CONTAINER>` token; the container name is spelled out so a half-done substitution is visible rather than silent.)
+Substitute the real PR number for **every** `<NUMBER>` in the template — do not work from a count, and do not assume they are all inside `docker exec` commands. They are not: they include the container-name sentence, the toolchain paths, and `/tmp/pr-<NUMBER>.diff`, the primary review surface. Leaving that last one literal points every agent at a nonexistent file, so no agent can produce a verifiable EVIDENCE line and the whole run degrades to all-agents-failed. (There is deliberately no `<CONTAINER>` token; the container name is spelled out so a half-done substitution is visible rather than silent.)
+
+Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in the template — the toolchain-unavailable branch and the `## Established measurements` body. A charter shipped with an unresolved angle-bracket instruction tells nine agents to follow an instruction meant for you.
+
+**`<EVIDENCE_FILE>` is the one token that stays literal in the charter.** It differs per agent (the reproduce-verifier keeps the full diff while the others may get the incremental one), so the charter deliberately defers it — "named in your dispatch prompt" — and each _dispatch prompt_ resolves it to a real path. Substituting a single path into the charter would silently point some agents at a file they were never given.
 
 ### Dispatch the review agents directly — NOT via the toolkit command
 
@@ -415,6 +590,28 @@ populated diff hands every agent a `CHANGED FILES:` heading followed by nothing.
 `wc -l < /tmp/pr-<NUMBER>.files` does not equal the `changedFiles` count parsed in Step 2 — that
 mismatch means one of the two `gh` calls silently returned a partial answer.
 
+**Pass the file list by path, not by value.** Agents have `Read` and the list is a host file, so
+pasting its contents into every prompt buys nothing and costs the whole list once per agent. The one
+thing the paste bought — an agent noticing an empty scope — is already covered by the abort above,
+which fires before any dispatch.
+
+### Choose the EVIDENCE surface
+
+The proof-of-work line number (charter: "Proof of work") is checked against **one** file, named per
+dispatch as `<EVIDENCE_FILE>`:
+
+- **First review**, or no usable incremental diff → `/tmp/pr-<NUMBER>.diff`.
+- **Re-review** where Step 4 set `HAS_PRIOR_CONTEXT=true` **and**
+  `wc -l < /tmp/pr-<NUMBER>-incremental.diff` is at least 40 → `/tmp/pr-<NUMBER>-incremental.diff`.
+
+Pointing the proof at the incremental diff on a re-review does two things at once: it proves the
+agent opened the surface that actually matters this round, and it stops agents grazing the full diff
+for a quotable line. Below ~40 lines the far-half retry (see below) has too little room, so fall
+back to the full diff.
+
+The full diff stays available either way — as **reference**, not as the review target. Say which is
+which; agents that are handed both without a hierarchy read both in full.
+
 Then dispatch each agent with this prompt shape:
 
 ```
@@ -428,29 +625,29 @@ SCOPE — review exactly these changes. Do NOT run `git status` or `git diff` to
 the host working tree is clean and unrelated to this PR, so host git reports no changes. If you
 find yourself with an empty file list, you have the wrong scope — re-read the inputs below.
 
-- DIFF: /tmp/pr-<NUMBER>.diff  (host file — the complete PR diff; read it with `Read`)
-- CHANGED FILES: <PASTE the contents of /tmp/pr-<NUMBER>.files>
+- REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with `Read`; this is what you review)
+- CHANGED FILES: /tmp/pr-<NUMBER>.files  (host file — one path per line; `Read` it)
 - CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
 - BASE_REF: <BASE_REF_NAME>
+<ONLY IF <EVIDENCE_FILE> is the incremental diff, ADD:>
+- FULL DIFF (reference only): /tmp/pr-<NUMBER>.diff — the whole PR against its base. Consult it to
+  understand context around a delta hunk; do NOT review it end to end. Prior rounds already reviewed
+  it, and this round's job is the delta.
 
-Read /tmp/pr-<NUMBER>.review-charter.md (host file) first — it carries the severity policy, the
-maintainer calibrations, and the mandatory sandbox reading protocol. The PR source is NOT on the
-host: reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`, and
-never run PR code on the host.
+Read /tmp/pr-<NUMBER>.review-charter.md (host file) FIRST. It carries the sandbox reading protocol,
+the pre-installed analysis toolchain, any measurements already established for you, the severity
+policy and the maintainer calibrations. The PR source is NOT on the host: reach it only via
+`docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`, and never run PR code on the host.
 
-REQUIRED — open your report with exactly these three lines:
-
-  REVIEWED: <how many changed files you actually opened>
-  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
-  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign,
-                  and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
-
-The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT. The line NUMBER is the
-proof: it is in no prompt and in no prior-review text, so only opening the diff yields it. A filename
-or a `diff --git` header is derivable from this prompt and proves nothing. A report that does not
-verify is discarded and the agent recorded as failed — including a report that found no issues.
+REQUIRED — open your report with the three proof-of-work lines exactly as the charter's
+"Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to.
+A report without a verifying pair is discarded and the agent recorded as failed — including one
+that found no issues.
 <ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
-Also read /tmp/pr-<NUMBER>.review-context.md — the prior review of this PR. Focus on what changed since.
+Also read /tmp/pr-<NUMBER>.review-context.md — a distilled carry-forward from prior reviews of this
+PR: what is still open, what was already fixed, and which trade-offs are settled. Focus on what
+changed since. It is deliberately NOT the full prior reviews — it lists only what carries forward, so
+treat it as a checklist to verify, never as a statement that anything absent from it is fine.
 """
 )
 ```
@@ -469,14 +666,16 @@ Dispatch these in parallel:
 
 A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. Every agent — the toolkit agents here (four, or five when `type-design-analyzer` applies), **and** the four in Steps 5a–5a.5 — must prove it opened the artifact.
 
-**Demand a line number, not just a line.** A filename is not evidence: the changed-file list is pasted into every agent's prompt, so an agent that read nothing can cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `/tmp/pr-<NUMBER>.diff` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
+**Demand a line number, not just a line.** A filename is not evidence: the changed-file list is a host file every agent is told to `Read`, so an agent that opened nothing else can still cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `<EVIDENCE_FILE>` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
 
 ```
 REVIEWED: <N> changed files
-EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff, e.g. 214>
+EVIDENCE_LINE: <the line number in <EVIDENCE_FILE>, e.g. 214>
 EVIDENCE_TEXT: <that exact line, verbatim — must begin with `+` or `-`, 20+ chars after the sign,
                and not a `diff --git` / `index` / `---` / `+++` / `@@` line>
 ```
+
+`<EVIDENCE_FILE>` is whichever surface you named as REVIEW TARGET for that agent — the full diff on a first review, the incremental diff on a re-review. Use the **same** file when you verify; checking a line number against a different file than the agent was pointed at fails every honest agent at once.
 
 **Verify by reading the diff yourself at that number.** BOTH `EVIDENCE_LINE` and `EVIDENCE_TEXT` are agent-authored and untrusted — get them into shell variables **only via the `Write` tool + `$(cat …)`, never a bare `LINE=<paste>`**. A bare assignment of the agent's line number is itself host RCE before any gate runs: `LINE=1e touch /tmp/x #` is bash assignment-prefix syntax — it sets `LINE=1e` and _runs_ `touch /tmp/x`. So write both fields to files with the **`Write` tool** (no shell parses their bytes), then read them back with `$(cat …)`. Run everything below as **one** shell invocation — the `LINE=$(cat …)` read and the `case` are a single block, because this harness does not persist shell variables between separate Bash calls (split them and `$LINE` is empty in the `case`, which fails an honest agent). It must emit **exactly one token**; do not paraphrase the checks into separate `echo FAILED` lines:
 
@@ -488,7 +687,7 @@ verdict=FAILED
 case "$LINE" in
   ''|*[!0-9]*) ;;                                  # non-numeric → stays FAILED; sed must NOT run (see below)
   *)
-    sed -n "${LINE}p" /tmp/pr-<NUMBER>.diff > /tmp/pr-<NUMBER>.diffline
+    sed -n "${LINE}p" <EVIDENCE_FILE> > /tmp/pr-<NUMBER>.diffline
     line=$(cat /tmp/pr-<NUMBER>.diffline)          # $(…) strips the trailing newline sed adds
     ev=$(cat /tmp/pr-<NUMBER>.evidence 2>/dev/null)
     if   printf '%s' "$line" | grep -qE '^[+-]' \
@@ -511,13 +710,15 @@ Each element defeats a specific failure that real reviews of this skill actually
 - **`^[+-]` and the header exclusion together**: a `@@` hunk line is caught by `^[+-]` (it starts with `@`); `diff --git`/`index`/`+++`/`---` lines are caught by the header exclusion. Both are derivable from the file list, so only a real content line counts.
 - **Both agent fields reach the shell only through `Write` + `$(cat)`**: `EVIDENCE_LINE` and `EVIDENCE_TEXT` are untrusted, and a bare `LINE=<paste>` executes the value via bash assignment-prefix syntax _before_ the `case` gate. Round-tripping through a file keeps every agent byte out of any shell word.
 
+**One tolerated deviation: a markdown code-span wrapper.** Agents recurrently return `EVIDENCE_TEXT` wrapped in backticks, sometimes also backslash-escaping the inner ones, despite the prompt saying not to. Strip an outer code span and any such escaping, then run the comparison unchanged. This concedes nothing: the **line number** is the proof of work, and the unwrapped text must still match the file byte-for-byte. Failing an honest agent over a formatting habit costs a whole re-review — Step 7 flips the verdict to `failed`, the one value that defeats Step 2's dedup. Record it as a protocol deviation in `## Failures`, not as a failure.
+
 **This applies to endorsements too, and especially to them.** `APPROACH_SOUND`, `PERFORMANCE_SOUND`, `SECURITY_SOUND`, and a `NOT_ATTEMPTED` reproduction all assert _"I checked and found nothing"_ — a claim an agent that read nothing produces just as fluently, and which Steps 5a–5a.3 fold into **Strengths** as an affirmative statement that the dimension was audited. An endorsement must cost more evidence than a finding, not less. A `*_SOUND` verdict with no verified EVIDENCE line is recorded **failed**, never as a strength.
 
 **If EVIDENCE fails to verify, re-dispatch once — but never paste the answer.** Restating the changed-file list is a no-op; the agent already had it. Pasting diff content into the retry prompt is worse than a no-op: it makes the retry's own check unfalsifiable, because the premise the whole mechanism rests on — _the diff content is not in the prompt_ — becomes false exactly for the agent under suspicion. A retry that hands over the evidence launders a failed agent into a pass, and since `verdict: failed` only fires after two failures, it also means that verdict can essentially never fire.
 
 Instead, keep the evidence out of reach and make the demand more specific:
 
-> Your previous EVIDENCE did not verify. Re-read `/tmp/pr-<NUMBER>.diff` and give the EVIDENCE_LINE /
+> Your previous EVIDENCE did not verify. Re-read `<EVIDENCE_FILE>` and give the EVIDENCE_LINE /
 > EVIDENCE_TEXT pair for a `+` or `-` line in the **second half** of the file (line number > <N/2>).
 
 Verify exactly as above (same single-`verdict` block). Add the far-half check as an extra clause **inside** the numeric `*)` branch's `if` — e.g. `&& [ "$LINE" -gt <N/2> ]` — where `$LINE` is already known to be pure digits. Do NOT put it before the `case`: there `$LINE` is unvalidated, so a `[ "$LINE" -gt … ]` on non-numeric input errors, and a standalone reject reintroduces the non-aggregating pattern the block exists to avoid. The line-number requirement already means an agent whose tools return nothing cannot pass; the far-half clause just stops it from replaying a number it kept from the first attempt.
@@ -570,21 +771,16 @@ Evaluate whether PR <NUMBER> in nrwl/nx takes the right approach to the problem 
 Inputs:
 - PR_NUMBER: <NUMBER>
 - CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
-- DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
-- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
+- REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
+- FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
 - BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
 Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
 
 You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
 
-REQUIRED — open your report with exactly these three lines:
-
-  REVIEWED: <how many changed files you actually opened>
-  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
-  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign, and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
-
-The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT; the line NUMBER is the proof, since it appears in no prompt. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
+REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
 
 Follow your standard workflow and return the structured report.
 """
@@ -611,21 +807,16 @@ Analyze the runtime performance of PR <NUMBER> in nrwl/nx: CPU/memory footprint 
 Inputs:
 - PR_NUMBER: <NUMBER>
 - CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
-- DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
-- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
+- REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
+- FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
 - BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
 Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
 
 You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
 
-REQUIRED — open your report with exactly these three lines:
-
-  REVIEWED: <how many changed files you actually opened>
-  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
-  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign, and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
-
-The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT; the line NUMBER is the proof, since it appears in no prompt. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
+REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
 
 Follow your standard workflow and return the structured report.
 """
@@ -652,21 +843,16 @@ Analyze PR <NUMBER> in nrwl/nx for injection-class vulnerabilities and data expo
 Inputs:
 - PR_NUMBER: <NUMBER>
 - CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
-- DIFF: /tmp/pr-<NUMBER>.diff  (host file — the diff, readable with Read)
-- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — severity policy, calibrations, sandbox protocol)
+- REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
+- FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
 - BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
 Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`.
 
 You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
 
-REQUIRED — open your report with exactly these three lines:
-
-  REVIEWED: <how many changed files you actually opened>
-  EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
-  EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign, and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
-
-The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT; the line NUMBER is the proof, since it appears in no prompt. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
+REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
 
 Follow your standard workflow and return the structured report.
 """
@@ -718,9 +904,12 @@ Inputs:
 - PR_NUMBER: <NUMBER>
 - CONTAINER: nx-review-pr-<NUMBER>  (one sandbox container; HEAD at /work/nx, base worktree at /work/base)
 - DIFF: /tmp/pr-<NUMBER>.diff  (host file — the complete PR diff; read it with Read)
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements)
 - HEAD_SHA: <HEAD_REF_OID>
 - BASE_REF: <BASE_REF_NAME>
 - RUN_LEVEL_2: <true|false — see gate above>
+
+**This agent alone keeps the FULL diff as both its review surface and its `<EVIDENCE_FILE>`, even on a re-review** — its job is mapping every claim in the PR body to code, and those claims span the whole PR, not the delta. Verify its EVIDENCE against `/tmp/pr-<NUMBER>.diff` accordingly; using the incremental diff here would fail an honest verifier.
 
 Use the DIFF file for all "does the diff address the bug?" reasoning. Do NOT reconstruct the diff
 yourself with `git diff` inside the container: both checkouts are `--depth 1`, so `BASE...HEAD`
@@ -771,6 +960,8 @@ REQUIRED — open your report with exactly these three lines:
   EVIDENCE_LINE: <the line number in /tmp/pr-<NUMBER>.diff of the line you quote below>
   EVIDENCE_TEXT: <that exact line, verbatim — MUST begin with `+` or `-`, 20+ chars after the sign,
                   and MUST NOT be a `diff --git`, `index`, `---`, `+++`, or `@@` line>
+
+Return them as plain text — no markdown headings, and do NOT wrap EVIDENCE_TEXT in backticks.
 
 The caller reads the diff at EVIDENCE_LINE and checks it equals EVIDENCE_TEXT; the line NUMBER is the
 proof. This applies to a NOT_ATTEMPTED reproduction exactly as to a confirmed one — "there was
@@ -826,6 +1017,68 @@ If this is the first review (no triage file existed), skip this step entirely �
 
 The reconciled (or fresh) text becomes `$REVIEW_BODY`.
 
+## Step 5c: Verify findings against the Polygraph session (optional, read-only)
+
+Most `nrwl/nx` work is driven from a Polygraph session whose description is the author's own running record — stated goal, what they tried, the caveats they wrote down, what they deliberately deferred. That record is not in the diff and cannot be inferred from it.
+
+**Its only job here is to verify findings that already exist.** Every finding is complete before this step runs. The session never generates a finding, never redirects the review, and never reaches the agents.
+
+**Run it only if the review has a finding whose correctness turns on _why_ the author did something.** Concretely: a finding that hinges on whether a behavior was intentional, whether an apparent omission was scoped out, or whether an alternative was already considered and rejected. If every surviving finding is a plain defect — a null deref is a null deref regardless of motivation — skip this step. Skip it too when the PR body and linked issue already explain the why. **No finding of that shape ⇒ do not open the session.**
+
+### Why after, never before
+
+The `alternative-approach`, `security-analyzer` and `performance-analyzer` agents are valuable precisely because they arrive uninformed. An agent that reads "we considered that alternative and rejected it because X" stops independently designing X; one that reads "we staged this cross-uid and it holds" is markedly less likely to go stage it. Their independence is the product, and it is unrecoverable once spent — so the record stays sealed until there is nothing left for it to bias.
+
+It is the exam-marking order: sit the paper, then open the answer key. Opening it first tells you nothing about what the candidate knew.
+
+### Lookup
+
+```bash
+PRURL="https://github.com/nrwl/nx/pull/<NUMBER>"
+polygraph whoami --json >/dev/null 2>&1 || echo "POLYGRAPH_UNAVAILABLE"
+for sid in $(polygraph session search --query "<NUMBER>" --limit 10 --json 2>/dev/null | jq -r '.[]?.sessionId'); do
+  polygraph session show "$sid" --json 2>/dev/null | jq -c --arg u "$PRURL" '
+    select(any(.pullRequests[]?; .url == $u))
+    | {sessionId, title, author: .author.name, status,
+       prs: [.pullRequests[] | {url, branch, baseBranch, status}],
+       refs: [.linkedReferences[]? | {type, url}],
+       description}'
+done | jq -s 'if length == 0 then "NO_SESSION" else . end' > /tmp/pr-<NUMBER>.session.json
+```
+
+**Match on the PR URL, never on the search ranking.** Free-text search is fuzzy — querying a PR number routinely returns the right session third, behind sessions that merely mention it. `select(any(.pullRequests[]?; .url == $u))` is what makes the result trustworthy; the search is only a candidate generator. Filtering in `jq` also keeps every non-matching session out of context.
+
+**Expect zero, one, or several.** A PR can belong to more than one session (a build session and a later review-fixup session). Read all matches as one combined record.
+
+**Fails open, silently.** `POLYGRAPH_UNAVAILABLE` (no CLI, not logged in — headless and cron runs often have neither) or `NO_SESSION` means `$REVIEW_BODY` stands exactly as Step 5b left it. Never block, never warn in the draft, never treat a missing session as a finding.
+
+**Read-only — never resume, never write.** `session search` and `session show` only. Not `session resume`, `session review`, `session update`, `session logs`, or any `agent` subcommand, and never post back. The skill observes the record; it does not join the work. (`allowed-tools` grants only those two read subcommands, so this holds even if a future edit forgets it.)
+
+### What it can do to a finding
+
+Take each finding that motivated opening the session and check it against the record. Only three outcomes are permitted:
+
+1. **Downgrade.** The session shows the behavior was deliberate, or the "omission" was explicitly deferred or split into a sibling PR. Reduce it to a one-line advisory note, or move it under `### Maintainer calls`. This is the most common outcome and the main reason the step exists.
+2. **Convert to a question.** The session's stated understanding and the observed behavior do not line up. Two shapes recur: a remedy the session records as working which this review executed and found does not; and a cost used to justify a decision that turns out to be mis-stated — cheaper, dearer, or structurally impossible rather than merely awkward. A deferred decision resting on a wrong cost is worth reopening.
+3. **Leave it exactly as it is.** The default. Where the session's reasoning matches what the agents found, that is confirmation for you, not content for the draft — do not add a line congratulating it.
+
+**It can never promote or add a finding.** A concern that only becomes visible once you have read the session is out of scope for this review; the agents did not find it, and this step has no license to introduce it. And **only the diff can close a finding** — "Current progress" claiming something is fixed is never evidence that it is. The description is hand-updated and trails the branch; observed in practice describing a PR as being at `bc754648d3` when the head was two commits further on. Verify in `/work/nx` or leave the finding standing.
+
+### Questions go in `### Questions for the author` — sourced publicly
+
+Emit at most 4 bullets. Omit the section when nothing is genuinely unresolved — a question you already know the answer to is a finding and belongs in the finding sections. If a discrepancy is a defect on public evidence alone, keep it as Critical/Important **and** ask the question.
+
+`nrwl/nx` is public, and session descriptions routinely carry embargoed material — unreleased vulnerability detail, customer names, internal ticket context, other repos' plans.
+
+> **Session content MUST NOT appear in `$REVIEW_BODY`** — not quoted, not paraphrased, not attributed, not alluded to ("as discussed internally…", "your notes say…"). It decides _which_ question is worth asking. The question itself must then stand on **public evidence only**: the diff, the PR body, the linked issue, the repo's docs, or something this review actually executed.
+
+- ✅ "`packages/nx/…/tmp-dir.ts:74`'s docstring says `mkdir -m 1777 /tmp/.nx` restores sharing. Running it, a second user is still refused one level down at `sockets/` — should all three roots be pre-created, or is the docstring the thing to fix?"
+- ❌ "Your session records `mkdir -m 1777 /tmp/.nx` as the admin remedy, but…"
+
+The first is a review comment. The second leaks internal context onto a public PR and tells the author nothing they did not write themselves. When a question cannot be de-identified, drop it from the body and record it in the triage file's `## Author follow-ups (not for the PR)` section — that file stays host-side.
+
+The adjusted text becomes the final `$REVIEW_BODY`.
+
 ## Step 6: Format for GitHub
 
 `$REVIEW_BODY` is posted as-is — no header, footer, or tool attribution. It should read like a review a maintainer wrote. The review metadata (commit, date, attempt) lives in the triage file's frontmatter, not in the posted body.
@@ -855,11 +1108,11 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 
 1. Read the existing file.
 2. Move the existing `## Review draft` content into a new entry at the top of `## Prior reviews`, prefixed with a header like `### attempt <N-1> — head_sha=<PRIOR_SHA> — <PRIOR_DATE>`.
-3. Preserve the `## Posted` and `## Failures` sections verbatim.
+3. Preserve the `## Author follow-ups (not for the PR)`, `## Posted` and `## Failures` sections verbatim.
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
 5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`. Preserve `posted_at` / `posted_url` (the user fills those in).
 
-**No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top.
+**No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the nine agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
 
 Format:
 
@@ -897,6 +1150,12 @@ HEAD: `<HEAD_SHA_SHORT>` · base: `<BASE_REF>`
 
 <and so on — oldest at the bottom>
 
+## Author follow-ups (not for the PR)
+
+(omit unless Step 5c matched a session and produced a question that could not be
+de-identified — this file is host-side, so embargoed context may be named here, and
+must not be copied into the posted body)
+
 ## Posted
 
 (none yet, or whatever was already there)
@@ -905,6 +1164,8 @@ HEAD: `<HEAD_SHA_SHORT>` · base: `<BASE_REF>`
 
 (none, or whatever was already there)
 ```
+
+Carry `## Author follow-ups (not for the PR)` forward verbatim on re-review, alongside `## Posted` and `## Failures` — an unanswered question stays open across attempts.
 
 ## Step 9: Cleanup
 
