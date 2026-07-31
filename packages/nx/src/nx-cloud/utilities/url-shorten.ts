@@ -2,9 +2,6 @@ import { logger } from '../../utils/logger';
 import { getCloudUrl } from './get-cloud-options';
 import { getVcsRemoteInfo } from '../../utils/git-utils';
 
-/**
- * This is currently duplicated in Nx Console. Please let @MaxKless know if you make changes here.
- */
 export async function createNxCloudOnboardingURL(
   onboardingSource: string,
   accessToken?: string,
