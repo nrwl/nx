@@ -1,5 +1,6 @@
 import type { TargetDefaults } from 'nx/src/devkit-exports';
 import {
+  collectMigrationScope,
   migrateProjectExecutorsToPlugin,
   readTargetDefaultsForExecutor,
 } from './executor-to-plugin-migrator';
@@ -146,5 +147,114 @@ describe('whole-workspace inference passes', () => {
   it('grows with project count today (status quo, pre-rewrite)', async () => {
     const passes = await migrateUniformFixture(5);
     expect(passes).toBe(1 + 2 * 5);
+  });
+});
+
+describe('collectMigrationScope (Phase 0)', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  it('collects targets, per-project plugin options and distinct option sets', () => {
+    ctx = setupFixture('collect-scope');
+    // 2 projects share target name `test`, 1 uses a custom target name `check`
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
+    addExecutorProject(ctx, { name: 'app2', root: 'app2', targetName: 'test' });
+    addExecutorProject(ctx, { name: 'app3', root: 'app3', targetName: 'check' });
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({ targetName }),
+          postTargetTransformer: (t: any) => t,
+        },
+      ],
+      { targetName: 'build', extra: true },
+      undefined,
+      undefined
+    );
+
+    // targetsToMigrate: target -> set of projects
+    expect([...scope.targetsToMigrate.keys()].sort()).toEqual(['check', 'test']);
+    expect([...scope.targetsToMigrate.get('test')].sort()).toEqual([
+      'app1',
+      'app2',
+    ]);
+    expect([...scope.targetsToMigrate.get('check')]).toEqual(['app3']);
+
+    // pluginOptionsByProject: defaults merged with per-target mapper output
+    expect(scope.pluginOptionsByProject.get('app1')).toEqual({
+      targetName: 'test',
+      extra: true,
+    });
+    expect(scope.pluginOptionsByProject.get('app2')).toEqual({
+      targetName: 'test',
+      extra: true,
+    });
+    expect(scope.pluginOptionsByProject.get('app3')).toEqual({
+      targetName: 'check',
+      extra: true,
+    });
+
+    // distinct inference option sets (mapper output, no defaults): one per
+    // distinct target-name mapping
+    expect(scope.distinctOptionSets).toHaveLength(2);
+    expect(scope.distinctOptionSets).toContainEqual({ targetName: 'test' });
+    expect(scope.distinctOptionSets).toContainEqual({ targetName: 'check' });
+  });
+
+  it('collapses distinct option sets to one when every project shares a target name', () => {
+    ctx = setupFixture('collect-scope-uniform');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'build' });
+    addExecutorProject(ctx, { name: 'app2', root: 'app2', targetName: 'build' });
+    addExecutorProject(ctx, { name: 'app3', root: 'app3', targetName: 'build' });
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      syntheticMigrations(),
+      { targetName: 'build' },
+      undefined,
+      undefined
+    );
+
+    expect(scope.distinctOptionSets).toHaveLength(1);
+    expect(scope.distinctOptionSets[0]).toEqual({ targetName: 'build' });
+    expect([...scope.targetsToMigrate.get('build')].sort()).toEqual([
+      'app1',
+      'app2',
+      'app3',
+    ]);
+  });
+
+  it('throws (not warns) when a specific project cannot be migrated', () => {
+    ctx = setupFixture('collect-scope-throw');
+    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'build' });
+
+    expect(() =>
+      collectMigrationScope(
+        ctx.tree,
+        ctx.projectGraph,
+        [
+          {
+            executors: [SYNTHETIC_EXECUTOR],
+            targetPluginOptionMapper: (targetName: string) => ({ targetName }),
+            postTargetTransformer: (t: any) => t,
+            skipTargetFilter: () => 'nope',
+          },
+        ],
+        { targetName: 'build' },
+        'app1',
+        undefined
+      )
+    ).toThrow('The build target on project "app1" cannot be migrated. nope');
   });
 });

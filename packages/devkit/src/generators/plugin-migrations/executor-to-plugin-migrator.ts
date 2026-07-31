@@ -49,6 +49,211 @@ type SkipProjectFilter = (
   projectConfiguration: ProjectConfiguration
 ) => false | string;
 
+type MigrationDefinition<T> = {
+  executors: string[];
+  targetPluginOptionMapper: (targetName: string) => Partial<T>;
+  postTargetTransformer: PostTargetTransformer;
+  skipProjectFilter?: SkipProjectFilter;
+  skipTargetFilter?: SkipTargetFilter;
+};
+
+/**
+ * A distinct plugin-option set used to infer targets (Phase 1). `options` is the
+ * value passed to the plugin's `createNodes` (i.e. `targetPluginOptionMapper`'s
+ * output) and `targetNames` are the migrated target names that option set is
+ * responsible for producing.
+ */
+interface InferenceOptionSet<T> {
+  options: T;
+  targetNames: Set<string>;
+}
+
+interface ExecutorScope<T> {
+  executor: string;
+  migration: MigrationDefinition<T>;
+  targetAndProjects: Map<string, Set<string>>;
+}
+
+/**
+ * The result of Phase 0 (Collect). Built once per plugin from a single pass over
+ * `forEachExecutorOptions`, replacing the per-executor scope derivation the
+ * migrator used to do internally.
+ */
+export interface MigrationScope<T> {
+  /** target name -> set of projects to migrate that target */
+  targetsToMigrate: Map<string, Set<string>>;
+  /** project -> resolved plugin registration options (defaults + mappers) */
+  pluginOptionsByProject: Map<string, T>;
+  /** distinct inference option sets (deduped `targetPluginOptionMapper` output) */
+  distinctOptionSets: T[];
+  /** distinct inference option sets paired with the target names they infer */
+  optionSetGroups: InferenceOptionSet<T>[];
+  /** per (migration, executor) slice used to drive residual computation */
+  executorScopes: ExecutorScope<T>[];
+  /** projects excluded by a skipProjectFilter */
+  skipped: Set<string>;
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value) ?? 'undefined';
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+  const keys = Object.keys(value as Record<string, unknown>).sort();
+  return `{${keys
+    .map(
+      (k) =>
+        JSON.stringify(k) +
+        ':' +
+        stableStringify((value as Record<string, unknown>)[k])
+    )
+    .join(',')}}`;
+}
+
+/**
+ * Phase 0 — Collect (once). Fold `forEachExecutorOptions` over every
+ * migration/executor into a single scope object, applying the skip filters with
+ * the exact same warn-vs-throw semantics the migrator used before (a
+ * `specificProjectToMigrate` skip throws instead of warning). This is the single
+ * authority for filtering; downstream phases only read the returned maps.
+ */
+export function collectMigrationScope<T>(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  migrations: MigrationDefinition<T>[],
+  defaultPluginOptions: T,
+  specificProjectToMigrate: string | undefined,
+  logger: typeof devkitLogger | undefined
+): MigrationScope<T> {
+  const log = logger ?? devkitLogger;
+  const targetsToMigrate = new Map<string, Set<string>>();
+  const pluginOptionsByProject = new Map<string, T>();
+  const executorScopes: ExecutorScope<T>[] = [];
+  const skipped = new Set<string>();
+  const optionSetGroupsByKey = new Map<string, InferenceOptionSet<T>>();
+
+  for (const migration of migrations) {
+    const skipProjectFilter =
+      migration.skipProjectFilter ?? ((..._args) => false as const);
+    const skipTargetFilter =
+      migration.skipTargetFilter ?? ((..._args) => false as const);
+
+    for (const executor of migration.executors) {
+      const targetAndProjects = new Map<string, Set<string>>();
+      // Fresh per executor to preserve the previous per-migrator semantics
+      // (each executor got its own migrator + skipped set).
+      const skippedForExecutor = new Set<string>();
+
+      forEachExecutorOptions(
+        tree,
+        executor,
+        (options, projectName, targetName, configurationName) => {
+          if (skippedForExecutor.has(projectName) || configurationName) {
+            return;
+          }
+
+          if (
+            specificProjectToMigrate &&
+            projectName !== specificProjectToMigrate
+          ) {
+            return;
+          }
+
+          const skipProjectReason = skipProjectFilter(
+            projectGraph.nodes[projectName].data
+          );
+          if (skipProjectReason) {
+            skippedForExecutor.add(projectName);
+            skipped.add(projectName);
+            const errorMsg = `The "${projectName}" project cannot be migrated. ${skipProjectReason}`;
+            if (specificProjectToMigrate) {
+              throw new Error(errorMsg);
+            }
+            log.warn(errorMsg);
+            return;
+          }
+
+          const skipTargetReason = skipTargetFilter(
+            options,
+            projectGraph.nodes[projectName].data
+          );
+          if (skipTargetReason) {
+            const errorMsg = `The ${targetName} target on project "${projectName}" cannot be migrated. ${skipTargetReason}`;
+            if (specificProjectToMigrate) {
+              throw new Error(errorMsg);
+            }
+            log.warn(errorMsg);
+            return;
+          }
+
+          if (!targetAndProjects.has(targetName)) {
+            targetAndProjects.set(targetName, new Set());
+          }
+          targetAndProjects.get(targetName).add(projectName);
+        }
+      );
+
+      if (targetAndProjects.size === 0) {
+        continue;
+      }
+
+      executorScopes.push({ executor, migration, targetAndProjects });
+
+      for (const [targetName, projs] of targetAndProjects) {
+        if (!targetsToMigrate.has(targetName)) {
+          targetsToMigrate.set(targetName, new Set());
+        }
+        const globalSet = targetsToMigrate.get(targetName);
+        for (const project of projs) {
+          globalSet.add(project);
+        }
+
+        const inferenceOptions = migration.targetPluginOptionMapper(
+          targetName
+        ) as T;
+        const key = stableStringify(inferenceOptions);
+        if (!optionSetGroupsByKey.has(key)) {
+          optionSetGroupsByKey.set(key, {
+            options: inferenceOptions,
+            targetNames: new Set(),
+          });
+        }
+        optionSetGroupsByKey.get(key).targetNames.add(targetName);
+
+        // Invert to per-project registration options, mirroring the previous
+        // `migrateProjects` inversion loop (target-grouped insertion order).
+        for (const project of projs) {
+          pluginOptionsByProject.set(project, {
+            ...(pluginOptionsByProject.get(project) ?? ({} as T)),
+            ...migration.targetPluginOptionMapper(targetName),
+          } as T);
+        }
+      }
+    }
+  }
+
+  // Apply default plugin options (registration options only).
+  for (const [project, options] of pluginOptionsByProject) {
+    pluginOptionsByProject.set(project, {
+      ...defaultPluginOptions,
+      ...options,
+    });
+  }
+
+  const optionSetGroups = [...optionSetGroupsByKey.values()];
+
+  return {
+    targetsToMigrate,
+    pluginOptionsByProject,
+    distinctOptionSets: optionSetGroups.map((group) => group.options),
+    optionSetGroups,
+    executorScopes,
+    skipped,
+  };
+}
+
 class ExecutorToPluginMigrator<T> {
   readonly tree: Tree;
   readonly #projectGraph: ProjectGraph;
@@ -56,17 +261,12 @@ class ExecutorToPluginMigrator<T> {
   readonly #pluginPath: string;
   readonly #pluginOptionsBuilder: PluginOptionsBuilder<T>;
   readonly #postTargetTransformer: PostTargetTransformer;
-  readonly #skipTargetFilter: SkipTargetFilter;
-  readonly #skipProjectFilter: SkipProjectFilter;
-  readonly #specificProjectToMigrate: string;
-  readonly #logger: typeof devkitLogger;
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
   #targetAndProjectsToMigrate: Map<string, Set<string>>;
   #createNodes?: CreateNodes<T>;
   #createNodesV2?: CreateNodes<T>;
   #createNodesResultsForTargets: Map<string, ConfigurationResult>;
-  #skippedProjects: Set<string>;
 
   constructor(
     tree: Tree,
@@ -75,14 +275,11 @@ class ExecutorToPluginMigrator<T> {
     pluginPath: string,
     pluginOptionsBuilder: PluginOptionsBuilder<T>,
     postTargetTransformer: PostTargetTransformer,
-    createNodes?: CreateNodes<T>,
-    createNodesV2?: CreateNodes<T>,
-    specificProjectToMigrate?: string,
-    filters?: {
-      skipProjectFilter?: SkipProjectFilter;
-      skipTargetFilter?: SkipTargetFilter;
-    },
-    logger?: typeof devkitLogger
+    createNodes: CreateNodes<T> | undefined,
+    createNodesV2: CreateNodes<T> | undefined,
+    // The set of targets/projects to migrate for this executor, precomputed by
+    // `collectMigrationScope` (Phase 0). Filtering/skip semantics already ran.
+    targetAndProjectsToMigrate: Map<string, Set<string>>
   ) {
     this.tree = tree;
     this.#projectGraph = projectGraph;
@@ -92,11 +289,7 @@ class ExecutorToPluginMigrator<T> {
     this.#postTargetTransformer = postTargetTransformer;
     this.#createNodes = createNodes;
     this.#createNodesV2 = createNodesV2;
-    this.#specificProjectToMigrate = specificProjectToMigrate;
-    this.#skipProjectFilter =
-      filters?.skipProjectFilter ?? ((...args) => false);
-    this.#skipTargetFilter = filters?.skipTargetFilter ?? ((...args) => false);
-    this.#logger = logger ?? devkitLogger;
+    this.#targetAndProjectsToMigrate = targetAndProjectsToMigrate;
   }
 
   async run(): Promise<Map<string, Set<string>>> {
@@ -113,12 +306,9 @@ class ExecutorToPluginMigrator<T> {
     const nxJson = readNxJson(this.tree);
     nxJson.plugins ??= [];
     this.#nxJson = nxJson;
-    this.#targetAndProjectsToMigrate = new Map();
     this.#createNodesResultsForTargets = new Map();
-    this.#skippedProjects = new Set();
 
     this.#getTargetDefaultsForExecutor();
-    this.#getTargetAndProjectsToMigrate();
     await this.#getCreateNodesResults();
   }
 
@@ -226,67 +416,6 @@ class ExecutorToPluginMigrator<T> {
         ])
       );
     }
-  }
-
-  #getTargetAndProjectsToMigrate() {
-    forEachExecutorOptions(
-      this.tree,
-      this.#executor,
-      (
-        options: Record<string, unknown>,
-        projectName,
-        targetName,
-        configurationName
-      ) => {
-        if (this.#skippedProjects.has(projectName) || configurationName) {
-          return;
-        }
-
-        if (
-          this.#specificProjectToMigrate &&
-          projectName !== this.#specificProjectToMigrate
-        ) {
-          return;
-        }
-
-        const skipProjectReason = this.#skipProjectFilter(
-          this.#projectGraph.nodes[projectName].data
-        );
-        if (skipProjectReason) {
-          this.#skippedProjects.add(projectName);
-          const errorMsg = `The "${projectName}" project cannot be migrated. ${skipProjectReason}`;
-          if (this.#specificProjectToMigrate) {
-            throw new Error(errorMsg);
-          }
-
-          this.#logger.warn(errorMsg);
-          return;
-        }
-
-        const skipTargetReason = this.#skipTargetFilter(
-          options,
-          this.#projectGraph.nodes[projectName].data
-        );
-        if (skipTargetReason) {
-          const errorMsg = `The ${targetName} target on project "${projectName}" cannot be migrated. ${skipTargetReason}`;
-          if (this.#specificProjectToMigrate) {
-            throw new Error(errorMsg);
-          } else {
-            this.#logger.warn(errorMsg);
-          }
-          return;
-        }
-
-        if (this.#targetAndProjectsToMigrate.has(targetName)) {
-          this.#targetAndProjectsToMigrate.get(targetName).add(projectName);
-        } else {
-          this.#targetAndProjectsToMigrate.set(
-            targetName,
-            new Set([projectName])
-          );
-        }
-      }
-    );
   }
 
   #getTargetDefaultsForExecutor() {
@@ -453,47 +582,35 @@ async function migrateProjects<T>(
     pluginPath
   );
 
-  for (const migration of migrations) {
-    for (const executor of migration.executors) {
-      const migrator = new ExecutorToPluginMigrator(
-        tree,
-        projectGraph,
-        executor,
-        pluginPath,
-        migration.targetPluginOptionMapper,
-        migration.postTargetTransformer,
-        createNodes,
-        createNodesV2,
-        specificProjectToMigrate,
-        {
-          skipProjectFilter: migration.skipProjectFilter,
-          skipTargetFilter: migration.skipTargetFilter,
-        },
-        logger
-      );
-      const result = await migrator.run();
-      // invert the result to have a map of projects to their targets
-      for (const [target, projectList] of result.entries()) {
-        for (const project of projectList) {
-          if (!projects.has(project)) {
-            projects.set(project, {});
-          }
+  // Phase 0 — Collect (once): scope + filtering + per-project options.
+  const scope = collectMigrationScope(
+    tree,
+    projectGraph,
+    migrations,
+    defaultPluginOptions,
+    specificProjectToMigrate,
+    logger
+  );
 
-          projects.set(project, {
-            ...projects.get(project),
-            ...migration.targetPluginOptionMapper(target),
-          });
-        }
-      }
-    }
+  // Per-executor residual writes (unchanged output). The scope has already
+  // applied every skip filter, so the migrator no longer re-derives it.
+  for (const executorScope of scope.executorScopes) {
+    const migrator = new ExecutorToPluginMigrator(
+      tree,
+      projectGraph,
+      executorScope.executor,
+      pluginPath,
+      executorScope.migration.targetPluginOptionMapper,
+      executorScope.migration.postTargetTransformer,
+      createNodes,
+      createNodesV2,
+      executorScope.targetAndProjects
+    );
+    await migrator.run();
   }
 
-  // apply default options
-  for (const [project, pluginOptions] of projects.entries()) {
-    projects.set(project, {
-      ...defaultPluginOptions,
-      ...pluginOptions,
-    });
+  for (const [project, options] of scope.pluginOptionsByProject) {
+    projects.set(project, options as Record<string, string>);
   }
 
   await addPluginRegistrations(
