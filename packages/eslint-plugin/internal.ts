@@ -10,10 +10,10 @@
 // reaching a single rule through that entry pays for all of it.
 //
 // Assigned to a `const` rather than `export { default as … } from`: this package
-// is CJS and `@nx/oxlint` is ESM, and the re-export form emits a
-// `defineProperty` getter around `tslib.__importDefault(…)` that
-// `cjs-module-lexer` cannot see through, so the name never reaches the ESM
-// facade. A plain `exports.x =` assignment is lexer-visible.
+// is CJS and `@nx/oxlint` is ESM, and under `esModuleInterop` that form emits a
+// getter whose body calls `__importDefault(…)`. `cjs-module-lexer` before Node
+// 24.14 cannot follow a call there, so the name never reaches the ESM facade.
+// `internal.spec.ts` pins the shape.
 import enforceModuleBoundariesRule from './src/rules/enforce-module-boundaries';
 
 export const enforceModuleBoundaries = enforceModuleBoundariesRule;
