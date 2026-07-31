@@ -200,6 +200,24 @@ describe('js init generator', () => {
     );
   });
 
+  it('should add the oxc vscode extension if .vscode/extensions.json file exists', async () => {
+    // The oxc extension is what runs oxfmt in the editor, so an oxfmt
+    // workspace should recommend it the same way a prettier one does.
+    writeJson(tree, '.vscode/extensions.json', { recommendations: ['foo'] });
+
+    await init(tree, { formatter: 'oxfmt' });
+
+    expect(readJson(tree, '.vscode/extensions.json')).toEqual({
+      recommendations: ['foo', 'oxc.oxc-vscode'],
+    });
+  });
+
+  it('should not create .vscode/extensions.json for oxfmt when it does not exist', async () => {
+    await init(tree, { formatter: 'oxfmt' });
+
+    expect(tree.exists('.vscode/extensions.json')).toBeFalsy();
+  });
+
   it('should add prettier vscode extension if .vscode/extensions.json file exists', async () => {
     // No existing recommendations
     writeJson(tree, '.vscode/extensions.json', {});

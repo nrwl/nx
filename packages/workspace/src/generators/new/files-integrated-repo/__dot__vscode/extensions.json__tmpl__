@@ -4,6 +4,7 @@
     "angular.ng-template",<% }
     %>
     "nrwl.angular-console"<% if(formatter === 'prettier') { %>,
-    "esbenp.prettier-vscode"<% } %>
+    "esbenp.prettier-vscode"<% } %><% if(formatter === 'oxfmt') { %>,
+    "oxc.oxc-vscode"<% } %>
   ]
 }
