@@ -271,8 +271,10 @@ async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
  * defines as gitignore-style and rooted at the config's directory.
  *
  * Only the root ignore files are read. The CLI additionally honours ignore
- * files sitting in subdirectories; formatting from memory deliberately does
- * not, because a generator batch is resolved against the workspace root.
+ * files in subdirectories, which this path cannot: the files being formatted
+ * live in the tree, so walking up from each one would consult a filesystem
+ * that does not yet contain the directories being generated. Same limit, same
+ * reason, as the config files - see `resolveOxfmtConfig`.
  */
 function readIgnoreMatcher(
   workspaceRoot: string,
