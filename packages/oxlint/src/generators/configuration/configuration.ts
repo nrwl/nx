@@ -8,7 +8,7 @@ import {
 import { initGenerator } from '../init/init.js';
 import { addPluginsToOxlintConfig } from '../../utils/oxlint-config.js';
 
-export interface LintProjectGeneratorSchema {
+export interface ConfigurationGeneratorSchema {
   project: string;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
@@ -17,11 +17,11 @@ export interface LintProjectGeneratorSchema {
   plugins?: string[];
 }
 
-export function lintProjectGenerator(
+export function configurationGenerator(
   tree: Tree,
-  options: LintProjectGeneratorSchema
+  options: ConfigurationGeneratorSchema
 ) {
-  return lintProjectGeneratorInternal(tree, options);
+  return configurationGeneratorInternal(tree, options);
 }
 
 /**
@@ -30,9 +30,9 @@ export function lintProjectGenerator(
  * It writes no target: `@nx/oxlint` is inference-only, so the plugin registered
  * by `init` is what gives the project its Oxlint task.
  */
-export async function lintProjectGeneratorInternal(
+export async function configurationGeneratorInternal(
   tree: Tree,
-  options: LintProjectGeneratorSchema
+  options: ConfigurationGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(
@@ -55,4 +55,4 @@ export async function lintProjectGeneratorInternal(
   return runTasksInSerial(...tasks);
 }
 
-export default lintProjectGenerator;
+export default configurationGenerator;

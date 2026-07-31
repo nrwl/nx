@@ -28,7 +28,9 @@ export interface AddLintingToProjectOptions {
  * Sets a project's linter up, dispatching to whichever linter the workspace
  * asked for. Consumers call this instead of importing `lintProjectGenerator`
  * from `@nx/eslint` directly, so adding a linter does not mean editing every
- * generator.
+ * generator. The two arms name different generators on purpose: `@nx/eslint`
+ * writes a lint target, while `@nx/oxlint` is inference-only and only
+ * configures the project.
  *
  * Scope is deliberately narrow: registering the linter and its project target.
  * Linter-specific config shaping — ESLint framework presets, `extends`, ignore
@@ -64,10 +66,10 @@ export async function addLintingToProject(
     // in the root eslint config.
     ensurePackage('@nx/oxlint', nxVersion);
     const {
-      lintProjectGenerator,
+      configurationGenerator,
       // nx-ignore-next-line
     } = require('@nx/oxlint/generators');
-    return lintProjectGenerator(tree, {
+    return configurationGenerator(tree, {
       project: options.project,
       plugins: [
         ...(options.oxlintPlugins ?? []),
