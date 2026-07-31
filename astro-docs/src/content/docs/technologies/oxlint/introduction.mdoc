@@ -8,7 +8,7 @@ filter: 'type:References'
 ---
 
 [Oxlint](https://oxc.rs/docs/guide/usage/linter/) is a linter written in Rust.
-The `@nx/oxlint` plugin runs it as a cached Nx task, so a change re-lints only the projects it affects.
+The `@nx/oxlint` plugin runs it as a cacheable Nx task, so a change re-lints only the projects it affects.
 
 {% aside type="caution" title="Experimental" %}
 `@nx/oxlint` is experimental. The module boundaries bridge depends on the Oxlint JavaScript plugin API, which Oxlint excludes from its semantic versioning policy and can change in any release.
@@ -20,7 +20,7 @@ The `@nx/oxlint` plugin runs it as a cached Nx task, so a change re-lints only t
 nx add @nx/oxlint
 ```
 
-This installs `oxlint`, registers `@nx/oxlint`, and creates a root `.oxlintrc.json` if the workspace has no Oxlint config.
+This installs `oxlint` if it is not already installed, registers `@nx/oxlint`, and creates a root `.oxlintrc.json` if the workspace has no Oxlint config.
 
 ## Inferred tasks
 
@@ -31,7 +31,7 @@ This installs `oxlint`, registers `@nx/oxlint`, and creates a root `.oxlintrc.js
 - `oxlint.config.ts`
 - `oxlint.config.mts`
 
-A project gets a task when it owns an Oxlint config, or when it contains files Oxlint can lint. Documentation-only and non-JavaScript projects stay untouched unless they opt in with a config of their own.
+A project gets a task when it owns an Oxlint config, or when it contains files Oxlint can lint. Documentation-only and non-JavaScript projects do not get a target inferred unless they opt in with a config of their own.
 
 View the inferred task with:
 
@@ -53,9 +53,9 @@ Oxc also ships extensions for Zed, JetBrains IDEs, and Neovim. Any editor with L
 
 Oxlint walks up from each file to the nearest config. Two configs in one directory is an error, not a precedence, so pick one format per directory. Prefer `.oxlintrc.json`:
 
-- `oxlint.config.ts` needs a Node runtime that executes TypeScript (Node 22.18 or later), and doesn't work with the standalone binary. Node 20 can't, whatever Oxlint's own error message says.
+- `oxlint.config.ts` only works on a Node runtime that can run TypeScript directly, which means Node 22.18 or later. Node 20 cannot, even though Oxlint's error message suggests otherwise, and Oxlint's standalone binary cannot either.
 - Only JSON configs get their `extends` chain tracked as task inputs. Nx can't read a TypeScript config statically.
-- Framework generators can't register Oxlint plugins for you under a TypeScript config. `nx g @nx/react:app --linter=oxlint` warns and leaves the `plugins` array to you.
+- Framework generators can only register Oxlint plugins into a JSON config. Under a TypeScript root config they can still update a project that already has its own `.oxlintrc.json`, but they can't create one — `nx g @nx/react:app --linter=oxlint` warns and leaves the `plugins` array to you.
 
 ## Task naming
 
@@ -63,7 +63,8 @@ Oxlint is designed to run alongside ESLint during a migration, so the plugin cla
 
 1. `lint`
 2. `oxlint`
-3. `oxlint-lint`
+3. `oxlint:lint`
+4. `oxlint-lint`
 
 A workspace with no other linter gets `lint`. A workspace where ESLint already owns `lint` gets `oxlint`.
 
@@ -110,13 +111,7 @@ Turn them on for a single run with `nx lint my-app --type-aware`, which Nx forwa
 
 ## Module boundaries
 
-`@nx/oxlint` exposes the project-graph-aware `enforce-module-boundaries` rule as an Oxlint JavaScript plugin. `@nx/eslint-plugin` is an optional peer, so no package manager installs it for you:
-
-```shell
-nx add @nx/eslint-plugin
-```
-
-Then register the bridge in `.oxlintrc.json`:
+`@nx/oxlint` exposes the project-graph-aware `enforce-module-boundaries` rule as an Oxlint JavaScript plugin. Register the bridge in `.oxlintrc.json`:
 
 ```json
 {
@@ -131,12 +126,6 @@ Then register the bridge in `.oxlintrc.json`:
   }
 }
 ```
-
-The rule runs as JavaScript rather than native Rust, so it's slower than the built-in Oxlint rules. It also reloads the project graph for every file it checks, so the gap widens with workspace size.
-
-{% aside type="caution" title="It skips silently without a project graph" %}
-When no cached project graph is available, the rule reports nothing and the task still passes. The notice it prints is not a lint diagnostic, so `--deny-warnings` and `--max-warnings` don't catch it either. Run it behind `nx lint` rather than invoking `oxlint` directly, and don't rely on it as your only boundary check until that's fixed.
-{% /aside %}
 
 `depConstraints` takes the same syntax as it does under ESLint. To tag projects and write constraints, see [enforce module boundaries](/docs/features/enforce-module-boundaries).
 

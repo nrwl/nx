@@ -77,7 +77,6 @@ export async function expoApplicationGeneratorInternal(
   }
 
   const lintTask = await addLinting(host, {
-    unitTestRunner: options.unitTestRunner,
     ...options,
     projectRoot: options.appProjectRoot,
     tsConfigPaths: [

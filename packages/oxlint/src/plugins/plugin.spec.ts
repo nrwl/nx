@@ -69,6 +69,21 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
+  // Oxlint reports to stdout and has no output-file flag, so the task declares
+  // no outputs — the cache replays terminal output only. Declaring one would
+  // make Nx expect a file that never appears.
+  it('should declare no outputs', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/src/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(results.projects['libs/a'].targets.lint.outputs).toBeUndefined();
+  });
+
   it('should not create a target for a project with no lintable files', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,

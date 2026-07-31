@@ -45,8 +45,22 @@ export function addPluginsToOxlintConfig(
     return;
   }
 
+  // Reuse whichever editable config the project already has: writing
+  // `.oxlintrc.json` beside an existing `.oxlintrc.jsonc` is a hard error in
+  // Oxlint, not an override.
+  const existingProjectConfig =
+    projectRoot === '.'
+      ? undefined
+      : EDITABLE_CONFIG_FILENAMES.map((file) =>
+          joinPathFragments(projectRoot, file)
+        ).find((path) => tree.exists(path));
+
+  // The root's format only constrains us when a project config has to be
+  // created, since that is what needs an `extends` pointing at the root. A
+  // project that already has its own editable config can be updated whatever
+  // the root is. A root project is its own config, so it always needs one.
   const rootConfigPath = findRootOxlintConfig(tree);
-  if (!rootConfigPath) {
+  if (!rootConfigPath && !existingProjectConfig) {
     // A TypeScript config cannot be rewritten statically. Say so — otherwise
     // the generator reports success and the plugins silently never run.
     logger.warn(
@@ -57,14 +71,6 @@ export function addPluginsToOxlintConfig(
     );
     return;
   }
-
-  // A root project has no config to nest — the root config is its own.
-  // Otherwise reuse whichever editable config the project already has: writing
-  // `.oxlintrc.json` beside an existing `.oxlintrc.jsonc` is a hard error in
-  // Oxlint, not an override.
-  const existingProjectConfig = EDITABLE_CONFIG_FILENAMES.map((file) =>
-    joinPathFragments(projectRoot, file)
-  ).find((path) => tree.exists(path));
 
   const projectConfigPath =
     projectRoot === '.'

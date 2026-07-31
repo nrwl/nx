@@ -71,6 +71,7 @@
   "generators": "./generators.json",
   "dependencies": {
     "@nx/devkit": "workspace:*",
+    "@nx/eslint-plugin": "workspace:*",
     "@nx/js": "workspace:*",
     "tslib": "catalog:typescript"
   },
@@ -78,13 +79,9 @@
     "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
   },
   "peerDependencies": {
-    "@nx/eslint-plugin": "workspace:*",
     "oxlint": "^1.0.0"
   },
   "peerDependenciesMeta": {
-    "@nx/eslint-plugin": {
-      "optional": true
-    },
     "oxlint": {
       "optional": true
     }
