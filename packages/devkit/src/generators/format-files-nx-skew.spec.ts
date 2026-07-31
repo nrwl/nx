@@ -21,10 +21,6 @@ jest.mock('nx/src/devkit-internals', () => {
 describe('formatFiles against an nx without the formatter exports', () => {
   let tree: Tree;
 
-  beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
-  });
-
   it('guards the simulation itself', () => {
     // Without this the suite passes for the wrong reason: a mock that quietly
     // stopped applying would exercise the current nx and prove nothing.
@@ -34,17 +30,17 @@ describe('formatFiles against an nx without the formatter exports', () => {
     expect(seen.isUsingPrettierInTree).toEqual(expect.any(Function));
   });
 
-  it('still formats a prettier workspace through the fallback', () => {
-    // `createTreeWithEmptyWorkspace` writes the `.prettierrc` this relies on.
+  it('still formats a prettier workspace through the fallback', async () => {
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
     tree.write('test.ts', 'const   x   =   "hi"');
 
-    return formatFiles(tree).then(() => {
-      expect(tree.read('test.ts', 'utf-8')).toBe("const x = 'hi';\n");
-    });
+    await formatFiles(tree);
+
+    expect(tree.read('test.ts', 'utf-8')).toBe("const x = 'hi';\n");
   });
 
   it('leaves a workspace with no formatter alone', async () => {
-    tree.delete('.prettierrc');
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     tree.write('test.ts', 'const   x   =   "hi"');
 
     await expect(formatFiles(tree)).resolves.toBeUndefined();
@@ -54,8 +50,7 @@ describe('formatFiles against an nx without the formatter exports', () => {
   it('leaves an oxfmt workspace unformatted rather than throwing', async () => {
     // The pairing that has no answer: the workspace wants oxfmt and this nx
     // cannot drive it. Skipping is correct; throwing would break the generator.
-    tree.delete('.prettierrc');
-    tree.write('.oxfmtrc.json', JSON.stringify({ singleQuote: true }));
+    tree = createTreeWithEmptyWorkspace({ formatter: 'oxfmt' });
     tree.write('test.ts', 'const   x   =   "hi"');
 
     await expect(formatFiles(tree)).resolves.toBeUndefined();
@@ -64,6 +59,7 @@ describe('formatFiles against an nx without the formatter exports', () => {
 
   it('still sorts tsconfig paths', async () => {
     // Sorting runs before formatter detection, so it must survive regardless.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     tree.write(
       'tsconfig.base.json',
       JSON.stringify({

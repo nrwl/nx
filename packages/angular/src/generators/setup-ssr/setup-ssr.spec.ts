@@ -98,11 +98,7 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/app/app-module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-        import {
-          BrowserModule,
-          provideClientHydration,
-          withEventReplay,
-        } from '@angular/platform-browser';
+        import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { App } from './app';
         import { appRoutes } from './app.routes';
@@ -111,10 +107,7 @@ describe('setupSSR', () => {
         @NgModule({
           declarations: [App, NxWelcome],
           imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-          providers: [
-            provideBrowserGlobalErrorListeners(),
-            provideClientHydration(withEventReplay()),
-          ],
+          providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
           bootstrap: [App],
         })
         export class AppModule {}
@@ -142,15 +135,11 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import {
-          BootstrapContext,
-          bootstrapApplication,
-        } from '@angular/platform-browser';
+        "import { BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
         import { App } from './app/app';
         import { config } from './app/app.config.server';
 
-        const bootstrap = (context: BootstrapContext) =>
-          bootstrapApplication(App, config, context);
+        const bootstrap = (context: BootstrapContext) => bootstrapApplication(App, config, context);
 
         export default bootstrap;
         "

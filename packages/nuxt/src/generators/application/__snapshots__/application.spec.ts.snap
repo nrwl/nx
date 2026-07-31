@@ -30,11 +30,10 @@ export default defineNuxtConfig({
 
 exports[`app Nuxt v4 with app directory structure should create all files in correct location with useAppDir 1`] = `
 [
-  ".prettierrc",
+  ".oxfmtrc.json",
   "package.json",
   "nx.json",
   "tsconfig.base.json",
-  ".prettierignore",
   "my-app/project.json",
   "my-app/.npmrc",
   "my-app/app/app.vue",
@@ -111,13 +110,7 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     },
   );
 "
@@ -141,13 +134,7 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     },
   );
 "
@@ -247,13 +234,7 @@ exports[`app generated files content - as-provided - my-app general application 
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ],
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"],
     "composite": true
   },
   "include": [
@@ -295,11 +276,10 @@ exports[`app generated files content - as-provided - my-app general application 
 
 exports[`app generated files content - as-provided - my-app general application should create all new files in the correct location 1`] = `
 [
-  ".prettierrc",
+  ".oxfmtrc.json",
   "package.json",
   "nx.json",
   "tsconfig.base.json",
-  ".prettierignore",
   "my-app/project.json",
   "my-app/.npmrc",
   "my-app/nuxt.config.ts",
@@ -358,13 +338,7 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     },
   );
 "
@@ -400,13 +374,7 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     },
   );
 "
@@ -579,13 +547,7 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     },
   );
 "
@@ -609,13 +571,7 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     },
   );
 "
@@ -715,13 +671,7 @@ exports[`app generated files content - as-provided - myApp general application s
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ],
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"],
     "composite": true
   },
   "include": [
@@ -763,11 +713,10 @@ exports[`app generated files content - as-provided - myApp general application s
 
 exports[`app generated files content - as-provided - myApp general application should create all new files in the correct location 1`] = `
 [
-  ".prettierrc",
+  ".oxfmtrc.json",
   "package.json",
   "nx.json",
   "tsconfig.base.json",
-  ".prettierignore",
   "myApp/project.json",
   "myApp/.npmrc",
   "myApp/nuxt.config.ts",
@@ -826,13 +775,7 @@ module.exports = createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     },
   );
 "
@@ -868,13 +811,7 @@ export default createConfigForNuxt({
       },
     },
     {
-      ignores: [
-        '.nuxt/**',
-        '.output/**',
-        'node_modules',
-        '**/*.d.ts',
-        '**/*.vue.js',
-      ],
+      ignores: ['.nuxt/**', '.output/**', 'node_modules', '**/*.d.ts', '**/*.vue.js'],
     },
   );
 "

@@ -27,7 +27,9 @@ describe('setup-ai-agents generator', () => {
   let getInstalledNxVersionSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    // Prettier: these assertions pin exact AGENTS.md content, and prettier
+    // normalises markdown where oxfmt does not format it at all.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
     // Use local implementation instead of fetching from latest
     process.env.NX_AI_FILES_USE_LOCAL = 'true';
 

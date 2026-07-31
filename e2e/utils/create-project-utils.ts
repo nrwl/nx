@@ -265,11 +265,9 @@ export function runCreateWorkspace(
     nextAppDir,
     nextSrcDir,
     linter = 'eslint',
-    // Deliberately not `create-nx-workspace`'s own default of oxfmt: every
-    // suite that asserts on generated file contents would have to move with
-    // it. The oxfmt paths are covered by create-nx-workspace-formatter.test.ts
-    // instead, which opts in per test.
-    formatter = 'prettier',
+    // Matches `create-nx-workspace`'s own default, so the e2e suites exercise
+    // what users actually get. Suites that need prettier pass it explicitly.
+    formatter = 'oxfmt',
     unitTestRunner,
     e2eTestRunner,
     ssr,
