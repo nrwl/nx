@@ -75,9 +75,6 @@
     "@nx/js": "workspace:*",
     "tslib": "catalog:typescript"
   },
-  "engines": {
-    "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
-  },
   "peerDependencies": {
     "oxlint": "^1.43.0"
   },
