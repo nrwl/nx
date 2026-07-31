@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 
 export interface Schema {
   directory: string;
@@ -10,7 +10,7 @@ export interface Schema {
   unitTestRunner?: 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
-  linter: Linter | LinterType;
+  linter: LinterType;
   formatter?: 'none' | 'prettier';
   routing?: boolean;
   js?: boolean;
