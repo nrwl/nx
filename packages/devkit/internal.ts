@@ -24,6 +24,7 @@ export {
 // `nx`, so this is its declared route to them. Against an older nx they are
 // `undefined` rather than absent, which is what the callers' fallbacks check.
 export {
+  detectFormatterInTree,
   isUsingPrettierInTree,
   prettierConfigFiles,
   oxfmtConfigFiles,
