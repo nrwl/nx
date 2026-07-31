@@ -58,10 +58,10 @@ describe('create-nx-workspace --formatter', () => {
     });
 
     // Generators format through oxfmt's programmatic API, so Nx - not the
-    // oxfmt CLI - has to read the config. `oxfmt.config.mts` is the only
-    // discovered name that `require()` cannot load, and a top-level await
-    // makes that certain: Nx has to fall back to `import()`. Nothing below
-    // e2e covers this, because jest's module registry cannot `require(esm)`.
+    // oxfmt CLI - has to read the config. The top-level await is what forces
+    // the fallback: `require()` refuses an ESM graph containing one whatever
+    // the extension, so Nx has to reach `import()`. Nothing below e2e covers
+    // this, because jest's module registry cannot `require(esm)`.
     removeFile('.oxfmtrc.json');
     updateFile(
       'oxfmt.config.mts',

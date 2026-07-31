@@ -80,11 +80,12 @@ describe('formatFilesWithOxfmt', () => {
     expect(formatted.get('a.ts')).toEqual("const x = 'hi';\n");
   });
 
-  // `oxfmt.config.mts` is discovered too, but jest's module registry does not
-  // implement `require(esm)`, so `loadTsFile` cannot reach it here. Real Node
-  // (the `^20.19.0 || >=22.12.0` oxfmt supports) requires an ESM `.mts`
-  // directly - measured - so this is a limit of the test environment, not of
-  // the loader.
+  // `oxfmt.config.mts` is discovered too, but jest can serve neither half of the
+  // loader: its module registry does not implement `require(esm)`, and its vm
+  // context has no dynamic-import callback for the `import()` retry. Real Node
+  // (the `^20.19.0 || >=22.12.0` oxfmt supports) handles it - measured - so this
+  // is a limit of the test environment, not of the loader. Covered by
+  // `create-nx-workspace-formatter.test.ts` instead.
   it.each([
     [
       'oxfmt.config.ts',
