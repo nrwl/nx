@@ -1085,9 +1085,7 @@ export class DaemonClient {
         ) {
           // The 0700 dir and 0600 socket mean the OS refuses this rather than the
           // connect silently succeeding.
-          error = daemonProcessException(
-            'The operating system refused the connection to the Nx Daemon socket.'
-          );
+          error = daemonPermissionException(socketPath, err.message);
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
           error = daemonProcessException(
             `A server instance had not been fully shut down. Please try running the command again.`
@@ -1424,6 +1422,33 @@ function isDocker() {
 
 function nxJsonIsNotPresent() {
   return !hasNxJson(workspaceRoot);
+}
+
+/**
+ * The socket exists but the operating system refused it — it belongs to another
+ * user. That is the guarantee the owner-only socket directory buys, so it is an
+ * environment condition rather than a defect in Nx, and it deliberately does not
+ * carry `internalDaemonError`: that tag tells the user to file an issue and
+ * disables the daemon until `nx reset`, which would outlast the stale socket
+ * that caused it.
+ *
+ * It also skips the daemon log that `daemonProcessException` appends. The log
+ * belongs to *our* daemon; the process holding this socket is someone else's, so
+ * quoting it would describe an unrelated run.
+ */
+export function daemonPermissionException(socketPath: string, cause: string) {
+  const error = new Error(
+    [
+      `The operating system refused the connection to the Nx Daemon socket (${cause}).`,
+      '',
+      `Socket: ${socketPath}`,
+      '',
+      'The socket belongs to a different user. This is usually a daemon left behind by running Nx under `sudo`, a different uid inside a container, or a working copy shared between accounts.',
+      'Delete the socket above, or set NX_SOCKET_DIR to a directory only your user can reach.',
+    ].join('\n')
+  );
+  (error as any).daemonPermissionError = true;
+  return error;
 }
 
 /**
