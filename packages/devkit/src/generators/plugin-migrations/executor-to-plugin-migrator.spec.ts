@@ -1,9 +1,10 @@
 import type { TargetDefaults } from 'nx/src/devkit-exports';
-import { readNxJson, readJson } from 'nx/src/devkit-exports';
+import { readNxJson, readJson, updateNxJson } from 'nx/src/devkit-exports';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import {
   collectMigrationScope,
   computeResidualByProject,
+  computeStrictCommon,
   inferOncePerOptionSet,
   migrateProjectExecutorsToPlugin,
   readTargetDefaultsForExecutor,
@@ -345,7 +346,9 @@ describe('computeResidualByProject (Phase 2)', () => {
     }
   });
 
-  it('residual equals what the full migration writes into project.json', async () => {
+  it('residual equals what a single-project migration writes into project.json', async () => {
+    // In single-project (`--project`) mode nothing is hoisted, so the full
+    // residual stays in project.json — the byte-identical guarantee.
     ctx = setupFixture('residual-write');
     const plugin = createSyntheticPlugin();
     for (const name of ['app1', 'app2']) {
@@ -363,7 +366,7 @@ describe('computeResidualByProject (Phase 2)', () => {
       ctx.projectGraph,
       syntheticMigrations(),
       { targetName: 'build' },
-      undefined,
+      'app1',
       undefined
     );
     const nxJson = readNxJson(ctx.tree);
@@ -386,7 +389,71 @@ describe('computeResidualByProject (Phase 2)', () => {
       residualByProject.get('app1').get('build').residual
     );
 
-    // Now run the real migration end to end and compare project.json.
+    // Now run the real single-project migration end to end and compare.
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      'app1'
+    );
+
+    const projectJson = readJson(ctx.tree, 'app1/project.json');
+    expect(projectJson.targets.build).toEqual(expectedResidual);
+    // sibling project untouched
+    expect(ctx.tree.exists('app2/project.json')).toBe(true);
+    const app2 = readJson(ctx.tree, 'app2/project.json');
+    expect(app2.targets.build.executor).toBe(SYNTHETIC_EXECUTOR);
+    // no hoist in single-project mode: the workspace default is untouched
+    // (the empty workspace ships targetDefaults.build = { cache: true }).
+    expect(readNxJson(ctx.tree).targetDefaults?.build).toEqual({ cache: true });
+  });
+});
+
+describe('computeStrictCommon', () => {
+  it('keeps only values deep-equal across ALL residuals (per-options-key)', () => {
+    const common = computeStrictCommon([
+      { options: { mode: 'production', a: 1 }, cache: true },
+      { options: { mode: 'production', a: 2 }, cache: true },
+      { options: { mode: 'production' }, cache: true },
+    ]);
+    // `mode` is shared everywhere; `a` differs / is missing; `cache` is shared.
+    expect(common).toEqual({ options: { mode: 'production' }, cache: true });
+  });
+
+  it('does not hoist a top-level prop missing from some residuals', () => {
+    const common = computeStrictCommon([
+      { outputs: ['{projectRoot}/dist'], cache: true },
+      { cache: true },
+    ]);
+    expect(common).toEqual({ cache: true });
+  });
+});
+
+describe('Phase 3 — strict-common hoist', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  it('A: uniform residual is hoisted to targetDefaults; project targets emptied', async () => {
+    ctx = setupFixture('hoist-uniform');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const plugin = createSyntheticPlugin();
+
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
       ctx.projectGraph,
@@ -396,7 +463,85 @@ describe('computeResidualByProject (Phase 2)', () => {
       syntheticMigrations()
     );
 
-    const projectJson = readJson(ctx.tree, 'app1/project.json');
-    expect(projectJson.targets.build).toEqual(expectedResidual);
+    // central targetDefaults holds the shared residual, merged onto the
+    // workspace's pre-existing `build: { cache: true }` default.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({
+      cache: true,
+      options: { mode: 'production' },
+    });
+    // every project.json target is now empty (pure deviation = {})
+    for (const name of ['app1', 'app2', 'app3']) {
+      const pj = readJson(ctx.tree, `${name}/project.json`);
+      expect(pj.targets.build).toBeUndefined();
+    }
+  });
+
+  it('B: executor-keyed targetDefault is de-duped into targetDefaults[target]', async () => {
+    ctx = setupFixture('hoist-dedup');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+    // an executor-keyed default that the previous engine inlined into every
+    // project — its non-inferred remainder (`dependsOn`) should hoist once.
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { dependsOn: ['^build'] };
+    updateNxJson(ctx.tree, nxJson);
+
+    const plugin = createSyntheticPlugin();
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    const td = readNxJson(ctx.tree).targetDefaults;
+    // dead executor-keyed entry removed
+    expect(td[SYNTHETIC_EXECUTOR]).toBeUndefined();
+    // remainder sits once in the target-name default (merged onto the
+    // workspace's pre-existing `build: { cache: true }` default)
+    expect(td.build).toEqual({ cache: true, dependsOn: ['^build'] });
+    // no project.json duplicates it
+    for (const name of ['app1', 'app2', 'app3']) {
+      const pj = readJson(ctx.tree, `${name}/project.json`);
+      expect(pj.targets.build).toBeUndefined();
+    }
+  });
+
+  it('C: single-project mode does not hoist and leaves siblings untouched', async () => {
+    ctx = setupFixture('hoist-single');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      'app1'
+    );
+
+    // no central hoist: the workspace default is untouched
+    expect(readNxJson(ctx.tree).targetDefaults?.build).toEqual({ cache: true });
+    // migrated project keeps its full residual
+    expect(readJson(ctx.tree, 'app1/project.json').targets.build).toEqual({
+      options: { mode: 'production' },
+    });
+    // sibling untouched (still an executor target)
+    expect(readJson(ctx.tree, 'app2/project.json').targets.build.executor).toBe(
+      SYNTHETIC_EXECUTOR
+    );
   });
 });

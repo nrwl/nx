@@ -429,6 +429,243 @@ function writeResidualTarget(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
+function isDeepEqual(a: unknown, b: unknown): boolean {
+  try {
+    deepStrictEqual(a, b);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Phase 3 — the strict-common residual across ALL migrated projects for a
+ * target: the values that are deep-equal across every project's residual.
+ * Granularity: whole value for top-level target props (`inputs`, `outputs`,
+ * `cache`, `dependsOn`, `configurations`, …); per-key for `options`. A key is
+ * common only when EVERY residual carries it with an identical value.
+ */
+export function computeStrictCommon(
+  residuals: TargetConfiguration[]
+): TargetConfiguration {
+  if (residuals.length === 0) {
+    return {};
+  }
+
+  const [first, ...rest] = residuals;
+  const common: TargetConfiguration = {};
+
+  for (const key of Object.keys(first)) {
+    if (key === 'options') {
+      continue;
+    }
+    const value = (first as Record<string, unknown>)[key];
+    const isCommon = rest.every((residual) => {
+      const r = residual as Record<string, unknown>;
+      return key in r && isDeepEqual(r[key], value);
+    });
+    if (isCommon) {
+      (common as Record<string, unknown>)[key] = structuredClone(value);
+    }
+  }
+
+  const firstOptions = first.options as Record<string, unknown> | undefined;
+  if (firstOptions && typeof firstOptions === 'object') {
+    const commonOptions: Record<string, unknown> = {};
+    for (const optKey of Object.keys(firstOptions)) {
+      const optValue = firstOptions[optKey];
+      const isCommon = rest.every((residual) => {
+        const options = residual.options as Record<string, unknown> | undefined;
+        return (
+          options &&
+          typeof options === 'object' &&
+          optKey in options &&
+          isDeepEqual(options[optKey], optValue)
+        );
+      });
+      if (isCommon) {
+        commonOptions[optKey] = structuredClone(optValue);
+      }
+    }
+    if (Object.keys(commonOptions).length > 0) {
+      common.options = commonOptions;
+    }
+  }
+
+  return common;
+}
+
+/** `residual` with every property that the strict-common config carries removed. */
+function subtractCommon(
+  residual: TargetConfiguration,
+  common: TargetConfiguration
+): TargetConfiguration {
+  const deviation = structuredClone(residual);
+
+  for (const key of Object.keys(common)) {
+    if (key === 'options') {
+      continue;
+    }
+    const d = deviation as Record<string, unknown>;
+    if (key in d && isDeepEqual(d[key], (common as Record<string, unknown>)[key])) {
+      delete d[key];
+    }
+  }
+
+  if (common.options && deviation.options) {
+    const commonOptions = common.options as Record<string, unknown>;
+    const deviationOptions = deviation.options as Record<string, unknown>;
+    for (const optKey of Object.keys(commonOptions)) {
+      if (
+        optKey in deviationOptions &&
+        isDeepEqual(deviationOptions[optKey], commonOptions[optKey])
+      ) {
+        delete deviationOptions[optKey];
+      }
+    }
+    if (Object.keys(deviationOptions).length === 0) {
+      delete deviation.options;
+    }
+  }
+
+  return deviation;
+}
+
+/** Whether any target in the tree still uses the executor (post-migration). */
+function isExecutorStillUsed(tree: Tree, executor: string): boolean {
+  let stillUsed = false;
+  forEachExecutorOptions(tree, executor, () => {
+    stillUsed = true;
+  });
+  return stillUsed;
+}
+
+/**
+ * Remove the now-dead executor-keyed target default that Phase 2 inlined into
+ * every migrated project (mirrors `readTargetDefaultsForExecutor`'s match: the
+ * unfiltered entry keyed directly by the executor string).
+ */
+function removeDeadExecutorTargetDefault(
+  targetDefaults: NxJsonConfiguration['targetDefaults'],
+  executor: string
+): void {
+  if (!targetDefaults || !(executor in targetDefaults)) {
+    return;
+  }
+  const value = targetDefaults[executor];
+  if (!Array.isArray(value)) {
+    delete targetDefaults[executor];
+    return;
+  }
+  // Array-shaped: drop only the unfiltered entry that was inlined.
+  const remaining = value.filter((entry) => {
+    const filter = (entry as { filter?: Record<string, unknown> })?.filter;
+    const isUnfiltered =
+      !filter ||
+      (filter.projects === undefined &&
+        filter.plugin === undefined &&
+        filter.executor === undefined);
+    return !isUnfiltered;
+  });
+  if (remaining.length === 0) {
+    delete targetDefaults[executor];
+  } else {
+    targetDefaults[executor] = remaining;
+  }
+}
+
+/**
+ * Phase 3 (centralized variant) — hoist the strict-common residual per target
+ * into `nx.json` `targetDefaults[targetName]`, remove the dead executor-keyed
+ * entries, and write only per-project deviations to project.json. Used for
+ * whole-workspace migrations; single-project mode keeps the full residual.
+ */
+function hoistCommonAndWrite<T>(
+  tree: Tree,
+  scope: MigrationScope<T>,
+  residualByProject: ResidualByProject
+) {
+  // Group residuals by target name across all migrated projects.
+  const residualsByTarget = new Map<string, TargetConfiguration[]>();
+  for (const targetMap of residualByProject.values()) {
+    for (const [targetName, entry] of targetMap) {
+      if (!residualsByTarget.has(targetName)) {
+        residualsByTarget.set(targetName, []);
+      }
+      residualsByTarget.get(targetName).push(entry.residual);
+    }
+  }
+
+  const commonByTarget = new Map<string, TargetConfiguration>();
+  // Deterministic target-name order for stable nx.json output.
+  for (const targetName of [...residualsByTarget.keys()].sort()) {
+    const residuals = residualsByTarget.get(targetName);
+    // Centralization only pays off (and is only safe from leaking a lone
+    // project's config onto sibling inferred targets) when at least two
+    // projects share the same target. A single migrated project keeps its full
+    // residual in project.json.
+    const common =
+      residuals.length >= 2 ? computeStrictCommon(residuals) : {};
+    commonByTarget.set(targetName, common);
+  }
+
+  // Write per-project deviations first so migrated targets drop their executor
+  // before we decide whether an executor-keyed target default is still needed.
+  for (const executorScope of scope.executorScopes) {
+    for (const [targetName, projectNames] of executorScope.targetAndProjects) {
+      const common = commonByTarget.get(targetName) ?? {};
+      for (const projectName of projectNames) {
+        const entry = residualByProject.get(projectName)?.get(targetName);
+        if (!entry) {
+          continue;
+        }
+        writeResidualTarget(
+          tree,
+          projectName,
+          targetName,
+          subtractCommon(entry.residual, common)
+        );
+      }
+    }
+  }
+
+  // Update nx.json targetDefaults: hoist commons, drop dead executor entries.
+  const nxJson = readNxJson(tree);
+  nxJson.targetDefaults ??= {};
+
+  for (const targetName of [...commonByTarget.keys()].sort()) {
+    const common = commonByTarget.get(targetName);
+    if (Object.keys(common).length === 0) {
+      continue;
+    }
+    const existing = nxJson.targetDefaults[targetName];
+    if (existing && !Array.isArray(existing)) {
+      nxJson.targetDefaults[targetName] = mergeTargetConfigurations(
+        structuredClone(common),
+        structuredClone(existing as TargetConfiguration)
+      );
+    } else if (!existing) {
+      nxJson.targetDefaults[targetName] = common;
+    }
+    // Array-shaped existing target defaults are left untouched.
+  }
+
+  const migratedExecutors = new Set(
+    scope.executorScopes.map((executorScope) => executorScope.executor)
+  );
+  for (const executor of migratedExecutors) {
+    if (!isExecutorStillUsed(tree, executor)) {
+      removeDeadExecutorTargetDefault(nxJson.targetDefaults, executor);
+    }
+  }
+
+  if (Object.keys(nxJson.targetDefaults).length === 0) {
+    delete nxJson.targetDefaults;
+  }
+
+  updateNxJson(tree, nxJson);
+}
+
 function mergeInputs(
   target: TargetConfiguration,
   inferredTarget: TargetConfiguration
@@ -830,9 +1067,15 @@ async function migrateProjects<T>(
     nxJson
   );
 
-  // Phase 3 — write the full residual per project.json (centralization lands in
-  // a later task; output stays unchanged).
-  writeResiduals(tree, projectGraph, scope, residualByProject);
+  // Phase 3 — Derive strict-common + write. Single-project mode never hoists
+  // (would leak shared config to sibling projects), so it keeps the full
+  // residual in project.json; whole-workspace mode hoists the common config to
+  // `targetDefaults` and writes only per-project deviations.
+  if (specificProjectToMigrate) {
+    writeResiduals(tree, projectGraph, scope, residualByProject);
+  } else {
+    hoistCommonAndWrite(tree, scope, residualByProject);
+  }
 
   // Some plugins' `createNodes` normalize their options object in place (e.g.
   // `options.devTargetName ??= 'dev'`). The previous engine inferred once per
