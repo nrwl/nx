@@ -10,13 +10,13 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { FsTree } from 'nx/src/generators/tree';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { initGeneratorInternal } from './init.js';
+import { initGenerator } from './init.js';
 
-describe('initGeneratorInternal', () => {
+describe('initGenerator', () => {
   it('adds a root oxlint config matching what `oxlint --init` scaffolds', async () => {
     const tree = createTreeWithEmptyWorkspace();
 
-    await initGeneratorInternal(tree, {
+    await initGenerator(tree, {
       skipPackageJson: true,
       skipFormat: true,
     });
@@ -37,7 +37,7 @@ describe('initGeneratorInternal', () => {
       recommendations: ['esbenp.prettier-vscode'],
     });
 
-    await initGeneratorInternal(tree, {
+    await initGenerator(tree, {
       skipPackageJson: true,
       skipFormat: true,
     });
@@ -51,7 +51,7 @@ describe('initGeneratorInternal', () => {
   it('does not create .vscode/extensions.json when absent', async () => {
     const tree = createTreeWithEmptyWorkspace();
 
-    await initGeneratorInternal(tree, {
+    await initGenerator(tree, {
       skipPackageJson: true,
       skipFormat: true,
     });
@@ -66,7 +66,7 @@ describe('initGeneratorInternal', () => {
     const tree = createTreeWithEmptyWorkspace();
     updateNxJson(tree, { ...readNxJson(tree), useInferencePlugins: false });
 
-    await initGeneratorInternal(tree, {
+    await initGenerator(tree, {
       skipPackageJson: true,
       skipFormat: true,
     });
@@ -124,7 +124,7 @@ describe('initGeneratorInternal', () => {
         dependencies: {},
       });
 
-      await initGeneratorInternal(tree, {
+      await initGenerator(tree, {
         skipPackageJson: true,
         skipFormat: true,
       });
@@ -145,7 +145,7 @@ describe('initGeneratorInternal', () => {
     const tree = createTreeWithEmptyWorkspace();
     tree.write(configFile, '{}');
 
-    await initGeneratorInternal(tree, {
+    await initGenerator(tree, {
       skipPackageJson: true,
       skipFormat: true,
     });

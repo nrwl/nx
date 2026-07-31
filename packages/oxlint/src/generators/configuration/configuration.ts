@@ -17,20 +17,13 @@ export interface ConfigurationGeneratorSchema {
   plugins?: string[];
 }
 
-export function configurationGenerator(
-  tree: Tree,
-  options: ConfigurationGeneratorSchema
-) {
-  return configurationGeneratorInternal(tree, options);
-}
-
 /**
  * Registers `@nx/oxlint` and enables this project's Oxlint plugins.
  *
  * It writes no target: `@nx/oxlint` is inference-only, so the plugin registered
  * by `init` is what gives the project its Oxlint task.
  */
-export async function configurationGeneratorInternal(
+export async function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {

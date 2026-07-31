@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { Linter, LinterType } from '@nx/eslint';
+import { Linter } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -22,7 +22,7 @@ import {
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { versions } from './versions';
-import { addLintingToProject } from '@nx/js';
+import { addLintingToProject, type LinterType } from '@nx/js';
 
 export interface CyLinterOptions {
   project: string;
@@ -52,6 +52,10 @@ export async function addLinterToCyProject(
   tree: Tree,
   options: CyLinterOptions
 ) {
+  if (options.linter === 'none') {
+    return () => {};
+  }
+
   const tasks: GeneratorCallback[] = [];
   const projectConfig = readProjectConfiguration(tree, options.project);
 

@@ -70,15 +70,15 @@ A workspace with no other linter gets `lint`. A workspace where ESLint already o
 
 ## Customizing the task
 
-`@nx/oxlint` has no executor. Every Oxlint task comes from inference, so the plugin is registered even when `useInferencePlugins` is disabled.
-
-To change how one project is linted, override the inferred target in its `project.json`:
+To change how one project is linted, add arguments to the inferred target in its `project.json`. Use `args` rather than `command`: replacing the command drops the inferred `cache` and `inputs` with it, so the task stops being cached.
 
 ```json
 {
   "targets": {
     "lint": {
-      "command": "oxlint --type-aware ."
+      "options": {
+        "args": ["--type-aware"]
+      }
     }
   }
 }
@@ -96,12 +96,6 @@ To change it everywhere, pass options to the plugin in `nx.json`. `targetName` o
   ]
 }
 ```
-
-## Add Oxlint to an ESLint workspace
-
-Oxlint runs alongside ESLint, so the setup above is all you need and nothing about your ESLint config changes. ESLint keeps the `lint` target, so Oxlint registers as `oxlint` and every project with lintable files gets one.
-
-Nx doesn't translate ESLint rules into Oxlint rules. To generate an `.oxlintrc.json` from your existing ESLint config, run [`@oxlint/migrate`](https://github.com/oxc-project/oxlint-migrate). To stop ESLint from re-reporting what Oxlint already covers, add [`eslint-plugin-oxlint`](https://www.npmjs.com/package/eslint-plugin-oxlint) to the ESLint config.
 
 ## Type-aware linting
 
