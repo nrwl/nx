@@ -529,9 +529,10 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   });
 
   it('re-keys a bare _authToken from the workspace .npmrc onto the resolved registry dart', () => {
-    // npm ignores a bare auth key even in its own .npmrc, so a native bare
-    // token still needs darting; its registry is npm-native, so only the token
-    // bridges.
+    // npm reads this file itself: the registry does not bridge, and npm refuses
+    // to run on the bare key it finds there (ERR_INVALID_AUTH), so the re-keyed
+    // dart entry is produced but never consumed from this source. The case pins
+    // the dart routing shared with the yarn-only sources that do consume it.
     files[`${ROOT}/.npmrc`] = [
       'registry=https://reg-b.example.com/',
       '_authToken=project-token',
