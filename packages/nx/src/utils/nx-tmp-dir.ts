@@ -1,5 +1,5 @@
 import { homedir, platform, tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 import { getUserSegment } from './owned-private-dir';
 
 /**
@@ -43,4 +43,24 @@ export const NX_USER_TMP_DIR =
  * Longer than the `/tmp` root and not cleared on reboot, so it is the second
  * choice rather than the first.
  */
-export const NX_HOME_TMP_DIR = join(homedir(), '.nx');
+export const NX_HOME_TMP_DIR = resolveHomeTmpDir();
+
+/**
+ * `undefined` when there is no home directory to use, in which case callers skip
+ * this location entirely.
+ *
+ * A rootless container running as an arbitrary uid has neither `$HOME` nor a
+ * passwd entry, and `homedir()` then either throws or yields an empty string —
+ * from which `join` would build the *relative* path `.nx`, putting sockets in
+ * whatever the working directory happens to be and pointing `removeSocketDir`'s
+ * recursive delete at it. Evaluated at module scope, so the throw has to be
+ * caught here: the native binding loader imports this file.
+ */
+function resolveHomeTmpDir(): string | undefined {
+  try {
+    const home = homedir();
+    return home && isAbsolute(home) ? join(home, '.nx') : undefined;
+  } catch {
+    return undefined;
+  }
+}
