@@ -74,11 +74,15 @@ docker image inspect nx-review-sandbox:latest >/dev/null 2>&1 && echo "image OK"
 If MISSING (or stale — check the `created` date against the Dockerfile), build it. The Dockerfile only needs `mise.toml`, so build from a **minimal context** — do NOT pass `.` (the repo root), which would ship the whole monorepo (node_modules / .git / dist — many GB) to the daemon:
 
 ```bash
-mkdir -p tmp/review-sandbox-ctx && cp mise.toml tmp/review-sandbox-ctx/
+mkdir -p tmp/review-sandbox-ctx
+cp mise.toml package.json pnpm-lock.yaml pnpm-workspace.yaml tmp/review-sandbox-ctx/
+cp -r patches tmp/review-sandbox-ctx/
 docker build -t nx-review-sandbox:latest -f tools/review-sandbox/Dockerfile tmp/review-sandbox-ctx
 ```
 
-This installs the repo's exact toolchain — node/java/dotnet/maven/rust/bun via mise — and takes a while + several GB. Requires steps 1 + 3 to pass first (build needs working networking). If disk is tight, `/sandbox-prune` first.
+The context is still minimal — five entries, ~2 MB, almost all of it the lockfile — and deliberately excludes the repo itself. All five are load-bearing; the Dockerfile explains what each omission breaks.
+
+This installs the repo's exact toolchain — node/java/dotnet/maven/rust/bun via mise — and warms the pnpm store so reviews link packages instead of downloading them. Takes a while and several GB (the warm store is ~2.6 GB of that). Requires steps 1 + 3 to pass first (build needs working networking). If disk is tight, `/sandbox-prune` first.
 
 ## 5. Verify (smoke test)
 
