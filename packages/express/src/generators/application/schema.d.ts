@@ -1,8 +1,6 @@
-// `LinterType` comes from `@nx/js`, not `@nx/eslint`: this package is the one
-// `@nx/eslint` importer that does not declare it as a dependency, so the
-// specifier resolves to the published tarball, whose `LinterType` predates
-// `oxlint` and would contradict the enum in schema.json.
-import type { Linter } from '@nx/eslint';
+// From `@nx/js`, not `@nx/eslint`: this package is the one `@nx/eslint` importer
+// that does not declare it as a dependency, so that specifier resolves to the
+// published tarball whose `LinterType` predates `oxlint`.
 import type { LinterType } from '@nx/js';
 import type { UnitTestRunner } from '../../utils/test-runners';
 
@@ -13,7 +11,7 @@ export interface Schema {
   skipPackageJson: boolean;
   unitTestRunner: UnitTestRunner;
   tags?: string;
-  linter: Linter | LinterType;
+  linter: LinterType;
   frontendProject?: string;
   swcJest?: boolean;
   /** @deprecated use `swcJest` instead */

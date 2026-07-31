@@ -12,11 +12,10 @@ export async function generateStorybookConfiguration(
   return await configurationGenerator(tree, {
     project: options.project,
     uiFramework: '@storybook/angular',
-    // `@nx/storybook`'s schema types `linter` from the *published* `@nx/eslint`,
-    // whose `LinterType` predates oxlint, so `'oxlint'` does not typecheck here
-    // until that version ships. Coercing is safe: the storybook generator never
-    // reads this option — it decides what to do from `findEslintFile` instead —
-    // so all three values produce identical output.
+    // `@nx/storybook` is not a dependency here, so it resolves to the published
+    // package, whose schema types `linter` from an `@nx/eslint` that predates
+    // oxlint. Safe to coerce: the storybook generator ignores this option and
+    // decides from `findEslintFile`.
     linter: options.linter === 'eslint' ? 'eslint' : 'none',
     tsConfiguration: options.tsConfiguration,
     interactionTests: options.interactionTests,

@@ -82,6 +82,21 @@ describe('addPluginsToOxlintConfig', () => {
     expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
   });
 
+  // The root's format only matters when a project config has to be created,
+  // because that is what needs an `extends` pointing at the root.
+  it('should still update a project config that already exists under a TypeScript root', () => {
+    tree.delete('.oxlintrc.json');
+    tree.write('oxlint.config.ts', 'export default {};');
+    writeJson(tree, 'apps/my-app/.oxlintrc.json', { plugins: ['vue'] });
+
+    addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
+
+    expect(readJson(tree, 'apps/my-app/.oxlintrc.json').plugins).toEqual([
+      'vue',
+      'react',
+    ]);
+  });
+
   it('should not write a second config beside an existing .oxlintrc.jsonc', () => {
     tree.write(
       'apps/my-app/.oxlintrc.jsonc',
