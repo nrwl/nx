@@ -173,12 +173,12 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
   // Asserted rather than snapshotted: which extension is recommended now
   // depends on `--formatter`, and a snapshot would not say why it changed.
   it.each([
-    ['prettier', true],
-    ['oxfmt', false],
-    ['none', false],
+    ['prettier', true, false],
+    ['oxfmt', false, true],
+    ['none', false, false],
   ])(
-    'should recommend the prettier extension only for --formatter=prettier (%s)',
-    async (formatter, expected) => {
+    'should recommend the extension matching --formatter (%s)',
+    async (formatter, expectPrettier, expectOxc) => {
       await generateWorkspaceFiles(tree, {
         name: 'proj',
         directory: 'proj',
@@ -193,7 +193,11 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       ).recommendations;
 
       expect(recommendations).toContain('nrwl.angular-console');
-      expect(recommendations.includes('esbenp.prettier-vscode')).toBe(expected);
+      expect(recommendations.includes('esbenp.prettier-vscode')).toBe(
+        expectPrettier
+      );
+      // `oxc.oxc-vscode` is what runs oxfmt in the editor.
+      expect(recommendations.includes('oxc.oxc-vscode')).toBe(expectOxc);
     }
   );
 

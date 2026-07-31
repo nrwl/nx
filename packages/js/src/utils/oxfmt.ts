@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  updateJson,
   writeJson,
   type GeneratorCallback,
   type Tree,
@@ -18,6 +19,21 @@ export function generateOxfmtSetup(
     // oxfmt defaults to double quotes and we prefer single, so that is the one
     // option worth setting. Line width is left at oxfmt's default.
     writeJson(tree, '.oxfmtrc.json', { singleQuote: true });
+  }
+
+  // The oxc extension is what drives oxfmt in the editor, so recommend it for
+  // the same reason the prettier setup recommends its own. Only when the file
+  // is already there - creating it would push an editor choice on a workspace
+  // that has not made one.
+  if (tree.exists('.vscode/extensions.json')) {
+    updateJson(tree, '.vscode/extensions.json', (json) => {
+      json.recommendations ??= [];
+      const extension = 'oxc.oxc-vscode';
+      if (!json.recommendations.includes(extension)) {
+        json.recommendations.push(extension);
+      }
+      return json;
+    });
   }
 
   return options.skipPackageJson
