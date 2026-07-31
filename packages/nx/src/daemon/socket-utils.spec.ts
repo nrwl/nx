@@ -1,12 +1,17 @@
 import { win32 } from 'node:path';
 import { getPluginOsSocketPath, getPluginSocketFileName } from './socket-utils';
-import { getPluginSocketDir, getSocketDirFallbackCause } from './tmp-dir';
+import {
+  getPluginSocketDir,
+  getRefusedConfiguredSocketDir,
+  getSocketDirFallbackCause,
+} from './tmp-dir';
 
 jest.mock('./tmp-dir', () => ({
   getDaemonSocketDir: jest.fn(),
   getPluginSocketDir: jest.fn(),
   getSocketDir: jest.fn(),
   getSocketDirFallbackCause: jest.fn(),
+  getRefusedConfiguredSocketDir: jest.fn(),
 }));
 
 describe('socket path validation', () => {
@@ -67,6 +72,27 @@ describe('socket path validation', () => {
     } catch (error) {
       expect((error as Error).message).not.toContain('Nx fell back');
       expect((error as Error).cause).toBeUndefined();
+    }
+  });
+
+  it('stops advising a shorter NX_SOCKET_DIR once the configured one was refused', () => {
+    // They already set one, and it was rejected for a reason that has nothing
+    // to do with length — a read-only mount, EACCES, a directory they do not
+    // own. Repeating the generic advice sends them round in a circle.
+    (getPluginSocketDir as jest.Mock).mockReturnValue(`/${'a'.repeat(96)}`);
+    (getSocketDirFallbackCause as jest.Mock).mockReturnValue(undefined);
+    (getRefusedConfiguredSocketDir as jest.Mock).mockReturnValue(
+      '/mnt/read-only/sockets'
+    );
+
+    try {
+      getPluginOsSocketPath('123-0-12345678');
+      throw new Error('Expected socket path validation to fail');
+    } catch (error) {
+      const message = (error as Error).message;
+      expect(message).toContain('/mnt/read-only/sockets');
+      expect(message).toContain('could not be used');
+      expect(message).not.toContain('Set NX_SOCKET_DIR to a shorter path');
     }
   });
 });
