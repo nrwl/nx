@@ -258,177 +258,223 @@ export function collectMigrationScope<T>(
   };
 }
 
-class ExecutorToPluginMigrator {
-  readonly tree: Tree;
-  readonly #projectGraph: ProjectGraph;
-  readonly #executor: string;
-  readonly #postTargetTransformer: PostTargetTransformer;
-  readonly #targetAndProjectsToMigrate: Map<string, Set<string>>;
-  readonly #inferredByRoot: Map<string, Map<string, TargetConfiguration>>;
-  #nxJson: NxJsonConfiguration;
-  #targetDefaultsForExecutor: Partial<TargetConfiguration>;
+/** The per-project residual and the equivalence oracle baseline for a target. */
+export interface ResidualEntry {
+  /** Byte-for-byte what the previous engine writes into project.json. */
+  residual: TargetConfiguration;
+  /**
+   * The migrated (command-based) effective config the previous engine yields:
+   * the full inferred target with the residual layered on top. Used in Phase 4
+   * as the equivalence oracle.
+   */
+  baselineFinal: TargetConfiguration;
+}
 
-  constructor(
-    tree: Tree,
-    projectGraph: ProjectGraph,
-    executor: string,
-    postTargetTransformer: PostTargetTransformer,
-    // The set of targets/projects to migrate for this executor, precomputed by
-    // `collectMigrationScope` (Phase 0). Filtering/skip semantics already ran.
-    targetAndProjectsToMigrate: Map<string, Set<string>>,
-    // project root -> (target name -> stripped inferred target), precomputed
-    // once for the whole workspace by `inferOncePerOptionSet` (Phase 1).
-    inferredByRoot: Map<string, Map<string, TargetConfiguration>>
-  ) {
-    this.tree = tree;
-    this.#projectGraph = projectGraph;
-    this.#executor = executor;
-    this.#postTargetTransformer = postTargetTransformer;
-    this.#targetAndProjectsToMigrate = targetAndProjectsToMigrate;
-    this.#inferredByRoot = inferredByRoot;
-  }
+/** project name -> (target name -> residual entry) */
+export type ResidualByProject = Map<string, Map<string, ResidualEntry>>;
 
-  async run(): Promise<void> {
-    this.#init();
-    for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
-      await this.#migrateTarget(targetName);
-    }
-  }
+function stripInferredTarget(
+  fullInferredTarget: TargetConfiguration
+): TargetConfiguration {
+  const stripped: TargetConfiguration<RunCommandsOptions> =
+    structuredClone(fullInferredTarget);
+  delete stripped.command;
+  delete stripped.options?.cwd;
+  return stripped;
+}
 
-  #init() {
-    const nxJson = readNxJson(this.tree);
-    nxJson.plugins ??= [];
-    this.#nxJson = nxJson;
-    this.#getTargetDefaultsForExecutor();
-  }
-
-  async #migrateTarget(targetName: string) {
-    for (const projectName of this.#targetAndProjectsToMigrate.get(
-      targetName
-    )) {
-      await this.#migrateProject(projectName, targetName);
-    }
-  }
-
-  async #migrateProject(projectName: string, targetName: string) {
-    const projectFromGraph = this.#projectGraph.nodes[projectName];
-    const projectConfig = readProjectConfiguration(this.tree, projectName);
-
-    const createdTarget = this.#getCreatedTargetForProjectRoot(
-      targetName,
-      projectFromGraph.data.root
+function getFullInferredTarget(
+  inferredByRoot: Map<string, Map<string, TargetConfiguration>>,
+  projectRoot: string,
+  targetName: string
+): TargetConfiguration {
+  const inferredTarget = inferredByRoot.get(projectRoot)?.get(targetName);
+  if (!inferredTarget) {
+    throw new Error(
+      `The nx plugin did not find a project inside ${projectRoot}. File an issue at https://github.com/nrwl/nx with information about your project structure.`
     );
-    let projectTarget = projectConfig.targets[targetName];
-    projectTarget = mergeTargetConfigurations(
-      projectTarget,
-      this.#targetDefaultsForExecutor
-    );
-    delete projectTarget.executor;
+  }
+  return inferredTarget;
+}
 
-    deleteMatchingProperties(projectTarget, createdTarget);
+/**
+ * Phase 2 — Per-project residual (in-memory, no inference). For each
+ * `(project, target)` computes the residual exactly as the previous engine did
+ * (`mergeTargetConfigurations` with the executor target defaults ->
+ * `deleteMatchingProperties` -> input merge -> the plugin's
+ * `postTargetTransformer`), plus `baselineFinal = merge(residual, inferred)` as
+ * the equivalence oracle. Does NOT write project.json.
+ */
+export async function computeResidualByProject<T>(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  scope: MigrationScope<T>,
+  inferredByRoot: Map<string, Map<string, TargetConfiguration>>,
+  nxJson: NxJsonConfiguration
+): Promise<ResidualByProject> {
+  const residualByProject: ResidualByProject = new Map();
 
-    if (projectTarget.inputs && createdTarget.inputs) {
-      this.#mergeInputs(projectTarget, createdTarget);
-    }
-
-    projectTarget = await this.#postTargetTransformer(
-      projectTarget,
-      this.tree,
-      { projectName, root: projectFromGraph.data.root },
-      { ...createdTarget, name: targetName }
+  for (const executorScope of scope.executorScopes) {
+    const targetDefaultsForExecutor = structuredClone(
+      readTargetDefaultsForExecutor(executorScope.executor, nxJson.targetDefaults) ??
+        {}
     );
 
-    if (
-      projectTarget.options &&
-      Object.keys(projectTarget.options).length === 0
-    ) {
-      delete projectTarget.options;
-    }
+    for (const [targetName, projectNames] of executorScope.targetAndProjects) {
+      for (const projectName of projectNames) {
+        const root = projectGraph.nodes[projectName].data.root;
+        const fullInferredTarget = getFullInferredTarget(
+          inferredByRoot,
+          root,
+          targetName
+        );
+        const strippedInferredTarget = stripInferredTarget(fullInferredTarget);
 
-    if (Object.keys(projectTarget).length > 0) {
-      projectConfig.targets[targetName] = projectTarget;
-    } else {
-      delete projectConfig.targets[targetName];
-    }
+        const projectConfig = readProjectConfiguration(tree, projectName);
+        let projectTarget = projectConfig.targets[targetName];
+        projectTarget = mergeTargetConfigurations(
+          projectTarget,
+          targetDefaultsForExecutor
+        );
+        delete projectTarget.executor;
 
-    if (!projectConfig['// targets']) {
-      projectConfig['// targets'] =
-        `to see all targets run: nx show project ${projectName} --web`;
-    }
+        deleteMatchingProperties(projectTarget, strippedInferredTarget);
 
-    updateProjectConfiguration(this.tree, projectName, projectConfig);
-  }
-
-  #mergeInputs(
-    target: TargetConfiguration,
-    inferredTarget: TargetConfiguration
-  ) {
-    const isInputInferred = (input: string | InputDefinition) => {
-      return inferredTarget.inputs.some((inferredInput) => {
-        try {
-          deepStrictEqual(input, inferredInput);
-          return true;
-        } catch {
-          return false;
+        if (projectTarget.inputs && strippedInferredTarget.inputs) {
+          mergeInputs(projectTarget, strippedInferredTarget);
         }
-      });
-    };
 
-    if (target.inputs.every(isInputInferred)) {
-      delete target.inputs;
-      return;
-    }
+        projectTarget = await executorScope.migration.postTargetTransformer(
+          projectTarget,
+          tree,
+          { projectName, root },
+          { ...strippedInferredTarget, name: targetName }
+        );
 
-    const inferredTargetExternalDependencyInput = inferredTarget.inputs.find(
-      (i): i is { externalDependencies: string[] } =>
-        typeof i !== 'string' && 'externalDependencies' in i
-    );
-    if (!inferredTargetExternalDependencyInput) {
-      // plugins should normally have an externalDependencies input, but if it
-      // doesn't, there's nothing to merge
-      return;
-    }
+        if (
+          projectTarget.options &&
+          Object.keys(projectTarget.options).length === 0
+        ) {
+          delete projectTarget.options;
+        }
 
-    const targetExternalDependencyInput = target.inputs.find(
-      (i): i is { externalDependencies: string[] } =>
-        typeof i !== 'string' && 'externalDependencies' in i
-    );
-    if (!targetExternalDependencyInput) {
-      // the target doesn't have an externalDependencies input, so we can just
-      // add the inferred one
-      target.inputs.push(inferredTargetExternalDependencyInput);
-    } else {
-      // the target has an externalDependencies input, so we need to merge them
-      targetExternalDependencyInput.externalDependencies = Array.from(
-        new Set([
-          ...targetExternalDependencyInput.externalDependencies,
-          ...inferredTargetExternalDependencyInput.externalDependencies,
-        ])
-      );
+        const residual = projectTarget;
+        const baselineFinal = mergeTargetConfigurations(
+          structuredClone(residual),
+          structuredClone(fullInferredTarget)
+        );
+
+        if (!residualByProject.has(projectName)) {
+          residualByProject.set(projectName, new Map());
+        }
+        residualByProject
+          .get(projectName)
+          .set(targetName, { residual, baselineFinal });
+      }
     }
   }
 
-  #getTargetDefaultsForExecutor() {
-    this.#targetDefaultsForExecutor = structuredClone(
-      readTargetDefaultsForExecutor(
-        this.#executor,
-        this.#nxJson.targetDefaults
-      ) ?? {}
-    );
+  return residualByProject;
+}
+
+/**
+ * Phase 3 (residual-only variant used until centralization lands) — write the
+ * full residual into each project.json, exactly reproducing the previous
+ * per-(project, target) write sequence.
+ */
+function writeResiduals<T>(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  scope: MigrationScope<T>,
+  residualByProject: ResidualByProject
+) {
+  for (const executorScope of scope.executorScopes) {
+    for (const [targetName, projectNames] of executorScope.targetAndProjects) {
+      for (const projectName of projectNames) {
+        const entry = residualByProject.get(projectName)?.get(targetName);
+        if (!entry) {
+          continue;
+        }
+        writeResidualTarget(
+          tree,
+          projectName,
+          targetName,
+          structuredClone(entry.residual)
+        );
+      }
+    }
+  }
+}
+
+/** Write a single residual target into project.json (or delete it if empty). */
+function writeResidualTarget(
+  tree: Tree,
+  projectName: string,
+  targetName: string,
+  residual: TargetConfiguration
+) {
+  const projectConfig = readProjectConfiguration(tree, projectName);
+
+  if (Object.keys(residual).length > 0) {
+    projectConfig.targets[targetName] = residual;
+  } else {
+    delete projectConfig.targets[targetName];
   }
 
-  #getCreatedTargetForProjectRoot(targetName: string, projectRoot: string) {
-    const inferredTarget = this.#inferredByRoot
-      .get(projectRoot)
-      ?.get(targetName);
-    if (!inferredTarget) {
-      throw new Error(
-        `The nx plugin did not find a project inside ${projectRoot}. File an issue at https://github.com/nrwl/nx with information about your project structure.`
-      );
-    }
-    // Already stripped of `command`/`options.cwd` in Phase 1. Clone so the
-    // per-project residual computation can mutate freely.
-    return structuredClone(inferredTarget);
+  if (!projectConfig['// targets']) {
+    projectConfig['// targets'] =
+      `to see all targets run: nx show project ${projectName} --web`;
+  }
+
+  updateProjectConfiguration(tree, projectName, projectConfig);
+}
+
+function mergeInputs(
+  target: TargetConfiguration,
+  inferredTarget: TargetConfiguration
+) {
+  const isInputInferred = (input: string | InputDefinition) => {
+    return inferredTarget.inputs.some((inferredInput) => {
+      try {
+        deepStrictEqual(input, inferredInput);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  };
+
+  if (target.inputs.every(isInputInferred)) {
+    delete target.inputs;
+    return;
+  }
+
+  const inferredTargetExternalDependencyInput = inferredTarget.inputs.find(
+    (i): i is { externalDependencies: string[] } =>
+      typeof i !== 'string' && 'externalDependencies' in i
+  );
+  if (!inferredTargetExternalDependencyInput) {
+    // plugins should normally have an externalDependencies input, but if it
+    // doesn't, there's nothing to merge
+    return;
+  }
+
+  const targetExternalDependencyInput = target.inputs.find(
+    (i): i is { externalDependencies: string[] } =>
+      typeof i !== 'string' && 'externalDependencies' in i
+  );
+  if (!targetExternalDependencyInput) {
+    // the target doesn't have an externalDependencies input, so we can just
+    // add the inferred one
+    target.inputs.push(inferredTargetExternalDependencyInput);
+  } else {
+    // the target has an externalDependencies input, so we need to merge them
+    targetExternalDependencyInput.externalDependencies = Array.from(
+      new Set([
+        ...targetExternalDependencyInput.externalDependencies,
+        ...inferredTargetExternalDependencyInput.externalDependencies,
+      ])
+    );
   }
 }
 
@@ -526,7 +572,7 @@ export async function migrateProjectExecutorsToPluginV1<T>(
  * name -> stripped inferred target) that every later phase reads from, plus the
  * set of config files the plugin globs (used for analytic include coverage).
  */
-async function inferOncePerOptionSet<T>(
+export async function inferOncePerOptionSet<T>(
   tree: Tree,
   pluginPath: string,
   createNodes: CreateNodes<T> | undefined,
@@ -578,15 +624,13 @@ async function inferOncePerOptionSet<T>(
           if (!inferredTarget) {
             continue;
           }
-          const stripped: TargetConfiguration<RunCommandsOptions> =
-            structuredClone(inferredTarget);
-          delete stripped.command;
-          delete stripped.options?.cwd;
-
+          // Store the FULL inferred (command-based) target. Residual
+          // computation strips `command`/`options.cwd` at the point of use;
+          // `baselineFinal` (the equivalence oracle) needs the full form.
           if (!inferredByRoot.has(root)) {
             inferredByRoot.set(root, new Map());
           }
-          inferredByRoot.get(root).set(targetName, stripped);
+          inferredByRoot.get(root).set(targetName, structuredClone(inferredTarget));
         }
       }
     }
@@ -776,19 +820,19 @@ async function migrateProjects<T>(
     scope
   );
 
-  // Phase 2 — Per-project residual writes (in-memory, no re-inference). Still
-  // writes the full residual per project.json (centralization comes later).
-  for (const executorScope of scope.executorScopes) {
-    const migrator = new ExecutorToPluginMigrator(
-      tree,
-      projectGraph,
-      executorScope.executor,
-      executorScope.migration.postTargetTransformer,
-      executorScope.targetAndProjects,
-      inferredByRoot
-    );
-    await migrator.run();
-  }
+  // Phase 2 — Per-project residual (in-memory, no re-inference). Also captures
+  // `baselineFinal` (the equivalence oracle consumed in Phase 4).
+  const residualByProject = await computeResidualByProject(
+    tree,
+    projectGraph,
+    scope,
+    inferredByRoot,
+    nxJson
+  );
+
+  // Phase 3 — write the full residual per project.json (centralization lands in
+  // a later task; output stays unchanged).
+  writeResiduals(tree, projectGraph, scope, residualByProject);
 
   // Some plugins' `createNodes` normalize their options object in place (e.g.
   // `options.devTargetName ??= 'dev'`). The previous engine inferred once per

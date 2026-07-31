@@ -1,6 +1,10 @@
 import type { TargetDefaults } from 'nx/src/devkit-exports';
+import { readNxJson, readJson } from 'nx/src/devkit-exports';
+import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import {
   collectMigrationScope,
+  computeResidualByProject,
+  inferOncePerOptionSet,
   migrateProjectExecutorsToPlugin,
   readTargetDefaultsForExecutor,
 } from './executor-to-plugin-migrator';
@@ -265,5 +269,134 @@ describe('collectMigrationScope (Phase 0)', () => {
         undefined
       )
     ).toThrow('The build target on project "app1" cannot be migrated. nope');
+  });
+});
+
+describe('computeResidualByProject (Phase 2)', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  it('captures the residual (byte-for-byte project.json target) and baselineFinal', async () => {
+    ctx = setupFixture('residual');
+    const plugin = createSyntheticPlugin();
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      syntheticMigrations(),
+      { targetName: 'build' },
+      undefined,
+      undefined
+    );
+    const nxJson = readNxJson(ctx.tree);
+    const { inferredByRoot } = await inferOncePerOptionSet(
+      ctx.tree,
+      plugin.pluginPath,
+      plugin.createNodes,
+      undefined,
+      nxJson,
+      scope
+    );
+    const residualByProject = await computeResidualByProject(
+      ctx.tree,
+      ctx.projectGraph,
+      scope,
+      inferredByRoot,
+      nxJson
+    );
+
+    // residual = only the non-inferred deviation (mode was not inferred; config
+    // was deleted by the postTargetTransformer; cache/outputs match inferred).
+    for (const name of ['app1', 'app2']) {
+      const entry = residualByProject.get(name).get('build');
+      expect(entry.residual).toEqual({ options: { mode: 'production' } });
+
+      // baselineFinal = the migrated command-based effective config, i.e. the
+      // full inferred target with the residual layered on top.
+      const fullInferred = inferredByRoot.get(name).get('build');
+      expect(entry.baselineFinal).toEqual(
+        mergeTargetConfigurations(
+          structuredClone(entry.residual),
+          structuredClone(fullInferred)
+        )
+      );
+      // sanity: baselineFinal is the command-based effective config — the
+      // inferred run-commands base with the residual's `mode` layered on.
+      expect(entry.baselineFinal.executor).toBe('nx:run-commands');
+      expect(entry.baselineFinal.options).toEqual({
+        cwd: name,
+        command: 'acme-build',
+        mode: 'production',
+      });
+    }
+  });
+
+  it('residual equals what the full migration writes into project.json', async () => {
+    ctx = setupFixture('residual-write');
+    const plugin = createSyntheticPlugin();
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+
+    // Compute residual (Phase 2 only) from a snapshot before mutating the tree.
+    const scope = collectMigrationScope(
+      ctx.tree,
+      ctx.projectGraph,
+      syntheticMigrations(),
+      { targetName: 'build' },
+      undefined,
+      undefined
+    );
+    const nxJson = readNxJson(ctx.tree);
+    const { inferredByRoot } = await inferOncePerOptionSet(
+      ctx.tree,
+      plugin.pluginPath,
+      plugin.createNodes,
+      undefined,
+      nxJson,
+      scope
+    );
+    const residualByProject = await computeResidualByProject(
+      ctx.tree,
+      ctx.projectGraph,
+      scope,
+      inferredByRoot,
+      nxJson
+    );
+    const expectedResidual = structuredClone(
+      residualByProject.get('app1').get('build').residual
+    );
+
+    // Now run the real migration end to end and compare project.json.
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    const projectJson = readJson(ctx.tree, 'app1/project.json');
+    expect(projectJson.targets.build).toEqual(expectedResidual);
   });
 });
