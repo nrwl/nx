@@ -2,7 +2,9 @@ import {
   addProjectConfiguration,
   logger,
   readJson,
+  readNxJson,
   readProjectConfiguration,
+  updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -146,6 +148,64 @@ describe('convertFromEslintGenerator', () => {
       'no project has an explicit @nx/eslint:lint target'
     );
     warn.mockRestore();
+  });
+
+  it('reports the narrowed project, not the workspace, when --project has no ESLint target', async () => {
+    // lib-a does have one, so the workspace-wide claim would be false.
+    const tree = createTreeWithEslintProject();
+    addProjectConfiguration(tree, 'lib-b', {
+      root: 'libs/lib-b',
+      projectType: 'library',
+      targets: {},
+    });
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    await convertFromEslintGenerator(tree, {
+      project: 'lib-b',
+      skipPackageJson: true,
+      skipFormat: true,
+      addExplicitTargets: true,
+    });
+
+    const warnings = warn.mock.calls.flat().join('\n');
+    expect(warnings).not.toContain('no project has an explicit');
+    expect(warnings).toContain('lib-b');
+    warn.mockRestore();
+  });
+
+  it('registers the plugin by default', async () => {
+    const tree = createTreeWithEslintProject();
+
+    await convertFromEslintGenerator(tree, {
+      skipPackageJson: true,
+      skipFormat: true,
+      addExplicitTargets: true,
+    });
+
+    expect(readNxJson(tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/oxlint' })
+    );
+  });
+
+  it('honours useInferencePlugins: false instead of registering the plugin', async () => {
+    const tree = createTreeWithEslintProject();
+    updateNxJson(tree, { ...readNxJson(tree), useInferencePlugins: false });
+
+    await convertFromEslintGenerator(tree, {
+      skipPackageJson: true,
+      skipFormat: true,
+      addExplicitTargets: true,
+    });
+
+    const nxJson = readNxJson(tree);
+    expect(nxJson.plugins ?? []).not.toContainEqual(
+      expect.objectContaining({ plugin: '@nx/oxlint' })
+    );
+    // The explicit targets this generator adds are executor targets, so they
+    // are cached only if init took the targetDefaults branch.
+    expect(nxJson.targetDefaults['@nx/oxlint:lint']).toMatchObject({
+      cache: true,
+    });
   });
 
   it('throws when the requested project does not exist', async () => {

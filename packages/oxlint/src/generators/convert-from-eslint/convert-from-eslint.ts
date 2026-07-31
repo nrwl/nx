@@ -9,7 +9,7 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { initGenerator } from '../init/init.js';
+import { initGeneratorInternal } from '../init/init.js';
 
 export interface ConvertFromEslintSchema {
   project?: string;
@@ -36,9 +36,13 @@ export async function convertFromEslintGenerator(
   }
 
   const tasks: GeneratorCallback[] = [];
+  // `initGeneratorInternal`, not `initGenerator`: the latter defaults
+  // `addPlugin` to false, and forcing it to true here would register the plugin
+  // in a workspace that set `useInferencePlugins: false`. Letting init resolve
+  // it also means the targetDefaults branch runs when inference is off, which
+  // is what makes the explicit targets below cached.
   tasks.push(
-    await initGenerator(tree, {
-      addPlugin: true,
+    await initGeneratorInternal(tree, {
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       keepExistingVersions: options.keepExistingVersions,
@@ -79,8 +83,14 @@ export async function convertFromEslintGenerator(
       // Keyed on whether any project had an explicit ESLint target, not on how
       // many were converted: a re-run converts nothing and would otherwise
       // claim there was no ESLint target when there plainly is one.
+      //
+      // Scoped to `--project` when set, because `sawEslintTarget` only ever saw
+      // that one project — a workspace-wide claim would be false whenever
+      // another project has a target.
       logger.warn(
-        `Did not add any explicit Oxlint targets: no project has an explicit @nx/eslint:lint target. ` +
+        (options.project
+          ? `Did not add an explicit Oxlint target: "${options.project}" has no explicit @nx/eslint:lint target. `
+          : `Did not add any explicit Oxlint targets: no project has an explicit @nx/eslint:lint target. `) +
           `Projects that get their lint target from @nx/eslint/plugin will get an inferred Oxlint target instead, ` +
           `now that @nx/oxlint is registered.`
       );
