@@ -87,11 +87,9 @@ When `useInferencePlugins` is disabled, use the executor directly:
 
 ## Add Oxlint to an ESLint workspace
 
-```shell
-nx g @nx/oxlint:convert-from-eslint
-```
+Oxlint runs alongside ESLint, so the setup above is all you need and nothing about your ESLint config changes. ESLint keeps the `lint` target, so Oxlint registers as `oxlint` and every project with lintable files gets one.
 
-This adds an `oxlint` task to every project that has an explicit `@nx/eslint:lint` target and leaves the ESLint configuration in place. Projects whose lint target comes from `@nx/eslint/plugin` inference — the default — get an inferred `oxlint` target instead, and the generator says so when it converts nothing. It doesn't translate ESLint rules into Oxlint rules. To generate an `.oxlintrc.json` from an existing ESLint config, run [`@oxlint/migrate`](https://github.com/oxc-project/oxlint-migrate) separately. To stop ESLint from re-reporting what Oxlint already covers, add [`eslint-plugin-oxlint`](https://www.npmjs.com/package/eslint-plugin-oxlint) to the ESLint config.
+Nx doesn't translate ESLint rules into Oxlint rules. To generate an `.oxlintrc.json` from your existing ESLint config, run [`@oxlint/migrate`](https://github.com/oxc-project/oxlint-migrate). To stop ESLint from re-reporting what Oxlint already covers, add [`eslint-plugin-oxlint`](https://www.npmjs.com/package/eslint-plugin-oxlint) to the ESLint config.
 
 ## Type-aware linting
 

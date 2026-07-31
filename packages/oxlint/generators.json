@@ -13,11 +13,6 @@
       "factory": "./dist/src/generators/lint-project/lint-project#lintProjectGeneratorInternal",
       "schema": "./dist/src/generators/lint-project/schema.json",
       "description": "Add Oxlint to an existing project."
-    },
-    "convert-from-eslint": {
-      "factory": "./dist/src/generators/convert-from-eslint/convert-from-eslint#convertFromEslintGenerator",
-      "schema": "./dist/src/generators/convert-from-eslint/schema.json",
-      "description": "Register `@nx/oxlint` and add Oxlint targets alongside the existing ESLint setup."
     }
   }
 }
