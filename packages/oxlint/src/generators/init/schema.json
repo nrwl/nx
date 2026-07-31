@@ -24,10 +24,6 @@
       "type": "boolean",
       "description": "Skip formatting files.",
       "default": false
-    },
-    "addPlugin": {
-      "type": "boolean",
-      "description": "Add the `@nx/oxlint` inference plugin to `nx.json`."
     }
   },
   "additionalProperties": false

@@ -1,135 +1,93 @@
-import { addProjectConfiguration, readProjectConfiguration } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import {
+  addProjectConfiguration,
+  readJson,
+  readNxJson,
+  readProjectConfiguration,
+  Tree,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintProjectGeneratorInternal } from './lint-project.js';
 
 describe('lintProjectGeneratorInternal', () => {
-  it('adds an explicit target when the plugin is disabled', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'lib-a', {
       root: 'libs/lib-a',
       sourceRoot: 'libs/lib-a/src',
       projectType: 'library',
       targets: {},
     });
+  });
 
+  it('registers the plugin', async () => {
     await lintProjectGeneratorInternal(tree, {
       project: 'lib-a',
-      addPlugin: false,
       skipPackageJson: true,
       skipFormat: true,
     });
 
-    expect(readProjectConfiguration(tree, 'lib-a').targets.lint).toMatchObject({
-      executor: '@nx/oxlint:lint',
-    });
+    const plugins = readNxJson(tree).plugins?.map((p) =>
+      typeof p === 'string' ? p : p.plugin
+    );
+    expect(plugins).toContain('@nx/oxlint');
   });
 
-  it('steps aside to `oxlint` when another linter owns `lint`', async () => {
-    const tree = createTreeWithEmptyWorkspace();
-    addProjectConfiguration(tree, 'lib-a', {
-      root: 'libs/lib-a',
-      sourceRoot: 'libs/lib-a/src',
-      projectType: 'library',
-      targets: {
-        lint: { executor: '@nx/eslint:lint' },
-      },
-    });
-
+  // The inference-only invariant. Writing a target here would produce a second
+  // way to run Oxlint that has to be kept in sync with the inferred one.
+  it('writes no target', async () => {
     await lintProjectGeneratorInternal(tree, {
       project: 'lib-a',
-      addPlugin: false,
       skipPackageJson: true,
       skipFormat: true,
     });
 
-    const project = readProjectConfiguration(tree, 'lib-a');
-    expect(project.targets.lint.executor).toEqual('@nx/eslint:lint');
-    expect(project.targets.oxlint).toMatchObject({
-      executor: '@nx/oxlint:lint',
+    expect(readProjectConfiguration(tree, 'lib-a').targets).toEqual({});
+  });
+
+  it("enables the project's plugins in its own config", async () => {
+    await lintProjectGeneratorInternal(tree, {
+      project: 'lib-a',
+      plugins: ['react', 'jsx-a11y'],
+      skipPackageJson: true,
+      skipFormat: true,
+    });
+
+    expect(readJson(tree, 'libs/lib-a/.oxlintrc.json')).toMatchObject({
+      extends: ['../../.oxlintrc.json'],
+      plugins: ['react', 'jsx-a11y'],
     });
   });
 
-  it('does not add a second target when run twice', async () => {
-    const tree = createTreeWithEmptyWorkspace();
-    addProjectConfiguration(tree, 'lib-a', {
-      root: 'libs/lib-a',
-      sourceRoot: 'libs/lib-a/src',
-      projectType: 'library',
-      targets: {},
+  it('writes no project config when no plugins are requested', async () => {
+    await lintProjectGeneratorInternal(tree, {
+      project: 'lib-a',
+      skipPackageJson: true,
+      skipFormat: true,
     });
 
+    expect(tree.exists('libs/lib-a/.oxlintrc.json')).toBe(false);
+  });
+
+  it('is idempotent', async () => {
     const options = {
       project: 'lib-a',
-      addPlugin: false,
+      plugins: ['react'],
       skipPackageJson: true,
       skipFormat: true,
     };
     await lintProjectGeneratorInternal(tree, options);
     await lintProjectGeneratorInternal(tree, options);
 
-    const { targets } = readProjectConfiguration(tree, 'lib-a');
-    const oxlintTargets = Object.entries(targets).filter(
-      ([, target]) => target.executor === '@nx/oxlint:lint'
+    const plugins = readNxJson(tree).plugins?.filter((p) =>
+      typeof p === 'string' ? p === '@nx/oxlint' : p.plugin === '@nx/oxlint'
     );
-    expect(oxlintTargets.map(([name]) => name)).toEqual(['lint']);
-  });
-
-  it('falls through to a further name when lint and oxlint are both taken', async () => {
-    const tree = createTreeWithEmptyWorkspace();
-    addProjectConfiguration(tree, 'lib-a', {
-      root: 'libs/lib-a',
-      sourceRoot: 'libs/lib-a/src',
-      projectType: 'library',
-      targets: {
-        lint: { executor: '@nx/eslint:lint' },
-        oxlint: { executor: 'nx:run-commands' },
-      },
-    });
-
-    await lintProjectGeneratorInternal(tree, {
-      project: 'lib-a',
-      addPlugin: false,
-      skipPackageJson: true,
-      skipFormat: true,
-    });
-
-    const { targets } = readProjectConfiguration(tree, 'lib-a');
-    // The user asked for an Oxlint target; declining to add one at all would be
-    // a silent no-op reported as success.
-    const oxlintTargets = Object.entries(targets)
-      .filter(([, t]) => t.executor === '@nx/oxlint:lint')
-      .map(([name]) => name);
-    expect(oxlintTargets).toEqual(['oxlint-lint']);
-    expect(targets.lint.executor).toEqual('@nx/eslint:lint');
-    expect(targets.oxlint.executor).toEqual('nx:run-commands');
-  });
-
-  it('leaves a hand-tuned Oxlint target alone', async () => {
-    const tree = createTreeWithEmptyWorkspace();
-    addProjectConfiguration(tree, 'lib-a', {
-      root: 'libs/lib-a',
-      sourceRoot: 'libs/lib-a/src',
-      projectType: 'library',
-      targets: {
-        lint: {
-          executor: '@nx/oxlint:lint',
-          options: { lintFilePatterns: ['libs/lib-a/src'], typeAware: true },
-        },
-      },
-    });
-
-    await lintProjectGeneratorInternal(tree, {
-      project: 'lib-a',
-      addPlugin: false,
-      skipPackageJson: true,
-      skipFormat: true,
-    });
-
-    const { targets } = readProjectConfiguration(tree, 'lib-a');
-    expect(targets.lint.options).toEqual({
-      lintFilePatterns: ['libs/lib-a/src'],
-      typeAware: true,
-    });
-    expect(targets.oxlint).toBeUndefined();
+    expect(plugins).toHaveLength(1);
+    expect(readJson(tree, 'libs/lib-a/.oxlintrc.json').plugins).toEqual([
+      'react',
+    ]);
   });
 });

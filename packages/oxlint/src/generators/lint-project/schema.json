@@ -28,15 +28,6 @@
       "description": "Keep existing dependency versions when possible.",
       "default": false
     },
-    "addPlugin": {
-      "type": "boolean",
-      "description": "Add the `@nx/oxlint` inference plugin to `nx.json`."
-    },
-    "addExplicitTargets": {
-      "type": "boolean",
-      "description": "Always add an explicit `@nx/oxlint:lint` target instead of relying on inferred tasks.",
-      "default": false
-    },
     "plugins": {
       "type": "array",
       "items": {
@@ -46,6 +37,8 @@
       "default": []
     }
   },
-  "required": ["project"],
+  "required": [
+    "project"
+  ],
   "additionalProperties": false
 }

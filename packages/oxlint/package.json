@@ -68,7 +68,6 @@
     "migrations": "./migrations.json",
     "supportsOptionalMigrations": true
   },
-  "executors": "./executors.json",
   "generators": "./generators.json",
   "dependencies": {
     "@nx/devkit": "workspace:*",

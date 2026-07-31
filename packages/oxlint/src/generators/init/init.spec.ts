@@ -1,4 +1,11 @@
-import { readJson, readNxJson, writeJson } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import {
+  readJson,
+  readNxJson,
+  updateNxJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { initGeneratorInternal } from './init.js';
 
@@ -7,7 +14,6 @@ describe('initGeneratorInternal', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await initGeneratorInternal(tree, {
-      addPlugin: false,
       skipPackageJson: true,
       skipFormat: true,
     });
@@ -29,7 +35,6 @@ describe('initGeneratorInternal', () => {
     });
 
     await initGeneratorInternal(tree, {
-      addPlugin: false,
       skipPackageJson: true,
       skipFormat: true,
     });
@@ -44,7 +49,6 @@ describe('initGeneratorInternal', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await initGeneratorInternal(tree, {
-      addPlugin: false,
       skipPackageJson: true,
       skipFormat: true,
     });
@@ -52,19 +56,23 @@ describe('initGeneratorInternal', () => {
     expect(tree.exists('.vscode/extensions.json')).toBe(false);
   });
 
-  it('sets targetDefaults when the plugin is disabled', async () => {
+  // Registered even though this workspace opted out of inference plugins:
+  // `@nx/oxlint` has no other way to produce a task, so honouring the opt-out
+  // would mean doing nothing at all.
+  it('registers the plugin even when useInferencePlugins is false', async () => {
     const tree = createTreeWithEmptyWorkspace();
+    updateNxJson(tree, { ...readNxJson(tree), useInferencePlugins: false });
 
     await initGeneratorInternal(tree, {
-      addPlugin: false,
       skipPackageJson: true,
       skipFormat: true,
     });
 
-    const nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults['@nx/oxlint:lint']).toMatchObject({
-      cache: true,
-    });
+    const plugins = readNxJson(tree).plugins?.map((p) =>
+      typeof p === 'string' ? p : p.plugin
+    );
+    expect(plugins).toContain('@nx/oxlint');
+    expect(readNxJson(tree).targetDefaults?.['@nx/oxlint:lint']).toBeUndefined();
   });
 
   it.each([
@@ -77,7 +85,6 @@ describe('initGeneratorInternal', () => {
     tree.write(configFile, '{}');
 
     await initGeneratorInternal(tree, {
-      addPlugin: false,
       skipPackageJson: true,
       skipFormat: true,
     });

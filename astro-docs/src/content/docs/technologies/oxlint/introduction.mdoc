@@ -67,20 +67,32 @@ Oxlint is designed to run alongside ESLint during a migration, so the plugin cla
 
 A workspace with no other linter gets `lint`. A workspace where ESLint already owns `lint` gets `oxlint`.
 
-## Explicit tasks
+## Customizing the task
 
-When `useInferencePlugins` is disabled, use the executor directly:
+`@nx/oxlint` has no executor. Every Oxlint task comes from inference, so the plugin is registered even when `useInferencePlugins` is disabled.
+
+To change how one project is linted, override the inferred target in its `project.json`:
 
 ```json
 {
   "targets": {
     "lint": {
-      "executor": "@nx/oxlint:lint",
-      "options": {
-        "lintFilePatterns": ["{projectRoot}"]
-      }
+      "command": "oxlint --type-aware ."
     }
   }
+}
+```
+
+To change it everywhere, pass options to the plugin in `nx.json`. `targetName` overrides the automatic choice described above, and `extensions` controls which files count as lintable:
+
+```json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/oxlint",
+      "options": { "targetName": "oxlint", "extensions": ["ts", "tsx"] }
+    }
+  ]
 }
 ```
 
@@ -94,7 +106,7 @@ Nx doesn't translate ESLint rules into Oxlint rules. To generate an `.oxlintrc.j
 
 The Oxlint type-aware rules need the `oxlint-tsgolint` package, which bundles its own TypeScript compiler. Your workspace's TypeScript version doesn't matter.
 
-The `typeAware` option lives on the `@nx/oxlint:lint` executor, so it needs an explicit task rather than an inferred one. Generate one with `nx g @nx/oxlint:lint-project --addExplicitTargets`, or pass `--type-aware` through to the command on an inferred task.
+Turn them on for a single run with `nx lint my-app --type-aware`, which Nx forwards to the underlying command. To make it permanent, override the target as shown in [Customizing the task](#customizing-the-task).
 
 ## Module boundaries
 
