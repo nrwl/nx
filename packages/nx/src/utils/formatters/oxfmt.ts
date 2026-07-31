@@ -659,7 +659,17 @@ function overrideOptionsForFile(
  * There is no JavaScript branch: oxfmt does not discover `oxfmt.config.js`.
  *
  * Unlike the CLI, only the workspace-root config is read - nested configs
- * (which the CLI discovers unless given `--disable-nested-config`) are not.
+ * (which the CLI discovers unless given `--disable-nested-config`) are not. A
+ * nested config that differs from the root therefore formats one way here and
+ * another under `nx format:write`, so generated files can fail the workspace's
+ * own `format:check` until that runs.
+ *
+ * All of this exists because oxfmt's npm package ships the formatter without a
+ * resolver: `format()` takes options and discovers nothing, so config lookup,
+ * `.editorconfig` and ignore handling are reimplemented here. Prettier's path
+ * needs none of it because `prettier.resolveConfig` does the same job per file.
+ * Tracked upstream at https://github.com/oxc-project/oxc/issues/19922 - if that
+ * lands, most of this collapses into one call and nested configs come with it.
  */
 async function resolveOxfmtConfig(
   workspaceRoot: string,
