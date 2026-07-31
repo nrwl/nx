@@ -995,6 +995,80 @@ describe('executeMigrations', () => {
       ]);
     });
 
+    // `agenticRun` requires `kind: 'enabled'` and the outer-agent hand-off
+    // requires `kind: 'inside-agent'`, so these two pin the asymmetry that
+    // falls out of that: a hybrid's prompt is owed in every mode and waiving
+    // it moots the hand-off, while a generator-only migration has no
+    // validation step to waive under `inside-agent` and keeps the hand-off.
+    const runInsideAgent = (m: Record<string, unknown>) =>
+      executeMigrations(
+        tmpRoot,
+        [m] as Parameters<typeof executeMigrations>[1],
+        false,
+        true,
+        'chore(repo): ',
+        true,
+        { kind: 'inside-agent' },
+        false,
+        /* shouldRunValidation: */ true
+      );
+
+    it('keeps the outer-agent hand-off for a waived generator-only migration under inside-agent', async () => {
+      const m = writeMigration(
+        'gen-waives-inside-agent',
+        `tree.write('validated.txt', 'x'); return { skipAgentic: true, agentContext: ['hint for the outer agent'] };`
+      );
+      const stdoutSpy = jest
+        .spyOn(process.stdout, 'write')
+        .mockImplementation(() => true);
+      const verboseSpy = jest
+        .spyOn(logger, 'verbose')
+        .mockImplementation(() => undefined);
+
+      let written: string;
+      let result: Awaited<ReturnType<typeof executeMigrations>>;
+      try {
+        result = await runInsideAgent(m);
+        written = stdoutSpy.mock.calls.map((args) => String(args[0])).join('');
+      } finally {
+        stdoutSpy.mockRestore();
+      }
+
+      expect(written).toContain(
+        '<agent_context migration="exec-plugin:gen-waives-inside-agent">'
+      );
+      expect(written).toContain('hint for the outer agent');
+      // No validation step exists under `inside-agent`, so nothing was waived
+      // and neither the user-facing line nor the author-facing note applies.
+      expect(result.waivedAgenticStepsCount).toBe(0);
+      expect(logged()).not.toContain('Validation skipped');
+      expect(verboseSpy).not.toHaveBeenCalled();
+      verboseSpy.mockRestore();
+    });
+
+    it('drops the outer-agent hand-off for a waived hybrid under inside-agent', async () => {
+      const m = hybrid(
+        'hybrid-waives-inside-agent',
+        `tree.write('waived.txt', 'x'); return { skipAgentic: true, agentContext: ['hint for the outer agent'] };`
+      );
+      const stdoutSpy = jest
+        .spyOn(process.stdout, 'write')
+        .mockImplementation(() => true);
+
+      let written: string;
+      let result: Awaited<ReturnType<typeof executeMigrations>>;
+      try {
+        result = await runInsideAgent(m);
+        written = stdoutSpy.mock.calls.map((args) => String(args[0])).join('');
+      } finally {
+        stdoutSpy.mockRestore();
+      }
+
+      expect(written).not.toContain('<agent_context');
+      expect(result.waivedAgenticStepsCount).toBe(1);
+      expect(result.skippedPrompts).toEqual([]);
+    });
+
     it('runs the validation step for a generator-only migration that does not waive it', async () => {
       const m = writeMigration(
         'gen-keeps',

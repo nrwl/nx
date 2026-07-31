@@ -2629,12 +2629,10 @@ export async function executeMigrations(
         ).printDroppedAgentContextForOuterAgent
       : undefined;
 
-  // `agentContext` is scoped to the AI step it feeds, so a migration that
-  // waives its own step contradicts itself by returning any. Waiving also
-  // suppresses `printDroppedAgentContext`, since that hand-off exists to help
-  // an outer agent apply a prompt this migration just declared moot. The note
-  // is for the migration's author, not whoever runs `nx migrate`, so it stays
-  // behind `--verbose`.
+  // Both call sites fire only where an AI step was genuinely waived. That
+  // invariant is what makes dropping the `inside-agent` stdout hand-off
+  // correct: the prompt it would hand an outer agent is the one this migration
+  // just declared moot. Author-facing, so it stays behind `--verbose`.
   const noteWaivedAgentContext = (
     m: PlannedMigration,
     agentContext: string[]
@@ -2922,9 +2920,9 @@ export async function executeMigrations(
           resolvedCollection
         );
         migrationEmittedNextSteps.push(...nextSteps);
-        // Whether a validation step was on the table at all, which is what
-        // the waived case reports on: opting out of a step that was never
-        // going to run is not something to announce.
+        // Whether a validation step was on the table at all. `skipAgentic`
+        // waives nothing when it wasn't, so the whole waived path hangs off
+        // this, not just the log line.
         const validationApplies = !!validationRun && changes.length > 0;
         const canRunValidation = validationApplies && !skipAgentic;
 
@@ -2961,18 +2959,13 @@ export async function executeMigrations(
           );
           outcome = 'applied';
         } else {
-          if (skipAgentic) {
-            // Report it only when validation would otherwise have run.
-            // Otherwise there was no AI step to waive and announcing one
-            // would invent a capability the run never had.
-            if (validationApplies) {
-              logger.info(
-                pc.dim(
-                  '↷ Validation skipped. The migration reported its changes need no AI review.'
-                )
-              );
-              waivedAgenticStep = true;
-            }
+          if (skipAgentic && validationApplies) {
+            logger.info(
+              pc.dim(
+                '↷ Validation skipped. The migration reported its changes need no AI review.'
+              )
+            );
+            waivedAgenticStep = true;
             noteWaivedAgentContext(m, agentContext);
           } else if (printDroppedAgentContext && agentContext.length > 0) {
             // Inner validation step didn't run. Surface `agentContext` under

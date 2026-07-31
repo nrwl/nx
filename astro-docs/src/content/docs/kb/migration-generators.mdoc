@@ -123,8 +123,8 @@ and leaving it out keeps the behavior you have today.
 
 For a hybrid entry it also drops the prompt from the end-of-run next steps. That
 matters when the agentic flow is off, since Nx would otherwise tell the user to
-apply a prompt with no work left in it. Don't return `agentContext` alongside
-it. The two contradict each other, and Nx drops the context.
+apply a prompt with no work left in it. Don't return `agentContext` alongside it.
+The two contradict each other, and Nx drops the context feeding the step it waived.
 
 ## Update package.json dependencies
 
