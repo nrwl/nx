@@ -71,10 +71,10 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     output.setCliName(cliName ?? 'NX');
   }
 
-  // Skip formatting during generation — we'll run `nx format` once at the end
-  // after all files are created and dependencies are installed on disk. A user
-  // who set this deliberately still gets no formatting at all, so remember
-  // their value rather than silently taking it over.
+  // Skip formatting during generation - the single pass at the end covers
+  // everything once dependencies are on disk. A user who set this deliberately
+  // still gets no formatting at all, so remember their value rather than
+  // silently taking it over.
   const skipFormatRequested = process.env.NX_SKIP_FORMAT === 'true';
   process.env.NX_SKIP_FORMAT = 'true';
 
@@ -251,13 +251,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     await setupCI(directory, ciProvider, packageManager);
   }
 
-  // Format all files now that everything is on disk (dependencies installed,
-  // config files written). This replaces per-generator formatting which can't
-  // work reliably because the formatter binary may not be installed yet.
-  //
-  // This is the only formatting pass a new workspace gets, so a failure here
-  // leaves the workspace failing its own `nx format:check`. It stays
-  // non-fatal, but it does not stay silent.
+  // Format once now that dependencies are on disk. `@nx/workspace:new` formats
+  // its scaffolding before the install task, so no formatter is resolvable for
+  // that pass and it never did anything; the preset's own formatting runs after
+  // the install and is suppressed above. This is the only pass a new workspace
+  // gets - it is what makes one whose templates were authored for a different
+  // formatter pass its own `format:check` - so it stays non-fatal, but it does
+  // not stay silent.
   if (skipFormatRequested) {
     process.env.NX_SKIP_FORMAT = 'true';
   } else {
