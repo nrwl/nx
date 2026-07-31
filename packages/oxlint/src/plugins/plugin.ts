@@ -274,7 +274,10 @@ function splitConfigFiles(
   // `name`, and promoting one to a project root fails the whole graph with
   // ProjectsWithNoNameError.
   //
-  // Applied unconditionally, matching Nx core's package-json plugin. There is no
+  // Applied unconditionally, matching core's default path. (Core skips the
+  // matcher when `NX_INFER_ALL_PACKAGE_JSONS=true` and no root package.json is
+  // in play; that escape hatch is deliberately not mirrored, and the failure
+  // direction is a missing target.) There is no
   // empty-globs escape hatch on purpose: core appends the root package.json to
   // the globs only when it carries an `nx` key (which `nx init` writes), so a
   // root that is genuinely a project already comes through this matcher. Empty

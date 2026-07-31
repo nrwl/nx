@@ -11,9 +11,10 @@
 //
 // Assigned to a `const` rather than `export { default as … } from`: this package
 // is CJS and `@nx/oxlint` is ESM, and under `esModuleInterop` that form emits a
-// getter whose body calls `__importDefault(…)`. `cjs-module-lexer` before Node
-// 24.14 cannot follow a call there, so the name never reaches the ESM facade.
-// `internal.spec.ts` pins the shape.
+// getter whose body calls `__importDefault(…)`. Node's CJS named-export analyzer
+// only follows plain assignments and bare-member getters until 24.14, where the
+// analyzer changed from cjs-module-lexer to merve — so below that the name never
+// reaches the ESM facade. `internal.spec.ts` pins the shape.
 import enforceModuleBoundariesRule from './src/rules/enforce-module-boundaries';
 
 export const enforceModuleBoundaries = enforceModuleBoundariesRule;

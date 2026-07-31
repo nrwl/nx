@@ -4,17 +4,21 @@ import * as ts from 'typescript';
 
 /**
  * This package is CJS; `@nx/oxlint` is ESM and imports from `./internal` by
- * name. Node builds the ESM facade for a CJS module with `cjs-module-lexer`,
- * and the versions vendored before Node 24.14 cannot follow an export whose
- * getter body *calls* something — which is exactly what `esModuleInterop` emits
- * for `export { default as x } from '…'`. The import then throws `Named export
- * not found`. An e2e test cannot catch it: CI pins a Node where the broken
- * shape happens to work. The emit shape can.
+ * name. Node's CJS named-export analyzer cannot follow an export whose getter
+ * body *calls* something — which is exactly what `esModuleInterop` emits for
+ * `export { default as x } from '…'` — so the import throws `Named export not
+ * found`. Fixed in Node 24.14, where the analyzer changed from cjs-module-lexer
+ * to merve; Node 20 and 22 vendor the current cjs-module-lexer and still fail.
+ *
+ * Checking this anywhere else would be too late: PR-gating CI runs Node 26,
+ * where the broken shape works, and no e2e exercises the bridge's ESM import at
+ * all. Only the nightly Node 22 matrix would, and only after merge.
  */
 describe('internal entry emit shape', () => {
-  // Mirrors tsconfig.base.json + tsconfig.lib.json, which are what decide the
-  // shape. `esModuleInterop` is the load-bearing one; `importHelpers` only
-  // moves the helper into tslib.
+  // Pins the two options that decide the shape rather than the whole tsconfig:
+  // `esModuleInterop` is the load-bearing one, `importHelpers` only moves the
+  // helper into tslib. (The real build uses `nodenext`/`ES2021`; emit for this
+  // construct is identical.)
   const emitted = () =>
     ts.transpileModule(readFileSync(join(__dirname, 'internal.ts'), 'utf-8'), {
       compilerOptions: {
@@ -40,7 +44,7 @@ describe('internal entry emit shape', () => {
     expect(exposures()).not.toHaveLength(0);
   });
 
-  it('exposes each export in a shape cjs-module-lexer can follow', () => {
+  it("exposes each export in a shape Node's CJS analyzer can follow", () => {
     // A plain `exports.x = y` assignment and a getter returning a bare member
     // expression are both followed; a getter that calls into a helper is not.
     // Verified against Node 20 and 22, where the calling shape fails to import
