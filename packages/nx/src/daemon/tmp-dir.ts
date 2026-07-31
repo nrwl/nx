@@ -15,7 +15,11 @@ import { createHash } from 'crypto';
 // Only used to *reject* it as a socket location; see InvalidSocketDirConfigured.
 import { tmpdir as systemTmpDir } from 'tmp';
 import { NATIVE_CACHE_ROOT } from '../native/native-file-cache-location';
-import { NX_TMP_DIR, NX_USER_TMP_DIR } from '../utils/nx-tmp-dir';
+import {
+  NX_HOME_TMP_DIR,
+  NX_TMP_DIR,
+  NX_USER_TMP_DIR,
+} from '../utils/nx-tmp-dir';
 import { workspaceRoot } from '../utils/workspace-root';
 
 /**
@@ -96,6 +100,64 @@ function defaultSocketRoot(): string {
     : join(NX_USER_TMP_DIR, 'sockets');
 }
 
+function homeSocketRoot(): string {
+  return join(NX_HOME_TMP_DIR, 'sockets');
+}
+
+/**
+ * Socket roots to try, best first. Each entry establishes its own containment
+ * before it can be used; the first that succeeds wins, and the workspace data
+ * dir is the last resort when none does.
+ *
+ * `/tmp` first because it is the shortest path — the socket path budget is 95
+ * characters — and is cleared on reboot. Home second because it needs no
+ * administrator: a peer who created `/tmp/.nx` first locks everyone else out of
+ * the shared container, and before this chain that dropped straight to the
+ * workspace, whose path grows with checkout depth.
+ *
+ * Windows has one tier. Named pipes are not filesystem objects, so there is no
+ * containment to establish and nothing a second location would buy.
+ */
+function socketRootTiers(): { root: string; establish: () => boolean }[] {
+  if (process.platform === 'win32') {
+    return [{ root: systemTmpDir, establish: () => true }];
+  }
+  return [
+    {
+      root: defaultSocketRoot(),
+      establish: () =>
+        ensureSafeSharedRoot(NX_TMP_DIR) &&
+        // Arrow rather than a bare reference: `every` passes the index too, and
+        // these guards take only a path.
+        [NX_USER_TMP_DIR, defaultSocketRoot()].every((d) =>
+          ensureOwnedPrivateDir(d)
+        ),
+    },
+    {
+      root: homeSocketRoot(),
+      // No shared level to verify: the home directory is the user's own, so
+      // there is no container another user could have created first.
+      establish: () =>
+        [NX_HOME_TMP_DIR, homeSocketRoot()].every((d) =>
+          ensureOwnedPrivateDir(d)
+        ),
+    },
+  ];
+}
+
+/**
+ * The first socket root whose containment could be established, or `undefined`
+ * when none could and the caller should fall back to the workspace.
+ */
+function establishSocketRoot(): string | undefined {
+  for (const tier of socketRootTiers()) {
+    if (tier.establish()) {
+      return tier.root;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Directories that may not *be* the socket directory, and why. The system temp
  * directory and the stable container are reachable by other users; the rest are
@@ -108,12 +170,22 @@ function dirsUnusableAsSocketDir(): { dir: string; shared: boolean }[] {
     { dir: NX_TMP_DIR, shared: true },
     { dir: NX_USER_TMP_DIR, shared: false },
     { dir: defaultSocketRoot(), shared: false },
+    { dir: NX_HOME_TMP_DIR, shared: false },
+    { dir: homeSocketRoot(), shared: false },
     { dir: NATIVE_CACHE_ROOT, shared: false },
   ];
 }
 
+/**
+ * The root sockets will actually live under. Establishes containment as a side
+ * effect, since which tier wins is only known by trying them.
+ */
 export function getNxSocketRoot(): string {
-  return configuredSocketDir() ?? defaultSocketRoot();
+  return (
+    configuredSocketDir() ??
+    establishSocketRoot() ??
+    DAEMON_DIR_FOR_CURRENT_WORKSPACE
+  );
 }
 
 /**
@@ -131,33 +203,56 @@ function configuredSocketDir(): string | undefined {
   return dir ? resolve(dir) : undefined;
 }
 
-function socketDirName() {
+function socketDirName(root: string) {
   const hasher = createHash('sha256');
   hasher.update(workspaceRoot.toLowerCase());
   hasher.update(String(process.pid));
   const unique = hasher.digest('hex').substring(0, 20);
-  return join(getNxSocketRoot(), unique);
+  return join(root, unique);
 }
 
-function pluginSocketDirName() {
+function pluginSocketDirName(root: string) {
   // Short so the socket file name still fits under assertValidSocketPath's limit.
   const hash = createHash('sha256')
     .update(workspaceRoot.toLowerCase())
     .digest('hex')
     .substring(0, 8);
-  return join(getNxSocketRoot(), hash);
+  return join(root, hash);
 }
 
 /**
- * A socket dir under the common root, falling back to the workspace data dir.
- * Either way it is locked to the current user.
+ * A socket dir under the first usable root, falling back to the workspace data
+ * dir when no root can be established. Either way it is locked to the current
+ * user.
  */
-export function getSocketDir() {
+function socketDirUnderFirstUsableRoot(
+  leafFor: (root: string) => string
+): string {
   const configuredDir = configuredSocketDir();
-  return createOwnerOnlySocketDir(
-    configuredDir ?? socketDirName(),
-    configuredDir === undefined
-  );
+  if (configuredDir !== undefined) {
+    return createOwnerOnlySocketDir(configuredDir, false);
+  }
+
+  const root = establishSocketRoot();
+  if (root === undefined) {
+    return fallBackToWorkspaceSocketDir(
+      new Error(
+        [
+          `Nx could not establish any of its default socket directories (${socketRootTiers()
+            .map((t) => t.root)
+            .join(', ')}).`,
+          sharedRootRemedy(NX_TMP_DIR),
+        ]
+          .filter(Boolean)
+          .join(' ')
+      )
+    );
+  }
+  return createOwnerOnlySocketDir(leafFor(root), true);
+}
+
+export function getSocketDir() {
+  return socketDirUnderFirstUsableRoot(socketDirName);
 }
 
 /**
@@ -165,11 +260,7 @@ export function getSocketDir() {
  * sitting in the shared system temp dir, which cannot be locked down.
  */
 export function getPluginSocketDir() {
-  const configuredDir = configuredSocketDir();
-  return createOwnerOnlySocketDir(
-    configuredDir ?? pluginSocketDirName(),
-    configuredDir === undefined
-  );
+  return socketDirUnderFirstUsableRoot(pluginSocketDirName);
 }
 
 let socketDirFallbackCause: unknown;
@@ -200,31 +291,9 @@ function createOwnerOnlySocketDir(
   }
 
   try {
-    if (usingDefaultRoot) {
-      if (process.platform !== 'win32') {
-        // `/tmp/.nx` is the only shared level. A root-owned sticky instance lets
-        // every user create their uid directory directly beneath it; if the first
-        // user created it instead, it remains safe for that user and later users
-        // refuse it rather than trusting a peer-owned parent.
-        if (!ensureSafeSharedRoot(NX_TMP_DIR)) {
-          throw new Error(
-            [
-              `The Nx temp root ${NX_TMP_DIR} is not a directory Nx can safely keep a private directory under.`,
-              sharedRootRemedy(NX_TMP_DIR),
-            ]
-              .filter(Boolean)
-              .join(' ')
-          );
-        }
-        for (const root of [NX_USER_TMP_DIR, defaultSocketRoot()]) {
-          if (!ensureOwnedPrivateDir(root)) {
-            throw new Error(
-              `Nx could not establish ${root} as a private directory owned by the current user.`
-            );
-          }
-        }
-      }
-    } else {
+    // A default root has already had its containment established by the tier it
+    // came from; a configured one is the user's to create.
+    if (!usingDefaultRoot) {
       mkdirSync(dirname(dir), { recursive: true });
     }
     // Separately from its parents: mkdirSync does not throw on a pre-planted
@@ -238,41 +307,54 @@ function createOwnerOnlySocketDir(
   } catch (e) {
     // Recoverable: fall back to the owner-controlled workspace data dir.
     if (usingDefaultRoot) {
-      socketDirFallbackCause = e;
-      // Required lazily, and only on a path that is already failing. A static
-      // import closes a cycle — utils/logger reads `serverLogger` from
-      // daemon/logger while it is still evaluating, and daemon/logger imports
-      // this module — which throws whenever `isOnDaemon()` is true as this
-      // module loads. Production escapes it only because server.ts sets
-      // `global.NX_DAEMON` after its imports, so daemon boot rests on import
-      // order. Keeps this module to Node builtins, as owned-private-dir.ts and
-      // nx-tmp-dir.ts deliberately are.
-      const { logger } =
-        require('../utils/logger') as typeof import('../utils/logger');
-      logger.verbose(
-        `Nx could not use the default socket directory ${dir}. Falling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
-        e
-      );
-    } else {
-      // Never swap out a configured directory silently — the substitute is longer and
-      // would resurface as assertValidSocketPath complaining about a path the user
-      // never set.
-      console.warn(
-        `Nx could not use the configured socket directory ${dir}: ${
-          e instanceof Error ? e.message : e
-        }\nFalling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`
-      );
+      return fallBackToWorkspaceSocketDir(e, dir);
     }
-    mkdirSync(dirname(DAEMON_DIR_FOR_CURRENT_WORKSPACE), { recursive: true });
-    // The fallback is only safe if it passes the same checks the primary did.
-    if (!ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE)) {
-      throw new Error(
-        `Nx could not establish the fallback socket directory ${DAEMON_DIR_FOR_CURRENT_WORKSPACE} as a private directory owned by the current user.`,
-        { cause: e }
-      );
-    }
-    return DAEMON_DIR_FOR_CURRENT_WORKSPACE;
+    // Never swap out a configured directory silently — the substitute is longer and
+    // would resurface as assertValidSocketPath complaining about a path the user
+    // never set.
+    console.warn(
+      `Nx could not use the configured socket directory ${dir}: ${
+        e instanceof Error ? e.message : e
+      }\nFalling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`
+    );
+    return establishWorkspaceSocketDir(e);
   }
+}
+
+/**
+ * The last resort once no default root could be used. Retains the cause so
+ * `assertValidSocketPath` can explain a length failure the user did not cause.
+ */
+function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
+  socketDirFallbackCause = cause;
+  // Required lazily, and only on a path that is already failing. A static
+  // import closes a cycle — utils/logger reads `serverLogger` from
+  // daemon/logger while it is still evaluating, and daemon/logger imports this
+  // module — which throws whenever `isOnDaemon()` is true as this module loads.
+  // Production escapes it only because server.ts sets `global.NX_DAEMON` after
+  // its imports, so daemon boot rests on import order. Keeps this module to Node
+  // builtins, as owned-private-dir.ts and nx-tmp-dir.ts deliberately are.
+  const { logger } =
+    require('../utils/logger') as typeof import('../utils/logger');
+  logger.verbose(
+    `Nx could not use the default socket ${
+      attempted ? `directory ${attempted}` : 'directories'
+    }. Falling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
+    cause
+  );
+  return establishWorkspaceSocketDir(cause);
+}
+
+function establishWorkspaceSocketDir(cause: unknown): string {
+  mkdirSync(dirname(DAEMON_DIR_FOR_CURRENT_WORKSPACE), { recursive: true });
+  // The fallback is only safe if it passes the same checks the primary did.
+  if (!ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE)) {
+    throw new Error(
+      `Nx could not establish the fallback socket directory ${DAEMON_DIR_FOR_CURRENT_WORKSPACE} as a private directory owned by the current user.`,
+      { cause }
+    );
+  }
+  return DAEMON_DIR_FOR_CURRENT_WORKSPACE;
 }
 
 export function removeSocketDir() {
