@@ -1,7 +1,11 @@
 /**
  * Note to developers: STOP! These exports are available via requireNx in @nx/devkit.
  *
- * These may not be available in certain version of Nx, so be sure to check them first.
+ * This barrel is NOT under @nx/devkit's version-tolerance contract. That contract
+ * (nx at the current major +/- 1, per devkit's peerDependencies) covers the public
+ * @nx/devkit API only. These are nx internals, re-exported for first-party packages
+ * in this repo that ship in lockstep with nx, so they require an exactly matching
+ * nx version. See packages/devkit/CLAUDE.md.
  */
 export { createTempNpmDirectory } from './utils/package-manager';
 export {
@@ -85,8 +89,9 @@ export { setupAiAgentsGenerator } from './ai/set-up-ai-agents/set-up-ai-agents';
 export type { Agent } from './ai/utils';
 export type { GeneratorInformation } from './command-line/generate/generator-utils';
 export { getGeneratorInformation } from './command-line/generate/generator-utils';
-// Type-only: a value re-export would eagerly require release-graph (which pulls
-// in the project graph) during nx's own graph construction, creating a cycle.
+// Type-only: a value re-export would pull release-graph and the project graph
+// into this barrel's eager closure, which every plugin worker loads. Not a
+// cycle — nothing under packages/nx/src imports the barrel.
 export type { FinalConfigForProject } from './command-line/release/utils/release-graph';
 export { BatchFunctionRunner } from './command-line/watch/watch';
 export type { BatchExecutorTaskResult } from './config/misc-interfaces';
