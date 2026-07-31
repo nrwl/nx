@@ -32,11 +32,14 @@ import { OXLINT_CONFIG_FILENAMES } from '../utils/config-file.js';
 
 export interface OxlintPluginOptions {
   targetName?: string;
-  extensions?: string[];
 }
 
-/** Source types Oxlint can parse. It does not lint JSON. */
-const DEFAULT_EXTENSIONS = [
+/**
+ * Source types Oxlint can parse. It does not lint JSON. Not configurable:
+ * Oxlint picks the files it lints itself, so this only decides whether a
+ * project has anything worth inferring a target for.
+ */
+const LINTABLE_EXTENSIONS = [
   'js',
   'mjs',
   'cjs',
@@ -49,6 +52,7 @@ const DEFAULT_EXTENSIONS = [
   'svelte',
   'astro',
 ];
+const LINTABLE_FILES_GLOB = `**/*.{${LINTABLE_EXTENSIONS.join(',')}}`;
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const OXLINT_CONFIG_GLOB = combineGlobPatterns([
   ...OXLINT_CONFIG_FILENAMES.map((f) => `**/${f}`),
@@ -155,7 +159,6 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
     const getLintableFilesPerProjectRoot = () =>
       (lintableFilesPerProjectRoot ??= collectLintableFilesByProjectRoot(
         projectRoots,
-        options,
         context
       ));
 
@@ -469,13 +472,12 @@ function collectTsconfigChainsByProjectRoot(
  */
 async function collectLintableFilesByProjectRoot(
   projectRoots: string[],
-  options: OxlintPluginOptions,
   context: CreateNodesContext
 ): Promise<Map<string, number>> {
   const lintableFilesPerProjectRoot = new Map<string, number>();
 
   const lintableFiles = await globWithWorkspaceContext(context.workspaceRoot, [
-    `**/*.{${options.extensions.join(',')}}`,
+    LINTABLE_FILES_GLOB,
   ]);
 
   for (const projectRoot of projectRoots) {
@@ -597,9 +599,6 @@ function getProjectUsingOxlintConfig(
 function normalizeOptions(options: OxlintPluginOptions): OxlintPluginOptions {
   return {
     targetName: options?.targetName ?? 'lint',
-    extensions: (options?.extensions ?? DEFAULT_EXTENSIONS).map((f) =>
-      f.replace(/^\.+/, '')
-    ),
   };
 }
 
