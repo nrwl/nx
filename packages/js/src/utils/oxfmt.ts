@@ -34,10 +34,9 @@ export function generateOxfmtSetup(
     );
   }
   if (configFiles.every((name) => !tree.exists(name))) {
-    // Matches the style Nx has always generated. oxfmt's own defaults differ
-    // from prettier's (printWidth 100 vs 80), so they are set explicitly to
-    // keep generated code identical across the two formatters.
-    writeJson(tree, '.oxfmtrc.json', { singleQuote: true, printWidth: 80 });
+    // oxfmt defaults to double quotes and we prefer single, so that is the one
+    // option worth setting. Line width is left at oxfmt's default.
+    writeJson(tree, '.oxfmtrc.json', { singleQuote: true });
   }
 
   return options.skipPackageJson
