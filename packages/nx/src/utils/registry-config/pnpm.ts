@@ -48,6 +48,9 @@ import {
  *   ignores npm_config_* here, the overlay this builds is consumed by the
  *   spawned `npm pack` (and a forced `npm view`), not by `pnpm view`, which
  *   resolves natively.
+ * - >= 11.10.0: a JSON auth tier (`pnpm_config__auth` env over the global
+ *   config.yaml `_auth`) layers credentials above the URL-scoped env tier and
+ *   registries above the yaml.
  */
 
 const DEFAULT_REGISTRY = 'https://registry.npmjs.org/';
@@ -123,18 +126,27 @@ export function getPnpmSpawnRegistryEnv(
   // The yaml-only keys go in at npm's env tier, where npm's per-key chain
   // reproduces pnpm's ordering: a project .npmrc @scope:registry still beats an
   // injected default, while an injected @scope:registry beats the project
-  // .npmrc scoped key (yaml @scope > npmrc @scope in pnpm).
-  if (scope && settings.registries?.[scope]) {
-    setScopedRegistry(env, scope, settings.registries[scope]);
+  // .npmrc scoped key (yaml @scope > npmrc @scope in pnpm). JSON-auth
+  // registries sit above the yaml and below the named env registry, which pnpm
+  // applies onto registries.default after every spread.
+  const jsonAuth = readJsonAuthTier(pnpmVersion);
+  const scopedRegistry = scope
+    ? (jsonAuth?.registries[scope] ?? settings.registries?.[scope])
+    : undefined;
+  if (scope && scopedRegistry) {
+    setScopedRegistry(env, scope, scopedRegistry);
   }
   const defaultRegistry =
-    readPnpmEnvVar('registry', pnpmVersion) ?? settings.registries?.default;
+    readPnpmEnvVar('registry', pnpmVersion) ??
+    jsonAuth?.registries['default'] ??
+    settings.registries?.default;
   if (defaultRegistry) {
     setRegistry(env, defaultRegistry);
   }
 
   const authIniPath = getAuthIniPath();
   applyUrlScopedEnvConfig(env, pnpmVersion);
+  applyJsonAuthCredentials(env, scope, jsonAuth);
   bridgeAuthIni(env, root, scope, authIniPath, pnpmVersion, managerIgnoresEnv);
   reportTokenHelper(
     env,
@@ -193,6 +205,173 @@ function applyUrlScopedEnvConfig(env: NpmConfigEnv, pnpmVersion: string): void {
       continue;
     }
     env[`npm_config_${match[1]}`] = value;
+  }
+}
+
+type JsonAuthTier = {
+  /** One credential per (registry, scope), scope `@` meaning registry-wide. */
+  auth: { dart: string; scope: string; token: string }[];
+  /** `default` plus `@scope` keys, WHATWG-normalized URLs. */
+  registries: Record<string, string>;
+};
+
+/**
+ * The JSON auth tier pnpm reads from 11.10.0: `pnpm_config__auth` (then the
+ * uppercase spelling, an empty value skipped) parsed as JSON, over the global
+ * config.yaml's top-level `_auth`, merged per entry with the env winning.
+ * Its registries outrank the workspace yaml and lose to the named env/CLI
+ * registry; its credentials outrank the URL-scoped env tier and every file.
+ * pnpm dies on a declaration it cannot parse, so that throws into the caller's
+ * fall-open. See readJsonAuthEnv/parseJsonAuth in pnpm's config reader.
+ */
+function readJsonAuthTier(pnpmVersion: string): JsonAuthTier | null {
+  if (lt(pnpmVersion, '11.10.0')) {
+    return null;
+  }
+  const raw =
+    process.env['pnpm_config__auth'] ||
+    process.env['PNPM_CONFIG__AUTH'] ||
+    undefined;
+  let envTier: JsonAuthTier | null = null;
+  if (raw !== undefined) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      throw new Error(
+        'The pnpm_config__auth environment variable is not valid JSON.'
+      );
+    }
+    envTier = parsePnpmJsonAuth(parsed, 'pnpm_config__auth');
+  }
+  const yamlAuth = readPnpmGlobalConfigYaml()?.['_auth'];
+  const yamlTier =
+    yamlAuth != null ? parsePnpmJsonAuth(yamlAuth, '_auth') : null;
+  if (!envTier && !yamlTier) {
+    return null;
+  }
+  const merged = new Map<string, JsonAuthTier['auth'][number]>();
+  for (const tier of [yamlTier, envTier]) {
+    for (const entry of tier?.auth ?? []) {
+      merged.set(`${entry.scope} ${entry.dart}`, entry);
+    }
+  }
+  return {
+    auth: [...merged.values()],
+    registries: {
+      ...(yamlTier?.registries ?? {}),
+      ...(envTier?.registries ?? {}),
+    },
+  };
+}
+
+/**
+ * pnpm's parseJsonAuth: registry URL over scope, each leaf exactly
+ * { authToken: string }, every violation fatal. Messages carry the setting
+ * name and entry position rather than the entry itself, since a malformed
+ * URL key can embed credentials.
+ */
+function parsePnpmJsonAuth(parsed: unknown, source: string): JsonAuthTier {
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(
+      `The pnpm ${source} setting must be a JSON object of registry URLs.`
+    );
+  }
+  const auth: JsonAuthTier['auth'] = [];
+  const registries: Record<string, string> = {};
+  let entryNumber = 0;
+  for (const [rawUrl, scopes] of Object.entries(parsed)) {
+    entryNumber++;
+    let url: URL;
+    try {
+      url = new URL(rawUrl);
+    } catch {
+      throw invalidJsonAuthEntry(source, entryNumber);
+    }
+    if (
+      (url.protocol !== 'https:' && url.protocol !== 'http:') ||
+      url.hostname === '' ||
+      url.username !== '' ||
+      url.password !== '' ||
+      url.search !== '' ||
+      url.hash !== ''
+    ) {
+      throw invalidJsonAuthEntry(source, entryNumber);
+    }
+    // pnpm nerf-darts the href as-is: a path without a trailing slash scopes
+    // to its parent directory, and normalize-registry-url never alters an href.
+    const dart = nerfDart(url.href);
+    if (!dart) {
+      throw invalidJsonAuthEntry(source, entryNumber);
+    }
+    if (
+      scopes === null ||
+      typeof scopes !== 'object' ||
+      Array.isArray(scopes)
+    ) {
+      throw invalidJsonAuthScopes(source, entryNumber);
+    }
+    for (const [scope, creds] of Object.entries(scopes)) {
+      const validScope =
+        scope === '@' ||
+        (scope.startsWith('@') &&
+          scope.length > 1 &&
+          !scope.includes('/') &&
+          !scope.includes(':'));
+      if (
+        !validScope ||
+        creds === null ||
+        typeof creds !== 'object' ||
+        Array.isArray(creds) ||
+        Object.keys(creds).some((field) => field !== 'authToken') ||
+        typeof (creds as Record<string, unknown>)['authToken'] !== 'string'
+      ) {
+        throw invalidJsonAuthScopes(source, entryNumber);
+      }
+      auth.push({
+        dart,
+        scope,
+        token: (creds as Record<string, string>)['authToken'],
+      });
+      registries[scope === '@' ? 'default' : scope] = url.href;
+    }
+  }
+  return { auth, registries };
+}
+
+function invalidJsonAuthEntry(source: string, entryNumber: number): Error {
+  return new Error(
+    `Entry ${entryNumber} of the pnpm ${source} setting is not a plain http(s) registry URL.`
+  );
+}
+
+function invalidJsonAuthScopes(source: string, entryNumber: number): Error {
+  return new Error(
+    `Entry ${entryNumber} of the pnpm ${source} setting must map scopes ("@" or "@org") to { "authToken": string } objects.`
+  );
+}
+
+/**
+ * npm has no scope-qualified auth key, so a scoped entry lands on the plain
+ * dart, and only for the scope of the package being fetched: pnpm would not
+ * send that token for anything else. Registry-wide entries go first so a
+ * scoped token for the same registry wins, the way pnpm's per-scope credential
+ * lookup prefers the specific entry.
+ */
+function applyJsonAuthCredentials(
+  env: NpmConfigEnv,
+  scope: string | null,
+  jsonAuth: JsonAuthTier | null
+): void {
+  if (!jsonAuth) {
+    return;
+  }
+  for (const wanted of scope ? ['@', scope] : ['@']) {
+    for (const entry of jsonAuth.auth) {
+      if (entry.scope === wanted) {
+        env[`npm_config_${entry.dart}:_authToken`] = entry.token;
+      }
+    }
   }
 }
 
@@ -260,6 +439,22 @@ function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
 
 function getAuthIniPath(): string {
   return join(getPnpmConfigDir(process.env), 'auth.ini');
+}
+
+/**
+ * The global config.yaml, null when absent. pnpm aborts every command on one
+ * it cannot parse, so that propagates to the caller's fall-open instead of
+ * resolving on without the file's settings.
+ */
+function readPnpmGlobalConfigYaml(): Record<string, unknown> | null {
+  const path = join(getPnpmConfigDir(process.env), 'config.yaml');
+  const doc = readPnpmYamlConfig(path);
+  if (doc === 'invalid') {
+    throw new Error(
+      `The pnpm global configuration file at ${path} could not be read.`
+    );
+  }
+  return doc;
 }
 
 // pnpm warns and resolves on from the remaining layers when an npmrc-family
@@ -558,25 +753,17 @@ function resolveConfigPath(
 
 /**
  * The file pnpm >= 11 authenticates from. Its selection chain is followed here
- * minus the two CLI links, which nx never passes. Null when the global
- * config.yaml that could name the file cannot be read, leaving the choice
- * unknown.
+ * minus the two CLI links, which nx never passes.
  * See loadNpmrcConfig in pnpm's config reader.
  */
-function getPnpmUserConfigPath(
-  pnpmVersion: string,
-  root: string
-): string | null {
+function getPnpmUserConfigPath(pnpmVersion: string, root: string): string {
+  // Read first: pnpm parses the global config.yaml before the selector
+  // applies, so a malformed one aborts even when the env names the auth file.
+  const globalYaml = readPnpmGlobalConfigYaml();
   let selected =
     readPnpmEnvVar('npmrc_auth_file', pnpmVersion) ??
     readPnpmEnvVar('userconfig', pnpmVersion);
   if (selected === undefined) {
-    const globalYaml = readPnpmYamlConfig(
-      join(getPnpmConfigDir(process.env), 'config.yaml')
-    );
-    if (globalYaml === 'invalid') {
-      return null;
-    }
     const fromYaml = globalYaml?.['npmrcAuthFile'];
     selected =
       (typeof fromYaml === 'string' ? fromYaml : undefined) ||
@@ -619,18 +806,17 @@ type UnscopedHelperPin = 'declaring-file' | 'resolved-registry';
  * only from the user config pnpm resolves (10.x getAuthHeadersFromConfig reads
  * it from userSettings alone; 11 additionally aborts the command outright with
  * TOKEN_HELPER_IN_PROJECT_CONFIG when one reaches it from any other file), so
- * `userConfigPath` is the one place worth reading. Null when the caller cannot
- * tell which file that is.
+ * `userConfigPath` is the one place worth reading.
  */
 function reportTokenHelper(
   env: NpmConfigEnv,
   root: string,
   scope: string | null,
-  userConfigPath: string | null,
+  userConfigPath: string,
   unscopedPin: UnscopedHelperPin,
   managerIgnoresEnv: IgnoresNpmConfigEnv
 ): void {
-  const userConfig = userConfigPath ? readPnpmNpmrcMap(userConfigPath) : null;
+  const userConfig = readPnpmNpmrcMap(userConfigPath);
   if (!userConfig) {
     return;
   }
