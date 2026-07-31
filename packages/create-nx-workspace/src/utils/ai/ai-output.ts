@@ -17,6 +17,7 @@ export function isAiAgent(): boolean {
     _isAiAgent =
       isClaudeCode() ||
       isOpenCode() ||
+      isCodex() ||
       isReplitAi() ||
       isCursorAi() ||
       isGeminiCli();
@@ -30,6 +31,12 @@ export function isClaudeCode(): boolean {
 
 export function isOpenCode(): boolean {
   return !!process.env.OPENCODE;
+}
+
+export function isCodex(): boolean {
+  return (
+    !!process.env.CODEX_THREAD_ID || process.env.SUPERSET_AGENT_ID === 'codex'
+  );
 }
 
 export function isReplitAi(): boolean {
@@ -51,6 +58,7 @@ export function detectAiAgentName(): string | null {
   if (isClaudeCode()) return 'claude';
   if (isCursorAi()) return 'cursor';
   if (isOpenCode()) return 'opencode';
+  if (isCodex()) return 'codex';
   if (isGeminiCli()) return 'gemini';
   return null;
 }

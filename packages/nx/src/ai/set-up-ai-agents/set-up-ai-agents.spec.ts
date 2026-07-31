@@ -450,6 +450,81 @@ describe('setup-ai-agents generator', () => {
         ]);
       });
 
+      it('should allow nx socket usage through the sandbox', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/tmp/.nx/sockets',
+        ]);
+        expect(config.sandbox.filesystem.allowRead).toEqual(['/tmp/.nx']);
+        // Covers the tmp root, not just the socket dir: the native binary cache
+        // lives under it, and without it a running daemon pins the binding
+        // inside node_modules.
+        expect(config.sandbox.filesystem.allowWrite).toEqual(['/tmp/.nx']);
+      });
+
+      it('should allow creating unix sockets, not only connecting to existing ones', async () => {
+        // The scoped allowUnixSockets entry covers connecting to a socket that
+        // already exists. Nx binds its own — daemon, plugin workers, forked
+        // tasks — so without this the generator would write allowances that
+        // cannot unblock the failures that send users here in the first place.
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.network.allowAllUnixSockets).toBe(true);
+      });
+
+      it('should preserve existing sandbox socket and filesystem entries without duplicating the nx ones', async () => {
+        const options: SetupAiAgentsGeneratorSchema = {
+          directory: '.',
+          agents: ['claude'],
+        };
+
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            sandbox: {
+              filesystem: {
+                allowWrite: ['~/.gradle', '/tmp/.nx'],
+              },
+              network: {
+                allowUnixSockets: ['/var/run/docker.sock', '/tmp/.nx/sockets'],
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, options);
+
+        const config = JSON.parse(
+          tree.read('.claude/settings.json')?.toString() ?? '{}'
+        );
+        expect(config.sandbox.filesystem.allowWrite).toEqual([
+          '~/.gradle',
+          '/tmp/.nx',
+        ]);
+        expect(config.sandbox.filesystem.allowRead).toEqual(['/tmp/.nx']);
+        expect(config.sandbox.network.allowUnixSockets).toEqual([
+          '/var/run/docker.sock',
+          '/tmp/.nx/sockets',
+        ]);
+      });
+
       it('should preserve existing ref in nx-claude-plugins source', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
