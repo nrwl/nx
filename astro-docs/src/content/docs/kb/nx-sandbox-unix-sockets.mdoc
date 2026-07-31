@@ -38,22 +38,24 @@ This grants Nx the ability to create and connect to Unix sockets, which it needs
 
 ## Scoped allowlisting with the Nx socket root
 
-The daemon, forked task processes and plugin workers put their sockets beneath one stable root on macOS and Linux: `/tmp/.nx`, unless overridden via `NX_SOCKET_DIR`. This makes the filesystem rule suitable for team-wide project settings:
+The daemon, forked task processes and plugin workers put their sockets beneath one stable root on macOS and Linux: `/tmp/.nx`, unless overridden via `NX_SOCKET_DIR`. If that root cannot be used, Nx moves to `~/.nx` before falling back into your workspace, so allowlist both. Neither path varies between machines or users, which makes the rule suitable for team-wide project settings:
 
 ```json
 // .claude/settings.json
 {
   "sandbox": {
     "filesystem": {
-      "allowRead": ["/tmp/.nx"],
-      "allowWrite": ["/tmp/.nx"]
+      "allowRead": ["/tmp/.nx", "~/.nx"],
+      "allowWrite": ["/tmp/.nx", "~/.nx"]
     },
     "network": {
-      "allowUnixSockets": ["/tmp/.nx"]
+      "allowUnixSockets": ["/tmp/.nx", "~/.nx"]
     }
   }
 }
 ```
+
+`~` expands to the home directory of whoever runs Nx, so one committed entry covers every user. Wildcards don't work in these settings — each entry has to be a literal path.
 
 The write grant covers `/tmp/.nx` rather than only its `sockets` descendants because the first Nx run also has to create the root. Nx copies its compiled native binding into a cache under the same root before loading it, which the grant needs to cover too.
 
@@ -72,7 +74,9 @@ sudo install -d -m 1777 -o root -g root /tmp/.nx
 
 That one command is the entire setup. Each user then creates their own `/tmp/.nx/<uid>`, `sockets`, and `native-cache` directories beneath it.
 
-Without it, the first person to run Nx on the machine gets the shared layout and everyone after them falls back. Usually that's because a colleague got there first, though the same check is what refuses a container someone claimed deliberately. Falling back is safe rather than broken. Socket setup moves to a private directory inside your workspace, and the native binding cache is skipped entirely, loading in place from `node_modules` instead.
+Without it, the first person to run Nx on the machine gets the shared container and everyone after them moves on to `~/.nx`. Usually that's because a colleague got there first, though the same check is what refuses a container someone claimed deliberately. Your home directory needs no such check — nobody else can write there — so it needs no setup at all.
+
+Sockets only land inside your workspace if the home directory can't host them either, and that's safe rather than broken. The native binding cache has no second location. It stays under `/tmp/.nx` or is skipped entirely, loading in place from `node_modules` instead.
 
 Code inside the sandbox runs as your user, so this grant does let it write that binary cache, in the same way it can already write your workspace's `node_modules`.
 {% /aside %}
