@@ -1,4 +1,4 @@
-import { LinterType } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import type { Styles } from '../utils/types';
 

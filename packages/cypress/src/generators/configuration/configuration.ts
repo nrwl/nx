@@ -24,7 +24,7 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { LinterType } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,

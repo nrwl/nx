@@ -1,4 +1,4 @@
-import type { LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {

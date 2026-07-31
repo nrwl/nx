@@ -1,4 +1,4 @@
-import type { LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   appProject: string; // name of the project app to be tested (directory + app name), case insensitive

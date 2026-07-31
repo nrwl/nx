@@ -1,4 +1,4 @@
-import { LinterType } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,

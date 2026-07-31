@@ -16,7 +16,7 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import type { LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import { join, relative } from 'path';
 import {
   dedupe,

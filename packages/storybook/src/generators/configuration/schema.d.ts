@@ -1,4 +1,4 @@
-import { LinterType } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import { UiFramework } from '../../utils/models';
 
 export interface StorybookConfigureSchema {

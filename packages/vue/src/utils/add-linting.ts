@@ -5,7 +5,7 @@ import {
   Tree,
   joinPathFragments,
 } from '@nx/devkit';
-import { LinterType } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,

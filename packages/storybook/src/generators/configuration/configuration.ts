@@ -33,7 +33,7 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import type { LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   getStorybookVersionToInstall,
