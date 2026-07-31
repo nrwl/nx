@@ -4,20 +4,15 @@ import {
   formatFiles,
   GeneratorCallback,
   getDependencyVersionFromPackageJson,
-  readNxJson,
   runTasksInSerial,
-  TargetConfiguration,
   Tree,
   type ProjectGraph,
   updateJson,
-  updateNxJson,
   writeJson,
 } from '@nx/devkit';
 import {
   addPlugin,
   assertSupportedPackageVersion,
-  findTargetDefault,
-  upsertTargetDefault,
 } from '@nx/devkit/internal';
 import { createNodes } from '../../plugins/plugin.js';
 import { OXLINT_CONFIG_FILENAMES } from '../../utils/config-file.js';
@@ -32,7 +27,6 @@ export interface InitGeneratorSchema {
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;
   skipFormat?: boolean;
-  addPlugin?: boolean;
 }
 
 /**
@@ -90,26 +84,20 @@ export async function initGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson?.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPluginDefault;
-
-  if (options.addPlugin) {
-    const graph = await createProjectGraphAsync();
-    await addPlugin(
-      tree,
-      graph,
-      '@nx/oxlint',
-      createNodes,
-      { targetName: resolveTargetNames(graph) },
-      options.updatePackageScripts
-    );
-  } else {
-    addTargetDefaults(tree);
-  }
+  // Registered unconditionally, and deliberately not gated on
+  // `useInferencePlugins` / `NX_ADD_PLUGINS`: `@nx/oxlint` produces tasks only
+  // through inference, so opting out would leave a workspace with no Oxlint
+  // tasks at all rather than a different way of running them. Matches
+  // `@nx/dotnet`, the other inference-only plugin.
+  const graph = await createProjectGraphAsync();
+  await addPlugin(
+    tree,
+    graph,
+    '@nx/oxlint',
+    createNodes,
+    { targetName: resolveTargetNames(graph) },
+    options.updatePackageScripts
+  );
 
   ensureRootConfig(tree);
   updateVsCodeRecommendedExtensions(tree);
@@ -143,35 +131,7 @@ export async function initGeneratorInternal(
 }
 
 export function initGenerator(tree: Tree, options: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...options });
-}
-
-function addTargetDefaults(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  const existing = findTargetDefault(nxJson.targetDefaults, {
-    executor: '@nx/oxlint:lint',
-  });
-
-  const patch: Partial<TargetConfiguration> = {};
-  if (existing?.cache === undefined) {
-    patch.cache = true;
-  }
-  if (existing?.inputs === undefined) {
-    patch.inputs = [
-      'default',
-      '^default',
-      ...OXLINT_CONFIG_FILENAMES.map((file) => `{workspaceRoot}/${file}`),
-      { externalDependencies: ['oxlint'] },
-    ];
-  }
-
-  if (Object.keys(patch).length > 0) {
-    upsertTargetDefault(tree, nxJson, {
-      executor: '@nx/oxlint:lint',
-      ...patch,
-    });
-    updateNxJson(tree, nxJson);
-  }
+  return initGeneratorInternal(tree, options);
 }
 
 /**

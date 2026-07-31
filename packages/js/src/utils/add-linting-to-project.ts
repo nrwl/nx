@@ -76,7 +76,7 @@ export async function addLintingToProject(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       keepExistingVersions: options.keepExistingVersions,
-      addPlugin: options.addPlugin,
+      // No `addPlugin`: `@nx/oxlint` is inference-only, so it always registers.
     });
   }
 
