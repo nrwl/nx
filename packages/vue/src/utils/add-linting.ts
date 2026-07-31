@@ -5,7 +5,7 @@ import {
   Tree,
   joinPathFragments,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { Linter, LinterType } from '@nx/eslint';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -45,36 +45,26 @@ export async function addLinting(
   },
   projectType: 'lib' | 'app'
 ) {
-  // Everything below configures ESLint — predefined configs, `extends`,
-  // ignore entries — which have no equivalent in other linters. They only
-  // need the linter registering, which the helper handles (including `none`).
-  if (options.linter && options.linter !== 'eslint') {
-    return addLintingToProject(host, {
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
       oxlintPlugins: ['vue'],
-      unitTestRunner: options.unitTestRunner,
-      linter: options.linter,
-      project: options.projectName,
-      addPlugin: options.addPlugin,
-      skipPackageJson: options.skipPackageJson,
-    });
-  }
-
-  if (options.linter === 'eslint') {
-    const tasks: GeneratorCallback[] = [];
-    const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
       enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
 
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter === 'eslint') {
     if (useFlatConfig(host)) {
     } else {
       const addExtendsTask = addExtendsToLintConfig(
@@ -115,11 +105,9 @@ export async function addLinting(
       );
       tasks.push(installTask);
     }
-
-    return runTasksInSerial(...tasks);
-  } else {
-    return () => {};
   }
+
+  return runTasksInSerial(...tasks);
 }
 
 function editEslintConfigFiles(tree: Tree, projectRoot: string) {
