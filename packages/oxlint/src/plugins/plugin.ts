@@ -62,7 +62,7 @@ const internalCreateNodes = async (
   options: OxlintPluginOptions,
   context: CreateNodesContext,
   projectRootsByOxlintRoots: Map<string, string[]>,
-  getLintableFilesPerProjectRoot: () => Promise<Map<string, string[]>>,
+  getLintableFilesPerProjectRoot: () => Promise<Map<string, number>>,
   configChainsByConfig: Map<string, string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
   projectsCache: PluginCache<OxlintProjects>,
@@ -94,8 +94,7 @@ const internalCreateNodes = async (
       // `||` and behind the cache check above: a warm run never pays for it.
       const shouldInferTarget =
         (configDir === projectRoot && projectRoot !== '.') ||
-        ((await getLintableFilesPerProjectRoot()).get(projectRoot)?.length ??
-          0) > 0;
+        ((await getLintableFilesPerProjectRoot()).get(projectRoot) ?? 0) > 0;
 
       if (!shouldInferTarget) {
         projectsCache.set(hash, {});
@@ -161,7 +160,7 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
     // this plugin does, and it is only consulted on a cache miss. Keep it lazy
     // so a warm graph computation skips it, and memoize the promise so the
     // concurrent per-config calls below share one glob.
-    let lintableFilesPerProjectRoot: Promise<Map<string, string[]>> | undefined;
+    let lintableFilesPerProjectRoot: Promise<Map<string, number>> | undefined;
     const getLintableFilesPerProjectRoot = () =>
       (lintableFilesPerProjectRoot ??= collectLintableFilesByProjectRoot(
         projectRoots,
@@ -267,6 +266,19 @@ function splitConfigFiles(
     } else {
       oxlintConfigFiles.push(configFile);
     }
+  }
+
+  // Nothing below depends on the package.json/project.json partition when there
+  // is no Oxlint config, and the caller bails on that too. Returning here keeps
+  // a registered-but-unconfigured workspace from reading the root package.json,
+  // pnpm-workspace.yaml and lerna.json and minimatching every package.json on
+  // every graph computation, for a result it discards.
+  if (oxlintConfigFiles.length === 0) {
+    return {
+      oxlintConfigFiles,
+      projectRoots: [],
+      projectRootsByOxlintRoots: new Map(),
+    };
   }
 
   // A package.json outside the package manager's workspaces is not a project —
@@ -484,19 +496,24 @@ function collectTsconfigChainsByProjectRoot(
   return result;
 }
 
+/**
+ * Counts rather than collects: the only caller asks whether a project has any
+ * lintable file, and the glob spans the whole workspace, so keeping the paths
+ * would retain every one of them for the rest of the graph computation.
+ */
 async function collectLintableFilesByProjectRoot(
   projectRoots: string[],
   options: OxlintPluginOptions,
   context: CreateNodesContext
-): Promise<Map<string, string[]>> {
-  const lintableFilesPerProjectRoot = new Map<string, string[]>();
+): Promise<Map<string, number>> {
+  const lintableFilesPerProjectRoot = new Map<string, number>();
 
   const lintableFiles = await globWithWorkspaceContext(context.workspaceRoot, [
     `**/*.{${options.extensions.join(',')}}`,
   ]);
 
   for (const projectRoot of projectRoots) {
-    lintableFilesPerProjectRoot.set(projectRoot, []);
+    lintableFilesPerProjectRoot.set(projectRoot, 0);
   }
 
   for (const file of lintableFiles) {
@@ -505,16 +522,20 @@ async function collectLintableFilesByProjectRoot(
       lintableFilesPerProjectRoot
     );
     if (projectRoot) {
-      lintableFilesPerProjectRoot.get(projectRoot).push(file);
+      lintableFilesPerProjectRoot.set(
+        projectRoot,
+        lintableFilesPerProjectRoot.get(projectRoot) + 1
+      );
     }
   }
 
   return lintableFilesPerProjectRoot;
 }
 
+// Only the keys are read, so the value type is left open for both callers.
 function getRootForDirectory(
   directory: string,
-  roots: Map<string, string[]>
+  roots: Map<string, unknown>
 ): string | null {
   let currentPath = normalize(directory);
 

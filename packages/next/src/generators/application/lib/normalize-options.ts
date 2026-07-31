@@ -4,9 +4,8 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { assertValidStyle } from '@nx/react';
-import { detectLinter } from '@nx/js';
 import { Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export interface NormalizedSchema
   extends Omit<Schema, 'name' | 'useTsSolution'> {

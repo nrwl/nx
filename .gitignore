@@ -105,7 +105,11 @@ node_modules/
 .vscode
 # examples/* are fixture workspaces; they carry the editor config a real
 # workspace would have, so generators that append to it can be exercised.
+# Git will not look inside an ignored directory, so the directory itself has to
+# be un-ignored first; re-ignoring its contents keeps that from tracking
+# everything under it.
 !examples/**/.vscode/
+examples/**/.vscode/*
 !examples/**/.vscode/extensions.json
 *.suo
 *.ntvs*

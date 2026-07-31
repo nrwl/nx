@@ -42,7 +42,10 @@ export interface InitGeneratorSchema {
 export const OXLINT_TARGET_NAMES = [
   'lint',
   'oxlint',
-  'oxlint:lint',
+  // No `oxlint:lint` candidate: a colon in a target name makes
+  // `nx run <p>:oxlint:lint` ambiguous with target `oxlint` / configuration
+  // `lint`, and this fallback is only ever reached when a target named `oxlint`
+  // already exists — exactly when that ambiguity would bite.
   'oxlint-lint',
 ];
 

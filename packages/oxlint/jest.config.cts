@@ -4,10 +4,9 @@ module.exports = {
   preset: '../../jest.preset.js',
   globals: {},
   moduleFileExtensions: ['ts', 'js', 'html'],
-  // This package is ESM, so relative imports carry `.js` extensions. Jest
-  // resolves against the TypeScript sources, which have none.
-  moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
-  },
+  // No `moduleNameMapper` for this package's `.js` specifiers: the repo-wide
+  // resolver in scripts/patched-jest-resolver.js already falls back to the
+  // adjacent `.ts`, and it does so only after normal resolution fails rather
+  // than rewriting every relative import.
   coverageDirectory: '../../coverage/packages/oxlint',
 };
