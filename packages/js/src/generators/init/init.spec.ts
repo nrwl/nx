@@ -94,7 +94,7 @@ describe('js init generator', () => {
     expect(packageJson.devDependencies['prettier']).toBeUndefined();
 
     const oxfmtrc = readJson(tree, '.oxfmtrc.json');
-    expect(oxfmtrc).toEqual({ singleQuote: true, printWidth: 80 });
+    expect(oxfmtrc).toEqual({ singleQuote: true });
   });
 
   describe('default formatter', () => {

@@ -10,7 +10,7 @@ No Prettier is installed.
 ## Layout
 
 ```
-.oxfmtrc.json          oxfmt config (single quotes, 80 column width)
+.oxfmtrc.json          oxfmt config (single quotes)
 nx.json                @nx/js/typescript plugin only
 packages/greeter       one small TypeScript library
 ```
