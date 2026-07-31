@@ -137,9 +137,6 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
   OXLINT_CONFIG_GLOB,
   async (configFiles, options, context) => {
     options = normalizeOptions(options);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
     const optionsHash = hashObject(options);
     const cachePath = join(
       workspaceDataDirectory,
@@ -182,9 +179,12 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
       projectRoots,
       context.workspaceRoot
     );
-    const lockFilePattern = getLockFileName(
-      detectPackageManager(context.workspaceRoot)
-    );
+    // Detected once: it stats the workspace root for lock files, and both the
+    // executor command and the lock-file input below need the answer. Placed
+    // after the bail so a workspace with no Oxlint config never pays for it.
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFilePattern = getLockFileName(packageManager);
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       options,
