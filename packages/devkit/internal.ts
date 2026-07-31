@@ -11,6 +11,7 @@ export {
   resolvePrompt,
   PromptResolutionError,
   acknowledgeBuildScripts,
+  getCatalogManager,
 } from 'nx/src/devkit-internals';
 
 // Generators
@@ -70,8 +71,6 @@ export {
   calculateHashForCreateNodes,
   calculateHashesForCreateNodes,
 } from './src/utils/calculate-hash-for-create-nodes';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- nx/src/utils/catalog exists since nx 22.0.0, the whole supported range; swap to the nx/src/devkit-internals re-export in v25
-export { getCatalogManager } from 'nx/src/utils/catalog';
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
@@ -91,51 +90,55 @@ export {
   // NOTE: distinct from @nx/devkit's TaskResult (tasks-runner/life-cycle) —
   // this is the batch-executor result shape.
   type TaskResult,
-  Agent,
-  BatchExecutorTaskResult,
+  type Agent,
+  type BatchExecutorTaskResult,
   BatchFunctionRunner,
-  BatchResults,
-  CLIErrorMessageConfig,
-  CLINoteMessageConfig,
-  CLISuccessMessageConfig,
-  CLIWarnMessageConfig,
+  type BatchResults,
+  type CLIErrorMessageConfig,
+  type CLINoteMessageConfig,
+  type CLISuccessMessageConfig,
+  type CLIWarnMessageConfig,
   Cache,
-  CachedResult,
-  Change,
-  ChangedFile,
+  type CachedResult,
+  type Change,
+  type ChangedFile,
   CompositeLifeCycle,
   DeletedFileChange,
-  DependsOnEntryLocation,
-  FileChange,
-  FileDataDependency,
-  FileMapCache,
+  type DependsOnEntryLocation,
+  // NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts),
+  // which describes a pending Tree write. This one is a per-file diff
+  // ({ file, getChanges }), and the two barrels are routinely imported side by
+  // side — an editor auto-import can silently pick the wrong one.
+  type FileChange,
+  type FileDataDependency,
+  type FileMapCache,
   type FinalConfigForProject,
   FsTree,
-  GeneratorInformation,
-  InputDefinition,
-  JsonInput,
+  type GeneratorInformation,
+  type InputDefinition,
+  type JsonInput,
   LARGE_BUFFER,
-  LifeCycle,
+  type LifeCycle,
   LockFileChange,
   NX_PREFIX,
-  NormalizedTargetDependencyConfig,
-  NxCloudOnBoardingStatus,
+  type NormalizedTargetDependencyConfig,
+  type NxCloudOnBoardingStatus,
   type NxReleaseVersionConfiguration,
-  PackageJson,
-  PackageJsonDependencySection,
-  PackageManagerCommands,
-  ProjectRootMappings,
+  type PackageJson,
+  type PackageJsonDependencySection,
+  type PackageManagerCommands,
+  type ProjectRootMappings,
   RemoteCacheV2,
-  RunCommandsOptions,
+  type RunCommandsOptions,
   SyncError,
-  SyncGeneratorResult,
+  type SyncGeneratorResult,
   TEN_MEGABYTES,
   TargetProjectLocator,
-  TaskMetadata,
-  TaskStatus,
-  TaskWithCachedResult,
-  TasksRunner,
-  UnregisterCallback,
+  type TaskMetadata,
+  type TaskStatus,
+  type TaskWithCachedResult,
+  type TasksRunner,
+  type UnregisterCallback,
   WholeFileChange,
   buildProjectGraphAndSourceMapsWithoutDaemon,
   calculateFileChanges,
@@ -251,9 +254,10 @@ export {
 
 // Release runtime values (releasePublish, releaseVersion, VersionActions) are
 // intentionally NOT re-exported here: this barrel is imported by plugin graph
-// hooks, and eagerly loading nx's release command module during graph
-// construction creates a require cycle. Consumers import those from the public
-// `nx/release` entry point directly. Only erased types are re-exported —
-// `AfterAllProjectsVersioned` below, and `FinalConfigForProject` via
-// nx/src/devkit-internals.
+// hooks, and value-re-exporting `nx/release` would add ~73 modules to the
+// closure they eagerly load. It is a startup-cost constraint, not a require
+// cycle — nothing under packages/nx/src imports either devkit barrel back.
+// Consumers import those from the public `nx/release` entry point directly.
+// Only erased types are re-exported — `AfterAllProjectsVersioned` below, and
+// `FinalConfigForProject` via nx/src/devkit-internals.
 export type { AfterAllProjectsVersioned } from 'nx/release';
