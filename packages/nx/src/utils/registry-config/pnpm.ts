@@ -97,11 +97,12 @@ export function getPnpmSpawnRegistryEnv(
     // unscoped target but resolves a scoped one fine, so npm's own default is
     // left in place rather than aimed at a registry pnpm uses only for that
     // scope.
-    if (settings.registries?.default) {
-      setRegistry(env, settings.registries.default);
+    const yamlDefault = pickYamlRegistry(settings, 'default', root);
+    if (yamlDefault) {
+      setRegistry(env, yamlDefault);
     }
     const pick = scope
-      ? (settings.registries?.[scope] ?? settings.registries?.default)
+      ? (pickYamlRegistry(settings, scope, root) ?? yamlDefault)
       : undefined;
     if (scope && pick) {
       setScopedRegistry(env, scope, pick);
@@ -131,7 +132,7 @@ export function getPnpmSpawnRegistryEnv(
   // applies onto registries.default after every spread.
   const jsonAuth = readJsonAuthTier(pnpmVersion);
   const scopedRegistry = scope
-    ? (jsonAuth?.registries[scope] ?? settings.registries?.[scope])
+    ? (jsonAuth?.registries[scope] ?? pickYamlRegistry(settings, scope, root))
     : undefined;
   if (scope && scopedRegistry) {
     setScopedRegistry(env, scope, scopedRegistry);
@@ -139,7 +140,7 @@ export function getPnpmSpawnRegistryEnv(
   const defaultRegistry =
     readPnpmEnvVar('registry', pnpmVersion) ??
     jsonAuth?.registries['default'] ??
-    settings.registries?.default;
+    pickYamlRegistry(settings, 'default', root);
   if (defaultRegistry) {
     setRegistry(env, defaultRegistry);
   }
@@ -434,7 +435,70 @@ function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
     // silently treating the workspace as declaring no registry.
     throw new Error(`The pnpm workspace file at ${path} could not be read.`);
   }
-  return doc as PnpmWorkspaceSettings;
+  return validatePnpmWorkspaceSettings(doc, path);
+}
+
+/**
+ * pnpm type-checks none of these, so its tolerance is uneven and each shape
+ * here mirrors a measured 11.10.0 outcome. A wrong-shaped proxy aborts pnpm's
+ * fetch in the agent constructor, so it is fatal into the caller's fall-open. A
+ * null or non-map registries resolves as though absent. A wrong-shaped noProxy
+ * survives pnpm, so it is dropped rather than handed to the string-typed spawn
+ * env. Registry values are left for `pickYamlRegistry`, because pnpm only dies
+ * on the value it picks.
+ */
+function validatePnpmWorkspaceSettings(
+  doc: Record<string, unknown>,
+  path: string
+): PnpmWorkspaceSettings {
+  const fail = (what: string): never => {
+    throw new Error(`The pnpm workspace file at ${path} declares ${what}.`);
+  };
+  if (doc.proxy && typeof doc.proxy !== 'string') {
+    fail('a proxy that is not a string');
+  }
+  if (doc.httpsProxy && typeof doc.httpsProxy !== 'string') {
+    fail('an httpsProxy that is not a string');
+  }
+  const settings = doc as PnpmWorkspaceSettings;
+  if (
+    settings.registries !== undefined &&
+    (settings.registries === null ||
+      typeof settings.registries !== 'object' ||
+      Array.isArray(settings.registries))
+  ) {
+    settings.registries = undefined;
+  }
+  if (settings.noProxy !== undefined && typeof settings.noProxy !== 'string') {
+    settings.noProxy = undefined;
+  }
+  if (settings.noproxy !== undefined && typeof settings.noproxy !== 'string') {
+    settings.noproxy = undefined;
+  }
+  return settings;
+}
+
+/**
+ * The yaml registry for `key`, fatal when it exists with a non-string shape:
+ * pnpm dies in `new URL` on the registry it picks (measured on 11.10.0), and an
+ * entry it never picks harms nothing, so the check runs per pick rather than
+ * over the whole map.
+ */
+function pickYamlRegistry(
+  settings: PnpmWorkspaceSettings,
+  key: string,
+  root: string
+): string | undefined {
+  const value = settings.registries?.[key];
+  if (value !== undefined && typeof value !== 'string') {
+    throw new Error(
+      `The pnpm workspace file at ${join(
+        root,
+        'pnpm-workspace.yaml'
+      )} declares a registries["${key}"] that is not a string.`
+    );
+  }
+  return value;
 }
 
 function getAuthIniPath(): string {
