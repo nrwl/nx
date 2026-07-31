@@ -1,5 +1,6 @@
 import { mkdirSync } from 'node:fs';
-import { basename, dirname } from 'node:path';
+import { homedir } from 'node:os';
+import { basename, dirname, join } from 'node:path';
 import { tmpdir as systemTmpDir } from 'tmp';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
@@ -40,6 +41,19 @@ jest.mock('node:fs', () => {
 const SHARED_TMP_ROOT = '/tmp/.nx';
 const USER_TMP_ROOT = `${SHARED_TMP_ROOT}/501`;
 const SOCKET_ROOT = `${USER_TMP_ROOT}/sockets`;
+const HOME_TMP_ROOT = join(homedir(), '.nx');
+const HOME_SOCKET_ROOT = join(HOME_TMP_ROOT, 'sockets');
+
+/**
+ * Stage a machine where neither default root can be used, which is the only way
+ * to reach the workspace now that the home root sits between them.
+ */
+const denyEveryDefaultRoot = () => {
+  (ensureSafeSharedRoot as jest.Mock).mockReturnValue(false);
+  (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
+    (d: string) => !d.startsWith(HOME_TMP_ROOT)
+  );
+};
 
 describe('socket directories', () => {
   const originalPlatform = process.platform;
@@ -49,6 +63,11 @@ describe('socket directories', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    // clearAllMocks resets calls but keeps implementations, so a test that
+    // stages an unusable root would otherwise stage it for every test after it.
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValue(true);
+    (ensureOwnedPrivateDir as jest.Mock).mockReturnValue(true);
+    (sharedRootRemedy as jest.Mock).mockReturnValue(undefined);
     delete process.env.NX_SOCKET_DIR;
     delete process.env.NX_DAEMON_SOCKET_DIR;
     setPlatform(originalPlatform);
@@ -110,41 +129,57 @@ describe('socket directories', () => {
     });
   });
 
-  it('falls back before creating user roots beneath an unsafe shared container', () => {
+  it('moves to the home root, not the workspace, beneath an unsafe shared container', () => {
     setPlatform('linux');
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
+    (ensureSafeSharedRoot as jest.Mock).mockReturnValue(false);
 
-    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    // The tier that needs an administrator is the one being skipped, so a peer
+    // owning /tmp/.nx no longer costs the short socket path.
+    expect(getSocketDir()).toMatch(
+      new RegExp(`^${escapeRegExp(HOME_SOCKET_ROOT)}/`)
+    );
     expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
     expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
   });
 
-  it('falls back before creating the socket root when the per-user root is not ours', () => {
+  it('moves to the home root when the per-user root is not ours', () => {
     setPlatform('linux');
-    (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
+      (d: string) => d !== USER_TMP_ROOT
+    );
+
+    expect(getSocketDir()).toMatch(
+      new RegExp(`^${escapeRegExp(HOME_SOCKET_ROOT)}/`)
+    );
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+  });
+
+  it('reaches the workspace only once every default root is unusable', () => {
+    setPlatform('linux');
+    denyEveryDefaultRoot();
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(HOME_TMP_ROOT);
   });
 
   it('logs the default-root failure at verbose level and retains it as the fallback cause', () => {
     setPlatform('linux');
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
+    denyEveryDefaultRoot();
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
 
     const cause = getSocketDirFallbackCause();
     expect(cause).toBeInstanceOf(Error);
     expect(logger.verbose).toHaveBeenCalledWith(
-      expect.stringContaining('could not use the default socket directory'),
+      expect.stringContaining('could not use the default socket'),
       cause
     );
   });
 
   it('carries the chown remedy in the fallback cause when the container is another user’s', () => {
     setPlatform('linux');
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
-    (sharedRootRemedy as jest.Mock).mockReturnValueOnce(
+    denyEveryDefaultRoot();
+    (sharedRootRemedy as jest.Mock).mockReturnValue(
       `${SHARED_TMP_ROOT} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${SHARED_TMP_ROOT} && sudo chmod 1777 ${SHARED_TMP_ROOT}\`; every user can then keep their own directory under it.`
     );
 
@@ -155,15 +190,33 @@ describe('socket directories', () => {
     );
   });
 
-  it('omits the remedy when the container is unsafe for a reason the user cannot chown away', () => {
+  it('omits the remedy when the roots are unusable for a reason the user cannot chown away', () => {
     setPlatform('linux');
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValueOnce(false);
+    denyEveryDefaultRoot();
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
     const message = (getSocketDirFallbackCause() as Error).message;
-    expect(message).toContain('is not a directory Nx can safely keep');
+    expect(message).toContain('could not establish any of its default socket');
     expect(message).not.toContain('chown');
-    expect(message.endsWith('under.')).toBe(true);
+  });
+
+  it('rejects the home roots as a configured socket dir, as it does the shared ones', () => {
+    for (const dir of [HOME_TMP_ROOT, HOME_SOCKET_ROOT]) {
+      process.env.NX_SOCKET_DIR = dir;
+      expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
+    }
+  });
+
+  it('keeps the home tier off Windows, where named pipes have nothing to contain', () => {
+    setPlatform('win32');
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
+      (d: string) => !d.startsWith(HOME_TMP_ROOT)
+    );
+
+    expect(getSocketDir()).toMatch(
+      new RegExp(`^${escapeRegExp(systemTmpDir)}`)
+    );
+    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(HOME_TMP_ROOT);
   });
 
   // assertValidSocketPath (socket-utils.ts) currently applies its 95-character

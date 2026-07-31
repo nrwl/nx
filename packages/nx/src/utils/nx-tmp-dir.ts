@@ -1,4 +1,4 @@
-import { platform, tmpdir } from 'node:os';
+import { homedir, platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { getUserSegment } from './owned-private-dir';
 
@@ -29,3 +29,18 @@ export const NX_TMP_DIR =
  */
 export const NX_USER_TMP_DIR =
   platform() === 'win32' ? NX_TMP_DIR : join(NX_TMP_DIR, getUserSegment());
+
+/**
+ * Runtime root inside the user's home directory, used when the shared container
+ * cannot be established — most often because a peer created `/tmp/.nx` first.
+ *
+ * No level of it is shared, so it needs no administrator and no ownership
+ * derivation: the home directory belongs to the user by construction, and a peer
+ * who cannot write there cannot substitute anything beneath it. `~` is also a
+ * single literal in an agentic sandbox allowlist that expands per user, which a
+ * uid-bearing path is not.
+ *
+ * Longer than the `/tmp` root and not cleared on reboot, so it is the second
+ * choice rather than the first.
+ */
+export const NX_HOME_TMP_DIR = join(homedir(), '.nx');
