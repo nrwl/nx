@@ -85,13 +85,9 @@ const internalCreateNodes = async (
         return cached;
       }
 
-      // A project that owns its own config is assumed to want linting; for
-      // every other project, only infer a target when there is something to
-      // lint. Without this, docs-only and non-JS projects sprout Oxlint
-      // targets that lint nothing.
-      //
-      // The right-hand side globs the whole workspace, so it stays behind the
-      // `||` and behind the cache check above: a warm run never pays for it.
+      // Owning a config implies wanting linting; otherwise require something
+      // lintable, so docs-only projects get no target. The right-hand side globs
+      // the whole workspace, so it stays behind the `||` and the cache check.
       const shouldInferTarget =
         (configDir === projectRoot && projectRoot !== '.') ||
         ((await getLintableFilesPerProjectRoot()).get(projectRoot) ?? 0) > 0;
@@ -153,10 +149,8 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
       return [];
     }
 
-    // Globbing every lintable file in the workspace is the most expensive thing
-    // this plugin does, and it is only consulted on a cache miss. Keep it lazy
-    // so a warm graph computation skips it, and memoize the promise so the
-    // concurrent per-config calls below share one glob.
+    // The most expensive thing here, and only needed on a cache miss. Lazy so a
+    // warm run skips it; memoized so concurrent per-config calls share one glob.
     let lintableFilesPerProjectRoot: Promise<Map<string, number>> | undefined;
     const getLintableFilesPerProjectRoot = () =>
       (lintableFilesPerProjectRoot ??= collectLintableFilesByProjectRoot(
@@ -179,9 +173,8 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
       projectRoots,
       context.workspaceRoot
     );
-    // Detected once: it stats the workspace root for lock files, and both the
-    // executor command and the lock-file input below need the answer. Placed
-    // after the bail so a workspace with no Oxlint config never pays for it.
+    // Stats the workspace root, so detect once for both uses below — and after
+    // the bail, so a workspace with no Oxlint config never pays for it.
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFilePattern = getLockFileName(packageManager);
@@ -190,17 +183,14 @@ export const createNodes: CreateNodes<OxlintPluginOptions> = [
       options,
       context,
       projectRoots.map((root) => {
-        // Configs that govern this project: the one in its own directory, and
-        // every ancestor's. Configs *below* the project root are already
-        // covered by the `{projectRoot}/**/*` glob the hasher adds, and it is
-        // the ancestors whose edits would otherwise go unnoticed.
+        // Own directory and every ancestor. Configs below the root are already
+        // covered by the hasher's `{projectRoot}/**/*` glob.
         const governingConfigs = oxlintConfigFiles.filter((oxlintConfig) => {
           const configDir = dirname(oxlintConfig);
           return configDir === root || isSubDir(configDir, root);
         });
-        // Deduped: with a config per project every chain resolves to the same
-        // root config, and each duplicate is another glob for the hasher to
-        // evaluate against the whole workspace.
+        // Deduped: every chain ends at the same root config, and each duplicate
+        // is another whole-workspace glob for the hasher.
         return [
           ...new Set([
             ...governingConfigs,
@@ -268,11 +258,9 @@ function splitConfigFiles(
     }
   }
 
-  // Nothing below depends on the package.json/project.json partition when there
-  // is no Oxlint config, and the caller bails on that too. Returning here keeps
-  // a registered-but-unconfigured workspace from reading the root package.json,
-  // pnpm-workspace.yaml and lerna.json and minimatching every package.json on
-  // every graph computation, for a result it discards.
+  // The caller bails on this too, so returning early keeps a workspace with no
+  // Oxlint config from reading the root package.json, pnpm-workspace.yaml and
+  // lerna.json and minimatching every package.json for a discarded result.
   if (oxlintConfigFiles.length === 0) {
     return {
       oxlintConfigFiles,
@@ -281,22 +269,10 @@ function splitConfigFiles(
     };
   }
 
-  // A package.json outside the package manager's workspaces is not a project —
-  // nested marker files (`{"sideEffects": false}` next to a bundle, say) have no
-  // `name`, and promoting one to a project root fails the whole graph with
-  // ProjectsWithNoNameError.
-  //
-  // Applied unconditionally, matching core's default path. (Core skips the
-  // matcher when `NX_INFER_ALL_PACKAGE_JSONS=true` and no root package.json is
-  // in play; that escape hatch is deliberately not mirrored, and the failure
-  // direction is a missing target.) There is no
-  // empty-globs escape hatch on purpose: core appends the root package.json to
-  // the globs only when it carries an `nx` key (which `nx init` writes), so a
-  // root that is genuinely a project already comes through this matcher. Empty
-  // globs mean core creates no root project, and inferring one anyway either
-  // invents a project the rest of the graph lacks or fails it outright. A
-  // package.json beside a project.json is admitted by `projectJsonRoots` below
-  // regardless.
+  // A package.json outside the workspaces globs is not a project: nested marker
+  // files have no `name`, and promoting one fails the whole graph with
+  // ProjectsWithNoNameError. Unconditional on purpose — core admits a root only
+  // when it carries an `nx` key, so empty globs mean core creates no root either.
   const patterns = buildPackageJsonPatterns(workspaceRoot, (f) =>
     readJsonFile(join(workspaceRoot, f))
   );
@@ -336,23 +312,18 @@ function splitConfigFiles(
 }
 
 /**
- * Resolves each config's `extends` chain to workspace-relative paths so they
- * can be declared as target inputs. Oxlint resolves `extends` entries relative
- * to the referencing config's own directory and only tracks the chain for its
- * LSP, so Nx has to walk it here or caching goes stale on an extended file.
- *
- * TypeScript configs (`oxlint.config.{ts,mts}`) are not statically readable,
- * so only the config file itself is tracked for those.
+ * Resolves each config's `extends` chain to workspace-relative target inputs.
+ * Oxlint resolves entries relative to the referencing config and only tracks the
+ * chain for its LSP, so Nx walks it here or caching goes stale. TypeScript
+ * configs are not statically readable, so only the file itself is tracked.
  */
 function collectConfigChains(
   oxlintConfigFiles: string[],
   workspaceRoot: string
 ): Map<string, string[]> {
   const result = new Map<string, string[]>();
-  // Shared across configs, not per config: with a config per project every
-  // chain ends at the same root config, so without this each project re-reads
-  // and re-parses it. `null` records "read failed", so a bad file is not
-  // retried once per referrer either.
+  // Shared across configs so the common root config is read once. `null` records
+  // a failed read, so a bad file is not retried per referrer.
   const jsonCache = new Map<string, { extends?: string[] } | null>();
   const existsCache = new Map<string, boolean>();
 
@@ -418,9 +389,8 @@ function collectConfigChains(
         if (resolved.startsWith('..')) {
           continue; // escapes the workspace, cannot be a `{workspaceRoot}` input
         }
-        // Declared even when absent: a `{workspaceRoot}` input that matches no
-        // file contributes nothing to the hash, so declaring it costs nothing
-        // and keeps the target's `inputs` stable across the file appearing.
+        // Declared even when absent: an input matching no file costs nothing and
+        // keeps `inputs` stable if the file later appears.
         extended.push(resolved);
         if (configExists(resolved)) {
           walk(resolved);
@@ -436,12 +406,9 @@ function collectConfigChains(
 }
 
 /**
- * For each project root that has a `tsconfig.json`, resolves its `extends`
- * chain and returns the workspace-relative paths of every reachable file that
- * lives OUTSIDE the project root. Type-aware Oxlint reads the tsconfig, so
- * those files have to invalidate the cache.
- *
- * Mirrors `@nx/eslint`'s equivalent, including its skip cases.
+ * Per project root, the `extends`-reachable tsconfig files that live OUTSIDE the
+ * project root. Type-aware Oxlint reads the tsconfig, so those have to invalidate
+ * the cache. Mirrors `@nx/eslint`'s equivalent, including its skip cases.
  */
 function collectTsconfigChainsByProjectRoot(
   projectRoots: string[],
@@ -498,8 +465,7 @@ function collectTsconfigChainsByProjectRoot(
 
 /**
  * Counts rather than collects: the only caller asks whether a project has any
- * lintable file, and the glob spans the whole workspace, so keeping the paths
- * would retain every one of them for the rest of the graph computation.
+ * lintable file, and the glob spans the whole workspace.
  */
 async function collectLintableFilesByProjectRoot(
   projectRoots: string[],
