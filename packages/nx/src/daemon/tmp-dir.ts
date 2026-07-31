@@ -23,6 +23,14 @@ import {
 import { workspaceRoot } from '../utils/workspace-root';
 
 /**
+ * Why a directory was refused. Named rather than a boolean so a table entry
+ * reads as its own reason: picking the wrong one tells a user their private
+ * directory is a code-execution risk, which is the one claim here that most
+ * needs to be true.
+ */
+export type SocketDirRefusal = 'shared-with-other-users' | 'nx-managed';
+
+/**
  * Thrown when the socket dir resolves to a directory Nx will not accept.
  * Invalid configuration, not a recoverable failure.
  *
@@ -34,10 +42,10 @@ import { workspaceRoot } from '../utils/workspace-root';
 export class InvalidSocketDirConfigured extends Error {
   constructor(
     public readonly dir: string,
-    sharedWithOtherUsers: boolean
+    public readonly reason: SocketDirRefusal
   ) {
     super(
-      sharedWithOtherUsers
+      reason === 'shared-with-other-users'
         ? `The configured Nx socket directory ${dir} is shared with the other users on this machine. Nx locks the socket directory to a single user, so pointing it at a shared one both shuts every other user out of it and — until it does — lets another local user connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
         : `The configured Nx socket directory ${dir} is a directory Nx manages for its own runtime state, and it locks down and cleans up everything beneath it. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
     );
@@ -170,19 +178,27 @@ function establishSocketRoot(): string | undefined {
  * the current user's own, refused because Nx manages their contents. Nx's actual
  * socket directories live under these roots.
  */
-function dirsUnusableAsSocketDir(): { dir: string; shared: boolean }[] {
+function dirsUnusableAsSocketDir(): {
+  dir: string;
+  reason: SocketDirRefusal;
+}[] {
+  // Both of the top two are per-user on Windows — `%TMP%` is per-account and
+  // NX_TMP_DIR sits inside it — so the shared-directory warning would be false
+  // there. They are still refused, just for the other reason.
+  const outermost: SocketDirRefusal =
+    process.platform === 'win32' ? 'nx-managed' : 'shared-with-other-users';
   return [
-    { dir: systemTmpDir, shared: true },
-    { dir: NX_TMP_DIR, shared: true },
-    { dir: NX_USER_TMP_DIR, shared: false },
-    { dir: defaultSocketRoot(), shared: false },
+    { dir: systemTmpDir, reason: outermost },
+    { dir: NX_TMP_DIR, reason: outermost },
+    { dir: NX_USER_TMP_DIR, reason: 'nx-managed' },
+    { dir: defaultSocketRoot(), reason: 'nx-managed' },
     ...(NX_HOME_TMP_DIR
       ? [
-          { dir: NX_HOME_TMP_DIR, shared: false },
-          { dir: homeSocketRoot(), shared: false },
+          { dir: NX_HOME_TMP_DIR, reason: 'nx-managed' as const },
+          { dir: homeSocketRoot(), reason: 'nx-managed' as const },
         ]
       : []),
-    { dir: NATIVE_CACHE_ROOT, shared: false },
+    { dir: NATIVE_CACHE_ROOT, reason: 'nx-managed' },
   ];
 }
 
@@ -292,7 +308,7 @@ function createOwnerOnlySocketDir(
     (d) => resolve(dir) === resolve(d.dir)
   );
   if (unusable) {
-    throw new InvalidSocketDirConfigured(dir, unusable.shared);
+    throw new InvalidSocketDirConfigured(dir, unusable.reason);
   }
 
   try {

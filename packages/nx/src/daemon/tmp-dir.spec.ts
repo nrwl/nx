@@ -214,6 +214,35 @@ describe('socket directories', () => {
     }
   });
 
+  // NX_TMP_DIR is a module-scope constant, so flipping process.platform at
+  // runtime cannot reach it — the module has to be re-imported as win32.
+  it('does not call the Windows per-user temp roots shared with other users', () => {
+    setPlatform('win32');
+    jest.isolateModules(() => {
+      jest.doMock('node:os', () => ({
+        ...jest.requireActual('node:os'),
+        platform: () => 'win32',
+      }));
+      const { InvalidSocketDirConfigured: Ctor } = require('./tmp-dir');
+      const { NX_TMP_DIR: winTmp } = require('../utils/nx-tmp-dir');
+      const winSocketDir = require('./tmp-dir').getSocketDir;
+
+      process.env.NX_SOCKET_DIR = winTmp;
+      // %TMP% is per-account and NX_TMP_DIR sits inside it, so telling the user
+      // a local attacker could execute code in their daemon would be false.
+      let thrown!: Error;
+      try {
+        winSocketDir();
+      } catch (e) {
+        thrown = e as Error;
+      }
+      expect(thrown).toBeInstanceOf(Ctor);
+      expect(thrown.message).toContain('Nx manages for its own runtime');
+      expect(thrown.message).not.toContain('shared with the other users');
+    });
+    jest.dontMock('node:os');
+  });
+
   it('keeps the home tier off Windows, where named pipes have nothing to contain', () => {
     setPlatform('win32');
     (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
