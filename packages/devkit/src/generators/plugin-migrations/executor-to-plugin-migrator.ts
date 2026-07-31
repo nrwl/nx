@@ -34,7 +34,6 @@ import { logger as devkitLogger } from 'nx/src/devkit-exports';
 export type InferredTargetConfiguration = TargetConfiguration & {
   name: string;
 };
-type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
   targetConfiguration: TargetConfiguration,
   tree: Tree,
@@ -149,7 +148,12 @@ export function collectMigrationScope<T>(
       forEachExecutorOptions(
         tree,
         executor,
-        (options, projectName, targetName, configurationName) => {
+        (
+          options: Record<string, unknown>,
+          projectName,
+          targetName,
+          configurationName
+        ) => {
           if (skippedForExecutor.has(projectName) || configurationName) {
             return;
           }
@@ -254,62 +258,48 @@ export function collectMigrationScope<T>(
   };
 }
 
-class ExecutorToPluginMigrator<T> {
+class ExecutorToPluginMigrator {
   readonly tree: Tree;
   readonly #projectGraph: ProjectGraph;
   readonly #executor: string;
-  readonly #pluginPath: string;
-  readonly #pluginOptionsBuilder: PluginOptionsBuilder<T>;
   readonly #postTargetTransformer: PostTargetTransformer;
+  readonly #targetAndProjectsToMigrate: Map<string, Set<string>>;
+  readonly #inferredByRoot: Map<string, Map<string, TargetConfiguration>>;
   #nxJson: NxJsonConfiguration;
   #targetDefaultsForExecutor: Partial<TargetConfiguration>;
-  #targetAndProjectsToMigrate: Map<string, Set<string>>;
-  #createNodes?: CreateNodes<T>;
-  #createNodesV2?: CreateNodes<T>;
-  #createNodesResultsForTargets: Map<string, ConfigurationResult>;
 
   constructor(
     tree: Tree,
     projectGraph: ProjectGraph,
     executor: string,
-    pluginPath: string,
-    pluginOptionsBuilder: PluginOptionsBuilder<T>,
     postTargetTransformer: PostTargetTransformer,
-    createNodes: CreateNodes<T> | undefined,
-    createNodesV2: CreateNodes<T> | undefined,
     // The set of targets/projects to migrate for this executor, precomputed by
     // `collectMigrationScope` (Phase 0). Filtering/skip semantics already ran.
-    targetAndProjectsToMigrate: Map<string, Set<string>>
+    targetAndProjectsToMigrate: Map<string, Set<string>>,
+    // project root -> (target name -> stripped inferred target), precomputed
+    // once for the whole workspace by `inferOncePerOptionSet` (Phase 1).
+    inferredByRoot: Map<string, Map<string, TargetConfiguration>>
   ) {
     this.tree = tree;
     this.#projectGraph = projectGraph;
     this.#executor = executor;
-    this.#pluginPath = pluginPath;
-    this.#pluginOptionsBuilder = pluginOptionsBuilder;
     this.#postTargetTransformer = postTargetTransformer;
-    this.#createNodes = createNodes;
-    this.#createNodesV2 = createNodesV2;
     this.#targetAndProjectsToMigrate = targetAndProjectsToMigrate;
+    this.#inferredByRoot = inferredByRoot;
   }
 
-  async run(): Promise<Map<string, Set<string>>> {
-    await this.#init();
-    if (this.#targetAndProjectsToMigrate.size > 0) {
-      for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
-        await this.#migrateTarget(targetName);
-      }
+  async run(): Promise<void> {
+    this.#init();
+    for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
+      await this.#migrateTarget(targetName);
     }
-    return this.#targetAndProjectsToMigrate;
   }
 
-  async #init() {
+  #init() {
     const nxJson = readNxJson(this.tree);
     nxJson.plugins ??= [];
     this.#nxJson = nxJson;
-    this.#createNodesResultsForTargets = new Map();
-
     this.#getTargetDefaultsForExecutor();
-    await this.#getCreateNodesResults();
   }
 
   async #migrateTarget(targetName: string) {
@@ -428,47 +418,17 @@ class ExecutorToPluginMigrator<T> {
   }
 
   #getCreatedTargetForProjectRoot(targetName: string, projectRoot: string) {
-    const entry = Object.entries(
-      this.#createNodesResultsForTargets.get(targetName)?.projects ?? {}
-    ).find(([root]) => root === projectRoot);
-    if (!entry) {
+    const inferredTarget = this.#inferredByRoot
+      .get(projectRoot)
+      ?.get(targetName);
+    if (!inferredTarget) {
       throw new Error(
         `The nx plugin did not find a project inside ${projectRoot}. File an issue at https://github.com/nrwl/nx with information about your project structure.`
       );
     }
-    const createdProject = entry[1];
-    const createdTarget: TargetConfiguration<RunCommandsOptions> =
-      structuredClone(createdProject.targets[targetName]);
-    delete createdTarget.command;
-    delete createdTarget.options?.cwd;
-
-    return createdTarget;
-  }
-
-  async #getCreateNodesResults() {
-    if (this.#targetAndProjectsToMigrate.size === 0) {
-      return;
-    }
-
-    global.NX_GRAPH_CREATION = true;
-    try {
-      for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
-        const result = await getCreateNodesResultsForPlugin(
-          this.tree,
-          {
-            plugin: this.#pluginPath,
-            options: this.#pluginOptionsBuilder(targetName),
-          },
-          this.#pluginPath,
-          this.#createNodes,
-          this.#createNodesV2,
-          this.#nxJson
-        );
-        this.#createNodesResultsForTargets.set(targetName, result);
-      }
-    } finally {
-      global.NX_GRAPH_CREATION = false;
-    }
+    // Already stripped of `command`/`options.cwd` in Phase 1. Clone so the
+    // per-project residual computation can mutate freely.
+    return structuredClone(inferredTarget);
   }
 }
 
@@ -559,6 +519,219 @@ export async function migrateProjectExecutorsToPluginV1<T>(
   return projects;
 }
 
+/**
+ * Phase 1 — Infer (once per distinct option set). Runs a whole-workspace
+ * inference per distinct plugin-option set (usually one) instead of once per
+ * target and once per project. Builds `inferredByRoot` (project root -> target
+ * name -> stripped inferred target) that every later phase reads from, plus the
+ * set of config files the plugin globs (used for analytic include coverage).
+ */
+async function inferOncePerOptionSet<T>(
+  tree: Tree,
+  pluginPath: string,
+  createNodes: CreateNodes<T> | undefined,
+  createNodesV2: CreateNodes<T> | undefined,
+  nxJson: NxJsonConfiguration,
+  scope: MigrationScope<T>
+): Promise<{
+  inferredByRoot: Map<string, Map<string, TargetConfiguration>>;
+  matchedConfigFiles: string[];
+}> {
+  const inferredByRoot = new Map<string, Map<string, TargetConfiguration>>();
+  const rawMatchedFiles = new Set<string>();
+  const inferredRoots = new Set<string>();
+
+  if (scope.optionSetGroups.length === 0) {
+    return { inferredByRoot, matchedConfigFiles: [] };
+  }
+
+  global.NX_GRAPH_CREATION = true;
+  try {
+    for (const group of scope.optionSetGroups) {
+      const result = await getCreateNodesResultsForPlugin(
+        tree,
+        { plugin: pluginPath, options: group.options },
+        pluginPath,
+        createNodes,
+        createNodesV2,
+        nxJson
+      );
+
+      // The plugin's glob pattern is option-independent, so every option set
+      // matches the same config files; union defensively.
+      for (const file of result?.matchingProjectFiles ?? []) {
+        rawMatchedFiles.add(file);
+      }
+
+      for (const [root, projectConfig] of Object.entries(
+        result?.projects ?? {}
+      )) {
+        // Every root the plugin produces a project for. Config files whose
+        // owning root is NOT one of these produce no project and can be safely
+        // excluded by an `include` without changing the inferred set — this is
+        // why include-necessity must be judged against inferred roots, not the
+        // raw glob (which also matches package.json/project.json/etc.).
+        inferredRoots.add(root);
+
+        for (const targetName of group.targetNames) {
+          const inferredTarget = projectConfig.targets?.[targetName];
+          if (!inferredTarget) {
+            continue;
+          }
+          const stripped: TargetConfiguration<RunCommandsOptions> =
+            structuredClone(inferredTarget);
+          delete stripped.command;
+          delete stripped.options?.cwd;
+
+          if (!inferredByRoot.has(root)) {
+            inferredByRoot.set(root, new Map());
+          }
+          inferredByRoot.get(root).set(targetName, stripped);
+        }
+      }
+    }
+  } finally {
+    global.NX_GRAPH_CREATION = false;
+  }
+
+  // Keep only config files owned by an inferred project root (i.e. files that
+  // actually contribute a project). Include-coverage is decided against these.
+  const matchedConfigFiles = [...rawMatchedFiles].filter((file) =>
+    [...inferredRoots].some((root) => isFileUnderRoot(file, root))
+  );
+
+  return { inferredByRoot, matchedConfigFiles };
+}
+
+/** Whether `file` (workspace-relative) belongs to project root `root`. */
+function isFileUnderRoot(file: string, root: string): boolean {
+  if (root === '.') {
+    // The root project owns workspace-root-level files (no path separator).
+    return !file.includes('/');
+  }
+  return file === root || file.startsWith(`${root}/`);
+}
+
+/**
+ * Whether a registration's `include` globs already cover every config file the
+ * plugin globs (so the registration can be left unscoped). Because plugin
+ * inference is a pure function of the matched config-file set, this is exactly
+ * the answer the old per-project `arePluginIncludesRequired` inference computed,
+ * without running any additional inference.
+ */
+function includeCoversAllConfigFiles(
+  include: string[] | undefined,
+  exclude: string[] | undefined,
+  configFiles: string[]
+): boolean {
+  if (!include || include.length === 0) {
+    return true;
+  }
+  const excludeGlobs = exclude ?? [];
+  return configFiles.every(
+    (file) =>
+      include.some((glob) => minimatch(file, glob, { dot: true })) &&
+      !excludeGlobs.some((glob) => minimatch(file, glob, { dot: true }))
+  );
+}
+
+/**
+ * Phase 4 — a single verification inference pass over the whole workspace with
+ * the updated `nx.json` plugin registrations. Runs every registration for this
+ * plugin at once (one `retrieveProjectConfigurations` call). The equivalence
+ * oracle + fallback that consume this result are added in a later task.
+ */
+async function runVerificationPass<T>(
+  tree: Tree,
+  pluginPath: string,
+  createNodes: CreateNodes<T> | undefined,
+  createNodesV2: CreateNodes<T> | undefined
+): Promise<ConfigurationResult | undefined> {
+  const nxJson = readNxJson(tree);
+  const registrations = (nxJson.plugins ?? []).filter(
+    (plugin): plugin is string | ExpandedPluginConfiguration =>
+      plugin === pluginPath ||
+      (typeof plugin !== 'string' && plugin.plugin === pluginPath)
+  );
+  if (registrations.length === 0) {
+    return undefined;
+  }
+
+  global.NX_GRAPH_CREATION = true;
+  try {
+    const plugins = registrations.map(
+      (registration) =>
+        new LoadedNxPlugin(
+          { createNodes, createNodesV2, name: pluginPath },
+          registration
+        )
+    );
+    return await retrieveProjectConfigurations(
+      { specifiedPlugins: plugins, defaultPlugins: [] },
+      tree.root,
+      nxJson
+    );
+  } catch (e) {
+    if (e instanceof ProjectConfigurationsError) {
+      return e.partialProjectConfigurationsResult;
+    }
+    throw e;
+  } finally {
+    global.NX_GRAPH_CREATION = false;
+  }
+}
+
+/**
+ * Recover the default option keys a plugin fills into its options object during
+ * `createNodes` (Phase 1 mutated each option-set object in place if the plugin
+ * does so). A key qualifies only if it is not one of our own
+ * `defaultPluginOptions` and appears with an identical value across every
+ * option set — that is exactly a plugin default fill, never a per-target
+ * (mapper-provided) value. Reproduces the previous engine's incidental option
+ * enrichment without extra inference.
+ */
+function derivePluginFilledDefaults<T>(
+  optionSetGroups: InferenceOptionSet<T>[],
+  defaultPluginOptions: T
+): Partial<T> {
+  const filled: Record<string, unknown> = {};
+  if (optionSetGroups.length === 0) {
+    return filled as Partial<T>;
+  }
+
+  const defaults = (defaultPluginOptions ?? {}) as Record<string, unknown>;
+  const seen = new Map<
+    string,
+    { value: unknown; count: number; consistent: boolean }
+  >();
+  for (const group of optionSetGroups) {
+    for (const [key, value] of Object.entries(
+      (group.options ?? {}) as Record<string, unknown>
+    )) {
+      if (key in defaults) {
+        continue;
+      }
+      const existing = seen.get(key);
+      if (!existing) {
+        seen.set(key, { value, count: 1, consistent: true });
+      } else {
+        existing.count++;
+        if (stableStringify(existing.value) !== stableStringify(value)) {
+          existing.consistent = false;
+        }
+      }
+    }
+  }
+
+  for (const [key, entry] of seen) {
+    if (entry.consistent && entry.count === optionSetGroups.length) {
+      filled[key] = entry.value;
+    }
+  }
+
+  return filled as Partial<T>;
+}
+
 async function migrateProjects<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
@@ -592,102 +765,81 @@ async function migrateProjects<T>(
     logger
   );
 
-  // Per-executor residual writes (unchanged output). The scope has already
-  // applied every skip filter, so the migrator no longer re-derives it.
+  // Phase 1 — Infer (once per distinct option set) for the whole workspace.
+  const nxJson = readNxJson(tree);
+  const { inferredByRoot, matchedConfigFiles } = await inferOncePerOptionSet(
+    tree,
+    pluginPath,
+    createNodes,
+    createNodesV2,
+    nxJson,
+    scope
+  );
+
+  // Phase 2 — Per-project residual writes (in-memory, no re-inference). Still
+  // writes the full residual per project.json (centralization comes later).
   for (const executorScope of scope.executorScopes) {
     const migrator = new ExecutorToPluginMigrator(
       tree,
       projectGraph,
       executorScope.executor,
-      pluginPath,
-      executorScope.migration.targetPluginOptionMapper,
       executorScope.migration.postTargetTransformer,
-      createNodes,
-      createNodesV2,
-      executorScope.targetAndProjects
+      executorScope.targetAndProjects,
+      inferredByRoot
     );
     await migrator.run();
   }
 
+  // Some plugins' `createNodes` normalize their options object in place (e.g.
+  // `options.devTargetName ??= 'dev'`). The previous engine inferred once per
+  // project passing the project's registration-options object by reference, so
+  // those objects picked up the plugin's default keys. Phase 1 runs the same
+  // inference on each option-set object, so recover exactly those plugin-filled
+  // default keys (without any extra inference) and merge them back so the
+  // emitted registration options stay identical.
+  const pluginFilledDefaults = derivePluginFilledDefaults(
+    scope.optionSetGroups,
+    defaultPluginOptions
+  );
   for (const [project, options] of scope.pluginOptionsByProject) {
-    projects.set(project, options as Record<string, string>);
+    projects.set(project, {
+      ...pluginFilledDefaults,
+      ...options,
+    } as Record<string, string>);
   }
 
-  await addPluginRegistrations(
+  // Phase 3/4 — one-shot plugin registration + analytic include computation.
+  addPluginRegistrations(
     tree,
     projects,
     pluginPath,
-    createNodes,
-    createNodesV2,
     defaultPluginOptions,
     projectGraph,
-    spinner
+    spinner,
+    matchedConfigFiles
   );
+
+  // Phase 4 — single verification inference pass over the whole workspace.
+  await runVerificationPass(tree, pluginPath, createNodes, createNodesV2);
+
   spinner.succeed(`Migrated configuration for ${projects.size} project(s).\n`);
 
   return projects;
 }
 
-async function addPluginRegistrations<T>(
+function addPluginRegistrations<T>(
   tree: Tree,
   projects: Map<string, Record<string, string>>,
   pluginPath: string,
-  createNodes: CreateNodes | undefined,
-  createNodesV2: CreateNodes | undefined,
   defaultPluginOptions: T,
   projectGraph: ProjectGraph,
-  spinner: typeof globalSpinner
+  spinner: typeof globalSpinner,
+  // The config files the plugin globs across the whole workspace (from the
+  // Phase 1 inference). Used to decide analytically whether a registration's
+  // `include` globs already cover everything (so it can be left unscoped).
+  matchedConfigFiles: string[]
 ) {
   const nxJson = readNxJson(tree);
-
-  // collect createNodes results for each project before adding the plugins
-  const createNodesResults = new Map<string, ConfigurationResult>();
-  global.NX_GRAPH_CREATION = true;
-  try {
-    let index = 0;
-    for (const [project, options] of projects.entries()) {
-      index++;
-      spinner.updateText(
-        `${index}/${projects.size} - Parsing "${project}" configuration...`
-      );
-      const projectConfigs = await getCreateNodesResultsForPlugin(
-        tree,
-        { plugin: pluginPath, options },
-        pluginPath,
-        createNodes,
-        createNodesV2,
-        nxJson
-      );
-
-      createNodesResults.set(project, projectConfigs);
-    }
-  } finally {
-    global.NX_GRAPH_CREATION = false;
-  }
-
-  const arePluginIncludesRequired = async (
-    project: string,
-    pluginConfiguration: ExpandedPluginConfiguration
-  ): Promise<boolean> => {
-    global.NX_GRAPH_CREATION = true;
-    let result: ConfigurationResult;
-    try {
-      result = await getCreateNodesResultsForPlugin(
-        tree,
-        pluginConfiguration,
-        pluginPath,
-        createNodes,
-        createNodesV2,
-        nxJson
-      );
-    } finally {
-      global.NX_GRAPH_CREATION = false;
-    }
-
-    const originalResults = createNodesResults.get(project);
-
-    return !deepEqual(originalResults, result);
-  };
 
   let index = 0;
   for (const [project, options] of projects.entries()) {
@@ -719,7 +871,13 @@ async function addPluginRegistrations<T>(
         include: [projectIncludeGlob],
       };
 
-      if (!(await arePluginIncludesRequired(project, plugin))) {
+      if (
+        includeCoversAllConfigFiles(
+          plugin.include,
+          plugin.exclude,
+          matchedConfigFiles
+        )
+      ) {
         delete plugin.include;
       }
 
@@ -732,7 +890,13 @@ async function addPluginRegistrations<T>(
       ) {
         existingPlugin.include.push(projectIncludeGlob);
 
-        if (!(await arePluginIncludesRequired(project, existingPlugin))) {
+        if (
+          includeCoversAllConfigFiles(
+            existingPlugin.include,
+            existingPlugin.exclude,
+            matchedConfigFiles
+          )
+        ) {
           delete existingPlugin.include;
         }
       }
@@ -772,31 +936,4 @@ async function getCreateNodesResultsForPlugin(
   }
 
   return projectConfigs;
-}
-
-// Checks if two objects are structurely equal, without caring
-// about the order of the keys.
-function deepEqual<T extends Object>(a: T, b: T, logKey = ''): boolean {
-  const aKeys = Object.keys(a);
-  const bKeys = new Set(Object.keys(b));
-
-  if (aKeys.length !== bKeys.size) {
-    return false;
-  }
-
-  for (const key of aKeys) {
-    if (!bKeys.has(key)) {
-      return false;
-    }
-
-    if (typeof a[key] === 'object' && typeof b[key] === 'object') {
-      if (!deepEqual(a[key], b[key], logKey + '.' + key)) {
-        return false;
-      }
-    } else if (a[key] !== b[key]) {
-      return false;
-    }
-  }
-
-  return true;
 }

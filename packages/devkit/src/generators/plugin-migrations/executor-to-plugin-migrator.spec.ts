@@ -133,20 +133,29 @@ describe('whole-workspace inference passes', () => {
     return plugin.inferenceCount();
   }
 
-  // NOTE: Task 2 flips these expectations to `distinctOptionSets + 1` (a
-  // constant, independent of project count). Today the engine runs a
-  // whole-workspace inference pass once per target, once per project (to parse
-  // each project's config) and once more per project (the include-necessity
-  // check) => `targets + 2 * projects`.
-  it('scales as ~(targets + 2 * projects) today (status quo, pre-rewrite)', async () => {
+  // The engine runs one whole-workspace inference per distinct plugin-option
+  // set (Phase 1) plus exactly one verification pass (Phase 4). For a uniform
+  // fixture that is `1 + 1 = 2`, independent of the number of projects.
+  const EXPECTED_UNIFORM_PASSES = 1 /* distinctOptionSets */ + 1; /* verify */
+
+  it('runs distinctOptionSets + 1 passes for a 3-project fixture', async () => {
     const passes = await migrateUniformFixture(3);
-    // 1 target inference + 3 registration parses + 3 include-necessity checks
-    expect(passes).toBe(1 + 2 * 3);
+    expect(passes).toBe(EXPECTED_UNIFORM_PASSES);
   });
 
-  it('grows with project count today (status quo, pre-rewrite)', async () => {
+  it('does not grow with project count (constant passes)', async () => {
     const passes = await migrateUniformFixture(5);
-    expect(passes).toBe(1 + 2 * 5);
+    expect(passes).toBe(EXPECTED_UNIFORM_PASSES);
+  });
+
+  it('is identical for 3 and 20 projects (O(1) in project count)', async () => {
+    const passesFor3 = await migrateUniformFixture(3);
+    // teardown between runs
+    teardownFixture(ctx.fs);
+    ctx = undefined;
+    const passesFor20 = await migrateUniformFixture(20);
+    expect(passesFor3).toBe(EXPECTED_UNIFORM_PASSES);
+    expect(passesFor20).toBe(EXPECTED_UNIFORM_PASSES);
   });
 });
 
