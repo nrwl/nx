@@ -12,11 +12,7 @@ export async function generateStorybookConfiguration(
   return await configurationGenerator(tree, {
     project: options.project,
     uiFramework: '@storybook/angular',
-    // `@nx/storybook` is not a dependency here, so it resolves to the published
-    // package, whose schema types `linter` from an `@nx/eslint` that predates
-    // oxlint. Safe to coerce: the storybook generator ignores this option and
-    // decides from `findEslintFile`.
-    linter: options.linter === 'eslint' ? 'eslint' : 'none',
+    linter: options.linter,
     tsConfiguration: options.tsConfiguration,
     interactionTests: options.interactionTests,
     configureStaticServe: options.configureStaticServe,
