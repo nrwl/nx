@@ -15,18 +15,27 @@ import { createHash } from 'crypto';
 // Only used to *reject* it as a socket location; see InvalidSocketDirConfigured.
 import { tmpdir as systemTmpDir } from 'tmp';
 import { NATIVE_CACHE_ROOT } from '../native/native-file-cache-location';
-import { logger } from '../utils/logger';
 import { NX_TMP_DIR, NX_USER_TMP_DIR } from '../utils/nx-tmp-dir';
 import { workspaceRoot } from '../utils/workspace-root';
 
 /**
- * Thrown when the socket dir resolves to a directory shared with other users on
- * the machine. Invalid configuration, not a recoverable failure.
+ * Thrown when the socket dir resolves to a directory Nx will not accept.
+ * Invalid configuration, not a recoverable failure.
+ *
+ * Two reasons, and they are not interchangeable: a directory other users can
+ * reach is a security problem, while an Nx container or cache root is the user's
+ * own and is refused because Nx manages what lives there. Telling someone their
+ * own `0700` directory lets a local attacker execute code would be false.
  */
 export class InvalidSocketDirConfigured extends Error {
-  constructor(public readonly dir: string) {
+  constructor(
+    public readonly dir: string,
+    sharedWithOtherUsers: boolean
+  ) {
     super(
-      `The configured Nx socket directory ${dir} is shared with the other users on this machine. Nx locks the socket directory to a single user, so pointing it at a shared one both shuts every other user out of it and — until it does — lets another local user connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
+      sharedWithOtherUsers
+        ? `The configured Nx socket directory ${dir} is shared with the other users on this machine. Nx locks the socket directory to a single user, so pointing it at a shared one both shuts every other user out of it and — until it does — lets another local user connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
+        : `The configured Nx socket directory ${dir} is a directory Nx manages for its own runtime state, and it locks down and cleans up everything beneath it. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
     );
     this.name = 'InvalidSocketDirConfigured';
   }
@@ -88,17 +97,18 @@ function defaultSocketRoot(): string {
 }
 
 /**
- * Directories that may not *be* the socket directory. The system temp directory
- * is shared on POSIX, while the others are Nx container/cache roots rather than
- * socket directories. Nx's actual socket directories live under these roots.
+ * Directories that may not *be* the socket directory, and why. The system temp
+ * directory and the stable container are reachable by other users; the rest are
+ * the current user's own, refused because Nx manages their contents. Nx's actual
+ * socket directories live under these roots.
  */
-function dirsTooSharedForSockets(): string[] {
+function dirsUnusableAsSocketDir(): { dir: string; shared: boolean }[] {
   return [
-    systemTmpDir,
-    NX_TMP_DIR,
-    NX_USER_TMP_DIR,
-    defaultSocketRoot(),
-    NATIVE_CACHE_ROOT,
+    { dir: systemTmpDir, shared: true },
+    { dir: NX_TMP_DIR, shared: true },
+    { dir: NX_USER_TMP_DIR, shared: false },
+    { dir: defaultSocketRoot(), shared: false },
+    { dir: NATIVE_CACHE_ROOT, shared: false },
   ];
 }
 
@@ -182,8 +192,11 @@ function createOwnerOnlySocketDir(
 
   // Outside the try so it is not swallowed by the fallback. Exact matches only,
   // so the per-user directories under those roots never trip it.
-  if (dirsTooSharedForSockets().some((d) => resolve(dir) === resolve(d))) {
-    throw new InvalidSocketDirConfigured(dir);
+  const unusable = dirsUnusableAsSocketDir().find(
+    (d) => resolve(dir) === resolve(d.dir)
+  );
+  if (unusable) {
+    throw new InvalidSocketDirConfigured(dir, unusable.shared);
   }
 
   try {
@@ -226,6 +239,16 @@ function createOwnerOnlySocketDir(
     // Recoverable: fall back to the owner-controlled workspace data dir.
     if (usingDefaultRoot) {
       socketDirFallbackCause = e;
+      // Required lazily, and only on a path that is already failing. A static
+      // import closes a cycle — utils/logger reads `serverLogger` from
+      // daemon/logger while it is still evaluating, and daemon/logger imports
+      // this module — which throws whenever `isOnDaemon()` is true as this
+      // module loads. Production escapes it only because server.ts sets
+      // `global.NX_DAEMON` after its imports, so daemon boot rests on import
+      // order. Keeps this module to Node builtins, as owned-private-dir.ts and
+      // nx-tmp-dir.ts deliberately are.
+      const { logger } =
+        require('../utils/logger') as typeof import('../utils/logger');
       logger.verbose(
         `Nx could not use the default socket directory ${dir}. Falling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
         e
