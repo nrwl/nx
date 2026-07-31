@@ -871,8 +871,9 @@ describe('package-manager', () => {
       (statSync as jest.Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
-      execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
-        _cmd: string,
+      execMock = jest.spyOn(childProcess, 'execFile').mockImplementation(((
+        _file: string,
+        _args: string[],
         options: any,
         callback: any
       ) => {
@@ -894,8 +895,9 @@ describe('package-manager', () => {
 
       await packageRegistryView('nx', 'latest', '--json');
 
-      const [cmd, options] = execMock.mock.calls[0];
-      expect(cmd).toContain('npm view');
+      const [file, fileArgs, options] = execMock.mock.calls[0];
+      expect(file).toBe('npm');
+      expect(fileArgs).toEqual(['view', 'nx@latest', '--json']);
       expect(options.env.npm_config_force).toBe('true');
     });
 
@@ -906,9 +908,39 @@ describe('package-manager', () => {
 
       await packageRegistryView('nx', 'latest', '--json');
 
-      const [cmd, options] = execMock.mock.calls[0];
-      expect(cmd).toContain('pnpm view');
+      const [file, fileArgs, options] = execMock.mock.calls[0];
+      expect(file).toBe('pnpm');
+      expect(fileArgs).toEqual(['view', 'nx@latest', '--json']);
       expect(options.env?.npm_config_force).toBeUndefined();
+    });
+
+    it('should keep a shell on Windows and quote every argument', async () => {
+      // Node refuses to execFile the package manager's .cmd shim without a
+      // shell, so the spawn stays on exec there.
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'npm' } });
+      const shellMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(null, { stdout: '' });
+        return undefined;
+      }) as any);
+      const platform = Object.getOwnPropertyDescriptor(process, 'platform');
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+
+      try {
+        await packageRegistryView('nx', '>=0.0.0', '--json');
+      } finally {
+        Object.defineProperty(process, 'platform', platform);
+      }
+
+      expect(execMock).not.toHaveBeenCalled();
+      const [cmd] = shellMock.mock.calls[0];
+      expect(cmd).toBe('npm "view" "nx@>=0.0.0" "--json"');
     });
 
     it('should run from the workspace root and apply the registry overlay to the spawn env', async () => {
@@ -927,7 +959,7 @@ describe('package-manager', () => {
 
       await packageRegistryView('nx', 'latest', '--json');
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(workspaceRoot);
       expect(options.env.npm_config_registry).toBe(
         'https://sentinel.example.com/'
@@ -991,7 +1023,7 @@ describe('package-manager', () => {
         }
       }
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.env.NPM_CONFIG_REGISTRY).toBeUndefined();
       expect(options.env.npm_config_registry).toBe(
         'https://sentinel.example.com/'
@@ -1021,7 +1053,7 @@ describe('package-manager', () => {
         }
       }
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.env[key]).toBeUndefined();
     });
 
@@ -1046,7 +1078,7 @@ describe('package-manager', () => {
         }
       }
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.env[key]).toBe('ambient-token');
     });
 
@@ -1056,7 +1088,8 @@ describe('package-manager', () => {
         .mockReturnValue({ cli: { packageManager: 'npm' } });
       const leakyUrl = 'https://SECRET-TOKEN-123@reg.example.com/nx';
       execMock.mockImplementation(((
-        _cmd: string,
+        _file: string,
+        _args: string[],
         options: any,
         callback: any
       ) => {
@@ -1093,7 +1126,7 @@ describe('package-manager', () => {
 
       await packageRegistryView('nx', 'latest', '--json');
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(installationPath);
       expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
     });
@@ -1107,7 +1140,7 @@ describe('package-manager', () => {
 
       await packageRegistryView('nx', 'latest', '--json');
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(workspaceRoot);
     });
 
@@ -1121,7 +1154,7 @@ describe('package-manager', () => {
 
       await packageRegistryView('nx', 'latest', '--json');
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(workspaceRoot);
     });
   });
@@ -1136,8 +1169,9 @@ describe('package-manager', () => {
       (statSync as jest.Mock).mockImplementation(() => {
         throw new Error('ENOENT: no such file or directory');
       });
-      execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
-        _cmd: string,
+      execMock = jest.spyOn(childProcess, 'execFile').mockImplementation(((
+        _file: string,
+        _args: string[],
         options: any,
         callback: any
       ) => {
@@ -1155,16 +1189,21 @@ describe('package-manager', () => {
     it('should force npm to bypass devEngines enforcement', async () => {
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
-      const [cmd, options] = execMock.mock.calls[0];
-      // Spec is quoted so range operators are not parsed as shell redirections.
-      expect(cmd).toContain('npm pack "nx@1.0.0"');
+      const [file, fileArgs, options] = execMock.mock.calls[0];
+      expect(file).toBe('npm');
+      expect(fileArgs).toEqual([
+        'pack',
+        'nx@1.0.0',
+        '--pack-destination',
+        '/tmp/pack',
+      ]);
       expect(options.env.npm_config_force).toBe('true');
     });
 
     it('should leave npm min-release-age alone by default', async () => {
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.env.npm_config_min_release_age).toBeUndefined();
     });
 
@@ -1173,7 +1212,7 @@ describe('package-manager', () => {
         bypassMinReleaseAge: true,
       });
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.env.npm_config_min_release_age).toBe('0');
     });
 
@@ -1193,8 +1232,13 @@ describe('package-manager', () => {
 
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
-      const [cmd, options] = execMock.mock.calls[0];
-      expect(cmd).toContain('--pack-destination "/tmp/pack"');
+      const [, fileArgs, options] = execMock.mock.calls[0];
+      expect(fileArgs).toEqual([
+        'pack',
+        'nx@1.0.0',
+        '--pack-destination',
+        '/tmp/pack',
+      ]);
       expect(options.cwd).toBe(workspaceRoot);
       expect(options.env.npm_config_registry).toBe(
         'https://sentinel.example.com/'
@@ -1231,14 +1275,15 @@ describe('package-manager', () => {
         }
       }
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.env[key]).toBeUndefined();
     });
 
     it('redacts a credential embedded in a registry URL from a pack failure', async () => {
       const leakyUrl = 'https://SECRET-TOKEN-123@reg.example.com/nx';
       execMock.mockImplementation(((
-        _cmd: string,
+        _file: string,
+        _args: string[],
         options: any,
         callback: any
       ) => {
@@ -1274,7 +1319,7 @@ describe('package-manager', () => {
 
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
-      const [, options] = execMock.mock.calls[0];
+      const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(installationPath);
       expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
     });
@@ -1303,8 +1348,9 @@ describe('package-manager', () => {
       // npm masks only the password half of URL userinfo, so the token sits in the
       // username position here.
       const leakyUrl = 'https://SECRET-TOKEN-123@reg.example.com/nx';
-      jest.spyOn(childProcess, 'exec').mockImplementation(((
-        _cmd: string,
+      jest.spyOn(childProcess, 'execFile').mockImplementation(((
+        _file: string,
+        _args: string[],
         options: any,
         callback: any
       ) => {

@@ -35,6 +35,26 @@ import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+/**
+ * Shell-less spawn for the registry-bridged fetches: `exec` goes through
+ * /bin/sh, which is dash on Debian-family systems, and dash drops environment
+ * names that are not valid shell identifiers, i.e. every `//...:_authToken`
+ * credential and `@scope:registry` entry the overlay carries. Windows stays on
+ * `exec`, with every argument quoted, because Node refuses to execFile the
+ * package manager's `.cmd` shim without a shell.
+ */
+function execPackageManagerAsync(
+  pm: string,
+  args: string[],
+  options: { cwd: string; windowsHide: boolean; env: NodeJS.ProcessEnv }
+): Promise<{ stdout: string; stderr: string }> {
+  if (process.platform === 'win32') {
+    return execAsync([pm, ...args.map((arg) => `"${arg}"`)].join(' '), options);
+  }
+  return execFileAsync(pm, args, options);
+}
 
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
@@ -698,8 +718,6 @@ export async function packageRegistryView(
     require('./registry-config') as typeof import('./registry-config');
 
   // An empty version means we want the full packument; omit the trailing `@`.
-  // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
-  // redirections.
   const spec = version ? `${pkg}@${version}` : pkg;
   const configRoot = getPackageManagerConfigRoot();
   const workspacePmVersion = getPackageManagerVersionSafe(
@@ -710,23 +728,27 @@ export async function packageRegistryView(
   // which otherwise aborts even a read-only `view` when the pin sets
   // `onFail: error`. Only set for npm so a `pnpm view` is untouched.
   try {
-    const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
-      windowsHide: true,
-      cwd: configRoot,
-      env: mergeNpmConfigEnv(
-        process.env,
-        {
-          ...getNpmSpawnRegistryEnv(
-            pkg,
-            configRoot,
-            workspacePm,
-            workspacePmVersion
-          ),
-          ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
-        },
-        ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
-      ),
-    });
+    const { stdout } = await execPackageManagerAsync(
+      pm,
+      ['view', spec, ...args.split(/\s+/).filter(Boolean)],
+      {
+        windowsHide: true,
+        cwd: configRoot,
+        env: mergeNpmConfigEnv(
+          process.env,
+          {
+            ...getNpmSpawnRegistryEnv(
+              pkg,
+              configRoot,
+              workspacePm,
+              workspacePmVersion
+            ),
+            ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+          },
+          ignoresNpmConfigEnv(workspacePm, workspacePmVersion)
+        ),
+      }
+    );
     return stdout.toString().trim();
   } catch (e) {
     throw redactErrorCause(e);
@@ -769,8 +791,9 @@ export async function packageRegistryPack(
   // .npmrc natively; --pack-destination still writes the tarball to the temp
   // dir. npm prints the tarball basename to stdout.
   try {
-    const { stdout } = await execAsync(
-      `${pm} pack "${pkg}@${version}" --pack-destination "${packDestination}"`,
+    const { stdout } = await execPackageManagerAsync(
+      pm,
+      ['pack', `${pkg}@${version}`, '--pack-destination', packDestination],
       {
         cwd: configRoot,
         windowsHide: true,
