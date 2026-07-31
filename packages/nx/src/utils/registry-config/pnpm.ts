@@ -501,6 +501,15 @@ function bridgeAuthIni(
     authIni.set(key, expandPnpmEnvVars(value));
   }
   const projectNpmrc = readPnpmNpmrcMap(join(root, '.npmrc')) ?? new Map();
+  // Until 11.5.3 pnpm expanded `${VAR}` in workspace .npmrc keys too, so a
+  // placeholder-keyed entry there outranks auth.ini under this file's expanded
+  // spelling. From 11.5.3 pnpm drops placeholder-keyed auth and registry
+  // entries from that file instead of expanding them, so only a literal key
+  // competes.
+  const projectDeclares = (key: string): boolean =>
+    lt(pnpmVersion, '11.5.3')
+      ? readExpandedKey(projectNpmrc, key, expandPnpmEnvVars) !== undefined
+      : projectNpmrc.has(key);
   // An empty value declares nothing: pnpm's own readers re-check for an empty
   // registry, and npm skips an empty env value outright. Deriving from one is
   // what does damage (an empty cafile resolves to auth.ini's own directory).
@@ -512,7 +521,7 @@ function bridgeAuthIni(
   // .npmrc outranks auth.ini in pnpm, so it keeps winning here.
   if (
     !env['npm_config_registry'] &&
-    !projectNpmrc.has('registry') &&
+    !projectDeclares('registry') &&
     authIniRegistry
   ) {
     setRegistry(env, authIniRegistry);
@@ -523,7 +532,7 @@ function bridgeAuthIni(
   if (
     scope &&
     !env[`npm_config_${scope}:registry`] &&
-    !projectNpmrc.has(`${scope}:registry`) &&
+    !projectDeclares(`${scope}:registry`) &&
     authIniScopedRegistry
   ) {
     setScopedRegistry(env, scope, authIniScopedRegistry);
@@ -538,7 +547,7 @@ function bridgeAuthIni(
       env[`npm_config_${key}`] !== undefined ||
       (!managerIgnoresEnv(key) &&
         readNpmConfigEnv(process.env, key) !== undefined) ||
-      projectNpmrc.has(key)
+      projectDeclares(key)
     ) {
       continue;
     }
@@ -574,7 +583,7 @@ function bridgeAuthIni(
         env[`npm_config_${dartKey}`] === undefined &&
         (managerIgnoresEnv(dartKey) ||
           readNpmConfigEnv(process.env, dartKey) === undefined) &&
-        !projectNpmrc.has(dartKey)
+        !projectDeclares(dartKey)
       ) {
         env[`npm_config_${dartKey}`] = authIni.get(bareKey);
       }
@@ -605,7 +614,7 @@ function bridgeAuthIni(
   // (RAW_AUTH_CFG_KEYS) and are written to auth.ini by `pnpm config set`, so
   // bridge them too (a workspace .npmrc that sets the same key still wins).
   const unbridged = (key: string): boolean =>
-    !projectNpmrc.has(key) && authIni.has(key);
+    !projectDeclares(key) && authIni.has(key);
   const cafile = unbridged('cafile') ? declared('cafile') : undefined;
   if (cafile) {
     // From 11.2.0 pnpm resolves a relative cafile against the directory of the

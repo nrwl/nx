@@ -541,6 +541,47 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    it('lets a ${VAR}-keyed workspace .npmrc credential outrank auth.ini before 11.5.3', () => {
+      // Until 11.5.3 pnpm expands `${VAR}` in workspace .npmrc keys, so the
+      // project credential is what pnpm sends, and bridging auth.ini's would
+      // displace it at npm's env tier (verified against pnpm 11.5.2).
+      process.env.NX_TEST_HOST = 'reg-a.example.com';
+      writeFileSync(
+        join(root, '.npmrc'),
+        '//${NX_TEST_HOST}/:_authToken=project-token'
+      );
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//reg-a.example.com/:_authToken=ini-token',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.2')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+      });
+    });
+
+    it('bridges auth.ini over a ${VAR}-keyed workspace entry from 11.5.3, which pnpm drops', () => {
+      // From 11.5.3 pnpm refuses to expand `${VAR}` in workspace .npmrc auth and
+      // registry keys and drops the entry with a warning, so auth.ini is what
+      // pnpm resolves there (verified against pnpm 11.5.3).
+      process.env.NX_TEST_HOST = 'reg-a.example.com';
+      writeFileSync(
+        join(root, '.npmrc'),
+        '//${NX_TEST_HOST}/:_authToken=project-token'
+      );
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//reg-a.example.com/:_authToken=ini-token',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.3')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+      });
+    });
+
     it('warns once when a bare auth.ini credential cannot reach the contacted registry', () => {
       // Nothing in npm's own error ties the missing credential back to auth.ini.
       const { logger } = require('../logger');
