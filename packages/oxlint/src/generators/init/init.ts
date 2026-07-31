@@ -10,10 +10,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import {
-  addPlugin,
-  assertSupportedPackageVersion,
-} from '@nx/devkit/internal';
+import { addPlugin, assertSupportedPackageVersion } from '@nx/devkit/internal';
 import { createNodes } from '../../plugins/plugin.js';
 import { OXLINT_CONFIG_FILENAMES } from '../../utils/config-file.js';
 import {
@@ -73,10 +70,7 @@ function resolveTargetNames(graph: ProjectGraph): string[] {
   return available;
 }
 
-export async function initGeneratorInternal(
-  tree: Tree,
-  options: InitGeneratorSchema
-) {
+export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   assertSupportedPackageVersion(tree, 'oxlint', minSupportedOxlintVersion);
 
   const tasks: GeneratorCallback[] = [];
@@ -125,10 +119,6 @@ export async function initGeneratorInternal(
   }
 
   return runTasksInSerial(...tasks);
-}
-
-export function initGenerator(tree: Tree, options: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, options);
 }
 
 /**
