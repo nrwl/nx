@@ -17,6 +17,13 @@ export interface AddLintingToProjectOptions {
   enableTypedLinting?: boolean;
   /** ESLint-only. Ignored by other linters. */
   eslintConfigFormat?: 'mjs' | 'cjs';
+  /** ESLint-only. Oxlint is inference-only, so it writes no explicit target. */
+  addExplicitTargets?: boolean;
+  /**
+   * ESLint-only. The `@nx/dependency-checks` rule lints `package.json`, which
+   * Oxlint cannot read.
+   */
+  addPackageJsonDependencyChecks?: boolean;
   /**
    * Oxlint plugins to enable for this project, e.g. `['react', 'jsx-a11y']`.
    * Ignored by other linters, which express framework presets differently.
@@ -92,6 +99,8 @@ export async function addLintingToProject(
       rootProject: options.rootProject,
       enableTypedLinting: options.enableTypedLinting,
       eslintConfigFormat: options.eslintConfigFormat,
+      addExplicitTargets: options.addExplicitTargets,
+      addPackageJsonDependencyChecks: options.addPackageJsonDependencyChecks,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       keepExistingVersions: options.keepExistingVersions,
