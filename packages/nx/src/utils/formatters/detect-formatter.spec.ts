@@ -7,7 +7,9 @@ describe('detectFormatterInTree', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    // No formatter: this suite is about what detection reports, so a
+    // pre-seeded config would answer before the code under test runs.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     // The empty workspace ships a .prettierrc; remove it so each case starts
     // from a workspace with no formatter configured at all.
     tree.delete('.prettierrc');
@@ -34,6 +36,20 @@ describe('detectFormatterInTree', () => {
     tree.write('.prettierrc', '{}');
 
     expect(detectFormatterInTree(tree)).toBe('oxfmt');
+  });
+
+  it('should prefer a prettier config over a declared oxfmt dependency', () => {
+    // A config is stronger intent than a dependency, so the dependency
+    // fallback ranks below both configs rather than beside the oxfmt one.
+    // Otherwise a prettier workspace that pulls oxfmt in mid-migration
+    // silently switches formatter.
+    tree.write('.prettierrc', '{}');
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatterInTree(tree)).toBe('prettier');
   });
 
   it('should detect oxfmt from a dependency when it has no config file', () => {
@@ -104,6 +120,16 @@ describe('detectFormatter', () => {
     fs.createFileSync('.prettierrc', '{}');
 
     expect(detectFormatter(fs.tempDir)).toBe('oxfmt');
+  });
+
+  it('should prefer a prettier config over a declared oxfmt dependency', () => {
+    fs.createFileSync('.prettierrc', '{}');
+    fs.createFileSync(
+      'package.json',
+      JSON.stringify({ devDependencies: { oxfmt: '^0.60.0' } })
+    );
+
+    expect(detectFormatter(fs.tempDir)).toBe('prettier');
   });
 
   it('should resolve config files against the given root, not the cwd', () => {
