@@ -34,7 +34,7 @@ describe('migrate-to-vitest-3', () => {
   });
 
   describe('coverage-c8 → coverage-v8 (V3-2)', () => {
-    it('renames the package.json dep while preserving the user pin and order', async () => {
+    it('renames the package.json dep while preserving the user pin', async () => {
       const tree = createTreeWithEmptyWorkspace();
       tree.write(
         'package.json',
@@ -54,12 +54,13 @@ describe('migrate-to-vitest-3', () => {
       await migrateToVitest3(tree);
 
       const updated = JSON.parse(tree.read('package.json', 'utf-8'));
-      expect(Object.keys(updated.devDependencies)).toEqual([
-        'eslint',
-        '@vitest/coverage-v8',
-        'vitest',
-      ]);
-      expect(updated.devDependencies['@vitest/coverage-v8']).toBe('~0.34.6');
+      // Key order is deliberately not asserted: oxfmt sorts package.json, so a
+      // workspace using it normalises the order this migration produces.
+      expect(updated.devDependencies).toEqual({
+        eslint: '^9.0.0',
+        '@vitest/coverage-v8': '~0.34.6',
+        vitest: '^3.0.0',
+      });
     });
 
     it('drops the c8 key when v8 is already present (avoids overwriting user pin)', async () => {

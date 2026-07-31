@@ -477,11 +477,11 @@ describe('Remix Application', () => {
           "name",
           "private",
           "type",
-          "scripts",
           "sideEffects",
-          "nx",
+          "scripts",
           "dependencies",
           "devDependencies",
+          "nx",
         ]
       `);
       expect(packageJson).toMatchInlineSnapshot(`
@@ -682,11 +682,11 @@ describe('Remix Application', () => {
           "name",
           "private",
           "type",
-          "scripts",
           "sideEffects",
-          "nx",
+          "scripts",
           "dependencies",
           "devDependencies",
+          "nx",
         ]
       `);
     });

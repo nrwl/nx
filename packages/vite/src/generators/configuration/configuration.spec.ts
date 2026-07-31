@@ -528,10 +528,7 @@ describe('@nx/vite:configuration', () => {
           root: import.meta.dirname,
           cacheDir: '../../node_modules/.vite/packages/my-lib',
           plugins: [
-            dts({
-              entryRoot: 'src',
-              tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
-            }),
+            dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json') }),
           ],
           // Uncomment this if you are using workers.
           // worker: {

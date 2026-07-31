@@ -1,13 +1,7 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Remix Application Integrated Repo --directory should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
@@ -67,13 +61,7 @@ export default function Index() {
 `;
 
 exports[`Remix Application Integrated Repo --directory should extract the layout directory from the directory options if it exists 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
@@ -295,13 +283,7 @@ exports[`Remix Application Integrated Repo --unitTestRunner should generate the 
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ]
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
   },
   "include": [
     "vite.config.ts",
@@ -326,13 +308,7 @@ exports[`Remix Application Integrated Repo --unitTestRunner should generate the 
 `;
 
 exports[`Remix Application Integrated Repo should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [
@@ -421,9 +397,7 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: './coverage/test',
-  testMatch: [
-    '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-  ],
+  testMatch: ['<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 };
 "
 `;
@@ -514,13 +488,7 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
-    "types": [
-      "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
-      "node",
-      "vitest"
-    ]
+    "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"]
   },
   "include": [
     "vite.config.ts",
@@ -552,13 +520,7 @@ installGlobals();
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 1`] = `
-"import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+"import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node';
 
 export const meta: MetaFunction = () => [

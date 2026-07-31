@@ -570,8 +570,8 @@ describe('app', () => {
           "version",
           "private",
           "scripts",
-          "nx",
           "dependencies",
+          "nx",
         ]
       `);
 
