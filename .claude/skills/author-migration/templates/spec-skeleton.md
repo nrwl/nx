@@ -76,5 +76,5 @@ expect(result.agentContext).toContainEqual(expect.stringContaining('...'));
 // the path that leaves nothing for the AI step
 expect((await update(tree)).skipAgentic).toBe(true);
 // a path that still needs it
-expect((await update(treeWithUnhandledShape)).skipAgentic).toBeFalsy();
+expect((await update(treeWithUnhandledShape))?.skipAgentic).toBeFalsy();
 ```

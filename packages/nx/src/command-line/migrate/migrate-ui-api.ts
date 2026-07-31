@@ -378,10 +378,10 @@ export function addSuccessfulMigration(
     if (!copied.completedMigrations) {
       copied.completedMigrations = {};
     }
-    // A rerun re-records the same id. Carry an ack forward only off a record no
-    // run waived: once a waiving run writes one it is byte-identical to a user's,
-    // so a rerun that owes the prompt again re-asks rather than trust it.
-    // Waiving sets the ack because nothing is owed.
+    // A rerun re-records the same id. Carry an ack forward only off a record
+    // that carries no waiver: once a waiving run writes one it is
+    // byte-identical to a user's, so a rerun that owes the prompt again re-asks
+    // rather than trust it. Waiving sets the ack because nothing is owed.
     const existing = copied.completedMigrations[id];
     const acknowledgedPrompt =
       skipAgentic ||

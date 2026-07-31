@@ -82,11 +82,13 @@ export type PackageJsonUpdates = {
  *
  * - `nextSteps`: workspace-wide notes surfaced to the human in the `nx migrate`
  *   post-run summary. Same audience as the legacy `string[]` return.
- * - `agentContext`: for hybrid migrations (`implementation` + `prompt`). When the
- *   paired prompt runs under `--agentic`, these strings are delivered to the
- *   agent as part of its outer prompt. When no agent runs, this bucket is
- *   silently dropped — it is agent-only by contract. Content meant for the
- *   human in any scenario belongs in `nextSteps`.
+ * - `agentContext`: agent-only by contract. Under `--agentic` it is delivered to
+ *   the agent as part of its outer prompt, but only when the step it feeds
+ *   actually runs: a hybrid's paired prompt, or the validation pass after a
+ *   generator-only migration, which also needs file changes and no
+ *   `--no-validate`. When `nx migrate` itself runs inside an outer agent it goes
+ *   to stdout for that agent instead. Anything else drops it, so content meant
+ *   for the human in any scenario belongs in `nextSteps`.
  * - `skipAgentic`: set to `true` to declare that the deterministic run handled
  *   everything, so `nx migrate` skips the AI step it would otherwise run: the
  *   paired prompt of a hybrid migration, or the generic validation step of a

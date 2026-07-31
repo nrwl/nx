@@ -237,9 +237,9 @@ describe('migrate-ui-api git invocations', () => {
     });
 
     // A waiving run rewrites the whole record, so the ack it leaves behind is
-    // indistinguishable from one the user made. Both orderings below therefore
-    // re-ask rather than trust it; pinned so the next reader does not read the
-    // guard as preserving user acks.
+    // indistinguishable from one the user made, and both orderings below re-ask
+    // rather than trust it. Only the second pins the guard; the first records
+    // the other ordering that loses a user ack the same way.
     it('drops an acknowledgement the user made before a waiving rerun', async () => {
       await run(hybrid, { skipAgentic: false });
       acknowledgeMigrationPrompt('/workspace', hybrid);
