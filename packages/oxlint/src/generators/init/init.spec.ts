@@ -1,6 +1,7 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import {
+  createProjectGraphAsync,
   readJson,
   readNxJson,
   updateNxJson,
@@ -72,7 +73,41 @@ describe('initGeneratorInternal', () => {
       typeof p === 'string' ? p : p.plugin
     );
     expect(plugins).toContain('@nx/oxlint');
-    expect(readNxJson(tree).targetDefaults?.['@nx/oxlint:lint']).toBeUndefined();
+    expect(
+      readNxJson(tree).targetDefaults?.['@nx/oxlint:lint']
+    ).toBeUndefined();
+  });
+
+  // `addPlugin` resolves the target name by running our own `createNodes`
+  // against the real filesystem, where the root config does not exist yet on a
+  // first install because the Tree has not been flushed. It would therefore see
+  // no conflicts and take `lint`, even where ESLint already owns it. The
+  // candidate list is pre-filtered against the existing graph to prevent that.
+  it('should step aside when another linter already owns lint', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    (createProjectGraphAsync as jest.Mock).mockResolvedValueOnce({
+      nodes: {
+        'lib-a': {
+          name: 'lib-a',
+          type: 'lib',
+          data: {
+            root: 'libs/lib-a',
+            targets: { lint: { executor: '@nx/eslint:lint' } },
+          },
+        },
+      },
+      dependencies: {},
+    });
+
+    await initGeneratorInternal(tree, {
+      skipPackageJson: true,
+      skipFormat: true,
+    });
+
+    const plugin = readNxJson(tree).plugins?.find((p) =>
+      typeof p === 'string' ? false : p.plugin === '@nx/oxlint'
+    ) as { plugin: string; options?: { targetName?: string } };
+    expect(plugin.options?.targetName).toBe('oxlint');
   });
 
   it.each([
