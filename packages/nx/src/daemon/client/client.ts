@@ -1425,9 +1425,11 @@ function nxJsonIsNotPresent() {
 }
 
 /**
- * The socket exists but the operating system refused it — it belongs to another
- * user. That is the guarantee the owner-only socket directory buys, so it is an
- * environment condition rather than a defect in Nx, and it deliberately does not
+ * The operating system refused the connection. Most often the socket belongs to
+ * another user, which is the guarantee the owner-only socket directory buys —
+ * but a sandbox that denies unix-socket connects produces the same errno, so the
+ * message does not assert which. Either way it is an environment condition
+ * rather than a defect in Nx, and it deliberately does not
  * carry `internalDaemonError`: that tag tells the user to file an issue and
  * disables the daemon until `nx reset`, which would outlast the stale socket
  * that caused it.
@@ -1443,8 +1445,8 @@ export function daemonPermissionException(socketPath: string, cause: string) {
       '',
       `Socket: ${socketPath}`,
       '',
-      'The socket belongs to a different user. This is usually a daemon left behind by running Nx under `sudo`, a different uid inside a container, or a working copy shared between accounts.',
-      'Delete the socket above, or set NX_SOCKET_DIR to a directory only your user can reach.',
+      'Most often the socket belongs to a different user: a daemon left behind by running Nx under `sudo`, a different uid inside a container, or a working copy shared between accounts. If the socket is your own, a sandbox is refusing the connection instead.',
+      'If it belongs to another user, delete the socket above or set NX_SOCKET_DIR to a directory only your user can reach. If you are in a sandbox, allow unix sockets under the Nx socket root.',
     ].join('\n')
   );
   (error as any).daemonPermissionError = true;

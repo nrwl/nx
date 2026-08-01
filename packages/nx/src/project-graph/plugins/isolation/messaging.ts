@@ -159,9 +159,12 @@ type PluginMessageDefs = DefineMessages<{
 /**
  * The sender's workspace root. Only the *worker* asserts on it, for host→worker
  * messages; results and notifications carry the field but the host does not
- * check it, so this is not the symmetric protection the daemon applies.
+ * check it. The daemon channel is checked in the same one direction — the
+ * server validates inbound client messages and the client does not validate
+ * responses — so the two are alike rather than one being weaker.
  * Optional and stamped centrally in `sendMessageOverSocket`, so the many
- * message constructors need not set it; undefined is treated as not foreign.
+ * message constructors need not set it; undefined is treated as not foreign,
+ * which is why this detects a shared socket directory rather than an attacker.
  */
 export type WorkspaceStampedMessage = { workspaceRoot?: string };
 

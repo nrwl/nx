@@ -50,10 +50,11 @@ export const NX_HOME_TMP_DIR = resolveHomeTmpDir();
  * this location entirely.
  *
  * A rootless container running as an arbitrary uid has neither `$HOME` nor a
- * passwd entry, and `homedir()` then either throws or yields an empty string —
- * from which `join` would build the *relative* path `.nx`, putting sockets in
- * whatever the working directory happens to be and pointing `removeSocketDir`'s
- * recursive delete at it. Evaluated at module scope, so the throw has to be
+ * passwd entry, and `homedir()` then either throws or yields an empty string. A
+ * `$HOME` that is set but relative reaches the same place, which is why absolute
+ * is checked rather than merely non-empty: `join` would build the *relative*
+ * path `.nx`, putting sockets under whatever the working directory happens to be
+ * and pointing `removeSocketDir`'s recursive delete into it. Evaluated at module scope, so the throw has to be
  * caught here: the native binding loader imports this file.
  */
 function resolveHomeTmpDir(): string | undefined {

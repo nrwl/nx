@@ -1,7 +1,15 @@
 /**
- * Per workspace (to avoid subtle differences and issues), we want to have a deterministic
- * location within the OS's tmp directory where we write log files for background processes
- * and where we create the actual unix socket/named pipe for the daemon.
+ * Where the daemon, forked task processes and plugin workers put their sockets.
+ *
+ * Not `os.tmpdir()`, and not one location: the root is a literal `/tmp/.nx` so a
+ * sandbox can allowlist it once, and resolution walks an ordered chain —
+ * `$NX_SOCKET_DIR`, then `/tmp/.nx/<uid>/sockets`, then `~/.nx/sockets`, then the
+ * workspace data dir. The socket directory beneath the winning root is per-run,
+ * since its name hashes the pid; clients read the daemon's path back out of the
+ * process cache rather than deriving it.
+ *
+ * Daemon logs are not here — they live in the workspace data dir alongside the
+ * `disabled` marker, which is why that path survives a socket-root change.
  */
 import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'path';
@@ -284,7 +292,13 @@ export function getSocketDirFallbackCause(): unknown {
   return socketDirFallbackCause;
 }
 
-/** The NX_SOCKET_DIR that was refused, if that is why we are in the fallback. */
+/**
+ * The NX_SOCKET_DIR that was refused, if that is why we are in the fallback.
+ * Reflects the most recent resolution only — both accessors are cleared at the
+ * top of every `createOwnerOnlySocketDir` call, and the daemon and plugin socket
+ * paths each drive one. Read it immediately after the call that produced the
+ * path, which is what `assertValidSocketPath` does.
+ */
 export function getRefusedConfiguredSocketDir(): string | undefined {
   return refusedConfiguredSocketDir;
 }
