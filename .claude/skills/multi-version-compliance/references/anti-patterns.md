@@ -10,12 +10,26 @@ Patterns to reject in your own work and flag in reviews. Each entry: what it loo
 - `function cleanVersion(v) { return clean(v) ?? coerce(v)?.version ?? undefined; }` — duplicates `normalizeSemver`.
 - `getInstalledRsbuildVersionRuntime` / `getInstalled<X>FromFs` reading `require('<pkg>/package.json')` directly — duplicates `getInstalledPackageVersion`.
 - Inline `clean(declared) ?? coerce(declared)` chain at a generator entry point — duplicates `getDeclaredPackageVersion`.
+- Open-coded tree-branch in `getInstalled<Pkg>Version(tree?)`: `getDependencyVersionFromPackageJson(tree, pkg)` + an `installedVersion === 'latest' || installedVersion === 'next'` check + a `clean(...) ?? coerce(...)?.version ?? null` chain. The dist-tag list and the normalization chain are both centralized in `getDeclaredPackageVersion` (via `NON_SEMVER_DIST_TAGS` / `normalizeSemver`). A local copy silently misses new entries if `NON_SEMVER_DIST_TAGS` grows.
 
 **Why wrong:** The shared helpers in `@nx/devkit/internal` and `@nx/devkit/internal-testing-utils` already exist. Duplicates create drift — one will get the `latest`/`next` handling, the other won't; one will use `getNxRequirePaths()` for pnpm-strict resolution, the other won't.
 
 **Do instead:** Call `assertSupportedPackageVersion(tree, pkg, floor)` via the per-plugin wrapper (`assertSupportedXVersion`). For executor-side reads: `getInstalledPackageVersion(pkg)`. For tree-side normalization: `getDeclaredPackageVersion(tree, pkg, latestKnown)`. For raw semver cleaning: `normalizeSemver(v)`.
 
-**Reference:** Compliant — `packages/cypress/src/utils/assert-supported-cypress-version.ts` (7 lines). Concrete anti-pattern — PR `#35676` introduces `function cleanVersion` (`packages/rsbuild/src/utils/versions.ts`) and `getInstalledRsbuildVersionRuntime` reading `require('@rsbuild/core/package.json')`. Both should call the shared helpers instead.
+For the `getInstalled<Pkg>Version(tree?)` wrapper specifically:
+
+```ts
+export function getInstalledCypressVersion(tree?: Tree): string | null {
+  if (!tree) {
+    return getInstalledPackageVersion('cypress');
+  }
+  return getDeclaredPackageVersion(tree, 'cypress');
+}
+```
+
+**Omit the third arg by default.** It conflates "missing" with "dist tag" — both fall back to the supplied fresh-install constant. That's almost never what the caller wants; consumers that need a `?? latest` fallback should encode it at the call site, not globally in the helper (rspack/rsbuild precedent). See `canonical-shape.md` §"Dist-tag semantics — third arg".
+
+**Reference:** Compliant — `packages/cypress/src/utils/assert-supported-cypress-version.ts` (7 lines); `packages/cypress/src/utils/versions.ts` `getInstalledCypressVersion` (no third arg); `packages/rspack/src/utils/version-utils.ts` and `packages/rsbuild/src/utils/version-utils.ts` (same shape). Concrete anti-pattern — PR `#35676` introduces `function cleanVersion` (`packages/rsbuild/src/utils/versions.ts`) and `getInstalledRsbuildVersionRuntime` reading `require('@rsbuild/core/package.json')`. Both should call the shared helpers instead.
 
 ## 2. Above-ceiling throw or warn
 
@@ -201,14 +215,16 @@ return; // otherwise skip
 
 with no `requires` block on the migration entry in `migrations.json`.
 
-**Why wrong:** Neither approach is a source-major gate.
+**Why wrong:** Neither approach gates at the layer the runner filters on.
 
 - `incompatibleWith` blocks running on workspaces that have the matching version — it doesn't gate to a source-major range. A workspace on `@angular-devkit/build-angular: 22.0.0` will still pass the `incompatibleWith` check.
-- A runtime per-package guard runs the migration _body_ on every workspace and skips internally. The migration record still appears as "executed" to the migrate runner, and any side effects (logging, partial work) leak. The `nx migrate` runner uses `requires` as the source-major filter; bypassing it means the migration isn't filtered at the right layer.
+- A runtime per-package guard runs the migration _body_ on every workspace and skips internally. The migration record still appears as "executed" to the migrate runner, and any side effects (logging, partial work) leak. The `nx migrate` runner filters on `requires`; an in-body guard whose condition `requires` can express bypasses that layer.
 
-**Do instead:** `requires: { "<pkg>": ">=N.0.0 <(N+1).0.0" }` — the actual source-major gate at the migration-entry level. Drop the in-body guard once the `requires` is in place.
+**Do instead:** On a `packageJsonUpdates` entry (variant A): `requires: { "<pkg>": ">=N.0.0 <(N+1).0.0" }`, the source-major window. On a migration entry (variant B): `requires` with the destination range, usually `{ "<pkg>": ">=N.0.0" }` alone. Entry gates evaluate once at collection time against the version the package lands on in this run (installed only when the run does not bump it), so an upper bound meant as "migrating from N" skips whenever the run bumps past the cap and the migration never runs: `migrate-to-storybook-10` gated `>=9.0.0 <10.0.0` never fired because the same run landed storybook on 10, fixed in #33613 by flipping the gate to `>=10.0.0`. Add an upper bound only when the migration is inapplicable at or above it (`next >=15.0.0 <16.0.0` on the next-15 instructions entry in `packages/next/migrations.json`). Drop the in-body guard once the `requires` is in place.
 
-**Reference:** Anti-pattern (variant B) — `@nx/eslint` `update-typescript-eslint-v8.13.0` (NXC-4387) has runtime `gte('8.0.0') + lt('8.13.0')` per-package guards but no `requires` block. `@nx/jest` similar with `incompatibleWith` (NXC-4391).
+**Exception (conditions `requires` cannot express):** `requires` is AND across package names and an absent package fails the gate, so "either the umbrella or the scoped package is installed" cannot be written there; that check belongs in the body. See `hasTypescriptEslintV8` in `packages/eslint/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules.ts`, which replaced a single-name `requires` that silently skipped workspaces declaring only the scoped packages (#36180). An in-body guard whose condition `requires` can express is still this anti-pattern.
+
+**Reference:** Anti-pattern (variant B): `@nx/eslint` `update-typescript-eslint-v8.13.0` (NXC-4387, removed with the pre-v21 migration prune in #35909) had runtime `gte('8.0.0') + lt('8.13.0')` per-package guards but no `requires` block. `@nx/jest` similar with `incompatibleWith` (NXC-4391).
 
 ## 11. Naming a specific plugin in shared helper docstrings
 

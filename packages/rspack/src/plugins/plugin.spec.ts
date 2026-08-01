@@ -1,7 +1,7 @@
-import { type CreateNodesContextV2 } from '@nx/devkit';
+import { type CreateNodesContext } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodesV2 } from './plugin';
+import { createNodes } from './plugin';
 
 jest.mock('@nx/js/internal', () => ({
   ...jest.requireActual('@nx/js/internal'),
@@ -9,8 +9,8 @@ jest.mock('@nx/js/internal', () => ({
 }));
 
 describe('@nx/rspack', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
 

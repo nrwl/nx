@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { prompt } from 'enquirer';
@@ -85,9 +85,18 @@ async function promptForNewVersion(
       name: vs,
       message: vs,
       value: vs,
-      hint: interpolateVersionPattern(versionSchemes[vs], { projectName }),
+      description: interpolateVersionPattern(versionSchemes[vs], {
+        projectName,
+      }),
     })),
-  });
+    // Show only the focused scheme's resolved pattern, not every row's at once.
+    footer: function () {
+      const focused = this.focused as { description?: string };
+      return focused?.description
+        ? this.styles.muted(`  ${focused.description}`)
+        : '';
+    },
+  } as any);
 
   return versionScheme;
 }
@@ -125,7 +134,9 @@ function updateProjectVersion(
   const fullImageRef =
     nxDockerImageRefEnvOverride ?? `${newImageRef}:${newVersion}`;
   if (!isDryRun) {
-    execSync(`docker tag ${imageRef} ${fullImageRef}`, {
+    // argv array, not a shell string - the image ref is assembled from workspace
+    // config, CLI flags and env, so it can't be trusted as shell input.
+    execFileSync('docker', ['tag', imageRef, fullImageRef], {
       windowsHide: true,
     });
   }

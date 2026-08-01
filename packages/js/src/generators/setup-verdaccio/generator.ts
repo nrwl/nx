@@ -11,6 +11,7 @@ import {
 } from '@nx/devkit';
 import * as path from 'path';
 import { SetupVerdaccioGeneratorSchema } from './schema';
+import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
 import { verdaccioVersion } from '../../utils/versions';
 import { getNpmRegistry } from '../../utils/npm-config';
@@ -19,6 +20,8 @@ export async function setupVerdaccio(
   tree: Tree,
   options: SetupVerdaccioGeneratorSchema
 ) {
+  assertSupportedTypescriptVersion(tree);
+
   if (!tree.exists('.verdaccio/config.yml')) {
     generateFiles(tree, path.join(__dirname, 'files'), '.verdaccio', {
       npmUplinkRegistry:
@@ -73,7 +76,9 @@ export async function setupVerdaccio(
   return addDependenciesToPackageJson(
     tree,
     {},
-    { verdaccio: verdaccioVersion }
+    { verdaccio: verdaccioVersion },
+    undefined,
+    true
   );
 }
 

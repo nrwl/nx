@@ -3,12 +3,21 @@
     "update-22-2-0-create-ai-instructions-for-nuxt-4": {
       "version": "22.2.0-beta.0",
       "description": "Create AI Instructions to help migrate workspaces to Nuxt 4.",
-      "implementation": "./src/migrations/update-22-2-0/create-ai-instructions-for-nuxt-4"
+      "prompt": "./dist/src/migrations/update-22-2-0/ai-instructions-for-nuxt-4.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/nuxt/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {
     "22.2.0": {
       "version": "22.2.0-beta.0",
+      "requires": {
+        "nuxt": ">=3.0.0 <4.0.0"
+      },
       "packages": {
         "nuxt": {
           "version": "^4.0.0",

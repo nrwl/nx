@@ -9,6 +9,7 @@ import {
   normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 import { ViteDevServerExecutorOptions } from './schema';
+import schema from './schema.json';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import {
   createBuildableTsConfig,
@@ -143,7 +144,6 @@ async function getServerExtraArgs(
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
-  const schema = await import('./schema.json');
   const extraArgs = {};
   for (const key of Object.keys(options)) {
     if (!schema.properties[key]) {
@@ -181,10 +181,19 @@ async function getServerExtraArgs(
   }
 
   if (configuration) {
+    const normalizeWatchOption = <T>(
+      watch: T | false | undefined
+    ): T | undefined => {
+      return watch === false ? undefined : watch;
+    };
+
     serverOptions = {
       ...serverOptions,
-      watch: buildOptionsFromBuildTarget?.watch ?? serverOptions?.watch,
+      watch:
+        normalizeWatchOption(buildOptionsFromBuildTarget?.watch) ??
+        normalizeWatchOption(serverOptions?.watch),
     };
+
     otherOptions = {
       ...otherOptions,
       ...(otherOptionsFromBuildTarget ?? {}),

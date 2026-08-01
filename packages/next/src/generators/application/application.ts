@@ -7,12 +7,13 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   testingLibraryDomVersion,
   testingLibraryReactVersion,
-} from '@nx/react/src/utils/versions';
-import { getReactDependenciesVersionsToInstall } from '@nx/react/src/utils/version-utils';
+} from '@nx/react/internal';
+import { getReactDependenciesVersionsToInstall } from '@nx/react/internal';
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
@@ -46,6 +47,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
+  assertSupportedNextVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
@@ -128,7 +131,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       addDependenciesToPackageJson(
         host,
         { tslib: tsLibVersion },
-        devDependencies
+        devDependencies,
+        undefined,
+        true
       )
     );
   }

@@ -1,13 +1,12 @@
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
 // nx-ignore-next-line
-import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { useCallback, useMemo, useState } from 'react';
 import { MigrationCard } from './migration-card';
+import { MigrationsJsonMetadata } from '../migration-shape';
 import type { Interpreter } from 'xstate';
 import type {
   AutomaticMigrationState,
@@ -32,6 +31,7 @@ export function MigrationList(props: {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  onViewPrompt: (migration: MigrationDetailsWithId) => void;
 }) {
   const [selectedMigrations, setSelectedMigrations] = useState<
     Record<string, boolean>
@@ -169,6 +169,9 @@ export function MigrationList(props: {
             }}
             onViewDocumentation={() => {
               props.onViewDocumentation(migration);
+            }}
+            onViewPrompt={() => {
+              props.onViewPrompt(migration);
             }}
             onFileClick={(file) => {
               props.onFileClick(migration, file);

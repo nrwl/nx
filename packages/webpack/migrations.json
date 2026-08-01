@@ -4,44 +4,58 @@
       "cli": "nx",
       "version": "21.0.0-beta.11",
       "description": "Remove isolatedConfig option for @nx/webpack:webpack",
-      "implementation": "./src/migrations/update-21-0-0/remove-isolated-config"
+      "implementation": "./dist/src/migrations/update-21-0-0/remove-isolated-config",
+      "documentation": "./dist/src/migrations/update-21-0-0/remove-isolated-config.md"
     },
     "update-22-0-0-remove-deprecated-options": {
       "cli": "nx",
       "version": "22.0.0-beta.0",
       "description": "Remove deprecated deleteOutputPath and sassImplementation options from @nx/webpack:webpack",
-      "implementation": "./src/migrations/update-22-0-0/remove-deprecated-options"
+      "implementation": "./dist/src/migrations/update-22-0-0/remove-deprecated-options"
+    },
+    "update-23-0-0-remove-nx-tsconfig-paths-webpack-plugin-import": {
+      "cli": "nx",
+      "version": "23.0.0-beta.10",
+      "description": "Rewrites imports of NxTsconfigPathsWebpackPlugin from '@nx/webpack' to the sub-path '@nx/webpack/tsconfig-paths-plugin'.",
+      "factory": "./dist/src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import",
+      "documentation": "./dist/src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import.md"
+    },
+    "rewrite-webpack-internal-subpath-imports": {
+      "version": "23.0.0-beta.24",
+      "description": "Rewrites `@nx/webpack/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/webpack`'s exports map. Named imports/exports of public symbols are routed to `@nx/webpack` and the rest to the new `@nx/webpack/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/webpack/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/webpack/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {
-    "20.5.0": {
-      "version": "20.5.0-beta.3",
-      "packages": {
-        "sass-loader": {
-          "version": "^16.0.4",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.7.1": {
-      "version": "20.7.1-beta.0",
-      "packages": {
-        "webpack": {
-          "version": "5.98.0",
-          "alwaysAddToPackageJson": false
-        },
-        "webpack-dev-server": {
-          "version": "^5.2.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "21.5.0": {
       "version": "21.5.0-beta.0",
       "packages": {
         "webpack": {
           "version": "5.101.3",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0": {
+      "version": "23.0.0-beta.24",
+      "packages": {
+        "webpack": {
+          "version": "^5.101.3",
+          "alwaysAddToPackageJson": "devDependencies"
+        },
+        "webpack-dev-server": {
+          "version": "^5.2.1",
+          "alwaysAddToPackageJson": "devDependencies"
+        },
+        "webpack-cli": {
+          "version": "^7.0.0",
+          "alwaysAddToPackageJson": "devDependencies"
         }
       }
     }

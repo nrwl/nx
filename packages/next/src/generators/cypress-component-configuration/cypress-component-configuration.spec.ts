@@ -1,12 +1,12 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { libraryGenerator } from '../library/library';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual<any>('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual<any>('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 
@@ -43,10 +43,17 @@ describe('cypress-component-configuration generator', () => {
     );
     expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot();
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
-      import { defineConfig } from 'cypress';
-      export default defineConfig({
-        component: nxComponentTestingPreset(__filename),
+      "const {
+        nxComponentTestingPreset,
+      } = require('@nx/next/plugins/component-testing');
+      const { defineConfig } = require('cypress');
+      module.exports = defineConfig({
+        component: {
+          ...nxComponentTestingPreset(__filename),
+          // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
+          // intermittently run 0 tests in CI. Remove this line to opt back in.
+          justInTimeCompile: false,
+        },
       });
       "
     `);
@@ -164,10 +171,17 @@ describe('cypress-component-configuration generator', () => {
     );
     expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot();
     expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
-      import { defineConfig } from 'cypress';
-      export default defineConfig({
-        component: nxComponentTestingPreset(__filename),
+      "const {
+        nxComponentTestingPreset,
+      } = require('@nx/next/plugins/component-testing');
+      const { defineConfig } = require('cypress');
+      module.exports = defineConfig({
+        component: {
+          ...nxComponentTestingPreset(__filename),
+          // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
+          // intermittently run 0 tests in CI. Remove this line to opt back in.
+          justInTimeCompile: false,
+        },
       });
       "
     `);

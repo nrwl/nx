@@ -1,26 +1,12 @@
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as packageManagerUtils from 'nx/src/utils/package-manager';
 import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 import type { Tree } from 'nx/src/generators/tree';
 import { readJson, writeJson } from 'nx/src/generators/utils/json';
-import { addDependenciesToPackageJson, ensurePackage } from './package-json';
-
-// Mock fs for catalog tests
-jest.mock('fs', () => require('memfs').fs);
-jest.mock('node:fs', () => require('memfs').fs);
-
-// Mock yaml reading functions
-jest.mock('nx/src/devkit-internals', () => ({
-  ...jest.requireActual('nx/src/devkit-internals'),
-  readYamlFile: jest.fn((path: string) => {
-    const { vol } = require('memfs');
-    try {
-      const content = vol.readFileSync(path, 'utf8');
-      return require('@zkochan/js-yaml').load(content);
-    } catch (error) {
-      throw new Error(`Cannot read YAML file at ${path}`);
-    }
-  }),
-}));
+import {
+  addDependenciesToPackageJson,
+  ensurePackage,
+  getDependencyVersionFromPackageJson,
+} from './package-json';
 
 describe('addDependenciesToPackageJson', () => {
   let tree: Tree;
@@ -491,7 +477,9 @@ describe('addDependenciesToPackageJson', () => {
 
   describe('catalog support', () => {
     beforeEach(() => {
-      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('pnpm');
+      jest
+        .spyOn(packageManagerUtils, 'detectPackageManager')
+        .mockReturnValue('pnpm');
       tree.root = '/test-workspace';
     });
 
@@ -520,7 +508,7 @@ catalog:
       expect(result.dependencies).toEqual({ react: 'catalog:' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should add new dependencies as regular dependencies when no existing catalog reference', () => {
@@ -533,7 +521,9 @@ catalog:
     });
 
     it('should use direct dependencies with unsupported package managers', () => {
-      jest.spyOn(devkitExports, 'detectPackageManager').mockReturnValue('npm');
+      jest
+        .spyOn(packageManagerUtils, 'detectPackageManager')
+        .mockReturnValue('npm');
       writeJson(tree, 'package.json', {
         dependencies: { react: 'catalog:' },
       });
@@ -567,7 +557,7 @@ catalog:
       });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should preserve existing catalog references when updating with direct versions', () => {
@@ -586,7 +576,7 @@ catalog:
       expect(result.dependencies).toEqual({ react: 'catalog:' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('react: "^18.2.0"');
+      expect(workspace).toContain('react: ^18.2.0');
     });
 
     it('should update only the specific catalog when package exists in multiple catalogs', () => {
@@ -643,7 +633,7 @@ catalog:
       expect(result.devDependencies).toEqual({ jest: 'catalog:dev' });
 
       const workspace = tree.read('pnpm-workspace.yaml', 'utf-8');
-      expect(workspace).toContain('jest: "^29.0.0"');
+      expect(workspace).toContain('jest: ^29.0.0');
     });
 
     it('should resolve catalog references for version comparison', () => {
@@ -681,6 +671,102 @@ catalog:
         "Failed to resolve catalog reference 'catalog:nonexistent' for package 'react'"
       );
     });
+  });
+});
+
+describe('getDependencyVersionFromPackageJson', () => {
+  let tree: Tree;
+
+  beforeEach(() => {
+    tree = createTree();
+    tree.root = '/test-workspace';
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should resolve a bun catalog reference to the catalog version', () => {
+    jest
+      .spyOn(packageManagerUtils, 'detectPackageManager')
+      .mockReturnValue('bun');
+    writeJson(tree, 'package.json', {
+      workspaces: ['packages/*'],
+      catalog: { vite: '6.0.0' },
+    });
+    writeJson(tree, 'packages/app/package.json', {
+      devDependencies: { vite: 'catalog:' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'vite',
+      'packages/app/package.json'
+    );
+
+    expect(version).toBe('6.0.0');
+  });
+
+  it('should resolve a bun named catalog reference', () => {
+    jest
+      .spyOn(packageManagerUtils, 'detectPackageManager')
+      .mockReturnValue('bun');
+    writeJson(tree, 'package.json', {
+      workspaces: ['packages/*'],
+      catalogs: { web: { react: '^18.2.0' } },
+    });
+    writeJson(tree, 'packages/app/package.json', {
+      dependencies: { react: 'catalog:web' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'react',
+      'packages/app/package.json'
+    );
+
+    expect(version).toBe('^18.2.0');
+  });
+
+  it('should resolve a bun catalog reference nested under workspaces', () => {
+    jest
+      .spyOn(packageManagerUtils, 'detectPackageManager')
+      .mockReturnValue('bun');
+    writeJson(tree, 'package.json', {
+      workspaces: { packages: ['packages/*'], catalog: { vite: '6.0.0' } },
+    });
+    writeJson(tree, 'packages/app/package.json', {
+      devDependencies: { vite: 'catalog:' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'vite',
+      'packages/app/package.json'
+    );
+
+    expect(version).toBe('6.0.0');
+  });
+
+  it('should return the raw specifier when no catalog manager applies', () => {
+    jest
+      .spyOn(packageManagerUtils, 'detectPackageManager')
+      .mockReturnValue('npm');
+    writeJson(tree, 'package.json', {
+      catalog: { vite: '6.0.0' },
+    });
+    writeJson(tree, 'packages/app/package.json', {
+      devDependencies: { vite: 'catalog:' },
+    });
+
+    const version = getDependencyVersionFromPackageJson(
+      tree,
+      'vite',
+      'packages/app/package.json'
+    );
+
+    // npm has no catalog manager, so the reference is left unresolved.
+    expect(version).toBe('catalog:');
   });
 });
 

@@ -5,7 +5,8 @@
     "moduleResolution": "bundler",
     "declaration": true,
     "composite": false,
-    "outDir": "../../dist/packages/angular"
+    "outDir": "dist",
+    "rootDir": "."
   },
   "include": ["index.ts", "mf/**/*"],
   "angularCompilerOptions": {

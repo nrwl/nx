@@ -11,7 +11,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { mkdirSync, rmdirSync } from 'fs';
+import { mkdirSync, rmSync } from 'fs';
 import { execSync } from 'node:child_process';
 import { join } from 'path';
 import { createMultiPackageRepo } from './import-utils';
@@ -39,7 +39,7 @@ describe('Nx Import', () => {
     }
 
     try {
-      rmdirSync(join(tempImportE2ERoot));
+      rmSync(join(tempImportE2ERoot), { recursive: true, force: true });
     } catch {}
   });
 

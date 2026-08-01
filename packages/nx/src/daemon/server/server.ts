@@ -257,9 +257,13 @@ async function handleMessage(socket: Socket, data: string) {
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
   if (isDaemonMessage(payload) && payload.env) {
-    const envChanged = applyDaemonEnvFromClient(payload.env);
-    if (envChanged) {
-      serverLogger.log('Graph recompute necessary due to env variable refresh');
+    const changedEnvKeys = applyDaemonEnvFromClient(payload.env);
+    if (changedEnvKeys.length > 0) {
+      serverLogger.log(
+        `Graph recompute necessary due to env variable refresh. Changed keys: ${changedEnvKeys.join(
+          ', '
+        )}`
+      );
       forwardEnvToPluginWorkers(payload.env);
       invalidateGraphCache();
     }
@@ -660,6 +664,16 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 };
 
 export async function startServer(): Promise<Server> {
+  // Watch before scan: a file written during boot must be visible to the
+  // watcher or the scan below. Scan-first left a blind window where such
+  // files stayed invisible to both until an unrelated change arrived.
+  if (!getWatcherInstance()) {
+    storeWatcherInstance(await watchWorkspace(server, handleWorkspaceChanges));
+    serverLogger.watcherLog(
+      `Subscribed to changes within: ${workspaceRoot} (native)`
+    );
+  }
+
   setupWorkspaceContext(workspaceRoot);
 
   // Initialize analytics for daemon process
@@ -729,16 +743,6 @@ export async function startServer(): Promise<Server> {
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
-
-          if (!getWatcherInstance()) {
-            storeWatcherInstance(
-              await watchWorkspace(server, handleWorkspaceChanges)
-            );
-
-            serverLogger.watcherLog(
-              `Subscribed to changes within: ${workspaceRoot} (native)`
-            );
-          }
 
           if (!getOutputWatcherInstance()) {
             storeOutputWatcherInstance(

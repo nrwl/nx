@@ -2,7 +2,7 @@ import { formatFiles, readNxJson, type Tree, updateNxJson } from '@nx/devkit';
 import {
   forEachExecutorOptions,
   upsertTargetDefault,
-  normalizeTargetDefaults,
+  findTargetDefault,
 } from '@nx/devkit/internal';
 import type { WebpackExecutorOptions } from '@nx/webpack';
 
@@ -42,13 +42,9 @@ export default async function (tree: Tree) {
     { env: nxMFDevRemotesEnvVar },
   ];
 
-  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-    (e) =>
-      e.executor === webpackExecutor &&
-      e.target === undefined &&
-      e.projects === undefined &&
-      e.plugin === undefined
-  );
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    executor: webpackExecutor,
+  });
 
   if (!existing) {
     upsertTargetDefault(tree, nxJson, {

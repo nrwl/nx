@@ -10,7 +10,7 @@ describe('webpackInitGenerator (legacy)', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should not install webpack dependencies', async () => {
+  it('should install webpack and webpack-dev-server (they are peer dependencies)', async () => {
     await webpackInitGenerator(tree, {
       addPlugin: false,
     });
@@ -22,6 +22,8 @@ describe('webpackInitGenerator (legacy)', () => {
       devDependencies: {
         '@nx/web': expect.any(String),
         '@nx/webpack': expect.any(String),
+        webpack: expect.any(String),
+        'webpack-dev-server': expect.any(String),
       },
     });
   });

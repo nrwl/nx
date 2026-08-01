@@ -18,7 +18,7 @@ function updateDependencies(tree: Tree, options: Schema) {
       {},
       { '@nx/node': nxVersion },
       undefined,
-      options.keepExistingVersions
+      options.keepExistingVersions ?? true
     )
   );
 

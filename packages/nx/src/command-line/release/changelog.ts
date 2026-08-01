@@ -103,6 +103,23 @@ export type { ChangelogChange } from './changelog/version-plan-utils';
 
 export type PostGitTask = (latestCommit: string) => Promise<void>;
 
+/**
+ * Determines whether a changelog configuration will actually produce any output.
+ * A changelog config is effectively enabled when it would produce a changelog file
+ * or create a remote release.
+ */
+export function isChangelogEffectivelyEnabled(
+  config?:
+    | NxReleaseConfig['changelog']['workspaceChangelog']
+    | NxReleaseConfig['groups'][string]['changelog']
+): boolean | undefined {
+  if (!config) {
+    return false;
+  }
+
+  return config.file !== false || config.createRelease !== false;
+}
+
 export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
   handleErrors(args.verbose, () => createAPI({}, false)(args));
 
@@ -189,16 +206,19 @@ export function createAPI(
       output.note(releaseGraph.filterLog);
     }
 
-    let rawVersionPlans = await readRawVersionPlans();
-
-    if (args.deleteVersionPlans === undefined) {
-      // default to deleting version plans in this command instead of after versioning
-      args.deleteVersionPlans = true;
-    }
-
+    // Programmatic API consumers can force changelog generation to run even when the resolved
+    // configuration is considered effectively disabled (e.g. when they have disabled changelog
+    // file writing and remote release creation because they consume the returned changelog
+    // contents in memory instead)
     const changelogGenerationEnabled =
-      !!nxReleaseConfig.changelog.workspaceChangelog ||
-      Object.values(nxReleaseConfig.groups).some((g) => g.changelog);
+      args.forceChangelogGeneration ||
+      isChangelogEffectivelyEnabled(
+        nxReleaseConfig.changelog.workspaceChangelog
+      ) ||
+      Object.values(nxReleaseConfig.groups).some((g) =>
+        isChangelogEffectivelyEnabled(g.changelog)
+      );
+
     if (!changelogGenerationEnabled) {
       output.warn({
         title: `Changelogs are disabled. No changelog entries will be generated`,
@@ -207,6 +227,13 @@ export function createAPI(
         ],
       });
       return {};
+    }
+
+    let rawVersionPlans = await readRawVersionPlans();
+
+    if (args.deleteVersionPlans === undefined) {
+      // default to deleting version plans in this command instead of after versioning
+      args.deleteVersionPlans = true;
     }
 
     const useAutomaticFromRef =
@@ -370,7 +397,8 @@ export function createAPI(
       preid: string | undefined,
       checkAllBranchesWhen: CheckAllBranchesWhen,
       requireSemver: boolean,
-      strictPreid: boolean
+      strictPreid: boolean,
+      projectRoot?: string
     ): Promise<string | null> => {
       if (fromSHACache.has(cacheKey)) {
         return fromSHACache.get(cacheKey);
@@ -386,6 +414,7 @@ export function createAPI(
         requireSemver,
         strictPreid,
         useAutomaticFromRef,
+        projectRoot,
       });
       fromSHACache.set(cacheKey, sha);
       return sha;
@@ -491,7 +520,8 @@ export function createAPI(
               projectsPreid[project.name],
               releaseGroup.releaseTag.checkAllBranchesWhen,
               releaseGroup.releaseTag.requireSemver,
-              releaseGroup.releaseTag.strictPreid
+              releaseGroup.releaseTag.strictPreid,
+              project.data.root
             );
 
             let commits: GitCommit[];

@@ -11,16 +11,25 @@ import { workspaceRoot } from '@nx/devkit';
 let metroResolver: any = null;
 
 /**
- * Lazily require metro-resolver to handle cases where it might not be installed
+ * Lazily require the Metro resolver.
+ *
+ * Expo SDK 55+ ships Metro through `@expo/metro`, so the resolver must come
+ * from the same Metro instance Expo uses. Older SDKs (53/54) use the standalone
+ * `metro-resolver` package. We prefer `@expo/metro` and fall back to the
+ * standalone package to stay compatible with both.
  */
 function getMetroResolver() {
   if (!metroResolver) {
     try {
-      metroResolver = require('metro-resolver');
-    } catch (error) {
-      throw new Error(
-        'metro-resolver is required but not installed. Please install metro-resolver >= 0.82.0'
-      );
+      metroResolver = require('@expo/metro/metro-resolver');
+    } catch {
+      try {
+        metroResolver = require('metro-resolver');
+      } catch (error) {
+        throw new Error(
+          'Unable to load Metro resolver. Install `@expo/metro` (Expo SDK 55+) or `metro-resolver` (>= 0.82.0).'
+        );
+      }
     }
   }
   return metroResolver;

@@ -172,7 +172,7 @@ describe('generator utils', () => {
               // Don't forget to update your package.json as well.
               formats: ['es' as const]
             },
-            rollupOptions: {
+            rolldownOptions: {
               // External packages that should not be bundled into your library.
               external: []
             },
@@ -255,6 +255,10 @@ describe('generator utils', () => {
         json.workspaces = ['apps/*'];
         return json;
       });
+      // detectPackageManager() resolves to pnpm in the test env, so
+      // isWorkspacesEnabled requires pnpm-workspace.yaml to recognise this
+      // tree as using package-manager workspaces.
+      tree.write('pnpm-workspace.yaml', `packages:\n  - 'apps/*'\n`);
       writeJson(tree, 'tsconfig.base.json', {
         compilerOptions: {
           composite: true,
@@ -316,7 +320,7 @@ describe('generator utils', () => {
               // Don't forget to update your package.json as well.
               formats: ['es' as const]
             },
-            rollupOptions: {
+            rolldownOptions: {
               // External packages that should not be bundled into your library.
               external: []
             },

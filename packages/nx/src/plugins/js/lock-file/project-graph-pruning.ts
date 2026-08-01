@@ -70,10 +70,10 @@ function normalizeDependencies(
     ...peerDependencies,
   };
 
+  const manager = getCatalogManager(workspaceRootPath);
   Object.entries(combinedDependencies).forEach(
     ([packageName, versionRange]) => {
       let resolvedVersionRange = versionRange;
-      const manager = getCatalogManager(workspaceRootPath);
       if (manager?.isCatalogReference(versionRange)) {
         resolvedVersionRange = manager.resolveCatalogReference(
           workspaceRootPath,

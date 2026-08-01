@@ -14,6 +14,7 @@ import {
 
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
+import { nxVersion } from '../../utils/versions';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNxProjectGraphLines } from './get-project-graph-lines';
 import { GradlePluginOptions, normalizeOptions } from './gradle-plugin-options';
@@ -31,6 +32,8 @@ export interface ProjectGraphReport {
 
 export interface ProjectGraphReportCache extends ProjectGraphReport {
   hash: string;
+  /** The @nx/gradle version that wrote the cache. */
+  pluginVersion?: string;
 }
 
 function readProjectGraphReportCache(
@@ -42,7 +45,14 @@ function readProjectGraphReportCache(
   )
     ? readJsonFile(cachePath)
     : undefined;
-  if (!projectGraphReportCache || projectGraphReportCache.hash !== hash) {
+  if (
+    !projectGraphReportCache ||
+    projectGraphReportCache.hash !== hash ||
+    // Reports written by other @nx/gradle versions may use a different format
+    // (e.g. absolute machine paths before 0.1.24) — regenerate instead of
+    // trusting them, including when restored from another machine's cache.
+    projectGraphReportCache.pluginVersion !== nxVersion
+  ) {
     return;
   }
   return projectGraphReportCache as ProjectGraphReport;
@@ -55,6 +65,7 @@ export function writeProjectGraphReportToCache(
 ) {
   let projectGraphReportJson: ProjectGraphReportCache = {
     hash,
+    pluginVersion: nxVersion,
     ...results,
   };
 
@@ -178,6 +189,12 @@ export async function populateProjectGraph(
     gradleProjectGraphReportEnd.name
   );
   projectGraphReportCache = processNxProjectGraph(projectGraphLines);
+  // An empty report can be legitimate (e.g. no project produced nodes), but
+  // don't cache it so a transiently-degraded run cannot pin the workspace to
+  // a graph without gradle projects.
+  if (Object.keys(projectGraphReportCache.nodes).length === 0) {
+    return;
+  }
   writeProjectGraphReportToCache(
     projectGraphReportCachePath,
     projectGraphReportCache,
@@ -200,13 +217,19 @@ export function processNxProjectGraph(
     const line = projectGraphLines[index].trim();
     if (line.startsWith('> Task ') && line.endsWith(':nxProjectGraph')) {
       index++; // Skip the task line before searching for the JSON file path
+      // The task prints its report file path; stop searching at the next task
+      // header (e.g. the path was never printed) or the end of the output.
       while (
         index < projectGraphLines.length &&
-        !projectGraphLines[index].trim().endsWith('.json')
+        !projectGraphLines[index].trim().endsWith('.json') &&
+        !projectGraphLines[index].trim().startsWith('> Task ')
       ) {
         index++;
       }
-      const file = projectGraphLines[index];
+      const file = projectGraphLines[index]?.trim();
+      if (!file?.endsWith('.json')) {
+        continue;
+      }
       const projectGraphReportJson: ProjectGraphReport =
         readJsonFile<ProjectGraphReport>(file);
       projectGraphReportForAllProjects.nodes = {

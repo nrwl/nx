@@ -1,5 +1,5 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   getNamedInputs,
   loadConfigFile,
   PluginCache,
@@ -7,10 +7,12 @@ import {
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
+  AggregateCreateNodesError,
   type CreateDependencies,
-  type CreateNodesContextV2,
+  type CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -48,7 +50,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const remixConfigGlob = '**/{remix,vite}.config.{js,cjs,mjs,ts,cts,mts}';
 
-export const createNodes: CreateNodesV2<RemixPluginOptions> = [
+export const createNodes: CreateNodes<RemixPluginOptions> = [
   remixConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -57,22 +59,56 @@ export const createNodes: CreateNodesV2<RemixPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
+    const normalizedOptions = normalizeOptions(options);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            targetsCache,
-            _isUsingTsSolutionSetup(),
-            pmc,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterRemixConfigs(
         configFilePaths,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        { ...normalizedOptions, isUsingTsSolutionSetup },
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              isUsingTsSolutionSetup,
+              pmc,
+              entries[idx].siblingFiles,
+              entries[idx].remixCompiler,
+              projectHashes[idx] + configFile
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -84,41 +120,15 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: RemixPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<RemixTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  siblingFiles: string[],
+  remixCompiler: RemixCompiler,
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-  const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
-  // Do not create a project if package.json and project.json isn't there
-  const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  options = normalizeOptions(options);
-
-  const remixCompiler = determineIsRemixVite(
-    configFilePath,
-    context.workspaceRoot
-  );
-
-  if (remixCompiler === RemixCompiler.IsNotRemix) {
-    return {};
-  }
-
-  const hash =
-    (await calculateHashForCreateNodes(
-      projectRoot,
-      { ...options, isUsingTsSolutionSetup },
-      context,
-      [lockFileName]
-    )) + configFilePath;
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(
@@ -155,7 +165,7 @@ async function buildRemixTargets(
   configFilePath: string,
   projectRoot: string,
   options: RemixPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   siblingFiles: string[],
   remixCompiler: RemixCompiler,
   isUsingTsSolutionSetup: boolean,
@@ -458,4 +468,52 @@ enum RemixCompiler {
   IsClassic = 1,
   IsVte = 2,
   IsNotRemix = 3,
+}
+
+interface RemixEntry {
+  configFile: string;
+  projectRoot: string;
+  siblingFiles: string[];
+  remixCompiler: RemixCompiler;
+}
+
+async function filterRemixConfigs(
+  configFilePaths: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: RemixEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFilePaths.map(async (configFile): Promise<RemixEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        const remixCompiler = determineIsRemixVite(
+          configFile,
+          context.workspaceRoot
+        );
+        if (remixCompiler === RemixCompiler.IsNotRemix) {
+          return null;
+        }
+        return { configFile, projectRoot, siblingFiles, remixCompiler };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is RemixEntry => c !== null),
+    preErrors,
+  };
 }

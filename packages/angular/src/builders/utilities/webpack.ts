@@ -1,5 +1,5 @@
 import { merge } from 'webpack-merge';
-import { registerTsProject } from '@nx/js/internal';
+import { loadTsFile } from '@nx/js/internal';
 import { workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
@@ -64,9 +64,7 @@ export async function mergeCustomWebpackConfig(
 }
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
-  const cleanupTranspiler = registerTsProject(tsConfig);
-  const customWebpackConfig = require(path);
-  cleanupTranspiler();
+  const customWebpackConfig = loadTsFile<any>(path, tsConfig);
   // If the user provides a configuration in TS file
   // then there are 2 cases for exporting an object. The first one is:
   // `module.exports = { ... }`. And the second one is:
@@ -80,10 +78,7 @@ export function resolveIndexHtmlTransformer(
   tsConfig: string,
   target: import('@angular-devkit/architect').Target
 ) {
-  const cleanupTranspiler = registerTsProject(tsConfig);
-  const indexTransformer = require(path);
-  cleanupTranspiler();
-
+  const indexTransformer = loadTsFile<any>(path, tsConfig);
   const transform = indexTransformer.default ?? indexTransformer;
 
   return (indexHtml) => transform(target, indexHtml);

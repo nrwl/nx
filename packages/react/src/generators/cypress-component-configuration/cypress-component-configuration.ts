@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import type { GeneratorCallback } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
@@ -30,6 +31,8 @@ export async function cypressComponentConfigGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(tree);
+
   const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);

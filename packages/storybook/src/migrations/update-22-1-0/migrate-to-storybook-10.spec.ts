@@ -31,6 +31,7 @@ describe('migrate-to-storybook-10 migration', () => {
 
     expect(migrate10GeneratorSpy).toHaveBeenCalledWith(tree, {
       autoAcceptAllPrompts: true,
+      skipAiInstructions: true,
     });
   });
 

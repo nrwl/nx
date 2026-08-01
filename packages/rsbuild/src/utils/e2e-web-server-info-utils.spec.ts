@@ -22,18 +22,17 @@ describe('getRsbuildE2EWebServerInfo', () => {
     jest.resetModules();
   });
 
-  it('should use array-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
-    nxJson.targetDefaults = [
-      {
-        target: 'dev',
+    nxJson.targetDefaults = {
+      dev: {
         options: {
           port: 4400,
         },
       },
-    ];
+    };
     updateNxJson(tree, nxJson);
 
     // ACT

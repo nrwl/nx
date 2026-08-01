@@ -8,7 +8,7 @@
     { "glob": "**/schema.d.ts", "input": "packages/dotnet/src" },
     {
       "glob": "**/*",
-      "input": "dist/msbuild-analyzer",
+      "input": "packages/dotnet/analyzer/bin/Release/publish",
       "output": "/lib/",
       "includeIgnoredFiles": true
     }

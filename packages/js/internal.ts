@@ -7,8 +7,11 @@
 // Re-exports of nx-source internals (need `no-restricted-imports` overrides).
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export {
+  forceRegisterEsmLoader,
+  loadTsFile,
   registerTsProject,
   registerTsConfigPaths,
+  requireWithTsconfigFallback,
 } from 'nx/src/plugins/js/utils/register';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export {
@@ -24,6 +27,10 @@ export {
   type RawTsconfigJsonCache,
 } from './src/utils/typescript/raw-tsconfig';
 
+// Module-format detection for generators (project package.json `type` field +
+// TS solution awareness; mirrors Node's nearest-package.json semantics).
+export { isEsmProject } from './src/utils/module-format/is-esm-project';
+
 // TS solution setup detection
 export {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
@@ -38,10 +45,21 @@ export {
   updateTsconfigFiles,
 } from './src/utils/typescript/ts-solution-setup';
 
-// TypeScript helpers (resolvePathsBaseUrl, extractTsConfigBase,
-// tsConfigBaseOptions, addTsLibDependencies, resolveModuleByImport — all ship
-// via the public @nx/js entry)
+// TypeScript helpers. resolvePathsBaseUrl, extractTsConfigBase,
+// tsConfigBaseOptions, addTsLibDependencies, and resolveModuleByImport ship via
+// the public @nx/js entry. getTsConfigBaseOptions is public too, but is
+// re-exported here so internal consumers can import it from @nx/js/internal.
+export { getTsConfigBaseOptions } from './src/utils/typescript/create-ts-config';
+export {
+  createTreeParseConfigHost,
+  type TreeParseConfigHost,
+} from './src/utils/typescript/ts-config';
 export { ensureTypescript } from './src/utils/typescript/ensure-typescript';
+export {
+  getRangeMinimum,
+  getTsConfigModuleResolution,
+  isTypescriptVersionAtLeast,
+} from './src/utils/is-typescript-version-at-least';
 export { getNeededCompilerOptionOverrides } from './src/utils/typescript/configuration';
 export {
   compileTypeScript,

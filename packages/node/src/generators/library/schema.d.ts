@@ -17,7 +17,10 @@ export interface Schema {
   babelJest?: boolean;
   js?: boolean;
   strict?: boolean;
-  standaloneConfig?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   compiler: 'tsc' | 'swc';
   addPlugin?: boolean;

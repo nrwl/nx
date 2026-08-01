@@ -22,17 +22,17 @@ import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
-} from '@nx/eslint/src/generators/init/global-eslint-config';
+  addPluginsToLintConfig,
+  isEslintConfigSupported,
+  replaceOverridesInLintConfig,
+} from '@nx/eslint/internal';
 import * as path from 'path';
 import { axiosVersion } from '../../utils/versions';
 import { Schema } from './schema';
 import {
-  addPluginsToLintConfig,
-  isEslintConfigSupported,
-  replaceOverridesInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
-import { getInstalledJestMajorVersion } from '@nx/jest/src/utils/versions';
+  findRootJestPreset,
+  getInstalledJestMajorVersion,
+} from '@nx/jest/internal';
 import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
@@ -258,7 +258,7 @@ export async function e2eProjectGeneratorInternal(
       tsConfigPaths: [
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),
       ],
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
       skipPackageJson: false,
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,

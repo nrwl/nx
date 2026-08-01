@@ -123,9 +123,18 @@ describe('rewrite-internal-subpath-imports migration', () => {
       expect(rewriteSubpathImports(source)).toBe(source);
     });
 
-    it('leaves typeof import() type queries alone', () => {
+    it('rewrites typeof import() type queries to the internal entry', () => {
       const source = `type X = typeof import('@nx/js/src/utils/typescript/ts-config');\n`;
-      expect(rewriteSubpathImports(source)).toBe(source);
+      expect(rewriteSubpathImports(source)).toBe(
+        `type X = typeof import('@nx/js/internal');\n`
+      );
+    });
+
+    it('rewrites a <typeof import()>require() cast in tandem', () => {
+      const source = `const m = (require('@nx/js/src/utils/typescript/ts-config') as typeof import('@nx/js/src/utils/typescript/ts-config'));\n`;
+      expect(rewriteSubpathImports(source)).toBe(
+        `const m = (require('@nx/js/internal') as typeof import('@nx/js/internal'));\n`
+      );
     });
 
     it('returns the source unchanged when there are no matches', () => {

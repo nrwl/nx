@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/ui-primitives",
+    "outDir": "dist",
     "types": ["node"],
     "lib": ["DOM", "ES2022"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "rootDir": "."
   },
   "files": [],
   "exclude": [

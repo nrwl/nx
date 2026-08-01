@@ -48,7 +48,9 @@ export async function addRollupBuildTarget(
         {
           '@rollup/plugin-url': rollupPluginUrlVersion,
           '@svgr/rollup': svgrRollupVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
   }

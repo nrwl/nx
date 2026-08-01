@@ -34,7 +34,8 @@ public class TargetBuilderOutputPathsTests
         string projectDirectory,
         string projectName = "MyProj",
         bool isExe = false,
-        bool isTest = false) =>
+        bool isTest = false,
+        List<string>? directoryBuildInputs = null) =>
         TargetBuilder.BuildTargets(
             projectName: projectName,
             fileName: $"{projectName}.csproj",
@@ -45,7 +46,8 @@ public class TargetBuilderOutputPathsTests
             projectDirectory: projectDirectory,
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
-            nxJson: null);
+            nxJson: null,
+            directoryBuildInputs: directoryBuildInputs ?? new List<string>());
 
     // --- Original #33971: Microsoft.NET.Sdk.Web ---------------------------
 
@@ -201,5 +203,93 @@ public class TargetBuilderOutputPathsTests
                 "{workspaceRoot}/build-output/obj/foo",
             },
             targets["build"].Outputs);
+    }
+
+    // --- Publish output: configuration is rewritten to match the target -----
+
+    [Fact]
+    public void Publish_RewritesEvaluatedDebugPublishDirToRelease()
+    {
+        // MSBuild evaluates PublishDir at the default (Debug) configuration, but
+        // the publish target runs --configuration Release. The declared output
+        // must point at bin/Release/publish (where the publish actually lands),
+        // not the evaluated bin/Debug/publish.
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["PublishDir"] = "bin\\Debug\\publish\\",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin/Release/publish", "{projectRoot}/obj" },
+            targets["publish"].Outputs);
+    }
+
+    [Fact]
+    public void Publish_LeavesCustomPublishDirWithoutConfigurationSegmentAlone()
+    {
+        // A custom PublishDir that has no Debug/Release segment is passed through
+        // unchanged (only configuration segments are rewritten).
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["PublishDir"] = "dist-publish",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{projectRoot}/dist-publish", "{projectRoot}/obj" },
+            targets["publish"].Outputs);
+    }
+
+    [Fact]
+    public void Publish_ArtifactsLayout_EmitsWorkspaceRootPublishPath()
+    {
+        var projectDirectory = ProjectDir("apps", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["UseArtifactsOutput"] = "true",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
+
+        Assert.Equal(
+            new[] { "{workspaceRoot}/artifacts/publish/foo", "{workspaceRoot}/artifacts/obj/foo" },
+            targets["publish"].Outputs);
+    }
+
+    // --- Pack output: nupkg glob plus the intermediate (obj) directory ------
+
+    [Fact]
+    public void Pack_EmitsNupkgGlobAndIntermediateObj()
+    {
+        // `dotnet pack` writes the .nupkg into the package output directory and
+        // intermediate state into obj, so both must be declared as outputs.
+        var projectDirectory = ProjectDir("libs", "foo");
+
+        var targets = BuildTargets(properties: new Dictionary<string, string>(), projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin/*.nupkg", "{projectRoot}/obj" },
+            targets["pack"].Outputs);
+    }
+
+    [Fact]
+    public void Pack_ArtifactsLayout_EmitsWorkspaceRootPackageAndObjPaths()
+    {
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["UseArtifactsOutput"] = "true",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{workspaceRoot}/artifacts/package/*.nupkg", "{workspaceRoot}/artifacts/obj/foo" },
+            targets["pack"].Outputs);
     }
 }

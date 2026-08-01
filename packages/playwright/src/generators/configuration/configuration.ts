@@ -46,7 +46,10 @@ import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,
 } from './schema';
-import { addIgnoresToLintConfig } from '@nx/eslint/src/generators/utils/eslint-file';
+import {
+  addIgnoresToLintConfig,
+  isTypedLintingEnabled,
+} from '@nx/eslint/internal';
 
 export function configurationGenerator(
   tree: Tree,
@@ -75,15 +78,26 @@ export async function configurationGeneratorInternal(
   const projectConfig = readProjectConfiguration(tree, options.project);
   const offsetFromProjectRoot = offsetFromRoot(projectConfig.root);
 
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+
+  // Always emit `playwright.config.mts`. Node forces `.mts` to ESM
+  // regardless of workspace `type`, so Playwright's runtime routes it
+  // through the ESM loader (`requireOrImport` -> dynamic `import()`),
+  // bypassing the pirates CJS-compile path that breaks ESM-shape `.ts`
+  // configs. Nx's native TS strip loads `.mts` directly via `loadTsFile`.
+  // Playwright's configLoader auto-discovers `.mts` (extension list at
+  // configLoader.js:313 is `.ts/.js/.mts/.mjs/.cts/.cjs`).
   generateFiles(tree, path.join(__dirname, 'files'), projectConfig.root, {
     offsetFromRoot: offsetFromProjectRoot,
     projectRoot: projectConfig.root,
     webServerCommand: options.webServerCommand ?? null,
     webServerAddress: options.webServerAddress ?? null,
+    isTsSolutionSetup,
     ...options,
   });
-
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+  const playwrightConfigFile = options.js
+    ? 'playwright.config.mjs'
+    : 'playwright.config.mts';
   const tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
   if (tree.exists(tsconfigPath)) {
     if (isTsSolutionSetup) {
@@ -97,7 +111,7 @@ export async function configurationGeneratorInternal(
         include: [
           joinPathFragments(options.directory, '**/*.ts'),
           joinPathFragments(options.directory, '**/*.js'),
-          'playwright.config.ts',
+          playwrightConfigFile,
         ],
         exclude: ['out-tsc', 'test-output'],
       };
@@ -135,7 +149,7 @@ export async function configurationGeneratorInternal(
       include: [
         '**/*.ts',
         '**/*.js',
-        'playwright.config.ts',
+        playwrightConfigFile,
         'src/**/*.spec.ts',
         'src/**/*.spec.js',
         'src/**/*.test.ts',
@@ -218,7 +232,7 @@ export async function configurationGeneratorInternal(
       skipPackageJson: options.skipPackageJson,
       js: options.js,
       directory: options.directory,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject ?? projectConfig.root === '.',
       addPlugin: options.addPlugin,
     })
@@ -226,7 +240,7 @@ export async function configurationGeneratorInternal(
 
   if (options.js) {
     const { ModuleKind } = ensureTypescript();
-    toJS(tree, { extension: '.cjs', module: ModuleKind.CommonJS });
+    toJS(tree, { extension: '.mjs', module: ModuleKind.ESNext });
   }
 
   recommendVsCodeExtensions(tree);
@@ -405,8 +419,10 @@ Rename or remove the existing e2e target.`);
     executor: '@nx/playwright:playwright',
     outputs: [`{workspaceRoot}/dist/.playwright/${projectConfig.root}`],
     options: {
+      // Generator emits `playwright.config.mts` (`.mjs` for `--js`) so the
+      // legacy executor's `--config` flag must point at the same extension.
       config: `${projectConfig.root}/playwright.config.${
-        options.js ? 'cjs' : 'ts'
+        options.js ? 'mjs' : 'mts'
       }`,
     },
   };

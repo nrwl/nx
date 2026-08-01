@@ -3,7 +3,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   type NxJsonConfiguration,
   readJson,
-  type TargetDefaultEntry,
   type Tree,
   updateJson,
 } from '@nx/devkit';
@@ -15,22 +14,11 @@ describe('jest', () => {
   let tree: Tree;
   let options: JestInitSchema;
 
-  function getJestTargetDefaults(): TargetDefaultEntry[] {
-    const td =
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults ?? [];
-    if (!Array.isArray(td)) {
-      throw new Error('expected array-shaped targetDefaults in test');
-    }
-    return td.filter(
-      (entry): entry is TargetDefaultEntry => entry.executor === '@nx/jest:jest'
-    );
-  }
-
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    // ensure targetDefaults starts as the array shape so assertions target it
+    // ensure targetDefaults starts as an empty map so assertions target it
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults = [];
+      json.targetDefaults = {};
       return json;
     });
     options = {
@@ -73,17 +61,15 @@ describe('jest', () => {
         '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
         '!{projectRoot}/**/*.md',
       ];
-      const entries = (json.targetDefaults ?? []) as TargetDefaultEntry[];
-      entries.push({
-        target: 'test',
+      json.targetDefaults ??= {};
+      json.targetDefaults['test'] = {
         inputs: [
           'default',
           '^production',
           '{workspaceRoot}/jest.preset.js',
           '{workspaceRoot}/testSetup.ts',
         ],
-      });
-      json.targetDefaults = entries;
+      };
       nxJson = json;
       return json;
     });
@@ -102,66 +88,33 @@ describe('jest', () => {
     expect(packageJson.devDependencies['@nx/jest']).toBeDefined();
   });
 
-  it('should patch existing target-scoped and filtered jest defaults in place', async () => {
+  it('adds the generic @nx/jest:jest default without touching existing target-scoped or filtered jest entries', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults = [
-        {
-          target: 'test',
-          executor: '@nx/jest:jest',
-        },
-        {
-          executor: '@nx/jest:jest',
-          projects: 'tag:unit',
-          cache: false,
-        },
-      ];
+      json.targetDefaults = {
+        test: { executor: '@nx/jest:jest' },
+        '@nx/jest:jest': [{ filter: { projects: ['tag:unit'] }, cache: false }],
+      };
       return json;
     });
 
     await jestInitGenerator(tree, { ...options, addPlugin: false });
 
-    const jestDefaults = getJestTargetDefaults();
-    expect(jestDefaults).toHaveLength(2);
-    expect(jestDefaults).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          target: 'test',
-          executor: '@nx/jest:jest',
-          cache: true,
-          configurations: {
-            ci: {
-              ci: true,
-              codeCoverage: true,
-            },
-          },
-          options: {
-            passWithNoTests: true,
-          },
-        }),
-        expect.objectContaining({
-          executor: '@nx/jest:jest',
-          projects: 'tag:unit',
-          cache: false,
-          configurations: {
-            ci: {
-              ci: true,
-              codeCoverage: true,
-            },
-          },
-          options: {
-            passWithNoTests: true,
-          },
-        }),
-      ])
-    );
-    for (const entry of jestDefaults) {
-      expect(entry.inputs).toEqual(
-        expect.arrayContaining([
+    const td = readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults;
+    // The target-scoped and filtered entries the user authored are left as-is.
+    expect(td['test']).toEqual({ executor: '@nx/jest:jest' });
+    expect(td['@nx/jest:jest']).toEqual([
+      { filter: { projects: ['tag:unit'] }, cache: false },
+      // A new unfiltered baseline is appended for the executor.
+      expect.objectContaining({
+        cache: true,
+        options: { passWithNoTests: true },
+        configurations: { ci: { ci: true, codeCoverage: true } },
+        inputs: expect.arrayContaining([
           'default',
           '^default',
           expect.stringMatching(/^\{workspaceRoot\}\/jest\.preset\.(js|ts)$/),
-        ])
-      );
-    }
+        ]),
+      }),
+    ]);
   });
 });

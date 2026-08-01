@@ -1,15 +1,16 @@
 import {
   loadConfigFile,
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   PluginCache,
 } from '@nx/devkit/internal';
-import type { NuxtOptions } from '@nuxt/schema';
 import {
+  AggregateCreateNodesError,
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -37,22 +38,57 @@ export interface NuxtPluginOptions {
   watchDepsTargetName?: string;
 }
 
-export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
+export const createNodes: CreateNodes<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (files, options, context) => {
-    //TODO(@nrwl/nx-vue-reviewers): This should batch hashing like our other plugins.
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
-    const result = await createNodesFromFiles(
-      (configFile, opts, ctx) =>
-        createNodesInternal(configFile, opts, ctx, pmc, lockFileName),
-      files,
-      options,
-      context
-    );
-    targetsCache.writeToDisk();
-    return result;
+    const normalizedOptions = normalizeOptions(options);
+
+    try {
+      const { entries, preErrors } = await filterNuxtConfigs(files, context);
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
+    } finally {
+      targetsCache.writeToDisk();
+    }
   },
 ];
 
@@ -61,28 +97,11 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  options = normalizeOptions(options);
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
   if (!targetsCache.has(hash)) {
     targetsCache.set(
       hash,
@@ -104,7 +123,7 @@ async function buildNuxtTargets(
   configFilePath: string,
   projectRoot: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const nuxtConfig: {
@@ -230,12 +249,17 @@ function buildStaticTarget(
 
 async function getInfoFromNuxtConfig(
   configFilePath: string,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   projectRoot: string
 ): Promise<{
   buildDir: string;
 }> {
-  let config: NuxtOptions;
+  // Only `buildDir` is read below. Typing it to the full `@nuxt/schema`
+  // `NuxtOptions` couples to one schema version, which clashes when
+  // `loadNuxtConfig` returns the (possibly older) `@nuxt/schema` bundled by the
+  // installed `@nuxt/kit`. Type just what we read so it holds across the
+  // supported Nuxt 3.x–4.x range.
+  let config: { buildDir?: string };
   if (process.env.NX_ISOLATE_PLUGINS !== 'false') {
     config = await (
       await loadNuxtKitDynamicImport()
@@ -291,6 +315,45 @@ function normalizeOutputPath(
       }
     }
   }
+}
+
+interface NuxtEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterNuxtConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: NuxtEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<NuxtEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is NuxtEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {

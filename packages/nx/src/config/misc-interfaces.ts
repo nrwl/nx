@@ -77,9 +77,29 @@ export type PackageJsonUpdates = {
  * Returning a string[] from the migration function will be interpreted as
  * a list of next steps to be displayed to the user.
  */
+/**
+ * Structured return value for a migration function.
+ *
+ * - `nextSteps`: workspace-wide notes surfaced to the human in the `nx migrate`
+ *   post-run summary. Same audience as the legacy `string[]` return.
+ * - `agentContext`: for hybrid migrations (`implementation` + `prompt`). When the
+ *   paired prompt runs under `--agentic`, these strings are delivered to the
+ *   agent as part of its outer prompt. When no agent runs, this bucket is
+ *   silently dropped — it is agent-only by contract. Content meant for the
+ *   human in any scenario belongs in `nextSteps`.
+ */
+export interface MigrationReturnObject {
+  nextSteps?: string[];
+  agentContext?: string[];
+}
+
 export type Migration = (
   tree: Tree
-) => void | Promise<void> | string[] | Promise<string[]>;
+) =>
+  | void
+  | string[]
+  | MigrationReturnObject
+  | Promise<void | string[] | MigrationReturnObject>;
 
 export interface MigrationsJsonEntry {
   version: string;
@@ -88,6 +108,13 @@ export interface MigrationsJsonEntry {
   factory?: string;
   prompt?: string;
   requires?: Record<string, string>;
+  /**
+   * Path to a markdown doc describing the migration, relative to the
+   * `migrations.json` and resolved like `implementation`/`factory`. Always
+   * supplementary; never stands in for them. Under `--run-migrations
+   * --agentic` the resolved path is passed to the agent as extra context.
+   */
+  documentation?: string;
 }
 
 export type MigrationDetailsWithId = GeneratedMigrationDetails & {
@@ -100,6 +127,7 @@ export interface GeneratedMigrationDetails {
   description: string;
   implementation?: string;
   prompt?: string;
+  documentation?: string;
 }
 
 export interface MigrationsJson {

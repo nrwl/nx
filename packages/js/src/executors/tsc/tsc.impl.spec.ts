@@ -80,6 +80,18 @@ describe('tscExecutor', () => {
         rootDir: '/root/libs/ui/src',
       });
     });
+
+    it('should keep the Windows drive letter in rootDir and tsConfig', () => {
+      const result = createTypeScriptCompilationOptions(
+        normalizeOptions(testOptions, 'C:\\root', 'libs/ui/src', 'libs/ui'),
+        context
+      );
+
+      expect(result).toMatchObject({
+        rootDir: 'C:/root/libs/ui',
+        tsConfig: 'C:/root/libs/ui/tsconfig.json',
+      });
+    });
   });
 });
 

@@ -10,6 +10,45 @@ import {
   getPluginCapabilities,
 } from './plugin-capabilities';
 
+/** A workspace-local plugin discovered cheaply (no JS load). */
+export interface LocalPluginWithGenerators {
+  /** Absolute path to the project root that hosts the plugin. */
+  dir: string;
+  /** The `generators` or `schematics` field value from the plugin's
+   *  package.json (a relative path to the collection JSON). */
+  field: string;
+}
+
+/**
+ * Sync, lightweight scan: for each given project root, read its package.json
+ * and yield it as a plugin if it declares a `generators`/`schematics`
+ * collection. Used by tab completion which cannot afford the heavier
+ * {@link getLocalWorkspacePlugins} (that one loads each plugin's JS to
+ * walk its capabilities).
+ *
+ * `projectRoots` are paths relative to `workspaceRoot`.
+ */
+export function findLocalPluginsWithGenerators(
+  projectRoots: Iterable<string>
+): Map<string, LocalPluginWithGenerators> {
+  const plugins = new Map<string, LocalPluginWithGenerators>();
+  for (const root of projectRoots) {
+    if (!root) continue;
+    const dir = join(workspaceRoot, root);
+    let pkg: PackageJson | null = null;
+    try {
+      pkg = readJsonFile(join(dir, 'package.json'));
+    } catch {
+      continue;
+    }
+    const field = pkg?.generators ?? pkg?.schematics;
+    if (pkg?.name && typeof field === 'string') {
+      plugins.set(pkg.name, { dir, field });
+    }
+  }
+  return plugins;
+}
+
 export async function getLocalWorkspacePlugins(
   projectsConfiguration: ProjectsConfigurations,
   nxJson: NxJsonConfiguration

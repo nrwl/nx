@@ -19,13 +19,24 @@ import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 describe('application generator', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   const options: Schema = { directory: 'test' } as Schema;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
     jest
       .spyOn(devkitExports, 'getPackageManagerCommand')
       .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should run successfully', async () => {
@@ -51,12 +62,12 @@ describe('application generator', () => {
       e2eTestRunner: 'playwright',
       addPlugin: true,
     });
-    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test-e2e/playwright.config.ts', 'utf-8')
+      tree.read('test-e2e/playwright.config.mts', 'utf-8')
     ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
   });
@@ -141,9 +152,9 @@ describe('application generator', () => {
       unitTestRunner: 'vitest',
       e2eTestRunner: 'cypress',
     });
-    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
   });

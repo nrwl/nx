@@ -18,8 +18,12 @@ const { libraryGenerator } = require('@nx/js');
 describe('updateEslint', () => {
   let tree: Tree;
   let schema: NormalizedSchema;
+  let envBackup: string | undefined;
 
   beforeEach(async () => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     schema = {
       projectName: 'my-lib',
       destination: 'shared/my-destination',
@@ -30,6 +34,11 @@ describe('updateEslint', () => {
     };
 
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should handle .eslintrc.json not existing', async () => {
@@ -229,8 +238,12 @@ describe('updateEslint', () => {
 describe('updateEslint (flat config)', () => {
   let tree: Tree;
   let schema: NormalizedSchema;
+  let envBackup: string | undefined;
 
   beforeEach(async () => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+
     schema = {
       projectName: 'my-lib',
       destination: 'shared/my-destination',
@@ -243,6 +256,11 @@ describe('updateEslint (flat config)', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.delete('.eslintrc.json');
     tree.write('eslint.config.cjs', `module.exports = [];`);
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should handle config not existing', async () => {

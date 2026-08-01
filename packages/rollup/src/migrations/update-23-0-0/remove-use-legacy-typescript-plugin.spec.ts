@@ -1,6 +1,8 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   Tree,
+  readJson,
+  updateJson,
   readProjectConfiguration,
   readNxJson,
   updateNxJson,
@@ -586,5 +588,47 @@ module.exports = withNx({
         }
       `);
     });
+  });
+
+  it('should remove rollup-plugin-typescript2 from devDependencies when a legacy config was stripped', async () => {
+    addProjectConfiguration(tree, 'lib1', {
+      root: 'libs/lib1',
+      targets: {
+        build: {
+          executor: '@nx/rollup:rollup',
+          options: { useLegacyTypescriptPlugin: true },
+        },
+      },
+    });
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        'rollup-plugin-typescript2': '^0.36.0',
+      };
+      return json;
+    });
+
+    await migration(tree);
+
+    const pkg = readJson(tree, 'package.json');
+    expect(pkg.devDependencies?.['rollup-plugin-typescript2']).toBeUndefined();
+  });
+
+  it('should preserve rollup-plugin-typescript2 when no legacy config was found', async () => {
+    // User may depend on rollup-plugin-typescript2 for their own custom rollup
+    // setup unrelated to @nx/rollup. Don't strip it unless we actually migrated
+    // a useLegacyTypescriptPlugin reference.
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        'rollup-plugin-typescript2': '^0.36.0',
+      };
+      return json;
+    });
+
+    await migration(tree);
+
+    const pkg = readJson(tree, 'package.json');
+    expect(pkg.devDependencies?.['rollup-plugin-typescript2']).toBe('^0.36.0');
   });
 });

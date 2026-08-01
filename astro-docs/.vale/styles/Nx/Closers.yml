@@ -1,0 +1,13 @@
+extends: existence
+message: "Possible restatement closer '%s'. Check whether this sentence adds new info or just summarizes."
+level: warning
+ignorecase: true
+tokens:
+  - 'This is (why|how|what|the reason)'
+  - 'In short'
+  - 'In summary'
+  - 'Ultimately'
+  - 'All in all'
+  - 'At the end of the day'
+  - 'The (key|main) takeaway'
+  - 'This (is|was) the gap'

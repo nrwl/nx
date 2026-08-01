@@ -17,10 +17,23 @@ export const gradleConfigGlob = combineGlobPatterns(
   ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`)
 );
 
+// Files that influence Gradle's configuration phase and therefore the project
+// graph report: any *.gradle(.kts) script (build, settings, script plugins),
+// gradle.properties, the wrapper pin, and buildSrc build logic.
+const GRADLE_CONFIG_FILE_PATTERNS = [
+  '*.gradle',
+  '*.gradle.kts',
+  'gradle.properties',
+  'gradle/wrapper/gradle-wrapper.properties',
+  'buildSrc/**/*.kt',
+  'buildSrc/**/*.java',
+  'buildSrc/**/*.groovy',
+];
+
 export const gradleConfigAndTestGlob = combineGlobPatterns(
-  ...Array.from(GRADLE_BUILD_FILES),
+  ...GRADLE_CONFIG_FILE_PATTERNS,
+  ...GRADLE_CONFIG_FILE_PATTERNS.map((pattern) => `**/${pattern}`),
   ...Array.from(GRADLEW_FILES),
-  ...Array.from(GRADLE_BUILD_FILES).map((file) => `**/${file}`),
   ...Array.from(GRADLEW_FILES).map((file) => `**/${file}`),
   ...GRADLE_TEST_FILES,
   GRADLE_VERSION_CATALOG_GLOB

@@ -13,10 +13,18 @@ import { expoApplicationGenerator } from './application';
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should update workspace', async () => {
@@ -67,8 +75,11 @@ describe('app', () => {
 
     const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
     expect(tsconfig.extends).toEqual('../tsconfig.base.json');
+    // bundler is the only moduleResolution valid and non-deprecated under both
+    // TS 5.8 and 6.0 for this esm-family (module: esnext) config.
+    expect(tsconfig.compilerOptions.moduleResolution).toEqual('bundler');
 
-    expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.exists('my-app/eslint.config.mjs')).toBe(true);
   });
 
   it('should generate js files', async () => {
@@ -87,7 +98,7 @@ describe('app', () => {
     const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
     expect(tsconfig.extends).toEqual('../tsconfig.base.json');
 
-    expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.exists('my-app/eslint.config.mjs')).toBe(true);
   });
 
   it('should generate test files and install test dependencies if unitTestRunner is jest', async () => {
@@ -150,6 +161,7 @@ describe('app', () => {
   });
 
   it('should not ignore "out-tsc" from eslint', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
       linter: 'eslint',
@@ -612,6 +624,7 @@ describe('app', () => {
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await expoApplicationGenerator(tree, {
         directory: 'my-app',
         linter: 'eslint',

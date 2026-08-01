@@ -1,13 +1,15 @@
 import {
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
+  CreateNodesResultArray,
   type ProjectConfiguration,
   type TargetConfiguration,
-  CreateNodesV2,
-  CreateNodesContextV2,
+  CreateNodes,
+  CreateNodesContext,
   createNodesFromFiles,
   joinPathFragments,
   getPackageManagerCommand,
@@ -38,7 +40,7 @@ type RsbuildTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 const rsbuildConfigGlob = '**/rsbuild.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
+export const createNodes: CreateNodes<RsbuildPluginOptions> = [
   rsbuildConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -51,57 +53,76 @@ export const createNodesV2: CreateNodesV2<RsbuildPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            targetsCache,
-            isUsingTsSolutionSetup,
-            pmc,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterRsbuildConfigs(
         configFilePaths,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        { ...normalizedOptions, isUsingTsSolutionSetup },
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              isUsingTsSolutionSetup,
+              pmc,
+              entries[idx].tsConfigFiles,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
   },
 ];
 
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;
+
 async function createNodesInternal(
   configFilePath: string,
-  options: RsbuildPluginOptions,
-  context: CreateNodesContextV2,
+  normalizedOptions: RsbuildPluginOptions,
+  context: CreateNodesContext,
   targetsCache: PluginCache<RsbuildTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  tsConfigFiles: string[],
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const tsConfigFiles =
-    siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ?? [];
-
-  const normalizedOptions = normalizeOptions(options);
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    { ...normalizedOptions, isUsingTsSolutionSetup },
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(
@@ -137,7 +158,7 @@ async function createRsbuildTargets(
   options: RsbuildPluginOptions,
   tsConfigFiles: string[],
   isUsingTsSolutionSetup: boolean,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RsbuildTargets> {
   const absoluteConfigFilePath = joinPathFragments(
@@ -147,7 +168,9 @@ async function createRsbuildTargets(
 
   // Required lazily: `@rsbuild/core` is an optional peer dependency, so it
   // may be absent when the plugin is loaded in a workspace that doesn't use
-  // Rsbuild yet (e.g. before a generator installs it).
+  // Rsbuild yet (e.g. before a generator installs it). This path runs in
+  // the CLI/daemon (never Jest), so a plain require works on Node 22.12+
+  // via require(esm) for the pure-ESM @rsbuild/core@2.
   const { loadConfig } =
     require('@rsbuild/core') as typeof import('@rsbuild/core');
   const rsbuildConfig = await loadConfig({
@@ -277,10 +300,11 @@ function getOutputs(
   projectRoot: string,
   workspaceRoot: string
 ): { buildOutputs: string[] } {
+  // `output.distPath.root` is the directory Rsbuild emits the build into, so
+  // it is the build output as-is. (Don't take its `dirname` - that points at
+  // the parent directory, which can capture sibling projects' outputs.)
   const buildOutputPath = normalizeOutputPath(
-    rsbuildConfig?.output?.distPath?.root
-      ? dirname(rsbuildConfig?.output.distPath.root)
-      : undefined,
+    rsbuildConfig?.output?.distPath?.root,
     projectRoot,
     workspaceRoot,
     'dist'
@@ -314,6 +338,50 @@ function normalizeOutputPath(
       }
     }
   }
+}
+
+interface RsbuildEntry {
+  configFile: string;
+  projectRoot: string;
+  tsConfigFiles: string[];
+}
+
+async function filterRsbuildConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: RsbuildEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<RsbuildEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        const tsConfigFiles =
+          siblingFiles.filter((p) =>
+            minimatch(p, 'tsconfig*{.json,.*.json}')
+          ) ?? [];
+        return { configFile, projectRoot, tsConfigFiles };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is RsbuildEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(options: RsbuildPluginOptions): RsbuildPluginOptions {

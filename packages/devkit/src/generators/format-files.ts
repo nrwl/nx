@@ -6,6 +6,20 @@ import {
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 
+// Prettier v3 (ESM) exposes its API as named exports; v2 (CJS) exposes it under
+// `.default` when loaded via `import()`. Return whichever carries the API, or
+// null if prettier isn't installed.
+async function importPrettier(): Promise<typeof Prettier | null> {
+  try {
+    const imported = await import('prettier');
+    return (
+      (imported as any).resolveConfig ? imported : (imported as any).default
+    ) as typeof Prettier;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
@@ -39,9 +53,9 @@ export async function formatFiles(
     return;
   }
 
-  let prettier: typeof Prettier;
+  let prettier: typeof Prettier | null;
   try {
-    prettier = await import('prettier');
+    prettier = await importPrettier();
     /**
      * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
      * before proceeding to format with it.

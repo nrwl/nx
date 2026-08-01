@@ -65,6 +65,7 @@ describe('Invoke Runner', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         }));
         const handles = await runDiscreteTasks(
           discrete,
@@ -85,6 +86,7 @@ describe('Invoke Runner', () => {
           outputs: [],
           parallelism: true,
           continuous: true,
+          cache: false,
         };
         const running = await runContinuousTasks(
           [serve],

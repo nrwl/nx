@@ -181,4 +181,83 @@ describe('Rsbuild configuration generator', () => {
       "
     `);
   });
+
+  it('should set "type": "module" on the project package.json when one exists', async () => {
+    tree.write(
+      'apps/myapp/package.json',
+      JSON.stringify({ name: 'myapp', version: '0.0.1' })
+    );
+
+    await configurationGenerator(tree, {
+      project: 'myapp',
+      skipFormat: true,
+    });
+
+    const pkg = JSON.parse(tree.read('apps/myapp/package.json', 'utf-8'));
+    expect(pkg.type).toBe('module');
+  });
+
+  it('should not create a project package.json when none exists', async () => {
+    await configurationGenerator(tree, {
+      project: 'myapp',
+      skipFormat: true,
+    });
+
+    expect(tree.exists('apps/myapp/package.json')).toBeFalsy();
+  });
+
+  it('should not override an explicit "type" on the project package.json', async () => {
+    tree.write(
+      'apps/myapp/package.json',
+      JSON.stringify({ name: 'myapp', version: '0.0.1', type: 'commonjs' })
+    );
+
+    await configurationGenerator(tree, {
+      project: 'myapp',
+      skipFormat: true,
+    });
+
+    const pkg = JSON.parse(tree.read('apps/myapp/package.json', 'utf-8'));
+    expect(pkg.type).toBe('commonjs');
+  });
+
+  it('should emit .mjs output for a Node target with no project package.json', async () => {
+    await configurationGenerator(tree, {
+      project: 'myapp',
+      target: 'node',
+      skipFormat: true,
+    });
+
+    const config = tree.read('apps/myapp/rsbuild.config.ts', 'utf-8');
+    expect(config).toContain("js: '[name].mjs'");
+  });
+
+  it('should not emit .mjs output for a Node target that has a project package.json', async () => {
+    tree.write(
+      'apps/myapp/package.json',
+      JSON.stringify({ name: 'myapp', version: '0.0.1' })
+    );
+
+    await configurationGenerator(tree, {
+      project: 'myapp',
+      target: 'node',
+      skipFormat: true,
+    });
+
+    const config = tree.read('apps/myapp/rsbuild.config.ts', 'utf-8');
+    expect(config).not.toContain('.mjs');
+    const pkg = JSON.parse(tree.read('apps/myapp/package.json', 'utf-8'));
+    expect(pkg.type).toBe('module');
+  });
+
+  it('should not emit .mjs output for a web target', async () => {
+    await configurationGenerator(tree, {
+      project: 'myapp',
+      target: 'web',
+      skipFormat: true,
+    });
+
+    const config = tree.read('apps/myapp/rsbuild.config.ts', 'utf-8');
+    expect(config).not.toContain('.mjs');
+  });
 });

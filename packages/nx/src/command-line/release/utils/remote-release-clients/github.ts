@@ -353,7 +353,9 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       return;
     }
 
-    const open = require('open');
+    const { default: open } = await (new Function(
+      'return import("open")'
+    )() as Promise<typeof import('open')>);
     await open(result.url)
       .then(() => {
         console.info(

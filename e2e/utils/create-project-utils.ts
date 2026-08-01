@@ -19,7 +19,7 @@ import {
 } from './get-env-info';
 
 import { output, readJsonFile } from '@nx/devkit';
-import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/src/utils';
+import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -58,6 +58,7 @@ const nxPackages = [
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
+  `@nx/rsbuild`,
   `@nx/rspack`,
   `@nx/storybook`,
   `@nx/vue`,
@@ -68,6 +69,7 @@ const nxPackages = [
   `@nx/react-native`,
   `@nx/expo`,
   '@nx/dotnet',
+  `@nx/module-federation`,
   `@nx/workspace`,
 ] as const;
 
@@ -122,11 +124,20 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
+      // npm strips protected config keys like _authToken from the env it
+      // passes to child processes (npx nx ...), so npm publish needs the
+      // token in a config file; the workspace .npmrc keeps it scoped to the
+      // test project instead of mutating user-level config.
+      const registryPort = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
+      const npmrcLines = [
+        `//localhost:${registryPort}/:_authToken=secretVerdaccioToken`,
+      ];
       // Workaround: pnpm defaults to frozen-lockfile in CI, but e2e tests
       // dynamically add packages after workspace creation
       if (isCI && packageManager === 'pnpm') {
-        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
+        npmrcLines.unshift('prefer-frozen-lockfile=false');
       }
+      updateFile('.npmrc', npmrcLines.join('\n'));
 
       let packagesToInstall: Array<NxPackage> = [];
       if (!packages) {
@@ -615,13 +626,15 @@ export function newLernaWorkspace({
         '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {
-        json.pnpm = {
-          ...json.pnpm,
-          overrides: {
-            ...json.pnpm?.overrides,
-            ...overrides,
-          },
-        };
+        // pnpm 11 no longer reads the "pnpm" field in package.json; overrides
+        // live in pnpm-workspace.yaml.
+        updateFile(
+          'pnpm-workspace.yaml',
+          dump({
+            packages: ['packages/*'],
+            overrides,
+          })
+        );
       } else if (packageManager === 'yarn') {
         json.resolutions = {
           ...json.resolutions,

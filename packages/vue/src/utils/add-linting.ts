@@ -9,25 +9,21 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import {
-  getInstalledEslintVersion,
-  getTypeScriptEslintVersionToInstall,
-} from '@nx/eslint/src/utils/version-utils';
+  useFlatConfig,
+  versions,
+} from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
 import { Tree } from 'nx/src/generators/tree';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
-  eslint9__VueEslintConfigTypescriptVersion,
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
 } from './versions';
-import { lt } from 'semver';
 
 export async function addLinting(
   host: Tree,
@@ -36,6 +32,10 @@ export async function addLinting(
     name: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
+    enableTypedLinting?: boolean;
+    /**
+     * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+     */
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
@@ -54,7 +54,7 @@ export async function addLinting(
       ],
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
     });
@@ -77,13 +77,9 @@ export async function addLinting(
 
     editEslintConfigFiles(host, options.projectRoot);
 
-    const eslintVersion = getInstalledEslintVersion(host);
     const devDependencies = {
       '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
-      '@vue/eslint-config-typescript':
-        eslintVersion && lt(eslintVersion, '9.0.0')
-          ? vueEslintConfigTypescriptVersion
-          : eslint9__VueEslintConfigTypescriptVersion,
+      '@vue/eslint-config-typescript': vueEslintConfigTypescriptVersion,
       'eslint-plugin-vue': eslintPluginVueVersion,
     };
     if (
@@ -91,14 +87,16 @@ export async function addLinting(
       useFlatConfig(host)
     ) {
       devDependencies['@typescript-eslint/parser'] =
-        getTypeScriptEslintVersionToInstall(host);
+        versions(host).typescriptESLintVersion;
     }
 
     if (!options.skipPackageJson) {
       const installTask = addDependenciesToPackageJson(
         host,
         {},
-        devDependencies
+        devDependencies,
+        undefined,
+        true
       );
       tasks.push(installTask);
     }

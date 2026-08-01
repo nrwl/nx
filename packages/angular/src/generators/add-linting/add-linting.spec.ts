@@ -12,10 +12,13 @@ import { addLintingGenerator } from './add-linting';
 
 describe('addLinting generator', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   const appProjectName = 'ng-app1';
   const appProjectRoot = `apps/${appProjectName}`;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, appProjectName, {
@@ -24,6 +27,14 @@ describe('addLinting generator', () => {
       projectType: 'application',
       targets: {},
     } as ProjectConfiguration);
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should invoke the lintProjectGenerator', async () => {
@@ -39,7 +50,8 @@ describe('addLinting generator', () => {
     expect(linter.lintProjectGenerator).toHaveBeenCalled();
   });
 
-  it('should add the Angular specific EsLint devDependencies', async () => {
+  it('should add the Angular specific EsLint devDependencies (eslintrc)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
@@ -56,7 +68,6 @@ describe('addLinting generator', () => {
   });
 
   it('should use flat config and install correct dependencies when using it', async () => {
-    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
@@ -65,11 +76,11 @@ describe('addLinting generator', () => {
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['@typescript-eslint/utils']).toBe('^8.40.0');
-    delete process.env.ESLINT_USE_FLAT_CONFIG;
+    expect(devDependencies['@typescript-eslint/utils']).toBe('^8.58.0');
   });
 
   it('should correctly generate the .eslintrc.json file', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
@@ -79,6 +90,117 @@ describe('addLinting generator', () => {
 
     const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
     expect(eslintConfig).toMatchSnapshot();
+  });
+
+  it('should set parserOptions.project in the .eslintrc.json file when typed linting is enabled', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+      enableTypedLinting: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toEqual({
+      project: [`${appProjectRoot}/tsconfig.*?.json`],
+    });
+    expect(
+      tree.read(`${appProjectRoot}/.eslintrc.json`, 'utf-8')
+    ).not.toContain('projectService');
+  });
+
+  it('should carry over typed linting from an existing YAML config', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    // `findEslintFile` prefers `.eslintrc.yaml` over `.eslintrc.json`, so the
+    // carry-over check reads the YAML while the overrides are rewritten into the
+    // JSON that `lintProjectGenerator` creates.
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `overrides:\n  - files: ['*.ts']\n    parserOptions:\n      project: ['${appProjectRoot}/tsconfig.*?.json']\n`
+    );
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toEqual({
+      project: [`${appProjectRoot}/tsconfig.*?.json`],
+    });
+  });
+
+  it('should not add parserOptions.project when the existing config runs the project service', async () => {
+    // The project service needs no glob and typescript-eslint throws when one
+    // sits next to it, so there is nothing to carry over here.
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `overrides:\n  - files: ['*.ts']\n    parserOptions:\n      projectService: true\n`
+    );
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toBeUndefined();
+  });
+
+  it('should not carry over parserOptions.project when the project service is also on', async () => {
+    // A top-level `parserOptions` survives the override rewrite, so re-emitting
+    // the glob below it would leave the project service and a `project` in
+    // effect together, which typescript-eslint rejects.
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    tree.write(
+      `${appProjectRoot}/.eslintrc.yaml`,
+      `parserOptions:\n  projectService: true\noverrides:\n  - files: ['*.ts']\n    parserOptions:\n      project: ['${appProjectRoot}/tsconfig.*?.json']\n`
+    );
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toBeUndefined();
+  });
+
+  it('should not set parserOptions in the .eslintrc.json file when typed linting is disabled', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
+    const tsOverride = eslintConfig.overrides.find((o) =>
+      o.files.includes('*.ts')
+    );
+    expect(tsOverride.parserOptions).toBeUndefined();
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
@@ -104,8 +226,6 @@ describe('addLinting generator', () => {
   });
 
   it('should correctly generate the eslint.config.mjs file for a buildable library', async () => {
-    process.env.ESLINT_USE_FLAT_CONFIG = 'true';
-
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',
       projectType: 'library',
@@ -236,11 +356,10 @@ describe('addLinting generator', () => {
       ];
       "
     `);
-
-    delete process.env.ESLINT_USE_FLAT_CONFIG;
   });
 
   it('should correctly generate the .eslintrc.json file for a buildable library', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     addProjectConfiguration(tree, 'lib1', {
       root: 'libs/lib1',
       projectType: 'library',

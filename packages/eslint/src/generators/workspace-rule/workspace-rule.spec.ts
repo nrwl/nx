@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { Tree } from '@nx/devkit';
+import { readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintWorkspaceRuleGenerator } from './workspace-rule';
 
@@ -150,6 +150,49 @@ describe('@nx/eslint:workspace-rule', () => {
       };
       "
     `);
+  });
+
+  describe('ESLint v9 + eslintrc workspaces', () => {
+    let originalEnv: string | undefined;
+
+    beforeEach(() => {
+      originalEnv = process.env.ESLINT_USE_FLAT_CONFIG;
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          eslint: '^9.8.0',
+        };
+        return json;
+      });
+    });
+
+    afterEach(() => {
+      if (originalEnv === undefined) {
+        delete process.env.ESLINT_USE_FLAT_CONFIG;
+      } else {
+        process.env.ESLINT_USE_FLAT_CONFIG = originalEnv;
+      }
+    });
+
+    it('should generate the flat-style rule-test template and install @typescript-eslint/rule-tester', async () => {
+      await lintWorkspaceRuleGenerator(tree, {
+        name: 'my-rule',
+        directory: 'rules',
+      });
+
+      const spec = tree.read(
+        'tools/eslint-rules/rules/my-rule.spec.ts',
+        'utf-8'
+      );
+      expect(spec).toContain("from '@typescript-eslint/rule-tester'");
+      expect(spec).not.toContain("from '@typescript-eslint/utils'");
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(
+        packageJson.devDependencies['@typescript-eslint/rule-tester']
+      ).toBeDefined();
+    });
   });
 
   describe('--dir', () => {

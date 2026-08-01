@@ -1,13 +1,13 @@
 {
   "executors": {
     "build": {
-      "implementation": "./src/executors/build/build.impl",
-      "schema": "./src/executors/build/schema.json",
+      "implementation": "./dist/src/executors/build/build.impl",
+      "schema": "./dist/src/executors/build/schema.json",
       "description": "Build a Next.js application."
     },
     "server": {
-      "implementation": "./src/executors/server/server.impl",
-      "schema": "./src/executors/server/schema.json",
+      "implementation": "./dist/src/executors/server/server.impl",
+      "schema": "./dist/src/executors/server/schema.json",
       "description": "Serve a Next.js application."
     }
   }

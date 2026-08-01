@@ -2,7 +2,7 @@
 This pre-install script will check that the necessary dependencies are installed
 Checks for:
     * Node 20+
-    * pnpm 10+
+    * pnpm (major derived from package.json packageManager field)
     * Rust 1.70+
     * mise trust status (if applicable)
  */
@@ -13,6 +13,11 @@ if (process.env.CI) {
 
 const { execSync } = require('child_process');
 const lt = require('semver/functions/lt');
+const { packageManager } = require('../package.json');
+
+// packageManager is "pnpm@<version>"; the major is the floor we accept.
+const requiredPnpmVersion = packageManager.split('@')[1];
+const requiredPnpmMajor = requiredPnpmVersion.split('.')[0];
 
 function execOrNull(command) {
   try {
@@ -48,13 +53,13 @@ function checkNode({ node }) {
 function checkPnpm({ pnpm }) {
   if (pnpm === null) {
     console.error(
-      'Could not find pnpm on this system. Please make sure it is installed with: npm install -g pnpm@10'
+      `Could not find pnpm on this system. Please make sure it is installed with: npm install -g pnpm@${requiredPnpmMajor}`
     );
     return true;
   }
-  if (lt(pnpm, '10.0.0')) {
+  if (lt(pnpm, `${requiredPnpmMajor}.0.0`)) {
     console.error(
-      `Found pnpm ${pnpm}. Please make sure that your installed pnpm version is 10.0.0 or greater. You can update with: npm install -g pnpm@10`
+      `Found pnpm ${pnpm}. Please make sure that your installed pnpm version is ${requiredPnpmMajor}.0.0 or greater. You can update with: npm install -g pnpm@${requiredPnpmMajor}`
     );
     return true;
   }

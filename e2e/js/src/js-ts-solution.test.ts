@@ -14,7 +14,14 @@ import {
 describe('JS - TS solution setup', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/js'],
+      packages: [
+        '@nx/js',
+        '@nx/esbuild',
+        '@nx/rollup',
+        '@nx/vite',
+        '@nx/eslint',
+        '@nx/jest',
+      ],
       preset: 'ts',
     });
   });

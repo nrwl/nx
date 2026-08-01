@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/cypress/spec",
-    "module": "commonjs",
+    "outDir": "out-tsc/spec",
+    "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"],
     "skipLibCheck": true,
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

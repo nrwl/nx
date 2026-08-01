@@ -382,7 +382,7 @@ describe('Storybook - Convert To Inferred', () => {
             "options": {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
-              "webpack-stats-json": true,
+              "stats-json": true,
             },
             "outputs": [
               "{projectRoot}/{options.output-dir}",

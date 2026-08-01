@@ -3,6 +3,7 @@ import {
   checkFilesMatchingPatternExist,
   cleanupProject,
   newProject,
+  removeFile,
   runCLI,
   tmpProjPath,
   uniq,
@@ -374,6 +375,89 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
     });
   });
 
+  describe('Directory.Build.* Inputs', () => {
+    beforeAll(() => {
+      createDotNetProject({
+        name: 'DirBuildInputsApp',
+        type: 'console',
+      });
+
+      // Workspace-root Directory.Build.props — exists.
+      updateFile(
+        'Directory.Build.props',
+        `<Project>
+  <PropertyGroup>
+  </PropertyGroup>
+</Project>`
+      );
+
+      // Project-level Directory.Build.targets — also exists, at a different ancestor.
+      updateFile(
+        'DirBuildInputsApp/Directory.Build.targets',
+        `<Project>
+</Project>`
+      );
+
+      // Workspace-root Directory.Packages.props — Central Package Management.
+      updateFile(
+        'Directory.Packages.props',
+        `<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>`
+      );
+    });
+
+    afterAll(() => {
+      // The mere presence of a workspace-root Directory.Packages.props enables
+      // Central Package Management workspace-wide, which makes `dotnet restore`
+      // fail (NU1008) for every other project that pins versions inline. Remove
+      // the files this block wrote so later blocks (which restore/build other
+      // projects) aren't poisoned by leaked state.
+      removeFile('Directory.Packages.props');
+      removeFile('DirBuildInputsApp/Directory.Build.targets');
+    });
+
+    it('should declare only existing Directory.* files as inputs', () => {
+      const projectDetails = runCLI(`show project DirBuildInputsApp --json`);
+      const details = JSON.parse(projectDetails);
+
+      const buildInputs = details.targets.build.inputs as unknown[];
+
+      // The closest ancestor that defines each filename is declared as an input.
+      expect(buildInputs).toContain('{workspaceRoot}/Directory.Build.props');
+      expect(buildInputs).toContain(
+        '{workspaceRoot}/DirBuildInputsApp/Directory.Build.targets'
+      );
+      expect(buildInputs).toContain('{workspaceRoot}/Directory.Packages.props');
+
+      // Files that do NOT exist anywhere must not be declared — that was the point
+      // of moving from the always-declare design to exists-only inputs.
+      expect(buildInputs).not.toContain('{workspaceRoot}/Directory.Build.rsp');
+      expect(buildInputs).not.toContain(
+        '{workspaceRoot}/Directory.Solution.props'
+      );
+      expect(buildInputs).not.toContain(
+        '{workspaceRoot}/Directory.Solution.targets'
+      );
+
+      // Cacheable targets other than build (publish here) get the same inputs.
+      const publishInputs = details.targets.publish.inputs as unknown[];
+      expect(publishInputs).toContain('{workspaceRoot}/Directory.Build.props');
+      expect(publishInputs).toContain(
+        '{workspaceRoot}/DirBuildInputsApp/Directory.Build.targets'
+      );
+      expect(publishInputs).toContain(
+        '{workspaceRoot}/Directory.Packages.props'
+      );
+
+      // Targets without a declared inputs array (e.g. restore) are left untouched
+      // so we don't accidentally narrow Nx's default-input fallback.
+      expect(details.targets.restore.inputs).toBeUndefined();
+    });
+  });
+
   describe('Publish with Artifacts', () => {
     beforeAll(() => {
       createDotNetProject({
@@ -390,6 +474,12 @@ describe('.NET Plugin - Advanced MSBuild Features', () => {
   </PropertyGroup>
 </Project>`
       );
+
+      // Restore after switching to the artifacts layout so the artifacts/obj
+      // assets file exists for the `--no-restore` build below. The other
+      // artifacts blocks in this file do the same; relying on a prior block to
+      // have left UseArtifactsOutput enabled is brittle (test ordering).
+      runCLI('run-many -t restore');
     });
 
     it('should use artifacts path for publish output', () => {

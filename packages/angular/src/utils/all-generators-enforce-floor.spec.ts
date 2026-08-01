@@ -5,6 +5,6 @@ describe('@nx/angular generators enforce supported version floor', () => {
   assertGeneratorsEnforceVersionFloor({
     packageRoot: join(__dirname, '..', '..'),
     packageName: '@angular/core',
-    subFloorVersion: '~18.2.0',
+    subFloorVersion: '~19.2.0',
   });
 });

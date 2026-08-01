@@ -12,6 +12,22 @@ import applicationGenerator from '../application/application.impl';
 import libraryGenerator from './library.impl';
 
 describe('Remix Library Generator', () => {
+  it('throws when the workspace declares TypeScript 6', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~6.0.3' };
+      return json;
+    });
+
+    await expect(
+      libraryGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        addPlugin: true,
+      })
+    ).rejects.toThrow(/does not support TypeScript 6/);
+  });
+
   it('should generate a library correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

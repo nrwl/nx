@@ -20,34 +20,38 @@ public static partial class TargetBuilder
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
-        NxJsonConfig? nxJson)
+        NxJsonConfig? nxJson,
+        List<string> directoryBuildInputs)
     {
         var targets = new Dictionary<string, Target>();
 
         // Determine the appropriate input for production builds
         var productionInput = GetProductionInput(nxJson);
 
-        AddBuildTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput);
-        AddBuildReleaseTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput);
+        AddBuildTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
+        AddBuildReleaseTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
 
         if (isTest)
         {
-            AddTestTarget(targets, projectName, fileName, packageRefs, properties, projectDirectory, workspaceRoot, options, productionInput);
+            AddTestTarget(targets, projectName, fileName, packageRefs, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
         }
 
+        // restore/clean/watch/run intentionally omit Directory.* inputs — they don't declare an
+        // Inputs array, and adding one here would narrow Nx's default-input fallback should a
+        // user enable caching on them later.
         AddRestoreTarget(targets, fileName, options);
         AddCleanTarget(targets, fileName, isTest, options);
         AddWatchTarget(targets, fileName, options);
 
         if (isExe)
         {
-            AddPublishTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput);
+            AddPublishTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
             AddRunTarget(targets, fileName, options);
         }
 
         if (!isExe && !isTest)
         {
-            AddPackTarget(targets, projectName, fileName, properties, projectDirectory, workspaceRoot, options, productionInput);
+            AddPackTarget(targets, projectName, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
         }
 
         return targets;

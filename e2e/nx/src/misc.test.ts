@@ -1,5 +1,6 @@
 import type { NxJsonConfiguration, ProjectConfiguration } from '@nx/devkit';
 import {
+  checkFilesDoNotExist,
   cleanupProject,
   createNonNxProjectDirectory,
   e2eCwd,
@@ -31,7 +32,17 @@ import { join } from 'path';
 describe('Nx Commands', () => {
   beforeAll(() =>
     newProject({
-      packages: ['@nx/web', '@nx/angular', '@nx/next'],
+      packages: [
+        '@nx/angular',
+        '@nx/eslint',
+        '@nx/jest',
+        '@nx/next',
+        '@nx/playwright',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/web',
+        '@nx/webpack',
+      ],
     })
   );
 
@@ -1016,6 +1027,50 @@ describe('migrate', () => {
     }
   });
 
+  it('should run a single migration with --run-migration without recording run state', () => {
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    runCLI('migrate --run-migration=migrate-parent-package:run20', {
+      env: {
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    });
+
+    // only the requested migration runs
+    expect(readFile('file-20')).toEqual('content20');
+    checkFilesDoNotExist('file-11');
+    // no durable run dir and no commit without --create-commits
+    checkFilesDoNotExist('.nx/migrate-runs');
+    expect(runCommand('git --no-pager log --oneline -n 10')).not.toContain(
+      'chore: [nx migration] run20'
+    );
+
+    // commits are opt-in with --create-commits
+    runCLI(
+      'migrate --run-migration=migrate-parent-package:run11 --create-commits',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
+
+    expect(readFile('file-11')).toEqual('content11');
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+    expect(recentCommits).toContain('chore: [nx migration] run11');
+    expect(recentCommits).not.toContain('chore: [nx migration] run20');
+  });
+
   it('should fail if a custom commit prefix is provided when --create-commits is not enabled', () => {
     runCLI(
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
@@ -1040,7 +1095,7 @@ describe('migrate', () => {
     );
 
     expect(output).toContain(
-      `Error: Providing a custom commit prefix requires --create-commits to be enabled`
+      `A custom migrate commit prefix requires commits to be enabled`
     );
   });
 
@@ -1348,14 +1403,14 @@ catalogs:
       // Verify catalog definitions in pnpm-workspace.yaml
       const workspaceYaml = readFile('pnpm-workspace.yaml');
       // UPDATED packages (no ^ prefix as migrations provide resolved versions)
-      expect(workspaceYaml).toContain('migrate-parent-package: "2.0.0"');
-      expect(workspaceYaml).toContain('migrate-child-package: "9.0.0"');
-      expect(workspaceYaml).toContain('react: "18.2.0"');
-      expect(workspaceYaml).toContain('react-dom: "18.2.0"');
+      expect(workspaceYaml).toContain('migrate-parent-package: 2.0.0');
+      expect(workspaceYaml).toContain('migrate-child-package: 9.0.0');
+      expect(workspaceYaml).toContain('react: 18.2.0');
+      expect(workspaceYaml).toContain('react-dom: 18.2.0');
       // PRESERVED packages (retain original format with ^ prefix)
-      expect(workspaceYaml).toContain('typescript: "^5.3.0"');
-      expect(workspaceYaml).toContain('eslint: "^8.0.0"');
-      expect(workspaceYaml).toContain('prettier: "^3.0.0"');
+      expect(workspaceYaml).toContain('typescript: ^5.3.0');
+      expect(workspaceYaml).toContain('eslint: ^8.0.0');
+      expect(workspaceYaml).toContain('prettier: ^3.0.0');
 
       // Verify explicit version packages: updated and preserved
       expect(packageJson.dependencies['lodash']).toEqual('4.17.21');

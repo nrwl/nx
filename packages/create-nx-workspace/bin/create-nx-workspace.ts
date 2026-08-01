@@ -47,7 +47,7 @@ import {
   CnwErrorCode,
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
 import { isGhCliAvailable } from '../src/utils/git/git';
@@ -82,6 +82,8 @@ let chosenPreset: string;
 let useCloud: boolean;
 // For stats
 let packageManager: string;
+// Analytics opt-in answer for the completion stat.
+let analyticsPrompt: 'yes' | 'no' | 'unset' = 'unset';
 
 type AngularUnitTestRunner =
   | 'none'
@@ -283,13 +285,18 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             default: true,
           })
           .option('aiAgents', {
-            describe: chalk.dim`List of AI agents to configure.`,
+            describe: chalk.dim`List of AI agents to configure. Use "none" to skip.`,
             type: 'array',
-            choices: [...supportedAgents],
+            choices: [...supportedAgents, 'none'],
           })
           .option('template', {
             describe: chalk.dim`GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template`,
             type: 'string',
+          })
+          .option('trustThirdPartyPreset', {
+            describe: chalk.dim`Skip the confirmation prompt when installing a third-party preset. Use this when you trust the preset publisher.`,
+            type: 'boolean',
+            default: false,
           }),
         withNxCloud,
         withUseGitHub,
@@ -422,6 +429,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       setupCloudPrompt:
         messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
         messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      analyticsPrompt,
       nxCloudArg: parsedArgs.nxCloud ?? '',
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
@@ -451,8 +459,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 }
 
 async function handleError(error: unknown): Promise<void> {
-  const { version } = require('../package.json');
-
   // Record error stat for telemetry
   const errorCode = error instanceof CnwError ? error.code : 'UNKNOWN';
   const errorMessage = error instanceof Error ? error.message : String(error);
@@ -602,10 +608,6 @@ async function normalizeArgsMiddleware(
         );
       }
 
-      // Always enable Nx Cloud for AI agents - ignore --nxCloud=skip since the AI
-      // may pass it without asking the user. Nx Cloud is required for the full experience.
-      argv.nxCloud = 'yes';
-
       // Skip GitHub push prompts in AI mode - we'll provide instructions in the success output
       argv.skipGitHubPush = true;
     } else {
@@ -671,7 +673,8 @@ async function normalizeArgsMiddleware(
               : getCompletionMessageKeyForVariant();
         }
 
-        const analytics = await determineAnalytics(argv);
+        analyticsPrompt = await determineAnalytics(argv);
+        const analytics = analyticsPrompt === 'yes';
         packageManager = argv.packageManager ?? detectInvokedPackageManager();
         Object.assign(argv, {
           nxCloud,
@@ -766,7 +769,8 @@ async function normalizeArgsMiddleware(
               : getCompletionMessageKeyForVariant();
         }
 
-        const analytics = await determineAnalytics(argv);
+        analyticsPrompt = await determineAnalytics(argv);
+        const analytics = analyticsPrompt === 'yes';
 
         Object.assign(argv, {
           nxCloud,
@@ -823,9 +827,13 @@ function invariant(
   }
 }
 
+/** Workspace names must start with a letter. */
+export function isValidWorkspaceName(name: string): boolean {
+  return /^[a-zA-Z]/.test(name);
+}
+
 export function validateWorkspaceName(name: string): void {
-  const pattern = /^[a-zA-Z]/;
-  if (!pattern.test(name)) {
+  if (!isValidWorkspaceName(name)) {
     throw new CnwError(
       'INVALID_WORKSPACE_NAME',
       `The workspace name "${name}" is invalid. Workspace names must start with a letter. Examples of valid names: myapp, MyApp, my-app, my_app`
@@ -851,15 +859,9 @@ function isCurrentDirReference(folderName: string): boolean {
 export function resolveSpecialFolderName(
   folderName: string
 ): { name: string; workingDir: string } | null {
-  // User wants to init in the current directory
+  // User wants to scaffold in the current directory.
   if (isCurrentDirReference(folderName)) {
     const cwd = resolve(process.cwd());
-    if (readdirSync(cwd).length > 0) {
-      throw new CnwError(
-        'DIRECTORY_EXISTS',
-        `The current directory is not empty. Use "nx init" to add Nx to an existing project.`
-      );
-    }
     return { name: basename(cwd), workingDir: dirname(cwd) };
   }
 
@@ -903,11 +905,20 @@ export async function determineFolder(
 
     validateWorkspaceName(folderName);
 
-    // When input is "." or "./", resolveSpecialFolderName already validated
-    // the directory is empty. The target always "exists" because it IS the
-    // current working directory, so skip the existsSync check and default
-    // the workspace name to the directory name.
+    // When input is "." or "./", scaffold into the current directory. The
+    // target always "exists" because it IS the cwd, so skip the existsSync
+    // check and use the directory name as the workspace name.
     if (isCurrentDirReference(rawFolderName)) {
+      // Interactively confirm before scaffolding into the current directory;
+      // non-interactive (CI/AI) proceeds without prompting.
+      if (parsedArgs.interactive && !isCI()) {
+        if (!(await promptCreateInCurrentDir(folderName))) {
+          // Declined - fall back to creating a named subfolder under the cwd.
+          parsedArgs.workingDir = undefined;
+          return promptForFolder(parsedArgs);
+        }
+      }
+      parsedArgs.useCurrentDir = true;
       return folderName;
     }
 
@@ -943,6 +954,21 @@ export async function determineFolder(
   return promptForFolder(parsedArgs);
 }
 
+async function promptCreateInCurrentDir(dirName: string): Promise<boolean> {
+  const { useCurrentDir } = await enquirer.prompt<{
+    useCurrentDir: 'Yes' | 'No';
+  }>([
+    {
+      name: 'useCurrentDir',
+      message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
+      type: 'autocomplete',
+      choices: [{ name: 'Yes' }, { name: 'No' }],
+      initial: 0,
+    },
+  ]);
+  return useCurrentDir === 'Yes';
+}
+
 async function promptForFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
@@ -957,7 +983,7 @@ async function promptForFolder(
         if (!value) {
           return 'Folder name cannot be empty';
         }
-        if (!/^[a-zA-Z]/.test(value)) {
+        if (!isValidWorkspaceName(value)) {
           return 'Workspace name must start with a letter';
         }
         if (existsSync(value)) {

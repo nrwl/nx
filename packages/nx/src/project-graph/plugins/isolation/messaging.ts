@@ -8,7 +8,7 @@ import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
-  CreateNodesContextV2,
+  CreateNodesContext,
   PostTasksExecutionContext,
   PreTasksExecutionContext,
 } from '../public-api';
@@ -63,7 +63,7 @@ type PluginMessageDefs = DefineMessages<{
   createNodes: {
     payload: {
       configFiles: string[];
-      context: CreateNodesContextV2;
+      context: CreateNodesContext;
     };
     result:
       | {

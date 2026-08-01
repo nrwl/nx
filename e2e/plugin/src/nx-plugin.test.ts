@@ -1,6 +1,7 @@
 import { ProjectConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
+  checkFilesMatchingPatternExist,
   cleanupProject,
   createFile,
   expectTestsPass,
@@ -10,12 +11,15 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  tmpProjPath,
+  trimDaemonLog,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'path';
 import {
   ASYNC_GENERATOR_EXECUTOR_CONTENTS,
@@ -26,10 +30,38 @@ describe('Nx Plugin', () => {
   let workspaceName: string;
 
   beforeAll(() => {
-    workspaceName = newProject({ packages: ['@nx/plugin'] });
+    workspaceName = newProject({
+      packages: ['@nx/eslint', '@nx/jest', '@nx/plugin'],
+    });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    // The suite shares one long-lived daemon (no `reset`), so dump its log
+    // once before teardown — CI shows it for a daemon crash on plugin load.
+    try {
+      const daemonLog = join(
+        tmpProjPath(),
+        '.nx',
+        'workspace-data',
+        'd',
+        'daemon.log'
+      );
+      if (existsSync(daemonLog)) {
+        // Trimmed — see trimDaemonLog; the raw log is thousands of lines.
+        console.log(
+          `\n========== daemon.log (trimmed) ==========\n${trimDaemonLog(
+            readFileSync(daemonLog, 'utf-8')
+          )}\n========== end daemon.log ==========\n`
+        );
+      } else {
+        console.log(`[plugin-debug] no daemon log at ${daemonLog}`);
+      }
+    } catch (e) {
+      console.log(`[plugin-debug] failed to read daemon log: ${e}`);
+    }
+
+    cleanupProject();
+  });
 
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');
@@ -53,6 +85,31 @@ describe('Nx Plugin', () => {
 
     runCLI(`e2e ${plugin}-e2e`);
   }, 90000);
+
+  it('should be able to generate a Nx Plugin with vitest e2e tests', async () => {
+    const plugin = uniq('plugin');
+
+    runCLI(
+      `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=vitest --publishable`
+    );
+    const lintResults = runCLI(`lint ${plugin}`);
+    expect(lintResults).toContain('All files pass linting');
+
+    const buildResults = runCLI(`build ${plugin}`);
+    expect(buildResults).toContain('Done compiling TypeScript files');
+    checkFilesExist(
+      `dist/${plugin}/package.json`,
+      `dist/${plugin}/src/index.js`
+    );
+
+    // Verify vitest config was created
+    checkFilesMatchingPatternExist(`${plugin}-e2e/vitest.config.(ts|mts)`);
+
+    // Run the e2e tests with vitest
+    expect(() => {
+      runCLI(`e2e ${plugin}-e2e`);
+    }).not.toThrow();
+  }, 120000);
 
   it('should be able to generate a migration', async () => {
     const plugin = uniq('plugin');

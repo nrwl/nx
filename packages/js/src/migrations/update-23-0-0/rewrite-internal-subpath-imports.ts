@@ -8,7 +8,13 @@ import {
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import type { CallExpression, Node, SourceFile } from 'typescript';
+import type {
+  CallExpression,
+  ImportTypeNode,
+  Node,
+  SourceFile,
+  StringLiteral,
+} from 'typescript';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
 const FROM_PREFIX = '@nx/js/src/';
@@ -122,10 +128,28 @@ function collectCallExpressionRewrites(
       shouldRewriteSpecifier(node.arguments[0].text)
     ) {
       replaceSpecifier(sourceFile, node.arguments[0], changes);
+    } else if (ts!.isImportTypeNode(node)) {
+      // `typeof import('...')` parses as an `ImportTypeNode`, not a
+      // CallExpression — its argument is `LiteralTypeNode<StringLiteral>`.
+      // The whole module is referenced, so it can't be symbol-split.
+      const literal = getImportTypeStringLiteral(node);
+      if (literal && shouldRewriteSpecifier(literal.text)) {
+        replaceSpecifier(sourceFile, literal, changes);
+      }
     }
     ts!.forEachChild(node, visit);
   };
   visit(sourceFile);
+}
+
+function getImportTypeStringLiteral(
+  node: ImportTypeNode
+): StringLiteral | undefined {
+  const arg = node.argument;
+  if (arg && ts!.isLiteralTypeNode(arg) && ts!.isStringLiteral(arg.literal)) {
+    return arg.literal;
+  }
+  return undefined;
 }
 
 function shouldRewriteCallExpression(call: CallExpression): boolean {
@@ -133,9 +157,8 @@ function shouldRewriteCallExpression(call: CallExpression): boolean {
   // `require('...')`
   if (ts!.isIdentifier(callee) && callee.text === 'require') return true;
   // dynamic `import('...')` (runtime form parses as a CallExpression whose
-  // callee is the `import` keyword). The type-position form
-  // (`typeof import('...')`) is an `ImportTypeNode`, not a CallExpression, so
-  // we don't touch it.
+  // callee is the `import` keyword). The `typeof import('...')` type-position
+  // form is an `ImportTypeNode` (handled in `collectCallExpressionRewrites`).
   if (callee.kind === ts!.SyntaxKind.ImportKeyword) return true;
   // `jest.mock(...)` / `vi.mock(...)` and friends.
   if (ts!.isPropertyAccessExpression(callee)) {
@@ -153,7 +176,7 @@ function shouldRewriteCallExpression(call: CallExpression): boolean {
 
 function replaceSpecifier(
   sourceFile: SourceFile,
-  literal: import('typescript').StringLiteral,
+  literal: StringLiteral,
   changes: StringChange[]
 ): void {
   const start = literal.getStart(sourceFile);

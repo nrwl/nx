@@ -3,9 +3,16 @@ import { readFileSync } from 'node:fs';
 import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
 import { updateJson } from '../generators/utils/json';
 
+interface GeneratorEntry {
+  // generators.json entries point at their implementation via either `factory`
+  // (e.g. @nx/cypress) or `implementation` (e.g. @nx/remix). Both are valid.
+  factory?: string;
+  implementation?: string;
+}
+
 interface GeneratorsJson {
-  generators?: Record<string, { factory: string }>;
-  schematics?: Record<string, { factory: string }>;
+  generators?: Record<string, GeneratorEntry>;
+  schematics?: Record<string, GeneratorEntry>;
 }
 
 export function assertGeneratorsEnforceVersionFloor(options: {
@@ -35,10 +42,16 @@ export function assertGeneratorsEnforceVersionFloor(options: {
 
   for (const [name, def] of entries) {
     it(`\`${name}\` throws on sub-floor ${packageName}`, async () => {
-      const [factoryRelative, exportName] = def.factory
+      // generators.json is the published shape — factory paths point at the
+      // built `./dist/src/.../foo`. The spec runs against the source tree, so
+      // map the published path back to its source location.
+      const [factoryRelative, exportName] = (def.factory ?? def.implementation)
         .replace(/^\.\//, '')
+        .replace(/^dist\//, '')
         .split('#');
-      const factoryModule = require(join(packageRoot, factoryRelative));
+      // Local-dist plugins point factories at `./dist/src/...`; Jest loads from `./src/...`.
+      const sourceRelative = factoryRelative.replace(/^dist\//, '');
+      const factoryModule = require(join(packageRoot, sourceRelative));
       const factory = exportName
         ? factoryModule[exportName]
         : (factoryModule.default ?? factoryModule);

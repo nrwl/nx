@@ -2,10 +2,10 @@ import {
   addProjectConfiguration,
   formatFiles,
   generateFiles,
-  Tree,
+  type Tree,
 } from '@nx/devkit';
 import * as path from 'path';
-import { <%= className %>GeneratorSchema } from './schema';
+import type { <%= className %>GeneratorSchema } from './schema';
 
 export async function <%= generatorFnName %> (tree: Tree, options: <%= schemaInterfaceName %>) {
   const projectRoot = `libs/${options.name}`;

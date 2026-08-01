@@ -19,6 +19,7 @@ import {
 import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
 import {
   getImportPath,
+  createTreeParseConfigHost,
   ensureTypescript,
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
@@ -32,6 +33,7 @@ import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { hasPlugin } from '../../utils/has-plugin';
 import { warnRollupExecutorGenerating } from '../../utils/deprecation';
+import { assertSupportedRollupVersion } from '../../utils/versions';
 import { rollupInitGenerator } from '../init/init';
 import { RollupProjectSchema } from './schema';
 
@@ -41,6 +43,8 @@ export async function configurationGenerator(
   tree: Tree,
   options: RollupProjectSchema
 ) {
+  assertSupportedRollupVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -306,11 +310,10 @@ function updateTsConfig(tree: Tree, options: RollupProjectSchema): void {
     ts = ensureTypescript();
   }
 
-  const parsedTsConfig = readTsConfig(tsconfigPath, {
-    ...ts.sys,
-    readFile: (p) => tree.read(p, 'utf-8'),
-    fileExists: (p) => tree.exists(p),
-  });
+  const parsedTsConfig = readTsConfig(
+    tsconfigPath,
+    createTreeParseConfigHost(tree)
+  );
 
   updateJson(tree, tsconfigPath, (json) => {
     if (parsedTsConfig.options.module === ts.ModuleKind.NodeNext) {

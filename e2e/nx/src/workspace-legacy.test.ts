@@ -12,7 +12,16 @@ let proj: string;
 
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/eslint',
+        '@nx/jest',
+        '@nx/js',
+        '@nx/react',
+        '@nx/webpack',
+      ],
+    });
   });
 
   afterEach(() => cleanupProject());
@@ -44,7 +53,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint e2e`)).not.toThrow();
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       expect(() => runCLI(`e2e e2e`)).not.toThrow();
     }
   });

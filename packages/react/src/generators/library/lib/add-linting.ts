@@ -15,8 +15,9 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  isTypedLintingEnabled,
+  useFlatConfig,
+} from '@nx/eslint/internal';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === 'eslint') {
@@ -30,7 +31,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
@@ -71,7 +72,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies
+        extraEslintDependencies.devDependencies,
+        undefined,
+        true
       );
       tasks.push(installTask);
     }

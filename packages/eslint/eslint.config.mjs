@@ -4,6 +4,9 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 export default [
   ...baseConfig,
   {
+    ignores: ['dist'],
+  },
+  {
     files: ['**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', '@nx/workspace'],
@@ -33,6 +36,9 @@ export default [
           buildTargets: ['build-base'],
           ignoredDependencies: [
             'nx',
+            // Self-reference: resolves the package's own package.json at
+            // runtime (see src/utils/versions.ts).
+            '@nx/eslint',
             '@nx/jest',
             'typescript',
             'eslint',

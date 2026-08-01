@@ -1,6 +1,6 @@
-import type { CreateNodesContextV2 } from '@nx/devkit';
+import type { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodesV2, type AngularProjectConfiguration } from './plugin';
+import { createNodes, type AngularProjectConfiguration } from './plugin';
 import { loadVite } from './utils/vitest';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
@@ -14,8 +14,8 @@ jest.mock('./utils/vitest', () => ({
 }));
 
 describe('@nx/angular/plugin', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd: string;
 

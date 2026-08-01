@@ -10,7 +10,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { E2eTestRunner } from '../../utils/test-runners';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, webpackMergeVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
 
@@ -63,6 +63,26 @@ describe('Init MF', () => {
         'utf-8'
       );
       expect(mfConfigContents).toMatchSnapshot();
+    }
+  );
+
+  test.each([
+    ['app1', 'host'],
+    ['remote1', 'remote'],
+  ])(
+    'should add @nx/webpack and webpack-merge for the webpack build target ("%s", %s)',
+    async (app, type: 'host' | 'remote') => {
+      await setupMf(tree, {
+        appName: app,
+        mfType: type,
+        typescriptConfiguration: false,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['@nx/webpack']).toBe(nxVersion);
+      expect(devDependencies['webpack-merge']).toBe(webpackMergeVersion);
     }
   );
 

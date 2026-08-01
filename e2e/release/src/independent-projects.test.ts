@@ -1,5 +1,6 @@
 import { joinPathFragments, NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   exists,
   getPackageManagerCommand,
@@ -20,7 +21,7 @@ expect.addSnapshotSerializer({
       .toString()
       .trim();
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(`/private/${tmpProjPath()}`, '')
         .replaceAll(tmpProjPath(), '')
@@ -690,6 +691,10 @@ describe('nx release - independent projects', () => {
         NX   Successfully ran target nx-release-publish for project {project-name}
 
 
+        Run duration: {DURATION}
+        Cache: 0/1 hit (0%)
+        Critical path: {DURATION} (1 task)
+        Recoverable time: {DURATION}
 
       `);
 
@@ -739,6 +744,10 @@ describe('nx release - independent projects', () => {
         NX   Successfully ran target nx-release-publish for project {project-name}
 
 
+        Run duration: {DURATION}
+        Cache: 0/1 hit (0%)
+        Critical path: {DURATION} (1 task)
+        Recoverable time: {DURATION}
 
         NX   Running target nx-release-publish for project {project-name}:
 
@@ -776,6 +785,10 @@ describe('nx release - independent projects', () => {
         NX   Successfully ran target nx-release-publish for project {project-name}
 
 
+        Run duration: {DURATION}
+        Cache: 0/1 hit (0%)
+        Critical path: {DURATION} (1 task)
+        Recoverable time: {DURATION}
 
       `);
     });
@@ -859,6 +872,10 @@ describe('nx release - independent projects', () => {
         NX   Successfully ran target nx-release-publish for 2 projects
 
 
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION} (1 task)
+        Recoverable time: {DURATION}
 
       `);
 
@@ -901,6 +918,10 @@ describe('nx release - independent projects', () => {
           NX   Successfully ran target nx-release-publish for project {project-name}
 
 
+          Run duration: {DURATION}
+          Cache: 0/1 hit (0%)
+          Critical path: {DURATION} (1 task)
+          Recoverable time: {DURATION}
 
       `);
     });
@@ -984,6 +1005,10 @@ describe('nx release - independent projects', () => {
         NX   Successfully ran target nx-release-publish for 2 projects
 
 
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION} (1 task)
+        Recoverable time: {DURATION}
 
       `);
 
@@ -1026,6 +1051,10 @@ describe('nx release - independent projects', () => {
         NX   Successfully ran target nx-release-publish for project {project-name}
 
 
+        Run duration: {DURATION}
+        Cache: 0/1 hit (0%)
+        Critical path: {DURATION} (1 task)
+        Recoverable time: {DURATION}
 
         NX   Running target nx-release-publish for 2 projects:
 
@@ -1086,6 +1115,10 @@ describe('nx release - independent projects', () => {
         NX   Successfully ran target nx-release-publish for 2 projects
 
 
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION} (1 task)
+        Recoverable time: {DURATION}
 
       `);
     });

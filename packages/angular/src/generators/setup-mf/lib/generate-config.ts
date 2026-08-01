@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments, logger } from '@nx/devkit';
+import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import type { NormalizedOptions } from '../schema';
 
 export function generateWebpackConfig(
@@ -42,7 +43,7 @@ export function generateWebpackConfig(
     }
   );
 
-  if (!options.setParserOptionsProject) {
+  if (!isTypedLintingEnabled(options)) {
     tree.delete(joinPathFragments(appRoot, 'tsconfig.lint.json'));
   }
 }

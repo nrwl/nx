@@ -69,6 +69,8 @@ export const DEVKIT_INTERNAL_SYMBOLS: ReadonlySet<string> = new Set([
   'capitalize',
   'classify',
   'dasherize',
+  'emitPluginWorkerLog',
+  'throwForUnsupportedVersion',
 ]);
 
 // Methods on `jest` and `vi` that take a module specifier as their first

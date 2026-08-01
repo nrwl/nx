@@ -12,6 +12,7 @@ import {
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { VitePreviewServerExecutorOptions } from './schema';
+import schema from './schema.json';
 import { relative } from 'path';
 import { getBuildExtraArgs } from '../build/build.impl';
 import { loadViteDynamicImport } from '../../utils/executor-utils';
@@ -219,7 +220,6 @@ async function getExtraArgs(
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
-  const schema = await import('./schema.json');
   const extraArgs = {};
   for (const key of Object.keys(options)) {
     if (!schema.properties[key]) {

@@ -5,8 +5,8 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/vite/README.md"],
-      "command": "node ./scripts/copy-readme.js vite",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js vite packages/vite/readme-template.md packages/vite/README.md",
       "inputs": ["copyReadme"]
     }
   },

@@ -1,12 +1,14 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   getNamedInputs,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   createNodesFromFiles,
-  type CreateNodesContextV2,
-  type CreateNodesV2,
+  type CreateNodesContext,
+  CreateNodesResultArray,
+  type CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -41,7 +43,7 @@ interface NormalizedOptions {
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
-export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
+export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
   playwrightConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -53,21 +55,53 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            pluginCache,
-            pmc,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterPlaywrightConfigs(
         configFilePaths,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        { ...normalizedOptions, CI: process.env.CI },
+        context,
+        entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              pluginCache,
+              pmc,
+              entries[idx].externalTsconfigInputs,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       pluginCache.writeToDisk();
     }
@@ -78,39 +112,14 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: PlaywrightPluginOptions,
-  context: CreateNodesContextV2,
+  normalizedOptions: NormalizedOptions,
+  context: CreateNodesContext,
   pluginCache: PluginCache<PlaywrightTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  externalTsconfigInputs: string[],
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const normalizedOptions = normalizeOptions(options);
-
-  const externalTsconfigInputs = collectExternalTsconfigInputs(
-    projectRoot,
-    context.workspaceRoot
-  );
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    {
-      ...normalizedOptions,
-      CI: process.env.CI,
-    },
-    context,
-    [lockFileName, ...externalTsconfigInputs]
-  );
 
   if (!pluginCache.has(hash)) {
     pluginCache.set(
@@ -142,7 +151,7 @@ async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[]
 ): Promise<PlaywrightTargets> {
@@ -363,6 +372,7 @@ async function buildPlaywrightTargets(
     }
     targets[options.mergeReportsTargetName] = {
       executor: '@nx/playwright:merge-reports',
+      continuous: false,
       cache: true,
       inputs: ciBaseTargetConfig.inputs,
       outputs: Array.from(mergeReportsTargetOutputs),
@@ -383,7 +393,7 @@ async function buildPlaywrightTargets(
 }
 
 async function getAllTestFiles(opts: {
-  context: CreateNodesContextV2;
+  context: CreateNodesContext;
   path: string;
   config: PlaywrightTestConfig;
 }) {
@@ -632,6 +642,50 @@ function normalizeAtomizedTaskBlobReportOutput(
   return output.endsWith('.zip')
     ? joinPathFragments(dirname(output), `${subfolder}.zip`)
     : joinPathFragments(output, `${subfolder}.zip`);
+}
+
+interface PlaywrightEntry {
+  configFile: string;
+  projectRoot: string;
+  externalTsconfigInputs: string[];
+}
+
+async function filterPlaywrightConfigs(
+  configFilePaths: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: PlaywrightEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFilePaths.map(async (configFile): Promise<PlaywrightEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        const externalTsconfigInputs = collectExternalTsconfigInputs(
+          projectRoot,
+          context.workspaceRoot
+        );
+        return { configFile, projectRoot, externalTsconfigInputs };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is PlaywrightEntry => c !== null),
+    preErrors,
+  };
 }
 
 /**

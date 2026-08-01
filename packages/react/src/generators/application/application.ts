@@ -2,6 +2,7 @@ import {
   logShowProjectCommand,
   promptWhenInteractive,
 } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   formatFiles,
   GeneratorCallback,
@@ -60,6 +61,8 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(tree);
+
   const tasks = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
@@ -252,15 +255,15 @@ function findBuildDefault(
   td: TargetDefaults | undefined
 ): Partial<TargetConfiguration> | undefined {
   if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === 'build' &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+  const value = td['build'];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _f, ...rest } = found;
+    return rest;
   }
-  return td['build'];
+  return value;
 }
 
 export default applicationGenerator;

@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -19,8 +19,8 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 
@@ -40,6 +40,7 @@ const packageCmd = getPackageManagerCommand().exec;
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
   let schema: Schema = {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
@@ -54,12 +55,22 @@ describe('app', () => {
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
     (detectPackageManager as jest.Mock).mockImplementation((...args) =>
       jest.requireActual('@nx/devkit').detectPackageManager(...args)
     );
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -105,27 +116,37 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         addPlugin: true,
+        // Let the generator format the tree so we assert on the same
+        // prettier-formatted config a user gets, not the raw intermediate the
+        // e2e generator writes with skipFormat.
+        skipFormat: false,
       });
 
-      expect(appTree.read('my-app-e2e/cypress.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import { defineConfig } from 'cypress';
-        export default defineConfig({
-            e2e: {
-                ...nxE2EPreset(__filename, {
-                    "cypressDir": "src",
-                    "bundler": "vite",
-                    "webServerCommands": {
-                        "default": "npx nx run my-app:dev",
-                        "production": "npx nx run my-app:preview"
-                    },
-                    "ciWebServerCommand": "npx nx run my-app:preview",
-                    "ciBaseUrl": "http://localhost:4300"
-                }),
-                baseUrl: 'http://localhost:4200'
-            }
-        });"
+      // The web-server commands interpolate the detected package manager's exec
+      // command (`npx`, `pnpm exec`, ...), so normalize it to keep the snapshot
+      // package-manager agnostic.
+      const cypressConfig = appTree
+        .read('my-app-e2e/cypress.config.ts', 'utf-8')
+        .replaceAll(packageCmd, '<pm-exec>');
+      expect(cypressConfig).toMatchInlineSnapshot(`
+        "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+        const { defineConfig } = require('cypress');
+        module.exports = defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                default: '<pm-exec> nx run my-app:dev',
+                production: '<pm-exec> nx run my-app:preview',
+              },
+              ciWebServerCommand: '<pm-exec> nx run my-app:preview',
+              ciBaseUrl: 'http://localhost:4300',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
       `);
     });
 
@@ -148,7 +169,16 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
         addPlugin: true,
       });
-      const snapshot = `
+      // Spot-check the generated playwright config. Avoid inline snapshot
+      // here: `webServer.command` interpolates `packageCmd` at runtime
+      // (`npx`, `pnpm exec`, etc) which varies by package manager, and
+      // Jest's `-u` machinery can't round-trip an inline snapshot whose
+      // expected value is a runtime-built template variable.
+      const playwrightConfig = appTree.read(
+        'my-app-e2e/playwright.config.mts',
+        'utf-8'
+      );
+      expect(playwrightConfig).toMatchInlineSnapshot(`
         "import { defineConfig, devices } from '@playwright/test';
         import { nxE2EPreset } from '@nx/playwright/preset';
         import { workspaceRoot } from '@nx/devkit';
@@ -160,13 +190,20 @@ describe('app', () => {
          * Read environment variables from file.
          * https://github.com/motdotla/dotenv
          */
-        // require('dotenv').config();
+        // import 'dotenv/config';
 
         /**
          * See https://playwright.dev/docs/test-configuration.
+         *
+         * Generated as a .mts file so Node forces ESM regardless of workspace
+         * \`type\`. Playwright routes \`.mts\` through its ESM loader (dynamic import,
+         * bypassing the pirates CJS-compile path), and Nx's native TS strip loads
+         * \`.mts\` directly. Playwright's configLoader auto-discovers
+         * \`playwright.config.mts\` via its extension list
+         * (.ts/.js/.mts/.mjs/.cts/.cjs).
          */
         export default defineConfig({
-          ...nxE2EPreset(__filename, { testDir: './src' }),
+          ...nxE2EPreset(import.meta.dirname, { testDir: './src' }),
           /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
           use: {
             baseURL,
@@ -175,7 +212,7 @@ describe('app', () => {
           },
           /* Run your local dev server before starting the tests */
           webServer: {
-            command: '${packageCmd} nx run my-app:preview',
+            command: 'npx nx run my-app:preview',
             url: 'http://localhost:4300',
             reuseExistingServer: true,
             cwd: workspaceRoot
@@ -195,7 +232,7 @@ describe('app', () => {
               name: "webkit",
               use: { ...devices["Desktop Safari"] },
             },
-            
+
             // Uncomment for mobile browsers support
             /* {
               name: 'Mobile Chrome',
@@ -218,10 +255,7 @@ describe('app', () => {
           ],
         });
         "
-      `;
-      expect(
-        appTree.read('my-app-e2e/playwright.config.ts', 'utf-8')
-      ).toMatchInlineSnapshot(snapshot);
+      `);
     });
 
     it('should use preview vite types to tsconfigs', async () => {
@@ -316,11 +350,7 @@ describe('app', () => {
         'jest.config.cts',
       ]);
 
-      const eslintJson = readJson(appTree, 'my-app/.eslintrc.json');
-      expect(eslintJson.extends).toEqual([
-        'plugin:@nx/react',
-        '../.eslintrc.json',
-      ]);
+      expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
 
       expect(appTree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
@@ -329,7 +359,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -357,6 +387,17 @@ describe('app', () => {
 
       const tsConfig = readJson(appTree, 'my-app/tsconfig.json');
       expect(tsConfig.extends).toEqual('../tsconfig.base.json');
+    });
+
+    it('should use node10 moduleResolution in e2e tsconfig on TypeScript < 6', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+      await applicationGenerator(appTree, schema);
+
+      const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
+      expect(tsconfigE2E.compilerOptions.moduleResolution).toEqual('node10');
     });
   });
 
@@ -461,12 +502,8 @@ describe('app', () => {
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
         },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['plugin:@nx/react', '../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(appTree.exists('my-dir/my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should setup playwright', async () => {
@@ -477,7 +514,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('my-dir/my-app-e2e/playwright.config.ts')
+        appTree.exists('my-dir/my-app-e2e/playwright.config.mts')
       ).toBeTruthy();
       expect(
         appTree.exists('my-dir/my-app-e2e/src/example.spec.ts')
@@ -578,7 +615,7 @@ describe('app', () => {
   it('should setup the eslint builder', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.exists('my-app/.eslintrc.json')).toBeTruthy();
+    expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
   });
 
   describe('--unit-test-runner none', () => {
@@ -611,8 +648,48 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
       });
 
-      expect(appTree.exists('my-app-e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('my-app-e2e/playwright.config.mts')).toBeTruthy();
       expect(appTree.exists('my-app-e2e/src/example.spec.ts')).toBeTruthy();
+    });
+  });
+
+  describe('--enableTypedLinting', () => {
+    it.each(['playwright', 'cypress'] as const)(
+      'should forward the flag to the %s e2e project',
+      async (e2eTestRunner) => {
+        await applicationGenerator(appTree, {
+          ...schema,
+          e2eTestRunner,
+          enableTypedLinting: true,
+        });
+
+        expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
+          'projectService: true'
+        );
+      }
+    );
+
+    it('should forward the deprecated setParserOptionsProject flag to the e2e project', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        e2eTestRunner: 'playwright',
+        setParserOptionsProject: true,
+      });
+
+      expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
+        'projectService: true'
+      );
+    });
+
+    it('should not set up typed linting in the e2e project by default', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        e2eTestRunner: 'playwright',
+      });
+
+      expect(
+        appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')
+      ).not.toContain('projectService');
     });
   });
 
@@ -635,6 +712,7 @@ describe('app', () => {
   });
 
   it('should add .eslintrc.json and dependencies', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, { ...schema, linter: 'eslint' });
 
     const packageJson = readJson(appTree, '/package.json');
@@ -1046,7 +1124,7 @@ describe('app', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
             "types": [
               "jest",
@@ -1103,7 +1181,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
       });
 
-      expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('e2e/playwright.config.mts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
   });
@@ -1392,7 +1470,7 @@ describe('app', () => {
           "include": [
             "**/*.ts",
             "**/*.js",
-            "playwright.config.ts",
+            "playwright.config.mts",
             "src/**/*.spec.ts",
             "src/**/*.spec.js",
             "src/**/*.test.ts",
@@ -1930,7 +2008,7 @@ describe('app', () => {
       });
 
       const playwrightConfig = appTree.read(
-        'my-app-e2e/playwright.config.ts',
+        'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
       expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
@@ -1963,7 +2041,7 @@ describe('app', () => {
       });
 
       const playwrightConfig = appTree.read(
-        'my-app-e2e/playwright.config.ts',
+        'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
       expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
@@ -1996,7 +2074,7 @@ describe('app', () => {
       });
 
       const playwrightConfig = appTree.read(
-        'my-app-e2e/playwright.config.ts',
+        'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
       expect(playwrightConfig).toContain("|| 'http://localhost:9000'");

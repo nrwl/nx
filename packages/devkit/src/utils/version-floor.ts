@@ -1,6 +1,10 @@
 import type { Tree } from 'nx/src/devkit-exports';
-import { lt } from 'semver';
-import { isNonSemverDistTag, normalizeSemver } from './installed-version';
+import { coerce, lt } from 'semver';
+import {
+  getInstalledPackageVersion,
+  isNonSemverDistTag,
+  normalizeSemver,
+} from './installed-version';
 import { getDependencyVersionFromPackageJson } from './package-json';
 
 /**
@@ -51,4 +55,33 @@ export function assertSupportedPackageVersion(
   if (cleaned && lt(cleaned, minSupportedVersion)) {
     throwForUnsupportedVersion(packageName, declared, minSupportedVersion);
   }
+}
+
+/**
+ * Asserts that a package installed in the workspace is at or above the
+ * plugin's supported floor. No-op when the package is not resolvable from
+ * `node_modules` (peer not yet satisfied, fresh-install path). Throws via
+ * `throwForUnsupportedVersion` when below floor.
+ *
+ * Use from executor / runtime / preset / library entry points where
+ * node_modules is present and no `Tree` is available. Generator code should
+ * use `assertSupportedPackageVersion` instead, which reads the declared
+ * range from a tree.
+ */
+export function assertSupportedInstalledPackageVersion(
+  packageName: string,
+  minSupportedVersion: string
+): void {
+  const installed = getInstalledPackageVersion(packageName);
+  if (!installed) {
+    return;
+  }
+  // Coerce strips any prerelease tag (e.g. `19.0.0-rc.1` → `19.0.0`) so a
+  // prerelease of the supported major isn't wrongly flagged as below floor
+  // by semver's spec-mandated `lt(prerelease, release) === true` ordering.
+  const normalized = coerce(installed)?.version;
+  if (!normalized || !lt(normalized, minSupportedVersion)) {
+    return;
+  }
+  throwForUnsupportedVersion(packageName, installed, minSupportedVersion);
 }

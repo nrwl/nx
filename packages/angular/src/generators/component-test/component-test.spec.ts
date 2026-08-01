@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/versions';
+import { assertMinimumCypressVersion } from '@nx/cypress/internal';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
@@ -9,7 +9,7 @@ import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
 import { EOL } from 'node:os';
 
-jest.mock('@nx/cypress/src/utils/versions');
+jest.mock('@nx/cypress/internal');
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;

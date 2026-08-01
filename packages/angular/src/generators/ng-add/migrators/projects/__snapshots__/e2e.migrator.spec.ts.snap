@@ -14,9 +14,9 @@ export default defineConfig({
 `;
 
 exports[`e2e migrator cypress with project root at "" should create a cypress.config.ts file when it does not exist 1`] = `
-"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-import { defineConfig } from 'cypress';
-export default defineConfig({
+"const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+const { defineConfig } = require('cypress');
+module.exports = defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
@@ -97,9 +97,9 @@ export default defineConfig({
 `;
 
 exports[`e2e migrator cypress with project root at "projects/app1" should create a cypress.config.ts file when it does not exist 1`] = `
-"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-import { defineConfig } from 'cypress';
-export default defineConfig({
+"const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+const { defineConfig } = require('cypress');
+module.exports = defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',

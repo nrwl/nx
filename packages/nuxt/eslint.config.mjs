@@ -3,8 +3,14 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
   ...baseConfig,
+  { ignores: ['dist'] },
   {
-    files: ['./package.json', './generators.json', './executors.json'],
+    files: [
+      './package.json',
+      './generators.json',
+      './executors.json',
+      './migrations.json',
+    ],
     rules: {
       '@nx/nx-plugin-checks': 'error',
     },
@@ -27,6 +33,10 @@ export default [
             '@nx/playwright',
             '@nx/vite',
             '@nx/vitest',
+            // Declared as peers so workspaces get a compatible-range signal;
+            // installed by generators, not imported by the plugin's own source.
+            'nuxt',
+            '@nuxt/schema',
           ],
         },
       ],

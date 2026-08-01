@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { CreateNodesContextV2, hashArray } from 'nx/src/devkit-exports';
+import { CreateNodesContext, hashArray } from 'nx/src/devkit-exports';
 
 import {
   hashMultiGlobWithWorkspaceContext,
@@ -7,10 +7,15 @@ import {
   hashWithWorkspaceContext,
 } from 'nx/src/devkit-internals';
 
+/**
+ * @deprecated Use {@link calculateHashesForCreateNodes} instead, which batches
+ * workspace-context hashing across multiple project roots in a single call.
+ * This will be removed in Nx 24.
+ */
 export async function calculateHashForCreateNodes(
   projectRoot: string,
   options: object,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   additionalGlobs: string[] = []
 ): Promise<string> {
   return hashArray([
@@ -25,24 +30,26 @@ export async function calculateHashForCreateNodes(
 export async function calculateHashesForCreateNodes(
   projectRoots: string[],
   options: object,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   additionalGlobs: string[][] = []
 ): Promise<string[]> {
+  if (projectRoots.length === 0) {
+    return [];
+  }
   if (
     additionalGlobs.length &&
     additionalGlobs.length !== projectRoots.length
   ) {
     throw new Error(
-      'If additionalGlobs is provided, it must be the same length as projectRoots'
+      `calculateHashesForCreateNodes: projectRoots.length (${projectRoots.length}) !== additionalGlobs.length (${additionalGlobs.length})`
     );
   }
-  return hashMultiGlobWithWorkspaceContext(
+  const hashes = await hashMultiGlobWithWorkspaceContext(
     context.workspaceRoot,
     projectRoots.map((projectRoot, idx) => [
       join(projectRoot, '**/*'),
       ...(additionalGlobs.length ? additionalGlobs[idx] : []),
     ])
-  ).then((hashes) => {
-    return hashes.map((hash) => hashArray([hash, hashObject(options)]));
-  });
+  );
+  return hashes.map((hash) => hashArray([hash, hashObject(options)]));
 }

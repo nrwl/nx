@@ -96,7 +96,9 @@ export async function setupSsrForHost(
       express: expressVersion,
       '@types/express': typesExpressVersion,
     },
-    {}
+    {},
+    undefined,
+    true
   );
   tasks.push(installTask);
 

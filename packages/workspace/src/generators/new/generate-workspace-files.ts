@@ -198,7 +198,7 @@ export async function generateWorkspaceFiles(
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     if (gte(packageManagerVersion, '10.6.0')) {
-      addPnpmSettings(tree, options);
+      addPnpmSettings(tree, options, packageManagerVersion);
     } else {
       createNpmrc(tree, options);
     }
@@ -234,10 +234,10 @@ function createNxJson(
     defaultBase,
     targetDefaults:
       process.env.NX_ADD_PLUGINS === 'false'
-        ? [
-            { target: 'build', cache: true, dependsOn: ['^build'] },
-            { target: 'lint', cache: true },
-          ]
+        ? {
+            build: { cache: true, dependsOn: ['^build'] },
+            lint: { cache: true },
+          }
         : undefined,
     analytics,
   };
@@ -252,21 +252,9 @@ function createNxJson(
       sharedGlobals: [],
     };
     if (process.env.NX_ADD_PLUGINS === 'false') {
-      const td = nxJson.targetDefaults;
-      if (Array.isArray(td)) {
-        const buildIdx = td.findIndex(
-          (e) =>
-            e.target === 'build' &&
-            e.executor === undefined &&
-            e.projects === undefined &&
-            e.plugin === undefined
-        );
-        if (buildIdx >= 0) {
-          td[buildIdx] = {
-            ...td[buildIdx],
-            inputs: ['production', '^production'],
-          };
-        }
+      const build = nxJson.targetDefaults?.build;
+      if (build && !Array.isArray(build)) {
+        build.inputs = ['production', '^production'];
       }
       nxJson.useInferencePlugins = false;
     }
@@ -345,13 +333,18 @@ async function createReadme(
   });
 }
 
-// ensure that pnpm install add all the missing peer deps
+function addPnpmSettings(
+  tree: Tree,
+  options: NormalizedSchema,
+  packageManagerVersion: string
+) {
+  const buildAllowlist = gte(packageManagerVersion, '11.0.0')
+    ? `allowBuilds:\n  nx: true`
+    : `onlyBuiltDependencies:\n  - nx`;
 
-function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
-    `autoInstallPeers: true
-`
+    `autoInstallPeers: true\n${buildAllowlist}\n`
   );
 }
 

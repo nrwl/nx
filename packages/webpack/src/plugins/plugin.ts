@@ -1,14 +1,16 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -48,7 +50,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 
-export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
+export const createNodes: CreateNodes<WebpackPluginOptions> = [
   webpackConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -62,22 +64,52 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            targetsCache,
-            isTsSolutionSetup,
-            pmc,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterWebpackConfigs(
         configFilePaths,
-        normalizedOptions,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, opts, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              opts,
+              ctx,
+              targetsCache,
+              isTsSolutionSetup,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          normalizedOptions,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -89,29 +121,13 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<WebpackTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(
@@ -144,7 +160,7 @@ async function createWebpackTargets(
   configFilePath: string,
   projectRoot: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<WebpackTargets> {
@@ -169,7 +185,7 @@ async function createWebpackTargets(
 
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
-    options: { cwd: projectRoot, args: ['--node-env=production'] },
+    options: { cwd: projectRoot, env: { NODE_ENV: 'production' } },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs:
@@ -211,7 +227,7 @@ async function createWebpackTargets(
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
-      args: ['--node-env=development'],
+      env: { NODE_ENV: 'development' },
     },
     metadata: {
       technologies: ['webpack'],
@@ -232,7 +248,7 @@ async function createWebpackTargets(
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
-      args: ['--node-env=production'],
+      env: { NODE_ENV: 'production' },
     },
     metadata: {
       technologies: ['webpack'],
@@ -319,6 +335,45 @@ function normalizeOutputPath(
       }
     }
   }
+}
+
+interface WebpackEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterWebpackConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: WebpackEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<WebpackEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is WebpackEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(

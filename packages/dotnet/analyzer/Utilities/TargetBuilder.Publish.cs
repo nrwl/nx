@@ -16,7 +16,8 @@ public static partial class TargetBuilder
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
-        string productionInput)
+        string productionInput,
+        List<string> directoryBuildInputs)
     {
         // Create a copy of properties with Configuration=Release
         var releaseProperties = new Dictionary<string, string>(properties)
@@ -25,6 +26,11 @@ public static partial class TargetBuilder
         };
 
         var publishDir = GetPublishDir(releaseProperties, projectName, projectDirectory, workspaceRoot);
+        // `dotnet publish` writes incremental-publish state (e.g.
+        // obj/<Configuration>/PublishOutputs.<hash>.txt) into the intermediate
+        // (obj) directory, so it must be declared as an output alongside the
+        // publish directory, mirroring the build target.
+        var intermediatePath = GetIntermediateOutputPath(releaseProperties, projectName, projectDirectory, workspaceRoot);
 
         string[] defaultFlags = ["--no-build", "--no-dependencies", "--no-restore"];
 
@@ -57,8 +63,11 @@ public static partial class TargetBuilder
                 "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                .. directoryBuildInputs
             ],
-            Outputs = publishDir is null ? [] : [publishDir],
+            Outputs = new[] { publishDir, intermediatePath }
+                .Where(p => p is not null)
+                .ToArray()!,
             Metadata = new TargetMetadata
             {
                 Description = "Publish the .NET application",

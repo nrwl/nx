@@ -8,6 +8,7 @@ import {
 } from '@nx/devkit';
 import { storybookConfigurationGenerator as vueStorybookConfigurationGenerator } from '@nx/vue';
 import { Schema } from './schema';
+import { assertSupportedNuxtVersion } from '../../utils/assert-supported-nuxt-version';
 
 /*
  * This generator is basically the Vue one, but for Nuxt we
@@ -17,6 +18,8 @@ export async function storybookConfigurationGenerator(
   tree: Tree,
   options: Schema
 ) {
+  assertSupportedNuxtVersion(tree);
+
   const { root, sourceRoot } = readProjectConfiguration(tree, options.project);
 
   // Determine the source directory (app/ for Nuxt v4, src/ for Nuxt v3)

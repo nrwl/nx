@@ -139,7 +139,7 @@ describe('convertConfigToWebpackPluginGenerator', () => {
           // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
           // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
           // eslint-disable-next-line react-hooks/rules-of-hooks
-          await useLegacyNxPlugin(require('./webpack.config.old'), options),
+          await useLegacyNxPlugin(require('./webpack.config.old.js'), options),
         ],
       });
       "
@@ -428,7 +428,7 @@ describe('convertConfigToWebpackPluginGenerator', () => {
           // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
           // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
           // eslint-disable-next-line react-hooks/rules-of-hooks
-          await useLegacyNxPlugin(require('./webpack.config.old'), options),
+          await useLegacyNxPlugin(require('./webpack.config.old.js'), options),
         ],
       });
       "

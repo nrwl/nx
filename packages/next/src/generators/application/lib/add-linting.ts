@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react/src/utils/lint';
+import { extraEslintDependencies } from '@nx/react';
 import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
@@ -14,14 +14,15 @@ import {
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   updateOverrideInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
+  useFlatConfig,
+  addImportToFlatConfig,
+} from '@nx/eslint/internal';
 import {
   getEslintConfigNextDependenciesVersionsToInstall,
   isNext16,
 } from '../../../utils/version-utils';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { addImportToFlatConfig } from '@nx/eslint/src/generators/utils/flat-config/ast-utils';
 
 export async function addLinting(
   host: Tree,
@@ -41,7 +42,7 @@ export async function addLinting(
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       rootProject: options.rootProject,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
     })
   );
@@ -115,11 +116,17 @@ export async function addLinting(
       await getEslintConfigNextDependenciesVersionsToInstall(host);
 
     tasks.push(
-      addDependenciesToPackageJson(host, extraEslintDependencies.dependencies, {
-        ...extraEslintDependencies.devDependencies,
-        'eslint-config-next': eslintConfigNextVersion,
-        '@next/eslint-plugin-next': eslintConfigNextVersion,
-      })
+      addDependenciesToPackageJson(
+        host,
+        extraEslintDependencies.dependencies,
+        {
+          ...extraEslintDependencies.devDependencies,
+          'eslint-config-next': eslintConfigNextVersion,
+          '@next/eslint-plugin-next': eslintConfigNextVersion,
+        },
+        undefined,
+        true
+      )
     );
   }
 

@@ -1,14 +1,16 @@
 import {
   getNamedInputs,
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
 } from '@nx/devkit/internal';
 import {
-  CreateNodesContextV2,
+  AggregateCreateNodesError,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   joinPathFragments,
   NxJsonConfiguration,
@@ -38,7 +40,7 @@ type ReactNativeTargets = Record<
   TargetConfiguration<ReactNativePluginOptions>
 >;
 
-export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
+export const createNodes: CreateNodes<ReactNativePluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -50,21 +52,51 @@ export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
     const lockFileName = getLockFileName(
       detectPackageManager(context.workspaceRoot)
     );
+    const normalizedOptions = normalizeOptions(options);
 
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            targetsCache,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterReactNativeConfigs(
         configFiles,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -76,41 +108,11 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFile: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<ReactNativeTargets>,
-  lockFileName: string
+  hash: string
 ): Promise<CreateNodesResult> {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
-
-  // Do not create a project if package.json or project.json or metro.config.js isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') ||
-    !siblingFiles.includes('metro.config.js')
-  ) {
-    return {};
-  }
-
-  // Check if it's an Expo project
-  const packageJson = readJsonFile(
-    join(context.workspaceRoot, projectRoot, 'package.json')
-  );
-  const appConfig = await getAppConfig(configFile, context);
-  if (
-    appConfig.expo ||
-    packageJson.dependencies?.['expo'] ||
-    packageJson.devDependencies?.['expo']
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(
@@ -131,7 +133,7 @@ async function createNodesInternal(
 function buildReactNativeTargets(
   projectRoot: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -180,6 +182,7 @@ function buildReactNativeTargets(
     },
     [options.syncDepsTargetName]: {
       executor: '@nx/react-native:sync-deps',
+      continuous: false,
     },
     [options.upgradeTargetName]: {
       command: `react-native upgrade`,
@@ -192,11 +195,61 @@ function buildReactNativeTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   return loadConfigFile(resolvedPath);
+}
+
+async function filterReactNativeConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: Array<{ configFile: string; projectRoot: string }>;
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(
+      async (
+        configFile
+      ): Promise<{ configFile: string; projectRoot: string } | null> => {
+        try {
+          const projectRoot = dirname(configFile);
+          const siblingFiles = readdirSync(
+            join(context.workspaceRoot, projectRoot)
+          );
+          if (
+            !siblingFiles.includes('package.json') ||
+            !siblingFiles.includes('metro.config.js')
+          ) {
+            return null;
+          }
+          // Skip Expo projects; the @nx/expo plugin handles them.
+          const packageJson = readJsonFile(
+            join(context.workspaceRoot, projectRoot, 'package.json')
+          );
+          const appConfig = await getAppConfig(configFile, context);
+          if (
+            appConfig.expo ||
+            packageJson.dependencies?.['expo'] ||
+            packageJson.devDependencies?.['expo']
+          ) {
+            return null;
+          }
+          return { configFile, projectRoot };
+        } catch (e) {
+          preErrors.push([configFile, e as Error]);
+          return null;
+        }
+      }
+    )
+  );
+  return {
+    entries: candidates.filter((c): c is NonNullable<typeof c> => c !== null),
+    preErrors,
+  };
 }
 
 function getInputs(

@@ -8,7 +8,7 @@ import {
   validateDependency,
   workspaceRoot,
 } from '@nx/devkit';
-import { join, relative } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 
 import {
   getCurrentProjectGraphReport,
@@ -41,22 +41,20 @@ export const createDependencies: CreateDependencies<
   const dependencies: Array<StaticDependency> = [];
   dependenciesFromReport.forEach((dependencyFromPlugin: StaticDependency) => {
     try {
-      const source =
-        relative(workspaceRoot, dependencyFromPlugin.source) || '.';
+      // Report paths are workspace-relative with `/` separators
       const sourceProjectName =
         Object.values(context.projects).find(
-          (project) => source === project.root
+          (project) => dependencyFromPlugin.source === project.root
         )?.name ?? dependencyFromPlugin.source;
-      const target =
-        relative(workspaceRoot, dependencyFromPlugin.target) || '.';
       const targetProjectName =
         Object.values(context.projects).find(
-          (project) => target === project.root
+          (project) => dependencyFromPlugin.target === project.root
         )?.name ?? dependencyFromPlugin.target;
+      const sourceFile = dependencyFromPlugin.sourceFile;
       if (
         !sourceProjectName ||
         !targetProjectName ||
-        !existsSync(dependencyFromPlugin.sourceFile)
+        !existsSync(join(workspaceRoot, sourceFile))
       ) {
         return;
       }
@@ -64,9 +62,7 @@ export const createDependencies: CreateDependencies<
         source: sourceProjectName,
         target: targetProjectName,
         type: DependencyType.static,
-        sourceFile: normalizePath(
-          relative(workspaceRoot, dependencyFromPlugin.sourceFile)
-        ),
+        sourceFile,
       };
       validateDependency(dependency, context);
       dependencies.push(dependency);

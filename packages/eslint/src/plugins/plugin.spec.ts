@@ -1,4 +1,4 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2, EslintPluginOptions } from './plugin';
@@ -20,7 +20,7 @@ jest.mock('../utils/resolve-eslint-class', () => ({
 }));
 
 describe('@nx/eslint/plugin', () => {
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let configFiles: string[] = [];
 
@@ -91,7 +91,7 @@ describe('@nx/eslint/plugin', () => {
         'eslint.config.cjs': `module.exports = {};`,
         'project.json': `{}`,
       });
-      // NOTE: It should set ESLINT_USE_FLAT_CONFIG to true because of the use of eslint.config.cjs
+      // NOTE: a flat config (eslint.config.cjs) needs no env var; flat is the default for ESLint v9+
       expect(
         await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' })
       ).toMatchInlineSnapshot(`
@@ -146,6 +146,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -202,6 +205,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -291,6 +297,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -347,6 +356,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -479,6 +491,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -518,6 +533,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "libs/my-lib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -656,6 +674,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/my-app",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -696,6 +717,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "libs/my-lib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -754,6 +778,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/myapp",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -816,6 +843,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": "apps/myapp/nested/mylib",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -899,6 +929,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -956,6 +989,9 @@ describe('@nx/eslint/plugin', () => {
                   },
                   "options": {
                     "cwd": ".",
+                    "env": {
+                      "ESLINT_USE_FLAT_CONFIG": "false",
+                    },
                   },
                   "outputs": [
                     "{options.outputFile}",
@@ -1149,7 +1185,7 @@ describe('@nx/eslint/plugin', () => {
   }
 
   async function invokeCreateNodesOnMatchingFiles(
-    context: CreateNodesContextV2,
+    context: CreateNodesContext,
     options?: EslintPluginOptions
   ) {
     const aggregateProjects: Record<string, any> = {};

@@ -25,7 +25,7 @@ describe('createConfig', () => {
         import { createConfig }from '@nx/angular-rspack';
         
         
-        export default createConfig({ 
+        export default createConfig({
           options: {
             root: __dirname,
             
@@ -72,7 +72,7 @@ describe('createConfig', () => {
         import { createConfig }from '@nx/angular-rspack';
         
         
-        export default createConfig({ 
+        export default createConfig({
           options: {
             root: __dirname,
             

@@ -1,14 +1,16 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   getNamedInputs,
   PluginCache,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   NxJsonConfiguration,
@@ -47,7 +49,7 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-export const createNodes: CreateNodesV2<NextPluginOptions> = [
+export const createNodes: CreateNodes<NextPluginOptions> = [
   nextConfigBlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -57,23 +59,53 @@ export const createNodes: CreateNodesV2<NextPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
 
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            targetsCache,
-            isTsSolutionSetup,
-            pmc,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterNextConfigs(
         configFiles,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              isTsSolutionSetup,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       targetsCache.writeToDisk();
     }
@@ -85,30 +117,13 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: NextPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<NextTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-  options = normalizeOptions(options);
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [lockFileName]
-  );
 
   if (!targetsCache.has(hash)) {
     targetsCache.set(
@@ -138,7 +153,7 @@ async function buildNextTargets(
   nextConfigPath: string,
   projectRoot: string,
   options: NextPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -195,8 +210,10 @@ async function getBuildTargetConfig(
     outputs: [`${nextOutputPath}/!(cache)/**/*`, `${nextOutputPath}/!(cache)`],
   };
 
-  // TODO(ndcunningham): Update this to be consider different versions of next.js which is running
-  // This doesn't actually need to be tty, but next.js has a bug, https://github.com/vercel/next.js/issues/62906, where it exits 0 when SIGINT is sent.
+  // v14/v15/v16 all emit the same `next build` inferred target shape - no per-major branch needed.
+  // The tty=false is not version-specific: Next.js exits 0 on SIGINT regardless of major
+  // (https://github.com/vercel/next.js/issues/62906). Turbopack-default-on (v16+) and other
+  // bundler differences live at the executor / runtime layer, not here.
   targetConfig.options.tty = false;
 
   if (isTsSolutionSetup) {
@@ -261,11 +278,50 @@ async function getOutputs(projectRoot, nextConfig) {
 
 function getNextConfig(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   return loadConfigFile(resolvedPath);
+}
+
+interface NextEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterNextConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: NextEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<NextEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is NextEntry => c !== null),
+    preErrors,
+  };
 }
 
 function normalizeOptions(options: NextPluginOptions): NextPluginOptions {

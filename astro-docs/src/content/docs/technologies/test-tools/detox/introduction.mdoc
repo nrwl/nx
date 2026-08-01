@@ -1,6 +1,6 @@
 ---
-title: Detox Plugin for Nx
-description: Learn how to set up and use Detox for end-to-end testing of mobile applications in your Nx workspace, including environment setup and configuration options.
+title: Nx with Detox
+description: Run Detox through Nx for caching, affected test runs, and faster CI across your monorepo.
 sidebar:
   label: Introduction
 weight: 2
@@ -21,7 +21,7 @@ The `@nx/detox` plugin supports the following package versions.
 
 | Package | Supported Versions |
 | ------- | ------------------ |
-| `detox` | ^20.9.0            |
+| `detox` | ^20.0.0            |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -47,7 +47,7 @@ npm install -g jest
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/detox` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/detox` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/detox` by running the following command:
@@ -60,12 +60,14 @@ This will install the correct version of `@nx/detox`.
 
 ### How @nx/detox infers tasks
 
-The `@nx/detox` plugin will create a task for any project that has an ESLint configuration file present. Any of the following files will be recognized as an ESLint configuration file:
+The `@nx/detox/plugin` plugin creates tasks for projects with one of these Detox configuration files:
 
 - `.detoxrc.js`
 - `.detoxrc.json`
 - `detox.config.js`
 - `detox.config.json`
+
+It creates cached `build` and `test` tasks and a continuous `start` task.
 
 ### View inferred tasks
 
@@ -84,14 +86,24 @@ The `@nx/detox/plugin` is configured in the `plugins` array in `nx.json`.
       "options": {
         "buildTargetName": "build",
         "startTargetName": "start",
-        "testTargetName": "test"
+        "testTargetName": "test",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
       }
     }
   ]
 }
 ```
 
-Once a Detox configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `startTargetName` or `testTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `build` and `test`.
+| Option                | Type   | Default | Description                                |
+| --------------------- | ------ | ------- | ------------------------------------------ |
+| `buildTargetName`     | string | `build` | Name of the cached `detox build` task.     |
+| `startTargetName`     | string | `start` | Name of the continuous `detox start` task. |
+| `testTargetName`      | string | `test`  | Name of the cached `detox test` task.      |
+| `buildDepsTargetName` | string | none    | Name of an optional dependency build task. |
+| `watchDepsTargetName` | string | none    | Name of an optional dependency watch task. |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/detox/plugin`.
 
 ## Using detox
 
@@ -132,3 +144,9 @@ In addition, to override the device name specified in a configuration, you could
 nx test-ios frontend-e2e --device-name "iPhone 11"
 nx test-android frontend-e2e --device-name "Pixel_4a_API_30"
 ```
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

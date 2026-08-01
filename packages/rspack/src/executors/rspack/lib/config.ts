@@ -1,9 +1,10 @@
 import { ExecutorContext } from '@nx/devkit';
 import { type Configuration } from '@rspack/core';
 import {
-  composePluginsSync,
+  composePlugins,
   isNxRspackComposablePlugin,
 } from '../../../utils/config';
+import { suppressRspackComposeHelperWarnings } from '../../../utils/deprecation';
 import { resolveUserDefinedRspackConfig } from '../../../utils/resolve-user-defined-rspack-config';
 import { withNx } from '../../../utils/with-nx';
 import { withWeb } from '../../../utils/with-web';
@@ -28,11 +29,13 @@ export async function getRspackConfigs(
     userDefinedConfig = await userDefinedConfig;
   }
 
-  const config = (
-    options.target === 'web'
-      ? composePluginsSync(withNx(options), withWeb(options))
-      : withNx(options)
-  )({}, { options, context });
+  // Nx composes these helpers internally to build the default config; suppress
+  // their deprecation warning so it fires only for user-authored configs.
+  const config = await suppressRspackComposeHelperWarnings(() =>
+    (options.target === 'web'
+      ? composePlugins(withNx(options), withWeb(options))
+      : withNx(options))({}, { options, context })
+  );
 
   if (
     typeof userDefinedConfig === 'function' &&

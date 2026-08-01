@@ -7,8 +7,11 @@ import { addLinting } from './add-linting';
 
 describe('Add Linting', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(async () => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
       name: 'my-lib',
@@ -17,7 +20,13 @@ describe('Add Linting', () => {
     });
   });
 
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
   it('should add a .eslintrc.json when is passed', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLinting(tree, {
       projectName: 'my-lib',
       linter: 'eslint',

@@ -319,10 +319,10 @@ export class TasksSchedule {
     task: Task,
     batchTaskGraph: TaskGraph | undefined
   ): boolean {
-    // task self needs to have parallelism true
+    // task self needs to support parallelism (undefined defaults to parallel)
     // all deps have either completed or belong to the same batch
     return (
-      task.parallelism === true &&
+      task.parallelism !== false &&
       this.taskGraph.dependencies[task.id].every(
         (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
       )
@@ -358,7 +358,7 @@ export class TasksSchedule {
       return false;
     } else {
       // if all running tasks support parallelism, can only schedule task with parallelism
-      return this.taskGraph.tasks[taskId].parallelism === true;
+      return this.taskGraph.tasks[taskId].parallelism !== false;
     }
   }
 

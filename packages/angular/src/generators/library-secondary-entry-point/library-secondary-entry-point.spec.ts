@@ -335,40 +335,4 @@ describe('librarySecondaryEntryPoint generator', () => {
       ).toMatchSnapshot();
     });
   });
-
-  describe('compat', () => {
-    it('should generate the module file with the "." type separator for versions lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-
-      addProjectConfiguration(tree, 'lib1', {
-        root: 'libs/lib1',
-        projectType: 'library',
-      });
-      tree.write(
-        'libs/lib1/package.json',
-        JSON.stringify({ name: '@my-org/lib1' })
-      );
-
-      await librarySecondaryEntryPointGenerator(tree, {
-        name: 'testing',
-        library: 'lib1',
-        skipFormat: true,
-      });
-
-      expect(tree.exists('libs/lib1/testing/src/lib/testing.module.ts')).toBe(
-        true
-      );
-      expect(tree.read('libs/lib1/testing/src/index.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "export * from './lib/testing.module';
-        "
-      `);
-    });
-  });
 });

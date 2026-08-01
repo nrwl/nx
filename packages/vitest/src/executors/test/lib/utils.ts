@@ -12,6 +12,7 @@ import {
   loadViteDynamicImport,
   loadVitestDynamicImport,
 } from '../../../utils/executor-utils';
+import { isCI } from 'nx/src/devkit-internals';
 
 export async function getOptions(
   options: VitestExecutorOptions,
@@ -39,9 +40,15 @@ export async function getOptions(
     );
   }
 
+  // Vitest derives the Vite config mode as `options.mode || runMode`, where
+  // runMode defaults to 'test' (or 'benchmark'). Resolve it once and reuse it
+  // for both this pre-load and the value forwarded to vitest below, so the
+  // config file resolves its mode-based branches identically on both loads.
+  const mode = options.mode ?? options.runMode ?? 'test';
+
   const resolved = await loadConfigFromFile(
     {
-      mode: options?.mode ?? 'test',
+      mode,
       command: 'serve',
     },
     viteConfigPath
@@ -88,16 +95,30 @@ export async function getOptions(
     ...passThroughOptions
   } = normalizedExtraArgs as Record<string, any>;
 
+  // Vitest keeps the UI/browser server alive only in watch mode and has no
+  // --ui -> watch link, so a run-once `nx test --ui` tears the UI down right
+  // after the run. When --ui is requested from an interactive, non-CI terminal,
+  // default watch on so the UI stays open; bare runs and CI stay run-once so
+  // `nx run-many`/`affected` don't hang. An explicit CLI --watch/--no-watch or a
+  // config `test.watch` still takes precedence.
+  const uiRequested = passThroughOptions.ui === true;
+  const watchForUi = uiRequested && !!process.stdin.isTTY && !isCI();
+
   return {
-    // Explicitly set watch mode to false if not provided otherwise vitest
-    // will enable watch mode by default for non CI environments
-    watch: watch ?? false,
+    watch:
+      watch ??
+      (resolved?.config?.['test'] as Record<string, any>)?.watch ??
+      watchForUi,
     // Pass through any additional Vitest options
     ...passThroughOptions,
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly
     root: resolved?.config?.root ?? root,
     config: viteConfigPath,
+    // Forward the resolved mode so vitest reloads the config file with it;
+    // otherwise it falls back to its run-mode default and drops mode-based
+    // settings the pre-load above resolved (e.g. outputFile, coverage.reporter).
+    mode,
     // Vitest's resolveConfig processes reporters in two steps:
     // 1. options.reporters (plural) sets resolved.reporters
     // 2. resolved.reporter (singular, from config) overwrites resolved.reporters

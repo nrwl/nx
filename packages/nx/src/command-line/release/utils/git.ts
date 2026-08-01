@@ -606,8 +606,10 @@ export function extractReferencesFromCommit(commit: RawGitCommit): Reference[] {
     }
   }
 
-  // Extract issue references from commit body
-  for (const m of commit.body.matchAll(IssueRE)) {
+  // Extract issue references from commit body, only when linked via a closing
+  // keyword so that other repos' issue numbers mentioned in prose are not
+  // picked up (e.g. "web-infra-dev/rspack#2292")
+  for (const m of commit.body.matchAll(IssueClosingKeywordRE)) {
     if (!references.some((i) => i.value === m[1])) {
       references.push({ type: 'issue', value: m[1] });
     }
@@ -641,6 +643,9 @@ const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 // GitLab style merge request references
 const GitLabMergeRequestRE = /See merge request (?:[a-z0-9/-]+)?(![\d]+)/gim;
 const IssueRE = /(#\d+)/gm;
+// GitHub style issue closing keywords, e.g. "Fixes #1234"
+const IssueClosingKeywordRE =
+  /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+(#\d+)/gim;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
@@ -730,6 +735,44 @@ export async function getFirstGitCommit() {
   } catch (e) {
     throw new Error(`Unable to find first commit in git history`);
   }
+}
+
+/**
+ * Returns the parent of the first commit that touched the given project root,
+ * so that `from..HEAD` ranges include the project's creation commit.
+ * Falls back to getFirstGitCommit() if the project history cannot be determined.
+ */
+export async function getFirstProjectCommit(
+  projectRoot: string
+): Promise<string> {
+  try {
+    const result = (
+      await execCommand('git', [
+        'rev-list',
+        '--reverse',
+        'HEAD',
+        '--first-parent',
+        '--',
+        projectRoot,
+      ])
+    ).trim();
+    const firstCommit = result.split('\n')[0];
+
+    if (firstCommit) {
+      // Return the parent so the creation commit is included in from..to ranges
+      try {
+        return (
+          await execCommand('git', ['rev-parse', `${firstCommit}~1`])
+        ).trim();
+      } catch {
+        // No parent (project was added in the repo's very first commit)
+        return firstCommit;
+      }
+    }
+  } catch {
+    // fall through to fallback
+  }
+  return getFirstGitCommit();
 }
 
 async function getGitRoot() {

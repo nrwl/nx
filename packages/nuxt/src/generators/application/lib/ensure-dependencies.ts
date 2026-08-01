@@ -19,6 +19,7 @@ export async function ensureDependencies(
     '@nx/vite': nxVersion, // needed for the nxViteTsPaths plugin and @nx/vite/plugin
     '@nuxt/devtools': nuxtVersions.nuxtDevtools,
     '@nuxt/kit': nuxtVersions.nuxtKit,
+    '@nuxt/schema': nuxtVersions.nuxtSchema,
     '@nuxt/ui-templates': nuxtVersions.nuxtUiTemplates,
     nuxt: nuxtVersions.nuxt,
     h3: nuxtVersions.h3,
@@ -31,5 +32,11 @@ export async function ensureDependencies(
     devDependencies['sass'] = sassVersion;
   }
 
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }

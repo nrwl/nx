@@ -1,5 +1,5 @@
 import { WebDevServerOptions } from '@nx/webpack';
-import { DevRemoteDefinition } from '@nx/module-federation/src/executors/utils';
+import { DevRemoteDefinition } from '@nx/module-federation/internal';
 
 export type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: DevRemoteDefinition[];

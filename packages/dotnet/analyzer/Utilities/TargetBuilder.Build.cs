@@ -20,7 +20,8 @@ public static partial class TargetBuilder
         PluginOptions options,
         string productionInput,
         string defaultConfiguration,
-        string description)
+        string description,
+        List<string> directoryBuildInputs)
     {
         var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
         var intermediatePath = GetIntermediateOutputPath(properties, projectName, projectDirectory, workspaceRoot);
@@ -58,6 +59,7 @@ public static partial class TargetBuilder
                 "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                .. directoryBuildInputs
             ],
             Outputs = new[] { outputPath, intermediatePath }
                 .Where(p => p is not null)
@@ -79,7 +81,8 @@ public static partial class TargetBuilder
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
-        string productionInput)
+        string productionInput,
+        List<string> directoryBuildInputs)
     {
         var targetName = options.BuildTargetName;
         targets[targetName] = CreateBuildTarget(
@@ -92,7 +95,8 @@ public static partial class TargetBuilder
             options,
             productionInput,
             "Debug",
-            "Build the .NET project");
+            "Build the .NET project",
+            directoryBuildInputs);
     }
 
     private static void AddBuildReleaseTarget(
@@ -104,7 +108,8 @@ public static partial class TargetBuilder
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
-        string productionInput)
+        string productionInput,
+        List<string> directoryBuildInputs)
     {
         var releaseTargetName = $"{options.BuildTargetName}:release";
         targets[releaseTargetName] = CreateBuildTarget(
@@ -117,6 +122,7 @@ public static partial class TargetBuilder
             options,
             productionInput,
             "Release",
-            "Build the .NET project in Release configuration");
+            "Build the .NET project in Release configuration",
+            directoryBuildInputs);
     }
 }

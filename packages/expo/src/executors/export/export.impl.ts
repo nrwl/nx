@@ -10,6 +10,7 @@ import { resolve as pathResolve } from 'path';
 
 import { ExportExecutorSchema } from './schema';
 import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
+import { resolveExpoCliPath } from '../../utils/resolve-expo-cli';
 
 export interface ExpoExportOutput {
   success: boolean;
@@ -45,7 +46,7 @@ function exportAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('@expo/cli/build/bin/cli'),
+      resolveExpoCliPath(),
       [`export`, ...createExportOptions(options, projectRoot)],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),

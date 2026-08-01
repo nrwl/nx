@@ -6,6 +6,7 @@ import {
   newProject,
   promisifiedTreeKill,
   readJson,
+  reservePort,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -25,7 +26,18 @@ describe('@nx/expo (legacy)', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/expo'] });
+    proj = newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/expo',
+        '@nx/jest',
+        '@nx/playwright',
+        '@nx/react',
+        '@nx/rollup',
+        '@nx/storybook',
+        '@nx/web',
+      ],
+    });
     // we create empty preset above which skips creation of `production` named input
 
     originalEnv = process.env.NX_ADD_PLUGINS;
@@ -82,7 +94,7 @@ describe('@nx/expo (legacy)', () => {
 
   it('should serve with metro', async () => {
     let process: ChildProcess;
-    const port = 8051;
+    const port = await reservePort();
 
     try {
       process = await runCommandUntil(
@@ -173,7 +185,7 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should start', async () => {
-    const port = 8041;
+    const port = await reservePort();
     // run start command
     const startProcess = await runCommandUntil(
       `start ${appName} -- --port=${port}`,
@@ -252,7 +264,7 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should run e2e for cypress', async () => {
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const results = runCLI(`e2e ${appName}-e2e`);
       expect(results).toContain('Successfully ran target e2e');
 
@@ -266,7 +278,7 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should run e2e for cypress with configuration ci', async () => {
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
       expect(results).toContain('Successfully ran target e2e');
 
@@ -288,7 +300,7 @@ describe('@nx/expo (legacy)', () => {
     // Build first to speed up static-serve
     runCLI(`export ${appName2}`);
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });
       expect(results).toContain('Successfully ran target e2e');
 

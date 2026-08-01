@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { coerce, gt, SemVer } from 'semver';
+import { coerce, gt, maxSatisfying, SemVer } from 'semver';
 
 type PackageSpec = string | { main: string; children: string[] };
 const packagesToUpdate: PackageSpec[] = [
@@ -38,6 +38,12 @@ const packagesToUpdate: PackageSpec[] = [
   'ng-packagr',
 ];
 
+// Resolved from `@angular/core`'s peerDependencies (not its own dist-tags) so it
+// stays aligned with whatever range Angular actually accepts. Only zone.js: rxjs
+// is intentionally excluded - Angular accepts a wide rxjs range (6 || 7), so we
+// don't pin/bump it from here (which would otherwise force it into the migration).
+const angularCorePeerResolvedPackages = ['zone.js'] as const;
+
 export async function fetchVersionsFromRegistry(
   targetVersion: 'latest' | 'next'
 ) {
@@ -50,9 +56,49 @@ export async function fetchVersionsFromRegistry(
     )
   );
 
+  await resolveAngularCorePeerDependencies(packageVersionMap);
+
   console.log('✅ - Finished fetching versions from registry');
 
   return packageVersionMap;
+}
+
+async function resolveAngularCorePeerDependencies(
+  packageVersionMap: Map<string, string>
+) {
+  const angularCoreVersion = packageVersionMap.get('@angular/core')!;
+  const { data } = await axios.get(
+    `https://registry.npmjs.org/@angular/core/${angularCoreVersion}`
+  );
+  const peerDependencies: Record<string, string> = data.peerDependencies ?? {};
+
+  await Promise.all(
+    angularCorePeerResolvedPackages.map(async (pkgName) => {
+      const peerRange = peerDependencies[pkgName];
+      if (!peerRange) {
+        console.warn(
+          `     ⚠️  @angular/core@${angularCoreVersion} declares no peerDependency for "${pkgName}", skipping`
+        );
+        return;
+      }
+
+      const { data } = await axios.get(`https://registry.npmjs.org/${pkgName}`);
+      const resolved = maxSatisfying(
+        Object.keys(data.versions ?? {}),
+        peerRange,
+        { includePrerelease: false }
+      );
+      if (!resolved) {
+        console.warn(
+          `     ⚠️  Could not resolve a published version of "${pkgName}" matching peer range "${peerRange}"`
+        );
+        return;
+      }
+
+      packageVersionMap.set(pkgName, resolved);
+      console.log(`     ${pkgName}: ${resolved}`);
+    })
+  );
 }
 
 async function fetch(

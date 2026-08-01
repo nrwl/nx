@@ -79,9 +79,8 @@ describe('rename-test-path-pattern migration', () => {
 
   it('should rename "testPathPattern" option in nx.json target defaults for a target with the @nx/jest:jest executor', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults = [
-        {
-          target: 'test',
+      json.targetDefaults = {
+        test: {
           executor: '@nx/jest:jest',
           options: { testPathPattern: 'some-regex' },
           configurations: {
@@ -89,16 +88,15 @@ describe('rename-test-path-pattern migration', () => {
             production: { testPathPattern: 'regex-prod' },
           },
         },
-      ];
+      };
       return json;
     });
 
     await migration(tree);
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.targetDefaults).toEqual([
-      {
-        target: 'test',
+    expect(nxJson.targetDefaults).toEqual({
+      test: {
         executor: '@nx/jest:jest',
         options: { testPathPatterns: 'some-regex' },
         configurations: {
@@ -106,36 +104,69 @@ describe('rename-test-path-pattern migration', () => {
           production: { testPathPatterns: 'regex-prod' },
         },
       },
-    ]);
+    });
   });
 
   it('should rename "testPathPattern" option in nx.json target defaults for the @nx/jest:jest executor', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults = [
-        {
-          executor: '@nx/jest:jest',
+      json.targetDefaults = {
+        '@nx/jest:jest': {
           options: { testPathPattern: 'some-regex' },
           configurations: {
             development: { testPathPattern: 'regex-dev' },
             production: { testPathPattern: 'regex-prod' },
           },
         },
-      ];
+      };
       return json;
     });
 
     await migration(tree);
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.targetDefaults).toEqual([
-      {
-        executor: '@nx/jest:jest',
+    expect(nxJson.targetDefaults).toEqual({
+      '@nx/jest:jest': {
         options: { testPathPatterns: 'some-regex' },
         configurations: {
           development: { testPathPatterns: 'regex-dev' },
           production: { testPathPatterns: 'regex-prod' },
         },
       },
-    ]);
+    });
+  });
+
+  it('should rename "testPathPattern" inside the filtered array value form, leaving unrelated entries untouched', async () => {
+    // Migration order isn't guaranteed, so a default may already be array-shaped.
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.targetDefaults = {
+        test: [
+          {
+            filter: { executor: '@nx/jest:jest' },
+            options: { testPathPattern: 'some-regex' },
+          },
+          {
+            filter: { executor: '@nx/vite:test' },
+            options: { testPathPattern: 'leave-me' },
+          },
+        ],
+      };
+      return json;
+    });
+
+    await migration(tree);
+
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+    expect(nxJson.targetDefaults).toEqual({
+      test: [
+        {
+          filter: { executor: '@nx/jest:jest' },
+          options: { testPathPatterns: 'some-regex' },
+        },
+        {
+          filter: { executor: '@nx/vite:test' },
+          options: { testPathPattern: 'leave-me' },
+        },
+      ],
+    });
   });
 });

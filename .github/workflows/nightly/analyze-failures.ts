@@ -16,23 +16,6 @@ interface MatrixResult {
   duration: number;
 }
 
-interface Streak {
-  consecutive_failures: number;
-  failing_since: string | null;
-  last_passing: string | null;
-}
-
-interface HistoryEntry {
-  date: string;
-  failed: string[];
-}
-
-interface ErrorDate {
-  testFile: string;
-  startDate: string;
-  days: number;
-}
-
 const REPO = process.env.GITHUB_REPOSITORY || 'nrwl/nx';
 const RUN_ID = process.env.GITHUB_RUN_ID || '0';
 
@@ -186,53 +169,7 @@ export async function collectFailureDetails(
     }
   }
 
-  // Step 1: 30-day failure history
-  const histRunsRaw = gh(
-    `run list --workflow=e2e-matrix.yml --repo ${REPO} --limit 40 --json databaseId,createdAt,event --jq '[.[] | select(.event == "schedule" and .databaseId != ${RUN_ID})] | .[0:30]'`
-  );
-  const histRuns: Array<{ databaseId: number; createdAt: string }> =
-    histRunsRaw ? JSON.parse(histRunsRaw) : [];
-
-  const histResults = await ghParallel(
-    histRuns.map((r) => r.databaseId),
-    (rid) =>
-      `run view ${rid} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure") | .name | split(" ") | last] | unique'`
-  );
-
-  const history: HistoryEntry[] = histRuns.map((run) => {
-    const raw = histResults.get(run.databaseId) || '[]';
-    try {
-      return { date: run.createdAt, failed: JSON.parse(raw) };
-    } catch {
-      return { date: run.createdAt, failed: [] };
-    }
-  });
-
-  // Compute streaks
-  const streaks = new Map<string, Streak>();
-  for (const project of projectNames) {
-    let streak = 0,
-      firstSeen: string | null = null,
-      lastPassing: string | null = null,
-      broken = false;
-    for (const entry of history) {
-      if (broken) break;
-      if (entry.failed.includes(project)) {
-        streak++;
-        firstSeen = entry.date;
-      } else {
-        broken = true;
-        lastPassing = entry.date;
-      }
-    }
-    streaks.set(project, {
-      consecutive_failures: streak,
-      failing_since: firstSeen ? firstSeen.split('T')[0] : null,
-      last_passing: lastPassing ? lastPassing.split('T')[0] : null,
-    });
-  }
-
-  // Step 2: Fetch failure logs (one per OS/PM combo per project)
+  // Step 1: Fetch failure logs (one per OS/PM combo per project)
   const failedJobsRaw = gh(
     `run view ${RUN_ID} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure") | {id: .databaseId, name: .name, project: (.name | split(" ") | last), combo: (.name | split(" ")[0])}]'`
   );
@@ -296,7 +233,7 @@ export async function collectFailureDetails(
     );
   }
 
-  // Step 3: Build distinct failures per project — each (testFile, signature, combos) is a "failure"
+  // Step 2: Build distinct failures per project — each (testFile, signature, combos) is a "failure"
   interface DistinctFailure {
     testFile: string;
     signature: string;
@@ -328,183 +265,16 @@ export async function collectFailureDetails(
     projectDistinctFailures.set(project, [...seen.values()]);
   }
 
-  // Step 3b: Validate each distinct failure against the first-failing run
-  interface FailureValidation {
-    status: 'new' | 'confirmed' | 'different' | 'unknown';
-    startDate?: string;
-    days?: number;
-  }
-
-  // Key: "project|testFile|signature"
-  const failureValidations = new Map<string, FailureValidation>();
-
-  for (const project of projectNames) {
-    const streak = streaks.get(project)!;
-    const failures = projectDistinctFailures.get(project) || [];
-
-    if (streak.consecutive_failures <= 1 || !streak.failing_since) {
-      for (const f of failures) {
-        failureValidations.set(`${project}|${f.testFile}|${f.signature}`, {
-          status: 'new',
-          startDate: streak.failing_since || undefined,
-          days: streak.consecutive_failures || 1,
-        });
-      }
-      continue;
-    }
-
-    // Fetch first-failing run's signatures across all combos
-    const firstRun = histRuns.find(
-      (r) => r.createdAt.split('T')[0] === streak.failing_since
-    );
-    if (!firstRun) {
-      for (const f of failures) {
-        failureValidations.set(`${project}|${f.testFile}|${f.signature}`, {
-          status: 'unknown',
-        });
-      }
-      continue;
-    }
-
-    const firstJobIdsRaw = gh(
-      `run view ${firstRun.databaseId} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure" and (.name | split(" ") | last) == "${project}")] | group_by(.name | split("/")[0:2] | join("/")) | map(.[0].databaseId) | .[]'`
-    );
-    const firstJobIds = firstJobIdsRaw
-      .split('\n')
-      .filter((id) => id && id !== 'null');
-
-    // Collect ALL signatures from the first run
-    const firstRunSigs = new Set<string>(); // "testFile|signature"
-    for (const jobId of firstJobIds) {
-      const log = gh(`api repos/${REPO}/actions/jobs/${jobId}/logs`);
-      if (!log) continue;
-      const cleanedLog = log
-        .replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z /gm, '')
-        .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
-      const files = extractTestFiles(cleanedLog);
-      for (const f of files) {
-        const sig = extractErrorSignature(cleanedLog, f);
-        firstRunSigs.add(`${f}|${sig}`);
-      }
-    }
-
-    // Validate each current failure
-    for (const f of failures) {
-      const key = `${f.testFile}|${f.signature}`;
-      const fullKey = `${project}|${key}`;
-      if (firstRunSigs.has(key)) {
-        failureValidations.set(fullKey, {
-          status: 'confirmed',
-          startDate: streak.failing_since!,
-          days: streak.consecutive_failures,
-        });
-      } else {
-        failureValidations.set(fullKey, {
-          status: 'different',
-        });
-      }
-    }
-  }
-
-  // Step 4: Binary search for start date of each "different" failure
-  for (const project of projectNames) {
-    const streak = streaks.get(project)!;
-    const failures = projectDistinctFailures.get(project) || [];
-    const different = failures.filter((f) => {
-      const v = failureValidations.get(
-        `${project}|${f.testFile}|${f.signature}`
-      );
-      return v?.status === 'different';
-    });
-    if (!different.length) continue;
-
-    const projRunIds = histRuns
-      .slice(0, streak.consecutive_failures)
-      .map((r) => r.databaseId);
-    if (projRunIds.length <= 1) continue;
-
-    for (const failure of different) {
-      const targetSig = failure.signature;
-      if (!targetSig) continue;
-
-      function runHasSignature(runId: number): boolean {
-        const jobIdsRaw = gh(
-          `run view ${runId} --repo ${REPO} --json jobs --jq '[.jobs[] | select(.conclusion == "failure" and (.name | split(" ") | last) == "${project}")] | group_by(.name | split("/")[0:2] | join("/")) | map(.[0].databaseId) | .[]'`
-        );
-        for (const jid of jobIdsRaw.split('\n').filter(Boolean)) {
-          const log = gh(`api repos/${REPO}/actions/jobs/${jid}/logs`);
-          if (!log) continue;
-          const cleaned = log
-            .replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z /gm, '')
-            .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
-          const sig = extractErrorSignature(cleaned, failure.testFile);
-          if (sig === targetSig) return true;
-        }
-        return false;
-      }
-
-      let low = 0,
-        high = projRunIds.length - 1;
-
-      // Check oldest run
-      const fullKey = `${project}|${failure.testFile}|${failure.signature}`;
-
-      const oldestHas = runHasSignature(projRunIds[high]);
-      if (oldestHas) {
-        const run = histRuns.find((r) => r.databaseId === projRunIds[high]);
-        failureValidations.set(fullKey, {
-          status: 'different',
-          startDate: run?.createdAt.split('T')[0] || 'unknown',
-          days: projRunIds.length,
-        });
-        continue;
-      }
-
-      // Binary search
-      while (high - low > 1) {
-        const mid = Math.floor((low + high) / 2);
-        if (runHasSignature(projRunIds[mid])) low = mid;
-        else high = mid;
-      }
-
-      const foundRun = histRuns.find((r) => r.databaseId === projRunIds[low]);
-      failureValidations.set(fullKey, {
-        status: 'different',
-        startDate: foundRun?.createdAt.split('T')[0] || 'unknown',
-        days: low + 1,
-      });
-    }
-  }
-
-  // Step 5: Recent commits
-  let commitCount = 0;
-  if (histRuns[0]?.createdAt) {
-    try {
-      const commits = execSync(
-        `git log origin/master --after="${histRuns[0].createdAt}" --format="%h" --no-merges 2>/dev/null | head -30`,
-        { encoding: 'utf-8', timeout: 10_000 }
-      ).trim();
-      commitCount = commits ? commits.split('\n').length : 0;
-    } catch {
-      /* git not available */
-    }
-  }
-
-  // Step 6: Format report
+  // Step 3: Format report
   const lines: string[] = ['', '🔍 *Failure Details*', ''];
 
-  const sorted = [...projectNames].sort((a, b) => {
-    const sa = streaks.get(a)?.consecutive_failures || 0;
-    const sb = streaks.get(b)?.consecutive_failures || 0;
-    return (
-      sa - sb ||
+  const sorted = [...projectNames].sort(
+    (a, b) =>
       (failuresByProject.get(b)?.length || 0) -
-        (failuresByProject.get(a)?.length || 0)
-    );
-  });
+        (failuresByProject.get(a)?.length || 0) || a.localeCompare(b)
+  );
 
   for (const project of sorted) {
-    const streak = streaks.get(project)!;
     const projResults = failuresByProject.get(project) || [];
     const distinctFailures = projectDistinctFailures.get(project) || [];
     const block = projectLogs.get(project) || '';
@@ -517,8 +287,6 @@ export async function collectFailureDetails(
           ? 'all PMs'
           : pms.join('+');
 
-    const since = streak.failing_since || 'today (new)';
-    const lastPass = streak.last_passing || '—';
     const uniqueCombos = [
       ...new Set(
         failedJobs.filter((j) => j.project === project).map((j) => j.combo)
@@ -527,35 +295,12 @@ export async function collectFailureDetails(
 
     lines.push('———————————————————————————');
     lines.push(`*${project}* — ${projResults.length} combos (${pattern})`);
-    lines.push(
-      `Project failing since ${since} | Last fully passing: ${lastPass}`
-    );
     lines.push('');
 
     if (distinctFailures.length > 0) {
       for (const failure of distinctFailures) {
-        const fullKey = `${project}|${failure.testFile}|${failure.signature}`;
-        const val = failureValidations.get(fullKey);
-
-        let errorDate = since;
-        let errorDays: number | string = streak.consecutive_failures || 1;
-        let label = '';
-
-        if (val?.startDate) {
-          errorDate = val.startDate;
-          errorDays = val.days || 1;
-        }
-        if (val?.status === 'different') {
-          label = ' ⚠️ error changed mid-streak';
-        }
-        if (errorDays === 1 || errorDays === '1') {
-          label = ' 🆕 NEW';
-        }
-
         const comboStr = failure.combos.join(', ');
-        lines.push(
-          `📋 \`${failure.testFile}\` (${comboStr}) — failing since ${errorDate} (${errorDays} ${errorDays === 1 || errorDays === '1' ? 'day' : 'days'})${label}`
-        );
+        lines.push(`📋 \`${failure.testFile}\` (${comboStr})`);
 
         if (failure.block) {
           lines.push('```');
@@ -650,10 +395,6 @@ export async function collectFailureDetails(
       }
     }
     lines.push('');
-  }
-
-  if (commitCount > 0) {
-    lines.push(`_${commitCount} commits since last nightly_`);
   }
 
   // Build job links for the summary section

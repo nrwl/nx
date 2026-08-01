@@ -1,5 +1,5 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
-import { versions } from '@nx/jest/src/utils/versions';
+import { versions } from '@nx/jest/internal';
 import {
   configPluginsDetoxVersion,
   testingLibraryJestDom,
@@ -19,5 +19,11 @@ export function ensureDependencies(tree: Tree, options: NormalizedSchema) {
     devDependencies['@config-plugins/detox'] = configPluginsDetoxVersion;
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }

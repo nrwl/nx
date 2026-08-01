@@ -400,49 +400,5 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
         "
       `);
     });
-
-    it('should move project when angular version is lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies = {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        };
-        return json;
-      });
-      addProjectToGraph('my-lib');
-      await generateTestLibrary(tree, {
-        directory: 'my-lib',
-        buildable: true,
-        standalone: false,
-        skipFormat: true,
-      });
-
-      await runAngularPlugin('my-lib', 'my-new-lib', 'my-new-lib');
-
-      expect(tree.exists('my-lib/src/lib/my-lib.module.ts')).toBe(false);
-      expect(tree.read('my-new-lib/src/lib/my-new-lib.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { CommonModule } from '@angular/common';
-
-        @NgModule({
-          imports: [CommonModule],
-        })
-        export class MyNewLibModule {}
-        "
-      `);
-      expect(tree.exists('my-lib/ng-package.json')).toBe(false);
-      expect(tree.read('my-new-lib/ng-package.json', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "{
-          "$schema": "../node_modules/ng-packagr/ng-package.schema.json",
-          "dest": "../dist/my-new-lib",
-          "lib": {
-            "entryFile": "src/index.ts"
-          }
-        }
-        "
-      `);
-    });
   });
 });

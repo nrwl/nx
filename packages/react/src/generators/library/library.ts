@@ -1,4 +1,5 @@
 import { getRelativeCwd, logShowProjectCommand } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -52,6 +53,8 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
@@ -147,7 +150,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
-        rollupOptionsExternal: [
+        rolldownOptionsExternal: [
           "'react'",
           "'react-dom'",
           "'react/jsx-runtime'",
@@ -203,7 +206,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       nxVersion
     );
     ensurePackage('@nx/vitest', nxVersion);
-    const { configurationGenerator } = await import('@nx/vitest/generators');
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,
@@ -222,7 +227,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeLib: true,
         includeVitest: true,
         inSourceTests: options.inSourceTests,
-        rollupOptionsExternal: [
+        rolldownOptionsExternal: [
           "'react'",
           "'react-dom'",
           "'react/jsx-runtime'",

@@ -41,6 +41,7 @@
     }
   },
   "enabledPlugins": {
-    "nx@nx-claude-plugins": true
+    "nx@nx-claude-plugins": true,
+    "pr-review-toolkit@claude-plugins-official": true
   }
 }

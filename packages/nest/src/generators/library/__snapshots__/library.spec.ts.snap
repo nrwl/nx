@@ -115,7 +115,7 @@ exports[`lib not nested should create a local tsconfig.json 1`] = `
 }
 `;
 
-exports[`lib not nested should generate files 1`] = `
+exports[`lib not nested should generate the .eslintrc.json file (eslintrc) 1`] = `
 {
   "extends": [
     "../.eslintrc.json",

@@ -108,7 +108,9 @@ export async function setupSsrForRemote(
       express: expressVersion,
       '@types/express': typesExpressVersion,
     },
-    {}
+    {},
+    undefined,
+    true
   );
   tasks.push(installTask);
 

@@ -1,9 +1,9 @@
 import { getNamedInputs, PluginCache } from '@nx/devkit/internal';
 import {
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   ProjectConfiguration,
   readJsonFile,
@@ -38,7 +38,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const rspackConfigGlob = '**/rspack.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
+export const createNodes: CreateNodes<RspackPluginOptions> = [
   rspackConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -73,10 +73,15 @@ export const createNodesV2: CreateNodesV2<RspackPluginOptions> = [
   },
 ];
 
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;
+
 async function createNodesInternal(
   configFilePath: string,
   options: RspackPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<RspackTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -145,7 +150,7 @@ async function createRspackTargets(
   configFilePath: string,
   projectRoot: string,
   options: RspackPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RspackTargets> {

@@ -10,10 +10,11 @@ import { assertSupportedAngularVersion } from '../../utils/assert-supported-angu
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
+  tsNodeVersion,
+  webpackMergeVersion,
 } from '../../utils/versions';
 import {
   getInstalledAngularDevkitVersion,
-  getInstalledAngularVersionInfo,
   versions,
 } from '../utils/version-utils';
 import {
@@ -61,6 +62,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
           {
             '@nx/web': nxVersion,
             '@nx/webpack': nxVersion,
+            'webpack-merge': webpackMergeVersion,
             '@nx/module-federation': nxVersion,
           }
         )
@@ -94,6 +96,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
           {},
           {
             '@nx/webpack': nxVersion,
+            'webpack-merge': webpackMergeVersion,
             '@module-federation/enhanced': moduleFederationEnhancedVersion,
             '@nx/module-federation': nxVersion,
           }
@@ -117,23 +120,35 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     addCypressOnErrorWorkaround(tree, options);
   }
 
+  if (!options.skipPackageJson && options.typescriptConfiguration) {
+    // Angular custom-webpack loads webpack.config.ts at build time. Node native
+    // TS strip can't resolve the extensionless `./module-federation.config`
+    // import under strict ESM, so loadTsFile needs ts-node as the fallback.
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { 'ts-node': tsNodeVersion },
+        undefined,
+        true
+      )
+    );
+  }
+
   if (!options.skipPackageJson) {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-    if (angularMajorVersion >= 20) {
-      const angularDevkitVersion =
-        getInstalledAngularDevkitVersion(tree) ??
-        versions(tree).angularDevkitVersion;
-      // the executors used by MF require @angular-devkit/build-angular
-      tasks.push(
-        addDependenciesToPackageJson(
-          tree,
-          {},
-          { '@angular-devkit/build-angular': angularDevkitVersion },
-          undefined,
-          true
-        )
-      );
-    }
+    const angularDevkitVersion =
+      getInstalledAngularDevkitVersion(tree) ??
+      versions(tree).angularDevkitVersion;
+    // the executors used by MF require @angular-devkit/build-angular
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@angular-devkit/build-angular': angularDevkitVersion },
+        undefined,
+        true
+      )
+    );
   }
 
   // format files

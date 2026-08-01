@@ -14,6 +14,7 @@ import {
   killPorts,
   createFile,
   removeFile,
+  reservePort,
 } from '@nx/e2e-utils';
 import { join } from 'path';
 
@@ -22,9 +23,20 @@ describe('@nx/expo', () => {
   let libName: string;
 
   beforeAll(() => {
-    newProject({ packages: ['@nx/expo'] });
+    newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/expo',
+        '@nx/jest',
+        '@nx/react',
+        '@nx/rollup',
+        '@nx/storybook',
+      ],
+    });
     appName = uniq('app');
     libName = uniq('lib');
+    // Uses `--e2eTestRunner=cypress`, whose fresh config @nx/cypress now
+    // generates via base-setup templating (no tsquery).
     runCLI(
       `generate @nx/expo:app ${appName} --no-interactive --unitTestRunner=jest --e2eTestRunner=cypress --linter=eslint`
     );
@@ -95,7 +107,7 @@ describe('@nx/expo', () => {
 
   it('should start the app', async () => {
     let process: ChildProcess;
-    const port = 8088;
+    const port = await reservePort();
 
     try {
       process = await runCommandUntil(
@@ -114,7 +126,7 @@ describe('@nx/expo', () => {
 
   it('should serve the app', async () => {
     let process: ChildProcess;
-    const port = 8071;
+    const port = await reservePort();
 
     try {
       process = await runCommandUntil(
@@ -179,7 +191,7 @@ describe('@nx/expo', () => {
   });
 
   it('should run e2e for cypress', async () => {
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const results = runCLI(`e2e ${appName}-e2e`);
       expect(results).toContain('Successfully ran target e2e');
 

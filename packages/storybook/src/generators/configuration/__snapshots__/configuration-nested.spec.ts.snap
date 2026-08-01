@@ -41,7 +41,9 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true,
-    "outDir": ""
+    "outDir": "",
+    "module": "esnext",
+    "moduleResolution": "bundler"
   },
   "exclude": [
     "src/**/*.spec.ts",
@@ -105,7 +107,9 @@ exports[`@nx/storybook:configuration for workspaces with Root project basic func
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true,
-    "outDir": ""
+    "outDir": "",
+    "module": "esnext",
+    "moduleResolution": "bundler"
   },
   "exclude": [
     "src/**/*.spec.ts",

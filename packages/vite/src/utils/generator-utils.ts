@@ -214,7 +214,6 @@ export function editTsConfig(
       config.compilerOptions = {
         jsx: 'react-jsx',
         allowJs: false,
-        esModuleInterop: false,
         allowSyntheticDefaultImports: true,
         strict: true,
       };
@@ -325,7 +324,7 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  rollupOptionsExternal?: string[];
+  rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
@@ -377,9 +376,9 @@ export function createOrEditViteConfig(
       // Don't forget to update your package.json as well.
       formats: ['es' as const]
     },
-    rollupOptions: {
+    rolldownOptions: {
       // External packages that should not be bundled into your library.
-      external: [${options.rollupOptionsExternal ?? ''}]
+      external: [${options.rolldownOptionsExternal ?? ''}]
     },
   },`
       : `  build: {
@@ -402,6 +401,8 @@ export function createOrEditViteConfig(
   }
 
   if (!isTsSolutionSetup) {
+    // TODO(v24): drop this branch; emit `tsconfigPaths()` from
+    // `vite-tsconfig-paths` instead of the deprecated nx helpers.
     imports.push(
       `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`
@@ -704,8 +705,8 @@ function handleViteConfigFileExists(
           fileName: 'index',
           formats: ['es'],
         },
-        rollupOptions: {
-          external: options.rollupOptionsExternal ?? [],
+        rolldownOptions: {
+          external: options.rolldownOptionsExternal ?? [],
         },
         outDir: buildOutDir,
         reportCompressedSize: true,

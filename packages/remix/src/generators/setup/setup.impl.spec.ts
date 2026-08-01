@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { Tree } from '@nx/devkit';
+import { Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import setupGenerator from './setup.impl';
 
@@ -13,6 +13,17 @@ describe('app', () => {
       '.gitignore',
       `/node_modules
 /dist`
+    );
+  });
+
+  it('throws when the workspace declares TypeScript 6', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~6.0.3' };
+      return json;
+    });
+
+    await expect(setupGenerator(tree)).rejects.toThrow(
+      /does not support TypeScript 6/
     );
   });
 

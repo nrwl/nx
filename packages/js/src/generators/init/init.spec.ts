@@ -94,28 +94,27 @@ describe('js init generator', () => {
     expect(packageJson.devDependencies['typescript']).toBeDefined();
   });
 
-  it('should overwrite installed typescript version when is not a supported version', async () => {
+  it('should throw when the installed typescript version is below the supported floor', async () => {
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies = { ...json.devDependencies, typescript: '~4.5.0' };
       return json;
     });
 
-    await init(tree, {});
-
-    const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['typescript']).toBe(typescriptVersion);
+    await expect(init(tree, {})).rejects.toThrow(
+      'Unsupported version of `typescript` detected'
+    );
   });
 
   it('should not overwrite installed typescript version when is a supported version', async () => {
     updateJson(tree, 'package.json', (json) => {
-      json.devDependencies = { ...json.devDependencies, typescript: '~5.4.0' };
+      json.devDependencies = { ...json.devDependencies, typescript: '~5.8.3' };
       return json;
     });
 
     await init(tree, {});
 
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['typescript']).toBe('~5.4.0');
+    expect(packageJson.devDependencies['typescript']).toBe('~5.8.3');
     expect(packageJson.devDependencies['typescript']).not.toBe(
       typescriptVersion
     );

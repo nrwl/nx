@@ -1,6 +1,6 @@
 ---
-title: Playwright Plugin for Nx
-description: The Nx Plugin for Playwright contains executors and generators that support e2e testing with Playwright, including setup and configuration for your Nx workspace.
+title: Nx with Playwright
+description: Run Playwright through Nx for caching, affected test runs, and faster CI across your monorepo.
 sidebar:
   label: Introduction
 weight: 2
@@ -30,7 +30,7 @@ The `@nx/playwright` plugin supports the following package versions.
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/playwright` by running the following command:
@@ -51,6 +51,8 @@ The `@nx/playwright` plugin will create a task for any project that has a Playwr
 - `playwright.config.mts`
 - `playwright.config.cjs`
 - `playwright.config.cts`
+
+The configuration directory must also contain a `package.json` or `project.json`.
 
 ### View inferred tasks
 
@@ -79,9 +81,13 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 ### Splitting E2E tests
 
-`@nx/playwright/plugin` uses Nx Atomizer to automatically split your e2e tests into smaller tasks for more efficient distribution in CI. Read more about the [Atomizer feature](/docs/features/ci-features/split-e2e-tasks).
+The `targetName` task runs the complete Playwright suite and caches the configured test and reporter
+outputs.
+The `ciTargetName` task uses the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
 
-If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
+Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/playwright/plugin`.
 
 ## E2E testing
 
@@ -125,7 +131,7 @@ nx e2e frontend-e2e --grepInvert="feat-a"
 {% /aside %}
 
 By default, Playwright will run in headless mode. You will have the result of all the tests and errors (if any) in your
-terminal. Test output such as reports, screenshots and videos, will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
+terminal. Test output such as reports, screenshots, and videos will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
 
 {% aside type="note" title="Output Caching" %}
 If changing the output directory or report output, make sure to update the [target outputs](/docs/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached
@@ -205,7 +211,7 @@ export default defineConfig({
 });
 ```
 
-In order to set different `baseURL` values for different environments you can pass them via the [environment variables and nx configurations](/docs/guides/tips-n-tricks/define-environment-variables) or optionally via setting them per the environment they are needed in such as `CI`
+In order to set different `baseURL` values for different environments you can pass them via [environment variables and Nx configurations](/docs/reference/environment-variables#loading-environment-variables) or optionally via setting them per the environment they are needed in such as `CI`
 
 ```ts frame="none"
 import { defineConfig } from '@playwright/test';
@@ -296,3 +302,9 @@ export default defineConfig({
 ```
 
 See the [Playwright configuration docs](https://playwright.dev/docs/test-configuration) for more options for Playwright.
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

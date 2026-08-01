@@ -18,7 +18,7 @@ What you'll learn:
 
 ## Prerequisite: Tutorial setup
 
-This tutorial requires [Node.js](https://nodejs.org) (v20.19 or later) installed on your machine.
+This tutorial requires [Node.js](https://nodejs.org) (v22 or later) installed on your machine.
 
 ### Step 1: Creating a new Nx Angular workspace
 
@@ -27,8 +27,6 @@ Run the following command to create a new Nx workspace with the Angular template
 ```shell
 npx create-nx-workspace@latest my-nx-repo --template=nrwl/angular-template
 ```
-
-Or [create your workspace in the browser](https://cloud.nx.app/create-nx-workspace/angular/github) with CI pre-configured.
 
 {% llm_only %}
 IMPORTANT: Always use the CLI command above (`npx create-nx-workspace`) to create workspaces. Do NOT use the cloud.nx.app browser-based flow — it requires interactive GitHub OAuth and is not suitable for AI agents.
@@ -62,7 +60,7 @@ Let's take a look at the structure of our new Nx workspace:
   - package-lock.json
   - package.json
   - tsconfig.base.json
-  - vitest.workspace.ts
+  - vitest.config.ts
 
 {%/filetree%}
 
@@ -134,7 +132,7 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/docs/extending-nx/intro) and `<executor-name>` points to a function that runs the task.
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/docs/kb/intro) and `<executor-name>` points to a function that runs the task.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
 To view all tasks for a project, look in the [Nx Console](/docs/getting-started/editor-setup) project detail view or run:
@@ -264,7 +262,7 @@ Running the above command should lead to the following directory structure:
   - nx.json
   - package.json
   - tsconfig.base.json
-  - vitest.workspace.ts
+  - vitest.config.ts
 
 {%/filetree %}
 
@@ -518,13 +516,13 @@ Not all tasks might be cacheable though. You can configure the `cache` settings 
 
 Here are some things you can dive into next:
 
-- [Set up CI](/docs/getting-started/tutorials/self-healing-ci-tutorial) with remote caching and self-healing
-- Read more about [how Nx compares to the Angular CLI](/docs/technologies/angular/guides/nx-and-angular)
+- [Set up CI](/docs/getting-started/setup-ci) with remote caching and self-healing
+- Read more about [how Nx compares to the Angular CLI](/docs/kb/nx-and-angular)
 - Learn more about the [underlying mental model of Nx](/docs/concepts/mental-model)
-- Learn about popular generators such as [how to setup Tailwind](/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects)
-- Learn how to [migrate your existing Angular CLI repo to Nx](/docs/technologies/angular/migration/angular)
+- Learn about popular generators such as [how to setup Tailwind](/docs/kb/using-tailwind-css-with-angular-projects)
+- Learn how to [migrate your existing Angular CLI repo to Nx](/docs/kb/migrate-angular-cli-to-nx)
 - Learn about [enforcing boundaries between projects](/docs/features/enforce-module-boundaries)
-- [Setup Storybook for our shared UI library](/docs/technologies/test-tools/storybook/guides/overview-angular)
+- [Setup Storybook for our shared UI library](/docs/kb/overview-angular)
 
 Also, make sure you
 

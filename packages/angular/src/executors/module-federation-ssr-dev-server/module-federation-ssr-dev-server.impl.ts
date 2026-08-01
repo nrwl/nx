@@ -5,8 +5,7 @@ import {
   mapAsyncIterable,
   eachValueFrom,
 } from '@nx/devkit/internal';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import { waitForPortOpen } from '@nx/web/internal';
 import { existsSync } from 'fs';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
@@ -15,10 +14,11 @@ import {
   getDynamicMfManifestFile,
   validateDevRemotes,
 } from '../../builders/utilities/module-federation';
-import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
+import { assertPackageIsInstalled } from '../utilities/builder-package';
 import { normalizeOptions } from './lib/normalize-options';
 import { startRemotes } from './lib/start-dev-remotes';
 import type { Schema } from './schema';
+import { warnAngularMfDevSsrExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
 const Module = require('module');
@@ -44,9 +44,21 @@ export async function* moduleFederationSsrDevServerExecutor(
   schema: Schema,
   context: ExecutorContext
 ) {
+  assertPackageIsInstalled(
+    '@nx/module-federation',
+    '@nx/angular:module-federation-dev-ssr'
+  );
+  const { startRemoteIterators } = await import(
+    '@nx/module-federation/internal'
+  );
+
+  warnAngularMfDevSsrExecutorDeprecation();
   const options = normalizeOptions(schema);
 
-  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
+  assertPackageIsInstalled(
+    '@angular-devkit/build-angular',
+    '@nx/angular:module-federation-dev-ssr'
+  );
   const { executeSSRDevServerBuilder } = await import(
     '@angular-devkit/build-angular'
   );

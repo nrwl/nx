@@ -25,6 +25,7 @@ import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { getOutExtension } from '../../executors/esbuild/lib/build-esbuild-options';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
+import { assertSupportedEsbuildVersion } from '../../utils/assert-supported-esbuild-version';
 import { esbuildInitGenerator } from '../init/init';
 import { EsBuildProjectSchema } from './schema';
 
@@ -32,6 +33,8 @@ export async function configurationGenerator(
   tree: Tree,
   options: EsBuildProjectSchema
 ) {
+  assertSupportedEsbuildVersion(tree);
+
   const task = await esbuildInitGenerator(tree, {
     ...options,
     skipFormat: true,

@@ -31,6 +31,18 @@ describe('toJS', () => {
     expect(tree.read('a.mjs', 'utf-8')).toContain('// a');
   });
 
+  it('should rename .mts/.cts files alongside .ts', () => {
+    tree.write('a.mts', '// a');
+    tree.write('b.cts', '// b');
+
+    toJS(tree, { extension: '.mjs' });
+
+    expect(tree.exists('a.mts')).toBeFalsy();
+    expect(tree.exists('b.cts')).toBeFalsy();
+    expect(tree.read('a.mjs', 'utf-8')).toContain('// a');
+    expect(tree.read('b.mjs', 'utf-8')).toContain('// b');
+  });
+
   it('should support .jsx rather than .js files (for Vite)', () => {
     tree.write('a.ts', '// a');
     tree.write('b.tsx', '// b');

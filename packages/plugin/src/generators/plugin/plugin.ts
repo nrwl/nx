@@ -26,7 +26,7 @@ import pluginLintCheckGenerator from '../lint-checks/generator';
 import type { Schema } from './schema';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 
-const nxVersion = require('../../../package.json').version;
+const nxVersion = require(path.join('@nx/plugin', 'package.json')).version;
 
 async function addFiles(host: Tree, options: NormalizedSchema) {
   host.delete(normalizePath(`${options.projectRoot}/src/lib`));
@@ -113,7 +113,14 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       host,
       joinPathFragments(options.projectRoot, 'package.json'),
       (json) => {
-        delete json.type;
+        // Force CommonJS for the plugin package. `jsLibraryGenerator` sets
+        // `type: "module"` for TS-solution libs, but Nx-plugin generators
+        // and executors that get loaded by `nx generate` / `nx run` rely on
+        // CJS globals like `__dirname` (e.g. `path.join(__dirname, 'files')`
+        // in generator factories). Setting `type: "commonjs"` explicitly
+        // overrides Node's content-based ESM detection so the source TS
+        // files load as CJS at runtime.
+        json.type = 'commonjs';
         return json;
       }
     );
@@ -132,6 +139,11 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       {
         [options.unitTestRunner === 'vitest' ? '@nx/vitest' : '@nx/jest']:
           nxVersion,
+        ...(options.e2eTestRunner === 'vitest'
+          ? { '@nx/vitest': nxVersion }
+          : options.e2eTestRunner === 'jest'
+            ? { '@nx/jest': nxVersion }
+            : {}),
         '@nx/js': nxVersion,
         '@nx/plugin': nxVersion,
       }
@@ -161,6 +173,7 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         linter: options.linter,
         useProjectJson: options.useProjectJson,
         addPlugin: options.addPlugin,
+        testRunner: options.e2eTestRunner as 'jest' | 'vitest',
       })
     );
   }

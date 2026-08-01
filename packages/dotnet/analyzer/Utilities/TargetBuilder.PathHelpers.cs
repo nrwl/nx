@@ -214,14 +214,45 @@ public static partial class TargetBuilder
             return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/publish/{projectName}";
         }
 
+        // PublishDir (e.g. "bin/Debug/publish") is evaluated by MSBuild at the
+        // project's default Configuration, but the publish target runs with the
+        // Configuration in `properties` (Release). Rewrite the configuration
+        // segment so the declared output matches where the publish actually lands.
         var publishDir = properties.GetValueOrDefault("PublishDir");
         if (!string.IsNullOrEmpty(publishDir))
         {
-            return ResolvePath(publishDir, projectDirectory, workspaceRoot);
+            var resolved = ResolvePath(publishDir, projectDirectory, workspaceRoot);
+            return ApplyConfiguration(resolved, properties.GetValueOrDefault("Configuration"));
         }
 
         var outputPath = GetOutputPath(properties, projectName, projectDirectory, workspaceRoot);
         return outputPath is null ? null : $"{outputPath.TrimEnd('/')}/publish";
+    }
+
+    /// <summary>
+    /// Rewrites any <c>Debug</c>/<c>Release</c> path segment to the given
+    /// configuration. Used for paths (like PublishDir) that MSBuild evaluates at
+    /// the default configuration but a target consumes at another. A no-op when
+    /// the configuration is empty or the path contains no configuration segment.
+    /// </summary>
+    private static string? ApplyConfiguration(string? path, string? configuration)
+    {
+        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(configuration))
+        {
+            return path;
+        }
+
+        var segments = path.Split('/');
+        for (var i = 0; i < segments.Length; i++)
+        {
+            if (segments[i].Equals("Debug", StringComparison.OrdinalIgnoreCase) ||
+                segments[i].Equals("Release", StringComparison.OrdinalIgnoreCase))
+            {
+                segments[i] = configuration;
+            }
+        }
+
+        return string.Join('/', segments);
     }
 
     /// <summary>

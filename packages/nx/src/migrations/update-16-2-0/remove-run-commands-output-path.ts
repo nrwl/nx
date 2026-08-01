@@ -8,6 +8,7 @@ import {
   getProjects,
   updateProjectConfiguration,
 } from '../../generators/utils/project-configuration';
+import { targetDefaultConfigs } from '../utils/target-defaults';
 
 export default async function removeRunCommandsOutputPath(tree: Tree) {
   for (const [project, configuration] of getProjects(tree).entries()) {
@@ -22,11 +23,11 @@ export default async function removeRunCommandsOutputPath(tree: Tree) {
   }
   if (tree.exists('nx.json')) {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      const td = json.targetDefaults;
-      if (td) {
-        const entries = Array.isArray(td) ? td : Object.values(td);
-        for (const entry of entries) {
-          updateTargetBlock(entry as TargetConfiguration);
+      // `targetDefaults` is a map of values; each value may be the object form
+      // or the filtered array form, so flatten to every config block.
+      for (const value of Object.values(json.targetDefaults ?? {})) {
+        for (const block of targetDefaultConfigs(value)) {
+          updateTargetBlock(block);
         }
       }
       return json;

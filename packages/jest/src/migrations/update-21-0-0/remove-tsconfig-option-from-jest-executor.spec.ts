@@ -132,9 +132,8 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
 
   it('should remove tsConfig option in nx.json target defaults for a target with the jest executor', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults = [
-        {
-          target: 'test',
+      json.targetDefaults = {
+        test: {
           executor: '@nx/jest:jest',
           options: {
             jestConfig: '{projectRoot}/jest.config.ts',
@@ -147,28 +146,26 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
             },
           },
         },
-      ];
+      };
       return json;
     });
 
     await migration(tree);
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.targetDefaults).toEqual([
-      {
-        target: 'test',
+    expect(nxJson.targetDefaults).toEqual({
+      test: {
         executor: '@nx/jest:jest',
         options: { jestConfig: '{projectRoot}/jest.config.ts' },
         configurations: { production: { codeCoverage: true } },
       },
-    ]);
+    });
   });
 
   it('should remove tsConfig option in nx.json target defaults for the jest executor', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults = [
-        {
-          executor: '@nx/jest:jest',
+      json.targetDefaults = {
+        '@nx/jest:jest': {
           options: {
             jestConfig: '{projectRoot}/jest.config.ts',
             tsConfig: '{projectRoot}/tsconfig.json',
@@ -180,20 +177,19 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
             },
           },
         },
-      ];
+      };
       return json;
     });
 
     await migration(tree);
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.targetDefaults).toEqual([
-      {
-        executor: '@nx/jest:jest',
+    expect(nxJson.targetDefaults).toEqual({
+      '@nx/jest:jest': {
         options: { jestConfig: '{projectRoot}/jest.config.ts' },
         configurations: { production: { codeCoverage: true } },
       },
-    ]);
+    });
   });
 
   it('should remove empty options and configurations objects from project configuration', async () => {

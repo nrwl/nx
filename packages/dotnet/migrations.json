@@ -1,4 +1,11 @@
 {
-  "generators": {},
+  "generators": {
+    "update-23-0-0-migrate-dotnet-plugin-path": {
+      "cli": "nx",
+      "version": "23.0.0-beta.24",
+      "description": "Update `nx.json` plugin registrations that use the removed `@nx/dotnet/plugin` subpath to the bare `@nx/dotnet` specifier.",
+      "implementation": "./dist/migrations/update-23-0-0/update-plugin-path"
+    }
+  },
   "packageJsonUpdates": {}
 }

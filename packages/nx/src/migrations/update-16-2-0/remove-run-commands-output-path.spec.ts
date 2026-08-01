@@ -99,4 +99,33 @@ describe('removeRunCommandsOutputPath', () => {
     });
     expect(migratedTargetDefaults.other).toEqual(startingTargetDefaults.other);
   });
+
+  it('should migrate the filtered array value form and preserve filters', () => {
+    // `nx repair` can't assume migration order, so a default may already be
+    // array-shaped — the previous flat-array handling skipped these entirely.
+    const tree = createTreeWithEmptyWorkspace();
+    writeJson(tree, 'nx.json', {
+      targetDefaults: {
+        build: [
+          {
+            filter: { projects: ['tag:foo'] },
+            executor: 'nx:run-commands',
+            outputs: ['{options.outputPath}'],
+            options: { outputPath: 'dist/apps/my-app', commands: [] },
+          },
+          { executor: 'nx:run-script', options: { script: 'start' } },
+        ],
+      },
+    });
+    removeRunCommandsOutputPath(tree);
+    expect(readJson(tree, 'nx.json').targetDefaults.build).toEqual([
+      {
+        filter: { projects: ['tag:foo'] },
+        executor: 'nx:run-commands',
+        outputs: ['{workspaceRoot}/dist/apps/my-app'],
+        options: { commands: [] },
+      },
+      { executor: 'nx:run-script', options: { script: 'start' } },
+    ]);
+  });
 });

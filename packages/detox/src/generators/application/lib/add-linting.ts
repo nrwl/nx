@@ -13,8 +13,9 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  isTypedLintingEnabled,
+  useFlatConfig,
+} from '@nx/eslint/internal';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === 'none') {
@@ -29,6 +30,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
     ],
     skipFormat: true,
+    enableTypedLinting: isTypedLintingEnabled(options),
     addPlugin: options.addPlugin,
   });
   tasks.push(lintTask);
@@ -59,7 +61,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   const installTask = addDependenciesToPackageJson(
     host,
     extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies
+    extraEslintDependencies.devDependencies,
+    undefined,
+    true
   );
   tasks.push(installTask);
 

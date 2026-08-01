@@ -227,22 +227,23 @@ export function versions(tree: Tree): VitestVersions {
 
 ### The `getInstalled<Pkg>Version(tree?)` helper
 
-Optional `tree` parameter — with tree, reads declared from `package.json` (normalizing `latest`/`next` to the fresh-install constant); without tree, routes through the shared `getInstalledPackageVersion` from `@nx/devkit/internal` (FS resolution via `getNxRequirePaths()`).
+Optional `tree` parameter — with tree, reads declared from `package.json` via `getDeclaredPackageVersion` (handles dist-tag normalization, semver cleaning); without tree, routes through `getInstalledPackageVersion` from `@nx/devkit/internal` (FS resolution via `getNxRequirePaths()`).
+
+**Do not open-code the tree-branch.** `getDeclaredPackageVersion` already centralizes the dist-tag list (`isNonSemverDistTag`) and the `clean(v) ?? coerce(v)?.version ?? null` chain (`normalizeSemver`). Local re-implementations drift when devkit's constants change. See `anti-patterns.md` §1.
 
 ```ts
+import { type Tree } from '@nx/devkit';
+import {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersion,
+} from '@nx/devkit/internal';
+import { major } from 'semver';
+
 export function getInstalledVitestVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('vitest');
   }
-
-  const installedVersion = getDependencyVersionFromPackageJson(tree, 'vitest');
-  if (!installedVersion) {
-    return null;
-  }
-  if (installedVersion === 'latest' || installedVersion === 'next') {
-    return clean(vitestVersion) ?? coerce(vitestVersion)?.version ?? null;
-  }
-  return clean(installedVersion) ?? coerce(installedVersion)?.version ?? null;
+  return getDeclaredPackageVersion(tree, 'vitest');
 }
 
 export function getInstalledVitestMajorVersion(tree?: Tree): number | null {
@@ -251,7 +252,15 @@ export function getInstalledVitestMajorVersion(tree?: Tree): number | null {
 }
 ```
 
-This is the cypress/playwright/vitest pattern. Reference: `packages/cypress/src/utils/versions.ts`.
+Reference: `packages/cypress/src/utils/versions.ts`, `packages/rspack/src/utils/version-utils.ts`, `packages/rsbuild/src/utils/version-utils.ts`.
+
+#### Dist-tag semantics — third arg (`latestKnownVersion`)
+
+`getDeclaredPackageVersion(tree, pkg, latestKnownVersion?)`'s third arg falls back to `normalizeSemver(latestKnownVersion)` whenever the declared range can't be normalized to semver — both "package missing from `package.json`" AND "package declared as a dist tag (`latest` / `next`)". The helper does not distinguish the two cases.
+
+**Default to omitting the third arg.** The wrapper returns `null` for both "missing" and "dist tag"; consumers that want `?? latestVersions` semantics should encode it at the call site (rspack/rsbuild precedent), not globally in the helper. Passing the third arg makes the helper claim the package is "installed at the fresh-install constant" even when nothing is declared — which silently disables init generators' "add the package" branches.
+
+When a consumer specifically needs to distinguish "missing" from "dist tag", use `getDependencyVersionFromPackageJson` from `@nx/devkit` to inspect the raw declared string.
 
 ## Generator entry points
 
@@ -345,12 +354,12 @@ Reference (on master): `packages/cypress/src/generators/init/schema.json`, `pack
 
 Three categories of migration:
 
-| Category                         | Touches                                           | `requires`                                                                  |
-| -------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------- |
-| Nx-only                          | `nx.json`, executor options, generator defaults   | none                                                                        |
-| Codemod                          | source files / config tied to a third-party major | `{ "<pkg>": ">=N <N+1" }` (or open upper bound for legacy-cleanup codemods) |
-| `packageJsonUpdates` cross-major | bumps `<pkg>` from major N to N+1                 | `{ "<pkg>": ">=N.0.0 <(N+1).0.0" }` (source-major gate)                     |
-| `packageJsonUpdates` same-major  | bumps minor/patch                                 | none required                                                               |
+| Category                         | Touches                                           | `requires`                                                                                 |
+| -------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Nx-only                          | `nx.json`, executor options, generator defaults   | none                                                                                       |
+| Codemod                          | source files / config tied to a third-party major | `{ "<pkg>": ">=N" }` (destination gate; upper bound only when inapplicable at or above it) |
+| `packageJsonUpdates` cross-major | bumps `<pkg>` from major N to N+1                 | `{ "<pkg>": ">=N.0.0 <(N+1).0.0" }` (source-major gate)                                    |
+| `packageJsonUpdates` same-major  | bumps minor/patch                                 | none required                                                                              |
 
 ### Sibling packages
 
@@ -588,7 +597,7 @@ Scope:
 - [blocker] Every `packageJsonUpdates` entry that bumps across a major version has `requires: { "<pkg>": ">=N.0.0 <(N+1).0.0" }`. Source-major gate, not target. Anti-pattern: §6. Reference: `#35587` Module Federation entries.
   - **Read the actual range strings; don't tick this by counting split entries.**
   - [non-blocker / ask author] One-sided gates (`<X` with no lower bound, or `>=Y` with no upper bound) may be intentional or accidental. Legitimate cases: legacy-cleanup codemods that should apply on every source major below the target; a v0→v1 bridge where every v0.x workspace should migrate; bumping a package introduced at vN from `undefined`. Illegitimate cases: a v1→v2 bump expressed as `<2.x` would fire for v0 workspaces too; a `>=N` with no upper bound would fire for future majors. **When you see a one-sided gate, ask the author to confirm intent** — don't auto-flag as blocker.
-- [blocker] Codemod migrations that only make sense at/above a specific third-party major have a `requires` entry. Open upper bound is intentional when the codemod cleans up legacy flags. Runtime per-package guards (`gte`/`lt` inside the migration body) are NOT a substitute for `requires`.
+- [blocker] Codemod migrations that only make sense at/above a specific third-party major have a `requires` entry, open-ended (`>=N`) by default: entry gates evaluate against the version the package lands on in this run, so an upper bound skips multi-major runs that land past it. Anti-pattern: §10. Runtime per-package guards (`gte`/`lt` inside the migration body) are NOT a substitute for an expressible `requires`; only conditions `requires` cannot express (an OR of alternative package names) belong in the body.
 - [blocker] **Nx-only migrations have NO `requires` gate.** A migration that only writes to `nx.json`, executor options, or generator defaults applies regardless of third-party version. Anti-pattern: §5. Reference correction: `#35587` removed the over-gating `@angular/core: >=21.0.0` from `update-unit-test-runner-option`.
 - [blocker] For independent siblings (Angular: `@ngrx/*`, `@angular-eslint/*`, `zone.js`, `jest-preset-angular`), gating on the primary's major is **not sufficient** — each needs its own `requires` entry. Anti-pattern: §7. Verify pairing by reading the sibling's `peerDependencies` at the version range being bumped from.
 - [blocker] A single `packageJsonUpdates` entry must not mix mutually-exclusive cross-major bumps under one `requires` (AND-semantics). Split into separate entries each with its own gate. Concrete example: React PR's `22.3.4` entry mixed `react-router 7.12.0` (cross-major) with `react-router-dom 6.30.3` (v6 patch) — must split.

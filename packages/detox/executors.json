@@ -1,13 +1,13 @@
 {
   "executors": {
     "build": {
-      "implementation": "./src/executors/build/build.impl",
-      "schema": "./src/executors/build/schema.json",
+      "implementation": "./dist/src/executors/build/build.impl",
+      "schema": "./dist/src/executors/build/schema.json",
       "description": "Run the command defined in build property of the specified configuration."
     },
     "test": {
-      "implementation": "./src/executors/test/test.impl",
-      "schema": "./src/executors/test/schema.json",
+      "implementation": "./dist/src/executors/test/test.impl",
+      "schema": "./dist/src/executors/test/schema.json",
       "description": "Initiating your detox test suite."
     }
   }

@@ -4,7 +4,7 @@ import {
   MigrationsJson,
   MigrationsJsonEntry,
 } from '../../config/misc-interfaces';
-import { extractFileFromTarball } from '../../utils/fileutils';
+import { extractFileFromTarball } from '../../utils/tar';
 import { joinPathFragments } from '../../utils/path';
 
 export const AI_MIGRATIONS_DIR = joinPathFragments('tools', 'ai-migrations');
@@ -70,23 +70,69 @@ async function resolvePromptFiles(
     : undefined;
 }
 
+function isPromptPathWithinMigrationsDir(
+  migrationsDir: string,
+  promptRelPath: string
+): boolean {
+  const rel = relative(migrationsDir, join(migrationsDir, promptRelPath));
+  return !(
+    isAbsolute(promptRelPath) ||
+    rel === '..' ||
+    rel.startsWith(`..${sep}`) ||
+    rel.startsWith(`..${posix.sep}`)
+  );
+}
+
 function assertPromptPathWithinMigrationsDir(
   migrationsDir: string,
   promptRelPath: string,
   packageName: string,
   packageVersion: string
 ): void {
-  const rel = relative(migrationsDir, join(migrationsDir, promptRelPath));
-  if (
-    isAbsolute(promptRelPath) ||
-    rel === '..' ||
-    rel.startsWith(`..${sep}`) ||
-    rel.startsWith(`..${posix.sep}`)
-  ) {
+  if (!isPromptPathWithinMigrationsDir(migrationsDir, promptRelPath)) {
     throw new Error(
       `Invalid prompt path "${promptRelPath}" in package "${packageName}@${packageVersion}": prompt paths must be relative and resolve within the package's migrations directory.`
     );
   }
+}
+
+/**
+ * Thrown when the markdown prompt file referenced by a migration cannot be
+ * resolved.
+ */
+export class PromptResolutionError extends Error {
+  constructor(
+    public readonly promptPath: string,
+    public readonly migrationsDir: string,
+    options?: { cause?: unknown }
+  ) {
+    super(
+      `Could not resolve prompt "${promptPath}" from "${migrationsDir}".`,
+      options
+    );
+    this.name = 'PromptResolutionError';
+  }
+}
+
+/**
+ * Resolves a migration prompt file path to an absolute path. Prompt paths are
+ * plain markdown files referenced relative to the directory containing the
+ * `migrations.json` - unlike schemas, they are not resolved through package
+ * exports or `require.resolve`. The path must stay within the migrations
+ * directory and point at an existing file.
+ */
+export function resolvePrompt(
+  promptPath: string,
+  migrationsDir: string
+): string {
+  if (!isPromptPathWithinMigrationsDir(migrationsDir, promptPath)) {
+    throw new PromptResolutionError(promptPath, migrationsDir);
+  }
+  const resolvedPath = join(migrationsDir, promptPath);
+  if (!existsSync(resolvedPath)) {
+    throw new PromptResolutionError(promptPath, migrationsDir);
+  }
+  return resolvedPath;
 }
 
 export function extractPromptFilesFromTarball(

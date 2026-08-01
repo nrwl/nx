@@ -11,7 +11,10 @@ import {
 } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
-import { getPackageManagerCommand } from '../../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../../utils/package-manager';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
@@ -128,10 +131,11 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     scriptOutputs
   );
 
-  const pmc = getPackageManagerCommand();
+  const packageManager = detectPackageManager(repoRoot);
+  const pmc = getPackageManagerCommand(packageManager);
 
   updateGitIgnore(repoRoot);
-  addDepsToPackageJson(repoRoot);
+  addDepsToPackageJson(repoRoot, packageManager);
   addNestPluginToPackageJson(repoRoot);
   markRootPackageJsonAsNxProjectLegacy(repoRoot, cacheableOperations, pmc);
 
@@ -145,7 +149,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
   output.log({ title: '📦 Installing dependencies' });
 
-  runInstall(repoRoot);
+  runInstall(repoRoot, packageManager, pmc);
 
   if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });

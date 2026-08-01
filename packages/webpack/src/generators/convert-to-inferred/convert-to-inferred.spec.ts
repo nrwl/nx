@@ -13,6 +13,7 @@ import {
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
 import type { WebpackPluginOptions } from '../../plugins/plugin';
@@ -78,14 +79,18 @@ jest.mock('nx/src/devkit-internals', () => {
     {
       get(target, prop) {
         if (prop === 'getExecutorInformation') {
-          return jest
-            .fn()
-            .mockImplementation((pkg, ...args) =>
-              getActualDevkitInternals().getExecutorInformation(
-                '@nx/webpack',
-                ...args
+          // Read the executor schema from source so this unit test does not
+          // depend on @nx/webpack being built. executors.json points `schema`
+          // at ./dist (only present after copy-assets); readTargetOptions only
+          // consumes `schema`.
+          return jest.fn().mockImplementation((_pkg, executorName) => ({
+            schema: JSON.parse(
+              readFileSync(
+                join(__dirname, '../../executors', executorName, 'schema.json'),
+                'utf-8'
               )
-            );
+            ),
+          }));
         }
         if (prop === 'retrieveProjectConfigurations') {
           return getActual().retrieveProjectConfigurations;

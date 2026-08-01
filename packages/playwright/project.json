@@ -5,8 +5,10 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/playwright/README.md"],
-      "commands": ["node ./scripts/copy-readme.js playwright"],
+      "outputs": ["{projectRoot}/README.md"],
+      "commands": [
+        "node ./scripts/copy-readme.js playwright packages/playwright/readme-template.md packages/playwright/README.md"
+      ],
       "inputs": ["copyReadme"]
     }
   },

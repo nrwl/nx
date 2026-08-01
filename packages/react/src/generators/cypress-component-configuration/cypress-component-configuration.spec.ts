@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   DependencyType,
   ProjectGraph,
@@ -21,8 +21,8 @@ jest.mock('@nx/devkit', () => ({
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual<any>('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual<any>('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 // nested code imports graph from the repo, which might have innacurate graph version
@@ -532,9 +532,11 @@ describe('React:CypressComponentTestConfiguration', () => {
 
     const config = tree.read('some-lib/cypress.config.ts', 'utf-8');
     expect(config).toMatchInlineSnapshot(`
-      "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
-      import { defineConfig } from 'cypress';
-      export default defineConfig({
+      "const {
+        nxComponentTestingPreset,
+      } = require('@nx/react/plugins/component-testing');
+      const { defineConfig } = require('cypress');
+      module.exports = defineConfig({
         component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
       });
       "

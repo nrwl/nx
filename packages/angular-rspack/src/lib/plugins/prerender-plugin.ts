@@ -2,7 +2,7 @@ import { Compilation, type Compiler, RspackPluginInstance } from '@rspack/core';
 import { augmentAppWithServiceWorker } from '@angular/build/private';
 import { workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import assert from 'assert';
 import {
@@ -40,15 +40,49 @@ export class PrerenderPlugin implements RspackPluginInstance {
     compiler.hooks.afterEmit.tapAsync(
       'Angular Rspack',
       async (compilation, callback) => {
+        const prerenderedRoutes = new Set<string>();
         if (this.#_options.appShell) {
           await this.#prerenderAppShell(compilation);
+          prerenderedRoutes.add('/');
         }
         if (this.#_options.prerender) {
-          await this.#prerenderSSGUniversal(compilation);
+          for (const route of await this.#prerenderSSGUniversal(compilation)) {
+            // RoutesSet stores routes without the leading slash; the manifest
+            // keys carry it, matching the esbuild application builder.
+            prerenderedRoutes.add(`/${route}`);
+          }
         }
+        await this.#writePrerenderedRoutesManifest(
+          compilation,
+          prerenderedRoutes
+        );
         callback();
       }
     );
+  }
+
+  /**
+   * Overwrites the empty `prerendered-routes.json` emitted at the output root
+   * by the browser compiler with the routes that were prerendered.
+   */
+  async #writePrerenderedRoutesManifest(
+    compilation: Compilation,
+    prerenderedRoutes: Set<string>
+  ): Promise<void> {
+    // fromEntries keeps a route literally named "__proto__" an own key.
+    const routes = Object.fromEntries(
+      [...prerenderedRoutes].sort().map((route) => [route, {}])
+    );
+
+    try {
+      await writeFile(
+        join(this.#_options.outputPath.base, 'prerendered-routes.json'),
+        JSON.stringify({ routes }, null, 2)
+      );
+    } catch (error) {
+      assertIsError(error);
+      addError(compilation, error.message);
+    }
   }
 
   async #prerenderAppShell(compilation: Compilation) {
@@ -135,7 +169,7 @@ export class PrerenderPlugin implements RspackPluginInstance {
     }
   }
 
-  async #prerenderSSGUniversal(compilation: Compilation) {
+  async #prerenderSSGUniversal(compilation: Compilation): Promise<string[]> {
     // Users can specify a different base html file e.g. "src/home.html"
     const indexFile = getIndexOutputFile(
       this.#_options.index as IndexExpandedDefinition
@@ -230,6 +264,8 @@ export class PrerenderPlugin implements RspackPluginInstance {
     } finally {
       void worker.destroy();
     }
+
+    return routes ?? [];
   }
 
   async #getRoutes(

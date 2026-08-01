@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const glob = require('glob');
+const { globSync } = require('tinyglobby');
 
 /**
  * Remove TypeScript configuration and build info files from the dist directory
@@ -23,8 +23,8 @@ function cleanupTsConfigFiles() {
     .join(outputPath, '*/*.tsbuildinfo')
     .replace(/\\/g, '/');
 
-  const tsConfigFiles = glob.sync(tsConfigPattern);
-  const tsBuildInfoFiles = glob.sync(tsBuildInfoPattern);
+  const tsConfigFiles = globSync(tsConfigPattern);
+  const tsBuildInfoFiles = globSync(tsBuildInfoPattern);
 
   const allFiles = [...tsConfigFiles, ...tsBuildInfoFiles];
 

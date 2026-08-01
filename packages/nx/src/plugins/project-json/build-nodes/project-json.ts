@@ -2,14 +2,11 @@ import { dirname, join } from 'node:path';
 
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import { readJsonFile } from '../../../utils/fileutils';
-import {
-  createNodesFromFiles,
-  NxPluginV2,
-} from '../../../project-graph/plugins';
+import { createNodesFromFiles, NxPlugin } from '../../../project-graph/plugins';
 
-export const ProjectJsonProjectsPlugin: NxPluginV2 = {
+export const ProjectJsonProjectsPlugin: NxPlugin = {
   name: 'nx/core/project-json',
-  createNodesV2: [
+  createNodes: [
     '{project.json,**/project.json}',
     (configFiles, _, context) => {
       return createNodesFromFiles(

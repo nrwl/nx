@@ -1,0 +1,65 @@
+---
+title: 'Micro Frontends with Angular'
+description: 'Build Angular micro frontends with Native Federation in an Nx workspace: the supported path after Nx v23, and how Nx orchestrates the apps.'
+filter: 'type:Guides'
+sidebar:
+  label: Micro Frontends with Angular
+topics:
+  - 'Module Federation'
+---
+
+An Angular micro frontend architecture splits an Angular application into smaller applications
+that separate teams build, test, and deploy independently, composed in the browser at runtime.
+Whether the pattern fits your organization at all is covered in
+[What is Micro Frontend Architecture?](/docs/kb/micro-frontend-architecture): reach for it when
+independent deployment is a hard requirement, not when you want faster builds.
+
+## The supported path: Native Federation
+
+As of Nx v23, the `@nx/angular` `host` and `remote` generators are deprecated, and Angular Module
+Federation in Nx is no longer supported going forward.
+The supported path for Angular micro frontends is
+[`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation),
+which implements the same runtime composition model on top of the Angular CLI build using web
+standards (ES modules and import maps) instead of bundler-specific machinery.
+
+Native Federation apps are regular Angular applications in your workspace.
+Follow the package's documentation to configure the federation host and remotes, and a worked
+Angular Native Federation example lives in the
+[mf-examples repository](https://github.com/nrwl/mf-examples).
+
+## Nx still orchestrates the apps
+
+Moving federation config out of Nx doesn't change what Nx does for the workspace.
+Each micro frontend stays a separate project in the [project graph](/docs/features/explore-graph),
+which is what keeps a multi-team Angular workspace manageable:
+
+- **Affected-only CI** - [`nx affected`](/docs/features/ci-features/affected) rebuilds and retests
+  only the applications a change touches, and shared library changes compute the exact set of
+  affected micro frontends.
+- **Caching** - [local and remote caching](/docs/features/cache-task-results) means an app another
+  team already built is restored, not rebuilt.
+- **Module boundaries** - [tag rules](/docs/features/enforce-module-boundaries) keep one team's
+  internals private to their slice.
+- **Distribution** - [Nx Agents](/docs/features/ci-features/distribute-task-execution) spread
+  builds and tests across machines, so adding micro frontends stops adding CI time.
+
+## What about existing Nx Angular Module Federation setups?
+
+Workspaces built on `@nx/angular:host` and `@nx/angular:remote` keep working in Nx v23 on the
+deprecated executors, which will be removed in v24.
+Plan a migration to Native Federation, or evaluate whether your setup needs runtime composition
+at all: if every team deploys together anyway, regular applications with
+[buildable libraries](/docs/kb/buildable-and-publishable-libraries) remove the runtime failure
+modes entirely.
+The [deprecation details](/docs/kb/consumer-and-provider#what-changed-in-v23) list the exact
+generators and executors affected.
+
+## Should Angular and React micro frontends mix?
+
+Module Federation makes mixed-framework setups possible, but every extra framework multiplies the
+shared dependency surface and splits your developers into camps.
+Mixing makes sense only as a deliberate transition strategy, such as an incremental migration
+from Angular to React or the reverse.
+For the single-framework React path, see
+[Micro Frontends with React](/docs/kb/react-micro-frontends).

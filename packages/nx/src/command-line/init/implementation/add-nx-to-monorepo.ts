@@ -5,6 +5,7 @@ import { join, relative } from 'path';
 import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
+import { detectPackageManager } from '../../../utils/package-manager';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
@@ -113,10 +114,11 @@ export async function addNxToMonorepo(
   );
 
   updateGitIgnore(repoRoot);
-  addDepsToPackageJson(repoRoot);
+  const packageManager = detectPackageManager(repoRoot);
+  addDepsToPackageJson(repoRoot, packageManager);
 
   output.log({ title: '📦 Installing dependencies' });
-  runInstall(repoRoot);
+  runInstall(repoRoot, packageManager);
 
   if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });

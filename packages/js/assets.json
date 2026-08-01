@@ -2,6 +2,9 @@
   "outDir": "packages/js/dist",
   "assets": [
     {
+      "glob": "src/migrations/**/*.md"
+    },
+    {
       "glob": "**/files/**"
     },
     {

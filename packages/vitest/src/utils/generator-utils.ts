@@ -23,7 +23,7 @@ export type TargetFlags = Partial<Record<Target, boolean>>;
 export interface VitestGeneratorSchema {
   project: string;
   uiFramework?: 'angular' | 'react' | 'vue' | 'none';
-  coverageProvider: 'v8' | 'istanbul' | 'custom';
+  coverageProvider: 'v8' | 'istanbul' | 'custom' | 'none';
   inSourceTests?: boolean;
   skipViteConfig?: boolean;
   testTarget?: string;
@@ -85,10 +85,10 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  rollupOptionsExternal?: string[];
+  rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
-  coverageProvider?: 'v8' | 'istanbul' | 'custom';
+  coverageProvider?: 'v8' | 'istanbul' | 'custom' | 'none';
   setupFile?: string;
   useEsmExtension?: boolean;
   port?: number;
@@ -140,9 +140,9 @@ export function createOrEditViteConfig(
       // Don't forget to update your package.json as well.
       formats: ['es' as const]
     },
-    rollupOptions: {
+    rolldownOptions: {
       // External packages that should not be bundled into your library.
-      external: [${options.rollupOptionsExternal ?? ''}]
+      external: [${options.rolldownOptionsExternal ?? ''}]
     },
   },`
       : `  build: {
@@ -202,7 +202,9 @@ ${
     ? `    includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],\n`
     : ''
 }\
-    reporters: ['default'],
+    reporters: ['default']${
+      options.coverageProvider !== 'none'
+        ? `,
     coverage: {
       reportsDirectory: '${reportsDirectory}',
       provider: ${
@@ -210,6 +212,8 @@ ${
           ? `'${options.coverageProvider}' as const`
           : `'v8' as const`
       },
+    }`
+        : ''
     }
   },`
     : '';
@@ -351,8 +355,8 @@ function handleViteConfigFileExists(
           fileName: 'index',
           formats: ['es'],
         },
-        rollupOptions: {
-          external: options.rollupOptionsExternal ?? [],
+        rolldownOptions: {
+          external: options.rolldownOptionsExternal ?? [],
         },
         outDir: buildOutDir,
         reportCompressedSize: true,
