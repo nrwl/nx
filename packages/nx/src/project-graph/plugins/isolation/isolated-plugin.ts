@@ -563,9 +563,9 @@ async function startPluginWorker(name: string) {
   };
 
   // Keep the host pid readable for diagnostics, the counter collision-free
-  // within this process, and entropy for a reused pid across process runs. A
-  // one-character base36 counter plus eight random hex characters consumes the
-  // same path budget as the previous ten-character hash.
+  // within this process, and entropy for a reused pid across process runs. The
+  // eleven characters after the pid match what the `performance.now()` stamp
+  // this replaced spent, so the socket path budget is unchanged.
   const ipcPath = getPluginOsSocketPath(getPluginWorkerSocketId());
 
   const worker = spawn(

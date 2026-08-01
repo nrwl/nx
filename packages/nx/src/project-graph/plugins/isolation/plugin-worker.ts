@@ -50,7 +50,7 @@ const hostWorkspaceRoot = process.argv[4];
 
 // Positional, so inserting an argument host-side shifts all of them — and the
 // symptom is silent and total: an undefined hostWorkspaceRoot makes every
-// message look foreign while the host waits out a ten-minute timeout.
+// message look foreign while the host waits out its plugin timeout.
 if (!socketPath || !expectedPluginName || !hostWorkspaceRoot) {
   console.error(
     `[plugin-worker] started with an incomplete argument list ` +
@@ -218,8 +218,9 @@ server.on('error', (err: NodeJS.ErrnoException) => {
 // A failed bind surfaces through the error handler above.
 //
 // The random component is what this unlink rests on, and on Windows it is the
-// only barrier of any kind: both directory guards are no-ops there and the
-// endpoint is a global namespace object the filesystem does not gate.
+// only barrier this change contributes: the directory guards reduce to an
+// is-a-directory check there, and the endpoint is a namespace object rather
+// than a file, so the mode never applies.
 try {
   unlinkSync(socketPath);
 } catch {}

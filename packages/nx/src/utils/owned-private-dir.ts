@@ -10,14 +10,12 @@ import {
 import { userInfo } from 'node:os';
 
 /**
- * Each guard returns its own branded path rather than a bare boolean, so the
- * four cannot be substituted for one another. They take the same argument and
- * differ only in what they establish, and the substitutions are silent in the
- * direction that opens a hole: `ensureSafeSharedRoot` in place of
- * `ensureOwnedPrivateDir` creates the directory `1777` instead of `0700` and
- * still returns something truthy, so the caller proceeds believing it holds a
- * private directory. `null` is the single failure value throughout, so callers
- * that only test truthiness are unaffected.
+ * Each guard returns its own branded path rather than a bare boolean, so one
+ * guard's result cannot be stored in, or passed where the code expects,
+ * another's. Note the limit: every call site today tests truthiness, and a
+ * boolean context accepts any brand, so this catches a future edit rather than
+ * a wrong call in an `if`. `null` is the single failure value throughout, so
+ * those truthiness callers are unaffected.
  */
 declare const safeSharedRootBrand: unique symbol;
 declare const sharedRootEstablishedBrand: unique symbol;
@@ -146,8 +144,10 @@ export function sharedRootRemedy(dir: string): string | undefined {
  * for the current user.
  *
  * The chmod is best-effort: a later user cannot change a container owned by
- * root or by the first user, so the verdict always comes from
- * `isSafeSharedRoot`.
+ * root or by the first user, so on POSIX the verdict comes from
+ * `isSafeSharedRoot` rather than from whether the chmod worked. Windows has no
+ * shared level to verify — the OS temp root is already per-account — so
+ * creation alone is the verdict there.
  */
 export function ensureSafeSharedRoot(
   dir: string
@@ -211,7 +211,7 @@ export function getUserSegment(): string {
 /**
  * Ensure `dir` exists, is a real directory owned by us, and carries no group or
  * other bits at all — read and search alone reach a socket inside it, so 0755 is
- * re-locked rather than accepted. False means it could not be established —
+ * re-locked rather than accepted. `null` means it could not be established —
  * usually a directory another user planted, but also a plain filesystem error
  * or one we could not re-lock.
  *
