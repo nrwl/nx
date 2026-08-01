@@ -113,29 +113,182 @@ To inspect the resolved configuration as JSON instead, add `--json`:
 nx show project myapp --json
 ```
 
-A build target inferred by `@nx/vite/plugin` contains configuration like this:
+The project details view below shows selected targets inferred by `@nx/vite/plugin` for a Vite
+application:
 
-```jsonc
+{% project_details title="Inferred project details for myapp" height="520px" expandedTargets=["build"] %}
+
+```json
 {
-  "build": {
-    "command": "vite build",
-    "options": {
-      "cwd": "packages/myapp",
-    },
-    "cache": true,
-    "dependsOn": ["^build"],
-    "inputs": [
-      "production",
-      "^production",
-      {
-        "externalDependencies": ["vite"],
+  "project": {
+    "name": "myapp",
+    "type": "app",
+    "data": {
+      "root": "packages/myapp",
+      "targets": {
+        "build": {
+          "options": {
+            "cwd": "packages/myapp",
+            "command": "vite build"
+          },
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["vite"]
+            }
+          ],
+          "outputs": ["{workspaceRoot}/dist/packages/myapp"],
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"],
+            "description": "Run Vite build"
+          }
+        },
+        "dev": {
+          "continuous": true,
+          "options": {
+            "cwd": "packages/myapp",
+            "command": "vite"
+          },
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"],
+            "description": "Starts Vite dev server"
+          }
+        },
+        "preview": {
+          "continuous": true,
+          "dependsOn": ["build"],
+          "options": {
+            "cwd": "packages/myapp",
+            "command": "vite preview"
+          },
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"],
+            "description": "Locally preview Vite production build"
+          }
+        },
+        "typecheck": {
+          "cache": true,
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["typescript"]
+            }
+          ],
+          "options": {
+            "cwd": "packages/myapp",
+            "command": "tsc --noEmit -p tsconfig.app.json"
+          },
+          "executor": "nx:run-commands",
+          "configurations": {},
+          "metadata": {
+            "technologies": ["typescript"],
+            "description": "Runs type-checking for the project."
+          }
+        }
       },
-    ],
-    "outputs": ["{workspaceRoot}/dist/packages/myapp"],
+      "name": "myapp",
+      "sourceRoot": "packages/myapp/src",
+      "projectType": "application",
+      "tags": [],
+      "implicitDependencies": [],
+      "metadata": {
+        "technologies": ["react"]
+      }
+    }
   },
+  "sourceMap": {
+    "root": ["packages/myapp/package.json", "nx/core/package-json-workspaces"],
+    "targets": [
+      "packages/myapp/package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "targets.build": ["packages/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.command": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.options": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.cache": ["packages/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.dependsOn": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.inputs": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.outputs": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.dev": ["packages/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.dev.command": ["packages/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.dev.options": ["packages/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.dev.continuous": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview": ["packages/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.preview.command": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.options": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.dependsOn": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.preview.continuous": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck": ["packages/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "targets.typecheck.command": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.options": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.cache": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.typecheck.inputs": [
+      "packages/myapp/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "name": ["packages/myapp/package.json", "nx/core/package-json-workspaces"],
+    "sourceRoot": [
+      "packages/myapp/package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "projectType": ["packages/myapp/vite.config.ts", "@nx/vite/plugin"],
+    "tags": ["packages/myapp/package.json", "nx/core/package-json-workspaces"]
+  }
 }
 ```
 
+{% /project_details %}
+
+The source labels identify the configuration file and plugin that supplied each value.
 The exact targets and values depend on the project's Vite configuration and the plugin options in
 `nx.json`.
 
