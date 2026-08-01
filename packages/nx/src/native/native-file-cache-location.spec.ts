@@ -193,6 +193,27 @@ describe('native file cache location', () => {
     );
 
     posixOnly(
+      'should refuse a symlink planted at the override directory even with a trailing slash',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          // lstat on a path ending in `/` resolves the symlink rather than
+          // reporting it, and O_NOFOLLOW then opens the target — so without
+          // normalizing the configured value the guards are bypassed.
+          const victim = join(base, 'victim');
+          mkdirSync(victim, { mode: 0o700 });
+          const planted = join(base, 'planted');
+          symlinkSync(victim, planted);
+          process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = planted + '/';
+
+          expect(ensureSecureNativeFileCacheLocation()).toBeNull();
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
+      }
+    );
+
+    posixOnly(
       'should refuse a symlink planted at the override directory',
       () => {
         const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
