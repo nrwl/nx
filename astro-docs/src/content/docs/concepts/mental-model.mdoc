@@ -44,11 +44,233 @@ with your workspace.
 Nx creates a task graph whenever you run tasks.
 Each node is a task, which is a specific target invoked for a project, such as `myapp:build`.
 Edges represent the dependencies between tasks.
+For example, `nx test lib` creates a task graph with one node:
+
+{% graph title="Task graph for nx test lib" height="160px" type="task" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "root": "libs/lib",
+        "projectType": "library",
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskIds": ["lib:test"],
+  "taskGraph": {
+    "roots": ["lib:test"],
+    "tasks": {
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "outputs": [],
+        "projectRoot": "libs/lib",
+        "overrides": {},
+        "cache": true,
+        "parallelism": true,
+        "continuous": false
+      }
+    },
+    "dependencies": {
+      "lib:test": []
+    },
+    "continuousDependencies": {
+      "lib:test": []
+    }
+  }
+}
+```
+
+{% /graph %}
 
 The project graph and task graph aren't identical.
-If `app1` depends on `lib`, the `app1:test` task doesn't depend on `lib:test` unless the task pipeline
-contains that relationship.
-Without a dependency, Nx can run both test tasks in parallel.
+In this project graph, both applications depend on `lib`:
+
+{% graph title="Project dependencies" height="240px" type="project" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "root": "apps/app1",
+        "projectType": "application",
+        "tags": [],
+        "targets": {
+          "build": {},
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "root": "apps/app2",
+        "projectType": "application",
+        "tags": [],
+        "targets": {
+          "build": {},
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "root": "libs/lib",
+        "projectType": "library",
+        "tags": [],
+        "targets": {
+          "build": {},
+          "test": {}
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "app1": [
+      {
+        "source": "app1",
+        "target": "lib",
+        "type": "static"
+      }
+    ],
+    "app2": [
+      {
+        "source": "app2",
+        "target": "lib",
+        "type": "static"
+      }
+    ],
+    "lib": []
+  },
+  "affectedProjectIds": []
+}
+```
+
+{% /graph %}
+
+Running `nx run-many -t test -p app1 app2 lib` creates three independent tasks because the task
+pipeline doesn't define dependencies between the `test` targets:
+
+{% graph title="Independent test tasks" height="240px" type="task" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "root": "apps/app1",
+        "projectType": "application",
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "root": "apps/app2",
+        "projectType": "application",
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "root": "libs/lib",
+        "projectType": "library",
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskIds": ["app1:test", "app2:test", "lib:test"],
+  "taskGraph": {
+    "roots": ["app1:test", "app2:test", "lib:test"],
+    "tasks": {
+      "app1:test": {
+        "id": "app1:test",
+        "target": {
+          "project": "app1",
+          "target": "test"
+        },
+        "outputs": [],
+        "projectRoot": "apps/app1",
+        "overrides": {},
+        "cache": true,
+        "parallelism": true,
+        "continuous": false
+      },
+      "app2:test": {
+        "id": "app2:test",
+        "target": {
+          "project": "app2",
+          "target": "test"
+        },
+        "outputs": [],
+        "projectRoot": "apps/app2",
+        "overrides": {},
+        "cache": true,
+        "parallelism": true,
+        "continuous": false
+      },
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "outputs": [],
+        "projectRoot": "libs/lib",
+        "overrides": {},
+        "cache": true,
+        "parallelism": true,
+        "continuous": false
+      }
+    },
+    "dependencies": {
+      "app1:test": [],
+      "app2:test": [],
+      "lib:test": []
+    },
+    "continuousDependencies": {
+      "app1:test": [],
+      "app2:test": [],
+      "lib:test": []
+    }
+  }
+}
+```
+
+{% /graph %}
+
+Without task dependencies, Nx can run all three test tasks in parallel.
 
 Builds commonly need a different relationship because an application may consume the built output of
 its libraries.
@@ -64,9 +286,113 @@ Use `dependsOn` to make each `build` task depend on the `build` tasks of its pro
 }
 ```
 
-With this rule, `app1:build` depends on `lib:build` when `app1` depends on `lib` in the project graph.
-Nx runs `lib:build` first, then runs `app1:build` when its dependency is complete.
-Independent tasks can still run in parallel.
+Running `nx run-many -t build -p app1 app2 lib` now produces task dependencies that follow the project
+graph:
+
+{% graph title="Build tasks with dependencies" height="260px" type="task" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "root": "apps/app1",
+        "projectType": "application",
+        "tags": [],
+        "targets": {
+          "build": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "root": "apps/app2",
+        "projectType": "application",
+        "tags": [],
+        "targets": {
+          "build": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "root": "libs/lib",
+        "projectType": "library",
+        "tags": [],
+        "targets": {
+          "build": {}
+        }
+      }
+    }
+  ],
+  "taskIds": ["app1:build", "app2:build", "lib:build"],
+  "taskGraph": {
+    "roots": ["lib:build"],
+    "tasks": {
+      "app1:build": {
+        "id": "app1:build",
+        "target": {
+          "project": "app1",
+          "target": "build"
+        },
+        "outputs": ["{workspaceRoot}/dist/apps/app1"],
+        "projectRoot": "apps/app1",
+        "overrides": {},
+        "cache": true,
+        "parallelism": true,
+        "continuous": false
+      },
+      "app2:build": {
+        "id": "app2:build",
+        "target": {
+          "project": "app2",
+          "target": "build"
+        },
+        "outputs": ["{workspaceRoot}/dist/apps/app2"],
+        "projectRoot": "apps/app2",
+        "overrides": {},
+        "cache": true,
+        "parallelism": true,
+        "continuous": false
+      },
+      "lib:build": {
+        "id": "lib:build",
+        "target": {
+          "project": "lib",
+          "target": "build"
+        },
+        "outputs": ["{workspaceRoot}/dist/libs/lib"],
+        "projectRoot": "libs/lib",
+        "overrides": {},
+        "cache": true,
+        "parallelism": true,
+        "continuous": false
+      }
+    },
+    "dependencies": {
+      "app1:build": ["lib:build"],
+      "app2:build": ["lib:build"],
+      "lib:build": []
+    },
+    "continuousDependencies": {
+      "app1:build": [],
+      "app2:build": [],
+      "lib:build": []
+    }
+  }
+}
+```
+
+{% /graph %}
+
+With this rule, `app1:build` and `app2:build` wait for `lib:build`.
+After `lib:build` completes, Nx can run both application builds in parallel.
 
 ![Tasks running in dependency order and in parallel](../../../assets/concepts/mental-model/task-graph-execution.svg)
 
