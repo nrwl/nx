@@ -22,8 +22,7 @@ export default async function dockerReleasePublish(
   schema: DockerReleasePublishSchema,
   context: ExecutorContext
 ) {
-  const projectVersionData =
-    schema.nxReleaseVersionData?.[context.projectName];
+  const projectVersionData = schema.nxReleaseVersionData?.[context.projectName];
   if (projectVersionData?.dockerVersion === null) {
     console.warn(
       `Skipped Docker image for project "${context.projectName}", because no new Docker version was resolved for this project.`
