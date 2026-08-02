@@ -60,6 +60,7 @@ describe('isAlreadyQuoted', () => {
     ['empty string', ''],
     ['a single quote character', '"'],
     ['unterminated quote', '"abc'],
+    ['unterminated command substitution', '"x"$(foo'],
     // Each of these starts and ends with a quote but is not one word.
     ['two quoted words', '"a" "b"'],
     ['quoted words around a bare word', '"a" b "c"'],

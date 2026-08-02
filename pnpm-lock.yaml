@@ -3292,7 +3292,7 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
       unbash:
-        specifier: ^4.0.3
+        specifier: ^4.0.4
         version: 4.0.4
       which:
         specifier: 'catalog:'

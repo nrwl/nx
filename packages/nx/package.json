@@ -80,7 +80,7 @@
     "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
-    "unbash": "^4.0.3",
+    "unbash": "^4.0.4",
     "which": "catalog:",
     "yaml": "^2.8.3",
     "yargs": "catalog:",
