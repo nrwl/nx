@@ -17,6 +17,7 @@ export async function formatChangedFilesWithPrettierIfAvailable(
   tree: Tree,
   options?: {
     silent?: boolean;
+    excludePaths?: Set<string>;
   }
 ): Promise<void> {
   if (process.env.NX_SKIP_FORMAT === 'true') {
@@ -24,7 +25,12 @@ export async function formatChangedFilesWithPrettierIfAvailable(
   }
 
   const files = new Set(
-    tree.listChanges().filter((file) => file.type !== 'DELETE')
+    tree
+      .listChanges()
+      .filter(
+        (file) =>
+          file.type !== 'DELETE' && !options?.excludePaths?.has(file.path)
+      )
   );
 
   const results = await formatFilesWithPrettierIfAvailable(
@@ -48,7 +54,7 @@ export async function formatFilesWithPrettierIfAvailable(
   const results = new Map<string, string>();
 
   // Check here as well for direct callers of this function
-  if (process.env.NX_SKIP_FORMAT === 'true') {
+  if (process.env.NX_SKIP_FORMAT === 'true' || files.length === 0) {
     return results;
   }
 

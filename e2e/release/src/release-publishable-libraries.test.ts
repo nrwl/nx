@@ -110,8 +110,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.2",
       "type": "commonjs",
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.2
@@ -171,8 +169,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.3",
       "module": "./index.esm.js",
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.3
@@ -234,8 +230,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.4",
       "peerDependencies": {
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.4
@@ -354,8 +348,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.6",
       "peerDependencies": {
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.6
