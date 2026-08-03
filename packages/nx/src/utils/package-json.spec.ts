@@ -1230,6 +1230,20 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
+  it('honors a precomputed null pnpm major instead of re-probing', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+
+    // null means the probe already failed (and warned); re-probing here could
+    // disagree with the decisions the other builders derived from that null.
+    expect(
+      getPrunedPnpmInstallSettingsYaml(tempDir, undefined, {
+        pnpmMajor: null,
+        patchedDependencies: {},
+      })
+    ).toBeNull();
+  });
+
   it('scopes allowBuilds using the pruned lockfile written to the output dir', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(
@@ -2061,6 +2075,18 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
     expect(
       getPrunedPnpmPackageJsonBuildSettings(tempDir, 'not: [valid: yaml')
     ).toEqual({ onlyBuiltDependencies: ['esbuild'] });
+  });
+
+  it('honors a precomputed null pnpm major instead of re-probing', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
+
+    expect(
+      getPrunedPnpmPackageJsonBuildSettings(tempDir, undefined, {
+        pnpmMajor: null,
+        patchedDependencies: {},
+      })
+    ).toBeNull();
   });
 
   it('carries supportedArchitectures', () => {

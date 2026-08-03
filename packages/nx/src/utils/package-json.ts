@@ -827,7 +827,9 @@ export function getPrunedPnpmInstallSettingsYaml(
   // pnpm 11 was the first major to read these settings only from
   // pnpm-workspace.yaml; later majors keep that behavior. pnpm 10 and below
   // still read them from the emitted package.json, so nothing to carry.
-  const pnpmMajor = precomputed?.pnpmMajor ?? getPnpmMajor(workspaceRootPath);
+  const pnpmMajor = precomputed
+    ? precomputed.pnpmMajor
+    : getPnpmMajor(workspaceRootPath);
   if (pnpmMajor === null || pnpmMajor < 11) {
     return null;
   }
@@ -1188,7 +1190,9 @@ export function getPrunedPnpmPackageJsonBuildSettings(
   prunedLockfileContent?: string,
   precomputed?: PrunedPnpmConfig
 ): PrunedPnpmPackageJsonBuildSettings | null {
-  const pnpmMajor = precomputed?.pnpmMajor ?? getPnpmMajor(workspaceRootPath);
+  const pnpmMajor = precomputed
+    ? precomputed.pnpmMajor
+    : getPnpmMajor(workspaceRootPath);
   if (pnpmMajor === null || pnpmMajor >= 11) {
     return null;
   }
@@ -1337,7 +1341,9 @@ export function getPrunedPnpmPatchArtifacts(
       );
     }
   }
-  const pnpmMajor = precomputed?.pnpmMajor ?? getPnpmMajor(workspaceRootPath);
+  const pnpmMajor = precomputed
+    ? precomputed.pnpmMajor
+    : getPnpmMajor(workspaceRootPath);
   return {
     patchFiles,
     packageJsonPatchedDependencies:
