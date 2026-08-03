@@ -1046,7 +1046,16 @@ Valid values are: ${validReleaseVersionPrefixes
     } as NxArgs);
 
     // Use the same affected detection logic as `nx affected`
-    affectedGraph = await filterAffected(projectGraph, touchedFiles);
+    affectedGraph = await filterAffected(
+      projectGraph,
+      touchedFiles,
+      undefined,
+      undefined,
+      // Release evaluates historical commits against the current project
+      // graph. A project configuration which no longer exists must not make
+      // every surviving release project relevant to that commit.
+      false
+    );
     this.affectedGraphPerCommit.set(shortHash, affectedGraph);
 
     return affectedGraph;
