@@ -41,15 +41,13 @@ describe('createBrowserOutputServerAssets', () => {
 
     expect(Object.keys(assets).sort()).toEqual([
       'index.csr.html',
-      'index.html',
       'index.server.html',
       'styles.css',
     ]);
     await expect(assets['index.server.html'].text()).resolves.toBe(
       '<html></html>'
     );
-    expect(assets['styles.css'].size).toBe(6);
-    expect(assets['styles.css'].hash).toEqual(expect.any(String));
+    await expect(assets['styles.css'].text()).resolves.toBe('body{}');
   });
 
   it('should skip stylesheets when critical CSS inlining is disabled', async () => {
@@ -62,7 +60,6 @@ describe('createBrowserOutputServerAssets', () => {
 
     expect(Object.keys(assets).sort()).toEqual([
       'index.csr.html',
-      'index.html',
       'index.server.html',
     ]);
   });
@@ -100,8 +97,20 @@ describe('createBrowserOutputServerAssets', () => {
 
     expect(Object.keys(assets).sort()).toEqual([
       'index.csr.html',
-      'index.html',
       'index.server.html',
     ]);
+  });
+
+  it('should not cache a failed content read', async () => {
+    const dir = await createBrowserOutput({ 'index.html': '<html></html>' });
+    const assets = createBrowserOutputServerAssets(dir, 'index.html', false);
+    await rm(join(dir, 'index.html'));
+
+    await expect(assets['index.server.html'].text()).rejects.toThrow();
+
+    await writeFile(join(dir, 'index.html'), '<html></html>');
+    await expect(assets['index.server.html'].text()).resolves.toBe(
+      '<html></html>'
+    );
   });
 });

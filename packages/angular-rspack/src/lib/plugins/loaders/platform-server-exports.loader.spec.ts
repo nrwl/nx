@@ -84,12 +84,20 @@ describe('platform-server-exports.loader', () => {
     const engineManifestIndex = result.indexOf(
       '__ngRspackSetAngularAppEngineManifest({'
     );
+    const staticRouteRenderIndex = result.indexOf(
+      '__ngRspackAngularAppEngine.ɵallowStaticRouteRender = true;'
+    );
     const userContentIndex = result.indexOf(userContent);
     expect(appManifestIndex).toBeGreaterThan(-1);
     expect(engineManifestIndex).toBeGreaterThan(-1);
+    expect(staticRouteRenderIndex).toBeGreaterThan(-1);
     expect(appManifestIndex).toBeLessThan(userContentIndex);
     expect(engineManifestIndex).toBeLessThan(userContentIndex);
+    expect(staticRouteRenderIndex).toBeLessThan(userContentIndex);
 
+    expect(result).toContain(
+      `bootstrap: () => Promise.resolve(__ngRspackMainServerDefault),`
+    );
     expect(result).toContain(`baseHref: "/app/"`);
     expect(result).toContain(`locale: "en-US"`);
     expect(result).toContain(`inlineCriticalCss: true`);
@@ -98,8 +106,31 @@ describe('platform-server-exports.loader', () => {
     );
     expect(result).toContain(`"../browser"`);
     expect(result).toContain(`allowedHosts: ["example.com"]`);
+    expect(result).toContain(`'': () => Promise.resolve({`);
     expect(result).toMatch(
       /__ngRspackCreateServerAssets\([\s\S]*?"index\.html",\s*true\s*\)/
+    );
+  });
+
+  it('should import the manifest module instead of inlining the registration when one is provided', () => {
+    const result = runLoader(userContent, {
+      angularSSRInstalled: true,
+      isZoneJsInstalled: true,
+      engineWiring: {
+        ...engineWiring,
+        manifestModuleRequest: '/root/__manifest__.js',
+      },
+    });
+
+    const manifestImportIndex = result.indexOf(
+      `import "/root/__manifest__.js";`
+    );
+    const userContentIndex = result.indexOf(userContent);
+    expect(manifestImportIndex).toBeGreaterThan(-1);
+    expect(manifestImportIndex).toBeLessThan(userContentIndex);
+    expect(result).not.toContain('__ngRspackSetAngularAppManifest');
+    expect(result).toContain(
+      `export { default as __ngRspackMainServerBootstrap } from "/root/src/main.server.ts";`
     );
   });
 
@@ -134,7 +165,7 @@ describe('platform-server-exports.loader', () => {
     expect(result).toContain('ɵextractRoutesAndCreateRouteTree,');
     expect(result).toContain('ɵdestroyAngularServerApp,');
     expect(result).toContain(
-      `export { default as ɵmainServerBootstrap } from "/root/src/main.server.ts";`
+      `export { default as __ngRspackMainServerBootstrap } from "/root/src/main.server.ts";`
     );
   });
 
@@ -146,6 +177,6 @@ describe('platform-server-exports.loader', () => {
     });
 
     expect(result).not.toContain('__ngRspackSetAngularAppManifest');
-    expect(result).not.toContain('ɵmainServerBootstrap');
+    expect(result).not.toContain('__ngRspackMainServerBootstrap');
   });
 });

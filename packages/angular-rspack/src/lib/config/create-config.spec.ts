@@ -1,3 +1,4 @@
+import type { Configuration } from '@rspack/core';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -260,25 +261,44 @@ describe('createConfig', () => {
     }
   }, 10000);
 
-  it('should wire the server entry loader with the engine manifest inputs', async () => {
+  async function createSsrProjectRoot(
+    ssrPackageVersion = '22.0.0'
+  ): Promise<string> {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
-    try {
-      await mkdir(join(root, 'src'), { recursive: true });
-      await writeFile(join(root, 'src', 'main.server.ts'), '');
-      await writeFile(join(root, 'src', 'server.ts'), '');
-      // The engine wiring is only set up when @angular/ssr is installed.
-      const ssrPackageDir = join(root, 'node_modules', '@angular', 'ssr');
-      await mkdir(ssrPackageDir, { recursive: true });
-      await writeFile(
-        join(ssrPackageDir, 'package.json'),
-        JSON.stringify({
-          name: '@angular/ssr',
-          version: '0.0.0',
-          main: 'index.js',
-        })
-      );
-      await writeFile(join(ssrPackageDir, 'index.js'), '');
+    await mkdir(join(root, 'src'), { recursive: true });
+    await writeFile(join(root, 'src', 'main.server.ts'), '');
+    await writeFile(join(root, 'src', 'server.ts'), '');
+    // The engine wiring is only set up when @angular/ssr is installed.
+    const ssrPackageDir = join(root, 'node_modules', '@angular', 'ssr');
+    await mkdir(ssrPackageDir, { recursive: true });
+    await writeFile(
+      join(ssrPackageDir, 'package.json'),
+      JSON.stringify({
+        name: '@angular/ssr',
+        version: ssrPackageVersion,
+        main: 'index.js',
+      })
+    );
+    await writeFile(join(ssrPackageDir, 'index.js'), '');
+    return root;
+  }
 
+  function findServerExportsRule(
+    config: Configuration
+  ): { options: Record<string, unknown> } | undefined {
+    return config.module?.rules?.find(
+      (rule) =>
+        typeof rule === 'object' &&
+        rule !== null &&
+        'loader' in rule &&
+        typeof rule.loader === 'string' &&
+        rule.loader.includes('platform-server-exports')
+    ) as { options: Record<string, unknown> } | undefined;
+  }
+
+  it('should wire the server entry loader with the engine manifest inputs', async () => {
+    const root = await createSsrProjectRoot();
+    try {
       const configs = await _createConfig({
         ...configBase,
         root,
@@ -289,14 +309,7 @@ describe('createConfig', () => {
       });
 
       expect(configs).toHaveLength(2);
-      const serverExportsRule = configs[1].module?.rules?.find(
-        (rule) =>
-          typeof rule === 'object' &&
-          rule !== null &&
-          'loader' in rule &&
-          typeof rule.loader === 'string' &&
-          rule.loader.includes('platform-server-exports')
-      ) as { options: Record<string, unknown> } | undefined;
+      const serverExportsRule = findServerExportsRule(configs[1]);
 
       expect(serverExportsRule).toBeDefined();
       expect(serverExportsRule.options.engineWiring).toMatchObject({
@@ -307,8 +320,88 @@ describe('createConfig', () => {
         browserOutputRelativePath: '../browser',
         indexOutputName: 'index.html',
         allowedHosts: ['example.com'],
+        manifestModuleRequest: expect.stringContaining(
+          '__ng-rspack-ssr-entry-manifest__'
+        ),
+      });
+      expect(
+        configs[1].plugins?.some(
+          (plugin) => plugin?.constructor.name === 'VirtualModulesPlugin'
+        )
+      ).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should reject the "security.allowedHosts" option when @angular/ssr does not support it', async () => {
+    const root = await createSsrProjectRoot('21.1.0');
+    try {
+      await expect(
+        _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          security: { allowedHosts: ['example.com'] },
+        })
+      ).rejects.toThrow(
+        'The "security.allowedHosts" option requires "@angular/ssr" version 21.2.0 or greater. You are currently using version 21.1.0.'
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should allow the dev-server hosts in the engine manifest while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        devServer: { allowedHosts: ['.example.com', 'foo.dev'] },
+        security: { allowedHosts: ['prod.example.com'] },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toMatchObject({
+        allowedHosts: ['*.example.com', 'foo.dev', 'localhost'],
       });
     } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should not wire the engine when locale inlining is enabled', async () => {
+    const root = await createSsrProjectRoot();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        localize: ['fr'],
+        i18nMetadata: {
+          sourceLocale: 'en-US',
+          locales: { fr: { translation: [] } },
+        },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule).toBeDefined();
+      expect(serverExportsRule.options.engineWiring).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Locale inlining ("localize") disables the "@angular/ssr" application engine wiring'
+        )
+      );
+    } finally {
+      warnSpy.mockRestore();
       await rm(root, { recursive: true, force: true });
     }
   }, 10000);

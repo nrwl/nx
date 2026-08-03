@@ -17,6 +17,7 @@ import {
   findProjectForPath,
   normalizeProjectRoot,
 } from '../utils/find-project-for-path';
+import { getInstalledPackageVersion } from '../utils/misc-helpers';
 import { retrieveOrCreateProjectGraph } from '../utils/graph';
 import type {
   AngularRspackPluginOptions,
@@ -180,6 +181,24 @@ export async function normalizeOptions(
     ? resolve(root, options.tsConfig)
     : join(root, 'tsconfig.app.json');
 
+  const hasServer = getHasServer(root, server, normalizedSsr, outputMode);
+
+  if (hasServer && options.security?.allowedHosts) {
+    // The engine only reads the manifest's allowedHosts from @angular/ssr
+    // 21.2; on older versions the option would be silently ignored.
+    const ssrVersion = getInstalledPackageVersion(root, '@angular/ssr');
+    if (ssrVersion) {
+      const [major, minor] = ssrVersion
+        .split('.')
+        .map((part) => parseInt(part, 10));
+      if (major < 21 || (major === 21 && minor < 2)) {
+        throw new Error(
+          `The "security.allowedHosts" option requires "@angular/ssr" version 21.2.0 or greater. You are currently using version ${ssrVersion}.`
+        );
+      }
+    }
+  }
+
   const aot = options.aot ?? true;
   const advancedOptimizations = aot && normalizedOptimization.scripts;
 
@@ -317,7 +336,7 @@ export async function normalizeOptions(
     fileReplacements: resolveFileReplacements(fileReplacements, root),
     globalStyles,
     globalScripts,
-    hasServer: getHasServer(root, server, normalizedSsr, outputMode),
+    hasServer,
     index,
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
     namedChunks: options.namedChunks ?? false,
