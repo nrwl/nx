@@ -1,6 +1,7 @@
 import type { ProjectGraph } from '../../../config/project-graph';
 import type { PackageJson } from '../../../utils/package-json';
 import { createPrunedLockfile } from './lock-file';
+import { stringifyNpmLockfile } from './npm-parser';
 import { stringifyPnpmLockfile } from './pnpm-parser';
 import {
   rewritePrunedLocalPathSpecifiers,
@@ -164,7 +165,28 @@ describe('createPrunedLockfile', () => {
     expect(output.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         title: expect.stringContaining('falls back to the root lockfile'),
+        bodyLines: [
+          expect.stringContaining('pruning failed'),
+          expect.stringContaining('pnpm config'),
+          expect.stringContaining('`--frozen-lockfile`'),
+        ],
       })
     );
+  });
+
+  it('warns without pnpm-specific guidance when an npm prune falls back', () => {
+    (stringifyNpmLockfile as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('npm pruning failed');
+    });
+
+    createPrunedLockfile(packageJson, graph, 'apps/app', '/root', 'npm');
+
+    const { output } = require('../../../utils/output');
+    const [{ bodyLines }] = (output.warn as jest.Mock).mock.calls[0];
+    // the cause and the npm remediation, and none of the pnpm-only claims
+    expect(bodyLines).toEqual([
+      'The lockfile pruning failed: npm pruning failed',
+      '`npm ci` in the output will fail; run `npm install` instead.',
+    ]);
   });
 });

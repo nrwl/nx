@@ -367,14 +367,16 @@ export function createLockFile(
 
 /**
  * Creates the pruned lockfile for a generate-package-json flow, running the
- * steps every such flow needs around `createLockFile`: the manifest's
+ * steps such a flow needs around `createLockFile`. For pnpm, the manifest's
  * `file:`/`link:` local-path specifiers are relocated to their shipped location
  * first (pnpm re-resolves them on a non-frozen install, and the lockfile copies
- * the manifest's form), the pnpm config the pruned lockfile bakes into its
- * snapshots is stripped from the manifest afterwards (re-declaring it trips
- * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH), and the local-path dependency closure is
- * validated so a shipped `link:` target that requires an unresolvable
- * dependency fails the build instead of the deploy.
+ * the manifest's form), and the local-path dependency closure is validated
+ * after pruning so a shipped `link:` target that requires an unresolvable
+ * dependency fails the build instead of the deploy. For every package manager,
+ * the pnpm config a pruned lockfile bakes into its snapshots is stripped from
+ * the manifest after a successful prune (re-declaring it next to a pruned pnpm
+ * lockfile trips ERR_PNPM_LOCKFILE_CONFIG_MISMATCH; the block is inert for the
+ * others).
  *
  * `pruned` is false when `createLockFile` fell back to the root lockfile on a
  * pruning error: the fallback's importer describes the whole workspace, so the
@@ -387,9 +389,9 @@ export function createLockFile(
  * pnpm-workspace.yaml, the patch files, the local-path artifacts, and the
  * pnpm <=10 package.json declarations).
  *
- * Mutates `packageJson` (the specifier relocation and the config strip), so
- * write or emit the manifest after calling this. Not for bun, which has no
- * lockfile generation.
+ * Mutates `packageJson` (the pnpm-only specifier relocation and the config
+ * strip), so write or emit the manifest after calling this. Not for bun, which
+ * has no lockfile generation.
  */
 export function createPrunedLockfile(
   packageJson: PackageJson,
@@ -408,9 +410,11 @@ export function createPrunedLockfile(
     );
   }
   let pruned = true;
+  let pruneError: Error | undefined;
   const lockFileContent = createLockFile(packageJson, graph, packageManager, {
-    onPruneFallback: () => {
+    onPruneFallback: (error) => {
       pruned = false;
+      pruneError = error;
     },
   });
   if (pruned) {
@@ -430,13 +434,24 @@ export function createPrunedLockfile(
     }
     Object.assign(packageJson, originalPackageJson);
     // createLockFile's own error output is suppressed under a postinstall, so
-    // this is the only signal naming what the fallback output is missing.
+    // this is the only signal there naming the cause and what the fallback
+    // output is missing.
+    const bodyLines = [`The lockfile pruning failed: ${pruneError?.message}`];
+    if (packageManager === 'pnpm') {
+      bodyLines.push(
+        'The emitted package.json keeps its pnpm config, its vendored local-path specifiers point at their original workspace locations, and no local-path artifacts are shipped for it.'
+      );
+    }
+    bodyLines.push(
+      packageManager === 'npm'
+        ? '`npm ci` in the output will fail; run `npm install` instead.'
+        : packageManager === 'yarn'
+          ? 'An immutable install of the output (`--immutable`, or `--frozen-lockfile` on yarn 1) may fail; run an install without immutability instead (yarn 2+ turns it on by default in CI).'
+          : 'A `--frozen-lockfile` install of the output will fail; run a regular install instead.'
+    );
     output.warn({
       title: 'The pruned output falls back to the root lockfile',
-      bodyLines: [
-        'The emitted package.json keeps its original local-path specifiers and pnpm config, and no local-path artifacts are shipped for it.',
-        'A `--frozen-lockfile` install of this output will fail; run a regular install instead.',
-      ],
+      bodyLines,
     });
   }
   return { lockFileContent, pruned };
