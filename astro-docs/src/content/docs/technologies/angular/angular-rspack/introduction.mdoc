@@ -54,10 +54,17 @@ The following are known limitations and missing features of Angular Rspack:
 
 - The `static` output mode (build-time prerendering of the full application) is not supported.
 - Server routes marked for build-time prerendering (`RenderMode.Prerender`) are rendered at request time instead.
+- The server route configuration is extracted at runtime on the first request of each server process, rather than at build time. Route configuration errors surface at request time instead of build time.
 - Automatic content security policy generation (`security.autoCsp`) is not supported.
-- Locale inlining (`localize`) cannot be combined with the `outputMode` option.
+- Locale inlining (`localize`) disables the `@angular/ssr` application engine wiring, so it cannot be used by server entries written against the application engine APIs and cannot be combined with the `outputMode` option.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).
+
+{% aside type="note" title="Application engine host validation" %}
+
+When the `@angular/ssr` application engine handles requests, it rejects any request whose host is not in its allowlist with a 400 response. Configure the allowed hosts for production with the `security.allowedHosts` option (requires `@angular/ssr` version 21.2.0 or greater) or the `NG_ALLOWED_HOSTS` environment variable (comma-separated). The dev server host is allowed automatically while serving.
+
+{% /aside %}
 
 ## Benchmarks
 

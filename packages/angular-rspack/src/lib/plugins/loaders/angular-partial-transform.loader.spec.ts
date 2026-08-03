@@ -65,6 +65,26 @@ describe('angular-partial-transform.loader', () => {
     expect(callback).toHaveBeenCalledWith(null, '@angular content', chainMap);
   });
 
+  it('should pass the engine manifest virtual module through untransformed', () => {
+    angularPartialTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: makeCompilation(),
+        resourcePath: '/root/__ng-rspack-ssr-entry-manifest__.js',
+      },
+      `import '@angular/ssr';`,
+      chainMap
+    );
+
+    expect(callback).toHaveBeenCalledWith(
+      null,
+      `import '@angular/ssr';`,
+      chainMap
+    );
+    expect(transformFile).not.toHaveBeenCalled();
+    expect(transformData).not.toHaveBeenCalled();
+  });
+
   it('should pass content through when the angular compilation failed', () => {
     angularPartialTransformLoader.call(
       {

@@ -111,7 +111,7 @@ describe('normalizeOptions', () => {
     );
   });
 
-  it('should reject an output mode when the server or ssr entry file is missing', async () => {
+  it('should reject an output mode when the server file is missing', async () => {
     await expect(
       normalizeOptions({
         ...baseOptions,
@@ -121,6 +121,19 @@ describe('normalizeOptions', () => {
       })
     ).rejects.toThrow(
       'The "outputMode" option is set to "server", but "./src/does-not-exist.server.ts" does not exist.'
+    );
+  });
+
+  it('should reject an output mode when the ssr entry file is missing', async () => {
+    await expect(
+      normalizeOptions({
+        ...baseOptions,
+        outputMode: 'server',
+        server: './src/main.server.ts',
+        ssr: { entry: './src/does-not-exist.ts' },
+      })
+    ).rejects.toThrow(
+      'The "outputMode" option is set to "server", but "./src/does-not-exist.ts" does not exist.'
     );
   });
 
@@ -149,5 +162,40 @@ describe('normalizeOptions', () => {
     });
 
     expect(normalized.security).toEqual({ allowedHosts: ['example.com'] });
+  });
+
+  it('should accept the "security.allowedHosts" option with an old "@angular/ssr" version in a browser-only build', async () => {
+    const browserOnlyRoot = await mkdtemp(
+      join(tmpdir(), 'normalize-options-browser-only-')
+    );
+    try {
+      const ssrPackageDir = join(
+        browserOnlyRoot,
+        'node_modules',
+        '@angular',
+        'ssr'
+      );
+      await mkdir(ssrPackageDir, { recursive: true });
+      await writeFile(
+        join(ssrPackageDir, 'package.json'),
+        JSON.stringify({
+          name: '@angular/ssr',
+          version: '21.1.0',
+          main: 'index.js',
+        })
+      );
+      await writeFile(join(ssrPackageDir, 'index.js'), '');
+
+      const normalized = await normalizeOptions({
+        ...baseOptions,
+        root: browserOnlyRoot,
+        security: { allowedHosts: ['example.com'] },
+      });
+
+      expect(normalized.hasServer).toBe(false);
+      expect(normalized.security).toEqual({ allowedHosts: ['example.com'] });
+    } finally {
+      await rm(browserOnlyRoot, { recursive: true, force: true });
+    }
   });
 });

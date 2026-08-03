@@ -319,7 +319,8 @@ export interface AngularRspackPluginOptions {
   security?: {
     /**
      * A list of hostnames that are allowed to access the server-side
-     * application. For more information, see
+     * application. Requires `@angular/ssr` version 21.2.0 or greater. For
+     * more information, see
      * https://angular.dev/best-practices/security#preventing-server-side-request-forgery-ssrf.
      */
     allowedHosts?: string[];

@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { basename } from 'node:path';
 import { LoaderContext, RawSourceMap } from '@rspack/core';
 import { toTypeScriptFileCacheKey } from '@nx/angular-rspack-compiler';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
@@ -6,6 +7,7 @@ import {
   extractInlineSourceMap,
   isForwardableSourceMap,
 } from './inline-source-map';
+import { ENGINE_MANIFEST_VIRTUAL_NAME } from './platform-server-exports.loader';
 
 export default function loader(
   this: LoaderContext<unknown>,
@@ -45,6 +47,14 @@ export default function loader(
       request.startsWith('data:text/javascript') &&
       request.includes('__module_federation_bundler_runtime__')
     ) {
+      callback(null, content, chainMap);
+      return;
+    }
+
+    // The engine manifest virtual module mentions '@angular' but needs no
+    // transform, and it has no on-disk file for the transformer worker to
+    // read.
+    if (basename(request) === ENGINE_MANIFEST_VIRTUAL_NAME) {
       callback(null, content, chainMap);
       return;
     }

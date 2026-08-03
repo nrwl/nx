@@ -56,6 +56,21 @@ export function isPackageInstalled(root: string, name: string): boolean {
   }
 }
 
+export function getInstalledPackageVersion(
+  root: string,
+  name: string
+): string | null {
+  try {
+    const packageJsonPath = require.resolve(`${name}/package.json`, {
+      paths: [root],
+    });
+
+    return (require(packageJsonPath) as { version?: string }).version ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function assertNever(input: never): never {
   throw new Error(
     `Unexpected call to assertNever() with input: ${JSON.stringify(
