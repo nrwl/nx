@@ -1066,12 +1066,15 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(yaml).not.toBeNull();
     const { load } = require('@zkochan/js-yaml');
     expect(load(yaml)).toEqual({
+      packages: [],
       allowBuilds: { esbuild: true },
       supportedArchitectures: { os: ['linux'] },
     });
-    // Never carry the packages glob: it flips pnpm into workspace mode and pnpm
-    // 9 rejects it outright.
-    expect(yaml).not.toContain('packages:');
+    // Never carry the root packages glob, but declare an empty list: pnpm 9
+    // rejects a pnpm-workspace.yaml without a `packages` field, and `packages: []`
+    // installs on pnpm 9-11 without pulling any importer into the install.
+    expect(yaml).toContain('packages: []');
+    expect(yaml).not.toContain('packages/*');
   });
 
   it('returns null on pnpm 10 (those settings are read from package.json)', () => {
@@ -1089,7 +1092,10 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     expect(yaml).not.toBeNull();
     const { load } = require('@zkochan/js-yaml');
-    expect(load(yaml)).toEqual({ allowBuilds: { esbuild: true } });
+    expect(load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: { esbuild: true },
+    });
   });
 
   it('returns null when the workspace has no root pnpm-workspace.yaml', () => {
@@ -1153,6 +1159,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(existsSync(outputFile)).toBe(true);
     const { load } = require('@zkochan/js-yaml');
     expect(load(readFileSync(outputFile, 'utf-8'))).toEqual({
+      packages: [],
       allowBuilds: { esbuild: true },
     });
   });
@@ -1191,6 +1198,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     const { load } = require('@zkochan/js-yaml');
     // the entry for the package the prune dropped is left out
     expect(load(yaml)).toEqual({
+      packages: [],
       allowBuilds: { esbuild: true, '@parcel/watcher': true },
     });
   });
@@ -1224,7 +1232,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     const { load } = require('@zkochan/js-yaml');
     expect(
       load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
-    ).toEqual({ allowBuilds: { esbuild: true } });
+    ).toEqual({ packages: [], allowBuilds: { esbuild: true } });
   });
 
   it('removes a stale settings file when the pruned output no longer has settings', () => {
@@ -1273,7 +1281,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     // Scoped to the passed content (@parcel/watcher), not the on-disk esbuild.
     expect(
       load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
-    ).toEqual({ allowBuilds: { '@parcel/watcher': true } });
+    ).toEqual({ packages: [], allowBuilds: { '@parcel/watcher': true } });
   });
 
   // A pruned lockfile carrying a patchedDependencies section (values are the
@@ -1316,6 +1324,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     const { load } = require('@zkochan/js-yaml');
     expect(load(yaml)).toEqual({
+      packages: [],
       patchedDependencies: {
         'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
       },
@@ -1336,6 +1345,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     const { load } = require('@zkochan/js-yaml');
     expect(load(yaml)).toEqual({
+      packages: [],
       patchedDependencies: {
         'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
       },
@@ -1458,6 +1468,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     const { load } = require('@zkochan/js-yaml');
     expect(load(getPrunedPnpmInstallSettingsYaml(tempDir, lockfile))).toEqual({
+      packages: [],
       patchedDependencies: {
         'is-number@7.0.0': 'patches/tools/patches/is-number.patch',
       },
@@ -1551,6 +1562,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     const { load } = require('@zkochan/js-yaml');
     expect(load(getPrunedPnpmInstallSettingsYaml(tempDir, lockfile))).toEqual({
+      packages: [],
       patchedDependencies: {
         'is-number@7.0.0': 'patches/a/fix.patch',
         'is-odd@3.0.1': 'patches/b/fix.patch',
@@ -1701,6 +1713,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(
       load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
     ).toEqual({
+      packages: [],
       patchedDependencies: {
         'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
       },
@@ -1737,6 +1750,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     const { load } = require('@zkochan/js-yaml');
     const yamlAsset = emitted.find((a) => a.path === 'pnpm-workspace.yaml');
     expect(load(yamlAsset.content)).toEqual({
+      packages: [],
       patchedDependencies: {
         'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
       },
@@ -2108,7 +2122,7 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
     const { load } = require('@zkochan/js-yaml');
     expect(
       load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
-    ).toEqual({ allowBuilds: { esbuild: true } });
+    ).toEqual({ packages: [], allowBuilds: { esbuild: true } });
   });
 
   it('unions a project-level approval with the carried one', () => {
