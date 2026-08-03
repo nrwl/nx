@@ -38,6 +38,17 @@ tarballs) skips Generate: drop steps 3, 4 and 6, run its own source-install in p
 step 5, and start at step 7 (Run). The Run phase resolves each migration's implementation
 from the repo's `node_modules` by package + name, so a linked/tarball'd local nx runs.
 
+**One migration instead of the whole list.** Same pre-staged setup, but step 7 runs
+`nx migrate --run-migration=<package>:<name>`. `migrations.json` is still required: the flag
+picks one entry out of it rather than replacing it, and nx errors out when the file is
+missing. A bare `<name>` is accepted when it matches exactly one entry, and a name that
+itself contains `:` must use the full id. Two deltas downstream: per-migration commits are
+off unless `--create-commits` (or `migrate.createCommits` in `nx.json`) asks for them, so
+step 7's commit-by-hand still applies; and a prompt-only or hybrid migration writes nothing
+to `tools/ai-migrations/`. Instead nx prints an `<nx_migrate_prompt migration="...">` block
+holding the prompt path, the documentation path, and (for a hybrid) the generator half's
+file list. Step 8 still applies, but read the prompt from that block.
+
 ## Child instruction block
 
 > Migrate this repository to nx `<VERSION>`.

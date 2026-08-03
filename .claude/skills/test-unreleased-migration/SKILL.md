@@ -43,11 +43,11 @@ Companion pieces this skill composes (do not reimplement any of them):
 
 Pick how much of the real `nx migrate` pipeline to exercise. More coverage costs more time.
 
-| Mode                    | Exercises                                                                                 | Delivery                                                                                  | When                                                              |
-| ----------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **1. Full**             | package updates + migration collection + registry resolution + temp-CLI install + run all | verdaccio local publish, then `nx migrate <VERSION>`                                      | most comprehensive; slowest                                       |
-| **2. All migrations**   | run the whole `migrations.json`, no collection / package update / temp-CLI                | pack-and-copy tarballs + a produced `migrations.json`, then `nx migrate --run-migrations` | fast validation of every migration                                |
-| **3. Single migration** | run one migration, nothing else                                                           | `nx migrate --run-migration=<id>`                                                         | fastest loop for one migration; **not yet available** (see below) |
+| Mode                    | Exercises                                                                                 | Delivery                                                                                  | When                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **1. Full**             | package updates + migration collection + registry resolution + temp-CLI install + run all | verdaccio local publish, then `nx migrate <VERSION>`                                      | most comprehensive; slowest                   |
+| **2. All migrations**   | run the whole `migrations.json`, no collection / package update / temp-CLI                | pack-and-copy tarballs + a produced `migrations.json`, then `nx migrate --run-migrations` | fast validation of every migration            |
+| **3. Single migration** | run one migration out of the list, nothing else                                           | same tarballs + `migrations.json`, then `nx migrate --run-migration=<package>:<name>`     | fastest loop while iterating on one migration |
 
 ## Procedure
 
@@ -93,12 +93,35 @@ repo-specific; use the repo's release/build tooling. Verify `dist/` output exist
   `NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true nx migrate --run-migrations`, so the migrations
   execute against the tarball-installed local nx.
 
+- **Mode 3 (same substrate, one migration).** Identical delivery to mode 2, because
+  `--run-migration` reads `migrations.json` too: it selects one entry rather than replacing the file.
+  Narrow the producer to the migration's own package so the file stays small:
+
+  ```bash
+  node .claude/skills/test-unreleased-migration/scripts/produce-migrations-json.mjs \
+    --packages-dir <publisher-nx>/packages \
+    --from <current-version> --to <VERSION> \
+    --packages <package> \
+    --out <target-repo>/migrations.json
+  ```
+
+  Then run `NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true nx migrate --run-migration=<package>:<name>`.
+  Both env vars matter: without the first, nx spawns a temp `nx@latest` that has none of the local
+  changes; without the second, its pre-install reinstalls over the tarballs.
+
 ### 4. Run per target (child agents)
 
 `spawn_agent` a child per in-scope target and poll `show_agent` until terminal - do not barrier on the
 slowest. Inject the appropriate `run-nx-migration` child block (mode 1: full, `<REGISTRY>`=verdaccio;
-mode 2: Run-only), filling `<VERSION>` and `<BRANCH>` (e.g. `test-nx-<VERSION>`). Each child carries its
-own sandbox (see the pnpm-sandbox gotcha in `run-nx-migration`).
+mode 2: Run-only; mode 3: Run-only plus its "one migration instead of the whole list" note), filling
+`<VERSION>` and `<BRANCH>` (e.g. `test-nx-<VERSION>`). Each child carries its own sandbox (see the
+pnpm-sandbox gotcha in `run-nx-migration`).
+
+A child IS the agent nx hands prompt-based migrations to, and nx says so: it logs that it skipped its
+own nested agentic flow because the run came from inside an agent. In modes 1 and 2 the prompts land in
+`tools/ai-migrations/**/*.md`; in mode 3 nx prints an `<nx_migrate_prompt migration="...">` block on
+stdout instead. Either way the child applies them and reports what it did, per step 8 of the shared
+block.
 
 ### 5. Validate (the product)
 
@@ -166,13 +189,18 @@ optionally open a throwaway **validation** PR. This is a CI harness, not a migra
 - `await-polygraph-ci` to collect the CIPE; fold pass/fail into the per-repo report.
 - **Mandatory cleanup:** close the PR and delete the branch. Never merge - these are validation only.
 
-## Mode 3 (single migration) - not yet available
+## Mode 3 notes (single migration)
 
-Recheck PR #36407's merge status before relying on this section; once it merges, mode 3 stops being "not yet available" and this section should be wired up.
+The migration id is `<package>:<name>`, e.g. `@nx/eslint:remove-removed-typescript-eslint-extension-rules`.
+A bare `<name>` also works when it matches exactly one entry in `migrations.json`; nx errors and lists the
+candidates when it matches several, and a name that itself contains `:` must use the full id.
 
-Mode 3 runs `nx migrate --run-migration=<id>` (a stateless single-migration worker: run one migration,
-no `migrations.json`, no collection). That flag does not exist on the released nx yet - it ships with
-nx PR #36407 (`nx migrate --run-migration`). Until it merges, use mode 2 with a one-entry `migrations.json`
-to approximate a single-migration run. When #36407 is in the target nx, wire mode 3 here: deliver via
-pack-and-copy (as mode 2), skip the producer, and inject a single-migration `run-nx-migration` variant
-that runs `nx migrate --run-migration=<id>` then validates.
+Mode 3 exercises less than mode 2 by design, so it is an iteration loop rather than a sign-off. It skips
+everything mode 2 already skips (collection, package updates, temp-CLI install) and additionally never
+sees the other migrations, so it cannot catch a migration that only breaks in combination with an earlier
+one. Re-run mode 2 before calling the migration validated.
+
+Per-migration commits are off unless `--create-commits` (or `migrate.createCommits` in the target's
+`nx.json`) asks for them, which keeps the child's commit-by-hand step unchanged. Do not pass a custom
+`--commit-prefix` containing shell metacharacters: nx re-joins its argv into a shell string when it hands
+off to the workspace-local nx, so a `(` in the prefix crashes the run.
