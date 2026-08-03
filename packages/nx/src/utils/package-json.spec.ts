@@ -1215,6 +1215,21 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     ).toBeNull();
   });
 
+  it('carries allowBuilds verbatim when the pruned lockfile is unparseable', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir, 'not: [valid: yaml');
+
+    const { load } = require('@zkochan/js-yaml');
+    // Scoping needs the lockfile's package names; without them, dropping an
+    // approval silently skips a needed build script, so carry them all.
+    expect(load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: { esbuild: true },
+    });
+  });
+
   it('scopes allowBuilds using the pruned lockfile written to the output dir', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(
@@ -2013,6 +2028,38 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
         tempDir,
         prunedLockfileWith('esbuild@0.21.5')
       )
+    ).toEqual({ onlyBuiltDependencies: ['esbuild'] });
+  });
+
+  it('carries approvals verbatim for a pre-v9 lockfile instead of scoping', () => {
+    mockPnpmVersion('8.15.9');
+    writeRootPackageJson({
+      onlyBuiltDependencies: ['esbuild', 'some-absent-native-dep'],
+    });
+
+    // v6 keys (`/name@version`) do not parse as v9 `name@version`, so scoping
+    // would drop every approval; carry them verbatim instead (inert direction).
+    const v6Lockfile = [
+      "lockfileVersion: '6.0'",
+      '',
+      'packages:',
+      '',
+      '  /esbuild@0.21.5:',
+      '    resolution: {integrity: sha512-abc}',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir, v6Lockfile)).toEqual({
+      onlyBuiltDependencies: ['esbuild', 'some-absent-native-dep'],
+    });
+  });
+
+  it('carries approvals verbatim when the pruned lockfile is unparseable', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
+
+    expect(
+      getPrunedPnpmPackageJsonBuildSettings(tempDir, 'not: [valid: yaml')
     ).toEqual({ onlyBuiltDependencies: ['esbuild'] });
   });
 
