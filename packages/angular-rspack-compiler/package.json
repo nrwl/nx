@@ -46,7 +46,6 @@
     "@nx/devkit": "workspace:*",
     "sass-embedded": "catalog:css",
     "semver": "catalog:",
-    "ts-morph": "catalog:typescript",
     "tslib": "catalog:typescript",
     "typescript": "catalog:typescript"
   },
