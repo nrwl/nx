@@ -23,7 +23,7 @@ import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
   baseEsLintConfigFile,
@@ -63,7 +63,7 @@ const internalCreateNodesV2 = async (
   options: EslintPluginOptions,
   context: CreateNodesContext,
   projectRootsByEslintRoots: Map<string, string[]>,
-  lintableFilesPerProjectRoot: Map<string, string[]>,
+  getLintableFilesForProjectRoot: (projectRoot: string) => Promise<string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
   projectsCache: PluginCache<EslintProjects>,
   hashByRoot: Map<string, string>,
@@ -100,7 +100,7 @@ const internalCreateNodesV2 = async (
       let hasNonIgnoredLintableFiles = false;
       if (configDir !== projectRoot || projectRoot === '.') {
         const eslint = getEslint(projectRoot);
-        for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
+        for (const file of await getLintableFilesForProjectRoot(projectRoot)) {
           if (
             !(await eslint.isPathIgnored(join(context.workspaceRoot, file)))
           ) {
@@ -168,7 +168,10 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
       splitConfigFiles(configFiles);
-    const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
+    if (eslintConfigFiles.length === 0) {
+      return [];
+    }
+    const getLintableFilesForProjectRoot = createGetLintableFilesForProjectRoot(
       projectRoots,
       options,
       context
@@ -200,9 +203,6 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       projectRoots.map((r, i) => [r, hashes[i]])
     );
     try {
-      if (eslintConfigFiles.length === 0) {
-        return [];
-      }
       // Determine flat vs legacy from root config, matching ESLint's own
       // behavior (find-up from cwd). Nested .eslintrc.* files are irrelevant
       // when a root flat config exists. Prefer flat config at root when both
@@ -222,7 +222,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
             options,
             context,
             projectRootsByEslintRoots,
-            lintableFilesPerProjectRoot,
+            getLintableFilesForProjectRoot,
             tsconfigChainsByProjectRoot,
             targetsCache,
             hashByRoot,
@@ -357,32 +357,46 @@ function collectTsconfigChainsByProjectRoot(
   return result;
 }
 
-async function collectLintableFilesByProjectRoot(
+function createGetLintableFilesForProjectRoot(
   projectRoots: string[],
   options: EslintPluginOptions,
   context: CreateNodesContext
-): Promise<Map<string, string[]>> {
-  const lintableFilesPerProjectRoot = new Map<string, string[]>();
+): (projectRoot: string) => Promise<string[]> {
+  const lintableExtensions = new Set(options.extensions);
+  const projectRootMap = new Map<string, string[]>(
+    projectRoots.map((projectRoot) => [projectRoot, []])
+  );
+  const filesByProjectRoot = new Map<string, Promise<string[]>>();
 
-  const lintableFiles = await globWithWorkspaceContext(context.workspaceRoot, [
-    `**/*.{${options.extensions.join(',')}}`,
-  ]);
-
-  for (const projectRoot of projectRoots) {
-    lintableFilesPerProjectRoot.set(projectRoot, []);
-  }
-
-  for (const file of lintableFiles) {
-    const projectRoot = getRootForDirectory(
-      dirname(file),
-      lintableFilesPerProjectRoot
-    );
-    if (projectRoot) {
-      lintableFilesPerProjectRoot.get(projectRoot).push(file);
+  return async (projectRoot: string) => {
+    let files = filesByProjectRoot.get(projectRoot);
+    if (!files) {
+      files = getFilesInDirectoryUsingContext(
+        context.workspaceRoot,
+        projectRoot === '.' ? '' : projectRoot
+      ).then((files) =>
+        files.filter(
+          (file) =>
+            hasLintableExtension(file, lintableExtensions) &&
+            getRootForDirectory(dirname(file), projectRootMap) === projectRoot
+        )
+      );
+      filesByProjectRoot.set(projectRoot, files);
     }
-  }
 
-  return lintableFilesPerProjectRoot;
+    return files;
+  };
+}
+
+function hasLintableExtension(
+  file: string,
+  lintableExtensions: Set<string>
+): boolean {
+  const extensionIndex = file.lastIndexOf('.');
+  if (extensionIndex === -1) {
+    return false;
+  }
+  return lintableExtensions.has(file.slice(extensionIndex + 1));
 }
 
 function getRootForDirectory(
