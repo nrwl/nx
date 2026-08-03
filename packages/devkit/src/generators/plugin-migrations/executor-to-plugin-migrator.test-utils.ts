@@ -73,7 +73,8 @@ export interface SyntheticPlugin {
  * (used by fallback/divergence tests).
  */
 export function createSyntheticPlugin(
-  inferredTargetFor: InferredTargetFactory = defaultInferredTarget
+  inferredTargetFor: InferredTargetFactory = defaultInferredTarget,
+  pluginPath = SYNTHETIC_PLUGIN_PATH
 ): SyntheticPlugin {
   let count = 0;
   const createNodes: CreateNodes<SyntheticPluginOptions> = [
@@ -107,7 +108,7 @@ export function createSyntheticPlugin(
   ];
 
   return {
-    pluginPath: SYNTHETIC_PLUGIN_PATH,
+    pluginPath,
     createNodes,
     inferenceCount: () => count,
     resetCount: () => {

@@ -8,6 +8,7 @@ import type {
 import {
   readNxJson,
   readProjectConfiguration,
+  getProjects,
   updateNxJson,
   updateProjectConfiguration,
   type CreateNodes,
@@ -310,7 +311,8 @@ export async function computeResidualByProject<T>(
   projectGraph: ProjectGraph,
   scope: MigrationScope<T>,
   inferredByRoot: Map<string, Map<string, TargetConfiguration>>,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  projectConfigsByName: Map<string, ProjectConfiguration> = getProjects(tree)
 ): Promise<ResidualByProject> {
   const residualByProject: ResidualByProject = new Map();
 
@@ -332,7 +334,11 @@ export async function computeResidualByProject<T>(
         );
         const strippedInferredTarget = stripInferredTarget(fullInferredTarget);
 
-        const projectConfig = readProjectConfiguration(tree, projectName);
+        const projectConfig = readCachedProjectConfiguration(
+          tree,
+          projectConfigsByName,
+          projectName
+        );
         let projectTarget = projectConfig.targets[targetName];
         projectTarget = mergeTargetConfigurations(
           projectTarget,
@@ -386,6 +392,7 @@ export async function computeResidualByProject<T>(
  */
 function writeResiduals<T>(
   tree: Tree,
+  projectConfigsByName: Map<string, ProjectConfiguration>,
   projectGraph: ProjectGraph,
   scope: MigrationScope<T>,
   residualByProject: ResidualByProject
@@ -399,6 +406,7 @@ function writeResiduals<T>(
         }
         writeResidualTarget(
           tree,
+          projectConfigsByName,
           projectName,
           targetName,
           structuredClone(entry.residual)
@@ -411,11 +419,16 @@ function writeResiduals<T>(
 /** Write a single residual target into project.json (or delete it if empty). */
 function writeResidualTarget(
   tree: Tree,
+  projectConfigsByName: Map<string, ProjectConfiguration>,
   projectName: string,
   targetName: string,
   residual: TargetConfiguration
 ) {
-  const projectConfig = readProjectConfiguration(tree, projectName);
+  const projectConfig = readCachedProjectConfiguration(
+    tree,
+    projectConfigsByName,
+    projectName
+  );
 
   if (Object.keys(residual).length > 0) {
     projectConfig.targets[targetName] = residual;
@@ -429,6 +442,20 @@ function writeResidualTarget(
   }
 
   updateProjectConfiguration(tree, projectName, projectConfig);
+}
+
+function readCachedProjectConfiguration(
+  tree: Tree,
+  projectConfigsByName: Map<string, ProjectConfiguration>,
+  projectName: string
+): ProjectConfiguration {
+  const projectConfig = projectConfigsByName.get(projectName);
+  if (projectConfig) {
+    return projectConfig;
+  }
+  const readProjectConfig = readProjectConfiguration(tree, projectName);
+  projectConfigsByName.set(projectName, readProjectConfig);
+  return readProjectConfig;
 }
 
 function isDeepEqual(a: unknown, b: unknown): boolean {
@@ -587,6 +614,7 @@ function removeDeadExecutorTargetDefault(
  */
 function hoistCommonAndWrite<T>(
   tree: Tree,
+  projectConfigsByName: Map<string, ProjectConfiguration>,
   scope: MigrationScope<T>,
   residualByProject: ResidualByProject
 ) {
@@ -625,6 +653,7 @@ function hoistCommonAndWrite<T>(
         }
         writeResidualTarget(
           tree,
+          projectConfigsByName,
           projectName,
           targetName,
           subtractCommon(entry.residual, common)
@@ -986,6 +1015,7 @@ async function verifyAndFallback<T>(
   createNodes: CreateNodes<T> | undefined,
   createNodesV2: CreateNodes<T> | undefined,
   residualByProject: ResidualByProject,
+  projectConfigsByName: Map<string, ProjectConfiguration>,
   singleProjectMode: boolean,
   logger: typeof devkitLogger | undefined
 ): Promise<void> {
@@ -1012,7 +1042,11 @@ async function verifyAndFallback<T>(
 
       let equivalent = false;
       if (verifiedInferred) {
-        const projectConfig = readProjectConfiguration(tree, projectName);
+        const projectConfig = readCachedProjectConfiguration(
+          tree,
+          projectConfigsByName,
+          projectName
+        );
         const deviation = projectConfig.targets?.[targetName] ?? {};
         const postMigrationFinal = mergeTargetConfigurations(
           structuredClone(deviation),
@@ -1026,6 +1060,7 @@ async function verifyAndFallback<T>(
         // project.json override (which wins over the shared targetDefaults).
         writeResidualTarget(
           tree,
+          projectConfigsByName,
           projectName,
           targetName,
           structuredClone(entry.residual)
@@ -1127,6 +1162,7 @@ async function migrateProjects<T>(
     specificProjectToMigrate,
     logger
   );
+  const projectConfigsByName = getProjects(tree);
 
   // Phase 1 — Infer (once per distinct option set) for the whole workspace.
   const nxJson = readNxJson(tree);
@@ -1146,7 +1182,8 @@ async function migrateProjects<T>(
     projectGraph,
     scope,
     inferredByRoot,
-    nxJson
+    nxJson,
+    projectConfigsByName
   );
 
   // Phase 3 — Derive strict-common + write. Single-project mode never hoists
@@ -1154,9 +1191,15 @@ async function migrateProjects<T>(
   // residual in project.json; whole-workspace mode hoists the common config to
   // `targetDefaults` and writes only per-project deviations.
   if (specificProjectToMigrate) {
-    writeResiduals(tree, projectGraph, scope, residualByProject);
+    writeResiduals(
+      tree,
+      projectConfigsByName,
+      projectGraph,
+      scope,
+      residualByProject
+    );
   } else {
-    hoistCommonAndWrite(tree, scope, residualByProject);
+    hoistCommonAndWrite(tree, projectConfigsByName, scope, residualByProject);
   }
 
   // Some plugins' `createNodes` normalize their options object in place (e.g.
@@ -1198,6 +1241,7 @@ async function migrateProjects<T>(
     createNodes,
     createNodesV2,
     residualByProject,
+    projectConfigsByName,
     Boolean(specificProjectToMigrate),
     logger
   );
@@ -1221,11 +1265,27 @@ function addPluginRegistrations<T>(
 ) {
   const nxJson = readNxJson(tree);
 
-  let index = 0;
+  const registrationGroups = new Map<
+    string,
+    { options: Record<string, string>; include: string[] }
+  >();
   for (const [project, options] of projects.entries()) {
+    const projectIncludeGlob =
+      projectGraph.nodes[project].data.root === '.'
+        ? '*'
+        : join(projectGraph.nodes[project].data.root, '**/*');
+    const key = stableStringify(options);
+    if (!registrationGroups.has(key)) {
+      registrationGroups.set(key, { options, include: [] });
+    }
+    registrationGroups.get(key).include.push(projectIncludeGlob);
+  }
+
+  let index = 0;
+  for (const { options, include } of registrationGroups.values()) {
     index++;
     spinner.updateText(
-      `${index}/${projects.size} - Applying "${project}" configuration...`
+      `${index}/${registrationGroups.size} - Applying plugin configuration...`
     );
     const existingPlugin = nxJson.plugins?.find(
       (plugin): plugin is ExpandedPluginConfiguration =>
@@ -1239,16 +1299,12 @@ function addPluginRegistrations<T>(
         )
     );
 
-    const projectIncludeGlob =
-      projectGraph.nodes[project].data.root === '.'
-        ? '*'
-        : join(projectGraph.nodes[project].data.root, '**/*');
     if (!existingPlugin) {
       nxJson.plugins ??= [];
       const plugin: ExpandedPluginConfiguration = {
         plugin: pluginPath,
         options,
-        include: [projectIncludeGlob],
+        include: [...include],
       };
 
       if (
@@ -1263,22 +1319,24 @@ function addPluginRegistrations<T>(
 
       nxJson.plugins.push(plugin);
     } else if (existingPlugin.include) {
-      if (
-        !existingPlugin.include.some((include) =>
-          minimatch(projectIncludeGlob, include, { dot: true })
-        )
-      ) {
-        existingPlugin.include.push(projectIncludeGlob);
-
+      for (const projectIncludeGlob of include) {
         if (
-          includeCoversAllConfigFiles(
-            existingPlugin.include,
-            existingPlugin.exclude,
-            matchedConfigFiles
+          !existingPlugin.include.some((include) =>
+            minimatch(projectIncludeGlob, include, { dot: true })
           )
         ) {
-          delete existingPlugin.include;
+          existingPlugin.include.push(projectIncludeGlob);
         }
+      }
+
+      if (
+        includeCoversAllConfigFiles(
+          existingPlugin.include,
+          existingPlugin.exclude,
+          matchedConfigFiles
+        )
+      ) {
+        delete existingPlugin.include;
       }
     }
   }
