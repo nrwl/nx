@@ -17,6 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\analyzer\MsbuildAnalyzer.csproj" />
+    <!--
+      The analyzer excludes Roslyn's runtime assets and loads the SDK's copy at
+      startup. Tests call the scanner directly without going through that
+      startup, so they need their own reference.
+    -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
   </ItemGroup>
 
 </Project>

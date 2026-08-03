@@ -44,4 +44,26 @@ public class PluginOptions
     /// The name of the run target. Defaults to "run".
     /// </summary>
     public string RunTargetName { get; set; } = "run";
+
+    /// <summary>
+    /// The name of the target that runs the project's tests split across one
+    /// task per test unit. Null (the default) disables splitting entirely.
+    /// </summary>
+    public string? TestCiTargetName { get; set; }
+
+    /// <summary>
+    /// The name of the target group the split targets are collapsed into.
+    /// </summary>
+    /// <remarks>
+    /// Derived on the TypeScript side from the shared Nx helper, so that the
+    /// naming convention has a single implementation across plugins rather than
+    /// being reimplemented here.
+    /// </remarks>
+    public string? TestCiGroupName { get; set; }
+
+    /// <summary>
+    /// Whether each split task runs one test class or one test method.
+    /// Defaults to <see cref="SplitBy.Class"/>.
+    /// </summary>
+    public SplitBy TestCiSplitBy { get; set; } = SplitBy.Class;
 }
