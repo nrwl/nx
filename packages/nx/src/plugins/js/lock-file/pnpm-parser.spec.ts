@@ -4149,10 +4149,14 @@ snapshots:
         `vendored-lib@file:local_path_modules/vendor/vendored-lib-1.0.0.tgz:`
       );
       // ...and never the spurious, name-stripped duplicate key a v9 tarball used
-      // to emit from findOriginalKeys.
+      // to emit from findOriginalKeys. The duplicate carries no `@file:` marker,
+      // so containment leaves it at the source path.
       expect(result).not.toMatch(
-        /^\s+file:local_path_modules\/vendor\/vendored-lib-1\.0\.0\.tgz:\s*$/m
+        /^\s+file:vendor\/vendored-lib-1\.0\.0\.tgz:\s*$/m
       );
+      // Exactly one packages: key ends in the tarball name, so a duplicate under
+      // either the source or the relocated spelling fails.
+      expect(result.match(/vendored-lib-1\.0\.0\.tgz:\s*$/gm)).toHaveLength(1);
       // The root importer keeps the manifest's app-relative specifier (matching
       // package.json for pnpm's frozen check) with the version relocated to the
       // shipped tarball location (used to resolve it).
