@@ -79,6 +79,29 @@ describe('JsVersionActions', () => {
     );
   });
 
+  it('preserves comments and trailing commas in a valid manifest', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'packages/my-lib/package.json',
+      `{
+  // This comment should be preserved.
+  "name": "my-lib",
+  "version": "1.0.0",
+}
+`
+    );
+    const versionActions = await createVersionActions(tree);
+
+    await versionActions.updateProjectVersion(tree, '1.1.0');
+
+    expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(`{
+  // This comment should be preserved.
+  "name": "my-lib",
+  "version": "1.1.0",
+}
+`);
+  });
+
   it('preserves a dependency range that already contains the new version', async () => {
     const tree = createTreeWithEmptyWorkspace();
     const manifest = `{

@@ -267,10 +267,10 @@ export function createAPI(
 
     // A version actions implementation can opt its manifests out of this final
     // pass when it already preserves their formatting while updating values.
-    const manifestsToPreserveFormatting = new Set(
+    const manifestsToExcludeFromFormatting = new Set(
       Array.from(releaseGraph.projectsToVersionActions.values()).flatMap(
         (versionActions) =>
-          versionActions.preservesManifestFormatting
+          versionActions.excludeManifestsFromFormatting
             ? versionActions.manifestsToUpdate.map(
                 ({ manifestPath }) => manifestPath
               )
@@ -279,7 +279,7 @@ export function createAPI(
     );
     await formatChangedFilesWithPrettierIfAvailable(tree, {
       silent: true,
-      excludePaths: manifestsToPreserveFormatting,
+      excludePaths: manifestsToExcludeFromFormatting,
     });
 
     printAndFlushChanges(tree, !!args.dryRun);

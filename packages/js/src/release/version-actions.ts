@@ -2,6 +2,7 @@ import { getCatalogManager } from '@nx/devkit/internal';
 import {
   detectPackageManager,
   PackageManager,
+  parseJson,
   ProjectGraph,
   readJson,
   Tree,
@@ -42,7 +43,7 @@ let pm: PackageManager | undefined;
 
 export default class JsVersionActions extends VersionActions {
   validManifestFilenames = ['package.json'];
-  preservesManifestFormatting = true;
+  excludeManifestsFromFormatting = true;
 
   async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
     currentVersion: string;
@@ -347,11 +348,7 @@ export default class JsVersionActions extends VersionActions {
     if (updates.length === 0) {
       return;
     }
-    // Preserve the previous updateJson behavior of rejecting malformed
-    // manifests before writing any changes. readJson also retains Nx's support
-    // for comments and trailing commas.
-    readJson(tree, manifestPath);
-    let content = tree.read(manifestPath, 'utf-8');
+    let content = this.readAndValidateManifest(tree, manifestPath);
     const formattingOptions = this.detectFormattingOptions(content);
     for (const update of updates) {
       content = applyEdits(
@@ -360,6 +357,18 @@ export default class JsVersionActions extends VersionActions {
       );
     }
     tree.write(manifestPath, content);
+  }
+
+  private readAndValidateManifest(tree: Tree, manifestPath: string): string {
+    const content = tree.read(manifestPath, 'utf-8');
+    try {
+      // Match readJson's support for comments and trailing commas while
+      // retaining the original text for targeted edits.
+      parseJson(content);
+    } catch (error) {
+      throw new Error(`Cannot parse ${manifestPath}: ${error.message}`);
+    }
+    return content;
   }
 
   private detectFormattingOptions(content: string): FormattingOptions {
