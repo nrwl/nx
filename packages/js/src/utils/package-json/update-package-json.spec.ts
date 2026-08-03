@@ -24,10 +24,14 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 
 jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
   ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
-  createPrunedLockfile: jest.fn(() => ({
-    lockFileContent: 'lock-file-content',
-    pruned: true,
-  })),
+  createPrunedLockfile: jest.fn((packageJson) => {
+    // mimic the real contract: a successful prune strips the manifest's baked
+    // pnpm config, and the caller writes the manifest afterwards
+    jest
+      .requireActual('nx/src/utils/package-json')
+      .stripPrunedLockfilePnpmConfig(packageJson);
+    return { lockFileContent: 'lock-file-content', pruned: true };
+  }),
 }));
 
 jest.mock('nx/src/utils/package-json', () => ({

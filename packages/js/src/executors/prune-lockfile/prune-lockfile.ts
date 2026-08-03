@@ -16,7 +16,6 @@ import {
   type PackageJsonDependencySection,
 } from '@nx/devkit/internal';
 import { getLockFileName, createPrunedLockfile } from '@nx/devkit/internal';
-import { stripPrunedLockfilePnpmConfig } from '@nx/devkit/internal';
 import { writePrunedPnpmInstallSettings } from '@nx/devkit/internal';
 import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
@@ -57,9 +56,6 @@ export default async function pruneLockfileExecutor(
       getLockFileName(packageManager)
     );
     writeFileSync(lockfileOutputPath, lockFileContent);
-    // The pruned lockfile bakes pnpm config into its snapshots, so strip the
-    // manifest's pnpm config to avoid ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
-    stripPrunedLockfilePnpmConfig(packageJson);
     writeFileSync(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)

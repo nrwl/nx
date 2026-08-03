@@ -247,7 +247,6 @@ export {
   emitPrunedPnpmInstallAssets,
   readNxMigrateConfig,
   relocatePrunedLocalPathSpec,
-  stripPrunedLockfilePnpmConfig,
   warnUnshippableLocalPathSpec,
   writePrunedPnpmInstallSettings,
 } from './utils/package-json';

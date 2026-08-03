@@ -29,7 +29,7 @@ jest.mock('../../../utils/package-json', () => ({
   validatePrunedLocalPathClosure: jest.fn(),
 }));
 jest.mock('../../../utils/output', () => ({
-  output: { log: jest.fn(), error: jest.fn() },
+  output: { log: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
 
 describe('createPrunedLockfile', () => {
@@ -82,6 +82,28 @@ describe('createPrunedLockfile', () => {
     });
   });
 
+  it('strips the baked pnpm config from the manifest after a successful prune', () => {
+    packageJson.pnpm = {
+      overrides: { foo: '1.0.0' },
+      ignoredOptionalDependencies: ['fsevents'],
+      packageExtensions: { 'foo@1': { dependencies: { bar: '1.0.0' } } },
+      onlyBuiltDependencies: ['sharp'],
+    };
+
+    const { pruned } = createPrunedLockfile(
+      packageJson,
+      graph,
+      'apps/app',
+      '/root',
+      'pnpm'
+    );
+
+    expect(pruned).toBe(true);
+    // overrides, ignoredOptionalDependencies, and packageExtensions are baked
+    // into the pruned lockfile; build-script approvals are not, so they stay.
+    expect(packageJson.pnpm).toEqual({ onlyBuiltDependencies: ['sharp'] });
+  });
+
   it('skips the pnpm-only steps for npm', () => {
     const result = createPrunedLockfile(
       packageJson,
@@ -117,5 +139,32 @@ describe('createPrunedLockfile', () => {
       lockFileContent: 'ROOT_LOCKFILE',
       pruned: false,
     });
+  });
+
+  it('rolls back the manifest mutations when pruning falls back', () => {
+    packageJson.dependencies = { 'vendored-lib': 'file:../../vendor/lib' };
+    packageJson.pnpm = { overrides: { foo: '1.0.0' } };
+    const original = structuredClone(packageJson);
+    (rewritePrunedLocalPathSpecifiers as jest.Mock).mockImplementationOnce(
+      (pj: PackageJson) => {
+        pj.dependencies['vendored-lib'] = 'file:local_path_modules/vendor/lib';
+      }
+    );
+    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('pruning failed');
+    });
+
+    createPrunedLockfile(packageJson, graph, 'apps/app', '/root', 'pnpm');
+
+    // The root lockfile matches the manifest as authored: the local-path
+    // specifier must not point at unshipped local_path_modules/, and the pnpm
+    // config the root lockfile still declares must be kept.
+    expect(packageJson).toEqual(original);
+    const { output } = require('../../../utils/output');
+    expect(output.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('falls back to the root lockfile'),
+      })
+    );
   });
 });

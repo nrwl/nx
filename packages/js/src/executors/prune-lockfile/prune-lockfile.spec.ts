@@ -29,10 +29,14 @@ jest.mock('@nx/devkit/internal', () => ({
 jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
   ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
   getLockFileName: jest.fn(() => 'package-lock.json'),
-  createPrunedLockfile: jest.fn(() => ({
-    lockFileContent: '{}',
-    pruned: true,
-  })),
+  createPrunedLockfile: jest.fn((packageJson) => {
+    // mimic the real contract: a successful prune strips the manifest's baked
+    // pnpm config, and the executor writes the manifest afterwards
+    jest
+      .requireActual('nx/src/utils/package-json')
+      .stripPrunedLockfilePnpmConfig(packageJson);
+    return { lockFileContent: '{}', pruned: true };
+  }),
 }));
 jest.mock('nx/src/plugins/js/utils/get-workspace-packages-from-graph', () => ({
   ...jest.requireActual(
@@ -471,8 +475,9 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     const generated: PackageJson = JSON.parse(
       readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
     );
-    // The pruned lockfile bakes resolution-time config into its snapshots, so the
-    // manifest must drop it or pnpm aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    // createPrunedLockfile strips the baked resolution-time config from the
+    // manifest; the executor must write the manifest after that, or pnpm
+    // aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
     expect(generated.pnpm).toBeUndefined();
     expect(generated.dependencies).toEqual({ lodash: '^4.17.21' });
   });
@@ -715,9 +720,10 @@ describe('pruneLockfileExecutor - pnpm 11 install settings', () => {
     expect(content).toContain('esbuild: true');
     expect(content).toContain('supportedArchitectures:');
     expect(content).toContain('linux');
-    // ...but resolution-time config and the workspace `packages:` glob are not,
-    // so the standalone output never enters pnpm workspace mode.
-    expect(content).not.toContain('packages:');
+    // ...resolution-time config is not, and the root packages glob is replaced
+    // by an empty list (required by pnpm 9, inert on 10 and 11).
+    expect(content).toContain('packages: []');
+    expect(content).not.toContain('packages/*');
     expect(content).not.toContain('overrides:');
   });
 

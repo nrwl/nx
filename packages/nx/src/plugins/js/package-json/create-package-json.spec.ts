@@ -893,63 +893,6 @@ describe('createPackageJson', () => {
       });
     });
 
-    it('should drop pnpm overrides (root and project-level) when a pruned lockfile is emitted', () => {
-      spies.push(
-        jest
-          .spyOn(fs, 'existsSync')
-          .mockImplementation(
-            (path) =>
-              path === 'libs/lib1/package.json' ||
-              path === 'apps/app1/package.json' ||
-              path === 'package.json'
-          )
-      );
-      spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return {
-                ...rootPackageJson(),
-                pnpm: { overrides: { foo: '1.0.0' } },
-              };
-            }
-            if (path === 'libs/lib1/package.json') {
-              return projectPackageJson();
-            }
-            if (path === 'apps/app1/package.json') {
-              return {
-                ...projectPackageJson(),
-                pnpm: { overrides: { foo: '2.0.0', bar: '1.0.0' } },
-              };
-            }
-          })
-      );
-
-      // The lockfile bakes overrides into its snapshots, so none are declared
-      // here: neither the root nor a project's own.
-      expect(
-        createPackageJson('lib1', graph, { root: '', prunedLockfile: true })
-      ).toEqual({
-        dependencies: {
-          random: '1.0.0',
-          typescript: '^4.8.4',
-        },
-        name: 'other-name',
-        version: '1.2.3',
-      });
-      expect(
-        createPackageJson('app1', graph, { root: '', prunedLockfile: true })
-      ).toEqual({
-        dependencies: {
-          random: '1.0.0',
-          typescript: '^4.8.4',
-        },
-        name: 'other-name',
-        version: '1.2.3',
-      });
-    });
-
     it('should copy pnpm install configuration from root', () => {
       spies.push(
         jest
@@ -1005,71 +948,6 @@ describe('createPackageJson', () => {
           },
           ignoredOptionalDependencies: ['fsevents'],
         },
-      });
-
-      // With a pruned lockfile, ignoredOptionalDependencies is baked into it and
-      // dropped here; build-script and architecture settings still apply.
-      expect(
-        createPackageJson('lib1', graph, { root: '', prunedLockfile: true })
-      ).toEqual({
-        dependencies: {
-          random: '1.0.0',
-          typescript: '^4.8.4',
-        },
-        name: 'other-name',
-        version: '1.2.3',
-        pnpm: {
-          onlyBuiltDependencies: ['sharp', 'bcrypt'],
-          neverBuiltDependencies: ['fsevents'],
-          allowBuilds: { esbuild: true, rollup: false },
-          supportedArchitectures: {
-            os: ['linux'],
-            cpu: ['x64'],
-          },
-        },
-      });
-    });
-
-    it('should drop pnpm packageExtensions when a pruned lockfile is emitted', () => {
-      spies.push(
-        jest
-          .spyOn(fs, 'existsSync')
-          .mockImplementation(
-            (path) =>
-              path === 'libs/lib1/package.json' || path === 'package.json'
-          )
-      );
-      spies.push(
-        jest
-          .spyOn(fileutilsModule, 'readJsonFile')
-          .mockImplementation((path) => {
-            if (path === 'package.json') {
-              return rootPackageJson();
-            }
-            if (path === 'libs/lib1/package.json') {
-              return {
-                ...projectPackageJson(),
-                pnpm: {
-                  packageExtensions: {
-                    'foo@1': { dependencies: { bar: '1.0.0' } },
-                  },
-                },
-              };
-            }
-          })
-      );
-
-      // The lockfile records packageExtensions as packageExtensionsChecksum, so
-      // re-declaring it here would trip ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
-      expect(
-        createPackageJson('lib1', graph, { root: '', prunedLockfile: true })
-      ).toEqual({
-        dependencies: {
-          random: '1.0.0',
-          typescript: '^4.8.4',
-        },
-        name: 'other-name',
-        version: '1.2.3',
       });
     });
 
