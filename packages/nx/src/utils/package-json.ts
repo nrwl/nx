@@ -791,11 +791,16 @@ type PrunedPnpmConfig = {
  * pruned output ships no workspace file. So on pnpm 11+ the build-script
  * approvals (`allowBuilds`) and `supportedArchitectures` the workspace declares
  * would be dropped, and native production deps would never run their build
- * scripts. Carry those from the workspace root, but without a `packages:` key:
- * that flips pnpm into workspace mode, which pnpm 9 rejects outright.
+ * scripts. Carry those from the workspace root, plus an empty `packages` list:
+ * pnpm 9 rejects a pnpm-workspace.yaml without a `packages` field ("packages
+ * field missing or empty"), and `packages: []` is accepted by pnpm 9, 10 and 11
+ * alike without pulling any importer into the install, so the emitted file
+ * installs on any of those majors.
  *
- * The major comes from the build machine's pnpm; the deploy `pnpm install` is
- * assumed to run the same major, which is all that is knowable at build time.
+ * The major comes from the build machine's pnpm, which is all that is knowable
+ * at build time: an output built on pnpm <=10 declares the settings in its
+ * emitted package.json instead, so a pnpm 11+ deploy of that output would not
+ * pick them up.
  *
  * pnpm 10 and below read the same settings from the emitted package.json, so
  * this returns null there, and when the workspace declares none. Resolution-time
@@ -872,7 +877,9 @@ export function getPrunedPnpmInstallSettingsYaml(
     return null;
   }
   const { dump } = require('@zkochan/js-yaml');
-  return dump(settings);
+  // pnpm 9 rejects a pnpm-workspace.yaml without a `packages` field; an empty
+  // list is accepted by pnpm 9-11 without pulling any importer into the install.
+  return dump({ packages: [], ...settings });
 }
 
 /**
