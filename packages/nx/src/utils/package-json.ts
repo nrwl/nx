@@ -754,7 +754,8 @@ function generatePackageManagerFiles(
  * `packageExtensions`) a pruned standalone lockfile already resolves into its
  * snapshots, then drop an emptied `pnpm` block. Re-declaring them next to a
  * pruned lockfile makes pnpm <=10 fail with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
- * Shared by every prune path that ships a manifest beside a generated lockfile.
+ * Called by `createPrunedLockfile` after a successful prune; the root-lockfile
+ * fallback keeps the config, which that lockfile still declares.
  *
  * Counterpart to `stripStandaloneLockfileConfig` in the pnpm lock-file parser,
  * which strips the matching fields from the generated lockfile; keep the two in

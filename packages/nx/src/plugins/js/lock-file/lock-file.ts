@@ -21,6 +21,7 @@ import { output } from '../../../utils/output';
 import {
   PackageJson,
   rewritePrunedLocalPathSpecifiers,
+  stripPrunedLockfilePnpmConfig,
   validatePrunedLocalPathClosure,
 } from '../../../utils/package-json';
 import {
@@ -366,24 +367,29 @@ export function createLockFile(
 
 /**
  * Creates the pruned lockfile for a generate-package-json flow, running the
- * pnpm-specific steps every such flow needs around `createLockFile`: the
- * manifest's `file:`/`link:` local-path specifiers are relocated to their
- * shipped location first (pnpm re-resolves them on a non-frozen install, and
- * the lockfile copies the manifest's form), and the local-path dependency
- * closure is validated afterwards so a shipped `link:` target that requires an
- * unresolvable dependency fails the build instead of the deploy.
+ * steps every such flow needs around `createLockFile`: the manifest's
+ * `file:`/`link:` local-path specifiers are relocated to their shipped location
+ * first (pnpm re-resolves them on a non-frozen install, and the lockfile copies
+ * the manifest's form), the pnpm config the pruned lockfile bakes into its
+ * snapshots is stripped from the manifest afterwards (re-declaring it trips
+ * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH), and the local-path dependency closure is
+ * validated so a shipped `link:` target that requires an unresolvable
+ * dependency fails the build instead of the deploy.
  *
  * `pruned` is false when `createLockFile` fell back to the root lockfile on a
- * pruning error (already logged): the fallback's importer describes the whole
- * workspace, so the closure validation is skipped and the caller must not ship
- * local-path artifacts for it. Pass `pruned` as `includeLocalPathArtifacts` to
+ * pruning error: the fallback's importer describes the whole workspace, so the
+ * manifest mutations are rolled back (the root lockfile matches the manifest as
+ * authored: original local-path specifiers, pnpm config kept), the closure
+ * validation is skipped, and the caller must not ship local-path artifacts for
+ * it. Pass `pruned` as `includeLocalPathArtifacts` to
  * `emitPrunedPnpmInstallAssets`/`writePrunedPnpmInstallSettings`, which carry
  * the remaining install-time pieces (the pnpm 11 settings-only
  * pnpm-workspace.yaml, the patch files, the local-path artifacts, and the
  * pnpm <=10 package.json declarations).
  *
- * Mutates `packageJson` (the specifier relocation), so write or emit the
- * manifest after calling this. Not for bun, which has no lockfile generation.
+ * Mutates `packageJson` (the specifier relocation and the config strip), so
+ * write or emit the manifest after calling this. Not for bun, which has no
+ * lockfile generation.
  */
 export function createPrunedLockfile(
   packageJson: PackageJson,
@@ -392,6 +398,7 @@ export function createPrunedLockfile(
   workspaceRootPath: string = workspaceRoot,
   packageManager: PackageManager = detectPackageManager(workspaceRootPath)
 ): { lockFileContent: string; pruned: boolean } {
+  const originalPackageJson = structuredClone(packageJson);
   if (packageManager === 'pnpm') {
     rewritePrunedLocalPathSpecifiers(
       packageJson,
@@ -406,12 +413,31 @@ export function createPrunedLockfile(
       pruned = false;
     },
   });
-  if (packageManager === 'pnpm' && pruned) {
-    validatePrunedLocalPathClosure(
-      packageJson,
-      workspaceRootPath,
-      lockFileContent
-    );
+  if (pruned) {
+    stripPrunedLockfilePnpmConfig(packageJson);
+    if (packageManager === 'pnpm') {
+      validatePrunedLocalPathClosure(
+        packageJson,
+        workspaceRootPath,
+        lockFileContent
+      );
+    }
+  } else {
+    // The root lockfile matches the manifest as authored, so undo the
+    // specifier relocation and keep the pnpm config it still declares.
+    for (const key of Object.keys(packageJson)) {
+      delete (packageJson as unknown as Record<string, unknown>)[key];
+    }
+    Object.assign(packageJson, originalPackageJson);
+    // createLockFile's own error output is suppressed under a postinstall, so
+    // this is the only signal naming what the fallback output is missing.
+    output.warn({
+      title: 'The pruned output falls back to the root lockfile',
+      bodyLines: [
+        'The emitted package.json keeps its original local-path specifiers and pnpm config, and no local-path artifacts are shipped for it.',
+        'A `--frozen-lockfile` install of this output will fail; run a regular install instead.',
+      ],
+    });
   }
   return { lockFileContent, pruned };
 }
