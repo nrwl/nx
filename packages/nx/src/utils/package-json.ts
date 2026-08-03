@@ -916,12 +916,18 @@ function getPnpmMajorOrWarn(workspaceRootPath: string): number | null {
  * Keeps only the `allowBuilds` entries whose package is present in the pruned
  * lockfile. Build-script approvals for packages the prune dropped are inert, so
  * dropping them keeps the emitted pnpm-workspace.yaml scoped to the deployment.
+ * When the lockfile's package names cannot be extracted, the approvals are
+ * carried verbatim: an approval for an absent package is inert, a dropped one
+ * silently skips a needed build script.
  */
 function filterAllowBuildsToLockfile(
   allowBuilds: Record<string, boolean>,
   prunedLockfileContent: string
 ): Record<string, boolean> {
   const present = getPnpmLockfilePackageNames(prunedLockfileContent);
+  if (present === null) {
+    return allowBuilds;
+  }
   const filtered: Record<string, boolean> = {};
   for (const [name, allowed] of Object.entries(allowBuilds)) {
     if (present.has(name)) {
@@ -963,15 +969,23 @@ function parsePnpmLockfileYaml(content: string): object | null {
 /**
  * Extracts the package names from a pnpm v9 lockfile's `packages` keys
  * (`name@version`, `@scope/name@version`, optionally with a `(peer@ver)` suffix).
+ * Returns null when the names cannot be extracted: unparseable content, or a
+ * pre-v9 lockfile, whose `/name@version` (v6) and `/name/version` (v5) keys this
+ * parse would mangle. Callers treat null as "carry approvals verbatim", the
+ * inert direction, rather than scoping to names that match nothing.
  */
-function getPnpmLockfilePackageNames(lockfileContent: string): Set<string> {
-  const names = new Set<string>();
+function getPnpmLockfilePackageNames(
+  lockfileContent: string
+): Set<string> | null {
   const parsed = parsePnpmLockfileYaml(lockfileContent) as {
+    lockfileVersion?: string | number;
     packages?: Record<string, unknown>;
   } | null;
-  if (!parsed) {
-    return names;
+  const lockfileVersion = Number.parseFloat(String(parsed?.lockfileVersion));
+  if (!parsed || Number.isNaN(lockfileVersion) || lockfileVersion < 9) {
+    return null;
   }
+  const names = new Set<string>();
   for (const key of Object.keys(parsed.packages ?? {})) {
     // Skip index 0 so a scoped key's leading `@` is not read as the separator.
     const versionSeparator = key.indexOf('@', 1);
@@ -1161,7 +1175,9 @@ type PrunedPnpmPackageJsonBuildSettings = Pick<
  * package.json `pnpm` field (pnpm 9), and pnpm 10.26+ uses the `allowBuilds` map,
  * so read both root sources and fold a root `allowBuilds` map into the
  * on/never-built lists pnpm <=10 understands. Approvals are scoped to the
- * packages the pruned lockfile keeps; one for a dropped package is inert.
+ * packages the pruned lockfile keeps; one for a dropped package is inert. When
+ * the lockfile's names cannot be extracted (a pre-v9 lockfile, unparseable
+ * content), they are carried verbatim instead of scoped to nothing.
  *
  * Counterpart to the pnpm 11 `getPrunedPnpmInstallSettingsYaml`; keep the two in
  * sync when pnpm changes where build approvals are read from.
