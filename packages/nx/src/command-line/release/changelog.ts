@@ -501,6 +501,14 @@ export function createAPI(
 
       if (releaseGroup.projectsRelationship === 'independent') {
         for (const project of projectNodes) {
+          if (
+            !projectsVersionData[project.name] ||
+            (projectsVersionData[project.name].newVersion === null &&
+              !projectsVersionData[project.name].dockerVersion)
+          ) {
+            continue;
+          }
+
           let changes: ChangelogChange[] | null = null;
 
           if (releaseGroup.resolvedVersionPlans) {
