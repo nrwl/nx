@@ -75,7 +75,8 @@ export default changeExecutorNameToNewName;
 
 ## Return values
 
-A migration can return nothing at all. When it has something to report, return an object:
+A migration can return nothing at all. When it has something to report, return
+a [`MigrationReturnObject`](/docs/reference/devkit/MigrationReturnObject):
 
 ```ts
 export default async function update(tree: Tree) {
@@ -93,11 +94,11 @@ export default async function update(tree: Tree) {
 end-of-run summary. Returning a plain `string[]` is shorthand for this field on
 its own.
 
-`agentContext` only reaches an AI agent. Under `--agentic`, Nx hands these
-strings to the agent that runs a paired prompt or reviews what the generator
-changed. When `nx migrate` itself runs inside an agent, they go to that agent
-instead. Anything else drops them, so duplicate what a person needs into
-`nextSteps`.
+`agentContext` only reaches an AI agent. With the agentic flow on, Nx hands
+these strings to the agent that runs a paired prompt or reviews what the
+generator changed. When `nx migrate` itself runs inside an agent, they go to
+that agent instead. Anything else drops them, so duplicate what a person needs
+into `nextSteps`.
 
 ### Skip the AI step
 
