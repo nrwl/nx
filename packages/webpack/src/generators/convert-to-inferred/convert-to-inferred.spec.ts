@@ -836,6 +836,35 @@ describe('convert-to-inferred', () => {
     });
   });
 
+  it('centralizes shared build config without changing the effective target (equivalence)', async () => {
+    // Two projects share the same non-inferred build residual
+    // (configurations/defaultConfiguration), so it must be hoisted once into
+    // targetDefaults and still resolve identically for each project.
+    const app1 = createProject(tree, { appName: 'app1', appRoot: 'apps/app1' });
+    writeWebpackConfig(tree, app1.root);
+    const app2 = createProject(tree, { appName: 'app2', appRoot: 'apps/app2' });
+    writeWebpackConfig(tree, app2.root);
+
+    await convertToInferred(tree, { skipFormat: true });
+
+    const targetDefault = readNxJson(tree).targetDefaults?.build ?? {};
+    // the shared residual is centralized exactly once
+    expect(targetDefault.defaultConfiguration).toBe('production');
+    expect(targetDefault.configurations).toEqual({
+      development: {},
+      production: {},
+    });
+    for (const name of ['app1', 'app2']) {
+      const projectTarget =
+        readProjectConfiguration(tree, name).targets?.build ?? {};
+      // not duplicated per project
+      expect(projectTarget.defaultConfiguration).toBeUndefined();
+      // effective (merged) config still resolves it
+      const effective = { ...targetDefault, ...projectTarget };
+      expect(effective.defaultConfiguration).toBe('production');
+    }
+  });
+
   describe('all projects', () => {
     it('should migrate all projects using the webpack executors', async () => {
       const project1 = createProject(tree);

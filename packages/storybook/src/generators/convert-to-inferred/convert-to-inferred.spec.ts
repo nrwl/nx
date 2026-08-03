@@ -559,28 +559,7 @@ describe('Storybook - Convert To Inferred', () => {
         {
           "build-storybook": {
             "options": {
-              "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
-            },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
-          },
-          "storybook": {
-            "configurations": {
-              "ci": {
-                "args": [
-                  "--quiet",
-                ],
-              },
-            },
-            "options": {
-              "config-dir": ".storybook",
-              "port": 4400,
             },
           },
         }
@@ -591,28 +570,7 @@ describe('Storybook - Convert To Inferred', () => {
         {
           "build-storybook": {
             "options": {
-              "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/project2",
-            },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
-          },
-          "storybook": {
-            "configurations": {
-              "ci": {
-                "args": [
-                  "--quiet",
-                ],
-              },
-            },
-            "options": {
-              "config-dir": ".storybook",
-              "port": 4400,
             },
           },
         }

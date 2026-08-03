@@ -1089,6 +1089,40 @@ describe('Jest - Convert Executors To Plugin', () => {
   });
 
   describe('all projects', () => {
+    it('centralizes shared test config without changing the effective target (equivalence)', async () => {
+      // Two projects share a non-inferred option (codeCoverage -> coverage), so
+      // it must be hoisted once into targetDefaults and still resolve
+      // identically for each project.
+      createTestProject(
+        tree,
+        { appName: 'app1', appRoot: 'apps/app1' },
+        { codeCoverage: true }
+      );
+      createTestProject(
+        tree,
+        { appName: 'app2', appRoot: 'apps/app2' },
+        { codeCoverage: true }
+      );
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const targetDefault = readNxJson(tree).targetDefaults?.test ?? {};
+      // present exactly once, centrally
+      expect(targetDefault.options?.coverage).toBe(true);
+      for (const name of ['app1', 'app2']) {
+        const projectTarget =
+          readProjectConfiguration(tree, name).targets?.test ?? {};
+        // not duplicated per project
+        expect(projectTarget.options?.coverage).toBeUndefined();
+        // but the effective (merged) config still carries it
+        const effectiveOptions = {
+          ...(targetDefault.options ?? {}),
+          ...(projectTarget.options ?? {}),
+        };
+        expect(effectiveOptions.coverage).toBe(true);
+      }
+    });
+
     it('should migrate multiple projects using the jest executors', async () => {
       const project1 = createTestProject(tree, undefined, {
         tsConfig: `${defaultTestProjectOptions.appRoot}/tsconfig.spec.json`,

@@ -473,14 +473,15 @@ describe('Vite - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { skipFormat: true });
 
       // ASSERT
-      // project.json modifications
+      // project.json modifications: config shared across the migrated `bundle`
+      // projects is now centralized, so the project target is a pure deviation.
       const updatedProject = readProjectConfiguration(tree, project.name);
-      expect(updatedProject.targets).toMatchInlineSnapshot(`
+      expect(updatedProject.targets).toMatchInlineSnapshot(`{}`);
+      // the shared config lives in nx.json targetDefaults instead
+      expect(readNxJson(tree).targetDefaults?.bundle).toMatchInlineSnapshot(`
         {
-          "bundle": {
-            "options": {
-              "config": "./vite.config.ts",
-            },
+          "options": {
+            "config": "./vite.config.ts",
           },
         }
       `);
