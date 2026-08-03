@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
-import { applyEdits, modify } from 'jsonc-parser';
+import { applyEdits, FormattingOptions, modify } from 'jsonc-parser';
 import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
@@ -42,6 +42,7 @@ let pm: PackageManager | undefined;
 
 export default class JsVersionActions extends VersionActions {
   validManifestFilenames = ['package.json'];
+  preservesManifestFormatting = true;
 
   async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
     currentVersion: string;
@@ -346,14 +347,31 @@ export default class JsVersionActions extends VersionActions {
     if (updates.length === 0) {
       return;
     }
+    // Preserve the previous updateJson behavior of rejecting malformed
+    // manifests before writing any changes. readJson also retains Nx's support
+    // for comments and trailing commas.
+    readJson(tree, manifestPath);
     let content = tree.read(manifestPath, 'utf-8');
+    const formattingOptions = this.detectFormattingOptions(content);
     for (const update of updates) {
       content = applyEdits(
         content,
-        modify(content, update.path, update.value, {})
+        modify(content, update.path, update.value, { formattingOptions })
       );
     }
     tree.write(manifestPath, content);
+  }
+
+  private detectFormattingOptions(content: string): FormattingOptions {
+    const indentation = content.match(/^[\t ]+(?=")/m)?.[0] ?? '  ';
+    const insertSpaces = !indentation.includes('\t');
+
+    return {
+      eol: content.includes('\r\n') ? '\r\n' : '\n',
+      insertFinalNewline: content.endsWith('\n'),
+      insertSpaces,
+      tabSize: insertSpaces ? indentation.length : 1,
+    };
   }
 
   // NOTE: The TODOs were carried over from the original implementation, they are not yet implemented

@@ -1,6 +1,7 @@
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { isUsingPrettier } from '../../utils/is-using-prettier';
+import { normalizePath } from '../../utils/path';
 import type { Tree } from '../tree';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 
@@ -17,6 +18,10 @@ export async function formatChangedFilesWithPrettierIfAvailable(
   tree: Tree,
   options?: {
     silent?: boolean;
+    /**
+     * Tree-relative paths to leave untouched. Both platform-native and
+     * forward-slash separators are accepted.
+     */
     excludePaths?: Set<string>;
   }
 ): Promise<void> {
@@ -24,12 +29,16 @@ export async function formatChangedFilesWithPrettierIfAvailable(
     return;
   }
 
+  const excludedPaths = options?.excludePaths
+    ? new Set(Array.from(options.excludePaths, normalizePath))
+    : undefined;
   const files = new Set(
     tree
       .listChanges()
       .filter(
         (file) =>
-          file.type !== 'DELETE' && !options?.excludePaths?.has(file.path)
+          file.type !== 'DELETE' &&
+          !excludedPaths?.has(normalizePath(file.path))
       )
   );
 

@@ -1,7 +1,6 @@
 import * as pc from 'picocolors';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { basename } from 'node:path';
 import {
   NxReleaseConfiguration,
   NxReleaseVersionConfiguration,
@@ -266,21 +265,21 @@ export function createAPI(
       throw err;
     }
 
-    /**
-     * Format other changed files, but leave package manifests to their version
-     * actions so existing indentation and array layout remain untouched.
-     */
-    const packageJsonManifestsToPreserve = new Set(
+    // A version actions implementation can opt its manifests out of this final
+    // pass when it already preserves their formatting while updating values.
+    const manifestsToPreserveFormatting = new Set(
       Array.from(releaseGraph.projectsToVersionActions.values()).flatMap(
         (versionActions) =>
-          versionActions.manifestsToUpdate
-            .map(({ manifestPath }) => manifestPath)
-            .filter((manifestPath) => basename(manifestPath) === 'package.json')
+          versionActions.preservesManifestFormatting
+            ? versionActions.manifestsToUpdate.map(
+                ({ manifestPath }) => manifestPath
+              )
+            : []
       )
     );
     await formatChangedFilesWithPrettierIfAvailable(tree, {
       silent: true,
-      excludePaths: packageJsonManifestsToPreserve,
+      excludePaths: manifestsToPreserveFormatting,
     });
 
     printAndFlushChanges(tree, !!args.dryRun);

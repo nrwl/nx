@@ -147,7 +147,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         "name": "@proj/{project-name}",
@@ -160,7 +159,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
@@ -329,7 +327,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         "name": "@proj/{project-name}",
@@ -342,7 +339,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
@@ -512,7 +508,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         "name": "@proj/{project-name}",
@@ -525,7 +520,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
@@ -685,7 +679,6 @@ xdescribe('nx release circular dependencies', () => {
         "exports": {
 
         }
-        +
 
 
         Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
@@ -815,7 +808,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         "name": "@proj/{project-name}",
@@ -828,7 +820,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.
@@ -1000,7 +991,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "1.0.1"
         }
         }
-        +
 
 
         "name": "@proj/{project-name}",
@@ -1013,7 +1003,6 @@ xdescribe('nx release circular dependencies', () => {
         +     "@proj/{project-name}": "2.0.0"
         }
         }
-        +
 
 
         Skipped lock file update because {PACKAGE_MANAGER_WORKSPACES} are not enabled.

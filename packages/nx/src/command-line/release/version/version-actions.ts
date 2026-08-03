@@ -188,6 +188,15 @@ export abstract class VersionActions {
    */
   abstract validManifestFilenames: string[] | null;
   /**
+   * Whether this implementation preserves the formatting of manifests it
+   * updates. When true, those manifests are excluded from the final Prettier
+   * pass performed by Nx Release.
+   *
+   * Custom implementations must opt in explicitly. This defaults to false so
+   * their existing formatting behavior does not change.
+   */
+  preservesManifestFormatting = false;
+  /**
    * The interpolated manifest paths to update, if applicable based on the user's configuration, when new
    * versions and dependencies are determined. If no manifest files should be updated based on the user's
    * configuration, this will be an empty array.

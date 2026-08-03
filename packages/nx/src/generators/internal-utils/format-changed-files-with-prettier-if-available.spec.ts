@@ -1,37 +1,61 @@
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Tree } from '../tree';
-import { formatChangedFilesWithPrettierIfAvailable } from './format-changed-files-with-prettier-if-available';
+import {
+  formatChangedFilesWithPrettierIfAvailable,
+  formatFilesWithPrettierIfAvailable,
+} from './format-changed-files-with-prettier-if-available';
 
 describe('formatChangedFilesWithPrettierIfAvailable', () => {
-  it('does not format excluded files', async () => {
-    const originalSkipFormat = process.env.NX_SKIP_FORMAT;
+  let originalSkipFormat: string | undefined;
+  let root: string;
+
+  beforeEach(() => {
+    originalSkipFormat = process.env.NX_SKIP_FORMAT;
     delete process.env.NX_SKIP_FORMAT;
+    root = mkdtempSync(join(tmpdir(), 'nx-prettier-'));
+    mkdirSync(join(root, 'packages/my-lib'), { recursive: true });
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ prettier: {} }));
+  });
+
+  afterEach(() => {
+    if (originalSkipFormat === undefined) {
+      delete process.env.NX_SKIP_FORMAT;
+    } else {
+      process.env.NX_SKIP_FORMAT = originalSkipFormat;
+    }
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('does not format excluded nested paths with platform-native separators', async () => {
     const write = jest.fn();
-    const listChanges = jest.fn(() => [
-      {
-        path: 'package.json',
-        type: 'UPDATE' as const,
-        content: Buffer.from('{"version":"1.1.0"}'),
-      },
-    ]);
     const tree = {
-      root: process.cwd(),
-      listChanges,
+      root,
+      listChanges: jest.fn(() => [
+        {
+          path: 'packages/my-lib/package.json',
+          type: 'UPDATE' as const,
+          content: Buffer.from('{"version":"1.1.0"}'),
+        },
+      ]),
       write,
     } as unknown as Tree;
 
-    try {
-      await formatChangedFilesWithPrettierIfAvailable(tree, {
-        excludePaths: new Set(['package.json']),
-      });
+    await formatChangedFilesWithPrettierIfAvailable(tree);
+    expect(write).toHaveBeenCalledTimes(1);
 
-      expect(listChanges).toHaveBeenCalledTimes(1);
-      expect(write).not.toHaveBeenCalled();
-    } finally {
-      if (originalSkipFormat === undefined) {
-        delete process.env.NX_SKIP_FORMAT;
-      } else {
-        process.env.NX_SKIP_FORMAT = originalSkipFormat;
-      }
-    }
+    write.mockClear();
+    await formatChangedFilesWithPrettierIfAvailable(tree, {
+      excludePaths: new Set(['packages\\my-lib\\package.json']),
+    });
+
+    expect(write).not.toHaveBeenCalled();
+  });
+
+  it('returns immediately when there are no files to format', async () => {
+    await expect(formatFilesWithPrettierIfAvailable([], root)).resolves.toEqual(
+      new Map()
+    );
   });
 });
