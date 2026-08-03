@@ -851,15 +851,12 @@ describe('executeMigrations', () => {
       prompt: `prompts/${name}.md`,
     });
 
-    const run = (
-      migrations: Array<Record<string, unknown>>,
-      shouldCreateCommits = true
-    ) =>
+    const run = (migrations: Array<Record<string, unknown>>) =>
       executeMigrations(
         tmpRoot,
         migrations as Parameters<typeof executeMigrations>[1],
         false,
-        shouldCreateCommits,
+        /* shouldCreateCommits: */ true,
         'chore(repo): ',
         true,
         AGENTIC_ENABLED,

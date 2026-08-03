@@ -96,9 +96,9 @@ its own.
 
 `agentContext` only reaches an AI agent. With the agentic flow on, Nx hands
 these strings to the agent that runs a paired prompt or reviews what the
-generator changed. When `nx migrate` itself runs inside an agent, they go to
-that agent instead. Anything else drops them, so duplicate what a person needs
-into `nextSteps`.
+generator changed, but only when that step actually runs. When `nx migrate`
+itself runs inside an agent, they go to that agent instead. Anything else drops
+them, so duplicate what a person needs into `nextSteps`.
 
 ### Skip the AI step
 

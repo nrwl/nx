@@ -120,8 +120,8 @@ export interface MigrationsJsonEntry {
   /**
    * Path to a markdown doc describing the migration, relative to the
    * `migrations.json` and resolved like `implementation`/`factory`. Always
-   * supplementary; never stands in for them. Under `--run-migrations
-   * --agentic` the resolved path is passed to the agent as extra context.
+   * supplementary; never stands in for them. Both runners pass the resolved
+   * path along with the prompt or validation step it belongs to.
    */
   documentation?: string;
 }
