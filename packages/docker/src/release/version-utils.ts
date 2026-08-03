@@ -24,7 +24,7 @@ export async function handleDockerVersion(
   finalConfigForProject: FinalConfigForProject,
   dockerVersionScheme?: string,
   dockerVersion?: string,
-  versionActionsVersion?: string
+  versionActionsVersion?: string | null
 ) {
   // If the full docker image reference is provided, use it directly
   const nxDockerImageRefEnvOverride =
@@ -48,6 +48,19 @@ export async function handleDockerVersion(
                 availableVersionSchemes,
                 projectGraphNode.name
               );
+      if (
+        availableVersionSchemes[versionScheme].includes(
+          '{versionActionsVersion}'
+        ) &&
+        versionActionsVersion == null
+      ) {
+        return {
+          newVersion: null,
+          logs: [
+            `Skipped ${projectGraphNode.name}, because no new version was resolved for this project.`,
+          ],
+        };
+      }
       newVersion = calculateNewVersion(
         projectGraphNode.name,
         versionScheme,
