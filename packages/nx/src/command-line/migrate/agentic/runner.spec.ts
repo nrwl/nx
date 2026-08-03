@@ -6,8 +6,9 @@ import { join } from 'path';
 jest.mock('child_process', () => ({
   spawn: jest.fn(),
   execSync: jest.fn(),
-  // `promisify(exec)` in transitive imports needs a function to wrap.
+  // `promisify(exec)` and `promisify(execFile)` in transitive imports need a function to wrap.
   exec: jest.fn(),
+  execFile: jest.fn(),
 }));
 jest.mock('enquirer', () => ({
   prompt: jest.fn(),
