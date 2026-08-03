@@ -182,7 +182,11 @@ describe('collectMigrationScope (Phase 0)', () => {
     // 2 projects share target name `test`, 1 uses a custom target name `check`
     addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'test' });
     addExecutorProject(ctx, { name: 'app2', root: 'app2', targetName: 'test' });
-    addExecutorProject(ctx, { name: 'app3', root: 'app3', targetName: 'check' });
+    addExecutorProject(ctx, {
+      name: 'app3',
+      root: 'app3',
+      targetName: 'check',
+    });
 
     const scope = collectMigrationScope(
       ctx.tree,
@@ -200,7 +204,10 @@ describe('collectMigrationScope (Phase 0)', () => {
     );
 
     // targetsToMigrate: target -> set of projects
-    expect([...scope.targetsToMigrate.keys()].sort()).toEqual(['check', 'test']);
+    expect([...scope.targetsToMigrate.keys()].sort()).toEqual([
+      'check',
+      'test',
+    ]);
     expect([...scope.targetsToMigrate.get('test')].sort()).toEqual([
       'app1',
       'app2',
@@ -230,9 +237,21 @@ describe('collectMigrationScope (Phase 0)', () => {
 
   it('collapses distinct option sets to one when every project shares a target name', () => {
     ctx = setupFixture('collect-scope-uniform');
-    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'build' });
-    addExecutorProject(ctx, { name: 'app2', root: 'app2', targetName: 'build' });
-    addExecutorProject(ctx, { name: 'app3', root: 'app3', targetName: 'build' });
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'app1',
+      targetName: 'build',
+    });
+    addExecutorProject(ctx, {
+      name: 'app2',
+      root: 'app2',
+      targetName: 'build',
+    });
+    addExecutorProject(ctx, {
+      name: 'app3',
+      root: 'app3',
+      targetName: 'build',
+    });
 
     const scope = collectMigrationScope(
       ctx.tree,
@@ -254,7 +273,11 @@ describe('collectMigrationScope (Phase 0)', () => {
 
   it('throws (not warns) when a specific project cannot be migrated', () => {
     ctx = setupFixture('collect-scope-throw');
-    addExecutorProject(ctx, { name: 'app1', root: 'app1', targetName: 'build' });
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'app1',
+      targetName: 'build',
+    });
 
     expect(() =>
       collectMigrationScope(

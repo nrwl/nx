@@ -316,8 +316,10 @@ export async function computeResidualByProject<T>(
 
   for (const executorScope of scope.executorScopes) {
     const targetDefaultsForExecutor = structuredClone(
-      readTargetDefaultsForExecutor(executorScope.executor, nxJson.targetDefaults) ??
-        {}
+      readTargetDefaultsForExecutor(
+        executorScope.executor,
+        nxJson.targetDefaults
+      ) ?? {}
     );
 
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
@@ -507,7 +509,10 @@ function subtractCommon(
       continue;
     }
     const d = deviation as Record<string, unknown>;
-    if (key in d && isDeepEqual(d[key], (common as Record<string, unknown>)[key])) {
+    if (
+      key in d &&
+      isDeepEqual(d[key], (common as Record<string, unknown>)[key])
+    ) {
       delete d[key];
     }
   }
@@ -604,8 +609,7 @@ function hoistCommonAndWrite<T>(
     // project's config onto sibling inferred targets) when at least two
     // projects share the same target. A single migrated project keeps its full
     // residual in project.json.
-    const common =
-      residuals.length >= 2 ? computeStrictCommon(residuals) : {};
+    const common = residuals.length >= 2 ? computeStrictCommon(residuals) : {};
     commonByTarget.set(targetName, common);
   }
 
@@ -867,7 +871,9 @@ export async function inferOncePerOptionSet<T>(
           if (!inferredByRoot.has(root)) {
             inferredByRoot.set(root, new Map());
           }
-          inferredByRoot.get(root).set(targetName, structuredClone(inferredTarget));
+          inferredByRoot
+            .get(root)
+            .set(targetName, structuredClone(inferredTarget));
         }
       }
     }

@@ -46,11 +46,7 @@ export function defaultInferredTarget(
     command: 'acme-build',
     options: { cwd: root },
     cache: true,
-    inputs: [
-      'default',
-      '^default',
-      { externalDependencies: ['acme-tool'] },
-    ],
+    inputs: ['default', '^default', { externalDependencies: ['acme-tool'] }],
     outputs: ['{projectRoot}/dist'],
   };
 }
@@ -126,13 +122,21 @@ export interface FixtureContext {
   projectGraph: ProjectGraph;
 }
 
-export function setupFixture(label = 'executor-to-plugin-migrator'): FixtureContext {
+export function setupFixture(
+  label = 'executor-to-plugin-migrator'
+): FixtureContext {
   const fs = new TempFs(label);
   const tree = createTreeWithEmptyWorkspace();
   tree.root = fs.tempDir;
 
-  tree.write('package.json', JSON.stringify({ name: 'workspace', version: '0.0.1' }));
-  fs.createFileSync('package.json', JSON.stringify({ name: 'workspace', version: '0.0.1' }));
+  tree.write(
+    'package.json',
+    JSON.stringify({ name: 'workspace', version: '0.0.1' })
+  );
+  fs.createFileSync(
+    'package.json',
+    JSON.stringify({ name: 'workspace', version: '0.0.1' })
+  );
 
   const projectGraph: ProjectGraph = {
     nodes: {},
