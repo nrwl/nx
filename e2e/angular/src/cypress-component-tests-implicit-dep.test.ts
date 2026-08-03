@@ -8,7 +8,8 @@ import {
   CypressComponentTestsSetup,
 } from './cypress-component-tests-setup';
 
-describe('Angular Cypress Component Tests - Implicit Dep', () => {
+// TODO(leosvelperez): Re-enable once https://github.com/cypress-io/cypress/issues/34461 is fixed
+xdescribe('Angular Cypress Component Tests - Implicit Dep', () => {
   let setup: CypressComponentTestsSetup;
 
   beforeAll(async () => {

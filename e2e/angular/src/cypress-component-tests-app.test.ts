@@ -5,7 +5,8 @@ import {
   CypressComponentTestsSetup,
 } from './cypress-component-tests-setup';
 
-describe('Angular Cypress Component Tests - App', () => {
+// TODO(leosvelperez): Re-enable once https://github.com/cypress-io/cypress/issues/34461 is fixed
+xdescribe('Angular Cypress Component Tests - App', () => {
   let setup: CypressComponentTestsSetup;
 
   beforeAll(async () => {

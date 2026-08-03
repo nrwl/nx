@@ -269,6 +269,46 @@ describe('Cypress Component Testing Configuration', () => {
       }).resolves;
     });
 
+    it('should throw when no build target can be found', async () => {
+      await generateTestApplication(tree, {
+        directory: 'fancy-app',
+        zoneless: false,
+        skipFormat: true,
+      });
+      await generateTestLibrary(tree, {
+        directory: 'fancy-lib',
+        buildable: true,
+        skipFormat: true,
+      });
+
+      // no edge between the lib and the app, so there is no app build target to borrow
+      projectGraph = {
+        nodes: {
+          'fancy-app': {
+            name: 'fancy-app',
+            type: 'app',
+            data: { ...readProjectConfiguration(tree, 'fancy-app') } as any,
+          },
+          'fancy-lib': {
+            name: 'fancy-lib',
+            type: 'lib',
+            data: { ...readProjectConfiguration(tree, 'fancy-lib') } as any,
+          },
+        },
+        dependencies: {},
+      };
+
+      await expect(
+        cypressComponentConfiguration(tree, {
+          project: 'fancy-lib',
+          generateTests: false,
+          skipFormat: true,
+        })
+      ).rejects.toThrow(
+        'Unable to find a valid build configuration. Try passing in a target for an Angular app (e.g. --build-target=<project>:<target>[:<configuration>]).'
+      );
+    });
+
     it('should use own project config', async () => {
       await generateTestApplication(tree, {
         directory: 'fancy-app',
