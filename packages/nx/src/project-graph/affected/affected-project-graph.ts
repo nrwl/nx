@@ -18,7 +18,8 @@ export async function filterAffected(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration = readNxJson(),
-  packageJson: any = readPackageJson()
+  packageJson: any = readPackageJson(),
+  projectDeletionAffectsAllProjects = true
 ): Promise<ProjectGraph> {
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
@@ -36,7 +37,8 @@ export async function filterAffected(
       graph.nodes,
       nxJson,
       packageJson,
-      graph
+      graph,
+      projectDeletionAffectsAllProjects
     );
     performance.mark(locator.name + ':end');
     performance.measure(
