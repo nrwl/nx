@@ -41,6 +41,8 @@ export interface LibraryGeneratorSchema {
 export interface NormalizedLibraryGeneratorOptions
   extends LibraryGeneratorSchema {
   name: string;
+  /** `normalizeOptions` always resolves this, so it is no longer optional. */
+  linter: LinterType;
   projectNames: ProjectNameAndRootOptions['names'];
   fileName: string;
   projectRoot: string;

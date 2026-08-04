@@ -43,6 +43,31 @@ describe('addPluginsToOxlintConfig', () => {
     });
   });
 
+  // A nested config replaces the root, so plugins added to one without
+  // `extends` are enabled under rules the root never reaches.
+  it('should warn when updating a project config that does not extend the root', () => {
+    writeJson(tree, 'apps/my-app/.oxlintrc.json', { plugins: ['vue'] });
+
+    addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
+
+    expect(readJson(tree, 'apps/my-app/.oxlintrc.json').plugins).toEqual([
+      'vue',
+      'react',
+    ]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('no "extends"'));
+  });
+
+  it('should stay quiet when the project config already extends the root', () => {
+    writeJson(tree, 'apps/my-app/.oxlintrc.json', {
+      extends: ['../../.oxlintrc.json'],
+      plugins: ['vue'],
+    });
+
+    addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
+
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('should merge into an existing project config', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react', 'react-perf']);
