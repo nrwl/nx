@@ -217,4 +217,43 @@ describe('startInBackground', () => {
     expect((error as any).daemonPermissionError).toBeUndefined();
     expect((error as any).internalDaemonError).toBe(true);
   });
+
+  // The same staleness without a reset in between. When the process json is
+  // absent for the whole poll the resolver returns null every tick, so
+  // tryConnect never runs and onConnectError never fires — nothing overwrites
+  // the previous round's errno and nothing clears it. The user is then told to
+  // delete a socket that does not exist, for an attempt that never happened.
+  // The other half of the same rule: an errno the caller's probe produced does
+  // belong to this attempt, and the poll cannot reproduce it once the daemon
+  // that refused us has unlinked its process json. Without it a sandbox
+  // refusing connects degrades to a generic startup failure.
+  it('should report the errno its caller probed with when the poll produces none', async () => {
+    (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+    (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
+
+    const error = await daemonClient
+      .startInBackground({
+        error: Object.assign(new Error('connect EPERM'), { code: 'EPERM' }),
+        socketPath: refusedSocket,
+      })
+      .catch((e) => e);
+
+    expect((error as any).daemonPermissionError).toBe(true);
+    expect(error.message).toContain(refusedSocket);
+  });
+
+  it('should not report a refusal the current attempt never produced', async () => {
+    refuse('EACCES');
+    await daemonClient.startInBackground().catch((e) => e);
+
+    // No reset, and the poll never reports an errno: with the process json
+    // absent the resolver returns null every tick, so tryConnect is not called
+    // and onConnectError does not fire. Nothing overwrites the previous value.
+    (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
+    (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+    const error = await daemonClient.startInBackground().catch((e) => e);
+
+    expect((error as any).daemonPermissionError).toBeUndefined();
+    expect((error as any).internalDaemonError).toBe(true);
+  });
 });
