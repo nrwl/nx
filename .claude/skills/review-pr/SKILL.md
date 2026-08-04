@@ -130,15 +130,22 @@ docker exec "$CONTAINER" bash -lc '
 # cwd must sit under a mise.toml or the shims report "No version is set for shim: npm".
 # No `mise trust` needed: the image sets MISE_YES=1, which auto-trusts the PR's mise.toml on first
 # use. Without it, a PR that edits mise.toml fails with "Config files ... are not trusted".
+# The PATH export is required, exactly as in every other docker exec here: `bash -lc` does not put
+# the mise shims on PATH by itself, so without it `pnpm` is not found and this reports FAILED for a
+# reason that has nothing to do with the PR.
 docker exec "$CONTAINER" bash -lc '
+  export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"
   cd /work/nx
   mise install >/dev/null 2>&1                    # installs any tool version the PR bumped
-  if   pnpm install --frozen-lockfile >/dev/null 2>&1; then
+  if   pnpm install --frozen-lockfile >/tmp/install.log 2>&1; then
     echo "workspace install OK"
-  elif pnpm install >/dev/null 2>&1; then
+  elif pnpm install >>/tmp/install.log 2>&1; then
     echo "workspace install OK — but only WITHOUT --frozen-lockfile: the lockfile is out of sync with package.json (a review signal; note it)"
   else
+    # Print the cause. A bare "FAILED" sends you diagnosing the PR when the fault is usually the
+    # environment, and the log is inside a container that Step 9 destroys.
     echo "workspace install FAILED — agents cannot run tests or the repo eslint"
+    tail -20 /tmp/install.log
   fi
 '
 ```
