@@ -120,7 +120,6 @@ import {
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
-  getDaemonSocketDir,
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
@@ -173,13 +172,20 @@ export class DaemonClient {
   private currentSpinner: DelayedSpinner | null = null;
 
   /**
-   * The errno of the most recent failed connect attempt, from either probe.
-   * `startInBackground` classifies from it: both scenarios
-   * `daemonPermissionException` documents reach the client through a probe, not
-   * through `setUpConnection`, so without this the errno is gone by the time
-   * anything can report it.
+   * The most recent failed connect attempt, from either probe: the errno and
+   * the path it was made against. `startInBackground` classifies from it —
+   * both scenarios `daemonPermissionException` documents reach the client
+   * through a probe, not through `setUpConnection`, so without this the errno
+   * is gone by the time anything can report it.
+   *
+   * The path is carried rather than recomputed at report time. Recomputing it
+   * reads the daemon process json, which the daemon unlinks as it shuts down,
+   * so on the failure path this describes it is routinely gone — and
+   * `getSocketPath()` throws when it is.
    */
-  private lastConnectError: NodeJS.ErrnoException | undefined;
+  private lastConnectRefusal:
+    | { error: NodeJS.ErrnoException; socketPath: string }
+    | undefined;
 
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
@@ -279,6 +285,9 @@ export class DaemonClient {
     this.currentResolve = null;
     this.currentReject = null;
     this._enabled = undefined;
+    // A refusal describes one startup attempt. Left behind, it would misdiagnose
+    // the next command in this process as a permission problem.
+    this.lastConnectRefusal = undefined;
 
     // Clean up file watcher and project graph listener connections
     this.fileWatcherMessenger?.close();
@@ -991,7 +1000,7 @@ export class DaemonClient {
         }
         const socket = connect(socketPath, () => {
           socket.destroy();
-          this.lastConnectError = undefined;
+          this.lastConnectRefusal = undefined;
           resolve(true);
         });
         socket.once('error', (err) => {
@@ -999,7 +1008,7 @@ export class DaemonClient {
           // daemon is started, so it is where the errno for "the socket is
           // there but refuses us" is produced, and it is the only thing that
           // separates that from "no daemon yet".
-          this.lastConnectError = err;
+          this.lastConnectRefusal = { error: err, socketPath };
           resolve(false);
         });
       } catch (err) {
@@ -1202,11 +1211,16 @@ export class DaemonClient {
       {
         maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
         delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
-        onConnectError: (error) => {
-          this.lastConnectError = error;
-          // A refusal will not become an acceptance. Polling the full 60s
-          // budget only delays the same answer, and the message the user
-          // eventually gets is worse for the wait.
+        onConnectError: (error, socketPath) => {
+          this.lastConnectRefusal = { error, socketPath };
+          // A refusal is not expected to become an acceptance, so polling the
+          // full 60s budget only delays the same answer and the message the
+          // user eventually gets is worse for the wait. Not an absolute:
+          // `server.ts` binds and only then chmods the socket to 0600, so under
+          // a umask that strips owner write there is a microsecond window where
+          // a same-user connect sees EACCES. Losing that race costs a specific
+          // error instead of a successful connect on a retry, which is a better
+          // trade than the 60s hang it replaces.
           return isPermissionErrno(error);
         },
       }
@@ -1395,15 +1409,21 @@ export class DaemonClient {
       );
       return backgroundProcess.pid;
     } else {
-      const refusal = this.lastConnectError;
-      if (refusal && isPermissionErrno(refusal)) {
+      const refusal = this.lastConnectRefusal;
+      if (refusal && isPermissionErrno(refusal.error)) {
         // The flagship case this PR ships a KB page for: a sandbox refusing
         // unix-socket connects, or a socket owned by another user. Reported
         // here rather than as a generic startup failure, so it degrades
         // without disabling the daemon until `nx reset`.
+        //
+        // Both operands come from the refusal itself. Anything that resolves a
+        // path here instead would run after a daemon that failed to bind has
+        // already unlinked its process json, and `getSocketPath()` throws in
+        // that case — replacing this diagnosis with the internalDaemonError it
+        // exists to avoid.
         throw daemonPermissionException(
-          this.getSocketPath() ?? getDaemonSocketDir(),
-          refusal.message
+          refusal.socketPath,
+          refusal.error.message
         );
       }
       throw daemonProcessException(
@@ -1456,6 +1476,16 @@ function nxJsonIsNotPresent() {
 }
 
 /**
+ * EACCES and EPERM are the two errnos that mean the OS refused us rather than
+ * that nothing was listening. They need opposite remedies — a socket owned by
+ * someone else versus a sandbox refusing the connect syscall — but they share
+ * the property that retrying cannot change the answer.
+ */
+export function isPermissionErrno(error: NodeJS.ErrnoException): boolean {
+  return error?.code === 'EACCES' || error?.code === 'EPERM';
+}
+
+/**
  * The operating system refused the connection. Most often the socket belongs to
  * another user, which is the guarantee the owner-only socket directory buys —
  * but a sandbox that denies unix-socket connects produces the same errno, so the
@@ -1469,16 +1499,6 @@ function nxJsonIsNotPresent() {
  * belongs to *our* daemon; the process holding this socket is someone else's, so
  * quoting it would describe an unrelated run.
  */
-/**
- * EACCES and EPERM are the two errnos that mean the OS refused us rather than
- * that nothing was listening. They need opposite remedies — a socket owned by
- * someone else versus a sandbox refusing the connect syscall — but they share
- * the property that retrying cannot change the answer.
- */
-export function isPermissionErrno(error: NodeJS.ErrnoException): boolean {
-  return error?.code === 'EACCES' || error?.code === 'EPERM';
-}
-
 export function daemonPermissionException(socketPath: string, cause: string) {
   const error = new Error(
     [

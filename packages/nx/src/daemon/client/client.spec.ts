@@ -1,24 +1,45 @@
 import { rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-// Redirect the daemon log so both states — present and missing — are reachable.
-// Unique per run so parallel workers cannot collide.
+// Redirect the daemon log and its directory so both states — present and
+// missing — are reachable, and so startInBackground creates nothing in the
+// workspace. Unique per run so parallel workers cannot collide.
 jest.mock('../tmp-dir', () => {
   const actual = jest.requireActual('../tmp-dir');
   const { join: joinPath } = require('node:path');
   const { mkdtempSync } = require('node:fs');
   const { tmpdir: osTmpDir } = require('node:os');
+  const daemonDir = mkdtempSync(joinPath(osTmpDir(), 'nx-spec-daemon-'));
   return {
     ...actual,
-    DAEMON_OUTPUT_LOG_FILE: joinPath(
-      mkdtempSync(joinPath(osTmpDir(), 'nx-spec-daemon-')),
-      'daemon.log'
-    ),
+    DAEMON_DIR_FOR_CURRENT_WORKSPACE: daemonDir,
+    DAEMON_OUTPUT_LOG_FILE: joinPath(daemonDir, 'daemon.log'),
   };
 });
 
+jest.mock('child_process', () => ({
+  ...jest.requireActual('child_process'),
+  spawn: jest.fn(() => ({ pid: 4242, unref: jest.fn() })),
+}));
+
+jest.mock('../../utils/wait-for-socket-connection', () => ({
+  waitForSocketConnection: jest.fn(),
+}));
+
+jest.mock('../cache', () => ({
+  ...jest.requireActual('../cache'),
+  readDaemonProcessJsonCache: jest.fn(),
+  getDaemonProcessIdSync: jest.fn(() => undefined),
+}));
+
+import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
+import { readDaemonProcessJsonCache } from '../cache';
 import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
-import { daemonPermissionException, daemonProcessException } from './client';
+import {
+  daemonClient,
+  daemonPermissionException,
+  daemonProcessException,
+} from './client';
 
 // Both suites share the mocked log path, so the directory is torn down once at
 // the end rather than by whichever suite finishes first.
@@ -107,5 +128,93 @@ describe('daemonPermissionException', () => {
 
     expect(error.message).not.toContain('Messages from the log');
     expect(error.message).not.toContain('something went wrong in the daemon');
+  });
+});
+
+// The constructors above were the only thing covered, which is how a call site
+// that throws before it can report shipped: the branch, the errno it reads and
+// the path it names are all here.
+describe('startInBackground', () => {
+  const refusedSocket = '/tmp/.nx/1001/sockets/abc123/d.sock';
+
+  const refuse = (code: string) =>
+    (waitForSocketConnection as jest.Mock).mockImplementation(
+      async (_socketPath, options) => {
+        options?.onConnectError?.(
+          Object.assign(new Error(`connect ${code} ${refusedSocket}`), {
+            code,
+          }),
+          refusedSocket
+        );
+        return null;
+      }
+    );
+
+  beforeEach(() => {
+    daemonClient.reset();
+    (readDaemonProcessJsonCache as jest.Mock).mockReturnValue({
+      socketPath: refusedSocket,
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    rmSync(logFile, { force: true });
+  });
+
+  it.each(['EACCES', 'EPERM'])(
+    'should report a %s refusal as a permission problem rather than an internal daemon failure',
+    async (code: string) => {
+      refuse(code);
+
+      const error = await daemonClient.startInBackground().catch((e) => e);
+
+      // internalDaemonError is what tells the user to file an issue and
+      // disables the daemon until `nx reset`, which outlives the stale socket
+      // or the sandbox rule that caused this.
+      expect((error as any).daemonPermissionError).toBe(true);
+      expect((error as any).internalDaemonError).toBeUndefined();
+      expect(error.message).toContain(code);
+      expect(error.message).toContain(refusedSocket);
+    }
+  );
+
+  // The flagship case. A daemon that cannot bind shuts down, and performShutdown
+  // unlinks the process json on its way out — so by the time this is reported
+  // there is no socket path left to look up, and anything that tries throws
+  // daemonProcessException from inside the argument list, replacing the
+  // diagnosis with the one it exists to avoid.
+  it('should still name the socket when the daemon removed its process json', async () => {
+    refuse('EACCES');
+    (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
+
+    const error = await daemonClient.startInBackground().catch((e) => e);
+
+    expect((error as any).daemonPermissionError).toBe(true);
+    expect((error as any).internalDaemonError).toBeUndefined();
+    expect(error.message).toContain(refusedSocket);
+  });
+
+  it('should leave an ordinary startup failure classified as internal', async () => {
+    refuse('ENOENT');
+
+    const error = await daemonClient.startInBackground().catch((e) => e);
+
+    expect((error as any).internalDaemonError).toBe(true);
+    expect((error as any).daemonPermissionError).toBeUndefined();
+  });
+
+  // A refusal describes one startup attempt. Retained across a reset it would
+  // misdiagnose the next command in the same process.
+  it('should not carry a refusal from an earlier attempt into a later one', async () => {
+    refuse('EACCES');
+    await daemonClient.startInBackground().catch((e) => e);
+
+    daemonClient.reset();
+    (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+    const error = await daemonClient.startInBackground().catch((e) => e);
+
+    expect((error as any).daemonPermissionError).toBeUndefined();
+    expect((error as any).internalDaemonError).toBe(true);
   });
 });
