@@ -11,6 +11,7 @@ import {
 import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  isPeerWritable,
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isSafeSharedRoot,
@@ -200,6 +201,48 @@ describe('ensureOwnedPrivateDir', () => {
       }
     );
 
+    // An existing container is judged, never modified. Applying the mode first
+    // and deciding trust after means a process with CAP_FOWNER — root's default
+    // in Docker and most CI images — widens a peer's directory before refusing
+    // it, and an operator who deliberately tightened this root has it undone by
+    // essentially every nx process, since the native binding loader reaches
+    // here too.
+    posixOnly.each([0o700, 0o755, 0o1700, 0o750])(
+      'should judge an existing container at mode %s without modifying it',
+      (mode: number) => {
+        const dir = join(base, `existing-${mode.toString(8)}`);
+        mkdirSync(dir, { mode });
+        chmodSync(dir, mode); // mkdir's mode is subject to the umask
+
+        expect(ensureSafeSharedRoot(dir)).not.toBeNull();
+        expect(lstatSync(dir).mode & 0o7777).toBe(mode);
+      }
+    );
+
+    posixOnly(
+      'should not modify an existing container it goes on to refuse',
+      () => {
+        // The uid clause is what refuses a peer's root, and we cannot chown
+        // without privilege — so move our own uid instead, which is the same
+        // comparison from `isSafeSharedRoot`'s point of view.
+        const dir = join(base, 'peer-owned');
+        mkdirSync(dir, { mode: 0o700 });
+        chmodSync(dir, 0o700);
+        // Restored explicitly: this spec has no global restore, and a leaked
+        // uid makes every later ownership check fail.
+        const uid = jest
+          .spyOn(process, 'getuid')
+          .mockReturnValue(process.getuid!() + 1);
+
+        try {
+          expect(ensureSafeSharedRoot(dir)).toBeNull();
+          expect(lstatSync(dir).mode & 0o7777).toBe(0o700);
+        } finally {
+          uid.mockRestore();
+        }
+      }
+    );
+
     // The chmod is `1777`, so a non-directory reached here is handed group and
     // other write. Without this, dropping chmodRealDirectory's isDirectory()
     // check survives the suite.
@@ -224,6 +267,33 @@ describe('ensureOwnedPrivateDir', () => {
       chmodSync(dir, 0o702);
 
       expect(isSafeSharedRoot(dir)).toBeNull();
+    });
+  });
+
+  describe('isPeerWritable', () => {
+    // The alarming refusal message is gated on this, so it has to answer about
+    // the directory rather than the platform: os.tmpdir() is a world-writable
+    // /tmp on Linux but a private 0700 /var/folders/... on macOS.
+    posixOnly.each([
+      [0o1777, true],
+      [0o777, true],
+      [0o770, true],
+      [0o702, true],
+      [0o700, false],
+      [0o755, false],
+      [0o750, false],
+    ])('should report mode %s as peer-writable=%s', (mode, expected) => {
+      const dir = join(base, `mode-${mode.toString(8)}`);
+      mkdirSync(dir, { mode });
+      chmodSync(dir, mode);
+
+      expect(isPeerWritable(dir)).toBe(expected);
+    });
+
+    it('should not claim a path it cannot inspect is peer-writable', () => {
+      // This gates the claim that another local user can execute code, so an
+      // unreadable path must not be reported as shared.
+      expect(isPeerWritable(join(base, 'missing'))).toBe(false);
     });
   });
 
