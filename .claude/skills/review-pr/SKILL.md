@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(docker build *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -46,10 +46,23 @@ mkdir -p "$TRIAGE_DIR"
 uname -s                                                              # Linux → runsc REQUIRED; Darwin → Docker VM is the sandbox
 docker info >/dev/null 2>&1 && echo "docker OK" || echo "docker MISSING"
 docker info --format '{{range $k,$v := .Runtimes}}{{$k}} {{end}}' | grep -q runsc && echo "runsc OK" || echo "runsc ABSENT"
-test -n "$(docker images -q "$SANDBOX_IMAGE" 2>/dev/null)" && echo "image OK" || echo "image MISSING"
-```
 
-Use `docker images -q` (empty output ⇒ absent), **not** `docker image inspect`, to probe for the image. On Docker Desktop with Resource Saver, `docker image inspect` returns "No such image" for several seconds after the VM wakes even though the image is present — observed failing 5+ calls in a row while `docker images` and `docker run` both succeed. Probing with `inspect` there would send you to rebuild a ~5 GB image that already exists.
+# Bring the image up to date. Do NOT probe whether it exists and skip on a hit: an image
+# built from ANY older revision passes an existence check identically, so a missing
+# capability is invisible and shows up only as a review that is slower or quietly weaker.
+# Observed: an image predating the pnpm-store warming went unnoticed for two weeks and cost
+# ~25 min of package downloads on every review.
+#
+# Just build. Docker's layer cache makes this the right default rather than an expensive one:
+#   - nothing changed        -> ~0.6 s, every layer cached (measured)
+#   - Dockerfile/mise.toml   -> rebuilds from the changed instruction
+#   - pnpm-lock.yaml moved   -> re-runs `pnpm fetch`, which is the point: it keeps the warm
+#                               store matching the lockfile reviews actually install from
+# Concurrent runs are safe with no lock of our own — review-prs drives up to five parallel
+# `/review-pr` panes, and BuildKit deduplicates identical concurrent builds (measured: a 20 s
+# step ran ONCE across 5 simultaneous builds, all finishing in ~21 s rather than 100 s).
+bash "$(git rev-parse --show-toplevel)/tools/review-sandbox/build-image.sh"
+```
 
 **Set `RUNTIME_FLAG` explicitly, and fail closed.** Treat it as unset (`RUNTIME_FLAG=UNSET`) until `uname -s` has actually returned, then assign exactly once:
 
@@ -59,9 +72,9 @@ Use `docker images -q` (empty output ⇒ absent), **not** `docker image inspect`
 
 Never run `docker run` while `RUNTIME_FLAG` is still `UNSET`. This matters because an _unset_ variable expands to nothing, which is byte-identical to the correct macOS value — so a skipped or blocked `uname` would silently start the container under `runc` on Linux, running untrusted PR code with no gVisor and no error anywhere. The failure mode of this variable is "no isolation, reported as success", so it gets an explicit sentinel rather than a default.
 
-Fail fast with a clear message if: `gh` isn't authed; Docker is down; on Linux `runsc` is absent; or the image is missing. For the last three, point the user at the **`setup-review-sandbox`** skill (it installs Docker + gVisor + builds the image) — do not try to build it here.
+Fail fast with a clear message if: `gh` isn't authed; Docker is down; on Linux `runsc` is absent; or the image build fails. For the last three, point the user at the **`setup-review-sandbox`** skill — it installs Docker + gVisor, which the build above deliberately does not.
 
-(If `docker images -q` still comes back empty right after the daemon wakes, give it a few seconds and re-probe once before concluding the image is gone — the daemon can lag briefly on wake. Only treat a persistently empty result as truly MISSING.)
+The build prints one line on the fast path (`sandbox image up to date`), so a slow first run after a lockfile change is expected and self-explanatory rather than a mystery.
 
 ## Step 2: Fetch the PR metadata
 
