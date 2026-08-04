@@ -16,6 +16,7 @@ import {
   sharedRootRemedy,
 } from '../utils/owned-private-dir';
 import { logger } from '../utils/logger';
+import { isSandbox } from '../utils/is-sandbox';
 
 jest.mock('../utils/owned-private-dir', () => ({
   ensureOwnedPrivateDir: jest.fn(() => true),
@@ -23,6 +24,10 @@ jest.mock('../utils/owned-private-dir', () => ({
   sharedRootRemedy: jest.fn(() => undefined),
   isPeerWritable: jest.fn(() => true),
   getUserSegment: jest.fn(() => '501'),
+}));
+
+jest.mock('../utils/is-sandbox', () => ({
+  isSandbox: jest.fn(() => false),
 }));
 
 jest.mock('../utils/logger', () => ({
@@ -71,6 +76,7 @@ describe('socket directories', () => {
     (ensureOwnedPrivateDir as jest.Mock).mockReturnValue(true);
     (sharedRootRemedy as jest.Mock).mockReturnValue(undefined);
     (isPeerWritable as jest.Mock).mockReturnValue(true);
+    (isSandbox as jest.Mock).mockReturnValue(false);
     delete process.env.NX_SOCKET_DIR;
     delete process.env.NX_DAEMON_SOCKET_DIR;
     setPlatform(originalPlatform);
@@ -185,7 +191,27 @@ describe('socket directories', () => {
       expect.stringContaining(DAEMON_DIR_FOR_CURRENT_WORKSPACE)
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('allowlists')
+      expect.stringContaining('--verbose')
+    );
+    // Outside a sandbox the warning says nothing about one. This path is
+    // reached far more often for ordinary reasons — a peer owning the shared
+    // container, a read-only home — and naming a sandbox unprompted is the
+    // mistake the socket guidance was corrected for once already.
+    expect(logger.warn).not.toHaveBeenCalledWith(
+      expect.stringMatching(/sandbox|allowlist/i)
+    );
+  });
+
+  it('adds the allowlist note only when a sandbox is actually detected', () => {
+    setPlatform('linux');
+    (isSandbox as jest.Mock).mockReturnValue(true);
+    denyEveryDefaultRoot();
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    // The workspace is outside the roots a team would have allowlisted, so a
+    // sandboxed user needs to know their existing entry no longer covers it.
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/allowlist/i)
     );
   });
 

@@ -31,6 +31,7 @@ import {
   NX_TMP_DIR,
   NX_USER_TMP_DIR,
 } from '../utils/nx-tmp-dir';
+import { isSandbox } from '../utils/is-sandbox';
 import { workspaceRoot } from '../utils/workspace-root';
 
 /**
@@ -491,19 +492,26 @@ function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
     }. Falling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
     cause
   );
-  // Warned, not just logged verbosely. A tier-1 to tier-2 demotion is silent
-  // on purpose — nothing is broken and both roots are in the allowlist the docs
-  // tell teams to commit. The workspace is different in kind: it is *outside*
-  // that allowlist, so a sandbox that has not been configured lands here and
-  // then fails on a path the user was never told to allow. It is also where the
-  // 95-character socket budget is most likely to trip, since the path grows
-  // with checkout depth.
+  // Warned, not just logged verbosely. A demotion between the default roots is
+  // silent on purpose — nothing is broken. Landing in the workspace is
+  // different in kind: the path grows with checkout depth, so this is where the
+  // 95-character socket budget is most likely to trip, and anything that
+  // allowed Nx's usual roots by path no longer covers where the sockets went.
+  //
+  // The allowlist line is gated on `isSandbox()`. This path is reached far more
+  // often for ordinary reasons — a peer owning the shared container, a
+  // read-only home — and naming a sandbox unprompted is what the socket
+  // guidance was corrected for once already. Gated, it reaches the people it
+  // describes and nobody else.
   const remedy = sharedRootRemedy(NX_TMP_DIR);
   logger.warn(
     [
       `Nx could not use any of its usual socket directories and fell back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
       remedy,
-      'Sandbox allowlists covering only /tmp/.nx or ~/.nx will not cover this path. Run with --verbose to see why the others were rejected.',
+      isSandbox()
+        ? `A sandbox allowlist covering only ${NX_TMP_DIR} or ${NX_HOME_TMP_DIR} does not cover this path.`
+        : undefined,
+      'Run with --verbose to see why the others were rejected.',
     ]
       .filter(Boolean)
       .join(' ')
