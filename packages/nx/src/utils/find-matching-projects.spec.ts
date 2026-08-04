@@ -3,7 +3,7 @@ import {
   getMatchingStringsWithCache,
 } from './find-matching-projects';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 
 describe('findMatchingProjects', () => {
   let projectGraph: Record<string, ProjectGraphProjectNode> = {
@@ -352,20 +352,28 @@ describe.each([
     pattern: 'libs/*',
   },
 ])('getMatchingStringsWithCache', ({ items, pattern }) => {
-  it(`should be faster than using minimatch directly multiple times (${pattern})`, () => {
+  it(`should be faster than using picomatch directly multiple times (${pattern})`, () => {
     const iterations = 100;
     const cacheTime = time(
       () => getMatchingStringsWithCache(pattern, items),
       iterations
     );
-    const directTime = time(() => minimatch.match(items, pattern), iterations);
-    // Using minimatch directly is slower than using the cache.
+    const directTime = time(() => {
+      // don't pass the matcher to filter directly - the index argument lands
+      // in picomatch's returnObject param and every item matches
+      const isMatch = picomatch(pattern, { dot: true });
+      items.filter((item) => isMatch(item));
+    }, iterations);
+    // Using picomatch directly is slower than using the cache.
     expect(directTime / cacheTime).toBeGreaterThan(1);
   });
 
-  it(`should be comparable to using minimatch a single time (${pattern})`, () => {
+  it(`should be comparable to using picomatch a single time (${pattern})`, () => {
     const cacheTime = time(() => getMatchingStringsWithCache(pattern, items));
-    const directTime = time(() => minimatch.match(items, pattern));
+    const directTime = time(() => {
+      const isMatch = picomatch(pattern, { dot: true });
+      items.filter((item) => isMatch(item));
+    });
     // We are dealing with really small file sets here, with such a small
     // difference it time, the system variablility can make this flaky for
     // smaller values. If we are within 1ms, we are good.

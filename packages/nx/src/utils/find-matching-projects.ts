@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
 import { isGlobPattern } from './globs';
 
@@ -278,20 +278,19 @@ function isValidPatternType(type: string): type is ProjectPatternType {
 
 export const getMatchingStringsWithCache = (() => {
   // Map< Pattern, Map< Item, Result >>
-  const minimatchCache = new Map<string, Map<string, boolean>>();
+  const matchCache = new Map<string, Map<string, boolean>>();
   const regexCache = new Map<string, RegExp>();
   return (pattern: string, items: string[]) => {
-    if (!minimatchCache.has(pattern)) {
-      minimatchCache.set(pattern, new Map());
+    if (!matchCache.has(pattern)) {
+      matchCache.set(pattern, new Map());
     }
-    const patternCache = minimatchCache.get(pattern)!;
+    const patternCache = matchCache.get(pattern)!;
     if (!regexCache.has(pattern)) {
-      const regex = minimatch.makeRe(pattern, { dot: true });
-      if (regex) {
-        regexCache.set(pattern, regex);
-      } else {
+      // minimatch.makeRe returned false for empty patterns; picomatch throws
+      if (!pattern) {
         throw new Error('Invalid glob pattern ' + pattern);
       }
+      regexCache.set(pattern, picomatch.makeRe(pattern, { dot: true }));
     }
     const matcher = regexCache.get(pattern);
     return items.filter((item) => {

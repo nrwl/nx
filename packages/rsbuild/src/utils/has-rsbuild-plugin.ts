@@ -1,5 +1,5 @@
 import { type Tree, readNxJson } from '@nx/devkit';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 
 export function hasRsbuildPlugin(tree: Tree, projectPath?: string) {
   const nxJson = readNxJson(tree);
@@ -14,14 +14,14 @@ export function hasRsbuildPlugin(tree: Tree, projectPath?: string) {
     }
     if (p.exclude) {
       for (const exclude of p.exclude) {
-        if (minimatch(projectPath, exclude)) {
+        if (picomatch.isMatch(projectPath, exclude)) {
           return false;
         }
       }
     }
     if (p.include) {
       for (const include of p.include) {
-        if (minimatch(projectPath, include)) {
+        if (picomatch.isMatch(projectPath, include)) {
           return true;
         }
       }

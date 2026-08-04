@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { execCommand } from './exec-command';
 
 /**
@@ -132,11 +132,11 @@ export class RepoGitTags {
         // Check if any glob pattern matches next
         if (!alwaysCheckAllBranches) {
           alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => {
-            const r = minimatch.makeRe(pattern, { dot: true });
-            if (!r) {
+            // minimatch.makeRe returned false for empty patterns; picomatch throws
+            if (!pattern) {
               return false;
             }
-            return r.test(currentBranch);
+            return picomatch.makeRe(pattern, { dot: true }).test(currentBranch);
           });
         }
       }

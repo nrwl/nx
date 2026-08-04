@@ -18,7 +18,7 @@ import {
   targetSourceMapKey,
 } from './source-maps';
 
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { isGlobPattern } from '../../../utils/globs';
 
 export { validateProject } from './target-normalization';
@@ -197,7 +197,7 @@ export function mergeProjectConfigurationIntoRootMap(
         // this will map atomized targets to the glob pattern same as it does for targetDefaults
         matchingTargets = Object.keys(
           updatedProjectConfiguration.targets
-        ).filter((key) => minimatch(key, targetName));
+        ).filter((key) => picomatch.isMatch(key, targetName));
       }
       // If no matching targets were found, we can assume that the target name is not (meant to be) a glob pattern
       if (!matchingTargets.length) {

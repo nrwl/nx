@@ -24,7 +24,7 @@ import {
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { join, dirname, isAbsolute, relative } from 'path';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import type { RsbuildConfig } from '@rsbuild/core';
 export interface RsbuildPluginOptions {
   buildTargetName?: string;
@@ -369,7 +369,7 @@ async function filterRsbuildConfigs(
         }
         const tsConfigFiles =
           siblingFiles.filter((p) =>
-            minimatch(p, 'tsconfig*{.json,.*.json}')
+            picomatch.isMatch(p, 'tsconfig*{.json,.*.json}')
           ) ?? [];
         return { configFile, projectRoot, tsConfigFiles };
       } catch (e) {

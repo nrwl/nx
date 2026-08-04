@@ -11,7 +11,7 @@ import {
   getProjectSourceRoot,
   getProjectType,
 } from '@nx/js/internal';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { basename, join } from 'path';
 import {
   findExportDeclarationsForJsx,
@@ -98,7 +98,8 @@ export async function createAllStories(
     // Ignore private files starting with "_".
     if (basename(path).startsWith('_')) return;
 
-    if (schema.ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
+    if (schema.ignorePaths?.some((pattern) => picomatch.isMatch(path, pattern)))
+      return;
 
     if (
       (path.endsWith('.tsx') && !path.endsWith('.spec.tsx')) ||

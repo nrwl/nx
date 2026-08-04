@@ -10,7 +10,7 @@ import {
 } from 'node:fs';
 import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenger';
 import * as http from 'node:http';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { URL } from 'node:url';
 import {
   basename,
@@ -1469,15 +1469,15 @@ function getExpandedWorkspaceRoots(
     const matchingFile = allWorkspaceFiles.find((t) => t.file === pattern);
     if (
       matchingFile &&
-      !negativeWRPatterns.some((p) => minimatch(matchingFile.file, p))
+      !negativeWRPatterns.some((p) => picomatch.isMatch(matchingFile.file, p))
     ) {
       workspaceRootsExpanded.push(matchingFile.file);
     } else {
       allWorkspaceFiles
         .filter(
           (f) =>
-            minimatch(f.file, pattern) &&
-            !negativeWRPatterns.some((p) => minimatch(f.file, p))
+            picomatch.isMatch(f.file, pattern) &&
+            !negativeWRPatterns.some((p) => picomatch.isMatch(f.file, p))
         )
         .forEach((f) => {
           workspaceRootsExpanded.push(f.file);

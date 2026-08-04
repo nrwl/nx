@@ -8,7 +8,8 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
+import { expandGlobPatternBraces } from '../utils/globs';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { HashInputs, NxWorkspaceFilesExternals } from '../native';
@@ -493,7 +494,7 @@ export function filterUsingGlobPatterns(
   const filesetWithExpandedProjectRoot = patterns
     .map((f) => f.replace('{projectRoot}', root))
     .map((r) => {
-      // handling root level projects that create './' pattern that doesn't work with minimatch
+      // normalize './'-prefixed patterns from root level projects
       if (r.startsWith('./')) return r.substring(2);
       if (r.startsWith('!./')) return '!' + r.substring(3);
       return r;
@@ -513,6 +514,15 @@ export function filterUsingGlobPatterns(
     return files;
   }
 
+  // expand braces so `x/{**/*.ts,**/*.tsx}` matches `x/index.ts` (see
+  // expandGlobPatternBraces), and compile each pattern once
+  const positiveMatchers = positive.map((p) =>
+    picomatch(expandGlobPatternBraces(p))
+  );
+  const negativeMatchers = negative.map((p) =>
+    picomatch(expandGlobPatternBraces(p.substring(1)))
+  );
+
   return files.filter((f) => {
     let matchedPositive = false;
     if (
@@ -521,11 +531,11 @@ export function filterUsingGlobPatterns(
     ) {
       matchedPositive = true;
     } else {
-      matchedPositive = positive.some((pattern) => minimatch(f.file, pattern));
+      matchedPositive = positiveMatchers.some((m) => m(f.file));
     }
 
     if (!matchedPositive) return false;
 
-    return negative.every((pattern) => minimatch(f.file, pattern));
+    return negativeMatchers.every((m) => !m(f.file));
   });
 }

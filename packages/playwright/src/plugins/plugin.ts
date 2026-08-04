@@ -24,7 +24,7 @@ import {
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import { walkTsconfigExtendsChain } from '@nx/js/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, parse, relative, resolve, sep } from 'node:path';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
@@ -417,7 +417,7 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
   } else {
     return (path: string) => {
       try {
-        return minimatch(path, pattern);
+        return picomatch.isMatch(path, pattern);
       } catch (e) {
         throw new Error(`Error matching ${path} with ${pattern}: ${e.message}`);
       }

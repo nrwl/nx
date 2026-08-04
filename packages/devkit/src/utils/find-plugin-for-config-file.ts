@@ -5,7 +5,8 @@ import {
   CreateNodes,
 } from 'nx/src/devkit-exports';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
-import { minimatch } from 'minimatch';
+import { splitGlobPatterns } from './glob-patterns';
+import picomatch from 'picomatch';
 export async function findPluginForConfigFile(
   tree: Tree,
   pluginName: string,
@@ -40,7 +41,10 @@ export async function findPluginForConfigFile(
       // the plugin's createNodes glob) before the registration's include/exclude
       // filters are applied.
       const matchingConfigFile =
-        !pluginGlob || minimatch(pathToConfigFile, pluginGlob, { dot: true })
+        !pluginGlob ||
+        picomatch.isMatch(pathToConfigFile, splitGlobPatterns(pluginGlob), {
+          dot: true,
+        })
           ? findMatchingConfigFiles(
               [pathToConfigFile],
               plugin.include,
