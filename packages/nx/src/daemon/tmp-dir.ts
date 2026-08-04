@@ -57,7 +57,7 @@ export type SocketDirRefusal =
  *
  * Three reasons, and they are not interchangeable. A directory other users can
  * reach is a security problem; the OS temp root is the user's own but holds
- * everything else on the machine, and Nx deletes the socket directory
+ * everything else that uses it, and Nx deletes the socket directory
  * recursively; an Nx container or cache root is refused because Nx manages what
  * lives there. Telling someone their own `0700` directory lets a local attacker
  * execute code would be false, which is why the reason is derived from the
@@ -72,7 +72,14 @@ export class InvalidSocketDirConfigured extends Error {
       reason === 'shared-with-other-users'
         ? `The configured Nx socket directory ${dir} is shared with the other users on this machine. Nx locks the socket directory to a single user, so pointing it at a shared one both shuts every other user out of it and — until it does — lets another local user connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
         : reason === 'os-temp-root'
-          ? `The configured Nx socket directory ${dir} is the operating system temp directory. Nx deletes the socket directory and everything in it when the daemon stops, which here would take the temp files of everything else on the machine with it. Nx already puts its sockets in a subdirectory of this root by default. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
+          ? // Two claims deliberately absent. "the temp files of everything else
+            // on the machine" is false here: this reason is chosen when the
+            // root is *not* peer-writable, so what it holds is this account's
+            // own. And "Nx already puts its sockets in a subdirectory of this
+            // root" is false on POSIX, where the default root is a literal
+            // /tmp/.nx and this one is os.tmpdir() — which is exactly when the
+            // two differ.
+            `The configured Nx socket directory ${dir} is the operating system temp directory. Nx deletes the socket directory and everything in it when the daemon stops, which here would take everything else using this temp directory with it. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
           : `The configured Nx socket directory ${dir} is a directory Nx keeps its own runtime state in, and Nx creates and removes socket directories beneath it. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
     );
     this.name = 'InvalidSocketDirConfigured';
@@ -394,9 +401,12 @@ function socketDirUnderFirstUsableRoot(
  * Silence is the right default for a demotion that works — nothing failed from
  * the user's point of view. The one cost is that `assertValidSocketPath` keys
  * its "Nx fell back to … run with --verbose" block off this cause, so without
- * it a socket-length failure on a later tier tells the user to set a shorter
- * NX_SOCKET_DIR, which may be advice they already followed. Recording it also
- * gives `--verbose` something to print, which that message promises.
+ * it a socket-length failure on a later tier is explained as though the user
+ * had chosen the path. They have not — this function only runs when
+ * `configuredSocketDir()` returned undefined — so what the generic advice omits
+ * is the demotion itself, which is the part they would need to know to act.
+ * Recording it also gives `--verbose` something to print, which that message
+ * promises.
  */
 function noteSocketRootDemotion(preferred: string, used: string) {
   socketDirFallbackCause = new Error(
@@ -426,14 +436,16 @@ export function getPluginSocketDir() {
 let socketDirFallbackCause: unknown;
 let refusedConfiguredSocketDir: string | undefined;
 let warnedAboutWorkspaceFallback = false;
+let warnedAboutConfiguredSocketDir = false;
 
 /**
- * Exported for tests: the workspace-fallback warning fires once per process, so
- * a suite that stages that fallback more than once has to clear the latch
- * between cases.
+ * Exported for tests: both fallback warnings fire once per process, so a suite
+ * that stages either fallback more than once has to clear the latches between
+ * cases.
  */
 export function resetWorkspaceFallbackWarningForTesting() {
   warnedAboutWorkspaceFallback = false;
+  warnedAboutConfiguredSocketDir = false;
 }
 
 export function getSocketDirFallbackCause(): unknown {
@@ -496,11 +508,16 @@ function createOwnerOnlySocketDir(
     // Never swap out a configured directory silently — the substitute is longer and
     // would resurface as assertValidSocketPath complaining about a path the user
     // never set.
-    console.warn(
-      `Nx could not use the configured socket directory ${dir}: ${
-        e instanceof Error ? e.message : e
-      }\nFalling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`
-    );
+    // Latched like the workspace-fallback warning below, and for the same
+    // reason: a task-per-PseudoTerminal command resolves this once per task.
+    if (!warnedAboutConfiguredSocketDir) {
+      warnedAboutConfiguredSocketDir = true;
+      console.warn(
+        `Nx could not use the configured socket directory ${dir}: ${
+          e instanceof Error ? e.message : e
+        }\nFalling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`
+      );
+    }
     // Tracked separately from socketDirFallbackCause: this is not a default-root
     // fallback, and describing it as one would be false. It exists so the length
     // error can stop telling someone to set a shorter NX_SOCKET_DIR when the one
