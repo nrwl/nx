@@ -224,21 +224,35 @@ describe('socket directories', () => {
         platform: () => 'win32',
       }));
       const { InvalidSocketDirConfigured: Ctor } = require('./tmp-dir');
-      const { NX_TMP_DIR: winTmp } = require('../utils/nx-tmp-dir');
+      const { NX_TMP_DIR: winNxTmp } = require('../utils/nx-tmp-dir');
+      const { tmpdir: winOsTmp } = require('tmp');
       const winSocketDir = require('./tmp-dir').getSocketDir;
 
-      process.env.NX_SOCKET_DIR = winTmp;
-      // %TMP% is per-account and NX_TMP_DIR sits inside it, so telling the user
-      // a local attacker could execute code in their daemon would be false.
-      let thrown!: Error;
-      try {
-        winSocketDir();
-      } catch (e) {
-        thrown = e as Error;
+      const refusalFor = (dir: string) => {
+        process.env.NX_SOCKET_DIR = dir;
+        try {
+          winSocketDir();
+        } catch (e) {
+          return e as Error;
+        }
+        throw new Error(`expected ${dir} to be refused`);
+      };
+
+      // Both are per-account on Windows, so telling the user a local attacker
+      // could execute code in their daemon would be false for either.
+      for (const dir of [winOsTmp, winNxTmp]) {
+        const thrown = refusalFor(dir);
+        expect(thrown).toBeInstanceOf(Ctor);
+        expect(thrown.message).not.toContain('execute code');
+        expect(thrown.message).not.toContain('shared with the other users');
       }
-      expect(thrown).toBeInstanceOf(Ctor);
-      expect(thrown.message).toContain('Nx manages for its own runtime');
-      expect(thrown.message).not.toContain('shared with the other users');
+
+      // They are refused for different reasons, and the distinction is the
+      // point: %TMP% is the user's own temp directory and Nx does not manage
+      // it, while NX_TMP_DIR really is Nx's. Calling %TMP% Nx-managed claims
+      // Nx locks down and cleans out everything in it.
+      expect((refusalFor(winOsTmp) as any).reason).toEqual('os-temp-root');
+      expect((refusalFor(winNxTmp) as any).reason).toEqual('nx-managed');
     });
     jest.dontMock('node:os');
   });
@@ -350,8 +364,16 @@ describe('socket directories', () => {
 
       // Refusing these is right, but they are per-user; telling someone a peer
       // could execute code in their own directory would send them chasing a
-      // compromise that has not happened.
-      expect(() => getSocketDir()).toThrow(/Nx manages for its own runtime/);
+      // compromise that has not happened. Asserted on the reason rather than
+      // the prose, so rewording the message cannot silently swap the claim.
+      let thrown!: Error;
+      try {
+        getSocketDir();
+      } catch (e) {
+        thrown = e as Error;
+      }
+      expect((thrown as any).reason).toEqual('nx-managed');
+      expect(thrown.message).not.toContain('execute code');
       expect(() => getSocketDir()).not.toThrow(/shared with the other users/);
     }
   );

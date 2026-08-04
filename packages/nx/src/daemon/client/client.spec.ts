@@ -82,6 +82,24 @@ describe('daemonPermissionException', () => {
     expect(error.message).toContain('NX_SOCKET_DIR');
   });
 
+  // The errno has to be on the first line specifically, not merely somewhere in
+  // the message: createProjectGraphAndSourceMapsAsync renders this as an
+  // output.note using line 0 as the title and the rest as bodyLines. It is also
+  // the only thing separating EACCES (someone else's socket, delete it) from
+  // EPERM (a sandbox refusing the connect), and that branch writes no daemon
+  // log, so a message that buries the errno lower down loses it entirely.
+  it.each(['connect EACCES', 'connect EPERM'])(
+    'should put %s on the first line, where the rendered note uses it',
+    (cause: string) => {
+      const [summary] = daemonPermissionException(
+        socketPath,
+        cause
+      ).message.split('\n');
+
+      expect(summary).toContain(cause);
+    }
+  );
+
   it('should not quote our daemon log, which belongs to a different process', () => {
     writeFileSync(logFile, 'something went wrong in the daemon');
 

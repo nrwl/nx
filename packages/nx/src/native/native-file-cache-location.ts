@@ -17,12 +17,6 @@ import {
 export const NATIVE_CACHE_ROOT = join(NX_USER_TMP_DIR, 'native-cache');
 
 /**
- * The cache directory to delete on `nx reset`, or `null` if it is not safe to
- * delete through. Ownership is checked first — a weaker bar than the load path,
- * which also enforces mode and validates the version directory.
- */
-
-/**
  * The configured cache dir, normalized. `resolve` strips a trailing slash, which
  * would otherwise defeat the guards downstream: `lstat` on a path ending in `/`
  * resolves a symlink rather than reporting it, and `O_NOFOLLOW` then opens the

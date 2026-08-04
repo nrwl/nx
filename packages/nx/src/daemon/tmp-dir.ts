@@ -36,7 +36,10 @@ import { workspaceRoot } from '../utils/workspace-root';
  * directory is a code-execution risk, which is the one claim here that most
  * needs to be true.
  */
-export type SocketDirRefusal = 'shared-with-other-users' | 'nx-managed';
+export type SocketDirRefusal =
+  | 'shared-with-other-users'
+  | 'nx-managed'
+  | 'os-temp-root';
 
 /**
  * Thrown when the socket dir resolves to a directory Nx will not accept.
@@ -55,7 +58,9 @@ export class InvalidSocketDirConfigured extends Error {
     super(
       reason === 'shared-with-other-users'
         ? `The configured Nx socket directory ${dir} is shared with the other users on this machine. Nx locks the socket directory to a single user, so pointing it at a shared one both shuts every other user out of it and — until it does — lets another local user connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
-        : `The configured Nx socket directory ${dir} is a directory Nx manages for its own runtime state, and it locks down and cleans up everything beneath it. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
+        : reason === 'os-temp-root'
+          ? `The configured Nx socket directory ${dir} is the operating system temp directory. Nx keeps its own runtime state beneath it, and it holds unrelated files from everything else on the machine, so Nx will not take it over as a socket directory. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
+          : `The configured Nx socket directory ${dir} is a directory Nx keeps its own runtime state in, and Nx creates and removes socket directories beneath it. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
     );
     this.name = 'InvalidSocketDirConfigured';
   }
@@ -190,17 +195,28 @@ function dirsUnusableAsSocketDir(): {
   dir: string;
   reason: SocketDirRefusal;
 }[] {
-  // Both of the top two are per-user on Windows — `%TMP%` is per-account and
-  // NX_TMP_DIR sits inside it — so the shared-directory warning would be false
-  // there. They are still refused, just for the other reason.
-  const outermost: SocketDirRefusal =
-    process.platform === 'win32' ? 'nx-managed' : 'shared-with-other-users';
+  const onWindows = process.platform === 'win32';
   return [
-    { dir: systemTmpDir, reason: outermost },
-    { dir: NX_TMP_DIR, reason: outermost },
+    // `%TMP%` is per-account on Windows, so the shared-directory warning would
+    // be false there — but it is not Nx's either, and calling it Nx-managed
+    // would tell a Windows user that Nx locks down and cleans out their entire
+    // temp directory. It gets its own reason on both platforms for that: on
+    // POSIX the shared-directory answer is the more urgent one.
+    {
+      dir: systemTmpDir,
+      reason: onWindows ? 'os-temp-root' : 'shared-with-other-users',
+    },
+    // NX_TMP_DIR really is Nx's own, on either platform.
+    {
+      dir: NX_TMP_DIR,
+      reason: onWindows ? 'nx-managed' : 'shared-with-other-users',
+    },
     { dir: NX_USER_TMP_DIR, reason: 'nx-managed' },
     { dir: defaultSocketRoot(), reason: 'nx-managed' },
-    ...(NX_HOME_TMP_DIR
+    // Skipped on Windows, where `socketRootTiers()` offers a single tier and
+    // the home location is never reached, so refusing it explains a rule that
+    // does not apply there.
+    ...(!onWindows && NX_HOME_TMP_DIR
       ? [
           { dir: NX_HOME_TMP_DIR, reason: 'nx-managed' as const },
           { dir: homeSocketRoot(), reason: 'nx-managed' as const },
@@ -372,8 +388,7 @@ function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
   // daemon/logger while it is still evaluating, and daemon/logger imports this
   // module — which throws whenever `isOnDaemon()` is true as this module loads.
   // Production escapes it only because server.ts sets `global.NX_DAEMON` after
-  // its imports, so daemon boot rests on import order. Keeps this module to Node
-  // builtins, as owned-private-dir.ts and nx-tmp-dir.ts deliberately are.
+  // its imports, so daemon boot rests on import order.
   const { logger } =
     require('../utils/logger') as typeof import('../utils/logger');
   logger.verbose(
