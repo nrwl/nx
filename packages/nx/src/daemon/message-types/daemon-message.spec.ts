@@ -1,5 +1,5 @@
 import {
-  assertValidDaemonMessage,
+  assertNotForeignWorkspaceMessage,
   isForeignWorkspaceMessage,
 } from './daemon-message';
 
@@ -40,12 +40,12 @@ describe('isForeignWorkspaceMessage', () => {
   });
 });
 
-describe('assertValidDaemonMessage', () => {
+describe('assertNotForeignWorkspaceMessage', () => {
   const receiverRoot = '/Users/me/workspace';
 
   it('does not throw when the workspace roots match', () => {
     expect(() =>
-      assertValidDaemonMessage(
+      assertNotForeignWorkspaceMessage(
         { type: 'PING', workspaceRoot: receiverRoot },
         receiverRoot
       )
@@ -54,13 +54,13 @@ describe('assertValidDaemonMessage', () => {
 
   it('does not throw when the message has no workspace root', () => {
     expect(() =>
-      assertValidDaemonMessage({ type: 'PING' }, receiverRoot)
+      assertNotForeignWorkspaceMessage({ type: 'PING' }, receiverRoot)
     ).not.toThrow();
   });
 
   it('throws with both workspace roots when they differ', () => {
     expect(() =>
-      assertValidDaemonMessage(
+      assertNotForeignWorkspaceMessage(
         { type: 'PING', workspaceRoot: '/Users/me/other-workspace' },
         receiverRoot
       )
@@ -70,7 +70,7 @@ describe('assertValidDaemonMessage', () => {
   it('names the Nx Daemon in the error by default', () => {
     // The daemon relies on the default description; keep that wording stable.
     expect(() =>
-      assertValidDaemonMessage(
+      assertNotForeignWorkspaceMessage(
         { type: 'PING', workspaceRoot: '/Users/me/other-workspace' },
         receiverRoot
       )
@@ -81,7 +81,7 @@ describe('assertValidDaemonMessage', () => {
     // The plugin worker passes its own description; the shared assertion must
     // surface it instead of the daemon wording.
     expect(() =>
-      assertValidDaemonMessage(
+      assertNotForeignWorkspaceMessage(
         { type: 'load', workspaceRoot: '/Users/me/other-workspace' },
         receiverRoot,
         'The Nx plugin worker "my-plugin" (pid: 123)'
