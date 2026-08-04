@@ -3,7 +3,6 @@ import {
   isPresent,
   isUsingWindows,
   maxWorkers,
-  normalizeQuotes,
   parseMaxWorkers,
 } from './utils';
 import * as nodeOSModule from 'node:os';
@@ -94,12 +93,6 @@ describe('maxWorkers', () => {
 
     expect(maxWorkers()).toBe(4); // Min(4, max(availableParallelism - 1, 1))
     expect(availableParallelismSpy).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('normalizeQuotes', () => {
-  it.each(["'", '"', '`'])('should remove (%s) quotes if given', (quote) => {
-    expect(normalizeQuotes(`${quote}test${quote}`)).toBe('test');
   });
 });
 
