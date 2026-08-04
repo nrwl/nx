@@ -2585,6 +2585,63 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('symbolic link'));
   });
 
+  it('warns and skips a symlinked local-path root instead of shipping its target tree', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    // The lexical escape check sees vendor/linked, but the symlink resolves
+    // outside the workspace; following it would ship the outside tree.
+    const outsideDir = mkdtempSync(join(tmpdir(), 'nx-pruned-outside-'));
+    try {
+      writeFileSync(join(outsideDir, 'secret.txt'), 'secret');
+      mkdirSync(join(tempDir, 'vendor'));
+      symlinkSync(outsideDir, join(tempDir, 'vendor/linked'));
+
+      const lockfile = [
+        "lockfileVersion: '9.0'",
+        '',
+        'importers:',
+        '',
+        '  .:',
+        '    dependencies:',
+        '      linked-lib:',
+        '        specifier: link:vendor/linked',
+        '        version: link:vendor/linked',
+        '',
+      ].join('\n');
+
+      expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([]);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('symbolic link')
+      );
+    } finally {
+      rmSync(outsideDir, { recursive: true, force: true });
+    }
+  });
+
+  it('warns and skips a symlinked file: tarball', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const outsideDir = mkdtempSync(join(tmpdir(), 'nx-pruned-outside-'));
+    try {
+      writeFileSync(join(outsideDir, 'real.tgz'), Buffer.from([0, 1, 2, 3]));
+      mkdirSync(join(tempDir, 'vendor'));
+      symlinkSync(
+        join(outsideDir, 'real.tgz'),
+        join(tempDir, 'vendor/vendored-lib-1.0.0.tgz')
+      );
+
+      expect(
+        getPrunedPnpmLocalPathArtifacts(
+          tempDir,
+          lockfileWithTarball('file:vendor/vendored-lib-1.0.0.tgz')
+        )
+      ).toEqual([]);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('symbolic link')
+      );
+    } finally {
+      rmSync(outsideDir, { recursive: true, force: true });
+    }
+  });
+
   it('ships a contained directory at its shipped path, reading from the source', () => {
     // The pruned lockfile records the target relocated under local_path_modules;
     // it ships there while the bytes come from the original workspace location.
