@@ -1,4 +1,5 @@
 import { chmodSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { waitForSocketConnection } from './wait-for-socket-connection';
@@ -19,6 +20,32 @@ describe('waitForSocketConnection', () => {
 
   afterEach(() => {
     rmSync(base, { recursive: true, force: true });
+  });
+
+  // The suite was otherwise entirely negative-path, so the function's whole
+  // reason for existing — hand back a live socket and stop — was unasserted.
+  posixOnly('should return the connected socket and stop polling', async () => {
+    const sockPath = join(base, 'live.sock');
+    const server = createServer();
+    await new Promise<void>((r) => server.listen(sockPath, r));
+    let attempts = 0;
+
+    try {
+      const socket = await waitForSocketConnection(sockPath, {
+        maxAttempts: 5,
+        delayMs: 1,
+        onConnectError: () => {
+          attempts++;
+        },
+      });
+
+      expect(socket).not.toBeNull();
+      expect(socket.destroyed).toBe(false);
+      expect(attempts).toEqual(0);
+      socket.destroy();
+    } finally {
+      await new Promise<void>((r) => server.close(() => r()));
+    }
   });
 
   it('should report the errno of a failed attempt', async () => {

@@ -130,6 +130,12 @@ import {
 
 import { getDaemonEnv } from './daemon-environment';
 
+/** A refused connect: the errno, and the path it was made against. */
+type ConnectRefusal = {
+  error: NodeJS.ErrnoException;
+  socketPath: string;
+};
+
 export type UnregisterCallback = () => void;
 export type ChangedFile = {
   path: string;
@@ -173,19 +179,26 @@ export class DaemonClient {
 
   /**
    * The most recent failed connect attempt, from either probe: the errno and
-   * the path it was made against. `startInBackground` classifies from it —
-   * both scenarios `daemonPermissionException` documents reach the client
-   * through a probe, not through `setUpConnection`, so without this the errno
-   * is gone by the time anything can report it.
+   * the path it was made against.
+   *
+   * `setUpConnection` classifies its own errors — it holds the error and the
+   * socket path in closure — but it only runs after a connect has already
+   * succeeded. `startInBackground`'s failure path has neither, which is what
+   * this field is for.
    *
    * The path is carried rather than recomputed at report time. Recomputing it
    * reads the daemon process json, which the daemon unlinks as it shuts down,
    * so on the failure path this describes it is routinely gone — and
    * `getSocketPath()` throws when it is.
+   *
+   * Reset at the top of `startInBackground` to whatever that attempt was
+   * handed, so a value read there always belongs to it. The poll does not
+   * report an errno on every failed attempt — when the process json is absent
+   * the path resolver returns `null` and no connect is made at all — so without
+   * that reset a later round reads whatever an earlier one left and names a
+   * socket that no longer exists.
    */
-  private lastConnectRefusal:
-    | { error: NodeJS.ErrnoException; socketPath: string }
-    | undefined;
+  private lastConnectRefusal: ConnectRefusal | undefined;
 
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
@@ -1041,7 +1054,9 @@ export class DaemonClient {
         }
       }
       if (!serverAvailable) {
-        daemonPid = await this.startInBackground();
+        // Read before startInBackground resets it: this is the probe's verdict
+        // on the daemon that was already there.
+        daemonPid = await this.startInBackground(this.lastConnectRefusal);
       }
       this.setUpConnection();
       this._daemonStatus = DaemonStatus.CONNECTED;
@@ -1232,8 +1247,13 @@ export class DaemonClient {
       return true;
     }
 
+    // Not necessarily the full budget: onConnectError stops the poll early on a
+    // refusal, so reporting the maximum would misdescribe a run that gave up on
+    // attempt 1.
     clientLogger.log(
-      `[Client] Server not available after ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts`
+      this.lastConnectRefusal
+        ? `[Client] Server refused the connection (${this.lastConnectRefusal.error.code}), stopped polling`
+        : `[Client] Server not available after ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts`
     );
     return false;
   }
@@ -1351,12 +1371,23 @@ export class DaemonClient {
     }
   }
 
-  async startInBackground(): Promise<ChildProcess['pid']> {
+  async startInBackground(
+    probeRefusal?: ConnectRefusal
+  ): Promise<ChildProcess['pid']> {
     if (global.NX_PLUGIN_WORKER) {
       throw new Error(
         'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
       );
     }
+
+    // Seeded, not merely cleared. The attempt begins at the caller: the
+    // pre-start probe's errno is the only evidence when a daemon exists but
+    // refuses us, and the poll below cannot reproduce it once that daemon's
+    // process json is gone — its path resolver returns null and no connect is
+    // made at all. Passing it in keeps that evidence while making "the errno
+    // belongs to this attempt" true by construction for both entry points;
+    // `nx daemon --start` passes nothing and starts clean.
+    this.lastConnectRefusal = probeRefusal;
 
     mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
     if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
