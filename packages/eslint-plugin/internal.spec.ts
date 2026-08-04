@@ -10,9 +10,9 @@ import * as ts from 'typescript';
  * found`. Fixed in Node 24.14, where the analyzer changed from cjs-module-lexer
  * to merve; Node 20 and 22 vendor the current cjs-module-lexer and still fail.
  *
- * Checking this anywhere else would be too late: PR-gating CI runs Node 26,
- * where the broken shape works, and no e2e exercises the bridge's ESM import at
- * all. Only the nightly Node 22 matrix would, and only after merge.
+ * Nothing else would catch it. PR-gating CI runs Node 26, where the broken
+ * shape works; the nightly matrix is the only place a failing Node runs, and no
+ * e2e imports the bridge there either.
  */
 describe('internal entry emit shape', () => {
   // Pins the two options that decide the shape rather than the whole tsconfig:

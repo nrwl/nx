@@ -3,7 +3,8 @@ import { nxVersion } from './versions';
 import type { LinterType } from './linter';
 
 export interface AddLintingToProjectOptions {
-  linter: LinterType;
+  /** Required, but `undefined` still reaches here — see the normalization below. */
+  linter: LinterType | undefined;
   project: string;
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
@@ -51,12 +52,10 @@ export async function addLintingToProject(
   tree: Tree,
   options: AddLintingToProjectOptions
 ): Promise<GeneratorCallback> {
-  // `linter` is typed as required, but `tsconfig.base.json` sets
-  // `"strict": false` and several generator schemas (detox, expo,
-  // react-native) declare it optional, so `undefined` does reach here through
-  // a `...options` spread. It has always meant ESLint; naming that here keeps
-  // it from being an implicit fallthrough and lets the union below be
-  // exhaustive.
+  // Typed as required, but `tsconfig.base.json` sets `"strict": false`, so an
+  // `undefined` assigned to it is not an error — and detox's schema declares
+  // `linter?`. It has always meant ESLint; naming that here keeps it from being
+  // an implicit fallthrough and lets the union below be exhaustive.
   const linter = options.linter ?? 'eslint';
 
   if (linter === 'none') {
