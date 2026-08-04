@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -1626,10 +1627,11 @@ function collectPrunedLinkTargetDirs(
  *   skipped here).
  * - a `link:` target (a root importer `link:` version, or a package `link:`
  *   snapshot ref) -> the target directory tree.
- * `node_modules` is filtered from every directory copy; symlinked entries are
- * skipped with a warning; entries are deduped by destination. A source that
- * resolves outside the workspace root, or is missing on disk, is skipped with a
- * warning (it is not reproducibly deployable). Returns source paths rather than
+ * `node_modules` is filtered from every directory copy; symlinked sources, the
+ * root and entries within it alike, are skipped with a warning; entries are
+ * deduped by destination. A source that resolves outside the workspace root, or
+ * is missing on disk, is skipped with a warning (it is not reproducibly
+ * deployable). Returns source paths rather than
  * bytes so the file-writing prune paths can copy without buffering whole trees;
  * the bundler asset pipelines read the bytes as they emit.
  */
@@ -1650,7 +1652,8 @@ export function getPrunedPnpmLocalPathArtifacts(
   const seenDestinations = new Set<string>();
 
   // The absolute source for a shippable target, or null (with a warning) when
-  // the target escapes the workspace root or is missing on disk.
+  // the target escapes the workspace root, is missing on disk, or is itself a
+  // symbolic link.
   const resolveShippableSource = (
     wsRelativePath: string,
     origin: string
@@ -1662,9 +1665,20 @@ export function getPrunedPnpmLocalPathArtifacts(
       return null;
     }
     const source = join(workspaceRootPath, wsRelativePath);
-    if (!existsSync(source)) {
+    let stat: ReturnType<typeof lstatSync>;
+    try {
+      stat = lstatSync(source);
+    } catch {
       logger.warn(
         `Local-path dependency "${origin}" was not found at ${source}; the pruned output references it but cannot ship it.`
+      );
+      return null;
+    }
+    // The escape check above is lexical, so a symlinked root would silently
+    // ship its resolved target; reject it like the in-tree entries below.
+    if (stat.isSymbolicLink()) {
+      logger.warn(
+        `Local-path dependency "${origin}" is a symbolic link at ${source}, which is not shipped into the pruned output.`
       );
       return null;
     }
