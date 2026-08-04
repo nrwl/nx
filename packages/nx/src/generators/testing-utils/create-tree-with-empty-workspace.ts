@@ -1,6 +1,23 @@
 import { FsTree } from '../tree';
 import type { Tree } from '../tree';
+import type { FormatterType } from '../../utils/formatters';
 import { workspaceRoot } from '../../utils/workspace-root';
+
+/**
+ * A formatter choice rather than a dispatch target, so `'none'` is composed in
+ * here instead of living in `FormatterType`.
+ */
+type TestFormatter = FormatterType | 'none';
+
+/**
+ * Keyed by `FormatterType` so adding a formatter fails to compile here until
+ * this helper can seed it, rather than silently producing a workspace with no
+ * config. One of the sites `FormatterType` inventories.
+ */
+const formatterConfigFiles = {
+  prettier: '.prettierrc',
+  oxfmt: '.oxfmtrc.json',
+} satisfies Record<FormatterType, string>;
 
 /**
  * Creates a host for testing.
@@ -15,7 +32,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 export function createTreeWithEmptyWorkspace(
   opts = {} as {
     layout?: 'apps-libs';
-    formatter?: 'prettier' | 'oxfmt' | 'none';
+    formatter?: TestFormatter;
   }
 ): Tree {
   const tree = new FsTree('/virtual', false);
@@ -40,12 +57,13 @@ export function createTreeWithEmptyV1Workspace(): Tree {
 function addCommonFiles(
   tree: Tree,
   addAppsAndLibsFolders: boolean,
-  formatter: 'prettier' | 'oxfmt' | 'none' = 'oxfmt'
+  formatter: TestFormatter = 'oxfmt'
 ): Tree {
-  if (formatter === 'prettier') {
-    tree.write('./.prettierrc', JSON.stringify({ singleQuote: true }));
-  } else if (formatter === 'oxfmt') {
-    tree.write('./.oxfmtrc.json', JSON.stringify({ singleQuote: true }));
+  if (formatter !== 'none') {
+    tree.write(
+      `./${formatterConfigFiles[formatter]}`,
+      JSON.stringify({ singleQuote: true })
+    );
   }
   tree.write(
     '/package.json',

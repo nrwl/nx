@@ -203,7 +203,8 @@ export async function initGeneratorInternal(
       process.env.NX_SKIP_FORMAT !== 'true'
     ) {
       // `schema.formatter` is the table key here, so it is also the npm
-      // package name - it got past `getFormatterSetup` to produce `setup`.
+      // package name - it got past `getFormatterSetup` to produce
+      // `formatterSetup`.
       ensurePackage(schema.formatter, formatterSetup.version);
     }
     await formatFiles(tree);
