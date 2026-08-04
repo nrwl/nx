@@ -31,14 +31,12 @@ Resource usage requires Nx 22.1 or later.
 Resource usage is an add-on, enabled by default for new organizations. Once it's on, Nx uploads CPU
 and memory metrics for your CI runs and you view them in Nx Cloud. There's nothing else to set up.
 
-Each report costs 10 credits. With Nx Agents, each agent generates its own report. For
-non-distributed runs, every report generated on the same machine counts as a single 10 credit charge,
-however many runs happen there. See the
-[credits pricing reference](/docs/reference/nx-cloud/credits-pricing) for details. Turning off
-collection, at either the organization or the workspace level, skips the credit cost.
+Data collection for each report costs 10 credits. With Nx Agents, each agent generates its own
+report. For non-distributed runs, every report generated on the same machine counts as a single
+10 credit charge, however many runs happen there. See the
+[credits pricing reference](/docs/reference/nx-cloud/credits-pricing) for details.
 
-Control happens at two levels: the organization decides whether the add-on is enabled at all, and
-each workspace decides which of its runs report metrics.
+Data collection can be turned off at either the organization or the workspace level.
 
 ### Organization
 
