@@ -8,6 +8,7 @@ import {
   getSocketDir,
   getSocketDirFallbackCause,
   InvalidSocketDirConfigured,
+  resetWorkspaceFallbackWarningForTesting,
 } from './tmp-dir';
 import {
   ensureOwnedPrivateDir,
@@ -18,11 +19,18 @@ import {
 import { logger } from '../utils/logger';
 import { isSandbox } from '../utils/is-sandbox';
 
+// isPeerWritable delegates to the real implementation rather than returning a
+// constant: it is the only one of these whose platform behaviour the refusal
+// messages depend on, and stubbing it is how the Windows rows came to assert an
+// answer the shipped function could not give. Rows that need a specific answer
+// still override it explicitly.
 jest.mock('../utils/owned-private-dir', () => ({
   ensureOwnedPrivateDir: jest.fn(() => true),
   ensureSafeSharedRoot: jest.fn(() => true),
   sharedRootRemedy: jest.fn(() => undefined),
-  isPeerWritable: jest.fn(() => true),
+  isPeerWritable: jest.fn(
+    jest.requireActual('../utils/owned-private-dir').isPeerWritable
+  ),
   getUserSegment: jest.fn(() => '501'),
 }));
 
@@ -75,8 +83,13 @@ describe('socket directories', () => {
     (ensureSafeSharedRoot as jest.Mock).mockReturnValue(true);
     (ensureOwnedPrivateDir as jest.Mock).mockReturnValue(true);
     (sharedRootRemedy as jest.Mock).mockReturnValue(undefined);
-    (isPeerWritable as jest.Mock).mockReturnValue(true);
+    (isPeerWritable as jest.Mock).mockImplementation(
+      jest.requireActual('../utils/owned-private-dir').isPeerWritable
+    );
     (isSandbox as jest.Mock).mockReturnValue(false);
+    // The workspace-fallback warning is latched once per process, so without
+    // this only the first test staging that fallback would see it.
+    resetWorkspaceFallbackWarningForTesting();
     delete process.env.NX_SOCKET_DIR;
     delete process.env.NX_DAEMON_SOCKET_DIR;
     setPlatform(originalPlatform);
@@ -215,6 +228,50 @@ describe('socket directories', () => {
     );
   });
 
+  it('warns once per process, not once per socket directory resolved', () => {
+    setPlatform('linux');
+    denyEveryDefaultRoot();
+
+    // A single command resolves this more than once — the daemon socket, then
+    // one per isolated plugin worker and forked task — and neither accessor is
+    // memoized, so an unlatched warn repeats the same three sentences at the
+    // user several times.
+    getSocketDir();
+    getPluginSocketDir();
+    getSocketDir();
+
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('names only the roots that exist when there is no home directory', () => {
+    setPlatform('linux');
+    (isSandbox as jest.Mock).mockReturnValue(true);
+    jest.isolateModules(() => {
+      jest.doMock('node:os', () => ({
+        ...jest.requireActual('node:os'),
+        // No home directory is one of the reasons the home tier is skipped and
+        // this fallback is reached, so the sandbox line has to survive it.
+        homedir: () => '',
+      }));
+      const { getSocketDir: homelessSocketDir } = require('./tmp-dir');
+      const { logger: isolatedLogger } = require('../utils/logger');
+      require('../utils/owned-private-dir').ensureSafeSharedRoot.mockReturnValue(
+        false
+      );
+      require('../utils/is-sandbox').isSandbox.mockReturnValue(true);
+
+      homelessSocketDir();
+
+      expect(isolatedLogger.warn).toHaveBeenCalledWith(
+        expect.stringMatching(/allowlist/i)
+      );
+      expect(isolatedLogger.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('undefined')
+      );
+    });
+    jest.dontMock('node:os');
+  });
+
   it('does not warn when a later tier succeeds', () => {
     setPlatform('linux');
     (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
@@ -346,13 +403,12 @@ describe('socket directories', () => {
       const { NX_TMP_DIR: winNxTmp } = require('../utils/nx-tmp-dir');
       const { tmpdir: winOsTmp } = require('tmp');
       const winSocketDir = require('./tmp-dir').getSocketDir;
-      // isolateModules re-runs the module factory, so this is a different mock
-      // instance from the one the outer afterEach resets. Both Windows roots
-      // are per-account, which is the whole reason neither may be blamed on
-      // other users.
-      require('../utils/owned-private-dir').isPeerWritable.mockReturnValue(
-        false
-      );
+      // isPeerWritable is deliberately left running its real implementation
+      // here. Stubbing it to false is what previously made this pass: libuv
+      // synthesizes st_mode on Windows from the READONLY attribute and copies
+      // the owner bits across, so every directory reports 0777 and a mode test
+      // would call both of these roots shared. The win32 guard inside the
+      // function is the thing under test.
 
       const refusalFor = (dir: string) => {
         process.env.NX_SOCKET_DIR = dir;
@@ -464,6 +520,27 @@ describe('socket directories', () => {
       expect(ensureOwnedPrivateDir).not.toHaveBeenCalled();
     }
   );
+
+  // resolve() normalizes `..` and trailing slashes but does not dereference
+  // symlinks, so an aliased spelling of a refused root used to pass the
+  // exact-match list — and on macOS /tmp is itself a symlink to /private/tmp,
+  // which makes this the default spelling rather than a contrived one. Past the
+  // list, ensureOwnedPrivateDir re-locks the directory to 0700 and
+  // removeSocketDir aims a recursive delete at it.
+  it('refuses a symlinked spelling of a root it refuses directly', () => {
+    setPlatform('linux');
+    const realFs = jest.requireActual('node:fs');
+    const dir = realFs.mkdtempSync(join(systemTmpDir, 'nx-alias-'));
+    const link = join(dir, 'alias');
+    realFs.symlinkSync(systemTmpDir, link);
+
+    try {
+      process.env.NX_SOCKET_DIR = link;
+      expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
+    } finally {
+      realFs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
 
   it.each([
     ['the system temp dir', () => systemTmpDir],
