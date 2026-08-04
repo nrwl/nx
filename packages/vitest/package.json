@@ -37,6 +37,9 @@
       "generators": [
         "dist/generators.d.ts"
       ],
+      "internal": [
+        "dist/internal.d.ts"
+      ],
       "executors": [
         "dist/executors.d.ts"
       ]
