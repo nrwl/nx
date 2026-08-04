@@ -618,8 +618,9 @@ export interface NxWorkspaceFilesExternals {
 
 /**
  * Open `url` in the user's default browser. Returns `true` if an opener
- * process was spawned, `false` if it couldn't be (e.g. no `xdg-open`), so the
- * caller can tell the user instead of failing silently. Never throws.
+ * process was spawned, `false` if none could be (e.g. no `xdg-open`) or `url`
+ * isn't `http(s)`, so the caller can tell the user instead of failing
+ * silently. Never throws.
  */
 export declare function openUrl(url: string): boolean
 

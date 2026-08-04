@@ -21,6 +21,9 @@ use tracing::{debug, trace};
 use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetState};
 
 use crate::native::tui::tui::Tui;
+// Opening a URL is best-effort (NXC-3940): a missing opener can never crash the
+// TUI. The shared impl walks a fallback chain and is container-aware on WSL.
+use crate::native::utils::open_url::open_url_native as open_url;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskResult},
@@ -362,11 +365,6 @@ impl RegionSnapshot {
 /// double-click. crossterm reports individual button presses, so we detect
 /// double-clicks ourselves.
 const DOUBLE_CLICK_MS: u128 = 400;
-
-/// Open a URL in the user's default browser (NXC-3940). Best-effort: a missing
-/// opener can never crash the TUI. The shared implementation is container-aware
-/// on WSL; see [`crate::native::utils::open_url`].
-use crate::native::utils::open_url::open_url_native as open_url;
 
 impl App {
     /// Create a new App with existing shared state (for mode switching)

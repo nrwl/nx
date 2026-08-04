@@ -5,13 +5,20 @@
 //! caller can fall back to printing the URL.
 
 #[cfg(not(target_arch = "wasm32"))]
-use std::process::{Command, Stdio};
+use crate::native::utils::command::create_command;
 #[cfg(not(target_arch = "wasm32"))]
+use std::process::{Command, Stdio};
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
 use std::sync::OnceLock;
 
 /// Open `url` in the user's default browser. Returns `true` if an opener
-/// process was spawned, `false` if it couldn't be (e.g. no `xdg-open`), so the
-/// caller can tell the user instead of failing silently. Never throws.
+/// process was spawned, `false` if none could be (e.g. no `xdg-open`) or `url`
+/// isn't `http(s)`, so the caller can tell the user instead of failing
+/// silently. Never throws.
 #[cfg(not(target_arch = "wasm32"))]
 #[napi]
 pub fn open_url(url: String) -> bool {
@@ -32,7 +39,28 @@ pub fn open_url(_url: String) -> bool {
 /// inside the native crate — e.g. the TUI — use this directly.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn open_url_native(url: &str) -> bool {
-    build_open_command(url)
+    if !is_http_url(url) {
+        return false;
+    }
+    open_candidates(url).into_iter().any(spawn_detached)
+}
+
+/// Openers take whatever string they're handed and will launch a local program
+/// as readily as a browser, so anything that isn't `http(s)` is refused here.
+/// URLs reach this from remote responses (Nx Cloud, GitHub/GitLab hosts) and
+/// from task output the TUI turns into clickable links.
+#[cfg(not(target_arch = "wasm32"))]
+fn is_http_url(url: &str) -> bool {
+    let lower = url.to_ascii_lowercase();
+    lower.starts_with("http://") || lower.starts_with("https://")
+}
+
+/// A spawn succeeds when the opener *binary* exists; we deliberately don't wait
+/// on it, since an opener that hands off to a browser may not exit until the
+/// browser does.
+#[cfg(not(target_arch = "wasm32"))]
+fn spawn_detached(mut command: Command) -> bool {
+    command
         .stdin(Stdio::null())
         // Detach stdio to null so a launched opener can't corrupt a terminal
         // we may be drawing to (the TUI).
@@ -43,19 +71,18 @@ pub fn open_url_native(url: &str) -> bool {
 }
 
 #[cfg(all(not(target_arch = "wasm32"), target_os = "macos"))]
-fn build_open_command(url: &str) -> Command {
-    let mut c = Command::new("open");
+fn open_candidates(url: &str) -> Vec<Command> {
+    let mut c = create_command("open");
     c.arg(url);
-    c
+    vec![c]
 }
 
 #[cfg(all(not(target_arch = "wasm32"), target_os = "windows"))]
-fn build_open_command(url: &str) -> Command {
-    // Use PowerShell's Start-Process with the URL as a base64 -EncodedCommand
-    // rather than `cmd /C start "" <url>`: std spawns the URL unquoted, and
-    // `cmd` treats a `&` in a query string as a command separator, which both
-    // truncates real cloud/release URLs and is a command-injection sink.
-    powershell_start_process(url)
+fn open_candidates(url: &str) -> Vec<Command> {
+    // PowerShell rather than `cmd /C start "" <url>`: std leaves a URL unquoted
+    // (it only quotes args with whitespace or quotes) and `cmd` reads the `&` in
+    // a query string as a command separator.
+    vec![powershell_start_process("powershell.exe", url)]
 }
 
 #[cfg(all(
@@ -63,26 +90,30 @@ fn build_open_command(url: &str) -> Command {
     not(target_os = "macos"),
     not(target_os = "windows")
 ))]
-fn build_open_command(url: &str) -> Command {
-    // On a non-container WSL2 host the Linux `xdg-open` usually can't reach a
-    // browser, so hand the URL to the *Windows* host browser. Inside a
-    // Docker/Podman container the Windows interop path is absent and spawning
-    // it is exactly the crash this replaces (`open@8` misdetected Podman as
-    // bare WSL) — so containers must stay on `xdg-open`.
+fn open_candidates(url: &str) -> Vec<Command> {
+    let mut candidates = Vec::new();
+    // On a non-container WSL host the Linux openers can't reach a browser, so
+    // try the Windows host's browser first. Inside a Docker/Podman container the
+    // interop path is absent and spawning it is exactly the crash this replaces
+    // (`open@8` misdetected Podman as bare WSL) — containers stay on the Linux
+    // openers below.
     if is_wsl() && !is_in_container() {
-        powershell_start_process(url)
-    } else {
-        let mut c = Command::new("xdg-open");
-        c.arg(url);
-        c
+        candidates.extend(
+            wsl_powershell_programs()
+                .iter()
+                .map(|program| powershell_start_process(program, url)),
+        );
     }
+    // Always fall through to the Linux openers: WSL interop can be off, and a
+    // browser installed inside the distro still works.
+    candidates.extend(linux_open_candidates(url));
+    candidates
 }
 
 /// Both WSL1 and WSL2 register a `WSLInterop` binfmt entry, so `powershell.exe`
 /// is launchable from either — hence no WSL1/WSL2 distinction here. Matches the
 /// `is-wsl` package (which the replaced `open` used) so no WSL flavour loses the
-/// Windows bridge. If interop is disabled via `wsl.conf`, the spawn simply fails
-/// and the caller falls back to printing the URL.
+/// Windows bridge.
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
@@ -122,29 +153,184 @@ fn is_in_container() -> bool {
     })
 }
 
-/// Launch the default browser via the Windows host PowerShell — used on native
-/// Windows and, through WSL interop, on non-container WSL2. The URL is handed
-/// over as a base64 UTF-16LE `-EncodedCommand` (the same mechanism the `open`
-/// package used) so shell metacharacters — notably `&` in a query string, a
-/// `cmd.exe` separator — can neither break the command line nor inject
-/// anything: the URL never appears on a command line as text.
+/// `powershell.exe` is on `PATH` only while WSL's `[interop] appendWindowsPath`
+/// is left on, and turning it off is a common tweak that leaves interop itself
+/// working. So try the absolute System32 path first, the way `open@10` did, and
+/// keep the bare name as a fallback for unusual Windows layouts.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn wsl_powershell_programs() -> Vec<String> {
+    let absolute = format!(
+        "{}c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+        wsl_automount_root()
+    );
+    let mut programs = Vec::new();
+    if std::path::Path::new(&absolute).exists() {
+        programs.push(absolute);
+    }
+    programs.push("powershell.exe".to_string());
+    programs
+}
+
+/// WSL mounts the Windows drives under `[automount] root` from `/etc/wsl.conf`.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn wsl_automount_root() -> String {
+    static ROOT: OnceLock<String> = OnceLock::new();
+    ROOT.get_or_init(|| {
+        std::fs::read_to_string("/etc/wsl.conf")
+            .ok()
+            .and_then(|conf| parse_automount_root(&conf))
+            .unwrap_or_else(|| "/mnt/".to_string())
+    })
+    .clone()
+}
+
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn parse_automount_root(wsl_conf: &str) -> Option<String> {
+    let mut in_automount = false;
+    for line in wsl_conf.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') || line.starts_with(';') {
+            continue;
+        }
+        if line.starts_with('[') {
+            in_automount = line.eq_ignore_ascii_case("[automount]");
+            continue;
+        }
+        if !in_automount {
+            continue;
+        }
+        if let Some((key, value)) = line.split_once('=') {
+            if key.trim().eq_ignore_ascii_case("root") {
+                let value = value.trim().trim_matches('"');
+                if value.is_empty() {
+                    return None;
+                }
+                return Some(if value.ends_with('/') {
+                    value.to_string()
+                } else {
+                    format!("{value}/")
+                });
+            }
+        }
+    }
+    None
+}
+
+/// The opener chain `open@10` shipped: it vendored the freedesktop `xdg-open`
+/// script, which walks `$BROWSER` and then these desktop helpers. Trying only
+/// the system `xdg-open` loses the browser on minimal images, headless server
+/// distros and Termux, where it often isn't installed.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+const LINUX_OPENERS: &[&[&str]] = &[
+    &["xdg-open"],
+    &["gio", "open"],
+    &["gvfs-open"],
+    &["gnome-open"],
+    &["kde-open"],
+    &["exo-open"],
+    &["x-www-browser"],
+    &["www-browser"],
+];
+
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn linux_open_candidates(url: &str) -> Vec<Command> {
+    let browser = std::env::var("BROWSER").unwrap_or_default();
+    browser_env_candidates(&browser, url)
+        .into_iter()
+        .chain(LINUX_OPENERS.iter().map(|parts| {
+            let mut c = create_command(parts[0]);
+            c.args(&parts[1..]).arg(url);
+            c
+        }))
+        .collect()
+}
+
+/// `$BROWSER` is a colon-separated list of commands, each either a plain program
+/// or a template where `%s` stands in for the URL — the contract the freedesktop
+/// `xdg-open` script implements.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn browser_env_candidates(browser: &str, url: &str) -> Vec<Command> {
+    browser
+        .split(':')
+        .filter_map(|entry| {
+            let mut tokens = entry.split_whitespace();
+            let program = tokens.next()?;
+            let mut c = create_command(program);
+            let mut substituted = false;
+            for token in tokens {
+                if token.contains("%s") {
+                    substituted = true;
+                    c.arg(token.replace("%s", url));
+                } else {
+                    c.arg(token);
+                }
+            }
+            if !substituted {
+                c.arg(url);
+            }
+            Some(c)
+        })
+        .collect()
+}
+
+/// Launch the default browser through the Windows host's PowerShell — used on
+/// native Windows and, over WSL interop, on non-container WSL.
+///
+/// The URL rides *inside* the script as base64 rather than in a quoted literal.
+/// PowerShell accepts five code points as single-quote delimiters (`U+0027` plus
+/// `U+2018`–`U+201B`) and lets any of them close a literal any other opened, so
+/// escaping by doubling the ASCII quote is not sufficient; base64's alphabet
+/// can't express a quote at all.
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
-fn powershell_start_process(url: &str) -> Command {
-    // Single-quoted PowerShell literal; the only in-literal escape is a single
-    // quote, doubled.
-    let script = format!("Start-Process '{}'", url.replace('\'', "''"));
-    let utf16le: Vec<u8> = script
-        .encode_utf16()
-        .flat_map(|unit| unit.to_le_bytes())
-        .collect();
-    let mut c = Command::new("powershell.exe");
+fn powershell_start_process(program: &str, url: &str) -> Command {
+    let script = format!(
+        "Start-Process ([Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('{}')))",
+        base64_encode(&utf16le(url))
+    );
+    let mut c = create_command(program);
     c.args([
         "-NoProfile",
         "-NonInteractive",
+        // `open` set this too — a GPO-locked host otherwise refuses the command.
+        "-ExecutionPolicy",
+        "Bypass",
         "-EncodedCommand",
-        &base64_encode(&utf16le),
+        &base64_encode(&utf16le(&script)),
     ]);
     c
+}
+
+/// `-EncodedCommand` expects base64 of UTF-16LE, which is also what
+/// `[Text.Encoding]::Unicode` decodes.
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
+fn utf16le(s: &str) -> Vec<u8> {
+    s.encode_utf16()
+        .flat_map(|unit| unit.to_le_bytes())
+        .collect()
 }
 
 /// Minimal standard-alphabet base64 encoder (padded). Kept local to avoid a new
@@ -183,6 +369,28 @@ fn base64_encode(input: &[u8]) -> String {
 mod tests {
     use super::*;
 
+    fn args_of(cmd: &Command) -> Vec<String> {
+        cmd.get_args()
+            .map(|a| a.to_string_lossy().into_owned())
+            .collect()
+    }
+
+    fn programs_of(cmds: &[Command]) -> Vec<String> {
+        cmds.iter()
+            .map(|c| c.get_program().to_string_lossy().into_owned())
+            .collect()
+    }
+
+    fn decode_powershell_script(cmd: &Command) -> String {
+        let args = args_of(cmd);
+        let bytes = decode_base64(args.last().unwrap());
+        let utf16: Vec<u16> = bytes
+            .chunks(2)
+            .map(|p| u16::from_le_bytes([p[0], p[1]]))
+            .collect();
+        String::from_utf16(&utf16).unwrap()
+    }
+
     #[test]
     fn base64_matches_known_vectors() {
         assert_eq!(base64_encode(b""), "");
@@ -212,35 +420,95 @@ mod tests {
     }
 
     #[test]
-    fn powershell_command_encodes_url_without_leaking_metacharacters() {
-        // A URL with `&` (cmd separator) and a single quote must round-trip
-        // through the encoded command untouched — the raw URL must never appear
-        // as a plain argument.
-        let url = "https://cloud.nx.app/connect?a=1&b=2&x='y";
-        let cmd = powershell_start_process(url);
-        let args: Vec<String> = cmd
-            .get_args()
-            .map(|a| a.to_string_lossy().into_owned())
-            .collect();
+    fn only_http_urls_reach_an_opener() {
+        assert!(is_http_url("http://localhost:4211/projects"));
+        assert!(is_http_url("HTTPS://cloud.nx.app/connect/abc"));
+        // `Start-Process`/`xdg-open` would launch these as programs or files.
+        assert!(!is_http_url("calc.exe"));
+        assert!(!is_http_url("file:///etc/passwd"));
+        assert!(!is_http_url("javascript:alert(1)"));
+        assert!(!is_http_url(" http://leading-space.example"));
+        assert!(!open_url_native("calc.exe"));
+    }
+
+    #[test]
+    fn powershell_carries_the_url_as_base64_not_as_a_quoted_literal() {
+        // Every character PowerShell accepts as a single-quote delimiter, plus a
+        // `&` (cmd separator). None may reach the command line or the script.
+        let url = "https://cloud.nx.app/connect?a=1&b=2&q='\u{2018}\u{2019}\u{201A}\u{201B}";
+        let cmd = powershell_start_process("powershell.exe", url);
+        let args = args_of(&cmd);
+
         assert_eq!(cmd.get_program(), "powershell.exe");
         assert!(args.iter().any(|a| a == "-EncodedCommand"));
-        // No argument carries the raw URL or a bare `&`.
         assert!(!args.iter().any(|a| a.contains("://")));
         assert!(!args.iter().any(|a| a.contains('&')));
 
-        // The encoded payload decodes back to a single-quoted Start-Process
-        // with the quote doubled.
-        let encoded = args.last().unwrap();
-        let bytes = decode_base64(encoded);
+        // The script embeds the URL as base64, so no quote can escape it.
+        let script = decode_powershell_script(&cmd);
+        let payload = script
+            .strip_prefix(
+                "Start-Process ([Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('",
+            )
+            .and_then(|s| s.strip_suffix("')))"))
+            .expect("script shape");
+        assert!(!payload.contains(['\'', '\u{2018}', '\u{2019}', '\u{201A}', '\u{201B}']));
+
+        // ...and decodes back to exactly the URL we were handed.
+        let bytes = decode_base64(payload);
         let utf16: Vec<u16> = bytes
             .chunks(2)
             .map(|p| u16::from_le_bytes([p[0], p[1]]))
             .collect();
-        let script = String::from_utf16(&utf16).unwrap();
+        assert_eq!(String::from_utf16(&utf16).unwrap(), url);
+    }
+
+    #[test]
+    fn execution_policy_is_bypassed_for_gpo_locked_hosts() {
+        let cmd = powershell_start_process("powershell.exe", "https://nx.dev");
+        let args = args_of(&cmd);
+        let idx = args.iter().position(|a| a == "-ExecutionPolicy").unwrap();
+        assert_eq!(args[idx + 1], "Bypass");
+    }
+
+    #[test]
+    fn linux_falls_back_through_the_whole_opener_chain() {
+        let programs = programs_of(&linux_open_candidates("https://nx.dev"));
+        // `xdg-open` is only the first guess; the desktop helpers `open@10`
+        // vendored must still be reachable.
+        assert_eq!(programs[0], "xdg-open");
+        for expected in ["gio", "gvfs-open", "gnome-open", "kde-open", "exo-open"] {
+            assert!(programs.contains(&expected.to_string()), "{expected}");
+        }
+    }
+
+    #[test]
+    fn browser_env_entries_come_first_and_honor_the_s_placeholder() {
+        let cmds = browser_env_candidates("firefox:my-opener --url=%s", "https://nx.dev");
+        assert_eq!(programs_of(&cmds), vec!["firefox", "my-opener"]);
+        // No placeholder: the URL is appended. With one: it's substituted.
+        assert_eq!(args_of(&cmds[0]), vec!["https://nx.dev"]);
+        assert_eq!(args_of(&cmds[1]), vec!["--url=https://nx.dev"]);
+        assert!(browser_env_candidates("", "https://nx.dev").is_empty());
+    }
+
+    #[test]
+    fn wsl_automount_root_defaults_and_parses() {
+        assert_eq!(parse_automount_root(""), None);
+        // Only the [automount] section counts, and a trailing slash is implied.
         assert_eq!(
-            script,
-            "Start-Process 'https://cloud.nx.app/connect?a=1&b=2&x=''y'"
+            parse_automount_root("[automount]\nroot = /windows"),
+            Some("/windows/".to_string())
         );
+        assert_eq!(
+            parse_automount_root("[automount]\nroot=\"/mnt/\"\n"),
+            Some("/mnt/".to_string())
+        );
+        assert_eq!(
+            parse_automount_root("[interop]\nroot = /nope\n[automount]\n# comment\nroot = /w"),
+            Some("/w/".to_string())
+        );
+        assert_eq!(parse_automount_root("[interop]\nroot = /nope"), None);
     }
 
     // Test-only decoder to verify the encoder.
