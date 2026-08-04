@@ -1049,6 +1049,11 @@ describe('TargetProjectLocator', () => {
       );
 
       expect(result).toBeUndefined();
+      expect(
+        (targetProjectLocator as any).findProjectOfResolvedModule(
+          '..\\..\\node_modules\\external-package\\index.js'
+        )
+      ).toBeUndefined();
     });
 
     it('should be able to npm dependencies', () => {
