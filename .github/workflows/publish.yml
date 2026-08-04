@@ -627,7 +627,7 @@ jobs:
           corepack prepare --activate
 
       - name: Use npm 11.5.2
-        run: npm install -g npm@11.5.2
+        run: npm install -g npm@11.5.2 --ignore-scripts
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
