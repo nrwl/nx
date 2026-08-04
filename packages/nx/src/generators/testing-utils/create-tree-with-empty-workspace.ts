@@ -6,10 +6,11 @@ import { workspaceRoot } from '../../utils/workspace-root';
  * Creates a host for testing.
  *
  * Defaults to oxfmt, matching what `create-nx-workspace` gives a new
- * workspace, so generator tests assert what users actually get. Pass
- * `prettier` for a test that is about prettier specifically - oxfmt formats
- * JS and TS only, so anything asserting on formatted JSON or YAML needs it -
- * or `none` to assert exactly what the generator wrote.
+ * workspace, so generator tests assert what users actually get. oxfmt formats
+ * JS, TS, JSON, YAML and Markdown - nothing filters by extension on the way in
+ * - so any spec asserting on generated file *content* is affected. Pass `none`
+ * to assert exactly what the generator wrote, or `prettier` only for a test
+ * that is about prettier itself.
  */
 export function createTreeWithEmptyWorkspace(
   opts = {} as {

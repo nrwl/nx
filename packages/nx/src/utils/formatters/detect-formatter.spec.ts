@@ -10,9 +10,6 @@ describe('detectFormatterInTree', () => {
     // No formatter: this suite is about what detection reports, so a
     // pre-seeded config would answer before the code under test runs.
     tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
-    // The empty workspace ships a .prettierrc; remove it so each case starts
-    // from a workspace with no formatter configured at all.
-    tree.delete('.prettierrc');
   });
 
   it('should return null when nothing indicates a formatter', () => {
