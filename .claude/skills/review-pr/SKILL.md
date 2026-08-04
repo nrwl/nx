@@ -1,7 +1,7 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -78,6 +78,31 @@ Parse out:
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
 - **`PIPELINE_VERSION: 5`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+
+### Fetch the tracking ticket
+
+Much of the work in this repo is tracked in **Linear**, not in GitHub issues. A PR whose only reference is `NXC-1234` is **not** an unlinked PR — it is a PR whose bug report lives somewhere you have to go and read. Treating "no `Fixes #N`" as "no grounding available" throws away the problem statement, the acceptance criteria, and usually the reproduction, and it silently degrades the reproduce-verifier to guessing from the PR body.
+
+Extract every `NXC-\d+` from the PR body and commit messages (also accept a `linear.app/...` link), then fetch each one:
+
+```
+mcp__plugin_linear_linear__get_issue with id "NXC-1234"
+```
+
+Also pull its comments when the description is thin — a repro often arrives in a follow-up comment rather than the original report.
+
+From each ticket, keep:
+
+- **The problem statement** — what is broken, for whom, under what conditions.
+- **The reproduction**, if it has one. This is the highest-value field on the ticket: it is what Step 5a.5's Level 1 should actually run, and it is usually more precise than anything reconstructable from the diff.
+- **Acceptance criteria / definition of done**, if stated.
+
+**Fails open.** No Linear tools configured, not authenticated (headless and cron runs often are neither), or the ticket is unreadable ⇒ continue exactly as before and note it. Never block a review on the tracker.
+
+**Two boundaries, both load-bearing:**
+
+- **Internal content never reaches `$REVIEW_BODY`.** `nrwl/nx` is public and tickets routinely carry customer names, embargoed detail, and internal planning. The ticket informs _what you check_; anything in the posted draft must stand on public evidence — the diff, the PR body, a linked GitHub issue, the repo's docs, or something this review executed. Same rule Step 5c applies to Polygraph sessions, and for the same reason.
+- **Carry the problem, not the verdict.** The bug report and its reproduction are grounding, and every agent may have them. A maintainer's comment concluding _"the right fix is X"_ is a rationale, and it belongs with the Polygraph session in Step 5c — handing it to `alternative-approach` up front is what destroys that agent's independence.
 
 ## Step 3: Check the PR out inside the sandbox container
 
@@ -376,7 +401,7 @@ Filter to entries where `mergedAt` is null (closed without merging). Only flag w
 
 **8. No linked issue + speculative scope.** All of:
 
-- No `Fixes #N` / `Closes #N` / `Resolves #N` reference in body or commits. A Linear reference (`NXC-XXXX`, or a `linear.app/...` link, whether phrased "Fixes" or "Relates to") counts as a linked issue — do NOT treat a Linear-only PR as unlinked; many nx PRs track work in Linear rather than GitHub.
+- No `Fixes #N` / `Closes #N` / `Resolves #N` reference in body or commits. A Linear reference (`NXC-XXXX`, or a `linear.app/...` link, whether phrased "Fixes" or "Relates to") counts as a linked issue — do NOT treat a Linear-only PR as unlinked; many nx PRs track work in Linear rather than GitHub. Step 2 has already **fetched** that ticket, so judge this signal on what the ticket actually says: a `NXC-…` whose ticket states a real problem satisfies the linked-issue check outright. Only a reference that resolves to nothing readable leaves the PR effectively unlinked.
 - The PR body doesn't explain _why_ the change is needed — no motivation, no linked discussion. Judge the substance, not the length.
 - PR modifies > 100 lines OR touches public-API surface (`packages/*/src/index.ts`, files matching `*.public.ts`, anything under `packages/*/index.ts`).
 
@@ -541,6 +566,34 @@ from elsewhere fails with `No version is set for shim: npm` even though `node` r
 "the workspace install failed, so you cannot run tests or eslint; restrict yourself to reading" —
 rather than leaving agents to discover it one failed command at a time.>
 
+## The problem being solved
+
+<OMIT unless Step 2 fetched a tracking ticket (Linear `NXC-…`) or the PR links a GitHub issue.>
+
+<The problem statement and, if the ticket has one, the reproduction — in the reporter's terms, not
+the author's. This is what the change is meant to fix; judge the change against it.
+
+Carry the problem and the repro. Leave OUT any comment that concludes what the fix should be, and
+any internal detail (customer names, embargoed context) — it must never reach the posted draft.>
+
+## Orientation — where this change sits
+
+Facts about the code **around** the diff, gathered once so you do not each spend your first several
+tool calls rediscovering them. This is context, not conclusions: it says what the code is, never
+whether the change is good. Verify anything you intend to lean on; correct it if it is wrong.
+
+<Fill in from reads you are doing anyway before dispatch. Keep it to ~30 lines. Include:
+
+- **The changed symbols** — one line each: what it does, exported or module-private.
+- **Who calls them** — the call sites, with paths, from one `grep` over `/work/nx/packages`. Note any
+  reached through a dynamic `require`/`import`, across a package boundary, or from a test-only path.
+- **Base behavior** — what the same code did at `/work/base`, in a sentence per changed function.
+- **Where it sits in the flow** — the entry point that reaches this code, and what gates it.
+
+Leave OUT the PR body's rationale, the author's stated motivation, and any prior review's
+conclusions. Those bias the dimensions that are supposed to arrive uninformed; call sites and base
+behavior do not.>
+
 ## Established measurements
 
 <OMIT THIS SECTION ENTIRELY unless Step 4.7 ran. When it did, paste its results here.>
@@ -614,7 +667,9 @@ these is advisory at most and not worth writing up:
 
 Substitute the real PR number for **every** `<NUMBER>` in the template — do not work from a count, and do not assume they are all inside `docker exec` commands. They are not: they include the container-name sentence, the toolchain paths, and `/tmp/pr-<NUMBER>.diff`, the primary review surface. Leaving that last one literal points every agent at a nonexistent file, so no agent can produce a verifiable EVIDENCE line and the whole run degrades to all-agents-failed. (There is deliberately no `<CONTAINER>` token; the container name is spelled out so a half-done substitution is visible rather than silent.)
 
-Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in the template — the toolchain-unavailable branch and the `## Established measurements` body. A charter shipped with an unresolved angle-bracket instruction tells every dispatched agent to follow an instruction meant for you.
+Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in the template — the toolchain-unavailable branch, the `## Orientation` body, and the `## Established measurements` body. A charter shipped with an unresolved angle-bracket instruction tells every dispatched agent to follow an instruction meant for you.
+
+**Fill in `## Orientation` on every review, and treat it as the cheapest thing in this step.** Unlike Step 4.7, it is not gated on the diff making a claim — every diff has surrounding code, and on a first review that surrounding code is what each agent otherwise spends its opening tool calls reconstructing, arriving at the same answer separately. You are already reading most of it to write the charter and to pick a REVIEW TARGET. The rule that keeps it honest is the one in the template: **call sites and base behavior in, rationale and conclusions out.** A brief that says "`foo()` is called from these five places and previously returned `null` here" orients every dimension without touching what any of them is supposed to judge; a brief that says "the author chose X because Y" is the Polygraph session arriving early, and Step 5c exists precisely to keep that until last.
 
 **`<EVIDENCE_FILE>` is the one token that stays literal in the charter.** It differs per agent (the reproduce-verifier keeps the full diff while the others may get the incremental one), so the charter deliberately defers it — "named in your dispatch prompt" — and each _dispatch prompt_ resolves it to a real path. Substituting a single path into the charter would silently point some agents at a file they were never given.
 
@@ -1025,6 +1080,22 @@ Inputs:
 - HEAD_SHA: <HEAD_REF_OID>
 - BASE_REF: <BASE_REF_NAME>
 - RUN_LEVEL_2: <true|false — see gate above>
+- GROUNDING: <the tracking ticket's problem statement and reproduction from Step 2, verbatim where it
+  has one — Linear `NXC-…` and/or the linked GitHub issue. This, not the PR body, is what the change
+  is measured against. "NO_TRACKING_TICKET" if Step 2 found none or the tracker was unreachable.>
+- REPRO_CLASSIFICATION: <one of RUNNABLE (GROUNDING carries a concrete command or a repro repo —
+  run it), MANUAL_ONLY (the trigger needs a live second process, an interactive terminal, a real
+  workspace, or network the sandbox lacks), or NONE (no tracking ticket, or the ticket has no
+  reproduction). Derived host-side in Step 2 — do NOT spend your opening tool calls re-deriving it,
+  and say so if you believe it is wrong.>
+
+**Ground the verification in GROUNDING, not the PR body.** The PR body states what the author
+believes they did; the ticket states what the reporter needed. Where they differ, the difference is
+itself worth reporting — a change that satisfies its own description while missing the ticket's
+acceptance criteria is exactly what this agent exists to catch.
+
+Do **not** quote GROUNDING into your report. It may carry internal or embargoed detail and this
+review becomes a public draft; state findings in terms of the diff and what you ran.
 
 **This agent alone keeps the FULL diff as both its review surface and its `<EVIDENCE_FILE>`, even on a re-review** — its job is mapping every claim in the PR body to code, and those claims span the whole PR, not the delta. Verify its EVIDENCE against `/tmp/pr-<NUMBER>.diff` accordingly; using the incremental diff here would fail an honest verifier.
 
@@ -1094,7 +1165,7 @@ Capture the agent's output as `$REPRO_REPORT`. Fold it into the final review bod
 - `FIX_CONFIRMED` — evidence towards `lgtm`
 - `FIX_DID_NOT_WORK` / `FIX_CHANGED_BEHAVIOR_BUT_NOT_RESOLVED` — strong push towards `needs-changes` regardless of toolkit findings
 - `BUG_NOT_REPRODUCED_ON_BASELINE` — push towards `blocked` pending human check (could mean stale issue, wrong command, or the PR is unnecessary)
-- `NOT_ATTEMPTED` — no effect on verdict; note it in the summary. This is the _expected_ outcome for internal fixes with no runnable reproduction — Rust/native or TUI changes, Linear-only PRs, or anything whose trigger needs a live second Nx process or an interactive terminal. A unit-test baseline is usually impossible here anyway (new tests reference symbols the base branch lacks, so they don't compile on master). Do not let a `NOT_ATTEMPTED` on such a PR drift the verdict toward `blocked`; lean on the static grounding instead.
+- `NOT_ATTEMPTED` — no effect on verdict; note it in the summary. This is the _expected_ outcome when `REPRO_CLASSIFICATION` is `MANUAL_ONLY` or `NONE`: Rust/native or TUI changes, or anything whose trigger needs a live second Nx process, an interactive terminal, or network the sandbox lacks. **A Linear-only PR is not automatically one of these** — Step 2 fetches the ticket, and a ticket carrying a reproduction makes Level 1 runnable. Treat `NOT_ATTEMPTED` against a `RUNNABLE` classification as a gap to question, not an expected outcome. A unit-test baseline is usually impossible here anyway (new tests reference symbols the base branch lacks, so they don't compile on master). Do not let a `NOT_ATTEMPTED` on such a PR drift the verdict toward `blocked`; lean on the static grounding instead.
 
 **Level 2 verdicts (only present when opted in):**
 
