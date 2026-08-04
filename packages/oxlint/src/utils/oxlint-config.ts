@@ -9,9 +9,10 @@ import {
 import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
 /**
- * Config files whose contents can be read statically. Not all of them can be
- * rewritten — `addPluginsToOxlintConfig` below refuses `.jsonc`, because
- * `updateJson` would strip its comments.
+ * Config files this package can rewrite. Deliberately narrower than
+ * `OXLINT_CONFIG_FILENAMES` — use that one to ask whether a config *exists*,
+ * since a config Oxlint honours but we cannot edit still forbids writing a
+ * second one beside it.
  */
 const EDITABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
   /\.jsonc?$/.test(file)
@@ -33,8 +34,9 @@ export function findRootOxlintConfig(tree: Tree): string | null {
  * into it, so the generated config extends the root explicitly. Without that
  * `extends`, the root's `categories` and `rules` silently stop applying.
  *
- * No-op when the workspace uses a TypeScript config (`oxlint.config.ts`), which
- * cannot be rewritten statically.
+ * Warns and returns when the governing config is one this package cannot rewrite
+ * (`.jsonc`, or a TypeScript config) — writing a second config beside it would
+ * make Oxlint refuse to lint the project at all.
  */
 export function addPluginsToOxlintConfig(
   tree: Tree,
@@ -45,13 +47,13 @@ export function addPluginsToOxlintConfig(
     return;
   }
 
-  // Reuse whichever editable config the project already has: writing
-  // `.oxlintrc.json` beside an existing `.oxlintrc.jsonc` is a hard error in
-  // Oxlint, not an override.
+  // Probe every filename Oxlint honours, not just the editable ones: two configs
+  // in one directory is a hard error in Oxlint, not an override, so a config we
+  // cannot edit still has to stop us writing `.oxlintrc.json` beside it.
   const existingProjectConfig =
     projectRoot === '.'
       ? undefined
-      : EDITABLE_CONFIG_FILENAMES.map((file) =>
+      : OXLINT_CONFIG_FILENAMES.map((file) =>
           joinPathFragments(projectRoot, file)
         ).find((path) => tree.exists(path));
 
@@ -78,13 +80,17 @@ export function addPluginsToOxlintConfig(
       : (existingProjectConfig ??
         joinPathFragments(projectRoot, '.oxlintrc.json'));
 
-  // `updateJson` parses comments away and re-serializes, so rewriting a `.jsonc`
-  // would discard the one thing that format is for.
-  if (projectConfigPath.endsWith('.jsonc')) {
+  // Only plain JSON survives a rewrite: `updateJson` would strip a `.jsonc`'s
+  // comments, and cannot parse a TypeScript config at all. Warn rather than fall
+  // through to `writeJson`, which would create the second config Oxlint rejects.
+  if (!projectConfigPath.endsWith('.json')) {
+    const reason = projectConfigPath.endsWith('.jsonc')
+      ? `rewriting ${projectConfigPath} would strip its comments`
+      : `${projectConfigPath} is not JSON and cannot be updated automatically`;
     logger.warn(
       `Could not enable the Oxlint plugin(s) ${plugins.join(
         ', '
-      )} for "${projectRoot}": rewriting ${projectConfigPath} would strip its comments. ` +
+      )} for "${projectRoot}": ${reason}. ` +
         `Add them to its "plugins" array manually.`
     );
     return;

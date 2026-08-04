@@ -97,17 +97,23 @@ describe('addPluginsToOxlintConfig', () => {
     ]);
   });
 
-  it('should not write a second config beside an existing .oxlintrc.jsonc', () => {
-    tree.write(
-      'apps/my-app/.oxlintrc.jsonc',
-      '{\n  // keep this\n  "plugins": ["vue"]\n}\n'
-    );
+  // Two configs in one directory is a hard error in Oxlint, not an override, so
+  // every filename Oxlint honours has to block the write — including the ones
+  // this package cannot rewrite.
+  it.each([
+    ['.oxlintrc.jsonc', '{\n  // keep this\n  "plugins": ["vue"]\n}\n'],
+    ['oxlint.config.ts', 'export default { plugins: ["vue"] };\n'],
+    ['oxlint.config.mts', 'export default { plugins: ["vue"] };\n'],
+  ])(
+    'should not write a second config beside an existing %s',
+    (file, contents) => {
+      tree.write(`apps/my-app/${file}`, contents);
 
-    addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
+      addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
 
-    // Two configs in one directory is a hard error in Oxlint, not an override.
-    expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
-  });
+      expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
+    }
+  );
 
   it('should keep comments in an existing .oxlintrc.jsonc', () => {
     tree.write(
