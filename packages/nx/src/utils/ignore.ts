@@ -12,6 +12,112 @@ export function getIgnoreObject(
   return ig;
 }
 
+/** An ignore matcher paired with the directory its patterns are rooted at. */
+export type ScopedIgnoreMatcher = {
+  /** Workspace-relative POSIX directory, `''` for the workspace root. */
+  dir: string;
+  matcher: ReturnType<typeof ignore>;
+};
+
+/**
+ * Resolves the ignore files that apply to a directory: its own and every one
+ * above it, up to the workspace root.
+ *
+ * Ignore files cascade - a `.gitignore` covers its own directory and below, and
+ * its patterns are relative to *itself*, not to the workspace root. Reading only
+ * the root file, which is what `getIgnoreObject` and `getIgnoreObjectForTree`
+ * do, silently misses every nested one.
+ *
+ * A directory's answer is its own files plus its parent's, so every directory on
+ * the way up is memoized rather than only the one asked for: sibling leaves
+ * share the whole trunk, and a later walk stops at the first directory already
+ * known.
+ *
+ * `read` decides where the files come from - `tree.read` for a generator, disk
+ * for a caller with no tree - and returns an empty string or null when there is
+ * no such file. Paths handed to it are workspace-relative POSIX.
+ */
+export function createIgnoreChainResolver(
+  read: (path: string) => string | null | undefined,
+  filenames: string[]
+): (dir: string) => ScopedIgnoreMatcher[] {
+  const cache = new Map<string, ScopedIgnoreMatcher[]>();
+
+  const resolve = (dir: string): ScopedIgnoreMatcher[] => {
+    const cached = cache.get(dir);
+    if (cached) {
+      return cached;
+    }
+
+    const contents = filenames
+      .map((name) => read(dir ? `${dir}/${name}` : name))
+      .filter((c) => !!c && c.length > 0);
+
+    const inherited = dir === '' ? [] : resolve(parentDir(dir));
+    let chain = inherited;
+    if (contents.length > 0) {
+      const matcher = ignore();
+      for (const c of contents) {
+        matcher.add(c);
+      }
+      chain = [{ dir, matcher }, ...inherited];
+    }
+
+    cache.set(dir, chain);
+    return chain;
+  };
+
+  return resolve;
+}
+
+/**
+ * True when the file is ignored, resolving the chain nearest file first.
+ *
+ * Each matcher is tested against the path relative to its own directory, which
+ * is what makes a nested pattern like `/build` mean that directory's `build`
+ * rather than the workspace's.
+ *
+ * The first file with an *opinion* decides, rather than the first file that
+ * ignores: git overrides higher-level patterns with lower-level ones, so a
+ * nested `!keep.log` re-includes a file the root's `*.log` excluded. Stopping at
+ * the first match instead would let the root win and silently drop the
+ * negation. A file that matches nothing in a directory carries no opinion, so
+ * the search continues upwards.
+ *
+ * `filePath` is workspace-relative POSIX and must sit under every `dir` in the
+ * chain - which holds when the chain came from that file's own directory.
+ */
+export function isIgnoredByChain(
+  chain: ScopedIgnoreMatcher[],
+  filePath: string
+): boolean {
+  for (const { dir, matcher } of chain) {
+    const relative = dir === '' ? filePath : filePath.slice(dir.length + 1);
+    if (!relative) {
+      continue;
+    }
+    const result = matcher.test(relative);
+    if (result.ignored) {
+      return true;
+    }
+    if (result.unignored) {
+      return false;
+    }
+  }
+  return false;
+}
+
+/** `path.dirname` for the workspace-relative POSIX paths the chain is keyed by. */
+export function posixDirname(relativePath: string): string {
+  const separator = relativePath.lastIndexOf('/');
+  return separator === -1 ? '' : relativePath.slice(0, separator);
+}
+
+function parentDir(dir: string): string {
+  const separator = dir.lastIndexOf('/');
+  return separator === -1 ? '' : dir.slice(0, separator);
+}
+
 export function getIgnoreObjectForTree(tree: Tree) {
   let ig: ReturnType<typeof ignore>;
   if (tree.exists('.gitignore')) {
