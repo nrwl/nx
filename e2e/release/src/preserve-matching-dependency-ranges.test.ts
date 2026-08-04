@@ -159,8 +159,6 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": "^1.0.0"
         +     "@proj/{project-name}": "^1.1.0"
         }
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.1.0",
@@ -169,8 +167,6 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": ">=1.0.0 <2.0.0"
         +     "@proj/{project-name}": "1.1.0"
         }
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.1.0",
@@ -185,8 +181,6 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": "^1.0.0"
         +     "@proj/{project-name}": "^1.1.0"
         }
-        }
-        +
         NX   Staging changed files with git
       `);
     });
@@ -233,20 +227,14 @@ describe('nx release preserve matching dependency ranges', () => {
         -   "version": "1.0.0",
         +   "version": "1.1.0",
         "exports": {
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.1.0",
         "exports": {
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.1.0",
         "exports": {
-        }
-        +
         NX   Staging changed files with git
       `);
     });
@@ -298,8 +286,6 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": "^1.0.0"
         +     "@proj/{project-name}": "^1.0.1"
         }
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
@@ -308,14 +294,10 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": ">=1.0.0 <2.0.0"
         +     "@proj/{project-name}": "1.0.1"
         }
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
         "exports": {
-        }
-        +
         NX   Staging changed files with git
       `);
     });
@@ -361,8 +343,6 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": "^1.0.0"
         +     "@proj/{project-name}": "^1.1.0"
         }
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.1.0",
@@ -371,8 +351,6 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": ">=1.0.0 <2.0.0"
         +     "@proj/{project-name}": "1.1.0"
         }
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.1.0",
@@ -387,8 +365,6 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": "^1.0.0"
         +     "@proj/{project-name}": "^1.1.0"
         }
-        }
-        +
         NX   Staging changed files with git
       `);
     });
@@ -432,20 +408,14 @@ describe('nx release preserve matching dependency ranges', () => {
         -   "version": "1.0.0",
         +   "version": "1.0.1",
         "exports": {
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
         "exports": {
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
         "exports": {
-        }
-        +
         NX   Staging changed files with git
       `);
     });
@@ -497,14 +467,10 @@ describe('nx release preserve matching dependency ranges', () => {
         -   "version": "1.0.0",
         +   "version": "1.0.1",
         "exports": {
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
         "exports": {
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "1.0.1",
@@ -513,8 +479,6 @@ describe('nx release preserve matching dependency ranges', () => {
         -     "@proj/{project-name}": "1.0.0"
         +     "@proj/{project-name}": "1.0.1"
         },
-        }
-        +
         NX   Staging changed files with git
       `);
     });
@@ -579,20 +543,14 @@ describe('nx release preserve matching dependency ranges', () => {
         -   "version": "1.0.0",
         +   "version": "2.0.0",
         "exports": {
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
         "exports": {
-        }
-        +
         "name": "@proj/{project-name}",
         -   "version": "1.0.0",
         +   "version": "2.0.0",
         "exports": {
-        }
-        +
         NX   Staging changed files with git
       `);
     });

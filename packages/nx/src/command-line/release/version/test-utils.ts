@@ -281,8 +281,9 @@ export class MockJsVersionActions extends VersionActions {
   private read = (tree: Tree, manifestPath: string): any =>
     JSON.parse(tree.read(manifestPath, 'utf-8')!.toString());
 
-  // Match `@nx/devkit`'s `updateJson` formatting (2-space indent + trailing
-  // newline) so existing snapshots continue to match.
+  // Normalize JSON to a stable two-space format for orchestration snapshots.
+  // Formatting preservation is JS-specific behavior covered against the real
+  // implementation in packages/js.
   private write = (tree: Tree, manifestPath: string, json: any): void =>
     tree.write(manifestPath, JSON.stringify(json, null, 2) + '\n');
 

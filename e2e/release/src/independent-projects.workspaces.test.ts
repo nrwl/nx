@@ -182,9 +182,6 @@ describe('nx release - independent projects - workspaces', () => {
           +   "version": "999.9.9-package.2",
           "exports": {
 
-          }
-          +
-
 
           NX   Updating {package-manager} lock file
 

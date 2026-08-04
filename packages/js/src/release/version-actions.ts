@@ -2,14 +2,15 @@ import { getCatalogManager } from '@nx/devkit/internal';
 import {
   detectPackageManager,
   PackageManager,
+  parseJson,
   ProjectGraph,
   readJson,
   Tree,
-  updateJson,
   workspaceRoot,
 } from '@nx/devkit';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
+import { applyEdits, FormattingOptions, modify } from 'jsonc-parser';
 import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
 import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
@@ -42,6 +43,7 @@ let pm: PackageManager | undefined;
 
 export default class JsVersionActions extends VersionActions {
   validManifestFilenames = ['package.json'];
+  excludeManifestsFromFormatting = true;
 
   async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
     currentVersion: string;
@@ -193,10 +195,9 @@ export default class JsVersionActions extends VersionActions {
   ): Promise<string[]> {
     const logMessages: string[] = [];
     for (const manifestToUpdate of this.manifestsToUpdate) {
-      updateJson(tree, manifestToUpdate.manifestPath, (json) => {
-        json.version = newVersion;
-        return json;
-      });
+      this.updateManifestValues(tree, manifestToUpdate.manifestPath, [
+        { path: ['version'], value: newVersion },
+      ]);
       logMessages.push(
         `✍️  New version ${newVersion} written to manifest: ${manifestToUpdate.manifestPath}`
       );
@@ -223,82 +224,92 @@ export default class JsVersionActions extends VersionActions {
     const catalogManager = getCatalogManager(tree.root);
 
     for (const manifestToUpdate of this.manifestsToUpdate) {
-      updateJson(tree, manifestToUpdate.manifestPath, (json) => {
-        const dependencyTypes = [
-          'dependencies',
-          'devDependencies',
-          'peerDependencies',
-          'optionalDependencies',
-        ];
+      const json = readJson(tree, manifestToUpdate.manifestPath);
+      const manifestUpdates: Array<{
+        path: string[];
+        value: string;
+      }> = [];
+      const dependencyTypes = [
+        'dependencies',
+        'devDependencies',
+        'peerDependencies',
+        'optionalDependencies',
+      ];
 
-        const preserveMatchingDependencyRanges =
-          this.finalConfigForProject.preserveMatchingDependencyRanges === true
-            ? dependencyTypes
-            : this.finalConfigForProject.preserveMatchingDependencyRanges ===
-                false
-              ? []
-              : this.finalConfigForProject.preserveMatchingDependencyRanges ||
-                dependencyTypes;
+      const preserveMatchingDependencyRanges =
+        this.finalConfigForProject.preserveMatchingDependencyRanges === true
+          ? dependencyTypes
+          : this.finalConfigForProject.preserveMatchingDependencyRanges ===
+              false
+            ? []
+            : this.finalConfigForProject.preserveMatchingDependencyRanges ||
+              dependencyTypes;
 
-        for (const depType of dependencyTypes) {
-          if (json[depType]) {
-            for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
-              // Resolve the package name from the project graph metadata, as it may not match the project name
-              const packageName =
-                projectGraph.nodes[dep].data.metadata?.js?.packageName;
-              if (!packageName) {
-                throw new Error(
-                  `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
-                );
+      for (const depType of dependencyTypes) {
+        if (json[depType]) {
+          for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
+            // Resolve the package name from the project graph metadata, as it may not match the project name
+            const packageName =
+              projectGraph.nodes[dep].data.metadata?.js?.packageName;
+            if (!packageName) {
+              throw new Error(
+                `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
+              );
+            }
+            const currentVersion = json[depType][packageName];
+            if (currentVersion) {
+              if (catalogManager?.isCatalogReference(currentVersion)) {
+                // collect the catalog updates so we can update the catalog definitions later
+                const catalogRef =
+                  catalogManager.parseCatalogReference(currentVersion)!;
+                catalogUpdates.push({
+                  packageName,
+                  version,
+                  catalogName: catalogRef.catalogName,
+                });
+
+                numDependenciesToUpdate--;
+                continue;
               }
-              const currentVersion = json[depType][packageName];
-              if (currentVersion) {
-                if (catalogManager?.isCatalogReference(currentVersion)) {
-                  // collect the catalog updates so we can update the catalog definitions later
-                  const catalogRef =
-                    catalogManager.parseCatalogReference(currentVersion)!;
-                  catalogUpdates.push({
-                    packageName,
-                    version,
-                    catalogName: catalogRef.catalogName,
-                  });
-
-                  numDependenciesToUpdate--;
+              // Check if other local dependency protocols should be preserved
+              else if (
+                manifestToUpdate.preserveLocalDependencyProtocols &&
+                this.isLocalDependencyProtocol(currentVersion)
+              ) {
+                // Reduce the count appropriately to avoid confusing user-facing logs
+                numDependenciesToUpdate--;
+                continue;
+              } else if (
+                preserveMatchingDependencyRanges.includes(depType) &&
+                !this.isLocalDependencyProtocol(currentVersion)
+              ) {
+                // If the dependency is specified using a range, do some additional processing to determine whether to update the version
+                if (
+                  isValidRange(currentVersion) &&
+                  !isMatchingDependencyRange(version, currentVersion)
+                ) {
+                  throw new Error(
+                    `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
+                  );
+                } else if (isValidRange(currentVersion)) {
+                  // it is a range, but it is valid
                   continue;
                 }
-                // Check if other local dependency protocols should be preserved
-                else if (
-                  manifestToUpdate.preserveLocalDependencyProtocols &&
-                  this.isLocalDependencyProtocol(currentVersion)
-                ) {
-                  // Reduce the count appropriately to avoid confusing user-facing logs
-                  numDependenciesToUpdate--;
-                  continue;
-                } else if (
-                  preserveMatchingDependencyRanges.includes(depType) &&
-                  !this.isLocalDependencyProtocol(currentVersion)
-                ) {
-                  // If the dependency is specified using a range, do some additional processing to determine whether to update the version
-                  if (
-                    isValidRange(currentVersion) &&
-                    !isMatchingDependencyRange(version, currentVersion)
-                  ) {
-                    throw new Error(
-                      `"preserveMatchingDependencyRanges" is enabled for "${depType}" and the new version "${version}" is outside the current range for "${packageName}" in manifest "${manifestToUpdate.manifestPath}". Please update the range before releasing.`
-                    );
-                  } else if (isValidRange(currentVersion)) {
-                    // it is a range, but it is valid
-                    continue;
-                  }
-                }
-                json[depType][packageName] = version;
               }
+              manifestUpdates.push({
+                path: [depType, packageName],
+                value: version,
+              });
             }
           }
         }
+      }
 
-        return json;
-      });
+      this.updateManifestValues(
+        tree,
+        manifestToUpdate.manifestPath,
+        manifestUpdates
+      );
 
       // If we ignored local dependecy protocols, then we could have dynamically ended up with zero here and we should not log anything related to dependencies
       if (numDependenciesToUpdate === 0) {
@@ -325,6 +336,81 @@ export default class JsVersionActions extends VersionActions {
     }
 
     return logMessages;
+  }
+
+  private updateManifestValues(
+    tree: Tree,
+    manifestPath: string,
+    updates: Array<{ path: string[]; value: string }>
+  ): void {
+    if (updates.length === 0) {
+      return;
+    }
+    let content = this.readAndValidateManifest(tree, manifestPath);
+    const formattingOptions = this.detectFormattingOptions(content);
+    for (const update of updates) {
+      content = applyEdits(
+        content,
+        modify(content, update.path, update.value, { formattingOptions })
+      );
+    }
+    this.validateManifestUpdates(content, manifestPath, updates);
+    tree.write(manifestPath, content);
+  }
+
+  private readAndValidateManifest(tree: Tree, manifestPath: string): string {
+    const content = tree.read(manifestPath, 'utf-8');
+    try {
+      // Match readJson's support for comments and trailing commas while
+      // retaining the original text for targeted edits.
+      parseJson(content);
+    } catch (error) {
+      throw new Error(`Cannot parse ${manifestPath}: ${error.message}`);
+    }
+    return content;
+  }
+
+  private validateManifestUpdates(
+    content: string,
+    manifestPath: string,
+    updates: Array<{ path: string[]; value: string }>
+  ): void {
+    const manifest = parseJson(content);
+    for (const update of updates) {
+      let actualValue: unknown = manifest;
+      for (const pathSegment of update.path) {
+        if (
+          actualValue === null ||
+          typeof actualValue !== 'object' ||
+          !(pathSegment in actualValue)
+        ) {
+          actualValue = undefined;
+          break;
+        }
+        actualValue = (actualValue as Record<string, unknown>)[pathSegment];
+      }
+      if (actualValue !== update.value) {
+        throw new Error(
+          `Cannot update ${manifestPath}: "${update.path.join(
+            '.'
+          )}" resolves to ${JSON.stringify(
+            actualValue
+          )} instead of ${JSON.stringify(
+            update.value
+          )} after editing. The manifest may contain duplicate keys.`
+        );
+      }
+    }
+  }
+
+  private detectFormattingOptions(content: string): FormattingOptions {
+    const indentation = content.match(/^[\t ]+(?=")/m)?.[0] ?? '  ';
+    const insertSpaces = !indentation.includes('\t');
+
+    return {
+      insertSpaces,
+      tabSize: insertSpaces ? indentation.length : 1,
+    };
   }
 
   // NOTE: The TODOs were carried over from the original implementation, they are not yet implemented
