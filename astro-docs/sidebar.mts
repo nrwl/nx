@@ -120,7 +120,7 @@ const learnGroups: SidebarItems = [
         label: 'Cache task results',
         link: 'features/cache-task-results',
       },
-      { label: 'Enhance your LLM', link: 'features/enhance-ai' },
+      { label: 'Enhance your coding agent', link: 'features/enhance-ai' },
       {
         label: 'Code organization',
         collapsed: true,
@@ -166,7 +166,7 @@ const learnGroups: SidebarItems = [
           },
           { label: 'Affected', link: 'features/ci-features/affected' },
           {
-            label: 'Remote cache (Nx Replay)',
+            label: 'Remote caching',
             link: 'features/ci-features/remote-cache',
           },
           {
