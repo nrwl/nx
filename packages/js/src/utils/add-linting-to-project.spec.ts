@@ -57,9 +57,9 @@ describe('addLintingToProject', () => {
     expect(devDependencies['@nx/eslint']).toBeUndefined();
   });
 
-  // detox declares `linter?`, and `"strict": false` lets undefined through
-  // elsewhere. It has always meant ESLint, and the exhaustiveness check added
-  // alongside this must not turn that into a throw.
+  // `undefined` reaches the dispatcher from callers whose schema declares
+  // `linter?` — see the comment on the `?? 'eslint'` normalization. The
+  // exhaustiveness check added alongside it must not turn that into a throw.
   it('falls back to eslint when no linter is given', async () => {
     await expect(
       addLintingToProject(tree, {

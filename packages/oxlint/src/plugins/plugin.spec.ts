@@ -125,8 +125,7 @@ describe('@nx/oxlint plugin', () => {
       'libs/a/project.json': `{"name":"a"}`,
       'libs/a/src/index.ts': `export const a = 1;`,
       'libs/a/src/nested/.oxlintrc.json': `{"rules":{}}`,
-      // A sibling, not an ancestor: `libs/a` is a string prefix of `libs/ab`,
-      // which a naive `startsWith` would treat as containment.
+      // A config under a different Oxlint root is not this project's input.
       'libs/ab/.oxlintrc.json': `{"rules":{}}`,
     });
 
