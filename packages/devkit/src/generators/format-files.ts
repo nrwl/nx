@@ -68,10 +68,6 @@ export async function formatFiles(
   if (detectFormatterInTree) {
     formatterType = detectFormatterInTree(tree);
   } else {
-    // devkit supports nx +/- 1 major, and detectFormatterInTree does not exist
-    // in older versions. Missing exports do not throw, so this has to be a
-    // presence check rather than a catch - otherwise formatting is silently
-    // skipped against an older nx.
     try {
       if ((await importPrettier()) && isUsingPrettierInTree(tree)) {
         formatterType = 'prettier';
@@ -109,8 +105,7 @@ async function formatWithPrettier(
   const prettier = await importPrettier();
   if (!prettier) {
     // Detection said this workspace formats with prettier, so silence here
-    // would leave a generator's files unformatted for no stated reason. The
-    // oxfmt path reports the same situation.
+    // would leave a generator's files unformatted for no stated reason.
     console.warn(
       'Could not format files with prettier: prettier is configured for this workspace but is not installed.'
     );
