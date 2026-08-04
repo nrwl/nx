@@ -1,7 +1,7 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and executes the repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -77,7 +77,42 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 4`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 5`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+
+### Fetch the tracking ticket
+
+Much of the work in this repo is tracked in **Linear**, not in GitHub issues. A PR whose only reference is `NXC-1234` is **not** an unlinked PR — it is a PR whose bug report lives somewhere you have to go and read. Treating "no `Fixes #N`" as "no grounding available" throws away the problem statement, the acceptance criteria, and usually the reproduction, and it silently degrades the reproduce-verifier to guessing from the PR body.
+
+Extract every `NXC-\d+` from the PR body and commit messages (also accept a `linear.app/...` link), then fetch each one:
+
+```
+mcp__plugin_linear_linear__get_issue with id "NXC-1234"
+```
+
+Also pull its comments when the description is thin — a repro often arrives in a follow-up comment rather than the original report.
+
+From each ticket, keep:
+
+- **The problem statement** — what is broken, for whom, under what conditions.
+- **The reproduction**, if it has one. This is the highest-value field on the ticket: it is what Step 5a.5's Level 1 should actually run, and it is usually more precise than anything reconstructable from the diff.
+- **Acceptance criteria / definition of done**, if stated.
+
+Then classify the reproduction once, here, and carry it to Step 5a.5 as `REPRO_CLASSIFICATION`:
+
+- **`RUNNABLE`** — the ticket (or a linked GitHub issue) carries a concrete command or a repro repo.
+- **`MANUAL_ONLY`** — the trigger needs a live second Nx process, an interactive terminal, a real
+  connected workspace, or network the sandbox lacks.
+- **`NONE`** — no ticket, tracker unreachable, or the ticket has no reproduction.
+
+Deriving it here rather than in the agent is the point: it is one read of material you already have
+open, and the verifier otherwise spends its opening tool calls rediscovering the same answer.
+
+**Fails open.** No Linear tools configured, not authenticated (headless and cron runs often are neither), or the ticket is unreadable ⇒ continue exactly as before and note it. Never block a review on the tracker.
+
+**Two boundaries, both load-bearing:**
+
+- **Internal content never reaches `$REVIEW_BODY`.** `nrwl/nx` is public and tickets routinely carry customer names, embargoed detail, and internal planning. The ticket informs _what you check_; anything in the posted draft must stand on public evidence — the diff, the PR body, a linked GitHub issue, the repo's docs, or something this review executed. Same rule Step 5c applies to Polygraph sessions, and for the same reason.
+- **Carry the problem, not the verdict.** The bug report and its reproduction are grounding, and every agent may have them. A maintainer's comment concluding _"the right fix is X"_ is a rationale, and it belongs with the Polygraph session in Step 5c — handing it to `alternative-approach` up front is what destroys that agent's independence.
 
 ## Step 3: Check the PR out inside the sandbox container
 
@@ -229,7 +264,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
 3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
 
-   **Distill; do not paste.** Every byte here is read by all nine agents, so its cost is multiplied ninefold — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
+   **Distill; do not paste.** Every byte here is read by every agent you dispatch, so its cost is multiplied by the whole fleet — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
 
    Write this shape instead, and keep the whole file **under ~150 lines**:
 
@@ -240,11 +275,16 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    Earlier attempts: <one line per attempt, oldest first — "attempt 2 (1046ace) lgtm — daemon now
    rejects foreign-workspace messages">.
 
-   ## Open items — verify whether these still hold
+   ## Open items — I re-checked these at HEAD; cite them, do not re-verify
 
    <Every unresolved Critical/Important finding from ANY prior attempt, one bullet each.
    Quote the finding's own one-line summary verbatim where it has one; add the file:line and
-   the specific ask. These are load-bearing — see the budget rule below.>
+   the specific ask. These are load-bearing — see the budget rule below.
+
+   Mark each one with what YOU observed at HEAD before dispatching — "still present at
+   performance-report.ts:41, unchanged by this delta" or "now fixed by <commit>". An agent that
+   reads a bare open item will go and re-open the same three files to check it; an agent that
+   reads your verified status will cite it and move on.>
 
    ## Already fixed — do not re-raise
 
@@ -263,13 +303,19 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    ## Review focus
 
-   Focus on the diff since the last review. For unchanged code, only verify whether the open
-   items above still hold — do not re-analyze it from scratch.
+   Focus on the diff since the last review. The open items above are already re-checked — carry
+   their status into your report if your dimension owns one, but do not go and re-derive it. Do not
+   re-analyze unchanged code from scratch.
 
    <Optionally: 2-4 specific questions this round should settle, phrased neutrally.>
    ```
 
    Rules for the distillation:
+   - **Re-check the open items yourself, once, before you write this file.** Reading the three or
+     four places a prior round flagged is one or two commands for you; left to the agents it is the
+     same reads repeated by everyone whose dimension touches them, and they all reach your answer.
+     This is the same economy as Step 4.7, applied to the carry-forward. If an item turns out to be
+     fixed, move it to "Already fixed" and say what closed it.
    - **The budget never evicts an open finding.** The ~150-line target governs _prose_, not the Open-items list. If open items alone exceed the budget, keep them all and cut elsewhere — dropping an unresolved finding silently converts it into a "new" finding next round, or into no finding at all, which is the one failure this file exists to prevent.
    - **Compress by dropping sections, not by summarizing findings.** Prior Reproduction / Approach / Performance / Security narrative goes entirely; a finding's own wording is preserved. Never paraphrase a finding into something vaguer than the author wrote — the point of quoting is that the next agent can check the same claim.
    - **Do not carry a prior verdict's reasoning as an instruction.** Say what was found, not what to conclude. An agent told "attempt 5 concluded this is sound" will confirm it; an agent told "attempt 5 found X at file:line" will check X.
@@ -345,7 +391,9 @@ For larger PRs, skip this — the toolkit will catch subtler issues.
 gh issue view <ISSUE> --repo nrwl/nx --json comments --jq '[.comments[].author.login]'
 ```
 
-If no nrwl-org member has confirmed the bug AND the PR body offers no rationale of its own (no root-cause explanation, no design-doc link), the right outcome is a question, not a closure: flag it, push the verdict toward `blocked`, and have the draft ask the author for a runnable reproduction. This signal never forces `unnecessary`.
+**A Linear ticket is corroboration, and usually stronger than a GitHub comment** — it means the team tracked the work deliberately. Step 2 has already fetched it, so check it here before concluding the bug is unconfirmed. Firing this signal on a `NXC-…` PR purely because it has no GitHub issue would push a tracked, triaged piece of work toward `blocked` for the sole reason that its tracker is not GitHub.
+
+If no nrwl-org member has confirmed the bug, **no tracking ticket describes it**, AND the PR body offers no rationale of its own (no root-cause explanation, no design-doc link), the right outcome is a question, not a closure: flag it, push the verdict toward `blocked`, and have the draft ask the author for a runnable reproduction. This signal never forces `unnecessary`.
 
 **6. Stale + abandoned + conflicted.** All three together:
 
@@ -365,7 +413,7 @@ Filter to entries where `mergedAt` is null (closed without merging). Only flag w
 
 **8. No linked issue + speculative scope.** All of:
 
-- No `Fixes #N` / `Closes #N` / `Resolves #N` reference in body or commits. A Linear reference (`NXC-XXXX`, or a `linear.app/...` link, whether phrased "Fixes" or "Relates to") counts as a linked issue — do NOT treat a Linear-only PR as unlinked; many nx PRs track work in Linear rather than GitHub.
+- No `Fixes #N` / `Closes #N` / `Resolves #N` reference in body or commits. A Linear reference (`NXC-XXXX`, or a `linear.app/...` link, whether phrased "Fixes" or "Relates to") counts as a linked issue — do NOT treat a Linear-only PR as unlinked; many nx PRs track work in Linear rather than GitHub. Step 2 has already **fetched** that ticket, so judge this signal on what the ticket actually says: a `NXC-…` whose ticket states a real problem satisfies the linked-issue check outright. Only a reference that resolves to nothing readable leaves the PR effectively unlinked.
 - The PR body doesn't explain _why_ the change is needed — no motivation, no linked discussion. Judge the substance, not the length.
 - PR modifies > 100 lines OR touches public-API surface (`packages/*/src/index.ts`, files matching `*.public.ts`, anything under `packages/*/index.ts`).
 
@@ -424,6 +472,19 @@ dimension depends on. Signals that it does:
 - A changed **lint / CI / build config** whose effect is the point of the change.
 - A **removed** log, warning, or error, justified as "the sink already reports it".
 - A claimed **behavioral parity** between two code paths ("the worker mirrors the classic loop").
+- A change to a **shared signature or call contract**: a new parameter, a widened argument list, a
+  new option threaded through a function with several call sites.
+
+That last one needs looking somewhere different. The four above it are claims the diff makes **about
+itself**, so the diff contains the evidence; a signature change's expensive facts live in the code
+**around** it. Measure these outside the changed lines:
+
+- Is the new argument genuinely **inert** for the callers that do not pass it? (Read the dependency's
+  own source for the falsy guard; do not assume.)
+- What arity does **every** call site actually pass? Enumerate them once.
+- Does any consumer reach the symbol through an **untyped dynamic `require`/`import`**, or across a
+  package boundary where the two sides version independently? That is what decides whether an
+  options-object refactor is even available, and it is invisible to a reader of the diff alone.
 
 If the diff makes no such claim, skip this step entirely — most PRs will.
 
@@ -441,7 +502,22 @@ If the diff makes no such claim, skip this step entirely — most PRs will.
 4. **Measure the comparison points too** — the base (`/work/base`) and, on a re-review, the prior
    SHA (`git worktree add --detach /work/prior <PRIOR_SHA>`). A number without its baseline cannot
    answer "is this net-new?", which is calibration 7's question.
-5. **Record the method, not just the number.** The charter entry must let an agent re-run it.
+5. **Measure the corollaries each dimension will ask for, not just the headline conclusion.** This is
+   what decides whether the step actually suppresses duplication. An agent whose own question sits
+   one hop from your conclusion will rebuild the whole harness to answer that hop, and the
+   measurement buys nothing. Once a rig is standing, extra observations off it are nearly free, so
+   take them:
+   - You measured that a timeout **releases the event loop**. Also record what the call **returns**
+     and what it **logs** on that path — those are the error-handling and comment-accuracy
+     dimensions' versions of the same experiment.
+   - You measured that a request is **torn down**. Also record what the **server saw** — that answers
+     "did a stray write reach the wire?" for the security dimension.
+   - You measured a **cost**. Also record it for the base and for the untouched sibling path, so the
+     performance dimension does not re-run it to get a comparison.
+
+   Ask, per dimension: _what would this agent want to observe on the rig I already have standing?_
+
+6. **Record the method, not just the number.** The charter entry must let an agent re-run it.
 
 ### How to write it into the charter
 
@@ -501,6 +577,34 @@ from elsewhere fails with `No version is set for shim: npm` even though `node` r
 <IF the Step 3 install did not report OK, REPLACE the first paragraph with what actually happened —
 "the workspace install failed, so you cannot run tests or eslint; restrict yourself to reading" —
 rather than leaving agents to discover it one failed command at a time.>
+
+## The problem being solved
+
+<OMIT unless Step 2 fetched a tracking ticket (Linear `NXC-…`) or the PR links a GitHub issue.>
+
+<The problem statement and, if the ticket has one, the reproduction — in the reporter's terms, not
+the author's. This is what the change is meant to fix; judge the change against it.
+
+Carry the problem and the repro. Leave OUT any comment that concludes what the fix should be, and
+any internal detail (customer names, embargoed context) — it must never reach the posted draft.>
+
+## Orientation — where this change sits
+
+Facts about the code **around** the diff, gathered once so you do not each spend your first several
+tool calls rediscovering them. This is context, not conclusions: it says what the code is, never
+whether the change is good. Verify anything you intend to lean on; correct it if it is wrong.
+
+<Fill in from reads you are doing anyway before dispatch. Keep it to ~30 lines. Include:
+
+- **The changed symbols** — one line each: what it does, exported or module-private.
+- **Who calls them** — the call sites, with paths, from one `grep` over `/work/nx/packages`. Note any
+  reached through a dynamic `require`/`import`, across a package boundary, or from a test-only path.
+- **Base behavior** — what the same code did at `/work/base`, in a sentence per changed function.
+- **Where it sits in the flow** — the entry point that reaches this code, and what gates it.
+
+Leave OUT the PR body's rationale, the author's stated motivation, and any prior review's
+conclusions. Those bias the dimensions that are supposed to arrive uninformed; call sites and base
+behavior do not.>
 
 ## Established measurements
 
@@ -575,7 +679,9 @@ these is advisory at most and not worth writing up:
 
 Substitute the real PR number for **every** `<NUMBER>` in the template — do not work from a count, and do not assume they are all inside `docker exec` commands. They are not: they include the container-name sentence, the toolchain paths, and `/tmp/pr-<NUMBER>.diff`, the primary review surface. Leaving that last one literal points every agent at a nonexistent file, so no agent can produce a verifiable EVIDENCE line and the whole run degrades to all-agents-failed. (There is deliberately no `<CONTAINER>` token; the container name is spelled out so a half-done substitution is visible rather than silent.)
 
-Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in the template — the toolchain-unavailable branch and the `## Established measurements` body. A charter shipped with an unresolved angle-bracket instruction tells nine agents to follow an instruction meant for you.
+Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in the template — the toolchain-unavailable branch, the `## Orientation` body, and the `## Established measurements` body. A charter shipped with an unresolved angle-bracket instruction tells every dispatched agent to follow an instruction meant for you.
+
+**Fill in `## Orientation` on every review, and treat it as the cheapest thing in this step.** Unlike Step 4.7, it is not gated on the diff making a claim — every diff has surrounding code, and on a first review that surrounding code is what each agent otherwise spends its opening tool calls reconstructing, arriving at the same answer separately. You are already reading most of it to write the charter and to pick a REVIEW TARGET. The rule that keeps it honest is the one in the template: **call sites and base behavior in, rationale and conclusions out.** A brief that says "`foo()` is called from these five places and previously returned `null` here" orients every dimension without touching what any of them is supposed to judge; a brief that says "the author chose X because Y" is the Polygraph session arriving early, and Step 5c exists precisely to keep that until last.
 
 **`<EVIDENCE_FILE>` is the one token that stays literal in the charter.** It differs per agent (the reproduce-verifier keeps the full diff while the others may get the incremental one), so the charter deliberately defers it — "named in your dispatch prompt" — and each _dispatch prompt_ resolves it to a real path. Substituting a single path into the charter would silently point some agents at a file they were never given.
 
@@ -653,8 +759,10 @@ that found no issues.
 <ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
 Also read /tmp/pr-<NUMBER>.review-context.md — a distilled carry-forward from prior reviews of this
 PR: what is still open, what was already fixed, and which trade-offs are settled. Focus on what
-changed since. It is deliberately NOT the full prior reviews — it lists only what carries forward, so
-treat it as a checklist to verify, never as a statement that anything absent from it is fine.
+changed since. Its open items were re-checked at HEAD by the caller before you were dispatched — cite
+their recorded status rather than re-deriving it, and challenge one only if the code contradicts it.
+It is deliberately NOT the full prior reviews — it lists only what carries forward, so never read it
+as a statement that anything absent from it is fine.
 """
 )
 ```
@@ -669,9 +777,78 @@ Dispatch these in parallel:
 
 `code-simplifier` is deliberately omitted — its output is nice-to-have polish by definition, all of which the trim below would discard.
 
+### Scoping which agents spawn
+
+Two different levers, with deliberately different bars. The bar is set by **what backstops a wrong
+call**, so do not mix them up.
+
+#### 1. Content-based — structural non-applicability (any review, including the first)
+
+Skip an agent when the diff gives its dimension **nothing to act on**. The list above already does
+this for `type-design-analyzer` ("only when the diff adds or changes types"); the same reasoning
+generalizes, but only where the predicate is **mechanically decidable from the changed-file list and
+the diff text**, with no judgment about likelihood:
+
+| skip                                                                                     | when — and only when                                                                                                        |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `type-design-analyzer`                                                                   | the diff declares or changes no type, interface, or signature                                                               |
+| `security-analyzer`, `performance-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` | the diff changes **no executable code at all** — every path is docs, prose, or comments (`astro-docs/**`, `*.md`, `*.mdoc`) |
+
+`code-reviewer`, `comment-analyzer`, `alternative-approach` and `reproduce-verifier` always run: every
+diff has quality, prose, an approach, and claims to check against code.
+
+**A dimension being unlikely to fire is not non-applicability.** "This diff probably has no security
+issue" is exactly the judgment that loses a finding, and you cannot tell from outside which of the two
+you just made. The test: could you defend the skip to someone who later found a bug there? "The diff
+contains no code" survives that; "I read it and it looked fine" does not — that is a review, and if
+you are doing the review yourself you may as well dispatch the agent that does it properly. Two
+specific traps: a lockfile-only diff is **not** a docs diff (supply chain is `security-analyzer`'s
+core beat), and a generated-file diff still ships executable code.
+
+Structural skips get recorded in `## Failures` exactly like the judgment skips below — see the
+recording rule there. Every agent that did not run is named in the draft, whichever lever skipped it.
+
+#### 2. Delta-based — judgment scoping (re-reviews only)
+
+On a **first** review, stop at the structural rules above — nothing backstops a wrong call, so
+judgment about what the diff "probably" affects has no place.
+
+On a **re-review**, the unchanged code was already reviewed by the full set at a prior attempt, and
+re-running everything against a small delta buys mostly restatement. Scope the set to the dimensions
+the delta actually puts at stake. A round whose delta is one reworded comment does not need the
+security, performance and test dimensions re-run against code none of them touched.
+
+**Scope by dimension at stake, never by which files changed.** This distinction is the whole safety
+margin, because new code routinely changes what _unchanged_ code means. Add a cancellation path and
+the pre-existing `catch` blocks it now reaches can become wrong without appearing in the diff at all.
+A file-based rule drops `silent-failure-hunter` there and loses the finding; a dimension-based rule
+keeps it, because the delta's subject is cancellation and error handling is plainly at stake.
+
+Ask of each agent: _could the delta change what this dimension would conclude?_ Keep it if yes or if
+unsure. Concretely, a delta that adds no new sink and no new untrusted input rarely moves
+`security-analyzer`; one that adds no work on a hot path and no new allocation in a loop rarely moves
+`performance-analyzer`. A delta that changes a signature always moves `type-design-analyzer`.
+
+Three constraints:
+
+- **Never scope out a dimension the delta's own subject matter names.** Cancellation ⇒ error
+  handling. A changed comment ⇒ comment accuracy. A new parameter ⇒ type design.
+- **Record every skip and its reason in `## Failures`**, in the same breath as the scope decision, so
+  the draft never reads as though the full fleet cleared it when only part of it ran. A skipped agent is
+  not-applicable, exactly like `type-design-analyzer` on a typeless diff — not a failure, and it does
+  **not** force `verdict: failed` (Step 7). That token is reserved for an agent that was dispatched
+  and could not prove it read anything.
+- **When in doubt, dispatch.** The asymmetry is stark: an unnecessary agent costs tokens, a wrongly
+  skipped one costs a finding nobody knows is missing.
+
+**Do not extend this to PR-level properties.** Importance, size, author and risk tier are never
+grounds to drop a dimension; a PR does not earn its coverage by looking important. The two bases
+above are the only sanctioned ones — structural non-applicability, and a re-review whose unchanged
+code already carries recorded coverage from a prior attempt.
+
 ### Verify each agent actually reviewed something
 
-A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. Every agent — the toolkit agents here (four, or five when `type-design-analyzer` applies), **and** the four in Steps 5a–5a.5 — must prove it opened the artifact.
+A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the toolkit agents here **and** the four in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
 
 **Demand a line number, not just a line.** A filename is not evidence: the changed-file list is a host file every agent is told to `Read`, so an agent that opened nothing else can still cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `<EVIDENCE_FILE>` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
 
@@ -732,7 +909,7 @@ Verify exactly as above (same single-`verdict` block). Add the far-half check as
 
 If the second attempt also fails, record that agent as **failed** in the draft and in `## Failures` (Step 8).
 
-**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit. An agent that was **never dispatched** (e.g. `type-design-analyzer` on a diff that adds no types) is _not_ a failed agent — note it as not-applicable and move on.
+**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit. An agent that was **never dispatched** — `type-design-analyzer` on a diff that adds no types, or anything skipped by a scope decision under "Scoping which agents spawn" — is _not_ a failed agent. Note it as not-applicable, with the reason, and move on.
 
 Aggregate the surviving agents' output into Critical / Important / Strengths yourself. That aggregate is `$RAW_REVIEW_BODY`.
 
@@ -915,6 +1092,22 @@ Inputs:
 - HEAD_SHA: <HEAD_REF_OID>
 - BASE_REF: <BASE_REF_NAME>
 - RUN_LEVEL_2: <true|false — see gate above>
+- GROUNDING: <the tracking ticket's problem statement and reproduction from Step 2, verbatim where it
+  has one — Linear `NXC-…` and/or the linked GitHub issue. This, not the PR body, is what the change
+  is measured against. "NO_TRACKING_TICKET" if Step 2 found none or the tracker was unreachable.>
+- REPRO_CLASSIFICATION: <one of RUNNABLE (GROUNDING carries a concrete command or a repro repo —
+  run it), MANUAL_ONLY (the trigger needs a live second process, an interactive terminal, a real
+  workspace, or network the sandbox lacks), or NONE (no tracking ticket, or the ticket has no
+  reproduction). Derived host-side in Step 2 — do NOT spend your opening tool calls re-deriving it,
+  and say so if you believe it is wrong.>
+
+**Ground the verification in GROUNDING, not the PR body.** The PR body states what the author
+believes they did; the ticket states what the reporter needed. Where they differ, the difference is
+itself worth reporting — a change that satisfies its own description while missing the ticket's
+acceptance criteria is exactly what this agent exists to catch.
+
+Do **not** quote GROUNDING into your report. It may carry internal or embargoed detail and this
+review becomes a public draft; state findings in terms of the diff and what you ran.
 
 **This agent alone keeps the FULL diff as both its review surface and its `<EVIDENCE_FILE>`, even on a re-review** — its job is mapping every claim in the PR body to code, and those claims span the whole PR, not the delta. Verify its EVIDENCE against `/tmp/pr-<NUMBER>.diff` accordingly; using the incremental diff here would fail an honest verifier.
 
@@ -984,7 +1177,7 @@ Capture the agent's output as `$REPRO_REPORT`. Fold it into the final review bod
 - `FIX_CONFIRMED` — evidence towards `lgtm`
 - `FIX_DID_NOT_WORK` / `FIX_CHANGED_BEHAVIOR_BUT_NOT_RESOLVED` — strong push towards `needs-changes` regardless of toolkit findings
 - `BUG_NOT_REPRODUCED_ON_BASELINE` — push towards `blocked` pending human check (could mean stale issue, wrong command, or the PR is unnecessary)
-- `NOT_ATTEMPTED` — no effect on verdict; note it in the summary. This is the _expected_ outcome for internal fixes with no runnable reproduction — Rust/native or TUI changes, Linear-only PRs, or anything whose trigger needs a live second Nx process or an interactive terminal. A unit-test baseline is usually impossible here anyway (new tests reference symbols the base branch lacks, so they don't compile on master). Do not let a `NOT_ATTEMPTED` on such a PR drift the verdict toward `blocked`; lean on the static grounding instead.
+- `NOT_ATTEMPTED` — no effect on verdict; note it in the summary. This is the _expected_ outcome when `REPRO_CLASSIFICATION` is `MANUAL_ONLY` or `NONE`: Rust/native or TUI changes, or anything whose trigger needs a live second Nx process, an interactive terminal, or network the sandbox lacks. **A Linear-only PR is not automatically one of these** — Step 2 fetches the ticket, and a ticket carrying a reproduction makes Level 1 runnable. Treat `NOT_ATTEMPTED` against a `RUNNABLE` classification as a gap to question, not an expected outcome. A unit-test baseline is usually impossible here anyway (new tests reference symbols the base branch lacks, so they don't compile on master). Do not let a `NOT_ATTEMPTED` on such a PR drift the verdict toward `blocked`; lean on the static grounding instead.
 
 **Level 2 verdicts (only present when opted in):**
 
@@ -1094,7 +1287,7 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 
 Check in this order (first match wins):
 
-- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found.
+- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found. An agent deliberately **not dispatched** under "Scoping which agents spawn" does not trigger this — that is a recorded scope decision, not a dimension that silently went missing.
 - Close-without-merge check emitted "Likely superseded" with strong evidence (see Step 4.5) → `verdict: superseded`
 - Close-without-merge check emitted "Likely unnecessary" with strong evidence (see Step 4.5) → `verdict: unnecessary`
 - Has any **Still concerning** or **New concerns** items rated critical → `verdict: needs-changes`
@@ -1119,7 +1312,7 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
 5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`. Preserve `posted_at` / `posted_url` (the user fills those in).
 
-**No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the nine agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
+**No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the review agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
 
 Format:
 
