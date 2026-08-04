@@ -1,0 +1,106 @@
+import { chmodSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { platform, tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { waitForSocketConnection } from './wait-for-socket-connection';
+
+// A refused connect has to reach the caller. The daemon client classifies
+// EACCES/EPERM into a permission-specific error with its own remedy, and both
+// scenarios that error documents arrive through this poll rather than through
+// an established connection — so an errno dropped here is one nothing
+// downstream can report.
+const posixOnly = platform() === 'win32' ? it.skip : it;
+
+describe('waitForSocketConnection', () => {
+  let base: string;
+
+  beforeEach(() => {
+    base = mkdtempSync(join(tmpdir(), 'nx-wait-socket-'));
+  });
+
+  afterEach(() => {
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('should report the errno of a failed attempt', async () => {
+    const missing = join(base, 'not-there.sock');
+    const seen: string[] = [];
+
+    const socket = await waitForSocketConnection(missing, {
+      maxAttempts: 2,
+      delayMs: 1,
+      onConnectError: (error) => {
+        seen.push(error.code);
+      },
+    });
+
+    expect(socket).toBeNull();
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen[0]).toEqual('ENOENT');
+  });
+
+  it('should stop polling when the handler says the errno will not heal', async () => {
+    const missing = join(base, 'not-there.sock');
+    let attempts = 0;
+
+    const socket = await waitForSocketConnection(missing, {
+      maxAttempts: 50,
+      delayMs: 1,
+      onConnectError: () => {
+        attempts++;
+        return true;
+      },
+    });
+
+    expect(socket).toBeNull();
+    // Without the early exit this waits out the full budget and then reports a
+    // generic startup failure, which is the outcome the permission error exists
+    // to replace.
+    expect(attempts).toEqual(1);
+  });
+
+  it('should keep polling while the handler declines to stop', async () => {
+    const missing = join(base, 'not-there.sock');
+    let attempts = 0;
+
+    await waitForSocketConnection(missing, {
+      maxAttempts: 3,
+      delayMs: 1,
+      onConnectError: () => {
+        attempts++;
+      },
+    });
+
+    expect(attempts).toEqual(3);
+  });
+
+  posixOnly(
+    'should surface EACCES rather than treating it as an absent socket',
+    async () => {
+      // A directory the current user cannot search is the portable way to make
+      // connect() fail with EACCES rather than ENOENT — the distinction the
+      // permission error is built on.
+      const locked = join(base, 'locked');
+      mkdirSync(locked);
+      chmodSync(locked, 0o000);
+      const seen: string[] = [];
+
+      try {
+        await waitForSocketConnection(join(locked, 'd.sock'), {
+          maxAttempts: 1,
+          delayMs: 1,
+          onConnectError: (error) => {
+            seen.push(error.code);
+          },
+        });
+      } finally {
+        chmodSync(locked, 0o700);
+      }
+
+      // Running as root defeats the permission check entirely, so only assert
+      // the distinction where it can exist.
+      if (process.getuid?.() !== 0) {
+        expect(seen).toContain('EACCES');
+      }
+    }
+  );
+});
