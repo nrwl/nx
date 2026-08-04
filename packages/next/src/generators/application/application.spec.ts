@@ -364,6 +364,30 @@ describe('app', () => {
   });
 
   describe('--linter', () => {
+    // The ESLint config shaping is guarded per-linter, but the dependency
+    // install below it is a separate block that has to be guarded too.
+    it.each(['none', 'oxlint'] as const)(
+      'should not install ESLint packages for --linter=%s',
+      async (linter) => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+          linter,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(Object.keys(devDependencies ?? {})).toEqual(
+          expect.not.arrayContaining([
+            'eslint-config-next',
+            '@next/eslint-plugin-next',
+            'eslint-plugin-react',
+          ])
+        );
+      }
+    );
+
     describe('default (eslint)', () => {
       it('should add flat config as needed MJS', async () => {
         tree.write('eslint.config.mjs', 'export default {};');
