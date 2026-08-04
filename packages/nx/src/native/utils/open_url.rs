@@ -91,13 +91,28 @@ fn open_candidates(url: &str) -> Vec<Command> {
     not(target_os = "windows")
 ))]
 fn open_candidates(url: &str) -> Vec<Command> {
+    candidates_for(
+        is_wsl() && !is_in_container(),
+        &std::env::var("BROWSER").unwrap_or_default(),
+        url,
+    )
+}
+
+/// Split from `open_candidates` so the two probes it can't fake — the WSL gate
+/// and `$BROWSER` — become test inputs.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn candidates_for(use_windows_bridge: bool, browser: &str, url: &str) -> Vec<Command> {
     let mut candidates = Vec::new();
     // On a non-container WSL host the Linux openers can't reach a browser, so
     // try the Windows host's browser first. Inside a Docker/Podman container the
     // interop path is absent and spawning it is exactly the crash this replaces
     // (`open@8` misdetected Podman as bare WSL) — containers stay on the Linux
     // openers below.
-    if is_wsl() && !is_in_container() {
+    if use_windows_bridge {
         candidates.extend(
             wsl_powershell_programs()
                 .iter()
@@ -106,7 +121,7 @@ fn open_candidates(url: &str) -> Vec<Command> {
     }
     // Always fall through to the Linux openers: WSL interop can be off, and a
     // browser installed inside the distro still works.
-    candidates.extend(linux_open_candidates(url));
+    candidates.extend(linux_open_candidates(browser, url));
     candidates
 }
 
@@ -228,17 +243,16 @@ fn parse_automount_root(wsl_conf: &str) -> Option<String> {
     None
 }
 
-/// The opener chain `open@10` shipped: it vendored the freedesktop `xdg-open`
-/// script, which walks `$BROWSER` and then these desktop helpers. Trying only
-/// the system `xdg-open` loses the browser on minimal images, headless server
-/// distros and Termux, where it often isn't installed.
+/// The helpers `open@10`'s vendored freedesktop script falls through once
+/// `xdg-open` itself is unavailable. Trying only the system `xdg-open` loses the
+/// browser on minimal images, headless server distros and Termux, where it often
+/// isn't installed.
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
     not(target_os = "windows")
 ))]
-const LINUX_OPENERS: &[&[&str]] = &[
-    &["xdg-open"],
+const FALLBACK_OPENERS: &[&[&str]] = &[
     &["gio", "open"],
     &["gvfs-open"],
     &["gnome-open"],
@@ -248,21 +262,37 @@ const LINUX_OPENERS: &[&[&str]] = &[
     &["www-browser"],
 ];
 
+/// `xdg-open` first, because it dispatches to the desktop's own handler — the
+/// branch the vendored script took whenever it detected a desktop environment.
+/// `$BROWSER` is consulted only after that, mirroring the script's `open_generic`
+/// path: putting it first would let `BROWSER=echo` (a common way to suppress
+/// auto-open) spawn successfully on a desktop and report a browser that never
+/// appeared, since a candidate only loses its turn by failing to spawn.
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
     not(target_os = "windows")
 ))]
-fn linux_open_candidates(url: &str) -> Vec<Command> {
-    let browser = std::env::var("BROWSER").unwrap_or_default();
-    browser_env_candidates(&browser, url)
-        .into_iter()
-        .chain(LINUX_OPENERS.iter().map(|parts| {
-            let mut c = create_command(parts[0]);
-            c.args(&parts[1..]).arg(url);
-            c
-        }))
-        .collect()
+fn linux_open_candidates(browser: &str, url: &str) -> Vec<Command> {
+    let mut candidates = vec![opener_command(&["xdg-open"], url)];
+    candidates.extend(browser_env_candidates(browser, url));
+    candidates.extend(
+        FALLBACK_OPENERS
+            .iter()
+            .map(|parts| opener_command(parts, url)),
+    );
+    candidates
+}
+
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn opener_command(parts: &[&str], url: &str) -> Command {
+    let mut c = create_command(parts[0]);
+    c.args(&parts[1..]).arg(url);
+    c
 }
 
 /// `$BROWSER` is a colon-separated list of commands, each either a plain program
@@ -305,11 +335,17 @@ fn browser_env_candidates(browser: &str, url: &str) -> Vec<Command> {
 /// `U+2018`–`U+201B`) and lets any of them close a literal any other opened, so
 /// escaping by doubling the ASCII quote is not sufficient; base64's alphabet
 /// can't express a quote at all.
+///
+/// The inner payload is UTF-8, not UTF-16LE: both round-trip any URL, but the
+/// script is base64'd a second time for `-EncodedCommand`, so an inner UTF-16LE
+/// layer costs 7.1 bytes of command line per URL byte against `CreateProcessW`'s
+/// 32767 cap. `nx release` embeds a whole changelog in a GitHub URL, which put
+/// the ceiling under the size real changelogs reach.
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
 fn powershell_start_process(program: &str, url: &str) -> Command {
     let script = format!(
-        "Start-Process ([Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('{}')))",
-        base64_encode(&utf16le(url))
+        "Start-Process ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{}')))",
+        base64_encode(url.as_bytes())
     );
     let mut c = create_command(program);
     c.args([
@@ -448,19 +484,29 @@ mod tests {
         let script = decode_powershell_script(&cmd);
         let payload = script
             .strip_prefix(
-                "Start-Process ([Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('",
+                "Start-Process ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('",
             )
             .and_then(|s| s.strip_suffix("')))"))
             .expect("script shape");
         assert!(!payload.contains(['\'', '\u{2018}', '\u{2019}', '\u{201A}', '\u{201B}']));
 
         // ...and decodes back to exactly the URL we were handed.
-        let bytes = decode_base64(payload);
-        let utf16: Vec<u16> = bytes
-            .chunks(2)
-            .map(|p| u16::from_le_bytes([p[0], p[1]]))
-            .collect();
-        assert_eq!(String::from_utf16(&utf16).unwrap(), url);
+        assert_eq!(String::from_utf8(decode_base64(payload)).unwrap(), url);
+    }
+
+    #[test]
+    fn command_line_stays_under_the_windows_cap_for_a_changelog_sized_url() {
+        // `nx release` without a token opens a GitHub "new release" URL with the
+        // whole percent-encoded changelog in the query string. Two base64 layers
+        // multiply that against CreateProcessW's 32767-char limit.
+        let url = format!(
+            "https://github.com/nrwl/nx/releases/new?body={}",
+            "a".repeat(8000)
+        );
+        let cmd = powershell_start_process("powershell.exe", &url);
+        let line: usize =
+            cmd.get_program().len() + args_of(&cmd).iter().map(|a| a.len() + 1).sum::<usize>();
+        assert!(line < 32767, "command line was {line} chars");
     }
 
     #[test]
@@ -473,23 +519,56 @@ mod tests {
 
     #[test]
     fn linux_falls_back_through_the_whole_opener_chain() {
-        let programs = programs_of(&linux_open_candidates("https://nx.dev"));
-        // `xdg-open` is only the first guess; the desktop helpers `open@10`
-        // vendored must still be reachable.
-        assert_eq!(programs[0], "xdg-open");
-        for expected in ["gio", "gvfs-open", "gnome-open", "kde-open", "exo-open"] {
-            assert!(programs.contains(&expected.to_string()), "{expected}");
-        }
+        // `$BROWSER` is passed in, never read from the environment, so this holds
+        // on a machine that has one set (Codespaces and VS Code Remote do).
+        let cmds = linux_open_candidates("", "https://nx.dev");
+        assert_eq!(
+            programs_of(&cmds),
+            [
+                "xdg-open",
+                "gio",
+                "gvfs-open",
+                "gnome-open",
+                "kde-open",
+                "exo-open",
+                "x-www-browser",
+                "www-browser"
+            ]
+        );
+        // `gio` needs its `open` subcommand — dropping it still spawns, so the
+        // chain would report success while nothing opened.
+        assert_eq!(args_of(&cmds[1]), vec!["open", "https://nx.dev"]);
     }
 
     #[test]
-    fn browser_env_entries_come_first_and_honor_the_s_placeholder() {
+    fn browser_env_entries_sit_behind_xdg_open_and_honor_the_s_placeholder() {
         let cmds = browser_env_candidates("firefox:my-opener --url=%s", "https://nx.dev");
         assert_eq!(programs_of(&cmds), vec!["firefox", "my-opener"]);
         // No placeholder: the URL is appended. With one: it's substituted.
         assert_eq!(args_of(&cmds[0]), vec!["https://nx.dev"]);
         assert_eq!(args_of(&cmds[1]), vec!["--url=https://nx.dev"]);
         assert!(browser_env_candidates("", "https://nx.dev").is_empty());
+
+        // `xdg-open` dispatches to the desktop's own handler, so it outranks
+        // `$BROWSER`; otherwise `BROWSER=echo` would "succeed" with no browser.
+        let chain = programs_of(&linux_open_candidates("echo", "https://nx.dev"));
+        assert_eq!(chain[0], "xdg-open");
+        assert_eq!(chain[1], "echo");
+    }
+
+    #[test]
+    fn the_windows_bridge_is_skipped_inside_a_container() {
+        // The #34502 crash was spawning powershell.exe from a Podman-on-WSL
+        // container, so the container arm must offer no PowerShell candidate.
+        let in_container = programs_of(&candidates_for(false, "", "https://nx.dev"));
+        assert!(!in_container.iter().any(|p| p.contains("powershell")));
+        assert_eq!(in_container[0], "xdg-open");
+
+        // On a real WSL host the bridge leads, but the Linux openers still
+        // follow it — interop can be off, and that must not dead-end.
+        let on_wsl = programs_of(&candidates_for(true, "", "https://nx.dev"));
+        assert!(on_wsl[0].contains("powershell"));
+        assert!(on_wsl.iter().any(|p| p == "xdg-open"));
     }
 
     #[test]
