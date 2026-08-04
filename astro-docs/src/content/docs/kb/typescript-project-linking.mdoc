@@ -231,6 +231,75 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 }
 ```
 
+### Control what nx sync writes
+
+`nx sync` derives references from the project graph, so most workspaces never configure it. When the graph isn't the whole story, use one of four options to override it.
+
+#### Keep a project out of the root solution
+
+Some projects live inside the repository but outside its TypeScript build. A nested standalone workspace with its own lockfile and its own install is one example. Referencing it from the root `tsconfig.json` makes `tsc --build` walk into it. List it under `nx.sync.ignoredProjects` in the root `tsconfig.json` and sync leaves it alone:
+
+```jsonc title="tsconfig.json"
+{
+  "extends": "./tsconfig.base.json",
+  "files": [], // intentionally empty
+  "nx": {
+    "sync": {
+      "ignoredProjects": ["directory:examples/**"],
+    },
+  },
+  "references": [
+    // UPDATED BY NX SYNC
+    // All projects in the repository, except the ignored ones
+  ],
+}
+```
+
+Entries accept the same patterns as `targetDefaults` and `nx affected`: project names, name globs, `tag:foo`, and `directory:` patterns. Directory patterns match project roots as globs rather than prefixes, so `directory:examples/**` matches `examples/react/basic` and `directory:examples` doesn't.
+
+Sync also prunes an existing root reference to an ignored project, so you can add the option to a workspace that already has the reference and let sync clean it up.
+
+This option only governs the root `tsconfig.json`. A project that depends on an ignored project still references it from its own tsconfig, and imports keep type-checking.
+
+#### Adjust references on an individual project
+
+Two options apply to any project tsconfig, both under the same `nx.sync` key:
+
+- `ignoredReferences` keeps a reference you wrote by hand. Sync would otherwise prune anything it can't derive from the graph.
+- `ignoredDependencies` suppresses the reference for a named dependency. Reach for it when the project graph contains a deliberate cycle. TypeScript rejects circular project references with `TS6202`, and dropping the edge from the graph instead would hide a real dependency from every other tool.
+
+```jsonc title="packages/cart/tsconfig.json"
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [], // intentionally empty
+  "nx": {
+    "sync": {
+      "ignoredReferences": ["../../some/manual/tsconfig.json"],
+      "ignoredDependencies": ["utils"],
+    },
+  },
+  "references": [
+    // UPDATED BY NX SYNC
+  ],
+}
+```
+
+#### Recognize a custom runtime tsconfig name
+
+Sync looks for runtime tsconfigs named `tsconfig.app.json`, `tsconfig.lib.json`, `tsconfig.build.json`, `tsconfig.cjs.json`, `tsconfig.esm.json`, or `tsconfig.runtime.json`. If your projects use a different name, set `runtimeTsConfigFileNames` in `nx.json`. The list replaces the defaults rather than extending them.
+
+```jsonc title="nx.json"
+{
+  "sync": {
+    "generatorOptions": {
+      "@nx/js:typescript-sync": {
+        "runtimeTsConfigFileNames": ["tsconfig.custom.json"],
+      },
+    },
+  },
+}
+```
+
 ### TypeScript project references performance benefits
 
 {% youtube src="https://youtu.be/O2xBQJMTs9E" title="Why TypeScript Project References Make Your CI Faster!" /%}
