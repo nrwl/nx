@@ -112,9 +112,10 @@ export function writeWithPrettier(
   cwd?: string
 ): void {
   if (patterns.length === 0) {
-    // Prettier with no file arguments reads stdin. At EOF it prints "No parser
-    // and no file path given" and exits 0, but `stdio: [0, 1, 2]` hands it nx's
-    // own stdin, so from a terminal it blocks forever with nothing on screen.
+    // Prettier with no file arguments reads stdin, and `stdio: [0, 1, 2]` hands
+    // it nx's own - from a terminal it blocks forever with nothing on screen. At
+    // EOF it exits 0 under `--list-different` and 2 (which `execSync` throws on)
+    // without it, so which failure you get depends on `shouldUseListDifferent`.
     return;
   }
   const prettierPath = getPrettierPath();

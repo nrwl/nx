@@ -61,7 +61,7 @@ describe('remove-nx-tsconfig-paths-webpack-plugin-import migration', () => {
 
     await removeNxTsconfigPathsWebpackPluginImport(tree);
 
-    // prettier wraps the long symbol name to multi-line
+    // oxfmt keeps the long symbol name on one line
     expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
       "const { NxTsconfigPathsWebpackPlugin } = require('@nx/webpack/tsconfig-paths-plugin');
@@ -78,7 +78,7 @@ describe('remove-nx-tsconfig-paths-webpack-plugin-import migration', () => {
 
     await removeNxTsconfigPathsWebpackPluginImport(tree);
 
-    // prettier wraps the long symbol name to multi-line
+    // oxfmt keeps the long symbol name on one line
     expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
       "const { NxTsconfigPathsWebpackPlugin } = require('@nx/webpack/tsconfig-paths-plugin');
@@ -211,7 +211,6 @@ import { NxTsconfigPathsWebpackPlugin as P3, NxAppWebpackPlugin } from '@nx/webp
     // No formatter: this asserts the file is byte-identical afterwards, so
     // reformatting would defeat the very thing under test.
     const tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
-    // Use the already-prettier-formatted form so formatFiles does not change it
     const original = `const {
   NxTsconfigPathsWebpackPlugin,
 } = require('@nx/webpack/tsconfig-paths-plugin');

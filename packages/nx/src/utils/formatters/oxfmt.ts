@@ -238,13 +238,13 @@ function isJsonOxfmtConfig(name: string): boolean {
  * as a transpile artifact like `exports is not defined` - both mean "this is
  * ESM, import it".
  *
- * Which error survives a failed retry depends on what the `require` attempt
- * actually learned. The two ESM-redispatch codes are raised before the module
- * body is evaluated, so they say nothing about the config and the `import()`
- * failure is the only real diagnostic; anything else - a syntax error, a
- * transpile artifact - is reported as itself.
+ * Neither error is discardable when the retry also fails. The `require` attempt
+ * may have failed before the module body was evaluated (the redispatch codes) or
+ * during transpilation, and only `import()` ever actually evaluated the config -
+ * so the `import()` error is thrown with the `require` one attached as its cause
+ * rather than either being chosen over the other.
  *
- * No unit test pins that split: for a `.ts` config both paths surface the same
+ * No unit test pins this: for a `.ts` config both paths surface the same
  * transpile error, and the case where they differ (`.mts` with top-level await)
  * is unreachable from jest. `create-nx-workspace-formatter.test.ts` covers it.
  */
@@ -257,10 +257,7 @@ async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
     try {
       return await dynamicImport(pathToFileURL(configPath).href);
     } catch (importError) {
-      const code = loadError?.['code'];
-      throw code === 'ERR_REQUIRE_ESM' || code === 'ERR_REQUIRE_ASYNC_MODULE'
-        ? importError
-        : loadError;
+      throw Object.assign(importError, { cause: loadError });
     }
   }
 }
@@ -270,11 +267,11 @@ async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
  * `.prettierignore`, plus the config's own `ignorePatterns`, which oxfmt
  * defines as gitignore-style and rooted at the config's directory.
  *
- * Only the root ignore files are read. The CLI additionally honours ignore
- * files in subdirectories, which this path cannot: the files being formatted
- * live in the tree, so walking up from each one would consult a filesystem
- * that does not yet contain the directories being generated. Same limit, same
- * reason, as the config files - see `resolveOxfmtConfig`.
+ * Only the root ignore files are read, from disk. The CLI additionally honours
+ * ignore files in subdirectories; not doing so here is a scope decision rather
+ * than an inability, and it matches where `resolveOxfmtConfig` stops. A
+ * subdirectory ignore file that disagrees with the root will therefore leave
+ * generated files that the workspace's own `format:check` rejects.
  */
 function readIgnoreMatcher(
   workspaceRoot: string,
