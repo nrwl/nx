@@ -582,6 +582,13 @@ describe('socket directories', () => {
       expect((thrown as any).reason).toEqual(expected);
       expect(thrown.message).not.toContain('shared with the other users');
       expect(thrown.message).not.toContain('execute code');
+      // This reason is selected when the root is private to this account, so
+      // it cannot claim the machine's other users keep temp files there.
+      expect(thrown.message).not.toContain('on the machine');
+      // And on POSIX the default socket root is a literal /tmp/.nx, not
+      // os.tmpdir() — the two differ in exactly the case that picks this
+      // reason, so Nx's sockets are not beneath this root at all.
+      expect(thrown.message).not.toContain('subdirectory of this root');
     }
   );
 
