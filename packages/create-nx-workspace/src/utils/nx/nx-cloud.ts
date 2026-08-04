@@ -149,20 +149,21 @@ export function getSkippedNxCloudInfo() {
   return out.getOutput();
 }
 
-export async function openCloudSetupUrl(
+export function openCloudSetupUrl(
   connectUrl: string,
   workspaceDirectory: string
-): Promise<void> {
+): void {
   if (isCI()) {
     return;
   }
 
   try {
-    // Reuse the workspace's freshly-installed native Nx opener rather than
-    // bundling our own `open` dependency. Nx is installed at the same version as
-    // this CLI, so `openUrl` is present; an older Nx that lacks it makes the
-    // optional call a silent no-op, while a missing native module throws and is
-    // caught. Either way the URL is already shown in the banner.
+    // Open through the workspace's own Nx rather than bundling a second opener
+    // here. Only the preset flow installs this CLI's version — `--template` and
+    // third-party presets install whatever Nx *they* pin, which may predate
+    // `openUrl`, so the optional call no-ops. The banner printed after this
+    // carries the URL either way.
+    // nx-ignore-next-line
     const nativePath = require.resolve('nx/src/native', {
       paths: [workspaceDirectory],
     });
@@ -171,7 +172,7 @@ export async function openCloudSetupUrl(
     };
     openUrl?.(connectUrl);
   } catch {
-    // Fail gracefully — the URL is already displayed in the terminal banner
+    // Fail gracefully — the banner still carries the URL
   }
 }
 
