@@ -22,6 +22,8 @@ nx add @nx/oxlint
 
 This installs `oxlint` if it is not already installed, registers `@nx/oxlint`, and creates a root `.oxlintrc.json` if the workspace has no Oxlint config.
 
+`@nx/oxlint` requires Oxlint 1.43.0 or later. The generators stop with an error on anything older.
+
 ## Inferred tasks
 
 `@nx/oxlint` infers a lint task for projects governed by an Oxlint config. It recognizes the four config files Oxlint discovers on its own:
@@ -51,7 +53,9 @@ Oxc also ships extensions for Zed, JetBrains IDEs, and Neovim. Any editor with L
 
 ## Config file format
 
-Oxlint walks up from each file to the nearest config. Two configs in one directory is an error, not a precedence, so pick one format per directory. Prefer `.oxlintrc.json`:
+Oxlint walks up from each file to the nearest config, and that config replaces the root rather than merging into it. A project config needs an `extends` back to the root, or the root's `categories` and `rules` stop applying to that project — the generators write one for you.
+
+Two configs in one directory is an error, not a precedence, so pick one format per directory. Prefer `.oxlintrc.json`:
 
 - `oxlint.config.ts` only works on a Node runtime that can run TypeScript directly, which means Node 22.18 or later. Node 20 cannot, even though Oxlint's error message suggests otherwise, and Oxlint's standalone binary cannot either.
 - Only JSON configs get their `extends` chain tracked as task inputs. Nx can't read a TypeScript config statically.
