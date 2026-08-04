@@ -356,6 +356,7 @@ export default class JsVersionActions extends VersionActions {
         modify(content, update.path, update.value, { formattingOptions })
       );
     }
+    this.validateManifestUpdates(content, manifestPath, updates);
     tree.write(manifestPath, content);
   }
 
@@ -371,13 +372,44 @@ export default class JsVersionActions extends VersionActions {
     return content;
   }
 
+  private validateManifestUpdates(
+    content: string,
+    manifestPath: string,
+    updates: Array<{ path: string[]; value: string }>
+  ): void {
+    const manifest = parseJson(content);
+    for (const update of updates) {
+      let actualValue: unknown = manifest;
+      for (const pathSegment of update.path) {
+        if (
+          actualValue === null ||
+          typeof actualValue !== 'object' ||
+          !(pathSegment in actualValue)
+        ) {
+          actualValue = undefined;
+          break;
+        }
+        actualValue = (actualValue as Record<string, unknown>)[pathSegment];
+      }
+      if (actualValue !== update.value) {
+        throw new Error(
+          `Cannot update ${manifestPath}: "${update.path.join(
+            '.'
+          )}" resolves to ${JSON.stringify(
+            actualValue
+          )} instead of ${JSON.stringify(
+            update.value
+          )} after editing. The manifest may contain duplicate keys.`
+        );
+      }
+    }
+  }
+
   private detectFormattingOptions(content: string): FormattingOptions {
     const indentation = content.match(/^[\t ]+(?=")/m)?.[0] ?? '  ';
     const insertSpaces = !indentation.includes('\t');
 
     return {
-      eol: content.includes('\r\n') ? '\r\n' : '\n',
-      insertFinalNewline: content.endsWith('\n'),
       insertSpaces,
       tabSize: insertSpaces ? indentation.length : 1,
     };

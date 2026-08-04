@@ -28,7 +28,7 @@ describe('formatChangedFilesWithPrettierIfAvailable', () => {
     rmSync(root, { recursive: true, force: true });
   });
 
-  it('does not format excluded nested paths with platform-native separators', async () => {
+  it('does not format excluded paths given with Windows separators', async () => {
     const write = jest.fn();
     const tree = {
       root,

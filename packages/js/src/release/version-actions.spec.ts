@@ -102,6 +102,51 @@ describe('JsVersionActions', () => {
 `);
   });
 
+  it('rejects a version update shadowed by a duplicate key', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const manifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "version": "5.5.5"
+}
+`;
+    tree.write('packages/my-lib/package.json', manifest);
+    const versionActions = await createVersionActions(tree);
+
+    await expect(
+      versionActions.updateProjectVersion(tree, '1.1.0')
+    ).rejects.toThrow(
+      'Cannot update packages/my-lib/package.json: "version" resolves to "5.5.5" instead of "1.1.0"'
+    );
+    expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
+  });
+
+  it('rejects a dependency update shadowed by a duplicate key', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const manifest = `{
+  "name": "my-lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "dependency": "^1.0.0"
+  },
+  "dependencies": {
+    "dependency": "^5.0.0"
+  }
+}
+`;
+    tree.write('packages/my-lib/package.json', manifest);
+    const versionActions = await createVersionActions(tree);
+
+    await expect(
+      versionActions.updateProjectDependencies(tree, createProjectGraph(), {
+        dependency: '^2.0.0',
+      })
+    ).rejects.toThrow(
+      'Cannot update packages/my-lib/package.json: "dependencies.dependency" resolves to "^5.0.0" instead of "^2.0.0"'
+    );
+    expect(tree.read('packages/my-lib/package.json', 'utf-8')).toBe(manifest);
+  });
+
   it('preserves a dependency range that already contains the new version', async () => {
     const tree = createTreeWithEmptyWorkspace();
     const manifest = `{
