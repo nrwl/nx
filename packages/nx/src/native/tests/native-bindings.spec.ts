@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as ts from 'typescript';
 
@@ -28,5 +29,30 @@ describe('native bindings type definitions', () => {
       // jest 30 removed the global fail(); throwing keeps the diagnostics visible
       throw new Error(`index.d.ts has TypeScript errors:\n${formatted}`);
     }
+  });
+});
+
+describe('wasm bindings', () => {
+  // `build-native` and `build-native-wasm` generate separate shims, so a new
+  // `#[napi]` export can land in index.d.ts while the wasm ones stay stale —
+  // and JS that calls it under wasm gets a TypeError instead of a value.
+  function exportsOf(file: string, pattern: RegExp): string[] {
+    const source = readFileSync(join(__dirname, '..', file), 'utf-8');
+    return [...source.matchAll(pattern)].map(([, name]) => name).sort();
+  }
+
+  const cjsExports = () =>
+    exportsOf('nx.wasi.cjs', /^module\.exports\.(\w+)/gm);
+  const browserExports = () =>
+    exportsOf('nx.wasi-browser.js', /^export const (\w+)/gm);
+
+  it('should export the same names from both wasm shims', () => {
+    expect(cjsExports()).not.toHaveLength(0);
+    expect(cjsExports()).toEqual(browserExports());
+  });
+
+  it('should export openUrl, which has a wasm stub so callers get false rather than a TypeError', () => {
+    expect(cjsExports()).toContain('openUrl');
+    expect(browserExports()).toContain('openUrl');
   });
 });
