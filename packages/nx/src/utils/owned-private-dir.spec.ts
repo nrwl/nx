@@ -260,27 +260,37 @@ describe('ensureOwnedPrivateDir', () => {
       }
     );
 
-    posixOnly(
-      'should not modify an existing container it goes on to refuse',
-      () => {
-        // Foreign ownership is staged through the lstat, like its siblings
-        // above, rather than by moving our own uid. A fixture this suite
-        // creates is root-owned whenever the suite runs as root, and
-        // `isSafeSharedRoot` exempts uid 0 *before* the mode clause — so no
-        // value of getuid() can make it look like a peer's, and the test goes
-        // green on a GitHub runner while failing in any container CI.
-        const dir = join(base, 'peer-owned');
+    // Parameterized over the runner's own uid, 0 included, because that is the
+    // variable the previous version of this test was silently sensitive to. It
+    // faked a peer by moving `getuid()`, but a fixture this suite creates is
+    // root-owned when the suite runs as root, and `isSafeSharedRoot` exempts
+    // uid 0 *before* the mode clause — so no value of `getuid()` could make it
+    // look like a peer's. Green on a GitHub runner, red in any container CI.
+    // Staging the ownership through the lstat instead makes the runner's uid
+    // irrelevant, and running the row at 0 is what keeps that true.
+    posixOnly.each([
+      ['an unprivileged runner', 501],
+      ['a root runner', 0],
+    ])(
+      'should not modify an existing container it goes on to refuse, under %s',
+      (_label: string, runnerUid: number) => {
+        const dir = join(base, `peer-owned-${runnerUid}`);
         mkdirSync(dir, { mode: 0o700 });
         chmodSync(dir, 0o700);
-        const currentUid = process.getuid!();
+        const getuid = jest.spyOn(process, 'getuid').mockReturnValue(runnerUid);
         // Consumed by isSafeSharedRoot; the assertion below gets the real one.
+        // uid 1 is neither the runner nor root under either row.
         (lstatSync as jest.Mock).mockReturnValueOnce({
           isDirectory: () => true,
-          uid: currentUid === 1 ? 2 : 1,
+          uid: 1,
           mode: 0o40700,
         });
 
-        expect(ensureSafeSharedRoot(dir)).toBeNull();
+        try {
+          expect(ensureSafeSharedRoot(dir)).toBeNull();
+        } finally {
+          getuid.mockRestore();
+        }
         expect(lstatSync(dir).mode & 0o7777).toBe(0o700);
       }
     );
