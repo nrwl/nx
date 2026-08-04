@@ -58,8 +58,11 @@ npm add -D oxfmt
 }
 ```
 
-oxfmt's defaults differ from Prettier's, so set these two explicitly if you want your existing
-formatting to stay put.
+An Nx-generated `.prettierrc` sets `singleQuote`, and Prettier's own default width is 80, so these
+two keep that workspace formatting the way it did before.
+If you wrote your own `.prettierrc`, match what it set instead.
+oxfmt defaults to double quotes and a width of 100, so anything you leave out moves to those
+defaults.
 
 Then delete `.prettierrc` and run `nx format:write` to reformat everything in one commit.
 
