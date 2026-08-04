@@ -77,7 +77,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 4`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 5`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ## Step 3: Check the PR out inside the sandbox container
 
@@ -229,7 +229,7 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
 3. Write a context file at `/tmp/pr-<NUMBER>.review-context.md` (host-side — the agents `Read` it directly; it is our file, not PR code).
 
-   **Distill; do not paste.** Every byte here is read by all nine agents, so its cost is multiplied ninefold — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
+   **Distill; do not paste.** Every byte here is read by every agent you dispatch, so its cost is multiplied by the whole fleet — on a PR with several prior attempts, pasting full bodies makes the carry-forward the single largest fixed charge in the run, larger for most agents than the diff they are meant to review. Worse, it is mostly inert: the bulk of a prior draft is that round's Reproduction / Approach / Performance / Security prose, which describes work already done and re-verified from scratch this round by the agents that own those dimensions. What an agent genuinely needs from history is short: what is still open, what was already fixed, and which trade-offs are settled so it does not re-litigate them.
 
    Write this shape instead, and keep the whole file **under ~150 lines**:
 
@@ -240,11 +240,16 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    Earlier attempts: <one line per attempt, oldest first — "attempt 2 (1046ace) lgtm — daemon now
    rejects foreign-workspace messages">.
 
-   ## Open items — verify whether these still hold
+   ## Open items — I re-checked these at HEAD; cite them, do not re-verify
 
    <Every unresolved Critical/Important finding from ANY prior attempt, one bullet each.
    Quote the finding's own one-line summary verbatim where it has one; add the file:line and
-   the specific ask. These are load-bearing — see the budget rule below.>
+   the specific ask. These are load-bearing — see the budget rule below.
+
+   Mark each one with what YOU observed at HEAD before dispatching — "still present at
+   performance-report.ts:41, unchanged by this delta" or "now fixed by <commit>". An agent that
+   reads a bare open item will go and re-open the same three files to check it; an agent that
+   reads your verified status will cite it and move on.>
 
    ## Already fixed — do not re-raise
 
@@ -263,13 +268,19 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    ## Review focus
 
-   Focus on the diff since the last review. For unchanged code, only verify whether the open
-   items above still hold — do not re-analyze it from scratch.
+   Focus on the diff since the last review. The open items above are already re-checked — carry
+   their status into your report if your dimension owns one, but do not go and re-derive it. Do not
+   re-analyze unchanged code from scratch.
 
    <Optionally: 2-4 specific questions this round should settle, phrased neutrally.>
    ```
 
    Rules for the distillation:
+   - **Re-check the open items yourself, once, before you write this file.** Reading the three or
+     four places a prior round flagged is one or two commands for you; left to the agents it is the
+     same reads repeated by everyone whose dimension touches them, and they all reach your answer.
+     This is the same economy as Step 4.7, applied to the carry-forward. If an item turns out to be
+     fixed, move it to "Already fixed" and say what closed it.
    - **The budget never evicts an open finding.** The ~150-line target governs _prose_, not the Open-items list. If open items alone exceed the budget, keep them all and cut elsewhere — dropping an unresolved finding silently converts it into a "new" finding next round, or into no finding at all, which is the one failure this file exists to prevent.
    - **Compress by dropping sections, not by summarizing findings.** Prior Reproduction / Approach / Performance / Security narrative goes entirely; a finding's own wording is preserved. Never paraphrase a finding into something vaguer than the author wrote — the point of quoting is that the next agent can check the same claim.
    - **Do not carry a prior verdict's reasoning as an instruction.** Say what was found, not what to conclude. An agent told "attempt 5 concluded this is sound" will confirm it; an agent told "attempt 5 found X at file:line" will check X.
@@ -424,6 +435,20 @@ dimension depends on. Signals that it does:
 - A changed **lint / CI / build config** whose effect is the point of the change.
 - A **removed** log, warning, or error, justified as "the sink already reports it".
 - A claimed **behavioral parity** between two code paths ("the worker mirrors the classic loop").
+- A change to a **shared signature or call contract**: a new parameter, a widened argument list, a
+  new option threaded through a function with several call sites.
+
+That last one is a different species from the four above it, and it is the one most likely to be
+missed. The other triggers are claims the diff makes **about itself**, so they are visible in the
+diff. This one's expensive facts live in the code **around** the diff, which is why every agent goes
+and re-derives them separately:
+
+- Is the new argument genuinely **inert** for the callers that do not pass it? (Read the dependency's
+  own source for the falsy guard; do not assume.)
+- What arity does **every** call site actually pass? Enumerate them once.
+- Does any consumer reach the symbol through an **untyped dynamic `require`/`import`**, or across a
+  package boundary where the two sides version independently? That is what decides whether an
+  options-object refactor is even available, and it is invisible to a reader of the diff alone.
 
 If the diff makes no such claim, skip this step entirely — most PRs will.
 
@@ -441,7 +466,22 @@ If the diff makes no such claim, skip this step entirely — most PRs will.
 4. **Measure the comparison points too** — the base (`/work/base`) and, on a re-review, the prior
    SHA (`git worktree add --detach /work/prior <PRIOR_SHA>`). A number without its baseline cannot
    answer "is this net-new?", which is calibration 7's question.
-5. **Record the method, not just the number.** The charter entry must let an agent re-run it.
+5. **Measure the corollaries each dimension will ask for, not just the headline conclusion.** This is
+   what decides whether the step actually suppresses duplication. An agent whose own question sits
+   one hop from your conclusion will rebuild the whole harness to answer that hop — so the harness
+   gets built three times anyway and the measurement bought nothing. Once a rig is standing, extra
+   observations off it are nearly free, so take them:
+   - You measured that a timeout **releases the event loop**. Also record what the call **returns**
+     and what it **logs** on that path — those are the error-handling and comment-accuracy
+     dimensions' versions of the same experiment.
+   - You measured that a request is **torn down**. Also record what the **server saw** — that answers
+     "did a stray write reach the wire?" for the security dimension.
+   - You measured a **cost**. Also record it for the base and for the untouched sibling path, so the
+     performance dimension does not re-run it to get a comparison.
+
+   Ask, per dimension: _what would this agent want to observe on the rig I already have standing?_
+
+6. **Record the method, not just the number.** The charter entry must let an agent re-run it.
 
 ### How to write it into the charter
 
@@ -575,7 +615,7 @@ these is advisory at most and not worth writing up:
 
 Substitute the real PR number for **every** `<NUMBER>` in the template — do not work from a count, and do not assume they are all inside `docker exec` commands. They are not: they include the container-name sentence, the toolchain paths, and `/tmp/pr-<NUMBER>.diff`, the primary review surface. Leaving that last one literal points every agent at a nonexistent file, so no agent can produce a verifiable EVIDENCE line and the whole run degrades to all-agents-failed. (There is deliberately no `<CONTAINER>` token; the container name is spelled out so a half-done substitution is visible rather than silent.)
 
-Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in the template — the toolchain-unavailable branch and the `## Established measurements` body. A charter shipped with an unresolved angle-bracket instruction tells nine agents to follow an instruction meant for you.
+Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in the template — the toolchain-unavailable branch and the `## Established measurements` body. A charter shipped with an unresolved angle-bracket instruction tells every dispatched agent to follow an instruction meant for you.
 
 **`<EVIDENCE_FILE>` is the one token that stays literal in the charter.** It differs per agent (the reproduce-verifier keeps the full diff while the others may get the incremental one), so the charter deliberately defers it — "named in your dispatch prompt" — and each _dispatch prompt_ resolves it to a real path. Substituting a single path into the charter would silently point some agents at a file they were never given.
 
@@ -653,8 +693,10 @@ that found no issues.
 <ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
 Also read /tmp/pr-<NUMBER>.review-context.md — a distilled carry-forward from prior reviews of this
 PR: what is still open, what was already fixed, and which trade-offs are settled. Focus on what
-changed since. It is deliberately NOT the full prior reviews — it lists only what carries forward, so
-treat it as a checklist to verify, never as a statement that anything absent from it is fine.
+changed since. Its open items were re-checked at HEAD by the caller before you were dispatched — cite
+their recorded status rather than re-deriving it, and challenge one only if the code contradicts it.
+It is deliberately NOT the full prior reviews — it lists only what carries forward, so never read it
+as a statement that anything absent from it is fine.
 """
 )
 ```
@@ -669,9 +711,80 @@ Dispatch these in parallel:
 
 `code-simplifier` is deliberately omitted — its output is nice-to-have polish by definition, all of which the trim below would discard.
 
+### Scoping which agents spawn
+
+Two different levers, with deliberately different bars. The bar is set by **what backstops a wrong
+call**, so do not mix them up.
+
+#### 1. Content-based — structural non-applicability (any review, including the first)
+
+Skip an agent when the diff gives its dimension **nothing to act on**. The list above already does
+this for `type-design-analyzer` ("only when the diff adds or changes types"); the same reasoning
+generalizes, but only where the predicate is **mechanically decidable from the changed-file list and
+the diff text**, with no judgment about likelihood:
+
+| skip                                                                                     | when — and only when                                                                                                        |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `type-design-analyzer`                                                                   | the diff declares or changes no type, interface, or signature                                                               |
+| `security-analyzer`, `performance-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` | the diff changes **no executable code at all** — every path is docs, prose, or comments (`astro-docs/**`, `*.md`, `*.mdoc`) |
+
+`code-reviewer`, `comment-analyzer`, `alternative-approach` and `reproduce-verifier` always run: every
+diff has quality, prose, an approach, and claims to check against code.
+
+**A dimension being unlikely to fire is not non-applicability.** "This diff probably has no security
+issue" is exactly the judgment that loses a finding, and you cannot tell from outside which of the two
+you just made. The test: could you defend the skip to someone who later found a bug there? "The diff
+contains no code" survives that; "I read it and it looked fine" does not — that is a review, and if
+you are doing the review yourself you may as well dispatch the agent that does it properly. Two
+specific traps: a lockfile-only diff is **not** a docs diff (supply chain is `security-analyzer`'s
+core beat), and a generated-file diff still ships executable code.
+
+Structural skips get recorded in `## Failures` exactly like the judgment skips below — see the
+recording rule there. Every agent that did not run is named in the draft, whichever lever skipped it.
+
+#### 2. Delta-based — judgment scoping (re-reviews only)
+
+On a **first** review, stop at the structural rules above — nothing backstops a wrong call, so
+judgment about what the diff "probably" affects has no place.
+
+On a **re-review**, the unchanged code was already reviewed by the full set at a prior attempt, and
+re-running all nine against a small delta buys mostly restatement. Scope the set to the dimensions
+the delta actually puts at stake. This is already established practice, not a new liberty: a prior
+round of PR #36460 dispatched `comment-analyzer` alone for a two-line comment hunk and recorded it as
+"a scope decision, not an agent failure."
+
+**Scope by dimension at stake, never by which files changed.** This distinction is the whole safety
+margin, and there is a worked example of why. In one round of #36460 the delta added an
+`AbortSignal`; the round's only finding was in two `catch` blocks the delta **does not touch**, which
+became wrong precisely because the new abort path made a new error class reachable there. A
+file-based rule drops `silent-failure-hunter` and loses the finding. A dimension-based rule keeps it:
+the delta is about cancellation, so error handling is obviously at stake.
+
+Ask of each agent: _could the delta change what this dimension would conclude?_ Keep it if yes or if
+unsure. Concretely, a delta that adds no new sink and no new untrusted input rarely moves
+`security-analyzer`; one that adds no work on a hot path and no new allocation in a loop rarely moves
+`performance-analyzer`. A delta that changes a signature always moves `type-design-analyzer`.
+
+Three constraints:
+
+- **Never scope out a dimension the delta's own subject matter names.** Cancellation ⇒ error
+  handling. A changed comment ⇒ comment accuracy. A new parameter ⇒ type design.
+- **Record every skip and its reason in `## Failures`**, in the same breath as the scope decision, so
+  the draft never reads as "nine dimensions cleared it" when it was five. A skipped agent is
+  not-applicable, exactly like `type-design-analyzer` on a typeless diff — not a failure, and it does
+  **not** force `verdict: failed` (Step 7). That token is reserved for an agent that was dispatched
+  and could not prove it read anything.
+- **When in doubt, dispatch.** The asymmetry is stark: an unnecessary agent costs tokens, a wrongly
+  skipped one costs a finding nobody knows is missing.
+
+Note for anyone tempted to generalize this: scoping by **PR-level** properties — importance, size,
+author, risk tier — was measured across ~80 drafts and came out net-negative. What is sanctioned here
+is narrower and rests on a different justification: a re-review whose unchanged code already has full
+coverage from a recorded prior attempt.
+
 ### Verify each agent actually reviewed something
 
-A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. Every agent — the toolkit agents here (four, or five when `type-design-analyzer` applies), **and** the four in Steps 5a–5a.5 — must prove it opened the artifact.
+A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the toolkit agents here **and** the four in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
 
 **Demand a line number, not just a line.** A filename is not evidence: the changed-file list is a host file every agent is told to `Read`, so an agent that opened nothing else can still cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `<EVIDENCE_FILE>` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
 
@@ -732,7 +845,7 @@ Verify exactly as above (same single-`verdict` block). Add the far-half check as
 
 If the second attempt also fails, record that agent as **failed** in the draft and in `## Failures` (Step 8).
 
-**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit. An agent that was **never dispatched** (e.g. `type-design-analyzer` on a diff that adds no types) is _not_ a failed agent — note it as not-applicable and move on.
+**A failed agent is not a pass and not a silence — it changes the verdict.** See Step 7: any agent recorded failed forces `verdict: failed`, which is also what lets Step 2's dedup permit a re-review at the same commit. An agent that was **never dispatched** — `type-design-analyzer` on a diff that adds no types, or anything skipped by a scope decision under "Scoping which agents spawn" — is _not_ a failed agent. Note it as not-applicable, with the reason, and move on.
 
 Aggregate the surviving agents' output into Critical / Important / Strengths yourself. That aggregate is `$RAW_REVIEW_BODY`.
 
@@ -1094,7 +1207,7 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 
 Check in this order (first match wins):
 
-- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found.
+- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found. An agent deliberately **not dispatched** under "Scoping which agents spawn" does not trigger this — that is a recorded scope decision, not a dimension that silently went missing.
 - Close-without-merge check emitted "Likely superseded" with strong evidence (see Step 4.5) → `verdict: superseded`
 - Close-without-merge check emitted "Likely unnecessary" with strong evidence (see Step 4.5) → `verdict: unnecessary`
 - Has any **Still concerning** or **New concerns** items rated critical → `verdict: needs-changes`
@@ -1119,7 +1232,7 @@ Write `$TRIAGE_DIR/<NUMBER>.md`. **If the file already exists** (re-review):
 4. Replace `## Review draft` with the new `$REVIEW_BODY` (formatted in Step 6).
 5. Update frontmatter: `head_sha`, `last_reviewed_at`, `verdict`, increment `attempt`. Preserve `posted_at` / `posted_url` (the user fills those in).
 
-**No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the nine agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
+**No cap on history** — every prior review accumulates under `## Prior reviews`, oldest at the bottom, newest at the top. This file is the archive and stays uncapped; it is read only by you and by the human reviewer, never by the review agents. The trimming in Step 4 applies solely to the agents' `review-context.md`, which is a distilled carry-forward derived from this file — so keeping the archive complete is what makes trimming the derived copy safe.
 
 Format:
 
