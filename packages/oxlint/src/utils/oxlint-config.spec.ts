@@ -1,4 +1,4 @@
-import { readJson, writeJson, type Tree } from '@nx/devkit';
+import { logger, readJson, writeJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addPluginsToOxlintConfig } from './oxlint-config';
 
@@ -107,11 +107,15 @@ describe('addPluginsToOxlintConfig', () => {
   ])(
     'should not write a second config beside an existing %s',
     (file, contents) => {
+      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
       tree.write(`apps/my-app/${file}`, contents);
 
       addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
 
       expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
+      // Refusing silently would leave the plugins off with no signal at all.
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('react'));
+      warn.mockRestore();
     }
   );
 
