@@ -233,7 +233,7 @@ describe('release publishable libraries', () => {
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.4",
-      "peerDependencies": {
+      "sideEffects": false,
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.4
