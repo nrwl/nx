@@ -4,11 +4,18 @@ import { addPluginsToOxlintConfig } from './oxlint-config';
 
 describe('addPluginsToOxlintConfig', () => {
   let tree: Tree;
+  let warn: jest.SpyInstance;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     writeJson(tree, '.oxlintrc.json', { plugins: ['typescript'], rules: {} });
+    // In `beforeEach`/`afterEach` rather than inline: a failing assertion would
+    // skip an inline `mockRestore` and leave `logger.warn` mocked for the rest
+    // of the file.
+    warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
   });
+
+  afterEach(() => warn.mockRestore());
 
   it('should write the plugins to the project config', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react', 'jsx-a11y']);
@@ -73,13 +80,17 @@ describe('addPluginsToOxlintConfig', () => {
     expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
   });
 
-  it('should no-op when the workspace uses a TypeScript config', () => {
+  it('should warn rather than no-op silently under a TypeScript root', () => {
     tree.delete('.oxlintrc.json');
     tree.write('oxlint.config.ts', 'export default {};');
 
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
 
     expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
+    // The branch that writes nothing at all — the warning is the only signal.
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('only JSON Oxlint configs')
+    );
   });
 
   // The root's format only matters when a project config has to be created,
