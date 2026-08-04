@@ -6,6 +6,11 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Tree } from '../../generators/tree';
 import { readFileIfExisting } from '../fileutils';
+import {
+  createIgnoreChainResolver,
+  isIgnoredByChain,
+  type ScopedIgnoreMatcher,
+} from '../ignore';
 import { parseJson } from '../json';
 import { readModulePackageJson } from '../package-json';
 import { FORMATTER_MAX_BUFFER } from './shared';
@@ -262,74 +267,22 @@ async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
   }
 }
 
-/** An ignore matcher plus the directory its patterns are rooted at. */
-type ScopedIgnoreMatcher = {
-  dir: string;
-  matcher: ReturnType<typeof ignore>;
-};
-
-function readIgnoreMatcherInDir(dir: string): ScopedIgnoreMatcher | undefined {
-  const patterns = ['.gitignore', '.prettierignore']
-    .map((name) => readFileIfExisting(path.join(dir, name)))
-    .filter((contents) => contents.length > 0);
-
-  if (patterns.length === 0) {
-    return undefined;
-  }
-
-  const matcher = ignore();
-  for (const contents of patterns) {
-    matcher.add(contents);
-  }
-
-  return { dir, matcher };
-}
-
 /**
- * The ignore files that apply to a directory: its own and every one above it up
- * to the workspace root, as the CLI reads them. Each set stays paired with the
- * directory it was read from, because gitignore patterns are relative to their
- * own file rather than to the root.
+ * True when an ignore file along the chain covers the file, or when the resolved
+ * config's own `ignorePatterns` do.
  *
- * Cached per directory - a batch hits the same handful repeatedly.
- */
-function createIgnoreResolver(
-  workspaceRoot: string
-): (fileDir: string) => ScopedIgnoreMatcher[] {
-  const cache = new Map<string, ScopedIgnoreMatcher[]>();
-
-  return (fileDir: string) => {
-    const key = path.resolve(fileDir);
-    let chain = cache.get(key);
-    if (!chain) {
-      chain = [];
-      for (const dir of ancestorsWithin(workspaceRoot, key)) {
-        const scoped = readIgnoreMatcherInDir(dir);
-        if (scoped) {
-          chain.push(scoped);
-        }
-      }
-      cache.set(key, chain);
-    }
-    return chain;
-  };
-}
-
-/**
- * True when any ignore file along the chain covers the file, or when the
- * resolved config's own `ignorePatterns` do. Patterns are tested against the
- * path relative to whichever directory they came from.
+ * `ignorePatterns` is not an ignore file: it comes from the config and oxfmt
+ * roots it at that config's directory, so it is matched separately from the
+ * chain rather than folded into it.
  */
 function isIgnored(
   chain: ScopedIgnoreMatcher[],
+  relativePath: string,
   config: DirectoryConfig,
   absoluteFilePath: string
 ): boolean {
-  for (const { dir, matcher } of chain) {
-    const relative = toRelativeWithin(dir, absoluteFilePath);
-    if (relative !== undefined && matcher.ignores(relative)) {
-      return true;
-    }
+  if (isIgnoredByChain(chain, relativePath)) {
+    return true;
   }
 
   if (config.ignoreMatcher) {
@@ -922,6 +875,12 @@ function* ancestorsWithin(
  * Windows a path on another drive comes back looking relative (`D:/…`), which
  * is a wrong answer rather than an undefined one; no shipped caller does that.
  */
+/** `path.dirname` for the workspace-relative POSIX paths the chain is keyed by. */
+function posixDirname(relativePath: string): string {
+  const separator = relativePath.lastIndexOf('/');
+  return separator === -1 ? '' : relativePath.slice(0, separator);
+}
+
 function toRelativeWithin(
   baseDir: string,
   filePath: string
@@ -963,7 +922,13 @@ export async function formatFilesWithOxfmt(
   // Config, ignore files and .editorconfig are all resolved from the file's own
   // directory upwards, as the CLI does, and cached per directory.
   const resolveConfig = createOxfmtConfigResolver(workspaceRoot, seedConfig);
-  const resolveIgnores = createIgnoreResolver(workspaceRoot);
+  // oxfmt honours `.prettierignore` as well as `.gitignore` - measured against
+  // its CLI, and part of being a drop-in for prettier.
+  const resolveIgnores = createIgnoreChainResolver(
+    (relativePath) =>
+      readFileIfExisting(path.join(workspaceRoot, relativePath)),
+    ['.gitignore', '.prettierignore']
+  );
   const resolveEditorConfig = createEditorConfigResolver();
 
   const errors: string[] = [];
@@ -988,7 +953,19 @@ export async function formatFilesWithOxfmt(
         // Still inside the try: `ignores()` throws on a path it considers
         // non-relative, and an unhandled rejection here would discard the
         // formatting of every other file in the batch.
-        if (isIgnored(resolveIgnores(fileDir), config, absolutePath)) {
+        //
+        // A path outside the workspace cannot be covered by the workspace's own
+        // ignore files, so there is nothing to check for it.
+        const relativePath = toRelativeWithin(workspaceRoot, file.path);
+        if (
+          relativePath !== undefined &&
+          isIgnored(
+            resolveIgnores(posixDirname(relativePath)),
+            relativePath,
+            config,
+            absolutePath
+          )
+        ) {
           return;
         }
 
