@@ -10,7 +10,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { platform, tmpdir } from 'node:os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import {
   ensureSecureNativeFileCacheLocation,
   getNativeFileCacheLocationToDelete,
@@ -186,10 +186,23 @@ describe('native file cache location', () => {
       });
     });
 
-    it('should refuse when a directory on the way down is not ours', () => {
-      withGuards({ isOwnedRealDirectory: jest.fn(() => null) }, (m) => {
-        expect(m.getNativeFileCacheLocationToDelete()).toBeNull();
-      });
+    // Argument-aware, one directory at a time: a mock that answers the same way
+    // for both call sites cannot tell the two guards apart, so dropping either
+    // one on its own left the suite green.
+    it.each([
+      ['the per-user root', () => dirname(NATIVE_CACHE_ROOT)],
+      ['the native cache root', () => NATIVE_CACHE_ROOT],
+    ])('should refuse when %s is not ours', (_label, refused: () => string) => {
+      withGuards(
+        {
+          isOwnedRealDirectory: jest.fn((d: string) =>
+            d === refused() ? null : d
+          ),
+        },
+        (m) => {
+          expect(m.getNativeFileCacheLocationToDelete()).toBeNull();
+        }
+      );
     });
   });
 
