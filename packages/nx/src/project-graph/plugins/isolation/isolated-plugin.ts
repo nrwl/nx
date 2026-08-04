@@ -564,8 +564,11 @@ async function startPluginWorker(name: string) {
 
   // Keep the host pid readable for diagnostics, the counter collision-free
   // within this process, and entropy for a reused pid across process runs. The
-  // eleven characters after the pid match what the `performance.now()` stamp
-  // this replaced spent, so the socket path budget is unchanged.
+  // suffix is a base36 counter plus four random bytes: eleven characters after
+  // the pid until the counter passes 36, and fixed-length where the
+  // `performance.now()` stamp it replaced varied with process uptime. That
+  // keeps the socket path inside the 95-character budget `assertValidSocketPath`
+  // enforces.
   const ipcPath = getPluginOsSocketPath(getPluginWorkerSocketId());
 
   const worker = spawn(
