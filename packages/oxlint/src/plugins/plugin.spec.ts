@@ -125,7 +125,8 @@ describe('@nx/oxlint plugin', () => {
       'libs/a/project.json': `{"name":"a"}`,
       'libs/a/src/index.ts': `export const a = 1;`,
       'libs/a/src/nested/.oxlintrc.json': `{"rules":{}}`,
-      // A config under a different Oxlint root is not this project's input.
+      // A sibling, not an ancestor: `libs/a` is a string prefix of `libs/ab`,
+      // which a naive `startsWith` would treat as containment.
       'libs/ab/.oxlintrc.json': `{"rules":{}}`,
     });
 
@@ -314,6 +315,32 @@ describe('@nx/oxlint plugin', () => {
 
       expect(results.projects['libs/a'].targets.lint.inputs).not.toContain(
         '{workspaceRoot}/tsconfig.base.json'
+      );
+    });
+
+    // The node_modules skip is this plugin's own code, not the shared
+    // `walkTsconfigExtendsChain` — so nothing else pins it. The lockfile
+    // already invalidates on an external package change.
+    it('should drop shareable tsconfig packages resolved from node_modules', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'node_modules/@some/preset/package.json': `{"name":"@some/preset"}`,
+        'node_modules/@some/preset/tsconfig.json': `{}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/a/tsconfig.json': JSON.stringify({
+          extends: '@some/preset/tsconfig.json',
+        }),
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+      const inputs = results.projects['libs/a'].targets.lint.inputs;
+
+      expect(inputs).not.toContainEqual(
+        expect.stringContaining('node_modules')
+      );
+      expect(inputs).not.toContainEqual(
+        expect.stringContaining('@some/preset')
       );
     });
 

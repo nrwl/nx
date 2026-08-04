@@ -9,10 +9,10 @@ import {
 import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
 /**
- * Config files this package can rewrite. Deliberately narrower than
- * `OXLINT_CONFIG_FILENAMES` — use that one to ask whether a config *exists*,
- * since a config Oxlint honours but we cannot edit still forbids writing a
- * second one beside it.
+ * Root config filenames a generated `extends` can point at — JSON only, since
+ * Oxlint cannot extend a TypeScript config. Not all of them are *rewritable*:
+ * `addPluginsToOxlintConfig` refuses `.jsonc` below. To ask whether a config
+ * exists at all, use `OXLINT_CONFIG_FILENAMES`.
  */
 const EDITABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
   /\.jsonc?$/.test(file)

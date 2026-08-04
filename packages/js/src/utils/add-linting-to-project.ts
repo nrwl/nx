@@ -52,10 +52,11 @@ export async function addLintingToProject(
   tree: Tree,
   options: AddLintingToProjectOptions
 ): Promise<GeneratorCallback> {
-  // Typed as required, but `tsconfig.base.json` sets `"strict": false`, so an
-  // `undefined` assigned to it is not an error — and detox's schema declares
-  // `linter?`. It has always meant ESLint; naming that here keeps it from being
-  // an implicit fallthrough and lets the union below be exhaustive.
+  // Four callers declare `linter?` on the type they pass — detox's `Schema`,
+  // angular's `AddLintingGeneratorSchema`, and expo's and react-native's local
+  // `NormalizedSchema` — so `undefined` genuinely arrives. It has always meant
+  // ESLint; naming that keeps it from being an implicit fallthrough and lets
+  // the union below be exhaustive.
   const linter = options.linter ?? 'eslint';
 
   if (linter === 'none') {
