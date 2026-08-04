@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import {
   chmodSync,
+  fchmodSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -21,7 +22,11 @@ import { getSocketDir } from '../daemon/tmp-dir';
 
 jest.mock('node:fs', () => {
   const actual = jest.requireActual('node:fs');
-  return { ...actual, lstatSync: jest.fn(actual.lstatSync) };
+  return {
+    ...actual,
+    lstatSync: jest.fn(actual.lstatSync),
+    fchmodSync: jest.fn(actual.fchmodSync),
+  };
 });
 
 // Real filesystem behavior is used throughout except for the foreign-owner
@@ -195,9 +200,45 @@ describe('ensureOwnedPrivateDir', () => {
       'should create the one shared container sticky and world-writable',
       () => {
         const dir = join(base, 'shared');
+        // Explicit, because the whole point is the chmod: mkdir's mode is
+        // masked, so under `umask 0000` the directory arrives at 1777 on its
+        // own and deleting the chmod leaves this green.
+        const previousUmask = process.umask(0o022);
 
-        expect(ensureSafeSharedRoot(dir)).not.toBeNull();
-        expect(lstatSync(dir).mode & 0o7777).toBe(0o1777);
+        try {
+          expect(ensureSafeSharedRoot(dir)).not.toBeNull();
+          expect(lstatSync(dir).mode & 0o7777).toBe(0o1777);
+        } finally {
+          process.umask(previousUmask);
+        }
+      }
+    );
+
+    // The creation branch takes the same verdict as the pre-existing one. It is
+    // not redundant with "mkdirSync succeeded": XNU strips S_ISVTX at mkdir, so
+    // on macOS the sticky bit exists only because of the chmod, and a chmod that
+    // fails under `umask 0000` leaves a world-writable non-sticky container —
+    // which a peer can rename aside, above the directory a .node is loaded from.
+    // Linux keeps the sticky bit through mkdir, so there the result stays safe
+    // and the assertion is on the invariant rather than on a fixed outcome.
+    posixOnly(
+      'should refuse a container it created if the mode did not land',
+      () => {
+        const dir = join(base, 'chmod-refused');
+        const previousUmask = process.umask(0o000);
+        (fchmodSync as jest.Mock).mockImplementationOnce(() => {
+          throw Object.assign(new Error('denied'), { code: 'EPERM' });
+        });
+
+        try {
+          const established = ensureSafeSharedRoot(dir);
+          const mode = lstatSync(dir).mode & 0o7777;
+          const peerWritableAndNotSticky = !!(mode & 0o022) && !(mode & 0o1000);
+
+          expect(established === null).toBe(peerWritableAndNotSticky);
+        } finally {
+          process.umask(previousUmask);
+        }
       }
     );
 
@@ -222,34 +263,32 @@ describe('ensureOwnedPrivateDir', () => {
     posixOnly(
       'should not modify an existing container it goes on to refuse',
       () => {
-        // The uid clause is what refuses a peer's root, and we cannot chown
-        // without privilege — so move our own uid instead, which is the same
-        // comparison from `isSafeSharedRoot`'s point of view.
+        // Foreign ownership is staged through the lstat, like its siblings
+        // above, rather than by moving our own uid. A fixture this suite
+        // creates is root-owned whenever the suite runs as root, and
+        // `isSafeSharedRoot` exempts uid 0 *before* the mode clause — so no
+        // value of getuid() can make it look like a peer's, and the test goes
+        // green on a GitHub runner while failing in any container CI.
         const dir = join(base, 'peer-owned');
         mkdirSync(dir, { mode: 0o700 });
         chmodSync(dir, 0o700);
-        // Restored explicitly: this spec has no global restore, and a leaked
-        // uid makes every later ownership check fail.
-        const uid = jest
-          .spyOn(process, 'getuid')
-          .mockReturnValue(process.getuid!() + 1);
+        const currentUid = process.getuid!();
+        // Consumed by isSafeSharedRoot; the assertion below gets the real one.
+        (lstatSync as jest.Mock).mockReturnValueOnce({
+          isDirectory: () => true,
+          uid: currentUid === 1 ? 2 : 1,
+          mode: 0o40700,
+        });
 
-        try {
-          expect(ensureSafeSharedRoot(dir)).toBeNull();
-          expect(lstatSync(dir).mode & 0o7777).toBe(0o700);
-        } finally {
-          uid.mockRestore();
-        }
+        expect(ensureSafeSharedRoot(dir)).toBeNull();
+        expect(lstatSync(dir).mode & 0o7777).toBe(0o700);
       }
     );
 
-    // The chmod is `1777`, so a non-directory reached here is handed group and
-    // other write. Without this, dropping chmodRealDirectory's isDirectory()
-    // check survives the suite.
-    // The 0600 row matters on its own: the other fixtures are 0644, so they are
-    // caught downstream by chmodRealDirectory's own mode handling and deleting
-    // ensureOwnedPrivateDir's isDirectory() check survives the suite without it.
-    // A 0600 regular file otherwise comes back branded as an OwnedPrivateDir.
+    // A non-directory is never chmod-ed here — `mkdirSync` fails EEXIST and the
+    // verdict below refuses it — so what this pins is that the refusal happens
+    // before anything touches the planted path, and that the planted path is
+    // left exactly as it was found.
     posixOnly.each([
       ['a regular file', (p: string) => writeFileSync(p, '')],
       [
