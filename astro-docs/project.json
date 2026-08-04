@@ -29,6 +29,7 @@
             "esbuild",
             "gradle",
             "nuxt",
+            "oxlint",
             "plugin",
             "react-native",
             "remix"
@@ -54,6 +55,7 @@
             "esbuild",
             "gradle",
             "nuxt",
+            "oxlint",
             "plugin",
             "react-native",
             "remix"
