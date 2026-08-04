@@ -485,6 +485,12 @@ dimension depends on. Signals that it does:
 - A changed **lint / CI / build config** whose effect is the point of the change.
 - A **removed** log, warning, or error, justified as "the sink already reports it".
 - A claimed **behavioral parity** between two code paths ("the worker mirrors the classic loop").
+- A factual claim about an **external dependency's behavior**, especially **across versions** — "the
+  upstream package never reports X in any mode", "that field only exists from v21". One `npm pack` +
+  `grep` settles it; left unmeasured, every agent whose dimension touches it packs the same tarballs.
+  This shape hides because the claim is usually in a _comment_, so it reads as the comment-analyzer's
+  private business — but reachability claims of this kind set the severity of the whole PR, which
+  means the reproduce-verifier and the code reviewer need them too.
 - A change to a **shared signature or call contract**: a new parameter, a widened argument list, a
   new option threaded through a function with several call sites.
 
@@ -500,6 +506,15 @@ itself**, so the diff contains the evidence; a signature change's expensive fact
   options-object refactor is even available, and it is invisible to a reader of the diff alone.
 
 If the diff makes no such claim, skip this step entirely — most PRs will.
+
+**Finish this step before you dispatch anyone.** A measurement taken after dispatch reaches nobody:
+the charter is read once, at the start of each agent's run, so a late `## Established measurements`
+entry is invisible to every agent already working, and they each re-derive it. Observed: an
+external-dependency version claim measured after dispatch was independently re-derived by three
+agents at roughly 5-7k tokens each. If you think of a measurement mid-flight, you have two options —
+neither is "write it to the charter and hope": either accept the duplication, or `SendMessage` the
+specific agents whose dimension needs it. Prefer to catch it here by walking the trigger list above
+once, deliberately, before the first `Agent` call.
 
 ### How to do it
 
@@ -532,6 +547,32 @@ If the diff makes no such claim, skip this step entirely — most PRs will.
 
 6. **Record the method, not just the number.** The charter entry must let an agent re-run it.
 
+7. **Leave the rig standing, and say where it is.** This is the highest-leverage part of the step and
+   the easiest to skip, because by the time you have your number the harness feels like scaffolding.
+   It is not — it is the expensive part, and every agent that wants to _run_ anything will rebuild it
+   from scratch.
+
+   Observed on a single PR: six separate harnesses were built to do the same thing — load the shipped
+   implementation by transpiling its real source and push inputs through it. The orchestrator, the
+   silent-failure hunter, the code reviewer, the type analyzer, the test analyzer and the
+   reproduce-verifier each solved module resolution, each wrote the transpile boilerplate, and
+   several each hit the same `cd`-outside-the-mise-tree failure first.
+
+   So: when your measurement needed a harness, save it in the container at a stable path
+   (`/work/nx/<something>-probe.js` — under `/work/nx`, or `require()` cannot resolve workspace
+   modules), make its inputs a parameter rather than a hard-coded list, and give the charter the
+   literal command that runs it.
+
+   **Reuse the plumbing, never the cases.** The adversarial value of nine agents lives entirely in
+   which inputs each one thinks to try; it lives not at all in who wrote the `ts.transpileModule`
+   call. Hand over the loader and the runner; let every agent bring its own matrix. Word the charter
+   entry that way explicitly — "here is a rig that executes the shipped code, bring your own inputs"
+   — because a rig presented alongside a case list invites agents to read the case list as the
+   territory and stop there.
+
+   The same applies to anything else you stood up that was expensive and is reusable: an installed
+   base-side dependency, an extracted tarball, a snapshot at `/snap`.
+
 ### How to write it into the charter
 
 Add an `## Established measurements` section (see the Step 5 template). Frame every entry as a
@@ -547,6 +588,15 @@ independence that matters — `alternative-approach`, `security-analyzer` and `p
 arriving uninformed about the _author's reasoning_ — is untouched, because a mechanical measurement
 is not a rationale. Keep giving them the measurement; keep withholding the Polygraph session until
 Step 5c.
+
+**Record what you tested and found clean, not only what you found.** A negative result is as
+suppressive as a positive one and costs an extra line. If your matrix covered a case that looks like
+the obvious place for this change to break — the shape a reader would reach for first — say that you
+tested it and that it held. Otherwise every agent that has the same good instinct spends the same
+tool calls confirming your silence. Observed working: a charter that recorded "the guard-shape
+difference produces no divergence, including the case that difference would most plausibly expose"
+drew zero re-tests from nine agents, while the one measurement left out of the charter was re-derived
+by three.
 
 **Never put a conclusion here that you did not personally run.** This section is trusted by nine
 agents at once, so an error in it is nine wrong reviews rather than one.
@@ -613,6 +663,11 @@ whether the change is good. Verify anything you intend to lean on; correct it if
 - **Who calls them** — the call sites, with paths, from one `grep` over `/work/nx/packages`. Note any
   reached through a dynamic `require`/`import`, across a package boundary, or from a test-only path.
 - **Base behavior** — what the same code did at `/work/base`, in a sentence per changed function.
+  Where a changed export's **type** moved, give the before and after explicitly, including a type that
+  was previously _inferred_ rather than written down. That fact decides whether the change is a
+  narrowing or a break, so several dimensions need it — type design, code quality, and whoever asks
+  why a now-redundant guard could be deleted — and each will otherwise reconstruct the old inference
+  by hand from deleted source. Observed re-derived three times on one PR.
 - **Where it sits in the flow** — the entry point that reaches this code, and what gates it.
 
 Leave OUT the PR body's rationale, the author's stated motivation, and any prior review's
@@ -634,7 +689,27 @@ finding, and a valuable one. Reuse these as a _starting point_ for your own dime
 not as a place to stop.
 
 <For each measurement: the claim, the method (specific enough to re-run), and the result —
-including the base and, on a re-review, the prior SHA, so "is this net-new?" is answerable.>
+including the base and, on a re-review, the prior SHA, so "is this net-new?" is answerable.
+
+Where the measurement was clean, say so — "tested X, no divergence" — so nobody re-tests your
+silence.>
+
+### Reusable rig
+
+<OMIT unless Step 4.7 left a harness or other expensive setup standing. When it did, list each one:
+the path, the literal command that runs it, and what it does.
+
+State plainly that the inputs are the agent's to choose — the rig exists so nobody rewrites the
+plumbing, NOT so everyone reuses one case list. Example wording:
+
+    /work/nx/<name>-probe.js executes the SHIPPED implementation (it transpiles the real source;
+    it is not a reimplementation). Run it with:
+        docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && node <name>-probe.js'
+    Add your own cases to the matrix at the top. Bring inputs your dimension cares about — the
+    case list already there is mine, not a boundary on yours.
+
+Also list any expensive setup that is reusable rather than re-creatable: a base-side dependency you
+installed, an extracted tarball, a `/snap` snapshot.>
 
 ## Review methodology (mandatory)
 
