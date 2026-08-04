@@ -78,6 +78,49 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
     expect(newVersion).toBe('my-app-1.2.3');
   });
 
+  it('skips a project when the selected scheme requires a missing version actions version', async () => {
+    const finalConfigForProject: any = {
+      dockerOptions: {
+        repositoryName: 'repo',
+        registryUrl: undefined,
+        versionSchemes: { prod: '{versionActionsVersion}' },
+      },
+    };
+
+    const result = await handleDockerVersion(
+      process.cwd(),
+      mockProjectNode,
+      finalConfigForProject,
+      'prod'
+    );
+
+    expect(result).toEqual({
+      newVersion: null,
+      logs: [
+        'Skipped my-app, because no new version was resolved for this project.',
+      ],
+    });
+  });
+
+  it('still versions a project when its scheme does not require a version actions version', async () => {
+    const finalConfigForProject: any = {
+      dockerOptions: {
+        repositoryName: 'repo',
+        registryUrl: undefined,
+        versionSchemes: { prod: '{projectName}-latest' },
+      },
+    };
+
+    const { newVersion } = await handleDockerVersion(
+      process.cwd(),
+      mockProjectNode,
+      finalConfigForProject,
+      'prod'
+    );
+
+    expect(newVersion).toBe('my-app-latest');
+  });
+
   it('prompts for version scheme when multiple are available', async () => {
     const finalConfigForProject: any = {
       dockerOptions: {

@@ -192,9 +192,6 @@ describe('nx release multiple release branches', () => {
       +   "version": "0.1.0",
       "exports": {
 
-      }
-      +
-
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.7",
@@ -332,9 +329,6 @@ describe('nx release multiple release branches', () => {
       +   "version": "0.1.0",
       "exports": {
 
-      }
-      +
-
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
@@ -386,9 +380,6 @@ describe('nx release multiple release branches', () => {
       -   "version": "0.0.0",
       +   "version": "1.0.0",
       "exports": {
-
-      }
-      +
 
 
       "name": "@proj/{project-name}",
