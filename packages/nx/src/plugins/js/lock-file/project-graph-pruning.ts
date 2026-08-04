@@ -178,6 +178,21 @@ function traverseNode(
     return;
   }
   builder.addExternalNode(node);
+
+  // If this is an alias node (version starts with "npm:"), also traverse the
+  // real underlying package node. For example, an alias node "npm:auth0-legacy"
+  // with version "npm:auth0@4.37.0" must pull in the real "npm:auth0@4.37.0"
+  // node and its transitive dependencies.
+  if (node.data.version.startsWith('npm:')) {
+    const aliasTarget = node.data.version.slice('npm:'.length); // e.g. "auth0@4.37.0" or "@scope/pkg@1.0.0"
+    const realNode =
+      graph.externalNodes[`npm:${aliasTarget}`] ||
+      graph.externalNodes[`npm:${extractPackageName(aliasTarget)}`];
+    if (realNode) {
+      traverseNode(graph, builder, realNode);
+    }
+  }
+
   graph.dependencies[node.name]?.forEach((dep) => {
     const depNode = graph.externalNodes[dep.target];
     traverseNode(graph, builder, depNode);
@@ -293,6 +308,15 @@ function switchNodeToHoisted(
     builder.addStaticDependency(source, node.name);
     invBuilder.addStaticDependency(node.name, source);
   });
+}
+
+// Extract the package name from an "alias target" string like "auth0@4.37.0"
+// or "@scope/pkg@1.0.0". Returns "auth0" or "@scope/pkg".
+function extractPackageName(aliasTarget: string): string {
+  const versionSep = aliasTarget.startsWith('@')
+    ? aliasTarget.indexOf('@', 1)
+    : aliasTarget.indexOf('@');
+  return versionSep === -1 ? aliasTarget : aliasTarget.slice(0, versionSep);
 }
 
 // BFS to find the shortest path to a dependency specified in package.json
