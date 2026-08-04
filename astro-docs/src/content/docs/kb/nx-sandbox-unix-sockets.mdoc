@@ -61,7 +61,7 @@ The write grant covers `/tmp/.nx` rather than only its `sockets` descendants bec
 
 ## Where sockets go, and in what order
 
-Nx uses the first of these it can establish, checking each one before it writes anything there:
+Nx uses the first of these it can establish. It creates each directory and verifies it afterwards, not before: a check that ran first would leave a window in which someone else could swap the path between the check and the use.
 
 1. **`$NX_SOCKET_DIR`** is used exactly as given. It sits outside the order below: a configured directory that can't be used sends Nx straight to the workspace with a warning, instead of quietly substituting a longer path you never asked for.
 1. **`/tmp/.nx/<uid>/sockets`** needs `/tmp/.nx` to belong to you or to `root`, and to be sticky if anyone else can write to it. The two directories beneath it have to be yours and mode `0700`.
