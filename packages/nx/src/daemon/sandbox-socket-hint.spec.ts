@@ -32,6 +32,22 @@ describe('sandboxSocketHint', () => {
     expect(lines.join('\n')).toContain('NX_SOCKET_DIR');
   });
 
+  it('should name every root the chain may use when NX_SOCKET_DIR is unset', () => {
+    // Resolution walks a chain, so naming one root would be wrong wherever the
+    // other was picked — and both are what a sandbox allowlist has to cover.
+    // The home root is shown as `~/.nx`, which is what a committed allowlist
+    // entry needs in order to expand per user.
+    mockIsAiAgent.mockReturnValue(false);
+
+    const lines = withEnvironmentVariables(
+      { NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined },
+      () => sandboxSocketHint()
+    ).join('\n');
+
+    expect(lines).toContain('/tmp/.nx');
+    expect(lines).toContain('~/.nx');
+  });
+
   it('should offer the configure-ai-agents remediation only to AI agents', () => {
     mockIsAiAgent.mockReturnValue(true);
     expect(hint().join('\n')).toContain('nx configure-ai-agents');

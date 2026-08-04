@@ -49,6 +49,23 @@ export const NX_USER_TMP_DIR =
 export const NX_HOME_TMP_DIR = resolveHomeTmpDir();
 
 /**
+ * The runtime roots as they belong in a *committed* sandbox allowlist.
+ *
+ * Deliberately literal rather than the resolved constants above. `NX_TMP_DIR`
+ * is a machine's own temp path on Windows and `NX_HOME_TMP_DIR` is an expanded
+ * absolute home — either would pin a shared config file to whoever ran the
+ * generator. These two spellings are identical on every machine and are
+ * expanded by the sandbox per user, which is the property that makes the entry
+ * worth committing at all.
+ *
+ * Both are listed because socket resolution walks a chain: `/tmp/.nx` first,
+ * `~/.nx` when a peer already owns the shared container. Allowing only the
+ * first leaves every user on a machine where someone else got there first
+ * silently uncovered.
+ */
+export const NX_ALLOWLIST_ROOTS = ['/tmp/.nx', '~/.nx'] as const;
+
+/**
  * `undefined` when there is no home directory to use, in which case callers skip
  * this location entirely.
  *
