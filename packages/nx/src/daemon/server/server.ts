@@ -27,7 +27,7 @@ import {
 } from '../message-types/configure-ai-agents';
 import { applyDaemonEnvFromClient } from '../client/daemon-environment';
 import {
-  assertValidDaemonMessage,
+  assertNotForeignWorkspaceMessage,
   isDaemonMessage,
 } from '../message-types/daemon-message';
 import {
@@ -264,7 +264,7 @@ async function handleMessage(socket: Socket, data: string) {
   // NX_SOCKET_DIR). Respond, but stay alive for our own workspace.
   if (isDaemonMessage(payload)) {
     try {
-      assertValidDaemonMessage(payload, workspaceRoot);
+      assertNotForeignWorkspaceMessage(payload, workspaceRoot);
     } catch (e) {
       await respondWithError(socket, `Workspace root mismatch`, e);
       return;

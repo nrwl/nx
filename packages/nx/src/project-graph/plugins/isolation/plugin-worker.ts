@@ -10,7 +10,7 @@ import {
 } from '../../../utils/consume-messages-from-socket';
 import { logger } from '../../../utils/logger';
 import { createSerializableError } from '../../../utils/serializable-error';
-import { assertValidDaemonMessage } from '../../../daemon/message-types/daemon-message';
+import { assertNotForeignWorkspaceMessage } from '../../../daemon/message-types/daemon-message';
 import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { setPluginWorkerHostSocket } from './worker-streaming';
@@ -100,7 +100,7 @@ const server = createServer((socket) => {
       // a stray foreign message must not kill a worker serving its host. The daemon
       // has a response channel and surfaces it to the client instead.
       try {
-        assertValidDaemonMessage(
+        assertNotForeignWorkspaceMessage(
           message,
           hostWorkspaceRoot,
           `The Nx plugin worker "${expectedPluginName}" (pid: ${process.pid})`
