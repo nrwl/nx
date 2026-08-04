@@ -38,6 +38,24 @@ describe('waitForSocketConnection', () => {
     expect(seen[0]).toEqual('ENOENT');
   });
 
+  it('should tell the handler which path the attempt was made against', async () => {
+    // The caller reports the refusal after the daemon has given up, by which
+    // point it may have unlinked the process json its socket path comes from —
+    // so the path has to travel with the errno rather than be looked up again.
+    const missing = join(base, 'not-there.sock');
+    const seen: string[] = [];
+
+    await waitForSocketConnection(() => missing, {
+      maxAttempts: 1,
+      delayMs: 1,
+      onConnectError: (_error, socketPath) => {
+        seen.push(socketPath);
+      },
+    });
+
+    expect(seen).toEqual([missing]);
+  });
+
   it('should stop polling when the handler says the errno will not heal', async () => {
     const missing = join(base, 'not-there.sock');
     let attempts = 0;
