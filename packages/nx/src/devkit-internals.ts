@@ -30,7 +30,13 @@ export { readProjectConfigurationsFromRootMap } from './project-graph/utils/proj
 export { findMatchingConfigFiles } from './project-graph/utils/project-configuration-utils';
 export { findMatchingProjects } from './utils/find-matching-projects';
 export { readTargetDefaultsForTarget } from './project-graph/utils/project-configuration/target-defaults';
-export { getIgnoreObjectForTree } from './utils/ignore';
+export {
+  getIgnoreObjectForTree,
+  createIgnoreChainResolver,
+  isIgnoredByChain,
+  posixDirname,
+  type ScopedIgnoreMatcher,
+} from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
