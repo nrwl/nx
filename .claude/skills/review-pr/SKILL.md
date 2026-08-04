@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox — never into the host working tree — runs the repo's own nx-* review agents, the nx-reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the nx-alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the nx-performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the nx-security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through the sandbox CLI — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, mcp__linear-server__get_issue, mcp__linear-server__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -92,10 +92,12 @@ Much of the work in this repo is tracked in **Linear**, not in GitHub issues. A 
 Extract every `NXC-\d+` from the PR body and commit messages (also accept a `linear.app/...` link), then fetch each one:
 
 ```
-mcp__plugin_linear_linear__get_issue with id "NXC-1234"
+<get_issue tool> with id "NXC-1234"
 ```
 
-Also pull its comments when the description is thin — a repro often arrives in a follow-up comment rather than the original report.
+**Linear's tool ids differ by how the server is installed**, so use whichever pair this session actually exposes — `mcp__plugin_linear_linear__get_issue` / `__list_comments` when it comes from the Linear plugin, `mcp__linear-server__get_issue` / `__list_comments` when it is configured as a plain MCP server. Both pairs are granted in `allowed-tools`; neither is guaranteed to exist. If no Linear tool is available at all, that is one of the fail-open cases below, not an error.
+
+Also pull the ticket's comments when the description is thin — a repro often arrives in a follow-up comment rather than the original report.
 
 From each ticket, keep:
 
@@ -231,7 +233,7 @@ Write-then-verify-then-move, rather than redirecting straight onto the final pat
 
 ## Step 4: Gather incremental-review context (only if a prior review exists)
 
-If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, this is a **re-review** triggered by new commits. Build context for the toolkit so it can be conversational instead of starting fresh.
+If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, this is a **re-review** triggered by new commits. Build context for the review agents so they can be conversational instead of starting fresh.
 
 (If the existing draft's `verdict` is `failed` **and its `## Review draft` body is empty or has no findings**, the prior attempt produced nothing usable — skip this step and review fresh. Do NOT discard it merely because the token says `failed`: since Step 7 now sets `failed` when any single agent fails its EVIDENCE check, a `failed` draft routinely still contains eight agents' worth of real findings, and throwing that away loses the reconciliation this step exists for. The file's history is preserved by Step 8 either way.)
 
@@ -319,12 +321,12 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
 ## Step 4.5: Close-without-merge check
 
-Before running the toolkit, do a cheap pass to answer: **"Should this PR be closed without merging?"** Two flavors:
+Before dispatching the review agents, do a cheap pass to answer: **"Should this PR be closed without merging?"** Two flavors:
 
 - **Superseded** — master or another PR already addressed the goal.
 - **Unnecessary** — the change shouldn't be merged at all (no real bug, abandoned, out of scope, duplicate of rejected work).
 
-Both save the toolkit's effort on PRs that won't merge anyway. Signals 1–4 detect supersession; signals 6–8 detect unnecessary; signal 5 detects an unconfirmed bug (it can push to `blocked`, never to a close). Run the gh-only signals here. Signal 5 depends on the nx-reproduce-verifier and is finalized after Step 5a.5.
+Both save the review agents' effort on PRs that won't merge anyway. Signals 1–4 detect supersession; signals 6–8 detect unnecessary; signal 5 detects an unconfirmed bug (it can push to `blocked`, never to a close). Run the gh-only signals here. Signal 5 depends on the nx-reproduce-verifier and is finalized after Step 5a.5.
 
 These signals close other people's work, so bias every judgment call toward the contributor: when a signal is ambiguous, treat it as not fired.
 
@@ -375,7 +377,7 @@ The `if`/`else` must actually gate the `fetch`+`show`. A `… || { echo "skip"; 
 
 Compare key lines against what the PR is trying to set. Example: if the PR changes `"@foo/bar": "^1.0.0"` → `"^2.0.0"` but master already has `"^2.3.3"`, flag it. The fetch is not optional — this signal can recommend _closing someone's PR_, and a local clone that is weeks stale would answer "is the target state already on master?" from the wrong tree. (If the container already exists at this point, the base side of the sandbox is equivalent and needs no fetch.)
 
-For larger PRs, skip this — the toolkit will catch subtler issues.
+For larger PRs, skip this — the review agents will catch subtler issues.
 
 ### Unnecessary signals
 
@@ -436,7 +438,7 @@ If any signal fires, prepend a `### Close-without-merge check` section to `$REVI
 - **Superseded (strong)** → verdict `superseded`. "Strong" means ANY of: signal 2 fires (another merged PR closes the same issue), OR signals 3+4 both fire (same-file merged PR AND master already at/past the PR's target state). The section should include the specific superseding PR number(s) so whoever closes the PR has a concrete pointer to cite.
 - **Unnecessary (strong)** → verdict `unnecessary`. "Strong" means ANY of: signal 6 fires (stale + abandoned + conflicted, no recent author engagement), OR signal 7 fires (duplicate of declined work with clearly matching scope). Signal 5 is never part of this — an unconfirmed bug pushes toward `blocked` with an ask-the-author question, not toward a close.
 - **Both fire** → supersession wins (more specific framing, gives the author a concrete pointer).
-- **Stale branch alone** (only signal 1) → advisory; still run the toolkit, still pick a verdict normally.
+- **Stale branch alone** (only signal 1) → advisory; still run the review agents, still pick a verdict normally.
 - **Speculative scope alone** (only signal 8) → advisory; note it in the review body, don't force a verdict.
 - **Clean** → no section emitted.
 
@@ -444,7 +446,7 @@ If all signals are cheap-negative, skip emitting the section entirely (no noise 
 
 ### Early exit on a strong close signal
 
-If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, nx-alternative-approach, nx-performance-analyzer, nx-security-analyzer, nx-reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
+If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (the Step 5 agents, nx-alternative-approach, nx-performance-analyzer, nx-security-analyzer, nx-reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
 
 ## Step 4.7: Measure shared load-bearing claims ONCE, before dispatching
 
@@ -584,7 +586,7 @@ by three.
 **Never put a conclusion here that you did not personally run.** This section is trusted by nine
 agents at once, so an error in it is nine wrong reviews rather than one.
 
-## Step 5: Run the review toolkit
+## Step 5: Run the review agents
 
 First, write a review charter at `/tmp/pr-<NUMBER>.review-charter.md` (host-side) so the agents self-filter up front instead of generating findings that get trimmed later. **The charter must open with the sandbox reading protocol** so every downstream agent knows where the code is and never runs it on the host:
 
@@ -756,11 +758,13 @@ Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in th
 
 **`<EVIDENCE_FILE>` is the one token that stays literal in the charter.** It differs per agent (the nx-reproduce-verifier keeps the full diff while the others may get the incremental one), so the charter deliberately defers it — "named in your dispatch prompt" — and each _dispatch prompt_ resolves it to a real path. Substituting a single path into the charter would silently point some agents at a file they were never given.
 
-### Dispatch the review agents directly — NOT via the toolkit command
+### Dispatch the `nx-*` agents directly — NOT via the `pr-review-toolkit` command
 
 **Never let an agent discover its own scope.** The `nx-*` agents are dispatched with the diff and file list passed explicitly, and their definitions say so. An agent that falls back to host git state (`git status`, `git diff --name-only`) gets an **empty** scope, because the PR lives in the sandbox and the host working tree is unrelated — and an agent that finds no files will happily report that it found no issues. That is a confident clean review of nothing, indistinguishable from a genuine pass.
 
-Dispatch the toolkit's agents yourself instead, with the scope passed explicitly. Get the changed-file list first:
+The `pr-review-toolkit` plugin is still installed, and it ships both a `/pr-review-toolkit:review-pr` command and its own un-prefixed `code-reviewer` / `silent-failure-hunter` / `comment-analyzer` / `type-design-analyzer` / `pr-test-analyzer` agents — the ancestors of the `nx-*` set. Neither is what you want here: the plugin's agents review the host working tree and know nothing about the sandbox, so they are precisely the empty-scope case above. Dispatch the `nx-*` agents yourself, with the scope passed explicitly. **Check the `nx-` prefix on every `subagent_type`** — an un-prefixed name silently resolves to the plugin's agent.
+
+Get the changed-file list first:
 
 ```bash
 gh pr diff <NUMBER> --repo nrwl/nx --name-only > /tmp/pr-<NUMBER>.files.tmp \
@@ -919,7 +923,7 @@ code already carries recorded coverage from a prior attempt.
 
 ### Verify each agent actually reviewed something
 
-A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the toolkit agents here **and** the four in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
+A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the Step 5 agents here **and** the four in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
 
 **Demand a line number, not just a line.** A filename is not evidence: the changed-file list is a host file every agent is told to `Read`, so an agent that opened nothing else can still cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `<EVIDENCE_FILE>` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
 
@@ -1014,7 +1018,7 @@ These standing maintainer calibrations encode this repo's review culture. The ch
 
 ## Step 5a: Run the nx-alternative-approach agent
 
-In parallel with Step 5, dispatch the `nx-alternative-approach` agent — the toolkit answers "is this code correct?", this agent answers "is this the right solution at all?":
+In parallel with Step 5, dispatch the `nx-alternative-approach` agent — the Step 5 agents answer "is this code correct?", this agent answers "is this the right solution at all?":
 
 ```
 Agent(
@@ -1243,7 +1247,7 @@ Capture the agent's output as `$REPRO_REPORT`. Fold it into the final review bod
 **Level 1 verdicts:**
 
 - `FIX_CONFIRMED` — evidence towards `lgtm`
-- `FIX_DID_NOT_WORK` / `FIX_CHANGED_BEHAVIOR_BUT_NOT_RESOLVED` — strong push towards `needs-changes` regardless of toolkit findings
+- `FIX_DID_NOT_WORK` / `FIX_CHANGED_BEHAVIOR_BUT_NOT_RESOLVED` — strong push towards `needs-changes` regardless of the review agents' findings
 - `BUG_NOT_REPRODUCED_ON_BASELINE` — push towards `blocked` pending human check (could mean stale issue, wrong command, or the PR is unnecessary)
 - `NOT_ATTEMPTED` — no effect on verdict; note it in the summary. This is the _expected_ outcome when `REPRO_CLASSIFICATION` is `MANUAL_ONLY` or `NONE`: Rust/native or TUI changes, or anything whose trigger needs a live second Nx process, an interactive terminal, or network the sandbox lacks. **A Linear-only PR is not automatically one of these** — Step 2 fetches the ticket, and a ticket carrying a reproduction makes Level 1 runnable. Treat `NOT_ATTEMPTED` against a `RUNNABLE` classification as a gap to question, not an expected outcome. A unit-test baseline is usually impossible here anyway (new tests reference symbols the base branch lacks, so they don't compile on master). Do not let a `NOT_ATTEMPTED` on such a PR drift the verdict toward `blocked`; lean on the static grounding instead.
 
@@ -1261,7 +1265,7 @@ If a prior review exists, do a second pass _yourself_ (don't dispatch another ag
 - Was the same concern raised in a prior review and still present? → move it under **Still concerning** with a note like "raised in <date>".
 - Is it a new finding (not in any prior review)? → keep under **New concerns**.
 
-Reorganize the toolkit output into this structure:
+Reorganize the agents' output into this structure:
 
 ```markdown
 ## Addressed since last review
@@ -1281,7 +1285,7 @@ Reorganize the toolkit output into this structure:
 - <positive observations>
 ```
 
-If this is the first review (no triage file existed), skip this step entirely — just use the toolkit output verbatim.
+If this is the first review (no triage file existed), skip this step entirely — just use the agents' output verbatim.
 
 The reconciled (or fresh) text becomes `$REVIEW_BODY`.
 
@@ -1363,7 +1367,7 @@ Check in this order (first match wins):
 - Couldn't reach a clear conclusion → `verdict: blocked`
 - Otherwise → `verdict: lgtm`
 
-(For first reviews with no prior context, fall back to the toolkit's Critical/Important categories.)
+(For first reviews with no prior context, fall back to the agents' Critical/Important categories.)
 
 **Verdict values:** `lgtm | needs-changes | blocked | superseded | unnecessary | failed`.
 
