@@ -64,6 +64,7 @@ import {
   PerformanceLifeCycle,
   flushPerformanceReport,
 } from './life-cycles/performance-life-cycle';
+import { prefetchRemoteCacheOnboardingUrl } from './life-cycles/performance-report';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
@@ -130,6 +131,10 @@ async function getTerminalOutputLifeCycle(
   if (tasks.length === 1 && !ORIGINAL_TUI_ENV_VALUE) {
     process.env.NX_TUI = 'false';
   }
+
+  // Kick off in the background so the URL is ready by the exit report. A brief
+  // sync preamble (git remote + axios load) runs here; the network call does not.
+  prefetchRemoteCacheOnboardingUrl(nxJson);
 
   if (isTuiEnabled()) {
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
