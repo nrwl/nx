@@ -92,7 +92,9 @@ Set `indent_style` alongside it.
 
 Set [`NX_SKIP_FORMAT=true`](/docs/reference/environment-variables) to stop generators and migrations
 from formatting.
-TypeScript path sorting is separate and stays off by default.
+TypeScript path sorting is separate and stays off by default; turn it on with
+`NX_FORMAT_SORT_TSCONFIG_PATHS=true`, or per call with `formatFiles`'
+`sortRootTsconfigPaths` option.
 
 ```shell
 NX_SKIP_FORMAT=true nx g @nx/react:app my-app
