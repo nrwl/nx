@@ -97,6 +97,16 @@ From each ticket, keep:
 - **The reproduction**, if it has one. This is the highest-value field on the ticket: it is what Step 5a.5's Level 1 should actually run, and it is usually more precise than anything reconstructable from the diff.
 - **Acceptance criteria / definition of done**, if stated.
 
+Then classify the reproduction once, here, and carry it to Step 5a.5 as `REPRO_CLASSIFICATION`:
+
+- **`RUNNABLE`** — the ticket (or a linked GitHub issue) carries a concrete command or a repro repo.
+- **`MANUAL_ONLY`** — the trigger needs a live second Nx process, an interactive terminal, a real
+  connected workspace, or network the sandbox lacks.
+- **`NONE`** — no ticket, tracker unreachable, or the ticket has no reproduction.
+
+Deriving it here rather than in the agent is the point: it is one read of material you already have
+open, and the verifier otherwise spends its opening tool calls rediscovering the same answer.
+
 **Fails open.** No Linear tools configured, not authenticated (headless and cron runs often are neither), or the ticket is unreadable ⇒ continue exactly as before and note it. Never block a review on the tracker.
 
 **Two boundaries, both load-bearing:**
@@ -381,7 +391,9 @@ For larger PRs, skip this — the toolkit will catch subtler issues.
 gh issue view <ISSUE> --repo nrwl/nx --json comments --jq '[.comments[].author.login]'
 ```
 
-If no nrwl-org member has confirmed the bug AND the PR body offers no rationale of its own (no root-cause explanation, no design-doc link), the right outcome is a question, not a closure: flag it, push the verdict toward `blocked`, and have the draft ask the author for a runnable reproduction. This signal never forces `unnecessary`.
+**A Linear ticket is corroboration, and usually stronger than a GitHub comment** — it means the team tracked the work deliberately. Step 2 has already fetched it, so check it here before concluding the bug is unconfirmed. Firing this signal on a `NXC-…` PR purely because it has no GitHub issue would push a tracked, triaged piece of work toward `blocked` for the sole reason that its tracker is not GitHub.
+
+If no nrwl-org member has confirmed the bug, **no tracking ticket describes it**, AND the PR body offers no rationale of its own (no root-cause explanation, no design-doc link), the right outcome is a question, not a closure: flag it, push the verdict toward `blocked`, and have the draft ask the author for a runnable reproduction. This signal never forces `unnecessary`.
 
 **6. Stale + abandoned + conflicted.** All three together:
 
