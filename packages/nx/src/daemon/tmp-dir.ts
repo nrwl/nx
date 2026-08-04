@@ -59,7 +59,7 @@ export class InvalidSocketDirConfigured extends Error {
       reason === 'shared-with-other-users'
         ? `The configured Nx socket directory ${dir} is shared with the other users on this machine. Nx locks the socket directory to a single user, so pointing it at a shared one both shuts every other user out of it and — until it does — lets another local user connect to the daemon or plugin worker sockets and execute code in them. Set NX_SOCKET_DIR to a directory that only your user can access.`
         : reason === 'os-temp-root'
-          ? `The configured Nx socket directory ${dir} is the operating system temp directory. Nx keeps its own runtime state beneath it, and it holds unrelated files from everything else on the machine, so Nx will not take it over as a socket directory. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
+          ? `The configured Nx socket directory ${dir} is the operating system temp directory. Nx deletes the socket directory and everything in it when the daemon stops, which here would take the temp files of everything else on the machine with it. Nx already puts its sockets in a subdirectory of this root by default. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
           : `The configured Nx socket directory ${dir} is a directory Nx keeps its own runtime state in, and Nx creates and removes socket directories beneath it. Point NX_SOCKET_DIR at a directory of your own instead — one nested beneath this root is fine.`
     );
     this.name = 'InvalidSocketDirConfigured';
@@ -197,11 +197,13 @@ function dirsUnusableAsSocketDir(): {
 }[] {
   const onWindows = process.platform === 'win32';
   return [
-    // `%TMP%` is per-account on Windows, so the shared-directory warning would
-    // be false there — but it is not Nx's either, and calling it Nx-managed
-    // would tell a Windows user that Nx locks down and cleans out their entire
-    // temp directory. It gets its own reason on both platforms for that: on
-    // POSIX the shared-directory answer is the more urgent one.
+    // `%TMP%` is per-account on Windows, so neither of the other reasons fits:
+    // it is not shared with other users, and it is not Nx's to manage. It is
+    // still refused, because a configured directory is used as the socket
+    // directory itself rather than getting a subdirectory, and `removeSocketDir`
+    // deletes that recursively when the daemon stops — here, the user's whole
+    // temp directory. On POSIX the same path is refused for sharing instead,
+    // which is the more urgent answer there.
     {
       dir: systemTmpDir,
       reason: onWindows ? 'os-temp-root' : 'shared-with-other-users',
