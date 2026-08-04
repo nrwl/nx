@@ -102,10 +102,6 @@ export async function libraryGeneratorInternal(
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
       addTsConfigBase: true,
       addTsPlugin,
-      // `formatter` rides along on the spread above. It used to be pinned to
-      // prettier here, which silently overrode the formatter the caller chose -
-      // `create-nx-workspace --preset=ts-standalone --formatter=oxfmt` came out
-      // configured for prettier. When it is absent, js:init picks the default.
     })
   );
   const options = await normalizeOptions(tree, schema);
