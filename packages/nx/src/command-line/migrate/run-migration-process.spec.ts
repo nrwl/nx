@@ -105,9 +105,12 @@ describe('run-migration-process', () => {
     expect(payload.skipAgentic).toBe(false);
   });
 
-  it('commits through migrate-commits and still reports skipAgentic when create-commits is on', async () => {
+  it('commits through migrate-commits instead of installing directly when create-commits is on', async () => {
     process.argv[7] = 'true';
-    mockCommitMigrationIfRequested.mockResolvedValue({ status: 'success' });
+    mockCommitMigrationIfRequested.mockResolvedValue({
+      status: 'committed',
+      sha: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+    });
     mockRunNxOrAngularMigration.mockResolvedValue({
       changes: [{ path: 'a.ts', type: 'UPDATE', content: Buffer.from('x') }],
       nextSteps: [],
@@ -119,10 +122,16 @@ describe('run-migration-process', () => {
     const payload = await runScript();
 
     expect(payload.type).toBe('success');
-    expect(payload.skipAgentic).toBe(true);
     expect(mockCommitMigrationIfRequested).toHaveBeenCalledTimes(1);
-    // The commit helper owns the install on this path, so the direct call the
-    // create-commits-off path makes must not also happen.
+    // The commit helper owns the install here, so it has to receive the
+    // callback and the create-commits-off path's direct call must not fire.
+    expect(mockCommitMigrationIfRequested).toHaveBeenCalledWith(
+      '/workspace',
+      expect.objectContaining({ package: 'pkg', name: 'mig' }),
+      true,
+      'chore: ',
+      expect.any(Function)
+    );
     expect(mockInstallDepsIfChanged).not.toHaveBeenCalled();
   });
 });
