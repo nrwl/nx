@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { gte, major, maxSatisfying } from 'semver';
+import { gte, major, maxSatisfying, patch } from 'semver';
 
 // The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will strip the patch version number.
 // We will publish docs to the website branch based on the current tag (i.e. website-17)
@@ -11,6 +11,18 @@ const currentVersion = process.env.GITHUB_REF_NAME || '';
 console.log(`Comparing ${currentVersion} to npm versions`);
 
 const majorVersion = major(currentVersion);
+const branchName = `website-${majorVersion}`;
+
+// Patch releases are cut from a release branch (e.g. 23.1.x) that can be missing docs commits
+// which landed on master, so force-pushing website-<major> from it reverts the live site.
+// Majors and minors release from master, so they always have every commit.
+if (patch(currentVersion) !== 0) {
+  console.log(
+    `Not publishing docs to ${branchName} because ${currentVersion} is a patch release`
+  );
+  process.exit(0);
+}
+
 let releasedVersions: string[] = JSON.parse(
   execSync(`npm show nx@^${majorVersion} version --json`, {
     windowsHide: false,
@@ -26,7 +38,6 @@ console.log(`Found npm versions:\n${releasedVersions.join('\n')}`);
 
 // Publish if the current version is greater than or equal to the latest released version
 
-const branchName = `website-${majorVersion}`;
 if (
   !dryRun &&
   currentVersion &&
