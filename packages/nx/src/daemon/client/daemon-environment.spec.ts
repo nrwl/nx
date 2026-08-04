@@ -47,6 +47,7 @@ describe("normalizeDaemonEnvironmentForGraph", () => {
     });
 
     expect(normalized).toEqual({
+      BERRY_BIN_FOLDER: "<YARN_BERRY_BIN_FOLDER>",
       PATH: [`${berry}-tools`, "/usr/bin"].join(delimiter),
     });
   });
@@ -61,8 +62,22 @@ describe("normalizeDaemonEnvironmentForGraph", () => {
     );
 
     expect(normalized).toEqual({
+      BERRY_BIN_FOLDER: "<YARN_BERRY_BIN_FOLDER>",
       PATH: "C:\\Windows\\System32",
     });
+  });
+
+  it("keeps Yarn and direct invocation as different graph identities", () => {
+    const berry = "/tmp/xfs-command";
+    const yarnIdentity = normalizeDaemonEnvironmentForGraph({
+      BERRY_BIN_FOLDER: berry,
+      PATH: [berry, "/usr/bin"].join(delimiter),
+    });
+    const directIdentity = normalizeDaemonEnvironmentForGraph({
+      PATH: "/usr/bin",
+    });
+
+    expect(yarnIdentity).not.toEqual(directIdentity);
   });
 
   it("forwards Berry runtime changes without changing graph identity", () => {

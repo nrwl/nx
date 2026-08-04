@@ -1,5 +1,7 @@
 import { delimiter } from 'node:path';
 
+const BERRY_BIN_FOLDER_GRAPH_IDENTITY = '<YARN_BERRY_BIN_FOLDER>';
+
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
@@ -205,7 +207,7 @@ export function normalizeDaemonEnvironmentForGraph(
       .join(pathDelimiter);
   }
 
-  delete normalized.BERRY_BIN_FOLDER;
+  normalized.BERRY_BIN_FOLDER = BERRY_BIN_FOLDER_GRAPH_IDENTITY;
   return normalized;
 }
 
