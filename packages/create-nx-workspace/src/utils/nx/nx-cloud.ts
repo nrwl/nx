@@ -149,10 +149,10 @@ export function getSkippedNxCloudInfo() {
   return out.getOutput();
 }
 
-export function openCloudSetupUrl(
-  connectUrl: string,
-  workspaceDirectory: string
-): void {
+export function openCloudSetupUrl(opts: {
+  connectUrl: string;
+  workspaceDirectory: string;
+}): void {
   if (isCI()) {
     return;
   }
@@ -163,14 +163,19 @@ export function openCloudSetupUrl(
     // third-party presets install whatever Nx *they* pin, which may predate
     // `openUrl`, so the optional call no-ops. The banner printed after this
     // carries the URL either way.
+    //
+    // Load the bindings directly: `nx/src/native` is a loader shim that patches
+    // `process.emit` and `Module._load` process-wide and copies the .node into a
+    // cache keyed on cwd — all pointless here, since this process exits seconds
+    // later and its cwd isn't the new workspace.
     // nx-ignore-next-line
-    const nativePath = require.resolve('nx/src/native', {
-      paths: [workspaceDirectory],
+    const nativePath = require.resolve('nx/src/native/native-bindings.js', {
+      paths: [opts.workspaceDirectory],
     });
     const { openUrl } = require(nativePath) as {
       openUrl?: (url: string) => boolean;
     };
-    openUrl?.(connectUrl);
+    openUrl?.(opts.connectUrl);
   } catch {
     // Fail gracefully — the banner still carries the URL
   }

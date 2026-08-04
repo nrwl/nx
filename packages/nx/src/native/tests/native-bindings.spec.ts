@@ -33,9 +33,10 @@ describe('native bindings type definitions', () => {
 });
 
 describe('wasm bindings', () => {
-  // `build-native` and `build-native-wasm` generate separate shims, so a new
-  // `#[napi]` export can land in index.d.ts while the wasm ones stay stale —
-  // and JS that calls it under wasm gets a TypeError instead of a value.
+  // Both shims come out of the same `build-native-wasm` run, so they go stale
+  // together — comparing them catches a hand-edit to one, not a missed
+  // regeneration. Per-export assertions below are what cover that, and they are
+  // only worth adding for exports a caller invokes unguarded.
   function exportsOf(file: string, pattern: RegExp): string[] {
     const source = readFileSync(join(__dirname, '..', file), 'utf-8');
     return [...source.matchAll(pattern)].map(([, name]) => name).sort();
@@ -51,7 +52,9 @@ describe('wasm bindings', () => {
     expect(cjsExports()).toEqual(browserExports());
   });
 
-  it('should export openUrl, which has a wasm stub so callers get false rather than a TypeError', () => {
+  it('should export openUrl, which graph --open calls without a guard', () => {
+    // A missed regeneration here is a TypeError on `nx graph`, not a no-op:
+    // open_url.rs keeps a wasm stub so the export always exists to be bound.
     expect(cjsExports()).toContain('openUrl');
     expect(browserExports()).toContain('openUrl');
   });
