@@ -372,11 +372,11 @@ export function createLockFile(
  * first (pnpm re-resolves them on a non-frozen install, and the lockfile copies
  * the manifest's form), and the local-path dependency closure is validated
  * after pruning so a shipped `link:` target that requires an unresolvable
- * dependency fails the build instead of the deploy. For every package manager,
- * the pnpm config a pruned lockfile bakes into its snapshots is stripped from
- * the manifest after a successful prune (re-declaring it next to a pruned pnpm
- * lockfile trips ERR_PNPM_LOCKFILE_CONFIG_MISMATCH; the block is inert for the
- * others).
+ * dependency fails the build instead of the deploy. After a successful prune,
+ * the manifest's pnpm config block is stripped for every package manager:
+ * re-declaring config a pruned pnpm lockfile bakes into its snapshots trips
+ * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH, and npm and yarn never read the block at
+ * install time, so dropping it does not change their installs.
  *
  * `pruned` is false when `createLockFile` fell back to the root lockfile on a
  * pruning error: the fallback's importer describes the whole workspace, so the
