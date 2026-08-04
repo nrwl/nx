@@ -36,6 +36,9 @@
           }
         }
       }
+    },
+    "lint": {
+      "dependsOn": ["oxlint"]
     }
   }
 }
