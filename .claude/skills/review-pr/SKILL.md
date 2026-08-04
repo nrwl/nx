@@ -438,10 +438,9 @@ dimension depends on. Signals that it does:
 - A change to a **shared signature or call contract**: a new parameter, a widened argument list, a
   new option threaded through a function with several call sites.
 
-That last one is a different species from the four above it, and it is the one most likely to be
-missed. The other triggers are claims the diff makes **about itself**, so they are visible in the
-diff. This one's expensive facts live in the code **around** the diff, which is why every agent goes
-and re-derives them separately:
+That last one needs looking somewhere different. The four above it are claims the diff makes **about
+itself**, so the diff contains the evidence; a signature change's expensive facts live in the code
+**around** it. Measure these outside the changed lines:
 
 - Is the new argument genuinely **inert** for the callers that do not pass it? (Read the dependency's
   own source for the falsy guard; do not assume.)
@@ -468,9 +467,9 @@ If the diff makes no such claim, skip this step entirely — most PRs will.
    answer "is this net-new?", which is calibration 7's question.
 5. **Measure the corollaries each dimension will ask for, not just the headline conclusion.** This is
    what decides whether the step actually suppresses duplication. An agent whose own question sits
-   one hop from your conclusion will rebuild the whole harness to answer that hop — so the harness
-   gets built three times anyway and the measurement bought nothing. Once a rig is standing, extra
-   observations off it are nearly free, so take them:
+   one hop from your conclusion will rebuild the whole harness to answer that hop, and the
+   measurement buys nothing. Once a rig is standing, extra observations off it are nearly free, so
+   take them:
    - You measured that a timeout **releases the event loop**. Also record what the call **returns**
      and what it **logs** on that path — those are the error-handling and comment-accuracy
      dimensions' versions of the same experiment.
@@ -768,17 +767,17 @@ Three constraints:
 - **Never scope out a dimension the delta's own subject matter names.** Cancellation ⇒ error
   handling. A changed comment ⇒ comment accuracy. A new parameter ⇒ type design.
 - **Record every skip and its reason in `## Failures`**, in the same breath as the scope decision, so
-  the draft never reads as "nine dimensions cleared it" when it was five. A skipped agent is
+  the draft never reads as though the full fleet cleared it when only part of it ran. A skipped agent is
   not-applicable, exactly like `type-design-analyzer` on a typeless diff — not a failure, and it does
   **not** force `verdict: failed` (Step 7). That token is reserved for an agent that was dispatched
   and could not prove it read anything.
 - **When in doubt, dispatch.** The asymmetry is stark: an unnecessary agent costs tokens, a wrongly
   skipped one costs a finding nobody knows is missing.
 
-Note for anyone tempted to generalize this: scoping by **PR-level** properties — importance, size,
-author, risk tier — was measured across ~80 drafts and came out net-negative. What is sanctioned here
-is narrower and rests on a different justification: a re-review whose unchanged code already has full
-coverage from a recorded prior attempt.
+**Do not extend this to PR-level properties.** Importance, size, author and risk tier are never
+grounds to drop a dimension; a PR does not earn its coverage by looking important. The two bases
+above are the only sanctioned ones — structural non-applicability, and a re-review whose unchanged
+code already carries recorded coverage from a prior attempt.
 
 ### Verify each agent actually reviewed something
 
