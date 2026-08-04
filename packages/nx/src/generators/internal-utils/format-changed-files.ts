@@ -52,6 +52,11 @@ export async function formatChangedFiles(
   // may hold a formatter config the generator just created but hasn't flushed.
   // Probing disk config here would also read the real workspace config in
   // tests, which is why callers previously needed fs mocks.
+  //
+  // Detection reads the tree but oxfmt's *options* still come from disk - no
+  // `seedConfig` is threaded through `formatDetectedFiles`, which devkit's
+  // `formatFiles` does pass. Unreachable today because no generator on this
+  // path writes an oxfmt config; one that did would format on bare defaults.
   const formatterType = detectFormatterInTree(tree);
   if (!formatterType) {
     return;

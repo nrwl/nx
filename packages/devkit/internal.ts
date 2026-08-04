@@ -21,7 +21,6 @@ export {
 // a fallback per call site.
 export {
   detectFormatterInTree,
-  isUsingPrettierInTree,
   prettierConfigFiles,
   oxfmtConfigFiles,
 } from 'nx/src/devkit-internals';
