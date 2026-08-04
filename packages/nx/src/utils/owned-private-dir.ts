@@ -114,6 +114,27 @@ export function isSafeSharedRoot(dir: string): SafeSharedRoot | null {
 }
 
 /**
+ * Whether other users on this machine can write into `dir`.
+ *
+ * This, and not `process.platform`, is what decides whether refusing a
+ * directory may cite other users. `os.tmpdir()` is a world-writable `/tmp` on
+ * Linux but a private `0700` `/var/folders/…` on macOS and a per-account path
+ * on Windows, so keying that message on the platform tells most macOS users
+ * that their own private directory lets a local attacker execute code in their
+ * daemon — the exact claim `SocketDirRefusal` exists to keep true.
+ *
+ * A path that cannot be inspected is reported as *not* peer-writable: this
+ * gates the alarming message, so it should be made only when it can be shown.
+ */
+export function isPeerWritable(dir: string): boolean {
+  try {
+    return !!(lstatSync(dir).mode & 0o022);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * The remedy for a container `isSafeSharedRoot` refused, or `undefined` when
  * there is nothing the user can do about it. Only a container owned by another
  * unprivileged user has an actionable fix, and it is to hand it to root: Nx
@@ -139,15 +160,28 @@ export function sharedRootRemedy(dir: string): string | undefined {
 }
 
 /**
- * Create a shared container as sticky + world-writable, without following a
- * symlink at its final component, and report whether the resulting path is safe
- * for the current user.
+ * Create a shared container as sticky + world-writable if it does not exist,
+ * and report whether the resulting path is safe for the current user.
  *
- * The chmod is best-effort: a later user cannot change a container owned by
- * root or by the first user, so on POSIX the verdict comes from
- * `isSafeSharedRoot` rather than from whether the chmod worked. Windows has no
- * shared level to verify — the OS temp root is already per-account — so
- * creation alone is the verdict there.
+ * **A container that already exists is never modified — only judged.** Two
+ * things go wrong if the mode is applied first and trust decided after. A
+ * process holding `CAP_FOWNER`, which is root's default in Docker and most CI
+ * images, can chmod a directory it does not own: a peer-owned `0700` root is
+ * taken to `1777` and *then* refused, so Nx widens a directory it has just
+ * decided not to trust. And an operator who deliberately tightened this root
+ * has it re-widened on every run — measured at `0700`, `0755`, `1700` and
+ * `0750`, all already safe, all taken to `1777` with no privilege needed. This
+ * function is reached from `getSocketDir`, `getPluginSocketDir` and the native
+ * binding loader, so "every run" is close to every `nx` process.
+ *
+ * The chmod on the creation path repairs only what the umask stripped from a
+ * directory we made a line earlier, which is why it stays. The cost of not
+ * repairing a pre-existing root is that a container which is safe but not
+ * world-writable keeps peers out of it; they fall to their own home tier rather
+ * than having someone else's directory rewritten underneath them.
+ *
+ * Windows has no shared level to verify — the OS temp root is already
+ * per-account — so creation alone is the verdict there.
  */
 export function ensureSafeSharedRoot(
   dir: string
@@ -163,12 +197,16 @@ export function ensureSafeSharedRoot(
 
   try {
     mkdirSync(dir, { mode: 0o1777 });
+    // Ours, created a statement ago: this repairs the umask, nothing else.
+    chmodRealDirectory(dir, 0o1777);
+    return dir as EstablishedSharedRoot;
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
       return null;
     }
   }
-  chmodRealDirectory(dir, 0o1777);
+
+  // Pre-existing: decide, do not touch.
   return isSafeSharedRoot(dir) === null ? null : (dir as EstablishedSharedRoot);
 }
 

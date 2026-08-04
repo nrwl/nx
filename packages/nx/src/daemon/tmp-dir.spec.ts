@@ -12,6 +12,7 @@ import {
 import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
+  isPeerWritable,
   sharedRootRemedy,
 } from '../utils/owned-private-dir';
 import { logger } from '../utils/logger';
@@ -20,6 +21,7 @@ jest.mock('../utils/owned-private-dir', () => ({
   ensureOwnedPrivateDir: jest.fn(() => true),
   ensureSafeSharedRoot: jest.fn(() => true),
   sharedRootRemedy: jest.fn(() => undefined),
+  isPeerWritable: jest.fn(() => true),
   getUserSegment: jest.fn(() => '501'),
 }));
 
@@ -67,6 +69,7 @@ describe('socket directories', () => {
     (ensureSafeSharedRoot as jest.Mock).mockReturnValue(true);
     (ensureOwnedPrivateDir as jest.Mock).mockReturnValue(true);
     (sharedRootRemedy as jest.Mock).mockReturnValue(undefined);
+    (isPeerWritable as jest.Mock).mockReturnValue(true);
     delete process.env.NX_SOCKET_DIR;
     delete process.env.NX_DAEMON_SOCKET_DIR;
     setPlatform(originalPlatform);
@@ -289,6 +292,13 @@ describe('socket directories', () => {
       const { NX_TMP_DIR: winNxTmp } = require('../utils/nx-tmp-dir');
       const { tmpdir: winOsTmp } = require('tmp');
       const winSocketDir = require('./tmp-dir').getSocketDir;
+      // isolateModules re-runs the module factory, so this is a different mock
+      // instance from the one the outer afterEach resets. Both Windows roots
+      // are per-account, which is the whole reason neither may be blamed on
+      // other users.
+      require('../utils/owned-private-dir').isPeerWritable.mockReturnValue(
+        false
+      );
 
       const refusalFor = (dir: string) => {
         process.env.NX_SOCKET_DIR = dir;
@@ -405,12 +415,42 @@ describe('socket directories', () => {
     ['the system temp dir', () => systemTmpDir],
     ['the Nx shared tmp root', () => SHARED_TMP_ROOT],
   ])(
-    'blames other users on this machine only for %s, which they can reach',
+    'blames other users on this machine for %s when they really can reach it',
     (_name: string, dir: () => string) => {
       setPlatform('linux');
+      (isPeerWritable as jest.Mock).mockReturnValue(true);
       process.env.NX_SOCKET_DIR = dir();
 
       expect(() => getSocketDir()).toThrow(/shared with the other users/);
+    }
+  );
+
+  // The reason follows the directory, not process.platform. os.tmpdir() is a
+  // world-writable /tmp on Linux but a private 0700 /var/folders/... on macOS,
+  // so a platform test tells most macOS users that their own private directory
+  // lets a local attacker execute code in their daemon — the one claim
+  // SocketDirRefusal exists to keep true. Pinned on POSIX specifically, since
+  // the previous version of this test passed on a macOS runner while asserting
+  // the false claim.
+  it.each([
+    ['the system temp dir', () => systemTmpDir, 'os-temp-root'],
+    ['the Nx shared tmp root', () => SHARED_TMP_ROOT, 'nx-managed'],
+  ])(
+    'does not blame other users for %s when it is private to this user',
+    (_name: string, dir: () => string, expected: string) => {
+      setPlatform('linux');
+      (isPeerWritable as jest.Mock).mockReturnValue(false);
+      process.env.NX_SOCKET_DIR = dir();
+
+      let thrown!: Error;
+      try {
+        getSocketDir();
+      } catch (e) {
+        thrown = e as Error;
+      }
+      expect((thrown as any).reason).toEqual(expected);
+      expect(thrown.message).not.toContain('shared with the other users');
+      expect(thrown.message).not.toContain('execute code');
     }
   );
 

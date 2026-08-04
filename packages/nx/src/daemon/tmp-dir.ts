@@ -17,6 +17,7 @@ import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
+  isPeerWritable,
   sharedRootRemedy,
 } from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
@@ -233,21 +234,27 @@ function dirsUnusableAsSocketDir(): {
 }[] {
   const onWindows = process.platform === 'win32';
   return [
-    // `%TMP%` is per-account on Windows, so neither of the other reasons fits:
-    // it is not shared with other users, and it is not Nx's to manage. It is
-    // still refused, because a configured directory is used as the socket
-    // directory itself rather than getting a subdirectory, and `removeSocketDir`
-    // deletes that recursively when the daemon stops — here, the user's whole
-    // temp directory. On POSIX the same path is refused for sharing instead,
-    // which is the more urgent answer there.
+    // Keyed on the directory, not the platform. `os.tmpdir()` is a
+    // world-writable `/tmp` on Linux, but a private `0700` `/var/folders/…` on
+    // macOS and a per-account path on Windows — so a platform test tells most
+    // macOS users their own private directory lets a local attacker execute
+    // code in their daemon. It is still refused when it is nobody else's:
+    // a configured directory becomes the socket directory itself rather than
+    // getting a subdirectory, and `removeSocketDir` deletes that recursively
+    // when the daemon stops — here, the user's whole temp directory.
     {
       dir: systemTmpDir,
-      reason: onWindows ? 'os-temp-root' : 'shared-with-other-users',
+      reason: isPeerWritable(systemTmpDir)
+        ? 'shared-with-other-users'
+        : 'os-temp-root',
     },
-    // NX_TMP_DIR really is Nx's own, on either platform.
+    // Same test, different fallback: this root is Nx's own, so when peers
+    // cannot reach it the honest reason is that Nx manages it.
     {
       dir: NX_TMP_DIR,
-      reason: onWindows ? 'nx-managed' : 'shared-with-other-users',
+      reason: isPeerWritable(NX_TMP_DIR)
+        ? 'shared-with-other-users'
+        : 'nx-managed',
     },
     { dir: NX_USER_TMP_DIR, reason: 'nx-managed' },
     { dir: defaultSocketRoot(), reason: 'nx-managed' },
