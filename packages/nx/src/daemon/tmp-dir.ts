@@ -126,6 +126,33 @@ function homeSocketRoot(): string | undefined {
 }
 
 /**
+ * Whether `~/.nx` is somewhere other than the shared container.
+ *
+ * With `HOME=/tmp` they are the same path, and offering it as a second tier
+ * would point `ensureOwnedPrivateDir` at `/tmp/.nx` itself the moment tier 1
+ * fails — taking a root-owned `1777` container to `0700`, silently undoing the
+ * documented provisioning, dropping every other user's native cache, and
+ * breaking a sandbox allowlist scoped to that path. Other users are not locked
+ * out (they fail `isSafeSharedRoot` on the uid check and land on their own
+ * home), but nothing puts the container back.
+ *
+ * It is also the path `InvalidSocketDirConfigured` refuses when set explicitly,
+ * so auto-selecting it would contradict a rule Nx enforces one function away.
+ */
+function homeTierIsDistinct(): boolean {
+  if (!NX_HOME_TMP_DIR) {
+    return false;
+  }
+  return ![
+    systemTmpDir,
+    NX_TMP_DIR,
+    NX_USER_TMP_DIR,
+    defaultSocketRoot(),
+    NATIVE_CACHE_ROOT,
+  ].some((shared) => resolve(shared) === resolve(NX_HOME_TMP_DIR));
+}
+
+/**
  * Socket roots to try, best first. Each entry establishes its own containment
  * before it can be used; the first that succeeds wins, and the workspace data
  * dir is the last resort when none does.
@@ -154,9 +181,10 @@ function socketRootTiers(): { root: string; establish: () => boolean }[] {
           ensureOwnedPrivateDir(d)
         ),
     },
-    // Omitted entirely when there is no home directory to use, rather than
-    // offered and then failing its guards.
-    ...(NX_HOME_TMP_DIR && homeSocketRoot()
+    // Omitted entirely when there is no home directory to use, or when it is
+    // the shared container under another name, rather than offered and then
+    // damaging what it lands on.
+    ...(homeTierIsDistinct() && homeSocketRoot()
       ? [
           {
             root: homeSocketRoot(),
@@ -176,10 +204,18 @@ function socketRootTiers(): { root: string; establish: () => boolean }[] {
  * The first socket root whose containment could be established, or `undefined`
  * when none could and the caller should fall back to the workspace.
  */
-function establishSocketRoot(): string | undefined {
-  for (const tier of socketRootTiers()) {
+function establishSocketRoot():
+  | { root: string; preferred?: string }
+  | undefined {
+  const tiers = socketRootTiers();
+  for (const [index, tier] of tiers.entries()) {
     if (tier.establish()) {
-      return tier.root;
+      // `preferred` is set only on a demotion, and names the tier that was
+      // skipped — the caller records it so a later length failure can say the
+      // path was not the one Nx wanted.
+      return index === 0
+        ? { root: tier.root }
+        : { root: tier.root, preferred: tiers[0].root };
     }
   }
   return undefined;
@@ -273,8 +309,8 @@ function socketDirUnderFirstUsableRoot(
     return createOwnerOnlySocketDir(configuredDir, false);
   }
 
-  const root = establishSocketRoot();
-  if (root === undefined) {
+  const established = establishSocketRoot();
+  if (established === undefined) {
     return fallBackToWorkspaceSocketDir(
       new Error(
         [
@@ -288,7 +324,39 @@ function socketDirUnderFirstUsableRoot(
       )
     );
   }
-  return createOwnerOnlySocketDir(leafFor(root), true);
+  const dir = createOwnerOnlySocketDir(leafFor(established.root), true);
+  // Only when the directory we actually got is the demoted tier: if
+  // createOwnerOnlySocketDir fell back to the workspace, it recorded its own,
+  // more specific cause and that one should survive.
+  if (
+    established.preferred !== undefined &&
+    socketDirFallbackCause === undefined
+  ) {
+    noteSocketRootDemotion(established.preferred, established.root);
+  }
+  return dir;
+}
+
+/**
+ * Record a successful demotion to a later tier.
+ *
+ * Silence is the right default for a demotion that works — nothing failed from
+ * the user's point of view. The one cost is that `assertValidSocketPath` keys
+ * its "Nx fell back to … run with --verbose" block off this cause, so without
+ * it a socket-length failure on a later tier tells the user to set a shorter
+ * NX_SOCKET_DIR, which may be advice they already followed. Recording it also
+ * gives `--verbose` something to print, which that message promises.
+ */
+function noteSocketRootDemotion(preferred: string, used: string) {
+  socketDirFallbackCause = new Error(
+    `Nx could not establish its preferred socket root ${preferred}, so it used ${used}.`
+  );
+  // Lazily required for the cycle reason above.
+  const { logger } =
+    require('../utils/logger') as typeof import('../utils/logger');
+  logger.verbose(
+    `Nx could not use the default socket directory ${preferred}. Using ${used} instead.`
+  );
 }
 
 export function getSocketDir() {
