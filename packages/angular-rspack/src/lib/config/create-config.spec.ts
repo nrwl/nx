@@ -262,7 +262,8 @@ describe('createConfig', () => {
   }, 10000);
 
   async function createSsrProjectRoot(
-    ssrPackageVersion = '22.0.0'
+    ssrPackageVersion = '22.0.0',
+    rspackCoreVersion: string | null = '2.0.0'
   ): Promise<string> {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
     await mkdir(join(root, 'src'), { recursive: true });
@@ -280,6 +281,21 @@ describe('createConfig', () => {
       })
     );
     await writeFile(join(ssrPackageDir, 'index.js'), '');
+    // The manifest virtual module is only used when the project's own
+    // @rspack/core supports it.
+    if (rspackCoreVersion !== null) {
+      const rspackPackageDir = join(root, 'node_modules', '@rspack', 'core');
+      await mkdir(rspackPackageDir, { recursive: true });
+      await writeFile(
+        join(rspackPackageDir, 'package.json'),
+        JSON.stringify({
+          name: '@rspack/core',
+          version: rspackCoreVersion,
+          main: 'index.js',
+        })
+      );
+      await writeFile(join(rspackPackageDir, 'index.js'), '');
+    }
     return root;
   }
 
@@ -326,13 +342,46 @@ describe('createConfig', () => {
       });
       expect(
         configs[1].plugins?.some(
-          (plugin) => plugin?.constructor.name === 'VirtualModulesPlugin'
+          (plugin) => plugin?.constructor.name === 'EngineManifestPlugin'
         )
       ).toBe(true);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
   }, 10000);
+
+  it.each([
+    ['does not support virtual modules', '1.4.5'],
+    ['is not installed', null],
+  ])(
+    'should inline the manifest registration when the project @rspack/core %s',
+    async (_, rspackCoreVersion) => {
+      const root = await createSsrProjectRoot('22.0.0', rspackCoreVersion);
+      try {
+        const configs = await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+        });
+
+        const serverExportsRule = findServerExportsRule(configs[1]);
+        expect(serverExportsRule.options.engineWiring).toBeDefined();
+        expect(
+          (serverExportsRule.options.engineWiring as Record<string, unknown>)
+            .manifestModuleRequest
+        ).toBeUndefined();
+        expect(
+          configs[1].plugins?.some(
+            (plugin) => plugin?.constructor.name === 'EngineManifestPlugin'
+          )
+        ).toBe(false);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
 
   it('should reject the "security.allowedHosts" option when @angular/ssr does not support it', async () => {
     const root = await createSsrProjectRoot('21.1.0');

@@ -3,7 +3,6 @@ import {
   type Configuration,
   ContextReplacementPlugin,
   DefinePlugin,
-  experiments,
 } from '@rspack/core';
 import { posix, relative, resolve, sep } from 'path';
 import type {
@@ -20,8 +19,12 @@ import {
   type EngineWiringOptions,
   type PlatformServerExportsLoaderOptions,
 } from '../../plugins/loaders/platform-server-exports.loader';
+import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
-import { isPackageInstalled } from '../../utils/misc-helpers';
+import {
+  getInstalledPackageVersion,
+  isPackageInstalled,
+} from '../../utils/misc-helpers';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getOptimization } from './optimization-config';
 import { getSwcTranspilationRules } from './swc-transpilation';
@@ -79,21 +82,21 @@ export async function getServerConfig(
             : (normalizedOptions.security?.allowedHosts ?? []),
         }
       : undefined;
-  let engineManifestPlugin:
-    | InstanceType<typeof experiments.VirtualModulesPlugin>
-    | undefined;
-  // VirtualModulesPlugin is available from rspack 1.5; older versions inline
-  // the manifest registration into the entry instead, where it only runs
-  // before the user entry's own statements, not before its imports.
-  if (engineWiring && experiments?.VirtualModulesPlugin) {
+  let engineManifestPlugin: EngineManifestPlugin | undefined;
+  // Virtual modules require rspack 1.5, probed on the workspace's own
+  // @rspack/core: the copy that runs the build, which can differ from this
+  // package's. Older versions inline the manifest registration into the
+  // entry instead, where it only runs before the user entry's own
+  // statements, not before its imports.
+  if (engineWiring && installedRspackSupportsVirtualModules(root)) {
     engineWiring.manifestModuleRequest = resolve(
       root,
       ENGINE_MANIFEST_VIRTUAL_NAME
     );
-    engineManifestPlugin = new experiments.VirtualModulesPlugin({
-      [engineWiring.manifestModuleRequest]:
-        generateEngineManifestSource(engineWiring),
-    });
+    engineManifestPlugin = new EngineManifestPlugin(
+      engineWiring.manifestModuleRequest,
+      generateEngineManifestSource(engineWiring)
+    );
   }
   const platformServerExportsLoaderOptions: PlatformServerExportsLoaderOptions =
     {
@@ -172,6 +175,15 @@ export async function getServerConfig(
         : []),
     ],
   };
+}
+
+function installedRspackSupportsVirtualModules(root: string): boolean {
+  const version = getInstalledPackageVersion(root, '@rspack/core');
+  if (!version) {
+    return false;
+  }
+  const [major, minor] = version.split('.').map((part) => parseInt(part, 10));
+  return major > 1 || (major === 1 && minor >= 5);
 }
 
 /**
