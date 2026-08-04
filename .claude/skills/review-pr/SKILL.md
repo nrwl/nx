@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), and — when the diff touches docs content — the docs-reviewer agent (checks changed pages against astro-docs/STYLE_GUIDE.md, the CLAUDE.md docs instructions, and the structural hazards around them: missing redirects, sidebar-coupled routes, parse-breaking Markdoc), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
 allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(docker build *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
@@ -90,7 +90,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 5`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 6`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ### Fetch the tracking ticket
 
@@ -462,7 +462,7 @@ If all signals are cheap-negative, skip emitting the section entirely (no noise 
 
 ### Early exit on a strong close signal
 
-If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, security-analyzer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
+If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, security-analyzer, docs-reviewer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
 
 ## Step 4.7: Measure shared load-bearing claims ONCE, before dispatching
 
@@ -877,10 +877,11 @@ this for `type-design-analyzer` ("only when the diff adds or changes types"); th
 generalizes, but only where the predicate is **mechanically decidable from the changed-file list and
 the diff text**, with no judgment about likelihood:
 
-| skip                                                                                     | when — and only when                                                                                                        |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `type-design-analyzer`                                                                   | the diff declares or changes no type, interface, or signature                                                               |
-| `security-analyzer`, `performance-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` | the diff changes **no executable code at all** — every path is docs, prose, or comments (`astro-docs/**`, `*.md`, `*.mdoc`) |
+| skip                                                                                     | when — and only when                                                                                                                                                  |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type-design-analyzer`                                                                   | the diff declares or changes no type, interface, or signature                                                                                                         |
+| `security-analyzer`, `performance-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` | the diff changes **no executable code at all** — every path is docs, prose, or comments (`astro-docs/**`, `*.md`, `*.mdoc`)                                           |
+| `docs-reviewer`                                                                          | no changed path is under `astro-docs/src/content/` and `astro-docs/sidebar.mts` is untouched — the inverse gate: it spawns **only** on docs-content diffs (Step 5a.4) |
 
 `code-reviewer`, `comment-analyzer`, `alternative-approach` and `reproduce-verifier` always run: every
 diff has quality, prose, an approach, and claims to check against code.
@@ -936,7 +937,7 @@ code already carries recorded coverage from a prior attempt.
 
 ### Verify each agent actually reviewed something
 
-A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the toolkit agents here **and** the four in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
+A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the toolkit agents here **and** the ones in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
 
 **Demand a line number, not just a line.** A filename is not evidence: the changed-file list is a host file every agent is told to `Read`, so an agent that opened nothing else can still cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `<EVIDENCE_FILE>` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
 
@@ -984,7 +985,7 @@ Each element defeats a specific failure that real reviews of this skill actually
 
 **One tolerated deviation: a markdown code-span wrapper.** Agents recurrently return `EVIDENCE_TEXT` wrapped in backticks, sometimes also backslash-escaping the inner ones, despite the prompt saying not to. Strip an outer code span and any such escaping, then run the comparison unchanged. This concedes nothing: the **line number** is the proof of work, and the unwrapped text must still match the file byte-for-byte. Failing an honest agent over a formatting habit costs a whole re-review — Step 7 flips the verdict to `failed`, the one value that defeats Step 2's dedup. Record it as a protocol deviation in `## Failures`, not as a failure.
 
-**This applies to endorsements too, and especially to them.** `APPROACH_SOUND`, `PERFORMANCE_SOUND`, `SECURITY_SOUND`, and a `NOT_ATTEMPTED` reproduction all assert _"I checked and found nothing"_ — a claim an agent that read nothing produces just as fluently, and which Steps 5a–5a.3 fold into **Strengths** as an affirmative statement that the dimension was audited. An endorsement must cost more evidence than a finding, not less. A `*_SOUND` verdict with no verified EVIDENCE line is recorded **failed**, never as a strength.
+**This applies to endorsements too, and especially to them.** `APPROACH_SOUND`, `PERFORMANCE_SOUND`, `SECURITY_SOUND`, `DOCS_SOUND`, and a `NOT_ATTEMPTED` reproduction all assert _"I checked and found nothing"_ — a claim an agent that read nothing produces just as fluently, and which Steps 5a–5a.4 fold into **Strengths** as an affirmative statement that the dimension was audited. An endorsement must cost more evidence than a finding, not less. A `*_SOUND` verdict with no verified EVIDENCE line is recorded **failed**, never as a strength.
 
 **If EVIDENCE fails to verify, re-dispatch once — but never paste the answer.** Restating the changed-file list is a no-op; the agent already had it. Pasting diff content into the retry prompt is worse than a no-op: it makes the retry's own check unfalsifiable, because the premise the whole mechanism rests on — _the diff content is not in the prompt_ — becomes false exactly for the agent under suspicion. A retry that hands over the evidence launders a failed agent into a pass, and since `verdict: failed` only fires after two failures, it also means that verdict can essentially never fire.
 
@@ -1014,6 +1015,8 @@ The review body must include a `### Maintainer calls` section whenever the revie
 ### Docs direction (when the diff touches `astro-docs/`)
 
 Review changed docs for _editorial direction_, not just factual accuracy: does the page recommend a practice the team shouldn't encourage (e.g. sharing a daemon across containers — a remote-code-execution vector), does it frame an escape hatch as a primary use case, does a new env var/flag doc link back to the concept page that explains its risks? A doc that accurately describes a bad recommendation is a finding, not a strength. Rate genuinely harmful guidance Important; wording/positioning asks go under Suggestions.
+
+This direction check is yours, here at trim time. Compliance with the committed docs rules (`astro-docs/STYLE_GUIDE.md`, the CLAUDE.md docs instructions) and the structural checks (redirects, sidebar coupling, Markdoc validity) belong to the `docs-reviewer` agent — Step 5a.4 dispatched it if the diff touched docs content. Don't re-derive its checks; do re-check its surviving findings against the calibrations below like everyone else's.
 
 ### Nx-specific calibration
 
@@ -1136,6 +1139,44 @@ Capture the output as `$SECURITY_REPORT` and fold it into the review body as `##
 - `SECURITY_VULNERABILITY` — counts as a critical finding (complete untrusted-source-to-sink chain in a default setup).
 - `SECURITY_CONCERN` — counts as an important finding, with the traced chain as the evidence.
 - `SECURITY_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
+
+## Step 5a.4: Run the docs-reviewer agent (only when the diff touches docs content)
+
+Dispatch only when the changed-file list contains a path under `astro-docs/src/content/` or changes `astro-docs/sidebar.mts` — the same mechanical predicate as the structural-skip table, applied in reverse. On any other diff, record it as not-applicable in `## Failures` and move on. When it applies, dispatch in parallel with Step 5 — it answers "do the changed docs comply with the rules this repo committed to?" (`astro-docs/STYLE_GUIDE.md`, the docs instructions in `CLAUDE.md`) plus the structural hazards around them (missing redirects for moved/renamed/deleted pages, sidebar-label-coupled routes, Markdoc that breaks parsing):
+
+```
+Agent(
+  subagent_type="docs-reviewer",
+  description="Review PR <NUMBER> docs against committed docs rules",
+  prompt="""
+Review the documentation changes in PR <NUMBER> in nrwl/nx for compliance with the repo's committed docs rules and for structural integrity.
+
+Inputs:
+- PR_NUMBER: <NUMBER>
+- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
+- REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
+- FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
+- BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
+
+Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`. Read the rules you enforce from the checkout itself (/work/nx/astro-docs/STYLE_GUIDE.md and the docs sections of /work/nx/CLAUDE.md), never from memory.
+
+You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, Vale, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
+
+REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
+
+Follow your standard workflow and return the structured report.
+"""
+)
+```
+
+Capture the output as `$DOCS_REPORT` and fold it into the review body as `### Docs review`, directly below `### Security analysis` (or below `### Performance analysis` when security was skipped). Verdict influence (Step 7):
+
+- `DOCS_BROKEN` — counts as a critical finding (reader-facing breakage: missing redirect, orphaned page, parse-breaking Markdoc, harmful guidance).
+- `DOCS_CONCERN` — counts as an important finding, with the committed rule quoted as the evidence.
+- `DOCS_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
+
+The agent's Suggestions tier (voice/positioning polish) merges into the draft's `### Suggestions` section under the same 5-bullet cap as everything else — it never influences the verdict.
 
 ## Step 5a.5: Run the reproduce-verifier agent
 
@@ -1375,7 +1416,7 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 
 Check in this order (first match wins):
 
-- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found. An agent deliberately **not dispatched** under "Scoping which agents spawn" does not trigger this — that is a recorded scope decision, not a dimension that silently went missing.
+- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.4 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found. An agent deliberately **not dispatched** under "Scoping which agents spawn" does not trigger this — that is a recorded scope decision, not a dimension that silently went missing.
 - Close-without-merge check emitted "Likely superseded" with strong evidence (see Step 4.5) → `verdict: superseded`
 - Close-without-merge check emitted "Likely unnecessary" with strong evidence (see Step 4.5) → `verdict: unnecessary`
 - Has any **Still concerning** or **New concerns** items rated critical → `verdict: needs-changes`
