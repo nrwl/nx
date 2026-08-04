@@ -6,6 +6,7 @@ import {
   lstatSync,
   mkdirSync,
   openSync,
+  statSync,
 } from 'node:fs';
 import { userInfo } from 'node:os';
 
@@ -127,12 +128,27 @@ export function isSafeSharedRoot(dir: string): SafeSharedRoot | null {
  * that their own private directory lets a local attacker execute code in their
  * daemon — the exact claim `SocketDirRefusal` exists to keep true.
  *
+ * Windows has no answer to give. libuv synthesizes `st_mode` there from the
+ * READONLY attribute and copies the owner bits into group and other, so an
+ * ordinary per-account directory reports `0777` and the mode test would call
+ * every path on the machine peer-writable — the same false claim on a second
+ * platform. `false` is the honest answer: `%TMP%` is already scoped to one
+ * account.
+ *
  * A path that cannot be inspected is reported as *not* peer-writable: this
  * gates the alarming message, so it should be made only when it can be shown.
+ *
+ * `statSync`, not `lstatSync`: the question is about the directory that will be
+ * used, and a symlink's own mode is `0777` on every POSIX system. Nothing here
+ * decides whether a path is accepted, so following the link costs nothing the
+ * guards above do not already re-check.
  */
 export function isPeerWritable(dir: string): boolean {
+  if (process.platform === 'win32') {
+    return false;
+  }
   try {
-    return !!(lstatSync(dir).mode & 0o022);
+    return !!(statSync(dir).mode & 0o022);
   } catch {
     return false;
   }
@@ -144,10 +160,13 @@ export function isPeerWritable(dir: string): boolean {
  * unprivileged user has an actionable fix, and it is to hand it to root: Nx
  * cannot chown it, and refusing it is what keeps that user from renaming our
  * directory aside. Returns the message rather than a boolean because the caller
- * needs the text; note that unlike the guards above this is an unbranded
- * `string | undefined`, so nothing stops it being passed where a verified path
- * is expected. In a module whose convention is "truthy string = verified path",
- * this is the one string with no protection.
+ * needs the text.
+ *
+ * Unlike the guards above this is an unbranded `string | undefined`. A branded
+ * *parameter* would reject it, but no parameter in this module is annotated —
+ * every consumer takes a plain `string` — so in a file whose convention is
+ * "truthy string = verified path", a truthy English sentence is the one value
+ * here that nothing would catch.
  */
 export function sharedRootRemedy(dir: string): string | undefined {
   try {
@@ -181,8 +200,11 @@ export function sharedRootRemedy(dir: string): string | undefined {
  * function is reached from `getSocketDir`, `getPluginSocketDir` and the native
  * binding loader, so "every run" is close to every `nx` process.
  *
- * The chmod on the creation path repairs only what the umask stripped from a
- * directory we made a line earlier, which is why it stays. The cost of not
+ * The chmod on the creation path touches only a directory we made a line
+ * earlier, which is why it stays — and on macOS it is load-bearing rather than
+ * cosmetic, since `mkdir` there never keeps the sticky bit. Its result is not
+ * trusted either: both branches end at the same verdict, so a creation whose
+ * chmod did not land is refused on its mode like any other. The cost of not
  * repairing a pre-existing root is that a container which is safe but not
  * world-writable keeps peers out of it; they fall to their own home tier rather
  * than having someone else's directory rewritten underneath them.
@@ -204,16 +226,21 @@ export function ensureSafeSharedRoot(
 
   try {
     mkdirSync(dir, { mode: 0o1777 });
-    // Ours, created a statement ago: this repairs the umask, nothing else.
+    // Ours, created a statement ago. Not only a umask repair: XNU strips
+    // S_ISVTX at mkdir, so on macOS the sticky bit exists solely because of
+    // this call.
     chmodRealDirectory(dir, 0o1777);
-    return dir as EstablishedSharedRoot;
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
       return null;
     }
   }
 
-  // Pre-existing: decide, do not touch.
+  // One verdict for both branches. Pre-existing: decide, do not touch. Just
+  // created: the chmod above can fail — a sandbox denying it, a mount with no
+  // POSIX modes — and what it leaves behind is a peer-writable non-sticky
+  // container, which is exactly the mode this predicate refuses. Trusting the
+  // creation alone would brand it safe and skip the fall to the home tier.
   return isSafeSharedRoot(dir) === null ? null : (dir as EstablishedSharedRoot);
 }
 
