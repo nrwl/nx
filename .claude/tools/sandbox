@@ -1,0 +1,618 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * sandbox — uniform read/exec access to a code checkout, whether it lives in an
+ * isolated container or on the host.
+ *
+ * The point of the `--local` backend is that callers (skills, agents) use the
+ * SAME commands in both modes. An agent is never told that reading source off
+ * the host filesystem is an option, so there is no fallback path to take when
+ * the checkout really is isolated.
+ *
+ * Isolation selection lives here and nowhere else. Nothing above this file ever
+ * types a runtime flag again — the failure mode of getting that wrong is "no
+ * isolation, reported as success", which is invisible at every layer above.
+ */
+
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const STATE_DIR = path.join(os.homedir(), '.nx-sandboxes');
+const STATE_FILE = path.join(STATE_DIR, 'sandboxes.json');
+const CONTAINER_ROOT = '/work/nx';
+const CONTAINER_BASE = '/work/base';
+
+// ---------------------------------------------------------------- state
+
+function readState() {
+  try {
+    return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+  } catch {
+    return { version: 1, sandboxes: {} };
+  }
+}
+
+function writeState(state) {
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + '\n');
+}
+
+function getSandbox(id) {
+  const sb = readState().sandboxes[id];
+  if (!sb)
+    die(`unknown sandbox '${id}'. Run \`sandbox list\` to see live ones.`);
+  return sb;
+}
+
+// ---------------------------------------------------------------- util
+
+function die(msg, code = 1) {
+  process.stderr.write(`sandbox: ${msg}\n`);
+  process.exit(code);
+}
+
+function run(bin, args, opts = {}) {
+  return spawnSync(bin, args, { encoding: 'utf8', ...opts });
+}
+
+function has(bin) {
+  // Probe by spawning directly rather than `command -v` through a shell:
+  // spawnSync with shell:true concatenates argv without escaping (DEP0190).
+  return !spawnSync(bin, ['--version'], { stdio: 'ignore' }).error;
+}
+
+function newId() {
+  return 'sb_' + Math.random().toString(36).slice(2, 8);
+}
+
+/**
+ * Containment check. `sandbox read <id> ../../etc/passwd` must not escape the
+ * checkout — in container mode the path is interpreted inside the container, so
+ * validate with posix semantics either way.
+ */
+function resolveInRoot(root, p) {
+  const abs = path.posix.resolve(root, p);
+  if (abs !== root && !abs.startsWith(root + '/')) {
+    die(`path '${p}' escapes the sandbox root ${root}`);
+  }
+  return abs;
+}
+
+/** Same containment check, but returns the path relative to the root. */
+function relInRoot(root, p) {
+  return path.posix.relative(root, resolveInRoot(root, p)) || '.';
+}
+
+// ---------------------------------------------------------------- backends
+
+/**
+ * Probe what container backends exist and whether each can actually isolate.
+ *
+ * A stopped VM and an absent runtime look identical from `docker info` alone,
+ * and only the latter is a real setup failure — so macOS gets a wake attempt
+ * before anything is reported missing. Every wake command is a no-op when the
+ * backend is already running.
+ */
+function probeBackend(bin) {
+  if (!has(bin)) return { bin, present: false };
+  let up = run(bin, ['info']).status === 0;
+  if (!up && os.platform() === 'darwin') {
+    wakeDarwinVm();
+    up = run(bin, ['info']).status === 0;
+  }
+  if (!up) return { bin, present: true, up: false };
+
+  const runtimes =
+    run(bin, ['info', '--format', '{{range $k,$v := .Runtimes}}{{$k}} {{end}}'])
+      .stdout || '';
+  return {
+    bin,
+    present: true,
+    up: true,
+    runsc: /\brunsc\b/.test(runtimes),
+    rootless: /name=rootless/.test(run(bin, ['info']).stdout || ''),
+  };
+}
+
+function wakeDarwinVm() {
+  if (has('colima')) run('colima', ['start'], { stdio: 'ignore' });
+  else if (has('limactl')) {
+    run('limactl', ['start', 'docker', '-y'], { stdio: 'ignore' });
+    run('docker', ['context', 'use', 'lima-docker'], { stdio: 'ignore' });
+  } else if (fs.existsSync('/Applications/Docker.app')) {
+    run('open', ['-ga', 'Docker'], { stdio: 'ignore' });
+    run('sleep', ['15']);
+  }
+}
+
+function pickBackend() {
+  for (const bin of ['docker', 'podman']) {
+    const p = probeBackend(bin);
+    if (p.up) return p;
+  }
+  return null;
+}
+
+/**
+ * Decide whether a sandbox may execute code. Fail closed: on Linux without
+ * gVisor we refuse rather than silently degrading to runc, and `--local` never
+ * executes at all because it has no isolation boundary whatsoever.
+ */
+function isolationFor(backend) {
+  if (!backend)
+    return {
+      isolation: 'none',
+      canExec: false,
+      why: 'no container backend is running',
+    };
+  if (os.platform() === 'linux') {
+    return backend.runsc
+      ? { isolation: 'runsc', canExec: true, runtimeArgs: ['--runtime=runsc'] }
+      : {
+          isolation: 'none',
+          canExec: false,
+          why: 'Linux without gVisor: `runsc` is not registered. Refusing to run untrusted code under plain runc. Run the setup-review-sandbox skill.',
+        };
+  }
+  // macOS/other: the VM is the boundary. Docker Desktop, Colima, Lima and
+  // OrbStack all present the same CLI and the same boundary — which one is in
+  // use is deliberately not something callers can observe.
+  return { isolation: 'vm', canExec: true, runtimeArgs: [] };
+}
+
+// ---------------------------------------------------------------- verbs
+
+function cmdStart(argv) {
+  const opts = parseFlags(argv, {
+    local: 'string',
+    image: 'string',
+    checkout: 'string',
+    ref: 'string',
+    base: 'string',
+    json: 'boolean',
+  });
+
+  const id = newId();
+  let sb;
+
+  if (opts.local) {
+    const root = path.resolve(opts.local);
+    if (!fs.existsSync(root)) die(`--local path does not exist: ${root}`);
+    // A local sandbox's base is just a rev in the same checkout — typically the
+    // merge-base a branch review diffs against.
+    sb = {
+      id,
+      mode: 'local',
+      root,
+      baseRef: opts.base || null,
+      isolation: 'none',
+      canExec: false,
+      createdAt: nowIso(),
+    };
+  } else {
+    if (!opts.image)
+      die('container mode needs --image (or use --local <path>)');
+    const backend = pickBackend();
+    const iso = isolationFor(backend);
+    if (!backend) die(iso.why + '\nRun `sandbox doctor` for details.');
+
+    const container = `nx-sandbox-${id.slice(3)}`;
+    const args = [
+      'run',
+      '-d',
+      '--name',
+      container,
+      ...(iso.runtimeArgs || []),
+      '--cap-drop',
+      'ALL',
+      '--security-opt',
+      'no-new-privileges',
+      '--memory',
+      '6g',
+      '--cpus',
+      '4',
+      '--pids-limit',
+      '2048',
+      opts.image,
+      'sleep',
+      'infinity',
+    ];
+    const r = run(backend.bin, args);
+    if (r.status !== 0) die(`failed to start container:\n${r.stderr}`);
+
+    sb = {
+      id,
+      mode: 'container',
+      backend: backend.bin,
+      container,
+      image: opts.image,
+      root: CONTAINER_ROOT,
+      base: CONTAINER_BASE,
+      baseRef: opts.base ? `refs/remotes/origin/${opts.base}` : null,
+      isolation: iso.isolation,
+      canExec: iso.canExec,
+      createdAt: nowIso(),
+    };
+
+    if (opts.checkout) {
+      const script = [
+        'set -e',
+        `mkdir -p ${CONTAINER_ROOT} && cd ${CONTAINER_ROOT}`,
+        'git init -q',
+        `git remote add origin ${shq(opts.checkout)}`,
+        `git fetch -q --depth 1 origin ${shq(opts.ref || 'HEAD')}`,
+        'git checkout -q FETCH_HEAD',
+      ];
+      if (opts.base) {
+        // Use the remote-tracking ref, never FETCH_HEAD: FETCH_HEAD is a
+        // per-worktree pseudoref invisible from a linked worktree, and git
+        // reinterprets the unresolvable token as a pathspec, which reports an
+        // error pointing nowhere near the real cause.
+        script.push(
+          `git fetch -q --depth 1 origin ${shq(opts.base)}:refs/remotes/origin/${shq(opts.base)}`,
+          `git worktree add --detach ${CONTAINER_BASE} refs/remotes/origin/${shq(opts.base)}`
+        );
+      }
+      const r2 = execIn(sb, script.join('\n'));
+      if (r2.status !== 0) {
+        run(backend.bin, ['rm', '-f', container], { stdio: 'ignore' });
+        die(`checkout failed:\n${r2.stderr || r2.stdout}`);
+      }
+    }
+  }
+
+  const state = readState();
+  state.sandboxes[id] = sb;
+  writeState(state);
+
+  if (opts.json) {
+    process.stdout.write(JSON.stringify(sb, null, 2) + '\n');
+    return;
+  }
+  process.stdout.write(
+    `${id}\n\n` +
+      `mode=${sb.mode} isolation=${sb.isolation} exec=${sb.canExec ? 'allowed' : 'REFUSED'}\n` +
+      `Read source ONLY through this CLI:\n` +
+      `  .claude/tools/sandbox read ${id} <path> [--range a,b] [--ref <sha>]\n` +
+      `  .claude/tools/sandbox grep ${id} <pattern> [subdir]\n` +
+      `  .claude/tools/sandbox find ${id} <glob>\n` +
+      (sb.canExec ? `  .claude/tools/sandbox exec ${id} -- <cmd>\n` : '') +
+      `  .claude/tools/sandbox stop ${id}\n`
+  );
+}
+
+function cmdRead(argv) {
+  const [id, file] = argv;
+  if (!id || !file)
+    die('usage: sandbox read <id> <path> [--range a,b] [--ref <sha>] [-n]');
+  const opts = parseFlags(argv.slice(2), {
+    range: 'string',
+    ref: 'string',
+    n: 'boolean',
+  });
+  const sb = getSandbox(id);
+  const target = resolveInRoot(sb.root, file);
+  const rel = path.posix.relative(sb.root, target);
+
+  let out;
+  if (opts.ref) {
+    // `--ref base` is an alias for whatever base the sandbox was started with,
+    // so callers never have to spell out refs/remotes/origin/<branch>.
+    const ref = opts.ref === 'base' ? sb.baseRef : opts.ref;
+    if (!ref) die('this sandbox was not started with a --base ref');
+    out = gitIn(sb, ['show', `${ref}:${rel}`]);
+  } else if (sb.mode === 'local') {
+    out = readOut(run('cat', [target]));
+  } else {
+    out = readOut(execRaw(sb, ['cat', target]));
+  }
+
+  // Split on the content, not on a trailing newline — otherwise the final `\n`
+  // becomes a phantom empty line, which --range slices and -n then numbers.
+  let lines = out.replace(/\n$/, '').split('\n');
+  let start = 1;
+  if (opts.range) {
+    const [a, b] = opts.range.split(',').map((x) => parseInt(x, 10));
+    if (!Number.isInteger(a) || !Number.isInteger(b))
+      die('--range must be a,b integers');
+    lines = lines.slice(a - 1, b);
+    start = a;
+  }
+  if (opts.n) {
+    lines = lines.map((l, i) => `${String(start + i).padStart(6)}\t${l}`);
+  }
+  process.stdout.write(lines.join('\n') + '\n');
+}
+
+/**
+ * Search verbs run WITH THE ROOT AS CWD and emit root-relative paths in both
+ * modes. If local mode leaked `/Users/...` while container mode emitted
+ * `/work/nx/...`, an agent could tell the transports apart from output shape
+ * alone — which is precisely the distinction this CLI exists to hide.
+ */
+function relOut(stdout) {
+  return (stdout || '')
+    .split('\n')
+    .map((l) => l.replace(/^\.\//, ''))
+    .join('\n');
+}
+
+function cmdGrep(argv) {
+  const [id, pattern, subdir] = argv;
+  if (!id || !pattern) die('usage: sandbox grep <id> <pattern> [subdir]');
+  const sb = getSandbox(id);
+  const where = relInRoot(sb.root, subdir || '.');
+  const r = execRaw(sb, ['grep', '-rn', '--', pattern, where], {
+    cwd: sb.root,
+  });
+  process.stdout.write(relOut(r.stdout));
+  // grep exits 1 on "no matches", which is not an error for a search verb.
+  process.exit(r.status === 0 || r.status === 1 ? 0 : r.status);
+}
+
+function cmdFind(argv) {
+  const [id, glob, subdir] = argv;
+  if (!id || !glob) die('usage: sandbox find <id> <glob> [subdir]');
+  const sb = getSandbox(id);
+  const where = relInRoot(sb.root, subdir || '.');
+  const r = execRaw(sb, ['find', where, '-name', glob], { cwd: sb.root });
+  process.stdout.write(relOut(r.stdout));
+  process.exit(r.status || 0);
+}
+
+function cmdExec(argv) {
+  const sep = argv.indexOf('--');
+  const id = argv[0];
+  if (!id || sep === -1) die('usage: sandbox exec <id> [--base] -- <cmd...>');
+  const sb = getSandbox(id);
+  const opts = parseFlags(argv.slice(1, sep), { base: 'boolean' });
+
+  if (!sb.canExec) {
+    die(
+      `exec refused for ${id}: ${
+        sb.mode === 'local'
+          ? 'this is a --local sandbox. There is no isolation boundary, so it may be read but never executed.'
+          : 'no usable isolation runtime.'
+      }`
+    );
+  }
+  // `--base` runs against the base worktree instead of HEAD — the baseline half
+  // of a reproduction. Callers name the side they want rather than cd-ing to a
+  // container path, so nothing above this file learns the layout.
+  if (opts.base && !sb.base) {
+    die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
+  }
+  const r = execIn(sb, argv.slice(sep + 1).join(' '), {
+    stdio: 'inherit',
+    dir: opts.base ? sb.base : sb.root,
+  });
+  process.exit(r.status === null ? 1 : r.status);
+}
+
+function cmdStop(argv) {
+  const id = argv[0];
+  if (!id) die('usage: sandbox stop <id>');
+  const state = readState();
+  const sb = state.sandboxes[id];
+  if (!sb) die(`unknown sandbox '${id}'`);
+  if (sb.mode === 'container') {
+    run(sb.backend, ['rm', '-f', sb.container], { stdio: 'ignore' });
+  }
+  delete state.sandboxes[id];
+  writeState(state);
+  process.stdout.write(`stopped ${id}\n`);
+}
+
+function cmdList() {
+  const { sandboxes } = readState();
+  const ids = Object.keys(sandboxes);
+  if (!ids.length) return process.stdout.write('no live sandboxes\n');
+  for (const id of ids) {
+    const s = sandboxes[id];
+    process.stdout.write(
+      `${id}  ${s.mode.padEnd(9)} ${String(s.isolation).padEnd(6)} ` +
+        `${s.mode === 'local' ? s.root : s.container}  ${s.createdAt}\n`
+    );
+  }
+}
+
+/** Drop registry entries whose container is gone, and any container we leaked. */
+function cmdPrune() {
+  const state = readState();
+  let dropped = 0;
+  for (const [id, sb] of Object.entries(state.sandboxes)) {
+    if (sb.mode !== 'container') continue;
+    const alive =
+      run(sb.backend, ['inspect', sb.container], { stdio: 'ignore' }).status ===
+      0;
+    if (!alive) {
+      delete state.sandboxes[id];
+      dropped++;
+    }
+  }
+  writeState(state);
+
+  const backend = pickBackend();
+  let killed = 0;
+  if (backend) {
+    const ps = run(backend.bin, ['ps', '-aq', '--filter', 'name=nx-sandbox-']);
+    const live = new Set(
+      Object.values(state.sandboxes)
+        .filter((s) => s.container)
+        .map((s) => s.container)
+    );
+    for (const cid of (ps.stdout || '').split('\n').filter(Boolean)) {
+      const name = (
+        run(backend.bin, ['inspect', '-f', '{{.Name}}', cid]).stdout || ''
+      )
+        .trim()
+        .replace(/^\//, '');
+      if (!live.has(name)) {
+        run(backend.bin, ['rm', '-f', cid], { stdio: 'ignore' });
+        killed++;
+      }
+    }
+  }
+  process.stdout.write(
+    `pruned ${dropped} stale entr${dropped === 1 ? 'y' : 'ies'}, ${killed} orphaned container(s)\n`
+  );
+}
+
+function cmdDoctor(argv = []) {
+  const opts = parseFlags(argv, { image: 'string' });
+  process.stdout.write(`platform: ${os.platform()}\n\n`);
+  for (const bin of ['docker', 'podman']) {
+    const p = probeBackend(bin);
+    if (!p.present) {
+      process.stdout.write(`${bin}: not installed\n`);
+      continue;
+    }
+    if (!p.up) {
+      process.stdout.write(`${bin}: installed but not responding\n`);
+      continue;
+    }
+    const iso = isolationFor(p);
+    process.stdout.write(
+      `${bin}: up · runsc=${p.runsc ? 'yes' : 'no'} · rootless=${p.rootless ? 'yes' : 'no'}\n` +
+        `  isolation=${iso.isolation} exec=${iso.canExec ? 'allowed' : 'REFUSED'}` +
+        (iso.why ? ` (${iso.why})` : '') +
+        '\n'
+    );
+  }
+  if (opts.image) {
+    const backend = pickBackend();
+    // Probe with `images -q` (empty ⇒ absent), never `image inspect`: on Docker
+    // Desktop with Resource Saver, `inspect` reports "No such image" for several
+    // seconds after the VM wakes while `images` and `run` both succeed — which
+    // would send a caller off to rebuild a ~5 GB image that is already there.
+    const present =
+      backend &&
+      (run(backend.bin, ['images', '-q', opts.image]).stdout || '').trim() !==
+        '';
+    process.stdout.write(
+      `\nimage ${opts.image}: ${present ? 'OK' : 'MISSING'}\n` +
+        (present ? '' : '  build it with the setup-review-sandbox skill\n')
+    );
+  }
+  if (os.platform() === 'darwin') {
+    process.stdout.write(
+      '\nmacOS notes:\n' +
+        '  A stopped VM and an absent runtime look identical from `info` alone;\n' +
+        '  this CLI wakes the VM before reporting anything missing.\n' +
+        '  Removed Docker Desktop leaves dangling /usr/local/bin/docker and a\n' +
+        '  "credsStore": "desktop" / "currentContext": "desktop-linux" in\n' +
+        '  ~/.docker/config.json, both naming deleted binaries. Delete those keys —\n' +
+        '  the errors they raise never mention the VM backend you actually use.\n' +
+        '  Homebrew docker-buildx needs cliPluginsExtraDirs or `docker build` fails\n' +
+        '  with "\'buildx\' is not a docker command".\n' +
+        '  Size the VM above the container caps (6g/4cpu) or they cannot be honoured.\n'
+    );
+  }
+}
+
+// ---------------------------------------------------------------- exec plumbing
+
+/** Run argv inside the sandbox with NO shell on either side. */
+function execRaw(sb, argv, opts = {}) {
+  if (sb.mode === 'local') {
+    return run(argv[0], argv.slice(1), opts.cwd ? { cwd: opts.cwd } : {});
+  }
+  const wd = opts.cwd ? ['-w', opts.cwd] : [];
+  return run(sb.backend, ['exec', ...wd, sb.container, ...argv]);
+}
+
+/**
+ * Run a shell script inside the sandbox. The script is passed as a single argv
+ * element, so the HOST shell never parses it — only the sandbox's own shell
+ * does, which is the whole point of having a boundary.
+ */
+function execIn(sb, script, opts = {}) {
+  // Both the PATH export and the cd are required: a bare login shell lands in
+  // the image's default workdir with no mise shims, so `nx`/`pnpm` are not
+  // found and every run fails identically — which a caller would misread as the
+  // change being broken rather than the shell being wrong.
+  const mise =
+    'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"';
+  const dir = opts.dir || sb.root;
+  return run(
+    sb.backend,
+    [
+      'exec',
+      ...(opts.stdio === 'inherit' ? ['-i'] : []),
+      sb.container,
+      'bash',
+      '-lc',
+      `${mise}\ncd ${dir} 2>/dev/null || true\n${script}`,
+    ],
+    opts
+  );
+}
+
+function gitIn(sb, args) {
+  const r =
+    sb.mode === 'local'
+      ? run('git', ['-C', sb.root, ...args])
+      : execRaw(sb, ['git', '-C', sb.root, ...args]);
+  return readOut(r);
+}
+
+function readOut(r) {
+  if (r.status !== 0)
+    die((r.stderr || '').trim() || `command failed (${r.status})`);
+  return r.stdout;
+}
+
+function shq(s) {
+  return `'${String(s).replace(/'/g, `'\\''`)}'`;
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function parseFlags(argv, spec) {
+  const out = {};
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (!a.startsWith('-')) continue;
+    const key = a.replace(/^--?/, '');
+    if (!(key in spec)) continue;
+    out[key] = spec[key] === 'boolean' ? true : argv[++i];
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- main
+
+const USAGE = `sandbox — uniform access to a checkout, isolated or local
+
+  start  --local <path>                        register a host dir (read-only, never exec)
+  start  --image <img> [--checkout <url> --ref <r> [--base <r>]]
+  read   <id> <path> [--range a,b] [--ref <sha>] [-n]
+  grep   <id> <pattern> [subdir]
+  find   <id> <glob> [subdir]
+  exec   <id> [--base] -- <cmd...>             refused unless isolation is real; --base runs base-side
+  stop   <id> | list | prune | doctor [--image <img>]
+`;
+
+const [, , verb, ...rest] = process.argv;
+const verbs = {
+  start: cmdStart,
+  read: cmdRead,
+  grep: cmdGrep,
+  find: cmdFind,
+  exec: cmdExec,
+  stop: cmdStop,
+  list: cmdList,
+  prune: cmdPrune,
+  doctor: cmdDoctor,
+};
+if (!verb || verb === '--help' || verb === '-h') {
+  process.stdout.write(USAGE);
+  process.exit(verb ? 0 : 1);
+}
+if (!verbs[verb]) die(`unknown verb '${verb}'\n\n${USAGE}`);
+verbs[verb](rest);
