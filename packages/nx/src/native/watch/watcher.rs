@@ -1,4 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+#[cfg(not(any(target_os = "macos", windows)))]
+use std::collections::HashSet;
 use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
@@ -10,10 +12,10 @@ use notify::{RecursiveMode, Watcher as NotifyWatcher};
 use parking_lot::Mutex;
 use tracing::{debug, trace};
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", windows)))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", windows)))]
 use crate::native::walker::create_walker;
 use crate::native::watch::types::{
     EventType, RawWatchEvent, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
@@ -52,7 +54,7 @@ const FORCE_FLUSH_QUIET: Duration = Duration::from_millis(50);
 /// a late reply isn't read as "no changes".
 const FORCE_FLUSH_MAX: Duration = Duration::from_millis(250);
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", windows)))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
     build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
 }
@@ -60,7 +62,7 @@ fn build_ignore_glob_set() -> Arc<NxGlobSet> {
 /// Returns Err on `MaxFilesWatch` — the inotify limit is fatal since
 /// every subsequent registration would fail too. Other errors are
 /// warn-logged and skipped.
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", windows)))]
 fn register_watches<I, P>(
     watcher: &mut notify::RecommendedWatcher,
     paths: I,
@@ -81,7 +83,7 @@ where
     Ok(())
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", windows)))]
 fn enumerate_watch_paths<P: AsRef<Path>>(directory: P, use_ignores: bool) -> HashSet<PathBuf> {
     let walker = create_walker(&directory, use_ignores);
     let mut path_set: HashSet<PathBuf> = HashSet::new();
@@ -112,7 +114,7 @@ struct WatchPipeline {
     watcher: notify::RecommendedWatcher,
     /// `origin` with a trailing path separator.
     origin_path: String,
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", windows)))]
     ignore_globs: Arc<NxGlobSet>,
 
     accumulator: HashMap<PathBuf, WatchEventInternal>,
@@ -135,11 +137,14 @@ impl WatchPipeline {
         })
         .map_err(|e| format!("failed to create file watcher: {e}"))?;
 
-        #[cfg(target_os = "macos")]
+        // macOS FSEvents and Windows ReadDirectoryChangesW both support one
+        // recursive root watch. Using it on Windows avoids two HANDLEs for
+        // every workspace directory while event filtering still applies ignores.
+        #[cfg(any(target_os = "macos", windows))]
         if let Err(e) = watcher.watch(Path::new(&origin), RecursiveMode::Recursive) {
             tracing::error!(?e, "failed to watch root directory");
         }
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(any(target_os = "macos", windows)))]
         register_watches(&mut watcher, enumerate_watch_paths(&origin, use_ignore))
             .map_err(|e| format!("failed to register initial watches: {e}"))?;
 
@@ -153,7 +158,7 @@ impl WatchPipeline {
             notify_rx,
             watcher,
             origin_path,
-            #[cfg(not(target_os = "macos"))]
+            #[cfg(not(any(target_os = "macos", windows)))]
             ignore_globs: build_ignore_glob_set(),
             accumulator: HashMap::new(),
             burst_start: None,
@@ -191,7 +196,7 @@ impl WatchPipeline {
         self.flush_deadline = None;
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", windows)))]
     fn new_directories_from_event(&self, event: &RawWatchEvent) -> Vec<PathBuf> {
         use crate::native::watch::types::meta_is_dir;
         use notify::{EventKind, event::CreateKind};
@@ -213,7 +218,7 @@ impl WatchPipeline {
     /// Synchronously register watches for new directories, walk them to
     /// backfill files written before the watch was active, and recurse
     /// into any nested subdirectories. Returns Err on `MaxFilesWatch`.
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", windows)))]
     fn register_and_backfill_new_dirs(
         &mut self,
         dirs: &[PathBuf],
@@ -285,7 +290,7 @@ impl WatchPipeline {
             );
         }
 
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(any(target_os = "macos", windows)))]
         {
             let new_dirs = self.new_directories_from_event(&raw);
             if !new_dirs.is_empty() {
@@ -905,6 +910,61 @@ mod tests {
             matches!(new_evt.r#type, EventType::create),
             "rename destination should classify as Create; got {:?}",
             new_evt.r#type
+        );
+    }
+
+    #[test]
+    fn newly_created_nested_directory_is_watched() {
+        let dir = tempdir().expect("tempdir");
+        let (_watcher, captured) = start_watcher(dir.path());
+
+        let nested = dir.path().join("new").join("deep").join("tree");
+        fs::create_dir_all(&nested).expect("create nested directories");
+        fs::write(nested.join("created.txt"), "x").expect("write nested file");
+
+        let events = collect(&captured);
+        assert!(
+            events.iter().any(|e| e.path.ends_with("created.txt")),
+            "expected nested file event; got {events:?}"
+        );
+    }
+
+    #[cfg(windows)]
+    fn process_handle_count() -> u32 {
+        use winapi::um::processthreadsapi::{GetCurrentProcess, GetProcessHandleCount};
+
+        let mut count = 0;
+        let success = unsafe { GetProcessHandleCount(GetCurrentProcess(), &mut count) };
+        assert_ne!(success, 0, "GetProcessHandleCount failed");
+        count
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn recursive_watch_has_constant_windows_handle_cost() {
+        let dir = tempdir().expect("tempdir");
+        for i in 0..500 {
+            fs::create_dir_all(dir.path().join(format!("dir-{i}")).join("nested"))
+                .expect("create fixture directory");
+        }
+
+        let before = process_handle_count();
+        let (watcher, _captured) = start_watcher(dir.path());
+        let during = process_handle_count();
+        let added = during.saturating_sub(before);
+
+        assert!(
+            added < 64,
+            "recursive watch added {added} process handles for 1,000 directories"
+        );
+
+        drop(watcher);
+        std::thread::sleep(Duration::from_millis(500));
+        let after = process_handle_count();
+        assert!(
+            after <= before + 16,
+            "watcher drop retained {} process handles above baseline",
+            after.saturating_sub(before)
         );
     }
 
