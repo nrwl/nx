@@ -7,8 +7,7 @@ sidebar:
 filter: 'type:References'
 ---
 
-Nx formats code when you run `nx format:write` or `nx format:check`, at the end of most generators,
-over the files `nx init` writes, and once over a newly created workspace.
+Nx formats code when you run `nx format:write` or `nx format:check` and at the end of most generators and migrations.
 All of them use the same formatter, which Nx detects from your workspace.
 
 Two formatters are supported: [oxfmt](https://oxc.rs) and [Prettier](https://prettier.io).
@@ -22,11 +21,8 @@ Detection runs in this order, and the first match wins:
 2. A Prettier config file exists at the workspace root, or `package.json` has a `prettier` key.
 3. `package.json` declares an `oxfmt` dependency.
 
-An installed Prettier is not enough on its own, because Prettier is a common transitive dependency.
-
 If nothing matches, `nx format:write` and `nx format:check` warn and exit `0`, and generators skip
 formatting.
-That is what keeps Nx from reformatting a workspace that uses Biome, dprint, or anything else.
 
 The oxfmt config files Nx looks for:
 
@@ -34,9 +30,6 @@ The oxfmt config files Nx looks for:
 - `.oxfmtrc.jsonc`
 - `oxfmt.config.ts`
 - `oxfmt.config.mts`
-
-Keep one per directory.
-Given two, oxfmt fails with `Both '.oxfmtrc.json' and '.oxfmtrc.jsonc' found` rather than choosing.
 
 ### When both are configured
 
@@ -58,13 +51,11 @@ npm add -D oxfmt
 }
 ```
 
-An Nx-generated `.prettierrc` sets `singleQuote`, and Prettier's own default width is 80, so these
-two keep that workspace formatting the way it did before.
-If you wrote your own `.prettierrc`, match what it set instead.
-oxfmt defaults to double quotes and a width of 100, so anything you leave out moves to those
-defaults.
+These match an Nx-generated `.prettierrc`.
+If you wrote your own, match what it set instead.
+oxfmt defaults to double quotes and a width of 100.
 
-Then delete `.prettierrc` and run `nx format:write` to reformat everything in one commit.
+Then delete `.prettierrc` and run `nx format:write --all` to reformat everything in one commit.
 
 Keep `.prettierignore` if you have one.
 oxfmt reads it too, so deleting it starts formatting files you had excluded.
@@ -73,16 +64,13 @@ oxfmt reads it too, so deleting it starts formatting files you had excluded.
 
 `nx format:write` runs the formatter's own CLI.
 Generators format files that exist only in memory, so Nx applies the configuration itself.
-Both read the workspace root config, its `overrides` and `ignorePatterns`, and the root
-`.editorconfig`, `.gitignore`, and `.prettierignore`.
+Both resolve from each file's own directory upwards: the nearest oxfmt config, its `overrides` and
+`ignorePatterns`, and every `.gitignore`, `.prettierignore`, and `.editorconfig` along the way.
 
-Generator formatting reads only the workspace root.
-An `.oxfmtrc.json` or `.gitignore` in a subdirectory, or an `.editorconfig` above the root, applies
-under `nx format:write` and not during generator formatting.
-When a subdirectory config differs from the root one, generated files come out matching the root and
-fail `nx format:check` until you run `nx format:write`.
+A nested oxfmt config replaces the one above it rather than merging with it, so any option it leaves
+out falls back to oxfmt's own default and not to the parent's value.
 
-One root-level case leaves the two disagreeing: an `.editorconfig` that sets `indent_size` without
+One case leaves the two disagreeing: an `.editorconfig` that sets `indent_size` without
 `indent_style`.
 Generator formatting applies it and `nx format:write` ignores it, so your generated files fail your
 own `nx format:check`.
