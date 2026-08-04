@@ -207,6 +207,68 @@ describe('socket directories', () => {
     expect(message).not.toContain('chown');
   });
 
+  it('records the demotion when a later tier wins, so a length failure can explain itself', () => {
+    setPlatform('linux');
+    // Tier 1 unusable, home tier fine: a successful demotion, which used to be
+    // silent. assertValidSocketPath keys its "Nx fell back to … run with
+    // --verbose" block off this cause, and without it a socket-length failure
+    // here tells the user to set a shorter NX_SOCKET_DIR — advice they may have
+    // already followed.
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
+      (d: string) => !d.startsWith(USER_TMP_ROOT)
+    );
+
+    expect(getSocketDir()).toMatch(
+      new RegExp(`^${escapeRegExp(HOME_SOCKET_ROOT)}/`)
+    );
+    const cause = getSocketDirFallbackCause();
+    expect(cause).toBeInstanceOf(Error);
+    expect((cause as Error).message).toContain(SOCKET_ROOT);
+    // The --verbose the message promises has to print something.
+    expect(logger.verbose).toHaveBeenCalledWith(
+      expect.stringContaining(SOCKET_ROOT)
+    );
+  });
+
+  it('leaves the fallback cause unset when the first tier wins', () => {
+    setPlatform('linux');
+
+    expect(getSocketDir()).toMatch(
+      new RegExp(`^${escapeRegExp(SOCKET_ROOT)}/`)
+    );
+    expect(getSocketDirFallbackCause()).toBeUndefined();
+  });
+
+  // NX_HOME_TMP_DIR is a module-scope constant, so the module has to be
+  // re-imported with a different home.
+  it('skips the home tier when HOME makes it the shared container itself', () => {
+    setPlatform('linux');
+    jest.isolateModules(() => {
+      jest.doMock('node:os', () => ({
+        ...jest.requireActual('node:os'),
+        // HOME=/tmp, so ~/.nx IS /tmp/.nx.
+        homedir: () => '/tmp',
+      }));
+      const {
+        getSocketDir: collidingSocketDir,
+        DAEMON_DIR_FOR_CURRENT_WORKSPACE: workspaceDir,
+      } = require('./tmp-dir');
+      const {
+        ensureOwnedPrivateDir: guard,
+      } = require('../utils/owned-private-dir');
+      (guard as jest.Mock).mockImplementation(
+        (d: string) => !d.startsWith(SHARED_TMP_ROOT)
+      );
+
+      // Falls through to the workspace rather than offering /tmp/.nx as its own
+      // second tier — which would send the guard at the shared container and
+      // take a root-owned 1777 directory to 0700.
+      expect(collidingSocketDir()).toBe(workspaceDir);
+      expect(guard).not.toHaveBeenCalledWith(SHARED_TMP_ROOT);
+    });
+    jest.dontMock('node:os');
+  });
+
   it('rejects the home roots as a configured socket dir, as it does the shared ones', () => {
     for (const dir of [HOME_TMP_ROOT, HOME_SOCKET_ROOT]) {
       process.env.NX_SOCKET_DIR = dir;
