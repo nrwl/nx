@@ -9,12 +9,14 @@ allowed-tools: Bash(git *), Read, Write
 This skill works in the `nx` repo only.
 
 CRITICAL:
+
 - If you are not in the `nx` repo, say so and stop working!
 - If there are uncommitted/untracked files, say so and stop working!
 
 ## Why two branches
 
 Docs commits must land on BOTH:
+
 - `website-<major>` (e.g. `website-23`) - deploys nx.dev for the current major
 - the latest release branch `<major>.<minor>.x` (e.g. `23.1.x`) - used for patch releases, and the release pipeline overwrites the `website-<major>` branch from it
 
@@ -89,7 +91,7 @@ Conflicts are more likely here than on the website branch - do NOT try to resolv
 Print a per-branch breakdown:
 
 | Branch | Cherry-picked | Already present / skipped | Failed |
-|--------|---------------|---------------------------|--------|
+| ------ | ------------- | ------------------------- | ------ |
 
 List failed shas with subjects so they can be handled manually.
 
