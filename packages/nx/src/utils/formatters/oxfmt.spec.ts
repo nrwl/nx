@@ -796,6 +796,27 @@ describe('formatFilesWithOxfmt', () => {
       expect(formatted.get('apps/foo/keepme.ts')).toEqual("const x = 'hi';\n");
     });
 
+    it('anchors a nested .gitignore pattern at its own directory', async () => {
+      writeConfig({ singleQuote: true });
+      // A leading slash anchors to the directory holding the file. Matching it
+      // against the workspace-relative path instead would never hit, so this is
+      // what pins the rebasing - unlike a bare filename, which gitignore
+      // matches at any depth either way.
+      writeFileIn('apps/foo/.gitignore', '/generated/\n');
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 'apps/foo/generated/a.ts', content: 'const x =  "hi"' },
+          { path: 'generated/b.ts', content: 'const x =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.has('apps/foo/generated/a.ts')).toBe(false);
+      // The same anchor must not reach the workspace's own `generated/`.
+      expect(formatted.get('generated/b.ts')).toEqual("const x = 'hi';\n");
+    });
+
     it('roots a nested config ignorePatterns at that config, not the workspace', async () => {
       writeConfig({ singleQuote: true });
       writeFileIn(
