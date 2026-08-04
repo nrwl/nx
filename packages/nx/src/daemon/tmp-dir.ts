@@ -11,7 +11,13 @@
  * Daemon logs are not here — they live in the workspace data dir alongside the
  * `disabled` marker, which is why that path survives a socket-root change.
  */
-import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
@@ -133,6 +139,25 @@ function homeSocketRoot(): string | undefined {
 }
 
 /**
+ * The spelling to compare a directory by. `resolve` alone normalizes `..` and
+ * trailing slashes but does not dereference symlinks, and on macOS `/tmp` *is* a
+ * symlink to `/private/tmp` — so `/private/tmp/.nx` is the same directory as
+ * `/tmp/.nx` under a spelling an exact-match list would wave through, after
+ * which `ensureOwnedPrivateDir` re-locks the shared container to `0700` and
+ * `removeSocketDir` aims a recursive delete at it.
+ *
+ * A path that cannot be resolved does not exist yet, and so cannot be an alias
+ * for one that does; its normalized form is the best available answer.
+ */
+function canonicalDir(dir: string): string {
+  try {
+    return realpathSync(resolve(dir));
+  } catch {
+    return resolve(dir);
+  }
+}
+
+/**
  * Whether `~/.nx` is somewhere other than the shared container.
  *
  * With `HOME=/tmp` they are the same path, and offering it as a second tier
@@ -161,7 +186,7 @@ function homeTierIsDistinct(): boolean {
     NX_USER_TMP_DIR,
     defaultSocketRoot(),
     NATIVE_CACHE_ROOT,
-  ].some((shared) => resolve(shared) === resolve(NX_HOME_TMP_DIR));
+  ].some((shared) => canonicalDir(shared) === canonicalDir(NX_HOME_TMP_DIR));
 }
 
 /**
@@ -234,10 +259,11 @@ function establishSocketRoot():
 }
 
 /**
- * Directories that may not *be* the socket directory, and why. The system temp
- * directory and the stable container are reachable by other users; the rest are
- * the current user's own, refused because Nx manages their contents. Nx's actual
- * socket directories live under these roots.
+ * Directories that may not *be* the socket directory, and why. Every one is
+ * either a root Nx manages the contents of or the OS temp root itself; whether
+ * other users can also reach one is a separate question, answered per directory
+ * because the answer differs by platform. Nx's actual socket directories live
+ * under these roots.
  */
 function dirsUnusableAsSocketDir(): {
   dir: string;
@@ -376,7 +402,8 @@ function noteSocketRootDemotion(preferred: string, used: string) {
   socketDirFallbackCause = new Error(
     `Nx could not establish its preferred socket root ${preferred}, so it used ${used}.`
   );
-  // Lazily required for the cycle reason above.
+  // Lazily required for the import-cycle reason spelled out in
+  // fallBackToWorkspaceSocketDir below.
   const { logger } =
     require('../utils/logger') as typeof import('../utils/logger');
   logger.verbose(
@@ -398,6 +425,16 @@ export function getPluginSocketDir() {
 
 let socketDirFallbackCause: unknown;
 let refusedConfiguredSocketDir: string | undefined;
+let warnedAboutWorkspaceFallback = false;
+
+/**
+ * Exported for tests: the workspace-fallback warning fires once per process, so
+ * a suite that stages that fallback more than once has to clear the latch
+ * between cases.
+ */
+export function resetWorkspaceFallbackWarningForTesting() {
+  warnedAboutWorkspaceFallback = false;
+}
 
 export function getSocketDirFallbackCause(): unknown {
   return socketDirFallbackCause;
@@ -429,8 +466,9 @@ function createOwnerOnlySocketDir(
 
   // Outside the try so it is not swallowed by the fallback. Exact matches only,
   // so the per-user directories under those roots never trip it.
+  const canonical = canonicalDir(dir);
   const unusable = dirsUnusableAsSocketDir().find(
-    (d) => resolve(dir) === resolve(d.dir)
+    (d) => canonical === canonicalDir(d.dir)
   );
   if (unusable) {
     throw new InvalidSocketDirConfigured(dir, unusable.reason);
@@ -498,24 +536,37 @@ function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
   // 95-character socket budget is most likely to trip, and anything that
   // allowed Nx's usual roots by path no longer covers where the sockets went.
   //
+  // Once per process. Neither socket-dir accessor is memoized and both the
+  // daemon and every plugin worker resolve one, so without the latch a single
+  // command repeats an identical three-sentence warning several times. The
+  // verbose line above can repeat because it is a no-op by default; this
+  // cannot.
+  //
   // The allowlist line is gated on `isSandbox()`. This path is reached far more
   // often for ordinary reasons — a peer owning the shared container, a
   // read-only home — and naming a sandbox unprompted is what the socket
   // guidance was corrected for once already. Gated, it reaches the people it
   // describes and nobody else.
-  const remedy = sharedRootRemedy(NX_TMP_DIR);
-  logger.warn(
-    [
-      `Nx could not use any of its usual socket directories and fell back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
-      remedy,
-      isSandbox()
-        ? `A sandbox allowlist covering only ${NX_TMP_DIR} or ${NX_HOME_TMP_DIR} does not cover this path.`
-        : undefined,
-      'Run with --verbose to see why the others were rejected.',
-    ]
-      .filter(Boolean)
-      .join(' ')
-  );
+  if (!warnedAboutWorkspaceFallback) {
+    warnedAboutWorkspaceFallback = true;
+    logger.warn(
+      [
+        `Nx could not use any of its usual socket directories and fell back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
+        sharedRootRemedy(NX_TMP_DIR),
+        isSandbox()
+          ? // Built from the roots that exist: NX_HOME_TMP_DIR is undefined
+            // when there is no home directory, which is itself one of the
+            // reasons this fallback is reached.
+            `A sandbox allowlist covering only ${[NX_TMP_DIR, NX_HOME_TMP_DIR]
+              .filter(Boolean)
+              .join(' or ')} does not cover this path.`
+          : undefined,
+        'Run with --verbose to see why the others were rejected.',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    );
+  }
   return establishWorkspaceSocketDir(cause);
 }
 
