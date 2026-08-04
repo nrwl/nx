@@ -251,35 +251,22 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     await setupCI(directory, ciProvider, packageManager);
   }
 
-  // Format once now that dependencies are on disk. `@nx/workspace:new` formats
-  // its scaffolding before the install task, so no formatter is resolvable for
-  // that pass and it never did anything; the preset's own formatting runs after
-  // the install and is suppressed above. This is the only pass a new workspace
-  // gets - it is what makes one whose templates were authored for a different
-  // formatter pass its own `format:check` - so it stays non-fatal, but it does
-  // not stay silent.
+  // Format once now that dependencies are on disk: the passes inside
+  // `@nx/workspace:new` run before the install, when no formatter resolves yet.
+  // Non-fatal - the workspace is usable unformatted.
   if (skipFormatRequested) {
     process.env.NX_SKIP_FORMAT = 'true';
   } else {
     delete process.env.NX_SKIP_FORMAT;
     try {
       const pmc = getPackageManagerCommand(packageManager);
-      // `--all` explicitly: git has not been initialised yet, so file-based
-      // pattern resolution has no repo to diff against and would only reach
-      // the all-files pattern through its error path.
-      //
-      // Errors are not silenced: `nx format` is the one place a formatter
-      // problem becomes visible ("oxfmt is configured but is not installed",
-      // an unreadable config, a file it cannot parse), and the catch below
-      // carries that reason into the warning.
+      // `--all` because git is not initialised yet, so there is nothing to diff
+      // changed files against.
       await execAndWait(`${pmc.exec} nx format --all`, directory);
     } catch (e) {
-      // `execAndWait` falls back to a "see <logFile> for details" message only
-      // when the command produced no output at all - and it writes that log as
-      // `${stdout}\n${stderr}`, so in exactly that case the file holds "\n".
-      // Pointing at it would be useless twice over: it is empty, and the
-      // cleanup below deletes it. Say what happened instead. Every other
-      // message already carries the real stderr or stdout.
+      // `execAndWait` points at a log file only when the command produced no
+      // output at all - in which case that file holds just "\n" and is deleted
+      // below. Say what happened instead.
       const reason =
         e?.logFile && e?.message?.includes(e.logFile)
           ? `The command failed with exit code ${
@@ -294,18 +281,12 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
           'Run "nx format:write" inside the workspace to format them.',
         ],
       });
-      // The reason is in the warning above, so the log file has served its
-      // purpose. Leaving it behind would put an error.log in the workspace's
-      // very first commit - `initializeGitRepo` runs `git add .` below, and
-      // the generated .gitignore templates do not cover it. The workspace was
-      // created successfully either way, so a log that will not delete (a
-      // locked file on Windows) is left in place rather than failing the run.
+      // Otherwise `initializeGitRepo`'s `git add .` puts an error.log in the
+      // workspace's first commit; the .gitignore templates do not cover it.
       if (e?.logFile && existsSync(e.logFile)) {
         try {
           unlinkSync(e.logFile);
-        } catch {
-          // Nothing actionable: the warning above already carried the reason.
-        }
+        } catch {}
       }
     }
   }

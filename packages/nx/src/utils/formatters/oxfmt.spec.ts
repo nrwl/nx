@@ -1,6 +1,12 @@
-import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { formatFilesWithOxfmt } from './oxfmt';
 
 describe('formatFilesWithOxfmt', () => {
@@ -713,5 +719,183 @@ describe('formatFilesWithOxfmt', () => {
 
     expect(errors).toBeUndefined();
     expect(formatted.size).toBe(0);
+  });
+
+  describe('nested configuration', () => {
+    function writeFileIn(relativePath: string, contents: string) {
+      const target = join(workspaceRoot, relativePath);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, contents, 'utf-8');
+    }
+
+    const wide = 'const someName = { alpha: 1, beta: 2, gamma: 3, delta: 4 };';
+
+    it('uses the nearest config rather than the workspace root one', async () => {
+      writeConfig({ printWidth: 100 });
+      writeFileIn('apps/foo/.oxfmtrc.json', JSON.stringify({ printWidth: 40 }));
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 'apps/foo/src/a.ts', content: wide },
+          { path: 'root.ts', content: wide },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('apps/foo/src/a.ts')).toContain('\n  alpha: 1,');
+      expect(formatted.get('root.ts')).toEqual(`${wide}\n`);
+    });
+
+    it('replaces the parent config rather than merging with it', async () => {
+      // Measured against the oxfmt CLI: a nested config that omits a key gets
+      // oxfmt's default for it, NOT the value from the config above. Merging
+      // here would format differently from `nx format:write`.
+      writeConfig({ singleQuote: true, printWidth: 100 });
+      writeFileIn('apps/foo/.oxfmtrc.json', JSON.stringify({ printWidth: 40 }));
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [{ path: 'apps/foo/src/a.ts', content: 'const s =  "hi"' }],
+        workspaceRoot
+      );
+
+      expect(formatted.get('apps/foo/src/a.ts')).toEqual('const s = "hi";\n');
+    });
+
+    it('lets an empty nested config discard every parent option', async () => {
+      // The sharpest form of the rule above, measured against the CLI: an empty
+      // `{}` leaves the file on oxfmt's own defaults, tabs and quotes included.
+      writeConfig({ singleQuote: true, useTabs: true });
+      writeFileIn('apps/foo/.oxfmtrc.json', '{}');
+
+      const source = 'function f() {\nif (a) {\nconst s =  "hi";\n}\n}';
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 'apps/foo/a.ts', content: source },
+          { path: 'root.ts', content: source },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('root.ts')).toContain("\t\tconst s = 'hi';");
+      expect(formatted.get('apps/foo/a.ts')).toContain('    const s = "hi";');
+    });
+
+    it('honours a .gitignore in a subdirectory', async () => {
+      writeConfig({ singleQuote: true });
+      writeFileIn('apps/foo/.gitignore', 'skipme.ts\n');
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 'apps/foo/skipme.ts', content: 'const x =  "hi"' },
+          { path: 'apps/foo/keepme.ts', content: 'const x =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.has('apps/foo/skipme.ts')).toBe(false);
+      expect(formatted.get('apps/foo/keepme.ts')).toEqual("const x = 'hi';\n");
+    });
+
+    it('roots a nested config ignorePatterns at that config, not the workspace', async () => {
+      writeConfig({ singleQuote: true });
+      writeFileIn(
+        'apps/foo/.oxfmtrc.json',
+        JSON.stringify({ singleQuote: true, ignorePatterns: ['generated/**'] })
+      );
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          { path: 'apps/foo/generated/a.ts', content: 'const x =  "hi"' },
+          // Same trailing segments, but not under the nested config, so the
+          // pattern must not reach it.
+          { path: 'other/generated/b.ts', content: 'const x =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.has('apps/foo/generated/a.ts')).toBe(false);
+      expect(formatted.get('other/generated/b.ts')).toEqual(
+        "const x = 'hi';\n"
+      );
+    });
+
+    // The files under test sit a directory below the `.editorconfig` that
+    // should apply, so finding it requires the walk-up. Sizes are deliberately
+    // never 2 - that is oxfmt's default, and an assertion on it would hold just
+    // as well if no `.editorconfig` were found at all.
+    it('lets a nearer .editorconfig win over a farther one', async () => {
+      writeConfig({});
+      writeFileIn(
+        '.editorconfig',
+        '[*]\nindent_style = space\nindent_size = 8\n'
+      );
+      writeFileIn(
+        'apps/foo/.editorconfig',
+        '[*]\nindent_style = space\nindent_size = 4\n'
+      );
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          {
+            path: 'apps/foo/src/a.ts',
+            content: 'function f() {\nif (a) {\nb();\n}\n}',
+          },
+          { path: 'root.ts', content: 'function f() {\nif (a) {\nb();\n}\n}' },
+        ],
+        workspaceRoot
+      );
+
+      expect(formatted.get('apps/foo/src/a.ts')).toContain('\n    if (a) {');
+      expect(formatted.get('root.ts')).toContain('\n        if (a) {');
+    });
+
+    it('stops the .editorconfig walk at root = true', async () => {
+      writeConfig({});
+      // `max_line_length` is set only above the `root = true`, so it is the
+      // property that reveals whether the walk stopped. Asserting on
+      // indent_size alone would not: the nearer file sets it either way.
+      writeFileIn(
+        '.editorconfig',
+        '[*]\nindent_style = space\nindent_size = 8\nmax_line_length = 40\n'
+      );
+      writeFileIn(
+        'apps/foo/.editorconfig',
+        'root = true\n\n[*]\nindent_style = space\nindent_size = 4\n'
+      );
+
+      const { formatted } = await formatFilesWithOxfmt(
+        [
+          {
+            path: 'apps/foo/src/a.ts',
+            content: `function f() {\nif (a) {\n${wide}\n}\n}`,
+          },
+        ],
+        workspaceRoot
+      );
+
+      const result = formatted.get('apps/foo/src/a.ts');
+      expect(result).toContain('\n    if (a) {');
+      // Indented it is well past 40 columns, so it stays on one line only if
+      // the root file's max_line_length did not leak past the `root = true`.
+      expect(result).toContain('{ alpha: 1, beta: 2, gamma: 3, delta: 4 }');
+    });
+
+    it('fails only the files under an unreadable nested config', async () => {
+      writeConfig({ singleQuote: true });
+      writeFileIn('apps/foo/.oxfmtrc.json', '{ not json');
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [
+          { path: 'apps/foo/a.ts', content: 'const x =  "hi"' },
+          { path: 'other/b.ts', content: 'const x =  "hi"' },
+        ],
+        workspaceRoot
+      );
+
+      expect(errors?.length).toBe(1);
+      expect(errors[0]).toContain('apps/foo/.oxfmtrc.json');
+      expect(formatted.has('apps/foo/a.ts')).toBe(false);
+      expect(formatted.get('other/b.ts')).toEqual("const x = 'hi';\n");
+    });
   });
 });
