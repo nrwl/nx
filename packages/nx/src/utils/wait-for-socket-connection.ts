@@ -18,6 +18,12 @@ export async function waitForSocketConnection(
     signal?: AbortSignal;
     maxAttempts?: number;
     delayMs?: number;
+    /**
+     * Called with the errno of each failed connect. Return `true` to stop
+     * polling: a permission refusal does not heal by retrying, and without a
+     * way out the caller waits the full budget and then cannot say why.
+     */
+    onConnectError?: (error: NodeJS.ErrnoException) => boolean | void;
   }
 ): Promise<Socket | null> {
   const maxAttempts = options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
@@ -32,9 +38,15 @@ export async function waitForSocketConnection(
 
     const path = typeof socketPath === 'function' ? socketPath() : socketPath;
     if (path) {
-      const socket = await tryConnect(path);
-      if (socket) {
-        return socket;
+      const result = await tryConnect(path);
+      if (result.socket) {
+        return result.socket;
+      }
+      // The caller may need the errno this attempt produced — a refused
+      // connection is reported very differently from a socket that is not
+      // there yet, and polling past it only delays the same answer.
+      if (result.error && options?.onConnectError?.(result.error)) {
+        return null;
       }
     }
     attempts++;
@@ -42,18 +54,20 @@ export async function waitForSocketConnection(
   return null;
 }
 
-function tryConnect(socketPath: string): Promise<Socket | null> {
+function tryConnect(
+  socketPath: string
+): Promise<{ socket?: Socket; error?: NodeJS.ErrnoException }> {
   return new Promise((resolve) => {
     try {
       const socket = connect(socketPath, () => {
-        resolve(socket);
+        resolve({ socket });
       });
-      socket.once('error', () => {
+      socket.once('error', (error) => {
         socket.destroy();
-        resolve(null);
+        resolve({ error });
       });
-    } catch {
-      resolve(null);
+    } catch (error) {
+      resolve({ error: error as NodeJS.ErrnoException });
     }
   });
 }

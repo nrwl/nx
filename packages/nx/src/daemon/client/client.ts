@@ -120,6 +120,7 @@ import {
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
+  getDaemonSocketDir,
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
@@ -170,6 +171,15 @@ export class DaemonClient {
   // mutating the process-wide globalSpinner (which may belong to an
   // unrelated command).
   private currentSpinner: DelayedSpinner | null = null;
+
+  /**
+   * The errno of the most recent failed connect attempt, from either probe.
+   * `startInBackground` classifies from it: both scenarios
+   * `daemonPermissionException` documents reach the client through a probe, not
+   * through `setUpConnection`, so without this the errno is gone by the time
+   * anything can report it.
+   */
+  private lastConnectError: NodeJS.ErrnoException | undefined;
 
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
@@ -981,9 +991,15 @@ export class DaemonClient {
         }
         const socket = connect(socketPath, () => {
           socket.destroy();
+          this.lastConnectError = undefined;
           resolve(true);
         });
-        socket.once('error', () => {
+        socket.once('error', (err) => {
+          // Kept rather than discarded: this is the probe that runs before the
+          // daemon is started, so it is where the errno for "the socket is
+          // there but refuses us" is produced, and it is the only thing that
+          // separates that from "no daemon yet".
+          this.lastConnectError = err;
           resolve(false);
         });
       } catch (err) {
@@ -1079,10 +1095,7 @@ export class DaemonClient {
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
           error = daemonProcessException('The Daemon Server is not running');
-        } else if (
-          err.message.startsWith('connect EPERM') ||
-          err.message.startsWith('connect EACCES')
-        ) {
+        } else if (isPermissionErrno(err as NodeJS.ErrnoException)) {
           // The 0700 dir and 0600 socket mean the OS refuses this rather than the
           // connect silently succeeding.
           error = daemonPermissionException(socketPath, err.message);
@@ -1189,6 +1202,13 @@ export class DaemonClient {
       {
         maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
         delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
+        onConnectError: (error) => {
+          this.lastConnectError = error;
+          // A refusal will not become an acceptance. Polling the full 60s
+          // budget only delays the same answer, and the message the user
+          // eventually gets is worse for the wait.
+          return isPermissionErrno(error);
+        },
       }
     );
 
@@ -1375,6 +1395,17 @@ export class DaemonClient {
       );
       return backgroundProcess.pid;
     } else {
+      const refusal = this.lastConnectError;
+      if (refusal && isPermissionErrno(refusal)) {
+        // The flagship case this PR ships a KB page for: a sandbox refusing
+        // unix-socket connects, or a socket owned by another user. Reported
+        // here rather than as a generic startup failure, so it degrades
+        // without disabling the daemon until `nx reset`.
+        throw daemonPermissionException(
+          this.getSocketPath() ?? getDaemonSocketDir(),
+          refusal.message
+        );
+      }
       throw daemonProcessException(
         'Failed to start or connect to the Nx Daemon process.'
       );
@@ -1438,6 +1469,16 @@ function nxJsonIsNotPresent() {
  * belongs to *our* daemon; the process holding this socket is someone else's, so
  * quoting it would describe an unrelated run.
  */
+/**
+ * EACCES and EPERM are the two errnos that mean the OS refused us rather than
+ * that nothing was listening. They need opposite remedies — a socket owned by
+ * someone else versus a sandbox refusing the connect syscall — but they share
+ * the property that retrying cannot change the answer.
+ */
+export function isPermissionErrno(error: NodeJS.ErrnoException): boolean {
+  return error?.code === 'EACCES' || error?.code === 'EPERM';
+}
+
 export function daemonPermissionException(socketPath: string, cause: string) {
   const error = new Error(
     [
