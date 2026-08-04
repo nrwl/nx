@@ -491,7 +491,7 @@ describe('jestProject', () => {
       expect(tree.read('.vscode/extensions.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
-          "recommendations": ["firsttris.vscode-jest-runner"]
+          "recommendations": ["oxc.oxc-vscode", "firsttris.vscode-jest-runner"]
         }
         "
       `);
@@ -525,7 +525,9 @@ describe('jestProject', () => {
 
       expect(tree.read('.vscode/extensions.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "{}
+        "{
+          "recommendations": ["oxc.oxc-vscode"]
+        }
         "
       `);
     });
