@@ -47,7 +47,7 @@ export const CORE_PLUGINS: CorePlugin[] = [
   },
   {
     name: '@nx/oxlint',
-    capabilities: 'executors,generators',
+    capabilities: 'generators',
   },
   {
     name: '@nx/nest',

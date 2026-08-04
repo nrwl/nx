@@ -10,7 +10,7 @@
       "outputs": ["{projectRoot}/README.md"],
       "dependsOn": ["^build", "build-base"]
     },
-    "lint": {
+    "oxlint": {
       "command": "oxlint .",
       "options": {
         "cwd": "packages/oxlint"
