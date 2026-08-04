@@ -1,6 +1,6 @@
 ---
 name: reproduce-issue
-description: The single skill for reproducing an nx issue. Given a GitHub issue number (human entry) OR explicit repro parameters (agent entry), it runs the reproduction ENTIRELY inside an isolated Docker sandbox — gVisor on Linux, the Docker VM on macOS — so the untrusted repro's install scripts and commands never execute on the host, then reports whether it reproduces. Called by humans via "/reproduce-issue #N", "reproduce this bug", "does this reproduce", and by the reproduce-verifier agent (Level 2). Nothing lands on the host.
+description: The single skill for reproducing an nx issue. Given a GitHub issue number (human entry) OR explicit repro parameters (agent entry), it runs the reproduction ENTIRELY inside an isolated Docker sandbox — gVisor on Linux, the Docker VM on macOS — so the untrusted repro's install scripts and commands never execute on the host, then reports whether it reproduces. Called by humans via "/reproduce-issue #N", "reproduce this bug", "does this reproduce", and by the nx-reproduce-verifier agent (Level 2). Nothing lands on the host.
 allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(gh issue view *), Bash(gh issue list *), Bash(docker run *), Bash(docker cp *), Bash(docker rm *), Bash(docker info *), Bash(docker pull *)
 ---
 
@@ -19,7 +19,7 @@ This is the one reproduction engine in the repo. It has two front doors:
 2. Extract from the body: the **repro repo URL** (or `create-nx-workspace` steps), the **exact command(s)** that show the bug, the **reported vs expected** behavior, and the **Nx Report** (nx version + Node version).
 3. Fill the parameters below and run the sandbox (default `nx-version` = whatever the issue reports / the repo pins; default registry = public npm).
 
-## Entry B — explicit parameters (agent: reproduce-verifier Level 2)
+## Entry B — explicit parameters (agent: nx-reproduce-verifier Level 2)
 
 The caller passes these directly:
 
@@ -121,7 +121,7 @@ Substitute `<GIT_URL>`/`<ARGS>`, `<NX_VERSION>`, `<NX_REGISTRY>` (default `https
 
 ## Classify + report
 
-Compare output and `REPRO_EXIT` against the reported symptom, and return this block (verdicts match the reproduce-verifier's Level 2 vocabulary):
+Compare output and `REPRO_EXIT` against the reported symptom, and return this block (verdicts match the nx-reproduce-verifier's Level 2 vocabulary):
 
 ```
 repro:        <repo-url | create-nx-workspace ...>

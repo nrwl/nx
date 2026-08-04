@@ -1,12 +1,12 @@
 ---
 name: setup-review-sandbox
-description: One-time setup of the sandbox prerequisites used by the reproduce-issue skill and the reproduce-verifier agent — Docker, the isolation runtime (gVisor on Linux / Colima on macOS), healthy container networking, and the nx-review-sandbox toolchain image (built from the repo's mise.toml). Idempotent; re-run any time to verify or repair. Use when the user says "set up the review sandbox", "install the sandbox prereqs", "build the sandbox image", or a reproduce-issue preflight reports something MISSING.
+description: One-time setup of the sandbox prerequisites used by the reproduce-issue skill and the nx-reproduce-verifier agent — Docker, the isolation runtime (gVisor on Linux / Colima on macOS), healthy container networking, and the nx-review-sandbox toolchain image (built from the repo's mise.toml). Idempotent; re-run any time to verify or repair. Use when the user says "set up the review sandbox", "install the sandbox prereqs", "build the sandbox image", or a reproduce-issue preflight reports something MISSING.
 allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *), Bash(bash tools/review-sandbox/*)
 ---
 
 # Set up the review sandbox (one-time)
 
-Installs and verifies everything the `reproduce-issue` skill / `reproduce-verifier` agent need to run untrusted PR code in isolation. Idempotent — each step checks first and only acts if needed. Steps needing `sudo` are handed to the user to run in their terminal (this skill cannot `sudo` non-interactively).
+Installs and verifies everything the `reproduce-issue` skill / `nx-reproduce-verifier` agent need to run untrusted PR code in isolation. Idempotent — each step checks first and only acts if needed. Steps needing `sudo` are handed to the user to run in their terminal (this skill cannot `sudo` non-interactively).
 
 Run `uname -s` first — the path differs on Linux vs macOS.
 
@@ -65,7 +65,7 @@ If `modprobe` errors with a BTF / version mismatch (`failed to validate module [
 
 ## 4. The toolchain image (`nx-review-sandbox`)
 
-Needed only to **build an unreleased PR's nx** in the sandbox (reproduce-verifier Level 2). Reproducing against a published nx version does NOT need it.
+Needed only to **build an unreleased PR's nx** in the sandbox (nx-reproduce-verifier Level 2). Reproducing against a published nx version does NOT need it.
 
 Build it — unconditionally, without first checking whether it exists:
 
