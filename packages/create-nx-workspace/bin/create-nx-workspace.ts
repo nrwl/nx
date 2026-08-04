@@ -253,9 +253,9 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'string',
           })
           // `choices` is load-bearing, not documentation: `determineLinterOptions`
-          // returns `--linter` as-is, and any value that is not 'oxlint' or
-          // 'none' routes into the ESLint arm — so an unregistered typo would
-          // silently scaffold ESLint.
+          // returns `--linter` as-is and nothing downstream validates it — the
+          // `new`/`preset` schemas declare no enum — so a typo would surface only
+          // as an `Unsupported linter` throw partway through scaffolding.
           .option('linter', {
             describe: chalk.dim`Linter to use.`,
             choices: [...LINTERS],

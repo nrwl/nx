@@ -1,6 +1,6 @@
-// From `@nx/js`, not `@nx/eslint`: this package is the one `@nx/eslint` importer
-// that does not declare it as a dependency, so that specifier resolves to the
-// published tarball whose `LinterType` predates `oxlint`.
+// `LinterType` comes from `@nx/js`, which this package declares; `@nx/eslint`
+// is not a dependency here, so importing it would resolve to a published
+// tarball rather than workspace source.
 import type { LinterType } from '@nx/js';
 import type { UnitTestRunner } from '../../utils/test-runners';
 

@@ -125,7 +125,7 @@ describe('@nx/oxlint plugin', () => {
       'libs/a/project.json': `{"name":"a"}`,
       'libs/a/src/index.ts': `export const a = 1;`,
       'libs/a/src/nested/.oxlintrc.json': `{"rules":{}}`,
-      // A sibling whose path is a string prefix of the project's must not count.
+      // A config under a different Oxlint root is not this project's input.
       'libs/ab/.oxlintrc.json': `{"rules":{}}`,
     });
 
@@ -245,6 +245,95 @@ describe('@nx/oxlint plugin', () => {
 
     expect(roots).toContain('libs/a');
     expect(roots).not.toContain('libs/a/src/runtime/polyfill');
+  });
+
+  // Ported from `@nx/eslint`'s plugin.spec.ts, whose implementation this one
+  // mirrors. Type-aware Oxlint reads the tsconfig, so a shared config changing
+  // must dirty the project — a regression here replays a cached pass instead.
+  describe('tsconfig extends chain inputs', () => {
+    it('should not add tsconfig inputs when the project has no tsconfig.json', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+
+      expect(results.projects['libs/a'].targets.lint.inputs).not.toContainEqual(
+        expect.stringContaining('tsconfig')
+      );
+    });
+
+    it('should not add tsconfig inputs when tsconfig.json has no extends', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/a/tsconfig.json': `{}`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+
+      expect(results.projects['libs/a'].targets.lint.inputs).not.toContainEqual(
+        expect.stringContaining('tsconfig')
+      );
+    });
+
+    it('should not add tsconfig inputs when extends points inside the project root', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/a/tsconfig.json': JSON.stringify({
+          extends: './tsconfig.lib.json',
+        }),
+        'libs/a/tsconfig.lib.json': `{}`,
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+
+      expect(results.projects['libs/a'].targets.lint.inputs).not.toContainEqual(
+        expect.stringContaining('tsconfig')
+      );
+    });
+
+    // The native selective hasher already covers the root tsconfig.
+    it('should exclude the root tsconfig from inputs', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'tsconfig.base.json': `{}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/a/tsconfig.json': JSON.stringify({
+          extends: '../../tsconfig.base.json',
+        }),
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+
+      expect(results.projects['libs/a'].targets.lint.inputs).not.toContain(
+        '{workspaceRoot}/tsconfig.base.json'
+      );
+    });
+
+    it('should add the tsconfig to inputs when extends points outside the project root', async () => {
+      createFiles({
+        '.oxlintrc.json': `{"rules":{}}`,
+        'tsconfig.shared.json': `{}`,
+        'libs/a/project.json': `{"name":"a"}`,
+        'libs/a/src/index.ts': `export const a = 1;`,
+        'libs/a/tsconfig.json': JSON.stringify({
+          extends: '../../tsconfig.shared.json',
+        }),
+      });
+
+      const results = await invokeCreateNodesOnMatchingFiles(context);
+
+      expect(results.projects['libs/a'].targets.lint.inputs).toContain(
+        '{workspaceRoot}/tsconfig.shared.json'
+      );
+    });
   });
 
   function createFiles(fileSys: Record<string, string>) {

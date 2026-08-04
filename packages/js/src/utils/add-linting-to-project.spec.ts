@@ -57,9 +57,9 @@ describe('addLintingToProject', () => {
     expect(devDependencies['@nx/eslint']).toBeUndefined();
   });
 
-  // detox, expo and react-native declare `linter` optional and forward it with
-  // `...options`, so undefined reaches here. It has always meant ESLint, and the
-  // exhaustiveness check added alongside this must not turn that into a throw.
+  // detox declares `linter?`, and `"strict": false` lets undefined through
+  // elsewhere. It has always meant ESLint, and the exhaustiveness check added
+  // alongside this must not turn that into a throw.
   it('falls back to eslint when no linter is given', async () => {
     await expect(
       addLintingToProject(tree, {
@@ -102,10 +102,24 @@ describe('addLintingToProject', () => {
       unitTestRunner: 'none',
     });
 
-    const projectConfig = 'libs/my-lib/.oxlintrc.json';
-    if (tree.exists(projectConfig)) {
-      expect(readJson(tree, projectConfig).plugins ?? []).toEqual([]);
-    }
+    // With no plugins to add, the generator writes no project config at all.
+    expect(tree.exists('libs/my-lib/.oxlintrc.json')).toBe(false);
+  });
+
+  // How every framework generator hands Oxlint its presets — react, next, vue,
+  // nuxt, remix, react-native and expo all pass one.
+  it('enables the framework plugins the caller asks for', async () => {
+    await addLintingToProject(tree, {
+      linter: 'oxlint',
+      project: 'my-lib',
+      addPlugin: true,
+      oxlintPlugins: ['react', 'jsx-a11y'],
+      unitTestRunner: 'jest',
+    });
+
+    expect(readJson(tree, 'libs/my-lib/.oxlintrc.json').plugins).toEqual(
+      expect.arrayContaining(['react', 'jsx-a11y', 'jest'])
+    );
   });
 
   it('configures nothing for none', async () => {
