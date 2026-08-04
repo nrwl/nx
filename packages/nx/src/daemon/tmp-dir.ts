@@ -21,7 +21,9 @@ import {
   sharedRootRemedy,
 } from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
-// Only used to *reject* it as a socket location; see InvalidSocketDirConfigured.
+// Refused as a socket *directory* (see InvalidSocketDirConfigured), and also
+// the socket root itself on Windows, where named pipes are not filesystem
+// objects and there is nothing to lock down beneath it.
 import { tmpdir as systemTmpDir } from 'tmp';
 import { NATIVE_CACHE_ROOT } from '../native/native-file-cache-location';
 import {
@@ -46,10 +48,13 @@ export type SocketDirRefusal =
  * Thrown when the socket dir resolves to a directory Nx will not accept.
  * Invalid configuration, not a recoverable failure.
  *
- * Two reasons, and they are not interchangeable: a directory other users can
- * reach is a security problem, while an Nx container or cache root is the user's
- * own and is refused because Nx manages what lives there. Telling someone their
- * own `0700` directory lets a local attacker execute code would be false.
+ * Three reasons, and they are not interchangeable. A directory other users can
+ * reach is a security problem; the OS temp root is the user's own but holds
+ * everything else on the machine, and Nx deletes the socket directory
+ * recursively; an Nx container or cache root is refused because Nx manages what
+ * lives there. Telling someone their own `0700` directory lets a local attacker
+ * execute code would be false, which is why the reason is derived from the
+ * directory rather than the platform.
  */
 export class InvalidSocketDirConfigured extends Error {
   constructor(
@@ -131,11 +136,16 @@ function homeSocketRoot(): string | undefined {
  *
  * With `HOME=/tmp` they are the same path, and offering it as a second tier
  * would point `ensureOwnedPrivateDir` at `/tmp/.nx` itself the moment tier 1
- * fails — taking a root-owned `1777` container to `0700`, silently undoing the
- * documented provisioning, dropping every other user's native cache, and
- * breaking a sandbox allowlist scoped to that path. Other users are not locked
- * out (they fail `isSafeSharedRoot` on the uid check and land on their own
- * home), but nothing puts the container back.
+ * fails. That only rewrites the container when the directory is already ours —
+ * against a root-owned one it means Nx is running as root — but there it takes
+ * a `1777` container to `0700`, silently undoing the documented provisioning,
+ * dropping every other user's native cache, and breaking a sandbox allowlist
+ * scoped to that path. Nothing puts it back.
+ *
+ * Other users are not stopped by `isSafeSharedRoot`: it exempts uid 0, and
+ * `0700` carries no group or other write, so a root-owned container passes both
+ * clauses. They get as far as creating their own directory beneath it and fail
+ * there with EACCES.
  *
  * It is also the path `InvalidSocketDirConfigured` refuses when set explicitly,
  * so auto-selecting it would contradict a rule Nx enforces one function away.
@@ -316,6 +326,13 @@ function socketDirUnderFirstUsableRoot(
     return createOwnerOnlySocketDir(configuredDir, false);
   }
 
+  // Cleared here as well as in createOwnerOnlySocketDir: the no-tier exit below
+  // returns without ever entering it, and a value left from an earlier
+  // resolution would have assertValidSocketPath blame an NX_SOCKET_DIR the user
+  // no longer has set while suppressing the advice that is correct there.
+  socketDirFallbackCause = undefined;
+  refusedConfiguredSocketDir = undefined;
+
   const established = establishSocketRoot();
   if (established === undefined) {
     return fallBackToWorkspaceSocketDir(
@@ -473,6 +490,23 @@ function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
       attempted ? `directory ${attempted}` : 'directories'
     }. Falling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
     cause
+  );
+  // Warned, not just logged verbosely. A tier-1 to tier-2 demotion is silent
+  // on purpose — nothing is broken and both roots are in the allowlist the docs
+  // tell teams to commit. The workspace is different in kind: it is *outside*
+  // that allowlist, so a sandbox that has not been configured lands here and
+  // then fails on a path the user was never told to allow. It is also where the
+  // 95-character socket budget is most likely to trip, since the path grows
+  // with checkout depth.
+  const remedy = sharedRootRemedy(NX_TMP_DIR);
+  logger.warn(
+    [
+      `Nx could not use any of its usual socket directories and fell back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
+      remedy,
+      'Sandbox allowlists covering only /tmp/.nx or ~/.nx will not cover this path. Run with --verbose to see why the others were rejected.',
+    ]
+      .filter(Boolean)
+      .join(' ')
   );
   return establishWorkspaceSocketDir(cause);
 }

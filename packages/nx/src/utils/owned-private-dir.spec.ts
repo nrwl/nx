@@ -246,8 +246,16 @@ describe('ensureOwnedPrivateDir', () => {
     // The chmod is `1777`, so a non-directory reached here is handed group and
     // other write. Without this, dropping chmodRealDirectory's isDirectory()
     // check survives the suite.
+    // The 0600 row matters on its own: the other fixtures are 0644, so they are
+    // caught downstream by chmodRealDirectory's own mode handling and deleting
+    // ensureOwnedPrivateDir's isDirectory() check survives the suite without it.
+    // A 0600 regular file otherwise comes back branded as an OwnedPrivateDir.
     posixOnly.each([
       ['a regular file', (p: string) => writeFileSync(p, '')],
+      [
+        'a 0600 regular file',
+        (p: string) => writeFileSync(p, '', { mode: 0o600 }),
+      ],
       ['a FIFO', (p: string) => execFileSync('mkfifo', [p])],
     ])('should not chmod %s planted at the shared root', (_label, plant) => {
       const planted = join(base, 'not-a-dir');
@@ -269,6 +277,24 @@ describe('ensureOwnedPrivateDir', () => {
       expect(isSafeSharedRoot(dir)).toBeNull();
     });
   });
+
+  posixOnly.each([
+    [
+      'a 0600 regular file',
+      (p: string) => writeFileSync(p, '', { mode: 0o600 }),
+    ],
+    ['a 0644 regular file', (p: string) => writeFileSync(p, '')],
+  ])(
+    'should refuse %s rather than branding it a private directory',
+    (_l, plant) => {
+      // On Windows this check is the only thing between a planted non-directory
+      // and an OwnedPrivateDir, since the ownership branch returns early there.
+      const planted = join(base, 'not-a-dir');
+      plant(planted);
+
+      expect(ensureOwnedPrivateDir(planted)).toBeNull();
+    }
+  );
 
   describe('isPeerWritable', () => {
     // The alarming refusal message is gated on this, so it has to answer about

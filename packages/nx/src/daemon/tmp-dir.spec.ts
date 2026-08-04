@@ -28,6 +28,7 @@ jest.mock('../utils/owned-private-dir', () => ({
 jest.mock('../utils/logger', () => ({
   logger: {
     verbose: jest.fn(),
+    warn: jest.fn(),
   },
 }));
 
@@ -170,6 +171,33 @@ describe('socket directories', () => {
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
     expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(HOME_TMP_ROOT);
+  });
+
+  it('warns rather than only logging verbosely when it reaches the workspace', () => {
+    setPlatform('linux');
+    denyEveryDefaultRoot();
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+    // A tier-1 to tier-2 demotion stays silent; reaching the workspace does
+    // not, because it is outside the allowlist the docs tell teams to commit,
+    // and logger.verbose is a no-op without NX_VERBOSE_LOGGING.
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(DAEMON_DIR_FOR_CURRENT_WORKSPACE)
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('allowlists')
+    );
+  });
+
+  it('does not warn when a later tier succeeds', () => {
+    setPlatform('linux');
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
+      (d: string) => !d.startsWith(USER_TMP_ROOT)
+    );
+
+    getSocketDir();
+
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('logs the default-root failure at verbose level and retains it as the fallback cause', () => {
