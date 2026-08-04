@@ -1221,7 +1221,7 @@ async function determineNoneOptions(
     }
 
     if (preset === Preset.TS) {
-      return { preset, formatter: 'oxfmt' };
+      return { preset, formatter: parsedArgs.formatter ?? 'oxfmt' };
     }
 
     if (parsedArgs.js !== undefined) {
@@ -1389,7 +1389,7 @@ async function determineReactOptions(
     formatter = await determineFormatterOptions(parsedArgs);
   } else {
     linter = 'eslint';
-    formatter = 'oxfmt';
+    formatter = parsedArgs.formatter ?? 'oxfmt';
   }
 
   return {
@@ -1499,7 +1499,7 @@ async function determineVueOptions(
     formatter = await determineFormatterOptions(parsedArgs);
   } else {
     linter = 'eslint';
-    formatter = 'oxfmt';
+    formatter = parsedArgs.formatter ?? 'oxfmt';
   }
 
   return {
@@ -1704,7 +1704,7 @@ async function determineAngularOptions(
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs);
   } else {
-    formatter = 'oxfmt';
+    formatter = parsedArgs.formatter ?? 'oxfmt';
   }
 
   return {
@@ -1803,7 +1803,7 @@ async function determineNodeOptions(
     formatter = await determineFormatterOptions(parsedArgs);
   } else {
     linter = 'eslint';
-    formatter = 'oxfmt';
+    formatter = parsedArgs.formatter ?? 'oxfmt';
   }
 
   return {
