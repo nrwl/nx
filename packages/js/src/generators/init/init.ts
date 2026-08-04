@@ -16,6 +16,7 @@ import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { getFormatterSetup } from '../../utils/formatter-setup';
+import { assertNxSupportsFormatters } from '../../utils/nx-formatter-internals';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
@@ -35,6 +36,7 @@ export async function initGenerator(
   schema: InitSchema
 ): Promise<GeneratorCallback> {
   schema.addTsPlugin ??= false;
+  assertNxSupportsFormatters();
   const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
   // Whatever the workspace already uses wins, so a prettier workspace does not
   // gain a stray `.oxfmtrc.json` that then outranks its own config. Detection
