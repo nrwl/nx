@@ -9,12 +9,10 @@ import {
 import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
 /**
- * Root config filenames a generated `extends` can point at — JSON only, since
- * Oxlint cannot extend a TypeScript config. Not all of them are *rewritable*:
- * `addPluginsToOxlintConfig` refuses `.jsonc` below. To ask whether a config
- * exists at all, use `OXLINT_CONFIG_FILENAMES`.
+ * Root configs a generated `extends` can point at — Oxlint only extends JSON.
+ * To ask whether a config exists at all, use `OXLINT_CONFIG_FILENAMES`.
  */
-const EDITABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
+const EXTENDABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
   /\.jsonc?$/.test(file)
 );
 
@@ -24,7 +22,7 @@ interface OxlintConfig {
 }
 
 export function findRootOxlintConfig(tree: Tree): string | null {
-  return EDITABLE_CONFIG_FILENAMES.find((file) => tree.exists(file)) ?? null;
+  return EXTENDABLE_CONFIG_FILENAMES.find((file) => tree.exists(file)) ?? null;
 }
 
 /**
@@ -99,6 +97,19 @@ export function addPluginsToOxlintConfig(
   if (tree.exists(projectConfigPath)) {
     updateJson<OxlintConfig>(tree, projectConfigPath, (json) => {
       json.plugins = union(json.plugins ?? [], plugins);
+      // Deliberately not adding one: an existing config without `extends` may
+      // be isolating from the root on purpose. Say so rather than silently
+      // enabling plugins the root's rules will never reach.
+      if (rootConfigPath && !json.extends?.length && projectRoot !== '.') {
+        logger.warn(
+          `"${projectRoot}" has an Oxlint config with no "extends", so ${rootConfigPath}'s ` +
+            `categories and rules do not apply to it — including anything the plugin(s) ` +
+            `${plugins.join(', ')} enable. Add "extends": ["${joinPathFragments(
+              offsetFromRoot(projectRoot),
+              rootConfigPath
+            )}"] if that is not intended.`
+        );
+      }
       return json;
     });
     return;

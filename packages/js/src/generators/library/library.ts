@@ -926,6 +926,9 @@ async function normalizeOptions(
 
   return {
     ...options,
+    // Resolved above; naming it here is what makes it non-optional on the
+    // normalized type, since the spread carries the schema's `linter?`.
+    linter: options.linter,
     fileName,
     name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,
