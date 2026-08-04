@@ -78,10 +78,14 @@ const S_ISVTX = 0o1000;
 /**
  * Whether a shared container is safe to keep an owner-only directory under.
  *
- * A container writable by other users must be sticky, and it must be owned by
- * either root or the current user. Sticky directories still let the directory
- * owner rename entries, so accepting a container owned by another unprivileged
- * user would let that user replace a previously verified private directory.
+ * On POSIX, a container writable by other users must be sticky, and it must be
+ * owned by either root or the current user. Windows short-circuits after the
+ * directory test — the OS temp root is already scoped to one account, so there
+ * is no shared level whose ownership could matter.
+ *
+ * Sticky directories still let the directory's own owner rename entries, so
+ * accepting a container owned by another unprivileged user would let that user
+ * replace a previously verified private directory.
  *
  * A current-user-owned container is safe for that user but is deliberately
  * refused by other users. For cross-user use, an administrator only needs to
@@ -139,8 +143,11 @@ export function isPeerWritable(dir: string): boolean {
  * there is nothing the user can do about it. Only a container owned by another
  * unprivileged user has an actionable fix, and it is to hand it to root: Nx
  * cannot chown it, and refusing it is what keeps that user from renaming our
- * directory aside. Returns the message rather than a boolean so it cannot be
- * swapped with the guards above.
+ * directory aside. Returns the message rather than a boolean because the caller
+ * needs the text; note that unlike the guards above this is an unbranded
+ * `string | undefined`, so nothing stops it being passed where a verified path
+ * is expected. In a module whose convention is "truthy string = verified path",
+ * this is the one string with no protection.
  */
 export function sharedRootRemedy(dir: string): string | undefined {
   try {

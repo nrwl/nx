@@ -66,7 +66,7 @@ Nx uses the first of these it can establish, checking each one before it writes 
 1. **`$NX_SOCKET_DIR`** is used exactly as given. It sits outside the order below: a configured directory that can't be used sends Nx straight to the workspace with a warning, instead of quietly substituting a longer path you never asked for.
 1. **`/tmp/.nx/<uid>/sockets`** needs `/tmp/.nx` to belong to you or to `root`, and to be sticky if anyone else can write to it. The two directories beneath it have to be yours and mode `0700`.
 1. **`~/.nx/sockets`** needs both directories to be yours and mode `0700`. There's no container check here, because nobody else can write to your home directory.
-1. **`<workspaceRoot>/.nx/workspace-data/d`** is the last resort. Its length grows with the depth of your checkout, so a deeply nested workspace can push a socket past the 95-character limit the operating system enforces.
+1. **`<workspaceRoot>/.nx/workspace-data/d`** is the last resort. Its length grows with the depth of your checkout, so a deeply nested workspace can push a socket past the 95-character limit Nx enforces. That is Nx's own conservative guard, chosen to sit under the operating system's own cap on socket paths.
 
 The native binding cache doesn't follow sockets down that list. It lives at `/tmp/.nx/<uid>/native-cache/<nxVersion>` or nowhere — when that can't be established, Nx skips the cache and loads the binding in place from `node_modules`. A skipped cache costs one file copy, while a skipped socket costs you the daemon, so only sockets keep looking.
 

@@ -153,6 +153,46 @@ describe('native file cache location', () => {
     );
   });
 
+  // The default branch feeds a recursive delete in `nx reset`, and collapsing it
+  // to a bare `join(NATIVE_CACHE_ROOT, nxVersion)` — dropping all three guards —
+  // otherwise leaves the suite green. Its constants are module scope, so the
+  // guards are mocked and the module re-imported rather than staged on disk.
+  describe('getNativeFileCacheLocationToDelete', () => {
+    const withGuards = (
+      guards: Record<string, unknown>,
+      assert: (m: any) => void
+    ) => {
+      jest.isolateModules(() => {
+        jest.doMock('../utils/owned-private-dir', () => ({
+          ...jest.requireActual('../utils/owned-private-dir'),
+          isSafeSharedRoot: jest.fn(() => '/tmp/.nx'),
+          isOwnedRealDirectory: jest.fn(() => '/tmp/.nx/501'),
+          ...guards,
+        }));
+        assert(require('./native-file-cache-location'));
+      });
+      jest.dontMock('../utils/owned-private-dir');
+    };
+
+    it('should return a path when every guard passes', () => {
+      withGuards({}, (m) => {
+        expect(m.getNativeFileCacheLocationToDelete()).not.toBeNull();
+      });
+    });
+
+    it('should refuse when the shared container is not safe', () => {
+      withGuards({ isSafeSharedRoot: jest.fn(() => null) }, (m) => {
+        expect(m.getNativeFileCacheLocationToDelete()).toBeNull();
+      });
+    });
+
+    it('should refuse when a directory on the way down is not ours', () => {
+      withGuards({ isOwnedRealDirectory: jest.fn(() => null) }, (m) => {
+        expect(m.getNativeFileCacheLocationToDelete()).toBeNull();
+      });
+    });
+  });
+
   describe('ensureSecureNativeFileCacheLocation', () => {
     it('should create and return an explicit override directory', () => {
       const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
