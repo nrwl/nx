@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { prettierConfigFiles } from '@nx/devkit/internal';
 import type { Options } from 'prettier';
+import { assertNxSupportsFormatters } from './nx-formatter-internals';
 import { prettierVersion } from './versions';
 
 export interface ExistingPrettierConfig {
@@ -63,6 +64,8 @@ export function generatePrettierSetup(
   tree: Tree,
   options: { skipPackageJson?: boolean }
 ): GeneratorCallback {
+  assertNxSupportsFormatters();
+
   // Imported rather than copied: detection and setup have to agree on this
   // list, or a workspace whose config format is missing from one side gets a
   // second, redundant `.prettierrc` written beside the one it already has.
@@ -101,6 +104,8 @@ export function generatePrettierSetup(
 export async function resolvePrettierConfigPath(
   tree: Tree
 ): Promise<string | null> {
+  assertNxSupportsFormatters();
+
   const prettier = await importPrettier();
   if (!prettier) {
     return null;
