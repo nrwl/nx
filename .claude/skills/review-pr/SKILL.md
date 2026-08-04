@@ -748,17 +748,15 @@ On a **first** review, stop at the structural rules above — nothing backstops 
 judgment about what the diff "probably" affects has no place.
 
 On a **re-review**, the unchanged code was already reviewed by the full set at a prior attempt, and
-re-running all nine against a small delta buys mostly restatement. Scope the set to the dimensions
-the delta actually puts at stake. This is already established practice, not a new liberty: a prior
-round of PR #36460 dispatched `comment-analyzer` alone for a two-line comment hunk and recorded it as
-"a scope decision, not an agent failure."
+re-running everything against a small delta buys mostly restatement. Scope the set to the dimensions
+the delta actually puts at stake. A round whose delta is one reworded comment does not need the
+security, performance and test dimensions re-run against code none of them touched.
 
 **Scope by dimension at stake, never by which files changed.** This distinction is the whole safety
-margin, and there is a worked example of why. In one round of #36460 the delta added an
-`AbortSignal`; the round's only finding was in two `catch` blocks the delta **does not touch**, which
-became wrong precisely because the new abort path made a new error class reachable there. A
-file-based rule drops `silent-failure-hunter` and loses the finding. A dimension-based rule keeps it:
-the delta is about cancellation, so error handling is obviously at stake.
+margin, because new code routinely changes what _unchanged_ code means. Add a cancellation path and
+the pre-existing `catch` blocks it now reaches can become wrong without appearing in the diff at all.
+A file-based rule drops `silent-failure-hunter` there and loses the finding; a dimension-based rule
+keeps it, because the delta's subject is cancellation and error handling is plainly at stake.
 
 Ask of each agent: _could the delta change what this dimension would conclude?_ Keep it if yes or if
 unsure. Concretely, a delta that adds no new sink and no new untrusted input rarely moves
