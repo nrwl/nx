@@ -223,6 +223,78 @@ describe('add-pnpm-prune-lockfile-outputs migration', () => {
     });
   });
 
+  it('selects the executor key over a resolving exact-name key', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        'prune-lockfile': { executor: '@nx/js:prune-lockfile' },
+      },
+    });
+    const nxJson = readNxJson(tree);
+    nxJson.targetDefaults = {
+      '@nx/js:prune-lockfile': {
+        outputs: ['{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml'],
+      },
+      // resolves for the target too, but the runtime only applies the executor
+      // key, so appending here would declare outputs the runtime never merges
+      'prune-lockfile': {
+        outputs: ['{workspaceRoot}/out/{projectRoot}/pnpm-lock.yaml'],
+      },
+    };
+    updateNxJson(tree, nxJson);
+
+    await update(tree);
+
+    expect(readNxJson(tree).targetDefaults).toEqual({
+      '@nx/js:prune-lockfile': {
+        outputs: [
+          '{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml',
+          '{workspaceRoot}/dist/{projectRoot}/pnpm-workspace.yaml',
+          '{workspaceRoot}/dist/{projectRoot}/patches',
+          '{workspaceRoot}/dist/{projectRoot}/local_path_modules',
+        ],
+      },
+      'prune-lockfile': {
+        outputs: ['{workspaceRoot}/out/{projectRoot}/pnpm-lock.yaml'],
+      },
+    });
+  });
+
+  it('selects the longer glob when two glob keys match the target', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        'prune-lockfile': { executor: '@nx/js:prune-lockfile' },
+      },
+    });
+    const nxJson = readNxJson(tree);
+    nxJson.targetDefaults = {
+      'prune-*': {
+        outputs: ['{workspaceRoot}/out/{projectRoot}/pnpm-lock.yaml'],
+      },
+      'prune-lock*': {
+        outputs: ['{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml'],
+      },
+    };
+    updateNxJson(tree, nxJson);
+
+    await update(tree);
+
+    expect(readNxJson(tree).targetDefaults).toEqual({
+      'prune-*': {
+        outputs: ['{workspaceRoot}/out/{projectRoot}/pnpm-lock.yaml'],
+      },
+      'prune-lock*': {
+        outputs: [
+          '{workspaceRoot}/dist/{projectRoot}/pnpm-lock.yaml',
+          '{workspaceRoot}/dist/{projectRoot}/pnpm-workspace.yaml',
+          '{workspaceRoot}/dist/{projectRoot}/patches',
+          '{workspaceRoot}/dist/{projectRoot}/local_path_modules',
+        ],
+      },
+    });
+  });
+
   it('evaluates entry filters before the key or executor field, like the runtime matcher', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
