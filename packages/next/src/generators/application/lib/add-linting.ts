@@ -113,7 +113,7 @@ export async function addLinting(
     ]);
   }
 
-  if (!options.skipPackageJson) {
+  if (options.linter === 'eslint' && !options.skipPackageJson) {
     const eslintConfigNextVersion =
       await getEslintConfigNextDependenciesVersionsToInstall(host);
 
