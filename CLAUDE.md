@@ -21,7 +21,7 @@ When working on Nx documentation, all documentation content lives in the `astro-
 - Development workflow and commands
 - Sidebar management
 
-**MANDATORY**: After editing any file in `astro-docs/src/content/`, run the `nx-docs-style-check` skill. No exceptions.
+**MANDATORY**: After editing any file in `astro-docs/src/content/`, run the `check-docs-style` skill. No exceptions.
 
 **MANDATORY**: All documentation content must follow `astro-docs/STYLE_GUIDE.md`. vale only enforces its mechanical rules, so check the structural and voice rules yourself.
 
