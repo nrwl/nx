@@ -38,8 +38,7 @@ import {
   opencodeMcpPath,
   rulesRegex,
 } from '../constants';
-import { NX_SOCKET_ROOT_POSIX } from '../../daemon/tmp-dir';
-import { NX_TMP_DIR_POSIX } from '../../utils/nx-tmp-dir';
+import { NX_ALLOWLIST_ROOTS } from '../../utils/nx-tmp-dir';
 import { getAiConfigRepoPath } from '../clone-ai-config-repo';
 import { Agent, supportedAgents } from '../utils';
 import {
@@ -195,9 +194,9 @@ export async function setupAiAgentsGeneratorImpl(
         ...json.sandbox,
         filesystem: {
           ...json.sandbox?.filesystem,
-          allowRead: appendIfMissing(
+          allowRead: appendAllMissing(
             json.sandbox?.filesystem?.allowRead,
-            NX_TMP_DIR_POSIX
+            NX_ALLOWLIST_ROOTS
           ),
           // Covers the whole tmp root, not just the socket dir: the native
           // binary cache lives under it too, and without the cache a running
@@ -205,9 +204,9 @@ export async function setupAiAgentsGeneratorImpl(
           // which blocks reinstalling or rebuilding dependencies. What keeps
           // users apart is not this allowlist but the 0700 per-uid directories
           // Nx verifies on every use (see ensureOwnedPrivateDir).
-          allowWrite: appendIfMissing(
+          allowWrite: appendAllMissing(
             json.sandbox?.filesystem?.allowWrite,
-            NX_TMP_DIR_POSIX
+            NX_ALLOWLIST_ROOTS
           ),
         },
         network: {
@@ -222,9 +221,9 @@ export async function setupAiAgentsGeneratorImpl(
                 ),
               }
             : {}),
-          allowUnixSockets: appendIfMissing(
+          allowUnixSockets: appendAllMissing(
             json.sandbox?.network?.allowUnixSockets,
-            NX_SOCKET_ROOT_POSIX
+            NX_ALLOWLIST_ROOTS
           ),
           // Nx does not only connect to sockets, it creates them: the daemon,
           // every plugin worker, and forked task processes each bind their own.
@@ -486,6 +485,16 @@ function appendIfMissing(
   value: string
 ): string[] {
   return existing?.includes(value) ? existing : [...(existing ?? []), value];
+}
+
+function appendAllMissing(
+  existing: string[] | undefined,
+  values: readonly string[]
+): string[] {
+  return values.reduce<string[]>(
+    (acc, value) => appendIfMissing(acc, value),
+    existing ?? []
+  );
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {

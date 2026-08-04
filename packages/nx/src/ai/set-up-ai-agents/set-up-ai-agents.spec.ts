@@ -561,14 +561,24 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.claude/settings.json')?.toString() ?? '{}'
         );
+        // Both roots the socket chain may use. Allowing only /tmp/.nx leaves
+        // every user on a machine where a peer created it first uncovered,
+        // since Nx then falls back to ~/.nx.
         expect(config.sandbox.network.allowUnixSockets).toEqual([
-          '/tmp/.nx/sockets',
+          '/tmp/.nx',
+          '~/.nx',
         ]);
-        expect(config.sandbox.filesystem.allowRead).toEqual(['/tmp/.nx']);
+        expect(config.sandbox.filesystem.allowRead).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
         // Covers the tmp root, not just the socket dir: the native binary cache
         // lives under it, and without it a running daemon pins the binding
         // inside node_modules.
-        expect(config.sandbox.filesystem.allowWrite).toEqual(['/tmp/.nx']);
+        expect(config.sandbox.filesystem.allowWrite).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
       });
 
       it('should allow creating unix sockets, not only connecting to existing ones', async () => {
@@ -603,7 +613,7 @@ describe('setup-ai-agents generator', () => {
                 allowWrite: ['~/.gradle', '/tmp/.nx'],
               },
               network: {
-                allowUnixSockets: ['/var/run/docker.sock', '/tmp/.nx/sockets'],
+                allowUnixSockets: ['/var/run/docker.sock', '/tmp/.nx'],
               },
             },
           })
@@ -614,14 +624,21 @@ describe('setup-ai-agents generator', () => {
         const config = JSON.parse(
           tree.read('.claude/settings.json')?.toString() ?? '{}'
         );
+        // The pre-existing entries survive in place, ours is not duplicated,
+        // and the root that was missing is appended rather than replacing them.
         expect(config.sandbox.filesystem.allowWrite).toEqual([
           '~/.gradle',
           '/tmp/.nx',
+          '~/.nx',
         ]);
-        expect(config.sandbox.filesystem.allowRead).toEqual(['/tmp/.nx']);
+        expect(config.sandbox.filesystem.allowRead).toEqual([
+          '/tmp/.nx',
+          '~/.nx',
+        ]);
         expect(config.sandbox.network.allowUnixSockets).toEqual([
           '/var/run/docker.sock',
-          '/tmp/.nx/sockets',
+          '/tmp/.nx',
+          '~/.nx',
         ]);
       });
 
