@@ -1,5 +1,6 @@
 import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
 import {
+  createTreeIgnoreChecker,
   isUsingPrettierInTree,
   sortObjectByKeys,
 } from 'nx/src/devkit-internals';
@@ -67,8 +68,19 @@ export async function formatFiles(
 
   if (!prettier) return;
 
+  // Both prettier's CLI and oxfmt's skip files covered by `.gitignore` or
+  // `.prettierignore` (measured), so a generator that formatted them anyway
+  // would rewrite files `nx format:check` never looks at. `getFileInfo` below
+  // does not do this for us: without an `ignorePath` its `ignored` is always
+  // false.
+  const isIgnored = createTreeIgnoreChecker(tree, [
+    '.gitignore',
+    '.prettierignore',
+  ]);
   const files = new Set(
-    tree.listChanges().filter((file) => file.type !== 'DELETE')
+    tree
+      .listChanges()
+      .filter((file) => file.type !== 'DELETE' && !isIgnored(file.path))
   );
 
   const changedPrettierInTree = getChangedPrettierConfigInTree(tree);

@@ -93,6 +93,45 @@ describe('formatFiles', () => {
     });
   });
 
+  describe('ignore files', () => {
+    // These assert on formatted output, which needs prettier's parser loading
+    // to work - it uses a dynamic import that jest only permits under
+    // NODE_OPTIONS=--experimental-vm-modules. `nx test devkit` sets that
+    // (nx.json), a bare `npx jest` does not, and without it nothing formats and
+    // every case here is vacuous. The unformatted `kept` assertions are what
+    // catch that: they fail rather than silently passing.
+    const unformatted = 'const   x   =   1';
+    const formatted = 'const x = 1;\n';
+
+    it('should skip files covered by .gitignore or .prettierignore', async () => {
+      tree.write('.gitignore', 'by-git.ts\n');
+      tree.write('.prettierignore', 'by-prettier.ts\n');
+      tree.write('by-git.ts', unformatted);
+      tree.write('by-prettier.ts', unformatted);
+      tree.write('kept.ts', unformatted);
+
+      await formatFiles(tree);
+
+      expect(tree.read('kept.ts', 'utf-8')).toBe(formatted);
+      expect(tree.read('by-git.ts', 'utf-8')).toBe(unformatted);
+      expect(tree.read('by-prettier.ts', 'utf-8')).toBe(unformatted);
+    });
+
+    it('should honour an ignore file in a subdirectory', async () => {
+      tree.write('apps/foo/.gitignore', '/generated/\n');
+      tree.write('apps/foo/generated/a.ts', unformatted);
+      tree.write('apps/foo/kept.ts', unformatted);
+      // The same trailing segments outside that directory are unaffected.
+      tree.write('generated/b.ts', unformatted);
+
+      await formatFiles(tree);
+
+      expect(tree.read('apps/foo/kept.ts', 'utf-8')).toBe(formatted);
+      expect(tree.read('generated/b.ts', 'utf-8')).toBe(formatted);
+      expect(tree.read('apps/foo/generated/a.ts', 'utf-8')).toBe(unformatted);
+    });
+  });
+
   describe('sortRootTsconfigPaths', () => {
     it('should sort tsconfig paths when sortRootTsconfigPaths option is true', async () => {
       tree.write(
