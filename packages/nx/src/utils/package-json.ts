@@ -950,7 +950,10 @@ let lastParsedPnpmLockfile: {
  * Parses pnpm lockfile content, memoizing the last result: one prune run reads
  * the same content for the patch scope, the build-script approvals, the
  * local-path artifacts, and the link-closure validation, and a watch-mode
- * rebuild re-reads an unchanged lockfile. Returns null when the content is not
+ * rebuild re-reads an unchanged lockfile. The fallback path passes the root
+ * lockfile in, which pnpm 11 writes as two YAML documents when
+ * `managePackageManagerVersions` is on, so the workspace document is extracted
+ * the way the pnpm lockfile parser does. Returns null when the content is not
  * valid YAML or does not parse to an object. Consumers must not mutate the
  * returned document.
  */
@@ -958,7 +961,15 @@ function parsePnpmLockfileYaml(content: string): object | null {
   if (lastParsedPnpmLockfile?.content !== content) {
     let parsed: unknown;
     try {
-      parsed = require('@zkochan/js-yaml').load(content) ?? {};
+      // Required here so the pnpm lockfile machinery stays off the module graph
+      // of everything that imports this file.
+      const {
+        extractMainLockfileDocument,
+      } = require('../plugins/js/lock-file/utils/pnpm-normalizer');
+      parsed =
+        require('@zkochan/js-yaml').load(
+          extractMainLockfileDocument(content)
+        ) ?? {};
     } catch {
       parsed = null;
     }
