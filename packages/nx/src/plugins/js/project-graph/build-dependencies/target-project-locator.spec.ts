@@ -1024,6 +1024,38 @@ describe('TargetProjectLocator', () => {
       expect(result2).toEqual('@org/proj1');
     });
 
+    it('should not match Windows node_modules paths to the workspace root project', () => {
+      const targetProjectLocator = new TargetProjectLocator(
+        {
+          ...projects,
+          root: {
+            name: 'root',
+            type: 'app',
+            data: {
+              root: '.',
+            },
+          },
+        },
+        {}
+      );
+
+      jest
+        .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
+        .mockReturnValue('node_modules\\external-package\\index.js');
+
+      const result = targetProjectLocator.findProjectFromImport(
+        'external-package',
+        'libs/proj1/index.ts'
+      );
+
+      expect(result).toBeUndefined();
+      expect(
+        (targetProjectLocator as any).findProjectOfResolvedModule(
+          '..\\..\\node_modules\\external-package\\index.js'
+        )
+      ).toBeUndefined();
+    });
+
     it('should be able to npm dependencies', () => {
       const result1 = targetProjectLocator.findProjectFromImport(
         '@ng/core',
