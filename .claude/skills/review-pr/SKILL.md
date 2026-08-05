@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox — never into the host working tree — runs the repo's own nx-* review agents, the nx-reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the nx-alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the nx-performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the nx-security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through the sandbox CLI — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
-allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, mcp__linear-server__get_issue, mcp__linear-server__list_comments, Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(.claude/tools/sandbox *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Bash(tr *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, mcp__linear-server__get_issue, mcp__linear-server__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
 
@@ -137,6 +137,8 @@ Start a long-lived, locked-down sandbox and check the PR out **inside it** — t
 # anything present now is a previous run's session record for this PR — and a stale
 # one would be read as this run's, downgrading findings against an outdated record.
 rm -f /tmp/pr-<NUMBER>.diff /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.files \
+      /tmp/pr-<NUMBER>.files.tmp /tmp/pr-<NUMBER>.range-files \
+      /tmp/pr-<NUMBER>.own-added /tmp/pr-<NUMBER>.inc-added \
       /tmp/pr-<NUMBER>.review-charter.md /tmp/pr-<NUMBER>.review-context.md \
       /tmp/pr-<NUMBER>-incremental.diff /tmp/pr-<NUMBER>.evidence /tmp/repro-<NUMBER>.cmd \
       /tmp/pr-<NUMBER>.session.json
@@ -217,7 +219,7 @@ To **run** anything against the checkout (installs/builds/tests/repro):
 
 Paths and output are root-relative and identical regardless of where the checkout physically lives. That is deliberate: agents cannot tell an isolated checkout from a local one, so there is no host-path fallback for them to take when it _is_ isolated.
 
-The **diff** — the primary review surface — is fetched host-side (it's public PR info) and written to a host file the agents can `Read` directly:
+The **diff** — the primary review surface — and the changed-file list are fetched host-side (both are public PR info) and written to host files the agents can `Read` directly:
 
 ```bash
 gh pr diff <NUMBER> --repo nrwl/nx > /tmp/pr-<NUMBER>.diff.tmp \
@@ -225,9 +227,64 @@ gh pr diff <NUMBER> --repo nrwl/nx > /tmp/pr-<NUMBER>.diff.tmp \
 test -s /tmp/pr-<NUMBER>.diff.tmp \
   || { echo "FATAL: empty diff for a PR reporting <CHANGED_FILES> changed files"; exit 1; }
 mv /tmp/pr-<NUMBER>.diff.tmp /tmp/pr-<NUMBER>.diff
+
+gh pr diff <NUMBER> --repo nrwl/nx --name-only > /tmp/pr-<NUMBER>.files.tmp \
+  || { echo "FATAL: gh pr diff --name-only failed"; exit 1; }
+test -s /tmp/pr-<NUMBER>.files.tmp || { echo "FATAL: empty changed-file list"; exit 1; }
+mv /tmp/pr-<NUMBER>.files.tmp /tmp/pr-<NUMBER>.files
 ```
 
-Write-then-verify-then-move, rather than redirecting straight onto the final path. A bare `>` truncates the target _before_ `gh` runs, so a token expiry or a transient 5xx leaves a 0-byte file that every agent is then told is "the complete PR diff" — and because the changed-file list is fetched by a _separate_ `gh` call, agents can end up with a populated file list and an empty diff, which is exactly the shape the Step 5 verification is least able to catch. Cross-check `wc -l < /tmp/pr-<NUMBER>.files` against the `changedFiles` count already parsed in Step 2 before dispatching anyone.
+Write-then-verify-then-move on both, rather than redirecting straight onto the final path. A bare `>` truncates the target _before_ `gh` runs, so a token expiry or a transient 5xx leaves a 0-byte file that every agent is then told is "the complete PR diff" — and because the two are fetched by _separate_ `gh` calls, agents can end up with a populated file list and an empty diff, which is exactly the shape the Step 5 verification is least able to catch. Cross-check both against the `changedFiles` count already parsed in Step 2 before dispatching anyone:
+
+```bash
+wc -l < /tmp/pr-<NUMBER>.files                # must equal changedFiles — abort if not
+grep -c '^diff --git' /tmp/pr-<NUMBER>.diff   # should equal changedFiles
+```
+
+The file-list count is exact, so treat a mismatch there as fatal. The diff's hunk-header count can legitimately run _over_ on a PR that adds a patch or fixture file whose own contents contain `diff --git` lines — so investigate a discrepancy, and only abort once you have looked. Under is never legitimate.
+
+Fetch the file list here, next to the diff, even though its first consumer is Step 5 — Step 4's incremental diff needs it to scope a range, and the two must describe the same PR.
+
+#### How the PR diff is computed — merge-base, never a two-dot range
+
+`gh pr diff` returns exactly what GitHub's "Files changed" tab shows: the **three-dot** diff from
+`merge-base(<base>, <head>)` to `<head>`. That is the change the author is asking to merge, and it is
+the only range a review may run on. One call, cannot drift — always prefer it to reconstructing the
+range yourself.
+
+Know the failure mode, because it does not look like one:
+
+| range                  | what it computes                             | on a PR                                                                                          |
+| ---------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `git diff BASE...HEAD` | three-dot: `merge-base(BASE, HEAD)` → `HEAD` | correct — the PR's own change                                                                    |
+| `git diff BASE..HEAD`  | two-dot: tree at `BASE` → tree at `HEAD`     | **wrong** — also carries every commit merged into `BASE` since the branch forked, shown inverted |
+| `git diff BASE HEAD`   | identical to two-dot                         | wrong, the same way                                                                              |
+
+The two-dot form does not error. It returns a larger, entirely plausible diff in which files the
+author never touched appear as _reverted_ — and an agent that quotes one of those hunks passes its
+EVIDENCE check while reviewing somebody else's merged work.
+
+Inside the sandbox **neither** form is available: both checkouts are `--depth 1`, so there is no
+common ancestor. `BASE...HEAD` fails loudly (`fatal: no merge base`); `BASE..HEAD` succeeds and is
+wrong. That is _why_ the diff is fetched host-side. Never "fix" a container-side no-merge-base error
+by dropping a dot.
+
+If you ever need the range outside a PR context (a `--local` sandbox, a branch with no PR), pin the
+merge base explicitly and make a shallow clone fail loudly instead of silently answering with the
+wrong left-hand side:
+
+```bash
+git -C <REPO> fetch -q origin <BASE_BRANCH>
+MERGE_BASE=$(git -C <REPO> merge-base origin/<BASE_BRANCH> <HEAD_SHA>) \
+  || { echo "FATAL: no merge base — shallow clone; git fetch --unshallow first"; exit 1; }
+git -C <REPO> diff "$MERGE_BASE" <HEAD_SHA>
+git -C <REPO> diff --name-only "$MERGE_BASE" <HEAD_SHA>
+```
+
+Naming `$MERGE_BASE` rather than writing `A...B` is deliberate: the same commit is the correct
+left-hand side for the file list, for `git log`, and for every base-side read, so computing it once
+keeps them consistent. `origin/<BASE_BRANCH>` — not a local branch of the same name, which is
+whatever you last fetched.
 
 **Hard rule for every agent:** never execute PR code on the host. Any command that _runs_ the checkout — `npm`/`pnpm install`, `nx …`, a build, a test, the linked-issue reproduction — goes through `.claude/tools/sandbox exec "$SANDBOX" -- bash -lc '…'`, never bare on the host.
 
@@ -244,11 +301,14 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
 
    What you pass to the **agents** is a different, much smaller artifact — see step 3. Keep the two straight: full history in your head, distilled carry-forward on disk.
 
-2. Compute the incremental diff inside the container, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
+2. Compute the incremental diff inside the container, **scoped to the PR's own files**, writing it to a host file the agents can `Read`. `$PRIOR_SHA` isn't in the shallow checkout, so fetch it first — and branch on whether that fetch succeeded:
 
    ```bash
    if .claude/tools/sandbox exec "$SANDBOX" -- 'git fetch -q --depth 1 origin '"$PRIOR_SHA"; then
-     .claude/tools/sandbox exec "$SANDBOX" -- 'git diff '"$PRIOR_SHA"'..'"<HEAD_REF_OID>" \
+     # Pathspec from the PR's own changed-file list (Step 3), one quoted path per line.
+     PATHSPEC=$(sed 's/.*/"&"/' /tmp/pr-<NUMBER>.files | tr '\n' ' ')
+     .claude/tools/sandbox exec "$SANDBOX" \
+       -- 'git diff '"$PRIOR_SHA"'..'"<HEAD_REF_OID>"' -- '"$PATHSPEC" \
        > /tmp/pr-<NUMBER>-incremental.diff
    else
      echo "PRIOR_SHA <PRIOR_SHA> no longer on the remote — force-pushed; reviewing fresh"
@@ -256,6 +316,49 @@ If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, t
    ```
 
    A failed fetch means the author force-pushed and orphaned `$PRIOR_SHA`. Treat that as a **fresh review**: set `HAS_PRIOR_CONTEXT=false`, skip the incremental diff, skip step 3 below entirely, and note the force-push in the draft. Do not fall through with an empty incremental diff — an empty diff reads as "nothing changed since the last review" when in fact the entire branch was rewritten.
+
+   **The trailing `-- <paths>` is load-bearing; never drop it.** Two-dot is the right operator _here_ — both SHAs are heads of the same PR branch and the question is "what changed since I last looked", for which the merge base of the two is useless — but it compares tree states, so it assumes the branch **grew by appending commits**. When the author **rebased** onto a newer master instead, every commit that landed on master between the old and new base enters the range. Measured on PR #36477 attempt 4: the unscoped range was **24,236 lines across ~190 files** for a PR that touches **6**; scoped to the PR's own paths, **417 lines**. Note this is the mirror image of the Step 3 rule — there, a missing dot pulls in unrelated work; here, a missing pathspec does. The two ranges answer different questions and neither substitutes for the other.
+
+   The cost is the smaller half of it. This file becomes the agents' `<EVIDENCE_FILE>` in Step 5, so an unscoped one lets an agent quote a line from an unrelated merged PR and still verify — which defeats the proof-of-work check entirely.
+
+   **Detect the rebase and say so**, because the scoping is what hides it:
+
+   ```bash
+   .claude/tools/sandbox exec "$SANDBOX" \
+     -- 'git diff --name-only '"$PRIOR_SHA"'..'"<HEAD_REF_OID>" > /tmp/pr-<NUMBER>.range-files
+   grep -vxF -f /tmp/pr-<NUMBER>.files /tmp/pr-<NUMBER>.range-files \
+     || echo "range confined to the PR's files — branch was extended, not rebased"
+   ```
+
+   The `|| echo` is not decoration: `grep -v` exits **1** when it matches nothing, so the clean case
+   is silence plus a non-zero status, and silence alone is indistinguishable from a command that never
+   ran. Make the clean case say so.
+
+   Any filename printed is a file in the range that the PR does not touch — proof the branch was rebased (or merged with master) rather than merely extended. Say so in the draft: it explains why the delta looks larger than the new commits suggest, and it is a real signal about the branch's state.
+
+   **Then run the leak check below. Scoping by path is necessary and not sufficient**, and this is the failure that survives it: for a file the PR touches _and_ master also changed in the same window, the delta interleaves both authors' work with nothing marking whose is whose. Observed on PR #36370 attempt 6 — `astro-docs/…/nx-daemon.mdoc` appeared in the scoped delta as a whole-page rewrite (new headings, restructured voice) that was **entirely master's**, already present at the base ref; the PR's own change was two hunks in one section. Two of nine agents reported the resulting dangling heading anchors as this PR's regression. They are broken on master too.
+
+   Compare the delta's **added lines** against the PR's own merge-base diff — anything in the first and not the second is master's:
+
+   ```bash
+   grep '^+' /tmp/pr-<NUMBER>.diff              > /tmp/pr-<NUMBER>.own-added
+   grep '^+' /tmp/pr-<NUMBER>-incremental.diff  > /tmp/pr-<NUMBER>.inc-added
+   grep -vxF -f /tmp/pr-<NUMBER>.own-added /tmp/pr-<NUMBER>.inc-added \
+     || echo "delta is entirely the author's work — no master leakage"
+   wc -l < /tmp/pr-<NUMBER>.inc-added   # denominator: how much of the delta that leakage is
+   ```
+
+   Prefer this to eyeballing hunk counts. A file can show one hunk in each diff and still be almost
+   entirely master's — the giveaway is hunk _size_ (`@@ -1,40 +1,40 @@` in the delta against a small
+   `@@ -2,7 +2,7 @@` in the PR's own diff), and comparing line sets settles it exactly instead of
+   inviting a judgement call. On the reconstruction of #36370's shape, hunk counts read 1-vs-1 (clean)
+   while the line-set check correctly reported 39 of 41 added lines as master's.
+
+   Act on the ratio:
+   - **Little or no leakage** → proceed; the incremental diff is a sound `<EVIDENCE_FILE>`.
+   - **Substantial leakage** → do not hand agents the delta as their review target. Set `HAS_PRIOR_CONTEXT=true` for the carry-forward but select `/tmp/pr-<NUMBER>.diff` as `<EVIDENCE_FILE>` in Step 5, and say in the charter that the delta was discarded as unattributable. A wrong review surface costs more than a re-read of the full diff.
+   - **Either way**, tell agents the rule in their dispatch: a line is the author's only if it appears as an added line in `/tmp/pr-<NUMBER>.diff`. `grep -n "<the added line>" /tmp/pr-<NUMBER>.diff` settles authorship for any single finding in one call.
+   - If agents are already mid-flight when you notice, `SendMessage` the affected ones a scope correction rather than letting the round finish — they can re-scope and withdraw the bad findings.
 
    Set `HAS_PRIOR_CONTEXT=true` only on the success path. **Step 5 gates on that variable, never on the context file existing** — file existence is not a safe signal, because a prior review of the same PR leaves one behind and it would silently narrow this run's scope to a stale delta. (Step 3 also clears these paths up front, so the two defenses are independent.)
 
@@ -764,19 +867,17 @@ Also resolve the `<IF …>` / `<OMIT …>` / `<For each …>` placeholders in th
 
 The `pr-review-toolkit` plugin is still installed, and it ships both a `/pr-review-toolkit:review-pr` command and its own un-prefixed `code-reviewer` / `silent-failure-hunter` / `comment-analyzer` / `type-design-analyzer` / `pr-test-analyzer` agents — the ancestors of the `nx-*` set. Neither is what you want here: the plugin's agents review the host working tree and know nothing about the sandbox, so they are precisely the empty-scope case above. Dispatch the `nx-*` agents yourself, with the scope passed explicitly. **Check the `nx-` prefix on every `subagent_type`** — an un-prefixed name silently resolves to the plugin's agent.
 
-Get the changed-file list first:
+The changed-file list was fetched alongside the diff in Step 3. Confirm it is there and still agrees
+with the PR before dispatching anyone:
 
 ```bash
-gh pr diff <NUMBER> --repo nrwl/nx --name-only > /tmp/pr-<NUMBER>.files.tmp \
-  || { echo "FATAL: gh pr diff --name-only failed"; exit 1; }
-test -s /tmp/pr-<NUMBER>.files.tmp || { echo "FATAL: empty changed-file list"; exit 1; }
-mv /tmp/pr-<NUMBER>.files.tmp /tmp/pr-<NUMBER>.files
+test -s /tmp/pr-<NUMBER>.files || { echo "FATAL: no changed-file list — re-run the Step 3 fetch"; exit 1; }
+wc -l < /tmp/pr-<NUMBER>.files   # must equal the changedFiles count parsed in Step 2
 ```
 
-Same write-verify-move as the diff, and for the mirror-image reason: an empty `.files` with a
-populated diff hands every agent a `CHANGED FILES:` heading followed by nothing. Abort if
-`wc -l < /tmp/pr-<NUMBER>.files` does not equal the `changedFiles` count parsed in Step 2 — that
-mismatch means one of the two `gh` calls silently returned a partial answer.
+An empty or partial `.files` alongside a populated diff hands every agent a `CHANGED FILES:` heading
+followed by nothing, and a count mismatch means one of the two `gh` calls silently returned a partial
+answer. Abort on either — both are cheaper to catch here than to recognize in eight agents' reports.
 
 **Pass the file list by path, not by value.** Agents have `Read` and the list is a host file, so
 pasting its contents into every prompt buys nothing and costs the whole list once per agent. The one
@@ -789,8 +890,12 @@ The proof-of-work line number (charter: "Proof of work") is checked against **on
 dispatch as `<EVIDENCE_FILE>`:
 
 - **First review**, or no usable incremental diff → `/tmp/pr-<NUMBER>.diff`.
-- **Re-review** where Step 4 set `HAS_PRIOR_CONTEXT=true` **and**
-  `wc -l < /tmp/pr-<NUMBER>-incremental.diff` is at least 40 → `/tmp/pr-<NUMBER>-incremental.diff`.
+- **Re-review** where Step 4 set `HAS_PRIOR_CONTEXT=true`, `wc -l < /tmp/pr-<NUMBER>-incremental.diff`
+  is at least 40, **and** Step 4's leak check found little or no master leakage →
+  `/tmp/pr-<NUMBER>-incremental.diff`.
+- **Re-review whose delta failed the leak check** → `/tmp/pr-<NUMBER>.diff`, and say in the charter
+  that the delta was discarded as unattributable. An evidence surface that mixes two authors' work is
+  worse than one that is merely larger.
 
 Pointing the proof at the incremental diff on a re-review does two things at once: it proves the
 agent opened the surface that actually matters this round, and it stops agents grazing the full diff
@@ -821,6 +926,11 @@ find yourself with an empty file list, you have the wrong scope — re-read the 
 - FULL DIFF (reference only): /tmp/pr-<NUMBER>.diff — the whole PR against its base. Consult it to
   understand context around a delta hunk; do NOT review it end to end. Prior rounds already reviewed
   it, and this round's job is the delta.
+- AUTHORSHIP RULE: the delta is a commit range, so on a rebased branch it can also contain code that
+  landed on the base branch — not this author's. Before reporting any line as this PR's work, confirm
+  it appears as an added line in the FULL DIFF: `grep -n "<the line>" /tmp/pr-<NUMBER>.diff`. No match
+  means the base branch introduced it; do not report it, and say so if it changes a conclusion you
+  would otherwise have drawn.
 
 Read /tmp/pr-<NUMBER>.review-charter.md (host file) FIRST. It carries the sandbox reading protocol,
 the pre-installed analysis toolchain, any measurements already established for you, the severity
