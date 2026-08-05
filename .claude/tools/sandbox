@@ -137,30 +137,36 @@ function pickBackend() {
 }
 
 /**
- * Decide whether a sandbox may execute code. Fail closed: on Linux without
- * gVisor we refuse rather than silently degrading to runc, and `--local` never
- * executes at all because it has no isolation boundary whatsoever.
+ * Decide what a sandbox may execute. Tiers are ordered 'none' < 'screened' <
+ * 'full'. Fail closed on isolation: on Linux without gVisor we refuse rather
+ * than silently degrading to runc.
  */
+const EXEC_TIERS = ['none', 'screened', 'full'];
+
+function minTier(a, b) {
+  return EXEC_TIERS[Math.min(EXEC_TIERS.indexOf(a), EXEC_TIERS.indexOf(b))];
+}
+
 function isolationFor(backend) {
   if (!backend)
     return {
       isolation: 'none',
-      canExec: false,
+      exec: 'none',
       why: 'no container backend is running',
     };
   if (os.platform() === 'linux') {
     return backend.runsc
-      ? { isolation: 'runsc', canExec: true, runtimeArgs: ['--runtime=runsc'] }
+      ? { isolation: 'runsc', exec: 'full', runtimeArgs: ['--runtime=runsc'] }
       : {
           isolation: 'none',
-          canExec: false,
+          exec: 'none',
           why: 'Linux without gVisor: `runsc` is not registered. Refusing to run untrusted code under plain runc. Run the setup-review-sandbox skill.',
         };
   }
   // macOS/other: the VM is the boundary. Docker Desktop, Colima, Lima and
   // OrbStack all present the same CLI and the same boundary — which one is in
   // use is deliberately not something callers can observe.
-  return { isolation: 'vm', canExec: true, runtimeArgs: [] };
+  return { isolation: 'vm', exec: 'full', runtimeArgs: [] };
 }
 
 // ---------------------------------------------------------------- verbs
@@ -173,6 +179,7 @@ function cmdStart(argv) {
     ref: 'string',
     base: 'string',
     json: 'boolean',
+    'allow-exec': 'boolean',
   });
 
   const id = newId();
@@ -189,7 +196,13 @@ function cmdStart(argv) {
       root,
       baseRef: opts.base || null,
       isolation: 'none',
-      canExec: false,
+      // A local sandbox holds the user's own trusted checkout, so exec is
+      // useful rather than dangerous. What must not happen is a review agent
+      // mutating the branch it was asked to review, which is what `screened`
+      // catches. `--allow-exec` is for a caller that deliberately wants the
+      // project's own build/test commands — no screen can contain those, since
+      // `node -e` is arbitrary code by construction.
+      exec: opts['allow-exec'] ? 'full' : 'screened',
       createdAt: nowIso(),
     };
   } else {
@@ -233,7 +246,7 @@ function cmdStart(argv) {
       base: CONTAINER_BASE,
       baseRef: opts.base ? `refs/remotes/origin/${opts.base}` : null,
       isolation: iso.isolation,
-      canExec: iso.canExec,
+      exec: iso.exec,
       createdAt: nowIso(),
     };
 
@@ -274,12 +287,17 @@ function cmdStart(argv) {
   }
   process.stdout.write(
     `${id}\n\n` +
-      `mode=${sb.mode} isolation=${sb.isolation} exec=${sb.canExec ? 'allowed' : 'REFUSED'}\n` +
+      `mode=${sb.mode} isolation=${sb.isolation} exec=${sb.exec}\n` +
       `Read source ONLY through this CLI:\n` +
       `  .claude/tools/sandbox read ${id} <path> [--range a,b] [--ref <sha>]\n` +
       `  .claude/tools/sandbox grep ${id} <pattern> [subdir]\n` +
       `  .claude/tools/sandbox find ${id} <glob>\n` +
-      (sb.canExec ? `  .claude/tools/sandbox exec ${id} -- <cmd>\n` : '') +
+      (sb.exec !== 'none'
+        ? `  .claude/tools/sandbox exec ${id} -- <cmd>` +
+          (sb.exec === 'screened' ? '   (obvious writes are rejected)' : '') +
+          '\n'
+        : '') +
+      `  .claude/tools/sandbox view ${id}          # screened id for read-only agents\n` +
       `  .claude/tools/sandbox stop ${id}\n`
   );
 }
@@ -363,21 +381,259 @@ function cmdFind(argv) {
   process.exit(r.status || 0);
 }
 
+// ---------------------------------------------------------------- exec screen
+
+/**
+ * The screen rejects commands that OBVIOUSLY write, and nothing else.
+ *
+ * It is a guardrail, not a security boundary — deliberately. `screened` is used
+ * where the code is trusted (your own checkout, or a PR you chose to review),
+ * so the hazard is not malicious code, it is a review agent mutating the thing
+ * it was asked to review: `git checkout`, a formatter, `pnpm install`. Anyone
+ * intent on writing can reach around this in a dozen ways and that is fine.
+ *
+ * Because the code is trusted, this denies rather than allowlists: an allowlist
+ * would reject every unanticipated-but-harmless command, and each rejection
+ * costs a round-trip. The rejection message therefore names the offending
+ * command and the read-only way to get the same answer, so the caller
+ * self-corrects instead of guessing.
+ */
+const GIT_WRITE = new Set([
+  'checkout',
+  'switch',
+  'restore',
+  'reset',
+  'revert',
+  'merge',
+  'rebase',
+  'cherry-pick',
+  'commit',
+  'add',
+  'rm',
+  'mv',
+  'stash',
+  'apply',
+  'am',
+  'clean',
+  'gc',
+  'push',
+  'pull',
+  'fetch',
+  'remote',
+  'update-ref',
+  'symbolic-ref',
+  'filter-branch',
+  'sparse-checkout',
+  'init',
+  'clone',
+  'worktree',
+  'submodule',
+  'repack',
+  'prune',
+  'notes',
+  'replace',
+]);
+
+const FS_WRITE = new Set([
+  'rm',
+  'rmdir',
+  'mv',
+  'cp',
+  'install',
+  'dd',
+  'truncate',
+  'tee',
+  'chmod',
+  'chown',
+  'chgrp',
+  'ln',
+  'mkdir',
+  'touch',
+  'shred',
+  'unlink',
+  'vim',
+  'vi',
+  'nano',
+  'ed',
+  'emacs',
+]);
+
+const PKG_MANAGERS = new Set([
+  'npm',
+  'pnpm',
+  'yarn',
+  'bun',
+  'cargo',
+  'pip',
+  'pip3',
+  'gem',
+]);
+const PKG_WRITE = new Set([
+  'install',
+  'i',
+  'add',
+  'remove',
+  'rm',
+  'uninstall',
+  'update',
+  'up',
+  'link',
+  'unlink',
+  'ci',
+  'dedupe',
+  'prune',
+]);
+
+/** git flags that swallow the following token, so it isn't the subcommand. */
+const GIT_FLAGS_WITH_VALUE = new Set([
+  '-c',
+  '-C',
+  '--git-dir',
+  '--work-tree',
+  '--exec-path',
+]);
+
+/** Split a shell script into the segments a command could hide in. */
+function shellSegments(script) {
+  return script.split(/\|\||&&|[;\n|]/);
+}
+
+function gitSubcommand(tokens) {
+  for (let i = 1; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (GIT_FLAGS_WITH_VALUE.has(t)) {
+      i++;
+      continue;
+    }
+    if (t.startsWith('-')) continue;
+    return { sub: t, rest: tokens.slice(i + 1) };
+  }
+  return { sub: null, rest: [] };
+}
+
+/** Reject a dual-purpose git verb only when its arguments make it a write. */
+function screenDualGit(sub, rest) {
+  const flags = rest.filter((t) => t.startsWith('-'));
+  const positional = rest.filter((t) => !t.startsWith('-'));
+  if (sub === 'config') {
+    const reading = flags.some((f) =>
+      ['--get', '--get-all', '--get-regexp', '--list', '-l'].includes(f)
+    );
+    return reading ? null : '`git config` without --get/--list writes config';
+  }
+  // branch/tag: a positional name means create, and the delete/move/copy flags
+  // are writes however they are spelled.
+  const writeFlag = flags.some((f) =>
+    /^(-[dDmMcC]|--delete|--move|--copy|--force|-f)$/.test(f)
+  );
+  if (writeFlag) return `\`git ${sub}\` with ${flags.join(' ')} writes refs`;
+  if (positional.length) return `\`git ${sub} ${positional[0]}\` creates a ref`;
+  return null;
+}
+
+/**
+ * @returns {{cmd: string, why: string, hint?: string} | null}
+ */
+function screenSegment(seg) {
+  const raw = seg.trim();
+  if (!raw) return null;
+
+  // Fd duplications (`2>&1`, `>&2`) redirect, they don't create files.
+  if (/>>?/.test(raw.replace(/\d*>&\d*/g, ''))) {
+    return {
+      cmd: raw.split(/\s+/)[0],
+      why: 'output redirection (`>`/`>>`) writes a file',
+      hint: 'Let the command print to stdout — its output is returned to you.',
+    };
+  }
+
+  let tokens = raw.split(/\s+/).filter(Boolean);
+  // Drop `FOO=bar` env prefixes so the real head command is screened.
+  while (tokens.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[0]))
+    tokens.shift();
+  if (!tokens.length) return null;
+
+  const head = tokens[0].replace(/^.*\//, '');
+
+  if (head === 'git') {
+    const { sub, rest } = gitSubcommand(tokens);
+    if (!sub) return null;
+    if (GIT_WRITE.has(sub)) {
+      return {
+        cmd: `git ${sub}`,
+        why: 'it writes to the worktree, index or refs',
+        hint: 'To see a path at another revision: sandbox read <id> <path> --ref <sha>',
+      };
+    }
+    if (['branch', 'tag', 'config'].includes(sub)) {
+      const why = screenDualGit(sub, rest);
+      return why ? { cmd: `git ${sub}`, why } : null;
+    }
+    return null;
+  }
+
+  if (FS_WRITE.has(head)) {
+    return { cmd: head, why: 'it creates, moves, deletes or edits files' };
+  }
+
+  if (
+    (head === 'sed' || head === 'perl') &&
+    tokens.some((t) => /^-[a-zA-Z]*i/.test(t))
+  ) {
+    return { cmd: `${head} -i`, why: 'in-place editing rewrites the file' };
+  }
+
+  if (PKG_MANAGERS.has(head)) {
+    const sub = tokens.slice(1).find((t) => !t.startsWith('-'));
+    if (sub && PKG_WRITE.has(sub)) {
+      return {
+        cmd: `${head} ${sub}`,
+        why: 'it rewrites lockfiles and dependencies',
+        hint: 'If this review genuinely needs a real install, start the sandbox with --allow-exec.',
+      };
+    }
+  }
+
+  return null;
+}
+
+function screenScript(script) {
+  for (const seg of shellSegments(script)) {
+    const bad = screenSegment(seg);
+    if (bad) return bad;
+  }
+  return null;
+}
+
 function cmdExec(argv) {
   const sep = argv.indexOf('--');
   const id = argv[0];
   if (!id || sep === -1) die('usage: sandbox exec <id> [--base] -- <cmd...>');
   const sb = getSandbox(id);
   const opts = parseFlags(argv.slice(1, sep), { base: 'boolean' });
+  const script = argv.slice(sep + 1).join(' ');
 
-  if (!sb.canExec) {
+  if (sb.exec === 'none') {
     die(
       `exec refused for ${id}: ${
         sb.mode === 'local'
-          ? 'this is a --local sandbox. There is no isolation boundary, so it may be read but never executed.'
+          ? 'this local sandbox was created without exec.'
           : 'no usable isolation runtime.'
       }`
     );
+  }
+
+  if (sb.exec === 'screened') {
+    const bad = screenScript(script);
+    if (bad) {
+      die(
+        `exec refused for ${id} — \`${bad.cmd}\`: ${bad.why}.\n\n` +
+          `This sandbox is exec=screened: obvious writes are rejected so a review\n` +
+          `cannot mutate the code it is reviewing. It is a guardrail, not a\n` +
+          `security boundary. Anything that does not write is allowed.\n` +
+          (bad.hint ? `\n${bad.hint}\n` : '')
+      );
+    }
   }
   // `--base` runs against the base worktree instead of HEAD — the baseline half
   // of a reproduction. Callers name the side they want rather than cd-ing to a
@@ -385,11 +641,51 @@ function cmdExec(argv) {
   if (opts.base && !sb.base) {
     die(`sandbox ${id} has no base worktree (start it with --base <ref>)`);
   }
-  const r = execIn(sb, argv.slice(sep + 1).join(' '), {
+  const r = execIn(sb, script, {
     stdio: 'inherit',
     dir: opts.base ? sb.base : sb.root,
   });
   process.exit(r.status === null ? 1 : r.status);
+}
+
+/**
+ * Mint a second id onto the same checkout with a lower exec tier.
+ *
+ * This is what makes the read-only constraint structural instead of advisory.
+ * Agent frontmatter grants bare tool names (`Bash`), never per-verb patterns, so
+ * "this agent may read but not run things" cannot be expressed there. Handing an
+ * analyst a screened view and the reproduce-verifier the full id expresses it in
+ * the one place that can enforce it — and in container mode it genuinely binds,
+ * because the CLI is the analyst's only route to code that isn't on the host.
+ */
+function cmdView(argv) {
+  const id = argv[0];
+  if (!id) die('usage: sandbox view <id> [--exec screened|none] [--json]');
+  const opts = parseFlags(argv.slice(1), { exec: 'string', json: 'boolean' });
+  const parent = getSandbox(id);
+  const want = opts.exec || 'screened';
+  if (!EXEC_TIERS.includes(want))
+    die(`--exec must be one of ${EXEC_TIERS.join('|')}`);
+
+  const viewId = newId();
+  // A view can only ever narrow. Escalating through one would make the tier
+  // meaningless, since anyone holding a screened id can mint views from it.
+  const view = {
+    ...parent,
+    id: viewId,
+    viewOf: id,
+    exec: minTier(want, parent.exec),
+    createdAt: nowIso(),
+  };
+  const state = readState();
+  state.sandboxes[viewId] = view;
+  writeState(state);
+
+  if (opts.json)
+    return process.stdout.write(JSON.stringify(view, null, 2) + '\n');
+  process.stdout.write(
+    `${viewId}\n\nview of ${id} · mode=${view.mode} exec=${view.exec}\n`
+  );
 }
 
 function cmdStop(argv) {
@@ -398,12 +694,25 @@ function cmdStop(argv) {
   const state = readState();
   const sb = state.sandboxes[id];
   if (!sb) die(`unknown sandbox '${id}'`);
-  if (sb.mode === 'container') {
+  // Stopping a view drops the row only — the container belongs to its parent.
+  if (sb.mode === 'container' && !sb.viewOf) {
     run(sb.backend, ['rm', '-f', sb.container], { stdio: 'ignore' });
   }
   delete state.sandboxes[id];
+  // A view outliving the checkout it points at would hand out a dangling id.
+  let views = 0;
+  if (!sb.viewOf) {
+    for (const [vid, v] of Object.entries(state.sandboxes)) {
+      if (v.viewOf === id) {
+        delete state.sandboxes[vid];
+        views++;
+      }
+    }
+  }
   writeState(state);
-  process.stdout.write(`stopped ${id}\n`);
+  process.stdout.write(
+    `stopped ${id}${views ? ` (and ${views} view${views === 1 ? '' : 's'})` : ''}\n`
+  );
 }
 
 function cmdList() {
@@ -414,6 +723,8 @@ function cmdList() {
     const s = sandboxes[id];
     process.stdout.write(
       `${id}  ${s.mode.padEnd(9)} ${String(s.isolation).padEnd(6)} ` +
+        `exec=${String(s.exec).padEnd(8)} ` +
+        `${s.viewOf ? `view-of=${s.viewOf} ` : ''}` +
         `${s.mode === 'local' ? s.root : s.container}  ${s.createdAt}\n`
     );
   }
@@ -477,7 +788,7 @@ function cmdDoctor(argv = []) {
     const iso = isolationFor(p);
     process.stdout.write(
       `${bin}: up · runsc=${p.runsc ? 'yes' : 'no'} · rootless=${p.rootless ? 'yes' : 'no'}\n` +
-        `  isolation=${iso.isolation} exec=${iso.canExec ? 'allowed' : 'REFUSED'}` +
+        `  isolation=${iso.isolation} exec=${iso.exec}` +
         (iso.why ? ` (${iso.why})` : '') +
         '\n'
     );
@@ -530,13 +841,18 @@ function execRaw(sb, argv, opts = {}) {
  * does, which is the whole point of having a boundary.
  */
 function execIn(sb, script, opts = {}) {
+  const dir = opts.dir || sb.root;
+  if (sb.mode === 'local') {
+    // No PATH surgery here: a local sandbox runs in the user's own shell
+    // environment, which is the one these commands are meant to run in.
+    return run('bash', ['-lc', `cd ${shq(dir)}\n${script}`], opts);
+  }
   // Both the PATH export and the cd are required: a bare login shell lands in
   // the image's default workdir with no mise shims, so `nx`/`pnpm` are not
   // found and every run fails identically — which a caller would misread as the
   // change being broken rather than the shell being wrong.
   const mise =
     'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"';
-  const dir = opts.dir || sb.root;
   return run(
     sb.backend,
     [
@@ -589,13 +905,18 @@ function parseFlags(argv, spec) {
 
 const USAGE = `sandbox — uniform access to a checkout, isolated or local
 
-  start  --local <path>                        register a host dir (read-only, never exec)
+  start  --local <path> [--allow-exec]         register a host dir; exec=screened unless --allow-exec
   start  --image <img> [--checkout <url> --ref <r> [--base <r>]]
   read   <id> <path> [--range a,b] [--ref <sha>] [-n]
   grep   <id> <pattern> [subdir]
   find   <id> <glob> [subdir]
-  exec   <id> [--base] -- <cmd...>             refused unless isolation is real; --base runs base-side
+  exec   <id> [--base] -- <cmd...>             --base runs base-side
+  view   <id> [--exec screened|none]           second id onto the same checkout, narrowed
   stop   <id> | list | prune | doctor [--image <img>]
+
+exec tiers: none < screened < full. 'screened' rejects commands that obviously
+write (git checkout, rm, pnpm install, > redirects) so a review cannot mutate
+the code under review. It is a guardrail, not a security boundary.
 `;
 
 const [, , verb, ...rest] = process.argv;
@@ -605,6 +926,7 @@ const verbs = {
   grep: cmdGrep,
   find: cmdFind,
   exec: cmdExec,
+  view: cmdView,
   stop: cmdStop,
   list: cmdList,
   prune: cmdPrune,
