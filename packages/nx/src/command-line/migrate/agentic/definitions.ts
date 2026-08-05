@@ -65,7 +65,7 @@ function claudeCodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
     // `--allowedTools` is variadic (space/comma separated): a positional
     // placed right after its value gets swallowed as another rule. The rules
     // must stay in one comma-joined element with a non-variadic flag
-    // (`--system-prompt-file`) between them and the user prompt.
+    // (`--system-prompt-file`) between them and the instructions pointer.
     args: [
       ...(allowedTools ? ['--allowedTools', allowedTools] : []),
       '--system-prompt-file',
@@ -119,9 +119,12 @@ function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
  *
  * `JSON.stringify` produces the encoding: every escape it emits (`\"`, `\\`,
  * `\n`, `\r`, `\t`, `\b`, `\f`, `\uXXXX`) is also a TOML basic-string escape,
- * and the one JSON escape TOML lacks (`\/`) is never emitted. Its single-line
- * output matters too: a TOML multi-line string would put raw newlines back on
- * the command line, which a `.cmd` shim cannot carry.
+ * and the one JSON escape TOML lacks (`\/`) is never emitted. That covers what
+ * JSON escapes, not what it leaves raw, and the characters it leaves raw
+ * include control characters TOML rejects in a basic string. Catching those is
+ * what the round-trip is for. Its single-line output matters too: a TOML
+ * multi-line string would put raw newlines back on the command line, which a
+ * `.cmd` shim cannot carry.
  */
 function encodeTomlString(value: string): string {
   const encoded = JSON.stringify(value);
@@ -208,7 +211,10 @@ function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
  *
  * The substitution ends at the first `}`, so a path containing one would name
  * a file that does not exist. That case inlines the prompt instead, which is
- * what shipped before and stays well inside the variable limit.
+ * what shipped before. Only the system prompt is ever inlined, never the
+ * instructions, so the value is bounded by the prompt's own size rather than by
+ * the generator's output; `windows-command-line.spec.ts` holds it against the
+ * 8191-character limit, which the runner's own budget check cannot see.
  */
 function opencodeSystemPrompt(ctx: InvocationContext): string {
   // Forward slashes so the value opencode substitutes on carries no
