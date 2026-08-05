@@ -53,7 +53,7 @@ Oxc also ships extensions for Zed, JetBrains IDEs, and Neovim. Any editor with L
 
 ## Config file format
 
-Oxlint walks up from each file to the nearest config, and that config replaces the root rather than merging into it. A project config needs an `extends` back to the root, or the root's `categories` and `rules` stop applying to that project. The generators add one to any project config they create; a config you wrote yourself keeps whatever `extends` it already has.
+Oxlint walks up from each file to the nearest config, and that config replaces the one above it rather than merging into it. A project config needs an `extends` pointing back at the config above it, or that config's `categories` and `rules` stop applying to the project. The generators write that `extends` whenever they create a project config, targeting the closest ancestor config rather than the workspace root. A config you wrote yourself keeps whatever `extends` it already has.
 
 Two configs in one directory is an error, not a precedence, so pick one format per directory. Prefer `.oxlintrc.json`:
 
