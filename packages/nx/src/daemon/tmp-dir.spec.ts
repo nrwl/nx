@@ -63,6 +63,14 @@ const HOME_SOCKET_ROOT = join(HOME_TMP_ROOT, 'sockets');
  * Stage a machine where neither default root can be used, which is the only way
  * to reach the workspace now that the home root sits between them.
  */
+/**
+ * The guards take an optional refusal sink as a second argument, which some
+ * call sites pass and others do not. These assert on the directory, which is
+ * what every one of these tests is actually about.
+ */
+const dirsPassedTo = (fn: unknown): string[] =>
+  (fn as jest.Mock).mock.calls.map((c) => c[0]);
+
 const denyEveryDefaultRoot = () => {
   (ensureSafeSharedRoot as jest.Mock).mockReturnValue(false);
   (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
@@ -149,10 +157,10 @@ describe('socket directories', () => {
 
     const dir = getSocketDir();
 
-    expect(ensureSafeSharedRoot).toHaveBeenCalledWith(SHARED_TMP_ROOT);
-    expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(1, USER_TMP_ROOT);
-    expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(2, SOCKET_ROOT);
-    expect(ensureOwnedPrivateDir).toHaveBeenNthCalledWith(3, dir);
+    expect(dirsPassedTo(ensureSafeSharedRoot)).toContain(SHARED_TMP_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)[0]).toEqual(USER_TMP_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)[1]).toEqual(SOCKET_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)[2]).toEqual(dir);
     expect(mkdirSync).not.toHaveBeenCalledWith(dir, {
       recursive: true,
       mode: 0o700,
@@ -168,8 +176,8 @@ describe('socket directories', () => {
     expect(getSocketDir()).toMatch(
       new RegExp(`^${escapeRegExp(HOME_SOCKET_ROOT)}/`)
     );
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).not.toContain(USER_TMP_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).not.toContain(SOCKET_ROOT);
   });
 
   it('moves to the home root when the per-user root is not ours', () => {
@@ -181,7 +189,7 @@ describe('socket directories', () => {
     expect(getSocketDir()).toMatch(
       new RegExp(`^${escapeRegExp(HOME_SOCKET_ROOT)}/`)
     );
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).not.toContain(SOCKET_ROOT);
   });
 
   it('reaches the workspace only once every default root is unusable', () => {
@@ -189,7 +197,7 @@ describe('socket directories', () => {
     denyEveryDefaultRoot();
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(HOME_TMP_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).toContain(HOME_TMP_ROOT);
   });
 
   it('warns rather than only logging verbosely when it reaches the workspace', () => {
@@ -345,6 +353,54 @@ describe('socket directories', () => {
     );
   });
 
+  // The warning tells the user to rerun with --verbose to see why the roots
+  // were rejected, and the guards are the only thing that knows. While they
+  // answered with a bare null, --verbose could only repeat the root names, so
+  // the message directed people at a command that could not help them.
+  it('records why each default root was rejected, which is what --verbose promises', () => {
+    setPlatform('linux');
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d, why) => {
+      why?.(`${d} belongs to another user (uid 1001)`);
+      return null;
+    });
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d, why) => {
+      if (d.startsWith(HOME_TMP_ROOT)) {
+        why?.(`${d} could not be tightened to 0700`);
+        return null;
+      }
+      return d;
+    });
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+
+    const cause = getSocketDirFallbackCause() as Error;
+    expect(cause.message).toContain('belongs to another user (uid 1001)');
+    expect(cause.message).toContain('could not be tightened to 0700');
+  });
+
+  // The generic message this replaces named ownership whatever the cause, so a
+  // mode problem, a planted symlink and a non-directory all read as "owned by
+  // someone else" — wrong in most of the cases it covered.
+  it("reports the guard's own reason for a refused NX_SOCKET_DIR", () => {
+    setPlatform('linux');
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d, why) => {
+      if (d === '/custom/socket/dir') {
+        why?.(`${d} is not a directory`);
+        return null;
+      }
+      return d;
+    });
+    process.env.NX_SOCKET_DIR = '/custom/socket/dir';
+
+    try {
+      expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+      expect(String(warn.mock.calls[0]?.[0])).toContain('is not a directory');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it('leaves the fallback cause unset when the first tier wins', () => {
     setPlatform('linux');
 
@@ -449,7 +505,7 @@ describe('socket directories', () => {
     expect(getSocketDir()).toMatch(
       new RegExp(`^${escapeRegExp(systemTmpDir)}`)
     );
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(HOME_TMP_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).not.toContain(HOME_TMP_ROOT);
   });
 
   // assertValidSocketPath (socket-utils.ts) currently applies its 95-character
@@ -475,8 +531,8 @@ describe('socket directories', () => {
     getSocketDir();
     getPluginSocketDir();
 
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).not.toContain(USER_TMP_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).not.toContain(SOCKET_ROOT);
     expect(ensureSafeSharedRoot).not.toHaveBeenCalled();
   });
 
@@ -485,7 +541,7 @@ describe('socket directories', () => {
 
     const dir = getPluginSocketDir();
 
-    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith(dir);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).toContain(dir);
   });
 
   it('gives the daemon and plugin sockets distinct directories', () => {
@@ -697,7 +753,9 @@ describe('socket directories', () => {
     const dir = getSocketDir();
 
     expect(dir).toBe('/tmp/nx-custom-sock');
-    expect(ensureOwnedPrivateDir).toHaveBeenCalledWith('/tmp/nx-custom-sock');
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).toContain(
+      '/tmp/nx-custom-sock'
+    );
   });
 
   it('does not establish the default roots when an explicit socket dir is configured', () => {
@@ -706,8 +764,8 @@ describe('socket directories', () => {
 
     getSocketDir();
 
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(USER_TMP_ROOT);
-    expect(ensureOwnedPrivateDir).not.toHaveBeenCalledWith(SOCKET_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).not.toContain(USER_TMP_ROOT);
+    expect(dirsPassedTo(ensureOwnedPrivateDir)).not.toContain(SOCKET_ROOT);
     expect(ensureSafeSharedRoot).not.toHaveBeenCalled();
   });
 

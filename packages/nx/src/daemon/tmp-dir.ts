@@ -24,6 +24,7 @@ import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isPeerWritable,
+  type RefusalSink,
   sharedRootRemedy,
 } from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
@@ -235,19 +236,22 @@ function homeTierIsDistinct(): boolean {
  * Windows has one tier. Named pipes are not filesystem objects, so there is no
  * containment to establish and nothing a second location would buy.
  */
-function socketRootTiers(): { root: string; establish: () => boolean }[] {
+function socketRootTiers(): {
+  root: string;
+  establish: (why?: RefusalSink) => boolean;
+}[] {
   if (process.platform === 'win32') {
     return [{ root: systemTmpDir, establish: () => true }];
   }
   return [
     {
       root: defaultSocketRoot(),
-      establish: () =>
-        ensureSafeSharedRoot(NX_TMP_DIR) &&
+      establish: (why) =>
+        !!ensureSafeSharedRoot(NX_TMP_DIR, why) &&
         // Arrow rather than a bare reference: `every` passes the index too, and
         // these guards take only a path.
-        [NX_USER_TMP_DIR, defaultSocketRoot()].every((d) =>
-          ensureOwnedPrivateDir(d)
+        [NX_USER_TMP_DIR, defaultSocketRoot()].every(
+          (d) => !!ensureOwnedPrivateDir(d, why)
         ),
     },
     // Omitted entirely when there is no home directory to use, or when it is
@@ -259,9 +263,9 @@ function socketRootTiers(): { root: string; establish: () => boolean }[] {
             root: homeSocketRoot(),
             // No shared level to verify: the home directory is the user's own,
             // so there is no container another user could have created first.
-            establish: () =>
-              [NX_HOME_TMP_DIR, homeSocketRoot()].every((d) =>
-                ensureOwnedPrivateDir(d)
+            establish: (why) =>
+              [NX_HOME_TMP_DIR, homeSocketRoot()].every(
+                (d) => !!ensureOwnedPrivateDir(d, why)
               ),
           },
         ]
@@ -273,12 +277,12 @@ function socketRootTiers(): { root: string; establish: () => boolean }[] {
  * The first socket root whose containment could be established, or `undefined`
  * when none could and the caller should fall back to the workspace.
  */
-function establishSocketRoot():
-  | { root: string; preferred?: string }
-  | undefined {
+function establishSocketRoot(
+  refusals: string[]
+): { root: string; preferred?: string } | undefined {
   const tiers = socketRootTiers();
   for (const [index, tier] of tiers.entries()) {
-    if (tier.establish()) {
+    if (tier.establish((reason) => refusals.push(reason))) {
       // `preferred` is set only on a demotion, and names the tier that was
       // skipped — the caller records it so a later length failure can say the
       // path was not the one Nx wanted.
@@ -392,14 +396,18 @@ function socketDirUnderFirstUsableRoot(
   socketDirFallbackCause = undefined;
   refusedConfiguredSocketDir = undefined;
 
-  const established = establishSocketRoot();
+  // Collected rather than discarded: the warning below tells the user to rerun
+  // with --verbose to see why the roots were rejected, and the guards are the
+  // only place that knows. Each reason names its own directory.
+  const refusals: string[] = [];
+  const established = establishSocketRoot(refusals);
   if (established === undefined) {
     return fallBackToWorkspaceSocketDir(
       new Error(
         [
-          `Nx could not establish any of its default socket directories (${socketRootTiers()
-            .map((t) => t.root)
-            .join(', ')}).`,
+          `Nx could not establish any of its default socket directories: ${refusals.join(
+            '; '
+          )}.`,
           sharedRootRemedy(NX_TMP_DIR),
         ]
           .filter(Boolean)
@@ -519,9 +527,15 @@ function createOwnerOnlySocketDir(
     }
     // Separately from its parents: mkdirSync does not throw on a pre-planted
     // symlink, so creating and locking down in one step would adopt it.
-    if (!ensureOwnedPrivateDir(dir)) {
+    //
+    // The guard's own reason is the message. The generic one it replaces named
+    // ownership whatever the cause, so a mode that could not be tightened, a
+    // planted symlink and a path that is not a directory all read as "owned by
+    // someone else" — wrong in three of the four cases it covered.
+    let refusal: string | undefined;
+    if (!ensureOwnedPrivateDir(dir, (reason) => (refusal ??= reason))) {
       throw new Error(
-        `Nx could not establish ${dir} as a private directory owned by the current user.`
+        refusal ?? `Nx could not establish ${dir} as a private directory.`
       );
     }
     return dir;

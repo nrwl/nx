@@ -44,6 +44,28 @@ export type OwnedPrivateDir = string & {
 };
 
 /**
+ * Where a guard says *why* it refused, when the caller intends to explain
+ * itself. Optional, so the guards keep their branded return types: a `Result`
+ * wrapper would rewrite every `if (!guard(dir))` call site for a string only
+ * the two message-building callers read.
+ *
+ * The reason names its own directory, so a caller collecting several does not
+ * have to track which guard produced which line.
+ */
+export type RefusalSink = (reason: string) => void;
+
+/** Report and refuse in one expression, so each guard clause stays one line. */
+function refuse(why: RefusalSink | undefined, reason: string): null {
+  why?.(reason);
+  return null;
+}
+
+/** `0700`-style rendering, since modes are what these messages are about. */
+function asMode(mode: number): string {
+  return `0${(mode & 0o7777).toString(8)}`;
+}
+
+/**
  * chmod a path only if it is a real directory, never following a symlink at its
  * final component — `chmodSync` follows them, retargeting the mode change.
  *
@@ -98,11 +120,14 @@ const S_ISVTX = 0o1000;
  * create the single top-level container as root-owned mode 1777; every user can
  * create their own private subtree directly beneath it.
  */
-export function isSafeSharedRoot(dir: string): SafeSharedRoot | null {
+export function isSafeSharedRoot(
+  dir: string,
+  why?: RefusalSink
+): SafeSharedRoot | null {
   try {
     const stats = lstatSync(dir);
     if (!stats.isDirectory()) {
-      return null;
+      return refuse(why, `${dir} is not a directory`);
     }
     if (process.platform === 'win32') {
       // The OS temp root is already scoped to the current Windows user.
@@ -113,13 +138,21 @@ export function isSafeSharedRoot(dir: string): SafeSharedRoot | null {
       stats.uid !== process.getuid() &&
       stats.uid !== 0
     ) {
-      return null;
+      return refuse(
+        why,
+        `${dir} belongs to another user (uid ${stats.uid}) rather than to you or to root`
+      );
     }
     return !(stats.mode & 0o022) || !!(stats.mode & S_ISVTX)
       ? (dir as SafeSharedRoot)
-      : null;
-  } catch {
-    return null;
+      : refuse(
+          why,
+          `${dir} is writable by other users but not sticky (mode ${asMode(
+            stats.mode
+          )}), so a peer could replace directories inside it`
+        );
+  } catch (e: any) {
+    return refuse(why, `${dir} could not be inspected (${e?.code ?? e})`);
   }
 }
 
@@ -221,14 +254,15 @@ export function sharedRootRemedy(dir: string): string | undefined {
  * per-account — so creation alone is the verdict there.
  */
 export function ensureSafeSharedRoot(
-  dir: string
+  dir: string,
+  why?: RefusalSink
 ): EstablishedSharedRoot | null {
   if (process.platform === 'win32') {
     try {
       mkdirSync(dir, { recursive: true });
       return dir as EstablishedSharedRoot;
-    } catch {
-      return null;
+    } catch (e: any) {
+      return refuse(why, `${dir} could not be created (${e?.code ?? e})`);
     }
   }
 
@@ -240,7 +274,7 @@ export function ensureSafeSharedRoot(
     chmodRealDirectory(dir, 0o1777);
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
-      return null;
+      return refuse(why, `${dir} could not be created (${e?.code ?? e})`);
     }
   }
 
@@ -249,7 +283,9 @@ export function ensureSafeSharedRoot(
   // POSIX modes — and what it leaves behind is a peer-writable non-sticky
   // container, which is exactly the mode this predicate refuses. Trusting the
   // creation alone would brand it safe and skip the fall to the home tier.
-  return isSafeSharedRoot(dir) === null ? null : (dir as EstablishedSharedRoot);
+  return isSafeSharedRoot(dir, why) === null
+    ? null
+    : (dir as EstablishedSharedRoot);
 }
 
 /**
@@ -297,12 +333,15 @@ export function getUserSegment(): string {
  *
  * Node builtins only: reached from the native binding loader.
  */
-export function ensureOwnedPrivateDir(dir: string): OwnedPrivateDir | null {
+export function ensureOwnedPrivateDir(
+  dir: string,
+  why?: RefusalSink
+): OwnedPrivateDir | null {
   try {
     mkdirSync(dir, { mode: 0o700 });
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
-      return null;
+      return refuse(why, `${dir} could not be created (${e?.code ?? e})`);
     }
   }
 
@@ -322,22 +361,27 @@ export function ensureOwnedPrivateDir(dir: string): OwnedPrivateDir | null {
     // Before the Windows short-circuit: "is a real directory" holds on every
     // platform.
     if (!stats.isDirectory()) {
-      return null;
+      return refuse(why, `${dir} is not a directory`);
     }
     if (typeof process.getuid !== 'function') {
       // Windows: the roots there are per-user OS temp dirs, not a shared /tmp.
       return dir as OwnedPrivateDir;
     }
     if (stats.uid !== process.getuid()) {
-      return null;
+      return refuse(why, `${dir} is owned by uid ${stats.uid}, not by you`);
     }
     if (stats.mode & 0o077) {
       if (!chmodRealDirectory(dir, 0o700)) {
-        return null;
+        return refuse(
+          why,
+          `${dir} is reachable by other users (mode ${asMode(
+            stats.mode
+          )}) and could not be tightened to 0700`
+        );
       }
     }
     return dir as OwnedPrivateDir;
-  } catch {
-    return null;
+  } catch (e: any) {
+    return refuse(why, `${dir} could not be inspected (${e?.code ?? e})`);
   }
 }
