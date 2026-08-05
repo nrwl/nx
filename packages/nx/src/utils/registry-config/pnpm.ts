@@ -360,7 +360,8 @@ function invalidJsonAuthScopes(source: string, entryNumber: number): Error {
  * dart, and only for the scope of the package being fetched: pnpm would not
  * send that token for anything else. Registry-wide entries go first so a
  * scoped token for the same registry wins, the way pnpm's per-scope credential
- * lookup prefers the specific entry.
+ * lookup prefers the specific entry. Every registry in the map is bridged, on
+ * the same grounds as the auth.ini dart loop.
  */
 function applyJsonAuthCredentials(
   env: NpmConfigEnv,
@@ -608,6 +609,9 @@ function bridgeAuthIni(
   ) {
     setScopedRegistry(env, scope, authIniScopedRegistry);
   }
+  // Every dart is copied, not just the contacted registry's: npm resolves auth
+  // per fetched URI and sends only the matching key, so a tarball served from a
+  // second authenticated host keeps working. Filtering here would strip it.
   for (const [key, value] of authIni) {
     // The env checks keep the URL-scoped env tier above this file, matching
     // pnpm's merge order: pnpm_config_ spellings are already in the overlay
