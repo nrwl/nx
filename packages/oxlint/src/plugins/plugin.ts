@@ -1,6 +1,12 @@
 import {
+  buildPackageJsonPatterns,
+  buildPackageJsonWorkspacesMatcher,
   calculateHashesForCreateNodes,
+  combineGlobPatterns,
+  globWithWorkspaceContext,
+  hashObject,
   PluginCache,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   CreateNodes,
@@ -20,14 +26,6 @@ import {
 import { existsSync } from 'node:fs';
 import { relative as nativeRelative, sep as nativeSep } from 'node:path';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import {
-  buildPackageJsonPatterns,
-  buildPackageJsonWorkspacesMatcher,
-} from 'nx/src/plugins/package-json/create-nodes';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { OXLINT_CONFIG_FILENAMES } from '../utils/config-file.js';
 
 export interface OxlintPluginOptions {

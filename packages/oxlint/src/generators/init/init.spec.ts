@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   createProjectGraphAsync,
@@ -8,8 +8,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { FsTree } from 'nx/src/generators/tree';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { FsTree } from '@nx/devkit/internal';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { initGenerator } from './init.js';
 
 describe('initGenerator', () => {

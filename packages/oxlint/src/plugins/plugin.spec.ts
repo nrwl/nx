@@ -1,6 +1,6 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { mkdirSync, rmSync } from 'node:fs';
 import { createNodesV2, OxlintPluginOptions } from './plugin.js';
 
