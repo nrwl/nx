@@ -61,7 +61,17 @@ describe('describeRefusal', () => {
     [
       'not-a-directory',
       { kind: 'not-a-directory', dir: '/d' },
-      '/d is not a directory',
+      '/d exists and is not a directory',
+    ],
+    [
+      'not-a-directory planted as a symlink',
+      { kind: 'not-a-directory', dir: '/d', symlink: true },
+      '/d is a symlink, not a real directory — something replaced the path Nx expected to create',
+    ],
+    [
+      'foreign-shared-container',
+      { kind: 'foreign-shared-container', dir: '/d', uid: 1001 },
+      '/d belongs to another user (uid 1001) rather than to you or to root',
     ],
     [
       'foreign-owner',
@@ -119,8 +129,35 @@ describe('ensureOwnedPrivateDir', () => {
       const squatted = join(base, 'squatted');
       symlinkSync(victim, squatted);
 
-      expect(ensureOwnedPrivateDir(squatted).status).toBe('refused');
+      const verdict = ensureOwnedPrivateDir(squatted);
+
+      expect(verdict.status).toBe('refused');
       expect(lstatSync(victim).mode & 0o777).toBe(0o755);
+      // Refused *as a planted link*, not as a generic non-directory. This is
+      // the attack the module exists to detect, and it is the difference
+      // between an alarming message with a remedy and "is not a directory" —
+      // which reads as wrong, since `ls -ld` on the link does show a directory.
+      expect((verdict as any).refusal).toEqual({
+        kind: 'not-a-directory',
+        dir: squatted,
+        symlink: true,
+      });
+      expect(remedyFor((verdict as any).refusal)).toContain('remove the link');
+    }
+  );
+
+  posixOnly(
+    'should refuse a shared root planted as a symlink as a planted link',
+    () => {
+      const victim = join(base, 'victim-shared');
+      mkdirSync(victim, { mode: 0o1777 });
+      const planted = join(base, 'planted-shared');
+      symlinkSync(victim, planted);
+
+      const verdict = isSafeSharedRoot(planted);
+
+      expect(verdict.status).toBe('refused');
+      expect((verdict as any).refusal.symlink).toBe(true);
     }
   );
 
@@ -189,6 +226,50 @@ describe('ensureOwnedPrivateDir', () => {
     }
   );
 
+  // The one the union now makes impossible to get wrong: a per-user directory
+  // must never carry the shared container's kind, because that kind is what
+  // selects the `chmod 1777` advice. As a flag this compiled clean and passed
+  // the whole suite; as a discriminant it cannot be set from here at all.
+  posixOnly(
+    'should refuse a per-user directory as foreign-owner, never as the shared container',
+    () => {
+      const dir = join(base, 'peer-owned-per-user');
+      mkdirSync(dir, { mode: 0o700 });
+      (lstatSync as jest.Mock).mockReturnValueOnce({
+        isDirectory: () => true,
+        isSymbolicLink: () => false,
+        uid: 1001,
+        mode: 0o40700,
+      });
+
+      const verdict = ensureOwnedPrivateDir(dir);
+
+      expect(verdict.status).toBe('refused');
+      expect((verdict as any).refusal.kind).toBe('foreign-owner');
+      // Would tell the owner of a home directory to chmod 1777 it.
+      expect(remedyFor((verdict as any).refusal)).not.toContain('chmod 1777');
+    }
+  );
+
+  // A mount that accepts chmod and ignores it. The guard used to take the
+  // chmod's return as the verdict, so it detected 0777 and branded it anyway —
+  // on the guard standing in front of the socket dir and the .node load path.
+  posixOnly(
+    'should refuse a directory whose mode did not change despite a successful chmod',
+    () => {
+      const dir = join(base, 'chmod-ignored');
+      mkdirSync(dir, { mode: 0o700 });
+      chmodSync(dir, 0o777);
+      // fchmod succeeds and changes nothing, which is what those mounts do.
+      (fchmodSync as jest.Mock).mockImplementationOnce(() => undefined);
+
+      const verdict = ensureOwnedPrivateDir(dir);
+
+      expect(verdict.status).toBe('refused');
+      expect((verdict as any).refusal.kind).toBe('not-tightenable');
+    }
+  );
+
   describe('shared container validation', () => {
     posixOnly(
       'should refuse a sticky root owned by another unprivileged user',
@@ -233,12 +314,13 @@ describe('ensureOwnedPrivateDir', () => {
     // the verdict was 'ok', remedyFor was never called, and the assertion
     // degenerated to expect(undefined).toBeUndefined().
     it('should offer no remedy for a container root already owns', () => {
+      // The uid-0 exemption belongs to the shared container: root owning it is
+      // the provisioned state, not a problem to report.
       expect(
         remedyFor({
-          kind: 'foreign-owner',
+          kind: 'foreign-shared-container',
           dir: '/tmp/.nx',
           uid: 0,
-          shared: true,
         })
       ).toBeUndefined();
     });
@@ -289,10 +371,9 @@ describe('ensureOwnedPrivateDir', () => {
     it('should offer the chown remedy for the shared container', () => {
       expect(
         remedyFor({
-          kind: 'foreign-owner',
+          kind: 'foreign-shared-container',
           dir: '/tmp/.nx',
           uid: 1002,
-          shared: true,
         })
       ).toContain("sudo chown root '/tmp/.nx' && sudo chmod 1777 '/tmp/.nx'");
     });
@@ -300,10 +381,9 @@ describe('ensureOwnedPrivateDir', () => {
     it('should quote a path so a space survives the paste', () => {
       expect(
         remedyFor({
-          kind: 'foreign-owner',
+          kind: 'foreign-shared-container',
           dir: '/home/some user/.nx',
           uid: 1002,
-          shared: true,
         })
       ).toContain("sudo chown root '/home/some user/.nx'");
     });
@@ -311,15 +391,14 @@ describe('ensureOwnedPrivateDir', () => {
     it('should escape an embedded quote so the pasted command still parses', () => {
       expect(
         remedyFor({
-          kind: 'foreign-owner',
+          kind: 'foreign-shared-container',
           dir: "/home/o'brien/.nx",
           uid: 1002,
-          shared: true,
         })
       ).toContain("sudo chown root '/home/o'\\''brien/.nx'");
     });
 
-    posixOnly('should mark a refused shared container as shared', () => {
+    posixOnly('should refuse the shared container with its own kind', () => {
       const getuid = jest.spyOn(process, 'getuid').mockReturnValue(501);
       (lstatSync as jest.Mock).mockReturnValueOnce({
         isDirectory: () => true,
@@ -330,10 +409,9 @@ describe('ensureOwnedPrivateDir', () => {
         const verdict = isSafeSharedRoot('/tmp/.nx');
         expect(verdict.status).toBe('refused');
         expect((verdict as any).refusal).toEqual({
-          kind: 'foreign-owner',
+          kind: 'foreign-shared-container',
           dir: '/tmp/.nx',
           uid: 1002,
-          shared: true,
         });
       } finally {
         getuid.mockRestore();

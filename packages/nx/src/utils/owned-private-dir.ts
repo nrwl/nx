@@ -7,6 +7,7 @@ import {
   mkdirSync,
   openSync,
   statSync,
+  type Stats,
 } from 'node:fs';
 import { userInfo } from 'node:os';
 
@@ -61,13 +62,21 @@ export type OwnedPrivateDir = string & {
 export type DirRefusal =
   | { kind: 'not-created'; dir: string; code?: string }
   | { kind: 'not-inspectable'; dir: string; code?: string }
-  | { kind: 'not-a-directory'; dir: string }
-  // `shared` is set only by `isSafeSharedRoot`, i.e. only for the one container
-  // several users are meant to share. It is what makes `remedyFor`'s "hand it to
-  // root" advice correct by construction: the same kind from
-  // `ensureOwnedPrivateDir` describes a per-user directory, where that advice
-  // cannot work and would widen the 0700 boundary this module establishes.
-  | { kind: 'foreign-owner'; dir: string; uid: number; shared?: true }
+  // `symlink` separates the attack this module exists to detect — a peer
+  // planting a link where Nx expects to create a directory — from a stray file
+  // or fifo in the way. Both are refused, but only one is worth alarming about,
+  // and `ls -ld` on a planted link shows a directory, so "is not a directory"
+  // reads as simply wrong there.
+  | { kind: 'not-a-directory'; dir: string; symlink?: true }
+  // Two members rather than one with a flag. Which advice is correct turns on
+  // *which* directory was refused — root can usefully take over the one shared
+  // container, and cannot help with a per-user directory — so it is the
+  // discriminant `remedyFor` branches on, and `describeRefusal`'s `never` arm
+  // forces both wordings to exist. As a flag this was enforced only by comment:
+  // adding it to `ensureOwnedPrivateDir`'s deny compiled clean and would have
+  // told a user to `chmod 1777` their own home.
+  | { kind: 'foreign-owner'; dir: string; uid: number }
+  | { kind: 'foreign-shared-container'; dir: string; uid: number }
   | { kind: 'not-tightenable'; dir: string; mode: number }
   | { kind: 'peer-writable-not-sticky'; dir: string; mode: number };
 
@@ -95,6 +104,16 @@ const deny = <T>(refusal: DirRefusal): GuardResult<T> => ({
 // Four octal digits, so a sticky container reads `1777` and a plain directory
 // `0755` — the notation `chmod` and `ls` use. Prefixing a literal `0` instead
 // renders sticky modes as `01777`, which is not a form anyone writes.
+/**
+ * `lstat` already knows whether the thing in the way is a link, and both guards
+ * hold that result — so the distinction costs nothing to carry and is the one
+ * the user most needs.
+ */
+const notADirectory = (dir: string, stats: Stats): DirRefusal =>
+  stats.isSymbolicLink()
+    ? { kind: 'not-a-directory', dir, symlink: true }
+    : { kind: 'not-a-directory', dir };
+
 const asMode = (mode: number): string =>
   (mode & 0o7777).toString(8).padStart(4, '0');
 
@@ -106,9 +125,13 @@ export function describeRefusal(r: DirRefusal): string {
     case 'not-inspectable':
       return `${r.dir} could not be inspected${r.code ? ` (${r.code})` : ''}`;
     case 'not-a-directory':
-      return `${r.dir} is not a directory`;
+      return r.symlink
+        ? `${r.dir} is a symlink, not a real directory — something replaced the path Nx expected to create`
+        : `${r.dir} exists and is not a directory`;
     case 'foreign-owner':
       return `${r.dir} is owned by uid ${r.uid}, not by you`;
+    case 'foreign-shared-container':
+      return `${r.dir} belongs to another user (uid ${r.uid}) rather than to you or to root`;
     case 'not-tightenable':
       return `${r.dir} is reachable by other users (mode ${asMode(
         r.mode
@@ -144,14 +167,17 @@ const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
  * the sentence names the condition rather than guessing.
  */
 export function remedyFor(r: DirRefusal): string | undefined {
-  if (r.kind !== 'foreign-owner') {
-    return undefined;
+  if (r.kind === 'not-a-directory' && r.symlink) {
+    return `${r.dir} is a symlink where Nx expects a directory. If you did not create it, treat it as hostile: remove the link itself (not what it points at) and run the command again.`;
   }
-  if (!r.shared) {
+  if (r.kind === 'foreign-owner') {
     return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or move it aside — which you can do yourself if you own the directory it sits in, and otherwise needs an administrator.`;
   }
-  // Unreachable today: the only site that sets `shared` is `isSafeSharedRoot`'s
-  // ownership deny, and that deny is gated on `stats.uid !== 0`.
+  if (r.kind !== 'foreign-shared-container') {
+    return undefined;
+  }
+  // Unreachable today: `isSafeSharedRoot` denies with this kind only when
+  // `stats.uid !== 0`, so a root-owned container never reaches here.
   if (r.uid === 0) {
     return undefined;
   }
@@ -230,7 +256,7 @@ export function isSafeSharedRoot(dir: string): GuardResult<SafeSharedRoot> {
   try {
     const stats = lstatSync(dir);
     if (!stats.isDirectory()) {
-      return deny({ kind: 'not-a-directory', dir });
+      return deny(notADirectory(dir, stats));
     }
     if (process.platform === 'win32') {
       // The OS temp root is already scoped to the current Windows user.
@@ -241,9 +267,9 @@ export function isSafeSharedRoot(dir: string): GuardResult<SafeSharedRoot> {
       stats.uid !== process.getuid() &&
       stats.uid !== 0
     ) {
-      // The only site that sets `shared`: this is the container several users
-      // are meant to share, so it is the only one root can usefully take over.
-      return deny({ kind: 'foreign-owner', dir, uid: stats.uid, shared: true });
+      // The shared container: the only directory root can usefully take over,
+      // which is why it gets its own kind rather than a flag on the per-user one.
+      return deny({ kind: 'foreign-shared-container', dir, uid: stats.uid });
     }
     return !(stats.mode & 0o022) || !!(stats.mode & S_ISVTX)
       ? allow(dir as SafeSharedRoot)
@@ -427,7 +453,7 @@ export function ensureOwnedPrivateDir(
     // Before the Windows short-circuit: "is a real directory" holds on every
     // platform.
     if (!stats.isDirectory()) {
-      return deny({ kind: 'not-a-directory', dir });
+      return deny(notADirectory(dir, stats));
     }
     if (typeof process.getuid !== 'function') {
       // Windows: the roots there are per-user OS temp dirs, not a shared /tmp.
@@ -437,8 +463,19 @@ export function ensureOwnedPrivateDir(
       return deny({ kind: 'foreign-owner', dir, uid: stats.uid });
     }
     if (stats.mode & 0o077) {
+      // Re-read rather than trust the chmod's return, matching the sibling
+      // guard. A mount that ignores the mode argument — WSL2 `drvfs` without
+      // metadata, CIFS with `dir_mode`, FAT — accepts `fchmod` and reports
+      // success while leaving the directory `0777`. Detecting that and then
+      // branding it anyway is the reported bug still present, on the guard that
+      // stands in front of the socket directory and the directory a `.node` is
+      // loaded from. One extra stat, and only on the already-loose path.
       if (!chmodRealDirectory(dir, 0o700)) {
         return deny({ kind: 'not-tightenable', dir, mode: stats.mode });
+      }
+      const after = lstatSync(dir);
+      if (after.mode & 0o077) {
+        return deny({ kind: 'not-tightenable', dir, mode: after.mode });
       }
     }
     return allow(dir as OwnedPrivateDir);
