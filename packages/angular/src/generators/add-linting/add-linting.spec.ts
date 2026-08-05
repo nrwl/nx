@@ -179,6 +179,75 @@ describe('addLinting generator', () => {
     expect(devDependencies['@typescript-eslint/utils']).toBe('^8.58.0');
   });
 
+  it('should pin ESLint v9 when the workspace uses Angular 20', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': '~20.3.0' },
+    }));
+
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['eslint']).toBe('^9.8.0');
+    expect(devDependencies['angular-eslint']).toBe('^20.3.0');
+  });
+
+  it('should keep an existing ESLint version when the workspace uses Angular 20', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': '~20.3.0' },
+      devDependencies: { ...json.devDependencies, eslint: '^9.0.0' },
+    }));
+
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['eslint']).toBe('^9.0.0');
+  });
+
+  it('should not pin ESLint for --linter=oxlint when the workspace uses Angular 20', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, '@angular/core': '~20.3.0' },
+    }));
+
+    await addLintingGenerator(tree, {
+      linter: 'oxlint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies ?? {}).not.toHaveProperty('eslint');
+  });
+
+  it('should install ESLint v10 when the workspace uses the latest Angular version', async () => {
+    await addLintingGenerator(tree, {
+      linter: 'eslint',
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['eslint']).toBe('^10.0.0');
+  });
+
   it('should correctly generate the .eslintrc.json file', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
