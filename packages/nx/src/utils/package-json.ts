@@ -775,6 +775,28 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
 }
 
 /**
+ * Drops the `pnpm.patchedDependencies` the emitted manifest inherited from the
+ * project it was built from. The declaration a pruned output needs is the one
+ * `getPrunedPnpmPatchArtifacts` derives from the lockfile shipping beside it; an
+ * inherited one names the workspace's patch paths rather than the output's, and
+ * survives even when the output ships no patch file at all, which fails the
+ * install as pnpm hashes every declared patch. Called on both the pruned and the
+ * fallback path: pnpm reads the field from the workspace root alone, so a
+ * project-level block was inert at home and cannot be trusted here either.
+ */
+export function dropInheritedPnpmPatchedDependencies(
+  packageJson: PackageJson
+): void {
+  if (!packageJson.pnpm?.patchedDependencies) {
+    return;
+  }
+  delete packageJson.pnpm.patchedDependencies;
+  if (Object.keys(packageJson.pnpm).length === 0) {
+    delete packageJson.pnpm;
+  }
+}
+
+/**
  * pnpm config resolved once per prune and threaded into the settings-yaml and
  * patch-artifact builders, so neither re-detects the pnpm version nor re-reads
  * the root config and lockfile.
