@@ -1,0 +1,399 @@
+---
+title: Migrating from Turborepo to Nx
+description: Step-by-step guide to migrate a Turborepo workspace to Nx with nx init, covering package-specific tasks, continuous tasks, environment inputs, and command equivalents.
+filter: 'type:Guides'
+sidebar:
+  label: Migrating from Turborepo
+featured: true
+topics:
+  - 'Installation and updates'
+---
+
+{% llm_copy_prompt title="Let an AI agent run the migration" %}
+
+Migrate this Turborepo workspace to Nx, following the instructions on the page below.
+
+1. Run `npx nx@latest init` from the workspace root. It detects `turbo.json`, writes an equivalent `nx.json`, adds the `nx` dev dependency, and updates `.gitignore`. Leave `turbo.json` in place until the end.
+2. Diff `turbo.json` against the generated `nx.json` and tell me every key that did not carry over. Expect package-specific task entries like `web#build`, per-package `turbo.json` files, `persistent: true`, and task-level `env`, and keep reading past those, since top-level keys such as `ui` map to CLI flags instead of config. Do not stop at a fixed count.
+3. Port every `<package>#<task>` entry, and every per-package `turbo.json`, to an array entry under that task's `targetDefaults` key, with `"filter": { "projects": ["<package>"] }`. The unfiltered entry stays first as the baseline. A key set in a filtered entry replaces the baseline value outright rather than merging, and that includes arrays, so re-list the baseline `inputs` in any filtered entry that sets `inputs`. When one rule covers several packages, prefer a directory pattern such as `apps/*` over listing each name, and check that package names actually share a prefix before reaching for a name glob.
+4. Set `"continuous": true` on every task that was `persistent: true`.
+5. Move each task's `env` list into that target's `inputs` as `{ "env": "VAR_NAME" }` entries. Then add `"sharedGlobals"` to the `inputs` of every target that has an explicit `inputs` array, because `nx init` reaches `sharedGlobals` only through `default` and an explicit array bypasses it, which silently stops `globalEnv` and `globalDependencies` from invalidating those targets. Do not add `passThroughEnv` equivalents, because Nx does not block environment variables at runtime.
+6. Verify. Run `nx show project <name>` on a project each filtered entry should hit and on one it should not. Then run `nx run-many -t build lint check-types` twice and confirm the second run is all cache hits. `run-many` exits 0 for a target no project defines, so compare the project count in the summary against `nx show projects`. If `globalDependencies` was set, edit one of those files and confirm the dependent targets miss the cache.
+7. Move CI over. Replace `turbo run` calls with `nx affected -t <tasks>`, and tell me whether the workspace should run `nx connect` for remote caching.
+8. Only once CI is green: delete `turbo.json` and any package-level `turbo.json`, remove the `turbo` dev dependency, drop `.turbo` from `.gitignore`, and rewrite root scripts from `turbo run <task>` to `nx run-many -t <task>`. Then grep the whole workspace for `turbo` and deal with what is left, including scripts in packages rather than at the root and `eslint-plugin-turbo` in the shared ESLint config.
+
+Report what you changed in `nx.json`. Where a fix belongs in a project's own configuration instead, tell me rather than editing it silently.
+
+Page: {pageUrl}
+{% /llm_copy_prompt %}
+
+`nx init` reads your `turbo.json` and writes the equivalent `nx.json`. Your `package.json` scripts stay as they are, and Nx runs them through the package manager you already use.
+
+Package-specific task overrides, per-package `turbo.json` files, long-running tasks, and task-level environment variables don't convert. Steps 3 through 5 handle each one.
+
+## Why switch to Nx
+
+Nx runs the same scripts, so what you gain is the work Turborepo leaves to you.
+
+Polyglot workspaces are the clearest gap. First-party plugins for [Maven](/docs/technologies/java/maven/introduction), [Gradle](/docs/technologies/java/gradle/introduction), and [.NET](/docs/technologies/dotnet/introduction) put those projects in the same graph as your JavaScript packages, and community plugins cover [Python](https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python), [Rust](https://github.com/cammisuli/monodon/tree/main/packages/rust), and [Go](https://github.com/naxodev/oss/tree/main/packages/gonx). Turborepo can wrap any CLI in a `package.json` script, and an experimental flag teaches it Cargo workspaces, but outside those it builds no dependency graph, so a Go service and the app calling it stay islands.
+
+CI is the other. Turborepo scales past one machine through manual binning, where you assign tasks to runners by hand and rebalance as the workspace grows. Nx Agents distributes at the task level using historical timings, which on one workspace across four machines ran 9m 20s against Turborepo's 19m 18s. Nx Cloud also splits e2e suites by file, re-runs flaky tasks, and runs an agent that diagnoses and fixes broken tasks on CI.
+
+Two smaller ones. Task sandboxing, which Turborepo has no equivalent for, surfaces the files a task read or wrote without declaring them, so a cache hit means what it says. Generators run as code against the project graph and do AST-level transforms rather than filling in templates.
+
+For the full comparison, see [Nx vs Turborepo](/docs/kb/nx-vs-turborepo).
+
+## 1. Run `nx init`
+
+From the workspace root:
+
+```shell
+npx nx@latest init
+```
+
+Nx detects the `turbo.json`, converts it, and installs:
+
+```diff
+.gitignore   | Nx cache directories
+nx.json      | The converted turbo.json
+package.json | The "nx" dev dependency
+<lockfile>   |
+```
+
+`turbo.json` stays where it is and Turborepo keeps working, so you can run both side by side until you remove it in step 8.
+
+## 2. Read the generated `nx.json`
+
+Take the `turbo.json` from the `create-turbo` starter:
+
+```json
+// turbo.json
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
+```
+
+`nx init` turns it into this:
+
+```json
+// nx.json
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "outputs": ["{projectRoot}/.next/**", "!{projectRoot}/.next/cache/**"],
+      "cache": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "cache": true
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"],
+      "cache": true
+    },
+    "dev": {
+      "cache": false
+    }
+  }
+}
+```
+
+Three differences to read closely:
+
+- Turborepo paths are relative to a package. Nx paths are relative to the workspace root and use [`{projectRoot}` and `{workspaceRoot}` tokens](/docs/reference/inputs#source-files) to say which one you mean, so one entry can reference a workspace-wide file and a per-package file at the same time.
+- Turborepo caches a task unless you opt out, so an empty task entry is a cached task. Nx writes `cache` for each one.
+- `persistent: true` on `dev` is gone. Step 4 puts it back under its Nx name.
+- `ui` is gone as well, and it is not the only top-level key that ends up as a CLI flag rather than configuration. Check yours against the [configuration mapping](#configuration-mapping) below.
+
+## 3. Move package-specific task configuration
+
+Turborepo lets you override a task for one package, either with a `<package>#<task>` key in the root `turbo.json` or with a `turbo.json` inside the package that extends the root. `nx init` skips both, so a config like this comes across with only the `build` entry:
+
+```json
+// turbo.json
+{
+  "tasks": {
+    "build": { "dependsOn": ["^build"] },
+    "web#build": {
+      "outputs": [".next/**", "!.next/cache/**"]
+    }
+  }
+}
+```
+
+In Nx, a `targetDefaults` key holds either a plain object or an ordered array of entries, and each entry can carry a `filter` that scopes it:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      { "dependsOn": ["^build"], "cache": true },
+      {
+        "filter": { "projects": ["web"] },
+        "outputs": ["{projectRoot}/.next/**", "!{projectRoot}/.next/cache/**"]
+      }
+    ]
+  }
+}
+```
+
+The unfiltered entry is the baseline that every `build` target gets. Filtered entries apply on top, in document order, so a later entry overrides an earlier one.
+
+The override is per key, and a key that appears in a filtered entry replaces the baseline value outright. It does not merge into it. Above, `web` keeps `dependsOn` and `cache` from the baseline while its `outputs` replace the baseline `outputs`, which is what you want here. Arrays behave the same way, so a filtered entry that sets `inputs` drops every baseline input rather than appending to them. Re-list the baseline inputs in the filtered entry whenever you add one.
+
+Turborepo and Nx disagree on the rest of the semantics, and the difference is easy to miss. A `web#build` entry replaces the generic `build` definition for that package, so keys it leaves out fall back to Turborepo's defaults. The Nx equivalent inherits those keys from the baseline entry instead. Where that matters, usually with `env`, spell the keys out in the filtered entry rather than relying on either fallback.
+
+A per-package `turbo.json` gets the same treatment. Its task config becomes one more filtered entry keyed to that project, and the file itself goes away in step 8.
+
+Do not scope by project name when the rule covers several packages. `filter.projects` also accepts directory patterns such as `apps/*`, name globs, and negation with `!`:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      { "dependsOn": ["^build"], "cache": true },
+      {
+        "filter": { "projects": ["apps/*"] },
+        "outputs": ["{projectRoot}/.next/**", "!{projectRoot}/.next/cache/**"]
+      }
+    ]
+  }
+}
+```
+
+Name globs only help when the names share a prefix, which package names in a `create-turbo` workspace usually do not. Directory patterns are the ones that tend to fit. Tags work too, once the projects carry them, and you set those in each project's [configuration](/docs/reference/project-configuration#tags) rather than in `nx.json`. `filter.plugin` and `filter.executor` narrow by what created the target rather than by project. The [target defaults reference](/docs/reference/nx-json#target-defaults) lists every field.
+
+Confirm the scoping in both directions before moving on. Check a project the filter should hit, then one it should not:
+
+```shell
+nx show project web
+nx show project docs
+```
+
+## 4. Mark long-running tasks as continuous
+
+`persistent: true` does not survive the conversion. Nx calls the same thing [`continuous`](/docs/kb/defining-task-pipeline#continuous-task-dependencies):
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "dev": {
+      "cache": false,
+      "continuous": true
+    }
+  }
+}
+```
+
+Nx uses the flag for more than bookkeeping. A task that depends on a continuous task starts as soon as the server it needs is up, rather than waiting for a process that never exits, which is how you express "run the e2e suite against the dev server" as a task dependency.
+
+## 5. Carry over task-level environment variables
+
+A task's own `env` list does not convert, so add those to the target's `inputs`:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*",
+        { "env": "API_URL" }
+      ]
+    }
+  }
+}
+```
+
+Declaring an environment variable this way affects the cache only. Change `API_URL` and the build reruns. See [environment variables as inputs](/docs/reference/inputs#environment-variables) for the wildcard and `runtime` forms.
+
+Turborepo's `passThroughEnv` and `globalPassThroughEnv` have no counterpart, because Nx never blocked environment variables from reaching your tasks in the first place. Delete them.
+
+{% aside type="caution" title="Re-attach sharedGlobals to any target that declares inputs" %}
+
+`nx init` converts `globalEnv` and `globalDependencies` into a `sharedGlobals` named input and references it from `default`. Targets reach it through that fallback, and a target that declares its own `inputs` does not use the fallback. Every turbo task that had an `inputs` list comes out of the conversion with an explicit `inputs` array that omits `sharedGlobals`, so your globals stop invalidating exactly those targets.
+
+Turborepo hashes `globalEnv` and `globalDependencies` into every task, so the cache gets quietly weaker at this point unless you add the reference back:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*",
+        "sharedGlobals",
+        { "env": "API_URL" }
+      ]
+    }
+  }
+}
+```
+
+Edit a file listed in `globalDependencies` and re-run the target to confirm it misses the cache.
+
+{% /aside %}
+
+## 6. Verify the workspace
+
+Run everything twice:
+
+```shell
+nx run-many -t build lint check-types
+```
+
+The first run populates the cache and the second should report every task as a cache hit. If a task misses on the second run, its `inputs` include something that changes between runs.
+
+`run-many` exits 0 for a target that no project defines, so a typo in a task name reports success without running anything. The run summary reports how many projects it covered, and comparing that against `nx show projects` catches the case where a target name silently matched nothing.
+
+Open the [project graph](/docs/features/explore-graph) and check that the dependencies between your packages are the ones you expect:
+
+```shell
+nx graph
+```
+
+## 7. Move CI over
+
+Replace the `turbo run` calls in your CI config with the Nx equivalents, and run only what your change touched:
+
+```shell
+nx affected -t build lint check-types
+```
+
+Then connect the workspace so CI and your team share one cache:
+
+```shell
+nx connect
+```
+
+Remote caching on Nx Cloud is the direct replacement for Turborepo's Remote Cache. [Distributing tasks across agents](/docs/features/ci-features/distribute-task-execution) and [splitting e2e runs by file](/docs/features/ci-features/split-e2e-tasks) are the parts with no Turborepo equivalent, and they matter more than the cache once the workspace is large. The [CI setup guide](/docs/getting-started/setup-ci) walks through a full pipeline.
+
+## 8. Remove Turborepo
+
+Once CI is green on Nx, delete the root `turbo.json` and any package-level ones, remove the `turbo` dev dependency, and drop `.turbo` from `.gitignore`. Then point the root scripts at Nx:
+
+```json
+// package.json
+{
+  "scripts": {
+    "build": "nx run-many -t build",
+    "dev": "nx run-many -t dev",
+    "lint": "nx run-many -t lint",
+    "check-types": "nx run-many -t check-types"
+  }
+}
+```
+
+The root scripts are the obvious references. The ones that break are further down, so sweep for the rest before you commit:
+
+```shell
+grep -rn "turbo" --include=package.json --include="*.js" --include="*.mjs" . | grep -v node_modules
+```
+
+A `create-turbo` workspace ships two that this catches. `packages/ui` runs `turbo gen react-component`, which is a script in a package rather than at the root, and it fails the moment the dependency goes. Port it to a [generator](/docs/features/generate-code). The shared ESLint config also depends on `eslint-plugin-turbo` for a rule that reads the `turbo.json` you deleted, so drop both.
+
+## Additional considerations
+
+### Let plugins infer your tasks
+
+The migration above keeps every task defined by a `package.json` script, which is how Turborepo works and is a perfectly good way to run an Nx workspace.
+
+Nx can also derive tasks from the tools you already configured. Add [`@nx/vite`](/docs/technologies/build-tools/vite) and a package with a `vite.config.ts` gets a `build` target whose inputs and outputs are read from that config, with no script and no `targetDefaults` entry to maintain. The same applies to Jest, Playwright, ESLint, Cypress, Gradle, and others. That removes the class of cache bug where a tool's output directory changes and the config that lists it does not.
+
+Adopt this per tool, after the migration is done. See [inferred tasks](/docs/concepts/mental-model#inferred-tasks).
+
+### Configuration mapping
+
+Global configuration:
+
+| Turborepo Property     | Nx Equivalent                                                                                                                                                    |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cacheDir`             | Set in [`cacheDirectory`](/docs/reference/nx-json#task-options)                                                                                                  |
+| `daemon`               | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/reference/nx-daemon#turning-it-off) in `nx.json`                                                  |
+| `envMode`              | Nx core does not block any environment variables. See [Loading Environment Variables](/docs/reference/environment-variables#loading-environment-variables)       |
+| `globalDependencies`   | Add to the [`sharedGlobals` `namedInput`](/docs/kb/configure-inputs)                                                                                             |
+| `globalEnv`            | Add to the [`sharedGlobals` `namedInput`](/docs/kb/configure-inputs) as an [`env` input](/docs/reference/inputs#environment-variables)                           |
+| `globalPassThroughEnv` | N/A. See [Loading Environment Variables](/docs/reference/environment-variables#loading-environment-variables)                                                    |
+| `remoteCache`          | See [remote caching](/docs/features/ci-features/remote-cache)                                                                                                    |
+| `ui`                   | Nx will intelligently pick the most appropriate terminal output style, but it can be overridden with [`--output-style`](/docs/reference/nx-commands#outputstyle) |
+
+Task configuration:
+
+| Turborepo Property | Nx Equivalent                                                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `extends`          | N/A. Projects always extend `targetDefaults` from `nx.json`                                                                    |
+| `dependsOn`        | [Same syntax](/docs/reference/project-configuration#dependson)                                                                 |
+| `env`              | Define [env `inputs`](/docs/reference/inputs#environment-variables)                                                            |
+| `passThroughEnv`   | N/A. See [Loading Environment Variables](/docs/reference/environment-variables#loading-environment-variables)                  |
+| `outputs`          | [Similar syntax](/docs/reference/project-configuration#outputs)                                                                |
+| `cache`            | [Similar syntax](/docs/reference/project-configuration#cache)                                                                  |
+| `inputs`           | [Similar syntax](/docs/reference/inputs#source-files)                                                                          |
+| `outputLogs`       | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                |
+| `persistent`       | Use [`continuous`](/docs/kb/defining-task-pipeline#continuous-task-dependencies)                                               |
+| `interactive`      | N/A. Tasks marked [`continuous`](/docs/kb/defining-task-pipeline#continuous-task-dependencies) can accept stdin automatically. |
+| `<package>#<task>` | An array entry under that task's `targetDefaults` key with a [`filter`](/docs/reference/nx-json#target-defaults)               |
+
+### Command equivalents
+
+| Turborepo Command            | Nx Equivalent                                                                                                                                                    |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `turbo run test lint build`  | [`nx run-many -t test lint build`](/docs/reference/nx-commands#nx-run-many)                                                                                      |
+| `turbo run build --affected` | [`nx affected -t build`](/docs/reference/nx-commands#nx-affected)                                                                                                |
+| `turbo devtools`             | [`nx graph`](/docs/reference/nx-commands#nx-graph) for full interactive experience, also available in [Nx Console](/docs/getting-started/editor-setup)           |
+| `--cache-dir`                | Set in [`nx.json` under `cacheDirectory`](/docs/reference/nx-json#task-options)                                                                                  |
+| `--concurrency`              | [`--parallel`](/docs/reference/nx-commands#parallel)                                                                                                             |
+| `--continue`                 | [Use `--nx-bail`](/docs/reference/nx-commands#nxbail) with the inverse value                                                                                     |
+| `--cpuprofile`               | Use [`NX_PROFILE=profile.json`](/docs/kb/performance-profiling)                                                                                                  |
+| `--cwd`                      | Available in [`run-commands` executor](/docs/reference/nx/executors#run-commands#cwd)                                                                            |
+| `--daemon`                   | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/reference/nx-daemon#turning-it-off)                                                               |
+| `--dry-run`                  | Use [`nx show target <project>:<target> --inputs --outputs`](/docs/reference/nx-commands#nx-show-target) to preview inputs and outputs (available since 22.6.0+) |
+| `--env-mode`                 | See [Loading Environment Variables](/docs/reference/environment-variables#loading-environment-variables)                                                         |
+| `--filter`                   | Use lots of advanced project matcher syntax like [`-p admin-*` or `-p tag:api-*`](/docs/reference/nx-commands#nx-run-many)                                       |
+| `--force`                    | [`nx reset`](/docs/reference/nx-commands#nx-reset) and then run the command again                                                                                |
+| `--framework-inference`      | N/A. [Nx plugins infer tasks automatically as a first class feature](/docs/concepts/mental-model#inferred-tasks)                                                 |
+| `--global-deps`              | Use the [`sharedGlobals` `namedInput`](/docs/kb/configure-inputs). Nx is far more flexible with composable [`namedInputs`](/docs/reference/inputs)               |
+| `--graph`                    | [Similar syntax](/docs/reference/nx-commands#graph) or [`nx graph`](/docs/reference/nx-commands#nx-graph) for full interactive experience                        |
+| `--heap`                     | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                      |
+| `--ignore`                   | Use [`.nxignore`](/docs/reference/nxignore) or `.gitignore`                                                                                                      |
+| `--log-order`                | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                                                  |
+| `--no-cache`                 | Use [`--skip-nx-cache`](/docs/reference/nx-commands#skipnxcache)                                                                                                 |
+| `--output-logs`              | Use [`--output-style`](/docs/reference/nx-commands#outputstyle)                                                                                                  |
+| `--only`                     | N/A                                                                                                                                                              |
+| `--parallel`                 | N/A                                                                                                                                                              |
+| `--preflight`                | N/A                                                                                                                                                              |
+| `--summarize`                | N/A                                                                                                                                                              |
+| `--token`                    | Set [Nx Cloud CI Access Token](/docs/kb/access-tokens#setting-ci-access-tokens)                                                                                  |
+| `--team`                     | See `--token` for Nx Cloud workspace selection                                                                                                                   |
+| `--trace`                    | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                      |
+| `--verbosity`                | Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                           |
+| `turbo gen`                  | [Use `nx generate`](/docs/features/generate-code)                                                                                                                |
+| `turbo login`                | `nx login` - [Create an Nx Cloud account](/docs/reference/nx-commands#nx-login)                                                                                  |
+| `turbo link`                 | `nx connect` - [Connect a workspace to an Nx Cloud account](/docs/reference/nx-commands#nx-connect)                                                              |
+
+For a complete list of Nx commands and options, see the [Nx CLI documentation](/docs/reference/nx-commands).
