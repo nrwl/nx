@@ -8,12 +8,29 @@ import { setWorkspaceRoot, workspaceRoot } from 'nx/src/utils/workspace-root';
 import { createNodesV2 } from './plugin';
 import { _setChildEval, normalizeWebServers } from './webserver-readiness';
 
+// The plugin writes its disk cache under `workspaceDataDirectory`, which is
+// resolved from the real workspace root at import time. Redirect it into the
+// test's temp dir so cache round-trips stay isolated from the repo. `var` so
+// import-time readers of the export (nx's daemon tmp-dir) see the hoisted
+// empty value and fall back to the actual path instead of hitting the TDZ.
+var mockWorkspaceDataDir = '';
+jest.mock('nx/src/utils/cache-directory', () => {
+  const actual = jest.requireActual('nx/src/utils/cache-directory');
+  return {
+    ...actual,
+    get workspaceDataDirectory() {
+      return mockWorkspaceDataDir || actual.workspaceDataDirectory;
+    },
+  };
+});
+
 // The production resolver forks a child whose worker only exists in dist. In
 // tests, mirror the child by evaluating the config source in a fresh scope under
 // the task env; the in-process module cache would otherwise return the ambient
 // evaluation. Only handles the simple CJS configs the env tests use.
-function installFreshConfigEval(): void {
+function installFreshConfigEval(onEval?: () => void): void {
   _setChildEval(async (configFilePath, wsRoot, env) => {
+    onEval?.();
     const source = readFileSync(join(wsRoot, configFilePath), 'utf8');
     const moduleShim: { exports: PlaywrightTestConfig } = { exports: {} };
     new Function('module', 'exports', 'process', source)(
@@ -51,6 +68,7 @@ describe('@nx/playwright/plugin', () => {
     };
 
     process.chdir(tempFs.tempDir);
+    mockWorkspaceDataDir = join(tempFs.tempDir, '.nx', 'workspace-data');
     originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
   });
@@ -1179,6 +1197,74 @@ describe('@nx/playwright/plugin', () => {
     } finally {
       _setChildEval(null);
       setWorkspaceRoot(originalWorkspaceRoot);
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
+  it('rebuilds a cached gate when a dotenv outside the project changes', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BASE_URL;
+    setWorkspaceRoot(tempFs.tempDir);
+    // The disk cache is what carries a stale gate across runs, so this test
+    // needs it on, unlike the rest of the suite.
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    let evals = 0;
+    installFreshConfigEval(() => evals++);
+
+    try {
+      // A nested project whose config reads a workspace-root .env: the .env is
+      // outside the project's createNodes hash, so only the dotenv overlay in
+      // the plugin cache key can pick up a change to it.
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`,
+        'apps/e2e/tests/run-me.spec.ts': '',
+        '.env': 'BASE_URL=http://localhost:4301\n',
+      });
+
+      const run = async () =>
+        (
+          await createNodesFunction(
+            ['apps/e2e/playwright.config.js'],
+            { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+            context
+          )
+        )[0][1].projects['apps/e2e'].targets;
+
+      const first = await run();
+      expect(first['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4301' },
+      ]);
+      const evalsAfterFirst = evals;
+
+      const second = await run();
+      expect(second['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4301' },
+      ]);
+      expect(evals).toBe(evalsAfterFirst);
+
+      await tempFs.createFile('.env', 'BASE_URL=http://localhost:4302\n');
+      const third = await run();
+      expect(third['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4302' },
+      ]);
+      expect(evals).toBeGreaterThan(evalsAfterFirst);
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
       if (originalBaseUrl === undefined) {
         delete process.env.BASE_URL;
       } else {
