@@ -106,12 +106,13 @@ function truncateUtf8(value: string, maxBytes: number): string {
 
 /**
  * Sanitizing folds many characters to `_`, so distinct migrations can share a
- * prefix. The SHA-256 of the raw package and name is what keeps their handoffs
+ * prefix. The SHA-256 of the raw package and name is what keeps their paths
  * collision-resistant.
  */
-export function stepHandoffPath(
+export function stepFilePath(
   runDir: string,
-  migration: { package: string; name: string }
+  migration: { package: string; name: string },
+  extension: string
 ): string {
   const prefix = truncateUtf8(
     [...migration.package.split('/'), migration.name]
@@ -122,12 +123,20 @@ export function stepHandoffPath(
   const hash = createHash('sha256')
     .update(JSON.stringify([migration.package, migration.name]))
     .digest('hex');
-  return join(runDir, HANDOFFS_DIR_NAME, `${prefix}-${hash}.json`);
+  return join(runDir, HANDOFFS_DIR_NAME, `${prefix}-${hash}${extension}`);
 }
 
 /** Handoff path for a run step. No hash needed: step ids are unique within the run. */
 export function runStepHandoffPath(runDir: string, stepId: string): string {
   return join(runDir, HANDOFFS_DIR_NAME, `${sanitizeSegment(stepId)}.json`);
+}
+
+/** Absolute path of the handoff file for a migration step within a run. */
+export function stepHandoffPath(
+  runDir: string,
+  migration: { package: string; name: string }
+): string {
+  return stepFilePath(runDir, migration, '.json');
 }
 
 export type HandoffReadFailureReason =
