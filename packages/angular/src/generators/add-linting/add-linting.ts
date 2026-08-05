@@ -48,9 +48,12 @@ export async function addLintingGenerator(
     })
   );
 
-  // Everything below configures angular-eslint presets and selector rules,
-  // which have no equivalent in other linters — Oxlint ships no Angular plugin.
+  // The angular-eslint presets, selector rules and dependency install below have
+  // no equivalent in other linters. Only the formatting tail is shared.
   if (options.linter && options.linter !== 'eslint') {
+    if (!options.skipFormat) {
+      await formatFiles(tree);
+    }
     return runTasksInSerial(...tasks);
   }
 
