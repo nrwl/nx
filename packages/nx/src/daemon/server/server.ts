@@ -684,6 +684,7 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
         'Failed to evaluate dotenv changes for graph invalidation; invalidating the graph cache to be safe',
         e instanceof Error ? e.message : String(e)
       );
+      console.error(e);
       invalidateGraphCache();
     }
 
