@@ -332,6 +332,23 @@ function requestStatus(
           });
           return;
         }
+        if (
+          redirectUrl.protocol !== 'http:' &&
+          redirectUrl.protocol !== 'https:'
+        ) {
+          // Classified like an unparseable location rather than followed into
+          // `http.request`, which would throw synchronously and fail the wait
+          // outright. A boot-time redirect can still settle into a ready
+          // server within the budget.
+          settle({
+            href: url.href,
+            status: 0,
+            failure: describe(
+              `redirected to "${redirectUrl.href}", which is not an http or https url`
+            ),
+          });
+          return;
+        }
         settle(
           requestStatus(redirectUrl, ignoreHTTPSErrors, deadline, redirects + 1)
         );
