@@ -165,8 +165,11 @@ function homeSocketRoot(): string | undefined {
  * Only `ENOENT` walks up. `ELOOP`, `ENOTDIR` and `EACCES` mean the path exists
  * and cannot be read through, and inventing a spelling for it would be a guess;
  * the normalized form is returned as a best effort. That is a soft edge, and it
- * is tolerable only because this decides a refusal *message*, never containment
- * — which `lstat` and `O_NOFOLLOW` re-establish downstream regardless.
+ * is tolerable because a path `realpathSync` cannot read through is one
+ * `ensureOwnedPrivateDir` cannot establish either: its `lstat` sees the symlink
+ * or non-directory, and an ancestor we cannot traverse blocks `mkdirSync` the
+ * same way it blocked us. The edge cannot be walked into an accepted alias of a
+ * refused root.
  */
 function canonicalDir(dir: string): string {
   const resolved = resolve(dir);
@@ -213,13 +216,15 @@ function homeTierIsDistinct(): boolean {
   if (!NX_HOME_TMP_DIR) {
     return false;
   }
+  // Hoisted: the callback runs once per root, and this operand does not change.
+  const home = canonicalDir(NX_HOME_TMP_DIR);
   return ![
     systemTmpDir,
     NX_TMP_DIR,
     NX_USER_TMP_DIR,
     defaultSocketRoot(),
     NATIVE_CACHE_ROOT,
-  ].some((shared) => canonicalDir(shared) === canonicalDir(NX_HOME_TMP_DIR));
+  ].some((shared) => canonicalDir(shared) === home);
 }
 
 /**
