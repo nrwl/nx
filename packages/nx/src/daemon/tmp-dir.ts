@@ -18,7 +18,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join, resolve } from 'path';
+import { basename, dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
   ensureOwnedPrivateDir,
@@ -153,14 +153,38 @@ function homeSocketRoot(): string | undefined {
  * which `ensureOwnedPrivateDir` re-locks the shared container to `0700` and
  * `removeSocketDir` aims a recursive delete at it.
  *
- * A path that cannot be resolved does not exist yet, and so cannot be an alias
- * for one that does; its normalized form is the best available answer.
+ * Resolves the longest ancestor that exists and re-appends the rest, because
+ * both sides of the comparison go through here and **every root in the refusal
+ * list is absent before Nx's first run**. Canonicalizing only whole existing
+ * paths would leave the check degraded to the exact string match it replaced on
+ * precisely a fresh machine — where `/tmp/.nx` does not exist yet, but `/tmp`
+ * already resolves to `/private/tmp`.
+ *
+ * Only `ENOENT` walks up. `ELOOP`, `ENOTDIR` and `EACCES` mean the path exists
+ * and cannot be read through, and inventing a spelling for it would be a guess;
+ * the normalized form is returned as a best effort. That is a soft edge, and it
+ * is tolerable only because this decides a refusal *message*, never containment
+ * — which `lstat` and `O_NOFOLLOW` re-establish downstream regardless.
  */
 function canonicalDir(dir: string): string {
-  try {
-    return realpathSync(resolve(dir));
-  } catch {
-    return resolve(dir);
+  const resolved = resolve(dir);
+  const missing: string[] = [];
+  let candidate = resolved;
+
+  for (;;) {
+    try {
+      return join(realpathSync(candidate), ...missing);
+    } catch (e: any) {
+      if (e?.code !== 'ENOENT') {
+        return resolved;
+      }
+      const parent = dirname(candidate);
+      if (parent === candidate) {
+        return resolved;
+      }
+      missing.unshift(basename(candidate));
+      candidate = parent;
+    }
   }
 }
 
@@ -443,7 +467,7 @@ let warnedAboutConfiguredSocketDir = false;
  * that stages either fallback more than once has to clear the latches between
  * cases.
  */
-export function resetWorkspaceFallbackWarningForTesting() {
+export function resetSocketDirWarningsForTesting() {
   warnedAboutWorkspaceFallback = false;
   warnedAboutConfiguredSocketDir = false;
 }
@@ -553,11 +577,13 @@ function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
   // 95-character socket budget is most likely to trip, and anything that
   // allowed Nx's usual roots by path no longer covers where the sockets went.
   //
-  // Once per process. Neither socket-dir accessor is memoized and both the
-  // daemon and every plugin worker resolve one, so without the latch a single
-  // command repeats an identical three-sentence warning several times. The
-  // verbose line above can repeat because it is a no-op by default; this
-  // cannot.
+  // Once per process. Neither socket-dir accessor is memoized, and one CLI
+  // process resolves several — the daemon socket, one per spawned plugin
+  // worker, one per `PseudoTerminal` — so without the latch a single command
+  // repeats an identical three-sentence warning many times over. (Workers are
+  // separate processes with their own module instance and their own latch; the
+  // repetition this removes is the within-process one.) The verbose line above
+  // can repeat because it is a no-op by default; this cannot.
   //
   // The allowlist line is gated on `isSandbox()`. This path is reached far more
   // often for ordinary reasons — a peer owning the shared container, a
