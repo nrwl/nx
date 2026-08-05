@@ -165,11 +165,14 @@ async function getTerminalOutputLifeCycle(
     console.log = createPatchedConsoleMethod(originalConsoleLog);
     console.error = createPatchedConsoleMethod(originalConsoleError);
 
-    const patchedWrite = (_chunk, encoding, callback) => {
-      // Preserve original behavior around callback and return value, just in case.
-      // write(chunk, cb) is as valid as write(chunk, encoding, cb); dropping the
-      // two-argument form silently strands callers that await the callback.
-      const cb = typeof encoding === 'function' ? encoding : callback;
+    // Handle both overload signatures: dropping write(chunk, cb) would strand the
+    // callback and hang anything awaiting it, such as output.drain().
+    const patchedWrite = (_chunk, encodingOrCallback, callback) => {
+      const cb =
+        typeof encodingOrCallback === 'function'
+          ? encodingOrCallback
+          : callback;
+      // Preserve original behavior around callback and return value, just in case
       if (cb) {
         cb();
       }
@@ -276,11 +279,12 @@ async function getTerminalOutputLifeCycle(
         isError: boolean
       ): typeof process.stdout.write | typeof process.stderr.write => {
         // @ts-ignore
-        return (chunk, encoding, callback) => {
-          // write(chunk, cb) is as valid as write(chunk, encoding, cb); without this
-          // the callback is stranded and `encoding` reaches toString() as a function.
-          const cb = typeof encoding === 'function' ? encoding : callback;
-          const enc = typeof encoding === 'function' ? undefined : encoding;
+        // Handle both overload signatures: dropping write(chunk, cb) would strand the
+        // callback, and the callback would reach toString() below as the encoding.
+        return (chunk, encodingOrCallback, callback) => {
+          const isCb = typeof encodingOrCallback === 'function';
+          const cb = isCb ? encodingOrCallback : callback;
+          const enc = isCb ? undefined : encodingOrCallback;
           if (isError) {
             logDebug(
               Buffer.isBuffer(chunk) ? chunk.toString(enc) : chunk.toString()

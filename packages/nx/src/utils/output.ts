@@ -375,9 +375,9 @@ class CLIOutput {
       // process.nextTick: both run before the 'error' event, so the crash comes back.
       const onError = () => resolve();
       stream.on('error', onError);
-      // Encoding passed explicitly: the stdout patches in run-command.ts and
-      // task-orchestrator.ts read (chunk, encoding, callback) positionally, and a
-      // two-argument call leaves their callback undefined — drain would never resolve.
+      // Encoding passed explicitly: a positional (chunk, encoding, callback) stdout
+      // patch that does not normalize drops a two-argument write's callback, and this
+      // would never resolve. The patches in this repo normalize; third-party ones may not.
       stream.write('', 'utf8', () => {
         resolve();
         setImmediate(() => stream.removeListener('error', onError));

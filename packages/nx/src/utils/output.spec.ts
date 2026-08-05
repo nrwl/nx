@@ -155,9 +155,8 @@ describe('output.drain', () => {
     expect(stalled.stream.listenerCount('error')).toBe(0);
   });
 
-  // The stdout patches in run-command.ts and task-orchestrator.ts take
-  // (chunk, encoding, callback) positionally; a two-argument write would leave their
-  // callback undefined and drain() would never resolve.
+  // A positional (chunk, encoding, callback) stdout patch that does not normalize —
+  // as any third-party wrapper may be — drops a two-argument write's callback.
   it('resolves when process.stdout.write is patched positionally', async () => {
     const stalled = stalledStdout(1000);
     useStdout(stalled.stream);
