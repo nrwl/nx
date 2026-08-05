@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), and — when the diff touches docs content — the docs-reviewer agent (checks changed pages against astro-docs/STYLE_GUIDE.md, the CLAUDE.md docs instructions, and the structural hazards around them: missing redirects, sidebar-coupled routes, parse-breaking Markdoc), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), and the docs-reviewer agent (checks whether the change leaves prose docs stale or missing, and checks changed docs pages against astro-docs/STYLE_GUIDE.md, the CLAUDE.md docs instructions, and the structural hazards around them: missing redirects, sidebar-coupled routes, parse-breaking Markdoc), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
 allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(docker build *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
@@ -877,14 +877,14 @@ this for `type-design-analyzer` ("only when the diff adds or changes types"); th
 generalizes, but only where the predicate is **mechanically decidable from the changed-file list and
 the diff text**, with no judgment about likelihood:
 
-| skip                                                                                     | when — and only when                                                                                                                                                  |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type-design-analyzer`                                                                   | the diff declares or changes no type, interface, or signature                                                                                                         |
-| `security-analyzer`, `performance-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` | the diff changes **no executable code at all** — every path is docs, prose, or comments (`astro-docs/**`, `*.md`, `*.mdoc`)                                           |
-| `docs-reviewer`                                                                          | no changed path is under `astro-docs/src/content/` and `astro-docs/sidebar.mts` is untouched — the inverse gate: it spawns **only** on docs-content diffs (Step 5a.4) |
+| skip                                                                                     | when — and only when                                                                                                        |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `type-design-analyzer`                                                                   | the diff declares or changes no type, interface, or signature                                                               |
+| `security-analyzer`, `performance-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` | the diff changes **no executable code at all** — every path is docs, prose, or comments (`astro-docs/**`, `*.md`, `*.mdoc`) |
 
-`code-reviewer`, `comment-analyzer`, `alternative-approach` and `reproduce-verifier` always run: every
-diff has quality, prose, an approach, and claims to check against code.
+`code-reviewer`, `comment-analyzer`, `alternative-approach`, `reproduce-verifier` and `docs-reviewer`
+always run: every diff has quality, prose, an approach, claims to check against code — and either
+changes docs pages (compliance) or may change behavior the docs describe in prose (coverage, Step 5a.4).
 
 **A dimension being unlikely to fire is not non-applicability.** "This diff probably has no security
 issue" is exactly the judgment that loses a finding, and you cannot tell from outside which of the two
@@ -1008,6 +1008,15 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 
 **Only critical and important findings drive the verdict.** Keep **Critical**, **Important**, and **Strengths** in full. Suggestions are no longer discarded: distill any **Suggestions** / nice-to-have material into a `### Suggestions` section of at most 5 one-line bullets (`file:line — ask`), keeping only concrete, actionable asks (a rename, a restructure, a doc cross-link) and dropping vague polish. This tier NEVER influences the verdict — it exists because the maintainer's own reviews are largely made of it. The trimmed text is what flows into the steps below (reconciliation in Step 5b, formatting in Step 6).
 
+"Keep in full" is the load-bearing half of that paragraph, and it is the half this step actually fails. Four rules make it enforceable:
+
+- **Never re-tier an agent's finding downward on your own judgment.** The only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
+- **Severity comes from the rule violated, not the size of the fix.** A one-character punctuation change that breaks a committed `STYLE_GUIDE.md` rule vale has no rule for is Important. A three-paragraph rewrite that violates nothing is a Suggestion. Judging by surface form is the specific way this step goes wrong: docs, comment, and naming findings all have tiny diffs, so they read as polish and get swept into a tier that cannot move the verdict.
+- **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical or Important, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
+- **Reconcile per agent before you write the draft.** For each agent that ran, count what it filed at each tier and compare with what your draft carries. Any tier whose count dropped gets a one-line reason in `## Failures`, naming the calibration that licensed it. This is bookkeeping, not judgment, and it is the only thing that catches a compression you did not notice making. `docs-reviewer` hands you this for free: it emits a `TIERS: findings=<n> suggestions=<n>` line as the fourth line of its report, and `findings=<n>` is the number of docs items that must appear in your Critical/Important sections. Grep it, compare it, and treat a shortfall you cannot justify as a bug in your trim rather than a judgement you are entitled to.
+
+Observed: a `docs-reviewer` report filing two findings and four suggestions reached a draft as one finding and one merged bullet. The semicolon violation was demoted because punctuation reads as taste, then the cap silently absorbed two more. Nothing in the run flagged it; the maintainer did.
+
 ### Maintainer calls
 
 The review body must include a `### Maintainer calls` section whenever the review _endorsed_ a debatable design decision on the maintainer's behalf — fail-open vs fail-closed, normalize-then-compare vs exact comparison, an opt-out escape hatch left permissive, compat-driven leniency, a documented trade-off accepted as-is. One line each: the decision, the stricter/alternative option, and why the PR's choice was endorsed. These are the judgments a human most often overrides — burying them inside Strengths or an agent's endorsement hides exactly the calls the maintainer wants to veto. If there are none, omit the section.
@@ -1016,7 +1025,9 @@ The review body must include a `### Maintainer calls` section whenever the revie
 
 Review changed docs for _editorial direction_, not just factual accuracy: does the page recommend a practice the team shouldn't encourage (e.g. sharing a daemon across containers — a remote-code-execution vector), does it frame an escape hatch as a primary use case, does a new env var/flag doc link back to the concept page that explains its risks? A doc that accurately describes a bad recommendation is a finding, not a strength. Rate genuinely harmful guidance Important; wording/positioning asks go under Suggestions.
 
-This direction check is yours, here at trim time. Compliance with the committed docs rules (`astro-docs/STYLE_GUIDE.md`, the CLAUDE.md docs instructions) and the structural checks (redirects, sidebar coupling, Markdoc validity) belong to the `docs-reviewer` agent — Step 5a.4 dispatched it if the diff touched docs content. Don't re-derive its checks; do re-check its surviving findings against the calibrations below like everyone else's.
+This direction check is yours, here at trim time — including rating genuinely harmful guidance, which the `docs-reviewer` agent deliberately does not judge. Docs coverage of the change, compliance with the committed docs rules (`astro-docs/STYLE_GUIDE.md`, the CLAUDE.md docs instructions), and the structural checks (redirects, sidebar coupling, Markdoc validity) belong to that agent — Step 5a.4 dispatched it. Don't re-derive its checks; do re-check its surviving findings against the calibrations below like everyone else's.
+
+**This latitude is additive only.** It lets you _add_ a direction finding the agent's contract told it not to judge. It does not let you demote what that agent filed. Its `DOCS_CONCERN` and `DOCS_UPDATE_NEEDED` verdicts are defined as Important-level in its own contract, and every finding under them arrives with a committed rule quoted — so moving one to Suggestions overrides a rule citation with a preference. The docs tier is where this is most tempting, because a style-guide violation and a taste-level wording ask look identical in the diff and differ only in whether a committed rule names them.
 
 ### Nx-specific calibration
 
@@ -1140,16 +1151,16 @@ Capture the output as `$SECURITY_REPORT` and fold it into the review body as `##
 - `SECURITY_CONCERN` — counts as an important finding, with the traced chain as the evidence.
 - `SECURITY_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
 
-## Step 5a.4: Run the docs-reviewer agent (only when the diff touches docs content)
+## Step 5a.4: Run the docs-reviewer agent
 
-Dispatch only when the changed-file list contains a path under `astro-docs/src/content/` or changes `astro-docs/sidebar.mts` — the same mechanical predicate as the structural-skip table, applied in reverse. On any other diff, record it as not-applicable in `## Failures` and move on. When it applies, dispatch in parallel with Step 5 — it answers "do the changed docs comply with the rules this repo committed to?" (`astro-docs/STYLE_GUIDE.md`, the docs instructions in `CLAUDE.md`) plus the structural hazards around them (missing redirects for moved/renamed/deleted pages, sidebar-label-coupled routes, Markdoc that breaks parsing):
+In parallel with Step 5, dispatch the `docs-reviewer` agent — it answers two questions: "does this change need docs updates it doesn't have?" (every diff — a code change that alters user-facing behavior can leave prose pages stale without touching a docs file) and, when the diff touches docs content, "do the changed docs comply with the rules this repo committed to?" (`astro-docs/STYLE_GUIDE.md`, the docs instructions in `CLAUDE.md`) plus the structural hazards around them (missing redirects for moved/renamed/deleted pages, sidebar-label-coupled routes, Markdoc that breaks parsing):
 
 ```
 Agent(
   subagent_type="docs-reviewer",
-  description="Review PR <NUMBER> docs against committed docs rules",
+  description="Review PR <NUMBER> docs coverage and compliance",
   prompt="""
-Review the documentation changes in PR <NUMBER> in nrwl/nx for compliance with the repo's committed docs rules and for structural integrity.
+Review PR <NUMBER> in nrwl/nx for docs coverage (does the change leave prose docs stale or missing?) and, where the diff changes docs content, for compliance with the repo's committed docs rules and structural integrity.
 
 Inputs:
 - PR_NUMBER: <NUMBER>
@@ -1165,6 +1176,8 @@ You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the cont
 
 REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
 
+ALSO REQUIRED — emit the `TIERS: findings=<n> suggestions=<n>` line your own contract specifies, as a fourth plain-text line immediately after those three. Emit it on every report including `DOCS_SOUND` (`findings=0`). This is docs-specific and additional to the universal three-line block, not a replacement for it.
+
 Follow your standard workflow and return the structured report.
 """
 )
@@ -1172,9 +1185,12 @@ Follow your standard workflow and return the structured report.
 
 Capture the output as `$DOCS_REPORT` and fold it into the review body as `### Docs review`, directly below `### Security analysis` (or below `### Performance analysis` when security was skipped). Verdict influence (Step 7):
 
-- `DOCS_BROKEN` — counts as a critical finding (reader-facing breakage: missing redirect, orphaned page, parse-breaking Markdoc, harmful guidance).
+- `DOCS_BROKEN` — counts as a critical finding (reader-facing breakage: missing redirect, orphaned page, parse-breaking Markdoc).
 - `DOCS_CONCERN` — counts as an important finding, with the committed rule quoted as the evidence.
+- `DOCS_UPDATE_NEEDED` — counts as an important finding, with the named stale/missing page(s) as the ask.
 - `DOCS_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
+
+Harmful-guidance calls are deliberately NOT the agent's: editorial direction stays with you at trim time ("Docs direction" above), rated Important there.
 
 The agent's Suggestions tier (voice/positioning polish) merges into the draft's `### Suggestions` section under the same 5-bullet cap as everything else — it never influences the verdict.
 
