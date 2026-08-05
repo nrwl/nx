@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
+description: Deep code review of a single open PR in nrwl/nx. Checks out the PR inside an isolated sandbox container — gVisor on Linux, the Docker VM on macOS — never into the host working tree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the tracking ticket — a GitHub issue or a Linear NXC- ticket, fetched up front — and executes its repro inside the sandbox), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), and the docs-reviewer agent (checks whether the change leaves prose docs stale or missing, and checks changed docs pages against astro-docs/STYLE_GUIDE.md, the CLAUDE.md docs instructions, and the structural hazards around them: missing redirects, sidebar-coupled routes, parse-breaking Markdoc), then — only when a finding turns on why the author did something, and only once the review is finished — verifies that finding against the PR's Polygraph session (read-only, never resumed; it can downgrade a finding or raise a question but never add one, and its internal content never reaches the public draft), surfaces critical and important findings (plus strengths, a terse suggestions list, and explicit maintainer-call decisions), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Claude runs on the host and reads/executes the PR code only through `docker exec` — untrusted PR code never runs on the host and Claude's credentials never enter the sandbox. Use when you want a thorough review of one PR.
 allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(docker build *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
@@ -90,7 +90,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 5`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 6`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ### Fetch the tracking ticket
 
@@ -462,7 +462,7 @@ If all signals are cheap-negative, skip emitting the section entirely (no noise 
 
 ### Early exit on a strong close signal
 
-If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, security-analyzer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
+If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, security-analyzer, docs-reviewer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
 
 ## Step 4.7: Measure shared load-bearing claims ONCE, before dispatching
 
@@ -882,8 +882,9 @@ the diff text**, with no judgment about likelihood:
 | `type-design-analyzer`                                                                   | the diff declares or changes no type, interface, or signature                                                               |
 | `security-analyzer`, `performance-analyzer`, `silent-failure-hunter`, `pr-test-analyzer` | the diff changes **no executable code at all** — every path is docs, prose, or comments (`astro-docs/**`, `*.md`, `*.mdoc`) |
 
-`code-reviewer`, `comment-analyzer`, `alternative-approach` and `reproduce-verifier` always run: every
-diff has quality, prose, an approach, and claims to check against code.
+`code-reviewer`, `comment-analyzer`, `alternative-approach`, `reproduce-verifier` and `docs-reviewer`
+always run: every diff has quality, prose, an approach, claims to check against code — and either
+changes docs pages (compliance) or may change behavior the docs describe in prose (coverage, Step 5a.4).
 
 **A dimension being unlikely to fire is not non-applicability.** "This diff probably has no security
 issue" is exactly the judgment that loses a finding, and you cannot tell from outside which of the two
@@ -936,7 +937,7 @@ code already carries recorded coverage from a prior attempt.
 
 ### Verify each agent actually reviewed something
 
-A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the toolkit agents here **and** the four in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
+A silent "looks good" from an agent that read nothing is the one outcome this pipeline must never produce: it turns a missing review into an apparent endorsement. **Every agent you actually dispatched** — the toolkit agents here **and** the ones in Steps 5a–5a.5 — must prove it opened the artifact. Scoping (above) decides _which_ agents run; it never lowers the bar for one that did. An agent skipped by a scope decision is recorded as not-applicable in `## Failures`; an agent that ran and cannot prove it read anything is a failure.
 
 **Demand a line number, not just a line.** A filename is not evidence: the changed-file list is a host file every agent is told to `Read`, so an agent that opened nothing else can still cite one. Neither is a `diff --git` header (reconstructible from that list) nor — on a re-review — a bare code line (the prior-review context file quotes applied fixes, so the _content_ of a `+` line is in the agent's sanctioned reading set even when its container reads fail). The one thing an agent cannot produce without opening `<EVIDENCE_FILE>` is the **line number** of a `+`/`-` content line: line numbers appear in no prompt and in no prose. Require both:
 
@@ -984,7 +985,7 @@ Each element defeats a specific failure that real reviews of this skill actually
 
 **One tolerated deviation: a markdown code-span wrapper.** Agents recurrently return `EVIDENCE_TEXT` wrapped in backticks, sometimes also backslash-escaping the inner ones, despite the prompt saying not to. Strip an outer code span and any such escaping, then run the comparison unchanged. This concedes nothing: the **line number** is the proof of work, and the unwrapped text must still match the file byte-for-byte. Failing an honest agent over a formatting habit costs a whole re-review — Step 7 flips the verdict to `failed`, the one value that defeats Step 2's dedup. Record it as a protocol deviation in `## Failures`, not as a failure.
 
-**This applies to endorsements too, and especially to them.** `APPROACH_SOUND`, `PERFORMANCE_SOUND`, `SECURITY_SOUND`, and a `NOT_ATTEMPTED` reproduction all assert _"I checked and found nothing"_ — a claim an agent that read nothing produces just as fluently, and which Steps 5a–5a.3 fold into **Strengths** as an affirmative statement that the dimension was audited. An endorsement must cost more evidence than a finding, not less. A `*_SOUND` verdict with no verified EVIDENCE line is recorded **failed**, never as a strength.
+**This applies to endorsements too, and especially to them.** `APPROACH_SOUND`, `PERFORMANCE_SOUND`, `SECURITY_SOUND`, `DOCS_SOUND`, and a `NOT_ATTEMPTED` reproduction all assert _"I checked and found nothing"_ — a claim an agent that read nothing produces just as fluently, and which Steps 5a–5a.4 fold into **Strengths** as an affirmative statement that the dimension was audited. An endorsement must cost more evidence than a finding, not less. A `*_SOUND` verdict with no verified EVIDENCE line is recorded **failed**, never as a strength.
 
 **If EVIDENCE fails to verify, re-dispatch once — but never paste the answer.** Restating the changed-file list is a no-op; the agent already had it. Pasting diff content into the retry prompt is worse than a no-op: it makes the retry's own check unfalsifiable, because the premise the whole mechanism rests on — _the diff content is not in the prompt_ — becomes false exactly for the agent under suspicion. A retry that hands over the evidence launders a failed agent into a pass, and since `verdict: failed` only fires after two failures, it also means that verdict can essentially never fire.
 
@@ -1007,6 +1008,15 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 
 **Only critical and important findings drive the verdict.** Keep **Critical**, **Important**, and **Strengths** in full. Suggestions are no longer discarded: distill any **Suggestions** / nice-to-have material into a `### Suggestions` section of at most 5 one-line bullets (`file:line — ask`), keeping only concrete, actionable asks (a rename, a restructure, a doc cross-link) and dropping vague polish. This tier NEVER influences the verdict — it exists because the maintainer's own reviews are largely made of it. The trimmed text is what flows into the steps below (reconciliation in Step 5b, formatting in Step 6).
 
+"Keep in full" is the load-bearing half of that paragraph, and it is the half this step actually fails. Four rules make it enforceable:
+
+- **Never re-tier an agent's finding downward on your own judgment.** The only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
+- **Severity comes from the rule violated, not the size of the fix.** A one-character punctuation change that breaks a committed `STYLE_GUIDE.md` rule vale has no rule for is Important. A three-paragraph rewrite that violates nothing is a Suggestion. Judging by surface form is the specific way this step goes wrong: docs, comment, and naming findings all have tiny diffs, so they read as polish and get swept into a tier that cannot move the verdict.
+- **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical or Important, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
+- **Reconcile per agent before you write the draft.** For each agent that ran, count what it filed at each tier and compare with what your draft carries. Any tier whose count dropped gets a one-line reason in `## Failures`, naming the calibration that licensed it. This is bookkeeping, not judgment, and it is the only thing that catches a compression you did not notice making. `docs-reviewer` hands you this for free: it emits a `TIERS: findings=<n> suggestions=<n>` line as the fourth line of its report, and `findings=<n>` is the number of docs items that must appear in your Critical/Important sections. Grep it, compare it, and treat a shortfall you cannot justify as a bug in your trim rather than a judgement you are entitled to.
+
+Observed: a `docs-reviewer` report filing two findings and four suggestions reached a draft as one finding and one merged bullet. The semicolon violation was demoted because punctuation reads as taste, then the cap silently absorbed two more. Nothing in the run flagged it; the maintainer did.
+
 ### Maintainer calls
 
 The review body must include a `### Maintainer calls` section whenever the review _endorsed_ a debatable design decision on the maintainer's behalf — fail-open vs fail-closed, normalize-then-compare vs exact comparison, an opt-out escape hatch left permissive, compat-driven leniency, a documented trade-off accepted as-is. One line each: the decision, the stricter/alternative option, and why the PR's choice was endorsed. These are the judgments a human most often overrides — burying them inside Strengths or an agent's endorsement hides exactly the calls the maintainer wants to veto. If there are none, omit the section.
@@ -1014,6 +1024,10 @@ The review body must include a `### Maintainer calls` section whenever the revie
 ### Docs direction (when the diff touches `astro-docs/`)
 
 Review changed docs for _editorial direction_, not just factual accuracy: does the page recommend a practice the team shouldn't encourage (e.g. sharing a daemon across containers — a remote-code-execution vector), does it frame an escape hatch as a primary use case, does a new env var/flag doc link back to the concept page that explains its risks? A doc that accurately describes a bad recommendation is a finding, not a strength. Rate genuinely harmful guidance Important; wording/positioning asks go under Suggestions.
+
+This direction check is yours, here at trim time — including rating genuinely harmful guidance, which the `docs-reviewer` agent deliberately does not judge. Docs coverage of the change, compliance with the committed docs rules (`astro-docs/STYLE_GUIDE.md`, the CLAUDE.md docs instructions), and the structural checks (redirects, sidebar coupling, Markdoc validity) belong to that agent — Step 5a.4 dispatched it. Don't re-derive its checks; do re-check its surviving findings against the calibrations below like everyone else's.
+
+**This latitude is additive only.** It lets you _add_ a direction finding the agent's contract told it not to judge. It does not let you demote what that agent filed. Its `DOCS_CONCERN` and `DOCS_UPDATE_NEEDED` verdicts are defined as Important-level in its own contract, and every finding under them arrives with a committed rule quoted — so moving one to Suggestions overrides a rule citation with a preference. The docs tier is where this is most tempting, because a style-guide violation and a taste-level wording ask look identical in the diff and differ only in whether a committed rule names them.
 
 ### Nx-specific calibration
 
@@ -1136,6 +1150,49 @@ Capture the output as `$SECURITY_REPORT` and fold it into the review body as `##
 - `SECURITY_VULNERABILITY` — counts as a critical finding (complete untrusted-source-to-sink chain in a default setup).
 - `SECURITY_CONCERN` — counts as an important finding, with the traced chain as the evidence.
 - `SECURITY_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
+
+## Step 5a.4: Run the docs-reviewer agent
+
+In parallel with Step 5, dispatch the `docs-reviewer` agent — it answers two questions: "does this change need docs updates it doesn't have?" (every diff — a code change that alters user-facing behavior can leave prose pages stale without touching a docs file) and, when the diff touches docs content, "do the changed docs comply with the rules this repo committed to?" (`astro-docs/STYLE_GUIDE.md`, the docs instructions in `CLAUDE.md`) plus the structural hazards around them (missing redirects for moved/renamed/deleted pages, sidebar-label-coupled routes, Markdoc that breaks parsing):
+
+```
+Agent(
+  subagent_type="docs-reviewer",
+  description="Review PR <NUMBER> docs coverage and compliance",
+  prompt="""
+Review PR <NUMBER> in nrwl/nx for docs coverage (does the change leave prose docs stale or missing?) and, where the diff changes docs content, for compliance with the repo's committed docs rules and structural integrity.
+
+Inputs:
+- PR_NUMBER: <NUMBER>
+- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
+- REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
+- FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
+- CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
+- BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
+
+Read /tmp/pr-<NUMBER>.review-charter.md (a host file) first — it carries the mandatory sandbox reading protocol. The PR source is NOT on the host; reach it only via `docker exec nx-review-pr-<NUMBER> cat/grep/find/sed /work/nx/…`. Read the rules you enforce from the checkout itself (/work/nx/astro-docs/STYLE_GUIDE.md and the docs sections of /work/nx/CLAUDE.md), never from memory.
+
+You are READ-ONLY. Use only `cat`/`grep`/`find`/`sed`/`git show` inside the container. Never run installs, builds, tests, Vale, or the reproduction — not in the container, and not on the host. Only the reproduce-verifier executes anything.
+
+REQUIRED — open your report with the three proof-of-work lines exactly as the charter's "Proof of work" section specifies, with <EVIDENCE_FILE> as the file the line number refers to. This applies to an endorsement verdict exactly as to a finding: a `*_SOUND` report that does not verify is recorded as failed, not folded into Strengths.
+
+ALSO REQUIRED — emit the `TIERS: findings=<n> suggestions=<n>` line your own contract specifies, as a fourth plain-text line immediately after those three. Emit it on every report including `DOCS_SOUND` (`findings=0`). This is docs-specific and additional to the universal three-line block, not a replacement for it.
+
+Follow your standard workflow and return the structured report.
+"""
+)
+```
+
+Capture the output as `$DOCS_REPORT` and fold it into the review body as `### Docs review`, directly below `### Security analysis` (or below `### Performance analysis` when security was skipped). Verdict influence (Step 7):
+
+- `DOCS_BROKEN` — counts as a critical finding (reader-facing breakage: missing redirect, orphaned page, parse-breaking Markdoc).
+- `DOCS_CONCERN` — counts as an important finding, with the committed rule quoted as the evidence.
+- `DOCS_UPDATE_NEEDED` — counts as an important finding, with the named stale/missing page(s) as the ask.
+- `DOCS_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
+
+Harmful-guidance calls are deliberately NOT the agent's: editorial direction stays with you at trim time ("Docs direction" above), rated Important there.
+
+The agent's Suggestions tier (voice/positioning polish) merges into the draft's `### Suggestions` section under the same 5-bullet cap as everything else — it never influences the verdict.
 
 ## Step 5a.5: Run the reproduce-verifier agent
 
@@ -1375,7 +1432,7 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 
 Check in this order (first match wins):
 
-- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found. An agent deliberately **not dispatched** under "Scoping which agents spawn" does not trigger this — that is a recorded scope decision, not a dimension that silently went missing.
+- **Any agent recorded as failed** in Step 5 / 5a / 5a.2 / 5a.3 / 5a.4 / 5a.5 (EVIDENCE line unverifiable after a retry, or the agent errored out) → `verdict: failed`. This outranks everything below deliberately: a review missing one or more dimensions is not a clean review, and a `failed` verdict is the only value Step 2's dedup will let you re-review at the same commit. Name the failed agents in `## Failures`. Do **not** reason "the other agents found nothing, so it's fine" — the whole point is that you cannot know what the missing agent would have found. An agent deliberately **not dispatched** under "Scoping which agents spawn" does not trigger this — that is a recorded scope decision, not a dimension that silently went missing.
 - Close-without-merge check emitted "Likely superseded" with strong evidence (see Step 4.5) → `verdict: superseded`
 - Close-without-merge check emitted "Likely unnecessary" with strong evidence (see Step 4.5) → `verdict: unnecessary`
 - Has any **Still concerning** or **New concerns** items rated critical → `verdict: needs-changes`
