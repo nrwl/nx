@@ -98,13 +98,15 @@ export function addPluginsToOxlintConfig(
     updateJson<OxlintConfig>(tree, projectConfigPath, (json) => {
       json.plugins = union(json.plugins ?? [], plugins);
       // Deliberately not adding one: an existing config without `extends` may
-      // be isolating from the root on purpose. Say so rather than silently
-      // enabling plugins the root's rules will never reach.
+      // be isolating from the root on purpose. Say so rather than leaving the
+      // project silently outside the root's severities.
       if (rootConfigPath && !json.extends?.length && projectRoot !== '.') {
         logger.warn(
           `"${projectRoot}" has an Oxlint config with no "extends", so ${rootConfigPath}'s ` +
-            `categories and rules do not apply to it — including anything the plugin(s) ` +
-            `${plugins.join(', ')} enable. Add "extends": ["${joinPathFragments(
+            `categories and rules do not apply to it. The plugin(s) ${plugins.join(
+              ', '
+            )} still run, but under Oxlint's defaults — so this project can pass lint on ` +
+            `violations the root would fail it for. Add "extends": ["${joinPathFragments(
               offsetFromRoot(projectRoot),
               rootConfigPath
             )}"] if that is not intended.`
