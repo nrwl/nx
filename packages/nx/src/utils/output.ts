@@ -359,11 +359,18 @@ class CLIOutput {
 
   drain(): Promise<void> {
     return new Promise((resolve) => {
-      if (process.stdout.writableNeedDrain) {
-        process.stdout.once('drain', resolve);
-      } else {
+      // `writableNeedDrain` is only set once the queue passes the high-water mark,
+      // so a shorter queue needs the write callback instead. Waiting on the 'drain'
+      // event alone lets `process.exit()` discard up to highWaterMark of output.
+      if (process.stdout.writableLength === 0) {
         resolve();
+        return;
       }
+      // The reader may already be gone (`nx ... | head`); EPIPE must not fail an
+      // otherwise successful run. Use `on`, not `once`: the write callback fires
+      // with the error first, which would remove a `once` listener before 'error'.
+      process.stdout.on('error', () => resolve());
+      process.stdout.write('', () => resolve());
     });
   }
 }
