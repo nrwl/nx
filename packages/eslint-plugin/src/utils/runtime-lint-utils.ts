@@ -450,6 +450,11 @@ export function hasBuildExecutor(
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]dist[\/\\]bin[\/\\]run-executor\.js$/;
+// `@nx/oxlint` runs this rule through Oxlint's JS-plugin bridge, where argv[1]
+// is `node_modules/oxlint/bin/oxlint`. Without this the graph memo below never
+// takes and every linted file re-reads the whole project graph. The oxc editor
+// extension runs `oxc_language_server`, so IDE runs still get a fresh graph.
+const OXLINT_REGEX = /node_modules.*[\/\\]oxlint(?:\.js)?$/;
 
 export function isTerminalRun(): boolean {
   return (
@@ -457,6 +462,7 @@ export function isTerminalRun(): boolean {
     (!!process.argv[1].match(NRWL_CLI_REGEX) ||
       !!process.argv[1].match(JEST_REGEX) ||
       !!process.argv[1].match(ESLINT_REGEX) ||
+      !!process.argv[1].match(OXLINT_REGEX) ||
       !!process.argv[1].endsWith('/bin/jest.js'))
   );
 }
