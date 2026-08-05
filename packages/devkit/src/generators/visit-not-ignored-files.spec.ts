@@ -273,8 +273,12 @@ describe('visitNotIgnoredFiles', () => {
       'a.ts',
       'keep.ts',
       // `/generated/` matches nothing without this, so those cases would assert
-      // only that the walker ignores nothing.
+      // only that the walker ignores nothing. The nested copy is what makes the
+      // leading slash observable: git anchors it to the root, so this one is
+      // visited and `generated/a.ts` is not. Without the pair, stripping every
+      // anchor from every pattern leaves the whole suite green.
       'generated/a.ts',
+      'apps/generated/a.ts',
       'dist/a.ts',
       'dist/keep.ts',
       'apps/a.ts',
@@ -330,6 +334,13 @@ describe('visitNotIgnoredFiles', () => {
         GIT_CONFIG_PARAMETERS: '',
         GIT_TEMPLATE_DIR: '',
       };
+      // These point git at a different repo entirely - git exports them to its
+      // own subprocesses, so a suite run from a hook or `git bisect run` would
+      // otherwise re-init the ambient repo instead of `repo`. They have to be
+      // removed rather than emptied: git rejects `''` as an invalid path.
+      delete env.GIT_DIR;
+      delete env.GIT_WORK_TREE;
+      delete env.GIT_INDEX_FILE;
       // No `stdio: 'ignore'`: `-q` already silences the success path, and
       // discarding stderr would report every failure here - a missing git, a
       // read-only TMPDIR, `safe.directory` - as a bare "Command failed".
@@ -356,11 +367,20 @@ describe('visitNotIgnoredFiles', () => {
       return new Set(seen.filter((f) => FILES.includes(f)));
     }
 
+    // The label is pre-escaped rather than left to `%p`, which renders the
+    // multi-line pattern across three lines and breaks `jest -t` filtering.
     it.each(
       PATTERNS.flatMap((pattern) =>
-        NEGATIONS.map((negation) => [pattern, negation] as const)
+        NEGATIONS.map(
+          (negation) =>
+            [
+              `${JSON.stringify(pattern)} + ${JSON.stringify(negation)}`,
+              pattern,
+              negation,
+            ] as const
+        )
       )
-    )('matches git for %p + %p', (pattern, negation) => {
+    )('matches git for %s', (_label, pattern, negation) => {
       const gitignore = [pattern, negation].filter(Boolean).join('\n') + '\n';
 
       expect([...walkerVisits(gitignore)].sort()).toEqual(
