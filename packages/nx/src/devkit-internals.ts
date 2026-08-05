@@ -34,10 +34,7 @@ export { readTargetDefaultsForTarget } from './project-graph/utils/project-confi
 // from carry preconditions a caller can violate - a chain must be resolved from
 // the file's own directory, and the array it returns is the memo cache itself -
 // and nothing outside this package needs them.
-export {
-  getIgnoreObjectForTree,
-  createTreeIgnoreChecker,
-} from './utils/ignore';
+export { createTreeIgnoreChecker } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';

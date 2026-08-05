@@ -26,8 +26,8 @@ export type ScopedIgnoreMatcher = {
  *
  * Ignore files cascade - a `.gitignore` covers its own directory and below, and
  * its patterns are relative to *itself*, not to the workspace root. Reading only
- * the root file, which is what `getIgnoreObject` and `getIgnoreObjectForTree`
- * do, silently misses every nested one.
+ * the root file, which is what `getIgnoreObject` does, silently misses every
+ * nested one.
  *
  * A directory's answer is its own files plus its parent's, so every directory on
  * the way up is memoized rather than only the one asked for: sibling leaves
@@ -157,21 +157,6 @@ export function createTreeIgnoreChecker(
 export function posixDirname(relativePath: string): string {
   const separator = relativePath.lastIndexOf('/');
   return separator === -1 ? '' : relativePath.slice(0, separator);
-}
-
-export function getIgnoreObjectForTree(tree: Tree) {
-  let ig: ReturnType<typeof ignore>;
-  if (tree.exists('.gitignore')) {
-    ig = ignore();
-    ig.add('.git');
-    ig.add(tree.read('.gitignore', 'utf-8'));
-  }
-  if (tree.exists('.nxignore')) {
-    ig ??= ignore();
-    ig.add(tree.read('.nxignore', 'utf-8'));
-  }
-
-  return ig;
 }
 
 /**
