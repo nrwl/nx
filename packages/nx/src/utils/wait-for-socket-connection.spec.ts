@@ -27,9 +27,17 @@ describe('waitForSocketConnection', () => {
   posixOnly('should return the connected socket and stop polling', async () => {
     const sockPath = join(base, 'live.sock');
     const server = createServer();
-    // `server.close` does not call back while any connection is open, so a
-    // failed assertion here hangs the worker instead of failing it — including
-    // via the poll's own attempts, which this test never gets a handle on.
+    // `server.close` does not call back while any connection is open, so every
+    // one has to be destroyed or a failing assertion hangs the worker forever
+    // instead of failing it. The returned socket is not enough: a regression
+    // that connects but never hands the socket back leaves the poll's own
+    // attempts open, and this test would otherwise have no handle on them.
+    // (`closeAllConnections` is http.Server only, not net.Server.)
+    const accepted = new Set<Socket>();
+    server.on('connection', (c) => {
+      accepted.add(c);
+      c.on('close', () => accepted.delete(c));
+    });
     let socket: Socket | null = null;
     let attempts = 0;
 
@@ -52,6 +60,9 @@ describe('waitForSocketConnection', () => {
       expect(attempts).toEqual(0);
     } finally {
       socket?.destroy();
+      for (const c of accepted) {
+        c.destroy();
+      }
       await new Promise<void>((r) => server.close(() => r()));
     }
   });
