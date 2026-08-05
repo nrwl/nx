@@ -90,4 +90,17 @@ describe('configurationGenerator', () => {
       'react',
     ]);
   });
+
+  // `plugins` defaults to `[]`, so gating the project read on it would make a
+  // typo'd `--project` exit 0 having registered the plugin workspace-wide. No
+  // other test here passes an unknown project.
+  it('fails on an unknown project', async () => {
+    await expect(
+      configurationGenerator(tree, {
+        project: 'lib-typo',
+        skipPackageJson: true,
+        skipFormat: true,
+      })
+    ).rejects.toThrow(/lib-typo/);
+  });
 });
