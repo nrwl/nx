@@ -879,62 +879,42 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
 
       await convertToInferred(tree, {});
 
+      const expectedCachedBuildTargetDefaults = {
+        cache: true,
+        configurations: { development: {}, production: {} },
+        defaultConfiguration: 'production',
+      };
+      const expectedBuildTargetDefaults = {
+        configurations: { development: {}, production: {} },
+        defaultConfiguration: 'production',
+      };
+      const expectedServeTargetDefaults = {
+        configurations: { development: {}, production: {} },
+        defaultConfiguration: 'development',
+      };
+      const targetDefaults = readNxJson(tree).targetDefaults;
+      expect(targetDefaults?.build).toStrictEqual(
+        expectedCachedBuildTargetDefaults
+      );
+      expect(targetDefaults?.serve).toStrictEqual(expectedServeTargetDefaults);
+      expect(targetDefaults?.['build-rspack']).toStrictEqual(
+        expectedBuildTargetDefaults
+      );
+      expect(targetDefaults?.['serve-rspack']).toStrictEqual(
+        expectedServeTargetDefaults
+      );
+
       // project configurations
       const updatedProject1 = readProjectConfiguration(tree, project1.name);
-      expect(updatedProject1.targets).toStrictEqual({
-        build: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        serve: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject1.targets).toStrictEqual({});
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
-      expect(updatedProject2.targets).toStrictEqual({
-        build: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        serve: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject2.targets).toStrictEqual({});
       const updatedProject3 = readProjectConfiguration(tree, project3.name);
-      expect(updatedProject3.targets).toStrictEqual({
-        'build-rspack': {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        'serve-rspack': {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject3.targets).toStrictEqual({});
       const updatedProject4 = readProjectConfiguration(tree, project4.name);
-      expect(updatedProject4.targets).toStrictEqual({
-        build: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        'serve-rspack': {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject4.targets).toStrictEqual({});
       const updatedProject5 = readProjectConfiguration(tree, project5.name);
-      expect(updatedProject5.targets).toStrictEqual({
-        'build-rspack': {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'production',
-        },
-        serve: {
-          configurations: { development: {}, production: {} },
-          defaultConfiguration: 'development',
-        },
-      });
+      expect(updatedProject5.targets).toStrictEqual({});
       const updatedProjectWithComposePlugins = readProjectConfiguration(
         tree,
         projectWithComposePlugins.name
