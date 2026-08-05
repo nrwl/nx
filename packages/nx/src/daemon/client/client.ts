@@ -178,31 +178,20 @@ export class DaemonClient {
   private currentSpinner: DelayedSpinner | null = null;
 
   /**
-   * The most recent failed connect attempt, from either probe: the errno and
-   * the path it was made against.
+   * The pre-start probe's refusal, handed from `isServerAvailable` to the
+   * `startInBackground` call in the same `startDaemonIfNecessary` — the one
+   * place that needs an errno across two calls. `_daemonStatus` serializes that
+   * region, so there is exactly one writer and one reader in flight.
    *
-   * `setUpConnection` classifies its own errors — it holds the error and the
-   * socket path in closure — but it only runs after a connect has already
-   * succeeded. `startInBackground`'s failure path has neither, which is what
-   * this field is for.
+   * Deliberately *not* where the poll keeps its refusal. The reconnect paths
+   * have their own separate in-flight flags, so a file-watcher reconnect, a
+   * project-graph-listener reconnect and a startup poll can overlap; sharing one
+   * slot let a finished attempt report the socket path of a concurrent one.
+   * `waitForServerToBeAvailable` returns its refusal instead.
    *
-   * The path is carried rather than recomputed at report time. Recomputing it
-   * reads the daemon process json, which the daemon unlinks as it shuts down,
-   * so on the failure path this describes it is routinely gone — and
-   * `getSocketPath()` throws when it is.
-   *
-   * Lifetime, since more than one place reads it: every reader is preceded by
-   * a write that belongs to it. `isServerAvailable` clears on entry, so the
-   * value `startDaemonIfNecessary` hands on describes that probe;
-   * `startInBackground` resets to whatever it was handed; and `reset()` clears.
-   * A value read on a failure path therefore belongs to the attempt reading it. Without that, a later round reads whatever an earlier one left
-   * and names a socket that no longer exists — the poll does not report an
-   * errno on every failed attempt, since an absent process json makes the path
-   * resolver return `null` and no connect is made at all.
-   *
-   * It records *an* errno, not the reason a poll ended. Every failed connect
-   * writes here, while only a permission errno stops the loop, so anything
-   * asking "did we give up early?" must track that separately.
+   * `isServerAvailable` clears on entry because two of its branches return
+   * false without writing — no socket path, and a non-version-mismatch throw —
+   * and the value must otherwise not outlive the probe that produced it.
    */
   private lastConnectRefusal: ConnectRefusal | undefined;
 
@@ -512,9 +501,9 @@ export class DaemonClient {
     // Wait for daemon server to be available before trying to reconnect
     let serverAvailable: boolean;
     try {
-      serverAvailable = await this.waitForServerToBeAvailable({
+      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      });
+      }));
     } catch (err) {
       // Version mismatch - pass error to callbacks so they can handle it
       clientLogger.log(
@@ -705,9 +694,9 @@ export class DaemonClient {
     // Wait for daemon server to be available before trying to reconnect
     let serverAvailable: boolean;
     try {
-      serverAvailable = await this.waitForServerToBeAvailable({
+      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      });
+      }));
     } catch (err) {
       // Version mismatch - pass error to callbacks so they can handle it
       clientLogger.log(
@@ -1163,9 +1152,9 @@ export class DaemonClient {
 
     let serverAvailable: boolean;
     try {
-      serverAvailable = await this.waitForServerToBeAvailable({
+      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      });
+      }));
     } catch (err) {
       if (err instanceof VersionMismatchError) {
         // New daemon has different version - reject with error so caller can handle
@@ -1215,15 +1204,17 @@ export class DaemonClient {
    */
   private async waitForServerToBeAvailable(options: {
     ignoreVersionMismatch: boolean;
-  }): Promise<boolean> {
+  }): Promise<{ available: boolean; refusal?: ConnectRefusal }> {
     clientLogger.log(
       `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
 
-    // Poll-scoped, so the log below describes this poll and nothing else. The
-    // field cannot answer it: it is written on every failed connect, while only
-    // a permission errno stops the loop.
+    // Both poll-scoped. Instance state cannot hold either: the reconnect paths
+    // are guarded by their own separate flags, so a file-watcher reconnect, a
+    // project-graph-listener reconnect and a startup poll can be in flight at
+    // once, and a shared slot lets one attempt report another's socket.
     let stoppedOnRefusal = false;
+    let refusal: ConnectRefusal | undefined;
 
     const socket = await waitForSocketConnection(
       () => {
@@ -1243,7 +1234,7 @@ export class DaemonClient {
         maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
         delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
         onConnectError: (error, socketPath) => {
-          this.lastConnectRefusal = { error, socketPath };
+          refusal = { error, socketPath };
           // A refusal is not expected to become an acceptance, so polling the
           // full 60s budget only delays the same answer and the message the
           // user eventually gets is worse for the wait. Not an absolute:
@@ -1260,7 +1251,7 @@ export class DaemonClient {
     if (socket) {
       socket.destroy();
       clientLogger.log(`[Client] Server available`);
-      return true;
+      return { available: true };
     }
 
     // Keyed on the early exit actually taken, not on whether an errno was
@@ -1269,10 +1260,10 @@ export class DaemonClient {
     // polling" for a poll that was refused by nobody and ran to exhaustion.
     clientLogger.log(
       stoppedOnRefusal
-        ? `[Client] Server refused the connection (${this.lastConnectRefusal?.error.code}), stopped polling`
+        ? `[Client] Server refused the connection (${refusal?.error.code}), stopped polling`
         : `[Client] Server not available after ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts`
     );
-    return false;
+    return { available: false, refusal };
   }
 
   private envReflectionSent = false;
@@ -1388,6 +1379,13 @@ export class DaemonClient {
     }
   }
 
+  /**
+   * @param probeRefusal what the caller's pre-start probe saw, if anything. The
+   *        only evidence when a daemon exists but refuses us and then exits: the
+   *        poll below cannot reproduce it once that daemon has unlinked its
+   *        process json, because the path resolver returns `null` and no connect
+   *        is attempted. `nx daemon --start` passes nothing.
+   */
   async startInBackground(
     probeRefusal?: ConnectRefusal
   ): Promise<ChildProcess['pid']> {
@@ -1396,15 +1394,6 @@ export class DaemonClient {
         'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
       );
     }
-
-    // Seeded, not merely cleared. The attempt begins at the caller: the
-    // pre-start probe's errno is the only evidence when a daemon exists but
-    // refuses us, and the poll below cannot reproduce it once that daemon's
-    // process json is gone — its path resolver returns null and no connect is
-    // made at all. Passing it in keeps that evidence while making "the errno
-    // belongs to this attempt" true by construction for both entry points;
-    // `nx daemon --start` passes nothing and starts clean.
-    this.lastConnectRefusal = probeRefusal;
 
     mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
     if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
@@ -1448,16 +1437,17 @@ export class DaemonClient {
     /**
      * Ensure the server is actually available to connect to via IPC before resolving
      */
-    const serverAvailable = await this.waitForServerToBeAvailable({
-      ignoreVersionMismatch: true,
-    });
-    if (serverAvailable) {
+    const { available, refusal: polled } =
+      await this.waitForServerToBeAvailable({ ignoreVersionMismatch: true });
+    if (available) {
       clientLogger.log(
         `[Client] Daemon server started, pid=${backgroundProcess.pid}`
       );
       return backgroundProcess.pid;
     } else {
-      const refusal = this.lastConnectRefusal;
+      // The poll's own errno when it produced one, otherwise the probe's. Both
+      // are values held by this call, so no other attempt can substitute one.
+      const refusal = polled ?? probeRefusal;
       if (refusal && isPermissionErrno(refusal.error)) {
         // The flagship case this PR ships a KB page for: a sandbox refusing
         // unix-socket connects, or a socket owned by another user. Reported

@@ -231,6 +231,44 @@ describe('startInBackground', () => {
     expect((error as any).internalDaemonError).toBe(true);
   });
 
+  // Two polls in flight at once. The reconnect paths guard themselves with
+  // their own separate flags, so a file-watcher reconnect, a project-graph
+  // listener reconnect and a startup poll are not mutually exclusive. While the
+  // refusal lived in one instance field, whichever wrote last won and the
+  // startup could report a socket path belonging to someone else's attempt.
+  it('should not report a refusal belonging to a concurrent poll', async () => {
+    const polls: Array<{ options: any; resolve: (v: null) => void }> = [];
+    (waitForSocketConnection as jest.Mock).mockImplementation(
+      async (_socketPath, options) =>
+        new Promise<null>((resolve) => polls.push({ options, resolve }))
+    );
+
+    const startup = daemonClient.startInBackground().catch((e) => e);
+    const competing = (daemonClient as any).waitForServerToBeAvailable({
+      ignoreVersionMismatch: false,
+    });
+    expect(polls).toHaveLength(2);
+
+    // The startup poll is refused first; the other poll is refused after, with
+    // a different socket. The startup must still report its own.
+    polls[0].options.onConnectError(
+      Object.assign(new Error('connect EACCES /mine.sock'), { code: 'EACCES' }),
+      '/mine.sock'
+    );
+    polls[1].options.onConnectError(
+      Object.assign(new Error('connect EPERM /theirs.sock'), { code: 'EPERM' }),
+      '/theirs.sock'
+    );
+    polls[0].resolve(null);
+
+    const error = await startup;
+    expect(error.message).toContain('/mine.sock');
+    expect(error.message).not.toContain('/theirs.sock');
+
+    polls[1].resolve(null);
+    await competing;
+  });
+
   // The other half of the same rule: an errno the caller's probe produced does
   // belong to this attempt, and the poll cannot reproduce it once the daemon
   // that refused us has unlinked its process json. Without it a sandbox
