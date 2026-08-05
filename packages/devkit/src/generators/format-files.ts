@@ -77,7 +77,7 @@ export async function formatFiles(
   // (measured: a nested `.prettierignore` does not stop `prettier --check`
   // flagging the file), so cascading here would leave files unformatted that
   // `nx format:check` still fails on.
-  const isIgnored = createTreeIgnoreChecker(
+  const { isIgnoredFile } = createTreeIgnoreChecker(
     tree,
     ['.gitignore', '.prettierignore'],
     // `separate`: prettier ORs one ignorer per `--ignore-path`, so neither
@@ -87,7 +87,7 @@ export async function formatFiles(
   const files = new Set(
     tree
       .listChanges()
-      .filter((file) => file.type !== 'DELETE' && !isIgnored(file.path))
+      .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
   );
 
   const changedPrettierInTree = getChangedPrettierConfigInTree(tree);

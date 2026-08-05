@@ -35,18 +35,15 @@ export function visitNotIgnoredFiles(
   );
 }
 
+type IgnoreChecker = ReturnType<typeof createTreeIgnoreChecker>;
+
 function visitDirectory(
   tree: Tree,
   dirPath: string,
   visitor: (path: string) => void,
-  isIgnored: (path: string) => boolean
+  isIgnored: IgnoreChecker
 ): void {
-  // Probed as `dist/`, which is the spelling git documents for a directory and
-  // the only one a trailing-slash pattern matches. Load-bearing: without it the
-  // walk descends, and a negation in an ignore file *inside* the excluded
-  // directory becomes the nearest opinion and re-includes children git would
-  // never have looked at.
-  if (dirPath !== '' && isIgnored(asDirectory(dirPath))) {
+  if (dirPath !== '' && isIgnored.isIgnoredDirectory(dirPath)) {
     return;
   }
 
@@ -54,22 +51,14 @@ function visitDirectory(
     // Joined as POSIX rather than with `path.join`: tree paths are POSIX, and
     // on Windows a backslash-separated path silently matches nothing.
     const fullPath = dirPath ? `${dirPath}/${child}` : child;
-    if (isIgnored(fullPath)) {
-      continue;
-    }
     if (tree.isFile(fullPath)) {
-      visitor(fullPath);
-    } else {
-      // A directory excluded as `dist/` is not caught above - `ignore` will not
-      // match a trailing-slash pattern against a slash-less path - so the guard
-      // at the top of `visitDirectory` re-tests it as `dist/`.
+      if (!isIgnored.isIgnoredFile(fullPath)) {
+        visitor(fullPath);
+      }
+    } else if (!isIgnored.isIgnoredDirectory(fullPath)) {
       visitDirectory(tree, fullPath, visitor, isIgnored);
     }
   }
-}
-
-function asDirectory(path: string): string {
-  return path.endsWith('/') ? path : `${path}/`;
 }
 
 function normalizePathRelativeToRoot(path: string, root: string): string {
