@@ -99,6 +99,13 @@ If the `webServer` sets neither, Playwright has nothing to check and starts its 
 The `webServerTimeout` option sets how long, in milliseconds, that task waits before failing.
 It defaults to each web server's configured `timeout`, or 60000 when neither is set.
 
+Set the `waitForWebServer` option to `false` to opt out of that task.
+Nx still runs the web server as a task dependency, and the tests fall back to Playwright's own `reuseExistingServer` probe.
+
+The readiness address comes from evaluating the Playwright config while Nx computes the project graph.
+Nx does not track a variable the config reads straight from the shell environment, so changing it does not refresh an already-cached address.
+Run `nx reset` after changing such a variable, or set the variable in an env file such as `.env`, which Nx tracks.
+
 ### Splitting E2E tests
 
 The `targetName` task runs the complete Playwright suite and caches the configured test and reporter
