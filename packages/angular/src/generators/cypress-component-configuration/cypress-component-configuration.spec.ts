@@ -259,14 +259,12 @@ describe('Cypress Component Testing Configuration', () => {
       };
 
       useVite7ForCypressCT(tree);
-      await expect(async () => {
-        await cypressComponentConfiguration(tree, {
-          project: 'fancy-lib',
-          buildTarget: 'fancy-app:build',
-          generateTests: false,
-          skipFormat: true,
-        });
-      }).resolves;
+      await cypressComponentConfiguration(tree, {
+        project: 'fancy-lib',
+        buildTarget: 'fancy-app:build',
+        generateTests: false,
+        skipFormat: true,
+      });
     });
 
     it('should throw when no build target can be found', async () => {
