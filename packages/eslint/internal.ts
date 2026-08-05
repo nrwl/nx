@@ -33,6 +33,7 @@ export {
 export { setupRootEsLint } from './src/generators/lint-project/setup-root-eslint';
 
 export {
+  eslintV9Version,
   getInstalledEslintVersion,
   typescriptESLintVersion,
   versions,
