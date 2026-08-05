@@ -22,7 +22,6 @@ import {
   type GeneratorCallback,
   type ProjectConfiguration,
 } from '@nx/devkit';
-import { lintProjectGenerator } from '@nx/eslint';
 import type { LinterType } from '@nx/js';
 import {
   addPropertyToJestConfig,

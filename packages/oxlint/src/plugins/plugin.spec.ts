@@ -108,6 +108,10 @@ describe('@nx/oxlint plugin', () => {
 
     expect(results.projects['libs/a'].targets.lint.inputs).toEqual(
       expect.arrayContaining([
+        // Without these the task stops hashing the project's own source, so Nx
+        // replays a cached pass after an edit.
+        'default',
+        '^default',
         '{workspaceRoot}/.oxlintrc.json',
         '{workspaceRoot}/configs/base.json',
         { externalDependencies: ['oxlint'] },

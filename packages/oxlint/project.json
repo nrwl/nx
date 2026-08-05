@@ -20,7 +20,6 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/packages/oxlint/.oxlintrc.json",
         {
           "externalDependencies": ["oxlint"]
         }
