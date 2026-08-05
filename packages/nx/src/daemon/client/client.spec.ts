@@ -116,11 +116,14 @@ describe('daemonPermissionException', () => {
     expect(error.message).toContain('NX_SOCKET_DIR');
   });
 
-  // Both halves, because the pre-fix wording already contained
-  // `allowAllUnixSockets` and the link — pinning only those passes on a revert.
-  // What this change added is the vendor-neutral instruction first and the
-  // Claude Code scoping second: the KB page attributes connect-not-create to
-  // Claude Code's `allowUnixSockets`, not to scoped allowlists at large.
+  // Both halves. Measured against the wording this commit replaced — not
+  // against the start of the review round, where the neutral sentence was also
+  // present and briefly removed. That immediately-prior wording already carried
+  // `allowAllUnixSockets` and the link, so pinning only those two passes on a
+  // revert; the vendor-neutral instruction and `Claude Code` are what this
+  // change adds and what actually pin it. Scoping is deliberate: the KB page
+  // attributes connect-not-create to Claude Code's `allowUnixSockets`, not to
+  // scoped allowlists at large.
   it('should scope the allowAllUnixSockets advice to Claude Code', () => {
     const { message } = daemonPermissionException(socketPath, 'connect EPERM');
 

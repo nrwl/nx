@@ -177,24 +177,6 @@ export class DaemonClient {
   // unrelated command).
   private currentSpinner: DelayedSpinner | null = null;
 
-  /**
-   * The pre-start probe's refusal, handed from `isServerAvailable` to the
-   * `startInBackground` call in the same `startDaemonIfNecessary` — the one
-   * place that needs an errno across two calls. `_daemonStatus` serializes that
-   * region, so there is exactly one writer and one reader in flight.
-   *
-   * Deliberately *not* where the poll keeps its refusal. The reconnect paths
-   * have their own separate in-flight flags, so a file-watcher reconnect, a
-   * project-graph-listener reconnect and a startup poll can overlap; sharing one
-   * slot let a finished attempt report the socket path of a concurrent one.
-   * `waitForServerToBeAvailable` returns its refusal instead.
-   *
-   * `isServerAvailable` clears on entry because two of its branches return
-   * false without writing — no socket path, and a non-version-mismatch throw —
-   * and the value must otherwise not outlive the probe that produced it.
-   */
-  private lastConnectRefusal: ConnectRefusal | undefined;
-
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
   private _waitForDaemonReady: Promise<void> | null = null;
@@ -295,7 +277,6 @@ export class DaemonClient {
     this._enabled = undefined;
     // A refusal describes one startup attempt. Left behind, it would misdiagnose
     // the next command in this process as a permission problem.
-    this.lastConnectRefusal = undefined;
 
     // Clean up file watcher and project graph listener connections
     this.fileWatcherMessenger?.close();
@@ -998,39 +979,47 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  async isServerAvailable(): Promise<boolean> {
-    // Cleared up front so the value startDaemonIfNecessary hands on always
-    // describes this probe. Two branches below return false without writing —
-    // no socket path, and a non-version-mismatch throw — and without this they
-    // would pass on whatever an earlier probe left.
-    this.lastConnectRefusal = undefined;
+  /**
+   * The pre-start probe, returning why it failed instead of leaving it on the
+   * instance. `_daemonStatus` serializes `startDaemonIfNecessary` against
+   * itself but not the five public callers of `isServerAvailable`, which used
+   * to clear and write that field outside any guard — so the "one writer, one
+   * reader" its doc claimed was never structural. A return value needs no such
+   * claim, and matches `waitForServerToBeAvailable`.
+   */
+  private async probeServer(): Promise<{
+    available: boolean;
+    refusal?: ConnectRefusal;
+  }> {
     return new Promise((resolve, reject) => {
       try {
         const socketPath = this.getSocketPath();
         if (!socketPath) {
-          resolve(false);
+          resolve({ available: false });
           return;
         }
         const socket = connect(socketPath, () => {
           socket.destroy();
-          this.lastConnectRefusal = undefined;
-          resolve(true);
+          resolve({ available: true });
         });
         socket.once('error', (err) => {
           // Kept rather than discarded: this is the probe that runs before the
           // daemon is started, so it is where the errno for "the socket is
           // there but refuses us" is produced, and it is the only thing that
           // separates that from "no daemon yet".
-          this.lastConnectRefusal = { error: err, socketPath };
-          resolve(false);
+          resolve({ available: false, refusal: { error: err, socketPath } });
         });
       } catch (err) {
         if (err instanceof VersionMismatchError) {
           reject(err); // Let version mismatch bubble up
         }
-        resolve(false);
+        resolve({ available: false });
       }
     });
+  }
+
+  async isServerAvailable(): Promise<boolean> {
+    return (await this.probeServer()).available;
   }
 
   private async startDaemonIfNecessary() {
@@ -1042,20 +1031,21 @@ export class DaemonClient {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
       let daemonPid: number | null = null;
-      let serverAvailable: boolean;
+      let probe: { available: boolean; refusal?: ConnectRefusal };
       try {
-        serverAvailable = await this.isServerAvailable();
+        probe = await this.probeServer();
       } catch (err) {
         // Version mismatch - treat as server not available, start new one
         if (err instanceof VersionMismatchError) {
-          serverAvailable = false;
+          probe = { available: false };
         } else {
           throw err;
         }
       }
-      if (!serverAvailable) {
-        // The probe's verdict on the daemon that was already there.
-        daemonPid = await this.startInBackground(this.lastConnectRefusal);
+      if (!probe.available) {
+        // The probe's verdict on the daemon that was already there, carried as
+        // a value so no other caller's probe can substitute for it.
+        daemonPid = await this.startInBackground(probe.refusal);
       }
       this.setUpConnection();
       this._daemonStatus = DaemonStatus.CONNECTED;
