@@ -5,7 +5,8 @@ import {
   getNamedInputs,
   PluginCache,
   hashObject,
-  getGlobPatternsFromPackageManagerWorkspaces,
+  buildPackageJsonPatterns,
+  buildPackageJsonWorkspacesMatcher as buildWorkspacesMatcher,
   getNxRequirePaths,
   deriveGroupNameFromTarget,
   globWithWorkspaceContext,
@@ -21,9 +22,9 @@ import {
   normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
+  readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
-import picomatch from 'picomatch';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import {
   dirname,
@@ -235,22 +236,13 @@ function buildPackageJsonWorkspacesMatcher(
     return () => true;
   }
 
-  const packageManagerWorkspacesGlobs =
-    getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot);
-
-  // mixing negations into one picomatch call would let any path match via
-  // "not excluded"; require a positive match, then reject negated ones.
-  // an empty positive list matches nothing, same as the empty combined glob
-  // did with minimatch
-  const positive = packageManagerWorkspacesGlobs.filter(
-    (p) => !p.startsWith('!')
+  // Reuse nx core's matcher so @nx/jest and nx/core/package-json can never
+  // disagree about which package.json files are inside the workspaces.
+  return buildWorkspacesMatcher(
+    buildPackageJsonPatterns(workspaceRoot, (f) =>
+      readJsonFile(join(workspaceRoot, f))
+    )
   );
-  const negated = packageManagerWorkspacesGlobs
-    .filter((p) => p.startsWith('!'))
-    .map((p) => p.substring(1));
-  const isPositive = picomatch(positive);
-  const isNegated = negated.length ? picomatch(negated) : () => false;
-  return (path: string) => isPositive(path) && !isNegated(path);
 }
 
 function checkIfConfigFileShouldBeProject(

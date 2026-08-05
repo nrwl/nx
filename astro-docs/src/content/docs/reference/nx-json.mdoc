@@ -602,7 +602,7 @@ By default, Nx checks for matching tags on the current branch. If no tags are fo
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `true`     | Always check all branches for the latest matching tag                                                                                                                     |
 | `false`    | Only check the current branch (no fallback to all branches)                                                                                                               |
-| `string[]` | Check all branches when the current branch matches any of the provided names or [glob patterns](https://github.com/isaacs/minimatch). Otherwise, use the default behavior |
+| `string[]` | Check all branches when the current branch matches any of the provided names or [glob patterns](https://github.com/micromatch/picomatch#globbing-features). Otherwise, use the default behavior |
 
 This option is useful when release tags may exist on multiple branches. Setting `checkAllBranchesWhen` to `true` or to a list of branch patterns ensures Nx finds the latest tag regardless of which branch it was created on.
 

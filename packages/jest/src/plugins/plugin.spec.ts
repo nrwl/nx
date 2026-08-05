@@ -492,6 +492,27 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
     expect(results).toEqual([]);
   });
 
+  it('should create nodes for packages inside the package manager workspaces', async () => {
+    await tempFs.createFiles({
+      'package.json': JSON.stringify({
+        name: 'root',
+        workspaces: ['packages/*', '!packages/excluded'],
+      }),
+      'packages/included/jest.config.js': `module.exports = {}`,
+      'packages/included/package.json': '{}',
+    });
+
+    const results = await createNodesFunction(
+      ['packages/included/jest.config.js'],
+      { targetName: 'test', disableJestRuntime },
+      context
+    );
+
+    expect(results.map(([file]) => file)).toEqual([
+      'packages/included/jest.config.js',
+    ]);
+  });
+
   describe('ciGroupName', () => {
     it('should name atomized tasks group using provided group name', async () => {
       mockJestConfig(

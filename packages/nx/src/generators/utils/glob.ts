@@ -1,6 +1,6 @@
 import picomatch from 'picomatch';
 import { Tree } from '../tree';
-import { combineGlobPatterns } from '../../utils/globs';
+import { combineGlobPatterns, splitGlobPatterns } from '../../utils/globs';
 import {
   globWithWorkspaceContext,
   globWithWorkspaceContextSync,
@@ -52,23 +52,27 @@ function combineGlobResultsWithTree(
   const matches = new Set(results);
 
   let matcher: (path: string) => boolean;
-  try {
-    if (!patterns.length) {
-      throw new Error('no patterns');
-    }
-    // mixing negations into one picomatch call would let any path match via
-    // "not excluded"; require a positive match, then reject negated ones
-    const positive = patterns.filter((p) => !p.startsWith('!'));
-    const negated = patterns
-      .filter((p) => p.startsWith('!'))
-      .map((p) => p.substring(1));
-    const isPositive = picomatch(positive);
-    const isNegated = negated.length ? picomatch(negated) : () => false;
-    matcher = (path) => isPositive(path) && !isNegated(path);
-  } catch {
-    // picomatch throws on empty patterns where minimatch.makeRe returned false
-    throw new Error('Invalid glob pattern: ' + combineGlobPatterns(patterns));
+  const invalid = patterns.find((p) => !p);
+  if (!patterns.length || invalid !== undefined) {
+    // picomatch throws on an empty pattern where minimatch.makeRe returned false
+    throw new Error(
+      'Invalid glob pattern: ' +
+        JSON.stringify(invalid ?? combineGlobPatterns(patterns))
+    );
   }
+  // Mirror NxGlobSet::is_match in src/native/glob.rs, which produced `results`:
+  // a positive glob must match and no negation may, and a list of only
+  // negations matches everything it does not exclude. Folding the negations
+  // into one picomatch call instead would let any path match via "not
+  // excluded". `!(` opens an extglob, not a negation.
+  const isNegation = (p: string) => p.startsWith('!') && !p.startsWith('!(');
+  const positive = patterns
+    .filter((p) => !isNegation(p))
+    .flatMap(splitGlobPatterns);
+  const negators = patterns.filter(isNegation).map((p) => picomatch(p));
+  const isPositive =
+    negators.length && !positive.length ? () => true : picomatch(positive);
+  matcher = (path) => isPositive(path) && negators.every((m) => m(path));
 
   for (const change of tree.listChanges()) {
     if (change.type !== 'UPDATE' && matcher(change.path)) {

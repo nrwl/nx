@@ -8,20 +8,25 @@ export function hasRsbuildPlugin(tree: Tree, projectPath?: string) {
       typeof p === 'string' ? p === '@nx/rsbuild' : p.plugin === '@nx/rsbuild'
     );
   }
+  // projectPath is a directory, not a file: `strictSlashes` keeps `<root>/**`
+  // from matching `<root>` itself, as minimatch did
+  const matchesProject = (pattern: string) =>
+    picomatch.isMatch(projectPath, pattern, { strictSlashes: true });
+
   return !!nxJson.plugins?.some((p) => {
     if (typeof p === 'string') {
       return p === '@nx/rsbuild';
     }
     if (p.exclude) {
       for (const exclude of p.exclude) {
-        if (picomatch.isMatch(projectPath, exclude)) {
+        if (matchesProject(exclude)) {
           return false;
         }
       }
     }
     if (p.include) {
       for (const include of p.include) {
-        if (picomatch.isMatch(projectPath, include)) {
+        if (matchesProject(include)) {
           return true;
         }
       }

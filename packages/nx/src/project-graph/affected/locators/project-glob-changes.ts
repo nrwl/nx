@@ -37,7 +37,7 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
     })();
 
     if (!globPatterns.length) {
-      // no plugins with createNodes patterns; picomatch throws on empty patterns
+      // no plugins with createNodes patterns, so no file can belong to a project
       return [];
     }
 

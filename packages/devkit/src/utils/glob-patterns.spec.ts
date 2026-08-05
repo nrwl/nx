@@ -15,7 +15,9 @@ describe('splitGlobPatterns', () => {
     [['{a,b}/{c,d}'], '{a,b}/{c,d}'],
     [['{a,{b}'], '{a,{b}'],
     [['a', 'b'], '{a,b}'],
-    [[''], ''],
+    // never an empty pattern - picomatch throws on '', every caller counts length
+    [[], ''],
+    [['a', 'b'], '{a,,b}'],
   ])('should return %j for %s', (expected, pattern) => {
     expect(splitGlobPatterns(pattern)).toEqual(expected);
   });

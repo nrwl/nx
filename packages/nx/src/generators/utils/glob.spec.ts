@@ -82,4 +82,50 @@ describe('glob', () => {
       ]
     `);
   });
+
+  it('should match root-level tree files against a combined brace pattern', async () => {
+    tree.write('package.json', '{}');
+    tree.write('libs/a/package.json', '{}');
+    tree.write('libs/a/other.md', '');
+
+    const withTree = glob(tree, ['{**/package.json,**/project.json}']).sort();
+
+    expect(withTree).toEqual(['libs/a/package.json', 'package.json']);
+  });
+
+  it('should hide a deleted root-level file for a combined brace pattern', async () => {
+    fs.createFilesSync({
+      'package.json': '{}',
+      'libs/a/package.json': '{}',
+    });
+    tree.delete('package.json');
+
+    const withTree = glob(tree, ['{**/package.json,**/project.json}']).sort();
+
+    expect(withTree).toEqual(['libs/a/package.json']);
+  });
+
+  it('should treat a list of only negations as everything not excluded', async () => {
+    tree.write('keep.txt', '1');
+    tree.write('drop.txt', '2');
+
+    const withTree = glob(tree, ['!drop.txt']).sort();
+
+    expect(withTree).toEqual(['keep.txt']);
+  });
+
+  it('should treat a leading "!(" as an extglob, not a negation', async () => {
+    tree.write('tools/a/package.json', '{}');
+    tree.write('libs/a/package.json', '{}');
+
+    const withTree = glob(tree, ['!(tools)/**/package.json']).sort();
+
+    expect(withTree).toEqual(['libs/a/package.json']);
+  });
+
+  it('should name the offending entry when a pattern is empty', async () => {
+    expect(() => glob(tree, ['**/*.ts', ''])).toThrow(
+      'Invalid glob pattern: ""'
+    );
+  });
 });

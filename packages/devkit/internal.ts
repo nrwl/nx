@@ -188,6 +188,8 @@ export {
   getFilesInDirectoryUsingContext,
   getGeneratorInformation,
   getGlobPatternsFromPackageManagerWorkspaces,
+  buildPackageJsonPatterns,
+  buildPackageJsonWorkspacesMatcher,
   getLastValueFromAsyncIterableIterator,
   getLatestCommitSha,
   getLockFileName,
