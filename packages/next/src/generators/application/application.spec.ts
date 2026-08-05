@@ -378,13 +378,16 @@ describe('app', () => {
         });
 
         const { devDependencies } = readJson(tree, 'package.json');
-        expect(Object.keys(devDependencies ?? {})).toEqual(
-          expect.not.arrayContaining([
-            'eslint-config-next',
-            '@next/eslint-plugin-next',
-            'eslint-plugin-react',
-          ])
-        );
+        // One assertion per package, not `not.arrayContaining([...])`: that
+        // matcher negates "contains all of", so it passes as soon as any single
+        // one is absent — it would miss two of the three leaking back.
+        for (const pkg of [
+          'eslint-config-next',
+          '@next/eslint-plugin-next',
+          'eslint-plugin-react',
+        ]) {
+          expect(devDependencies ?? {}).not.toHaveProperty(pkg);
+        }
       }
     );
 

@@ -36,8 +36,11 @@ export async function configurationGenerator(
     })
   );
 
+  // Read before the `plugins` check: `plugins` defaults to `[]`, so gating this
+  // on it means a plain `--project=<typo>` run validates nothing and exits 0.
+  const projectConfig = readProjectConfiguration(tree, options.project);
+
   if (options.plugins?.length) {
-    const projectConfig = readProjectConfiguration(tree, options.project);
     addPluginsToOxlintConfig(tree, projectConfig.root, options.plugins);
   }
 
