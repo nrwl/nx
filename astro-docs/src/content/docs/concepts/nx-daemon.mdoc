@@ -62,12 +62,18 @@ tail -f <daemon-log-path>
 
 ## Change the socket directory
 
-On macOS and Linux, Nx tries several locations for the daemon socket and for the forked process and
-plugin worker sockets, and uses the first one it can establish: `$NX_SOCKET_DIR` if you set it, then
-`/tmp/.nx/<uid>/sockets`, then `~/.nx/sockets`, and finally a directory inside the workspace.
-Whichever wins, the socket goes in a per-run directory beneath it that only your user can reach.
+On macOS and Linux, Nx tries three locations for the daemon socket and for the forked process and
+plugin worker sockets, and uses the first one it can establish: `/tmp/.nx/<uid>/sockets`, then
+`~/.nx/sockets`, then a directory inside the workspace.
+Beneath whichever one wins, Nx creates a directory only your user can reach — named per run for the
+daemon and forked process sockets, and per workspace for the plugin worker sockets.
 For what each location requires, see
 [Configure Claude Code sandboxes for Nx](/docs/kb/nx-sandbox-unix-sockets).
+
+Setting `NX_SOCKET_DIR` does not add a fourth entry to that list — it replaces it.
+The value becomes the socket directory itself rather than a root to create one under, and it gets no
+fallback through the other locations: if Nx cannot use it you get the workspace directory and a
+warning, and if it names a directory Nx refuses outright you get an error.
 
 The stable `/tmp/.nx` and `~/.nx` prefixes are what an agentic coding sandbox allowlists.
 The workspace location is the last resort and is different in kind: it sits outside those prefixes, and
@@ -79,7 +85,7 @@ Windows named pipes are not files, so there is no shared directory to separate u
 walk.
 Nx places them directly in a per-run directory under `%TMP%`, which is already scoped to one account.
 
-Set `NX_SOCKET_DIR` to override the location:
+Override the location like this:
 
 ```shell
 NX_SOCKET_DIR=<your-directory> nx daemon
@@ -87,7 +93,8 @@ NX_SOCKET_DIR=<your-directory> nx daemon
 
 This is primarily a workaround for file-permission issues with the default location, such as an
 environment that restricts access to it or a socket path that exceeds the OS length limit.
-The value becomes the socket directory itself, so it has to name a directory only your user can reach.
+Because the value is used as the socket directory itself, it has to name a directory only your user can
+reach.
 Nx rejects the system temp directory and its own container and cache roots; name a directory beneath an
 owner-only root instead.
 `NX_SOCKET_DIR` takes precedence over the older `NX_DAEMON_SOCKET_DIR`.
