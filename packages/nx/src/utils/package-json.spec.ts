@@ -1178,6 +1178,25 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       ]),
     ].join('\n');
 
+  // createLockFile's fallback ships this instead: the workspace's projects sit
+  // under `importers`, and only third-party deps reach `packages`.
+  const rootLockfileWithImporters = () =>
+    [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .: {}',
+      '',
+      '  packages/lib: {}',
+      '',
+      'packages:',
+      '',
+      '  lodash@4.17.21:',
+      '    resolution: {integrity: sha512-abc}',
+      '',
+    ].join('\n');
+
   it('scopes allowBuilds to the packages present in the pruned lockfile', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(
@@ -1227,6 +1246,26 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(load(yaml)).toEqual({
       packages: [],
       allowBuilds: { esbuild: true },
+    });
+  });
+
+  it('carries allowBuilds verbatim when the fallback ships the root lockfile', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml("allowBuilds:\n  '@myorg/lib': true\n");
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      rootLockfileWithImporters()
+    );
+
+    const { load } = require('@zkochan/js-yaml');
+    // A workspace project is an importer and never a `packages` entry, so
+    // scoping against the root lockfile would drop the approval for the
+    // workspace module the output ships as a file: directory dependency, which
+    // pnpm does gate on the approval list.
+    expect(load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: { '@myorg/lib': true },
     });
   });
 
@@ -2065,6 +2104,38 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
         prunedLockfileWith('esbuild@0.21.5')
       )
     ).toEqual({ onlyBuiltDependencies: ['esbuild'] });
+  });
+
+  it('carries approvals verbatim when the fallback ships the root lockfile', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml(
+      'onlyBuiltDependencies:\n  - "@myorg/lib"\n  - some-absent-native-dep\n'
+    );
+
+    // The root lockfile lists workspace projects under `importers`, so scoping
+    // against it would drop the approval for the workspace module the output
+    // ships as a file: directory dependency.
+    const rootLockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .: {}',
+      '',
+      '  packages/lib: {}',
+      '',
+      'packages:',
+      '',
+      '  lodash@4.17.21:',
+      '    resolution: {integrity: sha512-abc}',
+      '',
+    ].join('\n');
+
+    expect(
+      getPrunedPnpmPackageJsonBuildSettings(tempDir, rootLockfile)
+    ).toEqual({
+      onlyBuiltDependencies: ['@myorg/lib', 'some-absent-native-dep'],
+    });
   });
 
   it('carries approvals verbatim for a pre-v9 lockfile instead of scoping', () => {

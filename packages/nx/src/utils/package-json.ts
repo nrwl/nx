@@ -942,15 +942,14 @@ function getPnpmMajorOrWarn(workspaceRootPath: string): number | null {
  * Keeps only the `allowBuilds` entries whose package is present in the pruned
  * lockfile. Build-script approvals for packages the prune dropped are inert, so
  * dropping them keeps the emitted pnpm-workspace.yaml scoped to the deployment.
- * When the lockfile's package names cannot be extracted, the approvals are
- * carried verbatim: an approval for an absent package is inert, a dropped one
- * silently skips a needed build script.
+ * Carries the approvals verbatim when `getBuildApprovalScopeNames` cannot
+ * determine that scope.
  */
 function filterAllowBuildsToLockfile(
   allowBuilds: Record<string, boolean>,
   prunedLockfileContent: string
 ): Record<string, boolean> {
-  const present = getPnpmLockfilePackageNames(prunedLockfileContent);
+  const present = getBuildApprovalScopeNames(prunedLockfileContent);
   if (present === null) {
     return allowBuilds;
   }
@@ -1004,22 +1003,36 @@ function parsePnpmLockfileYaml(content: string): object | null {
 }
 
 /**
- * Extracts the package names from a pnpm v9 lockfile's `packages` keys
- * (`name@version`, `@scope/name@version`, optionally with a `(peer@ver)` suffix).
- * Returns null when the names cannot be extracted: unparseable content, or a
- * pre-v9 lockfile, whose `/name@version` (v6) and `/name/version` (v5) keys this
- * parse would mangle. Callers treat null as "carry approvals verbatim", the
- * inert direction, rather than scoping to names that match nothing.
+ * The package names a build approval can apply to in the output, read from a
+ * pnpm v9 lockfile's `packages` keys (`name@version`, `@scope/name@version`,
+ * optionally with a `(peer@ver)` suffix). Returns null when that scope cannot be
+ * determined, which callers treat as "carry approvals verbatim", the inert
+ * direction: an approval for an absent package does nothing, a dropped one
+ * silently skips a needed build script. Three cases yield null:
+ * - unparseable content;
+ * - a pre-v9 lockfile, whose `/name@version` (v6) and `/name/version` (v5) keys
+ *   this parse would mangle;
+ * - a lockfile with an importer other than the output itself, which is
+ *   createLockFile's root-lockfile fallback. It lists the workspace's projects
+ *   under `importers` and never `packages`, so a workspace module the output
+ *   ships as a `file:` directory dependency, which pnpm does gate on the
+ *   approval list, has no name here to match.
  */
-function getPnpmLockfilePackageNames(
+function getBuildApprovalScopeNames(
   lockfileContent: string
 ): Set<string> | null {
   const parsed = parsePnpmLockfileYaml(lockfileContent) as {
     lockfileVersion?: string | number;
+    importers?: Record<string, unknown>;
     packages?: Record<string, unknown>;
   } | null;
   const lockfileVersion = Number.parseFloat(String(parsed?.lockfileVersion));
   if (!parsed || Number.isNaN(lockfileVersion) || lockfileVersion < 9) {
+    return null;
+  }
+  if (
+    Object.keys(parsed.importers ?? {}).some((importer) => importer !== '.')
+  ) {
     return null;
   }
   const names = new Set<string>();
@@ -1232,7 +1245,7 @@ export function getPrunedPnpmPackageJsonBuildSettings(
   }
   const root = readRootPnpmBuildSettings(workspaceRootPath);
   const present = prunedLockfileContent
-    ? getPnpmLockfilePackageNames(prunedLockfileContent)
+    ? getBuildApprovalScopeNames(prunedLockfileContent)
     : null;
   const scopeToLockfile = (names: Iterable<string>): string[] => {
     const scoped = [...names];
