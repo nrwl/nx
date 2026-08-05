@@ -52,9 +52,9 @@ export function createIgnoreChainResolver(
 
     const contents = filenames
       .map((name) => read(dir ? `${dir}/${name}` : name))
-      .filter((c) => !!c && c.length > 0);
+      .filter((c): c is string => !!c);
 
-    const inherited = dir === '' ? [] : resolve(parentDir(dir));
+    const inherited = dir === '' ? [] : resolve(posixDirname(dir));
     let chain = inherited;
     if (contents.length > 0) {
       const matcher = ignore();
@@ -78,12 +78,8 @@ export function createIgnoreChainResolver(
  * is what makes a nested pattern like `/build` mean that directory's `build`
  * rather than the workspace's.
  *
- * The first file with an *opinion* decides, rather than the first file that
- * ignores: git overrides higher-level patterns with lower-level ones, so a
- * nested `!keep.log` re-includes a file the root's `*.log` excluded. Stopping at
- * the first match instead would let the root win and silently drop the
- * negation. A file that matches nothing in a directory carries no opinion, so
- * the search continues upwards.
+ * First file with an *opinion* wins, not first match: a nested `!keep.log` must
+ * override the root's `*.log`, which is git's rule.
  *
  * `filePath` is workspace-relative POSIX and must sit under every `dir` in the
  * chain - which holds when the chain came from that file's own directory.
@@ -94,9 +90,6 @@ export function isIgnoredByChain(
 ): boolean {
   for (const { dir, matcher } of chain) {
     const relative = dir === '' ? filePath : filePath.slice(dir.length + 1);
-    if (!relative) {
-      continue;
-    }
     const result = matcher.test(relative);
     if (result.ignored) {
       return true;
@@ -127,19 +120,24 @@ export function isAlwaysIgnored(path: string): boolean {
 }
 
 /**
- * The cascading chain bound to a tree, as a predicate over workspace-relative
- * POSIX paths.
+ * The chain bound to a tree, as a predicate over workspace-relative POSIX paths.
  *
  * Reads from the tree rather than disk because a generator can create or amend
  * an ignore file in the same run, which would leave the on-disk copy stale.
  *
- * `filenames` differs by caller: git-facing walks want `.nxignore`, while a
- * formatter wants `.prettierignore` - both prettier and oxfmt honour it, and
- * `.gitignore`, in their CLIs.
+ * `cascade` has to match whatever the caller must agree with. A tree walk wants
+ * `true`, matching git and the native walker. A formatter wants `false`:
+ * prettier resolves `.gitignore`/`.prettierignore` from the workspace root only
+ * (measured), so cascading here would skip files `nx format:check` still checks,
+ * leaving them committed unformatted.
+ *
+ * `filenames` are merged into one matcher per directory, in array order, so a
+ * later file's negation beats an earlier file's pattern.
  */
 export function createTreeIgnoreChecker(
   tree: Tree,
-  filenames: string[]
+  filenames: string[],
+  { cascade }: { cascade: boolean }
 ): (path: string) => boolean {
   const resolve = createIgnoreChainResolver(
     (path) => (tree.exists(path) ? tree.read(path, 'utf-8') : null),
@@ -148,18 +146,17 @@ export function createTreeIgnoreChecker(
 
   return (path) =>
     isAlwaysIgnored(path) ||
-    isIgnoredByChain(resolve(posixDirname(path)), path);
+    isIgnoredByChain(resolve(cascade ? posixDirname(path) : ''), path);
 }
 
-/** `path.dirname` for the workspace-relative POSIX paths the chain is keyed by. */
+/**
+ * `path.dirname` for the workspace-relative POSIX paths the chain is keyed by,
+ * except that the workspace root is `''` rather than `.` - that is the key
+ * `createIgnoreChainResolver` terminates on.
+ */
 export function posixDirname(relativePath: string): string {
   const separator = relativePath.lastIndexOf('/');
   return separator === -1 ? '' : relativePath.slice(0, separator);
-}
-
-function parentDir(dir: string): string {
-  const separator = dir.lastIndexOf('/');
-  return separator === -1 ? '' : dir.slice(0, separator);
 }
 
 export function getIgnoreObjectForTree(tree: Tree) {

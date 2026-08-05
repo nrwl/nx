@@ -114,7 +114,11 @@ describe('visitNotIgnoredFiles', () => {
       expect(visited).toContain('apps/foo/kept.ts');
     });
 
-    it('should skip a directory a nested ignore file excludes', () => {
+    it('should skip files under a directory a nested ignore file excludes', () => {
+      // `dist/` is the canonical gitignore directory form, but the `ignore`
+      // package cannot tell a slash-suffixed pattern targets a directory when
+      // handed a path with no trailing slash, so the walker still descends and
+      // skips each file individually. See the next case for actual pruning.
       tree.write('apps/foo/.gitignore', 'dist/\n');
       tree.write('apps/foo/dist/deep/a.ts', '');
       tree.write('apps/foo/src/b.ts', '');
@@ -122,6 +126,38 @@ describe('visitNotIgnoredFiles', () => {
       const visited = visitAll();
 
       expect(visited).not.toContain('apps/foo/dist/deep/a.ts');
+      expect(visited).toContain('apps/foo/src/b.ts');
+    });
+
+    it('should not descend into a directory the chain excludes by name', () => {
+      // No trailing slash, so the directory path itself matches. `children` is
+      // spied on because asserting only on visited files cannot distinguish
+      // "never descended" from "descended and skipped each file".
+      tree.write('apps/foo/.gitignore', 'build\n');
+      tree.write('apps/foo/build/deep/a.ts', '');
+      tree.write('apps/foo/src/b.ts', '');
+      const children = jest.spyOn(tree, 'children');
+
+      const visited = visitAll();
+
+      expect(visited).not.toContain('apps/foo/build/deep/a.ts');
+      expect(visited).toContain('apps/foo/src/b.ts');
+      expect(children.mock.calls.map(([p]) => p)).not.toContain(
+        'apps/foo/build'
+      );
+      children.mockRestore();
+    });
+
+    it('should not re-include a file under an excluded directory', () => {
+      // git's rule, and the `ignore` package implements it: `!build/keep.ts`
+      // cannot resurrect a file whose directory `build` already excluded.
+      tree.write('apps/foo/.gitignore', 'build\n!build/keep.ts\n');
+      tree.write('apps/foo/build/keep.ts', '');
+      tree.write('apps/foo/src/b.ts', '');
+
+      const visited = visitAll();
+
+      expect(visited).not.toContain('apps/foo/build/keep.ts');
       expect(visited).toContain('apps/foo/src/b.ts');
     });
 
