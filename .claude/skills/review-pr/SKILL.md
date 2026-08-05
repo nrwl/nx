@@ -90,7 +90,7 @@ Parse out:
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 6`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 7`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ### Fetch the tracking ticket
 
@@ -815,9 +815,14 @@ which; agents that are handed both without a hierarchy read both in full.
 
 Then dispatch each agent with this prompt shape:
 
+`<SUBAGENT_TYPE>` is the **exact** identifier from the dispatch list below — most carry the
+`pr-review-toolkit:` prefix, but `comment-analyzer` is project-local and takes no prefix; prefixing it
+silently resolves to the stock plugin agent, which enforces different comment criteria. `<AGENT>` stays
+the bare name everywhere else, because it is what the evidence file paths are keyed on.
+
 ```
 Agent(
-  subagent_type="pr-review-toolkit:<AGENT>",
+  subagent_type="<SUBAGENT_TYPE>",
   description="<AGENT> review of PR <NUMBER>",
   prompt="""
 Review PR <NUMBER> in nrwl/nx.
@@ -860,7 +865,7 @@ Dispatch these in parallel:
 - `pr-review-toolkit:code-reviewer` — general quality and guideline compliance
 - `pr-review-toolkit:silent-failure-hunter` — error handling and swallowed failures
 - `pr-review-toolkit:pr-test-analyzer` — test coverage of the change
-- `pr-review-toolkit:comment-analyzer` — comment and doc accuracy
+- `comment-analyzer` — comment accuracy (project-local, not the `pr-review-toolkit` one: it enforces this repo's comment criteria and emits the `TIERS` line)
 - `pr-review-toolkit:type-design-analyzer` — only when the diff adds or changes types
 
 `code-simplifier` is deliberately omitted — its output is nice-to-have polish by definition, all of which the trim below would discard.
@@ -1013,7 +1018,7 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 - **Never re-tier an agent's finding downward on your own judgment.** The only sanctioned downgrade is a named calibration from the list below; when you apply one, say which calibration and why in the draft. "It feels minor", "that's just style", "the fix is one character" are not calibrations. An agent that filed something as a finding did so against a rule it was required to name. You are re-checking it against the calibrations, not re-scoring it by taste, and you are not the tier the agent's contract already assigned.
 - **Severity comes from the rule violated, not the size of the fix.** A one-character punctuation change that breaks a committed `STYLE_GUIDE.md` rule vale has no rule for is Important. A three-paragraph rewrite that violates nothing is a Suggestion. Judging by surface form is the specific way this step goes wrong: docs, comment, and naming findings all have tiny diffs, so they read as polish and get swept into a tier that cannot move the verdict.
 - **The 5-bullet cap binds the Suggestions tier only.** It is never a reason to move anything out of Critical or Important, and it never licenses a silent merge or drop. If you cut to the cap, name in one line what you cut and why. A reader must never mistake a trimmed list for a complete one.
-- **Reconcile per agent before you write the draft.** For each agent that ran, count what it filed at each tier and compare with what your draft carries. Any tier whose count dropped gets a one-line reason in `## Failures`, naming the calibration that licensed it. This is bookkeeping, not judgment, and it is the only thing that catches a compression you did not notice making. `docs-reviewer` hands you this for free: it emits a `TIERS: findings=<n> suggestions=<n>` line as the fourth line of its report, and `findings=<n>` is the number of docs items that must appear in your Critical/Important sections. Grep it, compare it, and treat a shortfall you cannot justify as a bug in your trim rather than a judgement you are entitled to.
+- **Reconcile per agent before you write the draft.** For each agent that ran, count what it filed at each tier and compare with what your draft carries. Any tier whose count dropped gets a one-line reason in `## Failures`, naming the calibration that licensed it. This is bookkeeping, not judgment, and it is the only thing that catches a compression you did not notice making. `docs-reviewer` and `comment-analyzer` hand you this for free: each emits a `TIERS: findings=<n> suggestions=<n>` line as the fourth line of its report, and `findings=<n>` is the number of that agent's items that must appear in your Critical/Important sections. Grep them, compare them, and treat a shortfall you cannot justify as a bug in your trim rather than a judgement you are entitled to.
 
 Observed: a `docs-reviewer` report filing two findings and four suggestions reached a draft as one finding and one merged bullet. The semicolon violation was demoted because punctuation reads as taste, then the cap silently absorbed two more. Nothing in the run flagged it; the maintainer did.
 
@@ -1042,6 +1047,7 @@ These standing maintainer calibrations encode this repo's review culture. The ch
 7. **Pre-existing behavior isn't Important.** Before rating a finding Important, verify it's net-new in the diff: does unchanged sibling code follow the same pattern? Did the behavior exist before the PR (check the base, look for tests pinning it)? If either is yes, it's advisory at most.
 8. **Deliberate, tested, documented design decisions aren't blockers.** A behavior change pinned by new tests and documented in JSDoc or the PR body is intentional — the right ask is a callout in the PR description, not a change request.
 9. **Don't demand defensive guards.** The repo prefers fixing an invariant at its source with one descriptive error at the true failure point over scattered guards, warnings, and version checks. Absence of extra defensive coding is not a finding.
+10. **Comment-volume asks are advisory; comment-accuracy findings are not.** The repo's comment criteria (`.claude/agents/comment-analyzer.md`, summarized for authors in `CLAUDE.md` § "Code Comments") default to no comment and cap a warranted one at ~3 lines, so "add a docstring", "document this parameter", "explain the rationale here", and "expand this comment" are Suggestions at most — never Important, never a verdict driver. The project-local `comment-analyzer` already enforces this, so the residual source is another agent (usually `code-reviewer`) reaching for documentation asks outside its beat. Still fully in scope, and still blocking: a comment that contradicts the code it describes, a stale reference the diff left behind, and the repo's load-bearing markers — a `@deprecated` missing its replacement or removal version, or version-gated work written without the `TODO(vNN)` form the major-release deprecation sweep greps for.
 
 ## Step 5a: Run the alternative-approach agent
 
