@@ -1,6 +1,8 @@
 import {
   forEachExecutorOptions,
   updateTargetDefault,
+  interpolate,
+  readTargetDefaultsForTarget,
 } from '@nx/devkit/internal';
 import {
   formatFiles,
@@ -15,8 +17,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { interpolate } from 'nx/src/devkit-internals';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { posix } from 'path';
 import type * as ts from 'typescript';
 import { jestConfigObjectAst } from '../../utils/config/functions';

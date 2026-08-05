@@ -1,6 +1,7 @@
 import {
   determineProjectNameAndRootOptions,
   logShowProjectCommand,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -39,7 +40,6 @@ import {
   addSwcTestConfig,
 } from '@nx/js/internal';
 import { relative } from 'node:path/posix';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {

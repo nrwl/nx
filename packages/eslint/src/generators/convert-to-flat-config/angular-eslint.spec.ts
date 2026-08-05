@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson, updateJson, type Tree } from '@nx/devkit';
 import { migrateAngularEslintV22FlatConfig } from './angular-eslint';
