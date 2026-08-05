@@ -125,7 +125,8 @@ export function buildPackageJsonPatterns(
   const negativePatternLookup: Record<string, boolean> = {};
 
   for (const pattern of patterns) {
-    if (pattern.startsWith('!')) {
+    // `!(` opens an extglob, not a negation - leave those to picomatch
+    if (pattern.startsWith('!') && !pattern.startsWith('!(')) {
       negativePatterns.push(pattern);
       negativePatternLookup[pattern.slice(1)] = true;
     } else {

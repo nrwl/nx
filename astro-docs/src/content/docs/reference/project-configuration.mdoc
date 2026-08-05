@@ -746,7 +746,7 @@ belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
 
-Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced statically, so you can set them manually like this. The `implicitDependencies` property is parsed with the [minimatch](https://github.com/isaacs/minimatch) library, so you can review that syntax for more advanced use cases.
+Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced statically, so you can set them manually like this. The `implicitDependencies` property is parsed with the [picomatch](https://github.com/micromatch/picomatch#globbing-features) library, so you can review that syntax for more advanced use cases.
 
 {% tabs syncKey="project-config-file"  %}
 {% tabitem label="package.json" %}

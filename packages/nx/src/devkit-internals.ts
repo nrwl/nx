@@ -145,7 +145,11 @@ export {
 } from './plugins/js/project-graph/build-dependencies/target-project-locator';
 export { getWorkspacePackagesFromGraph } from './plugins/js/utils/get-workspace-packages-from-graph';
 export { registerTsConfigPaths } from './plugins/js/utils/register';
-export { getGlobPatternsFromPackageManagerWorkspaces } from './plugins/package-json';
+export {
+  getGlobPatternsFromPackageManagerWorkspaces,
+  buildPackageJsonPatterns,
+  buildPackageJsonWorkspacesMatcher,
+} from './plugins/package-json';
 // NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts), which
 // describes a pending Tree write ({ path, type: 'CREATE' | 'DELETE' | 'UPDATE',
 // content }). This one describes a per-file diff ({ file, getChanges }). The two

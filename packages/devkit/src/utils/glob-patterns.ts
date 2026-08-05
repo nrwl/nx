@@ -3,10 +3,13 @@
  * individual patterns. picomatch drops the `**\/` zero-segment match inside
  * brace alternation, so `{**\/a,**\/b}` misses root-level files unless split.
  * Local copy: the nx version is not available in all supported nx majors.
+ * Keep in sync with packages/nx/src/utils/globs.ts.
  */
 export function splitGlobPatterns(pattern: string): string[] {
   if (!pattern.startsWith('{') || !pattern.endsWith('}')) {
-    return [pattern];
+    // never emit an empty pattern - picomatch throws on '', where minimatch
+    // matched nothing
+    return pattern ? [pattern] : [];
   }
   const inner = pattern.slice(1, -1);
   const parts: string[] = [];
@@ -26,5 +29,5 @@ export function splitGlobPatterns(pattern: string): string[] {
   }
   if (depth !== 0) return [pattern];
   parts.push(inner.slice(start));
-  return parts;
+  return parts.filter(Boolean);
 }

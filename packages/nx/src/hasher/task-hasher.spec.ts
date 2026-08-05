@@ -286,6 +286,66 @@ describe('TaskHasher', () => {
       ]);
     });
 
+    it('should expand braces in negative patterns so root-level files are excluded', () => {
+      const filtered = filterUsingGlobPatterns(
+        'libs/a',
+        [
+          { file: 'libs/a/index.ts' },
+          { file: 'libs/a/nested/comp.tsx' },
+          { file: 'libs/a/readme.md' },
+        ] as any,
+        ['{projectRoot}/**/*', '!{projectRoot}/{**/*.ts,**/*.tsx}']
+      );
+
+      expect(filtered.map((f) => f.file)).toEqual(['libs/a/readme.md']);
+    });
+
+    it('should treat an empty pattern as matching nothing rather than throwing', () => {
+      expect(
+        filterUsingGlobPatterns('.', [{ file: 'index.ts' }] as any, [
+          '{projectRoot}/',
+        ])
+      ).toEqual([]);
+    });
+
+    it('should treat an empty brace alternative as matching nothing rather than throwing', () => {
+      const filtered = filterUsingGlobPatterns(
+        'libs/a',
+        [{ file: 'libs/a/index.ts' }, { file: 'libs/a/readme.md' }] as any,
+        ['{projectRoot}/{,**/*.ts}']
+      );
+
+      expect(filtered.map((f) => f.file)).toEqual(['libs/a/index.ts']);
+    });
+
+    it('should treat a bare "!" as excluding nothing rather than throwing', () => {
+      const files = [{ file: 'libs/a/index.ts' }] as any;
+
+      expect(
+        filterUsingGlobPatterns('libs/a', files, ['{projectRoot}/**/*', '!'])
+      ).toEqual(files);
+    });
+
+    it('should read [!...] as a negated character class, as minimatch did', () => {
+      const filtered = filterUsingGlobPatterns(
+        'libs/a',
+        [{ file: 'libs/a/index.ts' }, { file: 'libs/a/_private.ts' }] as any,
+        ['{projectRoot}/[!_]*.ts']
+      );
+
+      expect(filtered.map((f) => f.file)).toEqual(['libs/a/index.ts']);
+    });
+
+    it('should match root-level project files whose patterns expand to "./"', () => {
+      const filtered = filterUsingGlobPatterns(
+        '.',
+        [{ file: 'index.ts' }, { file: 'nested/a.ts' }] as any,
+        ['{projectRoot}/**/*.ts']
+      );
+
+      expect(filtered.map((f) => f.file)).toEqual(['index.ts', 'nested/a.ts']);
+    });
+
     it('should OR all positive patterns and AND all negative patterns (when negative patterns)', () => {
       const filtered = filterUsingGlobPatterns(
         'root',

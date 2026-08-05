@@ -10,7 +10,9 @@ export function combineGlobPatterns(...patterns: (string | string[])[]) {
  */
 export function splitGlobPatterns(pattern: string): string[] {
   if (!pattern.startsWith('{') || !pattern.endsWith('}')) {
-    return [pattern];
+    // never emit an empty pattern - picomatch throws on '', where minimatch
+    // matched nothing
+    return pattern ? [pattern] : [];
   }
   const inner = pattern.slice(1, -1);
   const parts: string[] = [];
@@ -30,49 +32,69 @@ export function splitGlobPatterns(pattern: string): string[] {
   }
   if (depth !== 0) return [pattern];
   parts.push(inner.slice(start));
-  return parts;
+  return parts.filter(Boolean);
 }
 
 /**
- * Expands `{a,b}` alternations into separate brace-free patterns
+ * Expands every `{a,b}` alternation into one pattern per combination
  * (`x/{a,b}/z` -> `x/a/z`, `x/b/z`). picomatch drops the `**\/` zero-segment
  * match inside brace alternation, so `x/{**\/*.ts,**\/*.tsx}` misses
- * `x/index.ts` unless expanded. Range groups (`{1..3}`) are left alone.
+ * `x/index.ts` unless expanded. Groups with no top-level comma (`{1..3}`,
+ * `{projectRoot}`), escaped braces (`\{a,b\}`) and unbalanced braces are left
+ * alone, so results are not necessarily brace-free. Output size is the product
+ * of the alternation widths, and an empty alternative yields an empty pattern
+ * (`{,a}` -> `['', 'a']`) which picomatch rejects - callers must drop those.
  */
 export function expandGlobPatternBraces(pattern: string): string[] {
-  const open = pattern.indexOf('{');
-  if (open === -1) {
-    return [pattern];
-  }
-  let depth = 0;
-  let close = -1;
-  const commas: number[] = [];
-  for (let i = open; i < pattern.length; i++) {
-    const c = pattern[i];
-    if (c === '{') {
-      depth++;
-    } else if (c === '}') {
-      if (--depth === 0) {
-        close = i;
-        break;
+  let search = 0;
+  while (search < pattern.length) {
+    let open = -1;
+    let depth = 0;
+    let close = -1;
+    const commas: number[] = [];
+    for (let i = search; i < pattern.length; i++) {
+      const c = pattern[i];
+      // a backslash escapes the next character, so it opens/closes nothing
+      if (c === '\\') {
+        i++;
+      } else if (c === '{') {
+        if (open === -1) {
+          open = i;
+        }
+        depth++;
+      } else if (c === '}' && open !== -1) {
+        if (--depth === 0) {
+          close = i;
+          break;
+        }
+      } else if (c === ',' && depth === 1) {
+        commas.push(i);
       }
-    } else if (c === ',' && depth === 1) {
-      commas.push(i);
     }
+    // no group left, or an unbalanced one - nothing further is safe to expand
+    if (open === -1 || close === -1) {
+      return [pattern];
+    }
+    // not an alternation (a range, or a `{token}`) - look past it
+    if (!commas.length) {
+      search = close + 1;
+      continue;
+    }
+    const prefix = pattern.slice(0, open);
+    const suffix = pattern.slice(close + 1);
+    const bounds = [open, ...commas, close];
+    const results: string[] = [];
+    for (let i = 0; i < bounds.length - 1; i++) {
+      const part = pattern.slice(bounds[i] + 1, bounds[i + 1]);
+      // a loop rather than push(...spread) - the spread hits the argument
+      // limit and reports a misleading RangeError on large products
+      for (const expanded of expandGlobPatternBraces(prefix + part + suffix)) {
+        results.push(expanded);
+      }
+    }
+    return results;
   }
-  // unbalanced braces or no alternation to expand
-  if (close === -1 || !commas.length) {
-    return [pattern];
-  }
-  const prefix = pattern.slice(0, open);
-  const suffix = pattern.slice(close + 1);
-  const bounds = [open, ...commas, close];
-  const results: string[] = [];
-  for (let i = 0; i < bounds.length - 1; i++) {
-    const part = pattern.slice(bounds[i] + 1, bounds[i + 1]);
-    results.push(...expandGlobPatternBraces(prefix + part + suffix));
-  }
-  return results;
+  return [pattern];
 }
 
 export const GLOB_CHARACTERS = new Set(['*', '|', '{', '}', '(', ')', '[']);

@@ -491,14 +491,11 @@ export function filterUsingGlobPatterns(
   files: FileData[],
   patterns: string[]
 ): FileData[] {
-  const filesetWithExpandedProjectRoot = patterns
-    .map((f) => f.replace('{projectRoot}', root))
-    .map((r) => {
-      // normalize './'-prefixed patterns from root level projects
-      if (r.startsWith('./')) return r.substring(2);
-      if (r.startsWith('!./')) return '!' + r.substring(3);
-      return r;
-    });
+  // picomatch normalizes a leading './' itself, unlike minimatch, so root-level
+  // projects need no rewriting here
+  const filesetWithExpandedProjectRoot = patterns.map((f) =>
+    f.replace('{projectRoot}', root)
+  );
 
   const positive = [];
   const negative = [];
@@ -514,27 +511,26 @@ export function filterUsingGlobPatterns(
     return files;
   }
 
-  // expand braces so `x/{**/*.ts,**/*.tsx}` matches `x/index.ts` (see
-  // expandGlobPatternBraces), and compile each pattern once
-  const positiveMatchers = positive.map((p) =>
-    picomatch(expandGlobPatternBraces(p))
-  );
-  const negativeMatchers = negative.map((p) =>
-    picomatch(expandGlobPatternBraces(p.substring(1)))
-  );
+  const matchesEveryFile =
+    positive.length === 0 ||
+    (positive.length === 1 && positive[0] === `${root}/**/*`);
+
+  // Expand braces so `x/{**/*.ts,**/*.tsx}` matches `x/index.ts` (see
+  // expandGlobPatternBraces), and compile each pattern once. Empty products
+  // (`{,a}`, a bare `!`) are dropped - picomatch rejects '', where minimatch
+  // matched nothing. `posix` keeps `[!a]` a negated class rather than a
+  // literal '!', as minimatch read it.
+  const compile = (pattern: string) =>
+    picomatch(expandGlobPatternBraces(pattern).filter(Boolean), {
+      posix: true,
+    });
+  const positiveMatchers = matchesEveryFile ? [] : positive.map(compile);
+  const negativeMatchers = negative.map((p) => compile(p.substring(1)));
 
   return files.filter((f) => {
-    let matchedPositive = false;
-    if (
-      positive.length === 0 ||
-      (positive.length === 1 && positive[0] === `${root}/**/*`)
-    ) {
-      matchedPositive = true;
-    } else {
-      matchedPositive = positiveMatchers.some((m) => m(f.file));
+    if (!matchesEveryFile && !positiveMatchers.some((m) => m(f.file))) {
+      return false;
     }
-
-    if (!matchedPositive) return false;
 
     return negativeMatchers.every((m) => !m(f.file));
   });
