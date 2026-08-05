@@ -196,7 +196,8 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(leosvelperez): Re-enable once https://github.com/cypress-io/cypress/issues/34461 is fixed
+  xit(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);
@@ -215,12 +216,9 @@ export default defineConfig({
       );
 
       if (await runE2ETests('cypress')) {
-        // TODO(leosvelperez): Uncomment once https://github.com/cypress-io/cypress/issues/34461
-        // is fixed. Component testing is unsupported on Angular 22.1, while e2e
-        // sharing the same cypress.config.ts must keep working.
-        // expect(runCLI(`run ${appName}:component-test`)).toContain(
-        //   'All specs passed!'
-        // );
+        expect(runCLI(`run ${appName}:component-test`)).toContain(
+          'All specs passed!'
+        );
         expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
       }
       expect(await killPort(4200)).toBeTruthy();

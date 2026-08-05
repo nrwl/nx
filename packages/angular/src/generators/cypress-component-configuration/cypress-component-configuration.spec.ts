@@ -33,6 +33,16 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
   readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
 }));
 
+// Cypress can't run component tests on Angular 22.1+ until Cypress 16, so tests
+// pinning an older Cypress version have to pin Angular below 22.1 as well.
+// See: https://github.com/cypress-io/cypress/issues/34461
+function useAngularSupportedByCypress(tree: Tree) {
+  updateJson(tree, 'package.json', (json) => {
+    json.dependencies = { ...json.dependencies, '@angular/core': '~22.0.0' };
+    return json;
+  });
+}
+
 // TODO(jack): Remove this when Cypress adds Vite 8 support.
 // See: https://github.com/cypress-io/cypress/issues/33078
 function useVite7ForCypressCT(tree: Tree) {
@@ -57,6 +67,12 @@ describe('Cypress Component Testing Configuration', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', '');
     mockedInstalledCypressVersion.mockReturnValue(10);
+    // Cypress can't run component tests on Angular 22.1+ until Cypress 16.
+    // See: https://github.com/cypress-io/cypress/issues/34461
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = { ...json.dependencies, cypress: '^16.0.0' };
+      return json;
+    });
 
     projectGraph = {
       dependencies: {},
@@ -946,6 +962,7 @@ describe('Cypress Component Testing Configuration', () => {
     };
 
     useVite7ForCypressCT(tree);
+    useAngularSupportedByCypress(tree);
     await cypressComponentConfiguration(tree, {
       project: 'zoneless-app',
       generateTests: false,
@@ -1010,6 +1027,7 @@ describe('Cypress Component Testing Configuration', () => {
     };
 
     useVite7ForCypressCT(tree);
+    useAngularSupportedByCypress(tree);
     await cypressComponentConfiguration(tree, {
       project: 'zoneless-lib',
       buildTarget: 'zoneless-lib:build',
@@ -1077,6 +1095,7 @@ describe('Cypress Component Testing Configuration', () => {
     };
 
     useVite7ForCypressCT(tree);
+    useAngularSupportedByCypress(tree);
     await expect(
       cypressComponentConfiguration(tree, {
         project: 'zoneless-app',
@@ -1111,6 +1130,7 @@ describe('Cypress Component Testing Configuration', () => {
     };
 
     useVite7ForCypressCT(tree);
+    useAngularSupportedByCypress(tree);
     await expect(
       cypressComponentConfiguration(tree, {
         project: 'zoneless-lib',
@@ -1118,6 +1138,42 @@ describe('Cypress Component Testing Configuration', () => {
         skipFormat: true,
       })
     ).rejects.toThrow(/zoneless/i);
+  });
+
+  it('should throw an error when the cypress version does not support the angular version', async () => {
+    // this cypress version also fails the zoneless check, which the angular
+    // version check must take precedence over
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = { ...json.dependencies, cypress: '15.7.0' };
+      return json;
+    });
+    await generateTestApplication(tree, {
+      directory: 'zoneless-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+
+    projectGraph = {
+      nodes: {
+        'zoneless-app': {
+          name: 'zoneless-app',
+          type: 'app',
+          data: { ...readProjectConfiguration(tree, 'zoneless-app') } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    useVite7ForCypressCT(tree);
+    await expect(
+      cypressComponentConfiguration(tree, {
+        project: 'zoneless-app',
+        generateTests: false,
+        skipFormat: true,
+      })
+    ).rejects.toThrow(
+      /Cypress Component Testing doesn't support Angular 22\.1 and higher/
+    );
   });
 });
 
