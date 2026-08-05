@@ -3,6 +3,7 @@ import { mkdirSync } from 'fs';
 import { NX_TMP_DIR, NX_USER_TMP_DIR } from '../utils/nx-tmp-dir';
 import { nxVersion } from '../utils/versions';
 import {
+  DirectoryRefusedError,
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isOwnedRealDirectory,
@@ -65,10 +66,12 @@ export function ensureSecureNativeFileCacheLocation(
       // not additionally refused for naming one of Nx's own roots, and it warns
       // rather than throwing.
       mkdirSync(dirname(dir), { recursive: true });
-      if (ensureOwnedPrivateDir(dir).status !== 'ok') {
-        throw new Error(
-          'it is not a directory owned by the current user with no group or other access'
-        );
+      const established = ensureOwnedPrivateDir(dir);
+      if (established.status !== 'ok') {
+        // The guard's own reason rather than a fixed sentence: `not-created
+        // (EACCES)` and `foreign-owner` are exactly what the catch below
+        // promises to tell apart, and one string for all of them cannot.
+        throw new DirectoryRefusedError(established.refusal);
       }
       return dir;
     } catch (e: any) {
