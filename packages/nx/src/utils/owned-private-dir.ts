@@ -33,7 +33,12 @@ export type EstablishedSharedRoot = string & {
 };
 /** An existing real directory owned by us. Mode is *not* checked. */
 export type OwnedRealDir = string & { readonly [ownedRealDirBrand]: true };
-/** Created if absent, owned by us, and re-locked to `0700`. */
+/**
+ * Created if absent, owned by us, and verified at `0700` — re-locked first if
+ * it was looser. The mode is checked on whichever branch produced it, so the
+ * brand does not depend on who created the directory. The one thing it cannot
+ * promise is a filesystem that accepts `chmod` and ignores it.
+ */
 export type OwnedPrivateDir = string & {
   readonly [ownedPrivateDirBrand]: true;
 };
@@ -139,9 +144,12 @@ export function isSafeSharedRoot(dir: string): SafeSharedRoot | null {
  * gates the alarming message, so it should be made only when it can be shown.
  *
  * `statSync`, not `lstatSync`: the question is about the directory that will be
- * used, and a symlink's own mode is `0777` on every POSIX system. Nothing here
- * decides whether a path is accepted, so following the link costs nothing the
- * guards above do not already re-check.
+ * used, not about the link pointing at it. The error a link introduced ran
+ * *both* ways and neither was the safe one — Linux creates symlinks `0777`, so
+ * `lstat` reported a private target as peer-writable; macOS applies the umask
+ * to `symlink()`, so the usual `0755` reported a world-writable target as
+ * private. Nothing here decides whether a path is accepted, so following the
+ * link costs nothing the guards above do not already re-check.
  */
 export function isPeerWritable(dir: string): boolean {
   if (process.platform === 'win32') {
@@ -292,13 +300,23 @@ export function getUserSegment(): string {
 export function ensureOwnedPrivateDir(dir: string): OwnedPrivateDir | null {
   try {
     mkdirSync(dir, { mode: 0o700 });
-    return dir as OwnedPrivateDir;
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
       return null;
     }
   }
 
+  // One verdict for both branches, as in `ensureSafeSharedRoot`. `mkdir` masks
+  // its mode argument with the umask, so on a POSIX-conformant filesystem the
+  // result can only be tighter than 0700 and this costs one lstat. It earns its
+  // keep on mounts that ignore the mode entirely — WSL2 `drvfs` without
+  // metadata, CIFS with `dir_mode`, FAT — where a directory Nx asked for at
+  // 0700 can land 0777.
+  //
+  // Not a new failure mode for those mounts: the directory exists from the
+  // second run onward, so they already reach this check on every run but the
+  // first. Branding only the creation path meant the same directory in the same
+  // environment got a different verdict depending on who made it.
   try {
     const stats = lstatSync(dir);
     // Before the Windows short-circuit: "is a real directory" holds on every
