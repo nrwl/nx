@@ -178,6 +178,21 @@ describe('visitNotIgnoredFiles', () => {
       expect(visited).toEqual([]);
     });
 
+    it('should support the allowlist idiom', () => {
+      // `*` then `!apps/` is how you opt in rather than out. It only works if
+      // directories are asked about as `apps/` - probed as `apps`, the `*`
+      // matches and `!apps/` cannot, so the whole tree is pruned. Verified
+      // against real git, which visits `apps/a.ts` here.
+      tree.write('.gitignore', '*\n!apps/\n!apps/**\n');
+      tree.write('apps/a.ts', '');
+      tree.write('other/b.ts', '');
+
+      const visited = visitAll();
+
+      expect(visited).toContain('apps/a.ts');
+      expect(visited).not.toContain('other/b.ts');
+    });
+
     it('should let a .nxignore negation re-include a .gitignore exclusion', () => {
       // The native walker gives `.nxignore` precedence, and master merged both
       // files into one matcher so it won there too.

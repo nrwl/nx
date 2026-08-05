@@ -136,6 +136,22 @@ describe('formatFiles', () => {
       expect(tree.read('apps/foo/nested.ts', 'utf-8')).toBe(formatted);
     });
 
+    it('should not let .prettierignore negate .gitignore', async () => {
+      // prettier builds an ignorer per ignore file and ORs them, so a `!` in
+      // one cannot re-include what another excluded. This is the only test that
+      // reaches `combine: 'separate'` - without it the mode can be flipped to
+      // `'merged'` with the whole suite still green.
+      tree.write('.gitignore', 'a.ts\n');
+      tree.write('.prettierignore', '!a.ts\n');
+      tree.write('a.ts', unformatted);
+      tree.write('kept.ts', unformatted);
+
+      await formatFiles(tree);
+
+      expect(tree.read('kept.ts', 'utf-8')).toBe(formatted);
+      expect(tree.read('a.ts', 'utf-8')).toBe(unformatted);
+    });
+
     it('should apply a root ignore file to a nested path', async () => {
       tree.write('.gitignore', 'generated/\n');
       tree.write('apps/foo/generated/a.ts', unformatted);

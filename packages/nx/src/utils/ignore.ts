@@ -21,11 +21,14 @@ export function getIgnoreObject(
  *   and a negation counts only if none excluded. `createIsIgnoredFunction`
  *   builds an ignorer per `--ignore-path` and ORs them, so a `!x` in
  *   `.prettierignore` cannot re-include an `x` that `.gitignore` excluded.
- * - `merged` is git's and the native walker's: all files in one matcher, later
- *   ones winning, so `.nxignore`'s `!x` re-includes `.gitignore`'s `x`. It has
+ * - `merged` is git's and the native walker's: all files in one matcher, so
+ *   `.nxignore`'s `!x` removes `.gitignore`'s exclusion of `x` outright. It has
  *   to be a merge rather than a precedence check between separate matchers,
- *   because a lone `!x` reports an opinion on `x/` but *none* on `x/a.ts`
- *   (measured) - only a merge carries the negation down to the children.
+ *   because a lone `!x` in its own matcher reports an opinion on `x/` but *none*
+ *   on `x/a.ts` (measured), so the exclusion would still reach the children.
+ *   Note the merge only removes the exclusion within that one directory - a
+ *   negation in a nested file still loses to an ancestor's exclusion, matching
+ *   what the helper this replaced did.
  */
 export type IgnoreCombineMode = 'separate' | 'merged';
 
@@ -97,7 +100,9 @@ export function createIgnoreChainResolver(
  * rather than the workspace's.
  *
  * Nearest directory with an *opinion* wins, not the first match: a nested
- * `!keep.log` must override the root's `*.log`, which is git's rule.
+ * `!keep.log` must override the root's `*.log`, which is git's rule for files.
+ * A nested negation of a *directory* does not reach its children - see
+ * `IgnoreCombineMode`.
  *
  * How the files of one directory combine is decided when the chain is built -
  * see `IgnoreCombineMode`. Here they are simply the entry's matchers: any one
@@ -159,27 +164,36 @@ export function isAlwaysIgnored(path: string): boolean {
  *
  * `combine` decides how the files of one directory relate - see
  * `IgnoreCombineMode`. For `merged`, order `filenames` lowest-authority first.
+ *
+ * Files and directories are asked separately because the answers differ: a
+ * pattern is only directory-only if it ends in a slash, and `ignore` will not
+ * match `dist/` against the path `dist`. Callers must not have to know that, so
+ * the slash is appended here and never leaves this module.
  */
 export function createTreeIgnoreChecker(
   tree: Tree,
   filenames: string[],
   { cascade, combine }: { cascade: boolean; combine: IgnoreCombineMode }
-): (path: string) => boolean {
+): {
+  isIgnoredFile: (path: string) => boolean;
+  isIgnoredDirectory: (path: string) => boolean;
+} {
   const resolve = createIgnoreChainResolver(
     (path) => (tree.exists(path) ? tree.read(path, 'utf-8') : null),
     filenames,
     combine
   );
 
-  return (path) => {
-    // A directory is probed as `dist/` so a trailing-slash pattern matches it,
-    // but the chain is keyed by real directories - `posixDirname('dist/')` is
-    // `'dist'`, not `''` - so the lookup uses the bare path.
-    const bare = path.endsWith('/') ? path.slice(0, -1) : path;
-    return (
-      isAlwaysIgnored(path) ||
-      isIgnoredByChain(resolve(cascade ? posixDirname(bare) : ''), path)
-    );
+  // `probe` may carry a trailing slash; `path` never does. The chain is keyed by
+  // real directories, and `posixDirname('dist/')` is `'dist'` rather than the
+  // parent, so the lookup always uses the slash-less form.
+  const check = (path: string, probe: string) =>
+    isAlwaysIgnored(probe) ||
+    isIgnoredByChain(resolve(cascade ? posixDirname(path) : ''), probe);
+
+  return {
+    isIgnoredFile: (path) => check(path, path),
+    isIgnoredDirectory: (path) => check(path, `${path}/`),
   };
 }
 
