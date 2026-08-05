@@ -57,6 +57,10 @@ export type ScopedIgnoreMatcher = {
  * `read` decides where the files come from - `tree.read` for a generator, disk
  * for a caller with no tree - and returns an empty string or null when there is
  * no such file. Paths handed to it are workspace-relative POSIX.
+ *
+ * `filenames` order matters when `combine` is `merged`: they go into one matcher
+ * in order and the last matching pattern decides, so list them
+ * lowest-authority first.
  */
 export function createIgnoreChainResolver(
   read: (path: string) => string | null | undefined,
@@ -153,9 +157,9 @@ export function isAlwaysIgnored(path: string): boolean {
 /**
  * Which files to read, whether they cascade, and how the files of one directory
  * relate are all decided by one fact - the tool this has to agree with - so the
- * caller states that and nothing else. Offering them as separate options would
- * make four incoherent combinations representable, and picking the wrong value
- * for one of them is a silent behaviour change across every caller.
+ * caller states that and nothing else. As separate options the two consumers'
+ * values could be mixed, and picking one wrong is a silent behaviour change
+ * across every caller.
  */
 const AUTHORITIES = {
   // git, and the native walker: ignore files cascade, and `.nxignore` outranks
@@ -167,8 +171,11 @@ const AUTHORITIES = {
     combine: 'merged',
   },
   // prettier: resolves ignore files from the workspace root only, and ORs one
-  // ignorer per `--ignore-path` rather than merging them (both measured). A
-  // formatter has to skip exactly what `nx format:check` skips.
+  // ignorer per `--ignore-path` rather than merging them (both measured), which
+  // is the CLI `nx format:check` shells out to. Not an exact match for that
+  // command: `isAlwaysIgnored` below also skips the nx and yarn caches, and
+  // `format.ts` filters its own patterns through `.nxignore`, which this does
+  // not read.
   prettier: {
     filenames: ['.gitignore', '.prettierignore'],
     cascade: false,
@@ -179,7 +186,10 @@ const AUTHORITIES = {
   { filenames: string[]; cascade: boolean; combine: IgnoreCombineMode }
 >;
 
-/** The tool an ignore decision has to agree with. */
+/**
+ * The tool an ignore decision has to agree with. `git` also covers the native
+ * walker, which is where `.nxignore` comes from - git itself does not read it.
+ */
 export type IgnoreAuthority = keyof typeof AUTHORITIES;
 
 /**

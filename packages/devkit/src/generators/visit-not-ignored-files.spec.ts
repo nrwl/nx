@@ -248,12 +248,12 @@ describe('visitNotIgnoredFiles', () => {
     });
   });
 
-  // Differential test against real git rather than against hand-written
-  // expectations. The cases above encode what we believe git does; this one
-  // asks it. Every defect this walker has shipped was a disagreement with an
-  // authority, and a sweep finds those without anyone having to think of the
-  // specific pattern first - the allowlist idiom below went unnoticed through
-  // four rounds of hand-written tests.
+  // Differential against real git rather than hand-written expectations: the
+  // cases above encode what we believe git does, this one asks it.
+  //
+  // Covers pattern semantics, file-vs-directory probing and the cascade. It
+  // cannot cover how `.nxignore` merges with `.gitignore` - git has no
+  // `.nxignore` - so the cases above are what pin that.
   describe('agreement with git', () => {
     const PATTERNS = [
       'dist/',
@@ -263,19 +263,30 @@ describe('visitNotIgnoredFiles', () => {
       '/generated/',
       '**/tmp/',
       '*',
+      'keep.ts',
+      // The allowlist idiom needs both negations together, so it cannot be
+      // reached by pairing one pattern with one negation.
+      '*\n!apps/\n!apps/**',
     ];
     const NEGATIONS = ['', '!keep.ts', '!apps/', '!apps/**', '!dist/'];
     const FILES = [
       'a.ts',
       'keep.ts',
+      // `/generated/` matches nothing without this, so those cases would assert
+      // only that the walker ignores nothing.
+      'generated/a.ts',
       'dist/a.ts',
       'dist/keep.ts',
       'apps/a.ts',
+      'apps/keep.ts',
       'apps/dist/a.ts',
       'build/a.ts',
       'x.log',
       'apps/tmp/a.ts',
     ];
+    // A nested ignore file, so the cascade is under test too. Without one every
+    // case resolves the same root-only chain and `cascade` is never exercised.
+    const NESTED = { 'apps/.gitignore': '!keep.ts\n' };
 
     let repo: string;
 
@@ -284,26 +295,45 @@ describe('visitNotIgnoredFiles', () => {
     });
 
     afterEach(() => {
-      rmSync(repo, { recursive: true, force: true });
+      // git object files are read-only, which makes removal flaky on Windows.
+      rmSync(repo, { recursive: true, force: true, maxRetries: 3 });
     });
 
     /** What real git leaves untracked, i.e. does not ignore. */
     function gitVisits(gitignore: string): Set<string> {
       writeFileSync(join(repo, '.gitignore'), gitignore);
+      for (const [path, contents] of Object.entries(NESTED)) {
+        mkdirSync(dirname(join(repo, path)), { recursive: true });
+        writeFileSync(join(repo, path), contents);
+      }
       for (const file of FILES) {
         mkdirSync(dirname(join(repo, file)), { recursive: true });
         writeFileSync(join(repo, file), '');
       }
-      execSync('git init -q .', { cwd: repo, stdio: 'ignore' });
+      // `--exclude-standard` also honours the user's global excludesFile and
+      // `.git/info/exclude`, which the walker knows nothing about - without
+      // this the test passes or fails on whatever the developer has in
+      // `~/.gitignore`. Pointing at a path that does not exist keeps it
+      // portable; `/dev/null` would not be.
+      const env = {
+        ...process.env,
+        GIT_CONFIG_GLOBAL: join(repo, 'no-such-gitconfig'),
+        GIT_CONFIG_SYSTEM: join(repo, 'no-such-gitconfig'),
+      };
+      execSync('git init -q .', { cwd: repo, stdio: 'ignore', env });
       const listed = execSync('git ls-files -o --exclude-standard', {
         cwd: repo,
         encoding: 'utf-8',
+        env,
       });
       return new Set(listed.split('\n').filter((f) => FILES.includes(f)));
     }
 
     function walkerVisits(gitignore: string): Set<string> {
       tree.write('.gitignore', gitignore);
+      for (const [path, contents] of Object.entries(NESTED)) {
+        tree.write(path, contents);
+      }
       for (const file of FILES) {
         tree.write(file, '');
       }

@@ -68,9 +68,8 @@ export async function formatFiles(
 
   if (!prettier) return;
 
-  // Must skip exactly what `nx format:check` skips, or a generator leaves files
-  // it will later fail on. `getFileInfo` below does not do it: with no
-  // `ignorePath` its `ignored` is always false (measured).
+  // `getFileInfo` below looks like it filters ignored files but does not: with
+  // no `ignorePath` its `ignored` is always false (measured).
   const { isIgnoredFile } = createTreeIgnoreChecker(tree, 'prettier');
   const files = new Set(
     tree
