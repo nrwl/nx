@@ -446,6 +446,12 @@ describe('socket directories', () => {
     expect(logger.verbose).toHaveBeenCalledWith(
       expect.stringContaining(SOCKET_ROOT)
     );
+    // And it has to name what was refused, not just the tier root below it:
+    // `USER_TMP_ROOT` is the directory a user would have to act on, and the
+    // tier root is unreadable to them when it is the foreign-owned one.
+    expect(logger.verbose).toHaveBeenCalledWith(
+      expect.stringContaining(`${USER_TMP_ROOT} is not a directory`)
+    );
   });
 
   // The warning tells the user to rerun with --verbose to see why the roots

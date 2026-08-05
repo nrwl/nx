@@ -443,7 +443,7 @@ function socketDirUnderFirstUsableRoot(
     established.preferred !== undefined &&
     socketDirFallbackCause === undefined
   ) {
-    noteSocketRootDemotion(established.preferred, established.root);
+    noteSocketRootDemotion(established.preferred, established.root, refusals);
   }
   return dir;
 }
@@ -458,10 +458,17 @@ function socketDirUnderFirstUsableRoot(
  * had chosen the path. They have not — this function only runs when
  * `configuredSocketDir()` returned undefined — so what the generic advice omits
  * is the demotion itself, which is the part they would need to know to act.
- * Recording it also gives `--verbose` something to print, which that message
- * promises.
+ *
+ * `refusals` names the directory that was actually refused. `preferred` is the
+ * tier root, one level below it, which a user cannot even `stat` when the
+ * parent is the foreign-owned one — so without this the verbose line points at
+ * a path they can neither inspect nor act on.
  */
-function noteSocketRootDemotion(preferred: string, used: string) {
+function noteSocketRootDemotion(
+  preferred: string,
+  used: string,
+  refusals: DirRefusal[]
+) {
   socketDirFallbackCause = new Error(
     `Nx could not establish its preferred socket root ${preferred}, so it used ${used}.`
   );
@@ -470,7 +477,10 @@ function noteSocketRootDemotion(preferred: string, used: string) {
   const { logger } =
     require('../utils/logger') as typeof import('../utils/logger');
   logger.verbose(
-    `Nx could not use the default socket directory ${preferred}. Using ${used} instead.`
+    `Nx could not use the default socket directory ${preferred}. Using ${used} instead.` +
+      (refusals.length
+        ? ` ${refusals.map((r) => describeRefusal(r)).join('; ')}.`
+        : '')
   );
 }
 

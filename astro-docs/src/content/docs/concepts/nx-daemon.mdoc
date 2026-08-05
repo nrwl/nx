@@ -67,14 +67,14 @@ tail -f <daemon-log-path>
 On macOS and Linux, Nx tries three locations for the daemon socket and for the forked process and
 plugin worker sockets, and uses the first one it can establish: `/tmp/.nx/<uid>/sockets`, then
 `~/.nx/sockets`, then a directory inside the workspace.
-Beneath the first two, Nx creates a directory only your user can reach — named per run for the daemon
+Beneath the first two, Nx creates a directory only your user can reach, named per run for the daemon
 and forked process sockets, and per workspace for the plugin worker sockets.
 The workspace location is used directly rather than getting a directory beneath it, so sockets there are
 per workspace whichever kind they are.
 For what each location requires, see
 [Configure Claude Code sandboxes for Nx](/docs/kb/nx-sandbox-unix-sockets).
 
-Setting `NX_SOCKET_DIR` does not add a fourth entry to that list — it replaces it.
+Setting `NX_SOCKET_DIR` does not add a fourth entry to that list. It replaces it.
 The value becomes the socket directory itself rather than a root to create one under, and it gets no
 fallback through the other locations: if Nx cannot use it you get the workspace directory and a
 warning, and if it names a directory Nx refuses outright you get an error.

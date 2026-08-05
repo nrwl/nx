@@ -116,13 +116,16 @@ describe('daemonPermissionException', () => {
     expect(error.message).toContain('NX_SOCKET_DIR');
   });
 
-  // Nothing else reads the sandbox half, so a revert to wording that omits
-  // `allowAllUnixSockets` would go unnoticed. The KB page states that a scoped
-  // allowlist permits connecting but not creating, which is what a fresh daemon
-  // needs, so the message has to name the broader setting and the page.
-  it('should tell a sandboxed user that a scoped allowlist is not enough', () => {
+  // Both halves, because the pre-fix wording already contained
+  // `allowAllUnixSockets` and the link — pinning only those passes on a revert.
+  // What this change added is the vendor-neutral instruction first and the
+  // Claude Code scoping second: the KB page attributes connect-not-create to
+  // Claude Code's `allowUnixSockets`, not to scoped allowlists at large.
+  it('should scope the allowAllUnixSockets advice to Claude Code', () => {
     const { message } = daemonPermissionException(socketPath, 'connect EPERM');
 
+    expect(message).toContain('allow unix sockets under the Nx socket root');
+    expect(message).toContain('Claude Code');
     expect(message).toContain('allowAllUnixSockets: true');
     expect(message).toContain('https://nx.dev/docs/kb/nx-sandbox-unix-sockets');
   });
