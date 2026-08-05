@@ -78,6 +78,7 @@ export {
 } from './src/utils/calculate-hash-for-create-nodes';
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
+export { splitGlobPatterns } from './src/utils/glob-patterns';
 export { getNamedInputs } from './src/utils/get-named-inputs';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';

@@ -1,5 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { splitGlobPatterns } from 'nx/src/utils/globs';
+import { splitGlobPatterns } from '@nx/devkit/internal';
 import picomatch from 'picomatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
