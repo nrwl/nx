@@ -22,8 +22,9 @@ async function importPrettier(): Promise<typeof Prettier | null> {
 }
 
 /**
- * Formats the created or updated files using Prettier, skipping any the
- * workspace's `.gitignore` or `.prettierignore` covers
+ * Formats the created or updated files using Prettier, skipping `node_modules`,
+ * `.git`, the nx and yarn caches, and anything the workspace's root
+ * `.gitignore` or `.prettierignore` covers
  * @param tree - the file system tree
  * @param options - options for the formatFiles function
  *
