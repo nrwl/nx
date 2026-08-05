@@ -46,9 +46,11 @@ The environment variable takes precedence over `nx.json`.
 NX_DAEMON=false nx show projects
 ```
 
-Nx disables the daemon by default in CI, containers, sandboxed environments, and WebAssembly
-environments where its persistent state or file watching isn't useful.
+Nx disables the daemon by default in CI, containers, and sandboxed environments, where its
+persistent state or file watching isn't useful.
 Set `NX_DAEMON=true` to opt in when a supported long-running environment can reuse the process.
+
+Nx can't run the daemon in WebAssembly environments, so `NX_DAEMON=true` has no effect there.
 
 ## Inspect daemon logs
 
