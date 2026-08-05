@@ -2,8 +2,8 @@ import { Writable } from 'stream';
 import { output } from './output';
 
 /**
- * A stdout stand-in that never completes a write until `release()` is called,
- * so queued bytes stay queued — the state a slow pipe reader produces.
+ * A stdout stand-in that never completes a write until the test releases or fails
+ * it, so queued bytes stay queued — the state a slow pipe reader produces.
  */
 function stalledStdout(highWaterMark: number) {
   const pending: Array<(err?: Error) => void> = [];
@@ -107,12 +107,29 @@ describe('output.drain', () => {
     stalled.stream.write('c'.repeat(50));
     const promise = output.drain();
 
-    // Drive the error through Node's real ordering — write callback first, then
-    // the 'error' event. A bare emit lets a listener-removing refactor pass here
-    // while crashing on an actual pipe.
+    // Node's real ordering: write callback first, then the 'error' event. Emitting
+    // 'error' directly, or dropping the listener assertion, each let a
+    // listener-removing refactor pass here while crashing on an actual pipe.
     stalled.failPending(Object.assign(new Error('EPIPE'), { code: 'EPIPE' }));
-
+    expect(stalled.stream.listenerCount('error')).toBe(1);
     await expect(promise).resolves.toBeUndefined();
+  });
+
+  // The cleanup is deferred, so it must target the stream drain() attached to
+  // rather than re-reading process.stdout after a caller has swapped it.
+  it('detaches from the stream it attached to, not the current process.stdout', async () => {
+    const stalled = stalledStdout(1000);
+    useStdout(stalled.stream);
+
+    stalled.stream.write('e'.repeat(50));
+    const promise = output.drain();
+    stalled.release();
+    await promise;
+
+    useStdout(realStdout as Writable);
+    await new Promise((res) => setImmediate(res));
+
+    expect(stalled.stream.listenerCount('error')).toBe(0);
   });
 
   it('leaves no error listener behind', async () => {

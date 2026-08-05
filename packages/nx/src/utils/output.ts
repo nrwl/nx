@@ -360,22 +360,24 @@ class CLIOutput {
   /** Waits for queued `process.stdout` to reach the fd. Does not cover stderr. */
   drain(): Promise<void> {
     return new Promise((resolve) => {
+      // Captured once: the deferred cleanup below must detach from the stream it
+      // attached to, not from whatever `process.stdout` is a macrotask later.
+      const stream = process.stdout;
       // `writableNeedDrain` is only set once the queue passes the high-water mark,
       // so a shorter queue needs the write callback instead. Waiting on the 'drain'
       // event alone lets `process.exit()` discard up to highWaterMark of output.
-      if (process.stdout.writableLength === 0) {
+      if (stream.writableLength === 0) {
         resolve();
         return;
       }
-      // The reader may already be gone (`nx ... | head`); without an 'error'
-      // listener that EPIPE crashes the process instead of resolving. Cleanup is
-      // deferred because the write callback fires before the 'error' event, so
-      // removing the listener from inside it re-introduces the crash.
+      // The reader may already be gone (`nx ... | head`); an unhandled EPIPE would
+      // kill the run. Detach on the next tick, not inside the write callback: that
+      // callback fires before the 'error' event, so removing it there still crashes.
       const onError = () => resolve();
-      process.stdout.on('error', onError);
-      process.stdout.write('', () => {
+      stream.on('error', onError);
+      stream.write('', () => {
         resolve();
-        setImmediate(() => process.stdout.removeListener('error', onError));
+        setImmediate(() => stream.removeListener('error', onError));
       });
     });
   }
