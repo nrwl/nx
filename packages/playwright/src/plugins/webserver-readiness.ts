@@ -14,6 +14,9 @@ export interface ResolvedWebServer {
   reuseExistingServer?: boolean;
   ignoreHTTPSErrors?: boolean;
   timeout?: number;
+  // `wait.stdout`/`wait.stderr` presence projected to a boolean: the RegExp
+  // values do not survive the JSON IPC channel.
+  waitsForOutput?: boolean;
 }
 
 export function normalizeWebServers(
@@ -30,6 +33,8 @@ export function normalizeWebServers(
     reuseExistingServer: server.reuseExistingServer,
     ignoreHTTPSErrors: server.ignoreHTTPSErrors,
     timeout: server.timeout,
+    waitsForOutput:
+      server.wait?.stdout || server.wait?.stderr ? true : undefined,
   }));
 }
 
@@ -49,6 +54,16 @@ export function taskEnvDivergesFromAmbient(
   }
   return false;
 }
+
+/**
+ * The messages the config-eval worker sends over IPC. Tagged so the parent can
+ * tell them apart from anything else on the channel: the user's config module
+ * runs in the child and can itself call `process.send` during evaluation, and
+ * such a message must not settle the resolution.
+ */
+export type WebserverConfigWorkerMessage =
+  | { type: 'webserver-config-result'; webServers: ResolvedWebServer[] }
+  | { type: 'webserver-config-error'; error: string };
 
 type ChildEval = (
   configFilePath: string,
@@ -126,7 +141,9 @@ function forkChildEval(
       fn();
     };
     const timer = setTimeout(() => {
-      child.kill();
+      // SIGKILL: the eval child holds no state that needs graceful teardown,
+      // and a config stuck in a busy loop would ignore SIGTERM anyway.
+      child.kill('SIGKILL');
       finish(() =>
         reject(
           new Error(withStderr('Timed out evaluating the Playwright config'))
@@ -134,12 +151,19 @@ function forkChildEval(
       );
     }, CHILD_EVAL_TIMEOUT);
 
-    child.on('message', (message: ResolvedWebServer[] | { error: string }) => {
-      if (!Array.isArray(message) && message && 'error' in message) {
-        finish(() => reject(new Error(withStderr(message.error))));
-      } else {
-        finish(() => resolve(message as ResolvedWebServer[]));
+    child.on('message', (message: WebserverConfigWorkerMessage) => {
+      if (typeof message !== 'object' || message === null) {
+        return;
       }
+      if (message.type === 'webserver-config-error') {
+        finish(() => reject(new Error(withStderr(message.error))));
+      } else if (
+        message.type === 'webserver-config-result' &&
+        Array.isArray(message.webServers)
+      ) {
+        finish(() => resolve(message.webServers));
+      }
+      // Anything else came from the evaluated config itself; ignore it.
     });
     child.on('error', (error) => finish(() => reject(error)));
     // `close` rather than `exit` so the stderr the failure folds in has fully
@@ -162,9 +186,10 @@ function forkChildEval(
   });
 }
 
-// Test seam: the fork cannot run inside the unit test harness (the worker is
-// only compiled in dist). Tests replace it with an in-process evaluation, which
-// is safe there because the harness evaluates a single config at a time.
+// Test seam: plugin unit tests replace the fork with an in-process evaluation
+// (the compiled worker only exists in dist) and concurrency tests use it to
+// control completion order. The fork itself is exercised against fixture
+// workers via _setWorkerScriptPath below.
 export function _setChildEval(impl: ChildEval | null): void {
   childEval = impl ?? forkChildEval;
 }

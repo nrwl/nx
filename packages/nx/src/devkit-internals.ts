@@ -90,7 +90,7 @@ export {
   requireWithTsconfigFallback,
 } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
-export { getGraphTimeEnvForTask } from './tasks-runner/task-env';
+export { getGraphTimeDotEnvForTask } from './tasks-runner/task-env';
 export { isCI } from './utils/is-ci';
 export {
   isUsingPrettierInTree,
