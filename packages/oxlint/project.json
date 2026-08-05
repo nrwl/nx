@@ -11,9 +11,10 @@
       "dependsOn": ["^build", "build-base"]
     },
     "oxlint": {
-      "command": "oxlint . --max-warnings=5",
+      "command": "oxlint .",
       "options": {
-        "cwd": "packages/oxlint"
+        "cwd": "packages/oxlint",
+        "max-warnings": 0
       },
       "cache": true,
       "inputs": [
