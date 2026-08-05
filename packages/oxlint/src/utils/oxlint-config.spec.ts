@@ -172,10 +172,11 @@ describe('addPluginsToOxlintConfig', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
 
     expect(tree.exists('apps/my-app/.oxlintrc.json')).toBe(false);
-    // The branch that writes nothing at all — the warning is the only signal.
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('only JSON Oxlint configs')
-    );
+    // The branch that writes nothing at all — the warning is the only signal, so
+    // it has to name the file here too, not just in the ancestor case.
+    const message = warn.mock.calls[0][0];
+    expect(message).toContain('only JSON Oxlint configs');
+    expect(message).toContain('"oxlint.config.ts"');
   });
 
   // The governing config's format only matters when a project config has to be

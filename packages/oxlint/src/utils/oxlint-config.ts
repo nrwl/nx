@@ -10,8 +10,8 @@ import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
 /**
  * The root config a root project rewrites in place. Not where generated
- * `extends` targets come from — those are `findNearestOxlintConfig`'s, gated by
- * its own `.jsonc?` check. The `.json` check below still refuses `.jsonc` here.
+ * `extends` targets come from — those come from the ancestor walk, narrowed by
+ * the `.jsonc?` test in `addPluginsToOxlintConfig` rather than by this list.
  */
 const EXTENDABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
   /\.jsonc?$/.test(file)
@@ -55,10 +55,6 @@ function findNearestOxlintConfig(
  * A nested config *replaces* the one above it rather than merging into it, so
  * the generated config extends its nearest ancestor explicitly. Without that
  * `extends`, that config's `categories` and `rules` silently stop applying.
- *
- * Warns and returns when the config it would rewrite is one this package cannot
- * (`.jsonc`, or a TypeScript config) — writing a second config beside it would
- * make Oxlint refuse to lint the project at all.
  */
 export function addPluginsToOxlintConfig(
   tree: Tree,

@@ -59,7 +59,7 @@ Two configs in one directory is an error, not a precedence, so pick one format p
 
 - `oxlint.config.ts` only works on a Node runtime that can run TypeScript directly, which means Node 22.18 or later. Node 20 cannot, even though Oxlint's error message suggests otherwise, and Oxlint's standalone binary cannot either.
 - Only JSON configs get their `extends` chain tracked as task inputs. Nx can't read a TypeScript config statically.
-- Framework generators can only register Oxlint plugins into a JSON config. Under a TypeScript config anywhere above the project they can still update a project that already has its own `.oxlintrc.json`, but they can't create one — `nx g @nx/react:app --linter=oxlint` warns and leaves the `plugins` array to you.
+- Framework generators can only register Oxlint plugins into a JSON config. When the nearest config above a project is TypeScript they can still update a project that already has its own `.oxlintrc.json`, but they can't create one — `nx g @nx/react:app --linter=oxlint` warns and leaves the `plugins` array to you. A TypeScript config further up doesn't block anything, because the nearest one is what Oxlint resolves to.
 
 ## Task naming
 
