@@ -34,10 +34,13 @@ export type EstablishedSharedRoot = string & {
 /** An existing real directory owned by us. Mode is *not* checked. */
 export type OwnedRealDir = string & { readonly [ownedRealDirBrand]: true };
 /**
- * Created if absent, owned by us, and verified at `0700` — re-locked first if
- * it was looser. The mode is checked on whichever branch produced it, so the
- * brand does not depend on who created the directory. The one thing it cannot
- * promise is a filesystem that accepts `chmod` and ignores it.
+ * POSIX: created if absent, owned by us, and carrying no group or other bits —
+ * re-locked first if it was looser. The mode is checked on whichever branch
+ * produced it, so the brand does not depend on who created the directory. It
+ * cannot promise a filesystem that accepts `chmod` and ignores it.
+ *
+ * Windows: only *is a real directory*. `getuid` is unavailable there, so
+ * neither ownership nor mode is checked; `%TMP%` is already per-account.
  */
 export type OwnedPrivateDir = string & {
   readonly [ownedPrivateDirBrand]: true;
@@ -168,7 +171,7 @@ export function isSafeSharedRoot(
  *
  * Windows has no answer to give. libuv synthesizes `st_mode` there from the
  * READONLY attribute and copies the owner bits into group and other, so an
- * ordinary per-account directory reports `0777` and the mode test would call
+ * ordinary per-account directory reports `0666` and the mode test would call
  * every path on the machine peer-writable — the same false claim on a second
  * platform. `false` is the honest answer: `%TMP%` is already scoped to one
  * account.
