@@ -191,12 +191,18 @@ export class DaemonClient {
    * so on the failure path this describes it is routinely gone — and
    * `getSocketPath()` throws when it is.
    *
-   * Reset at the top of `startInBackground` to whatever that attempt was
-   * handed, so a value read there always belongs to it. The poll does not
-   * report an errno on every failed attempt — when the process json is absent
-   * the path resolver returns `null` and no connect is made at all — so without
-   * that reset a later round reads whatever an earlier one left and names a
-   * socket that no longer exists.
+   * Lifetime, since more than one place reads it: every reader is preceded by
+   * a write that belongs to it. `isServerAvailable` clears on entry, so the
+   * value `startDaemonIfNecessary` hands on describes that probe;
+   * `startInBackground` resets to whatever it was handed; and `reset()` clears.
+   * A value read on a failure path therefore belongs to the attempt reading it. Without that, a later round reads whatever an earlier one left
+   * and names a socket that no longer exists — the poll does not report an
+   * errno on every failed attempt, since an absent process json makes the path
+   * resolver return `null` and no connect is made at all.
+   *
+   * It records *an* errno, not the reason a poll ended. Every failed connect
+   * writes here, while only a permission errno stops the loop, so anything
+   * asking "did we give up early?" must track that separately.
    */
   private lastConnectRefusal: ConnectRefusal | undefined;
 
@@ -1004,6 +1010,11 @@ export class DaemonClient {
   }
 
   async isServerAvailable(): Promise<boolean> {
+    // Cleared up front so the value startDaemonIfNecessary hands on always
+    // describes this probe. Two branches below return false without writing —
+    // no socket path, and a non-version-mismatch throw — and without this they
+    // would pass on whatever an earlier probe left.
+    this.lastConnectRefusal = undefined;
     return new Promise((resolve, reject) => {
       try {
         const socketPath = this.getSocketPath();
@@ -1209,6 +1220,11 @@ export class DaemonClient {
       `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
 
+    // Poll-scoped, so the log below describes this poll and nothing else. The
+    // field cannot answer it: it is written on every failed connect, while only
+    // a permission errno stops the loop.
+    let stoppedOnRefusal = false;
+
     const socket = await waitForSocketConnection(
       () => {
         try {
@@ -1236,7 +1252,7 @@ export class DaemonClient {
           // a same-user connect sees EACCES. Losing that race costs a specific
           // error instead of a successful connect on a retry, which is a better
           // trade than the 60s hang it replaces.
-          return isPermissionErrno(error);
+          return (stoppedOnRefusal = isPermissionErrno(error));
         },
       }
     );
@@ -1247,12 +1263,13 @@ export class DaemonClient {
       return true;
     }
 
-    // Not necessarily the full budget: onConnectError stops the poll early on a
-    // refusal, so reporting the maximum would misdescribe a run that gave up on
-    // attempt 1.
+    // Keyed on the early exit actually taken, not on whether an errno was
+    // recorded. Every failed connect records one — including the ENOENT of an
+    // ordinary cold start — so keying on the field reports "refused, stopped
+    // polling" for a poll that was refused by nobody and ran to exhaustion.
     clientLogger.log(
-      this.lastConnectRefusal
-        ? `[Client] Server refused the connection (${this.lastConnectRefusal.error.code}), stopped polling`
+      stoppedOnRefusal
+        ? `[Client] Server refused the connection (${this.lastConnectRefusal?.error.code}), stopped polling`
         : `[Client] Server not available after ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts`
     );
     return false;
