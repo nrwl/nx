@@ -14,9 +14,9 @@ import {
 
 describe('React Router Applications - TS paths', () => {
   const appName = uniq('app');
-  // Both e2e cases start a dev server. Without a reserved port they both take the
-  // 4200 default, so the second one relocates itself while Playwright keeps
-  // navigating to 4200.
+  // Every case here starts a dev server on the 4200 default, as does the sibling
+  // react-router-ts-solution suite running in parallel on the same agent. Whoever
+  // loses the race relocates to 4201 while Playwright still navigates to 4200.
   let appPort: number;
   beforeAll(async () => {
     newProject({
