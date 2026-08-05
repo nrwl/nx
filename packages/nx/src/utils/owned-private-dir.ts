@@ -150,8 +150,8 @@ export function remedyFor(r: DirRefusal): string | undefined {
   if (!r.shared) {
     return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or move it aside — which you can do yourself if you own the directory it sits in, and otherwise needs an administrator.`;
   }
-  // Unreachable today: `isSafeSharedRoot` accepts a root-owned container rather
-  // than refusing it, so no guard emits `shared` with uid 0.
+  // Unreachable today: the only site that sets `shared` is `isSafeSharedRoot`'s
+  // ownership deny, and that deny is gated on `stats.uid !== 0`.
   if (r.uid === 0) {
     return undefined;
   }
