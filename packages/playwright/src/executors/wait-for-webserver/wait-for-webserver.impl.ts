@@ -117,7 +117,7 @@ async function waitForServer(server: Server, timeout: number): Promise<void> {
       throw new Error(
         `Timed out after ${timeout}ms waiting for the E2E web server at ${label} to be ready. Last observation: ${
           lastObserved ?? failure
-        }.`
+        }. If the server now listens at a different address, run "nx reset" so the gate is re-inferred from the Playwright config.`
       );
     }
     const delay = schedule.shift() ?? FALLBACK_RETRY_DELAY;
