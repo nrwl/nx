@@ -37,6 +37,46 @@ describe('addPluginsToOxlintConfig', () => {
     ).toEqual(['../../../../.oxlintrc.json']);
   });
 
+  // Oxlint resolves to the nearest config, so extending the workspace root here
+  // would skip `libs/shared` entirely and drop everything it configures — with
+  // both configs written by this generator, one run after the other.
+  it('should extend the nearest config, not the workspace root', () => {
+    writeJson(tree, 'libs/shared/.oxlintrc.json', {
+      extends: ['../../.oxlintrc.json'],
+      plugins: ['jest'],
+    });
+
+    addPluginsToOxlintConfig(tree, 'libs/shared/ui', ['react']);
+
+    expect(readJson(tree, 'libs/shared/ui/.oxlintrc.json').extends).toEqual([
+      '../../../libs/shared/.oxlintrc.json',
+    ]);
+  });
+
+  // Walking past it to the root would generate an `extends` naming a config
+  // that is not the one being replaced — the same silent drop, one type over.
+  it('should refuse rather than skip a TypeScript ancestor config', () => {
+    tree.write('libs/shared/oxlint.config.ts', 'export default {};');
+
+    addPluginsToOxlintConfig(tree, 'libs/shared/ui', ['react']);
+
+    expect(tree.exists('libs/shared/ui/.oxlintrc.json')).toBe(false);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('only JSON Oxlint configs')
+    );
+  });
+
+  it('should name the nearest config when warning about a missing extends', () => {
+    writeJson(tree, 'libs/shared/.oxlintrc.json', { plugins: ['jest'] });
+    writeJson(tree, 'libs/shared/ui/.oxlintrc.json', { plugins: ['vue'] });
+
+    addPluginsToOxlintConfig(tree, 'libs/shared/ui', ['react']);
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('libs/shared/.oxlintrc.json')
+    );
+  });
+
   it('should leave the root config untouched', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react']);
 

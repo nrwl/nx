@@ -28,11 +28,34 @@ export function findRootOxlintConfig(tree: Tree): string | null {
 }
 
 /**
+ * Nearest config above `projectRoot` — the one Oxlint resolves to, and so the
+ * only correct `extends` target. Probes every filename, not just the extendable
+ * ones: walking past a TypeScript ancestor to reach the root would point the
+ * `extends` at a config that is not the one being replaced.
+ */
+function findNearestOxlintConfig(
+  tree: Tree,
+  projectRoot: string
+): string | null {
+  let dir = projectRoot;
+  while (dir !== '.') {
+    dir = dir.includes('/') ? dir.slice(0, dir.lastIndexOf('/')) : '.';
+    const found = OXLINT_CONFIG_FILENAMES.map((file) =>
+      joinPathFragments(dir, file)
+    ).find((path) => tree.exists(path));
+    if (found) {
+      return found;
+    }
+  }
+  return null;
+}
+
+/**
  * Enables Oxlint plugins for a single project, in that project's own config.
  *
- * A nested config *replaces* the root one for its subtree rather than merging
- * into it, so the generated config extends the root explicitly. Without that
- * `extends`, the root's `categories` and `rules` silently stop applying.
+ * A nested config *replaces* the one above it rather than merging into it, so
+ * the generated config extends its nearest ancestor explicitly. Without that
+ * `extends`, that config's `categories` and `rules` silently stop applying.
  *
  * Warns and returns when the governing config is one this package cannot rewrite
  * (`.jsonc`, or a TypeScript config) — writing a second config beside it would
@@ -57,12 +80,21 @@ export function addPluginsToOxlintConfig(
           joinPathFragments(projectRoot, file)
         ).find((path) => tree.exists(path));
 
-  // The root's format only constrains us when a project config has to be
-  // created, since that is what needs an `extends` pointing at the root. A
+  // The governing config's format only constrains us when a project config has
+  // to be created, since that is what needs an `extends` pointing at it. A
   // project that already has its own editable config can be updated whatever
-  // the root is. A root project is its own config, so it always needs one.
-  const rootConfigPath = findRootOxlintConfig(tree);
-  if (!rootConfigPath && !existingProjectConfig) {
+  // sits above it. A root project is its own config, so it always needs one.
+  const nearestConfigPath =
+    projectRoot === '.'
+      ? findRootOxlintConfig(tree)
+      : findNearestOxlintConfig(tree, projectRoot);
+  // A TypeScript ancestor governs the project but cannot be extended, so it is
+  // no more usable as a target than having no config at all.
+  const governingConfigPath =
+    nearestConfigPath && /\.jsonc?$/.test(nearestConfigPath)
+      ? nearestConfigPath
+      : null;
+  if (!governingConfigPath && !existingProjectConfig) {
     // A TypeScript config cannot be rewritten statically. Say so — otherwise
     // the generator reports success and the plugins silently never run.
     logger.warn(
@@ -76,7 +108,7 @@ export function addPluginsToOxlintConfig(
 
   const projectConfigPath =
     projectRoot === '.'
-      ? rootConfigPath
+      ? governingConfigPath
       : (existingProjectConfig ??
         joinPathFragments(projectRoot, '.oxlintrc.json'));
 
@@ -102,15 +134,15 @@ export function addPluginsToOxlintConfig(
       // Not added automatically: a config without `extends` may be isolating
       // from the root on purpose. Silent when an `extends` exists (it may reach
       // the root through a preset) or the root is TypeScript (unextendable).
-      if (rootConfigPath && !json.extends?.length && projectRoot !== '.') {
+      if (governingConfigPath && !json.extends?.length && projectRoot !== '.') {
         logger.warn(
-          `"${projectRoot}" has an Oxlint config with no "extends", so ${rootConfigPath}'s ` +
+          `"${projectRoot}" has an Oxlint config with no "extends", so ${governingConfigPath}'s ` +
             `categories and rules do not apply to it. The plugin(s) ${plugins.join(
               ', '
             )} still run, but under Oxlint's defaults — so this project can pass lint on ` +
-            `violations the root would fail it for. Add "extends": ["${joinPathFragments(
+            `violations ${governingConfigPath} would fail it for. Add "extends": ["${joinPathFragments(
               offsetFromRoot(projectRoot),
-              rootConfigPath
+              governingConfigPath
             )}"] if that is not intended.`
         );
       }
@@ -120,7 +152,9 @@ export function addPluginsToOxlintConfig(
   }
 
   writeJson<OxlintConfig>(tree, projectConfigPath, {
-    extends: [joinPathFragments(offsetFromRoot(projectRoot), rootConfigPath)],
+    extends: [
+      joinPathFragments(offsetFromRoot(projectRoot), governingConfigPath),
+    ],
     plugins: [...plugins],
   });
 }
