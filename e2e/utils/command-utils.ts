@@ -26,7 +26,7 @@ import {
   getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
-import { logError, logInfo } from './log-utils';
+import { logError, logInfo, trimDaemonLog } from './log-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -452,16 +452,21 @@ export function normalizePerformanceReport(output: string): string {
  * command's own output, so the daemon log and the surviving processes are the only
  * evidence of where the run stopped. Best-effort: never throws.
  */
-function timeoutDiagnostics(cwd: string): string {
+function timeoutDiagnostics(cwd: string, env: RunCmdOpts['env']): string {
   const sections: string[] = [];
 
-  const daemonLog = join(cwd, '.nx', 'workspace-data', 'd', 'daemon.log');
+  // Mirrors workspaceDataDirectoryForWorkspace: a test that relocates the daemon's
+  // data dir (e.g. watch.test.ts) puts daemon.log somewhere other than the default.
+  const dataDir =
+    env?.NX_WORKSPACE_DATA_DIRECTORY ??
+    env?.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
+    join(cwd, '.nx', 'workspace-data');
+  const daemonLog = join(dataDir, 'd', 'daemon.log');
   try {
-    const lines = readFileSync(daemonLog, 'utf-8').trimEnd().split('\n');
     sections.push(
-      `Daemon log (last 50 lines of ${daemonLog}):\n${lines
-        .slice(-50)
-        .join('\n')}`
+      `Daemon log (trimmed, ${daemonLog}):\n${trimDaemonLog(
+        readFileSync(daemonLog, 'utf-8')
+      )}`
     );
   } catch (e) {
     sections.push(`Daemon log unavailable (${daemonLog}): ${e.message}`);
@@ -541,7 +546,8 @@ export function runCLI(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
       const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}\n\n${timeoutDiagnostics(
-        opts.cwd || tmpProjPath()
+        opts.cwd || tmpProjPath(),
+        opts.env
       )}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
@@ -599,7 +605,8 @@ export function runLernaCLI(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
       const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}\n\n${timeoutDiagnostics(
-        opts.cwd || tmpProjPath()
+        opts.cwd || tmpProjPath(),
+        opts.env
       )}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
