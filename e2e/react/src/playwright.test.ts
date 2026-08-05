@@ -4,6 +4,7 @@ import {
   runE2ETests,
   cleanupProject,
   newProject,
+  removeFile,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
@@ -30,8 +31,9 @@ describe('React Playwright e2e tests', () => {
     const configPath = `${e2eProject}/playwright.config.mts`;
     const gateAddress = 'http://localhost:4301';
 
-    // Write .env before editing the config: the config edit is what triggers
-    // the graph recompute, so the dotenv file has to be on disk beforehand.
+    // Write .env before editing the config: both writes trigger a graph
+    // recompute, and this order guarantees the recompute the assertion reads
+    // has seen the dotenv file regardless of how the watcher batches them.
     createFile(`${e2eProject}/.env`, `BASE_URL=${gateAddress}\n`);
     let originalConfig = '';
     updateFile(configPath, (content) => {
@@ -50,7 +52,7 @@ describe('React Playwright e2e tests', () => {
       );
     } finally {
       updateFile(configPath, originalConfig);
-      updateFile(`${e2eProject}/.env`, '');
+      removeFile(`${e2eProject}/.env`);
     }
   });
 
