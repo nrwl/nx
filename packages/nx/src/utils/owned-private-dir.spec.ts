@@ -100,6 +100,33 @@ describe('ensureOwnedPrivateDir', () => {
     }
   );
 
+  // The creation path takes the same verdict as the pre-existing one, so a
+  // directory Nx just made is refused when it did not land at 0700 and cannot
+  // be tightened — the shape a mount that ignores the mode argument produces
+  // (WSL2 drvfs without metadata, CIFS with dir_mode, FAT). Both halves are
+  // staged, because no POSIX filesystem will produce them on request.
+  //
+  // Worth being precise about the limit: this guards the case where the chmod
+  // *fails*. A mount that accepts chmod and silently does nothing still returns
+  // success, so the directory is still branded. That is unchanged by sharing
+  // the verdict, and unreachable from here.
+  posixOnly(
+    'should refuse a directory it created that did not land at 0700',
+    () => {
+      const dir = join(base, 'mode-ignored');
+      (lstatSync as jest.Mock).mockReturnValueOnce({
+        isDirectory: () => true,
+        uid: process.getuid!(),
+        mode: 0o40777,
+      });
+      (fchmodSync as jest.Mock).mockImplementationOnce(() => {
+        throw Object.assign(new Error('denied'), { code: 'EPERM' });
+      });
+
+      expect(ensureOwnedPrivateDir(dir)).toBeNull();
+    }
+  );
+
   describe('shared container validation', () => {
     posixOnly(
       'should refuse a sticky root owned by another unprivileged user',
@@ -226,16 +253,19 @@ describe('ensureOwnedPrivateDir', () => {
       () => {
         const dir = join(base, 'chmod-refused');
         const previousUmask = process.umask(0o000);
-        (fchmodSync as jest.Mock).mockImplementationOnce(() => {
+        // The mock reproduces the macOS post-condition rather than hoping the
+        // runner supplies it. Linux keeps S_ISVTX through mkdir, so a
+        // mode-derived expectation is satisfied there whether or not the
+        // verdict runs — and Linux is what CI runs, so the guard on this
+        // round's headline fix would not have executed anywhere.
+        (fchmodSync as jest.Mock).mockImplementationOnce((fd: number) => {
+          jest.requireActual('node:fs').fchmodSync(fd, 0o777);
           throw Object.assign(new Error('denied'), { code: 'EPERM' });
         });
 
         try {
-          const established = ensureSafeSharedRoot(dir);
-          const mode = lstatSync(dir).mode & 0o7777;
-          const peerWritableAndNotSticky = !!(mode & 0o022) && !(mode & 0o1000);
-
-          expect(established === null).toBe(peerWritableAndNotSticky);
+          expect(ensureSafeSharedRoot(dir)).toBeNull();
+          expect(lstatSync(dir).mode & 0o7777).toBe(0o777);
         } finally {
           process.umask(previousUmask);
         }
