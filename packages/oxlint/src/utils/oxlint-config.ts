@@ -9,10 +9,9 @@ import {
 import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
 /**
- * Root configs a generated `extends` can point at — Oxlint only extends JSON.
- * Extendable is not the same as rewritable: for a root project this list is also
- * the rewrite target, and the `.json` check below still refuses `.jsonc`.
- * To ask whether a config exists at all, use `OXLINT_CONFIG_FILENAMES`.
+ * The root config a root project rewrites in place. Not where generated
+ * `extends` targets come from — those are `findNearestOxlintConfig`'s, gated by
+ * its own `.jsonc?` check. The `.json` check below still refuses `.jsonc` here.
  */
 const EXTENDABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
   /\.jsonc?$/.test(file)
@@ -57,7 +56,7 @@ function findNearestOxlintConfig(
  * the generated config extends its nearest ancestor explicitly. Without that
  * `extends`, that config's `categories` and `rules` silently stop applying.
  *
- * Warns and returns when the governing config is one this package cannot rewrite
+ * Warns and returns when the config it would rewrite is one this package cannot
  * (`.jsonc`, or a TypeScript config) — writing a second config beside it would
  * make Oxlint refuse to lint the project at all.
  */
@@ -96,12 +95,16 @@ export function addPluginsToOxlintConfig(
       : null;
   if (!governingConfigPath && !existingProjectConfig) {
     // A TypeScript config cannot be rewritten statically. Say so — otherwise
-    // the generator reports success and the plugins silently never run.
+    // the generator reports success and the plugins silently never run. Name the
+    // file too: it can be an ancestor several levels up, so "your Oxlint config"
+    // sends the user looking in the project directory, where there is nothing.
     logger.warn(
       `Could not enable the Oxlint plugin(s) ${plugins.join(
         ', '
       )} for "${projectRoot}": only JSON Oxlint configs can be updated automatically. ` +
-        `Add them to the "plugins" array of your Oxlint config manually.`
+        `Add them to the "plugins" array of ${
+          nearestConfigPath ? `"${nearestConfigPath}"` : 'your Oxlint config'
+        } manually.`
     );
     return;
   }
@@ -132,8 +135,8 @@ export function addPluginsToOxlintConfig(
     updateJson<OxlintConfig>(tree, projectConfigPath, (json) => {
       json.plugins = union(json.plugins ?? [], plugins);
       // Not added automatically: a config without `extends` may be isolating
-      // from the root on purpose. Silent when an `extends` exists (it may reach
-      // the root through a preset) or the root is TypeScript (unextendable).
+      // deliberately. Silent when an `extends` exists (it may reach the governing
+      // config through a preset) or the nearest ancestor is TypeScript.
       if (governingConfigPath && !json.extends?.length && projectRoot !== '.') {
         logger.warn(
           `"${projectRoot}" has an Oxlint config with no "extends", so ${governingConfigPath}'s ` +
