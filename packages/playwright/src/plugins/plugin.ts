@@ -768,7 +768,7 @@ async function resolveChainWebserver(
         // `cause`, so fold the child's failure into the message to surface it.
         const detail = e instanceof Error ? e.message : String(e);
         throw new Error(
-          `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server readiness address.\n${detail}`,
+          `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server readiness address. Set "waitForWebServer": false in the @nx/playwright plugin options in nx.json to opt out of the readiness gate.\n${detail}`,
           { cause: e }
         );
       }

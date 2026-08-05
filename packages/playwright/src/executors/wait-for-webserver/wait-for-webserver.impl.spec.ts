@@ -426,6 +426,9 @@ describe('waitForWebserverExecutor', () => {
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('ECONNREFUSED')
     );
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('run "nx reset" so the gate is re-inferred')
+    );
   });
 
   it('bounds each server by its own timeout', async () => {
