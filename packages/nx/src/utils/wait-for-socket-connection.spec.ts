@@ -1,5 +1,5 @@
 import { chmodSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
-import { createServer } from 'node:net';
+import { createServer, type Socket } from 'node:net';
 import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { waitForSocketConnection } from './wait-for-socket-connection';
@@ -27,11 +27,19 @@ describe('waitForSocketConnection', () => {
   posixOnly('should return the connected socket and stop polling', async () => {
     const sockPath = join(base, 'live.sock');
     const server = createServer();
-    await new Promise<void>((r) => server.listen(sockPath, r));
+    // `server.close` does not call back while any connection is open, so a
+    // failed assertion here hangs the worker instead of failing it — including
+    // via the poll's own attempts, which this test never gets a handle on.
+    let socket: Socket | null = null;
     let attempts = 0;
 
     try {
-      const socket = await waitForSocketConnection(sockPath, {
+      await new Promise<void>((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(sockPath, resolve);
+      });
+
+      socket = await waitForSocketConnection(sockPath, {
         maxAttempts: 5,
         delayMs: 1,
         onConnectError: () => {
@@ -40,10 +48,10 @@ describe('waitForSocketConnection', () => {
       });
 
       expect(socket).not.toBeNull();
-      expect(socket.destroyed).toBe(false);
+      expect(socket!.destroyed).toBe(false);
       expect(attempts).toEqual(0);
-      socket.destroy();
     } finally {
+      socket?.destroy();
       await new Promise<void>((r) => server.close(() => r()));
     }
   });
