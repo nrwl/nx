@@ -14,7 +14,6 @@ import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isPeerWritable,
-  sharedRootRemedy,
 } from '../utils/owned-private-dir';
 import { logger } from '../utils/logger';
 import { isSandbox } from '../utils/is-sandbox';
@@ -24,15 +23,19 @@ import { isSandbox } from '../utils/is-sandbox';
 // messages depend on, and stubbing it is how the Windows rows came to assert an
 // answer the shipped function could not give. Rows that need a specific answer
 // still override it explicitly.
-jest.mock('../utils/owned-private-dir', () => ({
-  ensureOwnedPrivateDir: jest.fn(() => true),
-  ensureSafeSharedRoot: jest.fn(() => true),
-  sharedRootRemedy: jest.fn(() => undefined),
-  isPeerWritable: jest.fn(
-    jest.requireActual('../utils/owned-private-dir').isPeerWritable
-  ),
-  getUserSegment: jest.fn(() => '501'),
-}));
+jest.mock('../utils/owned-private-dir', () => {
+  const actual = jest.requireActual('../utils/owned-private-dir');
+  // Only the two guards are stubbed. describeRefusal/remedyFor/
+  // DirectoryRefusedError stay real, so the messages these tests assert on are
+  // the ones users get rather than ones the mock invented.
+  return {
+    ...actual,
+    ensureOwnedPrivateDir: jest.fn((d: string) => ({ status: 'ok', path: d })),
+    ensureSafeSharedRoot: jest.fn((d: string) => ({ status: 'ok', path: d })),
+    isPeerWritable: jest.fn(actual.isPeerWritable),
+    getUserSegment: jest.fn(() => '501'),
+  };
+});
 
 jest.mock('../utils/is-sandbox', () => ({
   isSandbox: jest.fn(() => false),
@@ -59,22 +62,26 @@ const SOCKET_ROOT = `${USER_TMP_ROOT}/sockets`;
 const HOME_TMP_ROOT = join(homedir(), '.nx');
 const HOME_SOCKET_ROOT = join(HOME_TMP_ROOT, 'sockets');
 
+/** The directories a guard was asked about, which is what these tests are about. */
+const dirsPassedTo = (fn: unknown): string[] =>
+  (fn as jest.Mock).mock.calls.map((c) => c[0]);
+
+const accept = (dir: string) => ({ status: 'ok', path: dir });
+const reject = (dir: string, refusal?: object) => ({
+  status: 'refused',
+  refusal: refusal ?? { kind: 'not-a-directory', dir },
+});
+
 /**
  * Stage a machine where neither default root can be used, which is the only way
  * to reach the workspace now that the home root sits between them.
  */
-/**
- * The guards take an optional refusal sink as a second argument, which some
- * call sites pass and others do not. These assert on the directory, which is
- * what every one of these tests is actually about.
- */
-const dirsPassedTo = (fn: unknown): string[] =>
-  (fn as jest.Mock).mock.calls.map((c) => c[0]);
-
 const denyEveryDefaultRoot = () => {
-  (ensureSafeSharedRoot as jest.Mock).mockReturnValue(false);
-  (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
-    (d: string) => !d.startsWith(HOME_TMP_ROOT)
+  (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+    reject(d)
+  );
+  (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+    !d.startsWith(HOME_TMP_ROOT) ? accept(d) : reject(d)
   );
 };
 
@@ -88,9 +95,12 @@ describe('socket directories', () => {
     jest.clearAllMocks();
     // clearAllMocks resets calls but keeps implementations, so a test that
     // stages an unusable root would otherwise stage it for every test after it.
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValue(true);
-    (ensureOwnedPrivateDir as jest.Mock).mockReturnValue(true);
-    (sharedRootRemedy as jest.Mock).mockReturnValue(undefined);
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      accept(d)
+    );
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      accept(d)
+    );
     (isPeerWritable as jest.Mock).mockImplementation(
       jest.requireActual('../utils/owned-private-dir').isPeerWritable
     );
@@ -169,7 +179,9 @@ describe('socket directories', () => {
 
   it('moves to the home root, not the workspace, beneath an unsafe shared container', () => {
     setPlatform('linux');
-    (ensureSafeSharedRoot as jest.Mock).mockReturnValue(false);
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      reject(d)
+    );
 
     // The tier that needs an administrator is the one being skipped, so a peer
     // owning /tmp/.nx no longer costs the short socket path.
@@ -182,8 +194,8 @@ describe('socket directories', () => {
 
   it('moves to the home root when the per-user root is not ours', () => {
     setPlatform('linux');
-    (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
-      (d: string) => d !== USER_TMP_ROOT
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d !== USER_TMP_ROOT ? accept(d) : reject(d)
     );
 
     expect(getSocketDir()).toMatch(
@@ -263,8 +275,11 @@ describe('socket directories', () => {
       }));
       const { getSocketDir: homelessSocketDir } = require('./tmp-dir');
       const { logger: isolatedLogger } = require('../utils/logger');
-      require('../utils/owned-private-dir').ensureSafeSharedRoot.mockReturnValue(
-        false
+      require('../utils/owned-private-dir').ensureSafeSharedRoot.mockImplementation(
+        (d: string) => ({
+          status: 'refused',
+          refusal: { kind: 'not-a-directory', dir: d },
+        })
       );
       require('../utils/is-sandbox').isSandbox.mockReturnValue(true);
 
@@ -283,8 +298,8 @@ describe('socket directories', () => {
 
   it('does not warn when a later tier succeeds', () => {
     setPlatform('linux');
-    (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
-      (d: string) => !d.startsWith(USER_TMP_ROOT)
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      !d.startsWith(USER_TMP_ROOT) ? accept(d) : reject(d)
     );
 
     getSocketDir();
@@ -308,15 +323,17 @@ describe('socket directories', () => {
 
   it('carries the chown remedy in the fallback cause when the container is another user’s', () => {
     setPlatform('linux');
-    denyEveryDefaultRoot();
-    (sharedRootRemedy as jest.Mock).mockReturnValue(
-      `${SHARED_TMP_ROOT} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${SHARED_TMP_ROOT} && sudo chmod 1777 ${SHARED_TMP_ROOT}\`; every user can then keep their own directory under it.`
+    // Derived from the refusal the guard produced, not from a second lstat.
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      reject(d, { kind: 'foreign-owner', dir: d, uid: 1001 })
+    );
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d.startsWith(HOME_TMP_ROOT) ? reject(d) : accept(d)
     );
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
-    expect(sharedRootRemedy).toHaveBeenCalledWith(SHARED_TMP_ROOT);
-    expect((getSocketDirFallbackCause() as Error).message).toContain(
-      `sudo chown root ${SHARED_TMP_ROOT}`
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(`sudo chown root ${SHARED_TMP_ROOT}`)
     );
   });
 
@@ -337,8 +354,8 @@ describe('socket directories', () => {
     // --verbose" block off this cause, and without it a socket-length failure
     // here tells the user to set a shorter NX_SOCKET_DIR — advice they may have
     // already followed.
-    (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
-      (d: string) => !d.startsWith(USER_TMP_ROOT)
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      !d.startsWith(USER_TMP_ROOT) ? accept(d) : reject(d)
     );
 
     expect(getSocketDir()).toMatch(
@@ -359,22 +376,24 @@ describe('socket directories', () => {
   // the message directed people at a command that could not help them.
   it('records why each default root was rejected, which is what --verbose promises', () => {
     setPlatform('linux');
-    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d, why) => {
-      why?.(`${d} belongs to another user (uid 1001)`);
-      return null;
-    });
-    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d, why) => {
-      if (d.startsWith(HOME_TMP_ROOT)) {
-        why?.(`${d} could not be tightened to 0700`);
-        return null;
-      }
-      return d;
-    });
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      reject(d, { kind: 'foreign-owner', dir: d, uid: 1001 })
+    );
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d.startsWith(HOME_TMP_ROOT)
+        ? reject(d, { kind: 'not-tightenable', dir: d, mode: 0o40755 })
+        : accept(d)
+    );
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
 
-    const cause = getSocketDirFallbackCause() as Error;
-    expect(cause.message).toContain('belongs to another user (uid 1001)');
+    // Asserted on the structure, so a reword cannot silently swap the claim.
+    const cause = getSocketDirFallbackCause() as AggregateError;
+    expect(cause.errors.map((e: any) => e.refusal.kind)).toEqual([
+      'foreign-owner',
+      'not-tightenable',
+    ]);
+    expect(cause.message).toContain('is owned by uid 1001, not by you');
     expect(cause.message).toContain('could not be tightened to 0700');
   });
 
@@ -384,13 +403,11 @@ describe('socket directories', () => {
   it("reports the guard's own reason for a refused NX_SOCKET_DIR", () => {
     setPlatform('linux');
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d, why) => {
-      if (d === '/custom/socket/dir') {
-        why?.(`${d} is not a directory`);
-        return null;
-      }
-      return d;
-    });
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d === '/custom/socket/dir'
+        ? reject(d, { kind: 'not-a-directory', dir: d })
+        : accept(d)
+    );
     process.env.NX_SOCKET_DIR = '/custom/socket/dir';
 
     try {
@@ -427,8 +444,10 @@ describe('socket directories', () => {
       const {
         ensureOwnedPrivateDir: guard,
       } = require('../utils/owned-private-dir');
-      (guard as jest.Mock).mockImplementation(
-        (d: string) => !d.startsWith(SHARED_TMP_ROOT)
+      (guard as jest.Mock).mockImplementation((d: string) =>
+        d.startsWith(SHARED_TMP_ROOT)
+          ? { status: 'refused', refusal: { kind: 'not-a-directory', dir: d } }
+          : { status: 'ok', path: d }
       );
 
       // Falls through to the workspace rather than offering /tmp/.nx as its own
@@ -498,8 +517,8 @@ describe('socket directories', () => {
 
   it('keeps the home tier off Windows, where named pipes have nothing to contain', () => {
     setPlatform('win32');
-    (ensureOwnedPrivateDir as jest.Mock).mockImplementation(
-      (d: string) => !d.startsWith(HOME_TMP_ROOT)
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      !d.startsWith(HOME_TMP_ROOT) ? accept(d) : reject(d)
     );
 
     expect(getSocketDir()).toMatch(
@@ -772,7 +791,9 @@ describe('socket directories', () => {
   it('does not label an explicit socket-directory failure as a default-root fallback', () => {
     setPlatform('linux');
     process.env.NX_SOCKET_DIR = '/tmp/nx-custom-sock';
-    (ensureOwnedPrivateDir as jest.Mock).mockReturnValueOnce(false);
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementationOnce((d: string) =>
+      reject(d)
+    );
     const warn = jest.spyOn(console, 'warn').mockImplementation();
     try {
       expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);

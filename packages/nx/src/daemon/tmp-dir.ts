@@ -21,11 +21,14 @@ import {
 import { basename, dirname, join, resolve } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import {
+  describeRefusal,
+  type DirRefusal,
+  type GuardResult,
+  DirectoryRefusedError,
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isPeerWritable,
-  type RefusalSink,
-  sharedRootRemedy,
+  remedyFor,
 } from '../utils/owned-private-dir';
 import { createHash } from 'crypto';
 // Refused as a socket *directory* (see InvalidSocketDirConfigured), and also
@@ -243,20 +246,37 @@ function homeTierIsDistinct(): boolean {
  */
 function socketRootTiers(): {
   root: string;
-  establish: (why?: RefusalSink) => boolean;
+  establish: (refusals: DirRefusal[]) => boolean;
 }[] {
   if (process.platform === 'win32') {
     return [{ root: systemTmpDir, establish: () => true }];
   }
+  // Stops at the first refusal and records it: once the shared container is
+  // unusable, whether the directories beneath it would also have failed says
+  // nothing the user can act on.
+  const establishAll = (
+    dirs: string[],
+    refusals: DirRefusal[],
+    guard: (d: string) => GuardResult<unknown>
+  ): boolean =>
+    dirs.every((d) => {
+      const result = guard(d);
+      if (result.status === 'refused') {
+        refusals.push(result.refusal);
+        return false;
+      }
+      return true;
+    });
+
   return [
     {
       root: defaultSocketRoot(),
-      establish: (why) =>
-        !!ensureSafeSharedRoot(NX_TMP_DIR, why) &&
-        // Arrow rather than a bare reference: `every` passes the index too, and
-        // these guards take only a path.
-        [NX_USER_TMP_DIR, defaultSocketRoot()].every(
-          (d) => !!ensureOwnedPrivateDir(d, why)
+      establish: (refusals) =>
+        establishAll([NX_TMP_DIR], refusals, ensureSafeSharedRoot) &&
+        establishAll(
+          [NX_USER_TMP_DIR, defaultSocketRoot()],
+          refusals,
+          ensureOwnedPrivateDir
         ),
     },
     // Omitted entirely when there is no home directory to use, or when it is
@@ -268,9 +288,11 @@ function socketRootTiers(): {
             root: homeSocketRoot(),
             // No shared level to verify: the home directory is the user's own,
             // so there is no container another user could have created first.
-            establish: (why) =>
-              [NX_HOME_TMP_DIR, homeSocketRoot()].every(
-                (d) => !!ensureOwnedPrivateDir(d, why)
+            establish: (refusals) =>
+              establishAll(
+                [NX_HOME_TMP_DIR, homeSocketRoot()],
+                refusals,
+                ensureOwnedPrivateDir
               ),
           },
         ]
@@ -283,11 +305,11 @@ function socketRootTiers(): {
  * when none could and the caller should fall back to the workspace.
  */
 function establishSocketRoot(
-  refusals: string[]
+  refusals: DirRefusal[]
 ): { root: string; preferred?: string } | undefined {
   const tiers = socketRootTiers();
   for (const [index, tier] of tiers.entries()) {
-    if (tier.establish((reason) => refusals.push(reason))) {
+    if (tier.establish(refusals)) {
       // `preferred` is set only on a demotion, and names the tier that was
       // skipped — the caller records it so a later length failure can say the
       // path was not the one Nx wanted.
@@ -403,21 +425,14 @@ function socketDirUnderFirstUsableRoot(
 
   // Collected rather than discarded: the warning below tells the user to rerun
   // with --verbose to see why the roots were rejected, and the guards are the
-  // only place that knows. Each reason names its own directory.
-  const refusals: string[] = [];
+  // only place that knows.
+  const refusals: DirRefusal[] = [];
   const established = establishSocketRoot(refusals);
   if (established === undefined) {
     return fallBackToWorkspaceSocketDir(
-      new Error(
-        [
-          `Nx could not establish any of its default socket directories: ${refusals.join(
-            '; '
-          )}.`,
-          sharedRootRemedy(NX_TMP_DIR),
-        ]
-          .filter(Boolean)
-          .join(' ')
-      )
+      socketRootsUnavailable(refusals),
+      undefined,
+      refusals
     );
   }
   const dir = createOwnerOnlySocketDir(leafFor(established.root), true);
@@ -533,21 +548,20 @@ function createOwnerOnlySocketDir(
     // Separately from its parents: mkdirSync does not throw on a pre-planted
     // symlink, so creating and locking down in one step would adopt it.
     //
-    // The guard's own reason is the message. The generic one it replaces named
-    // ownership whatever the cause, so a mode that could not be tightened, a
-    // planted symlink and a path that is not a directory all read as "owned by
-    // someone else" — wrong in three of the four cases it covered.
-    let refusal: string | undefined;
-    if (!ensureOwnedPrivateDir(dir, (reason) => (refusal ??= reason))) {
-      throw new Error(
-        refusal ?? `Nx could not establish ${dir} as a private directory.`
-      );
+    // The guard's own refusal becomes the error. The generic message it
+    // replaces named ownership whatever the cause, so a mode that could not be
+    // tightened, a planted symlink and a path that is not a directory all read
+    // as "owned by someone else" — wrong in three of the four cases it covered.
+    const created = ensureOwnedPrivateDir(dir);
+    if (created.status === 'refused') {
+      throw new DirectoryRefusedError(created.refusal);
     }
     return dir;
   } catch (e) {
+    const refusals = e instanceof DirectoryRefusedError ? [e.refusal] : [];
     // Recoverable: fall back to the owner-controlled workspace data dir.
     if (usingDefaultRoot) {
-      return fallBackToWorkspaceSocketDir(e, dir);
+      return fallBackToWorkspaceSocketDir(e, dir, refusals);
     }
     // Never swap out a configured directory silently — the substitute is longer and
     // would resurface as assertValidSocketPath complaining about a path the user
@@ -572,10 +586,28 @@ function createOwnerOnlySocketDir(
 }
 
 /**
+ * The refusals as one error. `AggregateError` because there genuinely are
+ * several — one per root the chain tried — and its `errors` stay inspectable
+ * rather than being flattened into the message that `--verbose` prints.
+ */
+function socketRootsUnavailable(refusals: DirRefusal[]): AggregateError {
+  return new AggregateError(
+    refusals.map((r) => new DirectoryRefusedError(r)),
+    `Nx could not establish any of its default socket directories: ${refusals
+      .map((r) => describeRefusal(r))
+      .join('; ')}.`
+  );
+}
+
+/**
  * The last resort once no default root could be used. Retains the cause so
  * `assertValidSocketPath` can explain a length failure the user did not cause.
  */
-function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
+function fallBackToWorkspaceSocketDir(
+  cause: unknown,
+  attempted?: string,
+  refusals: DirRefusal[] = []
+) {
   socketDirFallbackCause = cause;
   // Required lazily, and only on a path that is already failing. A static
   // import closes a cycle — utils/logger reads `serverLogger` from
@@ -615,7 +647,7 @@ function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
     logger.warn(
       [
         `Nx could not use any of its usual socket directories and fell back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
-        sharedRootRemedy(NX_TMP_DIR),
+        refusals.map(remedyFor).find(Boolean),
         isSandbox()
           ? // Built from the roots that exist: NX_HOME_TMP_DIR is undefined
             // when there is no home directory, which is itself one of the
@@ -636,9 +668,14 @@ function fallBackToWorkspaceSocketDir(cause: unknown, attempted?: string) {
 function establishWorkspaceSocketDir(cause: unknown): string {
   mkdirSync(dirname(DAEMON_DIR_FOR_CURRENT_WORKSPACE), { recursive: true });
   // The fallback is only safe if it passes the same checks the primary did.
-  if (!ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE)) {
+  const established = ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+  if (established.status === 'refused') {
+    // The last resort failing is the one case with nowhere left to go, so it
+    // says which check refused rather than the generic sentence it replaces.
     throw new Error(
-      `Nx could not establish the fallback socket directory ${DAEMON_DIR_FOR_CURRENT_WORKSPACE} as a private directory owned by the current user.`,
+      `Nx could not establish a socket directory: ${describeRefusal(
+        established.refusal
+      )}.`,
       { cause }
     );
   }
