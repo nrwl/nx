@@ -68,15 +68,20 @@ export async function formatFiles(
 
   if (!prettier) return;
 
-  // Both prettier's CLI and oxfmt's skip files covered by `.gitignore` or
-  // `.prettierignore` (measured), so a generator that formatted them anyway
-  // would rewrite files `nx format:check` never looks at. `getFileInfo` below
-  // does not do this for us: without an `ignorePath` its `ignored` is always
-  // false.
-  const isIgnored = createTreeIgnoreChecker(tree, [
-    '.gitignore',
-    '.prettierignore',
-  ]);
+  // Prettier's CLI skips files covered by the workspace-root `.gitignore` or
+  // `.prettierignore`, so formatting them here would rewrite files
+  // `nx format:check` never looks at. `getFileInfo` below does not do this for
+  // us: with no `ignorePath` its `ignored` is always false (measured).
+  //
+  // Root-only, deliberately. Prettier has no nested-ignore-file concept
+  // (measured: a nested `.prettierignore` does not stop `prettier --check`
+  // flagging the file), so cascading here would leave files unformatted that
+  // `nx format:check` still fails on.
+  const isIgnored = createTreeIgnoreChecker(
+    tree,
+    ['.gitignore', '.prettierignore'],
+    { cascade: false }
+  );
   const files = new Set(
     tree
       .listChanges()

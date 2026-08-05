@@ -5,19 +5,22 @@ import { join, relative, sep } from 'path';
 /**
  * Utility to act on all files in a tree that are not ignored by git.
  *
- * Ignore files cascade: a `.gitignore` applies to its own directory and below,
- * so a nested one is consulted for the files under it and a nested negation
- * overrides the root. Reading them from the tree rather than disk matters
- * because a generator can create or amend one in the same run.
+ * Ignore files cascade, so a nested `.gitignore` covers the files under it and a
+ * nested negation overrides the root. They are read from the tree, not disk, so
+ * one a generator wrote in the same run counts.
+ *
+ * `node_modules`, `.git` and the nx caches are never visited, whatever the
+ * workspace's ignore files say.
  */
 export function visitNotIgnoredFiles(
   tree: Tree,
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
-  // Built once for the whole traversal. The recursion used to call this
-  // function again per directory, which rebuilt the matcher every time.
-  const isIgnored = createTreeIgnoreChecker(tree, ['.gitignore', '.nxignore']);
+  // Built once for the whole traversal.
+  const isIgnored = createTreeIgnoreChecker(tree, ['.gitignore', '.nxignore'], {
+    cascade: true,
+  });
 
   visitDirectory(
     tree,
@@ -33,6 +36,10 @@ function visitDirectory(
   visitor: (path: string) => void,
   isIgnored: (path: string) => boolean
 ): void {
+  // A short-circuit, not a correctness guard: every child would be skipped
+  // individually anyway, since a pattern that excludes a directory also
+  // excludes its contents. It saves the `children` call for the entry
+  // directory, which is the only one not already filtered by the loop below.
   if (dirPath !== '' && isIgnored(dirPath)) {
     return;
   }
