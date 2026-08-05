@@ -141,8 +141,7 @@ const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
  *
  * Who can clear a per-user directory depends on who owns its *parent*, which the
  * refusal does not carry — so the sentence names the condition rather than
- * guessing. `rm` cannot help: a directory Nx created is `0700`, so a foreign
- * one cannot be emptied by us.
+ * guessing. A foreign directory Nx created is `0700`, so `rm` cannot empty it.
  */
 export function remedyFor(r: DirRefusal): string | undefined {
   if (r.kind !== 'foreign-owner') {
