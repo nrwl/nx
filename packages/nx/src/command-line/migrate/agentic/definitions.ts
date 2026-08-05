@@ -1,5 +1,6 @@
 import { homedir } from 'os';
 import { join } from 'path';
+import { parse as parseToml } from 'smol-toml';
 import {
   AgentDefinition,
   AgentId,
@@ -54,18 +55,22 @@ function claudeCodeHandoffAllowedTools(runDirName: string): string | null {
   return `Edit(${MIGRATE_RUNS_RELATIVE_DIR}/${runDirName}/${HANDOFFS_DIR_NAME}/**)`;
 }
 
+// `--system-prompt-file` rather than `--system-prompt`: the prompt is several
+// kilobytes of multi-line text and would not survive the `cmd.exe` shim on
+// Windows. Claude Code has accepted the flag since 1.0.55 (2025-07-17) and
+// errors out loudly on an older build rather than silently dropping it.
 function claudeCodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
   const allowedTools = claudeCodeHandoffAllowedTools(ctx.runDirName);
   return {
     // `--allowedTools` is variadic (space/comma separated): a positional
     // placed right after its value gets swallowed as another rule. The rules
     // must stay in one comma-joined element with a non-variadic flag
-    // (`--system-prompt`) between them and the user prompt.
+    // (`--system-prompt-file`) between them and the user prompt.
     args: [
       ...(allowedTools ? ['--allowedTools', allowedTools] : []),
-      '--system-prompt',
-      ctx.systemContext,
-      ctx.userPrompt,
+      '--system-prompt-file',
+      ctx.systemPromptFilePath,
+      ctx.instructionsPointer,
     ],
     cwd: ctx.workspaceRoot,
   };
@@ -88,11 +93,55 @@ function codexWellKnownPaths(): string[] {
 // No handoff permission flag: codex's default sandbox already allows writes
 // inside the cwd tree without prompting, and a user-hardened read-only config
 // is a deliberate choice we don't override.
+//
+// codex has no flag for loading instructions from a file (`-c
+// model_instructions_file` replaces its base instructions and its own docs
+// discourage it), so its system context is the one that stays on the command
+// line, hence the reduced `inlineSystemContext` rather than the full prompt.
 function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
   return {
-    args: ['-c', `developer_instructions=${ctx.systemContext}`, ctx.userPrompt],
+    args: [
+      '-c',
+      `developer_instructions=${encodeTomlString(ctx.inlineSystemContext)}`,
+      ctx.instructionsPointer,
+    ],
     cwd: ctx.workspaceRoot,
   };
+}
+
+/**
+ * Encodes a value for a codex `-c key=value` override as a TOML basic string.
+ *
+ * codex parses the value as TOML and, when the parse fails, silently falls
+ * back to the raw text with surrounding quotes trimmed, so a bad encoding
+ * would ship a mangled system context with no error anywhere. Round-tripping
+ * through a real TOML parser turns that into a thrown error instead.
+ *
+ * `JSON.stringify` produces the encoding: every escape it emits (`\"`, `\\`,
+ * `\n`, `\r`, `\t`, `\b`, `\f`, `\uXXXX`) is also a TOML basic-string escape,
+ * and the one JSON escape TOML lacks (`\/`) is never emitted. Its single-line
+ * output matters too: a TOML multi-line string would put raw newlines back on
+ * the command line, which a `.cmd` shim cannot carry.
+ */
+function encodeTomlString(value: string): string {
+  const encoded = JSON.stringify(value);
+  let decoded: unknown;
+  try {
+    decoded = (parseToml(`value = ${encoded}`) as { value: unknown }).value;
+  } catch (err) {
+    throw new Error(
+      `Could not encode the agent's system context as TOML for OpenAI Codex: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+      { cause: err }
+    );
+  }
+  if (decoded !== value) {
+    throw new Error(
+      `Encoding the agent's system context as TOML for OpenAI Codex did not round-trip; refusing to run the agent on altered instructions.`
+    );
+  }
+  return encoded;
 }
 
 export const codexDefinition: AgentDefinition = {
@@ -129,10 +178,15 @@ function opencodeWellKnownPaths(): string[] {
 // No handoff permission config: opencode's `edit` permission defaults to
 // allow, and injecting one would clobber (not merge with) a user's own
 // permission patterns.
+//
+// The config keeps travelling through OPENCODE_CONFIG_CONTENT rather than
+// OPENCODE_CONFIG: both are merged with the user's own config, but the runner
+// spreads `env` over `process.env`, so naming OPENCODE_CONFIG here would
+// silently overwrite one the user had set.
 function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
   const config = {
     agent: {
-      [OPENCODE_TRANSIENT_AGENT_NAME]: { prompt: ctx.systemContext },
+      [OPENCODE_TRANSIENT_AGENT_NAME]: { prompt: opencodeSystemPrompt(ctx) },
     },
   };
   return {
@@ -140,11 +194,27 @@ function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
       '--agent',
       OPENCODE_TRANSIENT_AGENT_NAME,
       '--prompt',
-      ctx.userPrompt,
+      ctx.instructionsPointer,
     ],
     env: { OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
     cwd: ctx.workspaceRoot,
   };
+}
+
+/**
+ * opencode substitutes `{file:<path>}` with the file's contents before parsing
+ * the config, which keeps the system prompt out of the environment block.
+ * cmd.exe drops any inherited variable longer than 8191 characters.
+ *
+ * The substitution ends at the first `}`, so a path containing one would name
+ * a file that does not exist. That case inlines the prompt instead, which is
+ * what shipped before and stays well inside the variable limit.
+ */
+function opencodeSystemPrompt(ctx: InvocationContext): string {
+  // Forward slashes so the value opencode substitutes on carries no
+  // backslash-escaping question of its own.
+  const filePath = ctx.systemPromptFilePath.replace(/\\/g, '/');
+  return filePath.includes('}') ? ctx.systemPrompt : `{file:${filePath}}`;
 }
 
 export const opencodeDefinition: AgentDefinition = {

@@ -1,5 +1,7 @@
 import { ChildProcess, execSync, spawn, SpawnOptions } from 'child_process';
 import { extname } from 'path';
+import * as pc from 'picocolors';
+import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
 import { reportMigratePrompt } from '../migrate-analytics';
 import { migrateChoice } from '../safe-prompt';
@@ -65,14 +67,11 @@ export async function runAgentic(
     gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
     forceKillWaitMs = FORCE_KILL_WAIT_MS,
   } = args;
-  const spec = definition.buildInteractive(invocationContext);
-
-  const adapted = adaptSpawnForWindowsShim(detected.binary, spec.args, {
-    stdio: 'inherit',
-    cwd: spec.cwd ?? invocationContext.workspaceRoot,
-    env: spec.env ? { ...process.env, ...spec.env } : process.env,
-    windowsHide: true,
-  });
+  const adapted = adaptWithinCommandLineBudget(
+    detected,
+    definition,
+    invocationContext
+  );
 
   let child: ChildProcess;
   // Local alias so `@nx/workspace-require-windows-hide` recognizes the
@@ -146,6 +145,80 @@ export async function runAgentic(
   );
 }
 
+// "The maximum length of the string that you can use at the command prompt is
+// 8191 characters".
+// https://learn.microsoft.com/troubleshoot/windows-client/shell-experience/command-line-string-limitation
+const WINDOWS_COMMAND_LINE_LIMIT = 8191;
+// Absorbs what cannot be measured from here: cmd.exe's own accounting of the
+// string it receives, and headroom for the prompts to grow.
+const WINDOWS_COMMAND_LINE_RESERVE = 1000;
+export const WINDOWS_COMMAND_LINE_BUDGET =
+  WINDOWS_COMMAND_LINE_LIMIT - WINDOWS_COMMAND_LINE_RESERVE;
+
+/**
+ * Builds the spawn arguments, keeping them within what Windows will execute.
+ *
+ * The prompts themselves already travel as files, so the only term that can
+ * still push the command line over is the workspace path, which every path in
+ * the arguments is built from. When it does, the agents that carry a system
+ * context on the command line fall back to the shorter form; there is nothing
+ * left to trade after that, so an argument list still over the limit aborts
+ * the step rather than dispatching the agent on a truncated one.
+ */
+function adaptWithinCommandLineBudget(
+  detected: DetectedInstalledAgent,
+  definition: AgentDefinition,
+  invocationContext: InvocationContext
+): AdaptedSpawn {
+  const adapt = (ctx: InvocationContext): AdaptedSpawn => {
+    const spec = definition.buildInteractive(ctx);
+    return adaptSpawnForWindowsShim(detected.binary, spec.args, {
+      stdio: 'inherit',
+      cwd: spec.cwd ?? ctx.workspaceRoot,
+      env: spec.env ? { ...process.env, ...spec.env } : process.env,
+      windowsHide: true,
+    });
+  };
+
+  const adapted = adapt(invocationContext);
+  if (withinCommandLineBudget(adapted)) {
+    return adapted;
+  }
+
+  const reduced = adapt({
+    ...invocationContext,
+    inlineSystemContext: invocationContext.inlineSystemContextFallback,
+  });
+  if (withinCommandLineBudget(reduced)) {
+    logger.info(
+      pc.dim(
+        `  Passing the agent a reduced set of instructions. The workspace path leaves no room for the full set on a Windows command line.`
+      )
+    );
+    return reduced;
+  }
+
+  output.error({
+    title: `${detected.displayName} cannot be started from this workspace path`,
+    bodyLines: [
+      `Launching it needs a ${reduced.commandLineLength}-character command line. cmd.exe runs at most ${WINDOWS_COMMAND_LINE_LIMIT} characters, and nx stops at ${WINDOWS_COMMAND_LINE_BUDGET} to leave room for what it cannot measure from here.`,
+      `The workspace path accounts for most of it, at ${invocationContext.workspaceRoot.length} characters.`,
+      ``,
+      `Move the workspace to a shorter path, or re-run with \`--agentic=false\` to apply the remaining migrations yourself.`,
+    ],
+  });
+  throw new Error(
+    `Cannot start ${detected.displayName}: the command line exceeds the Windows limit.`
+  );
+}
+
+function withinCommandLineBudget(adapted: AdaptedSpawn): boolean {
+  return (
+    adapted.commandLineLength === undefined ||
+    adapted.commandLineLength <= WINDOWS_COMMAND_LINE_BUDGET
+  );
+}
+
 function exitInfoToCause(info: ExitInfo): AmbiguousCause {
   const cause: AmbiguousCause = {};
   // Include `code === 0` so the prompt can distinguish "agent exited cleanly
@@ -200,7 +273,7 @@ const FORCE_KILL_WAIT_MS = 500;
  *
  * - Windows: skip SIGINT entirely. `child.kill('*')` on Windows is a
  *   `TerminateProcess` call regardless of the signal name (Windows has
- *   no POSIX signals), and on the `cmd.exe /d /s /c "..."` shim path it
+ *   no POSIX signals), and on the `cmd.exe` shim path it
  *   would terminate cmd.exe while leaving the agent orphaned (parent
  *   death doesn't cascade to children on Windows). `taskkill /T /F`
  *   walks the process tree and kills cmd.exe AND the agent atomically;
@@ -399,11 +472,23 @@ async function resolveFromHandoffOrPrompt(
   return promptAmbiguous(fullCause);
 }
 
+export interface AdaptedSpawn {
+  binary: string;
+  args: string[];
+  options: SpawnOptions;
+  /**
+   * Length of the command line Windows will receive. Only set when the
+   * `cmd.exe` wrapper was applied, since that is the only path with a limit
+   * worth checking against.
+   */
+  commandLineLength?: number;
+}
+
 /**
  * Node's `spawn` cannot directly execute `.cmd` / `.bat` shims on Windows;
  * `which` resolves to those when an agent was installed via npm. Wrap them in
- * a `cmd.exe /d /s /c` invocation with `windowsVerbatimArguments` so quoting
- * follows the cmd.exe convention rather than Node's default cooking.
+ * a `cmd.exe /c` invocation with `windowsVerbatimArguments` so quoting follows
+ * the cmd.exe convention rather than Node's default cooking.
  *
  * On non-Windows or for non-shim binaries this is a passthrough.
  */
@@ -411,7 +496,7 @@ export function adaptSpawnForWindowsShim(
   binary: string,
   args: readonly string[],
   options: SpawnOptions
-): { binary: string; args: string[]; options: SpawnOptions } {
+): AdaptedSpawn {
   if (process.platform !== 'win32') {
     return { binary, args: [...args], options };
   }
@@ -420,33 +505,84 @@ export function adaptSpawnForWindowsShim(
     return { binary, args: [...args], options };
   }
 
+  assertNoLineBreaks(binary, args);
   const cmdLine = [escapeCmdCommand(binary), ...args.map(escapeCmdArg)].join(
     ' '
   );
+  const comspec = process.env.comspec || 'cmd.exe';
+  // Both expansion modes are set rather than inherited, because a machine-wide
+  // registry setting can flip either one. `/e:on` keeps command extensions on,
+  // which the `%cd:~,%` substring in `neutralizePercent` needs to parse.
+  // `/v:off` keeps delayed expansion off, so a `!` in an argument stays a
+  // literal instead of opening a `!VAR!` reference. Same pair Rust's standard
+  // library uses to run a batch file (`library/std/src/sys/args/windows.rs`).
+  // Outer pair of quotes is required so cmd.exe /c does not strip the inner
+  // quotes around the binary path.
+  const cmdArgs = ['/e:on', '/v:off', '/d', '/s', '/c', `"${cmdLine}"`];
   return {
-    binary: process.env.comspec || 'cmd.exe',
-    // Outer pair of quotes is required so cmd.exe /c does not strip the inner
-    // quotes around the binary path.
-    args: ['/d', '/s', '/c', `"${cmdLine}"`],
+    binary: comspec,
+    args: cmdArgs,
     options: { ...options, windowsVerbatimArguments: true },
+    // `windowsVerbatimArguments` makes the command line the argv joined by
+    // single spaces, so this is what CreateProcess and then cmd.exe see.
+    commandLineLength: [comspec, ...cmdArgs].join(' ').length,
   };
 }
 
-const CMD_META_CHARS = /([()\][%!^"`<>&|;, ])/g;
+/**
+ * A `.cmd` shim invocation cannot carry `\r` or `\n` in an argument: no
+ * escaping reproduces them on the other side, and cmd.exe truncates the
+ * argument list at the break. Rust's standard library refuses them for the
+ * same reason (`library/std/src/sys/args/windows.rs`), and CVE-2024-24576 came
+ * out of trying to escape rather than refuse. Refusing here means a caller
+ * that grows a multi-line argument fails loudly instead of dispatching an
+ * agent on truncated instructions.
+ */
+function assertNoLineBreaks(binary: string, args: readonly string[]): void {
+  const offending = [binary, ...args].find((value) => /[\r\n]/.test(value));
+  if (offending !== undefined) {
+    throw new Error(
+      `Cannot pass a multi-line argument to "${binary}" on Windows: cmd.exe truncates the command line at the line break. Offending argument: ${JSON.stringify(
+        offending.slice(0, 120)
+      )}`
+    );
+  }
+}
+
+const CMD_META_CHARS = /([()\][!^"`<>&|;, ])/g;
 
 // Backslash-escape embedded quotes per MS C runtime convention, wrap in
 // quotes, then caret-escape cmd.exe metacharacters.
 function escapeCmdArg(arg: string): string {
-  const quoted = `"${arg
-    .replace(/(\\*)"/g, '$1$1\\"')
-    .replace(/(\\*)$/, '$1$1')}"`;
-  return quoted.replace(CMD_META_CHARS, '^$1');
+  return neutralizePercent(caretEscape(quoteCmdArg(arg)));
 }
 
 function escapeCmdCommand(arg: string): string {
   // cmd.exe interprets the command portion through an extra parsing pass;
   // apply the caret-escape twice so the .cmd shim sees the original.
-  return escapeCmdArg(arg).replace(CMD_META_CHARS, '^$1');
+  return neutralizePercent(caretEscape(caretEscape(quoteCmdArg(arg))));
+}
+
+function quoteCmdArg(arg: string): string {
+  return `"${arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\*)$/, '$1$1')}"`;
+}
+
+function caretEscape(quoted: string): string {
+  return quoted.replace(CMD_META_CHARS, '^$1');
+}
+
+/**
+ * Stops cmd.exe expanding `%VAR%` inside an argument. A caret does not escape
+ * `%`, because variable expansion runs before caret processing, so each `%`
+ * is turned into `%%cd:~,%`: `%cd:~,%` is a zero-length substring of the built-in
+ * `cd` variable, i.e. it expands to nothing and leaves the leading `%` behind.
+ * Same substitution the Rust standard library applies to batch-file arguments.
+ *
+ * Runs after the caret passes so the `,` it introduces stays uncareted; cmd
+ * would not recognize the substring syntax otherwise.
+ */
+function neutralizePercent(escaped: string): string {
+  return escaped.replace(/%/g, '%%cd:~,%');
 }
 
 async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {

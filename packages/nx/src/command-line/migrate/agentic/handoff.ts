@@ -78,7 +78,7 @@ function sanitizeSegment(value: string): string {
 }
 
 /**
- * Absolute path of the handoff file for a migration step within a run, under
+ * Absolute path of one of a migration step's scratch files within a run, under
  * the run directory's `handoffs/` subtree: the pre-authorized write scope
  * stops there, so a handoff placed anywhere else costs an approval prompt.
  * The package's scope (if any) becomes a real subdirectory so the package name
@@ -86,16 +86,25 @@ function sanitizeSegment(value: string): string {
  * colliding because they land in different package subdirectories. Each
  * segment is sanitized so the path is always writable on every platform.
  */
-export function stepHandoffPath(
+export function stepFilePath(
   runDir: string,
-  migration: { package: string; name: string }
+  migration: { package: string; name: string },
+  extension: string
 ): string {
   return join(
     runDir,
     HANDOFFS_DIR_NAME,
     ...migration.package.split('/').map(sanitizeSegment),
-    `${sanitizeSegment(migration.name)}.json`
+    `${sanitizeSegment(migration.name)}${extension}`
   );
+}
+
+/** Absolute path of the handoff file for a migration step within a run. */
+export function stepHandoffPath(
+  runDir: string,
+  migration: { package: string; name: string }
+): string {
+  return stepFilePath(runDir, migration, '.json');
 }
 
 export type HandoffReadFailureReason =

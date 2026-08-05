@@ -9,10 +9,16 @@ import {
 } from '../../../utils/package-manager';
 import { resetSgrAfterAgent } from '../migrate-output';
 import { mkdirSafely, stepHandoffPath } from './handoff';
+import { writeStepInstructionFiles } from './instruction-files';
 import { buildGenericValidationUserPrompt } from './prompts/generic-validation';
 import { buildHybridPromptUserPrompt } from './prompts/hybrid-prompt-migration';
 import { buildPromptMigrationUserPrompt } from './prompts/prompt-migration';
-import { AgenticPromptMode, buildSystemPrompt } from './prompts/system-prompt';
+import {
+  AgenticPromptMode,
+  buildInlineSystemContext,
+  buildMinimalSystemContext,
+  buildSystemPrompt,
+} from './prompts/system-prompt';
 import { getAgentDefinition } from './definitions';
 import { runAgentic } from './runner';
 import { EnabledResolvedAgentic, HandoffOutcome } from './types';
@@ -108,7 +114,7 @@ export async function runAgenticPromptStep(
     `handoff directory for ${migration.name}`
   );
   const pm = detectPackageManager(root);
-  const systemContext = buildSystemPrompt({
+  const systemPrompt = buildSystemPrompt({
     workspaceRoot: root,
     handoffFileAbsolutePath: handoffFilePath,
     packageManager: pm,
@@ -154,6 +160,15 @@ export async function runAgenticPromptStep(
     );
   }
 
+  const { systemPromptFilePath, instructionsPointer } =
+    writeStepInstructionFiles({
+      workspaceRoot: root,
+      runDir,
+      migration,
+      systemPrompt,
+      instructions: userPrompt,
+    });
+
   const phase = mode === 'generic-validation' ? 'Validating' : 'Running prompt';
   logger.info(pc.dim(`→ ${phase} with ${agentic.selectedAgent.displayName}…`));
 
@@ -161,8 +176,15 @@ export async function runAgenticPromptStep(
     detected: agentic.selectedAgent,
     definition,
     invocationContext: {
-      systemContext,
-      userPrompt,
+      systemPrompt,
+      systemPromptFilePath,
+      instructionsPointer,
+      inlineSystemContext: buildInlineSystemContext({
+        handoffFileAbsolutePath: handoffFilePath,
+        systemPromptFilePath,
+      }),
+      inlineSystemContextFallback:
+        buildMinimalSystemContext(systemPromptFilePath),
       workspaceRoot: root,
       runDirName: basename(runDir),
     },

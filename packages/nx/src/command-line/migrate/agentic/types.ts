@@ -61,10 +61,33 @@ export interface DetectedInstalledAgent {
  * Inputs the runner provides when asking an agent definition to build its
  * spawn arguments. Kept minimal — agent-specific quirks (e.g. transient agent
  * name for OpenCode) are encoded inside the definition, not here.
+ *
+ * Both prompts are written to disk (see `instruction-files.ts`) and reached
+ * through `systemPromptFilePath` / `instructionsPointer`. The two inline forms
+ * are the exception: codex can only receive its system context as a
+ * command-line value, so it carries a reduced one there.
  */
 export interface InvocationContext {
-  systemContext: string;
-  userPrompt: string;
+  /** Absolute path of the file holding the step's system prompt. */
+  systemPromptFilePath: string;
+  /**
+   * The step's system prompt, verbatim. Last resort for an agent whose
+   * file-loading path is unavailable for this particular step; anything else
+   * must use `systemPromptFilePath`.
+   */
+  systemPrompt: string;
+  /** Single-line command-line text pointing the agent at its instructions. */
+  instructionsPointer: string;
+  /**
+   * System context for agents that carry it on the command line, holding the
+   * handoff contract plus a pointer at `systemPromptFilePath`.
+   */
+  inlineSystemContext: string;
+  /**
+   * Shorter `inlineSystemContext`, swapped in by the runner when the command
+   * line would otherwise overflow the Windows limit.
+   */
+  inlineSystemContextFallback: string;
   workspaceRoot: string;
   /**
    * Name of the run directory under `MIGRATE_RUNS_RELATIVE_DIR` holding this
