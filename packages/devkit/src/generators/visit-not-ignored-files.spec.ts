@@ -311,19 +311,24 @@ describe('visitNotIgnoredFiles', () => {
         mkdirSync(dirname(join(repo, file)), { recursive: true });
         writeFileSync(join(repo, file), '');
       }
-      // `--exclude-standard` honours the developer's global `core.excludesFile`,
-      // which the walker knows nothing about, so without this the test passes or
-      // fails on whatever is in `~/.gitignore`. Pointing config at a path that
-      // does not exist drops it, and `init.templateDir` with it; `/dev/null`
-      // would not be portable. `GIT_CONFIG_COUNT` outranks `GIT_CONFIG_GLOBAL`,
-      // so it has to be cleared too. `.git/info/exclude` is repo state rather
-      // than config and is *not* covered - the repo is created fresh here, so
-      // there is none.
+      // `--exclude-standard` reads four sources the walker knows nothing about,
+      // and each needs pinning separately or the result depends on whoever is
+      // running the suite: the config files; `core.excludesFile`, whose default
+      // `~/.config/git/ignore` is a path fallback rather than config and so
+      // survives dropping them; git's two independent config-injection channels
+      // (`GIT_CONFIG_COUNT` and the older `GIT_CONFIG_PARAMETERS`); and the
+      // template dir, which is what seeds `.git/info/exclude` - with templates
+      // off the repo has none at all. `GIT_TEMPLATE_DIR` is empty rather than a
+      // nonexistent path because a missing template warns on every case.
       const env = {
         ...process.env,
         GIT_CONFIG_GLOBAL: join(repo, 'no-such-gitconfig'),
         GIT_CONFIG_SYSTEM: join(repo, 'no-such-gitconfig'),
-        GIT_CONFIG_COUNT: '0',
+        GIT_CONFIG_COUNT: '1',
+        GIT_CONFIG_KEY_0: 'core.excludesFile',
+        GIT_CONFIG_VALUE_0: join(repo, 'no-such-gitignore'),
+        GIT_CONFIG_PARAMETERS: '',
+        GIT_TEMPLATE_DIR: '',
       };
       // No `stdio: 'ignore'`: `-q` already silences the success path, and
       // discarding stderr would report every failure here - a missing git, a
