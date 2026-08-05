@@ -68,8 +68,10 @@ export async function formatFiles(
 
   if (!prettier) return;
 
-  // `getFileInfo` below looks like it filters ignored files but does not: with
-  // no `ignorePath` its `ignored` is always false (measured).
+  // `getFileInfo` below looks like it filters ignored files but only covers its
+  // own built-in `node_modules` skip: with no `ignorePath` it never reads the
+  // workspace's ignore files, so `ignored` is false for everything else
+  // (measured).
   const { isIgnoredFile } = createTreeIgnoreChecker(tree, 'prettier');
   const files = new Set(
     tree
