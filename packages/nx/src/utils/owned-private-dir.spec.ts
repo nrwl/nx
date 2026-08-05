@@ -16,7 +16,7 @@ import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isSafeSharedRoot,
-  sharedRootRemedy,
+  remedyFor,
 } from './owned-private-dir';
 import { getSocketDir } from '../daemon/tmp-dir';
 
@@ -57,7 +57,7 @@ describe('ensureOwnedPrivateDir', () => {
       const squatted = join(base, 'squatted');
       symlinkSync(victim, squatted);
 
-      expect(ensureOwnedPrivateDir(squatted)).toBeNull();
+      expect(ensureOwnedPrivateDir(squatted).status).toBe('refused');
       expect(lstatSync(victim).mode & 0o777).toBe(0o755);
     }
   );
@@ -76,7 +76,7 @@ describe('ensureOwnedPrivateDir', () => {
       chmodSync(dir, mode);
       expect(lstatSync(dir).mode & 0o777).toBe(mode);
 
-      expect(ensureOwnedPrivateDir(dir)).not.toBeNull();
+      expect(ensureOwnedPrivateDir(dir).status).toBe('ok');
       expect(lstatSync(dir).mode & 0o777).toBe(0o700);
     }
   );
@@ -93,7 +93,7 @@ describe('ensureOwnedPrivateDir', () => {
         .spyOn(process, 'getuid')
         .mockReturnValue(process.getuid!() + 1);
       try {
-        expect(ensureOwnedPrivateDir(dir)).toBeNull();
+        expect(ensureOwnedPrivateDir(dir).status).toBe('refused');
       } finally {
         getuid.mockRestore();
       }
@@ -123,7 +123,7 @@ describe('ensureOwnedPrivateDir', () => {
         throw Object.assign(new Error('denied'), { code: 'EPERM' });
       });
 
-      expect(ensureOwnedPrivateDir(dir)).toBeNull();
+      expect(ensureOwnedPrivateDir(dir).status).toBe('refused');
     }
   );
 
@@ -142,7 +142,7 @@ describe('ensureOwnedPrivateDir', () => {
         // Stub the stat result rather than changing getuid: a real fixture is
         // root-owned when the suite runs as root, and uid 0 is intentionally
         // accepted by the predicate.
-        expect(isSafeSharedRoot('/tmp/.nx')).toBeNull();
+        expect(isSafeSharedRoot('/tmp/.nx').status).toBe('refused');
       }
     );
 
@@ -158,7 +158,9 @@ describe('ensureOwnedPrivateDir', () => {
 
         // Refusing is not actionable on its own: only root can take the
         // container over, and until someone does every other user falls back.
-        expect(sharedRootRemedy('/tmp/.nx')).toContain(
+        const verdict = isSafeSharedRoot('/tmp/.nx');
+        expect(verdict.status).toBe('refused');
+        expect(remedyFor((verdict as any).refusal)).toContain(
           'sudo chown root /tmp/.nx'
         );
       }
@@ -177,7 +179,12 @@ describe('ensureOwnedPrivateDir', () => {
           mode: 0o41777,
         });
         try {
-          expect(sharedRootRemedy('/tmp/.nx')).toBeUndefined();
+          const verdict = isSafeSharedRoot('/tmp/.nx');
+          expect(
+            verdict.status === 'refused'
+              ? remedyFor(verdict.refusal)
+              : undefined
+          ).toBeUndefined();
         } finally {
           getuid.mockRestore();
         }
@@ -185,7 +192,9 @@ describe('ensureOwnedPrivateDir', () => {
     );
 
     posixOnly('should offer no remedy for a container that is absent', () => {
-      expect(sharedRootRemedy(join(base, 'missing'))).toBeUndefined();
+      const verdict = isSafeSharedRoot(join(base, 'missing'));
+      expect(verdict.status).toBe('refused');
+      expect(remedyFor((verdict as any).refusal)).toBeUndefined();
     });
 
     posixOnly('should accept a root-owned sticky container', () => {
@@ -196,7 +205,7 @@ describe('ensureOwnedPrivateDir', () => {
         mode: 0o41777,
       });
       try {
-        expect(isSafeSharedRoot('/tmp/.nx')).not.toBeNull();
+        expect(isSafeSharedRoot('/tmp/.nx').status).toBe('ok');
       } finally {
         getuid.mockRestore();
       }
@@ -209,7 +218,7 @@ describe('ensureOwnedPrivateDir', () => {
         mkdirSync(dir);
         chmodSync(dir, 0o777);
 
-        expect(isSafeSharedRoot(dir)).toBeNull();
+        expect(isSafeSharedRoot(dir).status).toBe('refused');
       }
     );
 
@@ -220,7 +229,7 @@ describe('ensureOwnedPrivateDir', () => {
       const planted = join(base, 'planted-root');
       symlinkSync(victim, planted);
 
-      expect(isSafeSharedRoot(planted)).toBeNull();
+      expect(isSafeSharedRoot(planted).status).toBe('refused');
     });
 
     posixOnly(
@@ -233,7 +242,7 @@ describe('ensureOwnedPrivateDir', () => {
         const previousUmask = process.umask(0o022);
 
         try {
-          expect(ensureSafeSharedRoot(dir)).not.toBeNull();
+          expect(ensureSafeSharedRoot(dir).status).toBe('ok');
           expect(lstatSync(dir).mode & 0o7777).toBe(0o1777);
         } finally {
           process.umask(previousUmask);
@@ -264,7 +273,7 @@ describe('ensureOwnedPrivateDir', () => {
         });
 
         try {
-          expect(ensureSafeSharedRoot(dir)).toBeNull();
+          expect(ensureSafeSharedRoot(dir).status).toBe('refused');
           expect(lstatSync(dir).mode & 0o7777).toBe(0o777);
         } finally {
           process.umask(previousUmask);
@@ -285,7 +294,7 @@ describe('ensureOwnedPrivateDir', () => {
         mkdirSync(dir, { mode });
         chmodSync(dir, mode); // mkdir's mode is subject to the umask
 
-        expect(ensureSafeSharedRoot(dir)).not.toBeNull();
+        expect(ensureSafeSharedRoot(dir).status).toBe('ok');
         expect(lstatSync(dir).mode & 0o7777).toBe(mode);
       }
     );
@@ -317,7 +326,7 @@ describe('ensureOwnedPrivateDir', () => {
         });
 
         try {
-          expect(ensureSafeSharedRoot(dir)).toBeNull();
+          expect(ensureSafeSharedRoot(dir).status).toBe('refused');
         } finally {
           getuid.mockRestore();
         }
@@ -341,7 +350,7 @@ describe('ensureOwnedPrivateDir', () => {
       plant(planted);
       const before = lstatSync(planted).mode & 0o7777;
 
-      expect(ensureSafeSharedRoot(planted)).toBeNull();
+      expect(ensureSafeSharedRoot(planted).status).toBe('refused');
       expect(lstatSync(planted).mode & 0o7777).toBe(before);
     });
 
@@ -353,7 +362,7 @@ describe('ensureOwnedPrivateDir', () => {
       mkdirSync(dir);
       chmodSync(dir, 0o702);
 
-      expect(isSafeSharedRoot(dir)).toBeNull();
+      expect(isSafeSharedRoot(dir).status).toBe('refused');
     });
   });
 
@@ -371,7 +380,7 @@ describe('ensureOwnedPrivateDir', () => {
       const planted = join(base, 'not-a-dir');
       plant(planted);
 
-      expect(ensureOwnedPrivateDir(planted)).toBeNull();
+      expect(ensureOwnedPrivateDir(planted).status).toBe('refused');
     }
   );
 

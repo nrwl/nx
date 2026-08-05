@@ -47,25 +47,93 @@ export type OwnedPrivateDir = string & {
 };
 
 /**
- * Where a guard says *why* it refused, when the caller intends to explain
- * itself. Optional, so the guards keep their branded return types: a `Result`
- * wrapper would rewrite every `if (!guard(dir))` call site for a string only
- * the two message-building callers read.
+ * Why a guard refused a directory. Data rather than a sentence: the wording is
+ * built at the point of display, so a caller can also *decide* on a refusal —
+ * which is what lets the "hand it to root" advice attach to the one refusal it
+ * applies to instead of being re-derived from a second `lstat`.
  *
- * The reason names its own directory, so a caller collecting several does not
- * have to track which guard produced which line.
+ * Every member carries its directory, so a caller aggregating several does not
+ * have to track which guard produced which.
  */
-export type RefusalSink = (reason: string) => void;
+export type DirRefusal =
+  | { kind: 'not-created'; dir: string; code?: string }
+  | { kind: 'not-inspectable'; dir: string; code?: string }
+  | { kind: 'not-a-directory'; dir: string }
+  | { kind: 'foreign-owner'; dir: string; uid: number }
+  | { kind: 'not-tightenable'; dir: string; mode: number }
+  | { kind: 'peer-writable-not-sticky'; dir: string; mode: number };
 
-/** Report and refuse in one expression, so each guard clause stays one line. */
-function refuse(why: RefusalSink | undefined, reason: string): null {
-  why?.(reason);
-  return null;
+/**
+ * A guard's verdict. The branded path moves inside the success arm rather than
+ * being the return value, which keeps each guard's type distinct from its
+ * siblings' — the only thing the brands were ever doing here, since no caller
+ * consumes the path itself.
+ */
+export type GuardResult<T> =
+  | { status: 'ok'; path: T }
+  | { status: 'refused'; refusal: DirRefusal };
+
+// Discriminated on a string, not a boolean `ok`. This repo compiles with
+// `strict: false`, and under that setting TypeScript does not narrow a union on
+// a boolean literal discriminant — `r.ok ? … : r.refusal` fails to compile,
+// while `r.status === 'ok'` narrows correctly. Verified against tsc 6.0.3 both
+// ways before choosing this shape.
+const allow = <T>(path: T): GuardResult<T> => ({ status: 'ok', path });
+const deny = <T>(refusal: DirRefusal): GuardResult<T> => ({
+  status: 'refused',
+  refusal,
+});
+
+const asMode = (mode: number): string => `0${(mode & 0o7777).toString(8)}`;
+
+/** The user-facing sentence for a refusal. The only place wording is decided. */
+export function describeRefusal(r: DirRefusal): string {
+  switch (r.kind) {
+    case 'not-created':
+      return `${r.dir} could not be created${r.code ? ` (${r.code})` : ''}`;
+    case 'not-inspectable':
+      return `${r.dir} could not be inspected${r.code ? ` (${r.code})` : ''}`;
+    case 'not-a-directory':
+      return `${r.dir} is not a directory`;
+    case 'foreign-owner':
+      return `${r.dir} is owned by uid ${r.uid}, not by you`;
+    case 'not-tightenable':
+      return `${r.dir} is reachable by other users (mode ${asMode(
+        r.mode
+      )}) and could not be tightened to 0700`;
+    case 'peer-writable-not-sticky':
+      return `${r.dir} is writable by other users but not sticky (mode ${asMode(
+        r.mode
+      )}), so a peer could replace directories inside it`;
+  }
 }
 
-/** `0700`-style rendering, since modes are what these messages are about. */
-function asMode(mode: number): string {
-  return `0${(mode & 0o7777).toString(8)}`;
+/**
+ * What the user can do about a refusal, or `undefined` when there is nothing.
+ *
+ * Only a container held by another unprivileged user has an actionable fix, and
+ * it is to hand it to root: Nx cannot chown it, and refusing it is what stops
+ * that user renaming our directory aside. Keyed off the refusal the guard
+ * already produced, so the ownership rule is evaluated once rather than
+ * re-derived from a second `lstat` that could drift from it.
+ */
+export function remedyFor(r: DirRefusal): string | undefined {
+  if (r.kind !== 'foreign-owner' || r.uid === 0) {
+    return undefined;
+  }
+  return `${r.dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${r.dir} && sudo chmod 1777 ${r.dir}\`; every user can then keep their own directory under it.`;
+}
+
+/**
+ * One refusal, as an `Error`, so several can travel in an `AggregateError` and
+ * through `cause` chains. Constructed only where a refusal is reported — the
+ * guards deal in `DirRefusal` and allocate nothing.
+ */
+export class DirectoryRefusedError extends Error {
+  constructor(readonly refusal: DirRefusal) {
+    super(describeRefusal(refusal));
+    this.name = 'DirectoryRefusedError';
+  }
 }
 
 /**
@@ -123,39 +191,28 @@ const S_ISVTX = 0o1000;
  * create the single top-level container as root-owned mode 1777; every user can
  * create their own private subtree directly beneath it.
  */
-export function isSafeSharedRoot(
-  dir: string,
-  why?: RefusalSink
-): SafeSharedRoot | null {
+export function isSafeSharedRoot(dir: string): GuardResult<SafeSharedRoot> {
   try {
     const stats = lstatSync(dir);
     if (!stats.isDirectory()) {
-      return refuse(why, `${dir} is not a directory`);
+      return deny({ kind: 'not-a-directory', dir });
     }
     if (process.platform === 'win32') {
       // The OS temp root is already scoped to the current Windows user.
-      return dir as SafeSharedRoot;
+      return allow(dir as SafeSharedRoot);
     }
     if (
       typeof process.getuid === 'function' &&
       stats.uid !== process.getuid() &&
       stats.uid !== 0
     ) {
-      return refuse(
-        why,
-        `${dir} belongs to another user (uid ${stats.uid}) rather than to you or to root`
-      );
+      return deny({ kind: 'foreign-owner', dir, uid: stats.uid });
     }
     return !(stats.mode & 0o022) || !!(stats.mode & S_ISVTX)
-      ? (dir as SafeSharedRoot)
-      : refuse(
-          why,
-          `${dir} is writable by other users but not sticky (mode ${asMode(
-            stats.mode
-          )}), so a peer could replace directories inside it`
-        );
+      ? allow(dir as SafeSharedRoot)
+      : deny({ kind: 'peer-writable-not-sticky', dir, mode: stats.mode });
   } catch (e: any) {
-    return refuse(why, `${dir} could not be inspected (${e?.code ?? e})`);
+    return deny({ kind: 'not-inspectable', dir, code: e?.code });
   }
 }
 
@@ -199,37 +256,6 @@ export function isPeerWritable(dir: string): boolean {
 }
 
 /**
- * The remedy for a container `isSafeSharedRoot` refused, or `undefined` when
- * there is nothing the user can do about it. Only a container owned by another
- * unprivileged user has an actionable fix, and it is to hand it to root: Nx
- * cannot chown it, and refusing it is what keeps that user from renaming our
- * directory aside. Returns the message rather than a boolean because the caller
- * needs the text.
- *
- * Unlike the guards above this is an unbranded `string | undefined`. A branded
- * *parameter* would reject it, but no parameter in this module is annotated —
- * every consumer takes a plain `string` — so in a file whose convention is
- * "truthy string = verified path", a truthy English sentence is the one value
- * here that nothing would catch.
- */
-export function sharedRootRemedy(dir: string): string | undefined {
-  try {
-    const stats = lstatSync(dir);
-    if (
-      !stats.isDirectory() ||
-      typeof process.getuid !== 'function' ||
-      stats.uid === process.getuid() ||
-      stats.uid === 0
-    ) {
-      return undefined;
-    }
-  } catch {
-    return undefined;
-  }
-  return `${dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${dir} && sudo chmod 1777 ${dir}\`; every user can then keep their own directory under it.`;
-}
-
-/**
  * Create a shared container as sticky + world-writable if it does not exist,
  * and report whether the resulting path is safe for the current user.
  *
@@ -257,15 +283,14 @@ export function sharedRootRemedy(dir: string): string | undefined {
  * per-account — so creation alone is the verdict there.
  */
 export function ensureSafeSharedRoot(
-  dir: string,
-  why?: RefusalSink
-): EstablishedSharedRoot | null {
+  dir: string
+): GuardResult<EstablishedSharedRoot> {
   if (process.platform === 'win32') {
     try {
       mkdirSync(dir, { recursive: true });
-      return dir as EstablishedSharedRoot;
+      return allow(dir as EstablishedSharedRoot);
     } catch (e: any) {
-      return refuse(why, `${dir} could not be created (${e?.code ?? e})`);
+      return deny({ kind: 'not-created', dir, code: e?.code });
     }
   }
 
@@ -277,7 +302,7 @@ export function ensureSafeSharedRoot(
     chmodRealDirectory(dir, 0o1777);
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
-      return refuse(why, `${dir} could not be created (${e?.code ?? e})`);
+      return deny({ kind: 'not-created', dir, code: e?.code });
     }
   }
 
@@ -286,9 +311,10 @@ export function ensureSafeSharedRoot(
   // POSIX modes — and what it leaves behind is a peer-writable non-sticky
   // container, which is exactly the mode this predicate refuses. Trusting the
   // creation alone would brand it safe and skip the fall to the home tier.
-  return isSafeSharedRoot(dir, why) === null
-    ? null
-    : (dir as EstablishedSharedRoot);
+  const verdict = isSafeSharedRoot(dir);
+  return verdict.status === 'ok'
+    ? allow(dir as EstablishedSharedRoot)
+    : deny(verdict.refusal);
 }
 
 /**
@@ -337,14 +363,13 @@ export function getUserSegment(): string {
  * Node builtins only: reached from the native binding loader.
  */
 export function ensureOwnedPrivateDir(
-  dir: string,
-  why?: RefusalSink
-): OwnedPrivateDir | null {
+  dir: string
+): GuardResult<OwnedPrivateDir> {
   try {
     mkdirSync(dir, { mode: 0o700 });
   } catch (e: any) {
     if (e?.code !== 'EEXIST') {
-      return refuse(why, `${dir} could not be created (${e?.code ?? e})`);
+      return deny({ kind: 'not-created', dir, code: e?.code });
     }
   }
 
@@ -364,27 +389,22 @@ export function ensureOwnedPrivateDir(
     // Before the Windows short-circuit: "is a real directory" holds on every
     // platform.
     if (!stats.isDirectory()) {
-      return refuse(why, `${dir} is not a directory`);
+      return deny({ kind: 'not-a-directory', dir });
     }
     if (typeof process.getuid !== 'function') {
       // Windows: the roots there are per-user OS temp dirs, not a shared /tmp.
-      return dir as OwnedPrivateDir;
+      return allow(dir as OwnedPrivateDir);
     }
     if (stats.uid !== process.getuid()) {
-      return refuse(why, `${dir} is owned by uid ${stats.uid}, not by you`);
+      return deny({ kind: 'foreign-owner', dir, uid: stats.uid });
     }
     if (stats.mode & 0o077) {
       if (!chmodRealDirectory(dir, 0o700)) {
-        return refuse(
-          why,
-          `${dir} is reachable by other users (mode ${asMode(
-            stats.mode
-          )}) and could not be tightened to 0700`
-        );
+        return deny({ kind: 'not-tightenable', dir, mode: stats.mode });
       }
     }
-    return dir as OwnedPrivateDir;
+    return allow(dir as OwnedPrivateDir);
   } catch (e: any) {
-    return refuse(why, `${dir} could not be inspected (${e?.code ?? e})`);
+    return deny({ kind: 'not-inspectable', dir, code: e?.code });
   }
 }

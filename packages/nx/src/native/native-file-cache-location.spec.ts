@@ -78,7 +78,7 @@ describe('native file cache location', () => {
     it('should create a missing directory owner-only', () => {
       const dir = join(base, 'fresh');
 
-      expect(ensureOwnedPrivateDir(dir)).not.toBeNull();
+      expect(ensureOwnedPrivateDir(dir).status).toBe('ok');
       expect(lstatSync(dir).isDirectory()).toBe(true);
       if (platform() !== 'win32') {
         expect(lstatSync(dir).mode & 0o777).toEqual(0o700);
@@ -89,7 +89,7 @@ describe('native file cache location', () => {
       const dir = join(base, 'existing');
       mkdirSync(dir, { mode: 0o700 });
 
-      expect(ensureOwnedPrivateDir(dir)).not.toBeNull();
+      expect(ensureOwnedPrivateDir(dir).status).toBe('ok');
     });
 
     posixOnly(
@@ -102,7 +102,7 @@ describe('native file cache location', () => {
         const dir = join(base, 'link');
         symlinkSync(planted, dir);
 
-        expect(ensureOwnedPrivateDir(dir)).toBeNull();
+        expect(ensureOwnedPrivateDir(dir).status).toBe('refused');
       }
     );
 
@@ -110,7 +110,7 @@ describe('native file cache location', () => {
       const dir = join(base, 'not-a-dir');
       writeFileSync(dir, '');
 
-      expect(ensureOwnedPrivateDir(dir)).toBeNull();
+      expect(ensureOwnedPrivateDir(dir).status).toBe('refused');
     });
 
     posixOnly('should refuse a directory owned by another user', () => {
@@ -120,7 +120,7 @@ describe('native file cache location', () => {
       // comparison under test is `stats.uid !== process.getuid()`.
       jest.spyOn(process, 'getuid').mockReturnValue(process.getuid!() + 1);
 
-      expect(ensureOwnedPrivateDir(dir)).toBeNull();
+      expect(ensureOwnedPrivateDir(dir).status).toBe('refused');
     });
 
     posixOnly(
@@ -131,7 +131,7 @@ describe('native file cache location', () => {
         chmodSync(dir, 0o777); // mkdir's mode is subject to the umask
         expect(lstatSync(dir).mode & 0o022).not.toEqual(0);
 
-        expect(ensureOwnedPrivateDir(dir)).not.toBeNull();
+        expect(ensureOwnedPrivateDir(dir).status).toBe('ok');
         expect(lstatSync(dir).mode & 0o777).toEqual(0o700);
       }
     );
@@ -148,7 +148,7 @@ describe('native file cache location', () => {
           throw error;
         });
 
-        expect(ensureOwnedPrivateDir(dir)).toBeNull();
+        expect(ensureOwnedPrivateDir(dir).status).toBe('refused');
       }
     );
   });
@@ -165,7 +165,10 @@ describe('native file cache location', () => {
       jest.isolateModules(() => {
         jest.doMock('../utils/owned-private-dir', () => ({
           ...jest.requireActual('../utils/owned-private-dir'),
-          isSafeSharedRoot: jest.fn(() => '/tmp/.nx'),
+          isSafeSharedRoot: jest.fn(() => ({
+            status: 'ok',
+            path: '/tmp/.nx',
+          })),
           isOwnedRealDirectory: jest.fn(() => '/tmp/.nx/501'),
           ...guards,
         }));
@@ -181,9 +184,17 @@ describe('native file cache location', () => {
     });
 
     it('should refuse when the shared container is not safe', () => {
-      withGuards({ isSafeSharedRoot: jest.fn(() => null) }, (m) => {
-        expect(m.getNativeFileCacheLocationToDelete()).toBeNull();
-      });
+      withGuards(
+        {
+          isSafeSharedRoot: jest.fn((d: string) => ({
+            status: 'refused',
+            refusal: { kind: 'not-a-directory', dir: d },
+          })),
+        },
+        (m) => {
+          expect(m.getNativeFileCacheLocationToDelete()).toBeNull();
+        }
+      );
     });
 
     // Argument-aware, one directory at a time: a mock that answers the same way

@@ -35,7 +35,7 @@ export function getNativeFileCacheLocationToDelete(): string | null {
     // also enforces mode and validates the version directory.
     return isOwnedRealDirectory(configured) ? configured : null;
   }
-  return isSafeSharedRoot(NX_TMP_DIR) &&
+  return isSafeSharedRoot(NX_TMP_DIR).status === 'ok' &&
     isOwnedRealDirectory(NX_USER_TMP_DIR) &&
     isOwnedRealDirectory(NATIVE_CACHE_ROOT)
     ? join(NATIVE_CACHE_ROOT, nxVersion)
@@ -65,7 +65,7 @@ export function ensureSecureNativeFileCacheLocation(
       // not additionally refused for naming one of Nx's own roots, and it warns
       // rather than throwing.
       mkdirSync(dirname(dir), { recursive: true });
-      if (!ensureOwnedPrivateDir(dir)) {
+      if (ensureOwnedPrivateDir(dir).status !== 'ok') {
         throw new Error(
           'it is not a directory owned by the current user with no group or other access'
         );
@@ -90,18 +90,18 @@ export function ensureSecureNativeFileCacheLocation(
   // Outermost first: the stable shared container must either belong to root or
   // to us, and must be sticky if peers can write there. The uid directory then
   // becomes the owner-only boundary for sockets and native-cache alike.
-  if (!ensureSafeSharedRoot(sharedRoot)) {
+  if (ensureSafeSharedRoot(sharedRoot).status !== 'ok') {
     return null;
   }
   for (const root of [userRoot, cacheRoot]) {
-    if (!ensureOwnedPrivateDir(root)) {
+    if (ensureOwnedPrivateDir(root).status !== 'ok') {
       return null;
     }
   }
 
   // Verified, not assumed: this is the directory we load a `.node` out of.
   const versionDir = join(cacheRoot, nxVersion);
-  if (!ensureOwnedPrivateDir(versionDir)) {
+  if (ensureOwnedPrivateDir(versionDir).status !== 'ok') {
     return null;
   }
   return versionDir;
