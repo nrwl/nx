@@ -61,9 +61,11 @@ describe('addPluginsToOxlintConfig', () => {
     addPluginsToOxlintConfig(tree, 'libs/shared/ui', ['react']);
 
     expect(tree.exists('libs/shared/ui/.oxlintrc.json')).toBe(false);
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('only JSON Oxlint configs')
-    );
+    const message = warn.mock.calls[0][0];
+    expect(message).toContain('only JSON Oxlint configs');
+    // Naming it is the whole signal: adding the plugins to the root instead —
+    // which "your Oxlint config" reads as — leaves them not running.
+    expect(message).toContain('"libs/shared/oxlint.config.ts"');
   });
 
   it('should name the nearest config when warning about a missing extends', () => {
@@ -72,8 +74,13 @@ describe('addPluginsToOxlintConfig', () => {
 
     addPluginsToOxlintConfig(tree, 'libs/shared/ui', ['react']);
 
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('libs/shared/.oxlintrc.json')
+    const message = warn.mock.calls[0][0];
+    expect(message).toContain('libs/shared/.oxlintrc.json');
+    // The suggested `extends` is the actionable part, and naming the config in
+    // the prose does not pin it: a root-relative path here would reproduce the
+    // very skip this warning reports.
+    expect(message).toContain(
+      '"extends": ["../../../libs/shared/.oxlintrc.json"]'
     );
   });
 
@@ -99,8 +106,8 @@ describe('addPluginsToOxlintConfig', () => {
     ]);
     const message = warn.mock.calls[0][0];
     expect(message).toContain('no "extends"');
-    // Pin the claim, not just the prefix: an earlier version of this message
-    // said the plugins would not run at all, which is measurably false.
+    // Pin the claim, not just the prefix — the prefix survives a rewrite that
+    // inverts what the message says the plugins do.
     expect(message).toContain("still run, but under Oxlint's defaults");
   });
 
@@ -168,8 +175,8 @@ describe('addPluginsToOxlintConfig', () => {
     );
   });
 
-  // The root's format only matters when a project config has to be created,
-  // because that is what needs an `extends` pointing at the root.
+  // The governing config's format only matters when a project config has to be
+  // created, because that is what needs an `extends` pointing at it.
   it('should still update a project config that already exists under a TypeScript root', () => {
     tree.delete('.oxlintrc.json');
     tree.write('oxlint.config.ts', 'export default {};');
