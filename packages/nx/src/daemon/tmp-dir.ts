@@ -435,7 +435,11 @@ function socketDirUnderFirstUsableRoot(
       refusals
     );
   }
-  const dir = createOwnerOnlySocketDir(leafFor(established.root), true);
+  const dir = createOwnerOnlySocketDir(
+    leafFor(established.root),
+    true,
+    refusals
+  );
   // Only when the directory we actually got is the demoted tier: if
   // createOwnerOnlySocketDir fell back to the workspace, it recorded its own,
   // more specific cause and that one should survive.
@@ -532,9 +536,16 @@ export function getRefusedConfiguredSocketDir(): string | undefined {
  *        case Nx verifies the stable shared container and establishes the
  *        current user's owner-only roots first.
  */
+/**
+ * @param priorRefusals why the tiers *above* this one were skipped, if any. The
+ *        leaf's own refusal is appended to it, so the fallback reports the whole
+ *        chain: reaching the home tier at all means `/tmp/.nx` was refused, and
+ *        that refusal carries the only actionable remedy in the scenario.
+ */
 function createOwnerOnlySocketDir(
   dir: string,
-  usingDefaultRoot: boolean
+  usingDefaultRoot: boolean,
+  priorRefusals: DirRefusal[] = []
 ): string {
   socketDirFallbackCause = undefined;
   refusedConfiguredSocketDir = undefined;
@@ -568,10 +579,20 @@ function createOwnerOnlySocketDir(
     }
     return dir;
   } catch (e) {
-    const refusals = e instanceof DirectoryRefusedError ? [e.refusal] : [];
+    const refusals =
+      e instanceof DirectoryRefusedError
+        ? [...priorRefusals, e.refusal]
+        : priorRefusals;
     // Recoverable: fall back to the owner-controlled workspace data dir.
     if (usingDefaultRoot) {
-      return fallBackToWorkspaceSocketDir(e, dir, refusals);
+      // Aggregated over the whole chain, not just the leaf: no default socket
+      // directory was established either way, and the tiers skipped on the way
+      // here are what `--verbose` promises to explain.
+      return fallBackToWorkspaceSocketDir(
+        refusals.length ? socketRootsUnavailable(refusals) : e,
+        dir,
+        refusals
+      );
     }
     // Never swap out a configured directory silently — the substitute is longer and
     // would resurface as assertValidSocketPath complaining about a path the user

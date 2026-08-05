@@ -371,6 +371,33 @@ describe('socket directories', () => {
     );
   });
 
+  // The third exit: a tier establishes, then the per-run leaf beneath it fails.
+  // That path used to build its own one-element list from the leaf error and
+  // discard the caller's, so the reason the *tier above* was skipped — and with
+  // it the only actionable remedy in the scenario — never reached the user,
+  // while the warning still told them --verbose would explain it.
+  it('keeps the skipped tiers in the report when the leaf beneath a tier fails', () => {
+    setPlatform('linux');
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      reject(d, { kind: 'foreign-shared-container', dir: d, uid: 1001 })
+    );
+    // The home tier establishes; its per-run leaf does not.
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d.startsWith(HOME_SOCKET_ROOT + '/') ? reject(d) : accept(d)
+    );
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+
+    const cause = getSocketDirFallbackCause() as AggregateError;
+    expect(cause.errors.map((e: any) => e.refusal.kind)).toContain(
+      'foreign-shared-container'
+    );
+    // And the remedy that only the skipped tier's refusal can supply.
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('sudo chown root')
+    );
+  });
+
   it('does not warn when a later tier succeeds', () => {
     setPlatform('linux');
     (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
@@ -396,14 +423,13 @@ describe('socket directories', () => {
     );
   });
 
-  it('carries the chown remedy in the fallback cause when the container is another user’s', () => {
+  it('carries the chown remedy in the fallback warning when the container is another user’s', () => {
     setPlatform('linux');
     // Derived from the refusal the guard produced, not from a second lstat.
-    // `shared: true` because only isSafeSharedRoot produces this refusal, and it
-    // is what makes the chown remedy apply. Without it the mock would stage a
-    // shape the real guard never returns.
+    // The shared container has its own kind, and that kind is what selects the
+    // chown remedy — a per-user directory's `foreign-owner` must not.
     (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
-      reject(d, { kind: 'foreign-owner', dir: d, uid: 1001, shared: true })
+      reject(d, { kind: 'foreign-shared-container', dir: d, uid: 1001 })
     );
     (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
       d.startsWith(HOME_TMP_ROOT) ? reject(d) : accept(d)
@@ -415,14 +441,28 @@ describe('socket directories', () => {
     );
   });
 
-  it('omits the remedy when the roots are unusable for a reason the user cannot chown away', () => {
+  it('keeps the remedy out of the fallback cause, which carries reasons only', () => {
     setPlatform('linux');
-    denyEveryDefaultRoot();
+    // Staged with the *chownable* refusal on purpose. With a reason the user
+    // cannot act on, no arm of describeRefusal emits `chown` and the negative
+    // assertion holds for every kind — it could not fail. The remedy belongs to
+    // the warning; the cause is what --verbose prints.
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      reject(d, { kind: 'foreign-shared-container', dir: d, uid: 1001 })
+    );
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d.startsWith(HOME_TMP_ROOT) ? reject(d) : accept(d)
+    );
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
     const message = (getSocketDirFallbackCause() as Error).message;
     expect(message).toContain('could not establish any of its default socket');
+    expect(message).toContain('belongs to another user (uid 1001)');
     expect(message).not.toContain('chown');
+    // The advice the user can act on is in the warning instead.
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('sudo chown root')
+    );
   });
 
   it('records the demotion when a later tier wins, so a length failure can explain itself', () => {
@@ -450,7 +490,7 @@ describe('socket directories', () => {
     // `USER_TMP_ROOT` is the directory a user would have to act on, and the
     // tier root is unreadable to them when it is the foreign-owned one.
     expect(logger.verbose).toHaveBeenCalledWith(
-      expect.stringContaining(`${USER_TMP_ROOT} is not a directory`)
+      expect.stringContaining(`${USER_TMP_ROOT} exists and is not a directory`)
     );
   });
 
