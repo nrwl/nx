@@ -19,6 +19,7 @@ import { RawProjectGraphDependency } from '../../../project-graph/project-graph-
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
 import {
+  dropInheritedPnpmPatchedDependencies,
   PackageJson,
   rewritePrunedLocalPathSpecifiers,
   stripPrunedLockfilePnpmConfig,
@@ -376,14 +377,16 @@ export function createLockFile(
  * the manifest's pnpm config block is stripped for every package manager:
  * re-declaring config a pruned pnpm lockfile bakes into its snapshots trips
  * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH, and npm and yarn never read the block at
- * install time, so dropping it does not change their installs.
+ * install time, so dropping it does not change their installs. An inherited
+ * `pnpm.patchedDependencies` is dropped on both paths, since the sinks below
+ * declare the patches the output actually ships.
  *
  * `pruned` is false when `createLockFile` fell back to the root lockfile on a
  * pruning error: the fallback's importer describes the whole workspace, so the
  * manifest mutations are rolled back (the root lockfile matches the manifest as
- * authored: original local-path specifiers, pnpm config kept), the closure
- * validation is skipped, and the caller must not ship local-path artifacts for
- * it. Pass `pruned` as `includeLocalPathArtifacts` to
+ * authored: original local-path specifiers, the rest of the pnpm config kept),
+ * the closure validation is skipped, and the caller must not ship local-path
+ * artifacts for it. Pass `pruned` as `includeLocalPathArtifacts` to
  * `emitPrunedPnpmInstallAssets`/`writePrunedPnpmInstallSettings`, which carry
  * the remaining install-time pieces (the pnpm 11 settings-only
  * pnpm-workspace.yaml, the patch files, the local-path artifacts, and the
@@ -454,6 +457,7 @@ export function createPrunedLockfile(
       bodyLines,
     });
   }
+  dropInheritedPnpmPatchedDependencies(packageJson);
   return { lockFileContent, pruned };
 }
 

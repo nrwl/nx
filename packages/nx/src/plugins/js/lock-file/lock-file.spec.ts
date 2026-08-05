@@ -88,6 +88,7 @@ describe('createPrunedLockfile', () => {
       overrides: { foo: '1.0.0' },
       ignoredOptionalDependencies: ['fsevents'],
       packageExtensions: { 'foo@1': { dependencies: { bar: '1.0.0' } } },
+      patchedDependencies: { 'foo@1.0.0': 'my-patches/foo.patch' },
       onlyBuiltDependencies: ['sharp'],
     };
 
@@ -101,8 +102,43 @@ describe('createPrunedLockfile', () => {
 
     expect(pruned).toBe(true);
     // overrides, ignoredOptionalDependencies, and packageExtensions are baked
-    // into the pruned lockfile; build-script approvals are not, so they stay.
+    // into the pruned lockfile, and the patch declaration comes from the
+    // install-settings sinks; build-script approvals are not, so they stay.
     expect(packageJson.pnpm).toEqual({ onlyBuiltDependencies: ['sharp'] });
+  });
+
+  it('drops an inherited patch declaration when pruning falls back', () => {
+    packageJson.pnpm = {
+      overrides: { foo: '1.0.0' },
+      patchedDependencies: { 'foo@1.0.0': 'my-patches/foo.patch' },
+    };
+    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('pruning failed');
+    });
+
+    const { pruned } = createPrunedLockfile(
+      packageJson,
+      graph,
+      'apps/app',
+      '/root',
+      'pnpm'
+    );
+
+    expect(pruned).toBe(false);
+    // The root lockfile still declares the resolution-time config, but the
+    // patch paths are the workspace's and no patch file ships unless the sinks
+    // scope one out of that lockfile.
+    expect(packageJson.pnpm).toEqual({ overrides: { foo: '1.0.0' } });
+  });
+
+  it('drops an emptied pnpm block with the inherited patch declaration', () => {
+    packageJson.pnpm = {
+      patchedDependencies: { 'foo@1.0.0': 'patches/foo.patch' },
+    };
+
+    createPrunedLockfile(packageJson, graph, 'apps/app', '/root', 'pnpm');
+
+    expect(packageJson.pnpm).toBeUndefined();
   });
 
   it('skips the pnpm-only steps for npm', () => {
