@@ -433,11 +433,17 @@ function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
   if (doc === null) {
     return {};
   }
+  if (doc === 'unreadable') {
+    // pnpm resolves on from the remaining layers here, so dropping the whole
+    // bridge would lose the registry over a file pnpm itself reads past.
+    warnUnreadableFile(path);
+    return {};
+  }
   if (doc === 'invalid') {
     // pnpm aborts on a file it cannot parse, so there is no resolution left to
     // reproduce. Propagating to the caller's fall-open warns instead of
     // silently treating the workspace as declaring no registry.
-    throw new Error(`The pnpm workspace file at ${path} could not be read.`);
+    throw new Error(`The pnpm workspace file at ${path} could not be parsed.`);
   }
   return validatePnpmWorkspaceSettings(doc, path);
 }
@@ -513,36 +519,45 @@ function getAuthIniPath(): string {
 }
 
 /**
- * The global config.yaml, null when absent. pnpm aborts every command on one
- * it cannot parse, so that propagates to the caller's fall-open instead of
- * resolving on without the file's settings.
+ * The global config.yaml, null when absent or unreadable. pnpm aborts every
+ * command on one it cannot parse, so that propagates to the caller's fall-open
+ * instead of resolving on without the file's settings.
  */
 function readPnpmGlobalConfigYaml(): Record<string, unknown> | null {
   const path = join(getPnpmConfigDir(process.env), 'config.yaml');
   const doc = readPnpmYamlConfig(path);
+  if (doc === 'unreadable') {
+    warnUnreadableFile(path);
+    return null;
+  }
   if (doc === 'invalid') {
     throw new Error(
-      `The pnpm global configuration file at ${path} could not be read.`
+      `The pnpm global configuration file at ${path} could not be parsed.`
     );
   }
   return doc;
 }
 
-// pnpm keeps resolving from the remaining layers for an npmrc-family file it
-// cannot read, so mirror the absent semantics. It stays silent on ENOENT and
-// EISDIR and warns otherwise; we warn for the whole unreadable class.
+// pnpm keeps resolving from the remaining layers for a config file it cannot
+// read, so mirror the absent semantics. It stays silent on ENOENT and EISDIR
+// and warns otherwise; we warn for the whole unreadable class.
 const warnedUnreadableFiles = new Set<string>();
+function warnUnreadableFile(path: string): void {
+  if (warnedUnreadableFiles.has(path)) {
+    return;
+  }
+  warnedUnreadableFiles.add(path);
+  logger.warn(
+    `Could not read ${path}; resolving the pnpm registry configuration without it, the way pnpm itself does.`
+  );
+}
+
 function readPnpmNpmrcMap(path: string): Map<string, string> | null {
   const map = readNpmrcMap(path);
   if (map !== 'unreadable') {
     return map;
   }
-  if (!warnedUnreadableFiles.has(path)) {
-    warnedUnreadableFiles.add(path);
-    logger.warn(
-      `Could not read ${path}; resolving the pnpm registry configuration without it, the way pnpm itself does.`
-    );
-  }
+  warnUnreadableFile(path);
   return null;
 }
 
