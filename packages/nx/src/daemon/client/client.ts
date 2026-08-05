@@ -1054,8 +1054,7 @@ export class DaemonClient {
         }
       }
       if (!serverAvailable) {
-        // Read before startInBackground resets it: this is the probe's verdict
-        // on the daemon that was already there.
+        // The probe's verdict on the daemon that was already there.
         daemonPid = await this.startInBackground(this.lastConnectRefusal);
       }
       this.setUpConnection();
@@ -1445,9 +1444,16 @@ export class DaemonClient {
       );
       return backgroundProcess.pid;
     } else {
-      // The poll's own errno when it produced one, otherwise the probe's. Both
-      // are values held by this call, so no other attempt can substitute one.
-      const refusal = polled ?? probeRefusal;
+      // A permission refusal from either source wins, then the poll's errno,
+      // then the probe's. Recency alone would report the ENOENT of a daemon
+      // that unlinked its socket over the EACCES the probe saw a moment
+      // earlier, and lose the diagnosis this whole path exists to produce.
+      // Both are values held by this call, so no other attempt can substitute
+      // one.
+      const refusal =
+        [polled, probeRefusal].find((r) => r && isPermissionErrno(r.error)) ??
+        polled ??
+        probeRefusal;
       if (refusal && isPermissionErrno(refusal.error)) {
         // The flagship case this PR ships a KB page for: a sandbox refusing
         // unix-socket connects, or a socket owned by another user. Reported
