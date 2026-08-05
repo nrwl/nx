@@ -84,6 +84,26 @@ describe('outputsChangeInvalidatesGraphEnv', () => {
     ).toBe(true);
   });
 
+  it('invalidates on a suffixed dotenv name', () => {
+    write('apps/app1/.e2e.env', 'BASE_URL=http://localhost:4301\n');
+    expect(
+      outputsChangeInvalidatesGraphEnv(
+        [{ path: 'apps/app1/.e2e.env', type: EventType.create }],
+        graphWithRoots(['apps/app1'])
+      )
+    ).toBe(true);
+  });
+
+  it('invalidates on a suffixed dotenv path whose identifier contains a slash', () => {
+    write('apps/app1/.e2e/smoke.env', 'BASE_URL=http://localhost:4301\n');
+    expect(
+      outputsChangeInvalidatesGraphEnv(
+        [{ path: 'apps/app1/.e2e/smoke.env', type: EventType.create }],
+        graphWithRoots(['apps/app1'])
+      )
+    ).toBe(true);
+  });
+
   it('matches a parent-root dotenv when a nested root shadows the deepest dir', () => {
     // A project rooted at apps/app1/.env.e2e must not shadow the parent
     // apps/app1's slash-identifier dotenv (.env.e2e/smoke).

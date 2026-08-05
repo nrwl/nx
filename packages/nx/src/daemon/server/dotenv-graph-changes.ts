@@ -36,10 +36,19 @@ export function outputsChangeInvalidatesGraphEnv(
   changeEvents: WatchEvent[],
   projectGraph: ProjectGraph | undefined
 ): boolean {
+  // Outputs batches rarely touch dotenv files, so the O(projects) roots set is
+  // only built once a path clears this superset-of-dotenv-names check.
+  const candidates = changeEvents.filter((event) =>
+    mayBeDotEnvPath(event.path)
+  );
+  if (candidates.length === 0) {
+    return false;
+  }
+
   const roots = graphTimeDotEnvRoots(projectGraph);
   let invalidate = false;
 
-  for (const { path, type } of changeEvents) {
+  for (const { path, type } of candidates) {
     if (dotEnvNameUnderRoot(path, roots) === null) {
       continue;
     }
@@ -67,6 +76,15 @@ export function outputsChangeInvalidatesGraphEnv(
   }
 
   return invalidate;
+}
+
+// Superset of the names both regexes accept: a prefixed name's first segment
+// starts with `.env` and a suffixed name's last segment ends with `.env`, even
+// when the target/configuration identifier contains `/`.
+function mayBeDotEnvPath(path: string): boolean {
+  return path
+    .split('/')
+    .some((segment) => segment.startsWith('.env') || segment.endsWith('.env'));
 }
 
 function graphTimeDotEnvRoots(
