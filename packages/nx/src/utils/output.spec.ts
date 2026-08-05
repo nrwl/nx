@@ -113,6 +113,27 @@ describe('output.drain', () => {
     stalled.failPending(Object.assign(new Error('EPIPE'), { code: 'EPIPE' }));
     expect(stalled.stream.listenerCount('error')).toBe(1);
     await expect(promise).resolves.toBeUndefined();
+    // Settle the deferred detach here so a too-early removal surfaces in this test
+    // rather than as an unhandled error attributed to whichever test runs next.
+    await new Promise((res) => setImmediate(res));
+  });
+
+  // process.nextTick drains before the 'error' emit, so a cleanup deferred that far
+  // detaches too early and the EPIPE goes unhandled. Only a macrotask is late enough.
+  it('keeps the listener attached through the nextTick queue', async () => {
+    const stalled = stalledStdout(1000);
+    useStdout(stalled.stream);
+
+    stalled.stream.write('f'.repeat(50));
+    const promise = output.drain();
+    stalled.release();
+
+    await new Promise((res) => process.nextTick(res));
+    expect(stalled.stream.listenerCount('error')).toBe(1);
+
+    await promise;
+    await new Promise((res) => setImmediate(res));
+    expect(stalled.stream.listenerCount('error')).toBe(0);
   });
 
   // The cleanup is deferred, so it must target the stream drain() attached to
@@ -123,13 +144,35 @@ describe('output.drain', () => {
 
     stalled.stream.write('e'.repeat(50));
     const promise = output.drain();
+    // Guards against the assertion below passing vacuously on an early return.
+    expect(stalled.stream.listenerCount('error')).toBe(1);
     stalled.release();
     await promise;
 
-    useStdout(realStdout as Writable);
+    useStdout(realStdout);
     await new Promise((res) => setImmediate(res));
 
     expect(stalled.stream.listenerCount('error')).toBe(0);
+  });
+
+  // The stdout patches in run-command.ts and task-orchestrator.ts take
+  // (chunk, encoding, callback) positionally; a two-argument write would leave their
+  // callback undefined and drain() would never resolve.
+  it('resolves when process.stdout.write is patched positionally', async () => {
+    const stalled = stalledStdout(1000);
+    useStdout(stalled.stream);
+
+    stalled.stream.write('g'.repeat(50));
+    (stalled.stream as any).write = (
+      _chunk: unknown,
+      _encoding: unknown,
+      callback?: () => void
+    ) => {
+      if (callback) callback();
+      return true;
+    };
+
+    await expect(output.drain()).resolves.toBeUndefined();
   });
 
   it('leaves no error listener behind', async () => {

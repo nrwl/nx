@@ -371,11 +371,14 @@ class CLIOutput {
         return;
       }
       // The reader may already be gone (`nx ... | head`); an unhandled EPIPE would
-      // kill the run. Detach on the next tick, not inside the write callback: that
-      // callback fires before the 'error' event, so removing it there still crashes.
+      // kill the run. Detach via setImmediate — not in the write callback and not via
+      // process.nextTick: both run before the 'error' event, so the crash comes back.
       const onError = () => resolve();
       stream.on('error', onError);
-      stream.write('', () => {
+      // Encoding passed explicitly: the stdout patches in run-command.ts and
+      // task-orchestrator.ts read (chunk, encoding, callback) positionally, and a
+      // two-argument call leaves their callback undefined — drain would never resolve.
+      stream.write('', 'utf8', () => {
         resolve();
         setImmediate(() => stream.removeListener('error', onError));
       });
