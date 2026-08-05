@@ -70,6 +70,6 @@ describe('fetchRegistryMetadata', () => {
       JSON.stringify({ name: 'pkg-a', versions: ['1.0.0'] })
     );
     await fetchRegistryMetadata('pkg-a');
-    expect(viewMock).toHaveBeenCalledWith('pkg-a', '', '--json');
+    expect(viewMock).toHaveBeenCalledWith('pkg-a', '', ['--json']);
   });
 });

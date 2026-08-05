@@ -538,7 +538,11 @@ function getPackageManagerConfigRoot(): string {
     return statSync(installationPath).isDirectory()
       ? installationPath
       : workspaceRoot;
-  } catch {
+  } catch (e) {
+    logger.verbose(
+      `Failed to stat the Nx installation directory at "${installationPath}".`,
+      e
+    );
     return workspaceRoot;
   }
 }
@@ -588,11 +592,9 @@ export async function resolvePackageVersionUsingRegistry(
       version
     );
 
-    const result = await packageRegistryView(
-      packageName,
-      resolvedVersion,
-      'version'
-    );
+    const result = await packageRegistryView(packageName, resolvedVersion, [
+      'version',
+    ]);
 
     if (!result) {
       throw new Error(
@@ -690,7 +692,7 @@ export async function resolvePackageVersionUsingInstallation(
 export async function packageRegistryView(
   pkg: string,
   version: string,
-  args: string,
+  args: string[],
   // `forceNpm` runs the view through npm even in a pnpm workspace: npm projects
   // a field across every matched version, whereas `pnpm view <pkg>@<range>`
   // collapses to the single highest match (breaks per-version field queries).
@@ -730,7 +732,7 @@ export async function packageRegistryView(
   try {
     const { stdout } = await execPackageManagerAsync(
       pm,
-      ['view', spec, ...args.split(/\s+/).filter(Boolean)],
+      ['view', spec, ...args],
       {
         windowsHide: true,
         cwd: configRoot,
