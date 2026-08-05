@@ -1,4 +1,5 @@
 import { ensurePackage, GeneratorCallback, Tree } from '@nx/devkit';
+import { handleImport } from '@nx/devkit/internal';
 import { nxVersion } from './versions';
 import type { LinterType } from './linter';
 
@@ -70,10 +71,16 @@ export async function addLintingToProject(
     // packages/js/project.json and is recorded in `ignoredCircularDependencies`
     // in the root eslint config.
     ensurePackage('@nx/oxlint', nxVersion);
-    const {
-      configurationGenerator,
-      // nx-ignore-next-line
-    } = require('@nx/oxlint/generators');
+    // `handleImport`, not a bare `require`: `@nx/oxlint` is the only ESM package
+    // under `packages/`, and its `./generators` subpath has no `require`
+    // condition, so `require()` throws ERR_REQUIRE_ESM below Node 20.19 / 22.12.
+    // A literal `import()` is not an option either — `@nx/oxlint` is installed on
+    // demand and is deliberately absent from this package's dependencies, so a
+    // static specifier fails to type-check (TS2307).
+    // nx-ignore-next-line
+    const { configurationGenerator } = await handleImport(
+      '@nx/oxlint/generators'
+    );
     return configurationGenerator(tree, {
       project: options.project,
       plugins: [
