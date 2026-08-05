@@ -167,8 +167,8 @@ function oxlintTestPlugins(unitTestRunner: string | undefined): string[] {
   }
 
   // `ensurePackage` installs by package name, so the `internal` subpath is
-  // required separately. It is a semi-private entry — this is a first-party
-  // consumer, which is what that surface is for.
+  // required separately. Plain `require` holds only while both runners are CJS;
+  // `@nx/oxlint` is ESM, which is why the arm above needs `handleImport`.
   ensurePackage(pkg, nxVersion);
   const { oxlintPlugins }: { oxlintPlugins?: string[] } = require(
     `${pkg}/internal`
