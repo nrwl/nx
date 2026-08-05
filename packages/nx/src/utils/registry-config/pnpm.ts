@@ -62,7 +62,9 @@ const BARE_AUTH_KEYS = [
 ] as const;
 
 interface PnpmWorkspaceSettings {
-  registries?: Record<string, string>;
+  // Values stay unknown because validation only checks the container; pnpm dies
+  // on the value it picks, so pickYamlRegistry is what narrows one to a string.
+  registries?: Record<string, unknown>;
   strictSsl?: boolean;
   proxy?: string;
   httpsProxy?: string;
@@ -491,7 +493,10 @@ function pickYamlRegistry(
   root: string
 ): string | undefined {
   const value = settings.registries?.[key];
-  if (value !== undefined && typeof value !== 'string') {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== 'string') {
     throw new Error(
       `The pnpm workspace file at ${join(
         root,
@@ -522,8 +527,9 @@ function readPnpmGlobalConfigYaml(): Record<string, unknown> | null {
   return doc;
 }
 
-// pnpm warns and resolves on from the remaining layers when an npmrc-family
-// file exists but cannot be read, so mirror it: warn, absent semantics.
+// pnpm keeps resolving from the remaining layers for an npmrc-family file it
+// cannot read, so mirror the absent semantics. It stays silent on ENOENT and
+// EISDIR and warns otherwise; we warn for the whole unreadable class.
 const warnedUnreadableFiles = new Set<string>();
 function readPnpmNpmrcMap(path: string): Map<string, string> | null {
   const map = readNpmrcMap(path);

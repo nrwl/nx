@@ -1,4 +1,3 @@
-import { existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { readYamlFile } from '../fileutils';
@@ -35,13 +34,16 @@ export function getPnpmConfigDir(env: NodeJS.ProcessEnv): string {
 export function readPnpmYamlConfig(
   path: string
 ): Record<string, unknown> | 'invalid' | null {
-  if (!existsSync(path)) {
-    return null;
-  }
   let doc: unknown;
   try {
     doc = readYamlFile(path);
-  } catch {
+  } catch (e) {
+    // Classified from the read itself rather than a preceding existence check,
+    // which would report a file deleted in between as malformed. ENOTDIR (a path
+    // through a non-directory) is another shape of absent.
+    if (e?.code === 'ENOENT' || e?.code === 'ENOTDIR') {
+      return null;
+    }
     return 'invalid';
   }
   // An empty file declares nothing; pnpm accepts it.
