@@ -1,5 +1,6 @@
 import { camelize, dasherize } from '@nx/devkit/internal';
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   joinPathFragments,
   runTasksInSerial,
@@ -9,6 +10,8 @@ import {
 import { lintProjectGenerator } from '@nx/eslint';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
+  eslintV9Version,
+  getInstalledEslintVersion,
   javaScriptOverride,
   typeScriptOverride,
   addOverrideToLintConfig,
@@ -20,6 +23,7 @@ import {
   replaceOverridesInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
+import { getInstalledAngularMajorVersion } from '../utils/version-utils';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
 import { isBuildableLibraryProject } from './lib/buildable-project';
 import type { AddLintingGeneratorSchema } from './schema';
@@ -31,6 +35,24 @@ export async function addLintingGenerator(
   assertSupportedAngularVersion(tree);
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
+
+  if (
+    !options.skipPackageJson &&
+    !getInstalledEslintVersion(tree) &&
+    getInstalledAngularMajorVersion(tree) === 20
+  ) {
+    // angular-eslint 20.x has no ESLint v10-compatible release, so pin the
+    // last v9 before the lint setup defaults a fresh install to v10
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { eslint: eslintV9Version },
+        undefined,
+        true
+      )
+    );
+  }
   const lintTask = await lintProjectGenerator(tree, {
     linter: 'eslint',
     project: options.projectName,
