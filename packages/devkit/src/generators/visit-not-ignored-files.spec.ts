@@ -319,18 +319,18 @@ describe('visitNotIgnoredFiles', () => {
       // set, so the oracle cannot depend on whoever is running the suite. An
       // allowlist rather than a denylist because git has more of these than is
       // practical to enumerate - `GIT_DIR` and `GIT_COMMON_DIR` relocate the
-      // repo, `GIT_INDEX_FILE` makes corpus files look tracked so `-o` drops
-      // them silently, and git exports all of them to its own subprocesses, so
-      // a run from a hook or `git bisect run` inherits them.
+      // repo, and `GIT_INDEX_FILE`, which git does export to its hooks, makes
+      // corpus files look tracked so `-o` drops them silently.
       //
-      // What survives the filter and still needs pinning: the config files, and
-      // `core.excludesFile`, whose default `~/.config/git/ignore` is a path
-      // fallback rather than config. `GIT_TEMPLATE_DIR` is empty rather than a
-      // nonexistent path - both stop `.git/info/exclude` being seeded, but a
-      // missing template warns on every case.
+      // Three things survive the filter and still need pinning: the config
+      // files; `core.excludesFile`, whose default `~/.config/git/ignore` is a
+      // path fallback rather than config; and git's built-in template dir.
+      // `GIT_TEMPLATE_DIR` is empty rather than a nonexistent path - both stop
+      // `.git/info/exclude` being seeded, but a missing template warns on every
+      // case.
       const env: NodeJS.ProcessEnv = {
         ...Object.fromEntries(
-          Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))
+          Object.entries(process.env).filter(([key]) => !/^GIT_/i.test(key))
         ),
         GIT_CONFIG_GLOBAL: join(repo, 'no-such-gitconfig'),
         GIT_CONFIG_SYSTEM: join(repo, 'no-such-gitconfig'),
