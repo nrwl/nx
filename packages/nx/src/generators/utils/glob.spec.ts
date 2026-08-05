@@ -65,4 +65,21 @@ describe('glob', () => {
       ]
     `);
   });
+
+  it('should not match tree files that only satisfy a negated pattern', async () => {
+    tree.write('packages/a/package.json', '{}');
+    tree.write('packages/excluded/package.json', '{}');
+    tree.write('tools/package.json', '{}');
+
+    const withTree = glob(tree, [
+      'packages/*/package.json',
+      '!packages/excluded/package.json',
+    ]).sort();
+
+    expect(withTree).toMatchInlineSnapshot(`
+      [
+        "packages/a/package.json",
+      ]
+    `);
+  });
 });

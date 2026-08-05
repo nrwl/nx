@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { join } from 'path';
 import { toProjectName } from '../../../config/to-project-name';
 import {
@@ -464,7 +464,7 @@ function* orderedMatchingKeys(
         key !== targetName &&
         key !== executor &&
         isGlobPattern(key) &&
-        minimatch(targetName, key)
+        picomatch.isMatch(targetName, key)
     )
     .sort((a, b) => b.length - a.length);
   yield* globKeys;

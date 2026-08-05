@@ -63,7 +63,7 @@
     "tslib": "catalog:typescript",
     "semver": "catalog:",
     "yargs-parser": "catalog:",
-    "minimatch": "catalog:",
+    "picomatch": "catalog:",
     "enquirer": "catalog:"
   },
   "devDependencies": {

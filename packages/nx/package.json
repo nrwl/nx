@@ -69,7 +69,7 @@
     "@jest/diff-sequences": "30.0.1",
     "jsonc-parser": "catalog:",
     "lines-and-columns": "2.0.3",
-    "minimatch": "catalog:",
+    "picomatch": "catalog:",
     "npm-run-path": "^4.0.1",
     "open": "^10.1.0",
     "ora": "catalog:",

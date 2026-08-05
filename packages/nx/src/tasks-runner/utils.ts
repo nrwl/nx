@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { relative } from 'node:path';
 import { join } from 'node:path/posix';
 import {
@@ -161,7 +161,7 @@ function findMatchingTargets(pattern: string, allTargetNames: string[]) {
     return cachedResult;
   }
 
-  const matcher = minimatch.filter(pattern);
+  const matcher = picomatch(pattern);
 
   const matchingTargets = allTargetNames.filter((t) => matcher(t));
   cache.set(pattern, matchingTargets);

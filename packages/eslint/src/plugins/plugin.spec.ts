@@ -1,5 +1,6 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { minimatch } from 'minimatch';
+import { splitGlobPatterns } from '@nx/devkit/internal';
+import picomatch from 'picomatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
 import { mkdirSync, rmSync } from 'fs';
@@ -1180,7 +1181,9 @@ describe('@nx/eslint/plugin', () => {
 
   function getMatchingFiles(allConfigFiles: string[]): string[] {
     return allConfigFiles.filter((file) =>
-      minimatch(file, createNodesV2[0], { dot: true })
+      picomatch.isMatch(file, splitGlobPatterns(createNodesV2[0]), {
+        dot: true,
+      })
     );
   }
 

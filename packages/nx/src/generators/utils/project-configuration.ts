@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { basename, dirname, join, relative } from 'path';
 
 import { getGlobPatternsFromPackageManagerWorkspaces } from '../../plugins/package-json';
@@ -369,7 +369,7 @@ function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
       const fileName = basename(change.path);
       if (
         globPatterns.some((pattern) =>
-          minimatch(change.path, pattern, { dot: true })
+          picomatch.isMatch(change.path, pattern, { dot: true })
         )
       ) {
         createdProjectFiles.push(change.path);
@@ -398,7 +398,7 @@ function findDeletedProjectFiles(tree: Tree, globPatterns: string[]) {
     .filter((f) => {
       return (
         f.type === 'DELETE' &&
-        globPatterns.some((pattern) => minimatch(f.path, pattern))
+        globPatterns.some((pattern) => picomatch.isMatch(f.path, pattern))
       );
     })
     .map((r) => r.path);

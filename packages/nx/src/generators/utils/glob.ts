@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { Tree } from '../tree';
 import { combineGlobPatterns } from '../../utils/globs';
 import {
@@ -51,15 +51,27 @@ function combineGlobResultsWithTree(
 ) {
   const matches = new Set(results);
 
-  const combinedGlob = combineGlobPatterns(patterns);
-  const matcher = minimatch.makeRe(combinedGlob);
-
-  if (!matcher) {
-    throw new Error('Invalid glob pattern: ' + combinedGlob);
+  let matcher: (path: string) => boolean;
+  try {
+    if (!patterns.length) {
+      throw new Error('no patterns');
+    }
+    // mixing negations into one picomatch call would let any path match via
+    // "not excluded"; require a positive match, then reject negated ones
+    const positive = patterns.filter((p) => !p.startsWith('!'));
+    const negated = patterns
+      .filter((p) => p.startsWith('!'))
+      .map((p) => p.substring(1));
+    const isPositive = picomatch(positive);
+    const isNegated = negated.length ? picomatch(negated) : () => false;
+    matcher = (path) => isPositive(path) && !isNegated(path);
+  } catch {
+    // picomatch throws on empty patterns where minimatch.makeRe returned false
+    throw new Error('Invalid glob pattern: ' + combineGlobPatterns(patterns));
   }
 
   for (const change of tree.listChanges()) {
-    if (change.type !== 'UPDATE' && matcher.test(change.path)) {
+    if (change.type !== 'UPDATE' && matcher(change.path)) {
       if (change.type === 'CREATE') {
         matches.add(change.path);
       } else if (change.type === 'DELETE') {

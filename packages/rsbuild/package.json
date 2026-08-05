@@ -56,7 +56,7 @@
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "minimatch": "catalog:",
+    "picomatch": "catalog:",
     "semver": "catalog:",
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },

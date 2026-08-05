@@ -9,7 +9,7 @@ import {
 } from './project-configuration/project-nodes-manager';
 import { validateAndNormalizeProjectRootMap } from './project-configuration/target-normalization';
 
-import { Minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
@@ -530,7 +530,7 @@ function createMatcher(
       const isNegation = pattern.startsWith('!');
       return {
         isNegation,
-        matcher: new Minimatch(isNegation ? pattern.substring(1) : pattern, {
+        matcher: picomatch(isNegation ? pattern.substring(1) : pattern, {
           dot: true,
         }),
       };
@@ -539,7 +539,7 @@ function createMatcher(
     return (file: string) => {
       let isMatch = initialMatch;
       for (const { isNegation, matcher } of compiled) {
-        if (matcher.match(file)) {
+        if (matcher(file)) {
           isMatch = !isNegation;
         }
       }
@@ -547,8 +547,8 @@ function createMatcher(
     };
   }
 
-  const compiled = patterns.map((p) => new Minimatch(p, { dot: true }));
-  return (file: string) => compiled.some((m) => m.match(file));
+  const compiled = patterns.map((p) => picomatch(p, { dot: true }));
+  return (file: string) => compiled.some((m) => m(file));
 }
 
 export function findMatchingConfigFiles(

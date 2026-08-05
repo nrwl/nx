@@ -269,6 +269,23 @@ describe('TaskHasher', () => {
       expect(filtered.map((f) => f.file)).toEqual(['root/a.ts', 'root/b.js']);
     });
 
+    it('should match root-level files against brace patterns with globstars', () => {
+      const filtered = filterUsingGlobPatterns(
+        'libs/a',
+        [
+          { file: 'libs/a/index.ts' },
+          { file: 'libs/a/nested/comp.tsx' },
+          { file: 'libs/a/readme.md' },
+        ] as any,
+        ['{projectRoot}/{**/*.ts,**/*.tsx}']
+      );
+
+      expect(filtered.map((f) => f.file)).toEqual([
+        'libs/a/index.ts',
+        'libs/a/nested/comp.tsx',
+      ]);
+    });
+
     it('should OR all positive patterns and AND all negative patterns (when negative patterns)', () => {
       const filtered = filterUsingGlobPatterns(
         'root',

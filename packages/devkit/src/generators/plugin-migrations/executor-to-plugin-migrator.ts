@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { deepStrictEqual } from 'node:assert';
 import { join } from 'node:path/posix';
 import type {
@@ -610,7 +610,7 @@ async function addPluginRegistrations<T>(
     } else if (existingPlugin.include) {
       if (
         !existingPlugin.include.some((include) =>
-          minimatch(projectIncludeGlob, include, { dot: true })
+          picomatch.isMatch(projectIncludeGlob, include, { dot: true })
         )
       ) {
         existingPlugin.include.push(projectIncludeGlob);

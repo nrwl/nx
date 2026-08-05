@@ -113,7 +113,7 @@
     "jest-resolve": "catalog:jest",
     "jest-util": "catalog:jest",
     "jsonc-parser": "catalog:",
-    "minimatch": "catalog:",
+    "picomatch": "catalog:",
     "picocolors": "catalog:",
     "resolve.exports": "2.0.3",
     "semver": "catalog:",

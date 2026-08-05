@@ -355,7 +355,7 @@ overrides:
   handlebars: 4.7.9
   minimist: ^1.2.6
   underscore: ^1.13.8
-  brace-expansion: 5.0.8
+  brace-expansion: 5.0.9
   axios: 1.18.1
   minimatch: ^10.2.5
   shell-quote: ^1.8.4
@@ -1152,9 +1152,6 @@ importers:
       mini-css-extract-plugin:
         specifier: ~2.4.7
         version: 2.4.7(webpack@5.105.2)
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
       next-sitemap:
         specifier: ^3.1.10
         version: 3.1.55(@next/env@16.2.7)(next@16.2.7(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.3))
@@ -2489,9 +2486,9 @@ importers:
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.4
       semver:
         specifier: 'catalog:'
         version: 7.8.4
@@ -2798,12 +2795,12 @@ importers:
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
       picocolors:
         specifier: 'catalog:'
         version: 1.1.1
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.4
       resolve.exports:
         specifier: 2.0.3
         version: 2.0.3
@@ -3246,9 +3243,6 @@ importers:
       lines-and-columns:
         specifier: 2.0.3
         version: 2.0.3
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
       npm-run-path:
         specifier: ^4.0.1
         version: 4.0.1
@@ -3261,6 +3255,9 @@ importers:
       picocolors:
         specifier: 'catalog:'
         version: 1.1.1
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.4
       resolve.exports:
         specifier: 2.0.3
         version: 2.0.3
@@ -3363,9 +3360,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.60.0
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.4
       semver:
         specifier: 'catalog:'
         version: 7.8.4
@@ -3425,9 +3422,9 @@ importers:
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.4
       react:
         specifier: '>=18.0.0 <20.0.0'
         version: 18.3.1
@@ -3656,9 +3653,9 @@ importers:
       '@rsbuild/core':
         specifier: ^1.0.0 || ^2.0.0
         version: 1.1.8
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.4
       semver:
         specifier: 'catalog:'
         version: 7.8.4
@@ -16181,8 +16178,8 @@ packages:
     resolution: {integrity: sha512-apC2+fspHGI3mMKj+dGevkGo/tCqVB8jMb6i+OX+E29p0Iposz07fABkRIfVUPNd5A5VbuOz1bZbnmkKLYF+wQ==}
     engines: {node: '>= 5.10.0'}
 
-  brace-expansion@5.0.8:
-    resolution: {integrity: sha512-JZyDyq3D4AUifKTPOB7DELf6XsB3WdPuNxCtob1vFXPsSXhdAiHBWJ/tJ8HAc9aH84BK+5JFZLNkJKx3G9kzQg==}
+  brace-expansion@5.0.9:
+    resolution: {integrity: sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==}
     engines: {node: 20 || >=22}
 
   braces@3.0.3:
@@ -43235,7 +43232,7 @@ snapshots:
     dependencies:
       big-integer: 1.6.52
 
-  brace-expansion@5.0.8:
+  brace-expansion@5.0.9:
     dependencies:
       balanced-match: 4.0.3
 
@@ -51161,7 +51158,7 @@ snapshots:
 
   minimatch@10.2.5:
     dependencies:
-      brace-expansion: 5.0.8
+      brace-expansion: 5.0.9
 
   minimist@1.2.8: {}
 
@@ -52177,7 +52174,7 @@ snapshots:
       balanced-match: 4.0.3
       base64-js: 1.5.1
       bl: 4.1.0
-      brace-expansion: 5.0.8
+      brace-expansion: 5.0.9
       buffer: 5.7.1
       call-bind-apply-helpers: 1.0.2
       chalk: 4.1.2
@@ -52307,7 +52304,7 @@ snapshots:
       balanced-match: 4.0.3
       base64-js: 1.5.1
       bl: 4.1.0
-      brace-expansion: 5.0.8
+      brace-expansion: 5.0.9
       buffer: 5.7.1
       bundle-name: 4.1.0
       call-bind-apply-helpers: 1.0.2
@@ -52443,7 +52440,7 @@ snapshots:
       balanced-match: 4.0.3
       base64-js: 1.5.1
       bl: 4.1.0
-      brace-expansion: 5.0.8
+      brace-expansion: 5.0.9
       buffer: 5.7.1
       bundle-name: 4.1.0
       call-bind-apply-helpers: 1.0.2
@@ -58276,8 +58273,8 @@ snapshots:
   vite@7.1.3(@types/node@24.12.2)(jiti@2.7.0)(less@4.6.7)(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.101.0)(terser@5.49.0)(tsx@4.20.5)(yaml@2.9.0):
     dependencies:
       esbuild: 0.25.0
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
+      fdir: 6.5.0(picomatch@4.0.5)
+      picomatch: 4.0.5
       postcss: 8.5.15
       rollup: 4.59.0
       tinyglobby: 0.2.15

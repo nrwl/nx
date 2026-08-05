@@ -26,7 +26,7 @@ import { runInstall } from '../init/implementation/utils';
 import { getBaseRef } from '../../utils/command-line-utils';
 import { prepareSourceRepo } from './utils/prepare-source-repo';
 import { mergeRemoteSource } from './utils/merge-remote-source';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import {
   configurePlugins,
   installPluginPackages,
@@ -788,7 +788,7 @@ async function handleMissingWorkspacesEntry(
     });
   } else {
     let workspaces: string[] = getPackageWorkspaces(pm, workspaceRoot);
-    const isPkgIncluded = workspaces.some((w) => minimatch(pkgPath, w));
+    const isPkgIncluded = workspaces.some((w) => picomatch.isMatch(pkgPath, w));
     if (isPkgIncluded) {
       return;
     }

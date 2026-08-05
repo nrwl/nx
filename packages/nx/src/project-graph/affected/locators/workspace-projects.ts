@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import {
   createProjectRootMappings,
@@ -50,7 +50,7 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 
   for (const [pattern, projects] of Object.entries(implicits)) {
     const implicitDependencyWasChanged = fileChanges.some((f) =>
-      minimatch(f.file, pattern, { dot: true })
+      picomatch.isMatch(f.file, pattern, { dot: true })
     );
     if (!implicitDependencyWasChanged) {
       continue;

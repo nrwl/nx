@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join } from 'path';
-import { minimatch } from 'minimatch';
+import picomatch from 'picomatch';
 import { lt, rcompare, satisfies, validRange } from 'semver';
 import { MS_PER_MINUTE } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
@@ -231,12 +231,12 @@ function parseExcludeEntry(entry: string): ExcludeMatcher | null {
     return null;
   }
   // checkIdent matches the ident first (exact identHash OR an unconditional
-  // micromatch) and only then applies the range, so run minimatch on every
-  // entry - no isGlob gate - to catch extglobs (`+(...)`, `@(...)`) yarn would
-  // glob-match. Residual: minimatch and micromatch disagree on `!(foo)`
-  // negation, which cannot be reconciled without micromatch (not an allowed
-  // dep).
-  const nameMatches = (pkg: string) => pkg === name || minimatch(pkg, name);
+  // micromatch) and only then applies the range, so glob-match every entry -
+  // no isGlob gate - to catch extglobs (`+(...)`, `@(...)`) yarn would
+  // glob-match. picomatch is micromatch's engine, so `!(foo)` negation now
+  // matches yarn's behavior too.
+  const nameMatches = (pkg: string) =>
+    pkg === name || picomatch.isMatch(pkg, name);
   if (range) {
     if (!validRange(range)) {
       // yarn parses the version part as a semver range; an invalid one bypasses
