@@ -9,9 +9,10 @@ import {
 import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
 /**
- * The root config a root project rewrites in place. Not where generated
- * `extends` targets come from — those come from the ancestor walk, narrowed by
- * the `.jsonc?` test in `addPluginsToOxlintConfig` rather than by this list.
+ * The root config a root project rewrites in place — though the `.json` check
+ * below still refuses `.jsonc`. Not where generated `extends` targets come from:
+ * those come from the ancestor walk, narrowed by the `.jsonc?` test in
+ * `addPluginsToOxlintConfig` rather than by this list.
  */
 const EXTENDABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
   /\.jsonc?$/.test(file)
@@ -111,9 +112,8 @@ export function addPluginsToOxlintConfig(
       : (existingProjectConfig ??
         joinPathFragments(projectRoot, '.oxlintrc.json'));
 
-  // Only plain JSON survives a rewrite: `updateJson` would strip a `.jsonc`'s
-  // comments, and cannot parse a TypeScript config at all. Warn rather than fall
-  // through to `writeJson`, which would create the second config Oxlint rejects.
+  // Only plain JSON survives a rewrite: without this, `updateJson` strips a
+  // `.jsonc`'s comments and throws outright on a TypeScript config.
   if (!projectConfigPath.endsWith('.json')) {
     const reason = projectConfigPath.endsWith('.jsonc')
       ? `rewriting ${projectConfigPath} would strip its comments`
