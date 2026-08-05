@@ -154,10 +154,11 @@ function homeSocketRoot(): string | undefined {
  * `removeSocketDir` aims a recursive delete at it.
  *
  * Resolves the longest ancestor that exists and re-appends the rest, because
- * both sides of the comparison go through here and **every root in the refusal
- * list is absent before Nx's first run**. Canonicalizing only whole existing
- * paths would leave the check degraded to the exact string match it replaced on
- * precisely a fresh machine — where `/tmp/.nx` does not exist yet, but `/tmp`
+ * both sides of the comparison go through here and **Nx's own roots are absent
+ * before its first run** — the system temp dir always exists, but `/tmp/.nx`,
+ * `~/.nx` and the cache roots do not. Canonicalizing only whole existing paths
+ * would leave the check degraded to the exact string match it replaced on
+ * precisely a fresh machine, where `/tmp/.nx` does not exist yet but `/tmp`
  * already resolves to `/private/tmp`.
  *
  * Only `ENOENT` walks up. `ELOOP`, `ENOTDIR` and `EACCES` mean the path exists
