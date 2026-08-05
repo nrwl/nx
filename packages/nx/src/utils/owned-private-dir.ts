@@ -136,34 +136,23 @@ const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
 /**
  * What the user can do about a refusal, or `undefined` when there is nothing.
  *
- * Only the shared container held by another unprivileged user has the "hand it
- * to root" fix, and `shared` is what identifies it: Nx cannot chown it, and
- * refusing it is what stops that user renaming our directory aside. Keyed off
- * the refusal the guard already produced, so the ownership rule is evaluated
- * once rather than re-derived from a second `lstat` that could drift from it.
+ * Only a shared container held by another unprivileged user has the "hand it to
+ * root" fix, which is what `shared` identifies.
  *
- * Root already owning the shared container is the desired end state, so that
- * case has nothing to ask for.
- *
- * A per-user directory gets different advice, not the same advice narrowed.
- * Handing one to root cannot help — `ensureOwnedPrivateDir` has no uid-0
- * exemption, so it would stay refused — and removing it is usually not the
- * user's to do: the container above it is sticky whenever a peer could have
- * planted there. `NX_SOCKET_DIR` is the lever that always works.
+ * Who can clear a per-user directory depends on who owns its *parent*, which the
+ * refusal does not carry — so the sentence names the condition rather than
+ * guessing. `rm` cannot help: a directory Nx created is `0700`, so a foreign
+ * one cannot be emptied by us.
  */
 export function remedyFor(r: DirRefusal): string | undefined {
   if (r.kind !== 'foreign-owner') {
     return undefined;
   }
   if (!r.shared) {
-    // Not "remove it": a sticky container restricts unlink to the entry's
-    // owner, the container's owner, or root — never us. And this branch is
-    // reached only under a container `isSafeSharedRoot` accepted, which is
-    // sticky whenever a peer could write to it.
-    return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or ask an administrator to remove it.`;
+    return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or move it aside — which you can do yourself if you own the directory it sits in, and otherwise needs an administrator.`;
   }
-  // Only for the shared container: root owning it is what the provisioning step
-  // establishes, so there is nothing left to ask for.
+  // Unreachable today: `isSafeSharedRoot` accepts a root-owned container rather
+  // than refusing it, so no guard emits `shared` with uid 0.
   if (r.uid === 0) {
     return undefined;
   }

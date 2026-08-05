@@ -258,23 +258,29 @@ describe('ensureOwnedPrivateDir', () => {
       // hatch, which is the only lever this user reliably has.
       expect(remedy).toContain('/tmp/.nx/501/sockets');
       expect(remedy).toContain('NX_SOCKET_DIR');
+      // Both halves of the condition. Who can clear the directory depends on
+      // who owns its parent, and dropping either half survives every other
+      // assertion here.
+      expect(remedy).toContain('yourself');
+      expect(remedy).toContain('administrator');
     });
 
-    it('should not tell a user to remove a directory a sticky parent protects', () => {
-      // The container above a per-user directory is sticky whenever a peer could
-      // have planted there, so unlink is the entry owner's, the container
-      // owner's, or root's — never ours. "Remove it" unqualified is dead advice.
+    it('should not tell a user to remove a directory they cannot remove', () => {
+      // `rm` cannot help on any directory this branch reaches — a foreign-owned
+      // 0700 directory cannot be emptied by us — so no phrasing of "remove it"
+      // belongs here.
       const remedy = remedyFor({
         kind: 'foreign-owner',
         dir: '/tmp/.nx/501',
         uid: 1002,
       });
-      expect(remedy).not.toMatch(/^.*\bRemove it\b/);
+      expect(remedy).not.toMatch(/remove it/i);
     });
 
-    it('should offer no remedy for a per-user directory root owns', () => {
-      // Handing it to root is what already happened; the uid-0 exemption is for
-      // the shared container, where root ownership is the goal.
+    it('should still point a per-user directory at NX_SOCKET_DIR when root owns it', () => {
+      // Reachable after one `sudo nx`, or in a root-provisioned image run as a
+      // non-root user. The uid-0 exemption below belongs to the shared
+      // container, so this shape still gets advice.
       expect(
         remedyFor({ kind: 'foreign-owner', dir: '/home/me/.nx', uid: 0 })
       ).toContain('NX_SOCKET_DIR');
