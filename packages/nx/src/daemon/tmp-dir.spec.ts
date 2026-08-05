@@ -8,7 +8,7 @@ import {
   getSocketDir,
   getSocketDirFallbackCause,
   InvalidSocketDirConfigured,
-  resetWorkspaceFallbackWarningForTesting,
+  resetSocketDirWarningsForTesting,
 } from './tmp-dir';
 import {
   ensureOwnedPrivateDir,
@@ -89,7 +89,7 @@ describe('socket directories', () => {
     (isSandbox as jest.Mock).mockReturnValue(false);
     // The workspace-fallback warning is latched once per process, so without
     // this only the first test staging that fallback would see it.
-    resetWorkspaceFallbackWarningForTesting();
+    resetSocketDirWarningsForTesting();
     delete process.env.NX_SOCKET_DIR;
     delete process.env.NX_DAEMON_SOCKET_DIR;
     setPlatform(originalPlatform);
@@ -262,11 +262,12 @@ describe('socket directories', () => {
 
       homelessSocketDir();
 
+      // Asserted as the whole clause, positively. The literal text `undefined`
+      // was the *old* bug's symptom (template interpolation); dropping
+      // .filter(Boolean) now yields a dangling "only /tmp/.nx or does not
+      // cover", which no absence-of-'undefined' check can see.
       expect(isolatedLogger.warn).toHaveBeenCalledWith(
-        expect.stringMatching(/allowlist/i)
-      );
-      expect(isolatedLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('undefined')
+        expect.stringContaining('covering only /tmp/.nx does not cover')
       );
     });
     jest.dontMock('node:os');
@@ -539,6 +540,44 @@ describe('socket directories', () => {
       expect(() => getSocketDir()).toThrow(InvalidSocketDirConfigured);
     } finally {
       realFs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // The refused root that does *not* exist yet is the case that matters: every
+  // root in the refusal list is absent before Nx's first run, and canonicalizing
+  // only whole existing paths degrades the check to the string match it
+  // replaced on exactly a fresh machine. Staged through the home root, since
+  // that one can be relocated to a directory this test controls.
+  it('refuses an aliased spelling of a root that does not exist yet', () => {
+    setPlatform('linux');
+    const realFs = jest.requireActual('node:fs');
+    const home = realFs.mkdtempSync(join(systemTmpDir, 'nx-fresh-home-'));
+    const aliasBase = realFs.mkdtempSync(join(systemTmpDir, 'nx-fresh-alias-'));
+    const alias = join(aliasBase, 'link');
+    realFs.symlinkSync(home, alias);
+
+    try {
+      jest.isolateModules(() => {
+        jest.doMock('node:os', () => ({
+          ...jest.requireActual('node:os'),
+          homedir: () => home,
+        }));
+        const {
+          getSocketDir: freshSocketDir,
+          InvalidSocketDirConfigured: Ctor,
+        } = require('./tmp-dir');
+
+        // `<home>/.nx` has never been created; `<alias>/.nx` is the same
+        // directory reached through a symlinked parent.
+        expect(realFs.existsSync(join(home, '.nx'))).toBe(false);
+        process.env.NX_SOCKET_DIR = join(alias, '.nx');
+
+        expect(() => freshSocketDir()).toThrow(Ctor);
+      });
+      jest.dontMock('node:os');
+    } finally {
+      realFs.rmSync(home, { recursive: true, force: true });
+      realFs.rmSync(aliasBase, { recursive: true, force: true });
     }
   });
 
