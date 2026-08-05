@@ -57,7 +57,11 @@ describe('addPluginsToOxlintConfig', () => {
       'vue',
       'react',
     ]);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('no "extends"'));
+    const message = warn.mock.calls[0][0];
+    expect(message).toContain('no "extends"');
+    // Pin the claim, not just the prefix: an earlier version of this message
+    // said the plugins would not run at all, which is measurably false.
+    expect(message).toContain("still run, but under Oxlint's defaults");
   });
 
   it('should stay quiet when the project config already extends the root', () => {
@@ -171,6 +175,23 @@ describe('addPluginsToOxlintConfig', () => {
     // discard the one thing the .jsonc format exists for.
     expect(tree.read('apps/my-app/.oxlintrc.jsonc', 'utf-8')).toContain(
       '// keep this'
+    );
+  });
+
+  it('should keep comments in a root .oxlintrc.jsonc for a root project', () => {
+    tree.delete('.oxlintrc.json');
+    tree.write(
+      '.oxlintrc.jsonc',
+      '{\n  // keep this\n  "plugins": ["vue"]\n}\n'
+    );
+
+    addPluginsToOxlintConfig(tree, '.', ['react']);
+
+    // A root project rewrites the root config itself, so the `.json` refusal has
+    // to hold for the root too — not just for a project subdirectory.
+    expect(tree.read('.oxlintrc.jsonc', 'utf-8')).toContain('// keep this');
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('strip its comments')
     );
   });
 });

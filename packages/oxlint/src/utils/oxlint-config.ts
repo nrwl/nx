@@ -99,10 +99,9 @@ export function addPluginsToOxlintConfig(
   if (tree.exists(projectConfigPath)) {
     updateJson<OxlintConfig>(tree, projectConfigPath, (json) => {
       json.plugins = union(json.plugins ?? [], plugins);
-      // Deliberately not adding one: an existing config without `extends` may
-      // be isolating from the root on purpose. Narrow on purpose too — an
-      // `extends` pointing somewhere other than the root, or a TypeScript root
-      // (which nothing can extend), are also isolated but have no fix to offer.
+      // Not added automatically: a config without `extends` may be isolating
+      // from the root on purpose. Silent when an `extends` exists (it may reach
+      // the root through a preset) or the root is TypeScript (unextendable).
       if (rootConfigPath && !json.extends?.length && projectRoot !== '.') {
         logger.warn(
           `"${projectRoot}" has an Oxlint config with no "extends", so ${rootConfigPath}'s ` +
