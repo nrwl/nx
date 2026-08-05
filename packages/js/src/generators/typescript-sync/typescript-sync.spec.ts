@@ -225,6 +225,123 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    describe('nx.sync.ignoredProjects', () => {
+      beforeEach(() => {
+        addProject('nested-app', [], [], 'examples/nested/app');
+        addProject('nested-lib', [], [], 'examples/nested/lib');
+      });
+
+      function setIgnoredProjects(ignoredProjects: string[]) {
+        updateJson(tree, 'tsconfig.json', (json) => ({
+          ...json,
+          nx: { sync: { ignoredProjects } },
+        }));
+      }
+
+      it('should not add a reference for an ignored project', async () => {
+        setIgnoredProjects(['nested-app', 'nested-lib']);
+
+        await syncGenerator(tree);
+
+        expect(readJson(tree, 'tsconfig.json').references).toEqual([
+          { path: './packages/a' },
+          { path: './packages/b' },
+        ]);
+      });
+
+      it('should match by directory', async () => {
+        // directory patterns are globs against the project root, not prefixes
+        setIgnoredProjects(['directory:examples/**']);
+
+        await syncGenerator(tree);
+
+        expect(readJson(tree, 'tsconfig.json').references).toEqual([
+          { path: './packages/a' },
+          { path: './packages/b' },
+        ]);
+      });
+
+      it('should match by name glob', async () => {
+        setIgnoredProjects(['nested-*']);
+
+        await syncGenerator(tree);
+
+        expect(readJson(tree, 'tsconfig.json').references).toEqual([
+          { path: './packages/a' },
+          { path: './packages/b' },
+        ]);
+      });
+
+      it('should prune an existing reference to an ignored project', async () => {
+        updateJson(tree, 'tsconfig.json', (json) => ({
+          ...json,
+          nx: { sync: { ignoredProjects: ['nested-*'] } },
+          references: [
+            { path: './packages/a' },
+            { path: './examples/nested/app' },
+          ],
+        }));
+
+        const result = await syncGenerator(tree);
+
+        expect(readJson(tree, 'tsconfig.json').references).toEqual([
+          { path: './packages/a' },
+          { path: './packages/b' },
+        ]);
+        expect((result as any).outOfSyncDetails).toContain(
+          '  - Stale references: examples/nested/app/tsconfig.json'
+        );
+      });
+
+      it('should not affect references between projects', async () => {
+        // nested-lib is ignored at the root, but `a` genuinely depends on it,
+        // so `a`'s own tsconfig must still reference it.
+        addProject('depends-on-nested', ['nested-lib'], [], 'packages/dep');
+        setIgnoredProjects(['nested-lib']);
+
+        await syncGenerator(tree);
+
+        expect(readJson(tree, 'packages/dep/tsconfig.json').references).toEqual(
+          [{ path: '../../examples/nested/lib' }]
+        );
+        expect(readJson(tree, 'tsconfig.json').references).not.toContainEqual({
+          path: './examples/nested/lib',
+        });
+      });
+
+      it('should filter nothing when unset', async () => {
+        await syncGenerator(tree);
+
+        expect(readJson(tree, 'tsconfig.json').references).toEqual([
+          { path: './packages/a' },
+          { path: './packages/b' },
+          { path: './examples/nested/app' },
+          { path: './examples/nested/lib' },
+        ]);
+      });
+    });
+
+    it('should not report a non-composite project as a missing reference', async () => {
+      addProject('not-composite', [], [], 'packages/not-composite');
+      writeJson(tree, 'packages/not-composite/tsconfig.json', {
+        compilerOptions: {},
+      });
+
+      const result = await syncGenerator(tree);
+
+      // It is dropped before writing, so it must never be named as a reason
+      // the workspace is out of sync.
+      expect((result as any).outOfSyncDetails).toStrictEqual([
+        'tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json, packages/b/tsconfig.json',
+        'packages/b/tsconfig.json:',
+        '  - Missing references: packages/a/tsconfig.json',
+      ]);
+      expect(readJson(tree, 'tsconfig.json').references).not.toContainEqual({
+        path: './packages/not-composite',
+      });
+    });
+
     it('should respect existing project references and discard non-existing ones in the tsconfig.json', async () => {
       writeJson(tree, 'tsconfig.json', {
         compilerOptions: {

@@ -12,6 +12,7 @@ import {
 import ignore from 'ignore';
 import { applyEdits, modify } from 'jsonc-parser';
 import { dirname, normalize, relative } from 'node:path/posix';
+import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import {
   SyncError,
   type SyncGeneratorResult,
@@ -30,6 +31,7 @@ interface Tsconfig {
     sync?: {
       ignoredReferences?: string[];
       ignoredDependencies?: string[];
+      ignoredProjects?: string[];
     };
   };
 }
@@ -99,6 +101,17 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     }
   );
 
+  // Projects the user has opted out of the root solution, e.g. a nested
+  // standalone workspace that must not be pulled into the root `tsc --build`.
+  // Scoped to the root tsconfig: projects that genuinely depend on an ignored
+  // project still reference it from their own tsconfig.
+  const ignoredProjectRoots = new Set(
+    findMatchingProjects(
+      rootTsconfig.nx?.sync?.ignoredProjects ?? [],
+      projectGraph.nodes
+    ).map((name) => normalizeReferencePath(projectGraph.nodes[name].data.root))
+  );
+
   const tsSysFromTree: ts.System = {
     ...ts.sys,
     fileExists(path) {
@@ -153,7 +166,10 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
         continue;
       }
 
-      if (tsconfigExists(tree, tsconfigInfoCaches, resolvedRefPath)) {
+      if (
+        tsconfigExists(tree, tsconfigInfoCaches, resolvedRefPath) &&
+        !ignoredProjectRoots.has(normalizedPath)
+      ) {
         // we only keep the references that still exist
         referencesSet.add(normalizedPath);
       } else {
@@ -169,7 +185,22 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
     for (const node of tsconfigProjectNodeValues) {
       const normalizedPath = normalizeReferencePath(node.data.root);
       // Skip the root tsconfig itself
-      if (node.data.root !== '.' && !referencesSet.has(normalizedPath)) {
+      if (
+        node.data.root !== '.' &&
+        !referencesSet.has(normalizedPath) &&
+        !ignoredProjectRoots.has(normalizedPath)
+      ) {
+        // Non-composite projects are dropped when writing below, so reporting
+        // them here would name a reference that can never be satisfied.
+        if (
+          !hasCompositeEnabled(
+            tsSysFromTree,
+            tsconfigInfoCaches,
+            joinPathFragments(normalizedPath, 'tsconfig.json')
+          )
+        ) {
+          continue;
+        }
         referencesSet.add(normalizedPath);
         addChangedFile(
           changedFiles,
@@ -182,7 +213,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     if (changedFiles.size > 0) {
       const updatedReferences = Array.from(referencesSet)
-        // Check composite is true in the internal reference before proceeding
+        // Pre-existing references skip the check above, so still filter here.
         .filter((ref) =>
           hasCompositeEnabled(
             tsSysFromTree,
