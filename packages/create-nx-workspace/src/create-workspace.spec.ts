@@ -25,6 +25,25 @@ describe('createWorkspace - template flow', () => {
       rmSync(tmpDir, { recursive: true, force: true });
     }
   });
+
+  it('rejects templates that escape the nrwl org via path traversal', async () => {
+    for (const template of [
+      'nrwl/../evil',
+      'nrwl/../../evil/repo',
+      'nrwl/..\\evil\\repo',
+      'nrwl/',
+    ]) {
+      await expect(
+        createWorkspace(undefined, {
+          template,
+          name: 'proj',
+          packageManager: 'npm',
+          nxCloud: 'skip',
+          workingDir: tmpdir(),
+        } as any)
+      ).rejects.toThrow(/Invalid template/);
+    }
+  });
 });
 
 describe('extractConnectUrl', () => {

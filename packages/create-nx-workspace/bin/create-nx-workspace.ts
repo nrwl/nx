@@ -518,25 +518,6 @@ async function normalizeArgsMiddleware(
   try {
     rawArgs = { ...argv };
 
-    // Map invalid/legacy presets to templates for all users
-    // These presets don't exist as npm packages and would fail if not mapped
-    const invalidPresetToTemplateMap: Record<string, string> = {
-      empty: 'nrwl/empty-template',
-    };
-
-    if (rawArgs.preset && !rawArgs.template) {
-      const mappedTemplate = invalidPresetToTemplateMap[rawArgs.preset];
-      if (mappedTemplate) {
-        output.log({
-          title: `Mapping preset '${rawArgs.preset}' to template '${mappedTemplate}'`,
-        });
-        argv.template = mappedTemplate;
-        rawArgs.template = mappedTemplate;
-        delete argv.preset;
-        delete rawArgs.preset;
-      }
-    }
-
     // AI Agent Detection: When an AI agent is detected, switch to AI-optimized mode
     const aiMode = isAiAgent();
 
@@ -545,7 +526,9 @@ async function normalizeArgsMiddleware(
       argv.interactive = false;
 
       // Map legacy presets to templates for AI agents
-      // Many AI models were trained on old preset syntax, so we convert them
+      // Many AI models were trained on old preset syntax, so we convert them.
+      // Never add `empty` here - it must stay npm-only as the escape hatch
+      // when github.com is unreachable (see applyEmptyPresetAlias).
       const legacyPresetToTemplateMap: Record<string, string> = {
         ts: 'nrwl/empty-template',
         apps: 'nrwl/empty-template',
@@ -616,6 +599,8 @@ async function normalizeArgsMiddleware(
           "Let's create a new workspace [https://nx.dev/getting-started/intro]",
       });
     }
+
+    applyEmptyPresetAlias(argv);
 
     argv.workspaces ??= true;
     argv.useProjectJson ??= !argv.workspaces;
@@ -814,6 +799,19 @@ async function normalizeArgsMiddleware(
     }
   } catch (error) {
     handleError(error);
+  }
+}
+
+// Map `empty` to the `ts` preset, not the template - sandboxed agents often
+// cannot reach github.com. Wins over --template so appending --preset=empty
+// to a failed command escapes the download.
+export function applyEmptyPresetAlias(argv: {
+  preset?: Preset | 'empty';
+  template?: string;
+}): void {
+  if (argv.preset === 'empty') {
+    argv.preset = Preset.TS;
+    delete argv.template;
   }
 }
 
