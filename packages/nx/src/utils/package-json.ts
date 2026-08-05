@@ -27,7 +27,7 @@ import { readJson } from '../generators/utils/json';
 import { readTargetDefaultsForTarget } from '../project-graph/utils/project-configuration-utils';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
-import { readJsonFile, readYamlFile } from './fileutils';
+import { readJsonFile, readYamlFile, writeJsonFile } from './fileutils';
 import { logger } from './logger';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
 import { getNxRequirePaths } from './installation-directory';
@@ -850,9 +850,7 @@ export function getPrunedPnpmInstallSettingsYaml(
   // pnpm 11 was the first major to read these settings only from
   // pnpm-workspace.yaml; later majors keep that behavior. pnpm 10 and below
   // still read them from the emitted package.json, so nothing to carry.
-  const pnpmMajor = precomputed
-    ? precomputed.pnpmMajor
-    : getPnpmMajor(workspaceRootPath);
+  const pnpmMajor = resolvePnpmMajor(precomputed, workspaceRootPath);
   if (pnpmMajor === null || pnpmMajor < 11) {
     return null;
   }
@@ -936,6 +934,20 @@ function getPnpmMajorOrWarn(workspaceRootPath: string): number | null {
     );
   }
   return pnpmMajor;
+}
+
+/**
+ * The pnpm major each install-settings builder works from. Probing is skipped
+ * whenever an orchestrator passed its own config, on the presence of that config
+ * rather than on the value: a precomputed `null` means the probe already failed
+ * and warned, and re-probing it here could disagree with what the sibling
+ * builders decided from that same `null`.
+ */
+function resolvePnpmMajor(
+  precomputed: PrunedPnpmConfig | undefined,
+  workspaceRootPath: string
+): number | null {
+  return precomputed ? precomputed.pnpmMajor : getPnpmMajor(workspaceRootPath);
 }
 
 /**
@@ -1237,9 +1249,7 @@ export function getPrunedPnpmPackageJsonBuildSettings(
   prunedLockfileContent?: string,
   precomputed?: PrunedPnpmConfig
 ): PrunedPnpmPackageJsonBuildSettings | null {
-  const pnpmMajor = precomputed
-    ? precomputed.pnpmMajor
-    : getPnpmMajor(workspaceRootPath);
+  const pnpmMajor = resolvePnpmMajor(precomputed, workspaceRootPath);
   if (pnpmMajor === null || pnpmMajor >= 11) {
     return null;
   }
@@ -1388,9 +1398,7 @@ export function getPrunedPnpmPatchArtifacts(
       );
     }
   }
-  const pnpmMajor = precomputed
-    ? precomputed.pnpmMajor
-    : getPnpmMajor(workspaceRootPath);
+  const pnpmMajor = resolvePnpmMajor(precomputed, workspaceRootPath);
   return {
     patchFiles,
     packageJsonPatchedDependencies:
@@ -2292,7 +2300,7 @@ export function writePrunedPnpmInstallSettings(
         buildSettings,
         packageJsonPatchedDependencies
       );
-      writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+      writeJsonFile(packageJsonPath, packageJson);
     }
   }
 }

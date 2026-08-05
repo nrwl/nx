@@ -635,10 +635,7 @@ export function stringifyPnpmLockfile(
         )) {
           if (workspaceModules.has(name)) {
             peers.workspaceSiblings.push(name);
-          } else if (
-            typeof spec === 'string' &&
-            (spec.startsWith('file:') || spec.startsWith('link:'))
-          ) {
+          } else if (typeof spec === 'string' && isLocalPathSpecifier(spec)) {
             peers.localPathPeers.push([name, spec]);
           }
         }
