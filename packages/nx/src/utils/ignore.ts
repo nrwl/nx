@@ -13,11 +13,12 @@ export function getIgnoreObject(
   return ig;
 }
 
-/** An ignore matcher paired with the directory its patterns are rooted at. */
+/** One directory's ignore files, and the directory its patterns are rooted at. */
 export type ScopedIgnoreMatcher = {
   /** Workspace-relative POSIX directory, `''` for the workspace root. */
   dir: string;
-  matcher: ReturnType<typeof ignore>;
+  /** One matcher per ignore file, never merged - see `isIgnoredByChain`. */
+  matchers: ReturnType<typeof ignore>[];
 };
 
 /**
@@ -50,19 +51,14 @@ export function createIgnoreChainResolver(
       return cached;
     }
 
-    const contents = filenames
+    const matchers = filenames
       .map((name) => read(dir ? `${dir}/${name}` : name))
-      .filter((c): c is string => !!c);
+      .filter((c): c is string => !!c)
+      .map((contents) => ignore().add(contents));
 
     const inherited = dir === '' ? [] : resolve(posixDirname(dir));
-    let chain = inherited;
-    if (contents.length > 0) {
-      const matcher = ignore();
-      for (const c of contents) {
-        matcher.add(c);
-      }
-      chain = [{ dir, matcher }, ...inherited];
-    }
+    const chain =
+      matchers.length > 0 ? [{ dir, matchers }, ...inherited] : inherited;
 
     cache.set(dir, chain);
     return chain;
@@ -78,8 +74,14 @@ export function createIgnoreChainResolver(
  * is what makes a nested pattern like `/build` mean that directory's `build`
  * rather than the workspace's.
  *
- * First file with an *opinion* wins, not first match: a nested `!keep.log` must
- * override the root's `*.log`, which is git's rule.
+ * Nearest directory with an *opinion* wins, not the first match: a nested
+ * `!keep.log` must override the root's `*.log`, which is git's rule.
+ *
+ * Within one directory the files are never merged - any one of them excluding
+ * the file wins, and a negation only counts if none of them excluded it. That is
+ * prettier's rule (`createIsIgnoredFunction` builds an ignorer per
+ * `--ignore-path` and ORs them), so a `!x` in `.prettierignore` cannot
+ * re-include an `x` that `.gitignore` excluded.
  *
  * `filePath` is workspace-relative POSIX and must sit under every `dir` in the
  * chain - which holds when the chain came from that file's own directory.
@@ -88,13 +90,17 @@ export function isIgnoredByChain(
   chain: ScopedIgnoreMatcher[],
   filePath: string
 ): boolean {
-  for (const { dir, matcher } of chain) {
+  for (const { dir, matchers } of chain) {
     const relative = dir === '' ? filePath : filePath.slice(dir.length + 1);
-    const result = matcher.test(relative);
-    if (result.ignored) {
-      return true;
+    let unignored = false;
+    for (const matcher of matchers) {
+      const result = matcher.test(relative);
+      if (result.ignored) {
+        return true;
+      }
+      unignored ||= result.unignored;
     }
-    if (result.unignored) {
+    if (unignored) {
       return false;
     }
   }
@@ -131,8 +137,8 @@ export function isAlwaysIgnored(path: string): boolean {
  * (measured), so cascading here would skip files `nx format:check` still checks,
  * leaving them committed unformatted.
  *
- * `filenames` are merged into one matcher per directory, in array order, so a
- * later file's negation beats an earlier file's pattern.
+ * `filenames` are kept as separate matchers, so one of them excluding a file
+ * cannot be undone by a negation in another - see `isIgnoredByChain`.
  */
 export function createTreeIgnoreChecker(
   tree: Tree,

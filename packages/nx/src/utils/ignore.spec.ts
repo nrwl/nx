@@ -73,6 +73,28 @@ describe('createIgnoreChainResolver', () => {
     expect(ignores(files, 'apps/bar/keep.log')).toBe(true);
   });
 
+  it('does not let one file negate another file in the same directory', () => {
+    // prettier builds an ignorer per ignore file and ORs them, so a `!` in one
+    // cannot re-include what another excluded. Merging them into one matcher
+    // would, and would reformat a file the user deliberately excluded.
+    const files = {
+      '.gitignore': 'both.ts\n',
+      '.prettierignore': '!both.ts\n',
+    };
+    const filenames = ['.gitignore', '.prettierignore'];
+
+    expect(ignores(files, 'both.ts', filenames)).toBe(true);
+    // Order must not matter either.
+    expect(ignores(files, 'both.ts', [...filenames].reverse())).toBe(true);
+  });
+
+  it('still honours a negation within a single file', () => {
+    const files = { '.gitignore': '*.log\n!keep.log\n' };
+
+    expect(ignores(files, 'keep.log')).toBe(false);
+    expect(ignores(files, 'other.log')).toBe(true);
+  });
+
   it('reads every configured filename in a directory', () => {
     const files = {
       'apps/foo/.gitignore': 'a.ts\n',

@@ -36,10 +36,11 @@ function visitDirectory(
   visitor: (path: string) => void,
   isIgnored: (path: string) => boolean
 ): void {
-  // A short-circuit, not a correctness guard: every child would be skipped
-  // individually anyway, since a pattern that excludes a directory also
-  // excludes its contents. It saves the `children` call for the entry
-  // directory, which is the only one not already filtered by the loop below.
+  // Fires only for the entry directory - every deeper one is already filtered
+  // by the loop below. Not redundant: an ignore file *inside* an excluded
+  // directory can un-ignore its own children, since the chain stops at the
+  // nearest opinion. git never descends that far, so pruning here is what
+  // matches it.
   if (dirPath !== '' && isIgnored(dirPath)) {
     return;
   }
