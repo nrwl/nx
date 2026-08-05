@@ -192,6 +192,22 @@ describe('@nx/oxlint plugin', () => {
     });
   });
 
+  // Without the root short-circuit, `lintPath` falls through to `.` and the root
+  // project gets `oxlint .`, re-linting every sub-project on top of its own target.
+  it('should not give a root project a task when it has no src or lib', async () => {
+    createFiles({
+      '.oxlintrc.json': `{"rules":{}}`,
+      'package.json': `{"name":"root-workspace","nx":{}}`,
+      'index.ts': `export const value = 1;`,
+      'libs/a/project.json': `{"name":"a"}`,
+      'libs/a/index.ts': `export const a = 1;`,
+    });
+
+    const results = await invokeCreateNodesOnMatchingFiles(context);
+
+    expect(Object.keys(results.projects)).toEqual(['libs/a']);
+  });
+
   it('should not invent a root project that Nx itself does not create', async () => {
     createFiles({
       '.oxlintrc.json': `{"rules":{}}`,
