@@ -116,6 +116,17 @@ describe('daemonPermissionException', () => {
     expect(error.message).toContain('NX_SOCKET_DIR');
   });
 
+  // Nothing else reads the sandbox half, so a revert to wording that omits
+  // `allowAllUnixSockets` would go unnoticed. The KB page states that a scoped
+  // allowlist permits connecting but not creating, which is what a fresh daemon
+  // needs, so the message has to name the broader setting and the page.
+  it('should tell a sandboxed user that a scoped allowlist is not enough', () => {
+    const { message } = daemonPermissionException(socketPath, 'connect EPERM');
+
+    expect(message).toContain('allowAllUnixSockets: true');
+    expect(message).toContain('https://nx.dev/docs/kb/nx-sandbox-unix-sockets');
+  });
+
   // The errno has to be on the first line specifically, not merely somewhere in
   // the message: createProjectGraphAndSourceMapsAsync renders this as an
   // output.note using line 0 as the title and the rest as bodyLines. It is also
