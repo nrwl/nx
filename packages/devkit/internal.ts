@@ -147,6 +147,7 @@ export {
   WholeFileChange,
   buildPackageJsonPatterns,
   buildPackageJsonWorkspacesMatcher,
+  handleImport,
   buildProjectGraphAndSourceMapsWithoutDaemon,
   calculateFileChanges,
   calculateReverseDeps,
