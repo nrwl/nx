@@ -11,12 +11,15 @@ import {
 import { userInfo } from 'node:os';
 
 /**
- * Each guard returns its own branded path rather than a bare boolean, so one
- * guard's result cannot be stored in, or passed where the code expects,
- * another's. Note the limit: every call site today tests truthiness, and a
- * boolean context accepts any brand, so this catches a future edit rather than
- * a wrong call in an `if`. `null` is the single failure value throughout, so
- * those truthiness callers are unaffected.
+ * Each guard's success arm carries its own branded path, so one guard's result
+ * cannot be stored in, or passed where the code expects, another's.
+ *
+ * The failure value is **not** falsy. Four of these guards return
+ * `GuardResult<T>`, and a refusal is an object, so `if (!ensureOwnedPrivateDir(d))`
+ * is always false and would accept every refused directory — on the path this
+ * module exists to secure. Test `.status`, never truthiness. `isOwnedRealDirectory`
+ * is the one guard still returning `T | null`, and it is the only one a
+ * truthiness test is correct for.
  */
 declare const safeSharedRootBrand: unique symbol;
 declare const sharedRootEstablishedBrand: unique symbol;
@@ -59,7 +62,12 @@ export type DirRefusal =
   | { kind: 'not-created'; dir: string; code?: string }
   | { kind: 'not-inspectable'; dir: string; code?: string }
   | { kind: 'not-a-directory'; dir: string }
-  | { kind: 'foreign-owner'; dir: string; uid: number }
+  // `shared` is set only by `isSafeSharedRoot`, i.e. only for the one container
+  // several users are meant to share. It is what makes `remedyFor`'s "hand it to
+  // root" advice correct by construction: the same kind from
+  // `ensureOwnedPrivateDir` describes a per-user directory, where that advice
+  // cannot work and would widen the 0700 boundary this module establishes.
+  | { kind: 'foreign-owner'; dir: string; uid: number; shared?: true }
   | { kind: 'not-tightenable'; dir: string; mode: number }
   | { kind: 'peer-writable-not-sticky'; dir: string; mode: number };
 
@@ -109,23 +117,45 @@ export function describeRefusal(r: DirRefusal): string {
       return `${r.dir} is writable by other users but not sticky (mode ${asMode(
         r.mode
       )}), so a peer could replace directories inside it`;
+    default: {
+      // This repo sets `strict: false` and leaves `noImplicitReturns` unset, so
+      // a new DirRefusal member would otherwise compile here and render as
+      // `undefined` inside the aggregate message. Assignability to `never` still
+      // holds under these settings, so this is a real compile-time guard.
+      const unhandled: never = r;
+      throw new Error(
+        `Unhandled directory refusal: ${(unhandled as any).kind}`
+      );
+    }
   }
 }
+
+/** Single-quoted for a shell, so a path with a space or quote survives a paste. */
+const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
 
 /**
  * What the user can do about a refusal, or `undefined` when there is nothing.
  *
- * Only a container held by another unprivileged user has an actionable fix, and
- * it is to hand it to root: Nx cannot chown it, and refusing it is what stops
- * that user renaming our directory aside. Keyed off the refusal the guard
- * already produced, so the ownership rule is evaluated once rather than
- * re-derived from a second `lstat` that could drift from it.
+ * Only the shared container held by another unprivileged user has the "hand it
+ * to root" fix, and `shared` is what identifies it: Nx cannot chown it, and
+ * refusing it is what stops that user renaming our directory aside. Keyed off
+ * the refusal the guard already produced, so the ownership rule is evaluated
+ * once rather than re-derived from a second `lstat` that could drift from it.
+ *
+ * A per-user directory gets the opposite advice. Handing one to root does not
+ * help — `ensureOwnedPrivateDir` has no uid-0 exemption, so it stays refused,
+ * and `remedyFor` then returns `undefined`, leaving the user with a widened
+ * directory and no guidance at all.
  */
 export function remedyFor(r: DirRefusal): string | undefined {
   if (r.kind !== 'foreign-owner' || r.uid === 0) {
     return undefined;
   }
-  return `${r.dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${r.dir} && sudo chmod 1777 ${r.dir}\`; every user can then keep their own directory under it.`;
+  if (!r.shared) {
+    return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Remove it if it is stale, or set NX_SOCKET_DIR to a short directory your user owns.`;
+  }
+  const q = shellQuote(r.dir);
+  return `${r.dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${q} && sudo chmod 1777 ${q}\`; every user can then keep their own directory under it.`;
 }
 
 /**
@@ -210,7 +240,9 @@ export function isSafeSharedRoot(dir: string): GuardResult<SafeSharedRoot> {
       stats.uid !== process.getuid() &&
       stats.uid !== 0
     ) {
-      return deny({ kind: 'foreign-owner', dir, uid: stats.uid });
+      // The only site that sets `shared`: this is the container several users
+      // are meant to share, so it is the only one root can usefully take over.
+      return deny({ kind: 'foreign-owner', dir, uid: stats.uid, shared: true });
     }
     return !(stats.mode & 0o022) || !!(stats.mode & S_ISVTX)
       ? allow(dir as SafeSharedRoot)
@@ -360,9 +392,10 @@ export function getUserSegment(): string {
 /**
  * Ensure `dir` exists, is a real directory owned by us, and carries no group or
  * other bits at all — read and search alone reach a socket inside it, so 0755 is
- * re-locked rather than accepted. `null` means it could not be established —
- * usually a directory another user planted, but also a plain filesystem error
- * or one we could not re-lock.
+ * re-locked rather than accepted. A `refused` status carries which check said
+ * no — usually `foreign-owner` for a directory another user planted, but also
+ * `not-created`/`not-inspectable` for a filesystem error, `not-a-directory`, or
+ * `not-tightenable` when the re-lock did not land.
  *
  * Node builtins only: reached from the native binding loader.
  */

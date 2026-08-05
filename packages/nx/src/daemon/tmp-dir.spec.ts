@@ -397,8 +397,11 @@ describe('socket directories', () => {
   it('carries the chown remedy in the fallback cause when the container is another user’s', () => {
     setPlatform('linux');
     // Derived from the refusal the guard produced, not from a second lstat.
+    // `shared: true` because only isSafeSharedRoot produces this refusal, and it
+    // is what makes the chown remedy apply. Without it the mock would stage a
+    // shape the real guard never returns.
     (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
-      reject(d, { kind: 'foreign-owner', dir: d, uid: 1001 })
+      reject(d, { kind: 'foreign-owner', dir: d, uid: 1001, shared: true })
     );
     (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
       d.startsWith(HOME_TMP_ROOT) ? reject(d) : accept(d)
@@ -406,7 +409,7 @@ describe('socket directories', () => {
 
     expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining(`sudo chown root ${SHARED_TMP_ROOT}`)
+      expect.stringContaining(`sudo chown root '${SHARED_TMP_ROOT}'`)
     );
   });
 

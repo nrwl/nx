@@ -223,35 +223,81 @@ describe('ensureOwnedPrivateDir', () => {
         const verdict = isSafeSharedRoot('/tmp/.nx');
         expect(verdict.status).toBe('refused');
         expect(remedyFor((verdict as any).refusal)).toContain(
-          'sudo chown root /tmp/.nx'
+          "sudo chown root '/tmp/.nx'"
         );
       }
     );
 
-    posixOnly.each([
-      ['root-owned', 0],
-      ['ours', 501],
-    ])(
-      'should offer no remedy for a container that is %s',
-      (_label: string, uid: number) => {
-        const getuid = jest.spyOn(process, 'getuid').mockReturnValue(501);
-        (lstatSync as jest.Mock).mockReturnValueOnce({
-          isDirectory: () => true,
-          uid,
-          mode: 0o41777,
+    // Called on a literal refusal, not on whatever a guard happens to return.
+    // Routed through isSafeSharedRoot these rows staged uids it *accepts*, so
+    // the verdict was 'ok', remedyFor was never called, and the assertion
+    // degenerated to expect(undefined).toBeUndefined().
+    it('should offer no remedy for a container root already owns', () => {
+      expect(
+        remedyFor({
+          kind: 'foreign-owner',
+          dir: '/tmp/.nx',
+          uid: 0,
+          shared: true,
+        })
+      ).toBeUndefined();
+    });
+
+    it('should not offer the chown remedy for a per-user directory', () => {
+      // Same kind, no `shared`: handing this to root cannot help, because
+      // ensureOwnedPrivateDir has no uid-0 exemption.
+      const remedy = remedyFor({
+        kind: 'foreign-owner',
+        dir: '/tmp/.nx/501/sockets',
+        uid: 1002,
+      });
+      expect(remedy).toBeDefined();
+      expect(remedy).not.toContain('chown');
+      expect(remedy).not.toContain('1777');
+    });
+
+    it('should offer the chown remedy for the shared container', () => {
+      expect(
+        remedyFor({
+          kind: 'foreign-owner',
+          dir: '/tmp/.nx',
+          uid: 1002,
+          shared: true,
+        })
+      ).toContain("sudo chown root '/tmp/.nx' && sudo chmod 1777 '/tmp/.nx'");
+    });
+
+    it('should quote a path so a space survives the paste', () => {
+      expect(
+        remedyFor({
+          kind: 'foreign-owner',
+          dir: '/home/some user/.nx',
+          uid: 1002,
+          shared: true,
+        })
+      ).toContain("sudo chown root '/home/some user/.nx'");
+    });
+
+    posixOnly('should mark a refused shared container as shared', () => {
+      const getuid = jest.spyOn(process, 'getuid').mockReturnValue(501);
+      (lstatSync as jest.Mock).mockReturnValueOnce({
+        isDirectory: () => true,
+        uid: 1002,
+        mode: 0o41777,
+      });
+      try {
+        const verdict = isSafeSharedRoot('/tmp/.nx');
+        expect(verdict.status).toBe('refused');
+        expect((verdict as any).refusal).toEqual({
+          kind: 'foreign-owner',
+          dir: '/tmp/.nx',
+          uid: 1002,
+          shared: true,
         });
-        try {
-          const verdict = isSafeSharedRoot('/tmp/.nx');
-          expect(
-            verdict.status === 'refused'
-              ? remedyFor(verdict.refusal)
-              : undefined
-          ).toBeUndefined();
-        } finally {
-          getuid.mockRestore();
-        }
+      } finally {
+        getuid.mockRestore();
       }
-    );
+    });
 
     posixOnly('should offer no remedy for a container that is absent', () => {
       const verdict = isSafeSharedRoot(join(base, 'missing'));
