@@ -10,6 +10,8 @@ import {
 import {
   getCatalogManager,
   interpolate,
+  dropEmptyPeerDependencySections,
+  movePeerDependencyToDependencies,
   type PackageJson,
   type PackageJsonDependencySection,
   getLockFileName,
@@ -102,29 +104,13 @@ function rewriteWorkspaceModuleSpecifiers(
       }
       const fileSpec = `file:./workspace_modules/${pkgName}`;
       if (section === 'peerDependencies') {
-        (packageJson.dependencies ??= {})[pkgName] = fileSpec;
-        delete deps[pkgName];
-        // drop the now-orphaned optional/required marker for the moved module
-        if (packageJson.peerDependenciesMeta) {
-          delete packageJson.peerDependenciesMeta[pkgName];
-        }
+        movePeerDependencyToDependencies(packageJson, pkgName, fileSpec);
       } else {
         deps[pkgName] = fileSpec;
       }
     }
   }
-  if (
-    packageJson.peerDependencies &&
-    Object.keys(packageJson.peerDependencies).length === 0
-  ) {
-    delete packageJson.peerDependencies;
-  }
-  if (
-    packageJson.peerDependenciesMeta &&
-    Object.keys(packageJson.peerDependenciesMeta).length === 0
-  ) {
-    delete packageJson.peerDependenciesMeta;
-  }
+  dropEmptyPeerDependencySections(packageJson);
 }
 
 /**

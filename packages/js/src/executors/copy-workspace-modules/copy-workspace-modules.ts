@@ -8,9 +8,11 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import {
-  interpolate,
-  getWorkspacePackagesFromGraph,
+  dropEmptyPeerDependencySections,
   getCatalogManager,
+  getWorkspacePackagesFromGraph,
+  interpolate,
+  movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
   warnUnshippableLocalPathSpec,
 } from '@nx/devkit/internal';
@@ -203,11 +205,11 @@ function handleWorkspaceModules(
         if (workspaceModules.has(depName)) {
           const fileSpec = `file:${calculateRelativePath(pkgName, depName)}`;
           if (section === 'peerDependencies') {
-            (copiedPackageJson.dependencies ??= {})[depName] = fileSpec;
-            delete deps[depName];
-            if (copiedPackageJson.peerDependenciesMeta) {
-              delete copiedPackageJson.peerDependenciesMeta[depName];
-            }
+            movePeerDependencyToDependencies(
+              copiedPackageJson,
+              depName,
+              fileSpec
+            );
           } else {
             deps[depName] = fileSpec;
           }
@@ -238,13 +240,13 @@ function handleWorkspaceModules(
           );
         }
         if (section === 'peerDependencies') {
-          // pnpm rejects a file:/link: spec under peerDependencies even when the
-          // target cannot ship, so always move it into dependencies.
-          (copiedPackageJson.dependencies ??= {})[depName] = relocation.spec;
-          delete deps[depName];
-          if (copiedPackageJson.peerDependenciesMeta) {
-            delete copiedPackageJson.peerDependenciesMeta[depName];
-          }
+          // Moved even when the target cannot ship: pnpm rejects the spec here
+          // either way.
+          movePeerDependencyToDependencies(
+            copiedPackageJson,
+            depName,
+            relocation.spec
+          );
           packageJsonModified = true;
         } else if (!relocation.reason) {
           deps[depName] = relocation.spec;
@@ -252,18 +254,7 @@ function handleWorkspaceModules(
         }
       }
     }
-    if (
-      copiedPackageJson.peerDependencies &&
-      Object.keys(copiedPackageJson.peerDependencies).length === 0
-    ) {
-      delete copiedPackageJson.peerDependencies;
-    }
-    if (
-      copiedPackageJson.peerDependenciesMeta &&
-      Object.keys(copiedPackageJson.peerDependenciesMeta).length === 0
-    ) {
-      delete copiedPackageJson.peerDependenciesMeta;
-    }
+    dropEmptyPeerDependencySections(copiedPackageJson);
 
     if (packageJsonModified) {
       writeFileSync(
