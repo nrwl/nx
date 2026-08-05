@@ -145,6 +145,8 @@ export {
   type TasksRunner,
   type UnregisterCallback,
   WholeFileChange,
+  buildPackageJsonPatterns,
+  buildPackageJsonWorkspacesMatcher,
   buildProjectGraphAndSourceMapsWithoutDaemon,
   calculateFileChanges,
   calculateReverseDeps,
