@@ -139,9 +139,9 @@ const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
  * Only a shared container held by another unprivileged user has the "hand it to
  * root" fix, which is what `shared` identifies.
  *
- * Who can clear a per-user directory depends on who owns its *parent*, which the
- * refusal does not carry — so the sentence names the condition rather than
- * guessing. A foreign directory Nx created is `0700`, so `rm` cannot empty it.
+ * Who can clear a per-user directory depends on who owns its *parent*, and
+ * whether `rm` could work depends on its mode — the refusal carries neither, so
+ * the sentence names the condition rather than guessing.
  */
 export function remedyFor(r: DirRefusal): string | undefined {
   if (r.kind !== 'foreign-owner') {

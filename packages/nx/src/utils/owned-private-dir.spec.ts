@@ -265,9 +265,9 @@ describe('ensureOwnedPrivateDir', () => {
       expect(remedy).toContain('administrator');
     });
 
-    it('should not tell a user to remove a directory they cannot remove', () => {
-      // A foreign directory Nx created is 0700, so we cannot empty it and `rm`
-      // is not advice this branch can give.
+    it('should not offer to remove a per-user directory', () => {
+      // The refusal carries no mode — the foreign-owner deny precedes the mode
+      // check — so `rm` is not advice this branch can give.
       const remedy = remedyFor({
         kind: 'foreign-owner',
         dir: '/tmp/.nx/501',
@@ -278,8 +278,9 @@ describe('ensureOwnedPrivateDir', () => {
 
     it('should still point a per-user directory at NX_SOCKET_DIR when root owns it', () => {
       // Reachable after one `sudo nx` that kept your HOME, or in a
-      // root-provisioned image run as a non-root user. The uid-0 exemption
-      // below belongs to the shared container, so this shape still gets advice.
+      // root-provisioned image run as a non-root user. The uid-0 exemption in
+      // `remedyFor` belongs to the shared container, so this shape still gets
+      // advice.
       expect(
         remedyFor({ kind: 'foreign-owner', dir: '/home/me/.nx', uid: 0 })
       ).toContain('NX_SOCKET_DIR');
