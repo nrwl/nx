@@ -17,15 +17,8 @@ export function visitNotIgnoredFiles(
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
-  // Built once for the whole traversal. `.nxignore` last and `merged` so its
-  // patterns win: the native walker registers it through
-  // `add_custom_ignore_filename`, which outranks `.gitignore`, so a `!x` there
-  // has to re-include an `x` that `.gitignore` excluded. Merging is also exactly
-  // what the helper this replaced did.
-  const isIgnored = createTreeIgnoreChecker(tree, ['.gitignore', '.nxignore'], {
-    cascade: true,
-    combine: 'merged',
-  });
+  // Built once for the whole traversal.
+  const isIgnored = createTreeIgnoreChecker(tree, 'git');
 
   visitDirectory(
     tree,
