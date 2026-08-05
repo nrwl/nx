@@ -1897,7 +1897,12 @@ export class TaskOrchestrator {
         // that point would appear after the prompt.
         // Handle both overload signatures: dropping write(chunk, cb) would strand
         // the callback and hang anything awaiting it, such as output.drain().
-        const noop = (_chunk, encodingOrCallback, callback) => {
+        // Typed rather than cast so the compiler keeps checking that.
+        const noop = (
+          _chunk: string | Uint8Array,
+          encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
+          callback?: (err?: Error) => void
+        ): boolean => {
           const cb =
             typeof encodingOrCallback === 'function'
               ? encodingOrCallback
@@ -1905,8 +1910,8 @@ export class TaskOrchestrator {
           if (cb) cb();
           return true;
         };
-        process.stdout.write = noop as any;
-        process.stderr.write = noop as any;
+        process.stdout.write = noop;
+        process.stderr.write = noop;
       }
       this.cleanup().finally(() => {
         if (this.resolveStopPromise) {

@@ -167,7 +167,12 @@ async function getTerminalOutputLifeCycle(
 
     // Handle both overload signatures: dropping write(chunk, cb) would strand the
     // callback and hang anything awaiting it, such as output.drain().
-    const patchedWrite = (_chunk, encodingOrCallback, callback) => {
+    // Typed rather than cast so the compiler keeps checking that.
+    const patchedWrite = (
+      _chunk: string | Uint8Array,
+      encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
+      callback?: (err?: Error) => void
+    ): boolean => {
       const cb =
         typeof encodingOrCallback === 'function'
           ? encodingOrCallback
@@ -179,8 +184,8 @@ async function getTerminalOutputLifeCycle(
       return true;
     };
 
-    process.stdout.write = patchedWrite as any;
-    process.stderr.write = patchedWrite as any;
+    process.stdout.write = patchedWrite;
+    process.stderr.write = patchedWrite;
 
     const { AppLifeCycle, restoreTerminal } = await handleImport(
       '../native/index.js',
@@ -272,30 +277,30 @@ async function getTerminalOutputLifeCycle(
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
        */
-      const createPatchedLogWrite = (
-        originalWrite:
-          | typeof process.stdout.write
-          | typeof process.stderr.write,
-        isError: boolean
-      ): typeof process.stdout.write | typeof process.stderr.write => {
-        // @ts-ignore
+      const createPatchedLogWrite = (): typeof process.stdout.write => {
         // Handle both overload signatures: dropping write(chunk, cb) would strand the
         // callback, and the callback would reach toString() below as the encoding.
-        return (chunk, encodingOrCallback, callback) => {
-          const isCb = typeof encodingOrCallback === 'function';
-          const cb = isCb ? encodingOrCallback : callback;
-          const enc = isCb ? undefined : encodingOrCallback;
-          if (isError) {
-            logDebug(
-              Buffer.isBuffer(chunk) ? chunk.toString(enc) : chunk.toString()
-            );
-          } else {
-            logDebug(
-              Buffer.isBuffer(chunk) ? chunk.toString(enc) : chunk.toString()
-            );
-          }
+        // isEncoding also rejects the values toString() cannot take ('buffer', '', null).
+        return (
+          chunk: string | Uint8Array,
+          encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
+          callback?: (err?: Error) => void
+        ): boolean => {
+          const cb =
+            typeof encodingOrCallback === 'function'
+              ? encodingOrCallback
+              : callback;
+          const enc =
+            typeof encodingOrCallback === 'string' &&
+            Buffer.isEncoding(encodingOrCallback)
+              ? encodingOrCallback
+              : undefined;
+          logDebug(
+            Buffer.isBuffer(chunk) ? chunk.toString(enc) : chunk.toString()
+          );
 
-          // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
+          // Nx Cloud logs are held back for the TUI; everything else is swallowed,
+          // since the TUI owns the terminal while it is running.
           const stackTrace = new Error().stack;
           const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
           if (isNxCloudLog) {
@@ -332,8 +337,8 @@ async function getTerminalOutputLifeCycle(
         };
       };
 
-      process.stdout.write = createPatchedLogWrite(originalStdoutWrite, false);
-      process.stderr.write = createPatchedLogWrite(originalStderrWrite, true);
+      process.stdout.write = createPatchedLogWrite();
+      process.stderr.write = createPatchedLogWrite();
 
       // The cloud client calls console.log when NX_VERBOSE_LOGGING is set to true
       console.log = createPatchedConsoleMethod(originalConsoleLog);
