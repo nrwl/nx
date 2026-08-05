@@ -95,6 +95,23 @@ describe('addLinting generator', () => {
     }
   });
 
+  // The oxlint arm passes `skipFormat: true` down to `@nx/oxlint`, so this
+  // generator owns the formatting. The early return must not skip it.
+  it('should still format when the linter is not eslint', async () => {
+    tree.write(`${appProjectRoot}/unformatted.json`, '{"a":1,   "b":2}');
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      linter: 'oxlint',
+    });
+
+    expect(tree.read(`${appProjectRoot}/unformatted.json`, 'utf-8')).toBe(
+      '{ "a": 1, "b": 2 }\n'
+    );
+  });
+
   it('should add the Angular specific EsLint devDependencies (eslintrc)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
