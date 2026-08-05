@@ -452,9 +452,16 @@ const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jes
 const NRWL_CLI_REGEX = /nx[\/\\]dist[\/\\]bin[\/\\]run-executor\.js$/;
 // `@nx/oxlint` runs this rule through Oxlint's JS-plugin bridge, where argv[1]
 // is `node_modules/oxlint/bin/oxlint`. Without this the graph memo below never
-// takes and every linted file re-reads the whole project graph. The oxc editor
-// extension runs `oxc_language_server`, so IDE runs still get a fresh graph.
+// takes and every linted file re-reads the whole project graph.
 const OXLINT_REGEX = /node_modules.*[\/\\]oxlint(?:\.js)?$/;
+
+// `oxlint --lsp` is the *same* entry point, not a separate binary — and it is the
+// only way the bridge runs in an editor, since a native language server has no
+// Node runtime to load a JS plugin. So it has to be excluded by flag rather than
+// by path, or the long-lived editor process this guard exists for would memoize.
+function isOxlintTerminalRun(argv: string[]): boolean {
+  return !!argv[1].match(OXLINT_REGEX) && !argv.includes('--lsp');
+}
 
 export function isTerminalRun(): boolean {
   return (
@@ -462,7 +469,7 @@ export function isTerminalRun(): boolean {
     (!!process.argv[1].match(NRWL_CLI_REGEX) ||
       !!process.argv[1].match(JEST_REGEX) ||
       !!process.argv[1].match(ESLINT_REGEX) ||
-      !!process.argv[1].match(OXLINT_REGEX) ||
+      isOxlintTerminalRun(process.argv) ||
       !!process.argv[1].endsWith('/bin/jest.js'))
   );
 }
