@@ -152,9 +152,16 @@ fn proc_version_is_wsl(proc_version: &str) -> bool {
     proc_version.to_lowercase().contains("microsoft")
 }
 
-/// Detects an OCI container (Docker `/.dockerenv`, or Podman
-/// `/run/.containerenv`). This is the marker `open@8`'s `is-docker` missed for
-/// Podman, causing the original crash.
+/// `/run/.containerenv` is the Podman marker `open@8`'s `is-docker` missed,
+/// which is what let #34502 take the WSL bridge and crash. A const so a test can
+/// assert it without a container to run in.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+const CONTAINER_MARKERS: &[&str] = &["/.dockerenv", "/run/.containerenv"];
+
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
@@ -163,8 +170,9 @@ fn proc_version_is_wsl(proc_version: &str) -> bool {
 fn is_in_container() -> bool {
     static IN_CONTAINER: OnceLock<bool> = OnceLock::new();
     *IN_CONTAINER.get_or_init(|| {
-        std::path::Path::new("/.dockerenv").exists()
-            || std::path::Path::new("/run/.containerenv").exists()
+        CONTAINER_MARKERS
+            .iter()
+            .any(|m| std::path::Path::new(m).exists())
     })
 }
 
@@ -243,10 +251,11 @@ fn parse_automount_root(wsl_conf: &str) -> Option<String> {
     None
 }
 
-/// The helpers `open@10`'s vendored freedesktop script falls through once
-/// `xdg-open` itself is unavailable. Trying only the system `xdg-open` loses the
-/// browser on minimal images, headless server distros and Termux, where it often
-/// isn't installed.
+/// What the vendored freedesktop script reaches internally — desktop handlers
+/// from its `detectDE` dispatch, then the browsers its `open_generic` default
+/// list names. We retry them directly because that script ships inside `open`,
+/// and the system `xdg-open` that replaces it is often absent on minimal images,
+/// headless server distros and Termux.
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
@@ -259,7 +268,18 @@ const FALLBACK_OPENERS: &[&[&str]] = &[
     &["kde-open"],
     &["exo-open"],
     &["x-www-browser"],
+    &["firefox"],
+    &["chromium"],
+    &["chromium-browser"],
+    &["google-chrome"],
+    &["epiphany"],
+    &["konqueror"],
     &["www-browser"],
+    &["links2"],
+    &["elinks"],
+    &["links"],
+    &["lynx"],
+    &["w3m"],
 ];
 
 /// `xdg-open` first, because it dispatches to the desktop's own handler — the
@@ -330,17 +350,14 @@ fn browser_env_candidates(browser: &str, url: &str) -> Vec<Command> {
 /// Launch the default browser through the Windows host's PowerShell — used on
 /// native Windows and, over WSL interop, on non-container WSL.
 ///
-/// The URL rides *inside* the script as base64 rather than in a quoted literal.
-/// PowerShell accepts five code points as single-quote delimiters (`U+0027` plus
-/// `U+2018`–`U+201B`) and lets any of them close a literal any other opened, so
-/// escaping by doubling the ASCII quote is not sufficient; base64's alphabet
-/// can't express a quote at all.
+/// The URL rides *inside* the script as base64, never in a quoted literal:
+/// PowerShell takes five code points as single-quote delimiters (`U+0027`,
+/// `U+2018`–`U+201B`) and lets any close a literal any other opened, so doubling
+/// the ASCII quote is not enough. Base64's alphabet can't express one at all.
 ///
-/// The inner payload is UTF-8, not UTF-16LE: both round-trip any URL, but the
-/// script is base64'd a second time for `-EncodedCommand`, so an inner UTF-16LE
-/// layer costs 7.1 bytes of command line per URL byte against `CreateProcessW`'s
-/// 32767 cap. `nx release` embeds a whole changelog in a GitHub URL, which put
-/// the ceiling under the size real changelogs reach.
+/// Keep the inner payload UTF-8. The script is base64'd again for
+/// `-EncodedCommand`, so UTF-16LE here would cost 7.1 command-line bytes per URL
+/// byte against `CreateProcessW`'s 32767 cap — halving the openable URL.
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
 fn powershell_start_process(program: &str, url: &str) -> Command {
     let script = format!(
@@ -360,8 +377,7 @@ fn powershell_start_process(program: &str, url: &str) -> Command {
     c
 }
 
-/// `-EncodedCommand` expects base64 of UTF-16LE, which is also what
-/// `[Text.Encoding]::Unicode` decodes.
+/// `-EncodedCommand` expects base64 of UTF-16LE.
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
 fn utf16le(s: &str) -> Vec<u8> {
     s.encode_utf16()
@@ -471,7 +487,10 @@ mod tests {
     fn powershell_carries_the_url_as_base64_not_as_a_quoted_literal() {
         // Every character PowerShell accepts as a single-quote delimiter, plus a
         // `&` (cmd separator). None may reach the command line or the script.
-        let url = "https://cloud.nx.app/connect?a=1&b=2&q='\u{2018}\u{2019}\u{201A}\u{201B}";
+        // The astral char pins the multi-byte round trip the UTF-8 payload rests
+        // on — it is two UTF-16 units, so an encoder split would corrupt it.
+        let url =
+            "https://cloud.nx.app/connect?a=1&b=2&q='\u{2018}\u{2019}\u{201A}\u{201B}\u{1F680}";
         let cmd = powershell_start_process("powershell.exe", url);
         let args = args_of(&cmd);
 
@@ -532,12 +551,32 @@ mod tests {
                 "kde-open",
                 "exo-open",
                 "x-www-browser",
-                "www-browser"
+                "firefox",
+                "chromium",
+                "chromium-browser",
+                "google-chrome",
+                "epiphany",
+                "konqueror",
+                "www-browser",
+                "links2",
+                "elinks",
+                "links",
+                "lynx",
+                "w3m"
             ]
         );
         // `gio` needs its `open` subcommand — dropping it still spawns, so the
         // chain would report success while nothing opened.
         assert_eq!(args_of(&cmds[1]), vec!["open", "https://nx.dev"]);
+    }
+
+    #[test]
+    fn podman_and_docker_markers_are_both_probed() {
+        // #34502: `open@8`'s `is-docker` only looked for /.dockerenv, so Podman
+        // took the WSL bridge and crashed. Asserted on the const because a test
+        // process can't fake either marker's presence.
+        assert!(CONTAINER_MARKERS.contains(&"/run/.containerenv"));
+        assert!(CONTAINER_MARKERS.contains(&"/.dockerenv"));
     }
 
     #[test]
