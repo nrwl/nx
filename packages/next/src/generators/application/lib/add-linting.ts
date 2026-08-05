@@ -13,6 +13,8 @@ import {
   addIgnoresToLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  eslintV9Version,
+  getInstalledEslintVersion,
   isEslintConfigSupported,
   isTypedLintingEnabled,
   updateOverrideInLintConfig,
@@ -21,6 +23,8 @@ import {
 } from '@nx/eslint/internal';
 import {
   getEslintConfigNextDependenciesVersionsToInstall,
+  isNext14,
+  isNext15,
   isNext16,
 } from '../../../utils/version-utils';
 
@@ -31,6 +35,25 @@ export async function addLinting(
   if (options.linter !== 'eslint') return () => {};
 
   const tasks: GeneratorCallback[] = [];
+
+  if (
+    !options.skipPackageJson &&
+    !getInstalledEslintVersion(host) &&
+    ((await isNext15(host)) || (await isNext14(host)))
+  ) {
+    // eslint-config-next for Next.js < 16 has no ESLint v10-compatible
+    // release, so pin the last v9 before the lint setup defaults a fresh
+    // install to v10
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        { eslint: eslintV9Version },
+        undefined,
+        true
+      )
+    );
+  }
 
   tasks.push(
     await lintProjectGenerator(host, {
