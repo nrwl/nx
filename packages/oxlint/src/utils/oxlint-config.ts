@@ -22,7 +22,7 @@ interface OxlintConfig {
   plugins?: string[];
 }
 
-export function findRootOxlintConfig(tree: Tree): string | null {
+function findRootOxlintConfig(tree: Tree): string | null {
   return EXTENDABLE_CONFIG_FILENAMES.find((file) => tree.exists(file)) ?? null;
 }
 
