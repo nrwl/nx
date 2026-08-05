@@ -151,19 +151,42 @@ export function isAlwaysIgnored(path: string): boolean {
 }
 
 /**
- * The chain bound to a tree, as a predicate over workspace-relative POSIX paths.
+ * Which files to read, whether they cascade, and how the files of one directory
+ * relate are all decided by one fact - the tool this has to agree with - so the
+ * caller states that and nothing else. Offering them as separate options would
+ * make four incoherent combinations representable, and picking the wrong value
+ * for one of them is a silent behaviour change across every caller.
+ */
+const AUTHORITIES = {
+  // git, and the native walker: ignore files cascade, and `.nxignore` outranks
+  // `.gitignore` (`walker.rs` registers it with `add_custom_ignore_filename`),
+  // which a merge with `.nxignore` last reproduces.
+  git: {
+    filenames: ['.gitignore', '.nxignore'],
+    cascade: true,
+    combine: 'merged',
+  },
+  // prettier: resolves ignore files from the workspace root only, and ORs one
+  // ignorer per `--ignore-path` rather than merging them (both measured). A
+  // formatter has to skip exactly what `nx format:check` skips.
+  prettier: {
+    filenames: ['.gitignore', '.prettierignore'],
+    cascade: false,
+    combine: 'separate',
+  },
+} satisfies Record<
+  string,
+  { filenames: string[]; cascade: boolean; combine: IgnoreCombineMode }
+>;
+
+/** The tool an ignore decision has to agree with. */
+export type IgnoreAuthority = keyof typeof AUTHORITIES;
+
+/**
+ * The chain bound to a tree, as predicates over workspace-relative POSIX paths.
  *
  * Reads from the tree rather than disk because a generator can create or amend
  * an ignore file in the same run, which would leave the on-disk copy stale.
- *
- * `cascade` has to match whatever the caller must agree with. A tree walk wants
- * `true`, matching git and the native walker. A formatter wants `false`:
- * prettier resolves `.gitignore`/`.prettierignore` from the workspace root only
- * (measured), so cascading here would skip files `nx format:check` still checks,
- * leaving them committed unformatted.
- *
- * `combine` decides how the files of one directory relate - see
- * `IgnoreCombineMode`. For `merged`, order `filenames` lowest-authority first.
  *
  * Files and directories are asked separately because the answers differ: a
  * pattern is only directory-only if it ends in a slash, and `ignore` will not
@@ -172,12 +195,12 @@ export function isAlwaysIgnored(path: string): boolean {
  */
 export function createTreeIgnoreChecker(
   tree: Tree,
-  filenames: string[],
-  { cascade, combine }: { cascade: boolean; combine: IgnoreCombineMode }
+  authority: IgnoreAuthority
 ): {
   isIgnoredFile: (path: string) => boolean;
   isIgnoredDirectory: (path: string) => boolean;
 } {
+  const { filenames, cascade, combine } = AUTHORITIES[authority];
   const resolve = createIgnoreChainResolver(
     (path) => (tree.exists(path) ? tree.read(path, 'utf-8') : null),
     filenames,
