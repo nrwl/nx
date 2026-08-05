@@ -6,14 +6,14 @@ import { output } from './output';
  * so queued bytes stay queued — the state a slow pipe reader produces.
  */
 function stalledStdout(highWaterMark: number) {
-  const pending: Array<() => void> = [];
+  const pending: Array<(err?: Error) => void> = [];
   let received = '';
   const stream = new Writable({
     highWaterMark,
     write(chunk, _enc, cb) {
-      pending.push(() => {
-        received += chunk.toString();
-        cb();
+      pending.push((err) => {
+        if (!err) received += chunk.toString();
+        cb(err);
       });
     },
   });
@@ -24,6 +24,10 @@ function stalledStdout(highWaterMark: number) {
     },
     release: () => {
       while (pending.length) pending.shift()!();
+    },
+    // Node hands EPIPE to the write callback first, then emits 'error'.
+    failPending: (err: Error) => {
+      while (pending.length) pending.shift()!(err);
     },
   };
 }
@@ -103,11 +107,26 @@ describe('output.drain', () => {
     stalled.stream.write('c'.repeat(50));
     const promise = output.drain();
 
-    stalled.stream.emit(
-      'error',
-      Object.assign(new Error('EPIPE'), { code: 'EPIPE' })
-    );
+    // Drive the error through Node's real ordering — write callback first, then
+    // the 'error' event. A bare emit lets a listener-removing refactor pass here
+    // while crashing on an actual pipe.
+    stalled.failPending(Object.assign(new Error('EPIPE'), { code: 'EPIPE' }));
 
     await expect(promise).resolves.toBeUndefined();
+  });
+
+  it('leaves no error listener behind', async () => {
+    const stalled = stalledStdout(1000);
+    useStdout(stalled.stream);
+
+    for (let i = 0; i < 3; i++) {
+      stalled.stream.write('d'.repeat(50));
+      const promise = output.drain();
+      stalled.release();
+      await promise;
+    }
+    await new Promise((res) => setImmediate(res));
+
+    expect(stalled.stream.listenerCount('error')).toBe(0);
   });
 });

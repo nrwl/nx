@@ -357,6 +357,7 @@ class CLIOutput {
     this.addNewline();
   }
 
+  /** Waits for queued `process.stdout` to reach the fd. Does not cover stderr. */
   drain(): Promise<void> {
     return new Promise((resolve) => {
       // `writableNeedDrain` is only set once the queue passes the high-water mark,
@@ -366,11 +367,16 @@ class CLIOutput {
         resolve();
         return;
       }
-      // The reader may already be gone (`nx ... | head`); EPIPE must not fail an
-      // otherwise successful run. Use `on`, not `once`: the write callback fires
-      // with the error first, which would remove a `once` listener before 'error'.
-      process.stdout.on('error', () => resolve());
-      process.stdout.write('', () => resolve());
+      // The reader may already be gone (`nx ... | head`); without an 'error'
+      // listener that EPIPE crashes the process instead of resolving. Cleanup is
+      // deferred because the write callback fires before the 'error' event, so
+      // removing the listener from inside it re-introduces the crash.
+      const onError = () => resolve();
+      process.stdout.on('error', onError);
+      process.stdout.write('', () => {
+        resolve();
+        setImmediate(() => process.stdout.removeListener('error', onError));
+      });
     });
   }
 }
