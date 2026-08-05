@@ -7,6 +7,7 @@ import {
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { existsSync } from 'fs-extra';
 import * as isCI from 'is-ci';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { gte } from 'semver';
@@ -445,6 +446,45 @@ export function normalizePerformanceReport(output: string): string {
   );
 }
 
+/**
+ * Extra context for a `Command timed out` failure. A wedged daemon outlives our kill —
+ * `sendMessageToDaemon` waits 20 minutes on a reply — and leaves no trace in the killed
+ * command's own output, so the daemon log and the surviving processes are the only
+ * evidence of where the run stopped. Best-effort: never throws.
+ */
+function timeoutDiagnostics(cwd: string): string {
+  const sections: string[] = [];
+
+  const daemonLog = join(cwd, '.nx', 'workspace-data', 'd', 'daemon.log');
+  try {
+    const lines = readFileSync(daemonLog, 'utf-8').trimEnd().split('\n');
+    sections.push(
+      `Daemon log (last 50 lines of ${daemonLog}):\n${lines
+        .slice(-50)
+        .join('\n')}`
+    );
+  } catch (e) {
+    sections.push(`Daemon log unavailable (${daemonLog}): ${e.message}`);
+  }
+
+  try {
+    // The timeout kills the shell, not its descendants, so the nx client, the daemon and
+    // any task process are all still listed here.
+    const processes = execSync('ps -eo pid,ppid,etime,args', {
+      encoding: 'utf-8',
+    })
+      .split('\n')
+      .filter((line) => line.includes('nx'))
+      .slice(0, 40)
+      .join('\n');
+    sections.push(`Surviving nx processes:\n${processes}`);
+  } catch (e) {
+    sections.push(`Process list unavailable: ${e.message}`);
+  }
+
+  return sections.join('\n\n');
+}
+
 export function runCLI(
   command: string,
   opts: RunCmdOpts = {
@@ -500,7 +540,9 @@ export function runCLI(
       const processOutput = stripVTControlCharacters(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
-      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}\n\n${timeoutDiagnostics(
+        opts.cwd || tmpProjPath()
+      )}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
     }
@@ -556,7 +598,9 @@ export function runLernaCLI(
       const processOutput = stripVTControlCharacters(
         `${e.stdout ?? ''}\n\n${e.stderr ?? ''}`
       ).trim();
-      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}`;
+      const msg = `Command timed out after ${timeoutSec}s: ${command}\n\nProcess output:\n${processOutput}\n\n${timeoutDiagnostics(
+        opts.cwd || tmpProjPath()
+      )}`;
       logError(`Command timed out`, msg);
       throw new Error(msg);
     }
