@@ -400,6 +400,22 @@ describe('ensureOwnedPrivateDir', () => {
       // unreadable path must not be reported as shared.
       expect(isPeerWritable(join(base, 'missing'))).toBe(false);
     });
+
+    posixOnly(
+      'should answer for the directory a link points at, not the link',
+      () => {
+        // Linux creates symlinks 0777, so lstat would report this private
+        // target as peer-writable. The inverse holds on macOS, where symlink()
+        // takes the umask and a 0755 link hides a world-writable target.
+        const target = join(base, 'link-target');
+        mkdirSync(target, { mode: 0o700 });
+        chmodSync(target, 0o700);
+        const link = join(base, 'link-to-target');
+        symlinkSync(target, link);
+
+        expect(isPeerWritable(link)).toBe(false);
+      }
+    );
   });
 
   describe('socket directory wiring', () => {
