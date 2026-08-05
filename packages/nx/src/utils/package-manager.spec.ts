@@ -915,8 +915,8 @@ describe('package-manager', () => {
     });
 
     it('should query the bare package name when no version is given', async () => {
-      // The full packument is fetched with an empty version; a trailing `@` would
-      // make npm resolve the empty spec instead.
+      // The full packument is fetched with an empty version, so the spec stays
+      // the bare name rather than carrying a trailing `@`.
       jest
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'npm' } });
