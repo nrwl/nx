@@ -1,4 +1,8 @@
-import { baseConfig, reactHooksV7Off } from '../../eslint.config.mjs';
+import {
+  allowDirectNxImports,
+  baseConfig,
+  reactHooksV7Off,
+} from '../../eslint.config.mjs';
 import nx from '@nx/eslint-plugin';
 
 export default [
@@ -25,4 +29,5 @@ export default [
   {
     ignores: ['src/assets/generated-*'],
   },
+  allowDirectNxImports,
 ];

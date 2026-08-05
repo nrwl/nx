@@ -8,15 +8,17 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { connectToNxCloud } from 'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
-import { createNxCloudOnboardingURL } from 'nx/src/nx-cloud/utilities/url-shorten';
+import {
+  connectToNxCloud,
+  createNxCloudOnboardingURL,
+} from '@nx/devkit/internal';
 import { join } from 'path';
 import { gte } from 'semver';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { nxVersion } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import type { NormalizedSchema } from './new';
-import { setupAiAgentsGenerator } from 'nx/src/ai/set-up-ai-agents/set-up-ai-agents';
+import { setupAiAgentsGenerator } from '@nx/devkit/internal';
 
 type PresetInfo = {
   generateAppCmd?: string;

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { assertMinimumCypressVersion } from '@nx/cypress/internal';
 import { Tree } from '@nx/devkit';

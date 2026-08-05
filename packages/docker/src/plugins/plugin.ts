@@ -2,6 +2,7 @@ import {
   calculateHashesForCreateNodes,
   getNamedInputs,
   PluginCache,
+  hashObject,
 } from '@nx/devkit/internal';
 import {
   type CreateNodes,
@@ -12,11 +13,12 @@ import {
   CreateNodesContext,
   workspaceRoot,
 } from '@nx/devkit';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { getLatestCommitSha } from 'nx/src/utils/git-utils';
+import {
+  workspaceDataDirectory,
+  getLatestCommitSha,
+} from '@nx/devkit/internal';
 import { interpolateObject } from '../utils/interpolate-pattern';
 
 export interface DockerTargetOptions {

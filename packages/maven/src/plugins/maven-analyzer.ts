@@ -2,11 +2,10 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import { spawn } from 'child_process';
 import { logger, readJsonFile } from '@nx/devkit';
-import { isCI } from 'nx/src/devkit-internals';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { MavenAnalysisData, MavenPluginOptions } from './types';
 import { detectMavenExecutable } from '../utils/detect-maven-executable';
 import treeKill from 'tree-kill';
+import { isCI, workspaceDataDirectory } from '@nx/devkit/internal';
 
 const DEFAULT_ANALYSIS_TIMEOUT_SECONDS = isCI() ? 600 : 120;
 

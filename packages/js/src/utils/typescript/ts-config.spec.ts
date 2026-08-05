@@ -1,5 +1,4 @@
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { FsTree } from 'nx/src/generators/tree';
+import { FsTree } from '@nx/devkit/internal';
 import {
   mkdirSync,
   mkdtempSync,
@@ -16,6 +15,7 @@ import {
 } from './ts-config';
 import { join } from 'path';
 import * as ts from 'typescript';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('resolvePathsBaseUrl', () => {
   let tempFs: TempFs;

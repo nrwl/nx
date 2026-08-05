@@ -1,10 +1,12 @@
 import { readJsonFile, type TargetConfiguration } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { extname, isAbsolute, relative, resolve } from 'node:path';
-import { type PackageManagerCommands } from 'nx/src/utils/package-manager';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { type ParsedCommandLine } from 'typescript';
+import {
+  type PackageManagerCommands,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import picomatch = require('picomatch');
 
 export type ExtendedConfigFile = {

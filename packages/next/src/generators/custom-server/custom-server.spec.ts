@@ -1,6 +1,6 @@
 import { Tree, readJson } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { applicationGenerator } from '../application/application';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('app', () => {
   let tree: Tree;

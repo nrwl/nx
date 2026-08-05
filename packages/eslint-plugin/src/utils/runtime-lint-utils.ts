@@ -13,12 +13,12 @@ import { getRootTsConfigFileName, resolveModuleByImport } from '@nx/js';
 import { TargetProjectLocator } from '@nx/js/internal';
 import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import * as path from 'node:path';
+import { getPath, pathExists } from './graph-utils';
 import {
   findProjectForPath,
   ProjectRootMappings,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { readFileIfExisting } from 'nx/src/utils/fileutils';
-import { getPath, pathExists } from './graph-utils';
+  readFileIfExisting,
+} from '@nx/devkit/internal';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {

@@ -11,8 +11,11 @@ import {
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { applyEdits, FormattingOptions, modify } from 'jsonc-parser';
-import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
-import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
+import { VersionActions } from 'nx/release';
+import type {
+  AfterAllProjectsVersioned,
+  NxReleaseVersionConfiguration,
+} from '@nx/devkit/internal';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');

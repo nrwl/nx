@@ -13,7 +13,6 @@ import { assertPackageIsInstalled } from '../utilities/builder-package';
 import { type Schema } from './schema';
 import { normalizeOptions, startRemotes } from './lib';
 import { waitForPortOpen, fileServerExecutor } from '@nx/web/internal';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { executeDevServerBuilder } from '../../builders/dev-server/dev-server.impl';
 import {
   getDynamicMfManifestFile,
@@ -22,6 +21,7 @@ import {
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
 import { warnAngularMfDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
 
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
 const Module = require('module');

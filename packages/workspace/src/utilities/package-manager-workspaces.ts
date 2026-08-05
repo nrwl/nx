@@ -1,7 +1,9 @@
 import { detectPackageManager, readJson, type Tree } from '@nx/devkit';
 import { join } from 'node:path/posix';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
-import { PackageJson } from 'nx/src/utils/package-json';
+import {
+  getGlobPatternsFromPackageManagerWorkspaces,
+  PackageJson,
+} from '@nx/devkit/internal';
 import picomatch = require('picomatch');
 
 export function isProjectIncludedInPackageManagerWorkspaces(

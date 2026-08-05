@@ -40,6 +40,15 @@
       ],
       "internal-testing-utils": [
         "dist/internal-testing-utils.d.ts"
+      ],
+      "internal-testing-utils/mock-project-graph": [
+        "dist/internal-testing-utils/mock-project-graph.d.ts"
+      ],
+      "internal-testing-utils/mock-fs": [
+        "dist/internal-testing-utils/mock-fs.d.ts"
+      ],
+      "internal-testing-utils/mock-prettier": [
+        "dist/internal-testing-utils/mock-prettier.d.ts"
       ]
     }
   },
@@ -88,6 +97,21 @@
       "@nx/nx-source": "./internal-testing-utils.ts",
       "types": "./dist/internal-testing-utils.d.ts",
       "default": "./dist/internal-testing-utils.js"
+    },
+    "./internal-testing-utils/mock-project-graph": {
+      "@nx/nx-source": "./internal-testing-utils/mock-project-graph.ts",
+      "types": "./dist/internal-testing-utils/mock-project-graph.d.ts",
+      "default": "./dist/internal-testing-utils/mock-project-graph.js"
+    },
+    "./internal-testing-utils/mock-fs": {
+      "@nx/nx-source": "./internal-testing-utils/mock-fs.ts",
+      "types": "./dist/internal-testing-utils/mock-fs.d.ts",
+      "default": "./dist/internal-testing-utils/mock-fs.js"
+    },
+    "./internal-testing-utils/mock-prettier": {
+      "@nx/nx-source": "./internal-testing-utils/mock-prettier.ts",
+      "types": "./dist/internal-testing-utils/mock-prettier.d.ts",
+      "default": "./dist/internal-testing-utils/mock-prettier.js"
     },
     "./ngcli-adapter": {
       "@nx/nx-source": "./ngcli-adapter.ts",

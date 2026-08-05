@@ -11,8 +11,8 @@ import {
 } from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { join } from 'path';
-import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
 import { isUsingTsSolutionSetup } from '../../utilities/typescript/ts-solution-setup';
+import { getNxCloudUrl, isNxCloudUsed } from '@nx/devkit/internal';
 
 function getNxCloudRecordCommand(
   ci: Schema['ci'],

@@ -26,9 +26,9 @@ import type {
   AssetGlobPattern,
   NormalizedWebpackExecutorOptions,
 } from '@nx/webpack';
-import { readNxJson } from 'nx/src/config/configuration';
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 
 export function nxComponentTestingPreset(
   pathToConfig: string,

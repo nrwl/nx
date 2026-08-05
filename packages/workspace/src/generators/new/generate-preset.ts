@@ -14,7 +14,7 @@ import { NormalizedSchema } from './new';
 import { join } from 'path';
 import yargsParser from 'yargs-parser';
 import { fork, ForkOptions } from 'child_process';
-import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
+import { getNxRequirePaths } from '@nx/devkit/internal';
 
 export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
   const { dependencies, dev } = getPresetDependencies(options);

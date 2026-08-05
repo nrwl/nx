@@ -1,6 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
 
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { type GradleReport } from './utils/get-gradle-report';
 
 let gradleReport: GradleReport;
@@ -13,6 +12,7 @@ jest.mock('./utils/get-gradle-report', () => {
 });
 
 import { createNodesV2 } from './nodes';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/gradle/plugin-v1/nodes', () => {
   let createNodesFunction = createNodesV2[1];

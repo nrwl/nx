@@ -8,7 +8,7 @@ import type { NxWebpackExecutionContext } from '../../utils/config';
 import type { NxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
 import type { Compiler, Configuration } from 'webpack';
 import { normalizeOptions } from '../nx-webpack-plugin/lib/normalize-options';
-import { readNxJson } from 'nx/src/config/configuration';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 
 /**
  * This function is used to wrap the legacy plugin function to be used with the `composePlugins` function.

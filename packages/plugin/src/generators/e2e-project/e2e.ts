@@ -1,4 +1,7 @@
-import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
+import {
+  determineProjectNameAndRootOptions,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   formatFiles,
@@ -31,7 +34,6 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';
 

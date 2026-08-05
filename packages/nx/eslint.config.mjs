@@ -1,4 +1,4 @@
-import { baseConfig } from '../../eslint.config.mjs';
+import { allowDirectNxImports, baseConfig } from '../../eslint.config.mjs';
 import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
@@ -155,4 +155,14 @@ export default [
   {
     ignores: ['**/__fixtures__/**/*', 'dist', 'native-packages/**/*'],
   },
+  // Scoped to spec files on purpose. `allowDirectNxImports` defaults to matching
+  // every file, so an unscoped append would *replace* (flat config does not merge
+  // rule options) the `@typescript-eslint/no-restricted-imports` configurations
+  // above — silently dropping the `typescript` optional-dependency ban and the
+  // `nx/*` circular-import ban for all of packages/nx. `files` must come AFTER
+  // the spread to win.
+  // Spec files need the exemption because the `**/*.ts` block above redefines
+  // the rule and carries `ignores: ['**/*.spec.ts']`, leaving them on the root
+  // rule.
+  { ...allowDirectNxImports, files: ['**/*.spec.ts'] },
 ];
