@@ -80,7 +80,9 @@ export async function formatFiles(
   const isIgnored = createTreeIgnoreChecker(
     tree,
     ['.gitignore', '.prettierignore'],
-    { cascade: false }
+    // `separate`: prettier ORs one ignorer per `--ignore-path`, so neither
+    // file's negation can undo the other's exclusion.
+    { cascade: false, combine: 'separate' }
   );
   const files = new Set(
     tree

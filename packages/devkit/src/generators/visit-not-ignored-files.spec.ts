@@ -148,6 +148,50 @@ describe('visitNotIgnoredFiles', () => {
       children.mockRestore();
     });
 
+    it('should prune a directory excluded with a trailing slash', () => {
+      // `dist/` is the form git documents for directories, and `ignore` will not
+      // match it against the slash-less path `dist`. Without probing directories
+      // with a trailing slash the walk descends, and the nested negation below
+      // then re-includes a file git would never have looked at.
+      tree.write('.gitignore', 'dist/\n');
+      tree.write('apps/foo/dist/.gitignore', '!keep.ts\n');
+      tree.write('apps/foo/dist/keep.ts', '');
+      tree.write('apps/foo/src/b.ts', '');
+
+      const visited = visitAll();
+
+      expect(visited).not.toContain('apps/foo/dist/keep.ts');
+      expect(visited).toContain('apps/foo/src/b.ts');
+    });
+
+    it('should visit nothing when started inside a trailing-slash exclusion', () => {
+      // Same leak as above, reached through the caller's `dirPath` instead of
+      // the walk - the loop below never sees this directory, so the entry guard
+      // is the only thing that can prune it.
+      tree.write('.gitignore', 'dist/\n');
+      tree.write('apps/foo/dist/.gitignore', '!keep.ts\n');
+      tree.write('apps/foo/dist/keep.ts', '');
+
+      const visited: string[] = [];
+      visitNotIgnoredFiles(tree, 'apps/foo/dist', (p) => visited.push(p));
+
+      expect(visited).toEqual([]);
+    });
+
+    it('should let a .nxignore negation re-include a .gitignore exclusion', () => {
+      // The native walker gives `.nxignore` precedence, and master merged both
+      // files into one matcher so it won there too.
+      tree.write('.gitignore', 'generated\n');
+      tree.write('.nxignore', '!generated\n');
+      tree.write('generated/a.ts', '');
+      tree.write('src/b.ts', '');
+
+      const visited = visitAll();
+
+      expect(visited).toContain('generated/a.ts');
+      expect(visited).toContain('src/b.ts');
+    });
+
     it('should not re-include a file under an excluded directory', () => {
       // git's rule, and the `ignore` package implements it: `!build/keep.ts`
       // cannot resurrect a file whose directory `build` already excluded.
