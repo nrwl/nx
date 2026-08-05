@@ -412,14 +412,13 @@ export function createPrunedLockfile(
       new Set(getWorkspacePackagesFromGraph(graph).keys())
     );
   }
-  let pruned = true;
   let pruneError: Error | undefined;
   const lockFileContent = createLockFile(packageJson, graph, packageManager, {
     onPruneFallback: (error) => {
-      pruned = false;
       pruneError = error;
     },
   });
+  const pruned = pruneError === undefined;
   if (pruned) {
     stripPrunedLockfilePnpmConfig(packageJson);
     if (packageManager === 'pnpm') {
