@@ -64,7 +64,7 @@ describe('addLinting generator', () => {
   it('should not set up ESLint for --linter=oxlint', async () => {
     // `mockClear`: this suite has no `restoreMocks`, and `spyOn` on an
     // already-spied property hands back the same mock — so without it the
-    // previous test's call is still recorded and this asserts nothing.
+    // previous test's call is still recorded and this one fails on it.
     jest.spyOn(linter, 'lintProjectGenerator').mockClear();
 
     await addLintingGenerator(tree, {

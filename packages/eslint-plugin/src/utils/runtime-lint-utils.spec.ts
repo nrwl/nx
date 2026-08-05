@@ -461,6 +461,14 @@ describe('is terminal run', () => {
     expect(isTerminalRun()).toBe(false);
   });
 
+  it('is not a terminal run under the standalone oxc language server', () => {
+    mockProcessArgv([
+      '/Users/user/.nvm/versions/node/v22.12.0/bin/node',
+      '/Users/user/my-repo/node_modules/.bin/oxc_language_server',
+    ]);
+    expect(isTerminalRun()).toBe(false);
+  });
+
   it('is not a terminal run when the is started from the IDE', () => {
     // Visual Studio Code mac
     mockProcessArgv([

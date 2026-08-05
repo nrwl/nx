@@ -1,6 +1,31 @@
-import { ensurePackage, GeneratorCallback, Tree } from '@nx/devkit';
+import {
+  ensurePackage,
+  workspaceRoot,
+  GeneratorCallback,
+  Tree,
+} from '@nx/devkit';
 import { handleImport } from '@nx/devkit/internal';
 import { nxVersion } from './versions';
+
+/**
+ * Structural stand-in for `@nx/oxlint/generators`. Declared here rather than
+ * imported: the package is installed on demand and is deliberately absent from
+ * this package's dependencies, so no static specifier — value or type —
+ * resolves. Catches a typo'd export name and a wrong option bag at the call
+ * site, which the `any` default would not.
+ */
+type OxlintGenerators = {
+  configurationGenerator: (
+    tree: Tree,
+    options: {
+      project: string;
+      plugins?: string[];
+      skipFormat?: boolean;
+      skipPackageJson?: boolean;
+      keepExistingVersions?: boolean;
+    }
+  ) => Promise<GeneratorCallback>;
+};
 import type { LinterType } from './linter';
 
 export interface AddLintingToProjectOptions {
@@ -17,8 +42,6 @@ export interface AddLintingToProjectOptions {
   rootProject?: boolean;
   /** ESLint-only. Ignored by other linters. */
   enableTypedLinting?: boolean;
-  /** ESLint-only. Ignored by other linters. */
-  eslintConfigFormat?: 'mjs' | 'cjs';
   /** ESLint-only. Oxlint is inference-only, so it writes no explicit target. */
   addExplicitTargets?: boolean;
   /**
@@ -71,16 +94,21 @@ export async function addLintingToProject(
     // packages/js/project.json and is recorded in `ignoredCircularDependencies`
     // in the root eslint config.
     ensurePackage('@nx/oxlint', nxVersion);
-    // `handleImport`, not a bare `require`: `@nx/oxlint` is the only ESM package
-    // under `packages/`, and its `./generators` subpath has no `require`
-    // condition, so `require()` throws ERR_REQUIRE_ESM below Node 20.19 / 22.12.
-    // A literal `import()` is not an option either — `@nx/oxlint` is installed on
-    // demand and is deliberately absent from this package's dependencies, so a
-    // static specifier fails to type-check (TS2307).
+    // `@nx/oxlint` is the only ESM package under `packages/` and its
+    // `./generators` subpath has no `require` condition, so a bare `require()`
+    // throws ERR_REQUIRE_ESM below Node 20.19 / 22.12.
+    //
+    // Resolve to an absolute path before importing. `ensurePackage` exposes an
+    // on-demand install by adding a temp dir to NODE_PATH, which `require.resolve`
+    // honours and the ESM loader does not — so handing `import()` a bare specifier
+    // fails with ERR_MODULE_NOT_FOUND on exactly the Node band this indirection
+    // exists for. `load-resolved-plugin.ts` calls `handleImport` the same way.
     // nx-ignore-next-line
-    const { configurationGenerator } = await handleImport(
-      '@nx/oxlint/generators'
-    );
+    const generatorsPath = require.resolve('@nx/oxlint/generators', {
+      paths: [workspaceRoot, __dirname],
+    });
+    const { configurationGenerator } =
+      await handleImport<OxlintGenerators>(generatorsPath);
     return configurationGenerator(tree, {
       project: options.project,
       plugins: [
@@ -103,7 +131,6 @@ export async function addLintingToProject(
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
       enableTypedLinting: options.enableTypedLinting,
-      eslintConfigFormat: options.eslintConfigFormat,
       addExplicitTargets: options.addExplicitTargets,
       addPackageJsonDependencyChecks: options.addPackageJsonDependencyChecks,
       skipFormat: true,
