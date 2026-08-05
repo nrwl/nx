@@ -251,9 +251,33 @@ describe('ensureOwnedPrivateDir', () => {
         dir: '/tmp/.nx/501/sockets',
         uid: 1002,
       });
-      expect(remedy).toBeDefined();
       expect(remedy).not.toContain('chown');
       expect(remedy).not.toContain('1777');
+      // Positive, not just negative: the negative pair alone survives replacing
+      // the whole sentence with one that drops both the path and the escape
+      // hatch, which is the only lever this user reliably has.
+      expect(remedy).toContain('/tmp/.nx/501/sockets');
+      expect(remedy).toContain('NX_SOCKET_DIR');
+    });
+
+    it('should not tell a user to remove a directory a sticky parent protects', () => {
+      // The container above a per-user directory is sticky whenever a peer could
+      // have planted there, so unlink is the entry owner's, the container
+      // owner's, or root's — never ours. "Remove it" unqualified is dead advice.
+      const remedy = remedyFor({
+        kind: 'foreign-owner',
+        dir: '/tmp/.nx/501',
+        uid: 1002,
+      });
+      expect(remedy).not.toMatch(/^.*\bRemove it\b/);
+    });
+
+    it('should offer no remedy for a per-user directory root owns', () => {
+      // Handing it to root is what already happened; the uid-0 exemption is for
+      // the shared container, where root ownership is the goal.
+      expect(
+        remedyFor({ kind: 'foreign-owner', dir: '/home/me/.nx', uid: 0 })
+      ).toContain('NX_SOCKET_DIR');
     });
 
     it('should offer the chown remedy for the shared container', () => {
@@ -276,6 +300,17 @@ describe('ensureOwnedPrivateDir', () => {
           shared: true,
         })
       ).toContain("sudo chown root '/home/some user/.nx'");
+    });
+
+    it('should escape an embedded quote so the pasted command still parses', () => {
+      expect(
+        remedyFor({
+          kind: 'foreign-owner',
+          dir: "/home/o'brien/.nx",
+          uid: 1002,
+          shared: true,
+        })
+      ).toContain("sudo chown root '/home/o'\\''brien/.nx'");
     });
 
     posixOnly('should mark a refused shared container as shared', () => {

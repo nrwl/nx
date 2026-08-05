@@ -308,6 +308,7 @@ describe('socket directories', () => {
       kind: 'foreign-owner' as const,
       dir: SHARED_TMP_ROOT,
       uid: 1001,
+      shared: true as const,
     };
     (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
       reject(d, container)
@@ -347,6 +348,7 @@ describe('socket directories', () => {
       kind: 'foreign-owner' as const,
       dir: SHARED_TMP_ROOT,
       uid: 1001,
+      shared: true as const,
     };
     const home = {
       kind: 'not-tightenable' as const,
@@ -453,7 +455,7 @@ describe('socket directories', () => {
   it('records why each default root was rejected, which is what --verbose promises', () => {
     setPlatform('linux');
     (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
-      reject(d, { kind: 'foreign-owner', dir: d, uid: 1001 })
+      reject(d, { kind: 'foreign-owner', dir: d, uid: 1001, shared: true })
     );
     (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
       d.startsWith(HOME_TMP_ROOT)

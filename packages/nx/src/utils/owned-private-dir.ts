@@ -14,7 +14,7 @@ import { userInfo } from 'node:os';
  * Each guard's success arm carries its own branded path, so one guard's result
  * cannot be stored in, or passed where the code expects, another's.
  *
- * The failure value is **not** falsy. Four of these guards return
+ * The failure value is **not** falsy. Three of these guards return
  * `GuardResult<T>`, and a refusal is an object, so `if (!ensureOwnedPrivateDir(d))`
  * is always false and would accept every refused directory — on the path this
  * module exists to secure. Test `.status`, never truthiness. `isOwnedRealDirectory`
@@ -142,17 +142,30 @@ const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
  * the refusal the guard already produced, so the ownership rule is evaluated
  * once rather than re-derived from a second `lstat` that could drift from it.
  *
- * A per-user directory gets the opposite advice. Handing one to root does not
- * help — `ensureOwnedPrivateDir` has no uid-0 exemption, so it stays refused,
- * and `remedyFor` then returns `undefined`, leaving the user with a widened
- * directory and no guidance at all.
+ * Root already owning the shared container is the desired end state, so that
+ * case has nothing to ask for.
+ *
+ * A per-user directory gets different advice, not the same advice narrowed.
+ * Handing one to root cannot help — `ensureOwnedPrivateDir` has no uid-0
+ * exemption, so it would stay refused — and removing it is usually not the
+ * user's to do: the container above it is sticky whenever a peer could have
+ * planted there. `NX_SOCKET_DIR` is the lever that always works.
  */
 export function remedyFor(r: DirRefusal): string | undefined {
-  if (r.kind !== 'foreign-owner' || r.uid === 0) {
+  if (r.kind !== 'foreign-owner') {
     return undefined;
   }
   if (!r.shared) {
-    return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Remove it if it is stale, or set NX_SOCKET_DIR to a short directory your user owns.`;
+    // Not "remove it": a sticky container restricts unlink to the entry's
+    // owner, the container's owner, or root — never us. And this branch is
+    // reached only under a container `isSafeSharedRoot` accepted, which is
+    // sticky whenever a peer could write to it.
+    return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or ask an administrator to remove it.`;
+  }
+  // Only for the shared container: root owning it is what the provisioning step
+  // establishes, so there is nothing left to ask for.
+  if (r.uid === 0) {
+    return undefined;
   }
   const q = shellQuote(r.dir);
   return `${r.dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${q} && sudo chmod 1777 ${q}\`; every user can then keep their own directory under it.`;
