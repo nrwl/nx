@@ -1223,6 +1223,7 @@ describe('@nx/playwright/plugin', () => {
         .map(([, e]: [unknown, Error]) => e.message)
         .join('\n');
       expect(innerMessages).toMatch(/could not evaluate/);
+      expect(innerMessages).toMatch(/"waitForWebServer": false/);
     } finally {
       _setChildEval(null);
       setWorkspaceRoot(originalWorkspaceRoot);
