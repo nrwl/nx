@@ -13,11 +13,27 @@ export function getIgnoreObject(
   return ig;
 }
 
+/**
+ * How the ignore files *within one directory* combine. The two consumers answer
+ * to different authorities and genuinely need different rules:
+ *
+ * - `separate` is prettier's: one matcher per file, any of them excluding wins,
+ *   and a negation counts only if none excluded. `createIsIgnoredFunction`
+ *   builds an ignorer per `--ignore-path` and ORs them, so a `!x` in
+ *   `.prettierignore` cannot re-include an `x` that `.gitignore` excluded.
+ * - `merged` is git's and the native walker's: all files in one matcher, later
+ *   ones winning, so `.nxignore`'s `!x` re-includes `.gitignore`'s `x`. It has
+ *   to be a merge rather than a precedence check between separate matchers,
+ *   because a lone `!x` reports an opinion on `x/` but *none* on `x/a.ts`
+ *   (measured) - only a merge carries the negation down to the children.
+ */
+export type IgnoreCombineMode = 'separate' | 'merged';
+
 /** One directory's ignore files, and the directory its patterns are rooted at. */
 export type ScopedIgnoreMatcher = {
   /** Workspace-relative POSIX directory, `''` for the workspace root. */
   dir: string;
-  /** One matcher per ignore file, never merged - see `isIgnoredByChain`. */
+  /** How they relate is decided at build time - see `IgnoreCombineMode`. */
   matchers: ReturnType<typeof ignore>[];
 };
 
@@ -41,7 +57,8 @@ export type ScopedIgnoreMatcher = {
  */
 export function createIgnoreChainResolver(
   read: (path: string) => string | null | undefined,
-  filenames: string[]
+  filenames: string[],
+  combine: IgnoreCombineMode
 ): (dir: string) => ScopedIgnoreMatcher[] {
   const cache = new Map<string, ScopedIgnoreMatcher[]>();
 
@@ -51,10 +68,15 @@ export function createIgnoreChainResolver(
       return cached;
     }
 
-    const matchers = filenames
+    const contents = filenames
       .map((name) => read(dir ? `${dir}/${name}` : name))
-      .filter((c): c is string => !!c)
-      .map((contents) => ignore().add(contents));
+      .filter((c): c is string => !!c);
+    const matchers =
+      combine === 'merged'
+        ? contents.length > 0
+          ? [contents.reduce((m, c) => m.add(c), ignore())]
+          : []
+        : contents.map((c) => ignore().add(c));
 
     const inherited = dir === '' ? [] : resolve(posixDirname(dir));
     const chain =
@@ -77,11 +99,9 @@ export function createIgnoreChainResolver(
  * Nearest directory with an *opinion* wins, not the first match: a nested
  * `!keep.log` must override the root's `*.log`, which is git's rule.
  *
- * Within one directory the files are never merged - any one of them excluding
- * the file wins, and a negation only counts if none of them excluded it. That is
- * prettier's rule (`createIsIgnoredFunction` builds an ignorer per
- * `--ignore-path` and ORs them), so a `!x` in `.prettierignore` cannot
- * re-include an `x` that `.gitignore` excluded.
+ * How the files of one directory combine is decided when the chain is built -
+ * see `IgnoreCombineMode`. Here they are simply the entry's matchers: any one
+ * excluding wins, and a negation counts only if none excluded.
  *
  * `filePath` is workspace-relative POSIX and must sit under every `dir` in the
  * chain - which holds when the chain came from that file's own directory.
@@ -137,22 +157,30 @@ export function isAlwaysIgnored(path: string): boolean {
  * (measured), so cascading here would skip files `nx format:check` still checks,
  * leaving them committed unformatted.
  *
- * `filenames` are kept as separate matchers, so one of them excluding a file
- * cannot be undone by a negation in another - see `isIgnoredByChain`.
+ * `combine` decides how the files of one directory relate - see
+ * `IgnoreCombineMode`. For `merged`, order `filenames` lowest-authority first.
  */
 export function createTreeIgnoreChecker(
   tree: Tree,
   filenames: string[],
-  { cascade }: { cascade: boolean }
+  { cascade, combine }: { cascade: boolean; combine: IgnoreCombineMode }
 ): (path: string) => boolean {
   const resolve = createIgnoreChainResolver(
     (path) => (tree.exists(path) ? tree.read(path, 'utf-8') : null),
-    filenames
+    filenames,
+    combine
   );
 
-  return (path) =>
-    isAlwaysIgnored(path) ||
-    isIgnoredByChain(resolve(cascade ? posixDirname(path) : ''), path);
+  return (path) => {
+    // A directory is probed as `dist/` so a trailing-slash pattern matches it,
+    // but the chain is keyed by real directories - `posixDirname('dist/')` is
+    // `'dist'`, not `''` - so the lookup uses the bare path.
+    const bare = path.endsWith('/') ? path.slice(0, -1) : path;
+    return (
+      isAlwaysIgnored(path) ||
+      isIgnoredByChain(resolve(cascade ? posixDirname(bare) : ''), path)
+    );
+  };
 }
 
 /**

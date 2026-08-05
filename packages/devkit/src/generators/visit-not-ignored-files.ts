@@ -17,9 +17,14 @@ export function visitNotIgnoredFiles(
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
-  // Built once for the whole traversal.
+  // Built once for the whole traversal. `.nxignore` last and `merged` so its
+  // patterns win: the native walker registers it through
+  // `add_custom_ignore_filename`, which outranks `.gitignore`, so a `!x` there
+  // has to re-include an `x` that `.gitignore` excluded. Merging is also exactly
+  // what the helper this replaced did.
   const isIgnored = createTreeIgnoreChecker(tree, ['.gitignore', '.nxignore'], {
     cascade: true,
+    combine: 'merged',
   });
 
   visitDirectory(
@@ -36,12 +41,12 @@ function visitDirectory(
   visitor: (path: string) => void,
   isIgnored: (path: string) => boolean
 ): void {
-  // Fires only for the entry directory - every deeper one is already filtered
-  // by the loop below. Not redundant: an ignore file *inside* an excluded
-  // directory can un-ignore its own children, since the chain stops at the
-  // nearest opinion. git never descends that far, so pruning here is what
-  // matches it.
-  if (dirPath !== '' && isIgnored(dirPath)) {
+  // Probed as `dist/`, which is the spelling git documents for a directory and
+  // the only one a trailing-slash pattern matches. Load-bearing: without it the
+  // walk descends, and a negation in an ignore file *inside* the excluded
+  // directory becomes the nearest opinion and re-includes children git would
+  // never have looked at.
+  if (dirPath !== '' && isIgnored(asDirectory(dirPath))) {
     return;
   }
 
@@ -55,9 +60,16 @@ function visitDirectory(
     if (tree.isFile(fullPath)) {
       visitor(fullPath);
     } else {
+      // A directory excluded as `dist/` is not caught above - `ignore` will not
+      // match a trailing-slash pattern against a slash-less path - so the guard
+      // at the top of `visitDirectory` re-tests it as `dist/`.
       visitDirectory(tree, fullPath, visitor, isIgnored);
     }
   }
+}
+
+function asDirectory(path: string): string {
+  return path.endsWith('/') ? path : `${path}/`;
 }
 
 function normalizePathRelativeToRoot(path: string, root: string): string {

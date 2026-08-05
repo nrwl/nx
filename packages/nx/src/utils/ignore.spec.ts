@@ -8,17 +8,23 @@ describe('createIgnoreChainResolver', () => {
   /** Builds a resolver over an in-memory `path -> contents` map. */
   function resolverFor(
     files: Record<string, string>,
-    filenames = ['.gitignore']
+    filenames = ['.gitignore'],
+    combine: 'separate' | 'merged' = 'separate'
   ) {
-    return createIgnoreChainResolver((path) => files[path] ?? null, filenames);
+    return createIgnoreChainResolver(
+      (path) => files[path] ?? null,
+      filenames,
+      combine
+    );
   }
 
   function ignores(
     files: Record<string, string>,
     filePath: string,
-    filenames?: string[]
+    filenames?: string[],
+    combine: 'separate' | 'merged' = 'separate'
   ) {
-    const resolve = resolverFor(files, filenames);
+    const resolve = resolverFor(files, filenames, combine);
     return isIgnoredByChain(resolve(posixDirname(filePath)), filePath);
   }
 
@@ -88,6 +94,40 @@ describe('createIgnoreChainResolver', () => {
     expect(ignores(files, 'both.ts', [...filenames].reverse())).toBe(true);
   });
 
+  it('lets a later file override an earlier one when merged', () => {
+    // The native walker registers `.nxignore` via `add_custom_ignore_filename`,
+    // which outranks `.gitignore` - measured against `WorkspaceContext` in both
+    // directions - and master merged both files into one matcher so `.nxignore`
+    // won there too. `separate` would let `.gitignore`'s exclusion win instead.
+    const names = ['.gitignore', '.nxignore'];
+
+    expect(
+      ignores(
+        { '.gitignore': 'x.ts\n', '.nxignore': '!x.ts\n' },
+        'x.ts',
+        names,
+        'merged'
+      )
+    ).toBe(false);
+    expect(
+      ignores(
+        { '.gitignore': '!x.ts\n', '.nxignore': 'x.ts\n' },
+        'x.ts',
+        names,
+        'merged'
+      )
+    ).toBe(true);
+    // A file with no opinion falls through to the next one.
+    expect(
+      ignores(
+        { '.gitignore': 'x.ts\n', '.nxignore': 'other.ts\n' },
+        'x.ts',
+        names,
+        'merged'
+      )
+    ).toBe(true);
+  });
+
   it('still honours a negation within a single file', () => {
     const files = { '.gitignore': '*.log\n!keep.log\n' };
 
@@ -114,7 +154,8 @@ describe('createIgnoreChainResolver', () => {
         reads.push(path);
         return path === '.gitignore' ? 'dist\n' : null;
       },
-      ['.gitignore']
+      ['.gitignore'],
+      'separate'
     );
 
     resolve('apps/foo/src');
