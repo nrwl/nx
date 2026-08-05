@@ -1907,7 +1907,7 @@ export class TaskOrchestrator {
             typeof encodingOrCallback === 'function'
               ? encodingOrCallback
               : callback;
-          if (cb) cb();
+          if (cb) cb(null);
           return true;
         };
         process.stdout.write = noop;

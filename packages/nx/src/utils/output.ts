@@ -357,7 +357,11 @@ class CLIOutput {
     this.addNewline();
   }
 
-  /** Waits for queued `process.stdout` to reach the fd. Does not cover stderr. */
+  /**
+   * Waits for queued `process.stdout` to reach the fd. Does not cover stderr, and
+   * resolves without flushing if something has replaced `process.stdout.write` —
+   * the SIGINT silencer in task-orchestrator.ts does exactly that, on purpose.
+   */
   drain(): Promise<void> {
     return new Promise((resolve) => {
       // Captured once: the deferred cleanup below must detach from the stream it

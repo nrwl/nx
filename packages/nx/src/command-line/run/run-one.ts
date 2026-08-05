@@ -69,6 +69,7 @@ export async function runOne(
       },
       workspaceRoot
     );
+    await output.drain();
     process.exit(0);
   }
 

@@ -179,7 +179,7 @@ async function getTerminalOutputLifeCycle(
           : callback;
       // Preserve original behavior around callback and return value, just in case
       if (cb) {
-        cb();
+        cb(null);
       }
       return true;
     };
@@ -296,7 +296,13 @@ async function getTerminalOutputLifeCycle(
               ? encodingOrCallback
               : undefined;
           logDebug(
-            Buffer.isBuffer(chunk) ? chunk.toString(enc) : chunk.toString()
+            ArrayBuffer.isView(chunk)
+              ? Buffer.from(
+                  chunk.buffer,
+                  chunk.byteOffset,
+                  chunk.byteLength
+                ).toString(enc)
+              : chunk.toString()
           );
 
           // Nx Cloud logs are held back for the TUI; everything else is swallowed,
@@ -317,7 +323,7 @@ async function getTerminalOutputLifeCycle(
           }
           // Preserve original behavior around callback and return value, just in case
           if (cb) {
-            cb();
+            cb(null);
           }
           return true;
         };
