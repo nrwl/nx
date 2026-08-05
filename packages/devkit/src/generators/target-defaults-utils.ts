@@ -17,8 +17,8 @@ import {
   findMatchingConfigFiles,
   findMatchingProjects,
   readTargetDefaultsForTarget as readTargetDefaultsForTargetFromNx,
+  splitGlobPatterns,
 } from 'nx/src/devkit-internals';
-import { splitGlobPatterns } from '../utils/glob-patterns';
 import picomatch from 'picomatch';
 
 /**

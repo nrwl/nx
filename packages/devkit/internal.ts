@@ -150,6 +150,7 @@ export {
   calculateReverseDeps,
   codeFrameColumns,
   combineGlobPatterns,
+  splitGlobPatterns,
   connectToNxCloud,
   createDirectory,
   createLockFile,

@@ -4,8 +4,10 @@ import {
   readNxJson,
   CreateNodes,
 } from 'nx/src/devkit-exports';
-import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
-import { splitGlobPatterns } from './glob-patterns';
+import {
+  findMatchingConfigFiles,
+  splitGlobPatterns,
+} from 'nx/src/devkit-internals';
 import picomatch from 'picomatch';
 export async function findPluginForConfigFile(
   tree: Tree,
