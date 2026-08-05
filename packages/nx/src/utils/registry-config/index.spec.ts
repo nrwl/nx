@@ -175,7 +175,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     // own resolution is silent.
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
-      'Could not read the yarn configuration'
+      'Could not resolve the yarn configuration'
     );
   });
 
@@ -190,7 +190,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     });
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
-      'Could not read the pnpm configuration'
+      'Could not resolve the pnpm configuration'
     );
   });
 
@@ -229,7 +229,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
       expect(fresh('is-even', ROOT, 'yarn', '1.22.22')).toEqual({});
     });
     expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
-      'Could not read the yarn configuration'
+      'Could not resolve the yarn configuration'
     );
   });
 

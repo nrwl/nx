@@ -43,7 +43,7 @@ export function getNpmSpawnRegistryEnv(
   } catch (e) {
     // The warning omits the cause because an rc parse error quotes the lines
     // around the fault, which in these files is credential material.
-    warnUnreadableConfig(packageManager);
+    warnUnresolvedConfig(packageManager);
     logger.verbose(
       `Failed to resolve the ${packageManager} registry configuration; falling back to npm's own resolution.`,
       e
@@ -112,14 +112,16 @@ function reconcileScopedRegistryKey(
   }
 }
 
-const warnedUnreadableConfigs = new Set<PackageManager>();
-function warnUnreadableConfig(packageManager: PackageManager): void {
-  if (warnedUnreadableConfigs.has(packageManager)) {
+const warnedUnresolvedConfigs = new Set<PackageManager>();
+// Reached by a failed read and equally by a malformed value the read returned,
+// so the wording stays on resolution rather than naming a file.
+function warnUnresolvedConfig(packageManager: PackageManager): void {
+  if (warnedUnresolvedConfigs.has(packageManager)) {
     return;
   }
-  warnedUnreadableConfigs.add(packageManager);
+  warnedUnresolvedConfigs.add(packageManager);
   logger.warn(
-    `Could not read the ${packageManager} configuration; packages will be fetched using npm's own registry resolution, which may differ from ${packageManager}'s. Run with NX_VERBOSE_LOGGING=true for the cause.`
+    `Could not resolve the ${packageManager} configuration; packages will be fetched using npm's own registry resolution, which may differ from ${packageManager}'s. Run with NX_VERBOSE_LOGGING=true for the cause.`
   );
 }
 

@@ -33,7 +33,11 @@ export function readBunfigRaw(
   try {
     raw = readFileSync(path, 'utf-8');
   } catch (error) {
-    return error?.code === 'ENOENT' ? null : 'unreadable';
+    // ENOTDIR (a path through a non-directory) is another shape of absent, the
+    // same way the .npmrc reader classifies it.
+    return error?.code === 'ENOENT' || error?.code === 'ENOTDIR'
+      ? null
+      : 'unreadable';
   }
   try {
     return parse(raw);

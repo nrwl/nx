@@ -1039,9 +1039,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     it('keeps bridging the auth.ini registry and TLS mode when the workspace .npmrc cannot be read', () => {
-      // pnpm warns and continues on an .npmrc it cannot read (verified on 10.33.2 and
-      // 11.5.0, EACCES and EISDIR), so an unreadable file must not collapse the bridge
-      // into npm's own resolution.
+      // pnpm keeps resolving from the remaining layers for an .npmrc it cannot read,
+      // so an unreadable file must not collapse the bridge into npm's own resolution.
       writeAuthIni(
         ['registry=https://reg-a.example.com/', 'strict-ssl=false'].join('\n')
       );
@@ -1338,50 +1337,70 @@ describe('getPnpmSpawnRegistryEnv', () => {
         process.env.pnpm_config__auth = '{not json';
         expect(() =>
           getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')
-        ).toThrow();
+        ).toThrow('is not valid JSON');
       });
 
       it.each([
         [
           'a non-object document',
           JSON.stringify(['https://reg-a.example.com']),
+          'must be a JSON object of registry URLs',
         ],
         [
           'a non-http registry key',
           JSON.stringify({
             'ftp://reg-a.example.com': { '@': { authToken: 't' } },
           }),
+          'is not a plain http(s) registry URL',
         ],
         [
           'a registry key with credentials',
           JSON.stringify({
             'https://user:pass@reg-a.example.com': { '@': { authToken: 't' } },
           }),
+          'is not a plain http(s) registry URL',
         ],
         [
           'a bad scope',
           JSON.stringify({
             'https://reg-a.example.com': { org: { authToken: 't' } },
           }),
+          'must map scopes',
         ],
         [
-          'an unsupported auth field',
+          'a missing auth field',
           JSON.stringify({
             'https://reg-a.example.com': { '@': { username: 'u' } },
           }),
+          'must map scopes',
+        ],
+        [
+          // Rejected only by the extra-field check: the token itself is valid,
+          // so dropping that clause leaves this the one case that stops failing.
+          'an auth field alongside the token',
+          JSON.stringify({
+            'https://reg-a.example.com': {
+              '@': { authToken: 't', username: 'u' },
+            },
+          }),
+          'must map scopes',
         ],
         [
           'a non-string token',
           JSON.stringify({
             'https://reg-a.example.com': { '@': { authToken: 42 } },
           }),
+          'must map scopes',
         ],
-      ])('fails on %s, the way pnpm dies on it', (_label, value) => {
-        process.env.pnpm_config__auth = value;
-        expect(() =>
-          getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')
-        ).toThrow();
-      });
+      ])(
+        'fails on %s, the way pnpm dies on it',
+        (_label, value, expected: string) => {
+          process.env.pnpm_config__auth = value;
+          expect(() =>
+            getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')
+          ).toThrow(expected);
+        }
+      );
 
       it.each([
         ['a corrupt', '_auth: [unclosed\n'],
@@ -1392,7 +1411,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
           writeGlobalConfigYaml(contents);
           expect(() =>
             getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')
-          ).toThrow();
+          ).toThrow('global configuration file');
         }
       );
 
@@ -1404,17 +1423,17 @@ describe('getPnpmSpawnRegistryEnv', () => {
 
     it('fails on a global config.yaml it cannot read even before the JSON auth tier (pnpm dies on it)', () => {
       writeGlobalConfigYaml('npmrcAuthFile: [unclosed\n');
-      expect(() =>
-        getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')
-      ).toThrow();
+      expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
+        'global configuration file'
+      );
     });
 
     it('fails on a global config.yaml it cannot read even when the env names the auth file (pnpm still dies on it)', () => {
       writePnpmOnlyUserConfig('');
       writeGlobalConfigYaml('npmrcAuthFile: [unclosed\n');
-      expect(() =>
-        getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')
-      ).toThrow();
+      expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
+        'global configuration file'
+      );
     });
 
     describe('token helpers', () => {
