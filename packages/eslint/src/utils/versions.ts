@@ -16,6 +16,7 @@ export const jsoncEslintParserVersion = '^2.1.0';
 export const eslintCompat = '^2.0.5';
 
 export const eslintVersion = '^10.0.0';
+export const eslintV9Version = '^9.8.0';
 export const typescriptESLintVersion = '^8.58.0';
 
 type EslintVersions = {
@@ -32,7 +33,7 @@ const latestVersions: EslintVersions = {
 // (latest) stack so existing workspaces aren't force-bumped to v10.
 type CompatVersions = 9;
 const versionMap: Record<CompatVersions, EslintVersions> = {
-  9: { eslintVersion: '^9.8.0', typescriptESLintVersion: '^8.58.0' },
+  9: { eslintVersion: eslintV9Version, typescriptESLintVersion: '^8.58.0' },
 };
 
 export function versions(tree: Tree): EslintVersions {
