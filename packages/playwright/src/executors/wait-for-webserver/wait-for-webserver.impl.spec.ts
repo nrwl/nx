@@ -202,6 +202,54 @@ describe('waitForWebserverExecutor', () => {
     expect(message).not.toContain('\u009b');
   });
 
+  it('does not treat a redirect to a non-http(s) location as ready', async () => {
+    const server = createHttpServer((_req, res) => {
+      res.statusCode = 302;
+      res.setHeader('location', 'ftp://example.com/');
+      res.end();
+    });
+    await listen(server, 0);
+    const { port } = server.address() as AddressInfo;
+
+    const result = await waitForWebserverExecutor(
+      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
+      context
+    );
+
+    expect(result).toEqual({ success: false });
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'redirected to "ftp://example.com/", which is not an http or https url'
+      )
+    );
+  });
+
+  it('retries past a boot-time redirect to a non-http(s) location', async () => {
+    // Following the location into http.request would throw and end the wait on
+    // the first probe; classifying it keeps probing until the server is ready.
+    let requests = 0;
+    const server = createHttpServer((_req, res) => {
+      if (++requests === 1) {
+        res.statusCode = 302;
+        res.setHeader('location', 'ftp://example.com/');
+        res.end();
+        return;
+      }
+      res.statusCode = 200;
+      res.end();
+    });
+    await listen(server, 0);
+    const { port } = server.address() as AddressInfo;
+
+    const result = await waitForWebserverExecutor(
+      { servers: [{ url: `http://127.0.0.1:${port}` }] },
+      context
+    );
+
+    expect(result).toEqual({ success: true });
+    expect(requests).toBeGreaterThan(1);
+  });
+
   it('reports how far a redirect chain got when a hop fails to connect', async () => {
     const deadPort = await closedPort();
     const server = createHttpServer((_req, res) => {
