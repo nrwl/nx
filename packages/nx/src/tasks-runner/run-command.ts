@@ -165,10 +165,13 @@ async function getTerminalOutputLifeCycle(
     console.log = createPatchedConsoleMethod(originalConsoleLog);
     console.error = createPatchedConsoleMethod(originalConsoleError);
 
-    const patchedWrite = (_chunk, _encoding, callback) => {
-      // Preserve original behavior around callback and return value, just in case
-      if (callback) {
-        callback();
+    const patchedWrite = (_chunk, encoding, callback) => {
+      // Preserve original behavior around callback and return value, just in case.
+      // write(chunk, cb) is as valid as write(chunk, encoding, cb); dropping the
+      // two-argument form silently strands callers that await the callback.
+      const cb = typeof encoding === 'function' ? encoding : callback;
+      if (cb) {
+        cb();
       }
       return true;
     };
@@ -274,17 +277,17 @@ async function getTerminalOutputLifeCycle(
       ): typeof process.stdout.write | typeof process.stderr.write => {
         // @ts-ignore
         return (chunk, encoding, callback) => {
+          // write(chunk, cb) is as valid as write(chunk, encoding, cb); without this
+          // the callback is stranded and `encoding` reaches toString() as a function.
+          const cb = typeof encoding === 'function' ? encoding : callback;
+          const enc = typeof encoding === 'function' ? undefined : encoding;
           if (isError) {
             logDebug(
-              Buffer.isBuffer(chunk)
-                ? chunk.toString(encoding)
-                : chunk.toString()
+              Buffer.isBuffer(chunk) ? chunk.toString(enc) : chunk.toString()
             );
           } else {
             logDebug(
-              Buffer.isBuffer(chunk)
-                ? chunk.toString(encoding)
-                : chunk.toString()
+              Buffer.isBuffer(chunk) ? chunk.toString(enc) : chunk.toString()
             );
           }
 
@@ -304,8 +307,8 @@ async function getTerminalOutputLifeCycle(
             }
           }
           // Preserve original behavior around callback and return value, just in case
-          if (callback) {
-            callback();
+          if (cb) {
+            cb();
           }
           return true;
         };
