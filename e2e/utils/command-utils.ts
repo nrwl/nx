@@ -7,7 +7,7 @@ import {
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { existsSync } from 'fs-extra';
 import * as isCI from 'is-ci';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, readlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { gte } from 'semver';
@@ -447,10 +447,9 @@ export function normalizePerformanceReport(output: string): string {
 }
 
 /**
- * Extra context for a `Command timed out` failure. A wedged daemon outlives our kill —
- * `sendMessageToDaemon` waits 20 minutes on a reply — and leaves no trace in the killed
- * command's own output, so the daemon log and the surviving processes are the only
- * evidence of where the run stopped. Best-effort: never throws.
+ * Extra context for a `Command timed out` failure. The killed command's own output stops
+ * exactly where the run stopped, so the daemon log, the surviving processes and what is
+ * holding them open are the only evidence of why. Best-effort: never throws.
  */
 function timeoutDiagnostics(cwd: string, env: RunCmdOpts['env']): string {
   const sections: string[] = [];
@@ -474,20 +473,77 @@ function timeoutDiagnostics(cwd: string, env: RunCmdOpts['env']): string {
 
   try {
     // The timeout kills the shell, not its descendants, so the nx client, the daemon and
-    // any task process are all still listed here.
-    const processes = execSync('ps -eo pid,ppid,etime,args', {
+    // any task process are all still listed here. Deliberately unfiltered: the process
+    // that failed to exit is often a bundler whose argv never mentions nx.
+    const [header = '', ...rows] = execSync('ps -eo pid,ppid,etime,args', {
       encoding: 'utf-8',
     })
-      .split('\n')
-      .filter((line) => line.includes('nx'))
-      .slice(0, 40)
-      .join('\n');
-    sections.push(`Surviving nx processes:\n${processes}`);
+      .trimEnd()
+      .split('\n');
+    // Never truncate away this workspace's own processes. `ps -e` lists by ascending
+    // pid, so fill the remaining budget from the tail — the most recently started.
+    const mine = rows.filter((line) => line.includes(cwd));
+    const others = rows.filter((line) => !line.includes(cwd));
+    const filler = others.slice(-Math.max(0, PS_LINE_LIMIT - mine.length));
+    const dropped = others.length - filler.length;
+    sections.push(
+      `Surviving processes:\n${[header, ...mine, ...filler].join('\n')}${
+        dropped > 0 ? `\n… ${dropped} unrelated process(es) not shown …` : ''
+      }`
+    );
+    const fds = fileDescriptorsByPid(mine);
+    if (fds) {
+      sections.push(`Open file descriptors (workspace processes):\n${fds}`);
+    }
   } catch (e) {
     sections.push(`Process list unavailable: ${e.message}`);
   }
 
   return sections.join('\n\n');
+}
+
+const PS_LINE_LIMIT = 200;
+const FD_PROCESS_LIMIT = 10;
+
+/**
+ * What is holding these processes open, as `count×kind` per pid — a pile of
+ * `anon_inode:inotify` means leaked file watchers, a lingering `socket:` means something
+ * else. Linux-only (reads /proc); returns null everywhere else.
+ */
+function fileDescriptorsByPid(psLines: string[]): string | null {
+  const summaries = psLines
+    .slice(0, FD_PROCESS_LIMIT)
+    .map((line) => {
+      const pid = line.trim().split(/\s+/)[0];
+      const kinds = fileDescriptorKinds(pid);
+      return kinds ? `  ${pid}: ${kinds}` : null;
+    })
+    .filter(Boolean);
+
+  return summaries.length > 0 ? summaries.join('\n') : null;
+}
+
+function fileDescriptorKinds(pid: string): string | null {
+  const counts = new Map<string, number>();
+  try {
+    for (const fd of readdirSync(`/proc/${pid}/fd`)) {
+      let target: string;
+      try {
+        target = readlinkSync(`/proc/${pid}/fd/${fd}`);
+      } catch {
+        continue; // Closed while we were walking the directory.
+      }
+      // Pipes and sockets carry a unique inode; drop it so they aggregate.
+      const kind = target.replace(/\[\d+\]$/, '');
+      counts.set(kind, (counts.get(kind) ?? 0) + 1);
+    }
+  } catch {
+    return null; // Not Linux, or the process exited.
+  }
+  return [...counts]
+    .sort((a, b) => b[1] - a[1])
+    .map(([kind, count]) => `${count}×${kind}`)
+    .join(', ');
 }
 
 export function runCLI(
