@@ -912,5 +912,94 @@ describe('project-graph-pruning', () => {
       expect(prunedGraph.externalNodes?.['npm:lodash@4.17.21']).toBeDefined();
       expect(prunedGraph.externalNodes?.['npm:lodash@4.17.20']).toBeDefined();
     });
+
+    describe('when a rehoist happens', () => {
+      const externalNode = (
+        name: string,
+        packageName: string,
+        version: string
+      ) => ({
+        type: 'npm' as const,
+        name,
+        data: { version, packageName, hash: `sha512-${packageName}${version}` },
+      });
+
+      // A package resolved to two versions, with the nested one reachable only
+      // through another dependency. Pruning to just that dependency leaves 1.1.1
+      // as the sole version, which triggers the rehoist.
+      const createGraph = (): ProjectGraph => ({
+        nodes: {},
+        externalNodes: {
+          'npm:cookie': externalNode('npm:cookie', 'cookie', '2.0.1'),
+          'npm:cookie@1.1.1': externalNode(
+            'npm:cookie@1.1.1',
+            'cookie',
+            '1.1.1'
+          ),
+          'npm:light-my-request': externalNode(
+            'npm:light-my-request',
+            'light-my-request',
+            '6.6.0'
+          ),
+        },
+        dependencies: {
+          'npm:light-my-request': [
+            {
+              source: 'npm:light-my-request',
+              target: 'npm:cookie@1.1.1',
+              type: 'static' as any,
+            },
+          ],
+        },
+      });
+
+      // Prunes down to a single cookie version, so the rehoist runs.
+      const rehoistingPackageJson: PackageJson = {
+        name: 'app-b',
+        version: '1.0.0',
+        dependencies: { 'light-my-request': '6.6.0' },
+      };
+
+      // Needs both cookie versions, so it depends on the source graph being intact.
+      const multiVersionPackageJson: PackageJson = {
+        name: 'app-a',
+        version: '1.0.0',
+        dependencies: { cookie: '2.0.1', 'light-my-request': '6.6.0' },
+      };
+
+      it('does not mutate the source graph', () => {
+        const graph = createGraph();
+
+        pruneProjectGraph(graph, rehoistingPackageJson);
+
+        expect(graph.externalNodes['npm:cookie@1.1.1'].name).toEqual(
+          'npm:cookie@1.1.1'
+        );
+        expect(graph.externalNodes['npm:cookie'].name).toEqual('npm:cookie');
+      });
+
+      it('stays deterministic when the same graph is pruned repeatedly', () => {
+        const graph = createGraph();
+
+        const first = pruneProjectGraph(graph, multiVersionPackageJson);
+        pruneProjectGraph(graph, rehoistingPackageJson);
+        const third = pruneProjectGraph(graph, multiVersionPackageJson);
+
+        expect(Object.keys(third.externalNodes ?? {}).sort()).toEqual(
+          Object.keys(first.externalNodes ?? {}).sort()
+        );
+        expect(third.dependencies).toEqual(first.dependencies);
+      });
+
+      it('keeps both versions resolvable after an earlier prune rehoisted one', () => {
+        const graph = createGraph();
+
+        pruneProjectGraph(graph, rehoistingPackageJson);
+
+        expect(() =>
+          pruneProjectGraph(graph, multiVersionPackageJson)
+        ).not.toThrow();
+      });
+    });
   });
 });

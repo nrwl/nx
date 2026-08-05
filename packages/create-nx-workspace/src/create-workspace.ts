@@ -77,7 +77,9 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // Resolve shorthand template names to full GitHub org/repo format
     options.template = resolveTemplateShorthand(options.template);
 
-    if (!options.template.startsWith('nrwl/'))
+    // Strict slug match - a bare startsWith('nrwl/') check lets path
+    // traversal (`nrwl/../evil`) resolve to another org's repo.
+    if (!/^nrwl\/[\w.-]+$/.test(options.template))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );

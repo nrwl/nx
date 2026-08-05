@@ -1,5 +1,6 @@
 import {
   determineAngularOptions,
+  applyEmptyPresetAlias,
   validateWorkspaceName,
   resolveSpecialFolderName,
   determineFolder,
@@ -391,5 +392,29 @@ describe('stylesheet format prompts', () => {
     } as any);
 
     expect(getStyleChoices()).toEqual(['css', 'scss', 'sass', 'less']);
+  });
+});
+
+describe('applyEmptyPresetAlias', () => {
+  it('maps --preset empty to the ts preset', () => {
+    const argv = { preset: 'empty' as const };
+    applyEmptyPresetAlias(argv);
+    expect(argv.preset).toBe('ts');
+  });
+
+  it('wins over --template so appending --preset=empty escapes the template download', () => {
+    const argv = { preset: 'empty' as const, template: 'nrwl/react-template' };
+    applyEmptyPresetAlias(argv);
+    expect(argv).toEqual({ preset: 'ts' });
+  });
+
+  it('leaves other presets and templates untouched', () => {
+    const preset = { preset: Preset.ReactMonorepo };
+    applyEmptyPresetAlias(preset);
+    expect(preset).toEqual({ preset: 'react-monorepo' });
+
+    const template = { template: 'empty' };
+    applyEmptyPresetAlias(template);
+    expect(template).toEqual({ template: 'empty' });
   });
 });

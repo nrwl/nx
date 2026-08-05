@@ -4,6 +4,7 @@ import {
   addBuildTargetDefaults,
   logShowProjectCommand,
   E2EWebServerDetails,
+  type PackageJson,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -48,7 +49,6 @@ import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 interface NormalizedSchema extends Schema {
   projectName: string;

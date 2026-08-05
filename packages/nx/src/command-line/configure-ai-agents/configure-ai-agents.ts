@@ -13,7 +13,7 @@ import {
   supportedAgents,
 } from '../../ai/utils';
 import { daemonClient } from '../../daemon/client/client';
-import { installPackageToTmp } from '../../devkit-internals';
+import { installPackageToTmp } from '../../utils/package-json';
 import { output } from '../../utils/output';
 import {
   detectPackageManager,
