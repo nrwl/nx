@@ -192,6 +192,22 @@ describe('addPluginsToOxlintConfig', () => {
       'vue',
       'react',
     ]);
+    // Nothing can `extends` a TypeScript config, so there is no fix to suggest.
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('should warn for a root project whose root config is TypeScript', () => {
+    tree.delete('.oxlintrc.json');
+    tree.write('oxlint.config.ts', 'export default {};');
+
+    addPluginsToOxlintConfig(tree, '.', ['react']);
+
+    // A root project has no config of its own to find, so the probe above is
+    // short-circuited for it. Without that, the TypeScript root is picked up as
+    // the project's own config and the guard below dereferences null.
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('only JSON Oxlint configs')
+    );
   });
 
   // Two configs in one directory is a hard error in Oxlint, not an override, so
