@@ -101,6 +101,10 @@ describe('lib', () => {
       // unitTestRunner property is ignored.
       // It only works with our executors.
       expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeFalsy();
+
+      // `npm-scripts` forces `linter: 'none'` after `normalizeLinterOption` has
+      // already resolved it — nothing else catches a regression there.
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeFalsy();
     });
 
     it('should generate an empty ts lib using --config=project', async () => {

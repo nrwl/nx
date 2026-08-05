@@ -926,9 +926,9 @@ async function normalizeOptions(
 
   return {
     ...options,
-    // Read from `options` rather than a hoisted local: `config === 'npm-scripts'`
-    // overrides it to 'none' further down. Naming the key is also what satisfies
-    // the normalized type, since the spread carries the schema's `linter?`.
+    // Read from `options`, not a hoisted local: the `npm-scripts` block resets
+    // it to 'none' after `normalizeLinterOption` runs. Naming the key also
+    // satisfies the normalized type, since the spread carries `linter?`.
     linter: options.linter,
     fileName,
     name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
