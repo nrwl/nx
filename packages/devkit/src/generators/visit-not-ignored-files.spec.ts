@@ -315,32 +315,30 @@ describe('visitNotIgnoredFiles', () => {
         mkdirSync(dirname(join(repo, file)), { recursive: true });
         writeFileSync(join(repo, file), '');
       }
-      // `--exclude-standard` reads four sources the walker knows nothing about,
-      // and each needs pinning separately or the result depends on whoever is
-      // running the suite: the config files; `core.excludesFile`, whose default
-      // `~/.config/git/ignore` is a path fallback rather than config and so
-      // survives dropping them; git's two independent config-injection channels
-      // (`GIT_CONFIG_COUNT` and the older `GIT_CONFIG_PARAMETERS`); and the
-      // template dir, which is what seeds `.git/info/exclude` - with templates
-      // off the repo has none at all. `GIT_TEMPLATE_DIR` is empty rather than a
-      // nonexistent path because a missing template warns on every case.
-      const env = {
-        ...process.env,
+      // Every ambient `GIT_*` is dropped and the ones below are the only ones
+      // set, so the oracle cannot depend on whoever is running the suite. An
+      // allowlist rather than a denylist because git has more of these than is
+      // practical to enumerate - `GIT_DIR` and `GIT_COMMON_DIR` relocate the
+      // repo, `GIT_INDEX_FILE` makes corpus files look tracked so `-o` drops
+      // them silently, and git exports all of them to its own subprocesses, so
+      // a run from a hook or `git bisect run` inherits them.
+      //
+      // What survives the filter and still needs pinning: the config files, and
+      // `core.excludesFile`, whose default `~/.config/git/ignore` is a path
+      // fallback rather than config. `GIT_TEMPLATE_DIR` is empty rather than a
+      // nonexistent path - both stop `.git/info/exclude` being seeded, but a
+      // missing template warns on every case.
+      const env: NodeJS.ProcessEnv = {
+        ...Object.fromEntries(
+          Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))
+        ),
         GIT_CONFIG_GLOBAL: join(repo, 'no-such-gitconfig'),
         GIT_CONFIG_SYSTEM: join(repo, 'no-such-gitconfig'),
         GIT_CONFIG_COUNT: '1',
         GIT_CONFIG_KEY_0: 'core.excludesFile',
         GIT_CONFIG_VALUE_0: join(repo, 'no-such-gitignore'),
-        GIT_CONFIG_PARAMETERS: '',
         GIT_TEMPLATE_DIR: '',
       };
-      // These point git at a different repo entirely - git exports them to its
-      // own subprocesses, so a suite run from a hook or `git bisect run` would
-      // otherwise re-init the ambient repo instead of `repo`. They have to be
-      // removed rather than emptied: git rejects `''` as an invalid path.
-      delete env.GIT_DIR;
-      delete env.GIT_WORK_TREE;
-      delete env.GIT_INDEX_FILE;
       // No `stdio: 'ignore'`: `-q` already silences the success path, and
       // discarding stderr would report every failure here - a missing git, a
       // read-only TMPDIR, `safe.directory` - as a bare "Command failed".
