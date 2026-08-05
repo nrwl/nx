@@ -99,8 +99,8 @@ This is primarily a workaround for file-permission issues with the default locat
 environment that restricts access to it or a socket path that exceeds the OS length limit.
 Because the value is used as the socket directory itself, it has to name a directory only your user can
 reach.
-Nx rejects the system temp directory and its own container and cache roots; name a directory beneath an
-owner-only root instead.
+Nx rejects the system temp directory and its own container and cache roots.
+Name a directory beneath an owner-only root instead.
 `NX_SOCKET_DIR` takes precedence over the older `NX_DAEMON_SOCKET_DIR`.
 
 {% aside type="caution" title="Never share the socket directory" %}

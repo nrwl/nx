@@ -61,9 +61,10 @@ The write grant covers `/tmp/.nx` rather than only its `sockets` descendants bec
 
 ## Where sockets go, and in what order
 
-Nx uses the first of these it can establish. It creates each directory and verifies it afterwards, not before: a check that ran first would leave a window in which someone else could swap the path between the check and the use.
+Setting `$NX_SOCKET_DIR` replaces this list rather than joining it: the value is used exactly as given, and a configured directory Nx can't use sends it straight to the workspace with a warning instead of quietly substituting a longer path you never asked for.
 
-1. **`$NX_SOCKET_DIR`** is used exactly as given. It sits outside the order below: a configured directory that can't be used sends Nx straight to the workspace with a warning, instead of quietly substituting a longer path you never asked for.
+Otherwise Nx uses the first of these it can establish. It creates each directory and verifies it afterwards, not before: a check that ran first would leave a window in which someone else could swap the path between the check and the use.
+
 1. **`/tmp/.nx/<uid>/sockets`** needs `/tmp/.nx` to belong to you or to `root`, and to be sticky if anyone else can write to it. The two directories beneath it have to be yours and mode `0700`.
 1. **`~/.nx/sockets`** needs both directories to be yours and mode `0700`. There's no container check here, because nobody else can write to your home directory.
 1. **`<workspaceRoot>/.nx/workspace-data/d`** is the last resort. Its length grows with the depth of your checkout, so a deeply nested workspace can push a socket past the 95-character limit Nx enforces. Nx sets that conservative guard to sit under the operating system's own cap on socket paths.
@@ -126,11 +127,11 @@ Both environment variables work around the symptom rather than fixing the root c
 
 For advanced use cases, Nx provides environment variables to override where socket files are created:
 
-| Variable                         | Description                                                                                                                                                                                                                                                                         |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin). Defaults to a per-run directory beneath `/tmp/.nx/<uid>/sockets`. Must name a directory only your user can reach. Nx rejects the system temp directory and its own container/cache roots outright. |
-| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.                                                                                                                                                                                 |
-| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                                                                                                                                                                                                |
+| Variable                         | Description                                                                                                                                                                                                                                                                             |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NX_SOCKET_DIR`                  | Overrides the directory for all Nx sockets (daemon, forked process, and plugin). Replaces the default locations listed above rather than joining them. Must name a directory only your user can reach. Nx rejects the system temp directory and its own container/cache roots outright. |
+| `NX_DAEMON_SOCKET_DIR`           | Legacy alias of `NX_SOCKET_DIR`. Used only when `NX_SOCKET_DIR` is not set. Prefer `NX_SOCKET_DIR`.                                                                                                                                                                                     |
+| `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                                                                                                                                                                                                    |
 
 These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.
 
