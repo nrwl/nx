@@ -125,14 +125,27 @@ describe('visitNotIgnoredFiles', () => {
       expect(visited).toContain('apps/foo/src/b.ts');
     });
 
-    it('should never visit .git, even with no .gitignore present', () => {
+    it('should never visit the hardcoded directories, with no ignore file present', () => {
+      // Shared with the native walker, so a tree walk and a filesystem walk
+      // agree on what is never worth visiting.
       tree.write('.git/config', '');
+      tree.write('node_modules/pkg/index.js', '');
+      tree.write('.nx/cache/x.js', '');
       tree.write('a.ts', '');
 
       const visited = visitAll();
 
       expect(visited).not.toContain('.git/config');
+      expect(visited).not.toContain('node_modules/pkg/index.js');
+      expect(visited).not.toContain('.nx/cache/x.js');
       expect(visited).toContain('a.ts');
+    });
+
+    it('should not let a negation re-include a hardcoded directory', () => {
+      tree.write('.gitignore', '!node_modules\n');
+      tree.write('node_modules/pkg/index.js', '');
+
+      expect(visitAll()).not.toContain('node_modules/pkg/index.js');
     });
   });
 });

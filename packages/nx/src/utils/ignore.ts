@@ -1,4 +1,5 @@
 import ignore = require('ignore');
+import { getHardcodedIgnorePatterns } from '../native/index';
 import { readFileIfExisting } from './fileutils';
 import { workspaceRoot } from './workspace-root';
 import { Tree } from '../generators/tree';
@@ -105,6 +106,49 @@ export function isIgnoredByChain(
     }
   }
   return false;
+}
+
+let alwaysIgnored: ReturnType<typeof ignore> | undefined;
+
+/**
+ * Directories that should never be walked, whatever the workspace's own ignore
+ * files say - `node_modules`, `.git`, the nx caches.
+ *
+ * The list comes from the native walker rather than a second copy here, so a
+ * filesystem walk and a tree walk cannot drift apart.
+ *
+ * Checked ahead of the cascading chain rather than folded into it: these are not
+ * re-includable, and as ordinary patterns a nested negation could resurrect
+ * `node_modules`.
+ */
+export function isAlwaysIgnored(path: string): boolean {
+  alwaysIgnored ??= ignore().add(getHardcodedIgnorePatterns());
+  return alwaysIgnored.ignores(path);
+}
+
+/**
+ * The cascading chain bound to a tree, as a predicate over workspace-relative
+ * POSIX paths.
+ *
+ * Reads from the tree rather than disk because a generator can create or amend
+ * an ignore file in the same run, which would leave the on-disk copy stale.
+ *
+ * `filenames` differs by caller: git-facing walks want `.nxignore`, while a
+ * formatter wants `.prettierignore` - both prettier and oxfmt honour it, and
+ * `.gitignore`, in their CLIs.
+ */
+export function createTreeIgnoreChecker(
+  tree: Tree,
+  filenames: string[]
+): (path: string) => boolean {
+  const resolve = createIgnoreChainResolver(
+    (path) => (tree.exists(path) ? tree.read(path, 'utf-8') : null),
+    filenames
+  );
+
+  return (path) =>
+    isAlwaysIgnored(path) ||
+    isIgnoredByChain(resolve(posixDirname(path)), path);
 }
 
 /** `path.dirname` for the workspace-relative POSIX paths the chain is keyed by. */
