@@ -19,9 +19,12 @@ function isDotEnvName(name: string): boolean {
 }
 
 /**
- * Whether any change event touches a dotenv file that a task chain would load
- * with content that actually changed. The daemon uses this to invalidate its
- * graph cache so createNodes re-resolves config that reads process.env.
+ * Whether any change event touches a file with the dotenv name shape
+ * getEnvPathsForTask loads (`.env[.<id>]` / `.<id>.env` variants) whose content
+ * actually changed. The names are a superset of what any task loads: target and
+ * configuration names are unknown here, so `.env.staging` invalidates whether
+ * or not a task loads it. The daemon uses this to invalidate its graph cache so
+ * createNodes re-resolves config that reads process.env.
  *
  * Only the workspace root and project roots are considered: getEnvPathsForTask
  * loads dotenv files from those, never from an arbitrary subdirectory (e.g. one
@@ -30,7 +33,7 @@ function isDotEnvName(name: string): boolean {
  * Known limitation: a `.nxignore`d dotenv file never reaches this watcher (the
  * native watcher applies `.nxignore` even with `use_ignore: false`), so a warm
  * edit of one does not invalidate the graph. The cold path still resolves it:
- * getGraphTimeEnvForTask reads dotenv from disk directly.
+ * getGraphTimeDotEnvForTask reads dotenv from disk directly.
  */
 export function outputsChangeInvalidatesGraphEnv(
   changeEvents: WatchEvent[],
@@ -49,7 +52,7 @@ export function outputsChangeInvalidatesGraphEnv(
   let invalidate = false;
 
   for (const { path, type } of candidates) {
-    if (dotEnvNameUnderRoot(path, roots) === null) {
+    if (!isDotEnvUnderRoot(path, roots)) {
       continue;
     }
 
@@ -100,13 +103,13 @@ function graphTimeDotEnvRoots(
 }
 
 /**
- * If `path` is a dotenv file that getEnvPathsForTask would load from the
- * workspace root or a project root, returns its name relative to that root;
- * otherwise null. The deepest root that yields a dotenv name wins, so a nested
- * project root does not shadow a parent's slash-identifier dotenv. The relative
- * name may contain `/` because a target/configuration identifier can.
+ * Whether `path` is a dotenv file that getEnvPathsForTask would load from the
+ * workspace root or a project root. The name relative to the root may contain
+ * `/` because a target/configuration identifier can, and every root ancestor is
+ * tried, so a nested project root does not shadow a parent's slash-identifier
+ * dotenv.
  */
-function dotEnvNameUnderRoot(path: string, roots: Set<string>): string | null {
+function isDotEnvUnderRoot(path: string, roots: Set<string>): boolean {
   for (
     let slash = path.lastIndexOf('/');
     slash > 0;
@@ -115,15 +118,15 @@ function dotEnvNameUnderRoot(path: string, roots: Set<string>): string | null {
     const dir = path.slice(0, slash);
     // Keep walking past a closer root that yields no dotenv name: the same path
     // can still be a slash-identifier dotenv for a shallower (parent) root.
-    if (roots.has(dir)) {
-      const name = path.slice(slash + 1);
-      if (isDotEnvName(name)) {
-        return name;
-      }
+    if (roots.has(dir) && isDotEnvName(path.slice(slash + 1))) {
+      return true;
     }
   }
-  // No project-root ancestor: treat as a workspace-root-relative path.
-  return roots.has('.') && isDotEnvName(path) ? path : null;
+  // No project-root ancestor: a workspace-root dotenv, single-segment names
+  // only. A deeper path (`.nx/cache/abc.env`, `.github/workflows/ci.env`) has
+  // the dotenv name shape only for a target identifier containing `/`;
+  // accepting those would invalidate on every write under such dot-directories.
+  return roots.has('.') && !path.includes('/') && isDotEnvName(path);
 }
 
 // Test helper: the hash map is daemon-lived module state.
