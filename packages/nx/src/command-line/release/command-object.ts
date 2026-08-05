@@ -1,6 +1,7 @@
 import { type Argv, type CommandModule, showHelp } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
 import {
   type OutputStyle,
   type RunManyOptions,
@@ -411,6 +412,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
+    await output.drain();
     process.exit(status);
   },
 };
