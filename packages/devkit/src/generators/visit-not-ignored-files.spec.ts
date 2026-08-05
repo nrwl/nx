@@ -1,3 +1,7 @@
+import { execSync } from 'child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { dirname, join } from 'path';
 import { createTree } from 'nx/src/generators/testing-utils/create-tree';
 import type { Tree } from 'nx/src/generators/tree';
 import { visitNotIgnoredFiles } from './visit-not-ignored-files';
@@ -241,6 +245,84 @@ describe('visitNotIgnoredFiles', () => {
       tree.write('node_modules/pkg/index.js', '');
 
       expect(visitAll()).not.toContain('node_modules/pkg/index.js');
+    });
+  });
+
+  // Differential test against real git rather than against hand-written
+  // expectations. The cases above encode what we believe git does; this one
+  // asks it. Every defect this walker has shipped was a disagreement with an
+  // authority, and a sweep finds those without anyone having to think of the
+  // specific pattern first - the allowlist idiom below went unnoticed through
+  // four rounds of hand-written tests.
+  describe('agreement with git', () => {
+    const PATTERNS = [
+      'dist/',
+      'dist',
+      '*.log',
+      'build',
+      '/generated/',
+      '**/tmp/',
+      '*',
+    ];
+    const NEGATIONS = ['', '!keep.ts', '!apps/', '!apps/**', '!dist/'];
+    const FILES = [
+      'a.ts',
+      'keep.ts',
+      'dist/a.ts',
+      'dist/keep.ts',
+      'apps/a.ts',
+      'apps/dist/a.ts',
+      'build/a.ts',
+      'x.log',
+      'apps/tmp/a.ts',
+    ];
+
+    let repo: string;
+
+    beforeEach(() => {
+      repo = mkdtempSync(join(tmpdir(), 'nx-ignore-oracle-'));
+    });
+
+    afterEach(() => {
+      rmSync(repo, { recursive: true, force: true });
+    });
+
+    /** What real git leaves untracked, i.e. does not ignore. */
+    function gitVisits(gitignore: string): Set<string> {
+      writeFileSync(join(repo, '.gitignore'), gitignore);
+      for (const file of FILES) {
+        mkdirSync(dirname(join(repo, file)), { recursive: true });
+        writeFileSync(join(repo, file), '');
+      }
+      execSync('git init -q .', { cwd: repo, stdio: 'ignore' });
+      const listed = execSync('git ls-files -o --exclude-standard', {
+        cwd: repo,
+        encoding: 'utf-8',
+      });
+      return new Set(listed.split('\n').filter((f) => FILES.includes(f)));
+    }
+
+    function walkerVisits(gitignore: string): Set<string> {
+      tree.write('.gitignore', gitignore);
+      for (const file of FILES) {
+        tree.write(file, '');
+      }
+      const seen: string[] = [];
+      visitNotIgnoredFiles(tree, '', (path) => seen.push(path));
+      // `createTree` seeds files of its own; compare only the corpus.
+      return new Set(seen.filter((f) => FILES.includes(f)));
+    }
+
+    it.each(
+      PATTERNS.flatMap((pattern) =>
+        NEGATIONS.map((negation) => [pattern, negation] as const)
+      )
+    )('matches git for %p + %p', (pattern, negation) => {
+      const gitignore = [pattern, negation].filter(Boolean).join('\n') + '\n';
+
+      expect([...walkerVisits(gitignore)].sort()).toEqual(
+        [...gitVisits(gitignore)].sort()
+      );
     });
   });
 });
