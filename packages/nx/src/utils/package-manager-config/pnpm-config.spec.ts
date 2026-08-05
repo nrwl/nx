@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { homedir, tmpdir } from 'os';
 import { join } from 'path';
 import { getPnpmConfigDir, readPnpmYamlConfig } from './pnpm-config';
@@ -97,6 +97,23 @@ describe('readPnpmYamlConfig', () => {
 
   it('reports a file that does not parse as invalid', () => {
     writeFileSync(path(), 'registries:\n\tdefault: tab-indented\n');
+    expect(readPnpmYamlConfig(path())).toBe('invalid');
+  });
+
+  it('returns null for a path through a non-directory', () => {
+    writeFileSync(path(), '');
+    expect(readPnpmYamlConfig(join(path(), 'pnpm-workspace.yaml'))).toBeNull();
+  });
+
+  it("reports a file that exists but cannot be read as 'unreadable'", () => {
+    // A symlink loop is the portable way to fail the read with an errno that
+    // root cannot bypass, unlike a permission bit.
+    symlinkSync(path(), path());
+    expect(readPnpmYamlConfig(path())).toBe('unreadable');
+  });
+
+  it("keeps a directory in the file's place fatal, the way pnpm 11.20 dies on it", () => {
+    mkdirSync(path());
     expect(readPnpmYamlConfig(path())).toBe('invalid');
   });
 

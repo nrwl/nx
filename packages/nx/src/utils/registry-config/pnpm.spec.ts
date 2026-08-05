@@ -2,7 +2,7 @@ jest.mock('../logger', () => ({
   logger: { warn: jest.fn(), verbose: jest.fn() },
 }));
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { getPnpmSpawnRegistryEnv } from './pnpm';
@@ -107,7 +107,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
     // an empty document would silently drop the registry and send npm to npmjs.
     writeYaml('registries:\n\tdefault: https://reg-a.example.com/\n');
     expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
-      /pnpm workspace file at .* could not be read/
+      /pnpm workspace file at .* could not be parsed/
     );
   });
 
@@ -1421,19 +1421,69 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
-    it('fails on a global config.yaml it cannot read even before the JSON auth tier (pnpm dies on it)', () => {
+    it('fails on a global config.yaml it cannot parse even before the JSON auth tier (pnpm dies on it)', () => {
       writeGlobalConfigYaml('npmrcAuthFile: [unclosed\n');
       expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
         'global configuration file'
       );
     });
 
-    it('fails on a global config.yaml it cannot read even when the env names the auth file (pnpm still dies on it)', () => {
+    it('fails on a global config.yaml it cannot parse even when the env names the auth file (pnpm still dies on it)', () => {
       writePnpmOnlyUserConfig('');
       writeGlobalConfigYaml('npmrcAuthFile: [unclosed\n');
       expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
         'global configuration file'
       );
+    });
+
+    describe('a yaml config file that cannot be read', () => {
+      // pnpm resolves on from the remaining layers here (measured on 10.33.2,
+      // 11.5.0 and 11.20.0), so an unreadable file must not collapse the bridge
+      // into npm's own resolution the way an unparseable one does. A symlink
+      // loop fails the read with an errno root cannot bypass.
+      it('keeps bridging the workspace registry when the global config.yaml cannot be read', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        mkdirSync(join(configHome, 'pnpm'), { recursive: true });
+        const path = join(configHome, 'pnpm', 'config.yaml');
+        symlinkSync(path, path);
+
+        let env: Record<string, string>;
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          env = fresh('is-even', root, '11.5.0');
+        });
+
+        expect(env).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
+          'Could not read'
+        );
+      });
+
+      it('resolves on from the lower layers when pnpm-workspace.yaml cannot be read', () => {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        // auth.ini rather than the user config: npm reads the latter itself, so
+        // only a pnpm-only layer proves the bridge survived.
+        writeAuthIni('registry=https://reg-b.example.com/\n');
+        const path = join(root, 'pnpm-workspace.yaml');
+        symlinkSync(path, path);
+
+        let env: Record<string, string>;
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          env = fresh('is-even', root, '11.5.0');
+        });
+
+        expect(env).toEqual({
+          npm_config_registry: 'https://reg-b.example.com/',
+        });
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+      });
     });
 
     describe('token helpers', () => {
