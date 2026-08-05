@@ -1447,6 +1447,28 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(packageJsonPatchedDependencies).toBeNull();
   });
 
+  it('reads the patch scope from a two-document pnpm 11 lockfile', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
+    );
+    writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
+    // The prune falls back to the root lockfile on a pruning error, and pnpm 11
+    // writes that lockfile as two documents under managePackageManagerVersions.
+    const lockfile = [
+      '---',
+      'packageManager: pnpm@11.2.2',
+      '---',
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0']),
+    ].join('\n');
+
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(tempDir, lockfile);
+
+    expect(patchFiles).toEqual([
+      { path: 'patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
+    ]);
+  });
+
   it('declares patchedDependencies in package.json on pnpm 10', () => {
     mockPnpmVersion('10.13.1');
     // pnpm <=10 reads the config from the package.json pnpm field

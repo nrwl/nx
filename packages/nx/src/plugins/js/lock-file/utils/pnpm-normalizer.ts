@@ -70,7 +70,7 @@ const YAML_DOCUMENT_SEPARATOR = '\n---\n';
 // holds the workspace lockfile. Mirror pnpm's own positional extraction so we
 // always read the workspace document.
 // https://github.com/pnpm/pnpm/blob/main/lockfile/fs/src/yamlDocuments.ts
-function extractMainLockfileDocument(content: string): string {
+export function extractMainLockfileDocument(content: string): string {
   // Lockfiles written on Windows may use CRLF line endings, which would never
   // match the LF-only document markers.
   content = content.replace(/\r\n/g, '\n');
