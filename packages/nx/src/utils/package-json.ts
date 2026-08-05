@@ -2004,6 +2004,60 @@ export function warnUnshippableLocalPathSpec(
 }
 
 /**
+ * The manifest shape the peer-dependency helpers below touch. Kept structural so
+ * the copied-module manifests the `@nx/js` prune executors carry, which are not
+ * full `PackageJson`s, go through the same helpers.
+ */
+type PeerDependencyManifest = {
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, unknown>;
+};
+
+/**
+ * Moves a peer dependency into `dependencies` under the given specifier: pnpm
+ * rejects a `file:`/`link:` spec under peerDependencies outright, so a shipped
+ * local path or workspace module declared there would fail the whole install.
+ * The `peerDependenciesMeta` entry goes with it, since the optional/required
+ * marker is orphaned once the dependency is no longer a peer.
+ */
+export function movePeerDependencyToDependencies(
+  packageJson: PeerDependencyManifest,
+  name: string,
+  spec: string
+): void {
+  (packageJson.dependencies ??= {})[name] = spec;
+  if (packageJson.peerDependencies) {
+    delete packageJson.peerDependencies[name];
+  }
+  if (packageJson.peerDependenciesMeta) {
+    delete packageJson.peerDependenciesMeta[name];
+  }
+}
+
+/**
+ * Drops a `peerDependencies`/`peerDependenciesMeta` section left empty by
+ * `movePeerDependencyToDependencies`, so a manifest that declared nothing but
+ * moved peers does not ship an empty section.
+ */
+export function dropEmptyPeerDependencySections(
+  packageJson: PeerDependencyManifest
+): void {
+  if (
+    packageJson.peerDependencies &&
+    Object.keys(packageJson.peerDependencies).length === 0
+  ) {
+    delete packageJson.peerDependencies;
+  }
+  if (
+    packageJson.peerDependenciesMeta &&
+    Object.keys(packageJson.peerDependenciesMeta).length === 0
+  ) {
+    delete packageJson.peerDependenciesMeta;
+  }
+}
+
+/**
  * Rewrites a standalone pruned manifest's non-workspace local-path specifiers
  * (`file:` tarball/dir, `link:` dir) to their shipped location under
  * `LOCAL_PATH_MODULES_DIR`, so a non-frozen `pnpm install` of the deploy output
@@ -2068,20 +2122,15 @@ export function rewritePrunedLocalPathSpecifiers(
         );
       }
       if (section === 'peerDependencies') {
-        // pnpm rejects a file:/link: spec under peerDependencies, so move it into
-        // dependencies (matching the workspace-module handling) and drop the
-        // now-orphaned peerDependenciesMeta entry.
-        packageJson.dependencies ??= {};
-        packageJson.dependencies[name] = relocation.spec;
-        delete deps[name];
-        if (packageJson.peerDependenciesMeta) {
-          delete packageJson.peerDependenciesMeta[name];
-        }
+        // Moved even when the target cannot ship: pnpm rejects the spec here
+        // either way, so leaving it would fail the whole install.
+        movePeerDependencyToDependencies(packageJson, name, relocation.spec);
       } else if (!relocation.reason) {
         deps[name] = relocation.spec;
       }
     }
   }
+  dropEmptyPeerDependencySections(packageJson);
 }
 
 /**

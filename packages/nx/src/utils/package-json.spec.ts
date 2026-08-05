@@ -2947,8 +2947,29 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
     expect(packageJson.dependencies).toEqual({
       shared: 'link:local_path_modules/apps/shared',
     });
-    expect(packageJson.peerDependencies.shared).toBeUndefined();
-    expect(packageJson.peerDependenciesMeta.shared).toBeUndefined();
+    // The sections held nothing but the moved peer, so they are dropped rather
+    // than shipped empty.
+    expect(packageJson.peerDependencies).toBeUndefined();
+    expect(packageJson.peerDependenciesMeta).toBeUndefined();
+  });
+
+  it('keeps the peer sections when a peer that is not a local path remains', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      peerDependencies: { shared: 'link:../shared', react: '^18.0.0' },
+      peerDependenciesMeta: {
+        shared: { optional: true },
+        react: { optional: false },
+      },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.peerDependencies).toEqual({ react: '^18.0.0' });
+    expect(packageJson.peerDependenciesMeta).toEqual({
+      react: { optional: false },
+    });
   });
 
   it('leaves a target that escapes the workspace root as-is with a warning', () => {
@@ -3015,8 +3036,8 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
     expect(packageJson.dependencies).toEqual({
       external: 'link:../../../outside/shared',
     });
-    expect(packageJson.peerDependencies.external).toBeUndefined();
-    expect(packageJson.peerDependenciesMeta.external).toBeUndefined();
+    expect(packageJson.peerDependencies).toBeUndefined();
+    expect(packageJson.peerDependenciesMeta).toBeUndefined();
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('outside the workspace root')
     );
