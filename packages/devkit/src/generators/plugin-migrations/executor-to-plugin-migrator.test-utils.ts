@@ -1,6 +1,7 @@
 import { dirname } from 'node:path/posix';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
-import { addProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
+import { addProjectConfiguration } from 'nx/src/devkit-exports';
 import type { Tree } from 'nx/src/generators/tree';
 import type { ProjectGraph } from 'nx/src/config/project-graph';
 import type {
@@ -8,7 +9,7 @@ import type {
   TargetConfiguration,
 } from 'nx/src/config/workspace-json-project-json';
 import type { CreateNodes } from 'nx/src/project-graph/plugins';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '../../../internal-testing-utils';
 
 /**
  * Shared test harness for the executor-to-plugin migrator engine specs.
