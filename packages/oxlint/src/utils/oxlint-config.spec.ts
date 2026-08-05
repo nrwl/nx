@@ -15,7 +15,10 @@ describe('addPluginsToOxlintConfig', () => {
     warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
   });
 
-  afterEach(() => warn.mockRestore());
+  // `restoreAllMocks` rather than `warn.mockRestore()`: if `beforeEach` throws
+  // before the spy is assigned, the latter adds a `TypeError` to every test and
+  // buries the real cause.
+  afterEach(() => jest.restoreAllMocks());
 
   it('should write the plugins to the project config', () => {
     addPluginsToOxlintConfig(tree, 'apps/my-app', ['react', 'jsx-a11y']);
@@ -97,6 +100,9 @@ describe('addPluginsToOxlintConfig', () => {
       plugins: ['typescript', 'react'],
       rules: {},
     });
+    // The root config is its own governing config, so the no-`extends` warning
+    // would be telling it to extend itself.
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('should no-op without plugins', () => {

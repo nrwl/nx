@@ -2,7 +2,8 @@ import { baseConfig } from '../../eslint.config.mjs';
 import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 // Oxlint lints this package's source via the `oxlint` target, but its config
-// there carries only the correctness/suspicious categories. ESLint still runs
+// there carries just the correctness/suspicious categories and `no-console`.
+// ESLint still runs
 // `baseConfig` for the repo-wide rules that config does not reproduce — module
 // boundaries, restricted imports, the internal `@nx/workspace-*` rules — plus
 // the JSON rules below, which Oxlint cannot run at all: it does not parse JSON.
