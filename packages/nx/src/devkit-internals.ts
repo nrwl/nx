@@ -33,6 +33,8 @@ export { readTargetDefaultsForTarget } from './project-graph/utils/project-confi
 export {
   getIgnoreObjectForTree,
   createIgnoreChainResolver,
+  createTreeIgnoreChecker,
+  isAlwaysIgnored,
   isIgnoredByChain,
   posixDirname,
   type ScopedIgnoreMatcher,
