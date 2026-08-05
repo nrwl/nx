@@ -12,6 +12,8 @@ import {
 import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  describeRefusal,
+  type DirRefusal,
   isPeerWritable,
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
@@ -34,6 +36,66 @@ jest.mock('node:fs', () => {
 // the property that cannot be mocked convincingly: a planted symlink is refused
 // rather than followed, and the socket directory is wired through the guard.
 const posixOnly = platform() === 'win32' ? it.skip : it;
+
+// Every sentence a user reads about a refused directory is produced here, so
+// this is where the wording is pinned. The guards decide *which* refusal; this
+// decides what it says. One row per member of the union — a new member with no
+// wording fails to compile against DirRefusal, and a reworded one fails here.
+describe('describeRefusal', () => {
+  it.each<[string, DirRefusal, string]>([
+    [
+      'not-created with an errno',
+      { kind: 'not-created', dir: '/d', code: 'EACCES' },
+      '/d could not be created (EACCES)',
+    ],
+    [
+      'not-created without one',
+      { kind: 'not-created', dir: '/d' },
+      '/d could not be created',
+    ],
+    [
+      'not-inspectable',
+      { kind: 'not-inspectable', dir: '/d', code: 'ELOOP' },
+      '/d could not be inspected (ELOOP)',
+    ],
+    [
+      'not-a-directory',
+      { kind: 'not-a-directory', dir: '/d' },
+      '/d is not a directory',
+    ],
+    [
+      'foreign-owner',
+      { kind: 'foreign-owner', dir: '/d', uid: 1001 },
+      '/d is owned by uid 1001, not by you',
+    ],
+    [
+      'not-tightenable',
+      { kind: 'not-tightenable', dir: '/d', mode: 0o40755 },
+      '/d is reachable by other users (mode 0755) and could not be tightened to 0700',
+    ],
+    [
+      'peer-writable-not-sticky',
+      { kind: 'peer-writable-not-sticky', dir: '/d', mode: 0o41777 },
+      '/d is writable by other users but not sticky (mode 1777), so a peer could replace directories inside it',
+    ],
+  ])('describes %s', (_label, refusal, expected) => {
+    expect(describeRefusal(refusal)).toEqual(expected);
+  });
+
+  // The file type bits are noise in a message about permissions: lstat reports
+  // a directory as 0o40755, and printing "mode 40755" would send someone
+  // looking for a mode that does not exist.
+  it('renders only the permission bits, not the file type', () => {
+    const text = describeRefusal({
+      kind: 'not-tightenable',
+      dir: '/d',
+      mode: 0o40755,
+    });
+
+    expect(text).toContain('0755');
+    expect(text).not.toContain('40755');
+  });
+});
 
 describe('ensureOwnedPrivateDir', () => {
   let base: string;
