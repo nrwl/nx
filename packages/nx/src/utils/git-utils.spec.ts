@@ -307,7 +307,7 @@ describe('git utils tests', () => {
       // ignore rule (trailing-slash .gitignore entry) does not match a bare
       // query when the directory does not exist on disk yet.
       expect(execSync).toHaveBeenLastCalledWith(
-        'git check-ignore -q .nx/migrate-runs/',
+        'git check-ignore -q -- .nx/migrate-runs/',
         expect.anything()
       );
     });
@@ -319,7 +319,7 @@ describe('git utils tests', () => {
         'ignored'
       );
       expect(execSync).toHaveBeenLastCalledWith(
-        'git check-ignore -q .nx/migrate-runs/',
+        'git check-ignore -q -- .nx/migrate-runs/',
         expect.anything()
       );
     });
