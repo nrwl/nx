@@ -295,7 +295,8 @@ describe('visitNotIgnoredFiles', () => {
     });
 
     afterEach(() => {
-      // git object files are read-only, which makes removal flaky on Windows.
+      // Windows can hold a handle on a freshly written `.git` file past the
+      // process that wrote it, which surfaces as a transient EBUSY/EPERM.
       rmSync(repo, { recursive: true, force: true, maxRetries: 3 });
     });
 
@@ -310,17 +311,24 @@ describe('visitNotIgnoredFiles', () => {
         mkdirSync(dirname(join(repo, file)), { recursive: true });
         writeFileSync(join(repo, file), '');
       }
-      // `--exclude-standard` also honours the user's global excludesFile and
-      // `.git/info/exclude`, which the walker knows nothing about - without
-      // this the test passes or fails on whatever the developer has in
-      // `~/.gitignore`. Pointing at a path that does not exist keeps it
-      // portable; `/dev/null` would not be.
+      // `--exclude-standard` honours the developer's global `core.excludesFile`,
+      // which the walker knows nothing about, so without this the test passes or
+      // fails on whatever is in `~/.gitignore`. Pointing config at a path that
+      // does not exist drops it, and `init.templateDir` with it; `/dev/null`
+      // would not be portable. `GIT_CONFIG_COUNT` outranks `GIT_CONFIG_GLOBAL`,
+      // so it has to be cleared too. `.git/info/exclude` is repo state rather
+      // than config and is *not* covered - the repo is created fresh here, so
+      // there is none.
       const env = {
         ...process.env,
         GIT_CONFIG_GLOBAL: join(repo, 'no-such-gitconfig'),
         GIT_CONFIG_SYSTEM: join(repo, 'no-such-gitconfig'),
+        GIT_CONFIG_COUNT: '0',
       };
-      execSync('git init -q .', { cwd: repo, stdio: 'ignore', env });
+      // No `stdio: 'ignore'`: `-q` already silences the success path, and
+      // discarding stderr would report every failure here - a missing git, a
+      // read-only TMPDIR, `safe.directory` - as a bare "Command failed".
+      execSync('git init -q .', { cwd: repo, env });
       const listed = execSync('git ls-files -o --exclude-standard', {
         cwd: repo,
         encoding: 'utf-8',
