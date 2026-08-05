@@ -2,7 +2,8 @@ import {
   calculateHashesForCreateNodes,
   loadConfigFile,
   getNamedInputs,
-  getGraphTimeEnvForTask,
+  getGraphTimeDotEnvForTask,
+  hashFile,
   hashObject,
   workspaceDataDirectory,
   PluginCache,
@@ -28,6 +29,7 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, parse, relative, resolve, sep } from 'node:path';
+import { getEnvPathsForTask } from 'nx/src/tasks-runner/task-env-paths';
 import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 import {
@@ -80,36 +82,6 @@ type WebserverReadinessServer = WaitForWebserverSchema['servers'][number];
 interface ChainWebserver {
   commandTasks: WebserverCommandTask[];
   readinessServers: WebserverReadinessServer[];
-}
-
-// getGraphTimeEnvForTask reads dotenv files from disk, and within one config's
-// createNodes the cache-key digest and each consumer chain resolve the same task
-// envs. Memoize by target coordinates in a cache scoped to that single config
-// eval, so a dotenv snapshot is never shared across concurrent createNodes
-// passes. Callers only read/spread the returned env.
-type GraphTimeEnvCache = Map<string, NodeJS.ProcessEnv>;
-
-function getCachedGraphTimeEnvForTask(
-  cache: GraphTimeEnvCache,
-  projectRoot: string,
-  target: string,
-  configuration?: string,
-  nonAtomizedTarget?: string
-): NodeJS.ProcessEnv {
-  const key = `${projectRoot}\0${target}\0${configuration ?? ''}\0${
-    nonAtomizedTarget ?? ''
-  }`;
-  let env = cache.get(key);
-  if (!env) {
-    env = getGraphTimeEnvForTask(
-      projectRoot,
-      target,
-      configuration,
-      nonAtomizedTarget
-    );
-    cache.set(key, env);
-  }
-  return env;
 }
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
@@ -190,19 +162,18 @@ async function createNodesInternal(
   hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-  const graphTimeEnvCache: GraphTimeEnvCache = new Map();
 
   // The createNodes hash covers projectRoot files, the lockfile, and tsconfig,
   // but a workspace-root dotenv a nested project loads is outside it. Fold the
-  // task dotenv overlay into the cache key so a dotenv change (which the daemon
-  // invalidates the graph on) rebuilds the gate instead of returning a stale one.
-  // Only when a gate is inferred does a dotenv change affect the output.
-  const cacheKey = normalizedOptions.waitForWebServer
-    ? `${hash}-${dotEnvOverlayDigest(
-        projectRoot,
-        normalizedOptions,
-        graphTimeEnvCache
-      )}`
+  // consumer chains' dotenv fingerprints into the cache key so a dotenv change
+  // (which the daemon invalidates the graph on) rebuilds the gate instead of
+  // returning a stale one. Only when the readiness gate is enabled can a
+  // dotenv change affect the output.
+  const chainDotEnvPairs = normalizedOptions.waitForWebServer
+    ? getChainDotEnvPairs(context.workspaceRoot, projectRoot, normalizedOptions)
+    : undefined;
+  const cacheKey = chainDotEnvPairs
+    ? `${hash}-${hashObject(chainDotEnvPairs)}`
     : hash;
 
   if (!pluginCache.has(cacheKey)) {
@@ -215,7 +186,7 @@ async function createNodesInternal(
         context,
         pmc,
         externalTsconfigInputs,
-        graphTimeEnvCache
+        chainDotEnvPairs
       )
     );
   }
@@ -239,7 +210,7 @@ async function buildPlaywrightTargets(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[],
-  graphTimeEnvCache: GraphTimeEnvCache
+  chainDotEnvPairs: ChainDotEnvPairs | undefined
 ): Promise<PlaywrightTargets> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
@@ -274,29 +245,48 @@ async function buildPlaywrightTargets(
   // config without the e2e task's dotenv loaded. Resolve each consumer chain's
   // servers under that chain's task env so the gate probes the address the task
   // will actually serve. `e2e` and the atomized `e2e-ci` tasks can load
-  // different dotenv, so a distinct resolved address gets its own gate.
-  const e2eChain = await resolveChainWebserver(
-    configFilePath,
-    projectRoot,
-    context.workspaceRoot,
-    ambientWebServers,
-    options.targetName,
-    undefined,
-    graphTimeEnvCache,
-    options.waitForWebServer
-  );
-  const ciChain = options.ciTargetName
-    ? await resolveChainWebserver(
+  // different dotenv, so a distinct resolved address gets its own gate. When
+  // both chains load the same dotenv inputs they resolve to the same servers,
+  // so a single resolution is shared; distinct inputs resolve concurrently.
+  const chainsShareDotEnv =
+    !chainDotEnvPairs ||
+    JSON.stringify(chainDotEnvPairs.target) ===
+      JSON.stringify(chainDotEnvPairs.ciTarget);
+  let e2eChain: ChainWebserver;
+  let ciChain: ChainWebserver;
+  if (!options.ciTargetName || chainsShareDotEnv) {
+    e2eChain = await resolveChainWebserver(
+      configFilePath,
+      projectRoot,
+      context.workspaceRoot,
+      ambientWebServers,
+      options.targetName,
+      undefined,
+      options.waitForWebServer
+    );
+    ciChain = e2eChain;
+  } else {
+    [e2eChain, ciChain] = await Promise.all([
+      resolveChainWebserver(
+        configFilePath,
+        projectRoot,
+        context.workspaceRoot,
+        ambientWebServers,
+        options.targetName,
+        undefined,
+        options.waitForWebServer
+      ),
+      resolveChainWebserver(
         configFilePath,
         projectRoot,
         context.workspaceRoot,
         ambientWebServers,
         options.ciTargetName,
         options.targetName,
-        graphTimeEnvCache,
         options.waitForWebServer
-      )
-    : e2eChain;
+      ),
+    ]);
+  }
 
   const e2eReadyTargetName =
     e2eChain.readinessServers.length > 0
@@ -329,13 +319,7 @@ async function buildPlaywrightTargets(
     },
   };
 
-  if (e2eChain.commandTasks.length) {
-    baseTargetConfig.dependsOn = e2eReadyTargetName
-      ? [...getDependsOn(e2eChain.commandTasks), { target: e2eReadyTargetName }]
-      : getDependsOn(e2eChain.commandTasks);
-  } else {
-    baseTargetConfig.parallelism = false;
-  }
+  applyChainDependsOn(baseTargetConfig, e2eChain, e2eReadyTargetName);
 
   targets[options.targetName] = {
     ...baseTargetConfig,
@@ -395,20 +379,11 @@ async function buildPlaywrightTargets(
       ),
     };
 
-    // The atomized tasks inherit the e2e chain's dependsOn. When the CI chain
-    // resolves a different address it has its own gate, so point them at it.
+    // The atomized tasks inherit the e2e chain's dependsOn and parallelism.
+    // When the CI chain resolves differently it has its own gate (or none), so
+    // re-derive both from it.
     if (!chainsShareGate) {
-      if (ciChain.commandTasks.length) {
-        ciBaseTargetConfig.dependsOn = ciReadyTargetName
-          ? [
-              ...getDependsOn(ciChain.commandTasks),
-              { target: ciReadyTargetName },
-            ]
-          : getDependsOn(ciChain.commandTasks);
-      } else {
-        delete ciBaseTargetConfig.dependsOn;
-        ciBaseTargetConfig.parallelism = false;
-      }
+      applyChainDependsOn(ciBaseTargetConfig, ciChain, ciReadyTargetName);
     }
 
     const groupName = 'E2E (CI)';
@@ -681,50 +656,66 @@ function addSubfolderToOutput(output: string, subfolder: string): string {
   return joinPathFragments(output, subfolder);
 }
 
-// Digest of the task dotenv overlay (the keys that differ from the graph-time
-// ambient env) for the consumer chains, folded into the PluginCache key so a
-// dotenv change the createNodes hash does not cover still rebuilds the gate.
-function dotEnvOverlayDigest(
-  projectRoot: string,
-  options: NormalizedOptions,
-  graphTimeEnvCache: GraphTimeEnvCache
-): string {
-  return hashObject({
-    e2e: dotEnvOverlay(
-      getCachedGraphTimeEnvForTask(
-        graphTimeEnvCache,
-        projectRoot,
-        options.targetName
-      )
-    ),
-    'e2e-ci': dotEnvOverlay(
-      getCachedGraphTimeEnvForTask(
-        graphTimeEnvCache,
-        projectRoot,
-        options.ciTargetName,
-        undefined,
-        options.targetName
-      )
-    ),
-  });
+// The dotenv files a chain's task would load, as sorted (workspace-relative
+// path, content hash) pairs of the files that exist. Hashed into the
+// PluginCache key so a dotenv change the createNodes hash does not cover still
+// rebuilds the gate, and compared across the two chains so identical dotenv
+// inputs share one config resolution.
+type DotEnvPairs = Array<[path: string, hash: string]>;
+
+interface ChainDotEnvPairs {
+  target: DotEnvPairs;
+  ciTarget: DotEnvPairs;
 }
 
-function dotEnvOverlay(taskEnv: NodeJS.ProcessEnv): Record<string, string> {
-  const overlay: Record<string, string> = {};
-  for (const key of new Set([
-    ...Object.keys(process.env),
-    ...Object.keys(taskEnv),
-  ])) {
-    if (process.env[key] !== taskEnv[key]) {
-      overlay[key] = taskEnv[key];
+function getChainDotEnvPairs(
+  workspaceRoot: string,
+  projectRoot: string,
+  options: NormalizedOptions
+): ChainDotEnvPairs {
+  const target = getDotEnvPairsForTask(
+    workspaceRoot,
+    projectRoot,
+    options.targetName
+  );
+  const ciTarget = options.ciTargetName
+    ? getDotEnvPairsForTask(
+        workspaceRoot,
+        projectRoot,
+        options.ciTargetName,
+        options.targetName
+      )
+    : target;
+  return { target, ciTarget };
+}
+
+function getDotEnvPairsForTask(
+  workspaceRoot: string,
+  projectRoot: string,
+  target: string,
+  nonAtomizedTarget?: string
+): DotEnvPairs {
+  const pairs: DotEnvPairs = [];
+  for (const file of getEnvPathsForTask(
+    projectRoot,
+    target,
+    undefined,
+    nonAtomizedTarget
+  )) {
+    const fileHash = hashFile(join(workspaceRoot, file));
+    if (fileHash !== null) {
+      pairs.push([file, fileHash]);
     }
   }
-  return overlay;
+  return pairs.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
 // Resolves the web server command tasks and readiness servers a consumer chain
-// (`e2e` or the atomized `e2e-ci`) would see. When `inferReadiness` is false the
-// gate is opted out: this skips the task-env resolution, keeps the ambient
+// (`e2e` or the atomized `e2e-ci`) would see. A config with no ambient
+// `webServer` yields nothing to depend on or gate, so the task-env resolution
+// is skipped entirely: a `webServer` entry whose existence (not address)
+// depends on task-scoped env is not detected. When `inferReadiness` is false
+// the gate is opted out: this skips the task-env resolution, keeps the ambient
 // command tasks, and returns no readiness servers. Otherwise, when the chain's
 // task env differs from the graph-time ambient env, the config is re-evaluated
 // in a child under that env so an env-derived address resolves the way the task
@@ -738,13 +729,14 @@ async function resolveChainWebserver(
   ambientWebServers: ResolvedWebServer[],
   target: string,
   nonAtomizedTarget: string | undefined,
-  graphTimeEnvCache: GraphTimeEnvCache,
   inferReadiness: boolean
 ): Promise<ChainWebserver> {
+  if (ambientWebServers.length === 0) {
+    return { commandTasks: [], readinessServers: [] };
+  }
   let webServers = ambientWebServers;
   if (inferReadiness) {
-    const taskEnv = getCachedGraphTimeEnvForTask(
-      graphTimeEnvCache,
+    const taskEnv = getGraphTimeDotEnvForTask(
       projectRoot,
       target,
       undefined,
@@ -769,9 +761,7 @@ async function resolveChainWebserver(
     }
   }
 
-  const commandTasks = getWebserverCommandTasks({
-    webServer: webServers,
-  });
+  const commandTasks = getWebserverCommandTasks(webServers);
   const readinessServers = inferReadiness
     ? (commandTasks
         .map(toReadinessServer)
@@ -807,20 +797,20 @@ function buildWaitForWebserverTarget(
 }
 
 function getWebserverCommandTasks(
-  playwrightConfig: PlaywrightTestConfig
+  webServers: ResolvedWebServer[]
 ): WebserverCommandTask[] {
-  if (!playwrightConfig.webServer) {
-    return [];
-  }
-
   const tasks: WebserverCommandTask[] = [];
 
-  const webServer = Array.isArray(playwrightConfig.webServer)
-    ? playwrightConfig.webServer
-    : [playwrightConfig.webServer];
-
-  for (const server of webServer) {
+  for (const server of webServers) {
     if (!server.reuseExistingServer) {
+      continue;
+    }
+    // Playwright races a `wait.stdout`/`wait.stderr` regex against the address
+    // probe and stores the match's named capture groups in the env, both tied
+    // to the process Playwright starts itself. A task-started server would be
+    // reused without them, or raced by a duplicate launch while it boots, so
+    // such a server gets no inferred dependency and no gate.
+    if (server.waitsForOutput) {
       continue;
     }
 
@@ -898,6 +888,27 @@ function parseTaskFromCommand(command: string): {
   }
 
   return null;
+}
+
+// A chain with inferred serve tasks depends on them (and its gate, when one
+// was inferred); one without cannot know what starts the server, so the target
+// must not run in parallel with whatever does. Set together so a config that
+// inherits one state (the atomized CI base copies the e2e config) cannot end
+// up carrying both.
+function applyChainDependsOn(
+  targetConfig: TargetConfiguration,
+  chain: ChainWebserver,
+  readyTargetName: string | undefined
+): void {
+  if (chain.commandTasks.length) {
+    targetConfig.dependsOn = readyTargetName
+      ? [...getDependsOn(chain.commandTasks), { target: readyTargetName }]
+      : getDependsOn(chain.commandTasks);
+    delete targetConfig.parallelism;
+  } else {
+    delete targetConfig.dependsOn;
+    targetConfig.parallelism = false;
+  }
 }
 
 function getDependsOn(

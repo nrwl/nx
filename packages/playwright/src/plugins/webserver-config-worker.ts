@@ -3,7 +3,7 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 import { join } from 'node:path';
 import {
   normalizeWebServers,
-  type ResolvedWebServer,
+  type WebserverConfigWorkerMessage,
 } from './webserver-readiness';
 
 /**
@@ -14,20 +14,24 @@ import {
  * race across them, and the module cache would hand back the first evaluation.
  *
  * argv: [configFilePath (workspace-relative), workspaceRoot]. The result is
- * sent over the IPC channel as ResolvedWebServer[], or `{ error }` on failure.
+ * sent over the IPC channel as a tagged `webserver-config-result` message, or
+ * `webserver-config-error` on failure.
  */
 async function main(): Promise<void> {
   const [configFilePath, workspaceRoot] = process.argv.slice(2);
   const config = await loadConfigFile<PlaywrightTestConfig>(
     join(workspaceRoot, configFilePath)
   );
-  await send(normalizeWebServers(config.webServer));
+  await send({
+    type: 'webserver-config-result',
+    webServers: normalizeWebServers(config.webServer),
+  });
 }
 
 // process.exit can truncate an IPC message that has not been flushed to the
 // parent, so wait for the send to be acknowledged before exiting. A delivery
 // failure rejects so the caller exits nonzero rather than reporting success.
-function send(message: ResolvedWebServer[] | { error: string }): Promise<void> {
+function send(message: WebserverConfigWorkerMessage): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!process.send) {
       resolve();
@@ -46,7 +50,7 @@ main().then(
       String(error) ||
       'Unknown error while evaluating the Playwright config.';
     try {
-      await send({ error: detail });
+      await send({ type: 'webserver-config-error', error: detail });
     } catch {
       // The channel is gone; the nonzero exit below still signals the failure.
     }

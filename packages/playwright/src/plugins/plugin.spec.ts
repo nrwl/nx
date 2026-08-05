@@ -5,6 +5,7 @@ import { PlaywrightTestConfig } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { setWorkspaceRoot, workspaceRoot } from 'nx/src/utils/workspace-root';
+import * as workspaceContext from 'nx/src/utils/workspace-context';
 import { createNodesV2 } from './plugin';
 import { _setChildEval, normalizeWebServers } from './webserver-readiness';
 
@@ -1100,7 +1101,7 @@ describe('@nx/playwright/plugin', () => {
     // Isolate the .env as the only source of BASE_URL; a value left in the
     // ambient env would satisfy the config on its own and mask the dotenv load.
     delete process.env.BASE_URL;
-    // getGraphTimeEnvForTask resolves dotenv relative to the workspace root.
+    // getGraphTimeDotEnvForTask resolves dotenv relative to the workspace root.
     setWorkspaceRoot(tempFs.tempDir);
     installFreshConfigEval();
 
@@ -1205,6 +1206,64 @@ describe('@nx/playwright/plugin', () => {
     }
   });
 
+  it('clears the inherited parallelism when only the CI chain resolves serve tasks', async () => {
+    const originalServeCommand = process.env.SERVE_COMMAND;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.SERVE_COMMAND;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: process.env.SERVE_COMMAND || 'node server.js',
+    url: 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      // Only the e2e-ci chain resolves an inferrable serve command, so the
+      // atomized tasks must swap the inherited parallelism: false for the CI
+      // chain's dependsOn rather than carry both.
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env.e2e-ci': 'SERVE_COMMAND=npx nx run app1:serve\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(targets['e2e'].parallelism).toBe(false);
+      expect(targets['e2e'].dependsOn).toBeUndefined();
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+
+      const atomized = targets['e2e-ci--tests/run-me.spec.ts'];
+      expect(atomized.dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+        { target: 'e2e-ci--wait-for-webserver' },
+      ]);
+      expect(atomized.parallelism).toBeUndefined();
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      if (originalServeCommand === undefined) {
+        delete process.env.SERVE_COMMAND;
+      } else {
+        process.env.SERVE_COMMAND = originalServeCommand;
+      }
+    }
+  });
+
   it('rebuilds a cached gate when a dotenv outside the project changes', async () => {
     const originalBaseUrl = process.env.BASE_URL;
     const originalWorkspaceRoot = workspaceRoot;
@@ -1218,8 +1277,8 @@ describe('@nx/playwright/plugin', () => {
 
     try {
       // A nested project whose config reads a workspace-root .env: the .env is
-      // outside the project's createNodes hash, so only the dotenv overlay in
-      // the plugin cache key can pick up a change to it.
+      // outside the project's createNodes hash, so only the dotenv fingerprint
+      // in the plugin cache key can pick up a change to it.
       await tempFs.createFiles({
         'apps/e2e/project.json': '{}',
         'apps/e2e/playwright.config.js': `module.exports = {
@@ -1265,6 +1324,169 @@ describe('@nx/playwright/plugin', () => {
       _setChildEval(null);
       setWorkspaceRoot(originalWorkspaceRoot);
       process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
+  it('rebuilds a cached gate when a dotenv change round-trips through the ambient env', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    setWorkspaceRoot(tempFs.tempDir);
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    installFreshConfigEval();
+    // The task env matches ambient in this scenario, so no child evaluation
+    // runs and the gate's address comes from the in-process config load, which
+    // jest's module registry pins to its first evaluation. Observe the rebuild
+    // through the test-file listing instead, which only a cache miss reaches.
+    const listTestFiles = jest.spyOn(
+      workspaceContext,
+      'getFilesInDirectoryUsingContext'
+    );
+
+    try {
+      // The daemon loads the root .env into its own env at startup, so the
+      // ambient env and the file agree and the task env matches ambient. After
+      // an edit plus a daemon restart they agree again on the new value: only
+      // the file content in the plugin cache key can tell the two runs apart,
+      // an env-delta digest sees an empty delta in both.
+      process.env.BASE_URL = 'http://localhost:4301';
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`,
+        'apps/e2e/tests/run-me.spec.ts': '',
+        '.env': 'BASE_URL=http://localhost:4301\n',
+      });
+
+      const run = async () =>
+        (
+          await createNodesFunction(
+            ['apps/e2e/playwright.config.js'],
+            { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+            context
+          )
+        )[0][1].projects['apps/e2e'].targets;
+
+      const first = await run();
+      expect(first['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4301' },
+      ]);
+      const rebuildsAfterFirst = listTestFiles.mock.calls.length;
+
+      // A rerun with nothing changed stays cached.
+      await run();
+      expect(listTestFiles.mock.calls.length).toBe(rebuildsAfterFirst);
+
+      process.env.BASE_URL = 'http://localhost:4302';
+      await tempFs.createFile('.env', 'BASE_URL=http://localhost:4302\n');
+      await run();
+      expect(listTestFiles.mock.calls.length).toBeGreaterThan(
+        rebuildsAfterFirst
+      );
+    } finally {
+      listTestFiles.mockRestore();
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
+  it('shares one config re-evaluation when both chains load the same dotenv inputs', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BASE_URL;
+    setWorkspaceRoot(tempFs.tempDir);
+    let evals = 0;
+    installFreshConfigEval(() => evals++);
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env': 'BASE_URL=http://localhost:4301\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(evals).toBe(1);
+      expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4301' },
+      ]);
+      expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toContainEqual({
+        target: 'e2e--wait-for-webserver',
+      });
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
+  it('skips the task-env config re-evaluation when the config has no webServer', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BASE_URL;
+    setWorkspaceRoot(tempFs.tempDir);
+    let evals = 0;
+    installFreshConfigEval(() => evals++);
+
+    try {
+      await mockPlaywrightConfig(tempFs, { testDir: 'tests' });
+      // The dotenv makes the task env diverge from ambient, but with no
+      // ambient webServer there is nothing to gate, so no re-evaluation runs.
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env': 'BASE_URL=http://localhost:4301\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      expect(evals).toBe(0);
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].parallelism).toBe(false);
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
       if (originalBaseUrl === undefined) {
         delete process.env.BASE_URL;
       } else {
@@ -1498,6 +1720,38 @@ describe('@nx/playwright/plugin', () => {
     });
   });
 
+  it('should drop a non-number webServer.timeout an unchecked config can carry', async () => {
+    // The gate task's schema rejects a string timeout at run time, so it must
+    // not be baked into the target.
+    await mockPlaywrightConfig(
+      tempFs,
+      `module.exports = {
+        testDir: 'tests',
+        webServer: {
+          command: 'npx nx run app1:serve',
+          port: 4200,
+          reuseExistingServer: true,
+          timeout: '120000',
+        },
+      };`
+    );
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+      { port: 4200 },
+    ]);
+  });
+
   it('should pass ignoreHTTPSErrors through to the wait-for-webserver task when set', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
@@ -1523,6 +1777,77 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
       { url: 'https://localhost:4200', ignoreHTTPSErrors: true },
     ]);
+  });
+
+  it('should not gate or depend on a webServer that waits for command output', async () => {
+    // Playwright treats a `wait.stdout`/`wait.stderr` server as ready when the
+    // regex matches (raced against the address probe) and stores named capture
+    // groups in the env, both tied to the process Playwright starts itself. A
+    // task-started server would be reused without either, so the server is
+    // left entirely to Playwright.
+    await mockPlaywrightConfig(
+      tempFs,
+      `module.exports = {
+        testDir: 'tests',
+        webServer: [
+          { command: 'npx nx run app1:serve', port: 4200, reuseExistingServer: true },
+          { command: 'npx nx run worker1:serve', port: 5000, reuseExistingServer: true, wait: { stdout: /ready/ } },
+        ],
+      };`
+    );
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+      { port: 4200 },
+    ]);
+    expect(targets['e2e'].dependsOn).toContainEqual({
+      projects: ['app1'],
+      target: 'serve',
+    });
+    expect(targets['e2e'].dependsOn).not.toContainEqual(
+      expect.objectContaining({ projects: expect.arrayContaining(['worker1']) })
+    );
+  });
+
+  it('should leave a config whose only webServer waits for command output entirely to Playwright', async () => {
+    await mockPlaywrightConfig(
+      tempFs,
+      `module.exports = {
+        testDir: 'tests',
+        webServer: {
+          command: 'npx nx run app1:serve',
+          port: 4200,
+          reuseExistingServer: true,
+          wait: { stdout: /ready/ },
+        },
+      };`
+    );
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+    expect(targets['e2e'].dependsOn).toBeUndefined();
+    // Serialized so parallel atomized runs cannot race to start the server.
+    expect(targets['e2e'].parallelism).toBe(false);
   });
 
   it('should not set parallelism to false and should infer dependsOn using the tasks run in the different webServer.command that have reuseExistingServer set to true', async () => {

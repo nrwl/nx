@@ -8,7 +8,7 @@ import {
   getEnvFilesForTask,
   getEnvVariablesForTask,
   getForceColorForChild,
-  getGraphTimeEnvForTask,
+  getGraphTimeDotEnvForTask,
   loadAndExpandDotEnvFile,
 } from './task-env';
 
@@ -275,7 +275,7 @@ describe('getEnvFilesForTask', () => {
   });
 });
 
-describe('getGraphTimeEnvForTask', () => {
+describe('getGraphTimeDotEnvForTask', () => {
   const originalEnv = process.env;
   const originalWorkspaceRoot = workspaceRoot;
   let tempDir: string;
@@ -304,7 +304,23 @@ describe('getGraphTimeEnvForTask', () => {
       'BASE_URL=http://localhost:4301\n'
     );
 
-    const env = getGraphTimeEnvForTask('.', 'e2e');
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
+
+    expect(env.BASE_URL).toBe('http://localhost:4301');
+  });
+
+  it('resolves a task-scoped value shadowed by an ambient root .env variable', () => {
+    // At Nx init the root .env was loaded into the ambient env. Reconstruction
+    // must unload it so the task-scoped file wins the way it does at run time:
+    // dotenv loading never overrides a key that is already set.
+    writeFileSync(join(tempDir, '.env'), 'BASE_URL=http://localhost:4200\n');
+    process.env.BASE_URL = 'http://localhost:4200';
+    writeFileSync(
+      join(tempDir, '.env.e2e'),
+      'BASE_URL=http://localhost:4301\n'
+    );
+
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
 
     expect(env.BASE_URL).toBe('http://localhost:4301');
   });
@@ -316,7 +332,7 @@ describe('getGraphTimeEnvForTask', () => {
       'BASE_URL=http://localhost:4301\n'
     );
 
-    const env = getGraphTimeEnvForTask('.', 'e2e');
+    const env = getGraphTimeDotEnvForTask('.', 'e2e');
 
     expect(env.BASE_URL).toBeUndefined();
   });
