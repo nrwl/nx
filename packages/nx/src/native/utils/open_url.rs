@@ -251,68 +251,26 @@ fn parse_automount_root(wsl_conf: &str) -> Option<String> {
     None
 }
 
-/// What the vendored freedesktop script reaches internally — desktop handlers
-/// from its `detectDE` dispatch, then the browsers its `open_generic` default
-/// list names. We retry them directly because that script ships inside `open`,
-/// and the system `xdg-open` that replaces it is often absent on minimal images,
-/// headless server distros and Termux.
-#[cfg(all(
-    not(target_arch = "wasm32"),
-    not(target_os = "macos"),
-    not(target_os = "windows")
-))]
-const FALLBACK_OPENERS: &[&[&str]] = &[
-    &["gio", "open"],
-    &["gvfs-open"],
-    &["gnome-open"],
-    &["kde-open"],
-    &["exo-open"],
-    &["x-www-browser"],
-    &["firefox"],
-    &["chromium"],
-    &["chromium-browser"],
-    &["google-chrome"],
-    &["epiphany"],
-    &["konqueror"],
-    &["www-browser"],
-    &["links2"],
-    &["elinks"],
-    &["links"],
-    &["lynx"],
-    &["w3m"],
-];
-
-/// `xdg-open` first, because it dispatches to the desktop's own handler — the
-/// branch the vendored script took whenever it detected a desktop environment.
-/// `$BROWSER` is consulted only after that, mirroring the script's `open_generic`
-/// path: putting it first would let `BROWSER=echo` (a common way to suppress
-/// auto-open) spawn successfully on a desktop and report a browser that never
-/// appeared, since a candidate only loses its turn by failing to spawn.
+/// `xdg-open` leads because it is the standard entry point and dispatches to
+/// whatever handler the desktop has. `$BROWSER` is the documented override, but
+/// it only gets a turn once `xdg-open` is missing — `xdg-open` consults it
+/// itself, and trying it first would let `BROWSER=echo` (a common way to
+/// suppress auto-open) spawn happily and report a browser that never appeared.
+///
+/// Deliberately no further rungs. A candidate only loses its turn by failing to
+/// spawn, so a terminal browser would "succeed" against the null stdio
+/// `spawn_detached` sets while rendering nowhere the user can see.
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
     not(target_os = "windows")
 ))]
 fn linux_open_candidates(browser: &str, url: &str) -> Vec<Command> {
-    let mut candidates = vec![opener_command(&["xdg-open"], url)];
+    let mut xdg = create_command("xdg-open");
+    xdg.arg(url);
+    let mut candidates = vec![xdg];
     candidates.extend(browser_env_candidates(browser, url));
-    candidates.extend(
-        FALLBACK_OPENERS
-            .iter()
-            .map(|parts| opener_command(parts, url)),
-    );
     candidates
-}
-
-#[cfg(all(
-    not(target_arch = "wasm32"),
-    not(target_os = "macos"),
-    not(target_os = "windows")
-))]
-fn opener_command(parts: &[&str], url: &str) -> Command {
-    let mut c = create_command(parts[0]);
-    c.args(&parts[1..]).arg(url);
-    c
 }
 
 /// `$BROWSER` is a colon-separated list of commands, each either a plain program
@@ -537,37 +495,12 @@ mod tests {
     }
 
     #[test]
-    fn linux_falls_back_through_the_whole_opener_chain() {
+    fn linux_tries_xdg_open_then_the_browser_override() {
         // `$BROWSER` is passed in, never read from the environment, so this holds
         // on a machine that has one set (Codespaces and VS Code Remote do).
         let cmds = linux_open_candidates("", "https://nx.dev");
-        assert_eq!(
-            programs_of(&cmds),
-            [
-                "xdg-open",
-                "gio",
-                "gvfs-open",
-                "gnome-open",
-                "kde-open",
-                "exo-open",
-                "x-www-browser",
-                "firefox",
-                "chromium",
-                "chromium-browser",
-                "google-chrome",
-                "epiphany",
-                "konqueror",
-                "www-browser",
-                "links2",
-                "elinks",
-                "links",
-                "lynx",
-                "w3m"
-            ]
-        );
-        // `gio` needs its `open` subcommand — dropping it still spawns, so the
-        // chain would report success while nothing opened.
-        assert_eq!(args_of(&cmds[1]), vec!["open", "https://nx.dev"]);
+        assert_eq!(programs_of(&cmds), ["xdg-open"]);
+        assert_eq!(args_of(&cmds[0]), vec!["https://nx.dev"]);
     }
 
     #[test]
