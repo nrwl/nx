@@ -126,6 +126,31 @@ describe('outputsChangeInvalidatesGraphEnv', () => {
     ).toBe(false);
   });
 
+  it('ignores a dot-directory artifact with the dotenv name shape', () => {
+    // `.{id}.env` with id `nx/cache/abc` has the dotenv name shape, but paths
+    // like this are tool caches written constantly, not dotenv files.
+    write('.nx/cache/abc.env', 'X=1\n');
+    expect(
+      outputsChangeInvalidatesGraphEnv(
+        [{ path: '.nx/cache/abc.env', type: EventType.create }],
+        undefined
+      )
+    ).toBe(false);
+  });
+
+  it('ignores a workspace-root dotenv path whose identifier contains a slash', () => {
+    // The cost of rejecting dot-directory artifacts: a workspace-root dotenv
+    // for a `/`-containing target identifier no longer invalidates. Project
+    // roots keep their slash identifiers via the root-ancestor walk.
+    write('.env.e2e/smoke', 'X=1\n');
+    expect(
+      outputsChangeInvalidatesGraphEnv(
+        [{ path: '.env.e2e/smoke', type: EventType.create }],
+        undefined
+      )
+    ).toBe(false);
+  });
+
   it('ignores a non-dotenv file at a root', () => {
     write('.eslintrc.json', '{}\n');
     expect(
