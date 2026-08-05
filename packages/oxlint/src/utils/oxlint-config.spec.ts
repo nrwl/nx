@@ -46,8 +46,8 @@ describe('addPluginsToOxlintConfig', () => {
     });
   });
 
-  // A nested config replaces the root, so plugins added to one without
-  // `extends` are enabled under rules the root never reaches.
+  // A nested config replaces the root, so the root's categories and rules stop
+  // reaching a project whose config names no `extends`.
   it('should warn when updating a project config that does not extend the root', () => {
     writeJson(tree, 'apps/my-app/.oxlintrc.json', { plugins: ['vue'] });
 

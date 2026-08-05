@@ -10,6 +10,8 @@ import { OXLINT_CONFIG_FILENAMES } from './config-file.js';
 
 /**
  * Root configs a generated `extends` can point at — Oxlint only extends JSON.
+ * Extendable is not the same as rewritable: for a root project this list is also
+ * the rewrite target, and the `.json` check below still refuses `.jsonc`.
  * To ask whether a config exists at all, use `OXLINT_CONFIG_FILENAMES`.
  */
 const EXTENDABLE_CONFIG_FILENAMES = OXLINT_CONFIG_FILENAMES.filter((file) =>
@@ -98,8 +100,9 @@ export function addPluginsToOxlintConfig(
     updateJson<OxlintConfig>(tree, projectConfigPath, (json) => {
       json.plugins = union(json.plugins ?? [], plugins);
       // Deliberately not adding one: an existing config without `extends` may
-      // be isolating from the root on purpose. Say so rather than leaving the
-      // project silently outside the root's severities.
+      // be isolating from the root on purpose. Narrow on purpose too — an
+      // `extends` pointing somewhere other than the root, or a TypeScript root
+      // (which nothing can extend), are also isolated but have no fix to offer.
       if (rootConfigPath && !json.extends?.length && projectRoot !== '.') {
         logger.warn(
           `"${projectRoot}" has an Oxlint config with no "extends", so ${rootConfigPath}'s ` +
