@@ -64,7 +64,6 @@ A comment earns its place only by saying something the code cannot. The default 
 
 <!-- This paragraph is quoted verbatim in CLAUDE.md as the orientation for authors. Change both together. -->
 
-
 Warranted:
 
 - **Non-obvious constraints and invariants** — the thing that breaks if someone "simplifies" the code. `// Read source maps fresh each flush so daemon-cached maps don't go stale.`
@@ -92,7 +91,7 @@ Not warranted — these are worth at most a Suggestion to remove, never a findin
 
 These are checked mechanically by other tooling, so a malformed one fails silently rather than loudly. That is what makes them findings rather than style:
 
-- **`@deprecated` must name both the replacement and the removal version** — `Use \`createNodesV2\` instead. This will be removed in Nx 24.` A bare `@deprecated` leaves the consumer no migration path and no deadline.
+- **`@deprecated` must name both the replacement and the removal version** — ``Use `createNodesV2` instead. This will be removed in Nx 24.`` A bare `@deprecated` leaves the consumer no migration path and no deadline.
 - **Version-gated work must use the `TODO(vNN):` form.** The major-release cleanup greps for exactly this; `// TODO: remove when we drop v23` is invisible to that sweep and will be missed.
 - **A follow-up `TODO` should name an owner** — `TODO(username)`. An anonymous `TODO:` has no one to chase it. Suggestion-level, not a finding.
 - **`@internal`** on exports that are public only as an implementation detail and carry no compatibility guarantee.
