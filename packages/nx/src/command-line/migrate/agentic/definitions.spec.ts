@@ -208,8 +208,10 @@ describe('opencodeDefinition', () => {
 
   // Round-trip guard: the system prompt reference is embedded as a
   // JSON-stringified value under OPENCODE_CONFIG_CONTENT. JSON handles quoting
-  // / newlines / angle-brackets, so hostile workspace paths must come back out
-  // unchanged after a JSON.parse round-trip.
+  // / newlines / angle-brackets, so a hostile workspace path must come back out
+  // of a JSON.parse round-trip as the reference opencode will resolve. That is
+  // the path with separators rewritten to `/`, or the inlined prompt when the
+  // path carries a `}` (see below).
   it.each([
     ['equals signs and braces', '/ws/{ key: "value" }/m.system.md'],
     ['double quotes', '/ws/"quoted"/m.system.md'],

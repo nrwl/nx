@@ -19,6 +19,7 @@ import { stepHandoffPath } from './handoff';
 import { writeStepInstructionFiles } from './instruction-files';
 import { buildGenericValidationUserPrompt } from './prompts/generic-validation';
 import { buildHybridPromptUserPrompt } from './prompts/hybrid-prompt-migration';
+import { buildPromptMigrationUserPrompt } from './prompts/prompt-migration';
 import {
   AgenticPromptMode,
   buildInlineSystemContext,
@@ -127,11 +128,14 @@ describe('windows command line', () => {
     });
   });
 
+  // `impl` is nullable because `run-step.ts` is: it picks the prompt-migration
+  // builder over the hybrid one exactly when a migration has no generator
+  // output to report on.
   function buildSpawn(
     definition: AgentDefinition,
     shimBinary: string,
     mode: AgenticPromptMode,
-    impl: typeof emptyImpl,
+    impl: typeof emptyImpl | null,
     root: string = workspaceRoot
   ) {
     const runDir = join(root, '.nx', 'migrate-runs', migration.version);
@@ -145,19 +149,23 @@ describe('windows command line', () => {
       nxInvocation: 'npx nx',
       mode,
     });
-    const instructions =
-      mode === 'generic-validation'
-        ? buildGenericValidationUserPrompt({
-            ...migration,
-            handoffFileAbsolutePath,
-            impl,
-          })
-        : buildHybridPromptUserPrompt({
-            ...migration,
-            promptPath: `migrations/${migration.name}.md`,
-            handoffFileAbsolutePath,
-            impl,
-          });
+    const promptCtx = {
+      ...migration,
+      promptPath: `migrations/${migration.name}.md`,
+      handoffFileAbsolutePath,
+    };
+    let instructions: string;
+    if (mode === 'generic-validation') {
+      instructions = buildGenericValidationUserPrompt({
+        ...migration,
+        handoffFileAbsolutePath,
+        impl: impl!,
+      });
+    } else {
+      instructions = impl
+        ? buildHybridPromptUserPrompt({ ...promptCtx, impl })
+        : buildPromptMigrationUserPrompt(promptCtx);
+    }
 
     const files = writeStepInstructionFiles({
       workspaceRoot: root,
@@ -242,6 +250,25 @@ describe('windows command line', () => {
           expect(`${name}=${value}`.length).toBeLessThanOrEqual(1000);
         }
       });
+    });
+
+    // The matrix above only ever reaches the hybrid builder in author mode. A
+    // migration with no generator to report on takes the third prompt shape,
+    // which is the one an agent gets for a prompt-only migration.
+    it('stays within the budget in author mode with no generator context', () => {
+      const { spec, adapted } = buildSpawn(
+        definition,
+        shimBinary,
+        'author',
+        null
+      );
+
+      expect(adapted.commandLineLength).toBeLessThanOrEqual(
+        WINDOWS_COMMAND_LINE_BUDGET
+      );
+      for (const arg of spec.args) {
+        expect(arg).not.toMatch(/[\r\n]/);
+      }
     });
   });
 

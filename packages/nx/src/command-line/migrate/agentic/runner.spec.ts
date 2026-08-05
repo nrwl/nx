@@ -810,6 +810,12 @@ describe('runAgentic', () => {
           expect(reported.title).toContain('OpenAI Codex');
           expect(reported.bodyLines.join('\n')).toContain('8191');
           expect(reported.bodyLines.join('\n')).toContain('--agentic=false');
+          // The workspace root is one contributor among three, and for
+          // opencode it contributes nothing at all, so the message must not
+          // pin the overflow on it and send the user to move the workspace.
+          expect(reported.bodyLines.join('\n')).toContain(
+            `migration's package and name`
+          );
         } finally {
           errorSpy.mockRestore();
         }

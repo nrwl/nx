@@ -158,12 +158,15 @@ export const WINDOWS_COMMAND_LINE_BUDGET =
 /**
  * Builds the spawn arguments, keeping them within what Windows will execute.
  *
- * The prompts themselves already travel as files, so the only term that can
- * still push the command line over is the workspace path, which every path in
- * the arguments is built from. When it does, the agents that carry a system
- * context on the command line fall back to the shorter form; there is nothing
- * left to trade after that, so an argument list still over the limit aborts
- * the step rather than dispatching the agent on a truncated one.
+ * The prompts themselves already travel as files, so what is left is paths,
+ * built from the workspace root and from the migration's package and name.
+ * Each appears in several of them, and the last two come from the migration
+ * author rather than from the workspace, so a long migration id pushes the
+ * total up faster than a long workspace path does. When it does not fit, the
+ * agents that carry a system context on the command line fall back to the
+ * shorter form; there is nothing left to trade after that, so an argument list
+ * still over the limit aborts the step rather than dispatching the agent on a
+ * truncated one.
  */
 function adaptWithinCommandLineBudget(
   detected: DetectedInstalledAgent,
@@ -192,19 +195,19 @@ function adaptWithinCommandLineBudget(
   if (withinCommandLineBudget(reduced)) {
     logger.info(
       pc.dim(
-        `  Passing the agent a reduced set of instructions. The workspace path leaves no room for the full set on a Windows command line.`
+        `  Passing the agent a reduced system context. The full one does not fit on a Windows command line alongside these paths.`
       )
     );
     return reduced;
   }
 
   output.error({
-    title: `${detected.displayName} cannot be started from this workspace path`,
+    title: `${detected.displayName} cannot be started for this migration step`,
     bodyLines: [
       `Launching it needs a ${reduced.commandLineLength}-character command line. cmd.exe runs at most ${WINDOWS_COMMAND_LINE_LIMIT} characters, and nx stops at ${WINDOWS_COMMAND_LINE_BUDGET} to leave room for what it cannot measure from here.`,
-      `The workspace path accounts for most of it, at ${invocationContext.workspaceRoot.length} characters.`,
+      `The length is paths: the workspace root, at ${invocationContext.workspaceRoot.length} characters, and the migration's package and name, each repeated across several of them.`,
       ``,
-      `Move the workspace to a shorter path, or re-run with \`--agentic=false\` to apply the remaining migrations yourself.`,
+      `Re-run with \`--agentic=false\` to apply the remaining migrations yourself. Moving the workspace to a shorter path can help too, but only for agents that put it on the command line.`,
     ],
   });
   throw new Error(
@@ -552,7 +555,8 @@ function assertNoLineBreaks(binary: string, args: readonly string[]): void {
 const CMD_META_CHARS = /([()\][!^"`<>&|;, ])/g;
 
 // Backslash-escape embedded quotes per MS C runtime convention, wrap in
-// quotes, then caret-escape cmd.exe metacharacters.
+// quotes, caret-escape cmd.exe metacharacters, then neutralize `%` so nothing
+// in the argument expands as a variable reference.
 function escapeCmdArg(arg: string): string {
   return neutralizePercent(caretEscape(quoteCmdArg(arg)));
 }
