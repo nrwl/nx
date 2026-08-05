@@ -893,7 +893,7 @@ describe('package-manager', () => {
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'yarn' } });
 
-      await packageRegistryView('nx', 'latest', '--json');
+      await packageRegistryView('nx', 'latest', ['--json']);
 
       const [file, fileArgs, options] = execMock.mock.calls[0];
       expect(file).toBe('npm');
@@ -906,12 +906,46 @@ describe('package-manager', () => {
         .spyOn(configModule, 'readNxJson')
         .mockReturnValue({ cli: { packageManager: 'pnpm' } });
 
-      await packageRegistryView('nx', 'latest', '--json');
+      await packageRegistryView('nx', 'latest', ['--json']);
 
       const [file, fileArgs, options] = execMock.mock.calls[0];
       expect(file).toBe('pnpm');
       expect(fileArgs).toEqual(['view', 'nx@latest', '--json']);
       expect(options.env?.npm_config_force).toBeUndefined();
+    });
+
+    it('should query the bare package name when no version is given', async () => {
+      // The full packument is fetched with an empty version; a trailing `@` would
+      // make npm resolve the empty spec instead.
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'npm' } });
+
+      await packageRegistryView('nx', '', ['--json']);
+
+      const [, fileArgs] = execMock.mock.calls[0];
+      expect(fileArgs).toEqual(['view', 'nx', '--json']);
+    });
+
+    it('should pass each argument through as its own argv entry', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'npm' } });
+
+      await packageRegistryView('nx', 'latest', [
+        'nx-migrations',
+        'ng-update',
+        '--json',
+      ]);
+
+      const [, fileArgs] = execMock.mock.calls[0];
+      expect(fileArgs).toEqual([
+        'view',
+        'nx@latest',
+        'nx-migrations',
+        'ng-update',
+        '--json',
+      ]);
     });
 
     it('should keep a shell on Windows and quote every argument', async () => {
@@ -933,7 +967,7 @@ describe('package-manager', () => {
       Object.defineProperty(process, 'platform', { value: 'win32' });
 
       try {
-        await packageRegistryView('nx', '>=0.0.0', '--json');
+        await packageRegistryView('nx', '>=0.0.0', ['--json']);
       } finally {
         Object.defineProperty(process, 'platform', platform);
       }
@@ -957,7 +991,7 @@ describe('package-manager', () => {
           npm_config_registry: 'https://sentinel.example.com/',
         });
 
-      await packageRegistryView('nx', 'latest', '--json');
+      await packageRegistryView('nx', 'latest', ['--json']);
 
       const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(workspaceRoot);
@@ -987,10 +1021,10 @@ describe('package-manager', () => {
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
         .mockReturnValue({});
 
-      await packageRegistryView('nx', 'latest', '--json');
+      await packageRegistryView('nx', 'latest', ['--json']);
       // The second call hits the cache, so the changed mock must not reach it.
       versionSpy.mockReturnValue('9.9.9' as any);
-      await packageRegistryView('nx', 'latest', '--json');
+      await packageRegistryView('nx', 'latest', ['--json']);
 
       expect(versionSpy).toHaveBeenCalledTimes(1);
       expect(overlaySpy.mock.calls.map((c) => c[3])).toEqual([
@@ -1014,7 +1048,7 @@ describe('package-manager', () => {
       process.env.NPM_CONFIG_REGISTRY = 'https://ambient.example.com/';
 
       try {
-        await packageRegistryView('nx', 'latest', '--json');
+        await packageRegistryView('nx', 'latest', ['--json']);
       } finally {
         if (saved === undefined) {
           delete process.env.NPM_CONFIG_REGISTRY;
@@ -1044,7 +1078,7 @@ describe('package-manager', () => {
       process.env[key] = 'ambient-token';
 
       try {
-        await packageRegistryView('nx', 'latest', '--json');
+        await packageRegistryView('nx', 'latest', ['--json']);
       } finally {
         if (saved === undefined) {
           delete process.env[key];
@@ -1069,7 +1103,7 @@ describe('package-manager', () => {
       process.env[key] = 'ambient-token';
 
       try {
-        await packageRegistryView('nx', 'latest', '--json');
+        await packageRegistryView('nx', 'latest', ['--json']);
       } finally {
         if (saved === undefined) {
           delete process.env[key];
@@ -1105,7 +1139,7 @@ describe('package-manager', () => {
 
       let caught: any;
       try {
-        await packageRegistryView('nx', 'latest', '--json');
+        await packageRegistryView('nx', 'latest', ['--json']);
       } catch (e) {
         caught = e;
       }
@@ -1124,7 +1158,7 @@ describe('package-manager', () => {
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
         .mockReturnValue({});
 
-      await packageRegistryView('nx', 'latest', '--json');
+      await packageRegistryView('nx', 'latest', ['--json']);
 
       const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(installationPath);
@@ -1138,7 +1172,7 @@ describe('package-manager', () => {
       });
       jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
 
-      await packageRegistryView('nx', 'latest', '--json');
+      await packageRegistryView('nx', 'latest', ['--json']);
 
       const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(workspaceRoot);
@@ -1152,7 +1186,7 @@ describe('package-manager', () => {
       (statSync as jest.Mock).mockReturnValue({ isDirectory: () => false });
       jest.spyOn(registryConfig, 'getNpmSpawnRegistryEnv').mockReturnValue({});
 
-      await packageRegistryView('nx', 'latest', '--json');
+      await packageRegistryView('nx', 'latest', ['--json']);
 
       const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(workspaceRoot);
