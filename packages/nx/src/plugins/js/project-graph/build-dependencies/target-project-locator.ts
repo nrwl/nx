@@ -12,6 +12,7 @@ import {
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 import type { PackageJson } from '../../../../utils/package-json';
+import { normalizePath } from '../../../../utils/path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
   getWorkspacePackagesMetadata,
@@ -506,6 +507,7 @@ export class TargetProjectLocator {
   private findProjectOfResolvedModule(
     resolvedModule: string
   ): string | undefined {
+    resolvedModule = normalizePath(resolvedModule);
     if (
       resolvedModule.startsWith('node_modules/') ||
       resolvedModule.includes('/node_modules/')
