@@ -56,7 +56,9 @@ describe('addLinting generator', () => {
       expect.objectContaining({
         project: appProjectName,
         addExplicitTargets: true,
-        tsConfigPaths: expect.any(Array),
+        addPlugin: false,
+        rootProject: false,
+        tsConfigPaths: [`${appProjectRoot}/tsconfig.app.json`],
       })
     );
   });
@@ -85,6 +87,9 @@ describe('addLinting generator', () => {
       '@angular-eslint/eslint-plugin',
       '@angular-eslint/eslint-plugin-template',
       '@angular-eslint/template-parser',
+      // Installed on both the flat and legacy paths, so it lands under this
+      // test's shape even though the two sets above are path-specific.
+      '@typescript-eslint/utils',
     ]) {
       expect(devDependencies ?? {}).not.toHaveProperty(pkg);
     }
