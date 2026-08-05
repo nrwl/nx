@@ -190,8 +190,6 @@ async function createNodesInternal(
   hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-  // Scoped to this single config eval so the memoized task envs are never shared
-  // across concurrent createNodes passes.
   const graphTimeEnvCache: GraphTimeEnvCache = new Map();
 
   // The createNodes hash covers projectRoot files, the lockfile, and tsconfig,
@@ -744,10 +742,6 @@ async function resolveChainWebserver(
   inferReadiness: boolean
 ): Promise<ChainWebserver> {
   let webServers = ambientWebServers;
-  // Only resolve under the task env when a gate will be inferred. The task env
-  // matters solely for the readiness address, so skipping it (and the readiness
-  // servers below) restores the pre-inference behavior when the gate is opted
-  // out.
   if (inferReadiness) {
     const taskEnv = getCachedGraphTimeEnvForTask(
       graphTimeEnvCache,
@@ -776,7 +770,7 @@ async function resolveChainWebserver(
   }
 
   const commandTasks = getWebserverCommandTasks({
-    webServer: webServers as PlaywrightTestConfig['webServer'],
+    webServer: webServers,
   });
   const readinessServers = inferReadiness
     ? (commandTasks

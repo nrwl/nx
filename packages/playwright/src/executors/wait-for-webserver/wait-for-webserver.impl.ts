@@ -50,7 +50,11 @@ export async function waitForWebserverExecutor(
     );
     return { success: true };
   } catch (e) {
-    logger.error(e instanceof Error ? e.message : String(e));
+    logger.error(
+      `@nx/playwright:wait-for-webserver ${
+        e instanceof Error ? e.message : String(e)
+      }`
+    );
     return { success: false };
   }
 }
@@ -285,10 +289,10 @@ function requestStatus(
     // than work of its own: it still fires while a request is in flight, and
     // cannot hold the process open once nothing else does.
     budget = setTimeout(() => {
-      // Staying silent for the window the port probe allows is something the
-      // server did. Going quiet with a sliver of budget left is not: that is
-      // the deadline arriving mid-request, and it says nothing about a server
-      // an earlier probe may have already reached.
+      // Silence for the window the port probe allows is an observation of the
+      // server. A request cut off with less budget than that only means the
+      // deadline arrived mid-flight, and must not displace what an earlier
+      // probe saw.
       settle({
         href: url.href,
         status: 0,
