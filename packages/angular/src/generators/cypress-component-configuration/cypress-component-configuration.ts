@@ -13,6 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
+import { assertCypressComponentTestingSupport } from '../../utils/assert-cypress-component-testing-support';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { isZonelessApp } from '../../utils/zoneless';
 import { nxVersion } from '../../utils/versions';
@@ -53,6 +54,7 @@ export async function cypressComponentConfiguration(
   const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
+  assertCypressComponentTestingSupport(tree);
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   let isZoneless: boolean;

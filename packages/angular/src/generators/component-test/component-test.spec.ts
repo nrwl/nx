@@ -1,7 +1,7 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { assertMinimumCypressVersion } from '@nx/cypress/internal';
-import { Tree } from '@nx/devkit';
+import { Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
@@ -21,6 +21,12 @@ describe('Angular Cypress Component Test Generator', () => {
     // silence warnings about missing .gitignore file
     tree.write('.gitignore', '');
     mockedAssertMinimumCypressVersion.mockReturnValue();
+    // Cypress can't run component tests on Angular 22.1+ until Cypress 16.
+    // See: https://github.com/cypress-io/cypress/issues/34461
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = { ...json.dependencies, cypress: '^16.0.0' };
+      return json;
+    });
   });
 
   it('should handle component w/o inputs', async () => {
@@ -243,5 +249,30 @@ describe(MyLib.name, () => {
         .read('my-lib/src/lib/my-lib/my-lib.cy.ts', 'utf-8')
         .replaceAll(EOL, '\n')
     ).toEqual(expected);
+  });
+
+  it('should throw an error when the cypress version does not support the angular version', async () => {
+    await generateTestLibrary(tree, {
+      directory: 'my-lib',
+      unitTestRunner: UnitTestRunner.None,
+      linter: 'none',
+      skipFormat: true,
+    });
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = { ...json.dependencies, cypress: '15.7.0' };
+      return json;
+    });
+
+    await expect(
+      componentTestGenerator(tree, {
+        componentName: 'MyLib',
+        componentFileName: './my-lib',
+        project: 'my-lib',
+        componentDir: 'src/lib/my-lib',
+        skipFormat: true,
+      })
+    ).rejects.toThrow(
+      /Cypress Component Testing doesn't support Angular 22\.1 and higher/
+    );
   });
 });
