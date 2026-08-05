@@ -74,11 +74,14 @@ describe('addPluginsToOxlintConfig', () => {
 
     addPluginsToOxlintConfig(tree, 'libs/shared/ui', ['react']);
 
+    // Each of the three mentions is pinned separately: any one of them can
+    // revert to the workspace root on its own, and the other two keep a
+    // whole-message assertion green while the text names two different configs.
     const message = warn.mock.calls[0][0];
-    expect(message).toContain('libs/shared/.oxlintrc.json');
-    // The suggested `extends` is the actionable part, and naming the config in
-    // the prose does not pin it: a root-relative path here would reproduce the
-    // very skip this warning reports.
+    expect(message).toContain("so libs/shared/.oxlintrc.json's categories");
+    expect(message).toContain('violations libs/shared/.oxlintrc.json would');
+    // The suggested `extends` is the actionable one — a root-relative path here
+    // reproduces the very skip this warning reports.
     expect(message).toContain(
       '"extends": ["../../../libs/shared/.oxlintrc.json"]'
     );
