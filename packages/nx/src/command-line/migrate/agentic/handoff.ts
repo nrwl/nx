@@ -74,21 +74,30 @@ function sanitizeSegment(value: string): string {
 }
 
 /**
- * Absolute path of the handoff file for a migration step within a run.
+ * Absolute path of one of a migration step's scratch files within a run.
  * The package's scope (if any) becomes a real subdirectory so the package name
  * stays readable; two packages can ship a migration with the same name without
  * colliding because they land in different package subdirectories. Each
  * segment is sanitized so the path is always writable on every platform.
  */
-export function stepHandoffPath(
+export function stepFilePath(
   runDir: string,
-  migration: { package: string; name: string }
+  migration: { package: string; name: string },
+  extension: string
 ): string {
   return join(
     runDir,
     ...migration.package.split('/').map(sanitizeSegment),
-    `${sanitizeSegment(migration.name)}.json`
+    `${sanitizeSegment(migration.name)}${extension}`
   );
+}
+
+/** Absolute path of the handoff file for a migration step within a run. */
+export function stepHandoffPath(
+  runDir: string,
+  migration: { package: string; name: string }
+): string {
+  return stepFilePath(runDir, migration, '.json');
 }
 
 export type HandoffReadFailureReason =

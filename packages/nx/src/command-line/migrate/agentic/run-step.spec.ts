@@ -4,6 +4,9 @@ jest.mock('./handoff', () => ({
   ...jest.requireActual('./handoff'),
   mkdirSafely: jest.fn(),
 }));
+jest.mock('./instruction-files', () => ({
+  writeStepInstructionFiles: jest.fn(),
+}));
 jest.mock('../migrate-output', () => ({
   resetSgrAfterAgent: jest.fn(),
 }));
@@ -20,6 +23,7 @@ jest.mock('../../../utils/child-process', () => ({
 
 import { runAgentic } from './runner';
 import { getAgentDefinition } from './definitions';
+import { writeStepInstructionFiles } from './instruction-files';
 import { runAgenticPromptStep } from './run-step';
 import {
   DetectedInstalledAgent,
@@ -29,6 +33,11 @@ import {
 
 const mockRunAgentic = runAgentic as jest.Mock;
 const mockGetDefinition = getAgentDefinition as jest.Mock;
+const mockWriteInstructionFiles = writeStepInstructionFiles as jest.Mock;
+
+const SYSTEM_PROMPT_FILE = '/ws/.nx/migrate-runs/20.0.0/@nx/test/m1.system.md';
+const INSTRUCTIONS_POINTER =
+  'Your instructions for this migration step are in the file .nx/migrate-runs/20.0.0/@nx/test/m1.instructions.md';
 
 function makeAgentic(): EnabledResolvedAgentic {
   const detected: DetectedInstalledAgent = {
@@ -78,7 +87,54 @@ describe('runAgenticPromptStep', () => {
       mkdirSafely: jest.Mock;
     };
     mkdirSafely.mockClear();
+    mockWriteInstructionFiles.mockReset();
+    mockWriteInstructionFiles.mockReturnValue({
+      systemPromptFilePath: SYSTEM_PROMPT_FILE,
+      instructionsPointer: INSTRUCTIONS_POINTER,
+    });
     installDeps = jest.fn().mockResolvedValue(undefined);
+  });
+
+  it('writes both prompts to the run directory and invokes the agent with pointers at them', async () => {
+    configureRun({ kind: 'success', summary: 'applied changes' });
+
+    await runAgenticPromptStep({
+      root: '/ws',
+      migration: makeMigration(),
+      agentic: makeAgentic(),
+      runDir: '/ws/.nx/migrate-runs/20.0.0',
+      installDepsIfChanged: installDeps,
+    });
+
+    const written = mockWriteInstructionFiles.mock.calls[0][0];
+    expect(written.workspaceRoot).toBe('/ws');
+    expect(written.runDir).toBe('/ws/.nx/migrate-runs/20.0.0');
+    expect(written.migration).toMatchObject({
+      package: '@nx/test',
+      name: 'm1',
+    });
+    expect(written.systemPrompt).toContain('<handoff_contract>');
+    expect(written.instructions).toContain('prompts/m1.md');
+
+    const { invocationContext } = mockRunAgentic.mock.calls[0][0];
+    expect(invocationContext.systemPromptFilePath).toBe(SYSTEM_PROMPT_FILE);
+    expect(invocationContext.instructionsPointer).toBe(INSTRUCTIONS_POINTER);
+    expect(invocationContext.systemPrompt).toBe(written.systemPrompt);
+    // The inline forms both point at the file; only the full one repeats the
+    // handoff contract the agent has to satisfy.
+    expect(invocationContext.inlineSystemContext).toContain(SYSTEM_PROMPT_FILE);
+    expect(invocationContext.inlineSystemContext).toContain(
+      '<handoff_contract>'
+    );
+    expect(invocationContext.inlineSystemContextFallback).toContain(
+      SYSTEM_PROMPT_FILE
+    );
+    expect(invocationContext.inlineSystemContextFallback).not.toContain(
+      '<handoff_contract>'
+    );
+    expect(invocationContext.inlineSystemContextFallback.length).toBeLessThan(
+      invocationContext.inlineSystemContext.length
+    );
   });
 
   it('returns the agent summary and calls installDeps on success', async () => {
