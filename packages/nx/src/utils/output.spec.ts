@@ -162,17 +162,22 @@ describe('output.drain', () => {
     useStdout(stalled.stream);
 
     stalled.stream.write('g'.repeat(50));
+    let writes = 0;
     (stalled.stream as any).write = (
       _chunk: unknown,
       _encoding: unknown,
       callback?: () => void
     ) => {
+      writes++;
       if (callback) callback();
       return true;
     };
 
     await expect(output.drain()).resolves.toBeUndefined();
-  });
+    // Also guards against an early return: drain must have reached the patched
+    // writer rather than resolving before it queued anything.
+    expect(writes).toBe(1);
+  }, 5000);
 
   it('leaves no error listener behind', async () => {
     const stalled = stalledStdout(1000);
