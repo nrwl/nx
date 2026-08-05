@@ -15,7 +15,7 @@ const MagicString = require(realMagicStringPath);
 module.exports = new Proxy(MagicString, {
   get(target, prop) {
     if (prop === '__esModule') return true;
-    if (prop === 'MagicString') return MagicString;
+    if (prop === 'MagicString') return target.MagicString ?? MagicString;
     return target[prop];
   },
   has(target, prop) {
