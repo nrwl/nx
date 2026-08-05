@@ -32,6 +32,34 @@ describe('normalizeWebServers', () => {
     expect(normalizeWebServers(server)).toEqual([server]);
     expect(normalizeWebServers([server])).toEqual([server]);
   });
+
+  it('projects `wait` to a boolean and drops run-only fields like cwd and env', () => {
+    expect(
+      normalizeWebServers({
+        command: 'nx serve app',
+        url: 'http://localhost:4300',
+        reuseExistingServer: true,
+        cwd: '/tmp/app',
+        env: { FOO: 'bar' },
+        wait: { stdout: /ready/ },
+      })
+    ).toEqual([
+      {
+        command: 'nx serve app',
+        url: 'http://localhost:4300',
+        reuseExistingServer: true,
+        waitsForOutput: true,
+      },
+    ]);
+  });
+
+  it('sets waitsForOutput for either stdio regex and not for an empty wait', () => {
+    const normalized = (wait: object) =>
+      normalizeWebServers({ command: 'x', wait })[0].waitsForOutput;
+    expect(normalized({ stdout: /ready/ })).toBe(true);
+    expect(normalized({ stderr: /ready/ })).toBe(true);
+    expect(normalized({})).toBeUndefined();
+  });
 });
 
 describe('taskEnvDivergesFromAmbient', () => {
@@ -131,11 +159,11 @@ describe('forkChildEval (real fork)', () => {
   afterAll(() => rmSync(fixtureDir, { recursive: true, force: true }));
   afterEach(() => _setWorkerScriptPath(null));
 
-  it('resolves with the message the worker sends', async () => {
+  it('resolves with the result message the worker sends', async () => {
     _setWorkerScriptPath(
       writeWorker(
         'ok.js',
-        `process.send([{ command: 'x', url: 'http://localhost:4301' }], () => process.exit(0));`
+        `process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }] }, () => process.exit(0));`
       )
     );
     await expect(
@@ -143,13 +171,30 @@ describe('forkChildEval (real fork)', () => {
     ).resolves.toEqual([{ command: 'x', url: 'http://localhost:4301' }]);
   });
 
-  it('rejects an `{ error }` message even when the string is empty', async () => {
+  it('ignores messages without the worker tag', async () => {
+    // The evaluated config runs arbitrary user code that can call process.send
+    // itself. A primitive or an untagged object must neither settle nor crash
+    // the resolution; only the tagged result does.
+    _setWorkerScriptPath(
+      writeWorker(
+        'chatty.js',
+        `process.send('ready');
+process.send({ event: 'progress' });
+process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url: 'http://localhost:4301' }] }, () => process.exit(0));`
+      )
+    );
+    await expect(
+      resolveWebServersUnderEnv('config.ts', 'root', {})
+    ).resolves.toEqual([{ command: 'x', url: 'http://localhost:4301' }]);
+  });
+
+  it('rejects a tagged error message even when the string is empty', async () => {
     // Guards the throw-don't-fall-back design: an empty error string must not
     // read as a successful (empty) result.
     _setWorkerScriptPath(
       writeWorker(
         'empty-error.js',
-        `process.send({ error: '' }, () => process.exit(0));`
+        `process.send({ type: 'webserver-config-error', error: '' }, () => process.exit(0));`
       )
     );
     await expect(

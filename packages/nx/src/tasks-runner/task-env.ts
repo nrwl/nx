@@ -71,18 +71,20 @@ export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
 }
 
 /**
- * Computes the env a task will run with, at graph-construction time.
+ * Reconstructs, at graph-construction time, the ambient env plus the dotenv
+ * files a task would load (`.env.<target>`, project-scoped `.env`, ...).
  *
- * `createNodes` runs before any task, so the per-task dotenv files
- * (`.env.<target>`, project-scoped `.env`, ...) that `getTaskSpecificEnv` loads
- * at run time are not in `process.env` yet. A plugin inferring targets from a
- * config that reads `process.env` needs those values to resolve the config the
- * way the task will. This mirrors `loadDotEnvFilesForTask` but takes the target
- * coordinates directly (there is no `Task`/graph yet) and gates on `!== 'false'`
- * rather than `=== 'true'`: the `'true'` marker is only stamped once the graph
- * exists (`run-command.ts`), which is after this runs.
+ * `createNodes` runs before any task, so the per-task dotenv files that
+ * `getTaskSpecificEnv` loads at run time are not in `process.env` yet. A plugin
+ * inferring targets from a config that reads `process.env` needs those values
+ * to resolve the config the way the task will. This mirrors
+ * `loadDotEnvFilesForTask` but takes the target coordinates directly (there is
+ * no `Task`/graph yet) and gates on `!== 'false'` rather than `=== 'true'`: the
+ * `'true'` marker is only stamped once the graph exists (`run-command.ts`),
+ * which is after this runs. Only the dotenv overlay is reconstructed: run-time
+ * env like `NX_TASK_TARGET_*` or `NX_TASK_HASH` is not included.
  */
-export function getGraphTimeEnvForTask(
+export function getGraphTimeDotEnvForTask(
   projectRoot: string,
   target: string,
   configuration?: string,
