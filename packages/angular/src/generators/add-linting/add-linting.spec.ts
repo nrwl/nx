@@ -47,7 +47,47 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    expect(linter.lintProjectGenerator).toHaveBeenCalled();
+    // Assert the arguments, not just the call: this is the only test that sees
+    // the `addLintingToProject` hop, and `addExplicitTargets` in particular
+    // decides whether the project gets an explicit `lint` target or relies on
+    // inference — it can be dropped in the hop with every suite still green.
+    expect(linter.lintProjectGenerator).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        project: appProjectName,
+        addExplicitTargets: true,
+        tsConfigPaths: expect.any(Array),
+      })
+    );
+  });
+
+  it('should not set up ESLint for --linter=oxlint', async () => {
+    // `mockClear`: this suite has no `restoreMocks`, and `spyOn` on an
+    // already-spied property hands back the same mock — so without it the
+    // previous test's call is still recorded and this asserts nothing.
+    jest.spyOn(linter, 'lintProjectGenerator').mockClear();
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      linter: 'oxlint',
+      skipFormat: true,
+    });
+
+    expect(linter.lintProjectGenerator).not.toHaveBeenCalled();
+    // The angular-eslint install is the visible half — without the early return
+    // it lands on top of an Oxlint project. Both spellings: the flat-config
+    // path installs `angular-eslint`, the legacy path the scoped trio.
+    const { devDependencies } = readJson(tree, 'package.json');
+    for (const pkg of [
+      'angular-eslint',
+      '@angular-eslint/eslint-plugin',
+      '@angular-eslint/eslint-plugin-template',
+      '@angular-eslint/template-parser',
+    ]) {
+      expect(devDependencies ?? {}).not.toHaveProperty(pkg);
+    }
   });
 
   it('should add the Angular specific EsLint devDependencies (eslintrc)', async () => {

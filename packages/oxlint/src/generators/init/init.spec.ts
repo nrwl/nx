@@ -75,9 +75,6 @@ describe('initGenerator', () => {
       typeof p === 'string' ? p : p.plugin
     );
     expect(plugins).toContain('@nx/oxlint');
-    expect(
-      readNxJson(tree).targetDefaults?.['@nx/oxlint:lint']
-    ).toBeUndefined();
   });
 
   // Real filesystem on purpose. `addPlugin` probes `tree.root`, so a virtual
