@@ -1,11 +1,21 @@
 /**
- * Note to developers: STOP! These exports are available via requireNx in @nx/devkit.
+ * Note to developers: STOP! These are nx internals, not part of the public
+ * @nx/devkit API.
  *
  * This barrel is NOT under @nx/devkit's version-tolerance contract. That contract
  * (nx at the current major +/- 1, per devkit's peerDependencies) covers the public
- * @nx/devkit API only. These are nx internals, re-exported for first-party packages
- * in this repo that ship in lockstep with nx, so they require an exactly matching
- * nx version. See packages/devkit/CLAUDE.md.
+ * @nx/devkit API only. Two classes of consumer read this file, and the rules
+ * differ:
+ *
+ *   1. packages/devkit/src/ — devkit's own implementation. It ships to external
+ *      plugins, so it *does* run under the +/- 1 tolerance (@nx/devkit@23 may be
+ *      installed against nx@22) and must still guard: check at runtime, or only
+ *      use symbols that have existed since the oldest supported nx major.
+ *   2. First-party plugins in this repo, via @nx/devkit/internal. They release in
+ *      lockstep with nx, so they require an exactly matching nx version and need
+ *      no guarding.
+ *
+ * See packages/devkit/CLAUDE.md.
  */
 export { createTempNpmDirectory } from './utils/package-manager';
 export {
@@ -234,7 +244,10 @@ export type {
 } from './utils/package-json';
 export { readNxMigrateConfig } from './utils/package-json';
 export type { PackageManagerCommands } from './utils/package-manager';
-export { deriveGroupNameFromTarget } from './utils/plugins';
+// Sourced from the leaf module rather than ./utils/plugins: the barrel index
+// pulls output.ts and core-plugins.ts into the eager closure for a function that
+// depends on neither.
+export { deriveGroupNameFromTarget } from './utils/plugins/atomizer-utils';
 export { findInstalledPlugins } from './utils/plugins/installed-plugins';
 export {
   findAllProjectNodeDependencies,

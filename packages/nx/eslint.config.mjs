@@ -238,8 +238,8 @@ export default [
   // above — silently dropping the `typescript` optional-dependency ban and the
   // `nx/*` circular-import ban for all of packages/nx. `files` must come AFTER
   // the spread to win.
-  // Spec files are the only TypeScript files the root rule newly reaches here:
-  // the `**/*.ts` block above redefines the rule and carries
-  // `ignores: ['**/*.spec.ts']`.
+  // Spec files need the exemption because the `**/*.ts` block above redefines
+  // the rule and carries `ignores: ['**/*.spec.ts']`, leaving them on the root
+  // rule.
   { ...allowDirectNxImports, files: ['**/*.spec.ts'] },
 ];

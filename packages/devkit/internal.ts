@@ -11,6 +11,11 @@ export {
   resolvePrompt,
   PromptResolutionError,
   acknowledgeBuildScripts,
+  // getCatalogManager takes the barrel route here because this file *is*
+  // @nx/devkit/internal — first-party consumers only, released in lockstep. Its
+  // class-1 siblings in packages/devkit/src/utils/ (semver.ts, package-json.ts)
+  // ship to external plugins under the +/- 1 tolerance, so they must keep
+  // importing nx/src/utils/catalog directly. See packages/devkit/CLAUDE.md.
   getCatalogManager,
 } from 'nx/src/devkit-internals';
 
