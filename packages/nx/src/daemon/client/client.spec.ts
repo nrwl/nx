@@ -1,4 +1,12 @@
-import { rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { dirname } from 'node:path';
 
 // Redirect the daemon log and its directory so both states — present and
@@ -26,6 +34,10 @@ jest.mock('../../utils/wait-for-socket-connection', () => ({
   waitForSocketConnection: jest.fn(),
 }));
 
+jest.mock('../logger', () => ({
+  clientLogger: { log: jest.fn() },
+}));
+
 jest.mock('../cache', () => ({
   ...jest.requireActual('../cache'),
   readDaemonProcessJsonCache: jest.fn(),
@@ -33,6 +45,7 @@ jest.mock('../cache', () => ({
 }));
 
 import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
+import { clientLogger } from '../logger';
 import { readDaemonProcessJsonCache } from '../cache';
 import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
 import {
@@ -218,11 +231,6 @@ describe('startInBackground', () => {
     expect((error as any).internalDaemonError).toBe(true);
   });
 
-  // The same staleness without a reset in between. When the process json is
-  // absent for the whole poll the resolver returns null every tick, so
-  // tryConnect never runs and onConnectError never fires — nothing overwrites
-  // the previous round's errno and nothing clears it. The user is then told to
-  // delete a socket that does not exist, for an attempt that never happened.
   // The other half of the same rule: an errno the caller's probe produced does
   // belong to this attempt, and the poll cannot reproduce it once the daemon
   // that refused us has unlinked its process json. Without it a sandbox
@@ -242,6 +250,105 @@ describe('startInBackground', () => {
     expect(error.message).toContain(refusedSocket);
   });
 
+  // The log line keys on the early exit actually taken. Every failed connect
+  // records an errno — including the ENOENT of an ordinary cold start, which is
+  // the "daemon died, restarting" path support asks users about — while only a
+  // permission errno stops the loop. Keying on the recorded value reported
+  // "refused, stopped polling" for a poll nobody refused.
+  it.each([
+    ['ENOENT', 'not available after'],
+    ['EACCES', 'refused the connection'],
+  ])(
+    'should describe a poll that ended on %s by how it actually ended',
+    async (code: string, expected: string) => {
+      refuse(code);
+
+      await daemonClient.startInBackground().catch((e) => e);
+
+      const logged = (clientLogger.log as jest.Mock).mock.calls
+        .map((c) => String(c[0]))
+        .join('\n');
+      expect(logged).toContain(expected);
+    }
+  );
+
+  // The only test that produces a ConnectRefusal the way production does. Every
+  // other one hands `startInBackground` an object built by hand, which covers
+  // the callee's contract but not the hand-off that feeds it: deleting the
+  // argument at the `startDaemonIfNecessary` call site left the whole suite
+  // green. Here the errno comes from the kernel — a directory with no search
+  // permission makes connect() fail EACCES — travels through
+  // `isServerAvailable`, and has to arrive at the classification.
+  const rootlessPosix =
+    process.platform === 'win32' || process.getuid?.() === 0 ? it.skip : it;
+
+  rootlessPosix(
+    'should carry a real probe refusal from isServerAvailable into the report',
+    async () => {
+      const base = mkdtempSync(join(tmpdir(), 'nx-spec-handoff-'));
+      const locked = join(base, 'locked');
+      mkdirSync(locked);
+      chmodSync(locked, 0o000);
+      const socketPath = join(locked, 'd.sock');
+      (readDaemonProcessJsonCache as jest.Mock).mockReturnValue({ socketPath });
+      // The poll reports nothing, so the probe's errno is the only one there is.
+      (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+
+      try {
+        daemonClient.reset();
+        const error = await (daemonClient as any)
+          .startDaemonIfNecessary()
+          .catch((e: any) => e);
+
+        expect((error as any).daemonPermissionError).toBe(true);
+        expect(error.message).toContain(socketPath);
+      } finally {
+        chmodSync(locked, 0o700);
+        rmSync(base, { recursive: true, force: true });
+      }
+    }
+  );
+
+  rootlessPosix(
+    'should not hand on a refusal from an earlier round when the probe records none',
+    async () => {
+      const base = mkdtempSync(join(tmpdir(), 'nx-spec-stale-'));
+      const locked = join(base, 'locked');
+      mkdirSync(locked);
+      chmodSync(locked, 0o000);
+      (readDaemonProcessJsonCache as jest.Mock).mockReturnValue({
+        socketPath: join(locked, 'd.sock'),
+      });
+      (waitForSocketConnection as jest.Mock).mockResolvedValue(null);
+
+      try {
+        daemonClient.reset();
+        await (daemonClient as any).startDaemonIfNecessary().catch((e) => e);
+
+        // Round two: no process json at all, so getSocketPath throws and
+        // isServerAvailable returns false *without* recording anything. Status
+        // is moved back by hand rather than via reset(), which would clear the
+        // field and hide exactly what this is checking.
+        (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
+        (daemonClient as any)._daemonStatus = 1; // DISCONNECTED
+        const error = await (daemonClient as any)
+          .startDaemonIfNecessary()
+          .catch((e: any) => e);
+
+        expect((error as any).daemonPermissionError).toBeUndefined();
+        expect((error as any).internalDaemonError).toBe(true);
+      } finally {
+        chmodSync(locked, 0o700);
+        rmSync(base, { recursive: true, force: true });
+      }
+    }
+  );
+
+  // The same staleness as the reset test above, without a reset in between.
+  // When the process json is absent for the whole poll the resolver returns
+  // null every tick, so tryConnect never runs and onConnectError never fires —
+  // nothing overwrites the previous round's errno. The user is then told to
+  // delete a socket that does not exist, for an attempt that never happened.
   it('should not report a refusal the current attempt never produced', async () => {
     refuse('EACCES');
     await daemonClient.startInBackground().catch((e) => e);
