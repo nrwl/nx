@@ -845,13 +845,13 @@ function getWebserverCommandTasks(
   return tasks;
 }
 
-// Playwright picks a web server's readiness probe by presence rather than
-// truthiness: a defined `port` makes it check that port over TCP even when the
-// value is falsy and the address comes from `url`, and a web server it can
-// address neither way gets no probe at all. An unchecked `playwright.config.js`
-// can also carry a `port` Playwright coerces but the readiness task can't
-// probe. Gate only on the shapes the task probes the same way; the rest is
-// left to Playwright.
+// Playwright throws when `port` and `url` are both truthy, but a present
+// `port` (even 0) still selects its TCP-only probe, whose target comes from
+// the derived url rather than the option: the url's port for `port: 0` plus
+// `url`, and 0, which can never connect, when that url carries no explicit
+// port. An unchecked `playwright.config.js` can also carry a `port` Playwright
+// coerces but the readiness task can't probe. Gate only on the shapes the task
+// probes the same way; the rest is left to Playwright.
 function toReadinessServer(
   task: WebserverCommandTask
 ): WebserverReadinessServer | undefined {
