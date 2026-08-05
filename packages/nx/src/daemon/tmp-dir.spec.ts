@@ -11,9 +11,11 @@ import {
   resetSocketDirWarningsForTesting,
 } from './tmp-dir';
 import {
+  describeRefusal,
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isPeerWritable,
+  remedyFor,
 } from '../utils/owned-private-dir';
 import { logger } from '../utils/logger';
 import { isSandbox } from '../utils/is-sandbox';
@@ -294,6 +296,77 @@ describe('socket directories', () => {
       );
     });
     jest.dontMock('node:os');
+  });
+
+  // The whole line, not a substring. Each piece is pinned where it is written
+  // (describeRefusal and remedyFor in owned-private-dir.spec); what this pins is
+  // the assembly — which pieces appear, in what order, and that the optional
+  // ones are dropped rather than leaving a gap or a stray separator.
+  it('assembles the fallback warning the user actually reads', () => {
+    setPlatform('linux');
+    const container = {
+      kind: 'foreign-owner' as const,
+      dir: SHARED_TMP_ROOT,
+      uid: 1001,
+    };
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      reject(d, container)
+    );
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d.startsWith(HOME_TMP_ROOT) ? reject(d) : accept(d)
+    );
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      [
+        `Nx could not use any of its usual socket directories and fell back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
+        remedyFor(container),
+        'Run with --verbose to see why the others were rejected.',
+      ].join(' ')
+    );
+  });
+
+  // Same path with nothing actionable to say. The remedy is dropped entirely
+  // rather than rendering an empty segment or a doubled space.
+  it('leaves no gap in the warning when there is no remedy to offer', () => {
+    setPlatform('linux');
+    denyEveryDefaultRoot();
+
+    getSocketDir();
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      `Nx could not use any of its usual socket directories and fell back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}. Run with --verbose to see why the others were rejected.`
+    );
+  });
+
+  // What `--verbose` adds, which is the thing the warning above promises.
+  it('explains each rejected root at verbose level', () => {
+    setPlatform('linux');
+    const shared = {
+      kind: 'foreign-owner' as const,
+      dir: SHARED_TMP_ROOT,
+      uid: 1001,
+    };
+    const home = {
+      kind: 'not-tightenable' as const,
+      dir: HOME_TMP_ROOT,
+      mode: 0o40755,
+    };
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation(() =>
+      reject('', shared)
+    );
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d.startsWith(HOME_TMP_ROOT) ? reject('', home) : accept(d)
+    );
+
+    getSocketDir();
+
+    expect((getSocketDirFallbackCause() as Error).message).toEqual(
+      `Nx could not establish any of its default socket directories: ${describeRefusal(
+        shared
+      )}; ${describeRefusal(home)}.`
+    );
   });
 
   it('does not warn when a later tier succeeds', () => {

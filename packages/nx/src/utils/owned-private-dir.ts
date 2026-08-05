@@ -84,7 +84,11 @@ const deny = <T>(refusal: DirRefusal): GuardResult<T> => ({
   refusal,
 });
 
-const asMode = (mode: number): string => `0${(mode & 0o7777).toString(8)}`;
+// Four octal digits, so a sticky container reads `1777` and a plain directory
+// `0755` — the notation `chmod` and `ls` use. Prefixing a literal `0` instead
+// renders sticky modes as `01777`, which is not a form anyone writes.
+const asMode = (mode: number): string =>
+  (mode & 0o7777).toString(8).padStart(4, '0');
 
 /** The user-facing sentence for a refusal. The only place wording is decided. */
 export function describeRefusal(r: DirRefusal): string {
