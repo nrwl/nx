@@ -3,7 +3,6 @@ import {
   PluginCache,
   hashObject,
   combineGlobPatterns,
-  getFilesInDirectoryUsingContext,
   globWithWorkspaceContext,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
@@ -363,41 +362,46 @@ function createGetLintableFilesForProjectRoot(
   options: EslintPluginOptions,
   context: CreateNodesContext
 ): (projectRoot: string) => Promise<string[]> {
-  const lintableExtensions = new Set(options.extensions);
-  const projectRootMap = new Map<string, string[]>(
-    projectRoots.map((projectRoot) => [projectRoot, []])
-  );
-  const filesByProjectRoot = new Map<string, Promise<string[]>>();
+  // The workspace-wide glob is expensive in large repositories, so it runs
+  // lazily and at most once, shared by every project root that needs it.
+  let lintableFilesPerProjectRoot: Promise<Map<string, string[]>>;
 
   return async (projectRoot: string) => {
-    let files = filesByProjectRoot.get(projectRoot);
-    if (!files) {
-      files = getFilesInDirectoryUsingContext(
-        context.workspaceRoot,
-        projectRoot === '.' ? '' : projectRoot
-      ).then((files) =>
-        files.filter(
-          (file) =>
-            hasLintableExtension(file, lintableExtensions) &&
-            getRootForDirectory(dirname(file), projectRootMap) === projectRoot
-        )
-      );
-      filesByProjectRoot.set(projectRoot, files);
-    }
-
-    return files;
+    lintableFilesPerProjectRoot ??= collectLintableFilesByProjectRoot(
+      projectRoots,
+      options,
+      context
+    );
+    return (await lintableFilesPerProjectRoot).get(projectRoot) ?? [];
   };
 }
 
-function hasLintableExtension(
-  file: string,
-  lintableExtensions: Set<string>
-): boolean {
-  const extensionIndex = file.lastIndexOf('.');
-  if (extensionIndex === -1) {
-    return false;
+async function collectLintableFilesByProjectRoot(
+  projectRoots: string[],
+  options: EslintPluginOptions,
+  context: CreateNodesContext
+): Promise<Map<string, string[]>> {
+  const lintableFilesPerProjectRoot = new Map<string, string[]>();
+
+  const lintableFiles = await globWithWorkspaceContext(context.workspaceRoot, [
+    `**/*.{${options.extensions.join(',')}}`,
+  ]);
+
+  for (const projectRoot of projectRoots) {
+    lintableFilesPerProjectRoot.set(projectRoot, []);
   }
-  return lintableExtensions.has(file.slice(extensionIndex + 1));
+
+  for (const file of lintableFiles) {
+    const projectRoot = getRootForDirectory(
+      dirname(file),
+      lintableFilesPerProjectRoot
+    );
+    if (projectRoot) {
+      lintableFilesPerProjectRoot.get(projectRoot).push(file);
+    }
+  }
+
+  return lintableFilesPerProjectRoot;
 }
 
 function getRootForDirectory(

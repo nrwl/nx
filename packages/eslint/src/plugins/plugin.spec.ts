@@ -617,16 +617,14 @@ describe('@nx/eslint/plugin', () => {
       });
 
       await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
-      const globCalls = mockGlobWithWorkspaceContext.mock.calls.length;
-      const directoryCalls =
-        mockGetFilesInDirectoryUsingContext.mock.calls.length;
+      // the first (uncached) invocation must actually discover files, so a
+      // broken mock interception cannot make this test pass on 0 === 0
+      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(1);
 
       await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
 
-      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(globCalls);
-      expect(mockGetFilesInDirectoryUsingContext).toHaveBeenCalledTimes(
-        directoryCalls
-      );
+      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(1);
+      expect(mockGetFilesInDirectoryUsingContext).not.toHaveBeenCalled();
     });
 
     it('should not discover lintable files for projects with local eslint configs', async () => {
@@ -645,7 +643,7 @@ describe('@nx/eslint/plugin', () => {
       expect(mockGetFilesInDirectoryUsingContext).not.toHaveBeenCalled();
     });
 
-    it('should discover lintable files from the project directory for projects using an inherited eslint config', async () => {
+    it('should discover lintable files with a single deferred workspace glob for projects using an inherited eslint config', async () => {
       createFiles({
         '.eslintrc.json': `{}`,
         'apps/my-app/project.json': `{}`,
@@ -654,11 +652,23 @@ describe('@nx/eslint/plugin', () => {
 
       await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
 
-      expect(mockGlobWithWorkspaceContext).not.toHaveBeenCalled();
-      expect(mockGetFilesInDirectoryUsingContext).toHaveBeenCalledWith(
-        context.workspaceRoot,
-        'apps/my-app'
-      );
+      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(1);
+      expect(mockGetFilesInDirectoryUsingContext).not.toHaveBeenCalled();
+    });
+
+    it('should run the deferred workspace glob only once when multiple projects inherit the root eslint config', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'libs/my-lib/project.json': `{}`,
+        'libs/my-lib/index.ts': `console.log('hello world')`,
+      });
+
+      await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
+
+      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(1);
+      expect(mockGetFilesInDirectoryUsingContext).not.toHaveBeenCalled();
     });
 
     it('should insert projects in input order when one root config governs multiple nested projects', async () => {
