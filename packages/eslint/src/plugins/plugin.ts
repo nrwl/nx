@@ -3,6 +3,7 @@ import {
   PluginCache,
   hashObject,
   combineGlobPatterns,
+  getFilesInDirectoryUsingContext,
   globWithWorkspaceContext,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
