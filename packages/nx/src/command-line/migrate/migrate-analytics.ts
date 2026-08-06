@@ -331,9 +331,11 @@ export function reportMigrateOrchestratorComplete(opts: {
 
 /**
  * Counts invocations, not completions: emitted as soon as the migration id
- * resolves, while the worker can still stop before running anything. Whether
- * it was recorded into an orchestrated run (`--run-id`) or ran standalone is
- * encoded in the event name.
+ * resolves, while the worker can still stop before running anything.
+ *
+ * An invocation recorded into an orchestrated run (`--run-id`) gets its own
+ * event name. Every other one keeps the name `--run-migration` shipped with,
+ * so that series stays continuous for users who never enable the orchestrator.
  */
 export function reportMigrateSingleMigrationInvocation(opts: {
   migrationType: 'generator' | 'prompt' | 'hybrid';
@@ -342,9 +344,9 @@ export function reportMigrateSingleMigrationInvocation(opts: {
   safeReport(() => {
     if (!customDimensions) return;
     reportEvent(
-      `migrate_single_migration_${
-        opts.orchestrated ? 'recorded' : 'standalone'
-      }`,
+      opts.orchestrated
+        ? 'migrate_single_migration_recorded'
+        : 'migrate_single_migration_invocation',
       {
         [customDimensions.promptChoice]: opts.migrationType,
       }

@@ -310,12 +310,15 @@ async function killWorkerAndReconcile(initOutput: string): Promise<{
 }
 
 describe('migrate orchestrator (dark launch)', () => {
+  // A workspace per test rather than the usual shared one: every test here
+  // drives a run to completion, so it leaves run dirs, commits and migration
+  // output that the next test's assertions would otherwise see as its own.
   beforeEach(() => {
     newProject({ packages: [] });
     setupMigrationPackage();
   });
 
-  afterAll(() => cleanupProject());
+  afterEach(() => cleanupProject());
 
   it('should drive a generator, prompt, and hybrid migration to completion through the fake agent loop', () => {
     writePlan([genMig, promptMig, hybridMig]);

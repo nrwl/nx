@@ -1,4 +1,11 @@
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'fs';
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import { nxVersion } from '../../../utils/versions';
@@ -448,6 +455,21 @@ describe('run-state', () => {
       ]);
     });
 
+    it('skips a finished run in an unsafely-named dir: it competes with nothing', () => {
+      // Reporting it would refuse every future run with no way for retention
+      // to ever clear it, since retention only runs once a run is created.
+      writeRun(
+        root,
+        'evil;rm -rf',
+        buildState({ runId: 'evil;rm -rf', status: 'completed' })
+      );
+
+      const result = findActiveRun(root);
+
+      expect(result.active).toBeNull();
+      expect(result.uninterpretable).toEqual([]);
+    });
+
     it('throws when the migrate-runs dir itself cannot be scanned', () => {
       mkdirSync(dirname(migrateRunsDir(root)), { recursive: true });
       writeFileSync(migrateRunsDir(root), 'not a directory');
@@ -513,6 +535,45 @@ describe('run-state', () => {
           'new-run',
         ].sort()
       );
+    });
+
+    it('creates the run even when a stale dir cannot be removed', () => {
+      // The run's state is already on disk by then, so aborting here would
+      // abort a run that exists, and every retry would abort the same way.
+      const dir = migrateRunsDir(root);
+      for (let i = 0; i < 6; i++) {
+        writeRun(
+          root,
+          `completed-${i}`,
+          buildState({
+            runId: `completed-${i}`,
+            status: 'completed',
+            createdAt: `2026-01-0${i + 1}T00:00:00.000Z`,
+          })
+        );
+      }
+      // Read-only leaves the dir readable (so retention still classifies it as
+      // stale) while its contents cannot be unlinked.
+      const stale = join(dir, 'completed-0');
+      chmodSync(stale, 0o500);
+
+      try {
+        expect(() =>
+          createRun(
+            root,
+            buildState({
+              runId: 'new-run',
+              status: 'active',
+              createdAt: '2026-03-01T00:00:00.000Z',
+            })
+          )
+        ).not.toThrow();
+
+        expect(readdirSync(dir)).toContain('new-run');
+        expect(readdirSync(dir)).toContain('completed-0');
+      } finally {
+        chmodSync(stale, 0o700);
+      }
     });
 
     it('leaves newer-format runs alone instead of pruning or crashing', () => {

@@ -33,15 +33,20 @@ export type StepEvent =
       stepId: string;
       finishedAt: string;
     }
+  // `foldPromptOutcome` and `markDied` carry the attempt they were observed
+  // on. Both are written after an unlocked read, and both source statuses
+  // recur across attempts, so the status alone cannot say which attempt the
+  // observation was about.
   | {
       type: 'foldPromptOutcome';
       stepId: string;
+      attempt: number;
       promptOutcome: MigrateStepPromptOutcome;
     }
   // Emitted between the generator half and the commit attempt, so a retry
   // after a failed commit or install does not reapply the generator.
   | { type: 'markGeneratorCompleted'; stepId: string }
-  | { type: 'markDied'; stepId: string }
+  | { type: 'markDied'; stepId: string; attempt: number }
   | { type: 'stepAction'; stepId: string; action: StepAction };
 
 // A string discriminant, not a boolean `ok`: this repo compiles without
@@ -126,6 +131,8 @@ export function applyStepEvent(
     case 'foldPromptOutcome':
       if (step.status !== 'awaiting-prompt-outcome')
         return illegal(step, event.type);
+      if (step.attempt !== event.attempt)
+        return staleAttempt(step, event.type, event.attempt);
       return commit(state, index, {
         ...step,
         status: PROMPT_OUTCOME_TO_STEP_STATUS[event.promptOutcome.status],
@@ -136,6 +143,8 @@ export function applyStepEvent(
       // A step awaiting a prompt outcome has no live process left to die;
       // only a running step can.
       if (step.status !== 'running') return illegal(step, event.type);
+      if (step.attempt !== event.attempt)
+        return staleAttempt(step, event.type, event.attempt);
       return commit(state, index, { ...step, status: 'died' });
 
     case 'stepAction':
@@ -157,17 +166,42 @@ function applyStepAction(
   if (step.status === 'failed') {
     switch (action) {
       case 'retry':
-        return commit(state, index, rearm(step));
+        // Nothing resets the tree, so the generator's changes are still in it.
+        return commit(state, index, rearm(step, true));
       case 'skip':
         return commit(state, index, { ...step, status: 'skipped' });
     }
   }
   if (step.status === 'died') {
     switch (action) {
+      case 'retry':
+        // Same no-reset rearm as from 'failed', and legal only once the
+        // generator half is recorded: that is what leaves the redispensed
+        // worker something to do (a hybrid's prompt, or the install and
+        // commit) other than reapplying the generator over its own changes.
+        if (step.generatorCompleted === true) {
+          return commit(state, index, rearm(step, true));
+        }
+        return {
+          kind: 'error',
+          reason: `Cannot apply action 'retry' to step '${step.id}': the worker died before recording that its generator ran, so keeping the current tree could apply the migration twice. Use 'retry-clean' or 'adopt' instead.`,
+        };
       case 'retry-clean':
-        return commit(state, index, rearm(step));
+        // The reset target predates the generator unless a commit of this
+        // step's own already carries it, so the marker only survives when
+        // such a commit exists; otherwise the reset discards the generator's
+        // changes and the retry has to run it again.
+        return commit(
+          state,
+          index,
+          rearm(step, coveringLandedEntries(state, step.id).length > 0)
+        );
       case 'adopt':
-        return commit(state, index, { ...step, status: 'succeeded' });
+        return commit(state, index, {
+          ...step,
+          status: 'succeeded',
+          outcome: { ...step.outcome, summary: adoptedSummary(step) },
+        });
     }
   }
   return {
@@ -176,18 +210,30 @@ function applyStepAction(
   };
 }
 
+// An adopted death records how far the worker got, since 'succeeded' alone
+// says the migration was applied and cannot say by what.
+function adoptedSummary(step: MigrateStep): string {
+  return step.generatorCompleted === true
+    ? "Adopted after the worker died: its generator had run, and the working tree it left was taken as this migration's result."
+    : "Adopted after the worker died before recording that its generator had run; the working tree it left was taken as this migration's result.";
+}
+
 // Re-arms a step for a fresh attempt. Drops every field the previous attempt
 // wrote (pid, timestamps, git ref, tree state, outcomes) so a later success
 // can't carry a stale failure outcome; dispenseCount stays cumulative across
 // attempts.
-// The generator-completed marker survives every rearm: with commits on, any
-// retry-clean reset target postdates the generator commit; with commits off
-// the orchestrator never offers a reset. Either way the generator's changes
-// are still in the tree, so re-running it would apply them twice. The
-// dependency baseline survives for the same reason: the retry must compare
-// against the state before the first attempt edited package.json, not against
-// what that attempt left behind.
-function rearm(step: MigrateStep): MigrateStep {
+// `keepGeneratorCompleted` says whether the generator's changes reach the new
+// attempt. They do when nothing resets the tree, and when the reset target
+// already contains the commit that landed them; re-running the generator there
+// would apply them twice. They do not when the reset discards them, and
+// keeping the marker then would skip the generator and record a success for a
+// migration that never ran. The dependency baseline always survives: it tracks
+// the last dependencies that were installed, so dropping it here would leave
+// the retry with nothing to detect the previous attempt's package.json edits.
+function rearm(
+  step: MigrateStep,
+  keepGeneratorCompleted: boolean
+): MigrateStep {
   return {
     id: step.id,
     roundIndex: step.roundIndex,
@@ -201,7 +247,23 @@ function rearm(step: MigrateStep): MigrateStep {
     ...(step.depsHashAtDispense !== undefined
       ? { depsHashAtDispense: step.depsHashAtDispense }
       : {}),
-    ...(step.generatorCompleted ? { generatorCompleted: true } : {}),
+    ...(keepGeneratorCompleted && step.generatorCompleted
+      ? { generatorCompleted: true }
+      : {}),
+  };
+}
+
+// A guarded transition whose observation was made against an earlier attempt
+// of the same step: the status recurred, so the observation says nothing about
+// the attempt on disk now.
+function staleAttempt(
+  step: MigrateStep,
+  eventType: StepEvent['type'],
+  observedAttempt: number
+): ApplyStepEventResult {
+  return {
+    kind: 'error',
+    reason: `Cannot apply '${eventType}' to step '${step.id}': it was observed on attempt ${observedAttempt} and the step is now on attempt ${step.attempt}.`,
   };
 }
 
@@ -223,6 +285,24 @@ function commit(
   const nextSteps = state.steps.slice();
   nextSteps[index] = updatedStep;
   return { kind: 'ok', state: { ...state, steps: nextSteps } };
+}
+
+/**
+ * Records that the run could not install the dependency changes a step left
+ * behind. Not a {@link StepEvent}: it annotates a step instead of moving it,
+ * and every status can carry it, since the orchestrator marks a step it has
+ * just settled while the worker marks one it is about to fail.
+ */
+export function markInstallFailed(
+  state: MigrateRunState,
+  stepId: string
+): MigrateRunState {
+  return {
+    ...state,
+    steps: state.steps.map((s) =>
+      s.id === stepId ? { ...s, installFailed: true } : s
+    ),
+  };
 }
 
 // Step ids named by a 'failed' ledger entry with no later 'landed' entry

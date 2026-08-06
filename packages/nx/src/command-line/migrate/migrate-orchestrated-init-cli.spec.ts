@@ -16,17 +16,14 @@ jest.mock('./agentic/inception', () => ({
   isInsideAgent: () => mockIsInsideAgent(),
 }));
 
+// The confirmation itself stays real so the branch resolution behind it is
+// exercised; only the terminal prompt is stubbed.
 const mockCanPrompt = jest.fn();
+const mockMigratePrompt = jest.fn();
 jest.mock('./safe-prompt', () => ({
   ...jest.requireActual('./safe-prompt'),
   canPrompt: (...args: unknown[]) => mockCanPrompt(...args),
-}));
-
-const mockConfirmCommits = jest.fn();
-jest.mock('./migrate-commits', () => ({
-  ...jest.requireActual('./migrate-commits'),
-  confirmCommitsOnDefaultBranch: (...args: unknown[]) =>
-    mockConfirmCommits(...args),
+  migratePrompt: (...args: unknown[]) => mockMigratePrompt(...args),
 }));
 
 const mockIsGitRepository = jest.fn();
@@ -42,9 +39,10 @@ jest.mock('../../config/configuration', () => ({
   readNxJson: () => ({}),
 }));
 
+const mockGetBaseRef = jest.fn();
 jest.mock('../../utils/command-line-utils', () => ({
   ...jest.requireActual('../../utils/command-line-utils'),
-  getBaseRef: () => 'main',
+  getBaseRef: (...args: unknown[]) => mockGetBaseRef(...args),
 }));
 
 jest.mock('../../utils/package-json', () => ({
@@ -96,9 +94,10 @@ describe('migrate() orchestrated init dispatch', () => {
     mockRunOrchestratorInit.mockReset().mockResolvedValue(undefined);
     mockIsInsideAgent.mockReset().mockReturnValue(true);
     mockCanPrompt.mockReset().mockReturnValue(true);
-    mockConfirmCommits.mockReset().mockResolvedValue(true);
+    mockMigratePrompt.mockReset().mockResolvedValue({ proceed: true });
     mockIsGitRepository.mockReset().mockReturnValue(true);
     mockGetGitCurrentBranch.mockReset().mockReturnValue('main');
+    mockGetBaseRef.mockReset().mockReturnValue('main');
     jest.spyOn(output, 'log').mockImplementation(() => {});
     jest.spyOn(output, 'warn').mockImplementation(() => {});
     jest.spyOn(output, 'error').mockImplementation(() => {});
@@ -115,29 +114,40 @@ describe('migrate() orchestrated init dispatch', () => {
   function runMigrationsArgs(overrides: Record<string, unknown> = {}) {
     return {
       runMigrations: 'migrations.json',
-      skipInstall: true,
+      skipInstall: false,
       verbose: false,
       ...overrides,
     };
   }
 
   it('starts no run when the default-branch commit confirmation is declined', async () => {
-    mockConfirmCommits.mockResolvedValue(false);
+    mockMigratePrompt.mockResolvedValue({ proceed: false });
 
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockConfirmCommits).toHaveBeenCalledWith({
-      currentBranch: 'main',
-      defaultBranch: 'main',
-    });
+    expect(mockMigratePrompt).toHaveBeenCalledWith([
+      expect.objectContaining({
+        name: 'proceed',
+        type: 'confirm',
+        message: expect.stringContaining(`default branch 'main'`),
+      }),
+    ]);
     expect(mockRunOrchestratorInit).not.toHaveBeenCalled();
   });
 
   it('starts the run once the confirmation is accepted', async () => {
     await migrate(root, runMigrationsArgs(), ['--run-migrations']);
 
-    expect(mockConfirmCommits).toHaveBeenCalledTimes(1);
+    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
+  });
+
+  it('confirms against the local branch name when the base ref carries an origin/ prefix', async () => {
+    mockGetBaseRef.mockReturnValue('origin/main');
+
+    await migrate(root, runMigrationsArgs(), ['--run-migrations']);
+
+    expect(mockMigratePrompt).toHaveBeenCalledTimes(1);
   });
 
   it('does not confirm when the run will not commit', async () => {
@@ -146,18 +156,33 @@ describe('migrate() orchestrated init dispatch', () => {
       '--no-create-commits',
     ]);
 
-    expect(mockConfirmCommits).not.toHaveBeenCalled();
+    expect(mockMigratePrompt).not.toHaveBeenCalled();
     expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
 
-  it('records the install policy on the run, which its dispensed commands cannot carry', async () => {
-    await migrate(root, runMigrationsArgs({ skipInstall: true }), [
-      '--run-migrations',
-      '--skip-install',
-    ]);
+  it('does not confirm when prompting is impossible', async () => {
+    mockCanPrompt.mockReturnValue(false);
 
-    expect(mockRunOrchestratorInit).toHaveBeenCalledWith(
-      expect.objectContaining({ root, skipInstall: true })
-    );
+    await migrate(root, runMigrationsArgs(), ['--run-migrations']);
+
+    expect(mockMigratePrompt).not.toHaveBeenCalled();
+    expect(mockRunOrchestratorInit).toHaveBeenCalledTimes(1);
   });
+
+  it.each<[string, boolean, string[]]>([
+    ['records --skip-install on the run', true, ['--skip-install']],
+    ['records the default install policy on the run', false, []],
+  ])(
+    '%s, which its dispensed commands cannot carry',
+    async (_label, skipInstall, extraArgs) => {
+      await migrate(root, runMigrationsArgs({ skipInstall }), [
+        '--run-migrations',
+        ...extraArgs,
+      ]);
+
+      expect(mockRunOrchestratorInit).toHaveBeenCalledWith(
+        expect.objectContaining({ root, skipInstall })
+      );
+    }
+  );
 });

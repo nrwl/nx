@@ -11,6 +11,7 @@ import { randomBytes } from 'crypto';
 import { join } from 'path';
 import { writeJsonFile } from '../../../utils/fileutils';
 import { nxVersion } from '../../../utils/versions';
+import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import { RUN_ID_SAFE } from './run-id';
 
 export const CURRENT_RUN_STATE_FORMAT_VERSION = 1;
@@ -91,9 +92,12 @@ export interface MigrateStep {
   // `gitRefBefore`, so anything but a confirmed-clean tree must withhold it.
   // Absent (a run created before this field existed) is treated as unsafe too.
   treeCleanAtDispense?: boolean;
-  // Hash of the workspace dependencies as of this step's first dispense, so a
-  // later install decision compares against the pre-attempt state rather than
-  // against whatever the step itself just wrote. Preserved across re-arms.
+  // Hash of the workspace dependencies the last time they were known to be
+  // installed: recorded at the step's first dispense, then moved forward by
+  // each install that lands. A later install decision compares against it, so
+  // it must not track what the step wrote but has not installed. Preserved
+  // across re-arms. Absent (the dispense-time probe failed) means unknown, not
+  // unchanged, and installs; a re-dispense re-probes for it.
   depsHashAtDispense?: string;
   outcome?: MigrateStepOutcome;
   // Folded from the handoff file at reconcile time.
@@ -102,6 +106,12 @@ export interface MigrateStep {
   // so a retry after a failed commit or install re-emits only the prompt (or
   // commits what is already in the tree) instead of reapplying the changes.
   generatorCompleted?: boolean;
+  // Set when the run could not install the dependency changes this step left
+  // behind, cleared by the next install that lands. The invocation that hit
+  // the failure warns and exits, so without this the completion report could
+  // not tell an installed step from one whose dependencies never made it into
+  // node_modules.
+  installFailed?: boolean;
 }
 
 const MIGRATE_ISSUE_DISPOSITIONS = [
@@ -180,7 +190,7 @@ const REQUIRED_TOP_LEVEL_FIELDS: readonly (keyof MigrateRunState)[] = [
 ];
 
 export function migrateRunsDir(root: string): string {
-  return join(root, '.nx', 'migrate-runs');
+  return join(root, MIGRATE_RUNS_RELATIVE_DIR);
 }
 
 export function runDir(root: string, runId: string): string {
@@ -285,6 +295,7 @@ function isStepShape(value: unknown): boolean {
     isStepOutcomeShape(value.outcome) &&
     isPromptOutcomeShape(value.promptOutcome) &&
     isOptionalBoolean(value.generatorCompleted) &&
+    isOptionalBoolean(value.installFailed) &&
     // Cross-field invariants the rest of the loop relies on. A running step
     // without a pid is never reclassified as died and no step action targets
     // it, so it stalls the run forever; a step awaiting a prompt outcome is
@@ -457,11 +468,17 @@ function readDirEntries(dir: string): Dirent[] {
   }
 }
 
-// Dirs without a run.json are legacy per-version runner dirs, not runs.
+// Whether a directory holds a run at all. False for a path that doesn't exist
+// (a run id the user made up) and for one that does but holds no run.json (a
+// legacy per-version agentic scratch dir).
+export function hasRunState(runDirPath: string): boolean {
+  return existsSync(join(runDirPath, RUN_STATE_FILE_NAME));
+}
+
 // Corrupt run.json reads as null; a newer-format run.json propagates so
 // callers can't mistake an incompatible run for an absent one.
 function readRunDirState(candidateDir: string): MigrateRunState | null {
-  if (!existsSync(join(candidateDir, RUN_STATE_FILE_NAME))) return null;
+  if (!hasRunState(candidateDir)) return null;
   try {
     return readRunState(candidateDir);
   } catch (e) {
@@ -476,12 +493,17 @@ export interface UninterpretableRunDir {
 }
 
 /**
- * Scans for the newest active run. A dir that holds a run.json but can't be
- * trusted (unreadable or corrupt content, or a name that fails
- * {@link RUN_ID_SAFE}) is returned as `uninterpretable` instead of being
- * silently skipped: it could be an active run, and treating it as absent
- * would let a run-starting caller create a competing run that re-applies
- * migrations the first run already applied.
+ * Scans for the newest active run. A dir that holds a run.json but could be an
+ * active run this caller cannot use is returned as `uninterpretable` instead
+ * of being silently skipped: treating it as absent would let a run-starting
+ * caller create a competing run that re-applies migrations the first run
+ * already applied. That covers unreadable or corrupt content, where whether
+ * the run is active cannot be determined, and an active run in a dir whose
+ * name fails {@link RUN_ID_SAFE}, which cannot be resumed either.
+ *
+ * A dir that reads cleanly as a finished run is skipped whatever its name is:
+ * it competes with nothing, and reporting it would block every future run
+ * with no way for retention to ever clear it.
  *
  * Throws {@link NewerRunStateFormatError} when any run dir holds a
  * newer-format run.json: whether that run is active can't be determined
@@ -497,19 +519,11 @@ export function findActiveRun(root: string): {
   for (const entry of readDirEntries(migrateRunsDir(root))) {
     if (!entry.isDirectory()) continue;
     const dir = join(migrateRunsDir(root), entry.name);
-    // Dirs without a run.json are legacy per-version runner dirs, not runs.
-    if (!existsSync(join(dir, RUN_STATE_FILE_NAME))) continue;
-    // Run ids are joined into paths and interpolated into dispensed commands,
-    // so a dir whose name fails the gate is never trusted as a resumable run.
-    if (!RUN_ID_SAFE.test(entry.name)) {
-      uninterpretable.push({
-        dirName: entry.name,
-        reason: 'its name is not a valid run id',
-      });
-      continue;
-    }
+    if (!hasRunState(dir)) continue;
     let state: MigrateRunState;
     try {
+      // Safe for any dir name: the path comes from the directory entry, never
+      // from a value interpolated into a command.
       state = readRunState(dir);
     } catch (e) {
       if (e instanceof NewerRunStateFormatError) throw e;
@@ -520,6 +534,15 @@ export function findActiveRun(root: string): {
       continue;
     }
     if (state.status !== 'active') continue;
+    // Run ids are joined into paths and interpolated into dispensed commands,
+    // so a dir whose name fails the gate is never trusted as a resumable run.
+    if (!RUN_ID_SAFE.test(entry.name)) {
+      uninterpretable.push({
+        dirName: entry.name,
+        reason: 'its name is not a valid run id',
+      });
+      continue;
+    }
     if (!newest || state.createdAt > newest.state.createdAt) {
       newest = { runId: entry.name, state };
     }
@@ -533,6 +556,10 @@ export function findActiveRun(root: string): {
  * newest {@link MAX_RETAINED_COMPLETED_RUNS} completed runs are kept. Active
  * runs, the run just created, and legacy per-version runner dirs (no
  * run.json) are never pruned.
+ *
+ * Retention is best effort. A dir it cannot interpret or cannot remove is
+ * left in place: the run's state is already written by then, so failing here
+ * would abort a run that exists, and every retry would abort the same way.
  */
 export function createRun(root: string, state: MigrateRunState): void {
   const dir = runDir(root, state.runId);
@@ -563,7 +590,12 @@ function pruneCompletedRuns(root: string, justCreatedRunId: string): void {
       a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0
     )
     .slice(MAX_RETAINED_COMPLETED_RUNS)
-    .forEach((stale) =>
-      rmSync(join(dir, stale.runId), { recursive: true, force: true })
-    );
+    .forEach((stale) => {
+      try {
+        rmSync(join(dir, stale.runId), { recursive: true, force: true });
+      } catch {
+        // Guarded per dir so one that cannot be removed (permissions, a file
+        // still held open) neither aborts the run nor stops the others.
+      }
+    });
 }

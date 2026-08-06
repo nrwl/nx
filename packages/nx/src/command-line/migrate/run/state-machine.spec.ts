@@ -113,7 +113,11 @@ const SIMPLE_CASES: {
   },
   {
     type: 'markDied',
-    buildEvent: (stepId) => ({ type: 'markDied', stepId }),
+    buildEvent: (stepId) => ({
+      type: 'markDied',
+      stepId,
+      attempt: 1,
+    }),
     legalFrom: 'running',
     expectedStatus: 'died',
   },
@@ -168,9 +172,30 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'markDied',
         stepId: 'step-1',
+        attempt: 1,
       });
 
       expect(result.kind).toBe('error');
+    });
+
+    // The death is observed without the lock held, so by the time the write
+    // runs the step may already have been re-armed and re-dispensed; killing
+    // that live attempt is what this rejects.
+    it('rejects an observation made against an earlier attempt', () => {
+      const state = stateWithStep({ status: 'running', attempt: 2, pid: 123 });
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, {
+        type: 'markDied',
+        stepId: 'step-1',
+        attempt: 1,
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining('attempt 1'),
+      });
+      expect(state).toEqual(before);
     });
   });
 
@@ -237,6 +262,7 @@ describe('applyStepEvent', () => {
         const result = applyStepEvent(state, {
           type: 'foldPromptOutcome',
           stepId: 'step-1',
+          attempt: 1,
           promptOutcome: { status: promptStatus },
         });
 
@@ -259,10 +285,34 @@ describe('applyStepEvent', () => {
       const result = applyStepEvent(state, {
         type: 'foldPromptOutcome',
         stepId: 'step-1',
+        attempt: 1,
         promptOutcome: { status: 'completed' },
       });
 
       expect(result.kind).toBe('error');
+      expect(state).toEqual(before);
+    });
+
+    // The handoff is read outside the lock, so a step that was re-armed and
+    // parked again in between is awaiting a different attempt's outcome.
+    it('rejects a handoff read against an earlier attempt', () => {
+      const state = stateWithStep({
+        status: 'awaiting-prompt-outcome',
+        attempt: 2,
+      });
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, {
+        type: 'foldPromptOutcome',
+        stepId: 'step-1',
+        attempt: 1,
+        promptOutcome: { status: 'completed' },
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining('attempt 1'),
+      });
       expect(state).toEqual(before);
     });
   });
@@ -270,8 +320,10 @@ describe('applyStepEvent', () => {
   describe('stepAction', () => {
     const ALL_ACTIONS: StepAction[] = ['retry', 'skip', 'retry-clean', 'adopt'];
 
-    // The only legal (status, action) pairs; every other combination must be
-    // rejected. `null` marks an illegal pair.
+    // The only legal (status, action) pairs for a step with no recorded
+    // generator half; every other combination must be rejected. `null` marks
+    // an illegal pair. `died` + `retry` becomes legal once that marker is set,
+    // which the tests below cover in both directions.
     const MATRIX: {
       status: MigrateStepStatus;
       action: StepAction;
@@ -396,7 +448,30 @@ describe('applyStepEvent', () => {
       }
     });
 
-    it('retry-clean preserves generatorCompleted: the reset target postdates the generator commit', () => {
+    it('retry-clean keeps generatorCompleted when a landed commit of this step carries the generator changes', () => {
+      const state = {
+        ...stateWithStep({ status: 'died', generatorCompleted: true }),
+        commits: [
+          { kind: 'landed', sha: 'abc', stepIds: ['step-1'], issueIds: [] },
+        ] as MigrateCommitLedgerEntry[],
+      };
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        action: 'retry-clean',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBe(true);
+      }
+    });
+
+    it('retry-clean drops generatorCompleted when no commit of this step landed: the reset discards the generator changes', () => {
+      // Commits off, or the generator's commit failed. The reset target
+      // predates the generator, so keeping the marker would skip it and record
+      // a success for a migration whose changes are gone.
       const state = stateWithStep({
         status: 'died',
         generatorCompleted: true,
@@ -410,7 +485,110 @@ describe('applyStepEvent', () => {
 
       expect(result.kind).toBe('ok');
       if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBeUndefined();
+      }
+    });
+
+    it('retry-clean drops generatorCompleted when the only landed commit covers a different step', () => {
+      const state = {
+        ...stateWithStep({ status: 'died', generatorCompleted: true }),
+        commits: [
+          { kind: 'landed', sha: 'abc', stepIds: ['step-0'], issueIds: [] },
+        ] as MigrateCommitLedgerEntry[],
+      };
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        action: 'retry-clean',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].generatorCompleted).toBeUndefined();
+      }
+    });
+
+    it('retry from died re-arms without a reset once the generator half is recorded', () => {
+      const state = stateWithStep({
+        status: 'died',
+        generatorCompleted: true,
+        pid: 123,
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        action: 'retry',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].status).toBe('pending');
+        expect(result.state.steps[0].attempt).toBe(2);
         expect(result.state.steps[0].generatorCompleted).toBe(true);
+      }
+    });
+
+    it('rejects retry from died when the generator half was never recorded', () => {
+      const state = stateWithStep({ status: 'died', pid: 123 });
+      const before = snapshot(state);
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        action: 'retry',
+      });
+
+      expect(result).toEqual({
+        kind: 'error',
+        reason: expect.stringContaining('twice'),
+      });
+      expect(state).toEqual(before);
+    });
+
+    it.each([
+      [true, 'its generator had run'],
+      [false, 'died before recording'],
+    ])(
+      'adopt records how far the worker got (generatorCompleted: %s)',
+      (generatorCompleted, expectedFragment) => {
+        const state = stateWithStep({
+          status: 'died',
+          ...(generatorCompleted ? { generatorCompleted: true } : {}),
+        });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          action: 'adopt',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0].status).toBe('succeeded');
+          expect(result.state.steps[0].outcome?.summary).toContain(
+            expectedFragment
+          );
+        }
+      }
+    );
+
+    it('adopt keeps the outcome the dead worker had already recorded', () => {
+      const state = stateWithStep({
+        status: 'died',
+        outcome: { fileChanges: ['a.ts'] },
+      });
+
+      const result = applyStepEvent(state, {
+        type: 'stepAction',
+        stepId: 'step-1',
+        action: 'adopt',
+      });
+
+      expect(result.kind).toBe('ok');
+      if (result.kind === 'ok') {
+        expect(result.state.steps[0].outcome?.fileChanges).toEqual(['a.ts']);
       }
     });
 
@@ -425,7 +603,14 @@ describe('applyStepEvent', () => {
       });
       expect(marked.kind).toBe('ok');
       if (marked.kind !== 'ok') return;
-      state = marked.state;
+      // The generator half's commit lands with the marker; it is what keeps
+      // the changes reachable from the reset target the retry-clean uses.
+      state = {
+        ...marked.state,
+        commits: [
+          { kind: 'landed', sha: 'abc', stepIds: ['step-1'], issueIds: [] },
+        ],
+      };
 
       const park = applyStepEvent(state, {
         type: 'awaitPromptOutcome',
@@ -439,6 +624,7 @@ describe('applyStepEvent', () => {
       const failed = applyStepEvent(state, {
         type: 'foldPromptOutcome',
         stepId: 'step-1',
+        attempt: 1,
         promptOutcome: { status: 'failed', summary: 'could not apply' },
       });
       expect(failed.kind).toBe('ok');
@@ -476,6 +662,7 @@ describe('applyStepEvent', () => {
       const died = applyStepEvent(state, {
         type: 'markDied',
         stepId: 'step-1',
+        attempt: 2,
       });
       expect(died.kind).toBe('ok');
       if (died.kind !== 'ok') return;
