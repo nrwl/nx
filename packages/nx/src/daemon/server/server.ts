@@ -146,9 +146,10 @@ import {
   scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
   invalidateGraphCache,
+  isKnownWorkspaceFile,
   currentProjectGraph,
 } from './project-graph-incremental-recomputation';
-import { outputsChangeInvalidatesGraphEnv } from './dotenv-graph-changes';
+import { outputsChangesInvalidatingGraphEnv } from './dotenv-graph-changes';
 import {
   hasRegisteredProjectGraphListenerSockets,
   registeredProjectGraphListenerSockets,
@@ -667,16 +668,26 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
       return;
     }
 
-    // A dotenv change that a task chain loads must invalidate the graph cache so
+    // A dotenv change that a task chain loads must refresh the graph so
     // createNodes re-resolves config reading process.env. This runs above the
     // outputsWatcherError guard: the two concerns are independent, and a
     // disabled outputs tracker must not leave the graph stale on a dotenv edit.
-    // Its own try/catch so a fault here cannot trip the outputs-tracking kill
-    // switch below, which belongs to an unrelated subsystem. It fails safe by
-    // invalidating: a stale graph on a dotenv edit is the bug this prevents, and
-    // invalidateGraphCache only clears the cached promise (idempotent, lazy).
+    // A change to a file the workspace watcher tracks already schedules a
+    // recomputation that reads the new content; invalidating for it here too
+    // would discard that recomputation at commit and force a second one, so
+    // only an ignored file (which never reaches the workspace watcher) needs
+    // the cache invalidated. Its own try/catch so a fault here cannot trip the
+    // outputs-tracking kill switch below, which belongs to an unrelated
+    // subsystem. It fails safe by invalidating: a stale graph on a dotenv edit
+    // is the bug this prevents, and invalidateGraphCache only clears the
+    // cached promise (idempotent, lazy).
     try {
-      if (outputsChangeInvalidatesGraphEnv(changeEvents, currentProjectGraph)) {
+      if (
+        outputsChangesInvalidatingGraphEnv(
+          changeEvents,
+          currentProjectGraph
+        ).some((path) => !isKnownWorkspaceFile(path))
+      ) {
         invalidateGraphCache();
       }
     } catch (e) {
