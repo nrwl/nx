@@ -1,7 +1,7 @@
 ---
 name: test-unreleased-migration
-description: Test UNRELEASED nx migrations - ones that live only in a local working tree, branch, or PR (a local publish at most, never an upstream release) - against the real downstream repo set (ocean, nx-labs, nx-examples, nx-console). Sources the migrations locally, runs them, validates each repo (project graph resolves + lint/typecheck/build, optionally CI), reviews the diff, and reports pass/fail per repo. Does NOT open real migration PRs. Use when asked to "test a migration against the real repos", "try this migration on ocean/nx-console", "validate my unreleased migration", or before merging/releasing a migration authored with `author-migration`.
-allowed-tools: Bash, Read, Write(tmp/notes/**), Grep, Glob, AskUserQuestion, Agent, Skill(polygraph:polygraph), Skill(run-nx-migration), Skill(polygraph:pack-and-copy), Skill(polygraph:await-polygraph-ci), mcp__plugin_polygraph_polygraph-mcp__show_session, mcp__plugin_polygraph_polygraph-mcp__add_repo, mcp__plugin_polygraph_polygraph-mcp__pack_and_copy, mcp__plugin_polygraph_polygraph-mcp__push_branch, mcp__plugin_polygraph_polygraph-mcp__create_pr
+description: Test UNRELEASED nx migrations - ones that live only in a local working tree, branch, or PR (a local publish at most, never an upstream release) - against the real downstream repo set (ocean, nx-labs, nx-examples, nx-console). Sources the migrations locally, runs them, validates each repo (project graph resolves + lint/typecheck/build), reviews the diff, and reports pass/fail per repo. Does NOT open real migration PRs. Use when asked to "test a migration against the real repos", "try this migration on ocean/nx-console", "validate my unreleased migration", or before merging/releasing a migration authored with `author-migration`.
+allowed-tools: Bash, Read, Write(tmp/notes/**), Grep, Glob, AskUserQuestion, Agent, Skill(polygraph:polygraph), Skill(run-nx-migration), mcp__plugin_polygraph_polygraph-mcp__show_session, mcp__plugin_polygraph_polygraph-mcp__add_repo
 ---
 
 # Test an unreleased nx migration against the real repos
@@ -19,13 +19,12 @@ Companion pieces this skill composes (do not reimplement any of them):
 - `run-nx-migration` for the per-repo run mechanics (package-manager handling, the
   `--create-commits` crash, applying deferred AI migrations, the graph-resolves verify) and
   the run gotchas. Its child block is injected into each per-repo child.
-- `polygraph:polygraph` for session lifecycle, `add_repo`, `spawn_agent`, `push_branch`,
-  `create_pr`.
-- `polygraph:pack-and-copy` to pack the local nx and install the tarballs into each consumer
-  as `file:` deps. Its phase 2 (building the publisher) is explicitly not automatable, phase 3
-  packs and rewrites `package.json`, and phase 4 installs and commits.
-- `polygraph:await-polygraph-ci` for the optional validation-PR tier. It polls to terminal
-  over the session's PRs rather than returning a single result.
+- `polygraph:polygraph` for session lifecycle, `add_repo`, and `spawn_agent`.
+
+`polygraph:pack-and-copy` is deliberately NOT used. It packs with `npm pack`, which leaves
+`catalog:` and `workspace:*` in the manifest, and it rewrites only the consumer's `package.json`,
+so a packed `@nx/*` still demands first-party siblings the consumer cannot resolve. Step 4 covers
+what this costs and why the local registry replaces it.
 
 ## Roles
 
@@ -44,7 +43,7 @@ Companion pieces this skill composes (do not reimplement any of them):
   Everything downstream keys off it, so read it rather than guessing a release number.
 - **The "from" version**, per target: what that repo has installed _before_ delivery. Capture it
   in step 2; the delivery overwrites it.
-- Mode: 1, 2, or 3 (below). If unspecified, default to mode 2 (fast, no publish).
+- Mode: 1, 2, or 3 (below). If unspecified, default to mode 2 (every migration, no generate phase).
 - Target repos: all of the default set or a subset (see step 1).
 - `--focus`: optional review/report narrowing (see `reference/focus.md`).
 
@@ -52,16 +51,32 @@ Companion pieces this skill composes (do not reimplement any of them):
 
 Pick how much of the real `nx migrate` pipeline to exercise. More coverage costs more time.
 
-| Mode                    | Exercises                                                                                 | Delivery                                                                                  | When                                          |
-| ----------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------- |
-| **1. Full**             | package updates + migration collection + registry resolution + temp-CLI install + run all | verdaccio local publish, then `nx migrate <VERSION>`                                      | most comprehensive; slowest                   |
-| **2. All migrations**   | run the whole `migrations.json`, no collection / package update / temp-CLI                | pack-and-copy tarballs + a produced `migrations.json`, then `nx migrate --run-migrations` | fast validation of every migration            |
-| **3. Single migration** | run one migration out of the list, nothing else                                           | same tarballs + `migrations.json`, then `nx migrate --run-migration=<package>:<name>`     | fastest loop while iterating on one migration |
+| Mode                    | Exercises                                                                                 | Delivery                                                                             | When                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------- |
+| **1. Full**             | package updates + migration collection + registry resolution + temp-CLI install + run all | verdaccio local publish, then `nx migrate <VERSION>`                                 | most comprehensive; slowest                   |
+| **2. All migrations**   | run the whole `migrations.json`, no collection / package update / temp-CLI                | local publish + a produced `migrations.json`, then `nx migrate --run-migrations`     | validate every migration, skipping generate   |
+| **3. Single migration** | run one migration out of the list, nothing else                                           | same publish + `migrations.json`, then `nx migrate --run-migration=<package>:<name>` | fastest loop while iterating on one migration |
 
 Mode 3 exercises less than mode 2 by design, so it is an iteration loop rather than a sign-off:
 it never sees the other migrations, so it cannot catch a break that only appears in combination
-with an earlier one. It also needs nx 23.2.0 or newer in the target, because that is where
-`--run-migration` ships. Re-run mode 2 before calling a migration validated.
+with an earlier one. Re-run mode 2 before calling a migration validated.
+
+`--run-migration` has to exist in the nx the workspace ends up running, which is the one delivery
+installs, not the one the target had before. So the requirement is on the delivered build's code,
+and the target's own version is irrelevant: a target on nx 22 is as eligible as one on 23.
+Delivering a build made from a branch that carries the flag satisfies it by construction.
+
+nx does have a version floor for these flags, and `NX_MIGRATE_USE_LOCAL` is what keeps it out of
+the way. Treat that env var as load-bearing, not incidental. Step 6 sets it for modes 2 and 3,
+which skips the run-target guard outright (`migrate.ts:3710`), and the temp-install guard
+(`:3656`) never fires because nx is running from inside the workspace.
+
+Drop the env var and a prerelease `<VERSION>` is genuinely refused, which matters because a
+`<VERSION>` under test is usually a prerelease. Once `latest` resolves at or above the floor, the
+run-target guard returns `temp-cli` before it ever reaches its same-version bypass
+(`version-skew-guard.ts:91-96`); nx installs to a temp dir, and re-entry from there trips the
+temp-install guard, which is a bare `lt` with no bypass. Its own contract says as much: a
+workspace pinned to a feature-carrying prerelease is refused there too.
 
 ## Procedure
 
@@ -82,7 +97,7 @@ bound, and delivery destroys it:
 node -p "require('<target-repo>/node_modules/nx/package.json').version"
 ```
 
-Then build the publisher packages so they are packable/publishable: `pnpm build` in the nrwl/nx
+Then build the publisher packages so they are publishable: `pnpm build` in the nrwl/nx
 checkout. Confirm the changed packages have `dist/` output before delivering; a prompt-only
 migration's markdown ships from `dist/`, so an unbuilt package produces a migration that cannot
 be staged.
@@ -96,29 +111,58 @@ against a dirty tree aborts:
 git fetch origin <base> && git checkout -B test-nx-<VERSION> origin/<base>
 ```
 
-### 4. Deliver the local nx into each target, by mode
+### 4. Deliver the local nx into each target
 
-- **Mode 1 (verdaccio).** Publish the local build to the local registry, then let each target
-  resolve `<VERSION>` from it. Clear the package-manager caches first, or stale entries resolve
-  old versions:
+**Every mode delivers through the local registry.** Tarballs are not an option, for a structural
+reason rather than a speed one: an `@nx/*` package declares its first-party siblings as
+`workspace:*`, and packing resolves that to a concrete version the consumer then has to find
+somewhere. `npm pack` does not even get that far, leaving `workspace:`/`catalog:` in the manifest
+so the install dies with `EUNSUPPORTEDPROTOCOL`. `pnpm pack` resolves both, and the install then
+dies with `ETARGET` on the sibling instead. No tool in this flow rewrites a tarball's own
+dependencies after packing, so tarball delivery can only satisfy the siblings a target happens to
+declare itself. A registry makes all of them resolvable, which is why this is the delivery path for
+modes 2 and 3 too.
 
-  ```bash
-  pnpm store prune --force && rm -rf ~/Library/Caches/pnpm && npm cache clean --force && rm -rf ~/.npm/_npx && bun pm cache rm
-  ```
+Publish once, then deliver per mode. Clear the package-manager caches first, or stale entries
+resolve old versions:
 
-  Then, in the publisher: `pnpm local-registry` in one shell; in another,
-  `npm adduser --registry http://localhost:4873` (any credentials work, e.g. test/test/test@test.io;
-  publishing just needs a login), then `pnpm nx-release <VERSION> --local`. `<VERSION>` must be
-  greater than every target's recorded "from" version, or `nx migrate` finds nothing to do.
+```bash
+pnpm store prune --force && rm -rf ~/Library/Caches/pnpm && npm cache clean --force && rm -rf ~/.npm/_npx && bun pm cache rm
+```
 
-  Each target then runs the full `run-nx-migration` child block with `<REGISTRY>` pointed at the
-  local verdaccio, and needs `NX_SKIP_PROVENANCE_CHECK=true`: locally published packages carry no
-  provenance attestations, and `nx migrate` refuses them without it.
+Then, in the publisher: `pnpm local-registry` in one shell; in another,
+`npm adduser --registry http://localhost:4873` (any credentials work, e.g. test/test/test@test.io;
+publishing just needs a login), then `pnpm nx-release <VERSION> --local`. `<VERSION>` must be
+greater than every target's recorded "from" version, or `nx migrate` finds nothing to do. This
+publishes every package, which is also what keeps a migration's first-party siblings resolvable:
+never hand-pick a subset, because a migration routinely reaches packages it does not live in.
 
-- **Modes 2 and 3 (pack-and-copy tarballs).** Invoke `polygraph:pack-and-copy` to pack the changed
-  packages and install the tarballs into each target as `file:` deps. Include `nx` itself in the
-  packed set: mode 3's `--run-migration` is a flag on the workspace-local nx, and both modes need
-  the local migration implementations.
+- **Mode 1.** Each target runs the full `run-nx-migration` child block with `<REGISTRY>` pointed
+  at the local verdaccio, and needs `NX_SKIP_PROVENANCE_CHECK=true`: locally published packages
+  carry no provenance attestations, and `nx migrate` refuses them without it. `nx migrate` does
+  the version rewrite and install itself.
+
+- **Modes 2 and 3.** There is no generate phase to do the rewrite, so do it explicitly: set `nx`
+  and every installed `@nx/*` to `<VERSION>` in the target's `package.json`, then install against
+  the local registry with that target's package manager (see the `run-nx-migration` cheat sheet;
+  Yarn Berry needs `YARN_NPM_REGISTRY_SERVER`, npm/pnpm/bun take `--registry`).
+
+**Gate the delivery before going further, in modes 2 and 3.** (Not mode 1: there the child does
+the install in step 6, so at this point the target is still on its "from" version by design.) The
+producer in step 5 reads collections out of the target's `node_modules`, and step 6 runs with
+`--skip-install`, so a delivery that silently did not land leaves every later step reading and
+running _published_ code while reporting a clean run. `--expect` does not save you here: it only
+fails when the migration id is absent, so an edited version of an already-published migration keeps
+its id and passes against the published implementation. Assert both, per target, and stop on either
+failure:
+
+```bash
+node -p "require('<target-repo>/node_modules/nx/package.json').version"   # must equal <VERSION>
+node -p "const c=require('<target-repo>/node_modules/<package>/migrations.json'); Object.keys({...c.schematics, ...c.generators})"   # must contain <name>
+```
+
+The second probe merges `schematics` and `generators` because that is what the step 5 producer
+reads; every first-party collection uses `generators` today, but do not narrow the probe to it.
 
 ### 5. Produce `migrations.json` (modes 2 and 3)
 
@@ -157,7 +201,7 @@ Give each delegation the appropriate `run-nx-migration` child block, filling `<V
   `NX_MIGRATE_USE_LOCAL=true nx migrate --skip-install --run-migrations` (mode 2) or
   `--run-migration=<package>:<name>` (mode 3). `NX_MIGRATE_USE_LOCAL` keeps nx from spawning a temp
   `nx@latest` that carries none of the local changes; `--skip-install` suppresses both the pre-install
-  and the post-migration dependency install, either of which would reinstall over the tarballs.
+  and the post-migration dependency install, either of which would reinstall over the delivered build.
 
 Each child carries its own sandbox (see the pnpm-sandbox gotcha in `run-nx-migration`).
 
@@ -166,6 +210,31 @@ its own nested agentic flow because the run came from inside an agent. In modes 
 are listed as next steps with their `tools/ai-migrations/**/*.md` paths; in mode 3 nx prints an
 `<nx_migrate_prompt migration="...">` block on stdout instead. Either way the child applies them and
 reports what it did, per step 8 of the shared block.
+
+**Tell the child what this path does and does not print, or it will report the difference as a
+migration defect.** A prompt written for the agentic flow may reference `<advisory_context>` and
+`<files_changed>`. Those two tag names are produced by the agentic prompt builders only, and never
+appear here, so their absence is expected and is not a finding. But do not tell the child the
+underlying content is absent, because usually it is not; it just arrives under a different shape,
+and which shape depends on the migration's kind:
+
+- **Prompt-only** (no implementation). There is no advisory context and no changed-file list, ever:
+  `agentContext` comes from what a migration's implementation returns
+  (`execute-migration.ts:417`), and this kind has none. Modes 1 and 2 list the prompt under nx's
+  "Next steps" directive; mode 3 prints `<nx_migrate_prompt>` carrying the prompt and
+  documentation paths. Inspect changes with git.
+- **Hybrid** (generator + prompt). Mode 3 puts the generator half's results in the
+  `<nx_migrate_prompt>` payload: `impl.changes` (the changed-file list), plus `impl.agentContext`
+  when the generator returned any (`worker.ts:588-600`). Mode 3 is also the only place hybrids are
+  excluded from the standalone block, so read the payload instead of waiting for one. In modes 1
+  and 2 it is the other way round: the classic loop's hybrid branch (`migrate.ts:2811`) prints
+  `<agent_context>` like any other kind, and there is no file list.
+- **Generator-only.** A non-hybrid migration's `agentContext` is printed as a standalone
+  `<agent_context migration="...">` block, precisely because the run is inside an agent
+  (`print-dropped-agent-context.ts`). No `agentContext` returned means no block, correctly.
+
+A validation run that invents prompt defects is worse than one that finds nothing, but a child that
+ignores real context because it was told to expect nothing is worse than both.
 
 ### 7. Validate, and prove the migration actually ran
 
@@ -209,26 +278,31 @@ failure with the migration that caused it. Leave fixes to the author.
 
 ### 9. Restore the targets
 
-These are real repos. A run leaves `file:` rewrites in `package.json`, a mutated lockfile,
-`.polygraph-packages/*.tgz`, tarball contents in `node_modules`, a produced `migrations.json`, a
-staged `tools/ai-migrations/`, and a `test-nx-<VERSION>` branch. Unless the optional CI tier below
-is running, restore each target once its report is captured: `git checkout <base>`, delete the test
-branch, and reinstall from the restored lockfile. In the publisher, stop the local registry if mode 1
-started one.
+These are real repos. A run leaves `<VERSION>` pins in `package.json`, a mutated lockfile, the
+locally published packages in `node_modules`, a produced `migrations.json`, a staged
+`tools/ai-migrations/`, and a `test-nx-<VERSION>` branch. Restore each target once its report is
+captured: `git checkout <base>`, delete the test branch, and reinstall from the restored lockfile.
+In the publisher, stop the local registry.
 
-## Optional CI-validation PR (opt-in, OFF by default)
+Confirm the restore landed with the same probe step 2 used: the target should read back its
+recorded "from" version.
 
-Local validation (step 7) is the default. For the highest-fidelity signal, the target's full CI
-matrix, optionally open a throwaway **validation** PR. This is a CI harness, not a migration
-delivery; it is the `polygraph:pack-and-copy` phase-4 flow, and it is off unless the author asks.
+## CI-validation PR: not currently available
 
-- Available only with the **mode 2/3 tarball substrate**, NOT mode 1 verdaccio: remote CI runners
-  cannot reach a localhost registry, whereas the committed `.polygraph-packages/*.tgz` let a fresh
-  CI clone install the `file:` deps. Surface this asymmetry when the author asks for CI on a mode-1 run.
-- Per opted-in target: commit the migration edits, the `.polygraph-packages/*.tgz`, and the
-  `package.json`/lockfile `file:` swaps on a throwaway branch.
-- `push_branch` + `create_pr` (draft) via the `polygraph:polygraph` skill; the body states it is
-  validation-only for an unmerged nx change.
-- `polygraph:await-polygraph-ci` to collect the CIPE; fold pass/fail into the per-repo report.
-- **Mandatory cleanup:** close the PR and delete the branch, then do step 9. Never merge; these are
-  validation only.
+The idea was a throwaway **validation** PR per target, so the target's own CI matrix runs against
+the unreleased build. It does not work today, and the reason is the same one that decided step 4's
+delivery. Say so plainly when an author asks for it, rather than attempting a run.
+
+A remote CI runner cannot reach the localhost registry every mode now publishes to, so CI needs
+either a substrate that travels with the commit or a registry it can actually reach. Committed
+tarballs are the obvious first candidate and they do not work as-is: each packed `@nx/*` demands
+its first-party siblings at an exact version, and nothing in this flow rewrites those after
+packing, so the install fails on any sibling the target does not already declare.
+
+Two paths exist if this becomes worth building. Pack every first-party package with `pnpm pack`
+(it resolves `catalog:` and `workspace:*`, which `npm pack` leaves verbatim, though it needs the
+publisher installed first or it aborts with `ERR_PNPM_CANNOT_RESOLVE_WORKSPACE_PROTOCOL`), then
+rewrite each tarball's own first-party dependencies to `file:` paths pointing at its siblings in
+`.polygraph-packages/` so the set resolves closed. Or expose the local registry at a URL CI can
+reach. Both are real work and nobody has asked for either. Until then, step 7's local validation is
+the ceiling.

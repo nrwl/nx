@@ -38,8 +38,8 @@ Parameters the parent fills in:
   migrate to a version that is not published upstream.
 
 **Pre-staged `migrations.json` (no Generate phase).** A consumer that produces
-`migrations.json` itself and links the target nx into the repo some other way (e.g. local
-tarballs) skips Generate. Keep steps 1 and 2, replace step 5 with its own delivery install,
+`migrations.json` itself and installs the target nx into the repo some other way (e.g. from a
+local registry) skips Generate. Keep steps 1 and 2, replace step 5 with its own delivery install,
 drop steps 3, 4 and 6, then run steps 7 to 11. Two consequences of dropping those steps:
 
 - **Branch before delivering.** Step 1 must run against a clean tree. A delivery that
@@ -50,8 +50,8 @@ drop steps 3, 4 and 6, then run steps 7 to 11. Two consequences of dropping thos
   produced `migrations.json` has to be filtered on.
 
 The Run phase resolves each migration's implementation from the repo's `node_modules` by
-package + name, so a linked/tarball'd local nx runs. Prompt paths are read relative to the
-**workspace root**, not the package, so a pre-staged file must already point at a copy
+package + name, so a locally installed nx runs regardless of how it got there. Prompt paths
+are read relative to the **workspace root**, not the package, so a pre-staged file must already point at a copy
 inside the repo (`tools/ai-migrations/...`); the producing consumer owns that.
 
 **One migration instead of the whole list.** Same pre-staged setup, but step 7 runs
@@ -59,8 +59,12 @@ inside the repo (`tools/ai-migrations/...`); the producing consumer owns that.
 picks one entry out of it rather than replacing it, nx errors out when the file is missing,
 and it must sit at the workspace root under exactly that name. A bare `<name>` is accepted
 when it matches exactly one entry, and a name that itself contains `:` must use the full id.
-The flag needs nx 23.2.0 or newer in the workspace, so the delivered build has to include
-`nx` itself. Two deltas downstream: per-migration commits are off unless `--create-commits`
+The flag has to exist in the nx the workspace actually runs, so the delivered build has to
+include `nx` itself; the version the repo had before delivery does not matter. Run it with
+`NX_MIGRATE_USE_LOCAL` set, which skips nx's floor guard for these flags. Without it a prerelease
+build is refused: nx routes through a temp install first, and the floor check on that side is a
+bare `lt` with no same-version bypass. Two deltas downstream:
+per-migration commits are off unless `--create-commits`
 (or `migrate.createCommits` in `nx.json`) asks for them, so step 7's commit-by-hand still
 applies; and a prompt-only or hybrid migration prints an `<nx_migrate_prompt migration="...">`
 block on stdout holding the prompt path, the documentation path, and (for a hybrid) the
@@ -69,6 +73,8 @@ generator half's file list. Step 8 still applies, but read the prompt from that 
 ## Child instruction block
 
 > Migrate this repository to nx `<VERSION>`.
+>
+> **First, confirm you are in the right repository, before you touch anything.** Run `git remote -v` and check it is the target you were asked to migrate. If it is the orchestrating repo (the one that spawned you, e.g. `nrwl/nx`), **stop and report that instead of proceeding**. That repo is checked out in place, so its working tree is someone's live work, and a migration run there rewrites their uncommitted changes. Never migrate a repo you were not explicitly given.
 >
 > 1. **Branch from the current default branch, not the clone's checkout.** Fetch first so you don't inherit a stale clone or an in-place working-dir branch, then create the branch from `origin/<base>` (`master` or `main`): `git fetch origin <base> && git checkout -B <BRANCH> origin/<base>`.
 > 2. Detect the package manager from the lockfile (`package-lock.json`=npm, `yarn.lock`=Yarn Berry, `pnpm-lock.yaml`=pnpm, `bun.lock`/`bun.lockb`=bun).
