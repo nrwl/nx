@@ -636,6 +636,48 @@ describe('app', () => {
   });
 
   describe('--linter', () => {
+    // `linter` has neither a schema default nor an in-code default, so leaving
+    // it unset follows the workspace instead of hardcoding ESLint.
+    describe('workspace detection', () => {
+      const installOxlint = () =>
+        updateJson(appTree, 'package.json', (json) => {
+          json.devDependencies = {
+            ...json.devDependencies,
+            oxlint: '^1.43.0',
+          };
+          return json;
+        });
+
+      // The key must be ABSENT, not `undefined`. `normalizeOptions` spreads the
+      // caller's options over its defaults, so a present-but-undefined `linter`
+      // bypasses the very default under test.
+      const generateAppWithoutLinter = () =>
+        generateTestApplication(appTree, {
+          directory: 'my-app',
+          skipFormat: true,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          unitTestRunner: UnitTestRunner.Jest,
+          standalone: false,
+        } as Schema);
+
+      it('should set up oxlint when the workspace already uses it', async () => {
+        installOxlint();
+
+        await generateAppWithoutLinter();
+
+        expect(appTree.exists('my-app/.oxlintrc.json')).toBe(true);
+      });
+
+      it('should set up eslint when no linter is detected', async () => {
+        await generateAppWithoutLinter();
+
+        expect(appTree.exists('my-app/.oxlintrc.json')).toBe(false);
+        expect(
+          readJson(appTree, 'package.json').devDependencies['@nx/eslint']
+        ).toBeDefined();
+      });
+    });
+
     describe('eslint', () => {
       it('should add lint target to application', async () => {
         await generateApp(appTree, 'my-app', { linter: 'eslint' });
