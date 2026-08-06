@@ -113,11 +113,10 @@ fn candidates_for(use_windows_bridge: bool, browser: &str, url: &str) -> Vec<Com
     // (`open@8` misdetected Podman as bare WSL) — containers stay on the Linux
     // openers below.
     if use_windows_bridge {
-        candidates.extend(
-            wsl_powershell_programs()
-                .iter()
-                .map(|program| powershell_start_process(program, url)),
-        );
+        // Off `PATH` when WSL's `[interop] appendWindowsPath` is disabled; that
+        // host falls through to the Linux openers below rather than resolving an
+        // absolute System32 path, so a browser still opens, just inside the distro.
+        candidates.push(powershell_start_process("powershell.exe", url));
     }
     // Always fall through to the Linux openers: WSL interop can be off, and a
     // browser installed inside the distro still works.
@@ -174,81 +173,6 @@ fn is_in_container() -> bool {
             .iter()
             .any(|m| std::path::Path::new(m).exists())
     })
-}
-
-/// `powershell.exe` is on `PATH` only while WSL's `[interop] appendWindowsPath`
-/// is left on, and turning it off is a common tweak that leaves interop itself
-/// working. So try the absolute System32 path first, the way `open@10` did, and
-/// keep the bare name as a fallback for unusual Windows layouts.
-#[cfg(all(
-    not(target_arch = "wasm32"),
-    not(target_os = "macos"),
-    not(target_os = "windows")
-))]
-fn wsl_powershell_programs() -> Vec<String> {
-    let absolute = format!(
-        "{}c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
-        wsl_automount_root()
-    );
-    let mut programs = Vec::new();
-    if std::path::Path::new(&absolute).exists() {
-        programs.push(absolute);
-    }
-    programs.push("powershell.exe".to_string());
-    programs
-}
-
-/// WSL mounts the Windows drives under `[automount] root` from `/etc/wsl.conf`.
-#[cfg(all(
-    not(target_arch = "wasm32"),
-    not(target_os = "macos"),
-    not(target_os = "windows")
-))]
-fn wsl_automount_root() -> String {
-    static ROOT: OnceLock<String> = OnceLock::new();
-    ROOT.get_or_init(|| {
-        std::fs::read_to_string("/etc/wsl.conf")
-            .ok()
-            .and_then(|conf| parse_automount_root(&conf))
-            .unwrap_or_else(|| "/mnt/".to_string())
-    })
-    .clone()
-}
-
-#[cfg(all(
-    not(target_arch = "wasm32"),
-    not(target_os = "macos"),
-    not(target_os = "windows")
-))]
-fn parse_automount_root(wsl_conf: &str) -> Option<String> {
-    let mut in_automount = false;
-    for line in wsl_conf.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') || line.starts_with(';') {
-            continue;
-        }
-        if line.starts_with('[') {
-            in_automount = line.eq_ignore_ascii_case("[automount]");
-            continue;
-        }
-        if !in_automount {
-            continue;
-        }
-        if let Some((key, value)) = line.split_once('=') {
-            if key.trim().eq_ignore_ascii_case("root") {
-                let value = value.trim().trim_matches('"');
-                if value.is_empty() {
-                    return None;
-                }
-                return Some(if value.ends_with('/') {
-                    value.to_string()
-                } else {
-                    format!("{value}/")
-                });
-            }
-        }
-    }
-    None
 }
 
 /// `xdg-open` leads because it is the standard entry point and dispatches to
@@ -541,25 +465,6 @@ mod tests {
         let on_wsl = programs_of(&candidates_for(true, "", "https://nx.dev"));
         assert!(on_wsl[0].contains("powershell"));
         assert!(on_wsl.iter().any(|p| p == "xdg-open"));
-    }
-
-    #[test]
-    fn wsl_automount_root_defaults_and_parses() {
-        assert_eq!(parse_automount_root(""), None);
-        // Only the [automount] section counts, and a trailing slash is implied.
-        assert_eq!(
-            parse_automount_root("[automount]\nroot = /windows"),
-            Some("/windows/".to_string())
-        );
-        assert_eq!(
-            parse_automount_root("[automount]\nroot=\"/mnt/\"\n"),
-            Some("/mnt/".to_string())
-        );
-        assert_eq!(
-            parse_automount_root("[interop]\nroot = /nope\n[automount]\n# comment\nroot = /w"),
-            Some("/w/".to_string())
-        );
-        assert_eq!(parse_automount_root("[interop]\nroot = /nope"), None);
     }
 
     // Test-only decoder to verify the encoder.
