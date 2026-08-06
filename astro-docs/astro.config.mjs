@@ -42,6 +42,10 @@ export default defineConfig({
   },
   trailingSlash: 'never',
   redirects: {
+    '/concepts/inferred-tasks': '/docs/concepts/mental-model',
+    '/concepts/executors-and-configurations':
+      '/docs/kb/executors-and-configurations',
+    '/concepts/nx-daemon': '/docs/reference/nx-daemon',
     '/guides/tips-n-tricks/define-environment-variables':
       '/docs/reference/environment-variables#loading-environment-variables',
     '/technologies/angular/guides/use-environment-variables-in-angular':

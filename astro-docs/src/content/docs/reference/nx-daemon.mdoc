@@ -2,8 +2,8 @@
 title: Nx Daemon
 description: Learn about the Nx Daemon, a background process that speeds up project graph computation in large workspaces by maintaining state between commands.
 sidebar:
-  order: 1
-filter: 'type:Concepts'
+  order: 6
+filter: 'type:References'
 ---
 
 The Nx Daemon dramatically speeds up project graph computation, particularly for large workspaces.
@@ -53,7 +53,8 @@ and control its location to enable sharing the daemon among your docker containe
 
 ## Daemon behavior in containers
 
-Nx automatically disables the daemon in Docker containers and CI environments. The daemon's performance benefits come from maintaining state between commands and watching for file changes—in short-lived environments where each command runs in a fresh container, this state cannot be reused, so the overhead of starting a background process provides no benefit.
+Nx automatically disables the daemon in Docker containers, CI environments, and sandboxed AI-agent environments. The daemon's performance benefits come from maintaining state between commands and watching for file changes.
+In ephemeral environments where each command runs in a fresh container, this state cannot be reused, so the overhead of starting a background process provides no benefit.
 
 ### Automatic detection
 

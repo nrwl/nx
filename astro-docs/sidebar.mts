@@ -94,12 +94,7 @@ const learnGroups: SidebarItems = [
         label: 'Types of configuration',
         link: 'concepts/types-of-configuration',
       },
-      {
-        label: 'Executors and configurations',
-        link: 'concepts/executors-and-configurations',
-      },
       { label: 'Nx plugins', link: 'concepts/nx-plugins' },
-      { label: 'Inferred tasks', link: 'concepts/inferred-tasks' },
       {
         label: 'Building blocks of fast CI',
         link: 'concepts/ci-concepts/building-blocks-fast-ci',
@@ -108,7 +103,6 @@ const learnGroups: SidebarItems = [
         label: 'Parallelization and distribution',
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
-      { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
     ],
   },
   {
@@ -578,6 +572,7 @@ const referenceGroups: SidebarItems = [
         link: 'reference/environment-variables',
       },
       { label: 'nxignore', link: 'reference/nxignore' },
+      { label: 'Nx Daemon', link: 'reference/nx-daemon' },
       { label: 'Glossary', link: 'reference/glossary' },
       { label: 'Releases', link: 'reference/releases' },
       { label: 'Nx MCP', link: 'reference/nx-mcp' },

@@ -126,7 +126,7 @@ If the `outputs` property for a given target isn't defined in the project's `pac
 If neither is defined, Nx defaults to caching `dist` and `build` at the root of the repository.
 
 {% aside type="note" title="Output vs OutputPath" %}
-Several executors have a property in options called `outputPath`. On its own, this property does not influence caching or what is stored at the end of a run. You can reuse that property though by defining your outputs like: `outputs: [{options.outputPath}]`.
+Some targets have a property in their options called `outputPath`. On its own, this property does not influence caching or what is stored at the end of a run. You can reuse that property though by defining your outputs like: `outputs: [{options.outputPath}]`.
 {% /aside %}
 
 ## Define cache inputs
