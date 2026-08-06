@@ -344,6 +344,63 @@ export default [
     }
   );
 
+  it('should not surface a project config the generator was able to convert', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    addProjectConfiguration(tree, 'js-lib', {
+      root: 'libs/js-lib',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: { lintFilePatterns: ['libs/js-lib'] },
+        },
+      },
+    });
+    tree.write(
+      'libs/js-lib/.eslintrc.js',
+      `module.exports = { rules: { 'no-console': 'error' } };`
+    );
+
+    const result = await update(tree);
+
+    expect(tree.exists('libs/js-lib/.eslintrc.js')).toBe(false);
+    expect(tree.exists('libs/js-lib/eslint.config.mjs')).toBe(true);
+    expect(result).toBeDefined();
+    expect(
+      [...result!.agentContext, ...result!.nextSteps].some((entry) =>
+        entry.includes('libs/js-lib/.eslintrc.js')
+      )
+    ).toBe(false);
+  });
+
+  it('should collect explicit rules from a JavaScript-based config the generator converts', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    addProjectConfiguration(tree, 'js-lib', {
+      root: 'libs/js-lib',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: { lintFilePatterns: ['libs/js-lib'] },
+        },
+      },
+    });
+    tree.write(
+      'libs/js-lib/.eslintrc.js',
+      `module.exports = {
+        rules: { 'no-console': 'error' },
+        overrides: [{ files: ['*.ts'], rules: { 'no-debugger': 'warn' } }],
+      };`
+    );
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    const baseline = result!.agentContext.find((entry) =>
+      entry.includes('Passing-state requirement')
+    );
+    expect(baseline).toContain('no-console');
+    expect(baseline).toContain('no-debugger');
+  });
+
   it('should collect explicit rules from YAML configs and overrides for the passing baseline', async () => {
     tree.write(
       '.eslintrc.yaml',

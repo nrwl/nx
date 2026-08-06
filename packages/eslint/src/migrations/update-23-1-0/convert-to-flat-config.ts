@@ -11,6 +11,10 @@ import {
 } from '../../utils/config-file';
 import { convertToFlatConfigGenerator } from '../../generators/convert-to-flat-config/generator';
 import { migrateAngularEslintV22FlatConfig } from '../../generators/convert-to-flat-config/angular-eslint';
+import {
+  JS_ESLINTRC_FILENAMES,
+  readStaticJsEslintrcFromTree,
+} from '../../generators/convert-to-flat-config/converters/static-js-config';
 
 // Output formatters ESLint removed in v9. Built-in names only; community
 // formatter packages (referenced by their package name) keep working.
@@ -64,7 +68,6 @@ export default async function update(tree: Tree): Promise<{
   // Gather pre-conversion context: the generator deletes the eslintrc files it
   // converts, so anything derived from them must be captured first.
   const userExplicitRules = collectUserRuleIds(tree);
-  const skippedJsConfigs = findJsProjectConfigs(tree);
   const removedFormatterTargets = findRemovedFormatterTargets(tree);
   const unsupportedOptionTargets = findUnsupportedFlatConfigOptionTargets(tree);
 
@@ -84,6 +87,11 @@ export default async function update(tree: Tree): Promise<{
   // root is JavaScript-based (so the generator never ran), already flat, or
   // absent. No-op for the converted root above (idempotent).
   await migrateAngularEslintV22FlatConfig(tree);
+
+  // Read after the conversion, not before: the generator converts and deletes
+  // the JavaScript-based configs whose exported object it can read statically,
+  // so only the ones it left behind belong in the hand-off.
+  const skippedJsConfigs = findJsProjectConfigs(tree);
 
   await formatFiles(tree);
 
@@ -178,18 +186,22 @@ function detectRootConfigState(tree: Tree): RootConfigState {
 // Collects every rule ID the user explicitly configured across all eslintrc
 // layers (root, base and per-project), so the agent can tell user-chosen rules
 // apart from preset defaults when restoring the passing baseline. JavaScript
-// configs are unreadable here and are surfaced separately.
+// configs count: the generator converts the ones it can read statically, and
+// their rules go live under a baseline that would otherwise deny they exist.
 function collectUserRuleIds(tree: Tree): string[] {
   const ruleIds = new Set<string>();
   const roots = ['', ...[...getProjects(tree).values()].map((p) => p.root)];
 
   for (const root of roots) {
-    for (const filename of ROOT_ESLINTRC_CANDIDATES) {
+    for (const filename of [
+      ...ROOT_ESLINTRC_CANDIDATES,
+      ...JS_ESLINTRC_FILENAMES,
+    ]) {
       const path = root ? `${root}/${filename}` : filename;
       if (!tree.exists(path)) {
         continue;
       }
-      const config = readEslintrcConfig(tree, path);
+      const config = readEslintrcConfig(tree, root, filename);
       if (!config) {
         continue;
       }
@@ -210,7 +222,7 @@ function collectUserRuleIds(tree: Tree): string[] {
 function findJsProjectConfigs(tree: Tree): string[] {
   const configs: string[] = [];
   for (const [, projectConfig] of getProjects(tree)) {
-    for (const filename of ['.eslintrc.js', '.eslintrc.cjs']) {
+    for (const filename of JS_ESLINTRC_FILENAMES) {
       const path = `${projectConfig.root}/${filename}`;
       if (tree.exists(path)) {
         configs.push(path);
@@ -374,8 +386,14 @@ function generatedConfigsUseFlatCompat(tree: Tree): boolean {
 
 function readEslintrcConfig(
   tree: Tree,
-  path: string
+  root: string,
+  filename: string
 ): { rules?: Record<string, unknown>; overrides?: any[] } | null {
+  const path = root ? `${root}/${filename}` : filename;
+  if (JS_ESLINTRC_FILENAMES.includes(filename)) {
+    const result = readStaticJsEslintrcFromTree(tree, root, filename);
+    return result.kind === 'config' ? result.config : null;
+  }
   if (path.endsWith('.yaml') || path.endsWith('.yml')) {
     const content = tree.read(path, 'utf-8');
     if (!content) {

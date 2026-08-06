@@ -35,6 +35,10 @@ import {
   renameLegacyEslintrcFile,
 } from './converters/json-converter';
 import {
+  JS_ESLINTRC_FILENAMES,
+  readStaticJsEslintrcFromTree,
+} from './converters/static-js-config';
+import {
   migrateAngularEslintV22FlatConfig,
   resolveAngularEslintVersion,
 } from './angular-eslint';
@@ -59,10 +63,13 @@ export async function convertToFlatConfigGenerator(
   if (!eslintFile) {
     throw new Error('Could not find root eslint file');
   }
-  if (eslintFile.endsWith('.js')) {
-    throw new Error(
-      'Only json and yaml eslint config files are supported for conversion'
-    );
+  if (JS_ESLINTRC_FILENAMES.includes(eslintFile)) {
+    const result = readStaticJsEslintrcFromTree(tree, '', eslintFile);
+    if (result.kind === 'unsupported') {
+      throw new Error(
+        `Cannot convert "${eslintFile}" automatically because ${result.reason}. Convert it to flat config manually.`
+      );
+    }
   }
 
   options.eslintConfigFormat ??= 'mjs';
@@ -120,30 +127,35 @@ function convertRootToFlatConfig(
   format: 'cjs' | 'mjs',
   keepExistingVersions?: boolean
 ) {
+  // Every generated config extends the root one, so a root config that holds
+  // nothing cannot be skipped the way a project's can: the conversion would
+  // leave every project pointing at a file that was never written.
+  const convertRoot = (source: string, target: string) => {
+    if (
+      !convertConfigToFlatConfig(
+        tree,
+        '',
+        source,
+        target,
+        format,
+        undefined,
+        keepExistingVersions
+      )
+    ) {
+      throw new Error(
+        `Cannot convert "${source}": it does not hold an ESLint configuration. Delete it or convert it to flat config manually.`
+      );
+    }
+  };
+
   if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
-    convertConfigToFlatConfig(
-      tree,
-      '',
-      eslintFile,
-      `eslint.base.config.${format}`,
-      format,
-      undefined,
-      keepExistingVersions
-    );
+    convertRoot(eslintFile, `eslint.base.config.${format}`);
   }
   // A workspace can ship `.eslintrc.base.json` without a sibling root config, so
   // only convert the non-base root config when it actually exists.
   const rootEslintFile = eslintFile.replace('.base.', '.');
   if (tree.exists(rootEslintFile)) {
-    convertConfigToFlatConfig(
-      tree,
-      '',
-      rootEslintFile,
-      `eslint.config.${format}`,
-      format,
-      undefined,
-      keepExistingVersions
-    );
+    convertRoot(rootEslintFile, `eslint.config.${format}`);
   }
 }
 
@@ -193,13 +205,19 @@ function convertProjectToFlatConfig(
   if (!eslintFile) {
     return;
   }
-  if (eslintFile === '.eslintrc.js' || eslintFile === '.eslintrc.cjs') {
-    logger.warn(
-      `Skipping "${project}": ${eslintFile} is a JavaScript-based ESLint config, which cannot be converted automatically. Convert it to flat config manually.`
+  if (JS_ESLINTRC_FILENAMES.includes(eslintFile)) {
+    const result = readStaticJsEslintrcFromTree(
+      tree,
+      projectConfig.root,
+      eslintFile
     );
-    return;
-  }
-  if (eslintFile.endsWith('.js')) {
+    if (result.kind === 'unsupported') {
+      logger.warn(
+        `Skipping "${project}": ${eslintFile} is a JavaScript-based ESLint config that cannot be converted automatically because ${result.reason}. Convert it to flat config manually.`
+      );
+      return;
+    }
+  } else if (eslintFile.endsWith('.js')) {
     // Already on a JavaScript-based flat config (eslint.config.js); nothing to convert.
     return;
   }
@@ -239,7 +257,7 @@ function convertProjectToFlatConfig(
     return;
   }
 
-  convertConfigToFlatConfig(
+  const converted = convertConfigToFlatConfig(
     tree,
     projectConfig.root,
     eslintFile,
@@ -248,6 +266,16 @@ function convertProjectToFlatConfig(
     ignorePath,
     keepExistingVersions
   );
+  if (!converted) {
+    // An empty or comment-only file parses to nothing. It carries no rules, so
+    // there is nothing to convert, but leaving it behind silently would hide it.
+    logger.warn(
+      `Skipping "${projectConfig.root}/${eslintFile}": it does not hold an ESLint configuration. Delete it or convert it to flat config manually.`
+    );
+    return;
+  }
+  // Only once the config is gone: flat config never reads .eslintignore, but an
+  // eslintrc that is still there does.
   eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
   if (ignorePath) {
     eslintIgnoreFiles.add(ignorePath);
@@ -393,53 +421,58 @@ function convertConfigToFlatConfig(
   format: 'cjs' | 'mjs',
   ignorePath?: string,
   keepExistingVersions?: boolean
-) {
+): boolean {
   const ignorePaths = ignorePath
     ? [ignorePath, `${root}/.eslintignore`]
     : [`${root}/.eslintignore`];
 
+  const config = readEslintrcConfig(tree, root, source);
+  if (!config) {
+    return false;
+  }
+
+  const conversionResult = convertEslintJsonToFlatConfig(
+    tree,
+    root,
+    config,
+    ignorePaths,
+    format
+  );
+  processConvertedConfig(
+    tree,
+    root,
+    source,
+    target,
+    conversionResult,
+    keepExistingVersions
+  );
+
+  return true;
+}
+
+// JavaScript-based configs are read statically, never executed, so only the ones
+// the caller already validated get this far.
+function readEslintrcConfig(
+  tree: Tree,
+  root: string,
+  source: string
+): ESLint.ConfigData | null {
   // `.eslintrc` (no extension) is JSON by convention.
   if (source.endsWith('.json') || basename(source) === '.eslintrc') {
-    const config: ESLint.ConfigData = readJson(tree, `${root}/${source}`);
-    const conversionResult = convertEslintJsonToFlatConfig(
-      tree,
-      root,
-      config,
-      ignorePaths,
-      format
-    );
-    return processConvertedConfig(
-      tree,
-      root,
-      source,
-      target,
-      conversionResult,
-      keepExistingVersions
-    );
+    return readJson(tree, `${root}/${source}`);
   }
   if (source.endsWith('.yaml') || source.endsWith('.yml')) {
-    const originalContent = tree.read(`${root}/${source}`, 'utf-8');
     const { load } = require('@zkochan/js-yaml');
-    const config = load(originalContent, {
+    return load(tree.read(`${root}/${source}`, 'utf-8'), {
       json: true,
       filename: source,
     }) as ESLint.ConfigData;
-    const conversionResult = convertEslintJsonToFlatConfig(
-      tree,
-      root,
-      config,
-      ignorePaths,
-      format
-    );
-    return processConvertedConfig(
-      tree,
-      root,
-      source,
-      target,
-      conversionResult,
-      keepExistingVersions
-    );
   }
+  if (JS_ESLINTRC_FILENAMES.includes(source)) {
+    const result = readStaticJsEslintrcFromTree(tree, root, source);
+    return result.kind === 'config' ? result.config : null;
+  }
+  return null;
 }
 
 function processConvertedConfig(
