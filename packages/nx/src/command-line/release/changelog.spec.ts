@@ -26,6 +26,7 @@ jest.mock('./utils/git', () => ({
   gitAdd: jest.fn(),
   gitPush: jest.fn(),
   gitTag: jest.fn(),
+  sanitizeProjectNameForGitTag: jest.fn((projectName) => projectName),
 }));
 
 jest.mock('./config/version-plans', () => ({
@@ -36,6 +37,7 @@ jest.mock('./config/version-plans', () => ({
 
 jest.mock('./changelog/version-plan-filtering', () => ({
   ...jest.requireActual('./changelog/version-plan-filtering'),
+  resolveChangelogFromSHA: jest.fn(() => Promise.resolve('fromsha')),
   resolveWorkspaceChangelogFromSHA: jest.fn(() => Promise.resolve('fromsha')),
 }));
 
@@ -68,11 +70,15 @@ const {
 const {
   createProjectFileMapUsingProjectGraph,
 } = require('../../project-graph/file-map-utils');
+const {
+  resolveChangelogFromSHA,
+} = require('./changelog/version-plan-filtering');
 
 describe('releaseChangelog', () => {
   let tempFs: TempFs;
   let projectGraph: ProjectGraph;
   let projectFileMap: ProjectFileMap;
+  let releaseGroup: ReleaseGroupWithName;
   let releaseGraph: ReleaseGraph;
 
   beforeEach(async () => {
@@ -118,7 +124,7 @@ describe('releaseChangelog', () => {
     createProjectGraphAsync.mockResolvedValue(projectGraph);
     createProjectFileMapUsingProjectGraph.mockResolvedValue(projectFileMap);
 
-    const releaseGroup = {
+    releaseGroup = {
       name: '__default__',
       projectsRelationship: 'fixed',
       projects: ['pkg-a'],
@@ -209,6 +215,66 @@ describe('releaseChangelog', () => {
       );
       // file: false means nothing should have been written to disk
       await expect(tempFs.readFile('CHANGELOG.md')).rejects.toThrow();
+    });
+  });
+
+  describe('independent project changelogs', () => {
+    it('should not resolve a changelog from ref for an unversioned dependent project', async () => {
+      await tempFs.createFiles({
+        'packages/pkg-b/package.json': JSON.stringify({
+          name: 'pkg-b',
+          version: '0.0.0',
+        }),
+      });
+      projectGraph.nodes['pkg-b'] = {
+        name: 'pkg-b',
+        type: 'lib',
+        data: {
+          root: 'packages/pkg-b',
+          targets: {
+            'nx-release-publish': {},
+          },
+        } as any,
+      };
+      releaseGroup.projectsRelationship = 'independent';
+      releaseGroup.projects = ['pkg-a', 'pkg-b'];
+      releaseGroup.changelog = {
+        createRelease: false,
+        entryWhenNoChanges: false,
+        file: false,
+      } as ReleaseGroupWithName['changelog'];
+
+      await runReleaseChangelog({
+        forceChangelogGeneration: true,
+        projects: ['pkg-a'],
+        version: undefined,
+        versionData: {
+          'pkg-a': {
+            currentVersion: '0.0.0',
+            newVersion: '1.0.0',
+            dependentProjects: [
+              {
+                dependencyCollection: 'dependencies',
+                rawVersionSpec: '0.0.0',
+                source: 'pkg-b',
+                target: 'pkg-a',
+                type: 'static',
+              },
+            ],
+          },
+        },
+      });
+
+      expect(resolveChangelogFromSHA).toHaveBeenCalledTimes(1);
+      expect(resolveChangelogFromSHA).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectRoot: 'packages/pkg-a',
+          tagPatternValues: {
+            projectName: 'pkg-a',
+            releaseGroupName: '__default__',
+          },
+        })
+      );
     });
   });
 });

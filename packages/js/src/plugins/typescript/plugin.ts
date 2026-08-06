@@ -30,12 +30,12 @@ import {
   relative,
   resolve,
 } from 'node:path';
-import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
+import { hashArray } from '@nx/devkit';
+import { hashFile, hashObject } from '@nx/devkit/internal';
 import picomatch = require('picomatch');
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
+import { getLockFileName } from '@nx/devkit/internal';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { getNxRequirePaths } from '@nx/devkit/internal';
 import type { Extension, ParsedCommandLine, System } from 'typescript';
 import {
   addBuildAndWatchDepsTargets,

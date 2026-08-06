@@ -146,9 +146,11 @@ import {
   buildRetainedAtSuccessBody,
   buildTallyBodyLine,
   countLandedCommits,
+  countWaivedAgenticSteps,
   logAgenticSuccessOutcome,
   logFailureRecap,
   logMigrationBoundary,
+  logWaivedAgenticStep,
   retainedMigrations,
   type CommitState,
   type MigrationOutcome,
@@ -2729,6 +2731,27 @@ export async function executeMigrations(
     return { kind: 'none' };
   }
 
+  // Records what a migration's deterministic phase produced. A migration that
+  // changed nothing must not attempt a commit: the absorbing `git add -A`
+  // would build a commit subject naming this no-op migration even though its
+  // content is entirely prior pending diffs, confusing `git log` / `git blame`
+  // attribution. Pending stays pending and the next change-producing migration
+  // absorbs it.
+  async function commitOrRecordNoChanges(
+    m: PlannedMigration,
+    madeChanges: boolean
+  ): Promise<CommitState> {
+    if (!madeChanges) {
+      migrationsWithNoChanges.push(m);
+      return { kind: 'none' };
+    }
+    const commit = await attemptMigrationCommit(m);
+    if (commit.kind === 'landed' && commit.sha) {
+      logger.info(pc.dim(`Committed as ${commit.sha}`));
+    }
+    return commit;
+  }
+
   const totalMigrations = sortedMigrations.length;
   let migrationIndex = 0;
   for (const m of sortedMigrations) {
@@ -2753,6 +2776,11 @@ export async function executeMigrations(
       );
       let outcome: MigrationOutcomeKind;
       let commit: CommitState = { kind: 'none' };
+      // Set when the migration returned `skipAgentic: true` and something was
+      // actually waived, so the end-of-run recaps can report it. A hybrid's
+      // prompt is owed in every agentic mode, so waiving it always counts; a
+      // generator-only migration only counts when validation would have run.
+      let waivedAgenticStep = false;
       if (isPromptOnlyMigration(m)) {
         if (agenticRun) {
           inAgenticStep = true;
@@ -2781,17 +2809,31 @@ export async function executeMigrations(
           outcome = 'deferred';
         }
       } else if (isHybridMigration(m)) {
-        const { changes, nextSteps, agentContext, logs, madeChanges } =
-          await runNxOrAngularMigration(
-            root,
-            m,
-            isVerbose,
-            /* captureGeneratorOutput: */ !!agenticRun,
-            resolvedCollection
-          );
+        const {
+          changes,
+          nextSteps,
+          agentContext,
+          skipAgentic,
+          logs,
+          madeChanges,
+        } = await runNxOrAngularMigration(
+          root,
+          m,
+          isVerbose,
+          /* captureGeneratorOutput: */ !!agenticRun,
+          resolvedCollection
+        );
         migrationEmittedNextSteps.push(...nextSteps);
 
-        if (agenticRun) {
+        if (skipAgentic) {
+          // The generator reported the prompt half unnecessary, so nothing is
+          // owed: no agent run, and no next-steps entry telling the user to
+          // run the prompt themselves. Runs in all three agentic modes.
+          logWaivedAgenticStep(m, agentContext);
+          waivedAgenticStep = true;
+          commit = await commitOrRecordNoChanges(m, madeChanges);
+          outcome = madeChanges ? 'applied' : 'no-changes';
+        } else if (agenticRun) {
           // Install any deps the deterministic phase added/bumped before the
           // agent runs — the prompt half may depend on them being present in
           // node_modules.
@@ -2837,21 +2879,7 @@ export async function executeMigrations(
             printDroppedAgentContext({ migration: m, agentContext });
           }
           skippedPrompts.push(m);
-          if (!madeChanges) {
-            migrationsWithNoChanges.push(m);
-          }
-          // Only attempt a commit when this migration's deterministic
-          // phase actually produced changes. Otherwise the absorbing
-          // `git add -A` would build a commit subject naming this no-op
-          // migration even though its content is entirely prior pending
-          // diffs — confusing `git log` / `git blame` attribution. Pending
-          // stays pending and the next change-producing migration absorbs.
-          if (madeChanges) {
-            commit = await attemptMigrationCommit(m);
-          }
-          if (commit.kind === 'landed' && commit.sha) {
-            logger.info(pc.dim(`Committed as ${commit.sha}`));
-          }
+          commit = await commitOrRecordNoChanges(m, madeChanges);
           outcome = 'deferred';
         }
       } else {
@@ -2859,16 +2887,26 @@ export async function executeMigrations(
         // changes uncommitted in the working tree for the user to review.
         const validationRun =
           agenticRun && shouldRunValidation ? agenticRun : undefined;
-        const { changes, nextSteps, agentContext, logs, madeChanges } =
-          await runNxOrAngularMigration(
-            root,
-            m,
-            isVerbose,
-            /* captureGeneratorOutput: */ !!validationRun,
-            resolvedCollection
-          );
+        const {
+          changes,
+          nextSteps,
+          agentContext,
+          skipAgentic,
+          logs,
+          madeChanges,
+        } = await runNxOrAngularMigration(
+          root,
+          m,
+          isVerbose,
+          /* captureGeneratorOutput: */ !!validationRun,
+          resolvedCollection
+        );
         migrationEmittedNextSteps.push(...nextSteps);
-        const canRunValidation = !!validationRun && changes.length > 0;
+        // Whether a validation step was on the table at all. `skipAgentic`
+        // waives nothing when it wasn't, so the whole waived path hangs off
+        // this, not just the log line.
+        const validationApplies = !!validationRun && changes.length > 0;
+        const canRunValidation = validationApplies && !skipAgentic;
 
         if (canRunValidation) {
           // Install any deps the deterministic phase added/bumped before the
@@ -2903,21 +2941,16 @@ export async function executeMigrations(
           );
           outcome = 'applied';
         } else {
-          // Inner validation step didn't run. Surface `agentContext` under
-          // `inside-agent` so the outer driving agent can ingest it.
-          if (printDroppedAgentContext && agentContext.length > 0) {
+          if (skipAgentic && validationApplies) {
+            logWaivedAgenticStep(m, agentContext);
+            waivedAgenticStep = true;
+          } else if (printDroppedAgentContext && agentContext.length > 0) {
+            // Inner validation step didn't run. Surface `agentContext` under
+            // `inside-agent` so the outer driving agent can ingest it.
             printDroppedAgentContext({ migration: m, agentContext });
           }
-          if (!madeChanges) {
-            migrationsWithNoChanges.push(m);
-            outcome = 'no-changes';
-          } else {
-            commit = await attemptMigrationCommit(m);
-            if (commit.kind === 'landed' && commit.sha) {
-              logger.info(pc.dim(`Committed as ${commit.sha}`));
-            }
-            outcome = 'applied';
-          }
+          commit = await commitOrRecordNoChanges(m, madeChanges);
+          outcome = madeChanges ? 'applied' : 'no-changes';
         }
       }
       outcomes.push({
@@ -2925,6 +2958,7 @@ export async function executeMigrations(
         status: 'completed',
         kind: outcome,
         commit,
+        waivedAgenticStep,
       });
       logger.info('');
     } catch (e) {
@@ -3010,6 +3044,7 @@ export async function executeMigrations(
     skippedPrompts,
     migrationEmittedNextSteps,
     committedShasCount: countLandedCommits(outcomes),
+    waivedAgenticStepsCount: countWaivedAgenticSteps(outcomes),
     // Migrations whose commits failed and never got absorbed by a later
     // commit. The caller surfaces them so a successful run doesn't claim
     // "up to date" while leaving uncommitted diffs in the working tree.
@@ -3177,6 +3212,7 @@ async function runMigrations(
     skippedPrompts,
     migrationEmittedNextSteps,
     committedShasCount,
+    waivedAgenticStepsCount,
     retainedAtSuccess,
   } = await executeMigrations(
     root,
@@ -3201,6 +3237,7 @@ async function runMigrations(
     appliedCount,
     committedShasCount,
     skippedPromptsCount,
+    waivedAgenticStepsCount,
     insideAgent,
   });
   const tallyBody = tallyLine ? [tallyLine] : undefined;

@@ -2,9 +2,8 @@ import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
 import { mkdirSync, rmSync } from 'node:fs';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
-import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { getLockFileName } from '@nx/devkit/internal';
+import { setupWorkspaceContext } from '@nx/devkit/internal';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
 
 jest.mock('nx/src/utils/cache-directory', () => ({

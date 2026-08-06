@@ -21,13 +21,12 @@ import {
   isUsingTsSolutionSetup,
   tsLibVersion,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
-import { nxVersion } from 'nx/src/utils/versions';
 import { join } from 'path';
 import { hasGenerator } from '../../utils/has-generator';
 import { generatorGenerator } from '../generator/generator';
 import { CreatePackageSchema } from './schema';
 import { NormalizedSchema, normalizeSchema } from './utils/normalize-schema';
+import { type PackageJson, nxVersion } from '@nx/devkit/internal';
 
 export async function createPackageGenerator(
   host: Tree,

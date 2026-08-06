@@ -8,10 +8,10 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { nxVersion } from 'nx/src/utils/versions';
 import { getActualBundler, isComponent } from '../../../utils/ct-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
 import type { CypressComponentConfigurationSchema } from '../schema';
+import { nxVersion } from '@nx/devkit/internal';
 
 export async function addFiles(
   tree: Tree,

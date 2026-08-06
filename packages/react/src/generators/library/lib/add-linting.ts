@@ -1,10 +1,10 @@
-import { Tree } from 'nx/src/generators/tree';
 import { lintProjectGenerator } from '@nx/eslint';
-import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   runTasksInSerial,
+  Tree,
+  joinPathFragments,
 } from '@nx/devkit';
 
 import { NormalizedSchema } from '../schema';

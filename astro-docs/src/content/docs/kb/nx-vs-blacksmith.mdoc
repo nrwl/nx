@@ -46,7 +46,7 @@ Blacksmith runs whatever your workflow matrix declares, on every push, whether o
 
 Blacksmith transparently accelerates the `actions/cache` API and offers sticky disks, persistent volumes remounted between jobs, for dependencies and Docker layers. This caching is coarse and manual: you declare which paths to store under a key you compute yourself (`path: node_modules`, `key: ${{ hashFiles(...) }}`), so it restores files by key match rather than understanding a task's inputs and outputs. It speeds up restoring state, but a task that already ran with identical inputs still reruns.
 
-[Nx Replay](/docs/features/ci-features/remote-cache) caches at the task level and derives the cache key from each task's actual inputs, so there are no paths or keys to maintain. A build or test computed once, on CI or on a developer laptop, replays everywhere else with its terminal output and artifacts, with [access-controlled, branch-isolated writes](/docs/kb/cache-security).
+[Nx Cloud remote caching](/docs/features/ci-features/remote-cache) caches at the task level and derives the cache key from each task's actual inputs, so there are no paths or keys to maintain. A build or test computed once, on CI or on a developer laptop, replays everywhere else with its terminal output and artifacts, with [access-controlled, branch-isolated writes](/docs/kb/cache-security).
 
 ## Distribution
 
