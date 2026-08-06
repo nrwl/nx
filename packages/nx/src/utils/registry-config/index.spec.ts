@@ -8,6 +8,7 @@ jest.mock('fs', () => ({
   ...jest.requireActual('fs'),
   existsSync: jest.fn(),
   readFileSync: jest.fn(),
+  statSync: jest.fn(),
 }));
 jest.mock('../logger', () => ({
   logger: {
@@ -61,6 +62,14 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     (fs.readFileSync as jest.Mock).mockImplementation((p: any) => {
       if (typeof p === 'string' && p in files) {
         return files[p];
+      }
+      throw Object.assign(new Error(`ENOENT: ${p}`), { code: 'ENOENT' });
+    });
+    // Every path in this fixture is a file, which is what pnpm's pre-11.8.0
+    // lookup asks about.
+    (fs.statSync as jest.Mock).mockImplementation((p: any) => {
+      if (typeof p === 'string' && p in files) {
+        return { isFile: () => true, isDirectory: () => false };
       }
       throw Object.assign(new Error(`ENOENT: ${p}`), { code: 'ENOENT' });
     });

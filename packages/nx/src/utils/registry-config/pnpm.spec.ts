@@ -1463,28 +1463,45 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     describe('a pnpm-workspace.yaml that cannot be opened', () => {
-      it('resolves on from the lower layers through a symlink loop, which pnpm looks up as absent', () => {
-        const { logger } = require('../logger');
-        (logger.warn as jest.Mock).mockClear();
-        // auth.ini rather than the user config: npm reads the latter itself, so
-        // only a pnpm-only layer proves the bridge survived.
-        writeAuthIni('registry=https://reg-b.example.com/\n');
-        const path = join(root, 'pnpm-workspace.yaml');
-        symlinkSync(path, path);
+      // Neither lookup sees a symlink loop, so it stays absent on both sides of
+      // the 11.8.0 boundary.
+      it.each(['11.7.0', '11.8.0'])(
+        'resolves on from the lower layers through a symlink loop on %s',
+        (version) => {
+          const { logger } = require('../logger');
+          (logger.warn as jest.Mock).mockClear();
+          // auth.ini rather than the user config: npm reads the latter itself,
+          // so only a pnpm-only layer proves the bridge survived.
+          writeAuthIni('registry=https://reg-b.example.com/\n');
+          const path = join(root, 'pnpm-workspace.yaml');
+          symlinkSync(path, path);
 
-        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          expect(getPnpmSpawnRegistryEnv('is-even', root, version)).toEqual({
+            npm_config_registry: 'https://reg-b.example.com/',
+          });
+          // Absent to pnpm as well, so there is nothing to tell the user about.
+          expect(logger.warn).not.toHaveBeenCalled();
+        }
+      );
+
+      // 11.8.0 swapped find-up, which requires the match to be a file, for a
+      // bare existence check, so the same directory goes from looked past to
+      // found and fatal.
+      it('resolves on from a directory in its place before 11.8.0', () => {
+        writeAuthIni('registry=https://reg-b.example.com/\n');
+        mkdirSync(join(root, 'pnpm-workspace.yaml'));
+
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.7.0')).toEqual({
           npm_config_registry: 'https://reg-b.example.com/',
         });
-        // Absent to pnpm as well, so there is nothing to tell the user about.
-        expect(logger.warn).not.toHaveBeenCalled();
       });
 
-      it('fails on a directory in its place, which pnpm 11.20 finds and then dies opening', () => {
+      it('fails on a directory in its place from 11.8.0 on', () => {
         writeAuthIni('registry=https://reg-b.example.com/\n');
         mkdirSync(join(root, 'pnpm-workspace.yaml'));
 
         expect(() =>
-          getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')
+          getPnpmSpawnRegistryEnv('is-even', root, '11.8.0')
         ).toThrow(/pnpm workspace file at .* could not be read/);
       });
     });

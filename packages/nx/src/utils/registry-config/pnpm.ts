@@ -7,6 +7,7 @@ import {
   readPnpmYamlConfig,
 } from '../package-manager-config/pnpm-config';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
+import { fileExists } from '../fileutils';
 import { logger } from '../logger';
 import {
   expandNpmEnvVars,
@@ -87,7 +88,7 @@ export function getPnpmSpawnRegistryEnv(
     return env;
   }
 
-  const settings = readPnpmWorkspaceSettings(root);
+  const settings = readPnpmWorkspaceSettings(root, pnpmVersion);
   const scope = getPackageScope(packageName);
   // Kept identical to the predicate the caller hands mergeNpmConfigEnv at spawn
   // time, which drops the bridged ambient npm_config_* this answers true for
@@ -428,13 +429,23 @@ function resolveNoProxy(
   return readPnpmEnvVar('noproxy', pnpmVersion) ?? settings.noproxy;
 }
 
-function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
+/**
+ * pnpm looks pnpm-workspace.yaml up before a reader that only tolerates ENOENT,
+ * so whatever this misses reads as absent while a file it finds and cannot open
+ * aborts the command. 11.8.0 swapped find-up, which requires the match to be a
+ * file, for a bare existence check, which is where a directory in the file's
+ * place stops being looked past.
+ */
+function pnpmFindsWorkspaceFile(path: string, pnpmVersion: string): boolean {
+  return lt(pnpmVersion, '11.8.0') ? fileExists(path) : existsSync(path);
+}
+
+function readPnpmWorkspaceSettings(
+  root: string,
+  pnpmVersion: string
+): PnpmWorkspaceSettings {
   const path = join(root, 'pnpm-workspace.yaml');
-  // pnpm locates this file with an existence check before a reader that only
-  // tolerates ENOENT, so a symlink loop or an unreadable parent reads as absent
-  // while a file that exists and will not open aborts it. The window between
-  // the two checks is pnpm's own.
-  if (!existsSync(path)) {
+  if (!pnpmFindsWorkspaceFile(path, pnpmVersion)) {
     return {};
   }
   const doc = readPnpmYamlConfig(path);
@@ -444,9 +455,7 @@ function readPnpmWorkspaceSettings(root: string): PnpmWorkspaceSettings {
   if (doc === 'unusable') {
     // pnpm aborts on this file, so there is no resolution left to reproduce.
     // Propagating to the caller's fall-open warns instead of silently treating
-    // the workspace as declaring no registry. A directory in the file's place
-    // only aborts pnpm from 11.20 on; pinning the newest keeps one from reading
-    // as config.
+    // the workspace as declaring no registry.
     throw new Error(`The pnpm workspace file at ${path} could not be read.`);
   }
   return validatePnpmWorkspaceSettings(doc, path);
