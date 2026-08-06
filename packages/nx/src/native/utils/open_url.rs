@@ -82,7 +82,7 @@ fn open_candidates(url: &str) -> Vec<Command> {
     // PowerShell rather than `cmd /C start "" <url>`: std leaves a URL unquoted
     // (it only quotes args with whitespace or quotes) and `cmd` reads the `&` in
     // a query string as a command separator.
-    vec![powershell_start_process("powershell.exe", url)]
+    vec![powershell_start_process(url)]
 }
 
 #[cfg(all(
@@ -92,10 +92,21 @@ fn open_candidates(url: &str) -> Vec<Command> {
 ))]
 fn open_candidates(url: &str) -> Vec<Command> {
     candidates_for(
-        is_wsl() && !is_in_container(),
+        use_windows_bridge(is_wsl(), is_in_container()),
         &std::env::var("BROWSER").unwrap_or_default(),
         url,
     )
+}
+
+/// #34502 was this predicate getting the container case wrong, so it is a named
+/// function rather than an inline `&&` — otherwise nothing can assert it.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn use_windows_bridge(is_wsl: bool, in_container: bool) -> bool {
+    is_wsl && !in_container
 }
 
 /// Split from `open_candidates` so the two probes it can't fake — the WSL gate
@@ -113,10 +124,16 @@ fn candidates_for(use_windows_bridge: bool, browser: &str, url: &str) -> Vec<Com
     // (`open@8` misdetected Podman as bare WSL) — containers stay on the Linux
     // openers below.
     if use_windows_bridge {
-        // Off `PATH` when WSL's `[interop] appendWindowsPath` is disabled; that
-        // host falls through to the Linux openers below rather than resolving an
-        // absolute System32 path, so a browser still opens, just inside the distro.
-        candidates.push(powershell_start_process("powershell.exe", url));
+        candidates.push(powershell_start_process(url));
+        // `[interop] appendWindowsPath=false` takes powershell.exe off PATH while
+        // leaving interop working, and a stock WSL distro has no browser of its
+        // own to fall through to. `/mnt/` is the default `[automount] root`; a
+        // custom one isn't worth parsing wsl.conf for, since the candidate simply
+        // fails to spawn when the path is wrong.
+        candidates.push(powershell_start_process_at(
+            "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+            url,
+        ));
     }
     // Always fall through to the Linux openers: WSL interop can be off, and a
     // browser installed inside the distro still works.
@@ -151,9 +168,11 @@ fn proc_version_is_wsl(proc_version: &str) -> bool {
     proc_version.to_lowercase().contains("microsoft")
 }
 
-/// `/run/.containerenv` is the Podman marker `open@8`'s `is-docker` missed,
-/// which is what let #34502 take the WSL bridge and crash. A const so a test can
-/// assert it without a container to run in.
+/// `/run/.containerenv` is the Podman marker that let #34502 take the WSL bridge
+/// and crash. `open@8` did probe for it, but destructured `fs` from
+/// `require('fs').promises` and then called `fs.statSync`, so the probe threw
+/// into its own empty catch and only `is-docker`'s `/.dockerenv` ever counted.
+/// A const so a test can assert both without a container to run in.
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
@@ -168,22 +187,33 @@ const CONTAINER_MARKERS: &[&str] = &["/.dockerenv", "/run/.containerenv"];
 ))]
 fn is_in_container() -> bool {
     static IN_CONTAINER: OnceLock<bool> = OnceLock::new();
-    *IN_CONTAINER.get_or_init(|| {
-        CONTAINER_MARKERS
-            .iter()
-            .any(|m| std::path::Path::new(m).exists())
-    })
+    *IN_CONTAINER.get_or_init(|| any_marker_exists(CONTAINER_MARKERS))
 }
 
-/// `xdg-open` leads because it is the standard entry point and dispatches to
-/// whatever handler the desktop has. `$BROWSER` is the documented override, but
-/// it only gets a turn once `xdg-open` is missing — `xdg-open` consults it
-/// itself, and trying it first would let `BROWSER=echo` (a common way to
-/// suppress auto-open) spawn happily and report a browser that never appeared.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
+fn any_marker_exists(markers: &[&str]) -> bool {
+    markers.iter().any(|m| std::path::Path::new(m).exists())
+}
+
+/// `xdg-open` leads: it is the standard entry point, and on a host with no
+/// desktop detected it consults `$BROWSER` itself. Our own `$BROWSER` rung is
+/// what covers the case where `xdg-open` is absent entirely. Trying it first
+/// instead would let `BROWSER=echo` (a common way to suppress auto-open) spawn
+/// happily and report a browser that never appeared.
 ///
-/// Deliberately no further rungs. A candidate only loses its turn by failing to
-/// spawn, so a terminal browser would "succeed" against the null stdio
-/// `spawn_detached` sets while rendering nowhere the user can see.
+/// Deliberately no rungs below these two. A candidate only loses its turn by
+/// failing to spawn, so anything that spawns and then declines to open — a
+/// desktop dispatcher with no handler, a terminal browser against the null stdio
+/// `spawn_detached` sets — buys a false `true` rather than a browser. `$BROWSER`
+/// is exempt because it is the user saying which program they meant.
+///
+/// The cost: a host with a browser but without `xdg-utils` used to be covered by
+/// the `open` package, which shipped its own copy of the freedesktop script
+/// rather than relying on the system one. That host now gets the printed URL.
 #[cfg(all(
     not(target_arch = "wasm32"),
     not(target_os = "macos"),
@@ -241,7 +271,14 @@ fn browser_env_candidates(browser: &str, url: &str) -> Vec<Command> {
 /// `-EncodedCommand`, so UTF-16LE here would cost 7.1 command-line bytes per URL
 /// byte against `CreateProcessW`'s 32767 cap — halving the openable URL.
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
-fn powershell_start_process(program: &str, url: &str) -> Command {
+fn powershell_start_process(url: &str) -> Command {
+    powershell_start_process_at("powershell.exe", url)
+}
+
+/// As above, but naming the interpreter — WSL needs an absolute path when
+/// `appendWindowsPath` is off.
+#[cfg(all(not(target_arch = "wasm32"), not(target_os = "macos")))]
+fn powershell_start_process_at(program: &str, url: &str) -> Command {
     let script = format!(
         "Start-Process ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{}')))",
         base64_encode(url.as_bytes())
@@ -362,6 +399,8 @@ mod tests {
         assert!(!is_http_url("file:///etc/passwd"));
         assert!(!is_http_url("javascript:alert(1)"));
         assert!(!is_http_url(" http://leading-space.example"));
+        // Prefix, not substring — the scheme has to be exactly http(s).
+        assert!(!is_http_url("httpx://evil.example"));
         assert!(!open_url_native("calc.exe"));
     }
 
@@ -369,11 +408,11 @@ mod tests {
     fn powershell_carries_the_url_as_base64_not_as_a_quoted_literal() {
         // Every character PowerShell accepts as a single-quote delimiter, plus a
         // `&` (cmd separator). None may reach the command line or the script.
-        // The astral char pins the multi-byte round trip the UTF-8 payload rests
-        // on — it is two UTF-16 units, so an encoder split would corrupt it.
+        // The astral char rides the UTF-8 payload; `utf16le` never sees it, since
+        // the script is ASCII by the time it is encoded (asserted separately).
         let url =
             "https://cloud.nx.app/connect?a=1&b=2&q='\u{2018}\u{2019}\u{201A}\u{201B}\u{1F680}";
-        let cmd = powershell_start_process("powershell.exe", url);
+        let cmd = powershell_start_process(url);
         let args = args_of(&cmd);
 
         assert_eq!(cmd.get_program(), "powershell.exe");
@@ -404,15 +443,24 @@ mod tests {
             "https://github.com/nrwl/nx/releases/new?body={}",
             "a".repeat(8000)
         );
-        let cmd = powershell_start_process("powershell.exe", &url);
+        let cmd = powershell_start_process(&url);
         let line: usize =
             cmd.get_program().len() + args_of(&cmd).iter().map(|a| a.len() + 1).sum::<usize>();
         assert!(line < 32767, "command line was {line} chars");
     }
 
     #[test]
+    fn utf16le_emits_surrogate_pairs_for_astral_chars() {
+        // `-EncodedCommand` is UTF-16LE, so a `char as u16` encoder would silently
+        // truncate anything outside the BMP. ASCII today, but the outer layer is
+        // the only place a non-ASCII script could ever reach.
+        assert_eq!(utf16le("\u{1F680}"), vec![0x3D, 0xD8, 0x80, 0xDE]);
+        assert_eq!(utf16le("ab"), vec![0x61, 0x00, 0x62, 0x00]);
+    }
+
+    #[test]
     fn execution_policy_is_bypassed_for_gpo_locked_hosts() {
-        let cmd = powershell_start_process("powershell.exe", "https://nx.dev");
+        let cmd = powershell_start_process("https://nx.dev");
         let args = args_of(&cmd);
         let idx = args.iter().position(|a| a == "-ExecutionPolicy").unwrap();
         assert_eq!(args[idx + 1], "Bypass");
@@ -425,15 +473,33 @@ mod tests {
         let cmds = linux_open_candidates("", "https://nx.dev");
         assert_eq!(programs_of(&cmds), ["xdg-open"]);
         assert_eq!(args_of(&cmds[0]), vec!["https://nx.dev"]);
+
+        // With one set, it follows `xdg-open` rather than leading — and nothing
+        // else joins the chain.
+        let cmds = linux_open_candidates("firefox", "https://nx.dev");
+        assert_eq!(programs_of(&cmds), ["xdg-open", "firefox"]);
     }
 
     #[test]
     fn podman_and_docker_markers_are_both_probed() {
-        // #34502: `open@8`'s `is-docker` only looked for /.dockerenv, so Podman
-        // took the WSL bridge and crashed. Asserted on the const because a test
-        // process can't fake either marker's presence.
+        // #34502: only /.dockerenv was effectively checked, so Podman took the
+        // WSL bridge and crashed. A test process can't fake either marker, so
+        // assert the list and the probe that walks it separately.
         assert!(CONTAINER_MARKERS.contains(&"/run/.containerenv"));
         assert!(CONTAINER_MARKERS.contains(&"/.dockerenv"));
+        // `/` always exists, so a probe that stops at the first entry fails here.
+        assert!(any_marker_exists(&["/nx-no-such-marker", "/"]));
+        assert!(!any_marker_exists(&["/nx-no-such-marker"]));
+    }
+
+    #[test]
+    fn the_windows_bridge_is_gated_on_wsl_outside_a_container() {
+        // The whole of #34502 is this predicate: Podman-on-WSL is both, and must
+        // not take the bridge.
+        assert!(use_windows_bridge(true, false));
+        assert!(!use_windows_bridge(true, true));
+        assert!(!use_windows_bridge(false, false));
+        assert!(!use_windows_bridge(false, true));
     }
 
     #[test]
@@ -460,10 +526,17 @@ mod tests {
         assert!(!in_container.iter().any(|p| p.contains("powershell")));
         assert_eq!(in_container[0], "xdg-open");
 
-        // On a real WSL host the bridge leads, but the Linux openers still
-        // follow it — interop can be off, and that must not dead-end.
+        // On a real WSL host the bridge leads — bare name first, then the default
+        // automount path for hosts that keep powershell.exe off PATH. The `.exe`
+        // is load-bearing: binfmt interop only resolves Windows binaries with it.
         let on_wsl = programs_of(&candidates_for(true, "", "https://nx.dev"));
-        assert!(on_wsl[0].contains("powershell"));
+        assert_eq!(on_wsl[0], "powershell.exe");
+        assert_eq!(
+            on_wsl[1],
+            "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+        );
+        // The Linux openers still follow — interop can be off, and that must not
+        // dead-end.
         assert!(on_wsl.iter().any(|p| p == "xdg-open"));
     }
 
