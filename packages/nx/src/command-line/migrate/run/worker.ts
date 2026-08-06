@@ -568,10 +568,7 @@ async function runRecorded(
   // step may match; a same-id step from an older round must not.
   const latest = latestRound(state);
   const step = state.steps.find(
-    (s) =>
-      s.kind === 'migration' &&
-      s.migrationId === migrationId &&
-      s.roundIndex === latest?.index
+    (s) => s.migrationId === migrationId && s.roundIndex === latest?.index
   );
   if (!step) {
     throw new Error(
@@ -825,11 +822,7 @@ async function commitStepChanges(
   } catch (commitError) {
     // A post-migration install failure leaves the diff uncommitted; record the
     // debt so only a landed entry can cover it.
-    appendCommit(dir, {
-      kind: 'failed',
-      stepIds: [step.id],
-      issueIds: [],
-    });
+    appendCommit(dir, { kind: 'failed', stepIds: [step.id] });
     throw commitError;
   }
   if (result.status === 'failed') {

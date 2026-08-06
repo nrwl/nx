@@ -186,7 +186,6 @@ const migStep = (
 ): MigrateStep => ({
   id,
   roundIndex,
-  kind: 'migration',
   migrationId,
   status,
   attempt: 1,
@@ -337,7 +336,6 @@ describe('runSingleMigrationWorker', () => {
       runId,
       createdAt: '2026-01-01T00:00:00.000Z',
       nxVersion: '1.0.0',
-      mode: 'orchestrated',
       status: 'active',
       createCommits: opts.createCommits ?? false,
       commitPrefix: 'chore: [nx migration] ',
@@ -348,7 +346,6 @@ describe('runSingleMigrationWorker', () => {
         planSnapshot: `plan-${r.index}.json`,
       })),
       steps: opts.steps,
-      issues: [],
       commits: opts.commits ?? [],
       analytics: { startEmitted: false, completeEmitted: false },
     };
@@ -801,13 +798,11 @@ describe('runSingleMigrationWorker', () => {
         runId: 'active-run',
         createdAt: '2026-01-01T00:00:00.000Z',
         nxVersion: '1.0.0',
-        mode: 'orchestrated',
         status: 'active',
         createCommits: false,
         commitPrefix: 'chore: [nx migration] ',
         rounds: [],
         steps: [],
-        issues: [],
         commits: [],
         analytics: { startEmitted: false, completeEmitted: false },
       });
@@ -992,13 +987,11 @@ describe('runSingleMigrationWorker', () => {
           runId: 'newer-run',
           createdAt: '2026-01-01T00:00:00.000Z',
           nxVersion: '999.0.0',
-          mode: 'orchestrated',
           status: 'active',
           createCommits: false,
           commitPrefix: '',
           rounds: [],
           steps: [],
-          issues: [],
           commits: [],
           analytics: { startEmitted: false, completeEmitted: false },
         })
@@ -1095,9 +1088,7 @@ describe('runSingleMigrationWorker', () => {
       // Without the marker a retry would re-run the generator against a tree
       // that already holds its changes.
       expect(state.steps[0].generatorCompleted).toBe(true);
-      expect(state.commits).toEqual([
-        { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
-      ]);
+      expect(state.commits).toEqual([{ kind: 'failed', stepIds: ['step-1'] }]);
     });
 
     it('finishes a retried generator step with the commit alone, covering the earlier debt', async () => {
@@ -1111,7 +1102,7 @@ describe('runSingleMigrationWorker', () => {
         ],
         migrations: [genMig('@nx/js', 'gen')],
         createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'], issueIds: [] }],
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
       });
 
       await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
@@ -1123,7 +1114,6 @@ describe('runSingleMigrationWorker', () => {
         kind: 'landed',
         sha: 'sha-1',
         stepIds: ['step-1'],
-        issueIds: [],
       });
     });
 
@@ -1449,7 +1439,7 @@ describe('runSingleMigrationWorker', () => {
         ],
         migrations: [genMig('@nx/js', 'gen')],
         createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'], issueIds: [] }],
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
       });
 
       await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
@@ -1463,7 +1453,6 @@ describe('runSingleMigrationWorker', () => {
         kind: 'landed',
         sha: 'newsha',
         stepIds: ['step-2', 'step-1'],
-        issueIds: [],
       });
     });
 
@@ -1490,7 +1479,6 @@ describe('runSingleMigrationWorker', () => {
       expect(state.commits).toContainEqual({
         kind: 'failed',
         stepIds: ['step-1'],
-        issueIds: [],
       });
       expect(state.steps[0].status).toBe('failed');
     });
@@ -1547,7 +1535,6 @@ describe('runSingleMigrationWorker', () => {
       expect(state.commits).toContainEqual({
         kind: 'failed',
         stepIds: ['step-1'],
-        issueIds: [],
       });
       expect(output.warn).toHaveBeenCalled();
       // A failed commit is not a failed step: the generator still succeeded.

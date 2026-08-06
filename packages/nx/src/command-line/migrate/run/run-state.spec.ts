@@ -29,13 +29,11 @@ function buildState(overrides: Partial<MigrateRunState> = {}): MigrateRunState {
     runId: 'run-1',
     createdAt: '2026-01-01T00:00:00.000Z',
     nxVersion: '99.9.9',
-    mode: 'orchestrated',
     status: 'active',
     createCommits: true,
     commitPrefix: 'chore: [nx migration] ',
     rounds: [],
     steps: [],
-    issues: [],
     commits: [],
     analytics: { startEmitted: false, completeEmitted: false },
     ...overrides,
@@ -180,7 +178,7 @@ describe('run-state', () => {
         join(dir, 'run.json'),
         JSON.stringify(
           buildState({
-            commits: [{ kind: 'bogus', stepIds: [], issueIds: [] }] as never,
+            commits: [{ kind: 'bogus', stepIds: [] }] as never,
           })
         )
       );
@@ -193,7 +191,6 @@ describe('run-state', () => {
       const validStep = {
         id: 'step-1',
         roundIndex: 0,
-        kind: 'migration',
         migrationId: '@nx/js:a',
         status: 'pending',
         attempt: 1,
@@ -264,7 +261,6 @@ describe('run-state', () => {
               {
                 id: 'step-1',
                 roundIndex: 0,
-                kind: 'migration',
                 migrationId: '@nx/js:a',
                 status: 'running',
                 attempt: 1,
@@ -278,9 +274,7 @@ describe('run-state', () => {
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
     });
 
-    it('refuses a non-migration step awaiting a prompt outcome', () => {
-      // The dispense for that status addresses the step's migration id, which
-      // a structural step does not have.
+    it('refuses a step without a migrationId, the documented format invariant', () => {
       const dir = join(root, 'run-1');
       mkdirSync(dir, { recursive: true });
       writeFileSync(
@@ -291,31 +285,6 @@ describe('run-state', () => {
               {
                 id: 'step-1',
                 roundIndex: 0,
-                kind: 'install',
-                status: 'awaiting-prompt-outcome',
-                attempt: 1,
-                dispenseCount: 1,
-              },
-            ] as never,
-          })
-        )
-      );
-
-      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
-    });
-
-    it('refuses a migration step without a migrationId, the documented format invariant', () => {
-      const dir = join(root, 'run-1');
-      mkdirSync(dir, { recursive: true });
-      writeFileSync(
-        join(dir, 'run.json'),
-        JSON.stringify(
-          buildState({
-            steps: [
-              {
-                id: 'step-1',
-                roundIndex: 0,
-                kind: 'migration',
                 status: 'pending',
                 attempt: 1,
                 dispenseCount: 0,
@@ -337,7 +306,6 @@ describe('run-state', () => {
           {
             id: 'step-1',
             roundIndex: 0,
-            kind: 'migration',
             migrationId: '@nx/js:a',
             status: 'succeeded',
             attempt: 2,
@@ -353,18 +321,7 @@ describe('run-state', () => {
             generatorCompleted: true,
           },
         ],
-        issues: [
-          {
-            id: 'issue-1',
-            description: 'a problem',
-            scope: {},
-            recordedBy: 'step-1',
-            disposition: 'recorded',
-          },
-        ],
-        commits: [
-          { kind: 'landed', sha: 'abc', stepIds: ['step-1'], issueIds: [] },
-        ],
+        commits: [{ kind: 'landed', sha: 'abc', stepIds: ['step-1'] }],
         checkpointFailed: true,
         skipInstall: true,
       });

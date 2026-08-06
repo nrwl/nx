@@ -40,7 +40,6 @@ function runState(step: Partial<MigrateStep> = {}): MigrateRunState {
     runId: 'run-1',
     createdAt: '2026-01-01T00:00:00.000Z',
     nxVersion: '99.9.9',
-    mode: 'orchestrated',
     status: 'active',
     createCommits: true,
     commitPrefix: 'chore: [nx migration] ',
@@ -49,7 +48,6 @@ function runState(step: Partial<MigrateStep> = {}): MigrateRunState {
       {
         id: 'step-1',
         roundIndex: 0,
-        kind: 'migration',
         migrationId: '@nx/js:gen',
         status: 'dispensed',
         attempt: 1,
@@ -57,7 +55,6 @@ function runState(step: Partial<MigrateStep> = {}): MigrateRunState {
         ...step,
       },
     ],
-    issues: [],
     commits: [],
     analytics: { startEmitted: false, completeEmitted: false },
   };

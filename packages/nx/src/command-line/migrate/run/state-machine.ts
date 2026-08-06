@@ -237,10 +237,7 @@ function rearm(
   return {
     id: step.id,
     roundIndex: step.roundIndex,
-    kind: step.kind,
-    ...(step.migrationId !== undefined
-      ? { migrationId: step.migrationId }
-      : {}),
+    migrationId: step.migrationId,
     status: 'pending',
     attempt: step.attempt + 1,
     dispenseCount: step.dispenseCount,
@@ -364,9 +361,9 @@ export function splitMigrationId(id: string): {
     : { package: id.slice(0, colon), name: id.slice(colon + 1) };
 }
 
-// Maps absorbed step ids to `{package, name}` for the commit body; steps
-// without a migrationId (or without a package in it) can't be attributed
-// there.
+// Maps absorbed step ids to `{package, name}` for the commit body; an id with
+// no matching step, or one whose migration id carries no package, can't be
+// attributed there.
 export function stepsToPendingMigrations(
   state: MigrateRunState,
   stepIds: string[]
@@ -399,10 +396,9 @@ export function commitResultToLedgerEntry(
         kind: 'landed',
         ...(result.sha ? { sha: result.sha } : {}),
         stepIds: [stepId, ...absorbedStepIds],
-        issueIds: [],
       };
     case 'failed':
-      return { kind: 'failed', stepIds: [stepId], issueIds: [] };
+      return { kind: 'failed', stepIds: [stepId] };
     case 'no-changes':
     case 'disabled':
       return null;

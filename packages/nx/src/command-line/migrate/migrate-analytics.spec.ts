@@ -459,16 +459,14 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('reports the dispense action, step kind and attempt', () => {
+    it('reports the dispense action and attempt', () => {
       const a = load();
       a.reportMigrateOrchestratorDispense({
         action: 'next-step',
-        stepKind: 'migration',
         attempt: 2,
       });
       expect(paramsFor('migrate_orchestrator_dispense')).toEqual({
         promptChoice: 'next-step',
-        migrationName: 'migration',
         migrationCount: 2,
       });
     });

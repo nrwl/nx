@@ -261,7 +261,6 @@ export async function runOrchestratorInit(
     runId,
     createdAt: nowIso(),
     nxVersion,
-    mode: 'orchestrated',
     status: 'active',
     createCommits,
     commitPrefix,
@@ -274,7 +273,6 @@ export async function runOrchestratorInit(
       },
     ],
     steps: buildSteps(sorted),
-    issues: [],
     commits: checkpoint ? [checkpoint] : [],
     ...(checkpointFailed ? { checkpointFailed: true } : {}),
     analytics: { startEmitted: false, completeEmitted: false },
@@ -373,11 +371,7 @@ function ensureCheckpoint(
   state: MigrateRunState
 ): MigrateRunState {
   if (!state.createCommits || !state.checkpointFailed) return state;
-  if (
-    state.steps.some((s) => s.kind === 'migration' && s.status !== 'pending')
-  ) {
-    return state;
-  }
+  if (state.steps.some((s) => s.status !== 'pending')) return state;
   // The checkpoint commit is a git side effect, so it runs before the lock; the
   // ledger append and flag clear then apply to the fresh on-disk state.
   const checkpoint = checkpointEntry(root, state.commitPrefix);
@@ -392,7 +386,7 @@ function ensureCheckpoint(
     // can leave that commit unledgered, the documented crash-window shape.
     if (
       !fresh.checkpointFailed ||
-      fresh.steps.some((s) => s.kind === 'migration' && s.status !== 'pending')
+      fresh.steps.some((s) => s.status !== 'pending')
     ) {
       return null;
     }
@@ -418,7 +412,7 @@ function checkpointEntry(
   commitCheckpointBeforeMigrations(root, commitPrefix);
   const after = getLatestCommitSha(root);
   if (after && after !== before) {
-    return { kind: 'checkpoint', sha: after, stepIds: [], issueIds: [] };
+    return { kind: 'checkpoint', sha: after, stepIds: [] };
   }
   return null;
 }
@@ -446,8 +440,7 @@ function finishInit(
     });
     if (claimed) {
       reportMigrateOrchestratorInit({
-        migrationCount: current.steps.filter((s) => s.kind === 'migration')
-          .length,
+        migrationCount: current.steps.length,
         createCommits: current.createCommits,
       });
     }
@@ -497,21 +490,14 @@ export async function runOrchestratorReconcile(
     // before the lock, then the transition and its ledger entry land in one
     // fresh-state write so a crash can't leave the step succeeded unrecorded.
     const { entry, installFailed }: StepSideEffects =
-      stepAction === 'adopt' &&
-      state.createCommits &&
-      target.kind === 'migration' &&
-      target.migrationId
+      stepAction === 'adopt' && state.createCommits
         ? await commitForStep(root, dir, state, target)
         : { entry: null, installFailed: false };
     // A rearm starts a fresh attempt; drop the stale handoff before the rearm
     // is persisted so a crash in between can't refold the old outcome into the
     // new attempt. Losing the handoff without the rearm is safe: the step is
     // still failed/died and the agent re-issues the action.
-    if (
-      (stepAction === 'retry' || stepAction === 'retry-clean') &&
-      target.kind === 'migration' &&
-      target.migrationId
-    ) {
+    if (stepAction === 'retry' || stepAction === 'retry-clean') {
       removeHandoff(dir, target.migrationId);
     }
     // Re-validate the transition against the fresh disk state: if a concurrent
@@ -544,35 +530,14 @@ export async function runOrchestratorReconcile(
 }
 
 function buildSteps(sortedMigrations: PlannedMigration[]): MigrateStep[] {
-  const steps: MigrateStep[] = [];
-  let n = 0;
-  const nextId = () => `step-${++n}`;
-  steps.push(structuralStep(nextId(), 'peer-compat'));
-  steps.push(structuralStep(nextId(), 'install'));
-  for (const m of sortedMigrations) {
-    steps.push({
-      id: nextId(),
-      roundIndex: 0,
-      kind: 'migration',
-      migrationId: `${m.package}:${m.name}`,
-      status: 'pending',
-      attempt: 1,
-      dispenseCount: 0,
-    });
-  }
-  steps.push(structuralStep(nextId(), 'final-validation'));
-  return steps;
-}
-
-function structuralStep(id: string, kind: MigrateStep['kind']): MigrateStep {
-  return {
-    id,
+  return sortedMigrations.map((m, index) => ({
+    id: `step-${index + 1}`,
     roundIndex: 0,
-    kind,
+    migrationId: `${m.package}:${m.name}`,
     status: 'pending',
     attempt: 1,
     dispenseCount: 0,
-  };
+  }));
 }
 
 // --- reconcile phases -------------------------------------------------------
@@ -589,7 +554,6 @@ async function foldHandoffs(
   for (const { id } of state.steps) {
     const step = current.steps.find((s) => s.id === id);
     if (step.status !== 'awaiting-prompt-outcome') continue;
-    if (step.kind !== 'migration' || !step.migrationId) continue;
     const result = readHandoffWithReason(
       handoffPath(dir, splitMigrationId(step.migrationId))
     );
@@ -683,7 +647,7 @@ async function foldLedgerEntry(
     promptOutcome.status !== 'completed' &&
     state.createCommits &&
     getWorkingTreeStatus(root) !== 'clean'
-      ? { kind: 'failed' as const, stepIds: [step.id], issueIds: [] }
+      ? { kind: 'failed' as const, stepIds: [step.id] }
       : null;
   return { entry, installFailed };
 }
@@ -708,9 +672,7 @@ function detectDeaths(dir: string, state: MigrateRunState): MigrateRunState {
   // `current`, so an earlier iteration's write is visible to the next.
   for (const { id } of state.steps) {
     const step = current.steps.find((s) => s.id === id);
-    // Only migration steps carry a real worker pid; structural placeholders are
-    // driven synchronously and never left running across invocations.
-    if (step.kind !== 'migration' || step.status !== 'running') continue;
+    if (step.status !== 'running') continue;
     if (step.pid === undefined || isPidAlive(step.pid)) continue;
     // markDied re-validates against fresh disk state, on the attempt and pid
     // this observation was made for: if the worker finished between the
@@ -830,7 +792,7 @@ async function commitForStep(
     // dependencies are still missing.
     warnCommitFailed(name, e);
     return {
-      entry: { kind: 'failed', stepIds: [step.id], issueIds: [] },
+      entry: { kind: 'failed', stepIds: [step.id] },
       installFailed: true,
     };
   }
@@ -851,15 +813,14 @@ function advanceAndDispense(
   runId: string,
   state: MigrateRunState
 ): void {
-  const current = autoSucceedPlaceholders(dir, state);
-  const step = firstActionableStep(current);
+  const step = firstActionableStep(state);
   if (!step) {
-    completeRun(root, dir, runId, current);
+    completeRun(root, dir, runId, state);
     return;
   }
   switch (step.status) {
     case 'pending':
-      dispenseNextStep(root, dir, runId, current, step);
+      dispenseNextStep(root, dir, runId, state, step);
       break;
     case 'dispensed':
       // Re-entry before the worker advanced the step; re-emit its command.
@@ -869,7 +830,7 @@ function advanceAndDispense(
       emitRetryFailed(root, runId, step);
       break;
     case 'died':
-      emitDied(root, runId, current, step);
+      emitDied(root, runId, state, step);
       break;
     case 'running':
       emitStillRunning(root, runId, step);
@@ -898,62 +859,6 @@ function advanceAndDispense(
 
 function firstActionableStep(state: MigrateRunState): MigrateStep | undefined {
   return state.steps.find((s) => !TERMINAL_STATUSES.has(s.status));
-}
-
-// peer-compat / install / final-validation are structural placeholders: they
-// hold their position in the step order but have no work behind them yet, so
-// each is driven to success with no child process.
-function autoSucceedPlaceholders(
-  dir: string,
-  state: MigrateRunState
-): MigrateRunState {
-  let current = state;
-  while (true) {
-    const step = firstActionableStep(current);
-    if (!step || step.kind === 'migration') return current;
-    current = drivePlaceholderToSuccess(dir, step.id);
-  }
-}
-
-// Drives the placeholder from wherever the fresh on-disk state has it to
-// succeeded, in one atomic write. Working from the fresh state under the lock
-// makes the drive idempotent under concurrency: when a concurrent init or
-// reconcile already advanced or completed the step, the remaining transitions
-// no-op instead of failing as duplicates. The transitions are pure state
-// churn with no side effects in between, so the batched write loses nothing
-// on a crash: the next entry re-drives from wherever the last write stopped.
-function drivePlaceholderToSuccess(
-  dir: string,
-  stepId: string
-): MigrateRunState {
-  return updateRunState(dir, (fresh) => {
-    let current = fresh;
-    const at = () => current.steps.find((s) => s.id === stepId);
-    if (at().status === 'pending') {
-      current = applyEventOrThrow(current, { type: 'dispense', stepId });
-    }
-    if (at().status === 'dispensed') {
-      current = applyEventOrThrow(current, {
-        type: 'start',
-        stepId,
-        pid: process.pid,
-        startedAt: nowIso(),
-      });
-    }
-    if (at().status === 'running') {
-      current = applyEventOrThrow(current, {
-        type: 'succeed',
-        stepId,
-        finishedAt: nowIso(),
-      });
-    }
-    if (at().status !== 'succeeded') {
-      throw new Error(
-        `Orchestrator could not auto-complete the ${at().kind} step '${stepId}'.`
-      );
-    }
-    return current === fresh ? null : current;
-  });
 }
 
 function dispenseNextStep(
@@ -1009,7 +914,7 @@ function emitNextStep(root: string, runId: string, step: MigrateStep): void {
 }
 
 function emitRetryFailed(root: string, runId: string, step: MigrateStep): void {
-  const migrationId = step.migrationId ?? step.id;
+  const migrationId = step.migrationId;
   const summary = step.outcome?.summary;
   emit(runId, step, 'retry-failed', {
     then: reconcileCommand(root, runId, 'retry'),
@@ -1095,7 +1000,7 @@ function emitDied(
   state: MigrateRunState,
   step: MigrateStep
 ): void {
-  const migrationId = step.migrationId ?? step.id;
+  const migrationId = step.migrationId;
   const ref = step.gitRefBefore;
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
@@ -1171,7 +1076,7 @@ function emitStillRunning(
   runId: string,
   step: MigrateStep
 ): void {
-  const migrationId = step.migrationId ?? step.id;
+  const migrationId = step.migrationId;
   const ageMs = step.startedAt ? Date.now() - Date.parse(step.startedAt) : 0;
   const lines = [
     `The worker for ${migrationId} (pid ${step.pid}) is still running. Wait for it to finish, then run the "then" command.`,
@@ -1271,11 +1176,7 @@ function emitError(root: string, runId: string, reason: string): void {
     'error',
     jsonPayload({ then: reconcileCommand(root, runId), instructions: reason })
   );
-  reportMigrateOrchestratorDispense({
-    action: 'error',
-    stepKind: 'none',
-    attempt: 0,
-  });
+  reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
 }
 
 function completeRun(
@@ -1285,11 +1186,10 @@ function completeRun(
   state: MigrateRunState
 ): void {
   let current = state;
-  const migrationSteps = current.steps.filter((s) => s.kind === 'migration');
-  const completed = migrationSteps.filter(
+  const completed = current.steps.filter(
     (s) => s.status === 'succeeded'
   ).length;
-  const skipped = migrationSteps.filter((s) => s.status === 'skipped').length;
+  const skipped = current.steps.filter((s) => s.status === 'skipped').length;
   const dispenseCount = current.steps.reduce((n, s) => n + s.dispenseCount, 0);
   // The crash-refold window can strand a failed ledger entry whose diff was in
   // fact absorbed; suppress the warning only on a verified-clean tree. A dirty
@@ -1333,7 +1233,7 @@ function completeRun(
   const installLine =
     uninstalled.length > 0
       ? `The dependency changes made by ${uninstalled
-          .map((s) => s.migrationId ?? s.id)
+          .map((s) => s.migrationId)
           .join(', ')} were not installed; run \`${pmInstallCommand(
           root
         )}\` before using the workspace.`
@@ -1374,11 +1274,7 @@ function emit(
     bodyLines: payload.instructions ? payload.instructions.split('\n') : [],
   });
   writeBlock(runId, step.id, action, jsonPayload(payload));
-  reportMigrateOrchestratorDispense({
-    action,
-    stepKind: step.kind,
-    attempt: step.attempt,
-  });
+  reportMigrateOrchestratorDispense({ action, attempt: step.attempt });
 }
 
 // Mirrors print-dropped-agent-context.ts: a raw `<` in a payload value could
