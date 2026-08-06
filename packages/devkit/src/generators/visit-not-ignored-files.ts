@@ -36,6 +36,15 @@ export function visitNotIgnoredFiles(
   visitDirectory(tree, start, visitor, isIgnored);
 }
 
+/**
+ * Callers must have cleared `dirPath` already - both call sites do.
+ *
+ * Not descending into an ignored directory is what makes the answers match git,
+ * not just what makes them fast: git refuses to re-include a file inside an
+ * excluded directory, and `isIgnoredFile` alone does not implement that rule
+ * (see `isIgnoredByChain`). Flattening this into a per-file filter would start
+ * visiting files git ignores.
+ */
 function visitDirectory(
   tree: Tree,
   dirPath: string,
