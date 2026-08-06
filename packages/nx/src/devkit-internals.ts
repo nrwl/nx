@@ -91,6 +91,7 @@ export {
 } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export { getGraphTimeDotEnvForTask } from './tasks-runner/task-env';
+export { getEnvPathsForTask } from './tasks-runner/task-env-paths';
 export { isCI } from './utils/is-ci';
 export {
   isUsingPrettierInTree,
