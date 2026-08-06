@@ -39,8 +39,7 @@
     "linter": {
       "description": "Linter to be used for the E2E project",
       "type": "string",
-      "enum": ["eslint", "oxlint", "none"],
-      "default": "eslint"
+      "enum": ["eslint", "oxlint", "none"]
     },
     "isNest": {
       "description": "Is the E2E server project nest",

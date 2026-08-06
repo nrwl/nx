@@ -9,7 +9,7 @@ import {
 } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
@@ -84,6 +84,10 @@ export async function normalizeOptions<T extends Schema = Schema>(
   normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
   normalized.devServerPort ??= options.port ?? findFreePort(host);
   normalized.minimal = normalized.minimal ?? false;
+  // Programmatic callers such as the host and remote generators leave this
+  // unset; the guards downstream read an unresolved `undefined` as "not eslint"
+  // and would half-configure the project.
+  normalized.linter ??= detectLinter(host);
 
   return normalized;
 }
