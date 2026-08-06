@@ -13,30 +13,11 @@ export function getIgnoreObject(
   return ig;
 }
 
-/**
- * How the ignore files *within one directory* combine. The two consumers answer
- * to different authorities and genuinely need different rules:
- *
- * - `separate` is prettier's: one matcher per file, any of them excluding wins,
- *   and a negation counts only if none excluded. `createIsIgnoredFunction`
- *   builds an ignorer per `--ignore-path` and ORs them, so a `!x` in
- *   `.prettierignore` cannot re-include an `x` that `.gitignore` excluded.
- * - `merged` is git's and the native walker's: all files in one matcher, so
- *   `.nxignore`'s `!x` removes `.gitignore`'s exclusion of `x` outright. It has
- *   to be a merge rather than a precedence check between separate matchers,
- *   because a lone `!x` in its own matcher reports an opinion on `x/` but *none*
- *   on `x/a.ts` (measured), so the exclusion would still reach the children.
- *   Note the merge only removes the exclusion within that one directory - a
- *   negation in a nested file still loses to an ancestor's exclusion, matching
- *   what the helper this replaced did.
- */
-export type IgnoreCombineMode = 'separate' | 'merged';
-
 /** One directory's ignore files, and the directory its patterns are rooted at. */
 export type ScopedIgnoreMatcher = {
   /** Workspace-relative POSIX directory, `''` for the workspace root. */
   dir: string;
-  /** How they relate is decided at build time - see `IgnoreCombineMode`. */
+  /** How they relate is decided at build time - see `merge`. */
   matchers: ReturnType<typeof ignore>[];
 };
 
@@ -58,14 +39,29 @@ export type ScopedIgnoreMatcher = {
  * for a caller with no tree - and returns an empty string or null when there is
  * no such file. Paths handed to it are workspace-relative POSIX.
  *
- * `filenames` order matters when `combine` is `merged`: they go into one matcher
- * in order and the last matching pattern decides, so list them
- * lowest-authority first.
+ * `merge` decides how the files *within one directory* relate, and the two
+ * consumers genuinely need different rules:
+ *
+ * - `false` is prettier's: one matcher per file, any of them excluding wins, and
+ *   a negation counts only if none excluded. `createIsIgnoredFunction` builds an
+ *   ignorer per `--ignore-path` and ORs them, so a `!x` in `.prettierignore`
+ *   cannot re-include an `x` that `.gitignore` excluded.
+ * - `true` is git's and the native walker's: all files in one matcher, so
+ *   `.nxignore`'s `!x` removes `.gitignore`'s exclusion of `x` outright. It has
+ *   to be a merge rather than a precedence check between separate matchers,
+ *   because a lone `!x` in its own matcher reports an opinion on `x/` but *none*
+ *   on `x/a.ts` (measured), so the exclusion would still reach the children.
+ *   The merge only removes the exclusion within that one directory - a negation
+ *   in a nested file still loses to an ancestor's exclusion.
+ *
+ * When `merge` is true, `filenames` order matters: they go into one matcher in
+ * order and the last matching pattern decides, so list them lowest-authority
+ * first.
  */
 export function createIgnoreChainResolver(
   read: (path: string) => string | null | undefined,
   filenames: string[],
-  combine: IgnoreCombineMode
+  merge: boolean
 ): (dir: string) => ScopedIgnoreMatcher[] {
   const cache = new Map<string, ScopedIgnoreMatcher[]>();
 
@@ -78,12 +74,11 @@ export function createIgnoreChainResolver(
     const contents = filenames
       .map((name) => read(dir ? `${dir}/${name}` : name))
       .filter((c): c is string => !!c);
-    const matchers =
-      combine === 'merged'
-        ? contents.length > 0
-          ? [contents.reduce((m, c) => m.add(c), ignore())]
-          : []
-        : contents.map((c) => ignore().add(c));
+    const matchers = merge
+      ? contents.length > 0
+        ? [contents.reduce((m, c) => m.add(c), ignore())]
+        : []
+      : contents.map((c) => ignore().add(c));
 
     const inherited = dir === '' ? [] : resolve(posixDirname(dir));
     const chain =
@@ -105,12 +100,12 @@ export function createIgnoreChainResolver(
  *
  * Nearest directory with an *opinion* wins, not the first match: a nested
  * `!keep.log` must override the root's `*.log`, which is git's rule for files.
- * A nested negation of a *directory* does not reach its children - see
- * `IgnoreCombineMode`.
+ * A nested negation of a *directory* does not reach its children - see the
+ * `merge` note on `createIgnoreChainResolver`.
  *
- * How the files of one directory combine is decided when the chain is built -
- * see `IgnoreCombineMode`. Here they are simply the entry's matchers: any one
- * excluding wins, and a negation counts only if none excluded.
+ * How the files of one directory relate is decided when the chain is built - see
+ * that same note. Here they are simply the entry's matchers: any one excluding
+ * wins, and a negation counts only if none excluded.
  *
  * `filePath` is workspace-relative POSIX and must sit under every `dir` in the
  * chain - which holds when the chain came from that file's own directory.
@@ -156,65 +151,76 @@ export function isAlwaysIgnored(path: string): boolean {
 
 /**
  * Which files to read, whether they cascade, and how the files of one directory
- * relate are all decided by one fact - the tool this has to agree with - so the
- * caller states that and nothing else. As separate options the two consumers'
- * values could be mixed, and picking one wrong is a silent behaviour change
- * across every caller.
+ * relate are all decided by one fact - the tool the decision has to agree with -
+ * so they are passed together, per tool. The two constructors below are the only
+ * way in and neither takes any of them as an argument, so one tool's value for
+ * one axis cannot reach another's.
  */
-const AUTHORITIES = {
-  // git, and the native walker: ignore files cascade, and `.nxignore` outranks
-  // `.gitignore` (`walker.rs` registers it with `add_custom_ignore_filename`),
-  // which a merge with `.nxignore` last reproduces.
-  git: {
-    filenames: ['.gitignore', '.nxignore'],
-    cascade: true,
-    combine: 'merged',
-  },
-  // prettier: resolves ignore files from the workspace root only, and ORs one
-  // ignorer per `--ignore-path` rather than merging them (both measured), which
-  // is the CLI `nx format:check` shells out to. Not an exact match for that
-  // command: `isAlwaysIgnored` below also skips the nx and yarn caches, and
-  // `format.ts` filters its own patterns through `.nxignore`, which this does
-  // not read.
-  prettier: {
-    filenames: ['.gitignore', '.prettierignore'],
-    cascade: false,
-    combine: 'separate',
-  },
-} satisfies Record<
-  string,
-  { filenames: string[]; cascade: boolean; combine: IgnoreCombineMode }
->;
-
-/**
- * The tool an ignore decision has to agree with. `git` also covers the native
- * walker, which is where `.nxignore` comes from - git itself does not read it.
- */
-export type IgnoreAuthority = keyof typeof AUTHORITIES;
+type IgnoreAuthority = {
+  filenames: string[];
+  cascade: boolean;
+  merge: boolean;
+};
 
 /**
  * The chain bound to a tree, as predicates over workspace-relative POSIX paths.
  *
- * Reads from the tree rather than disk because a generator can create or amend
- * an ignore file in the same run, which would leave the on-disk copy stale.
- *
  * Files and directories are asked separately because the answers differ: a
  * pattern is only directory-only if it ends in a slash, and `ignore` will not
  * match `dist/` against the path `dist`. Callers must not have to know that, so
- * the slash is appended here and never leaves this module.
+ * the slash is appended inside and never leaves this module.
  */
-export function createTreeIgnoreChecker(
-  tree: Tree,
-  authority: IgnoreAuthority
-): {
+export type TreeIgnoreChecker = {
   isIgnoredFile: (path: string) => boolean;
   isIgnoredDirectory: (path: string) => boolean;
-} {
-  const { filenames, cascade, combine } = AUTHORITIES[authority];
+};
+
+/**
+ * What git ignores, which is also what the native walker ignores.
+ *
+ * `.nxignore` outranks `.gitignore` - `walker.rs` registers it with
+ * `add_custom_ignore_filename` - which a merge with `.nxignore` last reproduces.
+ * git itself does not read it.
+ *
+ * Reads from the tree rather than disk because a generator can create or amend
+ * an ignore file in the same run, which would leave the on-disk copy stale.
+ */
+export function createGitIgnoreChecker(tree: Tree): TreeIgnoreChecker {
+  return createTreeIgnoreChecker(tree, {
+    filenames: ['.gitignore', '.nxignore'],
+    cascade: true,
+    merge: true,
+  });
+}
+
+/**
+ * What prettier ignores: the workspace root only, and one ignorer per
+ * `--ignore-path` ORed rather than merged (both measured), so a `!` in
+ * `.prettierignore` cannot re-include what `.gitignore` excluded. That is the
+ * CLI `nx format:check` shells out to.
+ *
+ * Not an exact match for that command: `isAlwaysIgnored` is wider than
+ * prettier's built-ins, and `format.ts` filters its own patterns through
+ * `.nxignore`, which this does not read.
+ *
+ * Reads from the tree rather than disk, as above.
+ */
+export function createPrettierIgnoreChecker(tree: Tree): TreeIgnoreChecker {
+  return createTreeIgnoreChecker(tree, {
+    filenames: ['.gitignore', '.prettierignore'],
+    cascade: false,
+    merge: false,
+  });
+}
+
+function createTreeIgnoreChecker(
+  tree: Tree,
+  { filenames, cascade, merge }: IgnoreAuthority
+): TreeIgnoreChecker {
   const resolve = createIgnoreChainResolver(
     (path) => tree.read(path, 'utf-8'),
     filenames,
-    combine
+    merge
   );
 
   // `probe` may carry a trailing slash; `path` never does. The chain is keyed by

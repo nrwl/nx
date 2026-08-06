@@ -1,5 +1,8 @@
 import type { Tree } from 'nx/src/devkit-exports';
-import { createTreeIgnoreChecker } from 'nx/src/devkit-internals';
+import {
+  createGitIgnoreChecker,
+  type TreeIgnoreChecker,
+} from 'nx/src/devkit-internals';
 import { join, relative, sep } from 'path';
 
 /**
@@ -18,7 +21,7 @@ export function visitNotIgnoredFiles(
   visitor: (path: string) => void
 ): void {
   // Built once for the whole traversal.
-  const isIgnored = createTreeIgnoreChecker(tree, 'git');
+  const isIgnored = createGitIgnoreChecker(tree);
 
   visitDirectory(
     tree,
@@ -28,13 +31,11 @@ export function visitNotIgnoredFiles(
   );
 }
 
-type IgnoreChecker = ReturnType<typeof createTreeIgnoreChecker>;
-
 function visitDirectory(
   tree: Tree,
   dirPath: string,
   visitor: (path: string) => void,
-  isIgnored: IgnoreChecker
+  isIgnored: TreeIgnoreChecker
 ): void {
   if (dirPath !== '' && isIgnored.isIgnoredDirectory(dirPath)) {
     return;

@@ -1,6 +1,6 @@
 import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
 import {
-  createTreeIgnoreChecker,
+  createPrettierIgnoreChecker,
   isUsingPrettierInTree,
   sortObjectByKeys,
 } from 'nx/src/devkit-internals';
@@ -74,7 +74,7 @@ export async function formatFiles(
   // own built-in `node_modules` skip: with no `ignorePath` it never reads the
   // workspace's ignore files, so `ignored` is false for everything else
   // (measured).
-  const { isIgnoredFile } = createTreeIgnoreChecker(tree, 'prettier');
+  const { isIgnoredFile } = createPrettierIgnoreChecker(tree);
   const files = new Set(
     tree
       .listChanges()
