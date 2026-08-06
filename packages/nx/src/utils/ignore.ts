@@ -107,8 +107,17 @@ export function createIgnoreChainResolver(
  * that same note. Here they are simply the entry's matchers: any one excluding
  * wins, and a negation counts only if none excluded.
  *
- * `filePath` is workspace-relative POSIX and must sit under every `dir` in the
- * chain - which holds when the chain came from that file's own directory.
+ * Two preconditions, both satisfied by a pruning walk and neither enforced:
+ *
+ * - `filePath` is workspace-relative POSIX and must sit under every `dir` in the
+ *   chain, which holds when the chain came from that file's own directory.
+ * - No ancestor directory of `filePath` may itself be ignored. git refuses to
+ *   re-include a file inside an excluded directory, and this does not implement
+ *   that rule: asked directly about `dist/keep.ts` with a root `dist/` and a
+ *   nested `dist/.gitignore` holding `!keep.ts`, it answers "not ignored" where
+ *   git says ignored (measured). `visitNotIgnoredFiles` never asks, because it
+ *   prunes `dist/` before descending - which is what makes its answers match
+ *   git, and why that pruning is load-bearing for correctness rather than speed.
  */
 export function isIgnoredByChain(
   chain: ScopedIgnoreMatcher[],
@@ -226,12 +235,23 @@ export function createPrettierIgnoreChecker(tree: Tree): TreeIgnoreChecker {
  * Reads from the tree rather than disk, as above.
  */
 export function createOxfmtIgnoreChecker(tree: Tree): TreeIgnoreChecker {
-  return createTreeIgnoreChecker(tree, {
-    filenames: ['.gitignore', '.prettierignore'],
-    cascade: true,
-    merge: false,
-  });
+  return createTreeIgnoreChecker(tree, OXFMT_IGNORE_OPTIONS);
 }
+
+/**
+ * Exported, unlike git's and prettier's, because oxfmt is the one tool with two
+ * consumers: this tree-backed checker and the disk-backed resolver in
+ * `formatters/oxfmt.ts`. They must agree, and a shared value is the only thing
+ * that makes them, so do not restate these three anywhere.
+ *
+ * `satisfies` rather than an annotation so `IgnoreCheckerOptions` itself stays
+ * private - the type is what stops a caller assembling its own set.
+ */
+export const OXFMT_IGNORE_OPTIONS = {
+  filenames: ['.gitignore', '.prettierignore'],
+  cascade: true,
+  merge: false,
+} satisfies IgnoreCheckerOptions;
 
 function createTreeIgnoreChecker(
   tree: Tree,

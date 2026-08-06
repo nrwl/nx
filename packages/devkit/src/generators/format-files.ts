@@ -1,5 +1,5 @@
 import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
-import type { FormatterType } from 'nx/src/devkit-internals';
+import type { FormatterType, TreeIgnoreChecker } from 'nx/src/devkit-internals';
 import {
   createOxfmtIgnoreChecker,
   createPrettierIgnoreChecker,
@@ -91,21 +91,32 @@ export async function formatFiles(
   // false for everything else (measured).
   //
   // The optional call is the older-nx path - see `NOTHING_IGNORED`.
-  const createChecker =
-    formatterType === 'oxfmt'
-      ? createOxfmtIgnoreChecker
-      : createPrettierIgnoreChecker;
-  const { isIgnoredFile } = createChecker?.(tree) ?? NOTHING_IGNORED;
-  const files = new Set(
-    tree
-      .listChanges()
-      .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
-  );
+  const changedFiles = (
+    createChecker: ((tree: Tree) => TreeIgnoreChecker) | undefined
+  ) => {
+    const { isIgnoredFile } = createChecker?.(tree) ?? NOTHING_IGNORED;
+    return new Set(
+      tree
+        .listChanges()
+        .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
+    );
+  };
 
-  if (formatterType === 'prettier') {
-    await formatWithPrettier(tree, files);
-  } else if (formatterType === 'oxfmt') {
-    await formatWithOxfmt(tree, files);
+  // One switch rather than a checker ternary plus a dispatch `if`: those defaulted
+  // differently, so a third formatter would have been filtered with prettier's
+  // rules and then not formatted at all. One of the guarded sites
+  // `FormatterType` inventories.
+  switch (formatterType) {
+    case 'prettier':
+      await formatWithPrettier(tree, changedFiles(createPrettierIgnoreChecker));
+      break;
+    case 'oxfmt':
+      await formatWithOxfmt(tree, changedFiles(createOxfmtIgnoreChecker));
+      break;
+    default: {
+      const unhandled: never = formatterType;
+      throw new Error(`Unhandled formatter: ${unhandled}`);
+    }
   }
 }
 
