@@ -31,7 +31,6 @@ function stateWithStep(overrides: Partial<MigrateStep> = {}): MigrateRunState {
     runId: 'run-1',
     createdAt: '2026-01-01T00:00:00.000Z',
     nxVersion: '99.9.9',
-    mode: 'orchestrated',
     status: 'active',
     createCommits: true,
     commitPrefix: 'chore: [nx migration] ',
@@ -40,14 +39,12 @@ function stateWithStep(overrides: Partial<MigrateStep> = {}): MigrateRunState {
       {
         id: 'step-1',
         roundIndex: 0,
-        kind: 'migration',
         status: 'pending',
         attempt: 1,
         dispenseCount: 0,
         ...overrides,
       },
     ],
-    issues: [],
     commits: [],
     analytics: { startEmitted: false, completeEmitted: false },
   };
@@ -394,7 +391,6 @@ describe('applyStepEvent', () => {
           expect(result.state.steps[0]).toEqual({
             id: 'step-1',
             roundIndex: 0,
-            kind: 'migration',
             status: 'pending',
             attempt: 2,
             dispenseCount: 3,
@@ -452,7 +448,7 @@ describe('applyStepEvent', () => {
       const state = {
         ...stateWithStep({ status: 'died', generatorCompleted: true }),
         commits: [
-          { kind: 'landed', sha: 'abc', stepIds: ['step-1'], issueIds: [] },
+          { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
         ] as MigrateCommitLedgerEntry[],
       };
 
@@ -493,7 +489,7 @@ describe('applyStepEvent', () => {
       const state = {
         ...stateWithStep({ status: 'died', generatorCompleted: true }),
         commits: [
-          { kind: 'landed', sha: 'abc', stepIds: ['step-0'], issueIds: [] },
+          { kind: 'landed', sha: 'abc', stepIds: ['step-0'] },
         ] as MigrateCommitLedgerEntry[],
       };
 
@@ -607,9 +603,7 @@ describe('applyStepEvent', () => {
       // the changes reachable from the reset target the retry-clean uses.
       state = {
         ...marked.state,
-        commits: [
-          { kind: 'landed', sha: 'abc', stepIds: ['step-1'], issueIds: [] },
-        ],
+        commits: [{ kind: 'landed', sha: 'abc', stepIds: ['step-1'] }],
       };
 
       const park = applyStepEvent(state, {
@@ -690,26 +684,24 @@ describe('hasPendingCommitDebt', () => {
 
   it('is false when a failed entry is covered by a later landed entry for the same step', () => {
     const state = stateWithCommits([
-      { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
-      { kind: 'landed', sha: 'abc', stepIds: ['step-1'], issueIds: [] },
+      { kind: 'failed', stepIds: ['step-1'] },
+      { kind: 'landed', sha: 'abc', stepIds: ['step-1'] },
     ]);
 
     expect(hasPendingCommitDebt(state)).toBe(false);
   });
 
   it('is true when a failed entry is never covered by a later landed entry', () => {
-    const state = stateWithCommits([
-      { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
-    ]);
+    const state = stateWithCommits([{ kind: 'failed', stepIds: ['step-1'] }]);
 
     expect(hasPendingCommitDebt(state)).toBe(true);
   });
 
   it('ignores checkpoint entries: only a landed entry can cover a failure', () => {
     const state = stateWithCommits([
-      { kind: 'checkpoint', sha: 'chk', stepIds: [], issueIds: [] },
-      { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
-      { kind: 'checkpoint', sha: 'chk2', stepIds: ['step-1'], issueIds: [] },
+      { kind: 'checkpoint', sha: 'chk', stepIds: [] },
+      { kind: 'failed', stepIds: ['step-1'] },
+      { kind: 'checkpoint', sha: 'chk2', stepIds: ['step-1'] },
     ]);
 
     expect(hasPendingCommitDebt(state)).toBe(true);
@@ -728,13 +720,11 @@ describe('coveringLandedEntries', () => {
       kind: 'landed',
       sha: 'abc',
       stepIds: ['step-1'],
-      issueIds: [],
     };
     const second: MigrateCommitLedgerEntry = {
       kind: 'landed',
       sha: 'def',
       stepIds: ['step-2', 'step-1'],
-      issueIds: [],
     };
     const state = stateWithCommits([first, second]);
 
@@ -744,8 +734,8 @@ describe('coveringLandedEntries', () => {
 
   it('ignores failed and checkpoint entries', () => {
     const state = stateWithCommits([
-      { kind: 'checkpoint', sha: 'chk', stepIds: ['step-1'], issueIds: [] },
-      { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
+      { kind: 'checkpoint', sha: 'chk', stepIds: ['step-1'] },
+      { kind: 'failed', stepIds: ['step-1'] },
     ]);
 
     expect(coveringLandedEntries(state, 'step-1')).toEqual([]);
@@ -759,7 +749,7 @@ describe('stepsToPendingMigrations', () => {
       steps: steps.map((overrides, i) => ({
         id: `step-${i + 1}`,
         roundIndex: 0,
-        kind: 'migration' as const,
+        migrationId: `@nx/js:m${i + 1}`,
         status: 'pending' as const,
         attempt: 1,
         dispenseCount: 0,
@@ -780,16 +770,20 @@ describe('stepsToPendingMigrations', () => {
     ]);
   });
 
-  it('drops steps without an attributable package', () => {
+  it('drops unknown step ids and ids without an attributable package', () => {
     const state = stateWithSteps([
-      { kind: 'install', migrationId: undefined },
       { migrationId: 'bare-name' },
       { migrationId: ':empty-package' },
       { migrationId: '@nx/js:kept' },
     ]);
 
     expect(
-      stepsToPendingMigrations(state, ['step-1', 'step-2', 'step-3', 'step-4'])
+      stepsToPendingMigrations(state, [
+        'step-1',
+        'step-2',
+        'step-3',
+        'no-such-step',
+      ])
     ).toEqual([{ package: '@nx/js', name: 'kept' }]);
   });
 });
@@ -804,7 +798,6 @@ describe('commitResultToLedgerEntry', () => {
       kind: 'landed',
       sha: 'abc',
       stepIds: ['step-2', 'step-1'],
-      issueIds: [],
     });
   });
 
@@ -815,7 +808,7 @@ describe('commitResultToLedgerEntry', () => {
         'step-1',
         []
       )
-    ).toEqual({ kind: 'landed', stepIds: ['step-1'], issueIds: [] });
+    ).toEqual({ kind: 'landed', stepIds: ['step-1'] });
   });
 
   it('maps a failed result to a debt entry naming only this step', () => {
@@ -825,7 +818,7 @@ describe('commitResultToLedgerEntry', () => {
         'step-2',
         ['step-1']
       )
-    ).toEqual({ kind: 'failed', stepIds: ['step-2'], issueIds: [] });
+    ).toEqual({ kind: 'failed', stepIds: ['step-2'] });
   });
 
   it.each(['no-changes', 'disabled'] as const)(

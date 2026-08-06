@@ -165,7 +165,6 @@ describe('orchestrator', () => {
   ): MigrateStep => ({
     id,
     roundIndex: 0,
-    kind: 'migration',
     migrationId,
     status,
     attempt: 1,
@@ -199,7 +198,6 @@ describe('orchestrator', () => {
       runId,
       createdAt: '2026-01-01T00:00:00.000Z',
       nxVersion: '1.0.0',
-      mode: 'orchestrated',
       status: opts.status ?? 'active',
       createCommits: opts.createCommits ?? false,
       commitPrefix: 'chore: [nx migration] ',
@@ -212,7 +210,6 @@ describe('orchestrator', () => {
         },
       ],
       steps: opts.steps,
-      issues: [],
       commits: opts.commits ?? [],
       ...(opts.checkpointFailed ? { checkpointFailed: true } : {}),
       analytics: {
@@ -270,7 +267,7 @@ describe('orchestrator', () => {
   }
 
   describe('init', () => {
-    it('builds the step list, snapshot, planHash and dispenses the first migration after auto-succeeding placeholders', async () => {
+    it('builds the step list, snapshot and planHash, then dispenses the first migration', async () => {
       mockGetLatestCommitSha.mockReturnValue('head-sha');
       const migrationsJson = {
         migrations: [
@@ -292,26 +289,15 @@ describe('orchestrator', () => {
       expect(active).not.toBeNull();
       const { runId, state } = active;
 
-      expect(state.steps.map((s) => s.kind)).toEqual([
-        'peer-compat',
-        'install',
-        'migration',
-        'migration',
-        'final-validation',
+      expect(state.steps.map((s) => s.id)).toEqual(['step-1', 'step-2']);
+      expect(state.steps.map((s) => s.migrationId)).toEqual([
+        '@nx/js:a',
+        '@nx/js:b',
       ]);
-      expect(state.steps.map((s) => s.id)).toEqual([
-        'step-1',
-        'step-2',
-        'step-3',
-        'step-4',
-        'step-5',
-      ]);
-      // Placeholders auto-succeed; the first migration is dispensed with its ref.
-      expect(state.steps[0].status).toBe('succeeded');
-      expect(state.steps[1].status).toBe('succeeded');
-      expect(state.steps[2].status).toBe('dispensed');
-      expect(state.steps[2].migrationId).toBe('@nx/js:a');
-      expect(state.steps[2].gitRefBefore).toBe('head-sha');
+      // The first migration is dispensed with its pre-migration ref.
+      expect(state.steps[0].status).toBe('dispensed');
+      expect(state.steps[0].gitRefBefore).toBe('head-sha');
+      expect(state.steps[1].status).toBe('pending');
 
       expect(state.rounds[0].planSnapshot).toBe('plan-0.json');
       expect(state.rounds[0].planHash).toMatch(/^[0-9a-f]{64}$/);
@@ -322,7 +308,7 @@ describe('orchestrator', () => {
 
       const block = lastBlock();
       expect(block.action).toBe('next-step');
-      expect(block.step).toBe('step-3');
+      expect(block.step).toBe('step-1');
       expect(block.payload.command).toBe(
         `NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
       );
@@ -376,7 +362,6 @@ describe('orchestrator', () => {
         kind: 'checkpoint',
         sha: 'checkpoint-sha',
         stepIds: [],
-        issueIds: [],
       });
     });
 
@@ -588,31 +573,28 @@ describe('orchestrator', () => {
       expect(step.dispenseCount).toBe(1);
     });
 
-    it('no-ops the placeholder drive when a concurrent process already advanced it', async () => {
-      const migrationsJson = { migrations: [genMig('@nx/js', 'a')] };
-      const placeholder: MigrateStep = {
-        id: 'step-1',
-        roundIndex: 0,
-        kind: 'peer-compat',
-        status: 'pending',
-        attempt: 1,
-        dispenseCount: 0,
+    it('dispatches against fresh state when a concurrent process advanced the run during the init report', async () => {
+      const migrationsJson = {
+        migrations: [genMig('@nx/js', 'a'), genMig('@nx/js', 'b')],
       };
       const dir = setupRun('run-1', {
-        steps: [placeholder, migStep('step-2', '@nx/js:a', 'pending')],
+        steps: [
+          migStep('step-1', '@nx/js:a', 'pending'),
+          migStep('step-2', '@nx/js:b', 'pending'),
+        ],
         planHash: computePlanHash(migrationsJson),
         plan: migrationsJson.migrations,
         startEmitted: false,
       });
       // The init-analytics report fires between the watermark claim and the
-      // placeholder drive; a concurrent process advancing the run there makes
-      // this init's in-memory snapshot stale.
+      // dispense; a concurrent process advancing the run there makes this
+      // init's in-memory snapshot stale.
       mockInit.mockImplementationOnce(() => {
         writeRunState(dir, {
           ...readRunState(dir),
           steps: [
-            { ...placeholder, status: 'succeeded', dispenseCount: 1 },
-            migStep('step-2', '@nx/js:a', 'dispensed'),
+            migStep('step-1', '@nx/js:a', 'succeeded'),
+            migStep('step-2', '@nx/js:b', 'dispensed'),
           ],
         });
       });
@@ -1184,7 +1166,7 @@ describe('orchestrator', () => {
         await runOrchestratorReconcile({ root, runId: 'run-1' });
 
         expect(readRunState(dir).commits).toEqual([
-          { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
+          { kind: 'failed', stepIds: ['step-1'] },
         ]);
       }
     );
@@ -1246,7 +1228,7 @@ describe('orchestrator', () => {
       expect(mockRunInstall).toHaveBeenCalledTimes(1);
       expect(mockCommit).not.toHaveBeenCalled();
       expect(readRunState(dir).commits).toEqual([
-        { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
+        { kind: 'failed', stepIds: ['step-1'] },
       ]);
     });
 
@@ -1263,7 +1245,7 @@ describe('orchestrator', () => {
 
       expect(mockRunInstall).toHaveBeenCalledTimes(1);
       expect(readRunState(dir).commits).toEqual([
-        { kind: 'landed', sha: 'sha-1', stepIds: ['step-1'], issueIds: [] },
+        { kind: 'landed', sha: 'sha-1', stepIds: ['step-1'] },
       ]);
     });
 
@@ -1346,7 +1328,7 @@ describe('orchestrator', () => {
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
       expect(readRunState(dir).commits).toEqual([
-        { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
+        { kind: 'failed', stepIds: ['step-1'] },
       ]);
     });
 
@@ -1673,7 +1655,7 @@ describe('orchestrator', () => {
           }),
         ],
         createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'], issueIds: [] }],
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
         plan: [genMig('@nx/js', 'gen')],
       });
 
@@ -1746,7 +1728,6 @@ describe('orchestrator', () => {
             kind: 'landed',
             sha: 'landed-sha',
             stepIds: ['step-1'],
-            issueIds: [],
           },
         ],
         plan: [genMig('@nx/js', 'gen')],
@@ -1778,7 +1759,6 @@ describe('orchestrator', () => {
             kind: 'landed',
             sha: 'landed-sha',
             stepIds: ['step-1'],
-            issueIds: [],
           },
         ],
         plan: [genMig('@nx/js', 'gen')],
@@ -1811,7 +1791,6 @@ describe('orchestrator', () => {
             kind: 'landed',
             sha: 'landed-sha',
             stepIds: ['step-1'],
-            issueIds: [],
           },
         ],
         plan: [genMig('@nx/js', 'gen')],
@@ -1830,7 +1809,6 @@ describe('orchestrator', () => {
           kind: 'landed',
           sha: 'landed-sha',
           stepIds: ['step-1'],
-          issueIds: [],
         },
       ]);
     });
@@ -1852,7 +1830,6 @@ describe('orchestrator', () => {
             kind: 'landed',
             sha: 'landed-sha',
             stepIds: ['step-1'],
-            issueIds: [],
           },
         ],
         plan: [genMig('@nx/js', 'gen')],
@@ -2039,7 +2016,6 @@ describe('orchestrator', () => {
         kind: 'landed',
         sha: 'adopt-sha',
         stepIds: ['step-1'],
-        issueIds: [],
       });
     });
 
@@ -2167,7 +2143,7 @@ describe('orchestrator', () => {
           migStep('step-2', '@nx/js:p', 'awaiting-prompt-outcome'),
         ],
         createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'], issueIds: [] }],
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
         plan: [promptMig('@nx/js', 'p')],
       });
       writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'ok' });
@@ -2182,7 +2158,6 @@ describe('orchestrator', () => {
         kind: 'landed',
         sha: 'newsha',
         stepIds: ['step-2', 'step-1'],
-        issueIds: [],
       });
     });
   });
@@ -2210,7 +2185,7 @@ describe('orchestrator', () => {
       setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'succeeded')],
         createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'], issueIds: [] }],
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
         plan: [genMig('@nx/js', 'gen')],
       });
 
@@ -2235,7 +2210,7 @@ describe('orchestrator', () => {
       setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'succeeded')],
         createCommits: true,
-        commits: [{ kind: 'failed', stepIds: ['step-1'], issueIds: [] }],
+        commits: [{ kind: 'failed', stepIds: ['step-1'] }],
         plan: [genMig('@nx/js', 'gen')],
       });
 

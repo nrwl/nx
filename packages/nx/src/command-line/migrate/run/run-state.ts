@@ -28,9 +28,6 @@ const MAX_RETAINED_COMPLETED_RUNS = 5;
 // Closed sets are declared as const arrays so the derived types and the
 // runtime validation in `readRunState` cannot drift apart (same pattern as
 // STEP_ACTIONS in step-actions.ts).
-const MIGRATE_RUN_MODES = ['orchestrated'] as const;
-export type MigrateRunMode = (typeof MIGRATE_RUN_MODES)[number];
-
 const MIGRATE_RUN_STATUSES = ['active', 'completed'] as const;
 export type MigrateRunStatus = (typeof MIGRATE_RUN_STATUSES)[number];
 
@@ -39,14 +36,6 @@ export interface MigrateRunRound {
   planHash: string;
   planSnapshot: string;
 }
-
-const MIGRATE_STEP_KINDS = [
-  'peer-compat',
-  'install',
-  'migration',
-  'final-validation',
-] as const;
-export type MigrateStepKind = (typeof MIGRATE_STEP_KINDS)[number];
 
 const MIGRATE_STEP_STATUSES = [
   'pending',
@@ -78,12 +67,8 @@ export interface MigrateStepPromptOutcome {
 export interface MigrateStep {
   id: string;
   roundIndex: number;
-  kind: MigrateStepKind;
-  // Only set for kind 'migration'; `<package>:<name>`. A format-level
-  // invariant callers rely on; deliberately not encoded as a
-  // kind-discriminated union to avoid churning the rest of this durable
-  // shape's typing.
-  migrationId?: string;
+  // `<package>:<name>`.
+  migrationId: string;
   status: MigrateStepStatus;
   attempt: number;
   dispenseCount: number;
@@ -118,24 +103,6 @@ export interface MigrateStep {
   installFailed?: boolean;
 }
 
-const MIGRATE_ISSUE_DISPOSITIONS = [
-  'recorded',
-  'claimed',
-  'deferred-final',
-  'resolved',
-] as const;
-export type MigrateIssueDisposition =
-  (typeof MIGRATE_ISSUE_DISPOSITIONS)[number];
-
-export interface MigrateIssue {
-  id: string;
-  description: string;
-  scope: Record<string, unknown>;
-  recordedBy: string;
-  disposition: MigrateIssueDisposition;
-  claimedBy?: string;
-}
-
 const MIGRATE_COMMIT_KINDS = ['checkpoint', 'landed', 'failed'] as const;
 export type MigrateCommitKind = (typeof MIGRATE_COMMIT_KINDS)[number];
 
@@ -144,7 +111,6 @@ export interface MigrateCommitLedgerEntry {
   sha?: string;
   kind: MigrateCommitKind;
   stepIds: string[];
-  issueIds: string[];
 }
 
 export interface MigrateRunAnalytics {
@@ -157,7 +123,6 @@ export interface MigrateRunState {
   runId: string;
   createdAt: string;
   nxVersion: string;
-  mode: MigrateRunMode;
   status: MigrateRunStatus;
   createCommits: boolean;
   commitPrefix: string;
@@ -166,7 +131,6 @@ export interface MigrateRunState {
   skipInstall?: boolean;
   rounds: MigrateRunRound[];
   steps: MigrateStep[];
-  issues: MigrateIssue[];
   commits: MigrateCommitLedgerEntry[];
   // Set when the tree still held uncommitted changes after the init preflight
   // (checkpoint commit plus gitignore fallback, both of which swallow their own
@@ -182,13 +146,11 @@ const REQUIRED_TOP_LEVEL_FIELDS: readonly (keyof MigrateRunState)[] = [
   'runId',
   'createdAt',
   'nxVersion',
-  'mode',
   'status',
   'createCommits',
   'commitPrefix',
   'rounds',
   'steps',
-  'issues',
   'commits',
   'analytics',
 ];
@@ -218,14 +180,12 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 const REQUIRED_ARRAY_FIELDS: readonly (keyof MigrateRunState)[] = [
   'rounds',
   'steps',
-  'issues',
   'commits',
 ];
 const REQUIRED_STRING_FIELDS: readonly (keyof MigrateRunState)[] = [
   'runId',
   'createdAt',
   'nxVersion',
-  'mode',
   'status',
   'commitPrefix',
 ];
@@ -292,14 +252,10 @@ function isStepShape(value: unknown): boolean {
     isPlainObject(value) &&
     typeof value.id === 'string' &&
     typeof value.roundIndex === 'number' &&
-    isOneOf(MIGRATE_STEP_KINDS, value.kind) &&
+    typeof value.migrationId === 'string' &&
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
     typeof value.attempt === 'number' &&
     typeof value.dispenseCount === 'number' &&
-    // The documented format invariant: migration steps carry `<package>:<name>`.
-    (value.kind === 'migration'
-      ? typeof value.migrationId === 'string'
-      : isOptionalString(value.migrationId)) &&
     isOptionalNumber(value.pid) &&
     isOptionalString(value.startedAt) &&
     isOptionalString(value.finishedAt) &&
@@ -310,26 +266,10 @@ function isStepShape(value: unknown): boolean {
     isPromptOutcomeShape(value.promptOutcome) &&
     isOptionalBoolean(value.generatorCompleted) &&
     isOptionalBoolean(value.installFailed) &&
-    // Cross-field invariants the rest of the loop relies on. A running step
+    // A cross-field invariant the rest of the loop relies on: a running step
     // without a pid is never reclassified as died and no step action targets
-    // it, so it stalls the run forever; a step awaiting a prompt outcome is
-    // always a migration, since the prompt is addressed to its migration id.
-    (value.status === 'running' ? typeof value.pid === 'number' : true) &&
-    (value.status === 'awaiting-prompt-outcome'
-      ? value.kind === 'migration'
-      : true)
-  );
-}
-
-function isIssueShape(value: unknown): boolean {
-  return (
-    isPlainObject(value) &&
-    typeof value.id === 'string' &&
-    typeof value.description === 'string' &&
-    isPlainObject(value.scope) &&
-    typeof value.recordedBy === 'string' &&
-    isOneOf(MIGRATE_ISSUE_DISPOSITIONS, value.disposition) &&
-    isOptionalString(value.claimedBy)
+    // it, so it stalls the run forever.
+    (value.status === 'running' ? typeof value.pid === 'number' : true)
   );
 }
 
@@ -339,8 +279,6 @@ function isCommitLedgerEntryShape(value: unknown): boolean {
     isOneOf(MIGRATE_COMMIT_KINDS, value.kind) &&
     Array.isArray(value.stepIds) &&
     value.stepIds.every((id) => typeof id === 'string') &&
-    Array.isArray(value.issueIds) &&
-    value.issueIds.every((id) => typeof id === 'string') &&
     isOptionalString(value.sha)
   );
 }
@@ -366,13 +304,11 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     ) &&
     typeof parsed.formatVersion === 'number' &&
     typeof parsed.createCommits === 'boolean' &&
-    isOneOf(MIGRATE_RUN_MODES, parsed.mode) &&
     isOneOf(MIGRATE_RUN_STATUSES, parsed.status) &&
     isOptionalBoolean(parsed.checkpointFailed) &&
     isOptionalBoolean(parsed.skipInstall) &&
     (parsed.rounds as unknown[]).every(isRoundShape) &&
     (parsed.steps as unknown[]).every(isStepShape) &&
-    (parsed.issues as unknown[]).every(isIssueShape) &&
     (parsed.commits as unknown[]).every(isCommitLedgerEntryShape) &&
     isAnalyticsShape(parsed.analytics)
   );
@@ -387,8 +323,8 @@ function corruptRunStateError(filePath: string, reason: string): Error {
  * understands. Callers must not treat such a run as absent: an older Nx
  * ignoring a newer active run would start a competing run on top of it.
  *
- * Adding a member to any persisted closed set (run mode or status, step kind
- * or status, prompt-outcome status, issue disposition, commit kind) needs a
+ * Adding a member to any persisted closed set (run status, step status,
+ * prompt-outcome status, commit kind) needs a
  * `CURRENT_RUN_STATE_FORMAT_VERSION` bump: without it, an older Nx reading
  * the new value would reject the run as corrupt (the closed-set validation
  * fails) instead of refusing with this error's ask for a newer Nx.

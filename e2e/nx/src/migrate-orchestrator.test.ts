@@ -51,8 +51,7 @@ interface RunStateFile {
   status: string;
   steps: {
     id: string;
-    kind: string;
-    migrationId?: string;
+    migrationId: string;
     status: string;
     attempt: number;
     pid?: number;
@@ -339,20 +338,16 @@ describe('migrate orchestrator (dark launch)', () => {
 
     const state = readRunStateFile(complete.runId);
     expect(state.status).toBe('completed');
-    expect(state.steps.map((s) => [s.kind, s.status])).toEqual([
-      ['peer-compat', 'succeeded'],
-      ['install', 'succeeded'],
-      ['migration', 'succeeded'],
-      ['migration', 'succeeded'],
-      ['migration', 'succeeded'],
-      ['final-validation', 'succeeded'],
+    expect(state.steps.map((s) => [s.migrationId, s.status])).toEqual([
+      [`${PKG}:gen-mig`, 'succeeded'],
+      [`${PKG}:prompt-mig`, 'succeeded'],
+      [`${PKG}:hybrid-mig`, 'succeeded'],
     ]);
 
     // Each migration's changes landed on disk and in a dedicated commit.
     expect(readFile('gen-file')).toEqual('gen-content');
     expect(readFile('hybrid-file')).toEqual('hybrid-content');
-    const migrationSteps = state.steps.filter((s) => s.kind === 'migration');
-    for (const step of migrationSteps) {
+    for (const step of state.steps) {
       expect(
         state.commits.some(
           (c) => c.kind === 'landed' && c.stepIds.includes(step.id)

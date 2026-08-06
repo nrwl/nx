@@ -290,21 +290,19 @@ export function reportMigrateOrchestratorInit(opts: {
 }
 
 /**
- * One event per orchestrator dispense. The `action` (dispense case) and step
- * `kind` are closed enums carried on reused dimensions, read conditioned on the
- * event name (the same multiplexing pattern as {@link reportMigratePrompt});
+ * One event per orchestrator dispense. The `action` (dispense case) is a
+ * closed enum carried on a reused dimension, read conditioned on the event
+ * name (the same multiplexing pattern as {@link reportMigratePrompt});
  * `attempt` rides the migration-count dimension.
  */
 export function reportMigrateOrchestratorDispense(opts: {
   action: string;
-  stepKind: string;
   attempt: number;
 }): void {
   safeReport(() => {
     if (!customDimensions) return;
     reportEvent('migrate_orchestrator_dispense', {
       [customDimensions.promptChoice]: opts.action,
-      [customDimensions.migrationName]: opts.stepKind,
       [customDimensions.migrationCount]: opts.attempt,
     });
   });

@@ -9,17 +9,13 @@ export {
   createRun,
 } from './run-state';
 export type {
-  MigrateRunMode,
   MigrateRunStatus,
   MigrateRunRound,
-  MigrateStepKind,
   MigrateStepStatus,
   PromptOutcomeStatus,
   MigrateStepOutcome,
   MigrateStepPromptOutcome,
   MigrateStep,
-  MigrateIssueDisposition,
-  MigrateIssue,
   MigrateCommitKind,
   MigrateCommitLedgerEntry,
   MigrateRunAnalytics,
