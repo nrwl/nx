@@ -1,4 +1,4 @@
-import { CreateNodesContext, logger, workspaceRoot } from '@nx/devkit';
+import { CreateNodesContext, workspaceRoot } from '@nx/devkit';
 import { setWorkspaceRoot } from '@nx/devkit/internal';
 import * as devkitInternal from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
@@ -6,7 +6,7 @@ import * as jsUtils from '@nx/js';
 import { PlaywrightTestConfig } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createNodesV2 } from './plugin';
+import { _clearWarnedUnparseableCommands, createNodesV2 } from './plugin';
 import { _setChildEval, normalizeWebServers } from './webserver-readiness';
 
 // The plugin writes its disk cache under `workspaceDataDirectory`, which is
@@ -29,9 +29,11 @@ jest.mock('nx/src/utils/cache-directory', () => {
 // tests, mirror the child by evaluating the config source in a fresh scope under
 // the task env; the in-process module cache would otherwise return the ambient
 // evaluation. Only handles the simple CJS configs the env tests use.
-function installFreshConfigEval(onEval?: () => void): void {
+function installFreshConfigEval(
+  onEval?: (env: NodeJS.ProcessEnv) => void
+): void {
   _setChildEval(async (configFilePath, wsRoot, env) => {
-    onEval?.();
+    onEval?.(env);
     const source = readFileSync(join(wsRoot, configFilePath), 'utf8');
     const moduleShim: { exports: PlaywrightTestConfig } = { exports: {} };
     new Function('module', 'exports', 'process', source)(
@@ -72,6 +74,9 @@ describe('@nx/playwright/plugin', () => {
     mockWorkspaceDataDir = join(tempFs.tempDir, '.nx', 'workspace-data');
     originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+    // The warn-once set outlives a test; without the reset, a warn assertion
+    // is coupled to its (config, command) pair being unique in the file.
+    _clearWarnedUnparseableCommands();
   });
 
   afterEach(() => {
@@ -1620,7 +1625,11 @@ describe('@nx/playwright/plugin', () => {
     _setChildEval(async () => {
       throw new Error('boom');
     });
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    // The plugin warns through emitPluginWorkerLog so the message survives the
+    // daemon, where `logger.warn` routes to the daemon log file.
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
 
     try {
       await mockPlaywrightConfig(
@@ -1657,9 +1666,151 @@ describe('@nx/playwright/plugin', () => {
         { projects: ['app1'], target: 'serve' },
       ]);
       expect(warn).toHaveBeenCalledWith(
+        'warn',
         expect.stringMatching(/could not evaluate playwright\.config\.js/)
       );
-      expect(warn).toHaveBeenCalledWith(expect.stringMatching(/boom/));
+      expect(warn).toHaveBeenCalledWith('warn', expect.stringMatching(/boom/));
+    } finally {
+      warn.mockRestore();
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
+  it('retries the task-env evaluation on the next pass instead of caching the failed fallback', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BASE_URL;
+    setWorkspaceRoot(tempFs.tempDir);
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    let failEval = true;
+    let evals = 0;
+    installFreshConfigEval(() => {
+      evals++;
+      if (failEval) {
+        throw new Error('boom');
+      }
+    });
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env': 'BASE_URL=http://localhost:4301\n',
+      });
+
+      const run = async () =>
+        (
+          await createNodesFunction(
+            ['playwright.config.js'],
+            { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+            context
+          )
+        )[0][1].projects['.'].targets;
+
+      // The failure degrades this pass to the ambient config with no gate.
+      const first = await run();
+      expect(first['e2e--wait-for-webserver']).toBeUndefined();
+      expect(evals).toBe(1);
+
+      // Nothing about the failed pass may be cached: a transient fault (a
+      // timeout, a fork error) must not permanently disable the gate, so the
+      // next pass re-attempts the evaluation and infers the gate.
+      failEval = false;
+      const second = await run();
+      expect(evals).toBe(2);
+      expect(second['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4301' },
+      ]);
+    } finally {
+      warn.mockRestore();
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalBaseUrl === undefined) {
+        delete process.env.BASE_URL;
+      } else {
+        process.env.BASE_URL = originalBaseUrl;
+      }
+    }
+  });
+
+  it('keeps a successful chain gated when only the other chain fails to evaluate', async () => {
+    const originalBaseUrl = process.env.BASE_URL;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.BASE_URL;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval((env) => {
+      if (env.FAIL_CI === '1') {
+        throw new Error('ci-chain boom');
+      }
+    });
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: 'npx nx run app1:serve',
+    url: process.env.BASE_URL || 'http://localhost:4200',
+    reuseExistingServer: true,
+  },
+};`
+      );
+      // The ci-only dotenv makes the chains diverge, so each evaluates on its
+      // own; the marker makes only the ci evaluation fail.
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env': 'BASE_URL=http://localhost:4301\n',
+        '.env.e2e-ci': 'FAIL_CI=1\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      // The e2e chain resolved under its task env and keeps its gate.
+      expect(targets['e2e--wait-for-webserver'].options.servers).toEqual([
+        { url: 'http://localhost:4301' },
+      ]);
+      expect(targets['e2e'].dependsOn).toContainEqual({
+        target: 'e2e--wait-for-webserver',
+      });
+      // The failed ci chain degrades to the ambient serve dependency, no gate.
+      expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+      ]);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledWith(
+        'warn',
+        expect.stringMatching(/for e2e-ci\b[\s\S]*ci-chain boom/)
+      );
     } finally {
       warn.mockRestore();
       _setChildEval(null);
@@ -1939,7 +2090,9 @@ describe('@nx/playwright/plugin', () => {
   });
 
   it('warns when a reuseExistingServer webServer command cannot be inferred', async () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
     try {
       await mockPlaywrightConfig(tempFs, {
         testDir: 'tests',
@@ -1964,8 +2117,42 @@ describe('@nx/playwright/plugin', () => {
       expect(targets['e2e'].dependsOn).toBeUndefined();
       expect(targets['e2e'].parallelism).toBe(false);
       expect(warn).toHaveBeenCalledWith(
+        'warn',
         expect.stringContaining('npx nx run app1:serve --port=4200')
       );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('does not warn for a webServer command that is not an Nx invocation', async () => {
+    const warn = jest
+      .spyOn(devkitInternal, 'emitPluginWorkerLog')
+      .mockImplementation(() => {});
+    try {
+      await mockPlaywrightConfig(tempFs, {
+        testDir: 'tests',
+        webServer: {
+          command: 'npm run start',
+          port: 4200,
+          reuseExistingServer: true,
+        },
+      });
+      await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      // A non-Nx command was never meant to map to a task, so the skip is not
+      // worth announcing; the serialization guard still applies.
+      expect(warn).not.toHaveBeenCalled();
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toBeUndefined();
+      expect(targets['e2e'].parallelism).toBe(false);
     } finally {
       warn.mockRestore();
     }
@@ -2028,6 +2215,12 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e'].dependsOn).not.toContainEqual(
       expect.objectContaining({ projects: expect.arrayContaining(['worker1']) })
     );
+    // The wait-based server gets no inferred task, so nothing in the graph
+    // starts it; the consuming tasks stay serialized even though the app1
+    // dependency was inferred.
+    expect(targets['e2e'].parallelism).toBe(false);
+    expect(targets['e2e-ci--tests/run-me.spec.ts'].parallelism).toBe(false);
+    expect(targets['e2e-ci'].parallelism).toBe(false);
   });
 
   it('should leave a config whose only webServer waits for command output entirely to Playwright', async () => {

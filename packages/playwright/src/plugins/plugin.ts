@@ -1,5 +1,6 @@
 import {
   calculateHashesForCreateNodes,
+  emitPluginWorkerLog,
   loadConfigFile,
   getNamedInputs,
   getGraphTimeDotEnvForTask,
@@ -19,7 +20,6 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
-  logger,
   normalizePath,
   type ProjectConfiguration,
   type TargetConfiguration,
@@ -84,6 +84,15 @@ type WebserverReadinessServer = WaitForWebserverSchema['servers'][number];
 interface ChainWebserver {
   commandTasks: WebserverCommandTask[];
   readinessServers: WebserverReadinessServer[];
+  // Count of `reuseExistingServer` servers no task could be inferred for.
+  uncoveredServers: number;
+}
+
+interface ResolvedChainWebserver {
+  chain: ChainWebserver;
+  // Outside ChainWebserver so a failed evaluation does not split `sameChain`'s
+  // structural comparison of two otherwise identical chains.
+  taskEnvEvalFailed: boolean;
 }
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
@@ -100,6 +109,9 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
+    // The workspace-root dotenv candidates are the same for every config, so
+    // hash each file at most once per pass rather than once per config.
+    const dotEnvFileHashes = new Map<string, string | null>();
 
     try {
       const { entries, preErrors } = await filterPlaywrightConfigs(
@@ -126,7 +138,8 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
               pluginCache,
               pmc,
               entries[idx].externalTsconfigInputs,
-              projectHashes[idx]
+              projectHashes[idx],
+              dotEnvFileHashes
             ),
           entries.map((e) => e.configFile),
           options,
@@ -161,37 +174,43 @@ async function createNodesInternal(
   pluginCache: PluginCache<PlaywrightTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[],
-  hash: string
+  hash: string,
+  dotEnvFileHashes: Map<string, string | null>
 ) {
   const projectRoot = dirname(configFilePath);
 
   // The createNodes hash covers projectRoot files, the lockfile, and tsconfig,
   // but a workspace-root dotenv a nested project loads is outside it. Fold the
   // consumer chains' dotenv fingerprints into the cache key so a dotenv change
-  // (which the daemon invalidates the graph on) rebuilds the inferred targets
-  // instead of returning stale ones.
+  // rebuilds the inferred targets instead of returning stale ones.
   const chainDotEnvPairs = getChainDotEnvPairs(
     context.workspaceRoot,
     projectRoot,
-    normalizedOptions
+    normalizedOptions,
+    dotEnvFileHashes
   );
   const cacheKey = `${hash}-${hashObject(chainDotEnvPairs)}`;
 
-  if (!pluginCache.has(cacheKey)) {
-    pluginCache.set(
-      cacheKey,
-      await buildPlaywrightTargets(
-        configFilePath,
-        projectRoot,
-        normalizedOptions,
-        context,
-        pmc,
-        externalTsconfigInputs,
-        chainDotEnvPairs
-      )
+  let playwrightTargets = pluginCache.get(cacheKey);
+  if (!playwrightTargets) {
+    const { taskEnvEvalFailed, ...built } = await buildPlaywrightTargets(
+      configFilePath,
+      projectRoot,
+      normalizedOptions,
+      context,
+      pmc,
+      externalTsconfigInputs,
+      chainDotEnvPairs
     );
+    // The key encodes nothing about evaluation success, so caching a failed
+    // evaluation's gate-less fallback would make a transient failure (a
+    // timeout, a fork error) permanent; leave it out so the next pass retries.
+    if (!taskEnvEvalFailed) {
+      pluginCache.set(cacheKey, built);
+    }
+    playwrightTargets = built;
   }
-  const { targets, metadata } = pluginCache.get(cacheKey);
+  const { targets, metadata } = playwrightTargets;
 
   return {
     projects: {
@@ -212,7 +231,7 @@ async function buildPlaywrightTargets(
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[],
   chainDotEnvPairs: ChainDotEnvPairs
-): Promise<PlaywrightTargets> {
+): Promise<PlaywrightTargets & { taskEnvEvalFailed: boolean }> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
   // See: https://github.com/microsoft/playwright/pull/11218/files
@@ -253,10 +272,10 @@ async function buildPlaywrightTargets(
   const chainsShareDotEnv =
     JSON.stringify(chainDotEnvPairs.target) ===
     JSON.stringify(chainDotEnvPairs.ciTarget);
-  let e2eChain: ChainWebserver;
-  let ciChain: ChainWebserver;
+  let e2eResolved: ResolvedChainWebserver;
+  let ciResolved: ResolvedChainWebserver;
   if (!options.ciTargetName || chainsShareDotEnv) {
-    e2eChain = await resolveChainWebserver(
+    e2eResolved = await resolveChainWebserver(
       configFilePath,
       projectRoot,
       context.workspaceRoot,
@@ -265,9 +284,9 @@ async function buildPlaywrightTargets(
       undefined,
       options.waitForWebServer
     );
-    ciChain = e2eChain;
+    ciResolved = e2eResolved;
   } else {
-    [e2eChain, ciChain] = await Promise.all([
+    [e2eResolved, ciResolved] = await Promise.all([
       resolveChainWebserver(
         configFilePath,
         projectRoot,
@@ -288,6 +307,10 @@ async function buildPlaywrightTargets(
       ),
     ]);
   }
+  const e2eChain = e2eResolved.chain;
+  const ciChain = ciResolved.chain;
+  const taskEnvEvalFailed =
+    e2eResolved.taskEnvEvalFailed || ciResolved.taskEnvEvalFailed;
 
   const e2eReadyTargetName =
     e2eChain.readinessServers.length > 0
@@ -496,7 +519,7 @@ async function buildPlaywrightTargets(
       },
     };
 
-    if (!ciChain.commandTasks.length) {
+    if (chainRequiresSerialization(ciChain)) {
       targets[options.ciTargetName].parallelism = false;
     }
     ciTargetGroup.push(options.ciTargetName);
@@ -532,7 +555,7 @@ async function buildPlaywrightTargets(
     ciTargetGroup.push(options.mergeReportsTargetName);
   }
 
-  return { targets, metadata };
+  return { targets, metadata, taskEnvEvalFailed };
 }
 
 async function getAllTestFiles(opts: {
@@ -672,11 +695,9 @@ interface ChainDotEnvPairs {
 function getChainDotEnvPairs(
   workspaceRoot: string,
   projectRoot: string,
-  options: NormalizedOptions
+  options: NormalizedOptions,
+  fileHashes: Map<string, string | null>
 ): ChainDotEnvPairs {
-  // The ci chain's candidate paths include the e2e chain's, so hash each file
-  // at most once per pass.
-  const fileHashes = new Map<string, string | null>();
   const target = getDotEnvPairsForTask(
     workspaceRoot,
     projectRoot,
@@ -735,7 +756,9 @@ function getDotEnvPairsForTask(
 // re-evaluation falls back to the ambient servers and skips the gate for the
 // chain: an unverified address must not become a gate the daemon then caches,
 // but a config bug or timeout should degrade to master's behavior, not kill
-// graph construction for most commands.
+// graph construction for most commands. The returned `taskEnvEvalFailed` flag
+// keeps that degraded result out of the plugin cache so a later pass retries
+// the evaluation.
 async function resolveChainWebserver(
   configFilePath: string,
   projectRoot: string,
@@ -744,9 +767,12 @@ async function resolveChainWebserver(
   target: string,
   nonAtomizedTarget: string | undefined,
   inferReadiness: boolean
-): Promise<ChainWebserver> {
+): Promise<ResolvedChainWebserver> {
   if (ambientWebServers.length === 0) {
-    return { commandTasks: [], readinessServers: [] };
+    return {
+      chain: { commandTasks: [], readinessServers: [], uncoveredServers: 0 },
+      taskEnvEvalFailed: false,
+    };
   }
   let webServers = ambientWebServers;
   let taskEnvEvalFailed = false;
@@ -766,20 +792,27 @@ async function resolveChainWebserver(
     } catch (e) {
       taskEnvEvalFailed = true;
       const detail = e instanceof Error ? e.message : String(e);
-      logger.warn(
+      emitPluginWorkerLog(
+        'warn',
         `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server address. Targets are inferred from the ambient config evaluation and no web server readiness task is inferred for ${target}.\n${detail}`
       );
     }
   }
 
-  const commandTasks = getWebserverCommandTasks(webServers, configFilePath);
+  const { commandTasks, uncoveredServers } = getWebserverCommandTasks(
+    webServers,
+    configFilePath
+  );
   const readinessServers =
     inferReadiness && !taskEnvEvalFailed
       ? (commandTasks
           .map(toReadinessServer)
           .filter(Boolean) as WebserverReadinessServer[])
       : [];
-  return { commandTasks, readinessServers };
+  return {
+    chain: { commandTasks, readinessServers, uncoveredServers },
+    taskEnvEvalFailed,
+  };
 }
 
 // Two chains share a gate only when both the readiness servers and the serve
@@ -813,11 +846,17 @@ function buildWaitForWebserverTarget(
 // warning is about the config's content, not about any single run.
 const warnedUnparseableCommands = new Set<string>();
 
+// Test seam: the warn-once set outlives a spec file's cases.
+export function _clearWarnedUnparseableCommands(): void {
+  warnedUnparseableCommands.clear();
+}
+
 function getWebserverCommandTasks(
   webServers: ResolvedWebServer[],
   configFilePath: string
-): WebserverCommandTask[] {
-  const tasks: WebserverCommandTask[] = [];
+): { commandTasks: WebserverCommandTask[]; uncoveredServers: number } {
+  const commandTasks: WebserverCommandTask[] = [];
+  let uncoveredServers = 0;
 
   for (const server of webServers) {
     if (!server.reuseExistingServer) {
@@ -826,6 +865,7 @@ function getWebserverCommandTasks(
     // An unchecked config can omit `command` (Playwright's own type requires
     // it); nothing runs, so there is nothing to depend on or gate.
     if (typeof server.command !== 'string') {
+      uncoveredServers++;
       continue;
     }
     // Playwright races a `wait.stdout`/`wait.stderr` regex against the address
@@ -834,12 +874,13 @@ function getWebserverCommandTasks(
     // reused without them, or raced by a duplicate launch while it boots, so
     // such a server gets no inferred dependency and no gate.
     if (server.waitsForOutput) {
+      uncoveredServers++;
       continue;
     }
 
     const task = parseTaskFromCommand(server.command);
     if (task) {
-      tasks.push({
+      commandTasks.push({
         ...task,
         port: server.port,
         url: server.url,
@@ -847,17 +888,23 @@ function getWebserverCommandTasks(
         timeout: server.timeout,
       });
     } else {
-      const warnedKey = `${configFilePath}|${server.command}`;
-      if (!warnedUnparseableCommands.has(warnedKey)) {
-        warnedUnparseableCommands.add(warnedKey);
-        logger.warn(
-          `@nx/playwright: could not infer an Nx task from the webServer command "${server.command}" in ${configFilePath}, so no serve dependency or readiness wait is inferred for it.`
-        );
+      uncoveredServers++;
+      // A command that never invokes nx (`npm run start`, `vite`) was never
+      // meant to map to a task, so its skip warrants no warning.
+      if (/(^|\s)nx\s/.test(server.command)) {
+        const warnedKey = `${configFilePath}|${server.command}`;
+        if (!warnedUnparseableCommands.has(warnedKey)) {
+          warnedUnparseableCommands.add(warnedKey);
+          emitPluginWorkerLog(
+            'warn',
+            `@nx/playwright: could not infer an Nx task from the webServer command "${server.command}" in ${configFilePath}, so no serve dependency or readiness wait is inferred for it.`
+          );
+        }
       }
     }
   }
 
-  return tasks;
+  return { commandTasks, uncoveredServers };
 }
 
 // Playwright throws when `port` and `url` are both truthy, but a present
@@ -918,8 +965,10 @@ function parseTaskFromCommand(command: string): {
 
   const nxRunMatch = command.match(nxRunRegex);
   if (nxRunMatch) {
+    // Truthiness rather than `!== undefined`: a trailing colon (`app:serve:`)
+    // splits to an empty configuration, which behaves as none.
     const [project, target, configuration] = nxRunMatch[1].split(':');
-    return { project, target, hasConfiguration: configuration !== undefined };
+    return { project, target, hasConfiguration: !!configuration };
   }
 
   const infixMatch = command.match(infixRegex);
@@ -931,11 +980,18 @@ function parseTaskFromCommand(command: string): {
   return null;
 }
 
+// Whether tasks consuming the chain's servers must not run in parallel: with
+// no inferred serve task, or with any reused server no task covers, something
+// the graph cannot see starts a server, and concurrent consumers would race
+// it (each launching its own copy, or tearing it down under the others).
+function chainRequiresSerialization(chain: ChainWebserver): boolean {
+  return !chain.commandTasks.length || chain.uncoveredServers > 0;
+}
+
 // A chain with inferred serve tasks depends on them (and its gate, when one
-// was inferred); one without cannot know what starts the server, so the target
-// must not run in parallel with whatever does. Set together so a config that
-// inherits one state (the atomized CI base copies the e2e config) cannot end
-// up carrying both.
+// was inferred). Set together with parallelism so a config that inherits one
+// state (the atomized CI base copies the e2e config) cannot end up carrying
+// both.
 function applyChainDependsOn(
   targetConfig: TargetConfiguration,
   chain: ChainWebserver,
@@ -945,10 +1001,13 @@ function applyChainDependsOn(
     targetConfig.dependsOn = readyTargetName
       ? [...getDependsOn(chain.commandTasks), { target: readyTargetName }]
       : getDependsOn(chain.commandTasks);
-    delete targetConfig.parallelism;
   } else {
     delete targetConfig.dependsOn;
+  }
+  if (chainRequiresSerialization(chain)) {
     targetConfig.parallelism = false;
+  } else {
+    delete targetConfig.parallelism;
   }
 }
 

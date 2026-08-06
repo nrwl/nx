@@ -234,8 +234,8 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
   });
 
   it('rejects a tagged error message even when the string is empty', async () => {
-    // Guards the throw-don't-fall-back design: an empty error string must not
-    // read as a successful (empty) result.
+    // Guards the fork's reject contract: an empty error string must not read
+    // as a successful (empty) result.
     _setWorkerScriptPath(
       writeWorker(
         'empty-error.js',
@@ -257,5 +257,26 @@ process.send({ type: 'webserver-config-result', webServers: [{ command: 'x', url
     await expect(
       resolveWebServersUnderEnv('config.ts', 'root', {})
     ).rejects.toThrow(/exited with code 3[\s\S]*boom-detail/);
+  });
+
+  it('kills a hung worker and rejects when the evaluation times out', async () => {
+    jest.useFakeTimers();
+    try {
+      // Holds the event loop open and never reports, like a config stuck in a
+      // busy loop or awaiting something that never resolves.
+      _setWorkerScriptPath(
+        writeWorker('hang.js', `setInterval(() => {}, 1000);`)
+      );
+      const evaluation = resolveWebServersUnderEnv('config.ts', 'root', {});
+      // Attach the rejection expectation before firing the timer so the
+      // rejection is never unhandled.
+      const assertion = expect(evaluation).rejects.toThrow(
+        'Timed out evaluating the Playwright config'
+      );
+      jest.advanceTimersByTime(30_000);
+      await assertion;
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

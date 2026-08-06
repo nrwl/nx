@@ -78,10 +78,10 @@
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "tslib": "catalog:typescript",
     "https-proxy-agent": "catalog:",
     "minimatch": "catalog:",
-    "semver": "catalog:"
+    "semver": "catalog:",
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "nx": "workspace:*"
