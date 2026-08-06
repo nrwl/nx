@@ -1,10 +1,7 @@
 # `--focus` selectors and resolution
 
-`--focus` narrows what the report expands on. It never changes which migrations run and never
-hides a failure: out-of-focus migrations still appear as one-liners, and every failure is shown
-regardless of tier. Omitting `--focus` puts everything in focus.
-
-It applies to modes 1 and 2. Mode 3 already runs a single migration, so focusing is moot there.
+Selector syntax and resolution for `--focus`, whose scope and two-tier report shape `SKILL.md`
+step 8 defines. Omitting it puts everything in focus.
 
 ## Selectors
 

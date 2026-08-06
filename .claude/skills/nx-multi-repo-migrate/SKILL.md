@@ -1,7 +1,7 @@
 ---
 name: nx-multi-repo-migrate
 description: Migrate several repos to a target nx version (e.g. 23.0.0-beta.25) in one coordinated pass — delegates `nx migrate` + migrations to a Polygraph child agent per repo, then pushes branches and opens linked draft PRs. Use when asked to upgrade/migrate multiple repos to a specific nx version, or when working a Polygraph session whose goal is an nx version bump across repos. The target must already be published upstream; to test an unreleased local build against the repos, use `test-unreleased-migration` instead.
-allowed-tools: Bash(npm view *), Read, Write(tmp/notes/**), Grep, Glob, Agent, Skill(polygraph:polygraph), Skill(run-nx-migration), mcp__plugin_polygraph_polygraph-mcp__show_session, mcp__plugin_polygraph_polygraph-mcp__push_branch, mcp__plugin_polygraph_polygraph-mcp__create_pr
+allowed-tools: Bash(npm view *), Read, Grep, Glob, Agent, Skill(polygraph:polygraph), Skill(run-nx-migration), mcp__plugin_polygraph_polygraph-mcp__show_session, mcp__plugin_polygraph_polygraph-mcp__push_branch, mcp__plugin_polygraph_polygraph-mcp__create_pr
 ---
 
 # Nx Multi-Repo Migrate
@@ -23,7 +23,7 @@ Use the `polygraph` skill to discover repos, select the org, and start (or join)
 
 This is the Polygraph way: each repo's work runs in its own child agent, not in the parent. Delegate to every repo in the session, in parallel, through the `polygraph:polygraph-delegate-subagent` running in the background. It owns `spawn_agent` and `show_agent`, which the `polygraph` skill requires be driven from a subagent rather than called directly.
 
-Hand each child the **child instruction block** from the `run-nx-migration` skill (`Skill(run-nx-migration)`), which owns the per-repo mechanics — package-manager detection and mutable install, the `--create-commits` crash, applying the deferred AI migrations, the graph-resolves verify — plus the run gotchas (release-age gate failures, pnpm under the sandbox, the initiator running in-place, source collisions). Fill its parameters: `<VERSION>` = the target version and `<BRANCH>` = `migrate-nx-<VERSION>`, and drop its `<REGISTRY>` clause, since this skill migrates to a version already on the public registry. Its "completing a partial run" note, package-manager cheat sheet, and "migrations can rewrite source" note apply here unchanged.
+Hand each child the **child instruction block** from the `run-nx-migration` skill (`Skill(run-nx-migration)`), which owns the per-repo mechanics (package-manager detection and mutable install, the `--create-commits` crash, applying the deferred AI migrations, the graph-resolves verify) plus the run gotchas (release-age gate failures, pnpm under the sandbox, the initiator running in-place, source collisions). Fill its parameters: `<VERSION>` = the target version and `<BRANCH>` = `migrate-nx-<VERSION>`, and drop its `<REGISTRY>` clause, since this skill migrates to a version already on the public registry. Its "completing a partial run" note, package-manager cheat sheet, and "migrations can rewrite source" note apply here unchanged.
 
 ### 3. Push + open a PR per repo, as each child finishes
 
@@ -49,7 +49,7 @@ The PRs stay **linked** because they all join the same Polygraph session — the
 
 ## Gotchas from real runs
 
-These each cost real time on a live 5-repo run. Plan for them up front. The per-repo run gotchas — release-age-gate downgrades, pnpm dying under the sandbox, the initiator running in-place, source collisions — live in the `run-nx-migration` skill; the two below are specific to this skill's multi-repo push/PR flow.
+These each cost real time on a live 5-repo run. Plan for them up front. The per-repo run gotchas (release-age-gate downgrades, pnpm dying under the sandbox, the initiator running in-place, source collisions) live in the `run-nx-migration` skill; the two below are specific to this skill's multi-repo push/PR flow.
 
 **The base can move after you start.** Branching from `origin/<base>` (step 1 of the shared child block) handles the _initial_ state, but the default branch can still advance **mid-run** — e.g. a separate version-bump PR merges underneath you, as happened when ocean's `main` jumped beta.23→beta.25 below an open migrate PR and turned it **conflicting**. Detect it with the behind-count (`git rev-list --count migrate-nx-<V>..origin/<base>`) and watch for open bump PRs; when the base moves, **redo the branch onto the fresh base** — only the repos whose base actually advanced need it. Redoing onto a newer base can also _shrink_ the diff: a beta.25→rc.0 redo is dep-only, whereas the old beta.23→rc.0 ran 16 migrations and rewrote source.
 

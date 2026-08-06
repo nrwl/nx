@@ -40,7 +40,7 @@ Parameters the parent fills in:
 **Pre-staged `migrations.json` (no Generate phase).** A consumer that produces
 `migrations.json` itself and installs the target nx into the repo some other way (e.g. from a
 local registry) skips Generate. Keep steps 1 and 2, replace step 5 with its own delivery install,
-drop steps 3, 4 and 6, then run steps 7 to 11. Two consequences of dropping those steps:
+drop steps 3, 4 and 6, then run steps 7 to 11. Four consequences of dropping those steps:
 
 - **Branch before delivering.** Step 1 must run against a clean tree. A delivery that
   rewrites `package.json` and the lockfile first makes `git checkout -B` abort, so the
@@ -48,6 +48,17 @@ drop steps 3, 4 and 6, then run steps 7 to 11. Two consequences of dropping thos
 - **Capture the "from" version before delivering too.** Step 3's probe reads the version
   out of `node_modules`, which the delivery overwrites. Record it first; it is what the
   produced `migrations.json` has to be filtered on.
+- **Commit the delivery, and keep the scaffolding out of every commit.** Step 6 is what normally
+  isolates the version bump from the migration edits. Without it the delivery's `package.json` and
+  lockfile are still uncommitted when step 7 starts committing per migration, so the first commit
+  swallows them and per-migration attribution is gone. Commit the delivery before handing over, and
+  tell the child that the produced `migrations.json` and `tools/ai-migrations/` are run scaffolding
+  that never gets staged.
+- **Step 10's re-install has to repeat the delivery install**, same registry and same
+  package-manager flags. A plain one resolves the target version from the public registry and
+  overwrites the delivered build. Dropping the re-install altogether is not the answer either: a
+  migration that added a dependency leaves it uninstalled, and step 9 then fails for a delivery
+  reason that reads like a migration bug.
 
 The Run phase resolves each migration's implementation from the repo's `node_modules` by
 package + name, so a locally installed nx runs regardless of how it got there. Prompt paths
@@ -61,9 +72,7 @@ and it must sit at the workspace root under exactly that name. A bare `<name>` i
 when it matches exactly one entry, and a name that itself contains `:` must use the full id.
 The flag has to exist in the nx the workspace actually runs, so the delivered build has to
 include `nx` itself; the version the repo had before delivery does not matter. Run it with
-`NX_MIGRATE_USE_LOCAL` set, which skips nx's floor guard for these flags. Without it a prerelease
-build is refused: nx routes through a temp install first, and the floor check on that side is a
-bare `lt` with no same-version bypass. Two deltas downstream:
+`NX_MIGRATE_USE_LOCAL` set, or the floor guard refuses a prerelease build. Two deltas downstream:
 per-migration commits are off unless `--create-commits`
 (or `migrate.createCommits` in `nx.json`) asks for them, so step 7's commit-by-hand still
 applies; and a prompt-only or hybrid migration prints an `<nx_migrate_prompt migration="...">`

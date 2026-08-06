@@ -238,6 +238,7 @@ function stagePrompt(pkgName, promptRelPath, migrationsDir) {
 
 const CARRY = ['description', 'implementation', 'factory', 'documentation'];
 const emitted = [];
+const pendingPrompts = [];
 const gatedOut = [];
 let collectionsRead = 0;
 
@@ -278,7 +279,12 @@ for (const pkgName of packageNames) {
     const record = { package: pkgName, name, version: def.version };
     for (const k of CARRY) if (def[k] != null) record[k] = def[k];
     if (def.prompt) {
-      record.prompt = stagePrompt(pkgName, def.prompt, migrationsDir);
+      pendingPrompts.push({
+        record,
+        pkgName,
+        promptRelPath: def.prompt,
+        migrationsDir,
+      });
     }
     emitted.push(record);
   }
@@ -318,6 +324,17 @@ if (args.expect) {
         .join(', ')}. Use the full <package>:<name> id.`
     );
   }
+}
+
+// Staged only once the list is final, so a failed `--expect` leaves the target clean. These files
+// land untracked in a real repo, where `git checkout` would not take them back out.
+for (const {
+  record,
+  pkgName,
+  promptRelPath,
+  migrationsDir,
+} of pendingPrompts) {
+  record.prompt = stagePrompt(pkgName, promptRelPath, migrationsDir);
 }
 
 writeFileSync(out, JSON.stringify({ migrations: emitted }, null, 2) + '\n');
