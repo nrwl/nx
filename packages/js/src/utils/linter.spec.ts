@@ -24,9 +24,19 @@ describe('detectLinter', () => {
     tree.write('package.json', JSON.stringify(packageJson));
   }
 
-  it('should fall back to eslint when nothing is detected', () => {
-    expect(detectLinter(tree)).toBe('eslint');
+  // A workspace with no linter installed opted out of linting; inferring ESLint
+  // for it would override that choice rather than follow it.
+  it('should return none when no linter is installed', () => {
+    expect(detectLinter(tree)).toBe('none');
   });
+
+  it.each(['@nx/eslint', 'eslint'])(
+    'should detect eslint from the %s dependency',
+    (pkg) => {
+      addDevDependency(pkg);
+      expect(detectLinter(tree)).toBe('eslint');
+    }
+  );
 
   it.each(['@nx/oxlint', 'oxlint'])(
     'should detect oxlint from the %s dependency',

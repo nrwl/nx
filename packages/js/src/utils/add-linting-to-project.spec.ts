@@ -61,7 +61,12 @@ describe('addLintingToProject', () => {
   // `undefined` reaches the dispatcher from callers whose schema declares
   // `linter?`. The exhaustiveness check added alongside the normalization must
   // not turn that into a throw.
-  it('falls back to the detected linter when none is given', async () => {
+  it('falls back to eslint when the workspace already uses it', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, eslint: '^9.0.0' };
+      return json;
+    });
+
     await expect(
       addLintingToProject(tree, {
         linter: undefined,
@@ -72,6 +77,22 @@ describe('addLintingToProject', () => {
 
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@nx/eslint']).toBeDefined();
+    expect(devDependencies['oxlint']).toBeUndefined();
+  });
+
+  // Detection now answers `none` for a workspace with no linter, so the
+  // dispatcher must set nothing up rather than inferring ESLint.
+  it('sets nothing up when the workspace has no linter', async () => {
+    await expect(
+      addLintingToProject(tree, {
+        linter: undefined,
+        project: 'my-lib',
+        addPlugin: true,
+      })
+    ).resolves.toBeDefined();
+
+    const { devDependencies = {} } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/eslint']).toBeUndefined();
     expect(devDependencies['oxlint']).toBeUndefined();
   });
 

@@ -34,11 +34,10 @@ function hasAnyDependency(tree: Tree, packages: string[]): boolean {
  * alongside its existing ESLint setup, and new projects should follow the
  * direction of travel rather than the setup being migrated away from.
  *
- * Falls back to `eslint` when nothing is detected, preserving the historical
- * default for fresh workspaces. Never returns `none` — detection answers "which
- * linter", not "whether to lint", so callers keep that decision.
+ * Returns `none` when neither is installed, so a workspace that opted out of
+ * linting keeps that choice instead of having ESLint inferred for it.
  */
-export function detectLinter(tree: Tree): Exclude<LinterType, 'none'> {
+export function detectLinter(tree: Tree): LinterType {
   if (
     hasPlugin(tree, '@nx/oxlint') ||
     hasAnyDependency(tree, ['@nx/oxlint', 'oxlint'])
@@ -46,5 +45,14 @@ export function detectLinter(tree: Tree): Exclude<LinterType, 'none'> {
     return 'oxlint';
   }
 
-  return 'eslint';
+  // `@nx/eslint` registers its inference plugin as `@nx/eslint/plugin`, unlike
+  // `@nx/oxlint`, which registers under its bare package name.
+  if (
+    hasPlugin(tree, '@nx/eslint/plugin') ||
+    hasAnyDependency(tree, ['@nx/eslint', 'eslint'])
+  ) {
+    return 'eslint';
+  }
+
+  return 'none';
 }

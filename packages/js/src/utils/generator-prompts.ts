@@ -11,23 +11,14 @@ export async function normalizeLinterOption(
     return linter;
   }
 
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   // Offer the linter the workspace already uses first, so a workspace that has
   // adopted Oxlint is not pushed back onto ESLint by the prompt's own ordering.
+  // `detectLinter` answers `none` for a workspace with no linter, so the
+  // opted-out case needs no separate branch here.
   const detected = detectLinter(tree);
-  const others = (['eslint', 'oxlint'] as const).filter((l) => l !== detected);
-  const choices = isTsSolutionSetup
-    ? [
-        { name: 'none' },
-        { name: detected },
-        ...others.map((name) => ({ name })),
-      ]
-    : [
-        { name: detected },
-        ...others.map((name) => ({ name })),
-        { name: 'none' },
-      ];
-  const defaultValue = isTsSolutionSetup ? 'none' : detected;
+  const others = (['eslint', 'oxlint', 'none'] as const).filter(
+    (l) => l !== detected
+  );
 
   return await promptWhenInteractive<{
     linter: LinterType;
@@ -36,10 +27,10 @@ export async function normalizeLinterOption(
       type: 'autocomplete',
       name: 'linter',
       message: `Which linter would you like to use?`,
-      choices,
+      choices: [{ name: detected }, ...others.map((name) => ({ name }))],
       initial: 0,
     },
-    { linter: defaultValue }
+    { linter: detected }
   ).then(({ linter }) => linter);
 }
 
