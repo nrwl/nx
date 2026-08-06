@@ -1,0 +1,117 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "$schema": "https://json-schema.org/schema",
+  "cli": "nx",
+  "title": "tsdown Build Target",
+  "description": "Build a TypeScript library using tsdown (Rolldown-powered).",
+  "type": "object",
+  "properties": {
+    "entry": {
+      "description": "Entry point(s) for the build.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      ],
+      "default": ["src/index.ts"],
+      "x-priority": "important"
+    },
+    "outDir": {
+      "type": "string",
+      "description": "Output directory for the build.",
+      "default": "dist"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files. Used by Nx for caching.",
+      "x-completion-type": "directory",
+      "x-priority": "important"
+    },
+    "format": {
+      "type": "array",
+      "description": "Output format(s).",
+      "items": {
+        "type": "string",
+        "enum": ["esm", "cjs", "iife"]
+      },
+      "default": ["esm"]
+    },
+    "dts": {
+      "type": "boolean",
+      "description": "Generate TypeScript declaration files.",
+      "default": true,
+      "x-priority": "important"
+    },
+    "sourcemap": {
+      "type": "boolean",
+      "description": "Generate source maps.",
+      "default": false
+    },
+    "clean": {
+      "type": "boolean",
+      "description": "Clean the output directory before building.",
+      "default": true
+    },
+    "tsconfig": {
+      "type": "string",
+      "description": "Path to the TypeScript configuration file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json",
+      "x-priority": "important"
+    },
+    "external": {
+      "type": "array",
+      "description": "External dependencies to exclude from the bundle.",
+      "items": { "type": "string" }
+    },
+    "skipNodeModulesBundle": {
+      "type": "boolean",
+      "description": "Skip bundling all node_modules dependencies. When true, all packages under node_modules are treated as external.",
+      "default": false
+    },
+    "minify": {
+      "type": "boolean",
+      "description": "Minify the output.",
+      "default": false
+    },
+    "target": {
+      "type": "string",
+      "description": "Compilation target (e.g. 'es2022', 'node18')."
+    },
+    "platform": {
+      "type": "string",
+      "description": "Target runtime platform.",
+      "enum": ["node", "browser", "neutral"],
+      "default": "node"
+    },
+    "globalName": {
+      "type": "string",
+      "description": "Global variable name for IIFE format builds."
+    },
+    "shims": {
+      "type": "boolean",
+      "description": "Enable CommonJS/ESM compatibility shims (e.g. __dirname in ESM).",
+      "default": false
+    },
+    "onSuccess": {
+      "type": "string",
+      "description": "Command to run after a successful build. Especially useful in watch mode."
+    },
+    "configFile": {
+      "type": "string",
+      "description": "Path to a tsdown configuration file. When provided, CLI args are not generated from other options.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsdown.config.@(ts|mts|cts|js|mjs|cjs)"
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Enable re-building when files change.",
+      "default": false
+    }
+  },
+  "required": [],
+  "examplesFile": "../../../docs/tsdown-examples.md"
+}

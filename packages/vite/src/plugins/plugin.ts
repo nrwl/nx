@@ -507,6 +507,7 @@ function getOutputs(
       viteBuildConfig?.builder?.buildApp ||
       build?.rollupOptions?.input || // Vite <8
       build?.rolldownOptions?.input || // Vite >=8
+      build?.rolldownOptions?.preserveModules || // Rolldown library builds
       existsSync(join(workspaceRoot, projectRoot, 'index.html'))
   );
 
