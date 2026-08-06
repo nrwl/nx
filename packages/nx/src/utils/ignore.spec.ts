@@ -208,11 +208,16 @@ describe('the ignore authorities', () => {
   describe('createGitIgnoreChecker', () => {
     it('reads .gitignore and .nxignore', () => {
       const git = createGitIgnoreChecker(
-        treeWith({ '.gitignore': 'a.ts\n', '.nxignore': 'b.ts\n' })
+        treeWith({
+          '.gitignore': 'a.ts\n',
+          '.nxignore': 'b.ts\n',
+          '.prettierignore': 'c.ts\n',
+        })
       );
 
       expect(git.isIgnoredFile('a.ts')).toBe(true);
       expect(git.isIgnoredFile('b.ts')).toBe(true);
+      // git knows nothing about .prettierignore - the set is exact, not a floor.
       expect(git.isIgnoredFile('c.ts')).toBe(false);
     });
 
