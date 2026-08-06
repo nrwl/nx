@@ -908,6 +908,19 @@ function toRelativeWithin(
  * A file oxfmt cannot parse fails only itself: the rest of the batch is still
  * applied, and every failure is reported through `errors`, one entry per file.
  */
+/** The batch's own oxfmt config, if it carries one. */
+function findOxfmtConfigInBatch(
+  files: { path: string; content: string }[]
+): { name: string; content: string } | undefined {
+  for (const name of oxfmtConfigFiles) {
+    const match = files.find((file) => file.path === name);
+    if (match) {
+      return { name, content: match.content };
+    }
+  }
+  return undefined;
+}
+
 export async function formatFilesWithOxfmt(
   files: { path: string; content: string }[],
   workspaceRoot: string,
@@ -921,7 +934,15 @@ export async function formatFilesWithOxfmt(
   const { format } = await loadOxfmtModule();
   // Config, ignore files and .editorconfig are all resolved from the file's own
   // directory upwards, as the CLI does, and cached per directory.
-  const resolveConfig = createOxfmtConfigResolver(workspaceRoot, seedConfig);
+  // A config in the batch itself is the freshest one there is, and for a caller
+  // holding a tree it may be the only copy - the on-disk file is stale or
+  // absent until the tree flushes. Callers that already know which file that is
+  // still pass it; this is the fallback for the ones that do not, so the answer
+  // does not depend on which entry point you came through.
+  const resolveConfig = createOxfmtConfigResolver(
+    workspaceRoot,
+    seedConfig ?? findOxfmtConfigInBatch(files)
+  );
   // oxfmt honours `.prettierignore` as well as `.gitignore` - measured against
   // its CLI, and part of being a drop-in for prettier.
   const resolveIgnores = createIgnoreChainResolver(
