@@ -27,15 +27,20 @@ const PM_EXEC_PREFIX: Record<string, string> = {
   bun: 'bun',
 };
 
-// The orchestrator is dark-launched behind NX_MIGRATE_ORCHESTRATOR and its
-// init additionally requires an agent context (CLAUDECODE is the detection
-// seam). Dispensed commands assume the gate env is exported at the session
-// level, so the fake agent carries it on every invocation.
-const ORCHESTRATOR_ENV = {
-  NX_MIGRATE_SKIP_INSTALL: 'true',
-  NX_MIGRATE_USE_LOCAL: 'true',
+// What the driving agent's own shell carries, on every invocation it makes:
+// CLAUDECODE is the seam nx's agent detection reads.
+const AGENT_ENV = { CLAUDECODE: '1' };
+
+// Init is the only gated entry point, so it is the only one carrying
+// NX_MIGRATE_ORCHESTRATOR. Dispensed commands are re-run with AGENT_ENV alone,
+// which is what pins them as self-sufficient. The other two keep init off the
+// temp-installation path and its pre-install; the dispensed commands derive
+// both from `--run-id`.
+const INIT_ENV = {
+  ...AGENT_ENV,
   NX_MIGRATE_ORCHESTRATOR: 'true',
-  CLAUDECODE: '1',
+  NX_MIGRATE_USE_LOCAL: 'true',
+  NX_MIGRATE_SKIP_INSTALL: 'true',
 };
 
 const PKG = 'migrate-orch-package';
@@ -79,36 +84,22 @@ function parseLastDispense(output: string): DispenseBlock {
   return last;
 }
 
-// Dispensed commands are POSIX env-prefixed `<pm exec> nx migrate ...`
-// strings; split them so they can be re-run through runCLI's package manager
-// wrapper.
-function parseDispensedCommand(command: string): {
-  env: Record<string, string>;
-  args: string;
-} {
+// Dispensed commands are plain `<pm exec> nx migrate ...` strings; strip the
+// prefix so the rest can be re-run through runCLI's package manager wrapper.
+// The assertion is the point: a command carrying anything before `<pm exec>`
+// would no longer be executable as-is on Windows.
+function dispensedArgs(command: string): string {
   const tokens = command.split(' ');
-  const env: Record<string, string> = {};
-  let i = 0;
-  while (
-    i < tokens.length &&
-    !tokens[i].startsWith('-') &&
-    tokens[i].includes('=')
-  ) {
-    const eq = tokens[i].indexOf('=');
-    env[tokens[i].slice(0, eq)] = tokens[i].slice(eq + 1);
-    i++;
-  }
   const execTokens = PM_EXEC_PREFIX[getSelectedPackageManager()].split(' ');
-  const prefixMatches = execTokens.every((t, j) => tokens[i + j] === t);
-  if (!prefixMatches || tokens[i + execTokens.length] !== 'nx') {
+  const prefixMatches = execTokens.every((t, i) => tokens[i] === t);
+  if (!prefixMatches || tokens[execTokens.length] !== 'nx') {
     throw new Error(`Unexpected dispensed command shape: ${command}`);
   }
-  return { env, args: tokens.slice(i + execTokens.length + 1).join(' ') };
+  return tokens.slice(execTokens.length + 1).join(' ');
 }
 
 function runDispensed(command: string): string {
-  const { env, args } = parseDispensedCommand(command);
-  return runCLI(args, { env: { ...env, ...ORCHESTRATOR_ENV } });
+  return runCLI(dispensedArgs(command), { env: AGENT_ENV });
 }
 
 function handoffPathFrom(block: DispenseBlock): string {
@@ -252,7 +243,7 @@ const slowMig = { package: PKG, name: 'slow-mig', version: '1.0.0' };
 
 function runInit(): string {
   return runCLI('migrate --run-migrations=migrations.json', {
-    env: ORCHESTRATOR_ENV,
+    env: INIT_ENV,
   });
 }
 
@@ -266,16 +257,14 @@ async function killWorkerAndReconcile(initOutput: string): Promise<{
   const dispense = parseLastDispense(initOutput);
   expect(dispense.action).toBe('next-step');
 
-  const { env, args } = parseDispensedCommand(dispense.payload.command);
   const pmc = getPackageManagerCommand();
-  const workerPromise = runCommandAsync(`${pmc.runNxSilent} ${args}`, {
-    silenceError: true,
-    env: {
-      ...getStrippedEnvironmentVariables(),
-      ...env,
-      ...ORCHESTRATOR_ENV,
-    },
-  });
+  const workerPromise = runCommandAsync(
+    `${pmc.runNxSilent} ${dispensedArgs(dispense.payload.command)}`,
+    {
+      silenceError: true,
+      env: { ...getStrippedEnvironmentVariables(), ...AGENT_ENV },
+    }
+  );
 
   let pid: number;
   await waitUntil(
@@ -327,10 +316,10 @@ describe('migrate orchestrator (dark launch)', () => {
     expect(firstDispense.action).toBe('next-step');
     const execPrefix = PM_EXEC_PREFIX[getSelectedPackageManager()];
     expect(firstDispense.payload.command).toBe(
-      `NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true ${execPrefix} nx migrate --run-migration=${PKG}:gen-mig --run-id=${firstDispense.runId}`
+      `${execPrefix} nx migrate --run-migration=${PKG}:gen-mig --run-id=${firstDispense.runId}`
     );
     expect(firstDispense.payload.then).toBe(
-      `NX_MIGRATE_ORCHESTRATOR=true NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true ${execPrefix} nx migrate --run-id=${firstDispense.runId}`
+      `${execPrefix} nx migrate --run-id=${firstDispense.runId}`
     );
 
     const complete = driveToComplete(initOutput);

@@ -25,23 +25,41 @@ export const NEW_MIGRATE_FLAGS = [
   '--stepAction',
 ] as const;
 
+const RUN_ID_FLAGS = ['--run-id', '--runId'] as const;
+
 /**
  * Matches an exact token or `<flag>=<value>`. The `=` matters: a bare
  * `startsWith` would also match `--run-migrations` (trailing s).
  */
-export function findNewMigrateFlag(argv: string[]): string | undefined {
+function findFlag(
+  argv: string[],
+  flags: readonly string[]
+): string | undefined {
   for (const arg of argv) {
     // Everything after the -- separator is positional data, not options.
     if (arg === '--') {
       return undefined;
     }
-    for (const flag of NEW_MIGRATE_FLAGS) {
+    for (const flag of flags) {
       if (arg === flag || arg.startsWith(`${flag}=`)) {
         return flag;
       }
     }
   }
   return undefined;
+}
+
+export function findNewMigrateFlag(argv: string[]): string | undefined {
+  return findFlag(argv, NEW_MIGRATE_FLAGS);
+}
+
+/**
+ * Whether the invocation names an existing orchestrated run. Such an
+ * invocation has to execute against the workspace-local nx that owns the run's
+ * state under `.nx/migrate-runs`, so it never routes to a temp installation.
+ */
+export function targetsExistingRun(argv: string[]): boolean {
+  return findFlag(argv, RUN_ID_FLAGS) !== undefined;
 }
 
 /**

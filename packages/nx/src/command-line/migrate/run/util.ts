@@ -11,29 +11,12 @@ import {
   readPackageJsonDeps,
   runInstall,
 } from '../execute-migration';
-import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
 import type { MigrateStep } from './run-state';
 import { updateRunState } from './state-lock';
 
 export function nowIso(): string {
   return new Date().toISOString();
 }
-
-// Dispensed commands use POSIX env-prefix syntax, invalid in both cmd.exe and
-// PowerShell. Until Windows support lands, refuse up front rather than working
-// on a run whose dispensed commands cannot execute. The remediation differs
-// per entry point: init can fall back to the standard flow, but an existing
-// run can only be continued off-Windows or abandoned (the standard flow cannot
-// resume it, and a restart would re-apply finished migrations).
-export function assertPlatformSupported(remediation: string): void {
-  if (process.platform === 'win32') {
-    throw new Error(
-      `The orchestrated migrate flow is not supported on Windows yet. ${remediation}`
-    );
-  }
-}
-
-export const EXISTING_RUN_WINDOWS_REMEDIATION = `This run cannot be continued on Windows. Continue it from a non-Windows environment, or delete its directory under ${MIGRATE_RUNS_RELATIVE_DIR} to abandon it; migrations it already applied remain applied.`;
 
 /**
  * Fingerprints the workspace dependencies so a step can persist what they

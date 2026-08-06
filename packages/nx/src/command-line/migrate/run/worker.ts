@@ -81,8 +81,6 @@ import {
 } from './state-machine';
 import { updateRunState } from './state-lock';
 import {
-  assertPlatformSupported,
-  EXISTING_RUN_WINDOWS_REMEDIATION,
   installDepsChangedSinceDispense,
   nowIso,
   pmExecPrefix,
@@ -126,13 +124,9 @@ export async function runSingleMigrationWorker(
 
   // The worker is a second CLI entry point: the run id reaches runDir() (where
   // join resolves '..'), so validate it up front exactly as the orchestrator
-  // does before it trusts a run id. Recording into a run is part of the
-  // orchestrated flow, so it is refused on Windows for the same reason.
-  if (runId !== undefined) {
-    if (!RUN_ID_SAFE.test(runId)) {
-      throw new Error(`Invalid run id '${runId}'.`);
-    }
-    assertPlatformSupported(EXISTING_RUN_WINDOWS_REMEDIATION);
+  // does before it trusts a run id.
+  if (runId !== undefined && !RUN_ID_SAFE.test(runId)) {
+    throw new Error(`Invalid run id '${runId}'.`);
   }
 
   const { migrations, source } = readMigrationsSource(root, runId);

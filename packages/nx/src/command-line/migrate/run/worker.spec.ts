@@ -1608,21 +1608,6 @@ describe('runSingleMigrationWorker', () => {
         /No migrate run '23\.1\.0' was found under \.nx\/migrate-runs/
       );
     });
-
-    it('refuses to record into a run on Windows, where the dispensed commands cannot run', async () => {
-      const originalPlatform = Object.getOwnPropertyDescriptor(
-        process,
-        'platform'
-      );
-      Object.defineProperty(process, 'platform', { value: 'win32' });
-      try {
-        await expect(
-          runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
-        ).rejects.toThrow(/not supported on Windows/);
-      } finally {
-        Object.defineProperty(process, 'platform', originalPlatform);
-      }
-    });
   });
 
   describe('agentic execution (spawn mode)', () => {

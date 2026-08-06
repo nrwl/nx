@@ -310,11 +310,9 @@ describe('orchestrator', () => {
       expect(block.action).toBe('next-step');
       expect(block.step).toBe('step-1');
       expect(block.payload.command).toBe(
-        `NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
+        `npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
       );
-      expect(block.payload.then).toBe(
-        `NX_MIGRATE_ORCHESTRATOR=true NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true npx nx migrate --run-id=${runId}`
-      );
+      expect(block.payload.then).toBe(`npx nx migrate --run-id=${runId}`);
       expect(mockInit).toHaveBeenCalledWith({
         migrationCount: 2,
         createCommits: false,
@@ -623,37 +621,26 @@ describe('orchestrator', () => {
         });
       });
 
-      it('refuses init and reconcile loudly instead of dispensing POSIX-only commands', async () => {
+      it('dispenses commands a cmd.exe or PowerShell shell can run verbatim', async () => {
         Object.defineProperty(process, 'platform', { value: 'win32' });
 
-        // toThrow(Error) asserts message equality, so a stray restart
-        // instruction appended to either message fails the test.
-        await expect(
-          runOrchestratorInit({
-            root,
-            migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
-            createCommits: false,
-            commitPrefix: 'chore: [nx migration] ',
-            skipInstall: false,
-            installedNxVersion: '23.0.0',
-          })
-        ).rejects.toThrow(
-          new Error(
-            'The orchestrated migrate flow is not supported on Windows yet. Unset NX_MIGRATE_ORCHESTRATOR to use the standard migrate flow.'
-          )
-        );
-        expect(findActiveRun(root).active).toBeNull();
+        await runOrchestratorInit({
+          root,
+          migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+          createCommits: false,
+          commitPrefix: 'chore: [nx migration] ',
+          skipInstall: false,
+          installedNxVersion: '23.0.0',
+        });
 
-        // The standard flow cannot continue an orchestrated run, so the
-        // reconcile remediation is continue-elsewhere or abandon, not the
-        // init fallback.
-        await expect(
-          runOrchestratorReconcile({ root, runId: 'run-1' })
-        ).rejects.toThrow(
-          new Error(
-            'The orchestrated migrate flow is not supported on Windows yet. This run cannot be continued on Windows. Continue it from a non-Windows environment, or delete its directory under .nx/migrate-runs to abandon it; migrations it already applied remain applied.'
-          )
+        const { runId } = findActiveRun(root).active;
+        const block = lastBlock();
+        // Nothing ahead of the package manager's exec prefix: an env-var
+        // assignment there is POSIX-only syntax neither Windows shell parses.
+        expect(block.payload.command).toBe(
+          `npx nx migrate --run-migration=@nx/js:a --run-id=${runId}`
         );
+        expect(block.payload.then).toBe(`npx nx migrate --run-id=${runId}`);
       });
     });
 

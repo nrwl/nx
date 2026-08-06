@@ -166,6 +166,20 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
       );
     });
 
+    it('skips the pre-install when recording into a run, which pays for one per dispensed command', async () => {
+      const exitCode = await migrate(
+        ROOT,
+        { runMigration: '@nx/js:gen', runId: 'run-1' },
+        ['--run-migration=@nx/js:gen', '--run-id=run-1']
+      );
+
+      expect(exitCode).toBe(0);
+      expect(mockRunInstall).not.toHaveBeenCalled();
+      // The run's own worker still installs what the migration changed; only
+      // the wrapper's blanket pre-install is skipped.
+      expect(mockRunNxSync).toHaveBeenCalledTimes(1);
+    });
+
     it('reads the local nx version from the workspace root, not the invocation directory', async () => {
       const wsRoot = realpathSync(
         mkdtempSync(join(tmpdir(), 'guard-wiring-ws-'))
@@ -208,10 +222,6 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
   });
 
   describe('runOrchestratorReconcileFromCli', () => {
-    beforeEach(() => {
-      process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
-    });
-
     it('runs the guard with the raw argv before handing off to the local nx', async () => {
       const argv = ['--run-id=abc123'];
       const exitCode = await migrate(ROOT, { runId: 'abc123' }, argv);
@@ -320,6 +330,21 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     expect(mockResolvePackageVersion).toHaveBeenCalledWith('nx', 'latest', {
       applySideEffects: false,
     });
+  });
+
+  it('runs the local nx without consulting the router when the argv names an existing run', async () => {
+    // The workspace-local nx owns the run state, so a temp installation would
+    // only hand back to it after paying for its own install; the dispensed
+    // commands rely on this instead of carrying NX_MIGRATE_USE_LOCAL.
+    process.argv = ['node', 'nx', 'migrate', '--run-id=run-1'];
+
+    const exitCode = await runMigration();
+
+    expect(exitCode).toBe(0);
+    expect(mockResolveRunTarget).not.toHaveBeenCalled();
+    expect(mockEnsurePackageHasProvenance).not.toHaveBeenCalled();
+    expect(mockRunNxSync).toHaveBeenCalledTimes(1);
+    expect(mockRunNxSync.mock.calls[0][0]).toBe('_migrate --run-id=run-1');
   });
 
   it('runs the local nx instead of installing the temp CLI when routed to local-nx', async () => {

@@ -193,6 +193,7 @@ import { applyAgenticHandoffGitignoreFallback } from './agentic/handoff-gitignor
 import {
   assertWorkspaceNxSupportsNewMigrateFlags,
   resolveNewMigrateFlagsRunTarget,
+  targetsExistingRun,
 } from './version-skew-guard';
 import { nxVersion as ownNxVersion } from '../../utils/versions';
 
@@ -1317,28 +1318,28 @@ export async function parseMigrationsOptions(
         `Error: '--run-id' requires the id of the migrate run to record into.`
       );
     }
-    // With the orchestrator gate on, a bare '--run-id' reconciles the run.
-    if (process.env.NX_MIGRATE_ORCHESTRATOR === 'true') {
-      // yargs' choices already reject bad CLI values; this guards programmatic
-      // callers, where silently dropping the action would reconcile without it.
-      if (
-        options.stepAction !== undefined &&
-        !isStepAction(options.stepAction)
-      ) {
-        throw new Error(
-          `Error: '--step-action' must be one of ${STEP_ACTIONS.join(', ')}.`
-        );
-      }
-      return {
-        type: 'orchestratorReconcile',
-        runId: options.runId as string,
-        ...(options.stepAction !== undefined
-          ? { stepAction: options.stepAction }
-          : {}),
-      };
+    if (options.runMigrations !== undefined) {
+      throw new Error(
+        `Error: '--run-id' (reconcile an orchestrated run) cannot be combined with '--run-migrations' (run the whole migrations file).`
+      );
     }
-    // Gate off: only the single-migration worker consumes '--run-id'.
-    throw new Error(`Error: '--run-id' requires '--run-migration'.`);
+    // A bare '--run-id' reconciles the run it names. Ungated, unlike init:
+    // the id has to name a run directory that exists, and only a gated init
+    // ever creates one.
+    // yargs' choices already reject bad CLI values; this guards programmatic
+    // callers, where silently dropping the action would reconcile without it.
+    if (options.stepAction !== undefined && !isStepAction(options.stepAction)) {
+      throw new Error(
+        `Error: '--step-action' must be one of ${STEP_ACTIONS.join(', ')}.`
+      );
+    }
+    return {
+      type: 'orchestratorReconcile',
+      runId: options.runId as string,
+      ...(options.stepAction !== undefined
+        ? { stepAction: options.stepAction }
+        : {}),
+    };
   }
 
   if (options.stepAction !== undefined) {
@@ -3798,7 +3799,15 @@ async function runSingleMigrationFromCli(
   mergedArgs: { [k: string]: any }
 ): Promise<number | void> {
   const shouldSkipInstall: boolean = mergedArgs['skipInstall'] ?? false;
-  if (!shouldSkipInstall && !process.env.NX_MIGRATE_SKIP_INSTALL) {
+  // A recorded execution skips the pre-install: the run carries its own
+  // install policy and its worker installs what the migration changed, so
+  // paying for a full install ahead of every dispensed command would be
+  // redundant.
+  if (
+    opts.runId === undefined &&
+    !shouldSkipInstall &&
+    !process.env.NX_MIGRATE_SKIP_INSTALL
+  ) {
     await runInstall(
       undefined,
       'pre-migration',
@@ -3861,6 +3870,7 @@ export async function runMigration() {
       );
 
     if (
+      !targetsExistingRun(process.argv.slice(3)) &&
       process.env.NX_USE_LOCAL !== 'true' &&
       process.env.NX_MIGRATE_USE_LOCAL === undefined
     ) {

@@ -2952,31 +2952,21 @@ module.exports = {
       ).rejects.toThrow(/'--run-id' requires the id of the migrate run/);
     });
 
-    it('should reject a bare --run-id when the orchestrator gate is off', async () => {
-      const prev = process.env.NX_MIGRATE_ORCHESTRATOR;
-      delete process.env.NX_MIGRATE_ORCHESTRATOR;
-      try {
-        await expect(() =>
-          parseMigrationsOptions({ runId: 'run-1' })
-        ).rejects.toThrow(/'--run-id' requires '--run-migration'/);
-      } finally {
-        if (prev === undefined) delete process.env.NX_MIGRATE_ORCHESTRATOR;
-        else process.env.NX_MIGRATE_ORCHESTRATOR = prev;
-      }
-    });
-
-    describe('orchestrator reconcile (gate on)', () => {
+    describe('orchestrator reconcile', () => {
+      // Ungated, unlike init: the id has to name a run directory that exists,
+      // and only a gated init creates one. Dispensed commands can therefore
+      // stay plain CLI instead of carrying the gate as an env prefix.
       let prevGate: string | undefined;
       beforeEach(() => {
         prevGate = process.env.NX_MIGRATE_ORCHESTRATOR;
-        process.env.NX_MIGRATE_ORCHESTRATOR = 'true';
+        delete process.env.NX_MIGRATE_ORCHESTRATOR;
       });
       afterEach(() => {
         if (prevGate === undefined) delete process.env.NX_MIGRATE_ORCHESTRATOR;
         else process.env.NX_MIGRATE_ORCHESTRATOR = prevGate;
       });
 
-      it('discriminates a reconcile from a bare --run-id', async () => {
+      it('discriminates a reconcile from a bare --run-id with the gate off', async () => {
         expect(await parseMigrationsOptions({ runId: 'run-1' })).toEqual({
           type: 'orchestratorReconcile',
           runId: 'run-1',
@@ -3005,6 +2995,17 @@ module.exports = {
         await expect(() =>
           parseMigrationsOptions({ runId: '' })
         ).rejects.toThrow(/'--run-id' requires the id of the migrate run/);
+      });
+
+      it('rejects --run-migrations rather than silently reconciling instead', async () => {
+        await expect(() =>
+          parseMigrationsOptions({
+            runId: 'run-1',
+            runMigrations: 'migrations.json',
+          })
+        ).rejects.toThrow(
+          /'--run-id' .* cannot be combined with '--run-migrations'/
+        );
       });
     });
 
