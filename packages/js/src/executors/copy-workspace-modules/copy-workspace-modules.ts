@@ -7,14 +7,15 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
-import { getCatalogManager } from '@nx/devkit/internal';
 import {
   dropEmptyPeerDependencySections,
+  getCatalogManager,
+  getWorkspacePackagesFromGraph,
+  interpolate,
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
   warnUnshippableLocalPathSpec,
 } from '@nx/devkit/internal';
-import { interpolate } from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
 import {
   cpSync,
@@ -25,7 +26,6 @@ import {
 } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
-import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
 
