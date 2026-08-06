@@ -1940,14 +1940,18 @@ async function getPackageMigrationsUsingRegistry(
 }
 
 // Matched exactly: a hostname that merely contains one of these is a different
-// registry. registry.yarnpkg.com is npmjs' CNAME, so it serves the same metadata.
+// registry. registry.yarnpkg.com is npmjs' CNAME, so it serves the same
+// metadata; the two loopback literals are the spellings of a local registry
+// that the substring below cannot reach, since neither contains "localhost".
 const FULL_METADATA_REGISTRIES: readonly string[] = [
   'registry.npmjs.org',
   'registry.yarnpkg.com',
+  '127.0.0.1',
+  '[::1]',
 ];
-// Matched as substrings on purpose, since neither names a single host: a local
-// registry answers on any localhost spelling and an Artifactory instance is
-// identified only by that word sitting somewhere in its hostname.
+// Matched as substrings, since neither names a single host: a local registry
+// can sit on a subdomain of localhost, and an Artifactory instance is
+// identified only by that word appearing somewhere in its hostname.
 const FULL_METADATA_REGISTRY_MARKERS: readonly string[] = [
   'localhost',
   'artifactory',
