@@ -4504,6 +4504,10 @@ module.exports = {
       // npmjs' CNAME, so it serves the same metadata.
       ['the yarn registry', 'registry.yarnpkg.com'],
       ['a local registry', 'localhost'],
+      // The loopback literals a local registry is just as often reached by,
+      // neither of which contains "localhost".
+      ['a local registry on IPv4 loopback', '127.0.0.1'],
+      ['a local registry on IPv6 loopback', '[::1]'],
       ['an Artifactory host', 'myco.artifactory.example.com'],
     ])(
       'reads a migration-less packument straight from %s',
