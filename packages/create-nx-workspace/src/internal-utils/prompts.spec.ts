@@ -1,4 +1,9 @@
-import { confirmThirdPartyPreset, determineTemplate } from './prompts';
+import {
+  confirmThirdPartyPreset,
+  determineLinterOptions,
+  determineTemplate,
+} from './prompts';
+import enquirer from 'enquirer';
 
 jest.mock('../utils/ci/is-ci', () => ({
   isCI: jest.fn(() => false),
@@ -126,5 +131,45 @@ describe('confirmThirdPartyPreset', () => {
       confirmThirdPartyPreset('@my-org/nx-plugin', true, false)
     ).resolves.toBe(true);
     expect(enquirer.prompt).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('determineLinterOptions', () => {
+  beforeEach(() => {
+    (enquirer.prompt as jest.Mock).mockReset();
+  });
+
+  it('should return the given linter without prompting', async () => {
+    const result = await determineLinterOptions({
+      linter: 'oxlint',
+      interactive: true,
+    });
+
+    expect(result).toBe('oxlint');
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+  });
+
+  it('should let the prompt skip itself when not interactive', async () => {
+    // A skipped enquirer prompt resolves to its `initial` choice, so the caller
+    // still gets a linter rather than `undefined`.
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'eslint' });
+
+    const result = await determineLinterOptions({ interactive: false });
+
+    expect(result).toBe('eslint');
+    expect(enquirer.prompt).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'linter', skip: true }),
+    ]);
+  });
+
+  it('should prompt when interactive', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'oxlint' });
+
+    const result = await determineLinterOptions({ interactive: true });
+
+    expect(result).toBe('oxlint');
+    expect(enquirer.prompt).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'linter', skip: false }),
+    ]);
   });
 });

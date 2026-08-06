@@ -22,10 +22,13 @@ import {
   determineAnalytics,
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
+  determineLinterOptions,
   determineNxCloud,
   determineNxCloudV2,
   determinePackageManager,
   determineTemplate,
+  LINTERS,
+  type Linter,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
@@ -90,13 +93,6 @@ type AngularUnitTestRunner =
   | 'jest'
   | 'vitest-angular'
   | 'vitest-analog';
-
-/**
- * Mirrors `LinterType` in `@nx/js`, which this package cannot depend on.
- * One array so the type and the yargs `choices` gate below cannot drift apart.
- */
-const LINTERS = ['eslint', 'oxlint', 'none'] as const;
-type Linter = (typeof LINTERS)[number];
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
@@ -1118,8 +1114,18 @@ async function determinePresetOptions(
     case 'node':
       return determineNodeOptions(parsedArgs);
     default:
-      return parsedArgs;
+      return isNxPluginPreset(parsedArgs.preset)
+        ? { ...parsedArgs, linter: await determineLinterOptions(parsedArgs) }
+        : parsedArgs;
   }
+}
+
+/**
+ * `@nx/plugin` is not a `Preset` member — it is passed by package name, and
+ * `create-nx-plugin` appends a version to it.
+ */
+function isNxPluginPreset(preset: string | undefined): boolean {
+  return preset === '@nx/plugin' || !!preset?.startsWith('@nx/plugin@');
 }
 
 async function determineFormatterOptions(
@@ -1148,32 +1154,6 @@ async function determineFormatterOptions(
     },
   ]);
   return reply.prettier === 'Yes' ? 'prettier' : 'none';
-}
-
-async function determineLinterOptions(args: {
-  linter?: Linter;
-  interactive?: boolean;
-}): Promise<Linter> {
-  if (args.linter) return args.linter;
-  const reply = await enquirer.prompt<{ linter: Linter }>([
-    {
-      name: 'linter',
-      message: `Which linter would you like to use?`,
-      type: 'autocomplete',
-      // `name` is the value returned; `message` is what the list shows. Oxlint
-      // is labelled so it isn't presented as an equal of ESLint here while the
-      // docs and the package both call it experimental.
-      choices: [
-        { name: 'eslint' },
-        { name: 'oxlint', message: 'oxlint (experimental)' },
-        { name: 'none' },
-      ],
-      // ESLint while Oxlint is experimental. One index change flips it.
-      initial: 0,
-      skip: !args.interactive || isCI(),
-    },
-  ]);
-  return reply.linter;
 }
 
 async function determineNoneOptions(
