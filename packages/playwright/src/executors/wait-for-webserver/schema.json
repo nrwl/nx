@@ -29,7 +29,7 @@
           },
           "timeout": {
             "type": "number",
-            "description": "The maximum time to wait for this server in milliseconds. Defaults to 60000.",
+            "description": "The maximum time to wait for this server in milliseconds. A value of 0 means unset, as it does for Playwright's webServer.timeout. Defaults to 60000.",
             "default": 60000
           }
         }
@@ -37,7 +37,7 @@
     },
     "timeout": {
       "type": "number",
-      "description": "The maximum time to wait in milliseconds before failing. Overrides the timeout configured on every server."
+      "description": "The maximum time to wait in milliseconds before failing. Overrides the timeout configured on every server. A value of 0 means unset, as it does for Playwright's webServer.timeout."
     }
   },
   "required": ["servers"]
