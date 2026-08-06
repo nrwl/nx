@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@nx/angular": "link:../../packages/angular",
-    "@nx/devkit": "23.2.0-beta.2",
+    "@nx/devkit": "link:../../packages/devkit",
     "@nx/js": "link:../../packages/js",
     "@nx/oxlint": "link:../../packages/oxlint",
     "@nx/playwright": "link:../../packages/playwright",

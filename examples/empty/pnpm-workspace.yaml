@@ -4,3 +4,5 @@
 # across workspace boundaries.
 packages:
   - 'packages/*'
+overrides:
+  '@nx/devkit': link:../../packages/devkit
