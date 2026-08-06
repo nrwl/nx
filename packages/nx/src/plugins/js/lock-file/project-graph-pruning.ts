@@ -280,18 +280,24 @@ function switchNodeToHoisted(
   builder.removeNode(node.name);
   invBuilder.removeNode(node.name);
 
-  // modify the node and re-add it
-  node.name = `npm:${node.data.packageName}`;
-  builder.addExternalNode(node);
-  invBuilder.addExternalNode(node);
+  // Re-add under the hoisted name as a new object. The node is shared by
+  // reference with the caller's graph, so renaming it in place would leave that
+  // graph with a node keyed `npm:<pkg>@<version>` but named `npm:<pkg>`, and
+  // every later prune of the same graph would fail to resolve the edge.
+  const hoistedNode: ProjectGraphExternalNode = {
+    ...node,
+    name: `npm:${node.data.packageName}`,
+  };
+  builder.addExternalNode(hoistedNode);
+  invBuilder.addExternalNode(hoistedNode);
 
   targets.forEach((target) => {
-    builder.addStaticDependency(node.name, target);
-    invBuilder.addStaticDependency(target, node.name);
+    builder.addStaticDependency(hoistedNode.name, target);
+    invBuilder.addStaticDependency(target, hoistedNode.name);
   });
   sources.forEach((source) => {
-    builder.addStaticDependency(source, node.name);
-    invBuilder.addStaticDependency(node.name, source);
+    builder.addStaticDependency(source, hoistedNode.name);
+    invBuilder.addStaticDependency(hoistedNode.name, source);
   });
 }
 

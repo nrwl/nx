@@ -11,18 +11,18 @@ import {
   readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
-import { daemonClient } from 'nx/src/daemon/client/client';
+import { daemonClient } from '@nx/devkit/internal';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
 import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
-import { killProcessTreeGraceful } from 'nx/src/native';
+import { killProcessTreeGraceful } from '@nx/devkit/internal';
 import { LineAwareWriter } from './lib/line-aware-writer';
 import { createCoalescingDebounce } from './lib/coalescing-debounce';
-import { fileExists } from 'nx/src/utils/fileutils';
-import { interpolate } from 'nx/src/tasks-runner/utils';
+import { fileExists } from '@nx/devkit/internal';
+import { interpolate } from '@nx/devkit/internal';
 import { detectModuleFormat } from './lib/detect-module-format';
 import { getOutputFileName } from './lib/output-file';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';

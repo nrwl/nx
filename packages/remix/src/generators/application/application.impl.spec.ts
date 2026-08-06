@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   joinPathFragments,
@@ -9,11 +9,11 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as devkitExports from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from './application.impl';
 import { join } from 'path';
-import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { PackageManagerCommands } from '@nx/devkit/internal';
 
 describe('Remix Application', () => {
   let envBackup: string | undefined;

@@ -13,7 +13,7 @@ import { Linter, LinterType } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
 import { execSync } from 'child_process';
-import { Agent } from 'nx/src/ai/utils';
+import { Agent } from '@nx/devkit/internal';
 
 interface Schema {
   directory: string;

@@ -923,11 +923,15 @@ export async function formatFilesWithOxfmt(
   // directory upwards, as the CLI does, and cached per directory.
   const resolveConfig = createOxfmtConfigResolver(workspaceRoot, seedConfig);
   // oxfmt honours `.prettierignore` as well as `.gitignore` - measured against
-  // its CLI, and part of being a drop-in for prettier.
+  // its CLI, and part of being a drop-in for prettier. One matcher per file
+  // rather than merged, so a `!` in one cannot re-include what the other
+  // excluded - same rule prettier applies, and the same values
+  // `createOxfmtIgnoreChecker` binds for the generator side.
   const resolveIgnores = createIgnoreChainResolver(
     (relativePath) =>
       readFileIfExisting(path.join(workspaceRoot, relativePath)),
-    ['.gitignore', '.prettierignore']
+    ['.gitignore', '.prettierignore'],
+    false
   );
   const resolveEditorConfig = createEditorConfigResolver();
 

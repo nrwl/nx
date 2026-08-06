@@ -50,5 +50,7 @@ module.exports = {
     // one test environment in a worker. The mock runs the real binary, so
     // formatting assertions still exercise real oxfmt.
     '^oxfmt$': '<rootDir>/../../scripts/jest-mocks/oxfmt.js',
+    // magic-string@1 is ESM-only and @angular-devkit/schematics@22.1 pulls it in
+    '^magic-string$': '<rootDir>/../../scripts/jest-mocks/magic-string.js',
   },
 };

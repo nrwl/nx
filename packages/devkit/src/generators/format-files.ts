@@ -1,6 +1,8 @@
 import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
 import type { FormatterType } from 'nx/src/devkit-internals';
 import {
+  createOxfmtIgnoreChecker,
+  createPrettierIgnoreChecker,
   detectFormatterInTree,
   formatFilesWithOxfmt,
   isUsingPrettierInTree,
@@ -25,7 +27,10 @@ async function importPrettier(): Promise<typeof Prettier | null> {
 }
 
 /**
- * Formats all the created or updated files using the configured formatter
+ * Formats the created or updated files using the configured formatter, skipping
+ * `node_modules`, `.git`, the nx and yarn caches, and anything the workspace's
+ * `.gitignore` or `.prettierignore` covers. Which of those ignore files apply
+ * follows the formatter: prettier reads the workspace root only, oxfmt cascades.
  * @param tree - the file system tree
  * @param options - options for the formatFiles function
  *
@@ -73,8 +78,22 @@ export async function formatFiles(
 
   if (!formatterType) return;
 
+  // Each formatter gets the ignore rules its own CLI applies, so a generator
+  // never rewrites a file `nx format:check` would skip. prettier reads the root
+  // ignore files only; oxfmt cascades. Both measured against the real CLIs.
+  //
+  // `getFileInfo` in the prettier branch below looks like it filters ignored
+  // files but only covers its own built-in `node_modules` skip: with no
+  // `ignorePath` it never reads the workspace's ignore files, so `ignored` is
+  // false for everything else (measured).
+  const { isIgnoredFile } =
+    formatterType === 'oxfmt'
+      ? createOxfmtIgnoreChecker(tree)
+      : createPrettierIgnoreChecker(tree);
   const files = new Set(
-    tree.listChanges().filter((file) => file.type !== 'DELETE')
+    tree
+      .listChanges()
+      .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
   );
 
   if (formatterType === 'prettier') {

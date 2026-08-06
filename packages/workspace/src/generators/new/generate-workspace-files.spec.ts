@@ -2,14 +2,16 @@ import * as devkit from '@nx/devkit';
 import {
   formatFiles,
   readJson,
+  readJsonFile,
   type NxJsonConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import Ajv from 'ajv';
-import * as nxSchema from 'nx/schemas/nx-schema.json';
 import { Preset } from '../utils/presets';
 import { generateWorkspaceFiles } from './generate-workspace-files';
+
+const nxSchema = readJsonFile(require.resolve('nx/schemas/nx-schema.json'));
 
 jest.mock(
   'nx/src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud',

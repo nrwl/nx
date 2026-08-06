@@ -5,7 +5,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import type { FileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import type { FileMapCache } from '@nx/devkit/internal';
 import migration from './change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence';
 
 let projectGraph: ProjectGraph;

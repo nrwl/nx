@@ -1,5 +1,4 @@
-import { ExecutorContext, names } from '@nx/devkit';
-import { readJsonFile } from 'nx/src/utils/fileutils';
+import { ExecutorContext, names, readJsonFile } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
 
 import { ExpoInstallOptions } from './schema';
