@@ -95,36 +95,39 @@ describe('readPnpmYamlConfig', () => {
     expect(readPnpmYamlConfig(path())).toEqual({});
   });
 
-  it('reports a file that does not parse as invalid', () => {
+  it('reports a file that does not parse as unusable', () => {
     writeFileSync(path(), 'registries:\n\tdefault: tab-indented\n');
-    expect(readPnpmYamlConfig(path())).toBe('invalid');
+    expect(readPnpmYamlConfig(path())).toBe('unusable');
   });
 
-  it('returns null for a path through a non-directory', () => {
-    writeFileSync(path(), '');
-    expect(readPnpmYamlConfig(join(path(), 'pnpm-workspace.yaml'))).toBeNull();
-  });
-
-  it("reports a file that exists but cannot be read as 'unreadable'", () => {
+  it.each([
     // A symlink loop is the portable way to fail the read with an errno that
     // root cannot bypass, unlike a permission bit.
-    symlinkSync(path(), path());
-    expect(readPnpmYamlConfig(path())).toBe('unreadable');
-  });
+    ['a symlink loop', () => symlinkSync(path(), path())],
+    ["a directory in the file's place", () => mkdirSync(path())],
+  ])(
+    'reports a file it cannot open (%s) as unusable, the way pnpm rethrows every errno but ENOENT',
+    (_label, fault) => {
+      fault();
+      expect(readPnpmYamlConfig(path())).toBe('unusable');
+    }
+  );
 
-  it("keeps a directory in the file's place fatal, the way pnpm 11.20 dies on it", () => {
-    mkdirSync(path());
-    expect(readPnpmYamlConfig(path())).toBe('invalid');
+  it('reports a path through a non-directory as unusable, leaving the absent call to the caller that looks the file up', () => {
+    writeFileSync(path(), '');
+    expect(readPnpmYamlConfig(join(path(), 'pnpm-workspace.yaml'))).toBe(
+      'unusable'
+    );
   });
 
   it.each([
     ['a bare scalar', 'just-a-string\n'],
     ['a sequence', '- a\n- b\n'],
   ])(
-    'reports non-object content (%s) as invalid, the way pnpm dies on it',
+    'reports non-object content (%s) as unusable, the way pnpm dies on it',
     (_label, contents) => {
       writeFileSync(path(), contents);
-      expect(readPnpmYamlConfig(path())).toBe('invalid');
+      expect(readPnpmYamlConfig(path())).toBe('unusable');
     }
   );
 });

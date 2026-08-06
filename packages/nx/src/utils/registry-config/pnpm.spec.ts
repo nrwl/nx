@@ -107,7 +107,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
     // an empty document would silently drop the registry and send npm to npmjs.
     writeYaml('registries:\n\tdefault: https://reg-a.example.com/\n');
     expect(() => getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toThrow(
-      /pnpm workspace file at .* could not be parsed/
+      /pnpm workspace file at .* could not be read/
     );
   });
 
@@ -1436,35 +1436,34 @@ describe('getPnpmSpawnRegistryEnv', () => {
       );
     });
 
-    describe('a yaml config file that cannot be read', () => {
-      // pnpm resolves on from the remaining layers here (measured on 10.33.2,
-      // 11.5.0 and 11.20.0), so an unreadable file must not collapse the bridge
-      // into npm's own resolution the way an unparseable one does. A symlink
-      // loop fails the read with an errno root cannot bypass.
-      it('keeps bridging the workspace registry when the global config.yaml cannot be read', () => {
-        const { logger } = require('../logger');
-        (logger.warn as jest.Mock).mockClear();
+    // pnpm reads the global config.yaml with no existence check in front, so
+    // every fault but an absent file aborts it (measured on 11.5.0 and 11.20.0).
+    // A symlink loop and a non-directory in the path fail the read with errnos
+    // root cannot bypass, unlike a permission bit.
+    describe('a global config.yaml that cannot be opened', () => {
+      it('fails on a symlink loop rather than bridging the workspace registry pnpm never resolved', () => {
         writeYaml('registries:\n  default: https://reg-a.example.com/\n');
         mkdirSync(join(configHome, 'pnpm'), { recursive: true });
         const path = join(configHome, 'pnpm', 'config.yaml');
         symlinkSync(path, path);
 
-        let env: Record<string, string>;
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          env = fresh('is-even', root, '11.5.0');
-        });
-
-        expect(env).toEqual({
-          npm_config_registry: 'https://reg-a.example.com/',
-        });
-        expect(logger.warn).toHaveBeenCalledTimes(1);
-        expect((logger.warn as jest.Mock).mock.calls[0][0]).toContain(
-          'Could not read'
-        );
+        expect(() =>
+          getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')
+        ).toThrow('global configuration file');
       });
 
-      it('resolves on from the lower layers when pnpm-workspace.yaml cannot be read', () => {
+      it('fails when the config dir is a file, so the path runs through a non-directory', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeFileSync(join(configHome, 'pnpm'), '');
+
+        expect(() =>
+          getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')
+        ).toThrow('global configuration file');
+      });
+    });
+
+    describe('a pnpm-workspace.yaml that cannot be opened', () => {
+      it('resolves on from the lower layers through a symlink loop, which pnpm looks up as absent', () => {
         const { logger } = require('../logger');
         (logger.warn as jest.Mock).mockClear();
         // auth.ini rather than the user config: npm reads the latter itself, so
@@ -1473,16 +1472,20 @@ describe('getPnpmSpawnRegistryEnv', () => {
         const path = join(root, 'pnpm-workspace.yaml');
         symlinkSync(path, path);
 
-        let env: Record<string, string>;
-        jest.isolateModules(() => {
-          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
-          env = fresh('is-even', root, '11.5.0');
-        });
-
-        expect(env).toEqual({
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
           npm_config_registry: 'https://reg-b.example.com/',
         });
-        expect(logger.warn).toHaveBeenCalledTimes(1);
+        // Absent to pnpm as well, so there is nothing to tell the user about.
+        expect(logger.warn).not.toHaveBeenCalled();
+      });
+
+      it('fails on a directory in its place, which pnpm 11.20 finds and then dies opening', () => {
+        writeAuthIni('registry=https://reg-b.example.com/\n');
+        mkdirSync(join(root, 'pnpm-workspace.yaml'));
+
+        expect(() =>
+          getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')
+        ).toThrow(/pnpm workspace file at .* could not be read/);
       });
     });
 

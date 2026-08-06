@@ -26,38 +26,34 @@ export function getPnpmConfigDir(env: NodeJS.ProcessEnv): string {
 /**
  * Reads a pnpm YAML config file (pnpm-workspace.yaml or the global
  * config.yaml). An absent file returns null so callers can fall through to
- * lower surfaces; a file that exists but cannot be read returns 'unreadable',
- * which pnpm resolves through; a corrupt or non-object one returns 'invalid',
- * which pnpm dies on. Requiring an object also keeps the sentinels out of the
- * success domain: a returned string can only ever mean one of them.
+ * lower surfaces; everything else returns 'unusable', which every caller turns
+ * into a throw. pnpm's own reader tolerates ENOENT alone and rethrows the rest,
+ * and it dies the same way on a document it cannot parse or that is not a
+ * mapping, so the two failures need no separate states. Requiring an object
+ * also keeps the sentinel out of the success domain: a returned string can only
+ * ever mean unusable.
  */
 export function readPnpmYamlConfig(
   path: string
-): Record<string, unknown> | 'unreadable' | 'invalid' | null {
+): Record<string, unknown> | 'unusable' | null {
   let doc: unknown;
   try {
     doc = readYamlFile(path);
   } catch (e) {
-    // Classified from the read itself rather than a preceding existence check,
-    // which would report a file deleted in between as malformed. ENOTDIR (a path
-    // through a non-directory) is another shape of absent.
-    if (e?.code === 'ENOENT' || e?.code === 'ENOTDIR') {
+    // Only ENOENT resolves on, so a path through a non-directory or a file that
+    // will not open is fatal here. Callers whose pnpm counterpart looks the file
+    // up before reading it widen "absent" themselves.
+    if (e?.code === 'ENOENT') {
       return null;
     }
-    // EISDIR alone is fatal: pnpm 11.20 aborts on it where 11.5 and 10.33 skip
-    // the file, and pinning the newest keeps a directory from reading as config.
-    if (e?.code && e.code !== 'EISDIR') {
-      return 'unreadable';
-    }
-    // No errno means the parser rejected the bytes, not the filesystem.
-    return 'invalid';
+    return 'unusable';
   }
   // An empty file declares nothing; pnpm accepts it.
   if (doc === null || doc === undefined) {
     return {};
   }
   if (typeof doc !== 'object' || Array.isArray(doc)) {
-    return 'invalid';
+    return 'unusable';
   }
   return doc as Record<string, unknown>;
 }
