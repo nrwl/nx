@@ -17,6 +17,10 @@ import { RUN_ID_SAFE } from './run-id';
 export const CURRENT_RUN_STATE_FORMAT_VERSION = 1;
 
 export const RUN_STATE_FILE_NAME = 'run.json';
+// Package names make up the rest of a handoff path, so without this segment
+// they would occupy the run directory's top level, leaving Nx no name it
+// could add there safely.
+const RUN_HANDOFFS_DIR_NAME = 'handoffs';
 // Keeps `.nx/migrate-runs` from growing unbounded across many `nx migrate`
 // invocations over the life of a workspace.
 const MAX_RETAINED_COMPLETED_RUNS = 5;
@@ -195,6 +199,16 @@ export function migrateRunsDir(root: string): string {
 
 export function runDir(root: string, runId: string): string {
   return join(migrateRunsDir(root), runId);
+}
+
+/**
+ * The one subtree of a run directory the driving agent writes: its handoff
+ * files. Everything else under the run directory is state Nx owns and reads
+ * back, so keeping the two apart is what lets an agent's write grant name
+ * this path instead of the whole run.
+ */
+export function runHandoffsDir(runDirPath: string): string {
+  return join(runDirPath, RUN_HANDOFFS_DIR_NAME);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -563,7 +577,10 @@ export function findActiveRun(root: string): {
  */
 export function createRun(root: string, state: MigrateRunState): void {
   const dir = runDir(root, state.runId);
-  mkdirSync(dir, { recursive: true });
+  // The handoffs subtree is created up front so the agent only ever writes a
+  // file into it, never the directory itself: a write grant narrowed to the
+  // subtree cannot be assumed to cover creating it.
+  mkdirSync(runHandoffsDir(dir), { recursive: true });
   writeRunState(dir, state);
   pruneCompletedRuns(root, state.runId);
 }

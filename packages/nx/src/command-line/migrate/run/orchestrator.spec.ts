@@ -72,6 +72,7 @@ import {
   migrateRunsDir,
   readRunState,
   runDir,
+  runHandoffsDir,
   writeRunState,
   type MigrateCommitLedgerEntry,
   type MigrateRunState,
@@ -223,13 +224,17 @@ describe('orchestrator', () => {
     return dir;
   }
 
+  function handoffPathIn(dir: string, pkg: string, name: string): string {
+    return stepHandoffPath(runHandoffsDir(dir), { package: pkg, name });
+  }
+
   function writeHandoff(
     dir: string,
     pkg: string,
     name: string,
     handoff: Record<string, unknown>
   ): void {
-    const p = stepHandoffPath(dir, { package: pkg, name });
+    const p = handoffPathIn(dir, pkg, name);
     mkdirSync(dirname(p), { recursive: true });
     writeFileSync(p, JSON.stringify(handoff));
   }
@@ -1134,10 +1139,7 @@ describe('orchestrator', () => {
         plan: [promptMig('@nx/js', 'p')],
       });
       writeHandoff(dir, '@nx/js', 'p', { status: 'failed', summary: 'boom' });
-      const handoffPath = stepHandoffPath(dir, {
-        package: '@nx/js',
-        name: 'p',
-      });
+      const handoffPath = handoffPathIn(dir, '@nx/js', 'p');
 
       await runOrchestratorReconcile({ root, runId: 'run-1' });
 
@@ -1158,7 +1160,7 @@ describe('orchestrator', () => {
       expect(block.action).toBe('await-prompt');
       expect(block.payload.instructions).toContain('awaiting your outcome');
       expect(block.payload.instructions).toContain(
-        stepHandoffPath(dir, { package: '@nx/js', name: 'p' })
+        handoffPathIn(dir, '@nx/js', 'p')
       );
     });
 
@@ -1376,10 +1378,7 @@ describe('orchestrator', () => {
         steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
         plan: [promptMig('@nx/js', 'p')],
       });
-      const handoffPath = stepHandoffPath(dir, {
-        package: '@nx/js',
-        name: 'p',
-      });
+      const handoffPath = handoffPathIn(dir, '@nx/js', 'p');
       mkdirSync(dirname(handoffPath), { recursive: true });
       writeFileSync(handoffPath, '{ not valid json');
 
@@ -2091,9 +2090,7 @@ describe('orchestrator', () => {
         stepAction: 'retry',
       });
 
-      expect(
-        existsSync(stepHandoffPath(dir, { package: '@nx/js', name: 'p' }))
-      ).toBe(false);
+      expect(existsSync(handoffPathIn(dir, '@nx/js', 'p'))).toBe(false);
 
       // Simulate the retried worker parking the step again; the agent has not
       // written a new handoff yet.

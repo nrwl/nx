@@ -35,6 +35,7 @@ import {
   hasRunState,
   readRunState,
   runDir,
+  runHandoffsDir,
   CURRENT_RUN_STATE_FORMAT_VERSION,
   type MigrateCommitLedgerEntry,
   type MigrateRunState,
@@ -590,7 +591,7 @@ async function foldHandoffs(
     if (step.status !== 'awaiting-prompt-outcome') continue;
     if (step.kind !== 'migration' || !step.migrationId) continue;
     const result = readHandoffWithReason(
-      stepHandoffPath(dir, splitMigrationId(step.migrationId))
+      handoffPath(dir, splitMigrationId(step.migrationId))
     );
     if (!result.ok) continue; // still awaiting; the dispense asks to settle it
     const promptOutcome = handoffToPromptOutcome(result.handoff);
@@ -1196,17 +1197,17 @@ function emitAwaitPrompt(
 ): void {
   const migrationId = step.migrationId;
   const { package: pkg, name } = splitMigrationId(migrationId);
-  const handoffPath = stepHandoffPath(dir, { package: pkg, name });
+  const filePath = handoffPath(dir, { package: pkg, name });
   const lines = [
     `Migration ${migrationId} is a prompt-based migration awaiting your outcome.`,
     `Apply the prompt (see the worker's earlier <nx_migrate_prompt> block), then write the handoff file and run the "then" command.`,
-    `Handoff file: ${handoffPath}`,
+    `Handoff file: ${filePath}`,
     `Handoff JSON: { "status": "success" | "failed", "summary": "<what you did>" }. To mark the prompt not applicable, use "status": "success" with "outcome": "skipped".`,
   ];
   // A handoff that exists but can't be read/parsed/validated is a rejection,
   // not a still-awaited outcome. Naming why stops the run from re-emitting the
   // same await forever while the agent leaves the bad file in place.
-  const rejection = describeRejectedHandoff(handoffPath);
+  const rejection = describeRejectedHandoff(filePath);
   if (rejection.length > 0) {
     lines.push('', ...rejection);
   }
@@ -1494,8 +1495,15 @@ function applyEventOrThrow(
   return result.state;
 }
 
+function handoffPath(
+  dir: string,
+  migration: { package: string; name: string }
+): string {
+  return stepHandoffPath(runHandoffsDir(dir), migration);
+}
+
 function removeHandoff(dir: string, migrationId: string): void {
-  rmSync(stepHandoffPath(dir, splitMigrationId(migrationId)), { force: true });
+  rmSync(handoffPath(dir, splitMigrationId(migrationId)), { force: true });
 }
 
 // null means the probe itself failed; the death dispense renders that as
