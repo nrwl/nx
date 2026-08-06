@@ -711,6 +711,28 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       );
     });
 
+    it.each(['ELOOP', 'ENOTDIR'])(
+      'fails on a .yarnrc %s that a preceding existence check would call absent',
+      (code) => {
+        // yarn's ungated pass over this file exits 1 on both (verified on
+        // 1.22.22). Skipping it would silently land the workspace on the home
+        // registry below it.
+        files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
+        const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+        (fs.readFileSync as jest.Mock).mockImplementation(
+          (p: any, ...rest: any[]) => {
+            if (p === `${ROOT}/.yarnrc`) {
+              throw Object.assign(new Error(`${code}: ${p}`), { code });
+            }
+            return readFile(p, ...rest);
+          }
+        );
+        expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+          /\.yarnrc at .* could not be read/
+        );
+      }
+    );
+
     it('fails on an .npmrc in the chain that cannot be opened', () => {
       // yarn dies the same way on its .npmrc chain (verified on 1.22.22: EACCES
       // on the workspace .npmrc fails both config get and install).
