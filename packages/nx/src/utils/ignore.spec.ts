@@ -9,12 +9,12 @@ describe('createIgnoreChainResolver', () => {
   function resolverFor(
     files: Record<string, string>,
     filenames = ['.gitignore'],
-    combine: 'separate' | 'merged' = 'separate'
+    merge = false
   ) {
     return createIgnoreChainResolver(
       (path) => files[path] ?? null,
       filenames,
-      combine
+      merge
     );
   }
 
@@ -22,9 +22,9 @@ describe('createIgnoreChainResolver', () => {
     files: Record<string, string>,
     filePath: string,
     filenames?: string[],
-    combine: 'separate' | 'merged' = 'separate'
+    merge = false
   ) {
-    const resolve = resolverFor(files, filenames, combine);
+    const resolve = resolverFor(files, filenames, merge);
     return isIgnoredByChain(resolve(posixDirname(filePath)), filePath);
   }
 
@@ -98,7 +98,7 @@ describe('createIgnoreChainResolver', () => {
     // The native walker registers `.nxignore` via `add_custom_ignore_filename`,
     // which outranks `.gitignore` - measured against `WorkspaceContext` in both
     // directions - and master merged both files into one matcher so `.nxignore`
-    // won there too. `separate` would let `.gitignore`'s exclusion win instead.
+    // won there too. Without the merge `.gitignore`'s exclusion would win.
     const names = ['.gitignore', '.nxignore'];
 
     expect(
@@ -106,7 +106,7 @@ describe('createIgnoreChainResolver', () => {
         { '.gitignore': 'x.ts\n', '.nxignore': '!x.ts\n' },
         'x.ts',
         names,
-        'merged'
+        true
       )
     ).toBe(false);
     expect(
@@ -114,7 +114,7 @@ describe('createIgnoreChainResolver', () => {
         { '.gitignore': '!x.ts\n', '.nxignore': 'x.ts\n' },
         'x.ts',
         names,
-        'merged'
+        true
       )
     ).toBe(true);
     // A file with no opinion falls through to the next one.
@@ -123,7 +123,7 @@ describe('createIgnoreChainResolver', () => {
         { '.gitignore': 'x.ts\n', '.nxignore': 'other.ts\n' },
         'x.ts',
         names,
-        'merged'
+        true
       )
     ).toBe(true);
   });
@@ -155,7 +155,7 @@ describe('createIgnoreChainResolver', () => {
         return path === '.gitignore' ? 'dist\n' : null;
       },
       ['.gitignore'],
-      'separate'
+      false
     );
 
     resolve('apps/foo/src');
