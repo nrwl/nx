@@ -22,13 +22,15 @@ export function visitNotIgnoredFiles(
 ): void {
   // Built once for the whole traversal.
   const isIgnored = createGitIgnoreChecker(tree);
+  const start = normalizePathRelativeToRoot(dirPath, tree.root);
 
-  visitDirectory(
-    tree,
-    normalizePathRelativeToRoot(dirPath, tree.root),
-    visitor,
-    isIgnored
-  );
+  // The caller's own directory is the only one nothing has checked - every
+  // deeper one is checked before it is descended into.
+  if (start !== '' && isIgnored.isIgnoredDirectory(start)) {
+    return;
+  }
+
+  visitDirectory(tree, start, visitor, isIgnored);
 }
 
 function visitDirectory(
@@ -37,10 +39,6 @@ function visitDirectory(
   visitor: (path: string) => void,
   isIgnored: TreeIgnoreChecker
 ): void {
-  if (dirPath !== '' && isIgnored.isIgnoredDirectory(dirPath)) {
-    return;
-  }
-
   for (const child of tree.children(dirPath)) {
     // Joined as POSIX rather than with `path.join`: tree paths are POSIX, and
     // on Windows a backslash-separated path silently matches nothing.

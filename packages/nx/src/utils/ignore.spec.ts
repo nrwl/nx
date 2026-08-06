@@ -1,5 +1,8 @@
+import { createTree } from '../generators/testing-utils/create-tree';
 import {
+  createGitIgnoreChecker,
   createIgnoreChainResolver,
+  createPrettierIgnoreChecker,
   isIgnoredByChain,
   posixDirname,
 } from './ignore';
@@ -187,5 +190,90 @@ describe('posixDirname', () => {
     ['apps/a.ts', 'apps'],
   ])('maps %s to %s', (input, expected) => {
     expect(posixDirname(input)).toBe(expected);
+  });
+});
+
+// Each constructor bundles three values - which files it reads, whether they
+// cascade, and whether they merge. They are unreachable from a caller, so the
+// only way to pin them is through what the returned predicates do.
+describe('the ignore authorities', () => {
+  function treeWith(files: Record<string, string>) {
+    const tree = createTree();
+    for (const [path, contents] of Object.entries(files)) {
+      tree.write(path, contents);
+    }
+    return tree;
+  }
+
+  describe('createGitIgnoreChecker', () => {
+    it('reads .gitignore and .nxignore', () => {
+      const git = createGitIgnoreChecker(
+        treeWith({ '.gitignore': 'a.ts\n', '.nxignore': 'b.ts\n' })
+      );
+
+      expect(git.isIgnoredFile('a.ts')).toBe(true);
+      expect(git.isIgnoredFile('b.ts')).toBe(true);
+      expect(git.isIgnoredFile('c.ts')).toBe(false);
+    });
+
+    it('cascades, so a nested ignore file covers its own directory', () => {
+      const git = createGitIgnoreChecker(
+        treeWith({ 'apps/foo/.gitignore': 'nested.ts\n' })
+      );
+
+      expect(git.isIgnoredFile('apps/foo/nested.ts')).toBe(true);
+      // The same name elsewhere is untouched - the nested file is not global.
+      expect(git.isIgnoredFile('apps/bar/nested.ts')).toBe(false);
+    });
+
+    it('merges the files of one directory, so .nxignore outranks .gitignore', () => {
+      const git = createGitIgnoreChecker(
+        treeWith({ '.gitignore': 'a.ts\n', '.nxignore': '!a.ts\n' })
+      );
+
+      expect(git.isIgnoredFile('a.ts')).toBe(false);
+    });
+  });
+
+  describe('createPrettierIgnoreChecker', () => {
+    it('reads .gitignore and .prettierignore, not .nxignore', () => {
+      const prettier = createPrettierIgnoreChecker(
+        treeWith({
+          '.gitignore': 'a.ts\n',
+          '.prettierignore': 'b.ts\n',
+          '.nxignore': 'c.ts\n',
+        })
+      );
+
+      expect(prettier.isIgnoredFile('a.ts')).toBe(true);
+      expect(prettier.isIgnoredFile('b.ts')).toBe(true);
+      expect(prettier.isIgnoredFile('c.ts')).toBe(false);
+    });
+
+    it('does not cascade - prettier resolves from the workspace root only', () => {
+      const prettier = createPrettierIgnoreChecker(
+        treeWith({ 'apps/foo/.prettierignore': 'nested.ts\n' })
+      );
+
+      expect(prettier.isIgnoredFile('apps/foo/nested.ts')).toBe(false);
+    });
+
+    it('keeps the files separate, so .prettierignore cannot re-include', () => {
+      const prettier = createPrettierIgnoreChecker(
+        treeWith({ '.gitignore': 'a.ts\n', '.prettierignore': '!a.ts\n' })
+      );
+
+      expect(prettier.isIgnoredFile('a.ts')).toBe(true);
+    });
+  });
+
+  it.each([
+    ['git', createGitIgnoreChecker],
+    ['prettier', createPrettierIgnoreChecker],
+  ])('%s always ignores the hardcoded directories', (_name, create) => {
+    const checker = create(treeWith({ '.gitignore': '!node_modules\n' }));
+
+    expect(checker.isIgnoredFile('node_modules/pkg/a.ts')).toBe(true);
+    expect(checker.isIgnoredDirectory('node_modules')).toBe(true);
   });
 });

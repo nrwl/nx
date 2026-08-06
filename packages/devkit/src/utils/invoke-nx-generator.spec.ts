@@ -1,5 +1,6 @@
 import type { Tree } from 'nx/src/generators/tree';
 import { convertNxGenerator } from './invoke-nx-generator';
+import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
 import { lastValueFrom } from 'rxjs';
 
 describe('Convert Nx Generator', () => {
@@ -56,6 +57,32 @@ describe('Convert Nx Generator', () => {
     expect(results.raw).toBeNull();
     expect(results.present).toEqual('const hello = "hello world";');
   });
+
+  it('should let visitNotIgnoredFiles walk the adapter tree', async () => {
+    // The walker probes for ignore files in every directory and most are
+    // absent, so it is the consumer that notices if the adapter throws rather
+    // than returning null for a missing file.
+    const {
+      SchematicTestRunner,
+    } = require('@angular-devkit/schematics/testing');
+    const ngSchematicRunner = new SchematicTestRunner(
+      '@schematics/angular',
+      require.resolve('@schematics/angular/collection.json')
+    );
+    const appTree = await ngSchematicRunner.runSchematic('workspace', {
+      name: 'workspace',
+      newProjectRoot: 'projects',
+      version: '6.0.0',
+    });
+
+    const convertedGenerator = convertNxGenerator(walksTheTreeGenerator);
+    await lastValueFrom(
+      ngSchematicRunner.callRule(convertedGenerator, appTree)
+    );
+
+    expect(visited).toContain('src/a.ts');
+    expect(visited).not.toContain('dist/out.js');
+  });
 });
 
 async function newFileGenerator(tree: Tree, options: {}) {
@@ -74,4 +101,12 @@ async function readsAMissingFileGenerator(tree: Tree, options: {}) {
   results.present = tree.read('present.ts', 'utf-8');
 }
 
+async function walksTheTreeGenerator(tree: Tree, options: {}) {
+  tree.write('src/a.ts', '');
+  tree.write('dist/out.js', '');
+  tree.write('.gitignore', 'dist\n');
+  visitNotIgnoredFiles(tree, '', (p) => visited.push(p));
+}
+
 const results: Record<string, unknown> = {};
+const visited: string[] = [];
