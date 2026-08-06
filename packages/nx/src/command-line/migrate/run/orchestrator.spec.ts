@@ -90,17 +90,21 @@ interface ParsedBlock {
 describe('orchestrator', () => {
   let root: string;
   let stdout: string;
+  let logged: { title: string; bodyLines?: string[] }[];
 
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'nx-migrate-orch-'));
     stdout = '';
+    logged = [];
     jest.spyOn(process.stdout, 'write').mockImplementation(((
       chunk: unknown
     ) => {
       stdout += String(chunk);
       return true;
     }) as unknown as typeof process.stdout.write);
-    jest.spyOn(output, 'log').mockImplementation(() => {});
+    jest.spyOn(output, 'log').mockImplementation((opts) => {
+      logged.push(opts as { title: string; bodyLines?: string[] });
+    });
     jest.spyOn(output, 'warn').mockImplementation(() => {});
 
     mockInit.mockReset();
@@ -691,6 +695,63 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.runId).toBe(runId);
       expect(block.action).toBe('next-step');
+    });
+
+    it('announces the run it resumed and how far along it is', async () => {
+      const migrationsJson = {
+        migrations: [
+          genMig('@nx/js', 'a'),
+          genMig('@nx/js', 'b'),
+          genMig('@nx/js', 'c'),
+          genMig('@nx/js', 'd'),
+          genMig('@nx/js', 'e'),
+        ],
+      };
+      // Only succeeded and skipped are done; a died step still has work left
+      // and counts as remaining, same as a pending one.
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:a', 'succeeded'),
+          migStep('step-2', '@nx/js:b', 'skipped'),
+          migStep('step-3', '@nx/js:c', 'succeeded'),
+          migStep('step-4', '@nx/js:d', 'died'),
+          migStep('step-5', '@nx/js:e', 'pending'),
+        ],
+        planHash: computePlanHash(migrationsJson),
+        plan: migrationsJson.migrations,
+      });
+
+      await runOrchestratorInit({
+        root,
+        migrationsJson,
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+      });
+
+      expect(logged[0]).toEqual({
+        title: 'nx migrate: resuming run run-1',
+        bodyLines: [
+          '  started: 2026-01-01T00:00:00.000Z',
+          '  progress: 2 applied, 1 skipped, 2 remaining',
+        ],
+      });
+    });
+
+    it('says nothing about resuming when the init started the run', async () => {
+      await runOrchestratorInit({
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        createCommits: false,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+      });
+
+      expect(logged.map((l) => l.title)).not.toContainEqual(
+        expect.stringContaining('resuming run')
+      );
     });
 
     it('validates migration ids on resume too, before deciding to resume', async () => {
