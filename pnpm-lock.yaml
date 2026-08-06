@@ -3285,6 +3285,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      unbash:
+        specifier: ^4.0.4
+        version: 4.0.4
       which:
         specifier: 'catalog:'
         version: 3.0.1
@@ -26187,6 +26190,10 @@ packages:
 
   ultrahtml@1.7.0:
     resolution: {integrity: sha512-2xRd0VHoAQE4M+vF/DvFFB7pUV0ZxTW1TLi7lHQWnF/Sb5TPeEUV/l+hxcNnGO00ZXGnR0voCMmYRKQf+rvJ2g==}
+
+  unbash@4.0.4:
+    resolution: {integrity: sha512-60m9IVGbavD6jholbxt0jVBXZkEB/HsMZq7Tyaghseve2/Sf0zQRAIfWsD34sde+DKP2tBxJS2wP88ZM0D1FhA==}
+    engines: {node: '>=14'}
 
   unbox-primitive@1.1.0:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
@@ -57136,6 +57143,8 @@ snapshots:
   ultrahtml@1.6.0: {}
 
   ultrahtml@1.7.0: {}
+
+  unbash@4.0.4: {}
 
   unbox-primitive@1.1.0:
     dependencies:
