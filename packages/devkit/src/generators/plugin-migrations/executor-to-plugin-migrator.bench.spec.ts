@@ -157,11 +157,17 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
     // config it replaced.
     expect(postBytes).toBeLessThanOrEqual(preBytes);
 
-    // Shared config is centralized; only the deviating projects keep an
-    // override.
+    // Shared config is centralized as a plugin-scoped entry; only the
+    // deviating projects keep an override.
     const nxJson = JSON.parse(ctx.tree.read('nx.json', 'utf-8'));
-    expect(nxJson.targetDefaults.lint.options).toEqual({ mode: 'production' });
-    expect(nxJson.targetDefaults.test.options).toEqual({ mode: 'production' });
+    expect(nxJson.targetDefaults.lint).toContainEqual({
+      filter: { plugin: LINT_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
+    expect(nxJson.targetDefaults.test).toContainEqual({
+      filter: { plugin: TEST_PLUGIN_PATH },
+      options: { mode: 'production' },
+    });
 
     let projectsWithLintOverride = 0;
     let projectsWithTestOverride = 0;

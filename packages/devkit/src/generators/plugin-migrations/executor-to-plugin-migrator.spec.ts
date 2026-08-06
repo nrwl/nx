@@ -449,6 +449,22 @@ describe('computeStrictCommon', () => {
     expect(common).toEqual({ options: { mode: 'production' }, cache: true });
   });
 
+  it('hoists configurations only when deep-equal across ALL residuals (whole-value)', () => {
+    expect(
+      computeStrictCommon([
+        { configurations: { ci: { quiet: true } } },
+        { configurations: { ci: { quiet: true } } },
+      ])
+    ).toEqual({ configurations: { ci: { quiet: true } } });
+    // any difference keeps configurations per-project entirely
+    expect(
+      computeStrictCommon([
+        { configurations: { ci: { quiet: true } } },
+        { configurations: { ci: { quiet: false } } },
+      ])
+    ).toEqual({});
+  });
+
   it('does not hoist a top-level prop missing from some residuals', () => {
     const common = computeStrictCommon([
       { outputs: ['{projectRoot}/dist'], cache: true },
@@ -489,12 +505,16 @@ describe('Phase 3 — strict-common hoist', () => {
       syntheticMigrations()
     );
 
-    // central targetDefaults holds the shared residual, merged onto the
-    // workspace's pre-existing `build: { cache: true }` default.
-    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({
-      cache: true,
-      options: { mode: 'production' },
-    });
+    // the shared residual is hoisted as a plugin-scoped entry appended after
+    // the workspace's pre-existing `build: { cache: true }` catch-all, so only
+    // this plugin's targets ever receive it.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
     // every project.json target is now empty (pure deviation = {})
     for (const name of ['app1', 'app2', 'app3']) {
       const pj = readJson(ctx.tree, `${name}/project.json`);
@@ -527,9 +547,16 @@ describe('Phase 3 — strict-common hoist', () => {
     const td = readNxJson(ctx.tree).targetDefaults;
     // dead executor-keyed entry removed
     expect(td[SYNTHETIC_EXECUTOR]).toBeUndefined();
-    // remainder sits once in the target-name default (merged onto the
-    // workspace's pre-existing `build: { cache: true }` default)
-    expect(td.build).toEqual({ cache: true, dependsOn: ['^build'] });
+    // the remainder stays scoped to this plugin's targets — re-homing an
+    // executor-scoped `dependsOn` as an unscoped name key would alter task
+    // scheduling for every same-named target in the workspace.
+    expect(td.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        dependsOn: ['^build'],
+      },
+    ]);
     // no project.json duplicates it
     for (const name of ['app1', 'app2', 'app3']) {
       const pj = readJson(ctx.tree, `${name}/project.json`);
@@ -569,6 +596,458 @@ describe('Phase 3 — strict-common hoist', () => {
     expect(readJson(ctx.tree, 'app2/project.json').targets.build.executor).toBe(
       SYNTHETIC_EXECUTOR
     );
+  });
+
+  it('D: preserves pre-existing target-name default keys the hoist does not touch', async () => {
+    ctx = setupFixture('hoist-preserve-existing');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // a user-authored default carrying a key that is neither inferred nor part
+    // of any project's residual — it must never be lost or overwritten.
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults.build = { cache: true, options: { verbose: true } };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // the pre-existing default survives byte-for-byte as the catch-all; the
+    // hoisted common is a separate plugin-scoped entry
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true, options: { verbose: true } },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
+    // centralization still completes: the Phase 1 inference pass merges the
+    // pre-existing target-name default into the inferred baseline, so the
+    // oracle verifies equivalence without any fallback
+    for (const name of ['app1', 'app2']) {
+      expect(
+        readJson(ctx.tree, `${name}/project.json`).targets.build
+      ).toBeUndefined();
+    }
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('E: a conflicting pre-existing target-name default is preserved for bystanders; the plugin-scoped entry wins only for migrated targets', async () => {
+    ctx = setupFixture('hoist-conflict');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // the user default conflicts with the strict-common residual on the same
+    // options key — every migrated project's own value won over this default
+    // pre-migration, and keeps winning post-migration.
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults.build = {
+      cache: true,
+      options: { mode: 'development' },
+    };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // the user's conflicting default value is never rewritten — any
+    // non-migrated target named `build` keeps inheriting `mode: 'development'`.
+    // Migrated targets resolve the plugin-scoped entry (document order, last
+    // match wins), so they still get `mode: 'production'`.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true, options: { mode: 'development' } },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
+    for (const name of ['app1', 'app2']) {
+      expect(
+        readJson(ctx.tree, `${name}/project.json`).targets.build
+      ).toBeUndefined();
+    }
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('F: executor-keyed targetDefault survives while the executor is still in use', async () => {
+    ctx = setupFixture('hoist-executor-alive');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[SYNTHETIC_EXECUTOR] = { dependsOn: ['^build'] };
+    updateNxJson(ctx.tree, nxJson);
+
+    // app3 is skipped, so its target keeps using the executor post-migration
+    // (the filter receives the graph node's data, which carries root, not name)
+    const migrations = syntheticMigrations();
+    (migrations[0] as any).skipProjectFilter = (project: any) =>
+      project.root === 'app3' ? 'skipped for this test' : false;
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      migrations
+    );
+
+    const td = readNxJson(ctx.tree).targetDefaults;
+    // still alive: app3's target uses the executor, so the entry must survive
+    expect(td[SYNTHETIC_EXECUTOR]).toEqual({ dependsOn: ['^build'] });
+    // the migrated projects' inlined remainder still hoists once, scoped to
+    // this plugin's targets (app3's executor-keyed entry wins for app3 anyway)
+    expect(td.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        dependsOn: ['^build'],
+      },
+    ]);
+    // app3 was not rewritten
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build).toEqual({
+      executor: SYNTHETIC_EXECUTOR,
+    });
+  });
+
+  it('G: array-shaped pre-existing target-name default gains the plugin-scoped entry; existing entries untouched', async () => {
+    ctx = setupFixture('hoist-array-existing');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const nxJson = readNxJson(ctx.tree);
+    (nxJson.targetDefaults as any).build = [{ cache: true }];
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // existing entries are never modified; the hoist appends after them
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
+    // centralization completes normally — no fallback churn for the
+    // array-shaped case anymore
+    for (const name of ['app1', 'app2', 'app3']) {
+      expect(
+        readJson(ctx.tree, `${name}/project.json`).targets.build
+      ).toBeUndefined();
+    }
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('H: a lone migrated project in whole-workspace mode keeps its residual (no hoist)', async () => {
+    ctx = setupFixture('hoist-lone-project');
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'app1',
+      targetName: 'build',
+      target: uniformExecutorTarget(),
+    });
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // a single project never hoists (it would leak its config onto future
+    // same-named targets); the workspace default is untouched
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    expect(readJson(ctx.tree, 'app1/project.json').targets.build).toEqual({
+      options: { mode: 'production' },
+    });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('I: a non-migrated project sharing the target name is not rewritten; hoist is exactly the strict common', async () => {
+    ctx = setupFixture('hoist-bystander');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // bystander: same target name, different executor — never migrated
+    addExecutorProject(ctx, {
+      name: 'app3',
+      root: 'app3',
+      targetName: 'build',
+      executor: '@other/tool:build',
+      target: { options: { mode: 'development' } },
+    });
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+
+    // the bystander's project.json is byte-identical
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build).toEqual({
+      executor: '@other/tool:build',
+      options: { mode: 'development' },
+    });
+    // the hoist is plugin-scoped, so the only default a same-named
+    // non-migrated target can resolve is the untouched catch-all — its
+    // effective config cannot change
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
+  });
+
+  it('J: sequential migrations sharing a target name stay isolated per plugin', async () => {
+    // The `@nx/workspace:infer-targets` flow: plugin A migrates app1/app2,
+    // plugin B migrates app3/app4, all on target `build`. Neither plugin's
+    // hoisted config may reach the other's projects.
+    ctx = setupFixture('hoist-sequential');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const OTHER_EXECUTOR = '@acme/other:build';
+    const OTHER_PLUGIN_PATH = '@acme/other/plugin';
+    for (const name of ['app3', 'app4']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        executor: OTHER_EXECUTOR,
+        target: {
+          options: { config: SYNTHETIC_CONFIG_FILE, level: 'high' },
+          cache: true,
+          outputs: ['{projectRoot}/dist'],
+        },
+      });
+    }
+    // each plugin only infers for its own projects' roots
+    const pluginA = createSyntheticPlugin((root, targetName) =>
+      defaultInferredTarget(root, targetName)
+    );
+    const pluginB = createSyntheticPlugin(
+      (root, targetName) => defaultInferredTarget(root, targetName),
+      OTHER_PLUGIN_PATH
+    );
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      pluginA.pluginPath,
+      pluginA.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations()
+    );
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      pluginB.pluginPath,
+      pluginB.createNodes,
+      { targetName: 'build' },
+      [
+        {
+          executors: [OTHER_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({ targetName }),
+          postTargetTransformer: (target: any) => {
+            if (target.options) {
+              delete target.options.config;
+              if (Object.keys(target.options).length === 0) {
+                delete target.options;
+              }
+            }
+            return target;
+          },
+        },
+      ]
+    );
+
+    // each hoist is scoped to its own plugin — no cross-pollution
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+      {
+        filter: { plugin: OTHER_PLUGIN_PATH },
+        options: { level: 'high' },
+      },
+    ]);
+    for (const name of ['app1', 'app2', 'app3', 'app4']) {
+      expect(
+        readJson(ctx.tree, `${name}/project.json`).targets.build
+      ).toBeUndefined();
+    }
+  });
+
+  it('K: a project skipped by skipProjectFilter never inherits the hoisted config', async () => {
+    ctx = setupFixture('hoist-skipped');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const migrations = syntheticMigrations();
+    (migrations[0] as any).skipProjectFilter = (project: any) =>
+      project.root === 'app3' ? 'skipped for this test' : false;
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      migrations,
+      undefined,
+      { warn } as any
+    );
+
+    // app3 keeps its executor target untouched
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build.executor).toBe(
+      SYNTHETIC_EXECUTOR
+    );
+    // and the hoist is plugin-scoped, so app3's executor-based target (which
+    // has no source plugin) can only ever resolve the untouched catch-all
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
+  });
+
+  it('L: reverts the hoist when a non-migrated project root infers the same target', async () => {
+    // The plugin is already registered workspace-wide, and app3 is
+    // inferred-only (config file, no executor target). Hoisting would change
+    // app3's inferred `build`, so the verification pass must revert it.
+    ctx = setupFixture('hoist-inferred-only');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    // app3: a project the plugin infers for, with no executor target
+    addExecutorProject(ctx, {
+      name: 'app3',
+      root: 'app3',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    // pre-registered, unscoped — app3 keeps inferring after the migration
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [SYNTHETIC_PLUGIN_PATH];
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin();
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // no hoisted entry survives — the catch-all collapses back to the plain
+    // object form
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    // migrated projects keep their full residuals (previous-engine output)
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    // app3 gained no project.json target
+    expect(
+      readJson(ctx.tree, 'app3/project.json').targets.build
+    ).toBeUndefined();
+    // the revert is surfaced once
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('build');
   });
 });
 
@@ -627,11 +1106,14 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
     expect(readJson(ctx.tree, 'app3/project.json').targets.build).toEqual({
       options: { mode: 'production' },
     });
-    // the shared default still exists for the others
-    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({
-      cache: true,
-      options: { mode: 'production' },
-    });
+    // the shared plugin-scoped default still exists for the others
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
     // exactly one warn, naming only the fallback project
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain('app3 > build');
@@ -680,5 +1162,17 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
     // app3 is inferrable but not covered, so the include is required and scopes
     // to exactly the migrated roots — the root project as '*'.
     expect(registration.include).toEqual(['*', 'app2/**/*']);
+    // app3's executor target and its resolvable defaults are untouched: the
+    // hoist is plugin-scoped and app3 sits outside the registration's include
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build).toEqual({
+      executor: '@other/tool:build',
+    });
+    expect(readNxJson(ctx.tree).targetDefaults.build).toStrictEqual([
+      { cache: true },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        options: { mode: 'production' },
+      },
+    ]);
   });
 });

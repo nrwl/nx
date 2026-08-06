@@ -987,9 +987,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
       await convertToInferred(tree, { skipFormat: true });
 
-      const targetDefault = readNxJson(tree).targetDefaults?.lint ?? {};
-      // present exactly once, centrally
-      expect(targetDefault.options?.['cache-location']).toBe('cache-dir');
+      // present exactly once, centrally, scoped to the eslint plugin's targets
+      const targetDefault = readNxJson(tree).targetDefaults?.lint;
+      expect(Array.isArray(targetDefault)).toBe(true);
+      const hoisted = (targetDefault as any[]).find(
+        (entry) => entry?.filter?.plugin === '@nx/eslint/plugin'
+      );
+      expect(hoisted?.options?.['cache-location']).toBe('cache-dir');
       for (const name of ['app1', 'app2']) {
         const projectTarget =
           readProjectConfiguration(tree, name).targets?.lint ?? {};
@@ -998,10 +1002,56 @@ describe('Eslint - Convert Executors To Plugin', () => {
         // but the effective (merged) config still carries it (project.json
         // deviations win over targetDefaults)
         const effectiveOptions = {
-          ...(targetDefault.options ?? {}),
+          ...(hoisted?.options ?? {}),
           ...(projectTarget.options ?? {}),
         };
         expect(effectiveOptions['cache-location']).toBe('cache-dir');
+      }
+    });
+
+    it('centralizes shared lint configurations without dropping named configuration behavior', async () => {
+      const app1 = createTestProject(tree, {
+        appName: 'app1',
+        appRoot: 'app1',
+      });
+      app1.targets.lint.configurations = {
+        ci: {
+          quiet: true,
+        },
+      };
+      updateProjectConfiguration(tree, app1.name, app1);
+      const app2 = createTestProject(tree, {
+        appName: 'app2',
+        appRoot: 'app2',
+      });
+      app2.targets.lint.configurations = {
+        ci: {
+          quiet: true,
+        },
+      };
+      updateProjectConfiguration(tree, app2.name, app2);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const targetDefault = readNxJson(tree).targetDefaults?.lint;
+      expect(Array.isArray(targetDefault)).toBe(true);
+      const hoisted = (targetDefault as any[]).find(
+        (entry) => entry?.filter?.plugin === '@nx/eslint/plugin'
+      );
+      expect(hoisted?.configurations?.ci).toEqual({
+        quiet: true,
+      });
+      for (const name of ['app1', 'app2']) {
+        const projectTarget =
+          readProjectConfiguration(tree, name).targets?.lint ?? {};
+        expect(projectTarget.configurations?.ci).toBeUndefined();
+        const effectiveCiConfiguration = {
+          ...(hoisted?.configurations?.ci ?? {}),
+          ...(projectTarget.configurations?.ci ?? {}),
+        };
+        expect(effectiveCiConfiguration).toEqual({
+          quiet: true,
+        });
       }
     });
 

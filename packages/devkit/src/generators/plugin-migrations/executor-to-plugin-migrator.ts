@@ -16,6 +16,7 @@ import {
   type NxJsonConfiguration,
   type ProjectGraph,
   type TargetConfiguration,
+  type TargetDefaultArrayEntry,
   type Tree,
 } from 'nx/src/devkit-exports';
 import {
@@ -28,7 +29,10 @@ import {
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { forEachExecutorOptions } from '../executor-options-utils';
-import { findTargetDefault } from '../target-defaults-utils';
+import {
+  findTargetDefault,
+  updateTargetDefault,
+} from '../target-defaults-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
 import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
@@ -578,46 +582,94 @@ function isExecutorStillUsed(tree: Tree, executor: string): boolean {
  * unfiltered entry keyed directly by the executor string).
  */
 function removeDeadExecutorTargetDefault(
-  targetDefaults: NxJsonConfiguration['targetDefaults'],
+  nxJson: NxJsonConfiguration,
   executor: string
 ): void {
-  if (!targetDefaults || !(executor in targetDefaults)) {
-    return;
-  }
-  const value = targetDefaults[executor];
+  updateTargetDefault(nxJson, { executor }, (_config, info) =>
+    info.key === executor && info.filter === undefined ? null : undefined
+  );
+}
+
+/**
+ * Append the hoisted common as a plugin-scoped entry after whatever value the
+ * key already holds. Existing entries — the workspace catch-all and any
+ * user-authored filtered entries — are never modified, so targets outside this
+ * plugin resolve exactly what they resolved before the migration. The entry is
+ * appended (never merged into an existing one) so the verification pass can
+ * revert precisely this entry and nothing else.
+ */
+function appendPluginScopedTargetDefault(
+  nxJson: NxJsonConfiguration,
+  targetName: string,
+  pluginPath: string,
+  common: TargetConfiguration
+): TargetDefaultArrayEntry {
+  const entry: TargetDefaultArrayEntry = {
+    filter: { plugin: pluginPath },
+    ...structuredClone(common),
+  };
+  nxJson.targetDefaults ??= {};
+  const existing = nxJson.targetDefaults[targetName];
+  nxJson.targetDefaults[targetName] =
+    existing === undefined
+      ? [entry]
+      : Array.isArray(existing)
+        ? [...existing, entry]
+        : [existing, entry];
+  return entry;
+}
+
+/**
+ * Remove a previously appended plugin-scoped entry, collapsing the value back
+ * to the plain object form when only a lone unfiltered entry remains. The
+ * appended entry survives an `updateNxJson`/`readNxJson` round trip only by
+ * value, so the last deep-equal occurrence (append order puts ours last) is
+ * the one removed.
+ */
+function removeHoistedTargetDefault(
+  nxJson: NxJsonConfiguration,
+  targetName: string,
+  entry: TargetDefaultArrayEntry
+): void {
+  const value = nxJson.targetDefaults?.[targetName];
   if (!Array.isArray(value)) {
-    delete targetDefaults[executor];
     return;
   }
-  // Array-shaped: drop only the unfiltered entry that was inlined.
-  const remaining = value.filter((entry) => {
-    const filter = (entry as { filter?: Record<string, unknown> })?.filter;
-    const isUnfiltered =
-      !filter ||
-      (filter.projects === undefined &&
-        filter.plugin === undefined &&
-        filter.executor === undefined);
-    return !isUnfiltered;
-  });
+  const entryKey = stableStringify(entry);
+  const remaining = [...value];
+  for (let i = remaining.length - 1; i >= 0; i--) {
+    if (stableStringify(remaining[i]) === entryKey) {
+      remaining.splice(i, 1);
+      break;
+    }
+  }
   if (remaining.length === 0) {
-    delete targetDefaults[executor];
+    delete nxJson.targetDefaults[targetName];
+  } else if (remaining.length === 1 && remaining[0].filter === undefined) {
+    const { filter: _filter, ...config } = remaining[0];
+    nxJson.targetDefaults[targetName] = config;
   } else {
-    targetDefaults[executor] = remaining;
+    nxJson.targetDefaults[targetName] = remaining;
   }
 }
 
 /**
  * Phase 3 (centralized variant) — hoist the strict-common residual per target
- * into `nx.json` `targetDefaults[targetName]`, remove the dead executor-keyed
- * entries, and write only per-project deviations to project.json. Used for
- * whole-workspace migrations; single-project mode keeps the full residual.
+ * into `nx.json` `targetDefaults[targetName]` as a plugin-scoped array entry,
+ * remove the dead executor-keyed entries, and write only per-project
+ * deviations to project.json. Used for whole-workspace migrations;
+ * single-project mode keeps the full residual.
+ *
+ * Returns the appended entry per target so the verification pass can revert a
+ * hoist that turns out to reach a target the migration did not migrate.
  */
 function hoistCommonAndWrite<T>(
   tree: Tree,
   projectConfigsByName: Map<string, ProjectConfiguration>,
   scope: MigrationScope<T>,
-  residualByProject: ResidualByProject
-) {
+  residualByProject: ResidualByProject,
+  pluginPath: string
+): Map<string, TargetDefaultArrayEntry> {
   // Group residuals by target name across all migrated projects.
   const residualsByTarget = new Map<string, TargetConfiguration[]>();
   for (const targetMap of residualByProject.values()) {
@@ -633,10 +685,11 @@ function hoistCommonAndWrite<T>(
   // Deterministic target-name order for stable nx.json output.
   for (const targetName of [...residualsByTarget.keys()].sort()) {
     const residuals = residualsByTarget.get(targetName);
-    // Centralization only pays off (and is only safe from leaking a lone
-    // project's config onto sibling inferred targets) when at least two
-    // projects share the same target. A single migrated project keeps its full
-    // residual in project.json.
+    // Centralization only pays off when at least two projects share the same
+    // target; a single migrated project keeps its full residual in
+    // project.json. The hoisted entry is scoped to this plugin's targets via
+    // its `filter`, and the verification pass reverts it if a non-migrated
+    // root still inherits it — the guard here is about de-bloat, not safety.
     const common = residuals.length >= 2 ? computeStrictCommon(residuals) : {};
     commonByTarget.set(targetName, common);
   }
@@ -666,21 +719,16 @@ function hoistCommonAndWrite<T>(
   const nxJson = readNxJson(tree);
   nxJson.targetDefaults ??= {};
 
+  const hoistedByTarget = new Map<string, TargetDefaultArrayEntry>();
   for (const targetName of [...commonByTarget.keys()].sort()) {
     const common = commonByTarget.get(targetName);
     if (Object.keys(common).length === 0) {
       continue;
     }
-    const existing = nxJson.targetDefaults[targetName];
-    if (existing && !Array.isArray(existing)) {
-      nxJson.targetDefaults[targetName] = mergeTargetConfigurations(
-        structuredClone(common),
-        structuredClone(existing as TargetConfiguration)
-      );
-    } else if (!existing) {
-      nxJson.targetDefaults[targetName] = common;
-    }
-    // Array-shaped existing target defaults are left untouched.
+    hoistedByTarget.set(
+      targetName,
+      appendPluginScopedTargetDefault(nxJson, targetName, pluginPath, common)
+    );
   }
 
   const migratedExecutors = new Set(
@@ -688,15 +736,19 @@ function hoistCommonAndWrite<T>(
   );
   for (const executor of migratedExecutors) {
     if (!isExecutorStillUsed(tree, executor)) {
-      removeDeadExecutorTargetDefault(nxJson.targetDefaults, executor);
+      removeDeadExecutorTargetDefault(nxJson, executor);
     }
   }
 
-  if (Object.keys(nxJson.targetDefaults).length === 0) {
+  if (
+    nxJson.targetDefaults &&
+    Object.keys(nxJson.targetDefaults).length === 0
+  ) {
     delete nxJson.targetDefaults;
   }
 
   updateNxJson(tree, nxJson);
+  return hoistedByTarget;
 }
 
 function mergeInputs(
@@ -1016,19 +1068,91 @@ async function verifyAndFallback<T>(
   createNodesV2: CreateNodes<T> | undefined,
   residualByProject: ResidualByProject,
   projectConfigsByName: Map<string, ProjectConfiguration>,
+  hoistedByTarget: Map<string, TargetDefaultArrayEntry>,
   singleProjectMode: boolean,
   logger: typeof devkitLogger | undefined
 ): Promise<void> {
+  // Single-project mode never hoists, so there is nothing to reconcile — and
+  // no reason to pay for a whole-workspace verification inference.
+  if (singleProjectMode) {
+    return;
+  }
+
   const verifyResult = await runVerificationPass(
     tree,
     pluginPath,
     createNodes,
     createNodesV2
   );
-
-  // Single-project mode never hoists, so there is nothing to reconcile.
-  if (singleProjectMode || !verifyResult) {
+  if (!verifyResult) {
     return;
+  }
+
+  // The hoist's contract is: behavioral equivalence for migrated targets, no
+  // effect on anything else. A root this plugin infers the target for that was
+  // NOT migrated (inferred-only, or covered by a pre-existing registration)
+  // would inherit the plugin-scoped default, so revert that target's hoist
+  // entirely: drop the appended entry and restore every full residual.
+  const migratedRootsByTarget = new Map<string, Set<string>>();
+  for (const [projectName, targetMap] of residualByProject) {
+    const root = projectGraph.nodes[projectName]?.data?.root;
+    for (const targetName of targetMap.keys()) {
+      if (!migratedRootsByTarget.has(targetName)) {
+        migratedRootsByTarget.set(targetName, new Set());
+      }
+      migratedRootsByTarget.get(targetName).add(root);
+    }
+  }
+
+  const revertedTargets = new Set<string>();
+  for (const [targetName] of hoistedByTarget) {
+    const migratedRoots =
+      migratedRootsByTarget.get(targetName) ?? new Set<string>();
+    const reachesNonMigratedRoot = Object.entries(
+      verifyResult.projects ?? {}
+    ).some(
+      ([root, projectConfig]) =>
+        projectConfig.targets?.[targetName] !== undefined &&
+        !migratedRoots.has(root)
+    );
+    if (reachesNonMigratedRoot) {
+      revertedTargets.add(targetName);
+    }
+  }
+
+  if (revertedTargets.size > 0) {
+    const nxJson = readNxJson(tree);
+    for (const targetName of revertedTargets) {
+      removeHoistedTargetDefault(
+        nxJson,
+        targetName,
+        hoistedByTarget.get(targetName)
+      );
+    }
+    updateNxJson(tree, nxJson);
+    for (const [projectName, targetMap] of residualByProject) {
+      for (const [targetName, entry] of targetMap) {
+        if (!revertedTargets.has(targetName)) {
+          continue;
+        }
+        writeResidualTarget(
+          tree,
+          projectConfigsByName,
+          projectName,
+          targetName,
+          structuredClone(entry.residual)
+        );
+      }
+    }
+    (logger ?? devkitLogger).warn(
+      `convert-to-inferred kept per-project configuration for target(s) ${[
+        ...revertedTargets,
+      ]
+        .sort()
+        .join(
+          ', '
+        )} instead of centralizing it: other projects inferred by this plugin would have inherited the centralized configuration. The migrated projects keep the same output as before centralization.`
+    );
   }
 
   const fallbacks: string[] = [];
@@ -1036,6 +1160,11 @@ async function verifyAndFallback<T>(
   for (const [projectName, targetMap] of residualByProject) {
     const root = projectGraph.nodes[projectName]?.data?.root;
     for (const [targetName, entry] of targetMap) {
+      if (revertedTargets.has(targetName)) {
+        // Restored to the full pre-centralization residual above — already the
+        // previous engine's exact output, so there is nothing left to verify.
+        continue;
+      }
       const verifiedInferred = verifyResult.projects?.[root]?.targets?.[
         targetName
       ] as TargetConfiguration | undefined;
@@ -1189,7 +1318,9 @@ async function migrateProjects<T>(
   // Phase 3 — Derive strict-common + write. Single-project mode never hoists
   // (would leak shared config to sibling projects), so it keeps the full
   // residual in project.json; whole-workspace mode hoists the common config to
-  // `targetDefaults` and writes only per-project deviations.
+  // a plugin-scoped `targetDefaults` entry and writes only per-project
+  // deviations.
+  let hoistedByTarget = new Map<string, TargetDefaultArrayEntry>();
   if (specificProjectToMigrate) {
     writeResiduals(
       tree,
@@ -1199,7 +1330,13 @@ async function migrateProjects<T>(
       residualByProject
     );
   } else {
-    hoistCommonAndWrite(tree, projectConfigsByName, scope, residualByProject);
+    hoistedByTarget = hoistCommonAndWrite(
+      tree,
+      projectConfigsByName,
+      scope,
+      residualByProject,
+      pluginPath
+    );
   }
 
   // Some plugins' `createNodes` normalize their options object in place (e.g.
@@ -1242,6 +1379,7 @@ async function migrateProjects<T>(
     createNodesV2,
     residualByProject,
     projectConfigsByName,
+    hoistedByTarget,
     Boolean(specificProjectToMigrate),
     logger
   );

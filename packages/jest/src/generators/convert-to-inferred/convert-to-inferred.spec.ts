@@ -1106,9 +1106,13 @@ describe('Jest - Convert Executors To Plugin', () => {
 
       await convertToInferred(tree, { skipFormat: true });
 
-      const targetDefault = readNxJson(tree).targetDefaults?.test ?? {};
-      // present exactly once, centrally
-      expect(targetDefault.options?.coverage).toBe(true);
+      // present exactly once, centrally, scoped to the jest plugin's targets
+      const targetDefault = readNxJson(tree).targetDefaults?.test;
+      expect(Array.isArray(targetDefault)).toBe(true);
+      const hoisted = (targetDefault as any[]).find(
+        (entry) => entry?.filter?.plugin === '@nx/jest/plugin'
+      );
+      expect(hoisted?.options?.coverage).toBe(true);
       for (const name of ['app1', 'app2']) {
         const projectTarget =
           readProjectConfiguration(tree, name).targets?.test ?? {};
@@ -1116,7 +1120,7 @@ describe('Jest - Convert Executors To Plugin', () => {
         expect(projectTarget.options?.coverage).toBeUndefined();
         // but the effective (merged) config still carries it
         const effectiveOptions = {
-          ...(targetDefault.options ?? {}),
+          ...(hoisted?.options ?? {}),
           ...(projectTarget.options ?? {}),
         };
         expect(effectiveOptions.coverage).toBe(true);

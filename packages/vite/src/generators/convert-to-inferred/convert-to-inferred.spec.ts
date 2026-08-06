@@ -479,11 +479,16 @@ describe('Vite - Convert Executors To Plugin', () => {
       expect(updatedProject.targets).toMatchInlineSnapshot(`{}`);
       // the shared config lives in nx.json targetDefaults instead
       expect(readNxJson(tree).targetDefaults?.bundle).toMatchInlineSnapshot(`
-        {
-          "options": {
-            "config": "./vite.config.ts",
+        [
+          {
+            "filter": {
+              "plugin": "@nx/vite/plugin",
+            },
+            "options": {
+              "config": "./vite.config.ts",
+            },
           },
-        }
+        ]
       `);
 
       // nx.json modifications

@@ -847,10 +847,15 @@ describe('convert-to-inferred', () => {
 
     await convertToInferred(tree, { skipFormat: true });
 
-    const targetDefault = readNxJson(tree).targetDefaults?.build ?? {};
-    // the shared residual is centralized exactly once
-    expect(targetDefault.defaultConfiguration).toBe('production');
-    expect(targetDefault.configurations).toEqual({
+    // the shared residual is centralized exactly once, scoped to the webpack
+    // plugin's targets
+    const targetDefault = readNxJson(tree).targetDefaults?.build;
+    expect(Array.isArray(targetDefault)).toBe(true);
+    const hoisted = (targetDefault as any[]).find(
+      (entry) => entry?.filter?.plugin === '@nx/webpack/plugin'
+    );
+    expect(hoisted?.defaultConfiguration).toBe('production');
+    expect(hoisted?.configurations).toEqual({
       development: {},
       production: {},
     });
@@ -860,7 +865,7 @@ describe('convert-to-inferred', () => {
       // not duplicated per project
       expect(projectTarget.defaultConfiguration).toBeUndefined();
       // effective (merged) config still resolves it
-      const effective = { ...targetDefault, ...projectTarget };
+      const effective = { ...hoisted, ...projectTarget };
       expect(effective.defaultConfiguration).toBe('production');
     }
   });
@@ -946,30 +951,34 @@ module.exports = composePlugins(
 
       await convertToInferred(tree, {});
 
-      const expectedCachedBuildTargetDefaults = {
-        cache: true,
+      // the shared residuals are centralized as webpack-plugin-scoped entries;
+      // the workspace's pre-existing `build: { cache: true }` catch-all stays
+      const webpackScoped = (config: Record<string, unknown>) => ({
+        filter: { plugin: '@nx/webpack/plugin' },
+        ...config,
+      });
+      const expectedBuildTargetDefaults = webpackScoped({
         configurations: { development: {}, production: {} },
         defaultConfiguration: 'production',
-      };
-      const expectedBuildTargetDefaults = {
-        configurations: { development: {}, production: {} },
-        defaultConfiguration: 'production',
-      };
-      const expectedServeTargetDefaults = {
+      });
+      const expectedServeTargetDefaults = webpackScoped({
         configurations: { development: {}, production: {} },
         defaultConfiguration: 'development',
-      };
+      });
       const targetDefaults = readNxJson(tree).targetDefaults;
-      expect(targetDefaults?.build).toStrictEqual(
-        expectedCachedBuildTargetDefaults
-      );
-      expect(targetDefaults?.serve).toStrictEqual(expectedServeTargetDefaults);
-      expect(targetDefaults?.['build-webpack']).toStrictEqual(
-        expectedBuildTargetDefaults
-      );
-      expect(targetDefaults?.['serve-webpack']).toStrictEqual(
-        expectedServeTargetDefaults
-      );
+      expect(targetDefaults?.build).toStrictEqual([
+        { cache: true },
+        expectedBuildTargetDefaults,
+      ]);
+      expect(targetDefaults?.serve).toStrictEqual([
+        expectedServeTargetDefaults,
+      ]);
+      expect(targetDefaults?.['build-webpack']).toStrictEqual([
+        expectedBuildTargetDefaults,
+      ]);
+      expect(targetDefaults?.['serve-webpack']).toStrictEqual([
+        expectedServeTargetDefaults,
+      ]);
 
       // project configurations
       const updatedProject1 = readProjectConfiguration(tree, project1.name);

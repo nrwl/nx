@@ -879,30 +879,34 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
 
       await convertToInferred(tree, {});
 
-      const expectedCachedBuildTargetDefaults = {
-        cache: true,
+      // the shared residuals are centralized as rspack-plugin-scoped entries;
+      // the workspace's pre-existing `build: { cache: true }` catch-all stays
+      const rspackScoped = (config: Record<string, unknown>) => ({
+        filter: { plugin: '@nx/rspack/plugin' },
+        ...config,
+      });
+      const expectedBuildTargetDefaults = rspackScoped({
         configurations: { development: {}, production: {} },
         defaultConfiguration: 'production',
-      };
-      const expectedBuildTargetDefaults = {
-        configurations: { development: {}, production: {} },
-        defaultConfiguration: 'production',
-      };
-      const expectedServeTargetDefaults = {
+      });
+      const expectedServeTargetDefaults = rspackScoped({
         configurations: { development: {}, production: {} },
         defaultConfiguration: 'development',
-      };
+      });
       const targetDefaults = readNxJson(tree).targetDefaults;
-      expect(targetDefaults?.build).toStrictEqual(
-        expectedCachedBuildTargetDefaults
-      );
-      expect(targetDefaults?.serve).toStrictEqual(expectedServeTargetDefaults);
-      expect(targetDefaults?.['build-rspack']).toStrictEqual(
-        expectedBuildTargetDefaults
-      );
-      expect(targetDefaults?.['serve-rspack']).toStrictEqual(
-        expectedServeTargetDefaults
-      );
+      expect(targetDefaults?.build).toStrictEqual([
+        { cache: true },
+        expectedBuildTargetDefaults,
+      ]);
+      expect(targetDefaults?.serve).toStrictEqual([
+        expectedServeTargetDefaults,
+      ]);
+      expect(targetDefaults?.['build-rspack']).toStrictEqual([
+        expectedBuildTargetDefaults,
+      ]);
+      expect(targetDefaults?.['serve-rspack']).toStrictEqual([
+        expectedServeTargetDefaults,
+      ]);
 
       // project configurations
       const updatedProject1 = readProjectConfiguration(tree, project1.name);
