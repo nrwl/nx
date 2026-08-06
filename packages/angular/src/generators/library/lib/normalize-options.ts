@@ -19,9 +19,9 @@ export async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   schema.standalone = schema.standalone ?? true;
   // Create a schema with populated default values
+  // No `linter` default here: it would mask the `detectLinter` fallback below.
   const options: Schema = {
     buildable: false,
-    linter: 'eslint',
     publishable: false,
     skipFormat: false,
     // Publishable libs cannot use `full` yet, so if its false then use the passed value or default to `full`
