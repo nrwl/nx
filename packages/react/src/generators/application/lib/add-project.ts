@@ -171,6 +171,7 @@ function createRspackServeTarget(
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
+      port: options.devServerPort,
       hmr: true,
     },
     configurations: {
@@ -262,6 +263,9 @@ function createServeTarget(options: NormalizedSchema): TargetConfiguration {
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,
+      // findFreePort picks the next port by reading this off the existing serve
+      // targets, so omitting it leaves every app on the executor's 4200 default.
+      port: options.devServerPort,
       hmr: true,
     },
     configurations: {

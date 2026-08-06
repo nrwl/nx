@@ -104,6 +104,7 @@ describe('react app generator (legacy)', () => {
         "options": {
           "buildTarget": "my-app:build",
           "hmr": true,
+          "port": 4200,
         },
       }
     `);
@@ -130,6 +131,44 @@ describe('react app generator (legacy)', () => {
       );
       "
     `);
+  });
+
+  it('should give each app its own dev-server port', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'first-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'second-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+
+    // findFreePort reads the port back off the existing serve targets, so the
+    // second app only moves off 4200 if the first one recorded its port.
+    expect(
+      readProjectConfiguration(appTree, 'first-app').targets.serve.options.port
+    ).toBe(4200);
+    expect(
+      readProjectConfiguration(appTree, 'second-app').targets.serve.options.port
+    ).toBe(4201);
+  });
+
+  it('should use an explicit --devServerPort for the serve target', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'pinned-app',
+      bundler: 'webpack',
+      devServerPort: 4321,
+      skipFormat: true,
+    });
+
+    expect(
+      readProjectConfiguration(appTree, 'pinned-app').targets.serve.options.port
+    ).toBe(4321);
   });
 
   it('should setup vite', async () => {
