@@ -167,6 +167,17 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
       const normalizedPath = normalizeReferencePath(node.data.root);
       // Skip the root tsconfig itself
       if (node.data.root !== '.' && !referencesSet.has(normalizedPath)) {
+        // Non-composite projects are dropped when writing below, so reporting
+        // them here would name a reference that can never be satisfied.
+        if (
+          !hasCompositeEnabled(
+            tsSysFromTree,
+            tsconfigInfoCaches,
+            joinPathFragments(normalizedPath, 'tsconfig.json')
+          )
+        ) {
+          continue;
+        }
         referencesSet.add(normalizedPath);
         addChangedFile(
           changedFiles,
@@ -179,7 +190,7 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     if (changedFiles.size > 0) {
       const updatedReferences = Array.from(referencesSet)
-        // Check composite is true in the internal reference before proceeding
+        // Pre-existing references skip the check above, so still filter here.
         .filter((ref) =>
           hasCompositeEnabled(
             tsSysFromTree,
