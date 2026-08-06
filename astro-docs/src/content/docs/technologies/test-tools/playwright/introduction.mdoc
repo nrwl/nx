@@ -83,39 +83,59 @@ When your Playwright config declares a `webServer` that sets `reuseExistingServe
 whose `command` runs an Nx task, Nx runs that task as a dependency of the Playwright tasks.
 The command must be `nx run <project>:<target>` or `nx <target> <project>`, optionally
 prefixed by `npx`, `yarn`, `bun`, `pnpm`, `pnpm exec`, or `pnpx`.
-A trailing `:<configuration>` in the `nx run` form is accepted, but the dependency runs the target without the configuration.
+A trailing `:<configuration>` in the `nx run` form is accepted, but the dependency runs the
+target without the configuration.
 Nx doesn't recognize a command with extra arguments, such as `npx nx run my-app:serve --port=4200`.
 
 The Playwright docs suggest setting `reuseExistingServer` to `!process.env.CI`.
 Set it to `true` instead, since Nx already runs the web server as a task dependency.
 With `false`, Nx skips that task and Playwright starts its own server inside each Playwright task.
 
-If that `webServer` also sets a `port` number, Nx infers an extra task that waits for the server to
-be ready.
+If that `webServer` also sets a `port` number, Nx infers an extra task, named
+`<targetName>--wait-for-webserver` (`e2e--wait-for-webserver` by default), that waits for the
+server to be ready.
 It infers the same task from a `url` when the `webServer` leaves `port` unset, which is when
 Playwright checks the URL rather than the port.
 Playwright then finds the server already running and reuses it.
 If the `webServer` sets neither, Playwright has nothing to check and starts its own server.
-Nx also skips the wait task for a `command` with a trailing `:<configuration>`: the dependency starts the server without the configuration, so it may not listen at the configured address.
-Nx doesn't infer the task dependency or the wait task for a `webServer` that sets `wait.stdout` or `wait.stderr`.
-Playwright treats matching output from the server process it starts as the readiness signal and can capture values from it into the environment, so Nx leaves starting that server to Playwright.
+Nx also skips the wait task for a `command` with a trailing `:<configuration>`: the dependency
+starts the server without the configuration, so it may not listen at the configured address.
+Nx doesn't infer the task dependency or the wait task for a `webServer` that sets `wait.stdout`
+or `wait.stderr`.
+Playwright treats matching output from the server process it starts as the readiness signal and
+can capture values from it into the environment, so Nx leaves starting that server to Playwright.
 
 The `webServerTimeout` option sets how long, in milliseconds, that task waits before failing.
 It defaults to each web server's configured `timeout`, or 60000 when neither is set.
 
 Set the `waitForWebServer` option to `false` to opt out of that task.
-Nx still runs the web server as a task dependency, and the tests fall back to Playwright's own `reuseExistingServer` probe.
+Nx still runs the web server as a task dependency, and the tests fall back to Playwright's own
+`reuseExistingServer` probe.
+Nx also still re-evaluates the config under the task's env, because the `webServer.command` the
+dependency is inferred from can itself read that env.
 
 The readiness address comes from evaluating the Playwright config while Nx computes the project graph.
-Nx caches the result and rebuilds it when an env file the Playwright task would load, such as `.env` or `.env.e2e`, changes.
-A variable set only in the shell is not part of that cache.
-Changing it does not refresh an already-cached address, and shells holding different values share whichever address was cached last.
-Set such a variable in an env file instead; `nx reset` also discards the cached address.
-Files the config imports from outside its project, such as a shared helper in `tools/`, are not part of the cache either.
-Editing one does not refresh an already-cached address; run `nx reset` to re-infer it.
-A task dependency cannot carry a target configuration, so the address is always inferred without one and a configuration-scoped env file such as `.env.e2e.production` never affects it.
-Nx re-evaluates the config under the task's env only when the graph-time evaluation found a `webServer`, so a `webServer` that only exists under the task's env is not detected.
-If that re-evaluation fails or times out, Nx logs a warning, infers the task dependencies from the graph-time evaluation, and skips the wait task.
+Nx caches the result and rebuilds it when an env file the Playwright task would load, such as
+`.env` or `.env.e2e`, changes.
+An env file listed in `.nxignore` is an exception: Nx does not see it change, so the cached
+result stays stale.
+Apart from `CI`, which Nx folds into the cache key, a variable set only in the shell is not part
+of that cache.
+Changing it does not refresh an already-cached address, and shells holding different values
+share whichever address was cached last.
+Set such a variable in an env file instead.
+Running `nx reset` also discards the cached address.
+Files the config imports from outside its project, such as a shared helper in `tools/`, are not
+part of the cache either.
+Editing one does not refresh an already-cached address.
+Run `nx reset` to re-infer it.
+A task dependency cannot carry a target configuration, so the address is always inferred without
+one and a configuration-scoped env file such as `.env.e2e.production` never affects it.
+Nx re-evaluates the config under the task's env only when the graph-time evaluation found a
+`webServer`, so a `webServer` that only exists under the task's env is not detected.
+If that re-evaluation fails or times out, Nx logs a warning, infers the task dependencies from
+the graph-time evaluation, and skips the wait task.
+The failed result is not cached, so the next project graph computation retries the evaluation.
 
 ### Splitting E2E tests
 
