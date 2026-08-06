@@ -29,8 +29,8 @@ import {
  *   reads /usr/local/share first and the real home second. <globalPrefix> is
  *   $PREFIX, else dirname(dirname(process.execPath)) (dirname on Windows).
  *
- * Unscoped registry: a `--registry`/`--install.registry` line in a CLI-rc
- * .yarnrc (yarn injects it as a default CLI arg) > npm_config_registry env >
+ * Unscoped registry: a `--registry`/`--install.registry` line in a CLI-rc file
+ * (yarn injects it as a default CLI arg) > npm_config_registry env >
  * YARN_REGISTRY env > .npmrc registry (the npm-config chain is exhausted first)
  * > .yarnrc registry > https://registry.yarnpkg.com.
  *
@@ -99,25 +99,25 @@ export function getYarnClassicSpawnRegistryEnv(
     npmNative: s.npmNative,
     map: toYarnValueMap(readChainNpmrcMap(s.npmrcPath)),
   }));
-  // yarn resolves these CLI default args through a separate rc path set, merged
-  // last-wins, so ~/.yarnrc beats the project .yarnrc which beats ancestors.
-  // <prefix>/etc, system /etc and XDG ~/.config/yarn are not in that set.
-  const cliRcPaths = [
-    join(realHome, '.yarnrc'),
-    join(root, '.yarnrc'),
-    ...ancestors.map((dir) => join(dir, '.yarnrc')),
-  ];
-  // Deriving the reads from that set rather than from the tier keeps the two in
-  // step: a tier outside it is looked up however the tiers are later rearranged.
-  const ungatedYarnrcPaths = new Set(cliRcPaths);
+  const cliRcPaths = yarnCliRcPaths(root, ancestors, primary.dir);
+  // The two readers overlap on the tiers above without covering each other, and
+  // what a file tolerates depends on which of them reach it, so each read is
+  // derived from the two path sets rather than from the tier it sits in.
+  const lookedUpPaths = new Set(sources.map((s) => s.yarnrcPath));
+  const ungatedPaths = new Set(cliRcPaths);
+  const readYarnrc = (path: string) =>
+    readYarnrcMap(path, {
+      lookedUp: lookedUpPaths.has(path),
+      ungated: ungatedPaths.has(path),
+    });
   const yarnrcChain: RcFile[] = sources.map((s) => ({
     // npm never reads .yarnrc.
     npmNative: false,
-    map: readYarnrcMap(s.yarnrcPath, !ungatedYarnrcPaths.has(s.yarnrcPath)),
+    map: readYarnrc(s.yarnrcPath),
   }));
   const cliRegistryChain: RcFile[] = cliRcPaths.map((rcPath) => ({
     npmNative: false,
-    map: readYarnrcMap(rcPath, false),
+    map: readYarnrc(rcPath),
   }));
 
   const authRegistry = resolveRegistry(
@@ -473,6 +473,61 @@ function yarnHomeTiers(home: string): {
   return { primary: { dir: home, npmNative: true } };
 }
 
+/**
+ * The files yarn injects `--`-prefixed lines from as default CLI args. It
+ * collects them through getRcPaths, a wider set than the tiers the registry
+ * client reads, and merges them last-wins, so this list runs the other way
+ * round: highest precedence first, to be read first-wins.
+ * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/rc.js#L11-L63
+ */
+function yarnCliRcPaths(
+  root: string,
+  ancestors: string[],
+  primaryHome: string
+): string[] {
+  const paths: string[] = [];
+  if (process.env.YARN_CONFIG) {
+    paths.push(process.env.YARN_CONFIG);
+  }
+  // Read straight off the env here rather than through os.homedir(), and every
+  // home tier dropped when it is unset, both as yarn does it.
+  const home =
+    process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME;
+  if (home) {
+    paths.push(
+      join(home, '.yarnrc.yml'),
+      join(home, '.yarnrc'),
+      join(home, '.yarn', 'config'),
+      join(home, '.config', 'yarn'),
+      join(home, '.config', 'yarn', 'config'),
+      yarnConfigDir(primaryHome)
+    );
+  }
+  if (process.platform !== 'win32') {
+    // The literal /etc, not the <prefix>/etc tier the registry client reads.
+    paths.push(join('/etc', 'yarnrc'), join('/etc', 'yarn', 'config'));
+  }
+  // A .yarnrc.yml sibling rides along with every .yarnrc yarn names, and lands
+  // above it.
+  for (const dir of [root, ...ancestors]) {
+    paths.push(join(dir, '.yarnrc.yml'), join(dir, '.yarnrc'));
+  }
+  return paths;
+}
+
+// Mirrors yarn's getConfigDir, which resolves against userHomeDir: the same
+// root-aware home yarnHomeTiers picks as the primary tier.
+function yarnConfigDir(primaryHome: string): string {
+  if (process.platform === 'win32') {
+    return process.env.LOCALAPPDATA
+      ? join(process.env.LOCALAPPDATA, 'Yarn', 'Config')
+      : join(primaryHome, '.config', 'yarn');
+  }
+  return process.env.XDG_CONFIG_HOME
+    ? join(process.env.XDG_CONFIG_HOME, 'yarn')
+    : join(primaryHome, '.config', 'yarn');
+}
+
 // Mirrors yarn's getGlobalPrefix.
 function globalEtcDir(): string {
   const prefix =
@@ -580,12 +635,20 @@ function toYarnValueMap(
   return result;
 }
 
+interface YarnrcReaders {
+  // The registry client looks the file up, then opens what the lookup found.
+  lookedUp: boolean;
+  // The CLI-arg pass opens it with no lookup in front.
+  ungated: boolean;
+}
+
 /**
- * Parses yarn classic's .yarnrc into a last-write-wins map. Yarn reads it with
- * its lockfile parser first, so one rejected line costs the whole file rather
- * than just that line, then retries the whole file with js-yaml and honors what
- * the retry accepts, which is how `registry: https://host/` works despite the
- * lockfile grammar throwing on it.
+ * Parses one of yarn classic's rc files into a last-write-wins map. Yarn reads
+ * it with its lockfile parser first, so one rejected line costs the whole file
+ * rather than just that line, then retries the whole file with js-yaml and
+ * honors what the retry accepts, which is how `registry: https://host/` works
+ * despite the lockfile grammar throwing on it. A `.yml` skips straight to the
+ * retry's parser.
  * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/lockfile/parse.js#L384-L397
  *
  * @yarnpkg/lockfile on npm is a 2018 snapshot of that parser and has since
@@ -594,25 +657,32 @@ function toYarnValueMap(
  */
 function readYarnrcMap(
   path: string,
-  lookedUp: boolean
+  readers: YarnrcReaders
 ): Map<string, YarnValue> | null {
-  // yarn reads its CLI-rc tiers a second time with nothing in front, so those
-  // see a fault the lookup would have skipped. It reaches every other tier
-  // through the lookup alone, and whatever that misses is absent to yarn too.
-  if (lookedUp && !existsSync(path)) {
+  // Whatever the lookup misses is absent to yarn as well, but only where no
+  // second reader opens the file behind its back.
+  if (!readers.ungated && !existsSync(path)) {
     return null;
   }
   let raw: string;
   try {
     raw = readFileSync(path, 'utf-8');
   } catch (e) {
-    // Only an absent file survives either route: the ungated pass spares ENOENT
-    // and EISDIR, and the lookup that follows it dies on the directory EISDIR
-    // spared. Anything else leaves no resolution to reproduce.
-    if (e?.code === 'ENOENT') {
+    // The CLI-arg pass spares ENOENT and EISDIR. A file the registry client
+    // also reads keeps only ENOENT, since a directory passes its lookup and
+    // then dies on the open. Anything left leaves no resolution to reproduce.
+    if (e?.code === 'ENOENT' || (e?.code === 'EISDIR' && !readers.lookedUp)) {
       return null;
     }
-    throw new Error(`The .yarnrc at ${path} could not be read.`);
+    throw new Error(`The yarn config at ${path} could not be read.`);
+  }
+  // A .yml goes to the failsafe YAML schema alone, with no lockfile grammar in
+  // front and no retry behind, which is why only a mapping declares anything.
+  if (path.endsWith('.yml')) {
+    const map = parseYarnrcAsYaml(path);
+    // yarn keeps `yarn-path` alone from a .yml that names one, dropping the CLI
+    // args read here.
+    return typeof map.get('yarnPath') === 'string' ? new Map() : map;
   }
   try {
     return parseYarnrc(raw);
@@ -622,10 +692,10 @@ function readYarnrcMap(
 }
 
 /**
- * Yarn's own fallback for a .yarnrc its lockfile parser rejects. The failsafe
- * schema makes every scalar a string, and classic passes the schema alone where
- * berry also passes `json: true`, so a duplicate key throws here rather than
- * resolving last-wins.
+ * Yarn's own fallback for an rc file its lockfile parser rejects, and its only
+ * parser for a `.yml`. The failsafe schema makes every scalar a string, and
+ * classic passes the schema alone where berry also passes `json: true`, so a
+ * duplicate key throws here rather than resolving last-wins.
  */
 function parseYarnrcAsYaml(path: string): Map<string, YarnValue> {
   let loaded: unknown;
@@ -636,7 +706,7 @@ function parseYarnrcAsYaml(path: string): Map<string, YarnValue> {
     // rather than reading on without the file. Keep the parse error out of the
     // message: it quotes the lines around the fault, which here can be
     // credential material.
-    throw new Error(`The .yarnrc at ${path} could not be read.`);
+    throw new Error(`The yarn config at ${path} could not be read.`);
   }
   const map = new Map<string, YarnValue>();
   // Yarn ignores a document that is not a mapping rather than failing, which is
