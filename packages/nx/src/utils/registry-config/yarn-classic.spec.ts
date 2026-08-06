@@ -752,6 +752,47 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       });
     });
 
+    it.each(['ELOOP', 'ENOTDIR'])(
+      'looks past a <prefix>/etc/yarnrc %s that yarn never finds',
+      (code) => {
+        // Only the CLI-rc tiers get the second ungated read, so this one is
+        // absent where the same fault on the project .yarnrc aborts yarn
+        // (verified on 1.22.22: exit 0 here, exit 1 there).
+        files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
+        const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+        (fs.readFileSync as jest.Mock).mockImplementation(
+          (p: any, ...rest: any[]) => {
+            if (p === `${PREFIX}/etc/yarnrc`) {
+              throw Object.assign(new Error(`${code}: ${p}`), { code });
+            }
+            return readFile(p, ...rest);
+          }
+        );
+        expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+          npm_config_registry: 'https://reg-home.example.com/',
+        });
+      }
+    );
+
+    it('fails on a <prefix>/etc/yarnrc that yarn finds and cannot open', () => {
+      // The lookup succeeds here, so yarn opens it and exits 1 (verified on
+      // 1.22.22 for both a directory and an unreadable file).
+      files[`${PREFIX}/etc/yarnrc`] =
+        'registry "https://reg-etc.example.com/"\n';
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === `${PREFIX}/etc/yarnrc`) {
+            throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
+          }
+          return readFile(p, ...rest);
+        }
+      );
+      expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+        /\.yarnrc at .* could not be read/
+      );
+    });
+
     it('fails on an .npmrc in the chain that cannot be opened', () => {
       // yarn dies the same way on its .npmrc chain (verified on 1.22.22: EACCES
       // on the workspace .npmrc fails both config get and install).
