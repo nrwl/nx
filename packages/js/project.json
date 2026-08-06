@@ -21,14 +21,5 @@
       "inputs": ["copyReadme"]
     }
   },
-  "implicitDependencies": [
-    "eslint",
-    "oxlint",
-    "jest",
-    "rollup",
-    "vite",
-    "vitest",
-    "esbuild"
-  ],
   "tags": []
 }

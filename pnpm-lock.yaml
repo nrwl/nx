@@ -2932,6 +2932,27 @@ importers:
         specifier: ^6.0.5
         version: 6.0.5(encoding@0.1.13)(typanion@3.14.0)
     devDependencies:
+      '@nx/esbuild':
+        specifier: workspace:*
+        version: link:../esbuild
+      '@nx/eslint':
+        specifier: workspace:*
+        version: link:../eslint
+      '@nx/jest':
+        specifier: workspace:*
+        version: link:../jest
+      '@nx/oxlint':
+        specifier: workspace:*
+        version: link:../oxlint
+      '@nx/rollup':
+        specifier: workspace:*
+        version: link:../rollup
+      '@nx/vite':
+        specifier: workspace:*
+        version: link:../vite
+      '@nx/vitest':
+        specifier: workspace:*
+        version: link:../vitest
       nx:
         specifier: workspace:*
         version: link:../nx
