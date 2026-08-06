@@ -7,6 +7,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addLintingToProject } from '@nx/js';
+import { detectLinter } from '@nx/js/internal';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   javaScriptOverride,
@@ -32,9 +33,12 @@ export async function addLintingGenerator(
 
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
+  // Resolved once, up front: the guard below spells the check as `!== 'eslint'`
+  // and would read an unresolved `undefined` as ESLint.
+  const linter = options.linter ?? detectLinter(tree);
   tasks.push(
     await addLintingToProject(tree, {
-      linter: options.linter,
+      linter,
       project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
@@ -50,7 +54,7 @@ export async function addLintingGenerator(
 
   // The angular-eslint presets, selector rules and dependency install below have
   // no equivalent in other linters. Only the formatting tail is shared.
-  if (options.linter && options.linter !== 'eslint') {
+  if (linter !== 'eslint') {
     if (!options.skipFormat) {
       await formatFiles(tree);
     }
