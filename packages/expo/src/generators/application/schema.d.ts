@@ -10,7 +10,7 @@ export interface Schema {
   unitTestRunner: 'jest' | 'none'; // default is jest
   classComponent?: boolean;
   js: boolean; // default is false
-  linter: LinterType; // default is eslint
+  linter?: LinterType;
   enableTypedLinting?: boolean; // default is false
   /**
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.

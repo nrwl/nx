@@ -11,7 +11,7 @@ export interface Schema {
   routing?: boolean;
   appProject?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
-  linter: LinterType;
+  linter?: LinterType;
   component?: boolean;
   publishable?: boolean;
   /** @deprecated Use bundler instead. */

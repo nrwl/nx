@@ -11,7 +11,7 @@ export interface Schema {
   globalCss?: boolean;
   host?: string;
   js?: boolean;
-  linter: LinterType;
+  linter?: LinterType;
   name?: string;
   routing?: boolean;
   enableTypedLinting?: boolean;

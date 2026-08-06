@@ -5,8 +5,11 @@ import {
 } from '@nx/devkit/internal';
 import { Schema } from '../schema';
 import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import type { LinterType } from '@nx/js';
 
 export interface NormalizedSchema extends Schema {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   importPath: string;
   projectRoot: string;
   isUsingTsSolutionConfig: boolean;
