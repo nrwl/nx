@@ -150,13 +150,14 @@ export function isAlwaysIgnored(path: string): boolean {
 }
 
 /**
- * Which files to read, whether they cascade, and how the files of one directory
- * relate are all decided by one fact - the tool the decision has to agree with -
- * so they are passed together, per tool. The two constructors below are the only
- * way in and neither takes any of them as an argument, so one tool's value for
- * one axis cannot reach another's.
+ * Not independent options despite the name: which files to read, whether they
+ * cascade, and how the files of one directory relate are all decided by one
+ * fact - the tool the decision has to agree with - so a whole set belongs to one
+ * tool and mixing two tools' values gives you neither. The constructors below
+ * are the only way in and none of them takes any of these as an argument, which
+ * is what keeps one tool's value for one axis from reaching another's.
  */
-type IgnoreAuthority = {
+type IgnoreCheckerOptions = {
   filenames: string[];
   cascade: boolean;
   merge: boolean;
@@ -215,7 +216,7 @@ export function createPrettierIgnoreChecker(tree: Tree): TreeIgnoreChecker {
 
 function createTreeIgnoreChecker(
   tree: Tree,
-  { filenames, cascade, merge }: IgnoreAuthority
+  { filenames, cascade, merge }: IgnoreCheckerOptions
 ): TreeIgnoreChecker {
   const resolve = createIgnoreChainResolver(
     (path) => tree.read(path, 'utf-8'),
