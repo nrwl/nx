@@ -1,6 +1,10 @@
 import { createServer as createHttpServer, type Server } from 'node:http';
 import * as https from 'node:https';
-import { createServer as createTcpServer } from 'node:net';
+import {
+  createServer as createTcpServer,
+  getDefaultAutoSelectFamily,
+  setDefaultAutoSelectFamily,
+} from 'node:net';
 import type { AddressInfo } from 'node:net';
 import { logger, type ExecutorContext } from '@nx/devkit';
 import waitForWebserverExecutor from './wait-for-webserver.impl';
@@ -73,6 +77,28 @@ describe('waitForWebserverExecutor', () => {
     );
 
     expect(result).toEqual({ success: true });
+  });
+
+  it('reaches a 127.0.0.1-only server through http://localhost with global family autoselection off', async () => {
+    // macOS resolves `localhost` to ::1 first; the per-request Happy Eyeballs
+    // opt-in must connect anyway, the way Playwright's probe agent does, even
+    // when the process-wide default is off (as it is on some Node lines).
+    const originalAutoSelect = getDefaultAutoSelectFamily();
+    setDefaultAutoSelectFamily(false);
+    try {
+      const server = createHttpServer((_req, res) => res.end('ok'));
+      await listen(server, 0);
+      const { port } = server.address() as AddressInfo;
+
+      const result = await waitForWebserverExecutor(
+        { servers: [{ url: `http://localhost:${port}`, timeout: 2000 }] },
+        context
+      );
+
+      expect(result).toEqual({ success: true });
+    } finally {
+      setDefaultAutoSelectFamily(originalAutoSelect);
+    }
   });
 
   it('treats an early 4xx (e.g. 403) response as ready, like Playwright', async () => {
