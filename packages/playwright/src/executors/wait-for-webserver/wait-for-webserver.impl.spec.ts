@@ -1,3 +1,4 @@
+import * as http from 'node:http';
 import { createServer as createHttpServer, type Server } from 'node:http';
 import * as https from 'node:https';
 import {
@@ -14,6 +15,10 @@ import waitForWebserverExecutor from './wait-for-webserver.impl';
 // what the request became on the wire instead of only what it was asked for.
 jest.mock('node:https', () => {
   const actual = jest.requireActual('node:https');
+  return { ...actual, request: jest.fn(actual.request) };
+});
+jest.mock('node:http', () => {
+  const actual = jest.requireActual('node:http');
   return { ...actual, request: jest.fn(actual.request) };
 });
 
@@ -98,6 +103,30 @@ describe('waitForWebserverExecutor', () => {
       expect(result).toEqual({ success: true });
     } finally {
       setDefaultAutoSelectFamily(originalAutoSelect);
+    }
+  });
+
+  it('opts every direct probe request into family autoselection', async () => {
+    // The localhost test above only discriminates where the resolver orders
+    // ::1 first (macOS); on Linux 127.0.0.1 comes first and the connection
+    // succeeds either way. Assert the request options instead, which is
+    // deterministic on every platform.
+    const requestSpy = http.request as jest.Mock;
+    requestSpy.mockClear();
+    const server = createHttpServer((_req, res) => res.end('ok'));
+    await listen(server, 0);
+    const { port } = server.address() as AddressInfo;
+
+    await waitForWebserverExecutor(
+      { servers: [{ url: `http://127.0.0.1:${port}` }] },
+      context
+    );
+
+    expect(requestSpy).toHaveBeenCalled();
+    for (const call of requestSpy.mock.calls) {
+      expect(call[1]).toEqual(
+        expect.objectContaining({ autoSelectFamily: true })
+      );
     }
   });
 
