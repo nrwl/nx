@@ -139,8 +139,8 @@ describe('formatFiles', () => {
     it('should not let .prettierignore negate .gitignore', async () => {
       // prettier builds an ignorer per ignore file and ORs them, so a `!` in
       // one cannot re-include what another excluded. This is the only test that
-      // reaches `combine: 'separate'` - without it the mode can be flipped to
-      // `'merged'` with the whole suite still green.
+      // reaches `merge: false` - without it the flag can be flipped to `true`
+      // with the whole suite still green.
       tree.write('.gitignore', 'a.ts\n');
       tree.write('.prettierignore', '!a.ts\n');
       tree.write('a.ts', unformatted);
