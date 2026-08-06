@@ -221,3 +221,63 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
     });
   });
 });
+
+describe('isKnownWorkspaceFile', () => {
+  let fs: TempFs;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-known-files');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  it('answers membership from the committed ignore-filtered file map', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      '.nxignore': '.env\n',
+      '.env': 'A=1\n',
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'libs/foo/src/index.ts': '',
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      // The plugin-loader mocks jest.doMock installs in the tests above are
+      // registry-wide and outlive their isolated module graphs.
+      jest.dontMock('../../project-graph/plugins/get-plugins');
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      const {
+        getCachedSerializedProjectGraphPromise,
+        scheduleProjectGraphRecomputation,
+        isKnownWorkspaceFile,
+      } = require('./project-graph-incremental-recomputation');
+
+      // Nothing is known before the first recompute commits a map; the caller
+      // (server.ts) then fails safe by invalidating.
+      expect(isKnownWorkspaceFile('package.json')).toBe(false);
+
+      const committed = await getCachedSerializedProjectGraphPromise();
+      expect(committed.error).toBeNull();
+
+      expect(isKnownWorkspaceFile('package.json')).toBe(true);
+      expect(isKnownWorkspaceFile('libs/foo/src/index.ts')).toBe(true);
+      // Ignored, so filtered out of the map (and never watched).
+      expect(isKnownWorkspaceFile('.env')).toBe(false);
+      expect(isKnownWorkspaceFile('never-existed.env')).toBe(false);
+
+      // A later commit replaces the map; membership must follow the new map,
+      // not a lookup structure built from the old one.
+      fs.createFileSync('libs/foo/src/other.ts', '');
+      scheduleProjectGraphRecomputation(['libs/foo/src/other.ts'], [], []);
+      await getCachedSerializedProjectGraphPromise();
+      expect(isKnownWorkspaceFile('libs/foo/src/other.ts')).toBe(true);
+    });
+  });
+});

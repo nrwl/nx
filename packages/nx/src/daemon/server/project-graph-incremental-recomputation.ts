@@ -424,26 +424,36 @@ export function invalidateGraphCache() {
   cachedSerializedProjectGraphPromise = null;
 }
 
+// isKnownWorkspaceFile's membership set, derived lazily from the map object it
+// was built from; every commit assigns a fresh `fileMapWithFiles`, so an
+// identity change is what invalidates it.
+let knownWorkspaceFiles: Set<string> | undefined;
+let knownWorkspaceFilesSource: typeof fileMapWithFiles;
+
 /**
  * Whether the ignore-filtered workspace file map knows `path`. The workspace
  * watcher applies the same ignore rules, so a change to a known file also
- * reaches scheduleProjectGraphRecomputation; a change to an unknown (ignored)
- * file does not.
+ * reaches scheduleProjectGraphRecomputation; an unknown file is either
+ * ignored, or created since the last recompute committed.
  */
 export function isKnownWorkspaceFile(path: string): boolean {
   if (!fileMapWithFiles) {
     return false;
   }
-  const { projectFileMap, nonProjectFiles } = fileMapWithFiles.fileMap;
-  if (nonProjectFiles.some((f) => f.file === path)) {
-    return true;
-  }
-  for (const files of Object.values(projectFileMap)) {
-    if (files.some((f) => f.file === path)) {
-      return true;
+  if (knownWorkspaceFilesSource !== fileMapWithFiles) {
+    const { projectFileMap, nonProjectFiles } = fileMapWithFiles.fileMap;
+    knownWorkspaceFiles = new Set<string>();
+    for (const { file } of nonProjectFiles) {
+      knownWorkspaceFiles.add(file);
     }
+    for (const files of Object.values(projectFileMap)) {
+      for (const { file } of files) {
+        knownWorkspaceFiles.add(file);
+      }
+    }
+    knownWorkspaceFilesSource = fileMapWithFiles;
   }
-  return false;
+  return knownWorkspaceFiles.has(path);
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(

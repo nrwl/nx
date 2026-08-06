@@ -674,9 +674,12 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
     // disabled outputs tracker must not leave the graph stale on a dotenv edit.
     // A change to a file the workspace watcher tracks already schedules a
     // recomputation that reads the new content; invalidating for it here too
-    // would discard that recomputation at commit and force a second one, so
-    // only an ignored file (which never reaches the workspace watcher) needs
-    // the cache invalidated. Its own try/catch so a fault here cannot trip the
+    // would discard that recomputation at commit and force a second one. The
+    // committed file map approximates what the watcher tracks: a file it does
+    // not know is either ignored (never reaches the watcher, so it needs the
+    // invalidation) or created since the last recompute (the watcher handles
+    // it; the extra invalidation is fail-safe). Its own try/catch so a fault
+    // here cannot trip the
     // outputs-tracking kill switch below, which belongs to an unrelated
     // subsystem. It fails safe by invalidating: a stale graph on a dotenv edit
     // is the bug this prevents, and invalidateGraphCache only clears the
