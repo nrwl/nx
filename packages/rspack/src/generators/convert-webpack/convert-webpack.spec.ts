@@ -162,6 +162,7 @@ describe('Convert webpack', () => {
                 "options": {
                   "buildTarget": "demo:build",
                   "hmr": true,
+                  "port": 4200,
                 },
               }
           `);
