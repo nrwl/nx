@@ -105,19 +105,17 @@ export function getYarnClassicSpawnRegistryEnv(
   // derived from the two path sets rather than from the tier it sits in.
   const lookedUpPaths = new Set(sources.map((s) => s.yarnrcPath));
   const ungatedPaths = new Set(cliRcPaths);
-  const readYarnrc = (path: string) =>
-    readYarnrcMap(path, {
-      lookedUp: lookedUpPaths.has(path),
-      ungated: ungatedPaths.has(path),
-    });
   const yarnrcChain: RcFile[] = sources.map((s) => ({
     // npm never reads .yarnrc.
     npmNative: false,
-    map: readYarnrc(s.yarnrcPath),
+    map: readYarnrcMap(
+      s.yarnrcPath,
+      ungatedPaths.has(s.yarnrcPath) ? 'both' : 'looked-up'
+    ),
   }));
   const cliRegistryChain: RcFile[] = cliRcPaths.map((rcPath) => ({
     npmNative: false,
-    map: readYarnrc(rcPath),
+    map: readYarnrcMap(rcPath, lookedUpPaths.has(rcPath) ? 'both' : 'cli-rc'),
   }));
 
   const authRegistry = resolveRegistry(
@@ -530,12 +528,20 @@ function yarnConfigDir(primaryHome: string): string {
 
 // Mirrors yarn's getGlobalPrefix.
 function globalEtcDir(): string {
-  const prefix =
-    process.env.PREFIX ??
-    (process.platform === 'win32'
-      ? dirname(process.execPath)
-      : dirname(dirname(process.execPath)));
-  return join(prefix, 'etc');
+  // Falsy rather than absent, so an exported but empty PREFIX falls through to
+  // the executable's own prefix instead of resolving `etc` against the cwd.
+  if (process.env.PREFIX) {
+    return join(process.env.PREFIX, 'etc');
+  }
+  if (process.platform === 'win32') {
+    return join(dirname(process.execPath), 'etc');
+  }
+  const prefix = dirname(dirname(process.execPath));
+  // DESTDIR reroots the prefix on Unix only, and only once PREFIX has passed.
+  return join(
+    process.env.DESTDIR ? join(process.env.DESTDIR, prefix) : prefix,
+    'etc'
+  );
 }
 
 interface Match<T extends YarnValue> {
@@ -635,12 +641,13 @@ function toYarnValueMap(
   return result;
 }
 
-interface YarnrcReaders {
-  // The registry client looks the file up, then opens what the lookup found.
-  lookedUp: boolean;
-  // The CLI-arg pass opens it with no lookup in front.
-  ungated: boolean;
-}
+/**
+ * Which of yarn's two rc readers reach a file, since that is what its tolerance
+ * depends on. The registry client looks the file up and then opens what the
+ * lookup found; the CLI-arg pass opens it with no lookup in front. A file both
+ * reach is read ungated but with the stricter pass's tolerance.
+ */
+type YarnrcReaders = 'looked-up' | 'cli-rc' | 'both';
 
 /**
  * Parses one of yarn classic's rc files into a last-write-wins map. Yarn reads
@@ -661,7 +668,7 @@ function readYarnrcMap(
 ): Map<string, YarnValue> | null {
   // Whatever the lookup misses is absent to yarn as well, but only where no
   // second reader opens the file behind its back.
-  if (!readers.ungated && !existsSync(path)) {
+  if (readers === 'looked-up' && !existsSync(path)) {
     return null;
   }
   // Unconditional even for a `.yml`, which parses from the path below: this
@@ -674,7 +681,10 @@ function readYarnrcMap(
     // also reads keeps only ENOENT, since a directory passes its lookup and
     // then dies on the open. Anything left leaves no resolution to reproduce.
     // See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/util/rc.js#L64-L79
-    if (e?.code === 'ENOENT' || (e?.code === 'EISDIR' && !readers.lookedUp)) {
+    if (
+      e?.code === 'ENOENT' ||
+      (e?.code === 'EISDIR' && readers === 'cli-rc')
+    ) {
       return null;
     }
     throw new Error(`The yarn config at ${path} could not be read.`);

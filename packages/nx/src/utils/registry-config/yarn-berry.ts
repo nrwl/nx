@@ -290,6 +290,8 @@ function npmrcReader(root: string): (key: string) => string | undefined {
 }
 
 function collectRcFiles(root: string): BerryRcFile[] {
+  // YARN_RC_FILENAME renames the files berry finds by walking up, but not the
+  // home one: findFolderRcFile reads the constant instead of the setting.
   const rcName = process.env['YARN_RC_FILENAME'] ?? '.yarnrc.yml';
   // berry looks the project and ancestor files up before reading them but opens
   // the home one outright, so a symlink loop is absent in the first group and
@@ -300,7 +302,7 @@ function collectRcFiles(root: string): BerryRcFile[] {
       path: join(dir, rcName),
       lookedUp: true,
     })),
-    { path: join(homedir(), rcName), lookedUp: false },
+    { path: join(homedir(), '.yarnrc.yml'), lookedUp: false },
   ];
   const files: BerryRcFile[] = [];
   for (const { path, lookedUp } of paths) {
