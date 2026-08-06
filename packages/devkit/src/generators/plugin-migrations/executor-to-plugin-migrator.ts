@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { minimatch, Minimatch } from 'minimatch';
 import { deepStrictEqual } from 'node:assert';
 import { join } from 'node:path/posix';
 import type {
@@ -567,13 +567,23 @@ function subtractCommon(
   return deviation;
 }
 
-/** Whether any target in the tree still uses the executor (post-migration). */
-function isExecutorStillUsed(tree: Tree, executor: string): boolean {
-  let stillUsed = false;
-  forEachExecutorOptions(tree, executor, () => {
-    stillUsed = true;
-  });
-  return stillUsed;
+/**
+ * Whether any target still uses the executor (post-migration). The cached
+ * project map is mutated in place by every residual write, so it already
+ * carries the post-write state — no whole-workspace re-scan needed.
+ */
+function isExecutorStillUsed(
+  projectConfigsByName: Map<string, ProjectConfiguration>,
+  executor: string
+): boolean {
+  for (const projectConfig of projectConfigsByName.values()) {
+    for (const target of Object.values(projectConfig.targets ?? {})) {
+      if (target.executor === executor) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -735,7 +745,7 @@ function hoistCommonAndWrite<T>(
     scope.executorScopes.map((executorScope) => executorScope.executor)
   );
   for (const executor of migratedExecutors) {
-    if (!isExecutorStillUsed(tree, executor)) {
+    if (!isExecutorStillUsed(projectConfigsByName, executor)) {
       removeDeadExecutorTargetDefault(nxJson, executor);
     }
   }
@@ -964,8 +974,11 @@ export async function inferOncePerOptionSet<T>(
 
   // Keep only config files owned by an inferred project root (i.e. files that
   // actually contribute a project). Include-coverage is decided against these.
+  // Both sets scale with project count — materialize the roots once, not per
+  // matched file.
+  const roots = [...inferredRoots];
   const matchedConfigFiles = [...rawMatchedFiles].filter((file) =>
-    [...inferredRoots].some((root) => isFileUnderRoot(file, root))
+    roots.some((root) => isFileUnderRoot(file, root))
   );
 
   return { inferredByRoot, matchedConfigFiles };
@@ -995,11 +1008,19 @@ function includeCoversAllConfigFiles(
   if (!include || include.length === 0) {
     return true;
   }
-  const excludeGlobs = exclude ?? [];
+  // The bare `minimatch()` helper recompiles its pattern on every call, and
+  // both the include list and the config-file list scale with project count —
+  // compile each glob exactly once.
+  const includeMatchers = include.map(
+    (glob) => new Minimatch(glob, { dot: true })
+  );
+  const excludeMatchers = (exclude ?? []).map(
+    (glob) => new Minimatch(glob, { dot: true })
+  );
   return configFiles.every(
     (file) =>
-      include.some((glob) => minimatch(file, glob, { dot: true })) &&
-      !excludeGlobs.some((glob) => minimatch(file, glob, { dot: true }))
+      includeMatchers.some((matcher) => matcher.match(file)) &&
+      !excludeMatchers.some((matcher) => matcher.match(file))
   );
 }
 
