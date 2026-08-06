@@ -1938,6 +1938,58 @@ describe('@nx/playwright/plugin', () => {
     ]);
   });
 
+  it('warns when a reuseExistingServer webServer command cannot be inferred', async () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    try {
+      await mockPlaywrightConfig(tempFs, {
+        testDir: 'tests',
+        webServer: {
+          command: 'npx nx run app1:serve --port=4200',
+          port: 4200,
+          reuseExistingServer: true,
+        },
+      });
+      await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      // The command was meant to be reused as a task, so its silent drop would
+      // read as the feature not working; the skip itself matches master.
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toBeUndefined();
+      expect(targets['e2e'].parallelism).toBe(false);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('npx nx run app1:serve --port=4200')
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('should not crash on a webServer without a command', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: { port: 4200, reuseExistingServer: true } as any,
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+    expect(targets['e2e'].dependsOn).toBeUndefined();
+    expect(targets['e2e'].parallelism).toBe(false);
+  });
+
   it('should not gate or depend on a webServer that waits for command output', async () => {
     // Playwright treats a `wait.stdout`/`wait.stderr` server as ready when the
     // regex matches (raced against the address probe) and stores named capture
