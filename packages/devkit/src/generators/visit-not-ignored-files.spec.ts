@@ -258,6 +258,12 @@ describe('visitNotIgnoredFiles', () => {
     const PATTERNS = [
       'dist/',
       'dist',
+      // `dist/` excludes the directory, so git refuses to re-include anything
+      // under it; `dist/**` excludes only the contents, so a later negation
+      // does work. Without this entry the pair is never distinguished, and a
+      // walker that stopped probing directories with a trailing slash would
+      // still pass every other case.
+      'dist/**',
       '*.log',
       'build',
       '/generated/',

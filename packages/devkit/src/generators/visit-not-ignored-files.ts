@@ -4,6 +4,7 @@ import {
   type TreeIgnoreChecker,
 } from 'nx/src/devkit-internals';
 import { join, relative, sep } from 'path';
+import { assertNxSupportsIgnoreCheckers } from '../utils/nx-ignore-internals';
 
 /**
  * Utility to act on all files in a tree that are not ignored by git.
@@ -20,6 +21,8 @@ export function visitNotIgnoredFiles(
   dirPath: string = tree.root,
   visitor: (path: string) => void
 ): void {
+  assertNxSupportsIgnoreCheckers();
+
   // Built once for the whole traversal.
   const isIgnored = createGitIgnoreChecker(tree);
   const start = normalizePathRelativeToRoot(dirPath, tree.root);
