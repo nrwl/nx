@@ -11,6 +11,7 @@ import {
 } from 'nx/src/devkit-internals';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
+import { NOTHING_IGNORED } from '../utils/nx-ignore-internals';
 
 // Prettier v3 (ESM) exposes its API as named exports; v2 (CJS) exposes it under
 // `.default` when loaded via `import()`. Return whichever carries the API, or
@@ -79,17 +80,22 @@ export async function formatFiles(
   if (!formatterType) return;
 
   // Each formatter gets the ignore rules its own CLI applies, so a generator
-  // never rewrites a file `nx format:check` would skip. prettier reads the root
+  // does not rewrite a file that formatter would skip. prettier reads the root
   // ignore files only; oxfmt cascades. Both measured against the real CLIs.
+  // `.nxignore` is the exception in both directions: `format.ts` filters the
+  // command's own file list through it, and neither checker reads it.
   //
   // `getFileInfo` in the prettier branch below looks like it filters ignored
   // files but only covers its own built-in `node_modules` skip: with no
   // `ignorePath` it never reads the workspace's ignore files, so `ignored` is
   // false for everything else (measured).
-  const { isIgnoredFile } =
+  //
+  // The optional call is the older-nx path - see `NOTHING_IGNORED`.
+  const createChecker =
     formatterType === 'oxfmt'
-      ? createOxfmtIgnoreChecker(tree)
-      : createPrettierIgnoreChecker(tree);
+      ? createOxfmtIgnoreChecker
+      : createPrettierIgnoreChecker;
+  const { isIgnoredFile } = createChecker?.(tree) ?? NOTHING_IGNORED;
   const files = new Set(
     tree
       .listChanges()
