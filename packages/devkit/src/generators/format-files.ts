@@ -6,7 +6,7 @@ import {
 } from 'nx/src/devkit-internals';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-import { assertNxSupportsIgnoreCheckers } from '../utils/nx-ignore-internals';
+import { NOTHING_IGNORED } from '../utils/nx-ignore-internals';
 
 // Prettier v3 (ESM) exposes its API as named exports; v2 (CJS) exposes it under
 // `.default` when loaded via `import()`. Return whichever carries the API, or
@@ -71,13 +71,14 @@ export async function formatFiles(
 
   if (!prettier) return;
 
-  assertNxSupportsIgnoreCheckers();
-
   // `getFileInfo` below looks like it filters ignored files but only covers its
   // own built-in `node_modules` skip: with no `ignorePath` it never reads the
   // workspace's ignore files, so `ignored` is false for everything else
   // (measured).
-  const { isIgnoredFile } = createPrettierIgnoreChecker(tree);
+  //
+  // The optional call is the older-nx path - see `NOTHING_IGNORED`.
+  const { isIgnoredFile } =
+    createPrettierIgnoreChecker?.(tree) ?? NOTHING_IGNORED;
   const files = new Set(
     tree
       .listChanges()

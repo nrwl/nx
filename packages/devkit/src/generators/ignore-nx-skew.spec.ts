@@ -48,7 +48,11 @@ describe('ignore checkers against an nx without them', () => {
     expect(internals.isUsingPrettierInTree).toBeDefined();
   });
 
-  it('should tell visitNotIgnoredFiles callers what to do rather than throwing a TypeError', () => {
+  // The two callers degrade in opposite directions on purpose.
+
+  it('should fail the walk by name rather than with a TypeError', () => {
+    // Without a checker nothing is ignored, so the walk would descend into
+    // node_modules and hand a migration every file in it. Failing beats that.
     tree.write('src/a.ts', '');
 
     expect(() => visitNotIgnoredFiles(tree, '', () => {})).toThrow(
@@ -56,12 +60,13 @@ describe('ignore checkers against an nx without them', () => {
     );
   });
 
-  it('should tell formatFiles callers the same', async () => {
+  it('should still format, filtering nothing, rather than failing', async () => {
+    // Filtering nothing is what this nx pairing always did, so a generator that
+    // formats is the right answer here - not one that refuses to run.
     tree.write('.prettierrc', '{}');
-    tree.write('test.ts', 'const   x   =   1');
+    tree.write('.gitignore', 'ignored.ts\n');
+    tree.write('ignored.ts', 'const   x   =   1');
 
-    await expect(formatFiles(tree)).rejects.toThrow(
-      /does not export the ignore checkers.*nx migrate latest/s
-    );
+    await expect(formatFiles(tree)).resolves.toBeUndefined();
   });
 });
