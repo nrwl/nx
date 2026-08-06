@@ -865,6 +865,12 @@ function* ancestorsWithin(
   }
 }
 
+/** `path.dirname` for the workspace-relative POSIX paths the chain is keyed by. */
+function posixDirname(relativePath: string): string {
+  const separator = relativePath.lastIndexOf('/');
+  return separator === -1 ? '' : relativePath.slice(0, separator);
+}
+
 /**
  * `ignore` rejects anything that is not already a relative path, and callers
  * pass both workspace-relative paths (from a tree) and absolute ones (from
@@ -876,12 +882,6 @@ function* ancestorsWithin(
  * Windows a path on another drive comes back looking relative (`D:/…`), which
  * is a wrong answer rather than an undefined one; no shipped caller does that.
  */
-/** `path.dirname` for the workspace-relative POSIX paths the chain is keyed by. */
-function posixDirname(relativePath: string): string {
-  const separator = relativePath.lastIndexOf('/');
-  return separator === -1 ? '' : relativePath.slice(0, separator);
-}
-
 function toRelativeWithin(
   baseDir: string,
   filePath: string
@@ -892,6 +892,19 @@ function toRelativeWithin(
     .join('/');
 
   return relative && !relative.startsWith('../') ? relative : undefined;
+}
+
+/** The batch's own oxfmt config, if it carries one. */
+function findOxfmtConfigInBatch(
+  files: { path: string; content: string }[]
+): { name: string; content: string } | undefined {
+  for (const name of oxfmtConfigFiles) {
+    const match = files.find((file) => file.path === name);
+    if (match) {
+      return { name, content: match.content };
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -909,19 +922,6 @@ function toRelativeWithin(
  * A file oxfmt cannot parse fails only itself: the rest of the batch is still
  * applied, and every failure is reported through `errors`, one entry per file.
  */
-/** The batch's own oxfmt config, if it carries one. */
-function findOxfmtConfigInBatch(
-  files: { path: string; content: string }[]
-): { name: string; content: string } | undefined {
-  for (const name of oxfmtConfigFiles) {
-    const match = files.find((file) => file.path === name);
-    if (match) {
-      return { name, content: match.content };
-    }
-  }
-  return undefined;
-}
-
 export async function formatFilesWithOxfmt(
   files: { path: string; content: string }[],
   workspaceRoot: string,
