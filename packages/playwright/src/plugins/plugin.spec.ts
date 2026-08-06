@@ -1065,6 +1065,121 @@ describe('@nx/playwright/plugin', () => {
     );
   });
 
+  it('resolves the serve dependency under the task env even when waitForWebServer is false', async () => {
+    const originalServeTarget = process.env.SERVE_TARGET;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.SERVE_TARGET;
+    setWorkspaceRoot(tempFs.tempDir);
+    installFreshConfigEval();
+
+    try {
+      await mockPlaywrightConfig(
+        tempFs,
+        `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: process.env.SERVE_TARGET === 'mock'
+      ? 'npx nx run app1:serve-mock'
+      : 'npx nx run app1:serve',
+    port: 4200,
+    reuseExistingServer: true,
+  },
+};`
+      );
+      await tempFs.createFiles({
+        'tests/run-me.spec.ts': '',
+        '.env': 'SERVE_TARGET=mock\n',
+      });
+
+      const results = await createNodesFunction(
+        ['playwright.config.js'],
+        { targetName: 'e2e', ciTargetName: 'e2e-ci', waitForWebServer: false },
+        context
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      // The flag opts out of the gate only; the dependency still comes from
+      // the config as the task's env would evaluate it.
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve-mock' },
+      ]);
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve-mock' },
+      ]);
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      if (originalServeTarget === undefined) {
+        delete process.env.SERVE_TARGET;
+      } else {
+        process.env.SERVE_TARGET = originalServeTarget;
+      }
+    }
+  });
+
+  it('rebuilds cached dependencies on a dotenv change when waitForWebServer is false', async () => {
+    const originalServeTarget = process.env.SERVE_TARGET;
+    const originalWorkspaceRoot = workspaceRoot;
+    delete process.env.SERVE_TARGET;
+    setWorkspaceRoot(tempFs.tempDir);
+    // With the gate opted out the dotenv still selects the dependencies, so
+    // the disk cache key must fold it in; only a cache miss re-resolves.
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    installFreshConfigEval();
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/playwright.config.js': `module.exports = {
+  testDir: 'tests',
+  webServer: {
+    command: process.env.SERVE_TARGET === 'mock'
+      ? 'npx nx run app1:serve-mock'
+      : 'npx nx run app1:serve',
+    port: 4200,
+    reuseExistingServer: true,
+  },
+};`,
+        'apps/e2e/tests/run-me.spec.ts': '',
+        '.env': 'SERVE_TARGET=mock\n',
+      });
+
+      const run = async () =>
+        (
+          await createNodesFunction(
+            ['apps/e2e/playwright.config.js'],
+            {
+              targetName: 'e2e',
+              ciTargetName: 'e2e-ci',
+              waitForWebServer: false,
+            },
+            context
+          )
+        )[0][1].projects['apps/e2e'].targets;
+
+      const first = await run();
+      expect(first['e2e'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve-mock' },
+      ]);
+
+      await tempFs.createFile('.env', 'SERVE_TARGET=other\n');
+      const second = await run();
+      expect(second['e2e'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+      ]);
+    } finally {
+      _setChildEval(null);
+      setWorkspaceRoot(originalWorkspaceRoot);
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalServeTarget === undefined) {
+        delete process.env.SERVE_TARGET;
+      } else {
+        process.env.SERVE_TARGET = originalServeTarget;
+      }
+    }
+  });
+
   it('should infer a wait-for-webserver task using the url when the webServer defines a url', async () => {
     await mockPlaywrightConfig(tempFs, {
       testDir: 'tests',
