@@ -99,22 +99,26 @@ export function getYarnClassicSpawnRegistryEnv(
     npmNative: s.npmNative,
     map: toYarnValueMap(readChainNpmrcMap(s.npmrcPath)),
   }));
-  const yarnrcChain: RcFile[] = sources.map((s) => ({
-    // npm never reads .yarnrc.
-    npmNative: false,
-    map: readYarnrcMap(s.yarnrcPath),
-  }));
   // yarn resolves these CLI default args through a separate rc path set, merged
   // last-wins, so ~/.yarnrc beats the project .yarnrc which beats ancestors.
   // <prefix>/etc, system /etc and XDG ~/.config/yarn are not in that set.
-  const cliRegistryChain: RcFile[] = [
-    { npmNative: false, map: readYarnrcMap(join(realHome, '.yarnrc')) },
-    { npmNative: false, map: readYarnrcMap(join(root, '.yarnrc')) },
-    ...ancestors.map((dir) => ({
-      npmNative: false,
-      map: readYarnrcMap(join(dir, '.yarnrc')),
-    })),
+  const cliRcPaths = [
+    join(realHome, '.yarnrc'),
+    join(root, '.yarnrc'),
+    ...ancestors.map((dir) => join(dir, '.yarnrc')),
   ];
+  // Deriving the reads from that set rather than from the tier keeps the two in
+  // step: a tier outside it is looked up however the tiers are later rearranged.
+  const ungatedYarnrcPaths = new Set(cliRcPaths);
+  const yarnrcChain: RcFile[] = sources.map((s) => ({
+    // npm never reads .yarnrc.
+    npmNative: false,
+    map: readYarnrcMap(s.yarnrcPath, !ungatedYarnrcPaths.has(s.yarnrcPath)),
+  }));
+  const cliRegistryChain: RcFile[] = cliRcPaths.map((rcPath) => ({
+    npmNative: false,
+    map: readYarnrcMap(rcPath, false),
+  }));
 
   const authRegistry = resolveRegistry(
     env,
@@ -588,16 +592,23 @@ function toYarnValueMap(
  * diverged: its name token excludes `.`, so it rejects the `cafile ./ca.pem`
  * that yarn 1.22 accepts. Reading with it would drop whole files yarn honors.
  */
-function readYarnrcMap(path: string): Map<string, YarnValue> | null {
+function readYarnrcMap(
+  path: string,
+  lookedUp: boolean
+): Map<string, YarnValue> | null {
+  // yarn reads its CLI-rc tiers a second time with nothing in front, so those
+  // see a fault the lookup would have skipped. It reaches every other tier
+  // through the lookup alone, and whatever that misses is absent to yarn too.
+  if (lookedUp && !existsSync(path)) {
+    return null;
+  }
   let raw: string;
   try {
     raw = readFileSync(path, 'utf-8');
   } catch (e) {
-    // yarn reads .yarnrc twice: once with no existence check, where every errno
-    // but ENOENT and EISDIR aborts it, and once behind one, which then dies on
-    // the directory EISDIR spared. Only an absent file survives both passes, so
-    // anything else leaves no resolution to reproduce. Its .npmrc chain has no
-    // ungated pass, which is why that one reads ENOTDIR as absent.
+    // Only an absent file survives either route: the ungated pass spares ENOENT
+    // and EISDIR, and the lookup that follows it dies on the directory EISDIR
+    // spared. Anything else leaves no resolution to reproduce.
     if (e?.code === 'ENOENT') {
       return null;
     }
