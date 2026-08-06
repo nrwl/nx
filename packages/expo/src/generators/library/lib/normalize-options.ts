@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export interface NormalizedSchema extends Omit<Schema, 'name'> {
   fileName: string;
@@ -58,6 +58,10 @@ export async function normalizeOptions(
     useProjectJson,
     unitTestRunner: options.unitTestRunner ?? 'none',
   };
+
+  // Framework-specific ESLint shaping is guarded on `=== 'eslint'`, so an
+  // unresolved `undefined` would create a bare config with none of it.
+  normalized.linter ??= detectLinter(host);
 
   return normalized;
 }

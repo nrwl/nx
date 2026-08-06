@@ -11,6 +11,7 @@ import {
 } from '@nx/devkit';
 import { NormalizedSchema, Schema } from '../schema';
 import {
+  detectLinter,
   getProjectSourceRoot,
   getProjectType,
   isUsingTsSolutionSetup,
@@ -104,6 +105,10 @@ export async function normalizeOptions(
       );
     }
   }
+
+  // Framework-specific ESLint shaping is guarded on `=== 'eslint'`, so an
+  // unresolved `undefined` would create a bare config with none of it.
+  normalized.linter ??= detectLinter(host);
 
   return normalized;
 }
