@@ -5,6 +5,7 @@ import {
   readJson,
   readNxJson,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addLintingToProject } from './add-linting-to-project';
@@ -58,9 +59,9 @@ describe('addLintingToProject', () => {
   });
 
   // `undefined` reaches the dispatcher from callers whose schema declares
-  // `linter?` — see the comment on the `?? 'eslint'` normalization. The
-  // exhaustiveness check added alongside it must not turn that into a throw.
-  it('falls back to eslint when no linter is given', async () => {
+  // `linter?`. The exhaustiveness check added alongside the normalization must
+  // not turn that into a throw.
+  it('falls back to the detected linter when none is given', async () => {
     await expect(
       addLintingToProject(tree, {
         linter: undefined,
@@ -72,6 +73,25 @@ describe('addLintingToProject', () => {
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@nx/eslint']).toBeDefined();
     expect(devDependencies['oxlint']).toBeUndefined();
+  });
+
+  // The other half of the same fallback: a caller that does not resolve the
+  // linter must not silently get ESLint in a workspace that uses Oxlint.
+  it('falls back to oxlint when the workspace already uses it', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, oxlint: '^1.43.0' };
+      return json;
+    });
+
+    await addLintingToProject(tree, {
+      linter: undefined,
+      project: 'my-lib',
+      addPlugin: true,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@nx/oxlint']).toBeDefined();
+    expect(devDependencies['@nx/eslint']).toBeUndefined();
   });
 
   // The plugin names come from the runner packages, so these also assert that
