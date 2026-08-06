@@ -674,17 +674,23 @@ function getChainDotEnvPairs(
   projectRoot: string,
   options: NormalizedOptions
 ): ChainDotEnvPairs {
+  // The ci chain's candidate paths include the e2e chain's, so hash each file
+  // at most once per pass.
+  const fileHashes = new Map<string, string | null>();
   const target = getDotEnvPairsForTask(
     workspaceRoot,
     projectRoot,
-    options.targetName
+    options.targetName,
+    undefined,
+    fileHashes
   );
   const ciTarget = options.ciTargetName
     ? getDotEnvPairsForTask(
         workspaceRoot,
         projectRoot,
         options.ciTargetName,
-        options.targetName
+        options.targetName,
+        fileHashes
       )
     : target;
   return { target, ciTarget };
@@ -694,7 +700,8 @@ function getDotEnvPairsForTask(
   workspaceRoot: string,
   projectRoot: string,
   target: string,
-  nonAtomizedTarget?: string
+  nonAtomizedTarget: string | undefined,
+  fileHashes: Map<string, string | null>
 ): DotEnvPairs {
   const pairs: DotEnvPairs = [];
   for (const file of getEnvPathsForTask(
@@ -703,7 +710,11 @@ function getDotEnvPairsForTask(
     undefined,
     nonAtomizedTarget
   )) {
-    const fileHash = hashFile(join(workspaceRoot, file));
+    let fileHash = fileHashes.get(file);
+    if (fileHash === undefined) {
+      fileHash = hashFile(join(workspaceRoot, file));
+      fileHashes.set(file, fileHash);
+    }
     if (fileHash !== null) {
       pairs.push([file, fileHash]);
     }
