@@ -194,8 +194,10 @@ describe('posixDirname', () => {
 });
 
 // Each constructor bundles three values - which files it reads, whether they
-// cascade, and whether they merge. They are unreachable from a caller, so the
-// only way to pin them is through what the returned predicates do.
+// cascade, and whether they merge. git's and prettier's are unreachable from a
+// caller, so the only way to pin them is through what the returned predicates
+// do. oxfmt's is exported as `OXFMT_IGNORE_OPTIONS` because the disk-backed
+// resolver needs the same set, but it is pinned the same way here.
 describe('the ignore checkers', () => {
   function treeWith(files: Record<string, string>) {
     const tree = createTree();
