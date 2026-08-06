@@ -95,6 +95,32 @@ describe('addLinting generator', () => {
     }
   });
 
+  // `linter` has no schema default, so leaving it unset follows the workspace.
+  it('should set up oxlint when the workspace already uses it', async () => {
+    jest.spyOn(linter, 'lintProjectGenerator').mockClear();
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, oxlint: '^1.43.0' };
+      return json;
+    });
+
+    await addLintingGenerator(tree, {
+      prefix: 'myOrg',
+      projectName: appProjectName,
+      projectRoot: appProjectRoot,
+      skipFormat: true,
+    });
+
+    expect(linter.lintProjectGenerator).not.toHaveBeenCalled();
+    // No plugins are requested here, and `@nx/oxlint` only writes a project
+    // config when there are some — so the root config plus the registered
+    // plugin are what prove the oxlint arm ran.
+    expect(tree.exists('.oxlintrc.json')).toBe(true);
+    const plugins = (readJson(tree, 'nx.json').plugins ?? []).map((p) =>
+      typeof p === 'string' ? p : p.plugin
+    );
+    expect(plugins).toContain('@nx/oxlint');
+  });
+
   // The oxlint arm passes `skipFormat: true` down to `@nx/oxlint`, so this
   // generator owns the formatting. The early return must not skip it.
   it('should still format when the linter is not eslint', async () => {
