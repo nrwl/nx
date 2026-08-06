@@ -85,6 +85,11 @@ export function outputsChangesInvalidatingGraphEnv(
 // starts with `.env` and a suffixed name's last segment ends with `.env`, even
 // when the target/configuration identifier contains `/`.
 function mayBeDotEnvPath(path: string): boolean {
+  // Nearly every outputs path lacks the substring, so check it before the
+  // per-segment split: this runs for every path in every outputs batch.
+  if (!path.includes('.env')) {
+    return false;
+  }
   return path
     .split('/')
     .some((segment) => segment.startsWith('.env') || segment.endsWith('.env'));
@@ -123,9 +128,9 @@ function isDotEnvUnderRoot(path: string, roots: Set<string>): boolean {
     }
   }
   // No project-root ancestor: a workspace-root dotenv, single-segment names
-  // only. A deeper path (`.nx/cache/abc.env`, `.github/workflows/ci.env`) has
-  // the dotenv name shape only for a target identifier containing `/`;
-  // accepting those would invalidate on every write under such dot-directories.
+  // only. A deeper path (e.g. `.github/workflows/ci.env`) has the dotenv name
+  // shape only for a target identifier containing `/`; accepting those would
+  // invalidate on every write under such dot-directories.
   return roots.has('.') && !path.includes('/') && isDotEnvName(path);
 }
 

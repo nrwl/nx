@@ -133,12 +133,12 @@ describe('outputsChangesInvalidatingGraphEnv', () => {
   });
 
   it('ignores a dot-directory artifact with the dotenv name shape', () => {
-    // `.{id}.env` with id `nx/cache/abc` has the dotenv name shape, but paths
-    // like this are tool caches written constantly, not dotenv files.
-    write('.nx/cache/abc.env', 'X=1\n');
+    // `.{id}.env` with id `github/workflows/ci` has the dotenv name shape, but
+    // paths like this are ordinary dot-directory files, not dotenv files.
+    write('.github/workflows/ci.env', 'X=1\n');
     expect(
       outputsChangesInvalidatingGraphEnv(
-        [{ path: '.nx/cache/abc.env', type: EventType.create }],
+        [{ path: '.github/workflows/ci.env', type: EventType.create }],
         undefined
       )
     ).toEqual([]);
