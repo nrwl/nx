@@ -113,9 +113,10 @@ function withMigrationOptions(yargs: Argv) {
       type: 'string',
     })
     .option('runId', {
-      describe:
-        'Record the execution into the orchestrated migrate run with this id.',
+      // The orchestrated run to record into, or to reconcile when it comes
+      // without `--run-migration`. Hidden with the orchestrator itself.
       type: 'string',
+      hidden: true,
     })
     .option('stepAction', {
       // Decision relay for an orchestrated reconcile (`--run-id` without
