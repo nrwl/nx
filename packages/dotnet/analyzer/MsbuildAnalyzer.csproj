@@ -12,6 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="MsbuildAnalyzer.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Microsoft.Build packages provide ProjectGraph and evaluation APIs -->
     <!-- Using 17.* versions that support .NET Core/Standard -->
     <!-- ExcludeAssets="runtime" prevents copying MSBuild assemblies; MSBuildLocator will load them -->

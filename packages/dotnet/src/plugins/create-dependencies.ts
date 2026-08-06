@@ -4,7 +4,7 @@ import {
   RawProjectGraphDependency,
 } from '@nx/devkit';
 
-import { DotNetPluginOptions } from './create-nodes';
+import { DotNetPluginOptions, nugetExternalNodeName } from './create-nodes';
 import {
   readCachedAnalysisResult,
   isAnalysisErrorResult,
@@ -29,7 +29,16 @@ export const createDependencies: CreateDependencies<
     );
   }
 
-  const { referencesByRoot } = cachedResult;
+  const { nodesByFile, referencesByRoot, packagesByRoot } = cachedResult;
+
+  // Dependencies from a workspace project require a sourceFile; a project with only package
+  // references has no referencesByRoot entry, so recover its csproj from nodesByFile.
+  const configFileByRoot = new Map<string, string>();
+  for (const [configFile, node] of Object.entries(nodesByFile)) {
+    if (node?.root !== undefined) {
+      configFileByRoot.set(node.root, configFile);
+    }
+  }
 
   // Map references to dependencies
   // The analyzer returns: { [projectRoot]: [referencedProjectRoot1, referencedProjectRoot2, ...] }
@@ -52,6 +61,28 @@ export const createDependencies: CreateDependencies<
           sourceFile: referencedRoots.sourceConfigFile,
         });
       }
+    }
+  }
+
+  // Edges from each project to the NuGet packages it references.
+  for (const [sourceRoot, packages] of Object.entries(packagesByRoot ?? {})) {
+    const sourceName = rootMap.get(sourceRoot);
+    if (!sourceName) {
+      continue;
+    }
+
+    const sourceConfigFile = configFileByRoot.get(sourceRoot);
+    if (!sourceConfigFile) {
+      continue;
+    }
+
+    for (const pkg of packages) {
+      dependencies.push({
+        source: sourceName,
+        target: nugetExternalNodeName(pkg),
+        type: DependencyType.static,
+        sourceFile: sourceConfigFile,
+      });
     }
   }
 

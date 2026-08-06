@@ -2,11 +2,13 @@ import {
   CreateNodes,
   logger,
   ProjectConfiguration,
+  ProjectGraphExternalNode,
   TargetConfiguration,
 } from '@nx/devkit';
 import {
   analyzeProjects,
   isAnalysisErrorResult,
+  ResolvedPackage,
 } from '../analyzer/analyzer-client';
 import { mergeTargetConfigurations } from '@nx/devkit/internal';
 
@@ -175,6 +177,44 @@ function mergeUserTargetConfigurations(
   };
 }
 
+/**
+ * Kept in sync with `TargetBuilder.NuGetExternalNodePrefix` in the analyzer.
+ */
+export const NUGET_EXTERNAL_NODE_PREFIX = 'nuget:';
+
+/**
+ * The version is part of the node name so CPM scopes pinning the same package to different
+ * versions produce distinct nodes, as npm does with `npm:pkg@version`.
+ */
+export function nugetExternalNodeName(pkg: ResolvedPackage): string {
+  return `${NUGET_EXTERNAL_NODE_PREFIX}${pkg.id}@${pkg.version}`;
+}
+
+/**
+ * Builds one external node per (package, version) referenced anywhere in the workspace.
+ */
+function createNuGetExternalNodes(
+  packagesByRoot: Record<string, ResolvedPackage[]> | undefined
+): Record<string, ProjectGraphExternalNode> {
+  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+
+  for (const packages of Object.values(packagesByRoot ?? {})) {
+    for (const pkg of packages) {
+      const name = nugetExternalNodeName(pkg);
+      externalNodes[name] ??= {
+        type: 'nuget',
+        name,
+        data: {
+          packageName: pkg.id,
+          version: pkg.version,
+        },
+      };
+    }
+  }
+
+  return externalNodes;
+}
+
 export const createNodes: CreateNodes<DotNetPluginOptions> = [
   dotnetProjectGlob,
   async (configFilePaths, options, context) => {
@@ -219,15 +259,21 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
         throw result.error;
       }
 
-      const { nodesByFile } = result;
+      const { nodesByFile, packagesByRoot } = result;
 
-      // Return array of [configFile, result] tuples
-      return configFilePaths.map((configFile) => {
+      const externalNodes = createNuGetExternalNodes(packagesByRoot);
+
+      // Return array of [configFile, result] tuples. Every tuple's externalNodes merge into
+      // the same graph, so the map is attached to the first tuple only — repeating it would
+      // inflate the serialized worker payload proportionally to the number of project files.
+      return configFilePaths.map((configFile, index) => {
+        const tupleExternalNodes = index === 0 ? { externalNodes } : undefined;
+
         const node = nodesByFile[configFile];
         if (!node) {
           // Directory.Build.* / Directory.Solution.* files contribute no projects of
           // their own; returning an empty config is the conventional "skip" response.
-          return [configFile, {}];
+          return [configFile, { ...tupleExternalNodes }];
         }
 
         // Merge user-specified target configurations with generated targets. The analyzer
@@ -243,6 +289,7 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
             projects: {
               [mergedNode.root]: mergedNode,
             },
+            ...tupleExternalNodes,
           },
         ];
       });

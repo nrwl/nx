@@ -17,12 +17,9 @@ public static partial class TargetBuilder
         string workspaceRoot,
         PluginOptions options,
         string productionInput,
-        List<string> directoryBuildInputs)
+        List<string> directoryBuildInputs,
+        object? externalDependenciesInput = null)
     {
-        // TODO(@AgentEnder): We should add this back in after external deps
-        // support is fleshed out.
-        //
-        // var externalDeps = packageRefs.Select(p => p.Include).ToArray();
         var testResultsDir = GetTestResultsDirectory(properties, projectName, projectDirectory, workspaceRoot);
 
         string[] defaultFlags = ["--no-build", "--no-restore"];
@@ -44,7 +41,7 @@ public static partial class TargetBuilder
                 "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
-                // new { externalDependencies = externalDeps }
+                .. AsInputs(externalDependenciesInput),
                 .. directoryBuildInputs
             ],
             Outputs = testResultsDir is null ? [] : [testResultsDir],

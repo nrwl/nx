@@ -14,6 +14,12 @@ public record AnalysisResult
     /// Maps project root (relative to workspace root) to referenced project roots.
     /// </summary>
     public Dictionary<string, ReferencesInfo> ReferencesByRoot { get; init; } = new();
+
+    /// <summary>
+    /// Maps project root (relative to workspace root) to resolved NuGet packages. Only
+    /// populated for Central Package Management projects whose versions all resolved.
+    /// </summary>
+    public Dictionary<string, List<ResolvedPackage>> PackagesByRoot { get; init; } = new();
 }
 
 public record ReferencesInfo

@@ -1,5 +1,6 @@
 import { createNodes as createDotNetNodes } from './create-nodes';
 import { createDependencies as createDotNetDependencies } from './create-dependencies';
+import { createTouchedDependencies as createDotNetTouchedDependencies } from './create-touched-dependencies';
 
 // The plugin can be fully disabled (e.g. to debug graph issues) via the
 // NX_DOTNET_DISABLE environment variable. When disabled, no nodes or
@@ -15,3 +16,7 @@ export const createNodesV2 = disabled ? undefined : createDotNetNodes;
 export const createDependencies = disabled
   ? undefined
   : createDotNetDependencies;
+
+export const createTouchedDependencies = disabled
+  ? undefined
+  : createDotNetTouchedDependencies;

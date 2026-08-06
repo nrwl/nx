@@ -10,6 +10,12 @@ import {
   PluginCache,
 } from '@nx/devkit/internal';
 
+/** A NuGet package a project references, with the version MSBuild resolved for it. */
+export interface ResolvedPackage {
+  id: string;
+  version: string;
+}
+
 export interface AnalysisSuccessResult {
   // Maps project file path -> node configuration
   nodesByFile: Record<string, ProjectConfiguration>;
@@ -18,6 +24,9 @@ export interface AnalysisSuccessResult {
     string,
     { refs: string[]; sourceConfigFile: string }
   >;
+  // Maps project root -> resolved NuGet packages. Only populated for Central Package
+  // Management projects whose versions all resolved.
+  packagesByRoot?: Record<string, ResolvedPackage[]>;
 }
 export interface AnalysisErrorResult {
   error: Error;

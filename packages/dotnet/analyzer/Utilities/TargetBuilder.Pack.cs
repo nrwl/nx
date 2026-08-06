@@ -16,7 +16,8 @@ public static partial class TargetBuilder
         string workspaceRoot,
         PluginOptions options,
         string productionInput,
-        List<string> directoryBuildInputs)
+        List<string> directoryBuildInputs,
+        object? externalDependenciesInput = null)
     {
         // Create a copy of properties with Configuration=Release
         var releaseProperties = new Dictionary<string, string>(properties)
@@ -59,6 +60,7 @@ public static partial class TargetBuilder
                 "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                .. AsInputs(externalDependenciesInput),
                 .. directoryBuildInputs
             ],
             Outputs = new[]

@@ -78,6 +78,19 @@ public static class ProjectUtilities
     };
 
     /// <summary>
+    /// The Central Package Management manifest, treated separately from the other Directory.*
+    /// files because its contents can be attributed to individual packages.
+    /// </summary>
+    public const string CentralPackagesFileName = "Directory.Packages.props";
+
+    /// <summary>
+    /// Whether an input produced by <see cref="GetDirectoryBuildInputs"/> points at a
+    /// Directory.Packages.props file.
+    /// </summary>
+    public static bool IsCentralPackagesInput(string input) =>
+        input.EndsWith("/" + CentralPackagesFileName, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
     /// .NET project file extensions. Used both to partition stdin input and to filter the MSBuild
     /// project graph — imported files such as Directory.Build.props can surface as graph nodes
     /// depending on the SDK version, and they must never be treated as buildable projects.

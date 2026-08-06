@@ -187,4 +187,65 @@ describe('calculateFileChanges', () => {
       );
     });
   });
+  describe('base and head content accessors', () => {
+    const readAtRevision = (path: string, revision: string | void) =>
+      revision ? `content at ${revision}` : 'working tree content';
+
+    it('should read base and head content when both revisions are provided', () => {
+      const changes = calculateFileChanges(
+        ['Directory.Packages.props'],
+        { base: 'sha1', head: 'sha2' },
+        readAtRevision
+      );
+
+      expect(changes[0].getContentAtBase()).toEqual('content at sha1');
+      expect(changes[0].getContentAtHead()).toEqual('content at sha2');
+    });
+
+    it('should return null base content when no base revision is provided', () => {
+      // Reading without a revision falls back to the working tree, which would make base and
+      // head contents identical and hide real changes from consumers that diff them.
+      const changes = calculateFileChanges(
+        ['Directory.Packages.props'],
+        {},
+        readAtRevision
+      );
+
+      expect(changes[0].getContentAtBase()).toBeNull();
+    });
+
+    it('should return null base content for files passed via --files', () => {
+      const changes = calculateFileChanges(
+        ['Directory.Packages.props'],
+        { base: 'sha1', head: 'sha2', files: ['Directory.Packages.props'] },
+        readAtRevision
+      );
+
+      expect(changes[0].getContentAtBase()).toBeNull();
+    });
+
+    it('should normalize whitespace the same way on both sides', () => {
+      // defaultReadFileAtRevision trims git show output but not working-tree reads; the
+      // accessors trim both so plugins comparing contents don't see phantom differences.
+      const changes = calculateFileChanges(
+        ['Directory.Packages.props'],
+        { base: 'sha1' },
+        (path, revision) => (revision ? 'same content' : 'same content\n')
+      );
+
+      expect(changes[0].getContentAtBase()).toEqual('same content');
+      expect(changes[0].getContentAtHead()).toEqual('same content');
+    });
+
+    it('should not expose the accessors without nxArgs', () => {
+      const changes = calculateFileChanges(
+        ['Directory.Packages.props'],
+        undefined,
+        readAtRevision
+      );
+
+      expect(changes[0].getContentAtBase).toBeUndefined();
+      expect(changes[0].getContentAtHead).toBeUndefined();
+    });
+  });
 });

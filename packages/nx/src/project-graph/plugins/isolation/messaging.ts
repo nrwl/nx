@@ -8,6 +8,9 @@ import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
+  CreateTouchedDependenciesContext,
+  TouchedDependencies,
+  TouchedDependencyFile,
   CreateNodesContext,
   PostTasksExecutionContext,
   PreTasksExecutionContext,
@@ -50,6 +53,7 @@ type PluginMessageDefs = DefineMessages<{
           hasCreateDependencies: boolean;
           hasProcessProjectGraph: boolean;
           hasCreateMetadata: boolean;
+          touchedDependenciesPattern: string | null;
           hasPreTasksExecution: boolean;
           hasPostTasksExecution: boolean;
           success: true;
@@ -101,6 +105,22 @@ type PluginMessageDefs = DefineMessages<{
     result:
       | {
           metadata: Awaited<ReturnType<LoadedNxPlugin['createMetadata']>>;
+          success: true;
+        }
+      | {
+          success: false;
+          error: Error;
+        };
+  };
+
+  createTouchedDependencies: {
+    payload: {
+      touchedFiles: TouchedDependencyFile[];
+      context: CreateTouchedDependenciesContext;
+    };
+    result:
+      | {
+          touchedDependencies: TouchedDependencies;
           success: true;
         }
       | {
@@ -210,6 +230,7 @@ const MESSAGE_TYPES: ReadonlyArray<PluginWorkerMessage['type']> = [
   'createNodes',
   'createDependencies',
   'createMetadata',
+  'createTouchedDependencies',
   'preTasksExecution',
   'postTasksExecution',
   'setWorkerEnv',
@@ -220,6 +241,7 @@ const RESULT_TYPES: ReadonlyArray<PluginWorkerResult['type']> = [
   'createNodesResult',
   'createDependenciesResult',
   'createMetadataResult',
+  'createTouchedDependenciesResult',
   'preTasksExecutionResult',
   'postTasksExecutionResult',
   'setWorkerEnvResult',

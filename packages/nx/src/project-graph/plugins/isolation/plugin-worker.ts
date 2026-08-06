@@ -120,6 +120,8 @@ const server = createServer((socket) => {
                 'processProjectGraph' in plugin && !!plugin.processProjectGraph,
               hasCreateMetadata:
                 'createMetadata' in plugin && !!plugin.createMetadata,
+              touchedDependenciesPattern:
+                plugin.createTouchedDependencies?.[0] ?? null,
               hasPreTasksExecution:
                 'preTasksExecution' in plugin && !!plugin.preTasksExecution,
               hasPostTasksExecution:
@@ -142,6 +144,14 @@ const server = createServer((socket) => {
           withErrorHandling(async () => {
             const result = await plugin.createMetadata(graph, context);
             return { metadata: result, success: true as const };
+          }),
+        createTouchedDependencies: async ({ touchedFiles, context }) =>
+          withErrorHandling(async () => {
+            const result = await plugin.createTouchedDependencies[1](
+              touchedFiles,
+              context
+            );
+            return { touchedDependencies: result, success: true as const };
           }),
         preTasksExecution: async ({ context }) =>
           withErrorHandling(async () => {

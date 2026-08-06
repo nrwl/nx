@@ -111,6 +111,17 @@ The plugin analyzes your MSBuild project files to determine:
 - Available build targets (build, test, clean, etc.)
 - Project outputs and configuration
 
+### NuGet packages and Central Package Management
+
+When your workspace uses [Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management), the plugin resolves each project's `PackageReference` items against the `PackageVersion` items in `Directory.Packages.props`.
+Each package becomes an external node in the project graph, and each project's cacheable targets declare only the packages that project references as inputs.
+
+Bumping one version in `Directory.Packages.props` then only affects the projects that reference that package.
+Other projects under the same manifest keep their cached results, and `nx affected` doesn't select them.
+
+If any referenced package's version can't be determined, the plugin falls back to declaring the whole `Directory.Packages.props` file as an input for that project.
+The fallback over-invalidates but never produces a stale build.
+
 ## View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.

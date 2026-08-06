@@ -13,6 +13,7 @@ import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { readNxJson } from '../../config/configuration';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
+import { getTouchedDependencies } from './locators/touched-dependencies';
 
 export async function filterAffected(
   graph: ProjectGraph,
@@ -27,6 +28,7 @@ export async function filterAffected(
     getImplicitlyTouchedProjects,
     getTouchedProjectsFromProjectGlobChanges,
     getJSTouchedProjects,
+    getTouchedDependencies,
   ];
 
   const touchedProjects = [];

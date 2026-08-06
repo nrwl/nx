@@ -23,6 +23,17 @@ export interface Change {
 export interface FileChange<T extends Change = Change> {
   file: string;
   getChanges: () => T[];
+  /**
+   * Contents of the file at the comparison base, or null when there is no base revision to
+   * read from (including files passed via --files, which are marked changed without a
+   * revision comparison). Memoized. Undefined when the changes were not computed against a
+   * revision.
+   */
+  getContentAtBase?: () => string | null;
+  /**
+   * Contents of the file at the head revision, memoized. See {@link getContentAtBase}.
+   */
+  getContentAtHead?: () => string | null;
 }
 
 export class WholeFileChange implements Change {
@@ -78,8 +89,43 @@ export function calculateFileChanges(
     const ext = extname(f);
     const basename = f.split('/').pop() ?? f;
 
+    // Memoized per revision — each read shells out to `git show`.
+    const contentCache = new Map<string, string | null>();
+    const readAtRevision = (revision: string | undefined): string | null => {
+      const key = revision ?? '';
+      const cached = contentCache.get(key);
+      if (cached !== undefined) {
+        return cached;
+      }
+      let content: string | null;
+      try {
+        // Revision reads come back trimmed from defaultReadFileAtRevision while working-tree
+        // reads don't; trim here so both sides of a comparison are normalized the same way.
+        content = readFileAtRevision(f, revision).trim();
+      } catch {
+        content = null;
+      }
+      // The default reader swallows errors into '', so an empty string is ambiguous between a
+      // genuinely empty file and a failed read (e.g. the file not existing at that revision).
+      // Collapse both to null: diffing against '' would report removals as absent and let a
+      // consumer under-select, while null routes it to its conservative path.
+      content = content === '' ? null : content;
+      contentCache.set(key, content);
+      return content;
+    };
+
     return {
       file: f,
+      // Without a base revision the read would fall back to the working tree, making base and
+      // head contents identical. A consumer diffing them would see no changes and could skip
+      // work that needs to run, so return null and let it take its can't-attribute path.
+      getContentAtBase: nxArgs
+        ? () =>
+            nxArgs.base && !nxArgs.files?.includes(f)
+              ? readAtRevision(nxArgs.base)
+              : null
+        : undefined,
+      getContentAtHead: nxArgs ? () => readAtRevision(nxArgs.head) : undefined,
       getChanges: (): Change[] => {
         if (!existsSync(join(workspaceRoot, f))) {
           return [new DeletedFileChange()];

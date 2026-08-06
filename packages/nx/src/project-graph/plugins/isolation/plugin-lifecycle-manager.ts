@@ -5,6 +5,7 @@
  */
 const HOOKS_BY_PHASE = {
   graph: ['createNodes', 'createDependencies', 'createMetadata'],
+  affected: ['createTouchedDependencies'],
   'pre-task': ['preTasksExecution'],
   'post-task': ['postTasksExecution'],
 } as const;

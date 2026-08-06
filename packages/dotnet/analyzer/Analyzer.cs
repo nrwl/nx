@@ -76,6 +76,7 @@ public static class Analyzer
 
         var nodesByFile = new Dictionary<string, NxProjectGraphNode>();
         var referencesByRoot = new Dictionary<string, ReferencesInfo>();
+        var packagesByRoot = new Dictionary<string, List<ResolvedPackage>>();
 
         // Group nodes by project file path to handle multi-targeting projects.
         // Multi-targeting projects (using TargetFrameworks plural) create multiple nodes:
@@ -158,6 +159,17 @@ public static class Analyzer
                         directoryFilesByDir
                     );
 
+                    // With every package version resolved, per-package externalDependencies
+                    // inputs replace the whole-file Directory.Packages.props input.
+                    var packageVersions = CollectPackageVersions(primaryNode.ProjectInstance!);
+                    var resolvedPackages = ResolveCentralPackages(properties, packageRefs, packageVersions);
+
+                    var targetDirectoryInputs = resolvedPackages is null
+                        ? directoryBuildInputs
+                        : directoryBuildInputs
+                            .Where(i => !ProjectUtilities.IsCentralPackagesInput(i))
+                            .ToList();
+
                     var targets = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
@@ -169,7 +181,8 @@ public static class Analyzer
                         workspaceRoot,
                         pluginOptions,
                         nxJson,
-                        directoryBuildInputs
+                        targetDirectoryInputs,
+                        resolvedPackages
                     );
 
                     nodesByFile[relativeProjectFile] = new NxProjectGraphNode
@@ -191,6 +204,11 @@ public static class Analyzer
                             SourceConfigFile = relativeProjectFile
                         };
                     }
+
+                    if (resolvedPackages is not null)
+                    {
+                        packagesByRoot[projectRoot] = resolvedPackages;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -202,7 +220,8 @@ public static class Analyzer
         return new AnalysisResult
         {
             NodesByFile = nodesByFile,
-            ReferencesByRoot = referencesByRoot
+            ReferencesByRoot = referencesByRoot,
+            PackagesByRoot = packagesByRoot
         };
     }
 
@@ -215,11 +234,91 @@ public static class Analyzer
             packageRefs.Add(new PackageReference
             {
                 Include = item.EvaluatedInclude,
-                Version = item.Metadata.FirstOrDefault(m => m.Name == "Version")?.EvaluatedValue
+                Version = item.Metadata.FirstOrDefault(m => m.Name == "Version")?.EvaluatedValue,
+                VersionOverride = item.Metadata.FirstOrDefault(m => m.Name == "VersionOverride")?.EvaluatedValue
             });
         }
 
         return packageRefs;
+    }
+
+    /// <summary>
+    /// Collects PackageVersion items. These are declared in Directory.Packages.props and are
+    /// what Central Package Management uses to version a bare PackageReference. MSBuild
+    /// evaluates them, so they are available here without running a restore.
+    /// </summary>
+    private static Dictionary<string, string> CollectPackageVersions(ProjectInstance project)
+    {
+        var packageVersions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var item in project.GetItems("PackageVersion"))
+        {
+            var version = item.Metadata.FirstOrDefault(m => m.Name == "Version")?.EvaluatedValue;
+            if (!string.IsNullOrEmpty(item.EvaluatedInclude) && !string.IsNullOrEmpty(version))
+            {
+                // A case-insensitive Dictionary keeps the first key's casing on update; remove
+                // first so the latest item's casing wins along with its version.
+                packageVersions.Remove(item.EvaluatedInclude);
+                packageVersions[item.EvaluatedInclude] = version!;
+            }
+        }
+
+        return packageVersions;
+    }
+
+    /// <summary>
+    /// Joins PackageReference items with their resolved versions. Returns null when the project
+    /// is not using Central Package Management or any reference's version cannot be determined;
+    /// callers then keep the whole-file Directory.Packages.props input.
+    /// </summary>
+    internal static List<ResolvedPackage>? ResolveCentralPackages(
+        Dictionary<string, string> properties,
+        List<PackageReference> packageRefs,
+        Dictionary<string, string> packageVersions)
+    {
+        if (!string.Equals(
+                properties.GetValueOrDefault("ManagePackageVersionsCentrally"),
+                "true",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var resolved = new List<ResolvedPackage>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // NuGet ids are case-insensitive; prefer the manifest's casing so external node names
+        // agree with what createTouchedDependencies parses out of the same manifest.
+        var manifestIds = packageVersions.Keys.ToDictionary(k => k, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var packageRef in packageRefs)
+        {
+            if (string.IsNullOrEmpty(packageRef.Include))
+            {
+                continue;
+            }
+
+            var version = !string.IsNullOrEmpty(packageRef.VersionOverride)
+                ? packageRef.VersionOverride
+                : !string.IsNullOrEmpty(packageRef.Version)
+                    ? packageRef.Version
+                    : packageVersions.GetValueOrDefault(packageRef.Include);
+
+            if (string.IsNullOrEmpty(version))
+            {
+                // Unknown version — do not narrow this project's inputs.
+                return null;
+            }
+
+            var id = manifestIds.GetValueOrDefault(packageRef.Include!) ?? packageRef.Include!;
+            if (seen.Add(id))
+            {
+                resolved.Add(new ResolvedPackage { Id = id, Version = version! });
+            }
+        }
+
+        resolved.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+        return resolved;
     }
 
     /// <summary>
@@ -267,6 +366,10 @@ public static class Analyzer
             "OutputType",
             "AssemblyName",
             "IsTestProject",
+
+            // Central Package Management — when true, PackageReference items carry no Version
+            // and versions come from PackageVersion items in Directory.Packages.props.
+            "ManagePackageVersionsCentrally",
 
             // Build configuration
             "Configuration",
