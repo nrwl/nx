@@ -165,10 +165,10 @@ export function openCloudSetupUrl(opts: {
     // carries the URL either way.
     //
     // Load the bindings directly: `nx/src/native` is a loader shim that copies
-    // the multi-MB .node into a cache keyed on cwd, which here is the parent of
-    // the new workspace — so the copy is written and never read. It also
-    // suppresses a WASI ExperimentalWarning we lose by skipping it, but that
-    // only surfaces on the wasm fallback, where `openUrl` is a stub anyway.
+    // the multi-MB .node into a cache and loads the copy. The key is derived from
+    // cwd, which here is the parent of the new workspace, so nothing ever reuses
+    // it. Skipping the shim also loses its WASI ExperimentalWarning filter, but
+    // that only surfaces on the wasm fallback, where `openUrl` is a stub anyway.
     // nx-ignore-next-line
     const nativePath = require.resolve('nx/src/native/native-bindings.js', {
       paths: [opts.workspaceDirectory],
