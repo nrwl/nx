@@ -120,17 +120,17 @@ Maintaining path-based filters is expensive:
 ### Graph-based affected detection
 
 This derives the same answer from the code instead of from a list you maintain.
-The tool parses imports, builds a project graph, diffs the commit range, maps the changed files to
-projects, then walks the graph to include every project that depends on them.
-Nothing is maintained by hand, so the filters can't drift away from the imports.
+The tool reads your source and manifests, builds a project graph, diffs the commit range, maps the
+changed files to projects, then walks the graph to include every project that depends on them.
+Nothing is maintained by hand, so it can't drift from what the code actually does.
 
-| Concern          | Path filters                               | Graph-based affected                             |
-| ---------------- | ------------------------------------------ | ------------------------------------------------ |
-| Setup            | CI config only                             | Requires a tool that builds a project graph      |
-| Shared code      | Listed manually per consumer               | Followed automatically, including transitively   |
-| Drift risk       | High, filters and imports diverge silently | Low, the graph is derived from imports           |
-| Lockfile changes | Usually miss or trigger everything         | Tool-dependent, Nx can narrow it to changed deps |
-| Good fit         | Independent services, no shared libraries  | Any repository with shared code                  |
+| Concern              | Path filters                               | Graph-based affected                             |
+| -------------------- | ------------------------------------------ | ------------------------------------------------ |
+| **Setup**            | CI config only                             | Requires a tool that builds a project graph      |
+| **Shared code**      | Listed manually per consumer               | Followed automatically, including transitively   |
+| **Drift risk**       | High, filters drift from real dependencies | Low, the graph is derived from source            |
+| **Lockfile changes** | Usually miss or trigger everything         | Tool-dependent, Nx can narrow it to changed deps |
+| **Good fit**         | Independent services, no shared libraries  | Any repository with shared code                  |
 
 With Nx, [`nx affected`](/docs/features/ci-features/affected) covers every project in one job, and
 the workflow stops encoding the workspace structure:
