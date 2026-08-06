@@ -7,7 +7,7 @@ weight: 2
 filter: 'type:References'
 ---
 
-[Gradle](https://gradle.org/) is a build automation tool for JVM-based projects, and the `@nx/gradle` plugin brings Nx task running, caching, and graph analysis to a Gradle monorepo.
+[Gradle](https://gradle.org/) is a build automation tool for JVM-based projects. Nx brings task running, caching, and graph analysis to a Gradle monorepo.
 
 The `@nx/gradle` plugin registers Gradle projects in the Nx graph so you can [set up Gradle in Nx](#setup), [run local tasks](#local-development), [configure task inference](#configuration), and [scale in CI](#ci-considerations).
 
@@ -174,6 +174,12 @@ Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
 ```
 
 Individual Gradle projects can also configure Nx-specific settings using the `nx { }` DSL in `build.gradle` or `build.gradle.kts`.
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for inferred Gradle tasks must use the exact identifier `@nx/gradle`.
+
+{% aside type="caution" title="Legacy Gradle plugin" %}
+The public `@nx/gradle/plugin-v1` entry point is deprecated and will be removed in Nx 24. Replace it with `@nx/gradle`. The legacy entry recognizes Gradle build files and test files and supports `buildTargetName` (default `build`), `classesTargetName` (default `classes`), `testTargetName` (default `test`), `ciTargetName`, `includeSubprojectsTasks` (default `false`), and arbitrary `<taskName>TargetName` overrides.
+{% /aside %}
 
 ## Set up CI for your Gradle monorepo
 

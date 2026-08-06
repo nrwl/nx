@@ -5,8 +5,8 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
-import { existsSync } from 'fs';
-import { dirname, isAbsolute, join, resolve } from 'path';
+import { existsSync, readFileSync, statSync } from 'fs';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
 
@@ -14,7 +14,7 @@ let tsModule: typeof import('typescript');
 
 export function readTsConfig(
   tsConfigPath: string,
-  sys?: ts.System
+  sys?: ts.ParseConfigHost
 ): ts.ParsedCommandLine {
   if (!tsModule) {
     tsModule = require('typescript');
@@ -44,6 +44,147 @@ export function readTsConfigFromTree(
   };
 
   return readTsConfig(tsConfigPath, tsSysFromTree);
+}
+
+/**
+ * The members `createTreeParseConfigHost` overrides: the file system ones are
+ * backed by the `Tree`, `realpath`/`getCurrentDirectory` are anchored to
+ * `tree.root`, and `useCaseSensitiveFileNames` is platform-derived from
+ * `ts.sys`. The returned object still spreads `ts.sys` (TypeScript duck-types
+ * the host and reads members this type does not name), so the narrow type is a
+ * compile-time guard on Nx callers: everything outside it is disk-backed and
+ * escapes the tree.
+ */
+export type TreeParseConfigHost = Required<
+  Pick<
+    ts.ParseConfigHost,
+    | 'useCaseSensitiveFileNames'
+    | 'readDirectory'
+    | 'readFile'
+    | 'fileExists'
+    | 'directoryExists'
+    | 'realpath'
+    | 'getCurrentDirectory'
+  >
+>;
+
+/**
+ * A TypeScript host, backed by the devkit `Tree`, that resolves `extends` the
+ * way real `tsc` does. The naive `{ ...ts.sys, readFile: (p) => tree.read(p) }`
+ * host resolves less than `tsc`:
+ *  - A package-form `extends` (e.g. `@tsconfig/node14/tsconfig.json`) is
+ *    realpath-absolutized by TypeScript; `Tree.read`/`Tree.exists` re-root an
+ *    absolute path under the workspace, so the base reads as nothing and its
+ *    options silently vanish from the merged result (the failure surfaces only
+ *    as a TS5083/TS6053 in `errors`, which callers discard).
+ *  - An extension-less `extends` resolves against `process.cwd()` when
+ *    existence comes from `ts.sys`; Nx never chdirs to the workspace root, so it
+ *    resolves only when the command runs from the root.
+ *
+ * This host maps absolute paths under `tree.root` back to tree-relative for the
+ * tree lookups and falls through to `fs` for paths that resolve outside the
+ * workspace (a pnpm store or a `link:`/`file:` target). Resolution is anchored
+ * to `tree.root` rather than the working directory: TypeScript resolves a
+ * package-form base as a relative path and hands it to `realpath`, and
+ * `ts.sys.realpath` would resolve it against `process.cwd()`, so a workspace
+ * whose root is not an ancestor of the working directory would read a
+ * same-named package from the wrong tree.
+ *
+ * `readDirectory` is a no-op: the source-file scan is skipped because callers
+ * read only the merged `options`, never the file list. A config that resolves
+ * its inputs through `include` (or the default glob) then reports a TS18003
+ * unless it also carries `files` or `references`, so `errors.length > 0` is not
+ * a usable signal; match specific codes (TS5083/TS6053) instead.
+ */
+export function createTreeParseConfigHost(tree: Tree): TreeParseConfigHost {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
+  // Classify with `relative` rather than a string prefix: it normalizes
+  // separators, so an absolute path TypeScript hands over with forward slashes
+  // still matches a `tree.root` carrying platform separators, and it respects
+  // the segment boundary, so a sibling of the root (`/repo/core-utils` for
+  // `/repo/core`) is not taken for a path inside it.
+  const isOutsideRoot = (path: string) => {
+    if (!isAbsolute(path)) {
+      return false;
+    }
+    const rel = relative(tree.root, path);
+    return rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel);
+  };
+  const toTreePath = (path: string) =>
+    isAbsolute(path) ? relative(tree.root, path) || '.' : path;
+  // `ts.sys` gates `readFile`/`fileExists` on `isFile`, so a directory is never
+  // read as a config file. Both branches mirror that, which lets an
+  // extension-less `extends` ("./config") that collides with a same-named
+  // directory fall through to its `.json` sibling. Out-of-root, a bare
+  // `existsSync` answers true for a directory and `readFileSync` on it throws
+  // EISDIR (TS5012, which the extends-failure guard does not catch); in-root,
+  // `tree.exists` also answers true for a directory, so `fileExists` gates on
+  // `tree.isFile`.
+  const isFileOnDisk = (path: string) => {
+    try {
+      return statSync(path).isFile();
+    } catch {
+      return false;
+    }
+  };
+  const isDirectoryOnDisk = (path: string) => {
+    try {
+      return statSync(path).isDirectory();
+    } catch {
+      return false;
+    }
+  };
+
+  return {
+    ...tsModule.sys,
+    readDirectory: () => [],
+    getCurrentDirectory: () => tree.root,
+    // A relative path anchored to the workspace instead of `process.cwd()`; an
+    // absolute one still goes through `ts.sys` so a symlinked in-root
+    // `node_modules` entry resolves to its real (out-of-root) target.
+    realpath: (path) =>
+      tsModule.sys.realpath(isAbsolute(path) ? path : join(tree.root, path)),
+    readFile: (path) =>
+      isOutsideRoot(path)
+        ? isFileOnDisk(path)
+          ? readFileSync(path, 'utf-8')
+          : undefined
+        : (tree.read(toTreePath(path), 'utf-8') ?? undefined),
+    fileExists: (path) => {
+      if (isOutsideRoot(path)) {
+        return isFileOnDisk(path);
+      }
+      const treePath = toTreePath(path);
+      return tree.exists(treePath) && tree.isFile(treePath);
+    },
+    directoryExists: (path) => {
+      if (isOutsideRoot(path)) {
+        return isDirectoryOnDisk(path);
+      }
+      const treePath = toTreePath(path);
+      return tree.exists(treePath) && !tree.isFile(treePath);
+    },
+  };
+}
+
+/**
+ * Whether a `ParsedCommandLine` produced with `createTreeParseConfigHost` failed
+ * to resolve an `extends` target: TS5083 (the base resolved but could not be
+ * read) or TS6053 (the base could not be resolved at all). Because the host
+ * resolves what real `tsc` resolves, this only fires for a config whose extends
+ * chain `tsc` cannot read either. The no-op `readDirectory` also adds a TS18003
+ * whenever the config resolves inputs through `include` and carries neither
+ * `files` nor `references`, so `errors.length > 0` is not a usable signal; match
+ * these two codes.
+ */
+export function extendsResolutionFailed(
+  errors: readonly ts.Diagnostic[]
+): boolean {
+  // 5083: Cannot read file '{0}'. 6053: File '{0}' not found.
+  return errors.some((error) => error.code === 5083 || error.code === 6053);
 }
 
 export function getRootTsConfigPathInTree(tree: Tree): string | null {

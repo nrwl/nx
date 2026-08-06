@@ -206,7 +206,12 @@ export function createAPI(
       output.note(releaseGraph.filterLog);
     }
 
+    // Programmatic API consumers can force changelog generation to run even when the resolved
+    // configuration is considered effectively disabled (e.g. when they have disabled changelog
+    // file writing and remote release creation because they consume the returned changelog
+    // contents in memory instead)
     const changelogGenerationEnabled =
+      args.forceChangelogGeneration ||
       isChangelogEffectivelyEnabled(
         nxReleaseConfig.changelog.workspaceChangelog
       ) ||
@@ -496,6 +501,14 @@ export function createAPI(
 
       if (releaseGroup.projectsRelationship === 'independent') {
         for (const project of projectNodes) {
+          if (
+            !projectsVersionData[project.name] ||
+            (projectsVersionData[project.name].newVersion === null &&
+              !projectsVersionData[project.name].dockerVersion)
+          ) {
+            continue;
+          }
+
           let changes: ChangelogChange[] | null = null;
 
           if (releaseGroup.resolvedVersionPlans) {

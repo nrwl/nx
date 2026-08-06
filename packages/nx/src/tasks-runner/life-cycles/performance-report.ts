@@ -1,17 +1,95 @@
 import type { Link, PerformanceSummaryPayload } from '../../native';
 import { formatDuration } from '../../native';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { supportsHyperlinks, terminalLink } from '../../utils/terminal-link';
-import type { PerformanceSummary } from './performance-analysis';
+import { isNxCloudDisabled, isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { createNxCloudOnboardingURL } from '../../nx-cloud/utilities/url-shorten';
+import { getCloudUrl } from '../../nx-cloud/utilities/get-cloud-options';
+import { getVcsRemoteInfo } from '../../utils/git-utils';
+import { logger } from '../../utils/logger';
+import type {
+  PerformanceSummary,
+  TaskDurationRow,
+} from './performance-analysis';
 
 const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
-const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
+// Fallback for the remote-cache CTA when the short onboarding URL can't be
+// fetched: the generic Cloud get-started page (still drives to onboarding).
+const NX_CLOUD_GET_STARTED_URL = 'https://cloud.nx.app/get-started';
 const NX_PERFORMANCE_URL =
   'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution';
-/** utm tag attributing report clicks back to it. */
-const UTM = '?utm=performance-report';
-const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
-const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
-const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
+/** utm tag attributing report clicks back to it; the content names the CTA clicked. */
+const utm = (content: string) =>
+  `?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=${content}`;
+const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${utm('parallelization')}`;
+const NX_AGENTS_LINK = `${NX_AGENTS_URL}${utm('nx-agents')}`;
+const NX_REMOTE_CACHE_LINK = `${NX_CLOUD_GET_STARTED_URL}${utm('remote-cache')}`;
+
+// Defaults to the get-started link; a disconnected workspace gets a short Nx
+// Cloud onboarding URL instead (see prefetchRemoteCacheOnboardingUrl).
+let remoteCacheLink = NX_REMOTE_CACHE_LINK;
+
+// Give up on the short URL after this long so a slow/hung Cloud API never
+// lingers past the exit report. Covers two sequential round trips (features
+// GET, onboarding POST); the 30s CTA floor leaves room. Timing out also aborts
+// the request - Promise.race alone would leave the socket holding the event
+// loop open, which strands programmatic callers that never process.exit.
+const ONBOARDING_URL_TIMEOUT = 5000;
+
+/**
+ * Point the remote-cache CTA at a short Nx Cloud onboarding URL for a
+ * disconnected GitHub workspace - the VCS flow where Cloud opens the nx.json PR.
+ * Non-GitHub remotes keep the get-started link (handles every provider) and skip
+ * the network entirely. Runs in CI too - terminal + job summary.
+ *
+ * Best-effort: the get-started link stays on failure/timeout. Fired at run start;
+ * the CTA needs a >30s run (MIN_RECOMMENDATION_RUN_DURATION), so the fetch
+ * always resolves first.
+ */
+export async function prefetchRemoteCacheOnboardingUrl(
+  nxJson: NxJsonConfiguration
+): Promise<void> {
+  if (isNxCloudDisabled(nxJson) || isNxCloudUsed(nxJson)) {
+    return;
+  }
+  if (getVcsRemoteInfo()?.domain !== 'github.com') {
+    return;
+  }
+  const abortController = new AbortController();
+  try {
+    const url = await Promise.race([
+      createNxCloudOnboardingURL(
+        'nx-cli-perf-report',
+        undefined,
+        undefined,
+        false,
+        false,
+        undefined,
+        abortController.signal
+      ),
+      new Promise<null>((resolve) => {
+        // unref so the pending timer never keeps the CLI alive on its own.
+        setTimeout(() => {
+          abortController.abort();
+          resolve(null);
+        }, ONBOARDING_URL_TIMEOUT).unref();
+      }),
+    ]);
+    // createNxCloudOnboardingURL never throws - on an unreachable API it returns a
+    // paste-a-token URL (accessToken=undefined). Only accept a real short link.
+    if (url?.startsWith(`${getCloudUrl()}/connect/`)) {
+      remoteCacheLink = url;
+    } else {
+      logger.verbose(
+        `Keeping the get-started remote-cache link (${
+          url === null ? 'onboarding URL timed out' : `got: ${url}`
+        })`
+      );
+    }
+  } catch (e) {
+    logger.verbose(`Keeping the get-started remote-cache link: ${e}`);
+  }
+}
 /**
  * Whole-phrase CTA: the whole sentence is the link. The Rust TUI popup keeps no
  * copy of this string; it gets the phrase + href from the exit payload's `links`.
@@ -21,12 +99,16 @@ const NX_REMOTE_CACHE_CTA =
 const NX_DISTRIBUTE_CTA = 'Distribute across machines with Nx Agents';
 
 /**
- * A recommendation built from structured parts so the link text comes from the
- * link definition (not a substring scanned out of the assembled report). A part
- * is either literal text or a {@link RecLink}; the renderers below project the
- * same parts to the terminal string, the payload string, and the popup links.
+ * A recommendation built from structured parts so the link text comes from the link
+ * definition (not a substring scanned out of the assembled report). A part is literal
+ * text, a {@link RecLink}, or a {@link RecTaskRows}, projected to each output string by
+ * {@link renderRecommendation}.
+ *
+ * String parts must be single-line — multi-line content needs its own structured part (as
+ * {@link RecTaskRows} is). TS can't enforce this: `string` is already a handled member, so
+ * a multi-line one compiles and then breaks the Markdown nested list.
  */
-type RecPart = string | RecLink;
+type RecPart = string | RecLink | RecTaskRows;
 export type Recommendation = RecPart[];
 
 /**
@@ -36,18 +118,58 @@ export type Recommendation = RecPart[];
  * re-links the phrase from {@link PerformanceSummaryPayload.links}.
  */
 interface RecLink {
-  /** Visible label: the sentence that links. */
   visible: string;
-  /** OSC 8 click target / appended URL: the utm-tagged URL. */
   href: string;
 }
+
+/**
+ * The critical path's longest tasks as data, so each renderer formats them natively:
+ * the terminal and payload as space-aligned columns, Markdown as a nested list
+ * (HTML collapses space runs, so aligned columns don't survive rendering there).
+ */
+type RecTaskRows = TaskDurationRow[];
 
 function phraseLink(phrase: string, taggedUrl: string): RecLink {
   return { visible: phrase, href: taggedUrl };
 }
 
+// Discriminate positively — test for what each part *is*. A `!isRecTaskRows` catch-all
+// would misclassify a future `RecPart` member as a link; TS can't catch that (it never
+// checks a predicate body), so `recommendationLinks`' `.filter(isRecLink)` would ship
+// `{text: undefined, href: undefined}` to the popup.
 function isRecLink(part: RecPart): part is RecLink {
-  return typeof part !== 'string';
+  return typeof part !== 'string' && 'href' in part;
+}
+
+function isRecTaskRows(part: RecPart): part is RecTaskRows {
+  return Array.isArray(part);
+}
+
+/**
+ * Project a recommendation to a string, formatting each non-text part with the caller's
+ * renderers. The three output targets (payload, terminal, Markdown) share this one dispatch.
+ * After the string and task-rows branches a part is a {@link RecLink}, so `render.link`
+ * takes it directly — and a new {@link RecPart} member that is neither would fail to satisfy
+ * that `RecLink` parameter, turning "forgot to handle it" into a compile error right here.
+ */
+function renderRecommendation(
+  rec: Recommendation,
+  render: {
+    link: (link: RecLink) => string;
+    taskRows: (rows: RecTaskRows) => string;
+  }
+): string {
+  return rec
+    .map((part) => {
+      if (typeof part === 'string') {
+        return part;
+      }
+      if (isRecTaskRows(part)) {
+        return render.taskRows(part);
+      }
+      return render.link(part);
+    })
+    .join('');
 }
 
 /**
@@ -55,7 +177,15 @@ function isRecLink(part: RecPart): part is RecLink {
  * Links are URL-less (the popup re-links them from {@link PerformanceSummaryPayload.links}).
  */
 export function recommendationToPayloadString(rec: Recommendation): string {
-  return rec.map((part) => (!isRecLink(part) ? part : part.visible)).join('');
+  return renderRecommendation(rec, {
+    link: (link) => link.visible,
+    taskRows: taskRowsToText,
+  });
+}
+
+/** Task rows as the text block the terminal and payload embed: newline-led, space-aligned columns. */
+function taskRowsToText(tasks: RecTaskRows): string {
+  return ['', ...formatTopTaskRows(tasks)].join('\n');
 }
 
 /**
@@ -68,16 +198,13 @@ function recommendationToTerminalString(
   rec: Recommendation,
   hyperlinks: boolean
 ): string {
-  return rec
-    .map((part) => {
-      if (!isRecLink(part)) {
-        return part;
-      }
-      return hyperlinks
-        ? terminalLink(part.visible, part.href)
-        : `${part.visible} → ${part.href}`;
-    })
-    .join('');
+  return renderRecommendation(rec, {
+    link: (link) =>
+      hyperlinks
+        ? terminalLink(link.visible, link.href)
+        : `${link.visible} → ${link.href}`,
+    taskRows: taskRowsToText,
+  });
 }
 
 /** The popup links (phrase + href) for every link in a recommendation list, for OSC 8 re-linking. */
@@ -89,6 +216,8 @@ function recommendationLinks(recommendations: Recommendation[]): Link[] {
   );
 }
 
+/** Below this run duration (ms), the run is already fast — recommend nothing. */
+export const MIN_RECOMMENDATION_RUN_DURATION = 30_000;
 /** At/below this hit rate, recommend remote cache (if off); above it caching works. */
 const LOW_CACHE_HIT_RATE = 0.1;
 /** Below this (ms) overhead is noise, not worth a recommendation. */
@@ -107,10 +236,9 @@ function recoverableTime(s: PerformanceSummary): number {
 }
 
 /** Render the longest critical-path tasks as aligned columns: task (left), duration (right). */
-function formatTopTaskRows(
-  tasks: Array<{ id: string; duration: number }>
-): string[] {
-  // The only caller returns early when empty, so `tasks` is non-empty here.
+function formatTopTaskRows(tasks: TaskDurationRow[]): string[] {
+  // Non-empty by construction: the only recommendation carrying task rows requires
+  // `criticalPathTop.length > 0` to apply, so no empty array reaches the widths below.
   const idWidth = Math.max(...tasks.map((t) => t.id.length));
   const durations = tasks.map((t) => formatDuration(t.duration));
   const durWidth = Math.max(...durations.map((d) => d.length));
@@ -131,11 +259,13 @@ interface RecommendationContext {
   runDuration: number;
   canDistribute: boolean;
   distributing: boolean;
-  criticalPathTop: Array<{ id: string; duration: number }>;
+  criticalPathTop: TaskDurationRow[];
   cacheHits: number;
   cacheableCount: number;
   cacheSkipped: boolean;
   remoteCacheEnabled: boolean;
+  /** Opted out of Nx Cloud (`neverConnectToCloud` / NX_NO_CLOUD) — never recommend it. */
+  cloudOptedOut: boolean;
 }
 
 /** A single recommendation: the criteria under which it applies and the advice it yields. */
@@ -211,13 +341,15 @@ const RECOMMENDATIONS: RecommendationCandidate[] = [
   },
   {
     // Barely-used cache with no remote: set up Nx Cloud. Whole-phrase link; the payload
-    // string stays URL-less (the popup re-links the phrase).
+    // string stays URL-less (the popup re-links the phrase). Never pushed at a
+    // workspace that opted out of Nx Cloud.
     isApplicable: (c) =>
       !c.cacheSkipped &&
+      !c.cloudOptedOut &&
       c.cacheableCount > 0 &&
       !c.remoteCacheEnabled &&
       c.cacheHits / c.cacheableCount <= LOW_CACHE_HIT_RATE,
-    build: () => [phraseLink(NX_REMOTE_CACHE_CTA, NX_REMOTE_CACHE_LINK), `.`],
+    build: () => [phraseLink(NX_REMOTE_CACHE_CTA, remoteCacheLink), `.`],
   },
   {
     // Cache skipped: drop the flag to restore unchanged tasks instantly.
@@ -245,10 +377,8 @@ const RECOMMENDATIONS: RecommendationCandidate[] = [
     // only multi-line rec). Nothing ran (fully cached) → it doesn't apply.
     isApplicable: (c) => criticalPathBound(c) && c.criticalPathTop.length > 0,
     build: (c) => [
-      [
-        `Speed up or split the longest tasks on the critical path:`,
-        ...formatTopTaskRows(c.criticalPathTop),
-      ].join('\n'),
+      `Speed up or split the longest tasks on the critical path:`,
+      c.criticalPathTop,
     ],
   },
 ];
@@ -259,6 +389,10 @@ const RECOMMENDATIONS: RecommendationCandidate[] = [
  * the GitHub-summary Markdown, and the TUI payload.
  */
 export function buildRecommendations(s: PerformanceSummary): Recommendation[] {
+  // A fast run has nothing worth optimizing — stats only, no advice.
+  if (s.runDuration < MIN_RECOMMENDATION_RUN_DURATION) {
+    return [];
+  }
   const c: RecommendationContext = {
     recoverableByParallel: s.recoverableByParallel,
     recoverableByMachines: s.recoverableByMachines,
@@ -272,6 +406,7 @@ export function buildRecommendations(s: PerformanceSummary): Recommendation[] {
     cacheableCount: s.cacheableCount,
     cacheSkipped: s.cacheSkipped,
     remoteCacheEnabled: s.remoteCacheEnabled,
+    cloudOptedOut: s.cloudOptedOut,
   };
   return RECOMMENDATIONS.filter((r) => r.isApplicable(c)).map((r) =>
     r.build(c)
@@ -350,20 +485,18 @@ export function formatReport(s: PerformanceSummary): string {
 
 /**
  * A recommendation as Markdown: every link becomes `[phrase](href)` (no OSC 8, unlike the
- * terminal renderer) — the whole sentence reads as prose and is the link text. The
- * critical-path rec embeds newline-separated, space-aligned task rows; collapse them to
- * `<br>`-joined lines so they render inside the list item.
+ * terminal renderer) — the whole sentence reads as prose and is the link text. Task rows
+ * become a nested list under the recommendation's bullet (space-aligned columns don't
+ * survive HTML's whitespace collapsing).
  */
 function recommendationToMarkdownString(rec: Recommendation): string {
-  return rec
-    .map((part) =>
-      !isRecLink(part) ? part : `[${part.visible}](${part.href})`
-    )
-    .join('')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .join('<br>');
+  return renderRecommendation(rec, {
+    link: (link) => `[${link.visible}](${link.href})`,
+    taskRows: (rows) =>
+      rows
+        .map((t) => `\n  - \`${t.id}\` — ${formatDuration(t.duration)}`)
+        .join(''),
+  });
 }
 
 /**

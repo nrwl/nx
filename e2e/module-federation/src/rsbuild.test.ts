@@ -35,7 +35,7 @@ describe('@nx/module-federation v2 - Rsbuild', () => {
       `apps/${provider}/package.json`
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const serve = await runCommandUntil(
         `serve ${provider}`,
         (output) => output.includes('Local:'),
@@ -63,7 +63,7 @@ describe('@nx/module-federation v2 - Rsbuild', () => {
       `apps/${provider}/src/App.tsx`
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       let consumerReady = false;
       let providerReady = false;
       const serve = await runCommandUntil(

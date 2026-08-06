@@ -43,8 +43,8 @@ export interface VersionDataEntry {
     source: string;
     target: string;
     type: string;
-    dependencyCollection: string;
-    rawVersionSpec: string;
+    dependencyCollection: string | null;
+    rawVersionSpec: string | null;
   }[];
 }
 

@@ -30,8 +30,8 @@ export interface ResolveAgenticInput {
 }
 
 /**
- * Resolves the agentic state for a `--run-migrations` invocation. Runs once,
- * before the migration loop, and its result is cached for every entry.
+ * Callers resolve this once per run-phase invocation and reuse the result for
+ * every migration it covers.
  */
 export async function resolveAgentic(
   input: ResolveAgenticInput
@@ -82,6 +82,17 @@ export async function resolveAgentic(
   }
 
   return { kind: 'enabled', selectedAgent: selected };
+}
+
+/**
+ * No warning when `--validate` is passed with the agentic flow off: validation
+ * requires an active agent session by definition.
+ */
+export function resolveShouldRunValidation(args: {
+  validate: boolean | undefined;
+  agenticKind: ResolvedAgentic['kind'];
+}): boolean {
+  return args.validate !== false && args.agenticKind === 'enabled';
 }
 
 /**

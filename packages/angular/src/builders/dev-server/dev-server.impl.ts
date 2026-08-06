@@ -10,15 +10,11 @@ import {
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
-import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/internal';
 import { existsSync } from 'fs';
-import { readNxJson } from 'nx/src/config/configuration';
-import { isNpmProject } from 'nx/src/project-graph/operators';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { relative } from 'path';
 import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
+import { assertPackageIsInstalled } from '../../executors/utilities/builder-package';
 import {
   loadIndexHtmlTransformer,
   loadMiddleware,
@@ -27,12 +23,13 @@ import {
 } from '../../executors/utilities/esbuild-extensions';
 import { patchBuilderContext } from '../../executors/utilities/patch-builder-context';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import {
-  mergeCustomWebpackConfig,
-  resolveIndexHtmlTransformer,
-} from '../utilities/webpack';
 import { normalizeOptions, validateOptions } from './lib';
 import type { NormalizedSchema, Schema } from './schema';
+import {
+  readNxJsonFromDisk as readNxJson,
+  isNpmProject,
+  readCachedProjectConfiguration,
+} from '@nx/devkit/internal';
 
 type BuildTargetOptions = {
   tsConfig: string;
@@ -168,7 +165,10 @@ export function executeDevServerBuilder(
    * handle `@nx/angular:*` executors.
    */
   patchBuilderContext(context, !isUsingWebpackBuilder, parsedBuildTarget);
-  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
+  assertPackageIsInstalled(
+    '@angular-devkit/build-angular',
+    '@nx/angular:dev-server'
+  );
 
   return combineLatest([
     from(import('@angular-devkit/build-angular')),
@@ -207,6 +207,13 @@ export function executeDevServerBuilder(
                     // run the target for all projects.
                     // This will occur when workspaceDependencies = []
                     if (workspaceDependencies.length > 0) {
+                      assertPackageIsInstalled(
+                        '@nx/webpack',
+                        '@nx/angular:dev-server'
+                      );
+                      const { WebpackNxBuildCoordinationPlugin } = await import(
+                        '@nx/webpack/internal'
+                      );
                       baseWebpackConfig.plugins.push(
                         new WebpackNxBuildCoordinationPlugin(
                           `nx run-many --target=${
@@ -222,6 +229,17 @@ export function executeDevServerBuilder(
                     return baseWebpackConfig;
                   }
 
+                  assertPackageIsInstalled(
+                    '@nx/webpack',
+                    '@nx/angular:dev-server'
+                  );
+                  assertPackageIsInstalled(
+                    'webpack-merge',
+                    '@nx/angular:dev-server'
+                  );
+                  const { mergeCustomWebpackConfig } = await import(
+                    '../utilities/webpack.js'
+                  );
                   return mergeCustomWebpackConfig(
                     baseWebpackConfig,
                     pathToWebpackConfig,
@@ -274,11 +292,18 @@ async function loadIndexHtmlFileTransformer(
     return undefined;
   }
 
-  return isUsingWebpackBuilder
-    ? resolveIndexHtmlTransformer(
-        pathToIndexFileTransformer,
-        tsConfig,
-        context.target
-      )
-    : await loadIndexHtmlTransformer(pathToIndexFileTransformer, tsConfig);
+  if (isUsingWebpackBuilder) {
+    assertPackageIsInstalled('@nx/webpack', '@nx/angular:dev-server');
+    assertPackageIsInstalled('webpack-merge', '@nx/angular:dev-server');
+    const { resolveIndexHtmlTransformer } = await import(
+      '../utilities/webpack.js'
+    );
+    return resolveIndexHtmlTransformer(
+      pathToIndexFileTransformer,
+      tsConfig,
+      context.target
+    );
+  }
+
+  return loadIndexHtmlTransformer(pathToIndexFileTransformer, tsConfig);
 }

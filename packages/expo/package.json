@@ -67,12 +67,20 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
+    "@nx/cypress": "workspace:*",
+    "@nx/playwright": "workspace:*",
     "expo": ">=53.0.0",
     "@expo/metro": ">= 55.0.0",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
   "peerDependenciesMeta": {
+    "@nx/cypress": {
+      "optional": true
+    },
+    "@nx/playwright": {
+      "optional": true
+    },
     "expo": {
       "optional": true
     },

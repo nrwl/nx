@@ -205,6 +205,7 @@ describe('TaskOrchestrator', () => {
         getBatch: jest.fn(async () => batchResults),
         copyFilesFromCache: jest.fn(),
       };
+      orchestrator.cacheMissedHashes = new Set();
       orchestrator.shouldCopyOutputsFromCacheBatch = jest.fn(
         async () => new Map()
       );
@@ -264,6 +265,129 @@ describe('TaskOrchestrator', () => {
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).toHaveBeenCalledWith(failing, 'failure', 'boom');
+    });
+  });
+
+  describe('cache miss memoization', () => {
+    const originalCacheFailures = process.env.NX_CACHE_FAILURES;
+
+    afterEach(() => {
+      if (originalCacheFailures === undefined) {
+        delete process.env.NX_CACHE_FAILURES;
+      } else {
+        process.env.NX_CACHE_FAILURES = originalCacheFailures;
+      }
+    });
+
+    function createTask(id: string): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: true,
+        parallelism: true,
+        hash: `${id}-hash`,
+      } as Task;
+    }
+
+    function createOrchestrator(batchResults: Map<string, any>) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.cache = {
+        getBatch: jest.fn(async () => batchResults),
+      };
+      orchestrator.cacheMissedHashes = new Set();
+      return orchestrator;
+    }
+
+    it('should not re-query hashes already confirmed as misses', async () => {
+      const task = createTask('app:build');
+      const orchestrator = createOrchestrator(new Map());
+
+      expect(await orchestrator.fetchCacheHits([task])).toEqual([]);
+      expect(await orchestrator.fetchCacheHits([task])).toEqual([]);
+
+      expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should only query hashes not yet confirmed as misses', async () => {
+      const hit = createTask('app:test');
+      const miss = createTask('app:build');
+      const orchestrator = createOrchestrator(
+        new Map([[hit.hash, { code: 0, terminalOutput: 'ok', remote: false }]])
+      );
+
+      const firstHits = await orchestrator.fetchCacheHits([hit, miss]);
+      expect(firstHits.map((h: any) => h.task.id)).toEqual(['app:test']);
+
+      const secondHits = await orchestrator.fetchCacheHits([hit, miss]);
+      expect(secondHits.map((h: any) => h.task.id)).toEqual(['app:test']);
+      expect(orchestrator.cache.getBatch).toHaveBeenLastCalledWith([hit]);
+    });
+
+    it('should memoize cached failures as misses when they are not replayable', async () => {
+      const failing = createTask('app:lint');
+      const orchestrator = createOrchestrator(
+        new Map([
+          [failing.hash, { code: 1, terminalOutput: 'boom', remote: false }],
+        ])
+      );
+      delete process.env.NX_CACHE_FAILURES;
+
+      await orchestrator.fetchCacheHits([failing]);
+      await orchestrator.fetchCacheHits([failing]);
+
+      expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not memoize replayable cached failures when NX_CACHE_FAILURES is enabled', async () => {
+      const failing = createTask('app:lint');
+      const orchestrator = createOrchestrator(
+        new Map([
+          [failing.hash, { code: 1, terminalOutput: 'boom', remote: false }],
+        ])
+      );
+      process.env.NX_CACHE_FAILURES = 'true';
+
+      const hits = await orchestrator.fetchCacheHits([failing]);
+
+      expect(hits.map((h: any) => h.task.id)).toEqual(['app:lint']);
+      expect(orchestrator.cacheMissedHashes.has(failing.hash)).toBe(false);
+    });
+
+    it('should re-query a task after it is re-hashed to a new hash', async () => {
+      const task = createTask('app:build');
+      const orchestrator = createOrchestrator(new Map());
+
+      await orchestrator.fetchCacheHits([task]);
+      task.hash = 'app:build-rehash';
+      await orchestrator.fetchCacheHits([task]);
+
+      expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(2);
+      expect(orchestrator.cache.getBatch).toHaveBeenLastCalledWith([task]);
+    });
+
+    it('should skip bulk resolution entirely when every scheduled task is a known miss', async () => {
+      const task = createTask('app:build');
+      const orchestrator = createOrchestrator(new Map());
+      orchestrator.taskGraph = { tasks: { 'app:build': task } };
+      orchestrator.tasksSchedule = {
+        getAllScheduledTasks: () => ({ scheduledTasks: ['app:build'] }),
+      };
+      orchestrator.processedTasks = new Map();
+      orchestrator.groups = [];
+      orchestrator.options = {
+        parallel: 3,
+        lifeCycle: { scheduleTask: jest.fn() },
+      };
+
+      expect(await orchestrator.resolveCachedTasksBulk()).toBe(false);
+      expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(1);
+
+      expect(await orchestrator.resolveCachedTasksBulk()).toBe(false);
+      expect(orchestrator.cache.getBatch).toHaveBeenCalledTimes(1);
     });
   });
 });

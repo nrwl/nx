@@ -5,7 +5,8 @@
     "types": ["node"],
     "lib": ["DOM", "ES2022"],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "rootDir": "."
   },
   "files": [],
   "exclude": [

@@ -6,6 +6,7 @@ import {
 } from '@angular/build/private';
 import {
   buildAndAnalyze,
+  createJavascriptTransformerCache,
   DiagnosticModes,
   disposeComponentStylesheetBundler,
   JavaScriptTransformer,
@@ -13,6 +14,8 @@ import {
   maxWorkers,
   setupCompilationWithAngularCompilation,
   AngularCompilation,
+  type JavascriptTransformerCache,
+  type StylesheetMetafileInputs,
 } from '@nx/angular-rspack-compiler';
 import { workspaceRoot } from '@nx/devkit';
 import {
@@ -22,7 +25,15 @@ import {
   type RspackPluginInstance,
   sources,
 } from '@rspack/core';
-import { dirname, join, normalize, resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import {
+  basename,
+  dirname,
+  join,
+  normalize,
+  relative,
+  resolve,
+} from 'node:path';
 import {
   type I18nOptions,
   NG_RSPACK_SYMBOL_NAME,
@@ -38,6 +49,44 @@ import { getStatsOptions } from '../config/config-utils/get-stats-options';
 const PLUGIN_NAME = 'AngularRspackPlugin';
 type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];
 
+// A project-scoped directory under the Angular CLI cache directory, with an
+// `angular-rspack` leaf so the state never collides with @angular/build's own
+// cache for the same project.
+function getPersistentCachePath(
+  options: NormalizedAngularRspackPluginOptions
+): string | undefined {
+  // Skip disk caching in CI, where fresh checkouts never reuse it, and in
+  // web containers, where it brings no benefit, costs browser memory, and
+  // the lmdb-backed transformer cache is unsupported.
+  const ci = process.env['CI'];
+  if (ci === '1' || ci?.toLowerCase() === 'true') {
+    return undefined;
+  }
+  if (process.versions.webcontainer) {
+    return undefined;
+  }
+  // In Nx workspaces the project name scopes the cache. Outside them (plain
+  // programmatic `createConfig` usage) there is no project graph to name the
+  // project, so scope by the project root instead of skipping the cache.
+  let projectScope = options.projectName;
+  if (!projectScope) {
+    const relativeRoot = relative(workspaceRoot, options.root);
+    projectScope =
+      relativeRoot && !relativeRoot.startsWith('..')
+        ? relativeRoot.replace(/[\\/]/g, '-')
+        : basename(options.root);
+  }
+  const { version } = createRequire(__filename)('@angular/build/package.json');
+  return join(
+    workspaceRoot,
+    '.angular',
+    'cache',
+    version,
+    projectScope,
+    'angular-rspack'
+  );
+}
+
 export class AngularRspackPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
   #i18n: I18nOptions | undefined;
@@ -46,8 +95,21 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   // This will be defined in the apply method correctly
   #angularCompilation: AngularCompilation;
   #collectedStylesheetAssets: Array<{ path: string; text: string }> = [];
+  // Latest bundled inputs per stylesheet, persisted across rebuilds since
+  // only re-bundled stylesheets produce new results.
+  #stylesheetMetafileInputsBySource = new Map<
+    string,
+    StylesheetMetafileInputs['inputs']
+  >();
+  #stylesheetMetafileInputs: StylesheetMetafileInputs['inputs'] = {};
+  #collectedStylesheetMetafileInputs: StylesheetMetafileInputs[] = [];
+  #useTypeScriptTranspilation = true;
+  #resourceDependencies?: ReadonlyMap<string, readonly string[]>;
+  #javascriptTransformerCache?: JavascriptTransformerCache;
+  #diagnosticsPromise?: ReturnType<AngularCompilation['diagnoseFiles']>;
   #initializationError: string | undefined;
   #emitError: string | undefined;
+  #setupWarnings: string[] = [];
 
   constructor(
     options: NormalizedAngularRspackPluginOptions,
@@ -55,7 +117,12 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   ) {
     this.#_options = options;
     this.#i18n = i18nOptions;
-    this.#sourceFileCache = new SourceFileCache();
+    const persistentCachePath = getPersistentCachePath(options);
+    this.#sourceFileCache = new SourceFileCache(persistentCachePath);
+    if (persistentCachePath) {
+      this.#javascriptTransformerCache =
+        createJavascriptTransformerCache(persistentCachePath);
+    }
     this.#javascriptTransformer = new JavaScriptTransformer(
       {
         /**
@@ -70,7 +137,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         advancedOptimizations: this.#_options.advancedOptimizations,
         jit: !this.#_options.aot,
       },
-      maxWorkers()
+      maxWorkers(),
+      this.#javascriptTransformerCache?.cache
     ) as unknown as ResolvedJavascriptTransformer;
   }
 
@@ -81,7 +149,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     compiler.hooks.beforeRun.tapAsync(
       PLUGIN_NAME,
       async (compiler, callback) => {
-        await this.setupCompilation(root, compiler.options.resolve.tsConfig);
+        await this.setupCompilation(root, compiler.options.resolve);
 
         compiler.hooks.beforeCompile.tapAsync(
           PLUGIN_NAME,
@@ -113,20 +181,38 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           compiler.hooks.beforeCompile.tapAsync(
             PLUGIN_NAME,
             async (params, callback) => {
-              const watchingModifiedFiles = compiler.watching?.compiler
-                ?.modifiedFiles
-                ? new Set(compiler.watching.compiler.modifiedFiles)
-                : new Set<string>();
+              const watchingCompiler = compiler.watching?.compiler;
+              const watchingModifiedFiles = new Set(
+                watchingCompiler?.modifiedFiles
+              );
+              const removedFiles = new Set(watchingCompiler?.removedFiles);
+              // Removed files invalidate the compilation like modified ones.
+              const changedFiles = new Set([
+                ...watchingModifiedFiles,
+                ...removedFiles,
+              ]);
 
               if (this.#angularCompilation) {
-                this.#sourceFileCache.invalidate(watchingModifiedFiles);
+                // The worker-based compilation tracks modified files itself;
+                // the in-process one takes them from the host options.
+                await this.#angularCompilation.update?.(changedFiles);
+                this.#sourceFileCache.invalidate(changedFiles);
+                this.#sourceFileCache.prune(removedFiles);
+                for (const file of changedFiles) {
+                  // Inline styles are keyed `<file>?class=...`; drop those
+                  // along with the file's own entry.
+                  for (const key of this.#stylesheetMetafileInputsBySource.keys()) {
+                    if (key === file || key.startsWith(`${file}?`)) {
+                      this.#stylesheetMetafileInputsBySource.delete(key);
+                    }
+                  }
+                }
               }
               await this.setupCompilation(
                 root,
-                compiler.options.resolve.tsConfig,
-                watchingModifiedFiles.size > 0
-                  ? watchingModifiedFiles
-                  : undefined
+                compiler.options.resolve,
+                changedFiles.size > 0 ? changedFiles : undefined,
+                true
               );
 
               await this.buildAndAnalyze();
@@ -144,28 +230,24 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     );
 
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
-      // Surface a failed Angular compilation as a build error (like
-      // @angular/build) instead of an exception that stalls the hooks chain.
-      // Watch builds recover on the next rebuild's re-init.
+      // Surface a failed Angular compilation as a build error instead of an
+      // exception that stalls the hooks chain. Watch builds recover on the
+      // next rebuild's re-init.
       const angularCompilationError =
         this.#initializationError ?? this.#emitError;
       if (angularCompilationError) {
         addError(compilation, angularCompilationError);
       }
 
-      // Handle errors thrown by loaders that prevent sealing (but ignore for watch mode)
-      compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
-        if (!watchRunInitialized && compilation.errors.length > 0) {
-          const stats = compilation.getStats();
-          const compilationError = statsErrorsToString(
-            stats.toJson(),
-            getStatsOptions(this.#_options.verbose)
-          );
-          callback(new Error(compilationError));
-        } else {
-          callback();
-        }
-      });
+      // Setup warnings describe the one-time compilation setup; repeat them
+      // while initialization keeps failing so they also land with the first
+      // successful build, then keep rebuilds quiet.
+      for (const setupWarning of this.#setupWarnings) {
+        addWarning(compilation, setupWarning);
+      }
+      if (!this.#initializationError) {
+        this.#setupWarnings = [];
+      }
 
       compilation.hooks.processAssets.tap(
         {
@@ -253,11 +335,11 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       // there is no (or only stale) compilation state to diagnose and the
       // failure is already reported as a compilation error. After an emit
       // failure diagnostics still run since they usually carry the root
-      // cause, matching @angular/build's application builder.
+      // cause.
       try {
-        if (!this.#_options.skipTypeChecking && !this.#initializationError) {
-          const { errors, warnings } =
-            await this.#angularCompilation.diagnoseFiles(DiagnosticModes.All);
+        if (!this.#initializationError) {
+          const { errors, warnings } = await (this.#diagnosticsPromise ??
+            this.#angularCompilation.diagnoseFiles(this.#diagnosticModes()));
           for (const error of errors ?? []) {
             compilation.errors.push({
               name: PLUGIN_NAME,
@@ -284,11 +366,6 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         );
       }
 
-      try {
-        await this.#javascriptTransformer.close();
-      } catch {
-        // Best-effort cleanup that must never hang the build.
-      }
       callback();
     });
 
@@ -346,28 +423,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       }
     });
 
-    compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
-      // Despite the typings, stats is undefined when the run fails before
-      // producing stats (e.g. the afterSeal hook above fails the seal for a
-      // build with errors). Rspack reports that failure itself.
-      if (!stats) {
-        return;
-      }
-
-      // Get stats options - merge defaults with user's config if provided
-      const configStats = compiler.options.stats;
-      const defaultStatsOptions = getStatsOptions(this.#_options.verbose);
-      const statsOptions =
-        typeof configStats === 'object' && configStats !== null
-          ? { ...defaultStatsOptions, ...configStats }
-          : defaultStatsOptions;
-
-      rspackStatsLogger(stats, statsOptions);
-      // Don't forcibly exit the process with errors when in watch mode
-      if (!watchRunInitialized && stats.hasErrors()) {
-        process.exit(1);
-      }
-    });
+    this.#applyBuildResultReporting(compiler, () => watchRunInitialized);
 
     // Dispose the shared component stylesheet bundler after a one-shot build so
     // its esbuild service (a child process and sockets, with @angular/build >=
@@ -391,47 +447,37 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       }
     );
 
-    // Failed builds skip the done hook (afterSeal fails the seal), so release
-    // the esbuild service and worker pool here too. Runs on close for both
-    // one-shot and watch; both teardowns are idempotent.
+    // Failed builds skip the done hook, so release the esbuild service here
+    // too; disposing the bundler again after a one-shot build is a no-op.
+    // The transformer closes only on shutdown: a per-build close would tear
+    // down its worker pool on every watch rebuild.
     compiler.hooks.shutdown.tapAsync(
       `${PLUGIN_NAME}_cleanup`,
       async (callback) => {
-        try {
-          await this.#javascriptTransformer.close();
-          await disposeComponentStylesheetBundler();
-        } catch {
-          // Best-effort cleanup that must never fail the compiler teardown.
-        }
+        // Isolated per close so a failing one cannot skip the rest and leak
+        // their resources (an unterminated compilation worker keeps the
+        // process alive). Kept sequential: the transformer writes results
+        // through the cache store, so its worker pool closes first.
+        const closeSafely = async (close: () => unknown) => {
+          try {
+            await close();
+          } catch {
+            // Best-effort cleanup that must never fail the compiler teardown.
+          }
+        };
+        await closeSafely(() => this.#javascriptTransformer.close());
+        await closeSafely(() => this.#javascriptTransformerCache?.close());
+        // Terminates the worker of a worker-based compilation, which would
+        // otherwise keep the process alive.
+        await closeSafely(() => this.#angularCompilation?.close?.());
+        await closeSafely(() => disposeComponentStylesheetBundler());
         callback();
       }
     );
 
-    compiler.hooks.normalModuleFactory.tap(
-      PLUGIN_NAME,
-      (normalModuleFactory) => {
-        normalModuleFactory.hooks.beforeResolve.tap(PLUGIN_NAME, (data) => {
-          if (data.request.startsWith('angular:jit:')) {
-            const path = data.request.split(';')[1];
-            data.request = `${normalize(
-              resolve(dirname(data.contextInfo.issuer), path)
-            )}?raw`;
-          }
-        });
-      }
-    );
+    this.#applyJitResourceResolution(compiler);
 
-    compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
-      (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
-        javascriptTransformer: this
-          .#javascriptTransformer as unknown as JavaScriptTransformer,
-        typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
-        angularCompilationFailed:
-          this.#initializationError !== undefined ||
-          this.#emitError !== undefined,
-        i18n: this.#i18n,
-      });
-    });
+    this.#exposeLoaderState(compiler);
 
     if (this.#_options.serviceWorker) {
       compiler.hooks.done.tapAsync(
@@ -478,18 +524,140 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     }
   }
 
+  /**
+   * Wires a compiler to consume this plugin instance's compilation state
+   * without running an Angular compilation of its own. The server compiler
+   * of an SSR build runs after the browser compiler
+   * (`dependencies: ['browser']`), whose program already includes the server
+   * entry points, so its loaders read the emitted files straight from this
+   * instance's caches.
+   */
+  applyToDependentCompiler(compiler: Compiler) {
+    let watchRunInitialized = false;
+    let currentWatchingModifiedFiles = new Set<string>();
+    // Keeps modified files watched across rebuilds (same invariant as the
+    // matching tap in apply()).
+    compiler.hooks.compilation.tap(PLUGIN_NAME + '_fileDeps', (compilation) => {
+      currentWatchingModifiedFiles.forEach((file) => {
+        compilation.fileDependencies.add(file);
+      });
+    });
+    compiler.hooks.watchRun.tap(PLUGIN_NAME, (watchRunCompiler) => {
+      watchRunInitialized = true;
+      currentWatchingModifiedFiles = new Set(
+        watchRunCompiler.watching?.compiler?.modifiedFiles
+      );
+    });
+
+    // Surface a failed Angular compilation on this compiler too; its loaders
+    // emit empty modules in that case.
+    compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      const angularCompilationError =
+        this.#initializationError ?? this.#emitError;
+      if (angularCompilationError) {
+        addError(compilation, angularCompilationError);
+      }
+    });
+
+    this.#applyBuildResultReporting(compiler, () => watchRunInitialized);
+
+    this.#applyJitResourceResolution(compiler);
+
+    this.#exposeLoaderState(compiler);
+  }
+
+  // Fails the seal of an errored one-shot build and logs the compiler's
+  // stats; watch builds stay alive and recover on the next rebuild.
+  #applyBuildResultReporting(compiler: Compiler, isWatchRun: () => boolean) {
+    compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      // Handle errors thrown by loaders that prevent sealing (but ignore for watch mode)
+      compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
+        if (!isWatchRun() && compilation.errors.length > 0) {
+          const stats = compilation.getStats();
+          const compilationError = statsErrorsToString(
+            stats.toJson(),
+            getStatsOptions(this.#_options.verbose)
+          );
+          callback(new Error(compilationError));
+        } else {
+          callback();
+        }
+      });
+    });
+
+    compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
+      // Despite the typings, stats is undefined when the run fails before
+      // producing stats (e.g. the afterSeal hook above fails the seal for a
+      // build with errors). Rspack reports that failure itself.
+      if (!stats) {
+        return;
+      }
+
+      // Get stats options - merge defaults with user's config if provided
+      const configStats = compiler.options.stats;
+      const defaultStatsOptions = getStatsOptions(this.#_options.verbose);
+      const statsOptions =
+        typeof configStats === 'object' && configStats !== null
+          ? { ...defaultStatsOptions, ...configStats }
+          : defaultStatsOptions;
+
+      rspackStatsLogger(stats, statsOptions);
+      // Don't forcibly exit the process with errors when in watch mode
+      if (!isWatchRun() && stats.hasErrors()) {
+        process.exit(1);
+      }
+    });
+  }
+
+  #applyJitResourceResolution(compiler: Compiler) {
+    compiler.hooks.normalModuleFactory.tap(
+      PLUGIN_NAME,
+      (normalModuleFactory) => {
+        normalModuleFactory.hooks.beforeResolve.tap(PLUGIN_NAME, (data) => {
+          if (data.request.startsWith('angular:jit:')) {
+            const path = data.request.split(';')[1];
+            data.request = `${normalize(
+              resolve(dirname(data.contextInfo.issuer), path)
+            )}?raw`;
+          }
+        });
+      }
+    );
+  }
+
+  #exposeLoaderState(compiler: Compiler) {
+    compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
+      (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
+        javascriptTransformer: this
+          .#javascriptTransformer as unknown as JavaScriptTransformer,
+        typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
+        babelFileCache: this.#sourceFileCache.babelFileCache,
+        useTypeScriptTranspilation: this.#useTypeScriptTranspilation,
+        angularCompilationFailed:
+          this.#initializationError !== undefined ||
+          this.#emitError !== undefined,
+        stylesheetMetafileInputs: this.#stylesheetMetafileInputs,
+        resourceDependencies: this.#resourceDependencies,
+        i18n: this.#i18n,
+      });
+    });
+  }
+
   private async setupCompilation(
     root: string,
-    tsConfig: RspackOptionsNormalized['resolve']['tsConfig'],
-    modifiedFiles?: Set<string>
+    resolve: RspackOptionsNormalized['resolve'],
+    modifiedFiles?: Set<string>,
+    watch = false
   ) {
     this.#initializationError = undefined;
     this.#emitError = undefined;
+    const tsConfig = resolve.tsConfig;
     const tsconfigPath = tsConfig
       ? typeof tsConfig === 'string'
         ? tsConfig
         : tsConfig.configFile
       : this.#_options.tsConfig;
+    const isInitialSetup = this.#angularCompilation === undefined;
     try {
       const result = await setupCompilationWithAngularCompilation(
         {
@@ -507,6 +675,12 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           hasServer: this.#_options.hasServer,
           includePaths: this.#_options.stylePreprocessorOptions?.includePaths,
           sass: this.#_options.stylePreprocessorOptions?.sass,
+          watch,
+          sourceMap: this.#_options.sourceMap.scripts,
+          preserveSymlinks: this.#_options.preserveSymlinks,
+          // '...' splices rspack's default conditions back in; the rest are
+          // the bundler's custom conditions the program must match.
+          customConditions: resolve.conditionNames?.filter((c) => c !== '...'),
         },
         this.#sourceFileCache,
         this.#angularCompilation,
@@ -514,14 +688,35 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       );
       this.#angularCompilation = result.angularCompilation;
       this.#collectedStylesheetAssets = result.collectedStylesheetAssets;
+      this.#collectedStylesheetMetafileInputs =
+        result.collectedStylesheetMetafileInputs ?? [];
+      this.#useTypeScriptTranspilation =
+        result.useTypeScriptTranspilation ?? true;
+      this.#resourceDependencies = result.resourceDependencies;
+      if (isInitialSetup) {
+        this.#setupWarnings = result.setupWarnings ?? [];
+      }
     } catch (error) {
+      if (isInitialSetup) {
+        this.#setupWarnings =
+          (error as { setupWarnings?: string[] } | null)?.setupWarnings ?? [];
+      }
       this.#initializationError = `Angular compilation initialization failed.\n${formatError(
         error
       )}`;
     }
   }
 
+  // Skipping type checking skips only the semantic pass; option and
+  // syntactic diagnostics still surface configuration and parse errors.
+  #diagnosticModes(): DiagnosticModes {
+    return this.#_options.skipTypeChecking
+      ? ((DiagnosticModes.All & ~DiagnosticModes.Semantic) as DiagnosticModes)
+      : DiagnosticModes.All;
+  }
+
   private async buildAndAnalyze() {
+    this.#diagnosticsPromise = undefined;
     if (this.#initializationError) {
       return;
     }
@@ -536,6 +731,32 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         error
       )}`;
     }
+    this.#mergeStylesheetMetafileInputs();
+
+    // Start diagnostics now so they overlap with bundling; with the
+    // worker-based compilation it runs off the main thread and the emit hook
+    // only waits for what is left. Diagnostics still run after an emit
+    // failure since they usually carry the root cause.
+    const diagnosticsPromise = this.#angularCompilation.diagnoseFiles(
+      this.#diagnosticModes()
+    );
+    // Failed builds skip the emit hook that reports the result; don't
+    // leave the rejection unhandled.
+    diagnosticsPromise.catch(() => {});
+    this.#diagnosticsPromise = diagnosticsPromise;
+  }
+
+  // Fold this build's stylesheet bundling results into the persistent
+  // per-stylesheet map and refresh the flattened view exposed to plugins.
+  #mergeStylesheetMetafileInputs() {
+    for (const { source, inputs } of this.#collectedStylesheetMetafileInputs) {
+      this.#stylesheetMetafileInputsBySource.set(source, inputs);
+    }
+    const flattened: StylesheetMetafileInputs['inputs'] = {};
+    for (const inputs of this.#stylesheetMetafileInputsBySource.values()) {
+      Object.assign(flattened, inputs);
+    }
+    this.#stylesheetMetafileInputs = flattened;
   }
 }
 

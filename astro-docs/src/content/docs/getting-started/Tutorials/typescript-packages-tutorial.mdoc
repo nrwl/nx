@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:Guides'
 ---
 
-This tutorial walks you through creating a TypeScript monorepo with Nx. You'll build a small example project to understand the core concepts and workflows.
+This tutorial walks you through creating a TypeScript monorepo with Nx. You'll build a small example project to understand the core concepts and workflows. Everything here applies to plain JavaScript packages as well.
 
 What you'll learn:
 
@@ -58,7 +58,7 @@ Let's take a look at the structure of our new Nx workspace:
   - package.json
   - tsconfig.base.json
   - tsconfig.json
-  - vitest.workspace.ts
+  - vitest.config.ts
 
 {% /filetree %}
 
@@ -91,7 +91,7 @@ Running these commands should lead to new directories and files in your workspac
     - animal/
     - zoo/
     - ...
-  - vitest.workspace.ts
+  - vitest.config.ts
 
 {%/filetree %}
 

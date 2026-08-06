@@ -5,7 +5,7 @@ Migrates the previously deprecated `skipSetupFile` option of the `@nx/jest:confi
 - `skipSetupFile: true` becomes `setupFile: 'none'` (preserving the original behavior of skipping the setup file). Existing `setupFile` values are left untouched.
 - `skipSetupFile: false` is dropped (it was a no-op).
 
-Both flat (`@nx/jest:configuration`) and nested (`@nx/jest` → `configuration`) forms are handled.
+Both flat (`@nx/jest:configuration`) and nested (`@nx/jest` -> `configuration`) forms are handled.
 
 #### Examples
 
@@ -88,4 +88,4 @@ Rewrite a per-project generator default:
 }
 ```
 
-The nested form (`@nx/jest` → `configuration`) is handled the same way.
+The nested form (`@nx/jest` -> `configuration`) is handled the same way.

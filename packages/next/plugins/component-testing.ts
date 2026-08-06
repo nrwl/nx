@@ -18,17 +18,17 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { withReact } from '@nx/react';
-import { suppressReactComposeHelperWarnings } from '@nx/react/internal';
 import {
+  assertPackageIsInstalled,
+  suppressReactComposeHelperWarnings,
+} from '@nx/react/internal';
+import type {
   AssetGlobPattern,
-  composePluginsSync,
   NormalizedWebpackExecutorOptions,
-  withNx,
 } from '@nx/webpack';
-import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/internal';
-import { readNxJson } from 'nx/src/config/configuration';
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 
 export function nxComponentTestingPreset(
   pathToConfig: string,
@@ -39,6 +39,15 @@ export function nxComponentTestingPreset(
     // options, cast to any to avoid type errors
     return nxBaseCypressPreset(pathToConfig) as any;
   }
+
+  assertPackageIsInstalled('@nx/webpack', '@nx/next/plugins/component-testing');
+  const {
+    composePluginsSync,
+    withNx,
+  }: typeof import('@nx/webpack') = require('@nx/webpack');
+  const {
+    suppressWebpackComposeHelperWarnings,
+  }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
 
   const graph = readCachedProjectGraph();
   const { targets: ctTargets, name: ctProjectName } = getProjectConfigByPath(

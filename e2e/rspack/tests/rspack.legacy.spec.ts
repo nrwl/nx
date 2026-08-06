@@ -1,3 +1,4 @@
+import { names } from '@nx/devkit';
 import {
   cleanupProject,
   newProject,
@@ -114,6 +115,50 @@ describe('rspack e2e legacy', () => {
 
     const result = runCLI(`build ${appName}`);
 
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  });
+
+  it('should build without a TS6059 rootDir error when importing a lib from source', () => {
+    // Reproduces nx#35017: on TS 6 an app with a narrow rootDir that imports a
+    // workspace lib from source failed the rspack build's type-check with TS6059.
+    const appName = uniq('app');
+    const libName = uniq('lib');
+
+    runCLI(
+      `generate @nx/react:app --directory=apps/${appName} --bundler=rspack --e2eTestRunner=none --style=css --no-interactive`,
+      { env: { NX_ADD_PLUGINS: 'false' } }
+    );
+    runCLI(
+      `generate @nx/react:lib --directory=libs/${libName} --bundler=none --unitTestRunner=none --importPath=@acme/rspack-from-source --no-interactive`,
+      { env: { NX_ADD_PLUGINS: 'false' } }
+    );
+
+    // Narrow the app's rootDir so the from-source lib falls outside it (the
+    // configuration reported in the issue).
+    updateJson(`apps/${appName}/tsconfig.app.json`, (json) => {
+      json.compilerOptions ??= {};
+      json.compilerOptions.rootDir = 'src';
+      return json;
+    });
+
+    const libCmp = names(libName).className;
+    updateFile(
+      `apps/${appName}/src/app/app.tsx`,
+      `import { ${libCmp} } from '@acme/rspack-from-source';
+
+export function App() {
+  return <${libCmp} />;
+}
+
+export default App;
+`
+    );
+
+    const result = runCLI(`build ${appName}`);
+
+    expect(result).not.toContain('TS6059');
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`
     );

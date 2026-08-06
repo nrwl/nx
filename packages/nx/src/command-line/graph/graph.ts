@@ -12,7 +12,6 @@ import { VersionMismatchError } from '../../daemon/client/daemon-socket-messenge
 import * as http from 'node:http';
 import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
-import open from 'open';
 import {
   basename,
   dirname,
@@ -60,6 +59,7 @@ import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { splitTargetFromNodes } from '../../utils/split-target';
 
 export interface GraphError {
   message: string;
@@ -566,7 +566,15 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      open(url.toString());
+      (
+        new Function('return import("open")')() as Promise<
+          typeof import('open')
+        >
+      )
+        .then((m) => m.default(url.toString()))
+        .catch(() => {
+          // Ignore errors when opening browser (e.g. no browser available)
+        });
     }
 
     return new Promise((res) => {
@@ -705,7 +713,11 @@ async function startServer(
 
       const taskId = parsedUrl.searchParams.get('taskId');
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      const inputs = await getExpandedTaskInputs(taskId);
+      const inputs = await getExpandedTaskInputs(
+        currentProjectGraphClientResponse,
+        expandedTaskInputsCache,
+        taskId
+      );
       performance.mark('task input generation:end');
 
       res.end(JSON.stringify({ [taskId]: inputs }));
@@ -1282,7 +1294,9 @@ async function createTaskGraphForTargetsAndProjects(
   }
 }
 
-async function getExpandedTaskInputs(
+export async function getExpandedTaskInputs(
+  depGraphClientResponse: ProjectGraphClientResponse,
+  expandedTaskInputsCache: Map<string, Record<string, string[]>>,
   taskId: string
 ): Promise<Record<string, string[]>> {
   // Check cache first
@@ -1291,7 +1305,17 @@ async function getExpandedTaskInputs(
   }
 
   // Use the optimized version that only creates the specific task graph needed
-  const [projectName, targetName, configuration] = taskId.split(':');
+  // Use colon-aware splitting so that target names containing colons
+  // (e.g. "test:integration") are parsed correctly instead of being
+  // mistaken for a target + configuration pair.
+  const projectNodes = Object.fromEntries(
+    depGraphClientResponse.projects.map((p) => [p.name, p])
+  );
+  const [projectName, targetName, configuration] = splitTargetFromNodes(
+    taskId,
+    projectNodes,
+    { silent: true }
+  );
   const taskGraphResponse = await createTaskGraphForTargetsAndProjects(
     [targetName],
     [projectName],
@@ -1306,11 +1330,9 @@ async function getExpandedTaskInputs(
   if (inputs) {
     result = expandInputs(
       inputs,
-      currentProjectGraphClientResponse.projects.find(
-        (p) => p.name === projectName
-      ),
+      depGraphClientResponse.projects.find((p) => p.name === projectName),
       allWorkspaceFiles,
-      currentProjectGraphClientResponse
+      depGraphClientResponse
     );
   }
 

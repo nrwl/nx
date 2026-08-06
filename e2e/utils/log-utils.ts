@@ -47,7 +47,7 @@ export function logSuccess(title: string, body?: string) {
  */
 export function trimDaemonLog(contents: string, tailLines = 30): string {
   const signal =
-    /New daemon|Server stopped|Restarting daemon|Started new daemon|Daemon outdated|lock file hash|loadSpecifiedNxPlugins|loadDefaultNxPlugins|Load Nx Plugin:|Failed to load|AggregateError|Unable to find local plugin|Discarding stale|No in-memory cached project graph|Graph recompute necessary|recomputing project graph|Cannot find module|with an error|Error:/;
+    /New daemon|Server stopped|Restarting daemon|Started new daemon|Daemon outdated|lock file hash|loadSpecifiedNxPlugins|loadDefaultNxPlugins|Load Nx Plugin:|Failed to load|AggregateError|Unable to find local plugin|Discarding stale|No in-memory cached project graph|Graph recompute necessary|recomputing project graph|Cannot find module|with an error|Error:|force-flush|idle-window emitting|^\s+\[(Create|Update|Delete)\]|Reusing in-memory cached|Recomputing project graph because|handleRequestProjectGraph|Established a connection|Server stopped because/;
   const lines = contents.split('\n');
   const tailStart = Math.max(0, lines.length - tailLines);
   const out: string[] = [];

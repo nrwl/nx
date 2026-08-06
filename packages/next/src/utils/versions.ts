@@ -15,3 +15,4 @@ export const eslintConfigNext14Version = '^15.5.18';
 export const eslintConfigNextVersion = eslintConfigNext16Version;
 export const sassVersion = '1.97.2';
 export const tsLibVersion = '^2.3.0';
+export const svgrWebpackVersion = '^8.0.1';

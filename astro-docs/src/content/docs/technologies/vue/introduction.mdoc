@@ -7,7 +7,9 @@ weight: 2
 filter: 'type:References'
 ---
 
-The `@nx/vue` plugin adds first-class [Vue](https://vuejs.org/) support to an Nx workspace, so you can scaffold, build, and test apps and libraries in a Vue monorepo.
+[Vue](https://vuejs.org/) is a progressive JavaScript framework for building user interfaces. In a Vue monorepo, Nx caches task results and runs only the tasks a change affects.
+
+The `@nx/vue` plugin adds first-class Vue support to an Nx workspace, so you can scaffold, build, and test apps and libraries.
 
 ## Requirements
 
@@ -28,7 +30,7 @@ To create a new workspace with Vue, run `npx create-nx-workspace@latest --preset
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/vue` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/vue` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/vue` by running the following command:

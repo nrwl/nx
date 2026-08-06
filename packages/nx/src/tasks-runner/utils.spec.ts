@@ -1034,6 +1034,23 @@ describe('expandInitiatingTasksThroughNoop', () => {
     );
     expect([...result].sort()).toEqual(['app:serve', 'app:test']);
   });
+
+  it('throws a descriptive error when a task references a project missing from the graph', () => {
+    // e.g. a DTE agent whose local graph diverged from the coordinator's
+    const projectGraph = mkProjectGraph({
+      app: { build: { executor: 'nx:run-commands' } },
+    });
+    const taskGraph = mkTaskGraph(['other:build']);
+    expect(() =>
+      expandInitiatingTasksThroughNoop(
+        [taskGraph.tasks['other:build']],
+        taskGraph,
+        projectGraph
+      )
+    ).toThrow(
+      'Task "other:build" references project "other", which does not exist in the project graph.'
+    );
+  });
 });
 
 class GraphBuilder {

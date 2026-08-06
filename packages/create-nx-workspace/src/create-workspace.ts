@@ -25,8 +25,8 @@ import { nxVersion } from './utils/nx/nx-version';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
-import { cloneTemplate } from './utils/template/clone-template';
 import { updateNxVersions } from './utils/template/update-nx-versions';
+import { downloadTemplate } from './utils/template/download-template';
 import {
   addConnectUrlToReadme,
   amendOrCommitReadme,
@@ -79,30 +79,42 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // Resolve shorthand template names to full GitHub org/repo format
     options.template = resolveTemplateShorthand(options.template);
 
-    if (!options.template.startsWith('nrwl/'))
+    // Strict slug match - a bare startsWith('nrwl/') check lets path
+    // traversal (`nrwl/../evil`) resolve to another org's repo.
+    if (!/^nrwl\/[\w.-]+$/.test(options.template))
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
-    const templateUrl = `https://github.com/${options.template}`;
     const workingDir = (options.workingDir ?? process.cwd()).replace(
       /\\/g,
       '/'
     );
     directory = join(workingDir, name);
 
+    // downloadTemplate extracts into `directory`, creating it and overwriting
+    // files. That is intended only when scaffolding into the current directory.
+    // Otherwise refuse to write over an existing path (the CLI already guards
+    // this in determineFolder; this protects direct createWorkspace() callers).
+    if (!options.useCurrentDir && existsSync(directory)) {
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The directory '${directory}' already exists. Choose a different name or remove the existing directory.`
+      );
+    }
+
     const aiMode = isAiAgent();
 
     // Use spinner for human mode, progress logs for AI mode
     let workspaceSetupSpinner: any;
     if (aiMode) {
-      logProgress('cloning', `Cloning template ${options.template}...`);
+      logProgress('downloading', `Downloading template ${options.template}...`);
     } else {
       const ora = require('ora');
       workspaceSetupSpinner = ora(`Creating workspace from template`).start();
     }
 
     try {
-      await cloneTemplate(templateUrl, name, workingDir);
+      await downloadTemplate(options.template, directory);
 
       // Remove npm lockfile from template since we'll generate the correct one
       const npmLockPath = join(directory, 'package-lock.json');

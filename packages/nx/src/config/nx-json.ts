@@ -71,8 +71,10 @@ export type TargetDefaultEntry = {
 export type TargetDefaultFilter = {
   /**
    * Restrict the default to targets originated by a specific plugin
-   * (e.g. `@nx/vite`). Matches against the plugin that wrote the target's
-   * `executor` or `command`.
+   * (e.g. `@nx/vite`). Matches against the plugin from nx.json's `plugins`
+   * that wrote the target's `executor` or `command`. Targets whose
+   * executor/command comes from `project.json` or `package.json` have no
+   * source plugin and never match.
    */
   plugin?: string;
   /**
@@ -856,7 +858,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   targetDefaults?: TargetDefaults;
   /**
    * Default options for `nx affected`
-   * @deprecated use {@link defaultBase} instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
+   * @deprecated use {@link defaultBase} instead. For more information see https://nx.dev/docs/reference/nx-json#default-base
    */
   affected?: NxAffectedConfig;
 

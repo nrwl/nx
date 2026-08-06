@@ -47,7 +47,7 @@ import {
   CnwErrorCode,
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
 import { isGhCliAvailable } from '../src/utils/git/git';
@@ -285,9 +285,9 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             default: true,
           })
           .option('aiAgents', {
-            describe: chalk.dim`List of AI agents to configure.`,
+            describe: chalk.dim`List of AI agents to configure. Use "none" to skip.`,
             type: 'array',
-            choices: [...supportedAgents],
+            choices: [...supportedAgents, 'none'],
           })
           .option('template', {
             describe: chalk.dim`GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template`,
@@ -518,25 +518,6 @@ async function normalizeArgsMiddleware(
   try {
     rawArgs = { ...argv };
 
-    // Map invalid/legacy presets to templates for all users
-    // These presets don't exist as npm packages and would fail if not mapped
-    const invalidPresetToTemplateMap: Record<string, string> = {
-      empty: 'nrwl/empty-template',
-    };
-
-    if (rawArgs.preset && !rawArgs.template) {
-      const mappedTemplate = invalidPresetToTemplateMap[rawArgs.preset];
-      if (mappedTemplate) {
-        output.log({
-          title: `Mapping preset '${rawArgs.preset}' to template '${mappedTemplate}'`,
-        });
-        argv.template = mappedTemplate;
-        rawArgs.template = mappedTemplate;
-        delete argv.preset;
-        delete rawArgs.preset;
-      }
-    }
-
     // AI Agent Detection: When an AI agent is detected, switch to AI-optimized mode
     const aiMode = isAiAgent();
 
@@ -545,7 +526,9 @@ async function normalizeArgsMiddleware(
       argv.interactive = false;
 
       // Map legacy presets to templates for AI agents
-      // Many AI models were trained on old preset syntax, so we convert them
+      // Many AI models were trained on old preset syntax, so we convert them.
+      // Never add `empty` here - it must stay npm-only as the escape hatch
+      // when github.com is unreachable (see applyEmptyPresetAlias).
       const legacyPresetToTemplateMap: Record<string, string> = {
         ts: 'nrwl/empty-template',
         apps: 'nrwl/empty-template',
@@ -616,6 +599,8 @@ async function normalizeArgsMiddleware(
           "Let's create a new workspace [https://nx.dev/getting-started/intro]",
       });
     }
+
+    applyEmptyPresetAlias(argv);
 
     argv.workspaces ??= true;
     argv.useProjectJson ??= !argv.workspaces;
@@ -817,6 +802,19 @@ async function normalizeArgsMiddleware(
   }
 }
 
+// Map `empty` to the `ts` preset, not the template - sandboxed agents often
+// cannot reach github.com. Wins over --template so appending --preset=empty
+// to a failed command escapes the download.
+export function applyEmptyPresetAlias(argv: {
+  preset?: Preset | 'empty';
+  template?: string;
+}): void {
+  if (argv.preset === 'empty') {
+    argv.preset = Preset.TS;
+    delete argv.template;
+  }
+}
+
 function invariant(
   predicate: string | number | boolean,
   errorCode: CnwErrorCode,
@@ -827,9 +825,13 @@ function invariant(
   }
 }
 
+/** Workspace names must start with a letter. */
+export function isValidWorkspaceName(name: string): boolean {
+  return /^[a-zA-Z]/.test(name);
+}
+
 export function validateWorkspaceName(name: string): void {
-  const pattern = /^[a-zA-Z]/;
-  if (!pattern.test(name)) {
+  if (!isValidWorkspaceName(name)) {
     throw new CnwError(
       'INVALID_WORKSPACE_NAME',
       `The workspace name "${name}" is invalid. Workspace names must start with a letter. Examples of valid names: myapp, MyApp, my-app, my_app`
@@ -855,15 +857,9 @@ function isCurrentDirReference(folderName: string): boolean {
 export function resolveSpecialFolderName(
   folderName: string
 ): { name: string; workingDir: string } | null {
-  // User wants to init in the current directory
+  // User wants to scaffold in the current directory.
   if (isCurrentDirReference(folderName)) {
     const cwd = resolve(process.cwd());
-    if (readdirSync(cwd).length > 0) {
-      throw new CnwError(
-        'DIRECTORY_EXISTS',
-        `The current directory is not empty. Use "nx init" to add Nx to an existing project.`
-      );
-    }
     return { name: basename(cwd), workingDir: dirname(cwd) };
   }
 
@@ -907,11 +903,20 @@ export async function determineFolder(
 
     validateWorkspaceName(folderName);
 
-    // When input is "." or "./", resolveSpecialFolderName already validated
-    // the directory is empty. The target always "exists" because it IS the
-    // current working directory, so skip the existsSync check and default
-    // the workspace name to the directory name.
+    // When input is "." or "./", scaffold into the current directory. The
+    // target always "exists" because it IS the cwd, so skip the existsSync
+    // check and use the directory name as the workspace name.
     if (isCurrentDirReference(rawFolderName)) {
+      // Interactively confirm before scaffolding into the current directory;
+      // non-interactive (CI/AI) proceeds without prompting.
+      if (parsedArgs.interactive && !isCI()) {
+        if (!(await promptCreateInCurrentDir(folderName))) {
+          // Declined - fall back to creating a named subfolder under the cwd.
+          parsedArgs.workingDir = undefined;
+          return promptForFolder(parsedArgs);
+        }
+      }
+      parsedArgs.useCurrentDir = true;
       return folderName;
     }
 
@@ -947,6 +952,21 @@ export async function determineFolder(
   return promptForFolder(parsedArgs);
 }
 
+async function promptCreateInCurrentDir(dirName: string): Promise<boolean> {
+  const { useCurrentDir } = await enquirer.prompt<{
+    useCurrentDir: 'Yes' | 'No';
+  }>([
+    {
+      name: 'useCurrentDir',
+      message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
+      type: 'autocomplete',
+      choices: [{ name: 'Yes' }, { name: 'No' }],
+      initial: 0,
+    },
+  ]);
+  return useCurrentDir === 'Yes';
+}
+
 async function promptForFolder(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
@@ -961,7 +981,7 @@ async function promptForFolder(
         if (!value) {
           return 'Folder name cannot be empty';
         }
-        if (!/^[a-zA-Z]/.test(value)) {
+        if (!isValidWorkspaceName(value)) {
           return 'Workspace name must start with a letter';
         }
         if (existsSync(value)) {

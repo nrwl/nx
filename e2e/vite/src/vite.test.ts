@@ -182,6 +182,131 @@ describe('@nx/vite/plugin', () => {
       expect(() => runCLI(`test ${mylib}`)).not.toThrow();
     });
 
+    it('should resolve second tsconfig path value with custom build and test targets', () => {
+      const myApp = uniq('myapp');
+      const myBuildableLib = uniq('mybuildablelib');
+      runCLI(
+        `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/react:library ${myBuildableLib} --directory=libs/${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
+      );
+
+      // Note: target names must not collide with the inferred targets or the
+      // atomized targets from ciTargetName (e.g. `test-ci`).
+      updateJson(`apps/${myApp}/project.json`, (json) => {
+        json.targets ??= {};
+        json.targets['custom-test'] = {
+          command: 'vitest run',
+          options: { cwd: `apps/${myApp}` },
+        };
+        return json;
+      });
+      updateJson(`libs/${myBuildableLib}/project.json`, (json) => {
+        json.targets ??= {};
+        json.targets['custom-build'] = {
+          command: 'vite build',
+          options: { cwd: `libs/${myBuildableLib}` },
+        };
+        return json;
+      });
+
+      updateFile(
+        `apps/${myApp}/vite.config.mts`,
+        `/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/${myApp}',
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+  plugins: [
+    react(),
+    nxViteTsPaths({
+      buildLibsFromSource: false,
+      buildTarget: 'custom-build',
+      testTarget: 'custom-test',
+    }),
+  ],
+  build: {
+    outDir: '../../dist/apps/${myApp}',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/${myApp}',
+      provider: 'v8',
+    },
+  },
+});
+`
+      );
+
+      const exportedLibraryComponent = names(myBuildableLib).className;
+      updateFile(
+        `apps/${myApp}/src/app/app.spec.tsx`,
+        `
+        import { render } from '@testing-library/react';
+        import { App } from './app';
+        import { ${exportedLibraryComponent} } from 'multi-path-lib';
+        // Extensionless .tsx subpath is only resolvable through the plugin's
+        // own file matching, which must try every mapped path value.
+        import { ${exportedLibraryComponent} as FromSubpath } from 'multi-path-lib/lib/${myBuildableLib}';
+
+        describe('App', () => {
+          it('should render successfully', () => {
+            const { baseElement } = render(<App />);
+            expect(baseElement).toBeTruthy();
+            expect(${exportedLibraryComponent}).toBeDefined();
+            expect(FromSubpath).toBeDefined();
+          });
+        });
+        `
+      );
+
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['multi-path-lib'] = [
+          `libs/does-not-exist/src/index.ts`,
+          `libs/${myBuildableLib}/src/index.ts`,
+        ];
+        json.compilerOptions.paths['multi-path-lib/*'] = [
+          `libs/does-not-exist/src/*`,
+          `libs/${myBuildableLib}/src/*`,
+        ];
+        return json;
+      });
+
+      try {
+        expect(() => runCLI(`run ${myApp}:custom-test`)).not.toThrow();
+      } finally {
+        // Clean up the shared tsconfig so the path alias does not leak into
+        // subsequent tests.
+        updateJson('tsconfig.base.json', (json) => {
+          delete json.compilerOptions.paths['multi-path-lib'];
+          delete json.compilerOptions.paths['multi-path-lib/*'];
+          return json;
+        });
+      }
+    }, 300_000);
+
     it('should support importing files with "." in the name in tsconfig path', () => {
       const mylib = uniq('mylib');
       runCLI(
@@ -380,11 +505,98 @@ describe('@nx/vite/plugin', () => {
       const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vitest');
       expect(vitePlugin).toBeDefined();
       expect(vitePlugin.options.testTargetName).toEqual('test');
+      expect(vitePlugin.options.ciTargetName).toEqual('test-ci');
     });
 
     it('project.json should not contain test target', () => {
       const projectJson = readJson(`${reactVitest}/project.json`);
       expect(projectJson.targets.test).toBeUndefined();
+    });
+
+    it('should atomize the ci target identically with and without the vitest runtime', () => {
+      const collectAtomized = (details) =>
+        Object.keys(details.targets)
+          .filter((t) => t.startsWith('test-ci--'))
+          .sort()
+          .map((t) => ({
+            target: t,
+            command: details.targets[t].options?.command,
+          }));
+
+      // default path: spec files discovered via glob
+      const globDetails = JSON.parse(
+        runCLI(`show project ${reactVitest} --json`)
+      );
+      const parent = globDetails.targets['test-ci'];
+      expect(parent).toBeDefined();
+      expect(parent.executor).toEqual('nx:noop');
+      expect(parent.metadata.nonAtomizedTarget).toEqual('test');
+
+      const globAtomized = collectAtomized(globDetails);
+      expect(globAtomized.length).toBeGreaterThan(0);
+      for (const { target, command } of globAtomized) {
+        const relativePath = target.slice('test-ci--'.length);
+        expect(relativePath).toMatch(/\.spec\.tsx?$/);
+        expect(command).toEqual(`vitest run ${relativePath}`);
+      }
+
+      // force the vitest runtime to enumerate the specs; atomization must match
+      // the glob path exactly so the OOM-avoiding default preserves behavior
+      updateJson('nx.json', (json) => {
+        const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
+        vitest.options.discoverTestFiles = 'vitest';
+        return json;
+      });
+
+      const runtimeDetails = JSON.parse(
+        runCLI(`show project ${reactVitest} --json`)
+      );
+      expect(collectAtomized(runtimeDetails)).toEqual(globAtomized);
+    });
+
+    it('should discover atomized specs under the vitest test mode', () => {
+      // Restore the glob path (the parity test above forced the runtime).
+      updateJson('nx.json', (json) => {
+        const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
+        vitest.options.discoverTestFiles = 'glob';
+        return json;
+      });
+
+      // A config whose `test.include` branches on the resolved Vite mode.
+      // Vitest runs under mode 'test', so the glob path must resolve the same
+      // mode; resolving under 'development' would enumerate the wrong spec.
+      updateFile(
+        `${reactVitest}/vite.config.mts`,
+        `import { defineConfig } from 'vite';
+
+export default defineConfig(({ mode }) => ({
+  test: {
+    include:
+      mode === 'test'
+        ? ['src/**/*.vitest-mode.spec.ts']
+        : ['src/**/*.vite-dev-mode.spec.ts'],
+  },
+}));
+`
+      );
+      updateFile(
+        `${reactVitest}/src/sample.vitest-mode.spec.ts`,
+        `import { expect, test } from 'vitest';\ntest('mode', () => expect(true).toBe(true));\n`
+      );
+      updateFile(
+        `${reactVitest}/src/sample.vite-dev-mode.spec.ts`,
+        `import { expect, test } from 'vitest';\ntest('mode', () => expect(true).toBe(true));\n`
+      );
+
+      const details = JSON.parse(runCLI(`show project ${reactVitest} --json`));
+      const atomized = Object.keys(details.targets).filter((t) =>
+        t.startsWith('test-ci--')
+      );
+
+      expect(atomized).toContain('test-ci--src/sample.vitest-mode.spec.ts');
+      expect(atomized).not.toContain(
+        'test-ci--src/sample.vite-dev-mode.spec.ts'
+      );
     });
   });
 });

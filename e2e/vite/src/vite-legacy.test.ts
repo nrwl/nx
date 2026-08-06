@@ -385,6 +385,57 @@ export default App;
     });
   });
 
+  describe('type-check app importing a workspace lib from source', () => {
+    // Reproduces nx#35017: on TS 6 an app with a narrow rootDir that imports a
+    // workspace lib from source failed the vite build's type-check with TS6059.
+    let app: string;
+
+    beforeAll(() => {
+      proj = newProject({ packages: ['@nx/react', '@nx/vite'] });
+      app = uniq('app');
+      const lib = uniq('lib');
+
+      runCLI(
+        `generate @nx/react:app ${app} --bundler=vite --unitTestRunner=none --no-interactive --directory=${app}`
+      );
+      runCLI(
+        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/from-source" --no-interactive --directory=${lib}`
+      );
+
+      // Narrow the app's rootDir so the from-source lib falls outside it (the
+      // configuration reported in the issue).
+      updateJson(`${app}/tsconfig.app.json`, (json) => {
+        json.compilerOptions ??= {};
+        json.compilerOptions.rootDir = 'src';
+        return json;
+      });
+
+      const libCmp = names(lib).className;
+      updateFile(
+        `${app}/src/app/app.tsx`,
+        `import { ${libCmp} } from '@acme/from-source';
+
+export function App() {
+  return <${libCmp} />;
+}
+
+export default App;
+`
+      );
+    });
+
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should build without a TS6059 rootDir error', () => {
+      const result = runCLI(`build ${app} --buildLibsFromSource=true`);
+
+      expect(result).not.toContain('TS6059');
+      expect(result).toContain('Successfully ran target build for project');
+    });
+  });
+
   describe('should be able to create libs that use vitest', () => {
     describe('using default project configuration', () => {
       const lib = uniq('my-default-lib');

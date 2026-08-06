@@ -1,6 +1,6 @@
 import type { ProjectGraph } from '../../config/project-graph';
 import { type PluginConfiguration } from '../../config/nx-json';
-import { customDimensions } from '../../analytics';
+import { customDimensions, PERF_SPAN_SAMPLE_RATE } from '../../analytics';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -133,6 +133,7 @@ export class LoadedNxPlugin {
               track: true,
               ...(customDimensions && {
                 [customDimensions.projectCount]: projectCount,
+                [customDimensions.sampleRate]: PERF_SPAN_SAMPLE_RATE,
               }),
             },
           });

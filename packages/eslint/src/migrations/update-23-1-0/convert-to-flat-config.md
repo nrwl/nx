@@ -179,7 +179,9 @@ The set of rules the user explicitly configured before the migration is in `<adv
    nx run-many -t lint
    ```
 
-2. For each rule that now reports errors:
+2. Tell a rule violation apart from a plugin crash. If a project fails with a thrown error instead of rule findings - a `TypeError` such as `context.getAncestors is not a function`, a `Could not find "<rule>" in plugin "<name>"` / `couldn't find the config "<name>" to extend from`, or a plugin that fails to load - the plugin predates ESLint v9; this is not a changed preset default. Do NOT disable the rule (that silently drops its coverage); update the plugin instead (section 6), then re-run lint and continue.
+
+3. For each rule that now reports errors (findings, not a thrown error):
    - If the rule ID is NOT in the user's explicit list, it came from a changed preset default. Disable it in the relevant flat config with a short comment explaining why.
    - If the rule ID IS in the user's explicit list, the user chose it. Leave it as-is and report it in your handoff summary.
 
@@ -200,6 +202,7 @@ export default [
 **Action items**:
 
 - [ ] Run lint and collect every newly reported rule.
+- [ ] Treat a plugin crash (a thrown error, not rule findings) as a version incompatibility: update the plugin (section 6), never disable its rules to silence it.
 - [ ] Disable preset-originated rules that the user did not configure.
 - [ ] Never disable or weaken a rule the user explicitly configured.
 - [ ] Never edit source files to satisfy a newly enabled rule.
@@ -240,6 +243,7 @@ npm install --save-dev eslint-formatter-junit
 
 - **Removed CLI flags and executor options**: `--rulesdir`, `--ext`, and `--resolve-plugins-relative-to` were removed. The matching `@nx/eslint:lint` options (`rulesdir`, `resolvePluginsRelativeTo`, `ignorePath`) are not supported for flat config. Move file targeting into the config via the `files` and `ignores` keys.
 - **No eslintrc auto-merge**: flat config does not merge `.eslintrc.*` files found up the tree. Every setting must live in `eslint.config.*`.
+- **Third-party plugins that predate ESLint v9**: an installed ESLint plugin that was not updated for v9 breaks at lint time - its rules call the removed `context` APIs below, or it only ships an eslintrc config that no longer loads. This surfaces as a thrown error (see section 4), not a new rule violation. List the installed plugins from `package.json` (`dependencies`/`devDependencies` matching `eslint-plugin-*` or `@<scope>/eslint-plugin-*`), and for each confirm its version supports ESLint v9 (its changelog, or that `peerDependencies.eslint` allows `>=9`). Update any that do not, and prefer the plugin's flat entry point where it ships one (for example `eslint-plugin-cypress/flat`). Update the plugin rather than disabling its rules.
 - **Local rule API moved to `SourceCode`** (only relevant if the workspace authors its own rules):
   - `context.getScope()` to `sourceCode.getScope(node)`
   - `context.getAncestors()` to `sourceCode.getAncestors(node)`
@@ -252,6 +256,7 @@ npm install --save-dev eslint-formatter-junit
 **Action items**:
 
 - [ ] Remove unsupported CLI flags and executor options; move targeting into `files` / `ignores`.
+- [ ] Update any installed third-party ESLint plugin that does not yet support ESLint v9, preferring its flat entry point; do not disable its rules to work around a load error.
 - [ ] Update local rules to the `SourceCode` API and add `meta.schema` where required.
 
 ---

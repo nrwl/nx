@@ -91,6 +91,17 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
         })
       ).toEqual({ cache: false, inputs: ['jest.config.ts'] });
     });
+
+    it('preserves an unresolvable spread token when merging multiple matching entries', () => {
+      // The merged result is an intermediate that later merges onto the
+      // plugin-provided target — a `'...'` with no base among the matching
+      // entries must survive for that downstream merge.
+      expect(
+        readTargetDefaultsForTarget('test', {
+          test: [{ cache: true }, { inputs: ['...', 'extra'] }],
+        })
+      ).toEqual({ cache: true, inputs: ['...', 'extra'] });
+    });
   });
 
   it('matches a projects filter against the project node', () => {
@@ -124,6 +135,33 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
       }
     );
     expect(notMatched).toEqual({ cache: true });
+  });
+
+  it('skips a projects filter without throwing when resolved with no project context', () => {
+    // Regression: generators read target defaults with no project context, e.g.
+    // getViteE2EWebServerInfo (reached by the RN/Expo app generators via addE2e).
+    const targetDefaults = {
+      test: [
+        { cache: true },
+        {
+          filter: { projects: ['tag:test-runner:vite'] },
+          inputs: ['vite.config.ts'],
+        },
+      ],
+    };
+    expect(() =>
+      readTargetDefaultsForTarget('test', targetDefaults)
+    ).not.toThrow();
+    expect(readTargetDefaultsForTarget('test', targetDefaults)).toEqual({
+      cache: true,
+    });
+  });
+
+  it('returns null (does not throw) for a target whose only entry is projects-filtered, with no project context', () => {
+    const targetDefaults = {
+      dev: [{ filter: { projects: ['app'] }, options: { port: 5000 } }],
+    };
+    expect(readTargetDefaultsForTarget('dev', targetDefaults)).toBeNull();
   });
 
   it('matches a filter.executor against the resolved executor', () => {
@@ -201,13 +239,13 @@ describe('createTargetDefaultsResults (plugin filter)', () => {
   // than injecting `sourcePlugin` directly, so it would catch a regression in
   // the source-map key the matcher reads the source plugin from.
   it('applies a plugin-filtered default when the target is attributed to that plugin', () => {
-    const defaultRootMap = {
+    const specifiedRootMap = {
       'apps/app': {
         root: 'apps/app',
         targets: { build: { executor: '@nx/vite:build', options: {} } },
       },
     };
-    const defaultSourceMaps = {
+    const specifiedSourceMaps = {
       'apps/app': {
         'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'] as [
           string,
@@ -225,11 +263,10 @@ describe('createTargetDefaultsResults (plugin filter)', () => {
     };
 
     const results = createTargetDefaultsResults(
+      specifiedRootMap,
       {},
-      defaultRootMap,
       nxJson as any,
-      undefined,
-      defaultSourceMaps
+      specifiedSourceMaps
     );
 
     const synthetic = results[0]?.[2]?.projects?.['apps/app']?.targets?.build;
@@ -237,13 +274,13 @@ describe('createTargetDefaultsResults (plugin filter)', () => {
   });
 
   it('does not apply a plugin-filtered default when the plugin does not match', () => {
-    const defaultRootMap = {
+    const specifiedRootMap = {
       'apps/app': {
         root: 'apps/app',
         targets: { build: { executor: '@nx/vite:build', options: {} } },
       },
     };
-    const defaultSourceMaps = {
+    const specifiedSourceMaps = {
       'apps/app': {
         'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'] as [
           string,
@@ -260,11 +297,80 @@ describe('createTargetDefaultsResults (plugin filter)', () => {
     };
 
     const results = createTargetDefaultsResults(
+      specifiedRootMap,
+      {},
+      nxJson as any,
+      specifiedSourceMaps
+    );
+
+    expect(results).toEqual([]);
+  });
+
+  it('does not match a plugin filter for a target the default layer created', () => {
+    // project.json authored the target. Default plugins are not specified in
+    // nx.json, so no `filter.plugin` can name one — the target has no
+    // matchable source plugin.
+    const defaultRootMap = {
+      'apps/app': {
+        root: 'apps/app',
+        targets: { build: { executor: '@nx/vite:build', options: {} } },
+      },
+    };
+    const nxJson = {
+      targetDefaults: {
+        build: [
+          { filter: { plugin: '@nx/vite/plugin' }, options: { foo: 'bar' } },
+        ],
+      },
+    };
+
+    const results = createTargetDefaultsResults(
       {},
       defaultRootMap,
       nxJson as any,
-      undefined,
-      defaultSourceMaps
+      undefined
+    );
+
+    expect(results).toEqual([]);
+  });
+
+  it('stops matching a plugin filter when the default layer overrides the executor', () => {
+    // The vite plugin inferred the target, but project.json replaces its
+    // executor — the identity now belongs to the default layer, so the vite
+    // filter no longer applies.
+    const specifiedRootMap = {
+      'apps/app': {
+        root: 'apps/app',
+        targets: { build: { executor: '@nx/vite:build', options: {} } },
+      },
+    };
+    const specifiedSourceMaps = {
+      'apps/app': {
+        'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'] as [
+          string,
+          string,
+        ],
+      },
+    };
+    const defaultRootMap = {
+      'apps/app': {
+        root: 'apps/app',
+        targets: { build: { executor: '@nx/js:tsc' } },
+      },
+    };
+    const nxJson = {
+      targetDefaults: {
+        build: [
+          { filter: { plugin: '@nx/vite/plugin' }, options: { foo: 'bar' } },
+        ],
+      },
+    };
+
+    const results = createTargetDefaultsResults(
+      specifiedRootMap,
+      defaultRootMap,
+      nxJson as any,
+      specifiedSourceMaps
     );
 
     expect(results).toEqual([]);
@@ -315,13 +421,13 @@ describe('createTargetDefaultsResults (source attribution)', () => {
   });
 
   it('emits one result per matching array element with an indexed file', () => {
-    const defaultRootMap = {
+    const specifiedRootMap = {
       'apps/app': {
         root: 'apps/app',
         targets: { build: { executor: '@nx/vite:build', options: {} } },
       },
     };
-    const defaultSourceMaps = {
+    const specifiedSourceMaps = {
       'apps/app': {
         'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'] as [
           string,
@@ -339,11 +445,10 @@ describe('createTargetDefaultsResults (source attribution)', () => {
     };
 
     const results = createTargetDefaultsResults(
+      specifiedRootMap,
       {},
-      defaultRootMap,
       nxJson as any,
-      undefined,
-      defaultSourceMaps
+      specifiedSourceMaps
     );
 
     // Both the catch-all (index 0) and the matching plugin-filtered entry

@@ -8,22 +8,17 @@ import {
   readTargetOptions,
   Target,
   workspaceRoot,
+  ExecutorContext,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import {
-  buildStaticRemotes,
-  getModuleFederationConfig,
-  getRemotes,
-  parseStaticRemotesConfig,
-  StaticRemotesConfig,
-} from '@nx/module-federation/internal';
+import type { StaticRemotesConfig } from '@nx/module-federation/internal';
 import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
+import { assertPackageIsInstalled } from '../../utils/assert-package';
 import { warnReactMfStaticServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 import type { WebpackExecutorOptions } from '@nx/webpack';
 import { fork } from 'child_process';
 import type { Express } from 'express';
 import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { basename, extname, join } from 'path';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
 import { ModuleFederationStaticServerSchema } from './schema';
@@ -245,6 +240,17 @@ export default async function* moduleFederationStaticServer(
   schema: ModuleFederationStaticServerSchema,
   context: ExecutorContext
 ) {
+  const executorName = '@nx/react:module-federation-static-server';
+  assertPackageIsInstalled('@nx/module-federation', executorName);
+  assertPackageIsInstalled('express', executorName);
+  assertPackageIsInstalled('http-proxy-middleware', executorName);
+  const {
+    buildStaticRemotes,
+    getModuleFederationConfig,
+    getRemotes,
+    parseStaticRemotesConfig,
+  } = await import('@nx/module-federation/internal');
+
   warnReactMfStaticServerExecutorDeprecation();
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');

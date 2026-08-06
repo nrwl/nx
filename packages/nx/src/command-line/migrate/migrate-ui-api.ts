@@ -1,8 +1,9 @@
-import { execSync, spawn, ChildProcess } from 'child_process';
+import { execFileSync, execSync, spawn, ChildProcess } from 'child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { MigrationDetailsWithId } from '../../config/misc-interfaces';
 import type { FileChange } from '../../generators/tree';
+import { assertValidGitSha } from '../../utils/git-revision';
 import {
   getImplementationPath as getMigrationImplementationPath,
   isHybridMigration,
@@ -41,6 +42,11 @@ export type SuccessfulMigration = {
   // undefined for non-prompt migrations and for prompt-only (which use the
   // existing successful state directly: no separate pre-ack phase).
   acknowledgedPrompt?: boolean;
+  // True when the hybrid's generator returned `skipAgentic: true`, so the
+  // prompt phase was never owed. Recorded alongside `acknowledgedPrompt`
+  // rather than instead of it: the ack is what gates completion, this field
+  // only supplies the reason.
+  skipAgentic?: boolean;
 };
 
 export type FailedMigration = {
@@ -107,6 +113,10 @@ export function finishMigrationProcess(
     parsedMigrationsJson['nx-console'] as MigrationsJsonMetadata
   ).initialGitRef;
 
+  if (squashCommits && initialGitRef) {
+    assertValidGitSha(initialGitRef.ref);
+  }
+
   if (existsSync(migrationsJsonPath)) {
     rmSync(migrationsJsonPath);
   }
@@ -116,25 +126,26 @@ export function finishMigrationProcess(
     windowsHide: true,
   });
 
-  execSync(`git commit -m "${commitMessage}" --no-verify`, {
+  commit(workspacePath, commitMessage);
+
+  if (squashCommits && initialGitRef) {
+    execFileSync('git', ['reset', '--soft', initialGitRef.ref], {
+      cwd: workspacePath,
+      encoding: 'utf-8',
+      windowsHide: true,
+    });
+
+    commit(workspacePath, commitMessage);
+  }
+}
+
+function commit(workspacePath: string, commitMessage: string) {
+  execSync('git commit --no-verify -F -', {
     cwd: workspacePath,
     encoding: 'utf-8',
     windowsHide: true,
+    input: commitMessage,
   });
-
-  if (squashCommits && initialGitRef) {
-    execSync(`git reset --soft ${initialGitRef.ref}`, {
-      cwd: workspacePath,
-      encoding: 'utf-8',
-      windowsHide: true,
-    });
-
-    execSync(`git commit -m "${commitMessage}" --no-verify`, {
-      cwd: workspacePath,
-      encoding: 'utf-8',
-      windowsHide: true,
-    });
-  }
 }
 
 export async function runSingleMigration(
@@ -234,7 +245,7 @@ export async function runSingleMigration(
       throw new Error(result.message);
     }
 
-    const { fileChanges, gitRefAfter, nextSteps } = result;
+    const { fileChanges, gitRefAfter, nextSteps, skipAgentic } = result;
 
     modifyMigrationsJsonMetadata(
       workspacePath,
@@ -245,7 +256,11 @@ export async function runSingleMigration(
           type: change.type,
         })),
         gitRefAfter,
-        nextSteps
+        nextSteps,
+        // Only a hybrid has a prompt phase to waive. A generator-only
+        // migration has no prompt affordance in the UI, so recording it there
+        // would mark a state the UI never shows.
+        skipAgentic === true && isHybridMigration(migration)
       )
     );
 
@@ -353,7 +368,8 @@ export function addSuccessfulMigration(
   id: string,
   fileChanges: Omit<FileChange, 'content'>[],
   ref: string,
-  nextSteps: string[]
+  nextSteps: string[],
+  skipAgentic = false
 ) {
   return (
     migrationsJsonMetadata: MigrationsJsonMetadata
@@ -362,12 +378,16 @@ export function addSuccessfulMigration(
     if (!copied.completedMigrations) {
       copied.completedMigrations = {};
     }
-    // Carry forward a previously-set acknowledgedPrompt so any caller that
-    // re-records a successful entry for the same id (no current trigger; this
-    // is defensive against future paths) cannot silently drop the user's ack.
+    // A rerun re-records the same id. Carry an ack forward only off a record
+    // that carries no waiver: once a waiving run writes one it is
+    // byte-identical to a user's, so a rerun that owes the prompt again re-asks
+    // rather than trust it. Waiving sets the ack because nothing is owed.
     const existing = copied.completedMigrations[id];
     const acknowledgedPrompt =
-      existing?.type === 'successful' && existing.acknowledgedPrompt;
+      skipAgentic ||
+      (existing?.type === 'successful' &&
+        existing.acknowledgedPrompt &&
+        !existing.skipAgentic);
     copied.completedMigrations = {
       ...copied.completedMigrations,
       [id]: {
@@ -377,6 +397,7 @@ export function addSuccessfulMigration(
         ref,
         nextSteps,
         ...(acknowledgedPrompt && { acknowledgedPrompt: true }),
+        ...(skipAgentic && { skipAgentic: true }),
       },
     };
     return copied;
@@ -489,7 +510,8 @@ export function undoMigration(workspacePath: string, id: string) {
     // `existing.ref` is the unmodified HEAD at run time, so `ref^` would
     // reset past unrelated history. Only flip the metadata to skipped.
     if (existing.changedFiles.length > 0) {
-      execSync(`git reset --hard ${existing.ref}^`, {
+      assertValidGitSha(existing.ref);
+      execFileSync('git', ['reset', '--hard', `${existing.ref}^`], {
         cwd: workspacePath,
         encoding: 'utf-8',
         windowsHide: true,

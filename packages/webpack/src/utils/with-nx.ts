@@ -1,6 +1,5 @@
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
-import { applyBaseConfig } from '../plugins/nx-webpack-plugin/lib/apply-base-config';
 import { NxAppWebpackPluginOptions } from '../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
 import { normalizeAssets } from '../plugins/nx-webpack-plugin/lib/normalize-options';
 import { warnWebpackComposeHelpersDeprecation } from './deprecation';
@@ -26,6 +25,10 @@ export function withNx(
     { options, context }: NxWebpackExecutionContext
   ): Configuration {
     if (processed.has(config)) return config;
+
+    // Lazy-required so importing this module does not load the webpack bundler.
+    const { applyBaseConfig } =
+      require('../plugins/nx-webpack-plugin/lib/apply-base-config') as typeof import('../plugins/nx-webpack-plugin/lib/apply-base-config');
 
     applyBaseConfig(
       {

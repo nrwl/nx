@@ -4,6 +4,7 @@
 // See: https://github.com/alexeyraspopov/picocolors/issues/100
 
 if (process.env.FORCE_COLOR === '0') {
+  process.env.NX_ORIGINAL_FORCE_COLOR = '0';
   process.env.NO_COLOR = '1';
   delete process.env.FORCE_COLOR;
 }
@@ -264,6 +265,7 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
 function isNxCloudCommand(command: string): boolean {
   const nxCloudCommands = [
     'start-ci-run',
+    'start-nx-agents',
     'start-agent',
     'stop-all-agents',
     'complete-ci-run',
@@ -328,7 +330,7 @@ function warnIfUsingOutdatedGlobalInstall(
       : [];
 
     bodyLines.push(
-      'For more information, see https://nx.dev/more-concepts/global-nx'
+      'For more information, see https://nx.dev/docs/getting-started/installation#global-installation'
     );
     output.warn({
       title: `It's time to update Nx 🎉`,

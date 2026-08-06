@@ -10,14 +10,17 @@ import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
-import org.gradle.api.tasks.Copy
-import org.gradle.api.tasks.Sync
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.bundling.Compression
+import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
 
@@ -31,27 +34,6 @@ private val kotlinCompileToolClass: Class<*>? by lazy {
 
 private fun isKotlinCompileTask(task: Task): Boolean =
     kotlinCompileToolClass?.isInstance(task) == true
-
-// AGP task classes aren't on our classpath; resolve by name (like isKotlinCompileTask).
-// Maintained allow-list of AGP producers whose outputs feed downstream tasks.
-// FQCNs (esp. internal.tasks.*) can move between AGP majors; verify per version.
-private val agpCopyLikeClasses: List<Class<*>> by lazy {
-  listOf(
-          "com.android.build.gradle.tasks.MergeResources",
-          "com.android.build.gradle.tasks.MergeSourceSetFolders",
-          "com.android.build.gradle.tasks.ProcessApplicationManifest",
-          "com.android.build.gradle.internal.tasks.MergeJavaResourceTask",
-      )
-      .mapNotNull { name ->
-        try {
-          Class.forName(name)
-        } catch (e: Throwable) {
-          null
-        }
-      }
-}
-
-private fun isAgpCopyLikeTask(task: Task): Boolean = agpCopyLikeClasses.any { it.isInstance(task) }
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -186,49 +168,319 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 }
 
 /**
- * Infer file extensions consumed by a task from its dependents' outputs using task type checks.
- *
- * Test tasks consume .class + .jar (compiled code and library jars on the test classpath). Compile
- * tasks consume .class from upstream compile tasks (e.g. compileTestKotlin → compileKotlin).
- * Archive dependents declare their own extension (jar, war, etc).
- *
- * Works at configuration time without requiring files to exist on disk.
+ * Extension-level view of the input derivation, used by unit tests. Production uses
+ * [dependentOutputPatterns]. The task itself is not routed through [dependencyOutputExtensions] so
+ * it does not gain a self-input from its own outputs.
  */
-fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
+fun inferExtensionsFromInputProperties(
+    task: Task,
+    dependentTasks: Set<Task>,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): Set<String> {
   val extensions = mutableSetOf<String>()
-
-  when {
-    task is GradleTest -> {
-      extensions.add("class")
-      extensions.add("jar")
-    }
-    task is AbstractCompile || isKotlinCompileTask(task) -> extensions.add("class")
-  }
-
-  dependentTasks.forEach { depTask ->
-    if (depTask is AbstractArchiveTask) {
-      try {
-        depTask.archiveExtension.get().takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
-      } catch (e: Exception) {
-        task.logger.debug("Could not read archiveExtension for ${depTask.path}: ${e.message}")
-      }
-    }
-    if (depTask is AbstractCompile || isKotlinCompileTask(depTask)) {
-      extensions.add("class")
-    }
-    if (depTask is Copy || depTask is Sync || isAgpCopyLikeTask(depTask)) {
-      try {
-        depTask.inputs.files.forEach { f ->
-          if (f.isFile && f.extension.isNotEmpty()) extensions.add(f.extension)
-        }
-      } catch (e: Exception) {
-        task.logger.debug(
-            "Could not read copy/merge source inputs for ${depTask.path}: ${e.message}")
-      }
-    }
-  }
-
+  extensions.addAll(extensionsForTaskType(task))
+  extensions.addAll(declaredCopySourceExtensions(task, gitIgnoreClassifier))
+  dependentTasks.forEach { depTask -> extensions.addAll(dependencyOutputExtensions(depTask)) }
   return extensions.toSet()
+}
+
+/**
+ * Output extensions a dependency task produces. A consumer hashes the dependency's OUTPUT, so this
+ * reads declared outputs, never sources. A Copy names nothing here; its directory output gets the
+ * catch-all in [dependentOutputPatterns].
+ */
+private fun dependencyOutputExtensions(task: Task): Set<String> {
+  val byKind =
+      when {
+        task is AbstractArchiveTask -> declaredArchiveExtensions(task)
+        else -> extensionsForTaskType(task)
+      }
+  return byKind + declaredFileOutputExtensions(task)
+}
+
+/**
+ * dependentTasksOutputFiles patterns for one dependency: per-extension globs when nameable,
+ * otherwise the wildcard catch-all for a declared directory output (a Copy is the common case).
+ */
+private fun dependentOutputPatterns(task: Task): Set<String> {
+  val extensions = dependencyOutputExtensions(task)
+  return when {
+    extensions.isNotEmpty() ->
+        extensions
+            .filterNot { nonInputDependentOutputExtensions.contains(it) }
+            .map { "**/*.$it" }
+            .toSet()
+    declaresDirectoryOutput(task) -> setOf("**/*")
+    else -> emptySet()
+  }
+}
+
+/**
+ * Collect dependentTasksOutputFiles patterns for direct dependencies, seeing through opaque
+ * lifecycle tasks (e.g. `classes`) to their real producers (e.g. `processResources`). BFS with a
+ * visited guard for cycles and diamonds.
+ */
+private fun effectiveDependencyPatterns(directDeps: Set<Task>): Set<String> {
+  val patterns = mutableSetOf<String>()
+  val visited = mutableSetOf<Task>()
+  val queue = ArrayDeque(directDeps.toList())
+  while (queue.isNotEmpty()) {
+    val dep = queue.removeFirst()
+    if (!visited.add(dep)) continue // cycle / dedup guard
+    val depPatterns = dependentOutputPatterns(dep)
+    if (depPatterns.isNotEmpty()) {
+      // A catch-all subsumes every other pattern, so stop the walk as soon as one appears.
+      if ("**/*" in depPatterns) return setOf("**/*")
+      patterns.addAll(depPatterns) // real producer -> take its patterns, stop
+    } else {
+      queue.addAll(getDependsOnTask(dep)) // opaque/lifecycle -> see through, recurse
+    }
+  }
+  return patterns
+}
+
+/** Extensions a task's type is known to consume or produce, derived purely from the task class. */
+private fun extensionsForTaskType(task: Task): Set<String> =
+    when {
+      task is GradleTest -> setOf("class", "jar")
+      isKotlinCompileTask(task) -> setOf("class", "kotlin_module")
+      task is AbstractCompile -> setOf("class")
+      else -> emptySet()
+    }
+
+/**
+ * Declared archive extension(s) for an [AbstractArchiveTask]. Compressed tars also contribute the
+ * compression suffix (gz/bz2): the produced file ends in it while `archiveExtension` stays "tar".
+ */
+private fun declaredArchiveExtensions(task: Task): Set<String> {
+  if (task !is AbstractArchiveTask) return emptySet()
+  val extensions = mutableSetOf<String>()
+  try {
+    task.archiveExtension.orNull?.takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
+  } catch (e: Exception) {
+    task.logger.debug("Could not read archiveExtension for ${task.path}: ${e.message}")
+  }
+  if (task is Tar) {
+    when (task.compression) {
+      Compression.GZIP -> extensions.add("gz")
+      Compression.BZIP2 -> extensions.add("bz2")
+      else -> {}
+    }
+  }
+  return extensions
+}
+
+private const val OUTPUT_TYPE_FILE = "FILE"
+
+/**
+ * Reflectively read a task's declared output file-property specs, resolving `getFileProperties()`
+ * by name+params (its return type relocated between Gradle 8 and 9). Null means the read threw; an
+ * empty list means the task declares no outputs.
+ */
+private fun outputFileProperties(task: Task): List<Any>? =
+    try {
+      (task.outputs.javaClass.getMethod("getFileProperties").invoke(task.outputs) as? Iterable<*>)
+          ?.filterNotNull()
+          ?.toList() ?: emptyList()
+    } catch (t: Throwable) {
+      null
+    }
+
+/** Reflectively read an output-property spec's output type name ("FILE" / "DIRECTORY"). */
+private fun specOutputTypeName(spec: Any): String? =
+    try {
+      spec.javaClass.getMethod("getOutputType").invoke(spec)?.toString()
+    } catch (t: Throwable) {
+      null
+    }
+
+/** Reflectively read an output-property spec's declared files. */
+private fun specPropertyFiles(spec: Any): org.gradle.api.file.FileCollection? =
+    try {
+      spec.javaClass.getMethod("getPropertyFiles").invoke(spec)
+          as? org.gradle.api.file.FileCollection
+    } catch (t: Throwable) {
+      null
+    }
+
+/** Extensions of a task's declared FILE outputs, read from the declared paths (not disk). */
+private fun declaredFileOutputExtensions(task: Task): Set<String> {
+  val specs = outputFileProperties(task) ?: return emptySet()
+  val extensions = mutableSetOf<String>()
+  specs.forEach { spec ->
+    if (specOutputTypeName(spec) == OUTPUT_TYPE_FILE) {
+      specPropertyFiles(spec)?.files?.forEach { file ->
+        if (file.extension.isNotEmpty()) extensions.add(file.extension)
+      }
+    }
+  }
+  return extensions
+}
+
+/**
+ * True if the task declares a non-file output, or its output model couldn't be read (fail open:
+ * over-declare the catch-all rather than silently under-declare into a stale cache).
+ */
+private fun declaresDirectoryOutput(task: Task): Boolean {
+  val specs = outputFileProperties(task)
+  if (specs == null) {
+    task.logger.warn(
+        "nx(gradle): could not read declared output properties for ${task.path} " +
+            "(Gradle ${task.project.gradle.gradleVersion}); over-declaring its inputs as **/* to " +
+            "avoid a stale cache.")
+    return true
+  }
+  return specs.any { specOutputTypeName(it) != OUTPUT_TYPE_FILE }
+}
+
+/**
+ * Extensions of a copy task's declared concrete-file `from(...)` sources, read from the raw
+ * arguments without resolving them. Only gitignored (generated) sources contribute: checked-in
+ * sources are already direct inputs.
+ */
+private fun declaredCopySourceExtensions(
+    task: Task,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): Set<String> {
+  if (task !is AbstractCopyTask) return emptySet()
+  val extensions = mutableSetOf<String>()
+  try {
+    // getRootSpec() returns an internal type that moved between Gradle 8 and 9; resolve by name.
+    val rootSpec = task.javaClass.getMethod("getRootSpec").invoke(task)
+    if (rootSpec != null) {
+      collectCopySourceExtensions(rootSpec, extensions, gitIgnoreClassifier)
+    }
+  } catch (t: Throwable) {
+    task.logger.debug("Could not read copy source paths for ${task.path}: ${t.message}")
+  }
+  return extensions
+}
+
+private fun collectCopySourceExtensions(
+    spec: Any,
+    into: MutableSet<String>,
+    gitIgnoreClassifier: GitIgnoreClassifier
+) {
+  // DefaultCopySpec.getSourcePaths() holds the raw from(...) arguments. Absent (null) on specs that
+  // do not expose it -> nothing to read at this level.
+  val sourcePaths =
+      try {
+        spec.javaClass.getMethod("getSourcePaths").invoke(spec) as? Iterable<*>
+      } catch (t: Throwable) {
+        null
+      }
+  sourcePaths?.forEach { source ->
+    try {
+      val file = fileFromDeclaredSource(source) ?: return@forEach
+      if (gitIgnoreClassifier.isIgnored(file)) {
+        file.extension.takeIf { it.isNotEmpty() }?.let { into.add(it) }
+      }
+    } catch (t: Throwable) {}
+  }
+
+  val children =
+      try {
+        spec.javaClass.getMethod("getChildren").invoke(spec) as? Iterable<*>
+      } catch (t: Throwable) {
+        null
+      }
+  children?.filterNotNull()?.forEach { child ->
+    collectCopySourceExtensions(child, into, gitIgnoreClassifier)
+  }
+}
+
+/**
+ * Convert a declared `from(...)` argument into a concrete [File] without touching disk, unwrapping
+ * lazy forms ([FileSystemLocation], [Provider]). Null for types that would require enumerating the
+ * working tree (FileTree, FileCollection, task output).
+ */
+private fun fileFromDeclaredSource(source: Any?): File? =
+    when (source) {
+      is File -> source
+      is java.nio.file.Path -> source.toFile()
+      is CharSequence -> File(source.toString())
+      is FileSystemLocation -> source.asFile
+      is Provider<*> -> fileFromDeclaredSource(source.orNull)
+      else -> null
+    }
+
+/**
+ * Declared `from(...)` sources of a copy task that are committed directories; these become globs so
+ * files added later are picked up without recomputing the graph. Gitignored dirs are excluded:
+ * their existence depends on build state.
+ */
+private fun declaredCopySourceDirs(
+    task: Task,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): Set<File> {
+  if (task !is AbstractCopyTask) return emptySet()
+  val dirs = mutableSetOf<File>()
+  try {
+    val rootSpec = task.javaClass.getMethod("getRootSpec").invoke(task)
+    if (rootSpec != null) {
+      collectCopySourceDirs(rootSpec, task, dirs, gitIgnoreClassifier)
+    }
+  } catch (t: Throwable) {
+    task.logger.debug("Could not read copy source dirs for ${task.path}: ${t.message}")
+  }
+  return dirs
+}
+
+private fun collectCopySourceDirs(
+    spec: Any,
+    task: Task,
+    into: MutableSet<File>,
+    gitIgnoreClassifier: GitIgnoreClassifier
+) {
+  fun addCommittedDir(dir: File) {
+    val resolved = if (dir.isAbsolute) dir else File(task.project.projectDir, dir.path)
+    // A committed dir exists identically on a clean and a built tree, so this stat is
+    // deterministic.
+    if (!gitIgnoreClassifier.isIgnored(resolved) && resolved.isDirectory) {
+      into.add(resolved)
+    }
+  }
+  val sourcePaths =
+      try {
+        spec.javaClass.getMethod("getSourcePaths").invoke(spec) as? Iterable<*>
+      } catch (t: Throwable) {
+        null
+      }
+  sourcePaths?.forEach { source ->
+    try {
+      when (source) {
+        is org.gradle.api.file.SourceDirectorySet -> source.srcDirs.forEach { addCommittedDir(it) }
+        else -> fileFromDeclaredSource(source)?.let { addCommittedDir(it) }
+      }
+    } catch (t: Throwable) {}
+  }
+  val children =
+      try {
+        spec.javaClass.getMethod("getChildren").invoke(spec) as? Iterable<*>
+      } catch (t: Throwable) {
+        null
+      }
+  children?.filterNotNull()?.forEach { child ->
+    collectCopySourceDirs(child, task, into, gitIgnoreClassifier)
+  }
+}
+
+/** Source roots that may feed this task: every source set's srcDirs, from the public API. */
+private fun candidateSourceRoots(task: Task): Set<File> {
+  val roots = mutableSetOf<File>()
+  try {
+    val sourceSets =
+        task.project.extensions.findByName("sourceSets") as? org.gradle.api.tasks.SourceSetContainer
+    sourceSets?.forEach { sourceSet ->
+      roots.addAll(sourceSet.allSource.srcDirs)
+      ((sourceSet as? org.gradle.api.plugins.ExtensionAware)?.extensions?.findByName("kotlin")
+              as? org.gradle.api.file.SourceDirectorySet)
+          ?.let { roots.addAll(it.srcDirs) }
+    }
+  } catch (t: Throwable) {
+    task.logger.debug("Could not read source sets for ${task.path}: ${t.message}")
+  }
+  return roots
 }
 
 /**
@@ -266,24 +518,18 @@ private fun getInputsForTaskImpl(
   return try {
     val inputs = mutableListOf<Any>()
     val externalDependencies = mutableListOf<String>()
-    val dependentTaskOutputExtensions = mutableSetOf<String>()
 
     inputs.addAll(getGradleFilesInputs(workspaceRoot))
 
-    // Collect outputs from dependent tasks - group by extension for glob patterns
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
-    tasksToProcess.forEach { dependentTask ->
-      dependentTask.outputs.files.files.forEach { outputFile ->
-        if (isFileInWorkspace(outputFile, workspaceRoot)) {
-          val extension = outputFile.extension
-          if (extension.isNotEmpty()) {
-            dependentTaskOutputExtensions.add(extension)
-          }
-        }
-      }
-    }
 
-    // Process each tasks's input files from the tooling API
+    // Files under a known source root collapse into a `root/**/*` glob so files added later
+    // invalidate the cache without recomputing the graph (a per-file listing is frozen at
+    // graph-computation time).
+    val copySourceDirs = declaredCopySourceDirs(task, gitIgnoreClassifier)
+    val sourceRoots = candidateSourceRoots(task) + copySourceDirs
+    // A declared copy source dir globs even when it contributed no file yet.
+    val usedRoots = copySourceDirs.toMutableSet()
     task.inputs.files.forEach { inputFile ->
       val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
@@ -299,48 +545,49 @@ private fun getInputsForTaskImpl(
           }
         }
 
-        // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
-        // Group by extension for glob patterns
-        gitIgnoreClassifier.isIgnored(inputFile) -> {
-          val extension = inputFile.extension
-          if (extension.isNotEmpty()) {
-            dependentTaskOutputExtensions.add(extension)
-          }
-        }
+        // Gitignored - a build artifact, recovered from the task model, not the working tree
+        gitIgnoreClassifier.isIgnored(inputFile) -> {}
 
-        // Regular source file - add as direct input
+        // File inside a source root - covered by the root's glob
         else -> {
-          inputs.add(relativePath)
+          val root = sourceRoots.firstOrNull { inputFile.path.startsWith(it.path + File.separator) }
+          if (root != null) {
+            usedRoots.add(root)
+          } else {
+            inputs.add(relativePath)
+          }
         }
       }
     }
+    usedRoots.forEach { root ->
+      replaceRootInPath(root.path, projectRoot, workspaceRoot)?.let { inputs.add("$it/**/*") }
+    }
 
-    // Supplement with extensions inferred from Gradle metadata (handles clean builds where
-    // output directories exist but are empty, so file-based extension discovery misses them)
-    dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
+    // The task's own patterns: its type plus, for a Copy/Sync, its declared generated sources
+    // (e.g. processResources bundling a generated dist/*.tar.gz gains **/*.gz on itself). Not
+    // routed through dependencyOutputExtensions so a task gains no self-input from its own outputs.
+    val taskOwnPatterns =
+        (extensionsForTaskType(task) + declaredCopySourceExtensions(task, gitIgnoreClassifier))
+            .filterNot { nonInputDependentOutputExtensions.contains(it) }
+            .map { "**/*.$it" }
 
-    // Consolidate dependent-task outputs into per-extension globs (skip non-deterministic IC state)
-    dependentTaskOutputExtensions
-        .filterNot { nonInputDependentOutputExtensions.contains(it) }
-        .forEach { extension ->
-          inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
-        }
+    val dependentPatterns = (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess)).toSet()
+    // The catch-all subsumes every specific glob, so when present emit only it.
+    val emittedPatterns = if ("**/*" in dependentPatterns) setOf("**/*") else dependentPatterns
+    emittedPatterns.forEach { pattern ->
+      inputs.add(mapOf("dependentTasksOutputFiles" to pattern, "transitive" to true))
+    }
 
     if (externalDependencies.isNotEmpty()) {
       inputs.add(mapOf("externalDependencies" to externalDependencies))
     }
 
     inputs.ifEmpty { null }
-  } catch (e: Exception) {
+  } catch (e: Throwable) {
     task.logger.info("Error getting inputs for ${task.path}: ${e.message}")
     task.logger.debug("Stack trace:", e)
     null
   }
-}
-
-/** Checks if a file is within the workspace. */
-private fun isFileInWorkspace(file: File, workspaceRoot: String): Boolean {
-  return file.path.startsWith(workspaceRoot + File.separator)
 }
 
 /**

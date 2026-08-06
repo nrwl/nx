@@ -1,9 +1,12 @@
 import { formatFiles, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
+import { getDeclaredPackageVersion } from '@nx/devkit/internal';
+import { major } from 'semver';
 import * as ts from 'typescript';
 
 // Inlined rather than imported from the @nx/eslint utils so this migration stays
 // self-contained - a migration should not depend on a shared list that can change
-// in a later version.
+// in a later version. Includes the shared `eslint.base.config.*` files: they are
+// flat configs too and can carry the removed rules a project config inherits.
 const ESLINT_FLAT_CONFIG_FILENAMES = [
   'eslint.config.cjs',
   'eslint.config.js',
@@ -11,6 +14,14 @@ const ESLINT_FLAT_CONFIG_FILENAMES = [
   'eslint.config.cts',
   'eslint.config.ts',
   'eslint.config.mts',
+  'eslint.base.js',
+  'eslint.base.ts',
+  'eslint.base.config.cjs',
+  'eslint.base.config.js',
+  'eslint.base.config.mjs',
+  'eslint.base.config.cts',
+  'eslint.base.config.ts',
+  'eslint.base.config.mts',
 ];
 
 // Formatting/extension rules typescript-eslint removed in v8 (moved to
@@ -69,7 +80,25 @@ const RENAMED_TS_ESLINT_RULES = new Map([
   ],
 ]);
 
+// The stripped rules only disappear in typescript-eslint v8. On v7 (or with
+// typescript-eslint absent) they are still valid, so editing a config would
+// wrongly drop a live rule. Gate on the umbrella `typescript-eslint` or the
+// scoped `@typescript-eslint/eslint-plugin` (a workspace declares one or the
+// other); the migration's JSON `requires` cannot express that OR.
+function hasTypescriptEslintV8(tree: Tree): boolean {
+  return ['typescript-eslint', '@typescript-eslint/eslint-plugin'].some(
+    (pkg) => {
+      const version = getDeclaredPackageVersion(tree, pkg);
+      return version !== null && major(version) >= 8;
+    }
+  );
+}
+
 export default async function update(tree: Tree): Promise<void> {
+  if (!hasTypescriptEslintV8(tree)) {
+    return;
+  }
+
   let changed = false;
 
   visitNotIgnoredFiles(tree, '.', (path) => {

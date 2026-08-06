@@ -1,10 +1,10 @@
-import { Tree } from 'nx/src/generators/tree';
 import { lintProjectGenerator } from '@nx/eslint';
-import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   runTasksInSerial,
+  Tree,
+  joinPathFragments,
 } from '@nx/devkit';
 
 import { NormalizedSchema } from '../schema';
@@ -15,6 +15,7 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
 
@@ -30,7 +31,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);

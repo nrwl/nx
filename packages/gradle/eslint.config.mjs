@@ -5,7 +5,7 @@ export default [
   ...baseConfig,
   { ignores: ['dist'] },
   {
-    files: ['**/*.json'],
+    files: ['./package.json'],
     rules: {
       '@nx/dependency-checks': [
         'error',

@@ -13,8 +13,10 @@ import {
   addOverrideToLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  addTypedLintingToFlatConfig,
   findEslintFile,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { eslintPluginPlaywrightVersion } from './versions';
@@ -22,7 +24,11 @@ import { eslintPluginPlaywrightVersion } from './versions';
 export interface PlaywrightLinterOptions {
   project: string;
   linter: Linter | LinterType;
-  setParserOptionsProject: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
+  setParserOptionsProject?: boolean;
   skipPackageJson: boolean;
   rootProject: boolean;
   js?: boolean;
@@ -45,6 +51,7 @@ export async function addLinterToPlaywrightProject(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const eslintFile = findEslintFile(tree, projectConfig.root);
+  const enableTypedLinting = isTypedLintingEnabled(options);
   if (!eslintFile) {
     tasks.push(
       await lintProjectGenerator(tree, {
@@ -52,7 +59,7 @@ export async function addLinterToPlaywrightProject(
         linter: options.linter,
         skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
-        setParserOptionsProject: options.setParserOptionsProject,
+        enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
@@ -96,6 +103,13 @@ export async function addLinterToPlaywrightProject(
         files: ['*.ts', '*.js'],
         rules: {},
       });
+      // `lintProjectGenerator` only runs when the project has no ESLint config
+      // (it already emits the projectService block in that case). For an
+      // existing flat config it didn't run, so emit the block here when typed
+      // linting is requested.
+      if (eslintFile && enableTypedLinting) {
+        addTypedLintingToFlatConfig(tree, projectConfig.root);
+      }
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         tree,
@@ -110,11 +124,12 @@ export async function addLinterToPlaywrightProject(
       }
       addOverrideToLintConfig(tree, projectConfig.root, {
         files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
-        parserOptions: !options.setParserOptionsProject
-          ? undefined
-          : {
-              project: `${projectConfig.root}/tsconfig.*?.json`,
-            },
+        // Only emit `parserOptions.project` here on the legacy `.eslintrc`
+        // stack. Flat configs use `parserOptions.projectService` emitted by
+        // `lintProjectGenerator`.
+        parserOptions: enableTypedLinting
+          ? { project: `${projectConfig.root}/tsconfig.*?.json` }
+          : undefined,
         rules: {},
       });
     }

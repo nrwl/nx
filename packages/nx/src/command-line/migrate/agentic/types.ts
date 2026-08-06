@@ -2,6 +2,39 @@ import type { AgentId } from './cli-args';
 export type { AgentId };
 
 /**
+ * Workspace-relative directory holding all migrate-run scratch (handoff
+ * files). Shared by the run-dir layout in `handoff.ts` and the agent
+ * permission rules in `definitions.ts` so the pre-authorized write scope
+ * can't drift from the actual layout. It lives here so `definitions.ts`,
+ * loaded whenever the agentic flow is resolved, doesn't pull in the handoff
+ * runtime for the path alone.
+ */
+export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
+
+/**
+ * Composite identity of the v23 migration that adds `.nx/migrate-runs` to
+ * `.gitignore`. Hard-coded because the agentic preflight is a deliberate
+ * one-off coupling: this exact migration owns the entry that keeps
+ * `.nx/migrate-runs/<run-id>/...` scratch out of per-migration commits. If
+ * the migration is ever renamed, this entry must move with it. It lives here
+ * rather than in `handoff-gitignore.ts` so `sortMigrations`' hoist check
+ * doesn't load that module's migration-execution machinery.
+ */
+const HANDOFF_GITIGNORE_MIGRATION_PACKAGE = 'nx';
+const HANDOFF_GITIGNORE_MIGRATION_NAME =
+  '23-0-0-add-migrate-runs-to-git-ignore';
+
+export function isHandoffGitignoreMigration(m: {
+  package: string;
+  name: string;
+}): boolean {
+  return (
+    m.package === HANDOFF_GITIGNORE_MIGRATION_PACKAGE &&
+    m.name === HANDOFF_GITIGNORE_MIGRATION_NAME
+  );
+}
+
+/**
  * A coding agent that was found on the user's machine, ready to be spawned.
  *
  * Produced by `detect-installed.ts`. The `binary` is an absolute path so the
@@ -76,11 +109,12 @@ export type HandoffOutcome =
   | { kind: 'ambiguous-abort'; causeSummary?: string[] };
 
 /**
- * Result of the up-front resolution phase that runs once per `--run-migrations`
- * invocation, before the migration loop. Cached and consulted for every entry.
+ * Result of the up-front resolution phase, run once per run-phase invocation
+ * and applied to every migration it covers.
  *
  * - `inside-agent`: nx detected it is itself running inside another agent;
- *   every agentic step is skipped and prompt migrations go to `nextSteps`.
+ *   every agentic step is skipped and prompt migrations are surfaced for the
+ *   outer agent to apply.
  * - `disabled`: the user opted out (explicit `--agentic=false`, declined the
  *   up-front prompt, or non-TTY without the flag).
  * - `enabled`: the agentic flow runs and `selectedAgent` is the agent it

@@ -3,6 +3,7 @@ import {
   resolveImportPath,
   promptWhenInteractive,
   upsertTargetDefault,
+  PackageJson,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
@@ -36,7 +37,6 @@ import {
 } from '@nx/js/internal';
 import { warnPlaywrightExecutorGenerating } from '../../utils/deprecation';
 import { execSync } from 'child_process';
-import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
 import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';
@@ -46,7 +46,10 @@ import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,
 } from './schema';
-import { addIgnoresToLintConfig } from '@nx/eslint/internal';
+import {
+  addIgnoresToLintConfig,
+  isTypedLintingEnabled,
+} from '@nx/eslint/internal';
 
 export function configurationGenerator(
   tree: Tree,
@@ -229,7 +232,7 @@ export async function configurationGeneratorInternal(
       skipPackageJson: options.skipPackageJson,
       js: options.js,
       directory: options.directory,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject ?? projectConfig.root === '.',
       addPlugin: options.addPlugin,
     })

@@ -1,0 +1,525 @@
+---
+import type { KnowledgeBaseArticle } from '../../utils/knowledge-base';
+import { getTopicId } from '../../utils/knowledge-base';
+
+interface Props {
+  articles: KnowledgeBaseArticle[];
+  label: string;
+  filterable?: boolean;
+}
+
+const { articles, label, filterable = false } = Astro.props;
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+});
+const topics = Array.from(
+  new Set(articles.flatMap((article) => article.topics))
+).sort((first, second) => first.localeCompare(second));
+---
+
+{
+  filterable && (
+    <fieldset class="kb-topic-filter" data-kb-topic-filter>
+      <legend>Filter by topic</legend>
+      <div class="kb-topic-filter-options">
+        <button
+          type="button"
+          data-topic-id=""
+          aria-controls="kb-article-list"
+          aria-pressed="true"
+        >
+          All topics
+        </button>
+        {topics.map((topic) => (
+          <button
+            type="button"
+            data-topic-id={getTopicId(topic)}
+            aria-controls="kb-article-list"
+            aria-pressed="false"
+          >
+            {topic}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+<div class="kb-list-wrapper" data-pagefind-ignore>
+  <table
+    class="kb-list"
+    id={filterable ? 'kb-article-list' : undefined}
+    data-kb-article-list
+  >
+    <caption class="sr-only">{label}</caption>
+    <thead>
+      <tr>
+        <th scope="col">
+          <button type="button" class="kb-sort-button" data-sort-key="title">
+            Title
+            <span class="kb-sort-indicator" aria-hidden="true">↕︎</span>
+          </button>
+        </th>
+        <th scope="col" aria-sort="descending">
+          <button
+            type="button"
+            class="kb-sort-button"
+            data-sort-key="last-modified"
+          >
+            Last modified
+            <span class="kb-sort-indicator" aria-hidden="true">↓</span>
+          </button>
+        </th>
+        <th scope="col">Topics</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        articles.map((article) => (
+          <tr
+            data-topic-ids={article.topics.map(getTopicId).join(' ')}
+            data-sort-title={article.title}
+            data-sort-last-modified={article.lastModified.getTime()}
+          >
+            <td class="kb-list-title">
+              <a href={article.href}>{article.title}</a>
+            </td>
+            <td data-label="Last modified">
+              <time datetime={article.lastModified.toISOString()}>
+                {dateFormatter.format(article.lastModified)}
+              </time>
+            </td>
+            <td data-label="Topics">
+              <ul
+                class="kb-list-topics"
+                aria-label={`Topics for ${article.title}`}
+              >
+                {article.topics.map((topic) => (
+                  <li>
+                    <a href={`/docs/kb/${getTopicId(topic)}`}>{topic}</a>
+                  </li>
+                ))}
+              </ul>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p class="sr-only" aria-live="polite" data-kb-sort-status></p>
+</div>
+
+<style>
+  .kb-topic-filter {
+    margin: 0 0 1.25rem;
+    padding: 0;
+    border: 0;
+  }
+
+  .kb-topic-filter legend {
+    margin-bottom: 0.65rem;
+    color: var(--sl-color-gray-3);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .kb-topic-filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .kb-topic-filter button {
+    margin: 0;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 999px;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-gray-3);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .kb-topic-filter button:hover {
+    border-color: var(--sl-color-gray-4);
+    color: var(--sl-color-white);
+  }
+
+  .kb-topic-filter button[aria-pressed='true'] {
+    border-color: var(--sl-color-text-accent);
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-white);
+  }
+
+  .kb-topic-filter button:focus-visible {
+    outline: 2px solid var(--sl-color-accent-high);
+    outline-offset: 2px;
+  }
+
+  .kb-list-wrapper {
+    overflow: hidden;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.75rem;
+  }
+
+  .kb-list-wrapper > .kb-list {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  th,
+  td {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--sl-color-hairline);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  th {
+    background: color-mix(in srgb, var(--sl-color-gray-6) 55%, transparent);
+    color: var(--sl-color-gray-3);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .kb-sort-button {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+  }
+
+  .kb-sort-button:hover {
+    color: var(--sl-color-white);
+  }
+
+  .kb-sort-button:focus-visible {
+    border-radius: 0.2rem;
+    outline: 2px solid var(--sl-color-accent-high);
+    outline-offset: 3px;
+  }
+
+  .kb-sort-indicator {
+    color: var(--sl-color-gray-4);
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  th[aria-sort] .kb-sort-indicator {
+    color: var(--sl-color-text-accent);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr {
+    transition: background 0.15s ease;
+  }
+
+  tbody tr:hover {
+    background: color-mix(in srgb, var(--sl-color-gray-6) 35%, transparent);
+  }
+
+  .kb-list tr[hidden] {
+    display: none;
+  }
+
+  .kb-list-title {
+    width: 52%;
+  }
+
+  .kb-list-title a {
+    color: var(--sl-color-white);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .kb-list-title a:hover {
+    color: var(--sl-color-text-accent);
+  }
+
+  time {
+    color: var(--sl-color-gray-3);
+    white-space: nowrap;
+  }
+
+  .kb-list-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .kb-list-topics li {
+    margin: 0;
+  }
+
+  .kb-list-topics a {
+    display: inline-flex;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-gray-3);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  .kb-list-topics a:hover {
+    color: var(--sl-color-white);
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--sl-color-accent-high);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 44rem) {
+    .kb-list-wrapper {
+      border: 0;
+      border-radius: 0;
+    }
+
+    thead tr {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--sl-color-hairline);
+    }
+
+    tbody,
+    tbody tr,
+    tbody td {
+      display: block;
+      width: 100%;
+    }
+
+    thead th {
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    thead th:first-child {
+      flex: 1;
+    }
+
+    thead th:nth-child(3) {
+      display: none;
+    }
+
+    tbody tr {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--sl-color-hairline);
+    }
+
+    tbody td {
+      display: flex;
+      gap: 0.75rem;
+      align-items: baseline;
+      padding: 0.25rem 0;
+      border: 0;
+    }
+
+    td[data-label]::before {
+      flex: 0 0 6.5rem;
+      color: var(--sl-color-gray-4);
+      content: attr(data-label);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .kb-list-title {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.35rem;
+      font-size: 1rem;
+    }
+
+    tbody tr:hover {
+      background: transparent;
+    }
+  }
+</style>
+
+<script>
+  type SortKey = 'title' | 'last-modified';
+  type SortDirection = 'ascending' | 'descending';
+
+  function initializeArticleSorting(table: HTMLTableElement) {
+    if (table.dataset.sortInitialized === 'true') return;
+    table.dataset.sortInitialized = 'true';
+
+    const body = table.tBodies.item(0);
+    if (!body) return;
+
+    const headers = Array.from(
+      table.querySelectorAll<HTMLTableCellElement>('th')
+    );
+    const buttons = Array.from(
+      table.querySelectorAll<HTMLButtonElement>('[data-sort-key]')
+    );
+    const status = table.parentElement?.querySelector<HTMLElement>(
+      '[data-kb-sort-status]'
+    );
+
+    function sortRows(key: SortKey, direction: SortDirection) {
+      const directionFactor = direction === 'ascending' ? 1 : -1;
+      const rows = Array.from(body.rows);
+
+      rows.sort((left, right) => {
+        const leftTitle = left.dataset.sortTitle ?? '';
+        const rightTitle = right.dataset.sortTitle ?? '';
+        const titleComparison = leftTitle.localeCompare(rightTitle, undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        });
+
+        if (key === 'title') {
+          return (
+            titleComparison * directionFactor ||
+            Number(right.dataset.sortLastModified) -
+              Number(left.dataset.sortLastModified)
+          );
+        }
+
+        return (
+          (Number(left.dataset.sortLastModified) -
+            Number(right.dataset.sortLastModified)) *
+            directionFactor || titleComparison
+        );
+      });
+
+      body.append(...rows);
+
+      for (const header of headers) header.removeAttribute('aria-sort');
+      for (const button of buttons) {
+        const indicator =
+          button.querySelector<HTMLElement>('.kb-sort-indicator');
+        if (indicator) indicator.textContent = '↕︎';
+      }
+
+      const activeButton = buttons.find(
+        (button) => button.dataset.sortKey === key
+      );
+      const activeHeader = activeButton?.closest('th');
+      activeHeader?.setAttribute('aria-sort', direction);
+
+      const indicator =
+        activeButton?.querySelector<HTMLElement>('.kb-sort-indicator');
+      if (indicator) {
+        indicator.textContent = direction === 'ascending' ? '↑' : '↓';
+      }
+
+      if (status) {
+        const column = key === 'title' ? 'Title' : 'Last modified';
+        status.textContent = `Sorted by ${column}, ${direction}.`;
+      }
+    }
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        const key = button.dataset.sortKey as SortKey;
+        const header = button.closest('th');
+        const currentDirection = header?.getAttribute('aria-sort');
+        const defaultDirection = key === 'title' ? 'ascending' : 'descending';
+        const direction =
+          currentDirection === 'ascending'
+            ? 'descending'
+            : currentDirection === 'descending'
+              ? 'ascending'
+              : defaultDirection;
+
+        sortRows(key, direction);
+      });
+    }
+  }
+
+  function initializeTopicFilter(filter: HTMLElement) {
+    if (filter.dataset.initialized === 'true') return;
+    filter.dataset.initialized = 'true';
+
+    const table = document.getElementById('kb-article-list');
+    const count = document.querySelector<HTMLElement>(
+      '[data-kb-article-count]'
+    );
+    const buttons = Array.from(
+      filter.querySelectorAll<HTMLButtonElement>('[data-topic-id]')
+    );
+    const rows = Array.from(
+      table?.querySelectorAll<HTMLTableRowElement>('tbody tr') ?? []
+    );
+    const validTopicIds = new Set(
+      buttons.map((button) => button.dataset.topicId).filter(Boolean)
+    );
+
+    function applyTopic(topicId: string, updateUrl = false) {
+      const activeTopicId = validTopicIds.has(topicId) ? topicId : '';
+      let visibleCount = 0;
+
+      for (const row of rows) {
+        const rowTopics = row.dataset.topicIds?.split(' ') ?? [];
+        row.hidden =
+          Boolean(activeTopicId) && !rowTopics.includes(activeTopicId);
+        if (!row.hidden) visibleCount += 1;
+      }
+
+      for (const button of buttons) {
+        button.setAttribute(
+          'aria-pressed',
+          String((button.dataset.topicId ?? '') === activeTopicId)
+        );
+      }
+
+      if (count) {
+        count.textContent = `${visibleCount} ${visibleCount === 1 ? 'article' : 'articles'}`;
+      }
+
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        if (activeTopicId) url.searchParams.set('topic', activeTopicId);
+        else url.searchParams.delete('topic');
+        window.history.replaceState({}, '', url);
+      }
+    }
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        applyTopic(button.dataset.topicId ?? '', true);
+      });
+    }
+
+    applyTopic(new URL(window.location.href).searchParams.get('topic') ?? '');
+  }
+
+  document
+    .querySelectorAll<HTMLTableElement>('[data-kb-article-list]')
+    .forEach(initializeArticleSorting);
+
+  document
+    .querySelectorAll<HTMLElement>('[data-kb-topic-filter]')
+    .forEach(initializeTopicFilter);
+</script>

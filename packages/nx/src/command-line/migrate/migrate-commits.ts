@@ -2,6 +2,8 @@ import * as pc from 'picocolors';
 import { hasUncommittedChanges, tryCommitChanges } from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
+import type { ResolvedAgentic } from './agentic/types';
+import { migratePrompt } from './safe-prompt';
 
 /**
  * Discriminated result for `commitMigrationIfRequested`. Distinguishes the
@@ -23,14 +25,13 @@ export type CommitResult =
   | { status: 'disabled' };
 
 /**
- * Creates a per-migration commit when `shouldCreateCommits` is true.
+ * `pendingMigrations` are listed in the commit body so a `git log -p` reader
+ * can see which earlier migrations' diffs this commit absorbed (their own
+ * commits failed and `git add -A` picked their working-tree state up too).
  *
- * When `pendingMigrations` is non-empty, the commit message body lists
- * those entries so a reader of `git log -p` can see which prior migrations'
- * diffs were absorbed into this commit (because their own commits failed and
- * `git add -A` here captured their working-tree state too). Each entry is
- * rendered as `<package>: <name>` for unambiguous attribution across
- * packages.
+ * The default `failureGuidance` describes the classic loop's absorb-and-recap
+ * behavior; a caller with no later commit or recap to absorb the diff (the
+ * standalone single-migration worker) passes its own.
  */
 export async function commitMigrationIfRequested(
   root: string,
@@ -38,7 +39,8 @@ export async function commitMigrationIfRequested(
   shouldCreateCommits: boolean,
   commitPrefix: string,
   installDepsIfChanged: () => Promise<void>,
-  pendingMigrations: ReadonlyArray<{ package: string; name: string }> = []
+  pendingMigrations: ReadonlyArray<{ package: string; name: string }> = [],
+  failureGuidance = 'The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.'
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
   await installDepsIfChanged();
@@ -67,7 +69,7 @@ export async function commitMigrationIfRequested(
     const reason = err instanceof Error ? err.message : String(err);
     logger.info(
       pc.red(
-        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually.`
+        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. ${failureGuidance}`
       )
     );
     return { status: 'failed', reason };
@@ -141,4 +143,92 @@ export function commitCheckpointBeforeMigrations(
       ],
     });
   }
+}
+
+/**
+ * `agenticHasDiffContext` gates the agent prompt: without per-migration commits
+ * to isolate a migration's diff, the prompt embeds a file list instead of
+ * pointing at git.
+ */
+export function resolveCreateCommits(args: {
+  createCommits: boolean | undefined;
+  agenticKind: ResolvedAgentic['kind'];
+  isGitRepo: boolean;
+  commitPrefixIsCustom?: boolean;
+}): {
+  effective: boolean;
+  agenticHasDiffContext: boolean;
+  warning?: string;
+  error?: string;
+} {
+  const { createCommits, agenticKind, isGitRepo, commitPrefixIsCustom } = args;
+
+  if (createCommits === true && !isGitRepo) {
+    return {
+      effective: false,
+      agenticHasDiffContext: false,
+      error:
+        '`--create-commits` requires a git repository. Run `git init` first, or omit the flag.',
+    };
+  }
+
+  if (agenticKind === 'enabled') {
+    if (createCommits === false) {
+      return {
+        effective: false,
+        agenticHasDiffContext: false,
+        warning:
+          "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review." +
+          (commitPrefixIsCustom
+            ? ' Note: the custom --commit-prefix value will have no effect because commits are disabled.'
+            : ''),
+      };
+    }
+    // Not an error like the explicit `--create-commits` branch above: the
+    // agentic default was never asked for, so degrade instead.
+    if (!isGitRepo) {
+      return {
+        effective: false,
+        agenticHasDiffContext: false,
+        warning:
+          '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits, so the agent will not receive per-file diff context. Run `git init` to enable.' +
+          (commitPrefixIsCustom
+            ? ' The custom --commit-prefix value will have no effect.'
+            : ''),
+      };
+    }
+    return { effective: true, agenticHasDiffContext: true };
+  }
+
+  return {
+    effective: createCommits === true,
+    agenticHasDiffContext: false,
+    warning:
+      commitPrefixIsCustom && createCommits !== true
+        ? 'A custom migrate commit prefix is configured, but commits are not enabled for this run, so it has no effect. Set `migrate.createCommits` to `true` (or pass `--create-commits`) to create a commit per migration.'
+        : undefined,
+  };
+}
+
+/**
+ * Callers gate this on commits being effective and on prompting being
+ * possible, so non-interactive runs (CI, `--no-interactive`) never reach here.
+ */
+export async function confirmCommitsOnDefaultBranch(args: {
+  currentBranch: string | null;
+  defaultBranch: string | null;
+}): Promise<boolean> {
+  const { currentBranch, defaultBranch } = args;
+  if (!currentBranch || !defaultBranch || currentBranch !== defaultBranch) {
+    return true;
+  }
+  const { proceed } = await migratePrompt<{ proceed: boolean }>([
+    {
+      name: 'proceed',
+      type: 'confirm',
+      message: `You're on the default branch '${currentBranch}'. nx migrate will create a commit for each migration on this branch. Continue?`,
+      initial: false,
+    },
+  ]);
+  return proceed;
 }

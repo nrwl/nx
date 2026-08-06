@@ -321,6 +321,14 @@ describe('TargetProjectLocator', () => {
             packageName: 'lodash',
           },
         },
+        'npm:lodash@4.0.0': {
+          name: 'npm:lodash@4.0.0',
+          type: 'npm',
+          data: {
+            version: '4.0.0',
+            packageName: 'lodash',
+          },
+        },
         'npm:lodash-4': {
           name: 'npm:lodash-4',
           type: 'npm',
@@ -588,7 +596,7 @@ describe('TargetProjectLocator', () => {
       expect(proj5).toEqual('proj5');
     });
 
-    it('should be able to resolve packages aliases', () => {
+    it('should prefer alias nodes when canonical package nodes also exist', () => {
       const lodash = targetProjectLocator.findProjectFromImport(
         'lodash',
         'libs/proj/index.ts'
@@ -1014,6 +1022,38 @@ describe('TargetProjectLocator', () => {
         'libs/proj1/index.ts'
       );
       expect(result2).toEqual('@org/proj1');
+    });
+
+    it('should not match Windows node_modules paths to the workspace root project', () => {
+      const targetProjectLocator = new TargetProjectLocator(
+        {
+          ...projects,
+          root: {
+            name: 'root',
+            type: 'app',
+            data: {
+              root: '.',
+            },
+          },
+        },
+        {}
+      );
+
+      jest
+        .spyOn(targetProjectLocator as any, 'resolveImportWithRequire')
+        .mockReturnValue('node_modules\\external-package\\index.js');
+
+      const result = targetProjectLocator.findProjectFromImport(
+        'external-package',
+        'libs/proj1/index.ts'
+      );
+
+      expect(result).toBeUndefined();
+      expect(
+        (targetProjectLocator as any).findProjectOfResolvedModule(
+          '..\\..\\node_modules\\external-package\\index.js'
+        )
+      ).toBeUndefined();
     });
 
     it('should be able to npm dependencies', () => {

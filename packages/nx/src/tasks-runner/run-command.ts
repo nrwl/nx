@@ -1,5 +1,4 @@
 import { prompt } from 'enquirer';
-import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import type { Observable } from 'rxjs';
@@ -28,12 +27,14 @@ import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
 } from '../utils/nx-key';
 import { output } from '../utils/output';
+import { shouldPrintConfigureAiAgentsDisclaimer } from '../ai/configure-ai-agents-disclaimer';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
@@ -63,6 +64,7 @@ import {
   PerformanceLifeCycle,
   flushPerformanceReport,
 } from './life-cycles/performance-life-cycle';
+import { prefetchRemoteCacheOnboardingUrl } from './life-cycles/performance-report';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
@@ -130,8 +132,21 @@ async function getTerminalOutputLifeCycle(
     process.env.NX_TUI = 'false';
   }
 
+  // Kick off in the background so the URL is ready by the exit report. A brief
+  // sync preamble (git remote + axios load) runs here; the network call does not.
+  prefetchRemoteCacheOnboardingUrl(nxJson);
+
   if (isTuiEnabled()) {
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
+
+    // Resolve where the Nx Cloud client bundle actually loads from so the
+    // stack-trace check below matches its frames. It is NOT always
+    // `{workspaceRoot}/.nx/cache/cloud`: in a git worktree the cache dir is
+    // shared with the main repo, and it can also be relocated via
+    // NX_CACHE_DIRECTORY, a custom `cacheDirectory` in nx.json, or the lerna
+    // `node_modules/.cache` location. Using the client's own resolver keeps the
+    // interception working in all of those cases.
+    const nxCloudClientDir = getBundleInstallDefaultLocation();
 
     const createPatchedConsoleMethod = (
       originalMethod: typeof console.log | typeof console.error
@@ -139,9 +154,7 @@ async function getTerminalOutputLifeCycle(
       return (...args: any[]) => {
         // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
         const stackTrace = new Error().stack;
-        const isNxCloudLog = stackTrace.includes(
-          join(workspaceRoot, '.nx', 'cache', 'cloud')
-        );
+        const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
         if (!isNxCloudLog) {
           return originalMethod(...args);
         }
@@ -243,7 +256,8 @@ async function getTerminalOutputLifeCycle(
         nxJson.tui ?? {},
         titleText,
         workspaceRoot,
-        taskGraph
+        taskGraph,
+        isNxCloudUsed(nxJson)
       );
       // The native endCommand renders the perf report in the exit popup; the runner
       // sources the payload and CompositeLifeCycle forwards it here.
@@ -276,9 +290,7 @@ async function getTerminalOutputLifeCycle(
 
           // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
           const stackTrace = new Error().stack;
-          const isNxCloudLog = stackTrace.includes(
-            join(workspaceRoot, '.nx', 'cache', 'cloud')
-          );
+          const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
           if (isNxCloudLog) {
             interceptedNxCloudLogs.push(chunk);
             // Do not bother to store logs with only whitespace characters, they aren't relevant for the TUI
@@ -305,9 +317,7 @@ async function getTerminalOutputLifeCycle(
         return (...args: any[]) => {
           // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
           const stackTrace = new Error().stack;
-          const isNxCloudLog = stackTrace.includes(
-            join(workspaceRoot, '.nx', 'cache', 'cloud')
-          );
+          const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
           if (!isNxCloudLog) {
             return originalMethod(...args);
           }
@@ -620,13 +630,16 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
       return;
     }
     const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
-    if (outdatedAgents.length > 0) {
-      output.logRawLine(
-        output.dim(
-          'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
-        )
-      );
+    if (
+      !shouldPrintConfigureAiAgentsDisclaimer(outdatedAgents, workspaceRoot)
+    ) {
+      return;
     }
+    output.logRawLine(
+      output.dim(
+        'Your AI agent configuration is outdated. Run "nx configure-ai-agents" to update.'
+      )
+    );
   } catch {
     // Silently ignore errors
   }

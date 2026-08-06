@@ -3,6 +3,8 @@ import {
   calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
+  workspaceDataDirectory,
+  hashObject,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -19,10 +21,8 @@ import {
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import type { StorybookConfig } from 'storybook/internal/types';
-import { hashObject } from 'nx/src/hasher/file-hasher';
 import { query } from '@phenomnomnominal/tsquery';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 

@@ -17,14 +17,14 @@ export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
 
 /**
  * Clickable Nx Cloud marketing link for cloud prompt footers. Every
- * create-nx-workspace prompt reports the same medium, so the link is a single
- * baked constant embedded directly in the footers. Visible text stays the clean
- * `NX_CLOUD_URL` while clicks carry UTM attribution; terminals without OSC 8
- * support just render the bare URL (CLOUD-4642).
+ * create-nx-workspace prompt reports the same content tag, so the link is a
+ * single baked constant embedded directly in the footers. Visible text stays
+ * the clean `NX_CLOUD_URL` while clicks carry UTM attribution; terminals
+ * without OSC 8 support just render the bare URL (CLOUD-4642).
  */
 export const NX_CLOUD_HYPERLINK = terminalLink(
   NX_CLOUD_URL,
-  `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=create-nx-workspace`
+  `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
 );
 
 // Flow variant controls both tracking and banner display (CLOUD-4235)

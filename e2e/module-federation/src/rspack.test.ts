@@ -35,7 +35,7 @@ describe('@nx/module-federation v2 - Rspack', () => {
       `apps/${provider}/package.json`
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       const serve = await runCommandUntil(
         `serve ${provider}`,
         (output) =>
@@ -65,7 +65,7 @@ describe('@nx/module-federation v2 - Rspack', () => {
       `apps/${provider}/src/App.tsx`
     );
 
-    if (runE2ETests()) {
+    if (await runE2ETests()) {
       // `nx serve <provider>` brings the consumer up via provider.serve.dependsOn.
       // Both apps compile separately; wait for both compile-success messages.
       let compileCount = 0;

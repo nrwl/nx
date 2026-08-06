@@ -156,6 +156,43 @@ describe('getDependentPackagesForProject', () => {
     });
   });
 
+  it('should strip version suffix from npm dependency names for bun compatibility', () => {
+    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({});
+
+    const dependencies = getDependentPackagesForProject(
+      {
+        dependencies: {
+          shell: [
+            {
+              source: 'shell',
+              target: 'npm:@ngrx/store@21.0.1',
+              type: 'static',
+            },
+            {
+              source: 'shell',
+              target: 'npm:rxjs@7.8.1',
+              type: 'static',
+            },
+            { source: 'shell', target: 'npm:lodash', type: 'static' },
+          ],
+        },
+        nodes: {
+          shell: {
+            name: 'shell',
+            data: { root: 'apps/shell', sourceRoot: 'apps/shell/src' },
+            type: 'app',
+          },
+        } as any,
+      },
+      'shell'
+    );
+
+    expect(dependencies).toEqual({
+      workspaceLibraries: [],
+      npmPackages: ['@ngrx/store', 'rxjs', 'lodash'],
+    });
+  });
+
   it('should skip non-npm external dependencies like cargo:', () => {
     jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
       '@myorg/lib1': ['libs/lib1/src/index.ts'],

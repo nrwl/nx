@@ -144,7 +144,7 @@ function registerCleanupCallback(callback: () => void) {
   process.on('exit', wrapped);
 }
 
-async function executeTypeCheck(
+export async function executeTypeCheck(
   options: RspackExecutorSchema,
   context: ExecutorContext
 ) {
@@ -154,6 +154,10 @@ async function executeTypeCheck(
     workspaceRoot: resolve(projectConfiguration.root),
     tsConfigPath: options.tsConfig,
     mode: 'noEmit',
+    // TS 6 defaults rootDir to the tsconfig dir, so from-source workspace
+    // libs (outside the project) trip TS6059. rootDir is emit-only and this
+    // is noEmit, so widen it to the workspace root to clear the false error.
+    rootDir: context.root,
   });
 
   await printDiagnostics(result.errors, result.warnings);

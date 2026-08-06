@@ -1,11 +1,11 @@
 import { homedir } from 'os';
 import { join } from 'path';
-import { MIGRATE_RUNS_RELATIVE_DIR } from './handoff';
 import {
   AgentDefinition,
   AgentId,
   InvocationContext,
   InvocationSpec,
+  MIGRATE_RUNS_RELATIVE_DIR,
 } from './types';
 
 // --- Claude Code ---------------------------------------------------------

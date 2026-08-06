@@ -5,6 +5,7 @@ describe('isSandbox', () => {
     'SANDBOX_RUNTIME',
     'GEMINI_SANDBOX',
     'CODEX_SANDBOX',
+    'CODEX_SANDBOX_NETWORK_DISABLED',
     'CURSOR_SANDBOX',
   ];
 

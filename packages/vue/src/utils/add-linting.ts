@@ -2,6 +2,8 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   runTasksInSerial,
+  Tree,
+  joinPathFragments,
 } from '@nx/devkit';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
@@ -9,6 +11,7 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
@@ -16,8 +19,6 @@ import {
   versions,
 } from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
-import { Tree } from 'nx/src/generators/tree';
-import { joinPathFragments } from 'nx/src/utils/path';
 import {
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,
@@ -31,6 +32,10 @@ export async function addLinting(
     name: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
+    enableTypedLinting?: boolean;
+    /**
+     * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+     */
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
@@ -49,7 +54,7 @@ export async function addLinting(
       ],
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
     });

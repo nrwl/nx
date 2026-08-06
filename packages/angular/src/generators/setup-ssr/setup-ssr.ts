@@ -26,7 +26,11 @@ export async function setupSsr(tree: Tree, schema: Schema) {
   const options = await normalizeOptions(tree, schema);
 
   if (!schema.skipPackageJson) {
-    addDependencies(tree, options.isUsingApplicationBuilder);
+    addDependencies(
+      tree,
+      options.isUsingApplicationBuilder,
+      options.isUsingWebpackBuilder
+    );
   }
   generateSSRFiles(tree, options);
 

@@ -110,8 +110,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.2",
       "type": "commonjs",
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.2
@@ -149,10 +147,6 @@ describe('release publishable libraries', () => {
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      {project-name}:nx-release-publish    {DURATION}
     `);
   });
 
@@ -175,8 +169,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.3",
       "module": "./index.esm.js",
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.3
@@ -216,15 +208,15 @@ describe('release publishable libraries', () => {
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      {project-name}:nx-release-publish    {DURATION}
     `);
   });
 
-  it('should be able to release publishable angular library', async () => {
+  it('should only release publishable angular libraries', async () => {
+    const angularBuildableLib = uniq('my-pkg-');
     const angularLib = uniq('my-pkg-');
+    runCLI(
+      `generate @nx/angular:lib packages/${angularBuildableLib} --buildable --importPath=@proj/${angularBuildableLib} --no-interactive`
+    );
     runCLI(
       `generate @nx/angular:lib packages/${angularLib} --publishable --importPath=@proj/${angularLib} --no-interactive`
     );
@@ -242,8 +234,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.4",
       "peerDependencies": {
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.4
@@ -281,11 +271,11 @@ describe('release publishable libraries', () => {
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      {project-name}:nx-release-publish    {DURATION}
     `);
+
+    expect(() =>
+      execSync(`npm view @proj/${angularBuildableLib} version`)
+    ).toThrow(/npm (ERR!|error) code E404/);
   });
 
   it('should be able to release publishable vue library', async () => {
@@ -344,10 +334,6 @@ describe('release publishable libraries', () => {
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      {project-name}:nx-release-publish    {DURATION}
     `);
   });
 
@@ -370,8 +356,6 @@ describe('release publishable libraries', () => {
       -   "version": "0.0.1",
       +   "version": "0.0.6",
       "peerDependencies": {
-      }
-      +
       NX   Staging changed files with git
       No files to stage. Skipping git add.
       NX   Generating an entry in CHANGELOG.md for v0.0.6
@@ -411,10 +395,6 @@ describe('release publishable libraries', () => {
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Speed up or split the longest tasks on the critical path:
-      {project-name}:nx-release-publish    {DURATION}
     `);
   });
 });

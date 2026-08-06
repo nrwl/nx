@@ -177,7 +177,12 @@ function tryAddProjectsToConfig(
   if (countPropertyAssignments(configObject, 'test') > 1) return false;
 
   const testProperty = findPropertyAssignment(configObject, 'test');
-  const projectsText = `projects: ${formatEntriesArray(entries)}`;
+  // Same self-match guard as the create path: exclude this root config from its
+  // own `vitest.config.*` glob so vitest doesn't resolve it as an extra
+  // project. Skip it when the config has its own `test.include`, which vitest
+  // runs as that project's tests and so must not be excluded.
+  const ext = configPath.slice(configPath.lastIndexOf('.'));
+  const selfExclusion = `!vitest.config${ext}`;
 
   if (testProperty) {
     const testObject = testProperty.initializer;
@@ -198,14 +203,22 @@ function tryAddProjectsToConfig(
       // lists is a semantic decision the agent must make.
       return false;
     }
+    const entriesWithGuard = findPropertyAssignment(testObject, 'include')
+      ? entries
+      : [...entries, selfExclusion];
     const insertPos = testObject.getStart() + 1;
     tree.write(
       configPath,
       applyTextEdits(contents, [
-        { start: insertPos, end: insertPos, replacement: `${projectsText},` },
+        {
+          start: insertPos,
+          end: insertPos,
+          replacement: `projects: ${formatEntriesArray(entriesWithGuard)},`,
+        },
       ])
     );
   } else {
+    // No `test` block at all, so no own `include`: apply the guard.
     const insertPos = configObject.getStart() + 1;
     tree.write(
       configPath,
@@ -213,7 +226,10 @@ function tryAddProjectsToConfig(
         {
           start: insertPos,
           end: insertPos,
-          replacement: `test: {${projectsText},},`,
+          replacement: `test: {projects: ${formatEntriesArray([
+            ...entries,
+            selfExclusion,
+          ])},},`,
         },
       ])
     );
@@ -235,13 +251,19 @@ function createVitestConfig(
   const ext = ['.ts', '.mts', '.mjs'].includes(workspaceExt)
     ? workspaceExt
     : '.mjs';
+  // Guard the fresh root config against matching its own `vitest.config.*`
+  // glob: vitest would resolve it as an extra project that, having no
+  // `include`, re-runs every test via the default glob without its project
+  // config. The negation is root-anchored, so it only drops this file and is
+  // inert when the globs don't match it.
+  const projects = formatEntriesArray([...entries, `!vitest.config${ext}`]);
   tree.write(
     joinPathFragments(dir, `vitest.config${ext}`),
     `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    projects: ${formatEntriesArray(entries)},
+    projects: ${projects},
   },
 });
 `

@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   getProjects,
@@ -195,6 +195,9 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
       expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
+
+      const libPackageJson = readJson(tree, 'my-lib/package.json');
+      expect(libPackageJson.private).toBeUndefined();
     });
 
     it('should update package.json when buildable', async () => {
@@ -209,6 +212,7 @@ describe('lib', () => {
 
       const libPackageJson = readJson(tree, 'my-lib/package.json');
       expect(libPackageJson.dependencies?.['tslib']).toBeFalsy();
+      expect(libPackageJson.private).toBe(true);
     });
 
     it('should create project configuration', async () => {
@@ -1207,12 +1211,12 @@ describe('lib', () => {
         `);
       });
 
-      it('should set parserOptions.project when enabled (flat config)', async () => {
+      it('should enable typed linting via projectService (flat config)', async () => {
         tree.write('eslint.config.cjs', '');
 
         await runLibraryGeneratorWithOpts({
           linter: 'eslint',
-          setParserOptionsProject: true,
+          enableTypedLinting: true,
         });
 
         const eslintConfig = tree.read('my-lib/eslint.config.cjs', 'utf-8');
@@ -1233,9 +1237,11 @@ describe('lib', () => {
                   ],
                   languageOptions: {
                       parserOptions: {
-                          project: [
-                              "my-lib/tsconfig.*?.json"
-                          ]
+                          projectService: true,
+                          // \`projectService\` conflicts with a \`parserOptions.project\` set by any config
+                          // merged into this one. Remove this once you know none of them set it.
+                          project: null,
+                          tsconfigRootDir: __dirname
                       }
                   }
               },

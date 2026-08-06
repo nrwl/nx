@@ -11,18 +11,18 @@ import {
   readTargetOptions,
   runExecutor,
 } from '@nx/devkit';
-import { daemonClient } from 'nx/src/daemon/client/client';
+import { daemonClient } from '@nx/devkit/internal';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
 import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
 import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
-import { killTree } from './lib/kill-tree';
+import { killProcessTreeGraceful } from '@nx/devkit/internal';
 import { LineAwareWriter } from './lib/line-aware-writer';
 import { createCoalescingDebounce } from './lib/coalescing-debounce';
-import { fileExists } from 'nx/src/utils/fileutils';
-import { interpolate } from 'nx/src/tasks-runner/utils';
+import { fileExists } from '@nx/devkit/internal';
+import { interpolate } from '@nx/devkit/internal';
 import { detectModuleFormat } from './lib/detect-module-format';
 import { getOutputFileName } from './lib/output-file';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
@@ -114,14 +114,8 @@ export async function* nodeExecutor(
       const task = tasks.shift();
 
       if (previousTask && !previousTask.killed) {
-        previousTask.killed = true;
-
-        if (previousTask.childProcess?.connected) {
-          previousTask.childProcess.disconnect();
-        }
-
-        previousTask.childProcess?.removeAllListeners();
-
+        // stop() marks the task killed, detaches listeners, and waits for the
+        // process tree to exit.
         await previousTask.stop('SIGTERM');
 
         await new Promise((resolve) => setImmediate(resolve));
@@ -130,6 +124,14 @@ export async function* nodeExecutor(
       currentTask = task;
       globalLineAwareWriter.setActiveProcess(task.id);
       await task.start();
+
+      // A file change may have queued another task while we waited for the
+      // previous process to stop. Its debounce trigger piggybacked on this
+      // in-flight run, so drain the queue now or it would sit unprocessed
+      // until the next change.
+      if (tasks.length > 0) {
+        await processQueue();
+      }
     };
 
     const debouncedProcessQueue = createCoalescingDebounce(
@@ -143,7 +145,6 @@ export async function* nodeExecutor(
     ) => {
       for (const task of tasks) {
         if (!task.killed) {
-          task.killed = true;
           await task.stop('SIGTERM');
         }
       }
@@ -229,7 +230,7 @@ export async function* nodeExecutor(
         stop: async (signal = 'SIGTERM') => {
           task.killed = true;
 
-          if (task.childProcess) {
+          if (task.childProcess?.pid) {
             if (task.childProcess.stdout) {
               task.childProcess.stdout.pause();
             }
@@ -243,7 +244,16 @@ export async function* nodeExecutor(
 
             task.childProcess.removeAllListeners();
 
-            await killTree(task.childProcess.pid, signal);
+            // Wait for the process tree to fully exit so the port is released
+            // before a watch-mode restart boots the next server (EADDRINUSE).
+            // Windows cannot deliver graceful signals through this API, so
+            // skip the grace period and force-kill immediately (matching the
+            // previous taskkill /F behavior).
+            await killProcessTreeGraceful(
+              task.childProcess.pid,
+              signal,
+              process.platform === 'win32' ? 0 : undefined
+            );
           }
 
           if (task.id === globalLineAwareWriter.currentProcessId) {

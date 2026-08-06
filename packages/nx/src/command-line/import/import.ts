@@ -683,7 +683,11 @@ async function runInstallDestinationRepo(
     output.log({
       title: 'Installing dependencies for imported code',
     });
-    runInstall(workspaceRoot, getPackageManagerCommand(packageManager));
+    runInstall(
+      workspaceRoot,
+      packageManager,
+      getPackageManagerCommand(packageManager)
+    );
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;

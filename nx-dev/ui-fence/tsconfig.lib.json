@@ -6,7 +6,8 @@
     "types": ["node"],
     "lib": ["DOM", "es2022"],
     "composite": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "rootDir": "."
   },
   "exclude": [
     "jest.config.ts",

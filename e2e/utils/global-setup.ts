@@ -59,6 +59,26 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // Use environment variable instead of npm config command to avoid polluting other tests
     process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] =
       authToken;
+    // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and they
+    // take precedence over any registry a stray process wrote to ~/.npmrc.
+    process.env.pnpm_config_registry = registry;
+    process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] =
+      authToken;
+    // pnpm 11's minimumReleaseAge policy rejects packages published < 24h
+    // ago; everything e2e installs was just published to the local registry.
+    process.env.pnpm_config_minimum_release_age = '0';
+    // e2e installs plugin packages directly (no generator records allowBuilds
+    // decisions for their transitive deps), and pnpm 11 re-checks the whole
+    // workspace strictly on every implicit deps check (`pnpm exec nx ...`),
+    // so restore pnpm 10's warn-and-skip for the whole harness and skip the
+    // implicit install-before-run entirely.
+    process.env.pnpm_config_strict_dep_builds = 'false';
+    process.env.pnpm_config_verify_deps_before_run = 'false';
+    // pnpm 11 no longer reads pnpm settings from .npmrc, so the workspace
+    // prefer-frozen-lockfile=false workaround stopped applying; without this,
+    // tests that edit a package.json and re-run `pnpm install` fail in CI
+    // where frozen-lockfile defaults to true.
+    process.env.pnpm_config_frozen_lockfile = 'false';
 
     // bun
     process.env.BUN_CONFIG_REGISTRY = registry;
@@ -80,9 +100,19 @@ export default async function (globalConfig: Config.ConfigGlobals) {
 
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
+    // Installing a workspace unzips the Cypress binary into a cache directory
+    // shared by everything on the machine, so two suites running side by side
+    // can clear that directory out from under each other mid-unzip. Suites that
+    // never run e2e tests do not need the binary at all; the ones that do get it
+    // from `ensureCypressInstallation`, which takes a lock first.
+    if (process.env.NX_E2E_RUN_E2E !== 'true') {
+      process.env.CYPRESS_INSTALL_BINARY = '0';
+    }
+
     global.e2eTeardown = () => {
       // Clean up environment variable instead of npm config command
       delete process.env[`npm_config_//${listenAddress}:${port}/:_authToken`];
+      delete process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`];
     };
 
     /**

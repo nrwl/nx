@@ -208,11 +208,16 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export function runE2ETests(runner?: 'cypress' | 'playwright') {
+export async function runE2ETests(runner?: 'cypress' | 'playwright') {
   if (process.env.NX_E2E_RUN_E2E === 'true') {
+    // Cypress unzips into a cache shared by the whole machine, so this has to
+    // finish before the suite starts running tests.
     if (!runner || runner === 'cypress') {
-      ensureCypressInstallation();
+      await ensureCypressInstallation();
     }
+    // Playwright is deliberately not awaited: `npx playwright install
+    // --with-deps` takes longer than a test's timeout, so waiting on it here
+    // fails the suite outright.
     if (!runner || runner === 'playwright') {
       ensurePlaywrightBrowsersInstallation();
     }
@@ -413,12 +418,17 @@ export function runNgAdd(
  * stable placeholders so the report can stay in snapshots. Scoped to the report
  * block (from `Run duration:` to the next `NX` section header or end of output);
  * no-op when no report is present.
+ *
+ * The Recommendations section is dropped entirely: runs under 30s (every e2e run
+ * when healthy) print none, and a slow run crossing that floor must not flake the
+ * snapshot by re-introducing it.
  */
 export function normalizePerformanceReport(output: string): string {
   return output.replace(
     /\n[ \t]*Run duration:[\s\S]*?(?=\n[ \t]*\n(?:[ \t]*\n)*[ \t]*NX |\s*$)/g,
     (block) =>
       block
+        .replace(/\n[ \t]*\n[ \t]*Recommendations?:[\s\S]*$/, '')
         // Durations: match the minute form ("1m 30s") first so its "30s" isn't matched
         // alone; the optional "<" also captures a "<1ms" (sub-millisecond) duration.
         .replace(/<?(?:\b\d+m \d+s\b|\b\d+(?:\.\d+)?m?s\b)/g, '{DURATION}')

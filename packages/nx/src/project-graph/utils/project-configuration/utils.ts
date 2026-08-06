@@ -1,6 +1,7 @@
 import {
   readArrayItemSourceInfo,
   readObjectPropertySourceInfo,
+  TARGET_DEFAULTS_PLUGIN_NAME,
   type SourceInformation,
 } from './source-maps';
 
@@ -36,6 +37,33 @@ export class IntegerLikeSpreadKeyError extends Error {
       )}) alongside the '...' spread token. Integer-like keys are enumerated before other keys regardless of authored order, so their position relative to '...' is ambiguous. Rename the key (e.g. add a non-numeric prefix) or restructure the object.`
     );
     this.name = 'IntegerLikeSpreadKeyError';
+  }
+}
+
+/**
+ * Throws `IntegerLikeSpreadKeyError` when `value` is a `'...'` spread object
+ * whose enumeration hoists an integer-like key ahead of the spread, making its
+ * authored position ambiguous.
+ *
+ * The ambiguity is a property of the authored value alone, not of any merge
+ * base. `mergeObjectWithSpread` runs this the moment it merges such a value —
+ * but a merge layer that lets the base win a key drops the incoming value
+ * without merging it, so the check must also be run eagerly at those
+ * base-owns-key shortcuts. Otherwise the error would surface or vanish
+ * depending on which side owns the key (e.g. it fires in the target-defaults
+ * staging merge but not the real merge), which is exactly the divergence that
+ * makes discarding staging errors unsafe.
+ */
+export function assertNoIntegerLikeSpreadKey(
+  value: unknown,
+  errorContext: string
+): void {
+  if (!isObject(value) || value[NX_SPREAD_TOKEN] !== true) {
+    return;
+  }
+  const keys = Object.keys(value);
+  if (keys[0] && INTEGER_LIKE_KEY_PATTERN.test(keys[0])) {
+    throw new IntegerLikeSpreadKeyError(keys[0], errorContext);
   }
 }
 
@@ -85,10 +113,31 @@ export function getMergeValueResult<T>(
   // plugin already set, purely as a merge guard — must not steal provenance
   // from the layer that introduced the value. A genuinely new value (no base,
   // or a different one) still attributes to the new layer.
-  if (!isUnchangedPrimitive(newValue, baseValue)) {
+  //
+  // The exception cuts the other way too: when the *existing* attribution is a
+  // target-defaults stamp (TD merges before the plugin whose value it
+  // predicted, so its stamp lands first), a real plugin re-stating that value
+  // is the genuine author and reclaims the key.
+  if (
+    !isUnchangedPrimitive(newValue, baseValue) ||
+    isReclaimableTargetDefaultsStamp(sourceMapContext)
+  ) {
     writeTopLevelSourceMap(sourceMapContext);
   }
   return newValue;
+}
+
+// Whether the key's current attribution is a weak target-defaults stamp that
+// the (non-target-defaults) writer should reclaim despite the value being
+// unchanged.
+function isReclaimableTargetDefaultsStamp(
+  ctx: SourceMapContext | undefined
+): boolean {
+  return (
+    !!ctx &&
+    ctx.sourceMap[ctx.key]?.[1] === TARGET_DEFAULTS_PLUGIN_NAME &&
+    ctx.sourceInformation[1] !== TARGET_DEFAULTS_PLUGIN_NAME
+  );
 }
 
 // Whether `newValue` leaves a defined primitive base untouched. Objects fall
@@ -186,13 +235,11 @@ function mergeObjectWithSpread(
     ? `Object at "${sourceMapContext.key}"`
     : 'Object';
 
-  const newKeys = Object.keys(newValue);
+  // Integer-like keys are hoisted to the front of enumeration, so one
+  // alongside `'...'` makes its authored position ambiguous.
+  assertNoIntegerLikeSpreadKey(newValue, errorContext);
 
-  // Integer-like keys are hoisted to the front of enumeration, so if one
-  // exists alongside `'...'` it must be newKeys[0].
-  if (newKeys[0] && INTEGER_LIKE_KEY_PATTERN.test(newKeys[0])) {
-    throw new IntegerLikeSpreadKeyError(newKeys[0], errorContext);
-  }
+  const newKeys = Object.keys(newValue);
 
   // Base per-key sources captured lazily — only for shared keys the new
   // object overwrites before `'...'`, since writing their new source

@@ -173,7 +173,7 @@ exports[`application generator should set up project correctly for rsbuild 3`] =
   "test/tsconfig.spec.json",
   "test/vitest.config.mts",
   "tsconfig.base.json",
-  "vitest.workspace.ts",
+  "vitest.config.ts",
 ]
 `;
 
@@ -376,6 +376,6 @@ exports[`application generator should set up project correctly with given option
   "test/tsconfig.spec.json",
   "test/vite.config.mts",
   "tsconfig.base.json",
-  "vitest.workspace.ts",
+  "vitest.config.ts",
 ]
 `;

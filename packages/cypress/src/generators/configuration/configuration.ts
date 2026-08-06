@@ -1,4 +1,8 @@
-import { resolveImportPath, promptWhenInteractive } from '@nx/devkit/internal';
+import {
+  resolveImportPath,
+  promptWhenInteractive,
+  PackageJson,
+} from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -32,11 +36,11 @@ import {
   getTsConfigModuleResolution,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
 import { addDefaultE2EConfig } from '../../utils/config';
+import type { NxCypressE2EPresetOptions } from '../../../plugins/cypress-preset';
 import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   getInstalledCypressMajorVersion,
@@ -51,6 +55,10 @@ export interface CypressE2EConfigSchema {
   directory?: string;
   js?: boolean;
   skipFormat?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
@@ -321,17 +329,15 @@ async function addFiles(
 
   generateFiles(tree, join(__dirname, 'files'), projectConfig.root, fileOpts);
 
-  addBaseCypressSetup(tree, {
-    project: options.project,
-    directory: options.directory,
-    jsx: options.jsx,
-    js: options.js,
-  });
-
   const cyFile = joinPathFragments(
     projectConfig.root,
     options.js ? 'cypress.config.js' : 'cypress.config.ts'
   );
+  // A pre-existing config may be user-authored, so we AST-merge our e2e block
+  // into it below. A fresh one is generated complete by base-setup, so it never
+  // needs AST parsing - loading tsquery crashes under TypeScript 7.
+  const cypressConfigExists = tree.exists(cyFile);
+
   let webServerCommands: Record<string, string>;
 
   let ciWebServerCommand: string;
@@ -366,19 +372,40 @@ async function addFiles(
       ciWebServerCommand = `nx run ${parsedTarget.project}:serve-static`;
     }
   }
-  const updatedCyConfig = await addDefaultE2EConfig(
-    tree.read(cyFile, 'utf-8'),
-    {
-      cypressDir: options.directory,
-      bundler: options.bundler === 'vite' ? 'vite' : undefined,
-      webServerCommands,
-      ciWebServerCommand: ciWebServerCommand,
-      ciBaseUrl,
-    },
-    options.baseUrl
-  );
 
-  tree.write(cyFile, updatedCyConfig);
+  const e2ePresetOptions: NxCypressE2EPresetOptions = {
+    cypressDir: options.directory,
+    bundler: options.bundler === 'vite' ? 'vite' : undefined,
+    webServerCommands,
+    ciWebServerCommand,
+    ciBaseUrl,
+  };
+
+  addBaseCypressSetup(tree, {
+    project: options.project,
+    directory: options.directory,
+    jsx: options.jsx,
+    js: options.js,
+    // Generate a fresh config already containing the e2e preset (base-setup
+    // no-ops when a config already exists - see the merge below).
+    e2ePreset: {
+      presetOptions: JSON.stringify(e2ePresetOptions, null, 2)
+        .split('\n')
+        .join('\n    '),
+      baseUrl: options.baseUrl,
+    },
+  });
+
+  if (cypressConfigExists) {
+    tree.write(
+      cyFile,
+      await addDefaultE2EConfig(
+        tree.read(cyFile, 'utf-8'),
+        e2ePresetOptions,
+        options.baseUrl
+      )
+    );
+  }
 
   if (options.js) {
     toJS(tree);

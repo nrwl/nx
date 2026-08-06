@@ -13,12 +13,12 @@ import { getRootTsConfigFileName, resolveModuleByImport } from '@nx/js';
 import { TargetProjectLocator } from '@nx/js/internal';
 import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import * as path from 'node:path';
+import { getPath, pathExists } from './graph-utils';
 import {
   findProjectForPath,
   ProjectRootMappings,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { readFileIfExisting } from 'nx/src/utils/fileutils';
-import { getPath, pathExists } from './graph-utils';
+  readFileIfExisting,
+} from '@nx/devkit/internal';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {
@@ -449,7 +449,7 @@ export function hasBuildExecutor(
 
 const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
-const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
+const NRWL_CLI_REGEX = /nx[\/\\]dist[\/\\]bin[\/\\]run-executor\.js$/;
 
 export function isTerminalRun(): boolean {
   return (

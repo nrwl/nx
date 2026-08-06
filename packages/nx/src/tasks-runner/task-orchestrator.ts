@@ -49,6 +49,7 @@ import { SharedRunningTask } from './running-tasks/shared-running-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
+  getForceColorForChild,
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
@@ -133,6 +134,13 @@ export class TaskOrchestrator {
   );
 
   private processedTasks = new Map<string, Promise<NodeJS.ProcessEnv>>();
+
+  // Hashes confirmed absent from the cache this run. A confirmed miss can
+  // only become a hit when the task itself runs — and then it leaves the
+  // schedule — so a missed hash never needs re-querying. Without this, a
+  // miss waiting for a worker slot is re-queried (including the remote
+  // retrieval) on every coordinator cycle.
+  private cacheMissedHashes = new Set<string>();
 
   private completedTasks = new Map<string, TaskStatus>();
   private waitingForTasks: Function[] = [];
@@ -477,9 +485,14 @@ export class TaskOrchestrator {
    * inside DbCache.getBatch.
    */
   private async fetchCacheHits(tasks: Task[]): Promise<CacheHit[]> {
-    const batchResults = await this.cache.getBatch(tasks);
+    const tasksToQuery = tasks.filter(
+      (t) => t.hash && !this.cacheMissedHashes.has(t.hash)
+    );
+    if (tasksToQuery.length === 0) return [];
+
+    const batchResults = await this.cache.getBatch(tasksToQuery);
     const cacheHits: CacheHit[] = [];
-    for (const task of tasks) {
+    for (const task of tasksToQuery) {
       const cachedResult = batchResults.get(task.hash);
       // Replay a cached result only under the same condition it was cached
       // under (shouldCacheTaskResult): successes always, failures only when
@@ -487,6 +500,8 @@ export class TaskOrchestrator {
       // written but never read back.
       if (cachedResult && this.shouldCacheTaskResult(task, cachedResult.code)) {
         cacheHits.push({ task, cachedResult });
+      } else {
+        this.cacheMissedHashes.add(task.hash);
       }
     }
     return cacheHits;
@@ -574,7 +589,9 @@ export class TaskOrchestrator {
    * The coordinator relies on this running unconditionally (when cache
    * is enabled): tasks dispatched in step 5 via runTaskDirectly skip
    * their own cache lookup on the assumption that this has already
-   * confirmed them as misses. Don't add length-based bails.
+   * confirmed them as misses. Excluding cacheMissedHashes preserves that
+   * invariant — every dispatched hash was queried exactly once — but
+   * don't add other length-based bails.
    */
   private async resolveCachedTasksBulk(): Promise<boolean> {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
@@ -582,7 +599,12 @@ export class TaskOrchestrator {
     const candidates: Task[] = [];
     for (const id of scheduledTasks) {
       const task = this.taskGraph.tasks[id];
-      if (task.hash && !task.continuous && task.cache) {
+      if (
+        task.hash &&
+        !this.cacheMissedHashes.has(task.hash) &&
+        !task.continuous &&
+        task.cache
+      ) {
         candidates.push(task);
       }
     }
@@ -1047,9 +1069,7 @@ export class TaskOrchestrator {
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR,
+          getForceColorForChild(),
           this.options.skipNxCache,
           this.options.captureStderr,
           null,
@@ -1180,7 +1200,7 @@ export class TaskOrchestrator {
             // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
             this.options.lifeCycle.registerRunningTask(
               task.id,
-              runningTask.getParserAndWriter()
+              runningTask.getPtyHandles()
             );
             runningTask.onOutput((output) => {
               this.options.lifeCycle.appendTaskOutput(task.id, output, true);
@@ -1239,7 +1259,7 @@ export class TaskOrchestrator {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
           this.options.lifeCycle.registerRunningTask(
             task.id,
-            runningTask.getParserAndWriter()
+            runningTask.getPtyHandles()
           );
           runningTask.onOutput((output) => {
             this.options.lifeCycle.appendTaskOutput(task.id, output, true);
@@ -1358,9 +1378,7 @@ export class TaskOrchestrator {
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR,
+          getForceColorForChild(),
           this.options.skipNxCache,
           this.options.captureStderr,
           null,

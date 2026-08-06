@@ -1,4 +1,9 @@
-import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
+import {
+  calculateHashesForCreateNodes,
+  workspaceDataDirectory,
+  PluginCache,
+  hashObject,
+} from '@nx/devkit/internal';
 import {
   CreateNodes,
   CreateNodesContext,
@@ -8,10 +13,7 @@ import {
   normalizePath,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
 
-import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   gradleConfigAndTestGlob,
   splitConfigFiles,
@@ -148,10 +150,10 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         const projectRoot = buildFileProjectRoots[i];
         const hash = buildFileHashes[i];
 
-        // Get project from cache or nodes
+        // Get project from cache or nodes (report keys are workspace-relative
+        // with `/` separators)
         if (!pluginCache.has(hash)) {
-          const nodeProject =
-            nodes[projectRoot] ?? nodes[join(workspaceRoot, projectRoot)];
+          const nodeProject = nodes[normalizePath(projectRoot)];
           if (nodeProject) {
             pluginCache.set(hash, nodeProject);
           }

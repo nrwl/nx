@@ -113,7 +113,7 @@
     "source-map-loader": "^5.0.0",
     "style-loader": "^3.3.0",
     "terser-webpack-plugin": "^5.3.3",
-    "ts-loader": "^9.3.1",
+    "ts-loader": "^9.5.7",
     "tsconfig-paths-webpack-plugin": "4.2.0",
     "tslib": "catalog:typescript",
     "webpack-node-externals": "^3.0.0",

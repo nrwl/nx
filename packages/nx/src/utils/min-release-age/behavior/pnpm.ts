@@ -133,18 +133,29 @@ function readPnpmConfigList(root: string): Record<string, unknown> | null {
   }
 }
 
-// Extracts the cooldown keys from pnpm's reported config. pnpm reports the
-// kebab-case keys; the exclude list comes back as a JSON array (set in a yaml
-// surface) or a comma-joined string (set via .npmrc / env).
+// Extracts the cooldown keys from pnpm's reported config. pnpm 11 reports them
+// camelCase; pnpm 10 reported them kebab-case, so read both forms. The exclude
+// list comes back as a JSON array (set in a yaml surface) or a comma-joined
+// string (set via .npmrc / env).
 function parseCooldownConfig(
   config: Record<string, unknown>
 ): PnpmCooldownConfig {
+  const read = (camelKey: string, kebabKey: string): unknown =>
+    config[camelKey] ?? config[kebabKey];
   return {
-    windowMinutes: toNumber(config['minimum-release-age']) ?? undefined,
-    excludes: parseExcludeValue(config['minimum-release-age-exclude']),
-    strictExplicit: toBoolean(config['minimum-release-age-strict']),
+    windowMinutes:
+      toNumber(read('minimumReleaseAge', 'minimum-release-age')) ?? undefined,
+    excludes: parseExcludeValue(
+      read('minimumReleaseAgeExclude', 'minimum-release-age-exclude')
+    ),
+    strictExplicit: toBoolean(
+      read('minimumReleaseAgeStrict', 'minimum-release-age-strict')
+    ),
     ignoreMissingTimeExplicit: toBoolean(
-      config['minimum-release-age-ignore-missing-time']
+      read(
+        'minimumReleaseAgeIgnoreMissingTime',
+        'minimum-release-age-ignore-missing-time'
+      )
     ),
   };
 }
