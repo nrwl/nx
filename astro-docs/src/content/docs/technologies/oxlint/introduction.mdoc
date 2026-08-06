@@ -22,6 +22,8 @@ nx add @nx/oxlint
 
 This installs `oxlint` if it is not already installed, registers `@nx/oxlint`, and creates a root `.oxlintrc.json` if the workspace has no Oxlint config.
 
+After this, the application and library generators follow the workspace. `nx g @nx/react:app` with no `--linter` sets up Oxlint. Nx reads what the workspace already has, so an ESLint workspace keeps getting ESLint and a workspace with neither gets no linter. Pass `--linter` to choose for a single project.
+
 `@nx/oxlint` requires Oxlint 1.43.0 or later. The generators stop with an error on anything older.
 
 ## Inferred tasks
