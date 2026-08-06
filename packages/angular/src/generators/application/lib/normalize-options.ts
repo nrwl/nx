@@ -3,6 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
+import { detectLinter } from '@nx/js/internal';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
@@ -70,11 +71,13 @@ export async function normalizeOptions(
     skipTests: unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     e2eTestRunner: E2eTestRunner.Playwright,
-    linter: 'eslint',
     strict: true,
     standalone: true,
     directory: appProjectRoot,
     ...options,
+    // Resolved after the spread so it is a concrete linter before it reaches
+    // the `=== 'eslint'` guards downstream, which treat `undefined` as ESLint.
+    linter: options.linter ?? detectLinter(host),
     prefix: options.prefix || 'app',
     name: appProjectName,
     appProjectRoot,
