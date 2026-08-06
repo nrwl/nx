@@ -20,10 +20,9 @@ describe('formatFiles', () => {
   describe('NX_SKIP_FORMAT', () => {
     it('should skip formatting when NX_SKIP_FORMAT is true', async () => {
       process.env.NX_SKIP_FORMAT = 'true';
-      // `createTreeWithEmptyWorkspace` already writes a `.prettierrc`, and the
-      // prettier branch cannot format under jest (its dynamic import is
-      // refused), so the assertion held either way. Configuring oxfmt puts the
-      // test on the one branch that really formats here.
+      // The fixture already configures oxfmt, so this write is belt-and-braces:
+      // what the test needs is a workspace that really would format, or it
+      // would pass whether or not NX_SKIP_FORMAT were honoured.
       tree.write('.oxfmtrc.json', '{}');
 
       // Create a file with intentionally bad formatting
