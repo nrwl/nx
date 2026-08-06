@@ -8,7 +8,7 @@ import {
   getNpmScope,
   isUsingTsSolutionSetup,
   shouldConfigureTsSolutionSetup,
-  detectLinter,
+  normalizeLinterOption,
 } from '@nx/js/internal';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/internal';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
@@ -52,7 +52,7 @@ export async function normalizeOptions(
     controller: options.controller ?? false,
     fileName,
     global: options.global ?? false,
-    linter: options.linter ?? detectLinter(tree),
+    linter: await normalizeLinterOption(tree, options.linter),
     parsedTags,
     prefix: getNpmScope(tree), // we could also allow customizing this
     projectName:

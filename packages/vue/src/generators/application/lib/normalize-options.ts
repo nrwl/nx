@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { NormalizedSchema, Schema } from '../schema';
-import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function normalizeOptions(
   host: Tree,
@@ -53,7 +53,7 @@ export async function normalizeOptions(
   normalized.bundler = normalized.bundler ?? 'vite';
   // Resolved here rather than at the `addLinting` call, so the `=== 'eslint'`
   // check that builds the tsconfig excludes reads the same value.
-  normalized.linter ??= detectLinter(host);
+  normalized.linter = await normalizeLinterOption(host, normalized.linter);
 
   return normalized;
 }

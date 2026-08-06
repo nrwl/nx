@@ -11,7 +11,7 @@ import {
   toJS,
   updateJson,
 } from '@nx/devkit';
-import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { tslibVersion } from '@nx/node/internal';
 import { join } from 'path';
@@ -134,7 +134,7 @@ async function normalizeOptions(
     ...options,
     // Resolved after the spread so the type guarantees it downstream; this
     // generator forwards its options straight into `@nx/node:application`.
-    linter: options.linter ?? detectLinter(host),
+    linter: await normalizeLinterOption(host, options.linter),
     appProjectName,
     appProjectRoot,
     useProjectJson,
