@@ -41,6 +41,7 @@ describe('addLinting generator', () => {
     jest.spyOn(linter, 'lintProjectGenerator');
 
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -141,6 +142,7 @@ describe('addLinting generator', () => {
   it('should add the Angular specific EsLint devDependencies (eslintrc)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -157,6 +159,7 @@ describe('addLinting generator', () => {
 
   it('should use flat config and install correct dependencies when using it', async () => {
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -170,6 +173,7 @@ describe('addLinting generator', () => {
   it('should correctly generate the .eslintrc.json file', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -183,6 +187,7 @@ describe('addLinting generator', () => {
   it('should set parserOptions.project in the .eslintrc.json file when typed linting is enabled', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -213,6 +218,7 @@ describe('addLinting generator', () => {
     );
 
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -238,6 +244,7 @@ describe('addLinting generator', () => {
     );
 
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -262,6 +269,7 @@ describe('addLinting generator', () => {
     );
 
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -278,6 +286,7 @@ describe('addLinting generator', () => {
   it('should not set parserOptions in the .eslintrc.json file when typed linting is disabled', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
@@ -321,6 +330,7 @@ describe('addLinting generator', () => {
     });
 
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: 'lib1',
       projectRoot: 'libs/lib1',
@@ -455,6 +465,7 @@ describe('addLinting generator', () => {
     });
 
     await addLintingGenerator(tree, {
+      linter: 'eslint',
       prefix: 'myOrg',
       projectName: 'lib1',
       projectRoot: 'libs/lib1',

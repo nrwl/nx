@@ -1198,13 +1198,28 @@ describe('lib', () => {
         ).toBeUndefined();
       });
 
-      it('should set up eslint when no linter is detected', async () => {
+      it('should set up eslint when the workspace already uses it', async () => {
+        updateJson(tree, 'package.json', (json) => {
+          json.devDependencies = { ...json.devDependencies, eslint: '^9.0.0' };
+          return json;
+        });
+
         await runWithoutLinter();
 
         expect(tree.exists('my-lib/.oxlintrc.json')).toBe(false);
         expect(
           readJson(tree, 'package.json').devDependencies['@nx/eslint']
         ).toBeDefined();
+      });
+
+      // `detectLinter` answers `none` for a workspace with no linter, so an
+      // opt-out is preserved rather than having ESLint inferred for it.
+      it('should set up no linter when the workspace has none', async () => {
+        await runWithoutLinter();
+
+        expect(tree.exists('my-lib/.oxlintrc.json')).toBe(false);
+        const { devDependencies = {} } = readJson(tree, 'package.json');
+        expect(devDependencies['@nx/eslint']).toBeUndefined();
       });
 
       it('should let an explicit linter win over detection', async () => {

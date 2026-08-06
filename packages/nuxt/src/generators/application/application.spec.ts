@@ -49,6 +49,7 @@ describe('app', () => {
 
         it('should create all new files in the correct location', async () => {
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -84,6 +85,7 @@ describe('app', () => {
           tree.write('eslint.config.mjs', 'export default {};');
 
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -98,6 +100,7 @@ describe('app', () => {
           tree.write('eslint.config.cjs', 'module.exports = {};');
 
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -112,6 +115,7 @@ describe('app', () => {
           tree.write('eslint.config.mjs', 'export default {};');
 
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -128,6 +132,7 @@ describe('app', () => {
           tree.write('eslint.config.cjs', 'module.exports = {};');
 
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -144,6 +149,7 @@ describe('app', () => {
         it('should configure eslint correctly (eslintrc)', async () => {
           process.env.ESLINT_USE_FLAT_CONFIG = 'false';
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -185,6 +191,7 @@ describe('app', () => {
 
         it('should add the nuxt and vitest plugins', async () => {
           await applicationGenerator(tree, {
+            linter: 'eslint',
             directory: name,
             unitTestRunner: 'vitest',
             useAppDir: false,
@@ -376,6 +383,7 @@ describe('app', () => {
 
     it('should create all files in correct location with useAppDir', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-app',
         unitTestRunner: 'vitest',
         useAppDir: true,

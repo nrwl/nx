@@ -449,6 +449,7 @@ describe('Cypress Component Testing Configuration', () => {
       return json;
     });
     await generateTestLibrary(tree, {
+      linter: 'eslint',
       directory: 'my-lib',
       skipFormat: true,
     });
@@ -944,6 +945,7 @@ describe('Cypress Component Testing Configuration', () => {
       return json;
     });
     await generateTestApplication(tree, {
+      linter: 'eslint',
       directory: 'zoneless-app',
       bundler: 'webpack',
       skipFormat: true,
@@ -1011,6 +1013,7 @@ describe('Cypress Component Testing Configuration', () => {
       return json;
     });
     await generateTestLibrary(tree, {
+      linter: 'eslint',
       directory: 'zoneless-lib',
       skipFormat: true,
     });

@@ -668,13 +668,28 @@ describe('app', () => {
         expect(appTree.exists('my-app/.oxlintrc.json')).toBe(true);
       });
 
-      it('should set up eslint when no linter is detected', async () => {
+      it('should set up eslint when the workspace already uses it', async () => {
+        updateJson(appTree, 'package.json', (json) => {
+          json.devDependencies = { ...json.devDependencies, eslint: '^9.0.0' };
+          return json;
+        });
+
         await generateAppWithoutLinter();
 
         expect(appTree.exists('my-app/.oxlintrc.json')).toBe(false);
         expect(
           readJson(appTree, 'package.json').devDependencies['@nx/eslint']
         ).toBeDefined();
+      });
+
+      // `detectLinter` answers `none` for a workspace with no linter, so an
+      // opt-out is preserved rather than having ESLint inferred for it.
+      it('should set up no linter when the workspace has none', async () => {
+        await generateAppWithoutLinter();
+
+        expect(appTree.exists('my-app/.oxlintrc.json')).toBe(false);
+        const { devDependencies = {} } = readJson(appTree, 'package.json');
+        expect(devDependencies['@nx/eslint']).toBeUndefined();
       });
     });
 
