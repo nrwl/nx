@@ -92,7 +92,10 @@ export async function resolveWebServersUnderEnv(
   workspaceRoot: string,
   taskEnv: NodeJS.ProcessEnv
 ): Promise<ResolvedWebServer[]> {
-  if (activeEvals >= MAX_CONCURRENT_EVALS) {
+  // `while` rather than `if`: a caller arriving between a slot's release and
+  // the woken waiter's resume can claim the slot first, so the waiter must
+  // re-check before taking it.
+  while (activeEvals >= MAX_CONCURRENT_EVALS) {
     await new Promise<void>((resolve) => evalQueue.push(resolve));
   }
   activeEvals++;

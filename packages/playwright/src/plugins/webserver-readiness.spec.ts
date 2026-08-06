@@ -124,6 +124,51 @@ describe('resolveWebServersUnderEnv concurrency', () => {
     expect(startOrder).toEqual(ids);
   });
 
+  it('keeps the cap when a new caller barges in between a release and the woken waiter', async () => {
+    let active = 0;
+    let peak = 0;
+    const releasers: Array<() => void> = [];
+    _setChildEval(
+      () =>
+        new Promise((resolve) => {
+          active++;
+          peak = Math.max(peak, active);
+          releasers.push(() => {
+            active--;
+            resolve([]);
+          });
+        })
+    );
+
+    const all: Array<Promise<unknown>> = [];
+    for (let i = 0; i < MAX_CONCURRENT_EVALS + 1; i++) {
+      all.push(resolveWebServersUnderEnv(String(i), 'root', {}));
+    }
+    await flush();
+    expect(active).toBe(MAX_CONCURRENT_EVALS);
+
+    // Free a slot, then queue a new call as a microtask so it runs after the
+    // release's continuation but before the woken waiter resumes; without the
+    // waiter's re-check both would claim the single free slot.
+    releasers.shift()!();
+    await new Promise<void>((resolve) =>
+      queueMicrotask(() => {
+        all.push(resolveWebServersUnderEnv('barge', 'root', {}));
+        resolve();
+      })
+    );
+
+    let done = false;
+    void Promise.all(all).then(() => (done = true));
+    while (!done) {
+      await flush();
+      while (releasers.length > 0) {
+        releasers.shift()!();
+      }
+    }
+    expect(peak).toBe(MAX_CONCURRENT_EVALS);
+  });
+
   it('releases the slot when an evaluation rejects', async () => {
     _setChildEval((configFilePath) =>
       configFilePath === 'reject'
