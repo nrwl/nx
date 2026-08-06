@@ -37,7 +37,7 @@
       "default": 3000
     },
     "linter": {
-      "description": "Linter to be used for the E2E project",
+      "description": "Linter to be used for the E2E project. Defaults to the linter the workspace already uses.",
       "type": "string",
       "enum": ["eslint", "oxlint", "none"]
     },
