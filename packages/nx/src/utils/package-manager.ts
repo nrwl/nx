@@ -44,6 +44,9 @@ const execFileAsync = promisify(execFile);
  * credential and `@scope:registry` entry the overlay carries. Windows stays on
  * `exec`, with every argument quoted, because Node refuses to execFile the
  * package manager's `.cmd` shim without a shell.
+ *
+ * That quoting is the whole defence on Windows, so `args` must stay free of
+ * embedded double quotes: callers pass package names, versions and fixed flags.
  */
 function execPackageManagerAsync(
   pm: string,
