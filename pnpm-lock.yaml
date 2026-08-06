@@ -215,10 +215,10 @@ catalogs:
       specifier: ^22.1.0
       version: 22.1.0
     '@typescript-eslint/type-utils':
-      specifier: ^8.0.0
+      specifier: ^8.58.0
       version: 8.59.0
     '@typescript-eslint/utils':
-      specifier: ^8.0.0
+      specifier: ^8.58.0
       version: 8.59.0
     angular-eslint:
       specifier: ^22.1.0
