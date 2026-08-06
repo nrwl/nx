@@ -347,17 +347,22 @@ describe('ensureOwnedPrivateDir', () => {
       expect(remedy).toContain('administrator');
     });
 
-    it('should offer a way out of a filesystem that ignores permissions', () => {
+    it('should offer the chmod the owner can actually run', () => {
       const remedy = remedyFor({
         kind: 'not-tightenable',
-        dir: '/mnt/c/ws/.nx/workspace-data/d',
+        dir: '/tmp/.nx/501/sockets',
         mode: 0o40777,
       });
-      expect(remedy).toContain('/mnt/c/ws/.nx/workspace-data/d');
+      // The action, not just the path: ownership is established before this
+      // kind can be produced, so `chmod` is the user's to run — and the
+      // relocation is the fallback for when the mode does not stick.
+      expect(remedy).toContain("chmod 0700 '/tmp/.nx/501/sockets'");
+      expect(remedy).toContain('0777');
       expect(remedy).toContain('NX_SOCKET_DIR');
-      // Not the chown advice: no owner can fix a mount that discards modes.
+      // Never the shared-container advice: it names an owner who cannot help.
       expect(remedy).not.toContain('chown');
       expect(remedy).not.toContain('1777');
+      expect(remedy).not.toContain('belongs to another user');
     });
 
     it('should not offer to remove a per-user directory', () => {

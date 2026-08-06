@@ -72,8 +72,10 @@ const dirsPassedTo = (fn: unknown): string[] =>
 const accept = (dir: string) => ({ status: 'ok', path: dir });
 // Typed as DirRefusal, not `object`: these mocks stand in for the real guards,
 // so a staged shape the guards cannot produce is the one mistake worth failing
-// on. Specs are not typechecked in CI, so this catches it in the editor and in
-// an explicit `tsc` run.
+// on. Only catches fresh object literals — excess-property checking does not
+// reach a value passed through a variable, so the `const` fixtures below carry
+// the annotation themselves. Specs are not typechecked in CI, so this shows up
+// in the editor and in an explicit `tsc` run.
 const reject = (dir: string, refusal?: DirRefusal) => ({
   status: 'refused',
   refusal: refusal ?? { kind: 'not-a-directory', dir },
@@ -309,8 +311,8 @@ describe('socket directories', () => {
   // ones are dropped rather than leaving a gap or a stray separator.
   it('assembles the fallback warning the user actually reads', () => {
     setPlatform('linux');
-    const container = {
-      kind: 'foreign-shared-container' as const,
+    const container: DirRefusal = {
+      kind: 'foreign-shared-container',
       dir: SHARED_TMP_ROOT,
       uid: 1001,
     };
@@ -348,13 +350,13 @@ describe('socket directories', () => {
   // What `--verbose` adds, which is the thing the warning above promises.
   it('explains each rejected root at verbose level', () => {
     setPlatform('linux');
-    const shared = {
-      kind: 'foreign-shared-container' as const,
+    const shared: DirRefusal = {
+      kind: 'foreign-shared-container',
       dir: SHARED_TMP_ROOT,
       uid: 1001,
     };
-    const home = {
-      kind: 'not-tightenable' as const,
+    const home: DirRefusal = {
+      kind: 'not-tightenable',
       dir: HOME_TMP_ROOT,
       mode: 0o40755,
     };
@@ -443,6 +445,20 @@ describe('socket directories', () => {
       expect.stringContaining('could not use the default socket'),
       cause
     );
+  });
+
+  // The one refusal path with nowhere left to fall, and the only one that never
+  // reaches the warning where every other remedy is printed.
+  it('carries the remedy in the last-resort throw, which no warning can reach', () => {
+    setPlatform('linux');
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      reject(d, { kind: 'foreign-shared-container', dir: d, uid: 1001 })
+    );
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      reject(d, { kind: 'not-tightenable', dir: d, mode: 0o40777 })
+    );
+
+    expect(() => getSocketDir()).toThrow(/chmod 0700/);
   });
 
   it('carries the chown remedy in the fallback warning when the container is another user’s', () => {

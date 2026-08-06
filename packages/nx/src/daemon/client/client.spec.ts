@@ -377,8 +377,8 @@ describe('startInBackground', () => {
         daemonClient.reset();
         await (daemonClient as any).startDaemonIfNecessary().catch((e) => e);
 
-        // Status is moved back by hand rather than via reset(), which would
-        // also tear down the messengers.
+        // By hand, not via reset(): reset() would clear any instance-held
+        // refusal, which is exactly the regression this checks for.
         (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
         (daemonClient as any)._daemonStatus = 1; // DISCONNECTED
         const error = await (daemonClient as any)

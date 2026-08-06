@@ -61,7 +61,8 @@ export function ensureSecureNativeFileCacheLocation(
     const dir = configured;
     try {
       // Held to the same 0700 bar as the default location: a `.node` is loaded
-      // out of here. Unlike NX_SOCKET_DIR this warns rather than throwing.
+      // out of here. Unlike NX_SOCKET_DIR it is not additionally refused for
+      // naming one of Nx's own roots, which is the only case that throws.
       mkdirSync(dirname(dir), { recursive: true });
       const established = ensureOwnedPrivateDir(dir);
       if (established.status !== 'ok') {

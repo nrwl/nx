@@ -180,8 +180,9 @@ function canonicalDir(dir: string): string {
 /**
  * Whether `~/.nx` is somewhere other than the shared container. With
  * `HOME=/tmp` they are the same path, and offering it as a second tier would
- * point `ensureOwnedPrivateDir` at `/tmp/.nx` itself — taking a `1777` container
- * to `0700` and undoing the documented provisioning, with nothing to put it back.
+ * point `ensureOwnedPrivateDir` at `/tmp/.nx` itself — which, when the container
+ * is already ours (or Nx runs as root), takes a `1777` container to `0700` and
+ * undoes the documented provisioning, with nothing to put it back.
  */
 function homeTierIsDistinct(): boolean {
   if (!NX_HOME_TMP_DIR) {
@@ -610,10 +611,14 @@ function establishWorkspaceSocketDir(cause: unknown): string {
   // The fallback is only safe if it passes the same checks the primary did.
   const established = ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
   if (established.status === 'refused') {
+    // With the remedy: this is the one refusal path with nowhere left to fall,
+    // so it is where the user most needs it and the only one that cannot reach
+    // the warning's copy.
+    const remedy = remedyFor(established.refusal);
     throw new Error(
       `Nx could not establish a socket directory: ${describeRefusal(
         established.refusal
-      )}.`,
+      )}.${remedy ? ` ${remedy}` : ''}`,
       { cause }
     );
   }

@@ -11,12 +11,13 @@ import {
 } from 'node:fs';
 import { userInfo } from 'node:os';
 
-/**
- * A refusal is an object, so it is **not** falsy: `if (!ensureOwnedPrivateDir(d))`
- * is always false and would accept every refused directory. Test `.status`.
- * `isOwnedRealDirectory` is the one guard returning `T | null`, and the only one
- * a truthiness test is correct for.
- */
+// Phantom brands: each guard's success arm carries its own, so one guard's
+// verdict cannot be passed where another's is expected.
+//
+// A refusal is an object, so it is **not** falsy: `if (!ensureOwnedPrivateDir(d))`
+// is always false and would accept every refused directory. Test `.status`.
+// `isOwnedRealDirectory` is the one guard returning `T | null`, and the only one
+// a truthiness test is correct for.
 declare const safeSharedRootBrand: unique symbol;
 declare const sharedRootEstablishedBrand: unique symbol;
 declare const ownedRealDirBrand: unique symbol;
@@ -123,25 +124,41 @@ const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
 
 /** What the user can do about a refusal, or `undefined` when there is nothing. */
 export function remedyFor(r: DirRefusal): string | undefined {
-  if (r.kind === 'not-a-directory' && r.symlink) {
-    return `${r.dir} is a symlink where Nx expects a directory. If you did not create it, treat it as hostile: remove the link itself (not what it points at) and run the command again.`;
+  switch (r.kind) {
+    case 'not-a-directory':
+      return r.symlink
+        ? `${r.dir} is a symlink where Nx expects a directory. If you did not create it, treat it as hostile: remove the link itself (not what it points at) and run the command again.`
+        : undefined;
+    case 'foreign-owner':
+      return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or move it aside — which you can do yourself if you own the directory it sits in, and otherwise needs an administrator.`;
+    case 'not-tightenable':
+      // Both producers reach here having already established that the directory
+      // is ours, so `chmod` is the user's to run. Names no cause: one producer
+      // is a mount that discards the mode, the other is any `chmod` failure.
+      return `${r.dir} is reachable by other users (mode ${asMode(
+        r.mode
+      )}) and Nx could not restrict it. Run \`chmod 0700 ${shellQuote(
+        r.dir
+      )}\` and try again; if the mode does not stick, set NX_SOCKET_DIR to a short directory on a filesystem that keeps POSIX permissions.`;
+    case 'foreign-shared-container':
+      // Unreachable today: `isSafeSharedRoot` denies with this kind only when
+      // `stats.uid !== 0`, so a root-owned container never reaches here.
+      if (r.uid === 0) {
+        return undefined;
+      }
+      const q = shellQuote(r.dir);
+      return `${r.dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${q} && sudo chmod 1777 ${q}\`; every user can then keep their own directory under it.`;
+    case 'not-created':
+    case 'not-inspectable':
+    case 'peer-writable-not-sticky':
+      return undefined;
+    default: {
+      // Matches `describeRefusal`'s arm, so a new kind cannot ship with a
+      // sentence and no advice — which is how `not-tightenable` went unadvised.
+      const unhandled: never = r;
+      return undefined;
+    }
   }
-  if (r.kind === 'foreign-owner') {
-    return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or move it aside — which you can do yourself if you own the directory it sits in, and otherwise needs an administrator.`;
-  }
-  if (r.kind === 'not-tightenable') {
-    return `${r.dir} could not be restricted to your user, so Nx will not keep sockets there. Set NX_SOCKET_DIR to a short directory your user owns on a filesystem that supports POSIX permissions.`;
-  }
-  if (r.kind !== 'foreign-shared-container') {
-    return undefined;
-  }
-  // Unreachable today: `isSafeSharedRoot` denies with this kind only when
-  // `stats.uid !== 0`, so a root-owned container never reaches here.
-  if (r.uid === 0) {
-    return undefined;
-  }
-  const q = shellQuote(r.dir);
-  return `${r.dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${q} && sudo chmod 1777 ${q}\`; every user can then keep their own directory under it.`;
 }
 
 /** One refusal as an `Error`, so several can travel in an `AggregateError`. */
@@ -155,8 +172,8 @@ export class DirectoryRefusedError extends Error {
 /**
  * chmod a path only if it is a real directory, never following a symlink at its
  * final component — `chmodSync` follows them, retargeting the mode change. The
- * directory check is on the descriptor, not the errno, which varies by kernel
- * and flag combination. `O_NONBLOCK` stops a planted FIFO blocking `openSync`.
+ * directory check is on the descriptor, not the errno: a deny-list fails *open*
+ * on codes it does not know. `O_NONBLOCK` stops a planted FIFO blocking `openSync`.
  */
 function chmodRealDirectory(path: string, mode: number): boolean {
   let fd: number;
@@ -234,7 +251,9 @@ export function isSafeSharedRoot(dir: string): GuardResult<SafeSharedRoot> {
  *
  * `statSync`, not `lstatSync`: the question is about the directory that will be
  * used, not the link pointing at it. Link modes mislead in both directions —
- * Linux creates symlinks `0777`, macOS applies the umask.
+ * Linux creates symlinks `0777`, macOS applies the umask. Nothing here decides
+ * whether a path is accepted, so following the link costs nothing the guards
+ * do not already re-check.
  */
 export function isPeerWritable(dir: string): boolean {
   if (process.platform === 'win32') {

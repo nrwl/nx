@@ -214,7 +214,7 @@ server.on('error', (err: NodeJS.ErrnoException) => {
 // takes a recycled host pid landing on the same counter *and* the same 4 random
 // bytes; the random component is what this unlink rests on, and on Windows it is
 // the only barrier, since the endpoint is a namespace object and the mode never
-// applies.
+// applies. A failed bind surfaces through the error handler above.
 try {
   unlinkSync(socketPath);
 } catch {}

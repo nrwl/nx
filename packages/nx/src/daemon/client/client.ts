@@ -1217,9 +1217,10 @@ export class DaemonClient {
           refusal = { error, socketPath };
           // A refusal is not expected to become an acceptance, so polling the
           // full 60s budget only delays the same answer. Not absolute:
-          // `server.ts` binds before it chmods to 0600, so a same-user connect
-          // can lose a microsecond race and see EACCES. That costs a specific
-          // error rather than a retry — a better trade than a 60s hang.
+          // `server.ts` binds before it chmods to 0600, so under a umask that
+          // strips owner write a same-user connect can lose a microsecond race
+          // and see EACCES. That costs a specific error rather than a retry — a
+          // better trade than a 60s hang.
           return (stoppedOnRefusal = isPermissionErrno(error));
         },
       }
