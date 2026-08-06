@@ -135,11 +135,19 @@ async function waitForServer(server: Server, timeout: number): Promise<void> {
 // because Playwright checks one with a raw socket too.
 function probeServer(server: Server, deadline: number): Promise<ProbeFailure> {
   return server.port != null
-    ? probePort(server.port)
+    ? probePort(server.port, deadline)
     : probeUrl(server.url, server.ignoreHTTPSErrors ?? false, deadline);
 }
 
-function probePort(port: number): Promise<ProbeFailure> {
+function probePort(port: number, deadline: number): Promise<ProbeFailure> {
+  // Silence for the retry-delay window is the probe's observation; clamp it so
+  // a connect that hangs (e.g. a firewalled port) cannot run past the
+  // readiness deadline. Floored at 1ms because setTimeout(0) disables the
+  // socket's idle timeout instead.
+  const timeout = Math.max(
+    1,
+    Math.min(FALLBACK_RETRY_DELAY, deadline - Date.now())
+  );
   const canConnect = (host: string) =>
     new Promise<ProbeFailure>((resolve) => {
       const address = host.includes(':')
@@ -151,7 +159,7 @@ function probePort(port: number): Promise<ProbeFailure> {
         socket.destroy();
         resolve(failure);
       };
-      socket.setTimeout(FALLBACK_RETRY_DELAY);
+      socket.setTimeout(timeout);
       socket.once('connect', () => settle(null));
       socket.once('timeout', () => settle(`${address} timed out`));
       socket.once('error', (error: NodeJS.ErrnoException) =>
