@@ -170,7 +170,7 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     expect(logger.verbose).toHaveBeenCalledTimes(1);
   });
 
-  it('warns once (not per package) that a configuration could not be read', () => {
+  it('warns once (not per package) that a configuration could not be resolved', () => {
     const { logger } = require('../logger');
     (logger.warn as jest.Mock).mockClear();
     files[`${ROOT}/.yarnrc.yml`] =

@@ -27,12 +27,11 @@ import {
  * exists from bun 1.1.18; [install].ca/cafile from 1.1.31. When
  * XDG_CONFIG_HOME is set, bun reads $XDG_CONFIG_HOME/.npmrc INSTEAD of
  * ~/.npmrc, which npm always reads.
+ * See https://github.com/oven-sh/bun/blob/bun-v1.2.23/src/install/PackageManager.zig#L791
  *
  * The final default/scoped registry is always injected: bun does not read
  * npm-only surfaces (e.g. $PREFIX/etc/npmrc), so npm must not fall back to
  * them.
- *
- * See https://github.com/oven-sh/bun/blob/bun-v1.2.23/src/install/PackageManager.zig#L791
  */
 
 const BUN_DEFAULT_REGISTRY = 'https://registry.npmjs.org/';

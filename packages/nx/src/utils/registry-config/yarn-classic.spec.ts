@@ -15,7 +15,7 @@ jest.mock('../logger', () => ({
 
 import * as fs from 'fs';
 import { homedir } from 'os';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { getYarnClassicSpawnRegistryEnv } from './yarn-classic';
 
 describe('getYarnClassicSpawnRegistryEnv', () => {
@@ -193,7 +193,6 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
   // A miss here bridges the project .yarnrc that yarn itself overrode.
   it.each([
     ['~/.config/yarn/config', `${HOME}/.config/yarn/config`],
-    ['~/.config/yarn', `${HOME}/.config/yarn`],
     ['~/.yarn/config', `${HOME}/.yarn/config`],
     ['the XDG config dir', '/xdg/yarn'],
     ['$YARN_CONFIG', '/env/rc'],
@@ -211,6 +210,28 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
       npm_config_registry: 'https://reg-cli.example.com/',
     });
+  });
+
+  it('fails when ~/.config/yarn is a file, since its sibling rc path then runs through a non-directory', () => {
+    // yarn names both ~/.config/yarn and ~/.config/yarn/config, so a file at
+    // the first turns the second into an ENOTDIR and the tier can never
+    // contribute a registry (measured on 1.22.22: exit 1 whatever it says,
+    // with and without XDG_CONFIG_HOME).
+    files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+    files[`${HOME}/.config/yarn`] =
+      '--registry "https://reg-cli.example.com/"\n';
+    const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+    (fs.readFileSync as jest.Mock).mockImplementation(
+      (p: any, ...rest: any[]) => {
+        if (p === `${HOME}/.config/yarn/config`) {
+          throw Object.assign(new Error(`ENOTDIR: ${p}`), { code: 'ENOTDIR' });
+        }
+        return readFile(p, ...rest);
+      }
+    );
+    expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+      /yarn config at .* could not be read/
+    );
   });
 
   it('drops every CLI-rc home path when the home env var is unset', () => {
@@ -258,6 +279,63 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
       npm_config_registry: 'https://reg-proj.example.com/',
+    });
+  });
+
+  describe('on Windows', () => {
+    // yarn names its CLI-rc home paths off USERPROFILE there, drops the /etc
+    // tiers, and resolves its config dir through LOCALAPPDATA. Nx has no
+    // Windows CI job, so driving the platform here is the only coverage these
+    // arms get.
+    const originalPlatform = Object.getOwnPropertyDescriptor(
+      process,
+      'platform'
+    )!;
+    const USERHOME = 'C:\\Users\\me';
+    const APPDATA = 'C:\\Users\\me\\AppData\\Local';
+
+    beforeEach(() => {
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      process.env.USERPROFILE = USERHOME;
+      // Distinct from both, so anything reading it is visible.
+      process.env.HOME = '/posix/home';
+    });
+
+    afterEach(() => {
+      Object.defineProperty(process, 'platform', originalPlatform);
+    });
+
+    it('names its CLI-rc home paths off USERPROFILE, not HOME', () => {
+      files['/posix/home/.yarnrc'] =
+        '--registry "https://reg-posix.example.com/"\n';
+      files[join(USERHOME, '.yarnrc')] =
+        '--registry "https://reg-user.example.com/"\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-user.example.com/',
+      });
+    });
+
+    it('resolves the config dir through LOCALAPPDATA', () => {
+      // The other arm, LOCALAPPDATA unset, cannot be observed: it returns
+      // <home>/.config/yarn, and USERPROFILE is both what os.homedir() reports
+      // on Windows and what already puts that path in the list.
+      process.env.LOCALAPPDATA = APPDATA;
+      files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+      files[join(APPDATA, 'Yarn', 'Config')] =
+        '--registry "https://reg-appdata.example.com/"\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-appdata.example.com/',
+      });
+    });
+
+    it('never reads the /etc tiers', () => {
+      files['/etc/yarnrc'] = '--registry "https://reg-etc.example.com/"\n';
+      files['/etc/yarn/config'] =
+        '--registry "https://reg-etcdir.example.com/"\n';
+      files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-proj.example.com/',
+      });
     });
   });
 
