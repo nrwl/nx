@@ -111,8 +111,11 @@ Nx caches the result and rebuilds it when an env file the Playwright task would 
 A variable set only in the shell is not part of that cache.
 Changing it does not refresh an already-cached address, and shells holding different values share whichever address was cached last.
 Set such a variable in an env file instead; `nx reset` also discards the cached address.
+Files the config imports from outside its project, such as a shared helper in `tools/`, are not part of the cache either.
+Editing one does not refresh an already-cached address; run `nx reset` to re-infer it.
 A task dependency cannot carry a target configuration, so the address is always inferred without one and a configuration-scoped env file such as `.env.e2e.production` never affects it.
 Nx re-evaluates the config under the task's env only when the graph-time evaluation found a `webServer`, so a `webServer` that only exists under the task's env is not detected.
+If that re-evaluation fails or times out, Nx logs a warning, infers the task dependencies from the graph-time evaluation, and skips the wait task.
 
 ### Splitting E2E tests
 
