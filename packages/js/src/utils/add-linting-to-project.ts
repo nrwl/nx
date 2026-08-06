@@ -26,7 +26,7 @@ type OxlintGenerators = {
     }
   ) => Promise<GeneratorCallback>;
 };
-import type { LinterType } from './linter';
+import { detectLinter, type LinterType } from './linter';
 
 export interface AddLintingToProjectOptions {
   /** Required, but `undefined` still reaches here — see the normalization below. */
@@ -76,10 +76,10 @@ export async function addLintingToProject(
   tree: Tree,
   options: AddLintingToProjectOptions
 ): Promise<GeneratorCallback> {
-  // Callers can pass `undefined` — many generator schemas declare `linter?`.
-  // It has always meant ESLint; naming that keeps it from being an implicit
-  // fallthrough and lets the union below be exhaustive.
-  const linter = options.linter ?? 'eslint';
+  // Callers should resolve this themselves, since their own guards need a
+  // concrete value. Resolving again here keeps a caller that forgets from
+  // silently getting ESLint in a workspace that uses something else.
+  const linter = options.linter ?? detectLinter(tree);
 
   if (linter === 'none') {
     return () => {};
