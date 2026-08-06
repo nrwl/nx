@@ -86,6 +86,7 @@ export async function reportHandler() {
     mismatchedNxVersions,
     projectGraphError,
     nativeTarget,
+    nativeRuntime,
     cache,
     daemon,
   } = await getReportData();
@@ -94,6 +95,7 @@ export async function reportHandler() {
     ['Node', process.versions.node],
     ['OS', `${process.platform}-${process.arch}`],
     ['Native Target', nativeTarget ?? 'Unavailable'],
+    ['Native runtime', nativeRuntime ?? 'Unavailable'],
     [pm, pmVersion],
     [
       'daemon',
@@ -309,6 +311,7 @@ export interface ReportData {
   }>;
   projectGraphError?: Error | null;
   nativeTarget: string | null;
+  nativeRuntime: string | null;
   cache: {
     max: number;
     used: number;
@@ -443,6 +446,11 @@ export async function getReportData(): Promise<ReportData> {
     mismatchedNxVersions,
     projectGraphError,
     nativeTarget: native ? native.getBinaryTarget() : null,
+    nativeRuntime: native
+      ? native.IS_WASM
+        ? 'wasm (fallback)'
+        : 'native'
+      : null,
     cache,
     daemon: await getDaemonStatus(),
   };

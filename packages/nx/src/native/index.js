@@ -3,13 +3,16 @@ const {
   copyFileSync,
   existsSync,
   mkdirSync,
+  readFileSync,
   renameSync,
   statSync,
   unlinkSync,
+  writeSync,
 } = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
+const { getWasmFallbackWarning } = require('./wasm-fallback-warning');
 
 const MAX_COPY_RETRIES = 3;
 
@@ -75,6 +78,19 @@ function statsOrNull(path) {
 
 function isNoExecError(e) {
   return e.code === 'EACCES' || e.code === 'EPERM';
+}
+
+// Mirrors the musl detection in the generated native-bindings.js, which does not export it.
+function isMusl() {
+  if (process.platform !== 'linux') {
+    return false;
+  }
+  try {
+    return readFileSync('/usr/bin/ldd', 'utf-8').includes('musl');
+  } catch (e) {
+    process.report.excludeNetwork = true;
+    return !process.report.getReport().header.glibcVersionRuntime;
+  }
 }
 
 // We override the _load function so that when a native file is required,
@@ -168,6 +184,26 @@ Module._load = function (request, parent, isMain) {
 const indexModulePath = require.resolve('./native-bindings.js');
 delete require.cache[indexModulePath];
 const indexModule = require('./native-bindings.js');
+
+if (indexModule.IS_WASM) {
+  try {
+    const warning = getWasmFallbackWarning({
+      platform: process.platform,
+      arch: process.arch,
+      isMusl,
+      env: process.env,
+    });
+    if (warning) {
+      // Sync write: once the synchronous WASM work blocks the event loop a queued async
+      // stderr write cannot drain, so console/logger output would be lost on a piped stderr.
+      writeSync(process.stderr.fd, warning);
+      // Propagates to the many processes nx spawns so they do not each repeat the warning.
+      process.env.NX_WASM_FALLBACK_WARNED = 'true';
+    }
+  } catch (e) {
+    // a failed warning must never stop nx from loading
+  }
+}
 
 module.exports = indexModule;
 Module._load = originalLoad;
