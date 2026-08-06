@@ -345,6 +345,35 @@ describe('addDependenciesToPackageJson', () => {
     expect(installTask).toBeDefined();
   });
 
+  it('should keep dependencies that point at a package in the repo', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@nx/angular': 'workspace:*',
+        '@nx/vite': 'link:../../packages/vite',
+      },
+      devDependencies: {
+        '@nx/next': 'file:../../packages/next',
+        '@nx/web': 'portal:../../packages/web',
+      },
+    });
+
+    addDependenciesToPackageJson(
+      tree,
+      { '@nx/angular': '14.1.0', '@nx/vite': '14.1.0' },
+      { '@nx/next': '14.1.0', '@nx/web': '14.1.0' }
+    );
+
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies).toEqual({
+      '@nx/angular': 'workspace:*',
+      '@nx/vite': 'link:../../packages/vite',
+    });
+    expect(devDependencies).toEqual({
+      '@nx/next': 'file:../../packages/next',
+      '@nx/web': 'portal:../../packages/web',
+    });
+  });
+
   it('should overwrite dependencies when their version is not in a semver format', () => {
     // ARRANGE
     writeJson(tree, 'package.json', {

@@ -25,6 +25,19 @@ import {
 } from 'nx/src/utils/catalog';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
+/**
+ * Specs that resolve to a package inside the repo. Deliberately excludes the
+ * remote non-semver forms (`github:`, `git+…`), which are covered by
+ * `isIncomingVersionGreater`'s existing behaviour of preferring a real version.
+ */
+const LOCAL_PACKAGE_PROTOCOLS = ['file:', 'link:', 'workspace:', 'portal:'];
+
+function isLocalPackageSpec(version: string): boolean {
+  return LOCAL_PACKAGE_PROTOCOLS.some((protocol) =>
+    version.startsWith(protocol)
+  );
+}
+
 const NON_SEMVER_TAGS = {
   '*': 2,
   [UNIDENTIFIED_VERSION]: 2,
@@ -290,6 +303,14 @@ function isIncomingVersionGreater(
       );
     }
     resolvedExistingVersion = resolved;
+  }
+
+  // A spec pointing at a package in the repo names a location, not a version, so
+  // there is nothing to upgrade to. The comparison below reads it as
+  // `UNIDENTIFIED_VERSION`, which loses to everything, so a generator adding the
+  // same package would swap the local package out for a registry one.
+  if (isLocalPackageSpec(resolvedExistingVersion)) {
+    return false;
   }
 
   // if version is in the format of "latest", "next" or similar - keep it, otherwise try to parse it
