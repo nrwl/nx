@@ -167,15 +167,14 @@ async function createNodesInternal(
   // The createNodes hash covers projectRoot files, the lockfile, and tsconfig,
   // but a workspace-root dotenv a nested project loads is outside it. Fold the
   // consumer chains' dotenv fingerprints into the cache key so a dotenv change
-  // (which the daemon invalidates the graph on) rebuilds the gate instead of
-  // returning a stale one. Only when the readiness gate is enabled can a
-  // dotenv change affect the output.
-  const chainDotEnvPairs = normalizedOptions.waitForWebServer
-    ? getChainDotEnvPairs(context.workspaceRoot, projectRoot, normalizedOptions)
-    : undefined;
-  const cacheKey = chainDotEnvPairs
-    ? `${hash}-${hashObject(chainDotEnvPairs)}`
-    : hash;
+  // (which the daemon invalidates the graph on) rebuilds the inferred targets
+  // instead of returning stale ones.
+  const chainDotEnvPairs = getChainDotEnvPairs(
+    context.workspaceRoot,
+    projectRoot,
+    normalizedOptions
+  );
+  const cacheKey = `${hash}-${hashObject(chainDotEnvPairs)}`;
 
   if (!pluginCache.has(cacheKey)) {
     pluginCache.set(
@@ -211,7 +210,7 @@ async function buildPlaywrightTargets(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[],
-  chainDotEnvPairs: ChainDotEnvPairs | undefined
+  chainDotEnvPairs: ChainDotEnvPairs
 ): Promise<PlaywrightTargets> {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
@@ -242,17 +241,17 @@ async function buildPlaywrightTargets(
   // command whose I/O then leaks into the task. Both the `e2e` task and the
   // atomized CI tasks depend on it.
   //
-  // The address can be read from process.env, but createNodes evaluates the
-  // config without the e2e task's dotenv loaded. Resolve each consumer chain's
-  // servers under that chain's task env so the gate probes the address the task
-  // will actually serve. `e2e` and the atomized `e2e-ci` tasks can load
+  // The command and address can be read from process.env, but createNodes
+  // evaluates the config without the e2e task's dotenv loaded. Resolve each
+  // consumer chain's servers under that chain's task env so the dependencies
+  // and the gate match what the task will actually run and probe.
+  // `e2e` and the atomized `e2e-ci` tasks can load
   // different dotenv, so a distinct resolved address gets its own gate. When
   // both chains load the same dotenv inputs they resolve to the same servers,
   // so a single resolution is shared; distinct inputs resolve concurrently.
   const chainsShareDotEnv =
-    !chainDotEnvPairs ||
     JSON.stringify(chainDotEnvPairs.target) ===
-      JSON.stringify(chainDotEnvPairs.ciTarget);
+    JSON.stringify(chainDotEnvPairs.ciTarget);
   let e2eChain: ChainWebserver;
   let ciChain: ChainWebserver;
   if (!options.ciTargetName || chainsShareDotEnv) {
@@ -660,8 +659,8 @@ function addSubfolderToOutput(output: string, subfolder: string): string {
 // The dotenv files a chain's task would load, as sorted (workspace-relative
 // path, content hash) pairs of the files that exist. Hashed into the
 // PluginCache key so a dotenv change the createNodes hash does not cover still
-// rebuilds the gate, and compared across the two chains so identical dotenv
-// inputs share one config resolution.
+// rebuilds the inferred targets, and compared across the two chains so
+// identical dotenv inputs share one config resolution.
 type DotEnvPairs = Array<[path: string, hash: string]>;
 
 interface ChainDotEnvPairs {
@@ -715,16 +714,16 @@ function getDotEnvPairsForTask(
 // (`e2e` or the atomized `e2e-ci`) would see. A config with no ambient
 // `webServer` yields nothing to depend on or gate, so the task-env resolution
 // is skipped entirely: a `webServer` entry whose existence (not address)
-// depends on task-scoped env is not detected. When `inferReadiness` is false
-// the gate is opted out: this skips the task-env resolution, keeps the ambient
-// command tasks, and returns no readiness servers. Otherwise, when the chain's
+// depends on task-scoped env is not detected. Otherwise, when the chain's
 // task env differs from the graph-time ambient env, the config is re-evaluated
-// in a child under that env so an env-derived address resolves the way the task
-// will; a matching env reuses the ambient config. A failed re-evaluation falls
-// back to the ambient servers and skips the gate for the chain: an unverified
-// address must not become a gate the daemon then caches, but a config bug or
-// timeout should degrade to master's behavior, not kill graph construction for
-// most commands.
+// in a child under that env so an env-derived command or address resolves the
+// way the task will; a matching env reuses the ambient config. When
+// `inferReadiness` is false the gate is opted out: the resolved command tasks
+// still become dependencies, but no readiness servers are returned. A failed
+// re-evaluation falls back to the ambient servers and skips the gate for the
+// chain: an unverified address must not become a gate the daemon then caches,
+// but a config bug or timeout should degrade to master's behavior, not kill
+// graph construction for most commands.
 async function resolveChainWebserver(
   configFilePath: string,
   projectRoot: string,
@@ -739,27 +738,25 @@ async function resolveChainWebserver(
   }
   let webServers = ambientWebServers;
   let taskEnvEvalFailed = false;
-  if (inferReadiness) {
-    const taskEnv = getGraphTimeDotEnvForTask(
-      projectRoot,
-      target,
-      undefined,
-      nonAtomizedTarget
-    );
-    if (taskEnvDivergesFromAmbient(taskEnv)) {
-      try {
-        webServers = await resolveWebServersUnderEnv(
-          configFilePath,
-          workspaceRoot,
-          taskEnv
-        );
-      } catch (e) {
-        taskEnvEvalFailed = true;
-        const detail = e instanceof Error ? e.message : String(e);
-        logger.warn(
-          `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server address. Targets are inferred from the ambient config evaluation and no web server readiness task is inferred for ${target}.\n${detail}`
-        );
-      }
+  const taskEnv = getGraphTimeDotEnvForTask(
+    projectRoot,
+    target,
+    undefined,
+    nonAtomizedTarget
+  );
+  if (taskEnvDivergesFromAmbient(taskEnv)) {
+    try {
+      webServers = await resolveWebServersUnderEnv(
+        configFilePath,
+        workspaceRoot,
+        taskEnv
+      );
+    } catch (e) {
+      taskEnvEvalFailed = true;
+      const detail = e instanceof Error ? e.message : String(e);
+      logger.warn(
+        `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server address. Targets are inferred from the ambient config evaluation and no web server readiness task is inferred for ${target}.\n${detail}`
+      );
     }
   }
 
