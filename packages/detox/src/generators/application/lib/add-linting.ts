@@ -28,6 +28,8 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       ],
       enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
+      // Detox e2e specs are Jest; this is what enables the linter's Jest rules.
+      unitTestRunner: 'jest',
     })
   );
 

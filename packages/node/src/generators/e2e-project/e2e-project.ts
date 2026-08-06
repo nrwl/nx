@@ -263,6 +263,9 @@ export async function e2eProjectGeneratorInternal(
         project: options.e2eProjectName,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
+        // The generated e2e specs are Jest; this is what enables the linter's
+        // Jest rules.
+        unitTestRunner: 'jest',
       })
     );
   }
