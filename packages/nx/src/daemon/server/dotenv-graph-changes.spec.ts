@@ -6,10 +6,10 @@ import { EventType } from '../../native';
 import { setWorkspaceRoot, workspaceRoot } from '../../utils/workspace-root';
 import {
   _resetDotEnvFileHashes,
-  outputsChangeInvalidatesGraphEnv,
+  outputsChangesInvalidatingGraphEnv,
 } from './dotenv-graph-changes';
 
-describe('outputsChangeInvalidatesGraphEnv', () => {
+describe('outputsChangesInvalidatingGraphEnv', () => {
   const originalWorkspaceRoot = workspaceRoot;
   let tempDir: string;
 
@@ -40,36 +40,42 @@ describe('outputsChangeInvalidatesGraphEnv', () => {
   it('invalidates on a changed workspace-root dotenv file', () => {
     write('.env.e2e', 'BASE_URL=http://localhost:4301\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: '.env.e2e', type: EventType.create }],
         undefined
       )
-    ).toBe(true);
+    ).toEqual(['.env.e2e']);
   });
 
   it('skips a byte-identical rewrite of a dotenv file', () => {
     write('.env.e2e', 'BASE_URL=http://localhost:4301\n');
     const events = [{ path: '.env.e2e', type: EventType.update }];
-    expect(outputsChangeInvalidatesGraphEnv(events, undefined)).toBe(true);
-    expect(outputsChangeInvalidatesGraphEnv(events, undefined)).toBe(false);
+    expect(outputsChangesInvalidatingGraphEnv(events, undefined)).toEqual([
+      '.env.e2e',
+    ]);
+    expect(outputsChangesInvalidatingGraphEnv(events, undefined)).toEqual([]);
   });
 
   it('invalidates again once the content actually changes', () => {
     write('.env.e2e', 'BASE_URL=http://localhost:4301\n');
     const events = [{ path: '.env.e2e', type: EventType.update }];
-    expect(outputsChangeInvalidatesGraphEnv(events, undefined)).toBe(true);
+    expect(outputsChangesInvalidatingGraphEnv(events, undefined)).toEqual([
+      '.env.e2e',
+    ]);
     write('.env.e2e', 'BASE_URL=http://localhost:4302\n');
-    expect(outputsChangeInvalidatesGraphEnv(events, undefined)).toBe(true);
+    expect(outputsChangesInvalidatingGraphEnv(events, undefined)).toEqual([
+      '.env.e2e',
+    ]);
   });
 
   it('invalidates on a changed project-root dotenv file', () => {
     write('apps/app1/.env', 'BASE_URL=http://localhost:4301\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: 'apps/app1/.env', type: EventType.create }],
         graphWithRoots(['apps/app1'])
       )
-    ).toBe(true);
+    ).toEqual(['apps/app1/.env']);
   });
 
   it('invalidates on a dotenv path whose identifier contains a slash', () => {
@@ -77,31 +83,31 @@ describe('outputsChangeInvalidatesGraphEnv', () => {
     // path like apps/app1/.env.e2e/smoke; it must still match relative to the root.
     write('apps/app1/.env.e2e/smoke', 'BASE_URL=http://localhost:4301\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: 'apps/app1/.env.e2e/smoke', type: EventType.create }],
         graphWithRoots(['apps/app1'])
       )
-    ).toBe(true);
+    ).toEqual(['apps/app1/.env.e2e/smoke']);
   });
 
   it('invalidates on a suffixed dotenv name', () => {
     write('apps/app1/.e2e.env', 'BASE_URL=http://localhost:4301\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: 'apps/app1/.e2e.env', type: EventType.create }],
         graphWithRoots(['apps/app1'])
       )
-    ).toBe(true);
+    ).toEqual(['apps/app1/.e2e.env']);
   });
 
   it('invalidates on a suffixed dotenv path whose identifier contains a slash', () => {
     write('apps/app1/.e2e/smoke.env', 'BASE_URL=http://localhost:4301\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: 'apps/app1/.e2e/smoke.env', type: EventType.create }],
         graphWithRoots(['apps/app1'])
       )
-    ).toBe(true);
+    ).toEqual(['apps/app1/.e2e/smoke.env']);
   });
 
   it('matches a parent-root dotenv when a nested root shadows the deepest dir', () => {
@@ -109,21 +115,21 @@ describe('outputsChangeInvalidatesGraphEnv', () => {
     // apps/app1's slash-identifier dotenv (.env.e2e/smoke).
     write('apps/app1/.env.e2e/smoke', 'BASE_URL=http://localhost:4301\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: 'apps/app1/.env.e2e/smoke', type: EventType.create }],
         graphWithRoots(['apps/app1', 'apps/app1/.env.e2e'])
       )
-    ).toBe(true);
+    ).toEqual(['apps/app1/.env.e2e/smoke']);
   });
 
   it('ignores a dotenv file that sits under no root', () => {
     write('apps/app1/nested/.env', 'X=1\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: 'apps/app1/nested/.env', type: EventType.create }],
         graphWithRoots(['apps/app1'])
       )
-    ).toBe(false);
+    ).toEqual([]);
   });
 
   it('ignores a dot-directory artifact with the dotenv name shape', () => {
@@ -131,11 +137,11 @@ describe('outputsChangeInvalidatesGraphEnv', () => {
     // like this are tool caches written constantly, not dotenv files.
     write('.nx/cache/abc.env', 'X=1\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: '.nx/cache/abc.env', type: EventType.create }],
         undefined
       )
-    ).toBe(false);
+    ).toEqual([]);
   });
 
   it('ignores a workspace-root dotenv path whose identifier contains a slash', () => {
@@ -144,29 +150,29 @@ describe('outputsChangeInvalidatesGraphEnv', () => {
     // roots keep their slash identifiers via the root-ancestor walk.
     write('.env.e2e/smoke', 'X=1\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: '.env.e2e/smoke', type: EventType.create }],
         undefined
       )
-    ).toBe(false);
+    ).toEqual([]);
   });
 
   it('ignores a non-dotenv file at a root', () => {
     write('.eslintrc.json', '{}\n');
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: '.eslintrc.json', type: EventType.update }],
         undefined
       )
-    ).toBe(false);
+    ).toEqual([]);
   });
 
   it('invalidates when a root dotenv file is deleted', () => {
     expect(
-      outputsChangeInvalidatesGraphEnv(
+      outputsChangesInvalidatingGraphEnv(
         [{ path: '.env', type: EventType.delete }],
         undefined
       )
-    ).toBe(true);
+    ).toEqual(['.env']);
   });
 });

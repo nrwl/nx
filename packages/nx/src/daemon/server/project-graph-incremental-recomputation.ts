@@ -424,6 +424,28 @@ export function invalidateGraphCache() {
   cachedSerializedProjectGraphPromise = null;
 }
 
+/**
+ * Whether the ignore-filtered workspace file map knows `path`. The workspace
+ * watcher applies the same ignore rules, so a change to a known file also
+ * reaches scheduleProjectGraphRecomputation; a change to an unknown (ignored)
+ * file does not.
+ */
+export function isKnownWorkspaceFile(path: string): boolean {
+  if (!fileMapWithFiles) {
+    return false;
+  }
+  const { projectFileMap, nonProjectFiles } = fileMapWithFiles.fileMap;
+  if (nonProjectFiles.some((f) => f.file === path)) {
+    return true;
+  }
+  for (const files of Object.values(projectFileMap)) {
+    if (files.some((f) => f.file === path)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function processFilesAndCreateAndSerializeProjectGraph(
   separatedPlugins: SeparatedPlugins
 ): Promise<SerializedProjectGraph> {

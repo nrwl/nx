@@ -19,11 +19,11 @@ function isDotEnvName(name: string): boolean {
 }
 
 /**
- * Whether any change event touches a file with the dotenv name shape
+ * The paths among the change events with the dotenv name shape
  * getEnvPathsForTask loads (`.env[.<id>]` / `.<id>.env` variants) whose content
  * actually changed. The names are a superset of what any task loads: target and
- * configuration names are unknown here, so `.env.staging` invalidates whether
- * or not a task loads it. The daemon uses this to invalidate its graph cache so
+ * configuration names are unknown here, so `.env.staging` is reported whether
+ * or not a task loads it. The daemon uses this to refresh its graph cache so
  * createNodes re-resolves config that reads process.env.
  *
  * Only the workspace root and project roots are considered: getEnvPathsForTask
@@ -35,21 +35,21 @@ function isDotEnvName(name: string): boolean {
  * edit of one does not invalidate the graph. The cold path still resolves it:
  * getGraphTimeDotEnvForTask reads dotenv from disk directly.
  */
-export function outputsChangeInvalidatesGraphEnv(
+export function outputsChangesInvalidatingGraphEnv(
   changeEvents: WatchEvent[],
   projectGraph: ProjectGraph | undefined
-): boolean {
+): string[] {
   // Outputs batches rarely touch dotenv files, so the O(projects) roots set is
   // only built once a path clears this superset-of-dotenv-names check.
   const candidates = changeEvents.filter((event) =>
     mayBeDotEnvPath(event.path)
   );
   if (candidates.length === 0) {
-    return false;
+    return [];
   }
 
   const roots = graphTimeDotEnvRoots(projectGraph);
-  let invalidate = false;
+  const invalidatingPaths: string[] = [];
 
   for (const { path, type } of candidates) {
     if (!isDotEnvUnderRoot(path, roots)) {
@@ -60,7 +60,7 @@ export function outputsChangeInvalidatesGraphEnv(
       // A removed dotenv file drops the vars it set, so the config resolves
       // differently; there is no content to hash.
       dotEnvFileHashes.delete(path);
-      invalidate = true;
+      invalidatingPaths.push(path);
       continue;
     }
 
@@ -69,16 +69,16 @@ export function outputsChangeInvalidatesGraphEnv(
       continue;
     }
     // hashFile returns null on a vanished/unreadable file; when we cannot prove
-    // the content is unchanged, invalidate rather than risk a stale graph.
+    // the content is unchanged, report the path rather than risk a stale graph.
     if (hash !== null) {
       dotEnvFileHashes.set(path, hash);
     } else {
       dotEnvFileHashes.delete(path);
     }
-    invalidate = true;
+    invalidatingPaths.push(path);
   }
 
-  return invalidate;
+  return invalidatingPaths;
 }
 
 // Superset of the names both regexes accept: a prefixed name's first segment
