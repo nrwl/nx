@@ -10,7 +10,7 @@ export interface Schema {
   skipFormat: boolean; // default is false
   tags?: string;
   unitTestRunner: 'jest' | 'none';
-  linter: LinterType; // default is eslint
+  linter?: LinterType;
   publishable?: boolean;
   buildable?: boolean;
   importPath?: string;

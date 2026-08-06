@@ -10,7 +10,7 @@ export interface Schema {
   unitTestRunner?: 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
-  linter: LinterType;
+  linter?: LinterType;
   formatter?: 'none' | 'prettier';
   routing?: boolean;
   js?: boolean;
@@ -29,6 +29,8 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   projectName: string;
   appProjectRoot: string;
   importPath: string;

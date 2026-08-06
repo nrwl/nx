@@ -11,7 +11,7 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
-  linter: LinterType;
+  linter?: LinterType;
   classComponent?: boolean;
   routing?: boolean;
   useReactRouter?: boolean;
@@ -41,6 +41,8 @@ export interface Schema {
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   projectName: string;
   appProjectRoot: string;
   e2eProjectName: string;

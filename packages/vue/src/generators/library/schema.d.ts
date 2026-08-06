@@ -8,7 +8,7 @@ export interface Schema {
   importPath?: string;
   inSourceTests?: boolean;
   js?: boolean;
-  linter: LinterType;
+  linter?: LinterType;
   name?: string;
   publishable?: boolean;
   routing?: boolean;

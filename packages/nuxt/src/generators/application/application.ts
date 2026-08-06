@@ -44,7 +44,6 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
   sortPackageJsonFields,
-  detectLinter,
 } from '@nx/js/internal';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
@@ -193,7 +192,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     await addLinting(tree, {
       projectName: options.projectName,
       projectRoot: options.appProjectRoot,
-      linter: options.linter ?? detectLinter(tree),
+      linter: options.linter,
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
       enableTypedLinting: isTypedLintingEnabled(options),

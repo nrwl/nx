@@ -10,6 +10,7 @@ import {
 } from './lib';
 import type { NxRemixGeneratorSchema } from './schema';
 import {
+  detectLinter,
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
@@ -41,6 +42,9 @@ export async function remixLibraryGeneratorInternal(
   tasks.push(assertAndPinRemixTypescript(tree));
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
+  // Detected before `updateDependencies`, which installs eslint unconditionally.
+  // Detecting afterwards would just observe what this generator itself added.
+  const linter = schema.linter ?? detectLinter(tree);
   const installTask = updateDependencies(tree);
   tasks.push(installTask);
   const jsInitTask = await jsInitGenerator(tree, {
@@ -50,7 +54,7 @@ export async function remixLibraryGeneratorInternal(
   });
   tasks.push(jsInitTask);
 
-  const options = await normalizeOptions(tree, schema);
+  const options = await normalizeOptions(tree, { ...schema, linter });
 
   if (options.isUsingTsSolutionConfig) {
     await addProjectToTsSolutionWorkspace(tree, options.projectRoot);

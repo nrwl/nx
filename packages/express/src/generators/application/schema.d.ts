@@ -11,7 +11,7 @@ export interface Schema {
   skipPackageJson: boolean;
   unitTestRunner: UnitTestRunner;
   tags?: string;
-  linter: LinterType;
+  linter?: LinterType;
   frontendProject?: string;
   swcJest?: boolean;
   /** @deprecated use `swcJest` instead */
