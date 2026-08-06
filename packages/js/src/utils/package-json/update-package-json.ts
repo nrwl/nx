@@ -1,10 +1,11 @@
 import {
-  createPrunedLockfile,
-  getLockFileName,
   createPackageJson,
-  writePrunedPnpmInstallSettings,
+  createPrunedLockfile,
   fileExists,
+  getLockFileName,
+  type PackageJson,
   readFileMapCache,
+  writePrunedPnpmInstallSettings,
 } from '@nx/devkit/internal';
 
 import {
@@ -24,7 +25,6 @@ import {
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
-import type { PackageJson } from '@nx/devkit/internal';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 import { stripGlobToBaseDir } from '../strip-glob-to-base-dir';
