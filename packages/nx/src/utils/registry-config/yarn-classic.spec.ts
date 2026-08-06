@@ -48,6 +48,12 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'YARN_HTTPS_PROXY',
     'PREFIX',
     'FAKEROOTKEY',
+    // yarn names its CLI-rc paths off these rather than off os.homedir().
+    'HOME',
+    'USERPROFILE',
+    'YARN_CONFIG',
+    'XDG_CONFIG_HOME',
+    'LOCALAPPDATA',
   ];
   const savedEnv: Record<string, string | undefined> = {};
 
@@ -68,6 +74,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       delete process.env[key];
     }
     process.env.PREFIX = PREFIX;
+    process.env.HOME = HOME;
+    process.env.USERPROFILE = HOME;
     // Deleting FAKEROOTKEY above puts production on its root home tier whenever
     // the run itself is uid 0 (container CI).
     if (process.platform !== 'win32') {
@@ -178,6 +186,78 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     files[`${ROOT}/.yarnrc`] = '--registry "https://reg-proj.example.com/"\n';
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
       npm_config_registry: 'https://reg-home.example.com/',
+    });
+  });
+
+  // yarn names far more CLI-rc paths than the tiers its registry client reads.
+  // A miss here bridges the project .yarnrc that yarn itself overrode.
+  it.each([
+    ['~/.config/yarn/config', `${HOME}/.config/yarn/config`],
+    ['~/.config/yarn', `${HOME}/.config/yarn`],
+    ['~/.yarn/config', `${HOME}/.yarn/config`],
+    ['the XDG config dir', '/xdg/yarn'],
+    ['$YARN_CONFIG', '/env/rc'],
+    ['/etc/yarnrc', '/etc/yarnrc'],
+    ['/etc/yarn/config', '/etc/yarn/config'],
+    ['a home .yarnrc.yml', `${HOME}/.yarnrc.yml`],
+    ['a project .yarnrc.yml', `${ROOT}/.yarnrc.yml`],
+  ])('bridges a --registry CLI line in %s', (_label, path) => {
+    process.env.XDG_CONFIG_HOME = '/xdg';
+    process.env.YARN_CONFIG = '/env/rc';
+    files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+    files[path] = path.endsWith('.yml')
+      ? '"--registry": "https://reg-cli.example.com/"\n'
+      : '--registry "https://reg-cli.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-cli.example.com/',
+    });
+  });
+
+  it('drops every CLI-rc home path when the home env var is unset', () => {
+    delete process.env.HOME;
+    delete process.env.USERPROFILE;
+    files[`${HOME}/.yarnrc`] = '--registry "https://reg-home.example.com/"\n';
+    files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-proj.example.com/',
+    });
+  });
+
+  it('lets a .yarnrc.yml beat the .yarnrc beside it', () => {
+    files[`${ROOT}/.yarnrc.yml`] =
+      '"--registry": "https://reg-yml.example.com/"\n';
+    files[`${ROOT}/.yarnrc`] = '--registry "https://reg-cli.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-yml.example.com/',
+    });
+  });
+
+  it('lets $YARN_CONFIG beat the home .yarnrc', () => {
+    process.env.YARN_CONFIG = '/env/rc';
+    files['/env/rc'] = '--registry "https://reg-env.example.com/"\n';
+    files[`${HOME}/.yarnrc`] = '--registry "https://reg-home.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-env.example.com/',
+    });
+  });
+
+  it('ignores a .yarnrc.yml CLI line that is not a mapping', () => {
+    files[`${ROOT}/.yarnrc.yml`] =
+      '--registry "https://reg-yml.example.com/"\n';
+    files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-proj.example.com/',
+    });
+  });
+
+  it('drops a .yarnrc.yml CLI line when the file names a yarn-path', () => {
+    files[`${ROOT}/.yarnrc.yml`] = [
+      '"--registry": "https://reg-yml.example.com/"',
+      'yarnPath: ./.yarn/releases/yarn.cjs',
+    ].join('\n');
+    files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-proj.example.com/',
     });
   });
 
@@ -689,7 +769,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         'registry: https://reg-b.example.com/',
       ].join('\n');
       expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
-        /\.yarnrc at .* could not be read/
+        /yarn config at .* could not be read/
       );
     });
 
@@ -707,7 +787,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         }
       );
       expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
-        /\.yarnrc at .* could not be read/
+        /yarn config at .* could not be read/
       );
     });
 
@@ -728,7 +808,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
           }
         );
         expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
-          /\.yarnrc at .* could not be read/
+          /yarn config at .* could not be read/
         );
       }
     );
@@ -774,6 +854,61 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       }
     );
 
+    it('looks past a directory at a CLI-rc-only path', () => {
+      // Nothing looks this one up, so the ungated pass is the only reader and
+      // it spares EISDIR outright (verified on 1.22.22: exit 0, where the same
+      // directory at the project .yarnrc exits 1).
+      files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === `${HOME}/.config/yarn/config`) {
+            throw Object.assign(new Error(`EISDIR: ${p}`), { code: 'EISDIR' });
+          }
+          return readFile(p, ...rest);
+        }
+      );
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-proj.example.com/',
+      });
+    });
+
+    it('fails on a CLI-rc-only path that cannot be opened', () => {
+      // The ungated pass spares ENOENT and EISDIR alone, rethrowing the rest
+      // (verified on 1.22.22: exit 1 naming the EACCES).
+      files[`${ROOT}/.yarnrc`] = 'registry "https://reg-proj.example.com/"\n';
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === `${HOME}/.config/yarn/config`) {
+            throw Object.assign(new Error(`EACCES: ${p}`), { code: 'EACCES' });
+          }
+          return readFile(p, ...rest);
+        }
+      );
+      expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+        /yarn config at .* could not be read/
+      );
+    });
+
+    it('fails on a directory at a .yarnrc the registry client also reads', () => {
+      // The lookup passes on a directory and the open behind it dies, so this
+      // one keeps no EISDIR tolerance (verified on 1.22.22: exit 1).
+      files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === `${ROOT}/.yarnrc`) {
+            throw Object.assign(new Error(`EISDIR: ${p}`), { code: 'EISDIR' });
+          }
+          return readFile(p, ...rest);
+        }
+      );
+      expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+        /yarn config at .* could not be read/
+      );
+    });
+
     it('fails on a <prefix>/etc/yarnrc that yarn finds and cannot open', () => {
       // The lookup succeeds here, so yarn opens it and exits 1 (verified on
       // 1.22.22 for both a directory and an unreadable file).
@@ -789,7 +924,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
         }
       );
       expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
-        /\.yarnrc at .* could not be read/
+        /yarn config at .* could not be read/
       );
     });
 
