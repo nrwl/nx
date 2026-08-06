@@ -36,8 +36,6 @@ jest.mock('../utils/resolve-eslint-class', () => ({
   },
 }));
 
-import { createNodesV2, EslintPluginOptions } from './plugin';
-
 describe('@nx/eslint/plugin', () => {
   let context: CreateNodesContext;
   let tempFs: TempFs;
