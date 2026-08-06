@@ -1,0 +1,68 @@
+name: Pylon KB Sync
+
+# Mirrors astro-docs/src/content/docs/kb into the Pylon knowledge base so the
+# support widget can suggest these articles as answers. nx.dev stays canonical.
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Report changes without writing to Pylon'
+        type: boolean
+        default: false
+      prune:
+        description: 'Delete Pylon articles whose source page no longer exists'
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  sync:
+    if: ${{ github.repository_owner == 'nrwl' }}
+    permissions:
+      contents: read # to fetch code (actions/checkout)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync knowledge base
+        working-directory: astro-docs
+        env:
+          PYLON_API_TOKEN: ${{ secrets.PYLON_API_TOKEN }}
+          PYLON_AUTHOR_USER_ID: ${{ vars.PYLON_AUTHOR_USER_ID }}
+        run: |
+          pnpm exec tsx scripts/pylon/sync-kb.ts \
+            ${{ inputs.dry-run && '--dry-run' || '' }} \
+            ${{ inputs.prune && '--prune' || '' }}
+
+  report:
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: sync
+    runs-on: ubuntu-latest
+    name: Report status
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
+        with:
+          status: ${{ needs.sync.result }}
+          message_format: '{emoji} Pylon KB sync has {status_message}'
+          notification_title: '{workflow}'
+          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+          notify_when: 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
