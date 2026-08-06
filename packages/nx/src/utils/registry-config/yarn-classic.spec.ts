@@ -15,7 +15,7 @@ jest.mock('../logger', () => ({
 
 import * as fs from 'fs';
 import { homedir } from 'os';
-import { join, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
 import { getYarnClassicSpawnRegistryEnv } from './yarn-classic';
 
 describe('getYarnClassicSpawnRegistryEnv', () => {
@@ -47,6 +47,7 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     'yarn_https_proxy',
     'YARN_HTTPS_PROXY',
     'PREFIX',
+    'DESTDIR',
     'FAKEROOTKEY',
     // yarn names its CLI-rc paths off these rather than off os.homedir().
     'HOME',
@@ -156,6 +157,34 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       npm_config_registry: 'https://reg-h.example.com/',
     });
   });
+
+  it('falls through an empty PREFIX to the executable prefix, the way yarn does', () => {
+    // yarn reads PREFIX for truthiness, so an exported but empty one leaves the
+    // etc tier on process.execPath. Reading it as set resolves a bare `etc`
+    // against the cwd, which opens a file yarn never looks at.
+    process.env.PREFIX = '';
+    files[join(dirname(dirname(process.execPath)), 'etc', 'yarnrc')] =
+      'registry "https://reg-etc.example.com/"\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-etc.example.com/',
+    });
+  });
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'reroots the etc tier through DESTDIR, which yarn honors on Unix only',
+    () => {
+      // yarn joins DESTDIR onto the executable prefix, and only once PREFIX has
+      // not answered.
+      delete process.env.PREFIX;
+      process.env.DESTDIR = '/staged';
+      files[
+        join('/staged', dirname(dirname(process.execPath)), 'etc', 'yarnrc')
+      ] = 'registry "https://reg-etc.example.com/"\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-etc.example.com/',
+      });
+    }
+  );
 
   it('lets <prefix>/etc/npmrc (npm-native) shadow an ancestor .npmrc without bridging', () => {
     files[`${PREFIX}/etc/npmrc`] = 'registry=https://reg-etc.example.com/';
@@ -894,7 +923,8 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     it('looks past an .npmrc in the chain that yarn never finds', () => {
       // Nothing reads .npmrc a second time ungated, so a symlink loop stays
       // absent here where the same fault on .yarnrc aborts yarn (exit 0 vs 1 on
-      // 1.22.22).
+      // 1.22.22). The lookup is what spares it, and the read fault below is
+      // what it is spared from: drop the existence check and this goes red.
       files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
       const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
       (fs.readFileSync as jest.Mock).mockImplementation(
@@ -910,27 +940,26 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       });
     });
 
-    it.each(['ELOOP', 'ENOTDIR'])(
-      'looks past a <prefix>/etc/yarnrc %s that yarn never finds',
-      (code) => {
-        // Only the CLI-rc tiers get the second ungated read, so this one is
-        // absent where the same fault on the project .yarnrc aborts yarn
-        // (verified on 1.22.22: exit 0 here, exit 1 there).
-        files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
-        const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
-        (fs.readFileSync as jest.Mock).mockImplementation(
-          (p: any, ...rest: any[]) => {
-            if (p === `${PREFIX}/etc/yarnrc`) {
-              throw Object.assign(new Error(`${code}: ${p}`), { code });
-            }
-            return readFile(p, ...rest);
+    it('looks past a <prefix>/etc/yarnrc that yarn never finds', () => {
+      // Only the CLI-rc tiers get the second ungated read, so this one is
+      // absent where the same fault on the project .yarnrc aborts yarn
+      // (verified on 1.22.22: exit 0 here, exit 1 there). Every fault that
+      // reaches this tier fails its lookup first, so one stands for all of
+      // them; the read fault below is what the lookup spares it from.
+      files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === `${PREFIX}/etc/yarnrc`) {
+            throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
           }
-        );
-        expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
-          npm_config_registry: 'https://reg-home.example.com/',
-        });
-      }
-    );
+          return readFile(p, ...rest);
+        }
+      );
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-home.example.com/',
+      });
+    });
 
     it('looks past a directory at a CLI-rc-only path', () => {
       // Nothing looks this one up, so the ungated pass is the only reader and

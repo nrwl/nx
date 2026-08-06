@@ -83,6 +83,24 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
   const ancestorRc = (contents: string) =>
     (files['/repo/.yarnrc.yml'] = contents);
 
+  it('renames the rc files berry walks up to, but not the home one', () => {
+    // berry's findRcFiles honors YARN_RC_FILENAME, while findFolderRcFile,
+    // which is what reads the home file, uses the .yarnrc.yml constant.
+    process.env.YARN_RC_FILENAME = '.custom-rc.yml';
+    files[`${ROOT}/.custom-rc.yml`] =
+      'npmScopes:\n  acme:\n    npmRegistryServer: https://reg-scope.example.com/\n';
+    files[`${ROOT}/.yarnrc.yml`] =
+      'npmRegistryServer: https://never-read.example.com/\n';
+    files[`${HOME}/.yarnrc.yml`] =
+      'npmRegistryServer: https://reg-home.example.com/\n';
+    files[`${HOME}/.custom-rc.yml`] =
+      'npmRegistryServer: https://never-read.example.com/\n';
+    expect(getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-home.example.com/',
+      'npm_config_@acme:registry': 'https://reg-scope.example.com/',
+    });
+  });
+
   it('always injects the default registry (berry ignores .npmrc)', () => {
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
       npm_config_registry: 'https://registry.yarnpkg.com',
