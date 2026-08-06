@@ -274,6 +274,7 @@ describe('NxPlugin e2e-project Generator', () => {
 
   it('should setup the eslint builder', async () => {
     await e2eProjectGenerator(tree, {
+      linter: 'eslint',
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
