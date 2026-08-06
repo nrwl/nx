@@ -292,14 +292,20 @@ function npmrcReader(root: string): (key: string) => string | undefined {
 
 function collectRcFiles(root: string): BerryRcFile[] {
   const rcName = process.env['YARN_RC_FILENAME'] ?? '.yarnrc.yml';
-  const paths = [
-    join(root, rcName),
-    ...ancestorDirectories(root).map((dir) => join(dir, rcName)),
-    join(homedir(), rcName),
+  // berry looks the project and ancestor files up before reading them but opens
+  // the home one outright, so a symlink loop is absent in the first group and
+  // aborts yarn in the last (measured on 4.10.3).
+  const paths: { path: string; lookedUp: boolean }[] = [
+    { path: join(root, rcName), lookedUp: true },
+    ...ancestorDirectories(root).map((dir) => ({
+      path: join(dir, rcName),
+      lookedUp: true,
+    })),
+    { path: join(homedir(), rcName), lookedUp: false },
   ];
   const files: BerryRcFile[] = [];
-  for (const path of paths) {
-    if (!existsSync(path)) {
+  for (const { path, lookedUp } of paths) {
+    if (lookedUp && !existsSync(path)) {
       continue;
     }
     // An unreadable, corrupt or non-mapping rc file aborts yarn itself, so there
@@ -313,7 +319,12 @@ function collectRcFiles(root: string): BerryRcFile[] {
       // `npmAuthToken: 12345` a string and a repeated key last-wins rather than
       // an error, so read them the same way instead of re-typing the scalars.
       config = readYamlFile<BerryConfig>(path, { json: true, failsafe: true });
-    } catch {
+    } catch (e) {
+      // Nothing looked this one up, so an absent file surfaces as the read's
+      // own ENOENT rather than as a missed lookup.
+      if (!lookedUp && e?.code === 'ENOENT') {
+        continue;
+      }
       // The parse error quotes the lines around the fault, which in an rc file
       // is credential material, and the caller logs whatever reaches it.
       throw new Error(`The yarn rc file at ${path} could not be read.`);

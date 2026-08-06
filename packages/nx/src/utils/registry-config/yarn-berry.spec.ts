@@ -804,6 +804,46 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     });
   });
 
+  describe('an rc file that cannot be opened', () => {
+    // berry looks the project and ancestor files up before reading them but
+    // opens the home one outright, so the same symlink loop is absent in the
+    // first group and exits 1 in the last (measured on 4.10.3).
+    function failReadOf(target: string): void {
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === target) {
+            throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
+          }
+          return readFile(p, ...rest);
+        }
+      );
+    }
+
+    it('fails on a home rc file berry would abort on', () => {
+      projectRc('npmRegistryServer: https://reg-a.example.com/\n');
+      failReadOf(`${HOME}/.yarnrc.yml`);
+      expect(() =>
+        getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')
+      ).toThrow(/yarn rc file at .* could not be read/);
+    });
+
+    it('looks past a project rc file berry never finds', () => {
+      homeRc('npmRegistryServer: https://reg-home.example.com/\n');
+      failReadOf(`${ROOT}/.yarnrc.yml`);
+      expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+        npm_config_registry: 'https://reg-home.example.com/',
+      });
+    });
+
+    it('treats an absent home rc file as declaring nothing', () => {
+      projectRc('npmRegistryServer: https://reg-a.example.com/\n');
+      expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+      });
+    });
+  });
+
   it('fails on an rc file that is not a settings mapping', () => {
     projectRc('npmRegistryServer "https://reg-a.example.com/"\n');
     expect(() =>
