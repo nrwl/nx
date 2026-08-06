@@ -22,7 +22,7 @@ use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetSta
 
 use crate::native::tui::tui::Tui;
 // Opening a URL is best-effort (NXC-3940): a missing opener can never crash the
-// TUI. The shared impl walks a fallback chain and is container-aware on WSL.
+// TUI. The shared impl is container-aware on WSL.
 use crate::native::utils::open_url::open_url_native as open_url;
 use crate::native::{
     pseudo_terminal::pseudo_terminal::PtyHandles,
