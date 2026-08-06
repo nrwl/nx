@@ -38,8 +38,7 @@
     "linter": {
       "description": "The tool to use for running lint checks. NOTE: only used if running the generator in an Nx workspace.",
       "type": "string",
-      "enum": ["eslint", "oxlint", "none"],
-      "default": "eslint"
+      "enum": ["eslint", "oxlint", "none"]
     },
     "style": {
       "description": "The file extension to be used for style files. NOTE: only used if running the generator in an Nx workspace.",
