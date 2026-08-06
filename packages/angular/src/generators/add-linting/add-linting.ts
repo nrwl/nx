@@ -33,8 +33,8 @@ export async function addLintingGenerator(
 
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
-  // Resolved once, up front: the guard below spells the check as `!== 'eslint'`
-  // and would read an unresolved `undefined` as ESLint.
+  // Resolved once, up front: `undefined !== 'eslint'` is true, so an unresolved
+  // linter would take the early return below and skip the angular-eslint arm.
   const linter = options.linter ?? detectLinter(tree);
   tasks.push(
     await addLintingToProject(tree, {

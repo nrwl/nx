@@ -5,8 +5,11 @@ import {
 } from '@nx/devkit/internal';
 import { Schema } from '../schema';
 import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import type { LinterType } from '@nx/js';
 
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   className: string; // app name in class case
   fileName: string; // app name in file class
   projectName: string; // directory + app name, case based on user input
@@ -64,8 +67,9 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    // Resolved after the spread: the framework's ESLint shaping is guarded on
-    // `=== 'eslint'`, and an unresolved `undefined` would skip all of it.
+    // Resolved after the spread: `undefined` is falsy, so the ESLint arm in
+    // add-linting would still run while the `=== 'eslint'` tsconfig excludes
+    // below are skipped.
     linter: options.linter ?? detectLinter(host),
     name: projectNames.projectSimpleName,
     className,
