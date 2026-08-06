@@ -112,14 +112,16 @@ describe('addLinting generator', () => {
     });
 
     expect(linter.lintProjectGenerator).not.toHaveBeenCalled();
-    // No plugins are requested here, and `@nx/oxlint` only writes a project
-    // config when there are some — so the root config plus the registered
-    // plugin are what prove the oxlint arm ran.
     expect(tree.exists('.oxlintrc.json')).toBe(true);
     const plugins = (readJson(tree, 'nx.json').plugins ?? []).map((p) =>
       typeof p === 'string' ? p : p.plugin
     );
     expect(plugins).toContain('@nx/oxlint');
+    // The one observable this generator alone controls. `addLintingToProject`
+    // resolves the linter again on its own, so the oxlint config and the plugin
+    // registration land whether or not the guard above saw a resolved value.
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies ?? {}).not.toHaveProperty('angular-eslint');
   });
 
   // The oxlint arm passes `skipFormat: true` down to `@nx/oxlint`, so this

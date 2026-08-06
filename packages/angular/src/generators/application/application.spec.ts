@@ -666,6 +666,13 @@ describe('app', () => {
         await generateAppWithoutLinter();
 
         expect(appTree.exists('my-app/.oxlintrc.json')).toBe(true);
+        // The lint files land either way, because `addLintingToProject`
+        // resolves the linter again on its own. The value this generator
+        // records in nx.json is what its own resolution controls.
+        expect(
+          readJson(appTree, 'nx.json').generators['@nx/angular:application']
+            .linter
+        ).toBe('oxlint');
       });
 
       it('should set up eslint when the workspace already uses it', async () => {
