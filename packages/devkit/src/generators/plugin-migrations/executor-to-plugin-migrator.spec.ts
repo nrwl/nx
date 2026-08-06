@@ -142,9 +142,11 @@ describe('whole-workspace inference passes', () => {
   }
 
   // The engine runs one whole-workspace inference per distinct plugin-option
-  // set (Phase 1) plus exactly one verification pass (Phase 4). For a uniform
-  // fixture that is `1 + 1 = 2`, independent of the number of projects.
-  const EXPECTED_UNIFORM_PASSES = 1 /* distinctOptionSets */ + 1; /* verify */
+  // set (Phase 1) plus one verification pass per registration group (Phase 4).
+  // A uniform fixture has one option set and one registration group, so
+  // `1 + 1 = 2` — independent of the number of projects either way.
+  const EXPECTED_UNIFORM_PASSES =
+    1 /* distinctOptionSets */ + 1; /* verify (per registration group) */
 
   it('runs distinctOptionSets + 1 passes for a 3-project fixture', async () => {
     const passes = await migrateUniformFixture(3);

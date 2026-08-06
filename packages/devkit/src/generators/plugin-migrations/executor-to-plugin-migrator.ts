@@ -68,7 +68,8 @@ type MigrationDefinition<T> = {
  * responsible for producing.
  */
 interface InferenceOptionSet<T> {
-  options: T;
+  /** Raw mapper output — plugin defaults are never applied to inference sets. */
+  options: Partial<T>;
   targetNames: Set<string>;
 }
 
@@ -88,8 +89,8 @@ export interface MigrationScope<T> {
   targetsToMigrate: Map<string, Set<string>>;
   /** project -> resolved plugin registration options (defaults + mappers) */
   pluginOptionsByProject: Map<string, T>;
-  /** distinct inference option sets (deduped `targetPluginOptionMapper` output) */
-  distinctOptionSets: T[];
+  /** distinct inference option sets (deduped raw `targetPluginOptionMapper` output) */
+  distinctOptionSets: Partial<T>[];
   /** distinct inference option sets paired with the target names they infer */
   optionSetGroups: InferenceOptionSet<T>[];
   /** per (migration, executor) slice used to drive residual computation */
@@ -128,8 +129,8 @@ export function collectMigrationScope<T>(
   projectGraph: ProjectGraph,
   migrations: MigrationDefinition<T>[],
   defaultPluginOptions: T,
-  specificProjectToMigrate: string | undefined,
-  logger: typeof devkitLogger | undefined
+  specificProjectToMigrate?: string,
+  logger?: typeof devkitLogger
 ): MigrationScope<T> {
   const log = logger ?? devkitLogger;
   const targetsToMigrate = new Map<string, Set<string>>();
@@ -219,9 +220,7 @@ export function collectMigrationScope<T>(
           globalSet.add(project);
         }
 
-        const inferenceOptions = migration.targetPluginOptionMapper(
-          targetName
-        ) as T;
+        const inferenceOptions = migration.targetPluginOptionMapper(targetName);
         const key = stableStringify(inferenceOptions);
         if (!optionSetGroupsByKey.has(key)) {
           optionSetGroupsByKey.set(key, {
@@ -390,9 +389,10 @@ export async function computeResidualByProject<T>(
 }
 
 /**
- * Phase 3 (residual-only variant used until centralization lands) — write the
- * full residual into each project.json, exactly reproducing the previous
- * per-(project, target) write sequence.
+ * Phase 3 (single-project-mode variant) — write the full residual into each
+ * project.json, exactly reproducing the previous per-(project, target) write
+ * sequence. Single-project mode never centralizes, so this is its permanent
+ * write path.
  */
 function writeResiduals<T>(
   tree: Tree,
@@ -901,8 +901,10 @@ export async function migrateProjectExecutorsToPluginV1<T>(
  * Phase 1 — Infer (once per distinct option set). Runs a whole-workspace
  * inference per distinct plugin-option set (usually one) instead of once per
  * target and once per project. Builds `inferredByRoot` (project root -> target
- * name -> stripped inferred target) that every later phase reads from, plus the
- * set of config files the plugin globs (used for analytic include coverage).
+ * name -> FULL inferred target; residual computation strips `command` /
+ * `options.cwd` at the point of use) that every later phase reads from, plus
+ * the matched config files owned by an inferred project root (used for
+ * analytic include coverage).
  */
 export async function inferOncePerOptionSet<T>(
   tree: Tree,
@@ -995,10 +997,15 @@ function isFileUnderRoot(file: string, root: string): boolean {
 
 /**
  * Whether a registration's `include` globs already cover every config file the
- * plugin globs (so the registration can be left unscoped). Because plugin
- * inference is a pure function of the matched config-file set, this is exactly
- * the answer the old per-project `arePluginIncludesRequired` inference computed,
- * without running any additional inference.
+ * plugin globs that is owned by an inferred project root (so the registration
+ * can be left unscoped). Plugin inference is a pure function of the matched
+ * config-file set, so this answers what the old per-project
+ * `arePluginIncludesRequired` re-inference computed without running any
+ * additional inference — differing only on matched files that contribute no
+ * project: those are invisible here, so an `include` the old diff-based check
+ * kept for their sake is now deleted, letting future config files in such
+ * locations infer eagerly. The Phase 4 verification pass guards the current
+ * behavioral outcome either way.
  */
 function includeCoversAllConfigFiles(
   include: string[] | undefined,
@@ -1026,9 +1033,10 @@ function includeCoversAllConfigFiles(
 
 /**
  * Phase 4 — a single verification inference pass over the whole workspace with
- * the updated `nx.json` plugin registrations. Runs every registration for this
- * plugin at once (one `retrieveProjectConfigurations` call). The equivalence
- * oracle + fallback that consume this result are added in a later task.
+ * the updated `nx.json` plugin registrations. One
+ * `retrieveProjectConfigurations` call runs every registration for this plugin
+ * (the plugin's `createNodes` executes once per registration group). The
+ * equivalence oracle + fallback in `verifyAndFallback` consume the result.
  */
 async function runVerificationPass<T>(
   tree: Tree,
@@ -1193,9 +1201,8 @@ async function verifyAndFallback<T>(
         // previous engine's exact output, so there is nothing left to verify.
         continue;
       }
-      const verifiedInferred = verifyResult.projects?.[root]?.targets?.[
-        targetName
-      ] as TargetConfiguration | undefined;
+      const verifiedInferred: TargetConfiguration | undefined =
+        verifyResult.projects?.[root]?.targets?.[targetName];
       if (!verifiedInferred) {
         anyMissingFromVerification = true;
       }
@@ -1254,9 +1261,11 @@ async function verifyAndFallback<T>(
  * `createNodes` (Phase 1 mutated each option-set object in place if the plugin
  * does so). A key qualifies only if it is not one of our own
  * `defaultPluginOptions` and appears with an identical value across every
- * option set — that is exactly a plugin default fill, never a per-target
- * (mapper-provided) value. Reproduces the previous engine's incidental option
- * enrichment without extra inference.
+ * option set — the signature of a plugin default fill. (A mapper-provided key
+ * that is constant across every option set is indistinguishable and also
+ * qualifies; harmless, since per-project options are spread over these.)
+ * Reproduces the previous engine's incidental option enrichment without extra
+ * inference.
  */
 function derivePluginFilledDefaults<T>(
   optionSetGroups: InferenceOptionSet<T>[],
@@ -1437,9 +1446,11 @@ function addPluginRegistrations<T>(
   defaultPluginOptions: T,
   projectGraph: ProjectGraph,
   spinner: typeof globalSpinner,
-  // The config files the plugin globs across the whole workspace (from the
-  // Phase 1 inference). Used to decide analytically whether a registration's
-  // `include` globs already cover everything (so it can be left unscoped).
+  // The matched config files owned by an inferred project root (the filtered
+  // subset from the Phase 1 inference — files outside any inferred root
+  // contribute no project and are deliberately excluded). Used to decide
+  // analytically whether a registration's `include` globs already cover
+  // everything (so it can be left unscoped).
   matchedConfigFiles: string[]
 ) {
   const nxJson = readNxJson(tree);

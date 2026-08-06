@@ -19,9 +19,11 @@ import { TempFs } from '../../../internal-testing-utils';
  * runs end to end, while keeping the plugin trivial and deterministic.
  *
  * Every whole-workspace inference pass invokes the plugin's `createNodes`
- * function exactly once, so counting `createNodes` invocations is a faithful
- * proxy for counting `getCreateNodesResultsForPlugin` calls (the whole-workspace
- * inference passes we care about for performance).
+ * function exactly once, so counting `createNodes` invocations counts
+ * whole-workspace inference passes — the cost we care about — regardless of
+ * which retrieval entry point ran the pass (Phase 1 goes through
+ * `getCreateNodesResultsForPlugin`; the Phase 4 verification calls
+ * `retrieveProjectConfigurations` directly, once per registration group).
  */
 
 export const SYNTHETIC_CONFIG_FILE = 'build.config.json';

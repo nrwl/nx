@@ -142,8 +142,9 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
       migrations(TEST_EXECUTOR)
     );
 
-    // Every `createNodes` invocation is one whole-workspace inference pass, so
-    // this is exactly the getCreateNodesResultsForPlugin call count.
+    // Every `createNodes` invocation is one whole-workspace inference pass
+    // (Phase 1 runs one per distinct option set; the Phase 4 verification runs
+    // one per registration group).
     const inferencePasses =
       lintPlugin.inferenceCount() + testPlugin.inferenceCount();
     const postBytes = totalConfigBytes(ctx, roots);
