@@ -72,6 +72,7 @@ type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 interface WebserverCommandTask {
   project: string;
   target: string;
+  hasConfiguration: boolean;
   port?: number;
   url?: string;
   ignoreHTTPSErrors?: boolean;
@@ -839,6 +840,15 @@ function getWebserverCommandTasks(
 function toReadinessServer(
   task: WebserverCommandTask
 ): WebserverReadinessServer | undefined {
+  // The inferred dependency runs the target without the command's trailing
+  // `:configuration` (a task dependency cannot carry one), so the server it
+  // starts can listen at a different address than the configured one. Gating
+  // on that address would wait out the whole budget; leave readiness to
+  // Playwright's own probe instead.
+  if (task.hasConfiguration) {
+    return undefined;
+  }
+
   let server: WebserverReadinessServer;
   if (typeof task.port === 'number' && task.port) {
     server = { port: task.port };
@@ -870,6 +880,7 @@ function toReadinessServer(
 function parseTaskFromCommand(command: string): {
   project: string;
   target: string;
+  hasConfiguration: boolean;
 } | null {
   const nxRunRegex =
     /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
@@ -877,14 +888,14 @@ function parseTaskFromCommand(command: string): {
 
   const nxRunMatch = command.match(nxRunRegex);
   if (nxRunMatch) {
-    const [project, target] = nxRunMatch[1].split(':');
-    return { project, target };
+    const [project, target, configuration] = nxRunMatch[1].split(':');
+    return { project, target, hasConfiguration: configuration !== undefined };
   }
 
   const infixMatch = command.match(infixRegex);
   if (infixMatch) {
     const [target, project] = infixMatch[1].split(' ');
-    return { project, target };
+    return { project, target, hasConfiguration: false };
   }
 
   return null;
