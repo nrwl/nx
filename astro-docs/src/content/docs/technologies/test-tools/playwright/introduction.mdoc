@@ -104,7 +104,6 @@ It defaults to each web server's configured `timeout`, or 60000 when neither is 
 
 Set the `waitForWebServer` option to `false` to opt out of that task.
 Nx still runs the web server as a task dependency, and the tests fall back to Playwright's own `reuseExistingServer` probe.
-The option also selects the config evaluation the dependencies come from: with it on, the `webServer` commands resolve under the env the Playwright task runs with; with it off, under the env Nx computes the project graph with.
 
 The readiness address comes from evaluating the Playwright config while Nx computes the project graph.
 Nx caches the result and rebuilds it when an env file the Playwright task would load, such as `.env` or `.env.e2e`, changes.
