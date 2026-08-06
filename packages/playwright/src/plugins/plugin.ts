@@ -3,6 +3,7 @@ import {
   loadConfigFile,
   getNamedInputs,
   getGraphTimeDotEnvForTask,
+  getEnvPathsForTask,
   hashFile,
   hashObject,
   workspaceDataDirectory,
@@ -30,7 +31,6 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, parse, relative, resolve, sep } from 'node:path';
-import { getEnvPathsForTask } from 'nx/src/tasks-runner/task-env-paths';
 import type { Schema as WaitForWebserverSchema } from '../executors/wait-for-webserver/schema';
 import { getReporterOutputs, type ReporterOutput } from '../utils/reporters';
 import {

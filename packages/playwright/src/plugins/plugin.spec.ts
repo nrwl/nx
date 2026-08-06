@@ -1,11 +1,11 @@
-import { CreateNodesContext, logger } from '@nx/devkit';
+import { CreateNodesContext, logger, workspaceRoot } from '@nx/devkit';
+import { setWorkspaceRoot } from '@nx/devkit/internal';
+import * as devkitInternal from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as jsUtils from '@nx/js';
 import { PlaywrightTestConfig } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { setWorkspaceRoot, workspaceRoot } from 'nx/src/utils/workspace-root';
-import * as workspaceContext from 'nx/src/utils/workspace-context';
 import { createNodesV2 } from './plugin';
 import { _setChildEval, normalizeWebServers } from './webserver-readiness';
 
@@ -1458,7 +1458,7 @@ describe('@nx/playwright/plugin', () => {
     // jest's module registry pins to its first evaluation. Observe the rebuild
     // through the test-file listing instead, which only a cache miss reaches.
     const listTestFiles = jest.spyOn(
-      workspaceContext,
+      devkitInternal,
       'getFilesInDirectoryUsingContext'
     );
 
