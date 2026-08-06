@@ -733,6 +733,25 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       }
     );
 
+    it('looks past an .npmrc in the chain that yarn never finds', () => {
+      // Nothing reads .npmrc a second time ungated, so a symlink loop stays
+      // absent here where the same fault on .yarnrc aborts yarn (exit 0 vs 1 on
+      // 1.22.22).
+      files[`${HOME}/.yarnrc`] = 'registry "https://reg-home.example.com/"\n';
+      const readFile = (fs.readFileSync as jest.Mock).getMockImplementation();
+      (fs.readFileSync as jest.Mock).mockImplementation(
+        (p: any, ...rest: any[]) => {
+          if (p === `${ROOT}/.npmrc`) {
+            throw Object.assign(new Error(`ELOOP: ${p}`), { code: 'ELOOP' });
+          }
+          return readFile(p, ...rest);
+        }
+      );
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-home.example.com/',
+      });
+    });
+
     it('fails on an .npmrc in the chain that cannot be opened', () => {
       // yarn dies the same way on its .npmrc chain (verified on 1.22.22: EACCES
       // on the workspace .npmrc fails both config get and install).
