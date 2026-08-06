@@ -1908,6 +1908,36 @@ describe('@nx/playwright/plugin', () => {
     ]);
   });
 
+  it('should keep the dependency but not gate a webServer command with a trailing configuration', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve:production',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      context
+    );
+    const { targets } = results[0][1].projects['.'];
+
+    // The dependency runs the target without the configuration, so the
+    // started server may not listen at the configured address; readiness is
+    // left to Playwright's own probe.
+    expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+    expect(targets['e2e'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+    ]);
+    expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve' },
+    ]);
+  });
+
   it('should not gate or depend on a webServer that waits for command output', async () => {
     // Playwright treats a `wait.stdout`/`wait.stderr` server as ready when the
     // regex matches (raced against the address probe) and stores named capture

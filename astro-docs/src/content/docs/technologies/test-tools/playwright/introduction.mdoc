@@ -96,6 +96,7 @@ It infers the same task from a `url` when the `webServer` leaves `port` unset, w
 Playwright checks the URL rather than the port.
 Playwright then finds the server already running and reuses it.
 If the `webServer` sets neither, Playwright has nothing to check and starts its own server.
+Nx also skips the wait task for a `command` with a trailing `:<configuration>`: the dependency starts the server without the configuration, so it may not listen at the configured address.
 Nx doesn't infer the task dependency or the wait task for a `webServer` that sets `wait.stdout` or `wait.stderr`.
 Playwright treats matching output from the server process it starts as the readiness signal and can capture values from it into the environment, so Nx leaves starting that server to Playwright.
 
