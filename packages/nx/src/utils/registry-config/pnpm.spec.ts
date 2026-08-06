@@ -31,12 +31,15 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'npm_config_//reg-a.example.com/:_authToken',
     'npm_config_//reg-b.example.com/:_authToken',
     'pnpm_config_//reg-a.example.com/:_authToken',
+    'pnpm_config_//reg-a.example.com/:cert',
+    'npm_config_//reg-a.example.com/:cert',
     'PNPM_CONFIG_//reg-b.example.com/:_authToken',
     'pnpm_config_//reg-a.example.com/:tokenHelper',
     'pnpm_config_//reg-a.example.com/:username',
     'PNPM_TEST_NOPROXY',
     'PNPM_TEST_HELPER',
     'NX_TEST_HOST',
+    'NX_TEST_TOKEN',
     'NX_TEST_SCOPE',
     'XDG_CONFIG_HOME',
     'pnpm_config_npmrc_auth_file',
@@ -134,6 +137,30 @@ describe('getPnpmSpawnRegistryEnv', () => {
     expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
     writeYaml('registries:\n  - https://reg-a.example.com/\n');
     expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+  });
+
+  it('reads a pnpm-workspace.yaml an ancestor declares, the way pnpm walks up to it', () => {
+    // pnpm resolves the file by walking up from the directory it runs in, so a
+    // workspace nested under another one resolves through the outer file.
+    const nested = join(root, 'nested');
+    mkdirSync(nested);
+    writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+    expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
+  it('stops that walk at the nearest pnpm-workspace.yaml', () => {
+    const nested = join(root, 'nested');
+    mkdirSync(nested);
+    writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+    writeFileSync(
+      join(nested, 'pnpm-workspace.yaml'),
+      'registries:\n  default: https://reg-b.example.com/\n'
+    );
+    expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+      npm_config_registry: 'https://reg-b.example.com/',
+    });
   });
 
   it('fails on a proxy of the wrong shape, the way pnpm dies building its agent', () => {
@@ -623,6 +650,211 @@ describe('getPnpmSpawnRegistryEnv', () => {
       );
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.3')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+      });
+    });
+
+    it('reads the workspace .npmrc beside the ancestor workspace file, not the nested one', () => {
+      // From 11 pnpm reads a single project .npmrc, and it sits beside the
+      // workspace file it walked up to (loadNpmrcConfig's workspaceDir). Reading
+      // the nested one instead lets a registry pnpm never saw suppress the
+      // auth.ini registry it does resolve, leaving npm on a different host with
+      // the credential withheld.
+      const nested = join(root, 'nested');
+      mkdirSync(nested);
+      writeYaml('packages:\n  - "nested"\n');
+      writeFileSync(join(root, '.npmrc'), '; declares no registry');
+      writeFileSync(
+        join(nested, '.npmrc'),
+        'registry=https://reg-nested.example.com/'
+      );
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//reg-a.example.com/:_authToken=ini-token',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+      });
+    });
+
+    it('bridges the ancestor workspace .npmrc, which the spawned npm cannot read', () => {
+      // npm resolves its project config from the directory the spawn runs in, so
+      // a workspace .npmrc above that directory reaches pnpm and nothing else.
+      // Injecting the yaml registry without it would aim npm at a host it holds
+      // no credential for.
+      const nested = join(root, 'nested');
+      mkdirSync(nested);
+      writeYaml(
+        'packages:\n  - "nested"\nregistries:\n  default: https://reg-outer.example.com/\n'
+      );
+      writeFileSync(
+        join(root, '.npmrc'),
+        '//reg-outer.example.com/:_authToken=outer-token'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-outer.example.com/',
+        'npm_config_//reg-outer.example.com/:_authToken': 'outer-token',
+      });
+    });
+
+    it('lets the ancestor workspace .npmrc outrank auth.ini, the way pnpm merges them', () => {
+      const nested = join(root, 'nested');
+      mkdirSync(nested);
+      writeYaml('packages:\n  - "nested"\n');
+      writeFileSync(
+        join(root, '.npmrc'),
+        'registry=https://reg-outer.example.com/'
+      );
+      writeAuthIni('registry=https://reg-a.example.com/');
+      expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-outer.example.com/',
+      });
+    });
+
+    it('rescopes a bare ancestor workspace credential onto that file own registry', () => {
+      // rescopeUnscopedCreds runs per file, so the pin follows the registry the
+      // declaring file carries rather than whichever one wins overall.
+      const nested = join(root, 'nested');
+      mkdirSync(nested);
+      writeYaml('packages:\n  - "nested"\n');
+      writeFileSync(
+        join(root, '.npmrc'),
+        [
+          'registry=https://reg-outer.example.com/',
+          '_authToken=outer-token',
+        ].join('\n')
+      );
+      writeAuthIni(
+        ['registry=https://reg-a.example.com/', '_authToken=ini-token'].join(
+          '\n'
+        )
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-outer.example.com/',
+        'npm_config_//reg-outer.example.com/:_authToken': 'outer-token',
+        'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+      });
+    });
+
+    it('lets an emptied ancestor credential clear the one auth.ini declares', () => {
+      // pnpm re-keys a bare credential onto its registry whether or not it has a
+      // value, so an emptied one shadows the same key below it. Dropping it here
+      // would send npm a credential the workspace deliberately cleared.
+      const nested = join(root, 'nested');
+      mkdirSync(nested);
+      writeYaml('packages:\n  - "nested"\n');
+      writeFileSync(join(root, '.npmrc'), '_authToken=');
+      writeAuthIni('_authToken=ini-token');
+      expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+        'npm_config_//registry.npmjs.org/:_authToken': '',
+      });
+    });
+
+    it('takes a URL-scoped env certificate over the one a file declares', () => {
+      // The env tier outranks both files in pnpm, and npm reads inline PEM only
+      // as the flat key, so the scoped env entry has to be the one re-spelled.
+      process.env['pnpm_config_//reg-a.example.com/:cert'] = 'ENV-CERT';
+      writeAuthIni(
+        ['registry=https://reg-a.example.com/', 'cert=FILE-CERT'].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:cert': 'ENV-CERT',
+        npm_config_cert: 'ENV-CERT',
+      });
+    });
+
+    it('takes an ambient URL-scoped certificate the spawn keeps from 11.6.0 on', () => {
+      process.env['npm_config_//reg-a.example.com/:cert'] = 'AMBIENT-CERT';
+      writeAuthIni(
+        ['registry=https://reg-a.example.com/', 'cert=FILE-CERT'].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_cert: 'AMBIENT-CERT',
+      });
+    });
+
+    it('takes the client certificate pinned to the contacted registry, not the highest one', () => {
+      // pnpm pins inline cert/key to the declaring file's own registry before it
+      // merges, so a lower file's pair is the live one whenever its registry is
+      // the one being contacted. Picking by precedence instead would present a
+      // certificate for the wrong host, or withhold one and fail the handshake.
+      const nested = join(root, 'nested');
+      mkdirSync(nested);
+      writeYaml('packages:\n  - "nested"\n');
+      // Declares no registry, so its pair pins to npmjs and auth.ini's registry
+      // is the one npm contacts.
+      writeFileSync(
+        join(root, '.npmrc'),
+        ['cert=OUTER-CERT', 'key=OUTER-KEY'].join('\n')
+      );
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          'cert=A-CERT',
+          'key=A-KEY',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_cert: 'A-CERT',
+        npm_config_key: 'A-KEY',
+      });
+    });
+
+    it('lets a ${VAR}-valued workspace registry outrank auth.ini before 11.5.3', () => {
+      // The value half of the same rule: until 11.5.3 pnpm expands `${VAR}` in
+      // the value too, so the project registry is the one pnpm resolves and
+      // auth.ini's stays where pnpm leaves it (verified against pnpm 11.5.2).
+      process.env.NX_TEST_HOST = 'reg-b.example.com';
+      writeFileSync(join(root, '.npmrc'), 'registry=https://${NX_TEST_HOST}/');
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//reg-a.example.com/:_authToken=ini-token',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.2')).toEqual({
+        'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+      });
+    });
+
+    it('bridges auth.ini over a ${VAR}-valued workspace registry from 11.5.3, which pnpm drops', () => {
+      // From 11.5.3 pnpm drops a registry, proxy or credential entry whose value
+      // holds a `${VAR}` rather than expanding it, so auth.ini's registry is what
+      // it resolves. npm expands the same value and would otherwise send the
+      // request to a host pnpm never picked (verified against pnpm 11.5.3).
+      process.env.NX_TEST_HOST = 'reg-b.example.com';
+      writeFileSync(join(root, '.npmrc'), 'registry=https://${NX_TEST_HOST}/');
+      writeAuthIni(
+        [
+          'registry=https://reg-a.example.com/',
+          '//reg-a.example.com/:_authToken=ini-token',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.3')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
+      });
+    });
+
+    it('bridges an auth.ini credential over a ${VAR}-valued workspace one from 11.5.3', () => {
+      // Same drop on the credential side, where the cost is an unauthenticated
+      // request rather than a redirected one.
+      process.env.NX_TEST_TOKEN = 'project-token';
+      writeFileSync(
+        join(root, '.npmrc'),
+        [
+          'registry=https://reg-a.example.com/',
+          '//reg-a.example.com/:_authToken=${NX_TEST_TOKEN}',
+        ].join('\n')
+      );
+      writeAuthIni('//reg-a.example.com/:_authToken=ini-token');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.3')).toEqual({
         'npm_config_//reg-a.example.com/:_authToken': 'ini-token',
       });
     });
