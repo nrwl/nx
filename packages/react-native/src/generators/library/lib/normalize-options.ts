@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { Schema } from '../schema';
-import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 import type { LinterType } from '@nx/js';
 
 export interface NormalizedSchema extends Schema {
@@ -54,7 +54,7 @@ export async function normalizeOptions(
     // Resolved in the literal so the type guarantees it: `undefined` is falsy,
     // so the ESLint arm would still run while the `=== 'eslint'` tsconfig
     // excludes below are skipped.
-    linter: options.linter ?? detectLinter(host),
+    linter: await normalizeLinterOption(host, options.linter),
     fileName: projectName,
     routePath: `/${projectNames.projectSimpleName}`,
     name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,

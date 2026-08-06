@@ -3,7 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { Schema } from '../schema';
 import type { LinterType } from '@nx/js';
 
@@ -64,7 +64,7 @@ export async function normalizeOptions(
     // Resolved after the spread: `undefined` is falsy, so the ESLint arm in
     // add-linting would still run while the `=== 'eslint'` tsconfig excludes
     // below are skipped.
-    linter: options.linter ?? detectLinter(host),
+    linter: await normalizeLinterOption(host, options.linter),
     unitTestRunner: options.unitTestRunner || 'jest',
     e2eTestRunner: options.e2eTestRunner || 'none',
     simpleName: projectNames.projectSimpleName,

@@ -36,7 +36,7 @@ import {
   swcCoreVersion,
   getNpmScope,
   addProjectToTsSolutionWorkspace,
-  detectLinter,
+  normalizeLinterOption,
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
@@ -709,7 +709,7 @@ async function normalizeOptions(
     : [];
 
   options.style = options.style || 'css';
-  options.linter = options.linter || detectLinter(host);
+  options.linter = await normalizeLinterOption(host, options.linter);
   options.unitTestRunner = options.unitTestRunner || 'jest';
   options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 

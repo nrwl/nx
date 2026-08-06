@@ -4,7 +4,7 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { NormalizedSchema, Schema } from '../schema';
-import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNuxtDependenciesVersionsToInstall } from '../../../utils/version-utils';
 
 export async function normalizeOptions(
@@ -63,7 +63,7 @@ export async function normalizeOptions(
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
   // Resolved here rather than at the `addLinting` call, so every later reader
   // in this generator sees the same value.
-  normalized.linter ??= detectLinter(host);
+  normalized.linter = await normalizeLinterOption(host, normalized.linter);
 
   return normalized;
 }
