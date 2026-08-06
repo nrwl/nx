@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { readYamlFile } from '../fileutils';
@@ -584,16 +584,18 @@ function toYarnValueMap(
  * that yarn 1.22 accepts. Reading with it would drop whole files yarn honors.
  */
 function readYarnrcMap(path: string): Map<string, YarnValue> | null {
-  if (!existsSync(path)) {
-    return null;
-  }
   let raw: string;
   try {
     raw = readFileSync(path, 'utf-8');
-  } catch {
-    // yarn itself dies on a .yarnrc it cannot open, so there is no resolution
-    // left to reproduce. Skipping the file would resolve from the remaining
-    // ones, silently landing a workspace registry on the default.
+  } catch (e) {
+    // yarn reads .yarnrc twice: once with no existence check, where every errno
+    // but ENOENT and EISDIR aborts it, and once behind one, which then dies on
+    // the directory EISDIR spared. Only an absent file survives both passes, so
+    // anything else leaves no resolution to reproduce. Its .npmrc chain has no
+    // ungated pass, which is why that one reads ENOTDIR as absent.
+    if (e?.code === 'ENOENT') {
+      return null;
+    }
     throw new Error(`The .yarnrc at ${path} could not be read.`);
   }
   try {
