@@ -761,7 +761,7 @@ async function resolveChainWebserver(
     }
   }
 
-  const commandTasks = getWebserverCommandTasks(webServers);
+  const commandTasks = getWebserverCommandTasks(webServers, configFilePath);
   const readinessServers =
     inferReadiness && !taskEnvEvalFailed
       ? (commandTasks
@@ -797,13 +797,24 @@ function buildWaitForWebserverTarget(
   };
 }
 
+// One entry per (config, command) for the lifetime of the process: the two
+// chains and every graph recomputation re-derive the same tasks, and the
+// warning is about the config's content, not about any single run.
+const warnedUnparseableCommands = new Set<string>();
+
 function getWebserverCommandTasks(
-  webServers: ResolvedWebServer[]
+  webServers: ResolvedWebServer[],
+  configFilePath: string
 ): WebserverCommandTask[] {
   const tasks: WebserverCommandTask[] = [];
 
   for (const server of webServers) {
     if (!server.reuseExistingServer) {
+      continue;
+    }
+    // An unchecked config can omit `command` (Playwright's own type requires
+    // it); nothing runs, so there is nothing to depend on or gate.
+    if (typeof server.command !== 'string') {
       continue;
     }
     // Playwright races a `wait.stdout`/`wait.stderr` regex against the address
@@ -824,6 +835,14 @@ function getWebserverCommandTasks(
         ignoreHTTPSErrors: server.ignoreHTTPSErrors,
         timeout: server.timeout,
       });
+    } else {
+      const warnedKey = `${configFilePath}|${server.command}`;
+      if (!warnedUnparseableCommands.has(warnedKey)) {
+        warnedUnparseableCommands.add(warnedKey);
+        logger.warn(
+          `@nx/playwright: could not infer an Nx task from the webServer command "${server.command}" in ${configFilePath}, so no serve dependency or readiness wait is inferred for it.`
+        );
+      }
     }
   }
 
