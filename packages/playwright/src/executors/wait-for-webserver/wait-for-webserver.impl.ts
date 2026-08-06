@@ -370,8 +370,9 @@ function requestStatus(
         // `localhost` can resolve to ::1 first while the server listens on
         // 127.0.0.1 only; Happy Eyeballs tries both families the way
         // Playwright's probe agent does, on every Node line regardless of the
-        // process-wide default. A proxied request connects to the proxy
-        // instead, where Playwright drops it too.
+        // process-wide default. A proxied request dials the proxy instead;
+        // Playwright keeps its Happy Eyeballs agent for that dial on the
+        // plain-http route and drops it on the CONNECT route.
         // The cast is needed because @types/node's RequestOptions omits the
         // option; Node forwards request options to socket.connect, which
         // honors it.
