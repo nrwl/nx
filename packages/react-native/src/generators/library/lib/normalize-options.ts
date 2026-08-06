@@ -5,8 +5,11 @@ import {
 } from '@nx/devkit/internal';
 import { Schema } from '../schema';
 import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import type { LinterType } from '@nx/js';
 
 export interface NormalizedSchema extends Schema {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   name: string;
   fileName: string;
   projectRoot: string;
@@ -48,6 +51,10 @@ export async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const normalized: NormalizedSchema = {
     ...options,
+    // Resolved in the literal so the type guarantees it: `undefined` is falsy,
+    // so the ESLint arm would still run while the `=== 'eslint'` tsconfig
+    // excludes below are skipped.
+    linter: options.linter ?? detectLinter(host),
     fileName: projectName,
     routePath: `/${projectNames.projectSimpleName}`,
     name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
@@ -57,10 +64,6 @@ export async function normalizeOptions(
     isUsingTsSolutionConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
-
-  // Framework-specific ESLint shaping is guarded on `=== 'eslint'`, so an
-  // unresolved `undefined` would create a bare config with none of it.
-  normalized.linter ??= detectLinter(host);
 
   return normalized;
 }

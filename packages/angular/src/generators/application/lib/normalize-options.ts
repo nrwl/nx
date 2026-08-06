@@ -75,8 +75,9 @@ export async function normalizeOptions(
     standalone: true,
     directory: appProjectRoot,
     ...options,
-    // Resolved after the spread so it is a concrete linter before it reaches
-    // the `=== 'eslint'` guards downstream, which treat `undefined` as ESLint.
+    // Resolved after the spread, so the `=== 'none'` and `!== 'eslint'` guards
+    // downstream see a concrete linter. Both read `undefined` as "some linter,
+    // but not ESLint", which sets up linting and then skips its config.
     linter: options.linter ?? detectLinter(host),
     prefix: options.prefix || 'app',
     name: appProjectName,
