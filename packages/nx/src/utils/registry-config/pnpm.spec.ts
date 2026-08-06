@@ -40,6 +40,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'PNPM_TEST_HELPER',
     'NX_TEST_HOST',
     'NX_TEST_TOKEN',
+    'NX_TEST_TLS_KEY',
     'NX_TEST_SCOPE',
     'XDG_CONFIG_HOME',
     'pnpm_config_npmrc_auth_file',
@@ -764,6 +765,47 @@ describe('getPnpmSpawnRegistryEnv', () => {
         npm_config_registry: 'https://reg-a.example.com/',
         'npm_config_//reg-a.example.com/:cert': 'ENV-CERT',
         npm_config_cert: 'ENV-CERT',
+      });
+    });
+
+    it('cancels a project certificate pinned to a registry the fetch never reaches', () => {
+      // pnpm pins an inline pair to the registry its own file declares, so a
+      // scoped fetch elsewhere goes without one. npm reads the same pair out of
+      // the file itself and would present it to whatever host it contacts.
+      writeFileSync(
+        join(root, '.npmrc'),
+        [
+          'registry=https://reg-a.example.com/',
+          '@acme:registry=https://reg-b.example.com/',
+          'cert=A-CERT',
+          'key=A-KEY',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('@acme/pkg', root, '11.6.0')).toEqual({
+        npm_config_cert: 'null',
+        npm_config_key: 'null',
+      });
+      // The unscoped fetch does reach the registry they are pinned to.
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.6.0')).toEqual({
+        npm_config_cert: 'A-CERT',
+        npm_config_key: 'A-KEY',
+      });
+    });
+
+    it('cancels one npm only resolves through an expanded key', () => {
+      // npm expands a `${VAR}` in the key before looking the setting up, so a
+      // placeholder-spelled pair reaches it just the same and needs cancelling.
+      process.env.NX_TEST_TLS_KEY = 'cert';
+      writeFileSync(
+        join(root, '.npmrc'),
+        [
+          'registry=https://reg-a.example.com/',
+          '@acme:registry=https://reg-b.example.com/',
+          '${NX_TEST_TLS_KEY}=A-CERT',
+        ].join('\n')
+      );
+      expect(getPnpmSpawnRegistryEnv('@acme/pkg', root, '11.6.0')).toEqual({
+        npm_config_cert: 'null',
       });
     });
 

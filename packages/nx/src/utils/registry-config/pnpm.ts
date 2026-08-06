@@ -946,6 +946,18 @@ function bridgeNpmrcSources(
       declaringSource(dartKey)?.map.get(dartKey);
     if (value) {
       env[`npm_config_${key}`] = value;
+    } else if (
+      projectRaw &&
+      // Read as npm resolves it: it expands a `${VAR}` in the key before it
+      // looks the setting up, so a placeholder-spelled one still reaches it.
+      readExpandedKey(projectRaw, key, expandNpmEnvVars) !== undefined
+    ) {
+      // npm reads this one out of its own project config and presents it to
+      // every host it contacts, where pnpm pinned it to a registry this fetch
+      // never reaches. The `null` literal is what cancels a file value at npm's
+      // env tier; an empty one leaves the file's in place (measured on npm 9,
+      // 10 and 11).
+      env[`npm_config_${key}`] = 'null';
     }
   }
   const strictSslSource = bridging('strict-ssl');
