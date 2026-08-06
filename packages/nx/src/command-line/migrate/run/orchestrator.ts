@@ -350,7 +350,24 @@ function resumeRun(root: string, runId: string, state: MigrateRunState): void {
   // A run flagged checkpointFailed gets one more chance to capture the
   // pre-existing tree state before its first migration commit absorbs it.
   const resumed = ensureCheckpoint(root, dir, state);
+  announceResume(runId, resumed);
   finishInit(root, dir, runId, resumed);
+}
+
+// The dispense that follows says nothing about the steps already behind it, so
+// a resumed run is otherwise indistinguishable from a fresh one that happens
+// to start partway down the plan.
+function announceResume(runId: string, state: MigrateRunState): void {
+  const applied = state.steps.filter((s) => s.status === 'succeeded').length;
+  const skipped = state.steps.filter((s) => s.status === 'skipped').length;
+  const remaining = state.steps.length - applied - skipped;
+  output.log({
+    title: `nx migrate: resuming run ${runId}`,
+    bodyLines: [
+      `  started: ${state.createdAt}`,
+      `  progress: ${applied} applied, ${skipped} skipped, ${remaining} remaining`,
+    ],
+  });
 }
 
 // Resume-only checkpoint retry, gated on checkpointFailed: a fresh init always
