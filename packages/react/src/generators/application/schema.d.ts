@@ -26,6 +26,7 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   compiler?: 'babel' | 'swc';
   remotes?: string[];
+  /** @deprecated Use {@link Schema.port} instead. Kept so programmatic callers keep working; the CLI aliases it. */
   devServerPort?: number;
   skipPackageJson?: boolean;
   rootProject?: boolean;
