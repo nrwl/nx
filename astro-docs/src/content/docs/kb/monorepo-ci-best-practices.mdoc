@@ -124,7 +124,7 @@ The tool parses imports, builds a project graph, diffs the commit range, maps th
 projects, then walks the graph to include every project that depends on them.
 Nothing is maintained by hand, so the filters can't drift away from the imports.
 
-| Dimension        | Path filters                               | Graph-based affected                             |
+| Concern          | Path filters                               | Graph-based affected                             |
 | ---------------- | ------------------------------------------ | ------------------------------------------------ |
 | Setup            | CI config only                             | Requires a tool that builds a project graph      |
 | Shared code      | Listed manually per consumer               | Followed automatically, including transitively   |
@@ -195,16 +195,20 @@ CI was red gets picked back up.
 The [`nrwl/nx-set-shas`](https://github.com/nrwl/nx-set-shas) action does this bookkeeping on GitHub
 Actions by setting `NX_BASE` and `NX_HEAD`:
 
-```yaml
+```yaml {% meta="{10-12}" %}
 # .github/workflows/ci.yml
-- uses: actions/checkout@v7
-  with:
-    fetch-depth: 0
-    filter: tree:0
+on: pull_request
 
-- uses: nrwl/nx-set-shas@v5
-
-- run: npx nx affected -t lint test build
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+      - uses: nrwl/nx-set-shas@v5
+      - run: npx nx affected -t lint test build
 ```
 
 `fetch-depth: 0` gives change detection real git history, because a depth-one clone has no commit to
@@ -279,11 +283,9 @@ npx nx affected -t test --parallel=4
 ```
 
 Try different values for `--parallel` against your runner specs.
-Too low leaves cores idle, too high makes tasks compete for memory.
+Too low leaves cores idle, too high makes tasks compete for resources.
 
 Once the affected set outgrows one machine, the next win has to come from more machines.
-For the tradeoffs, see
-[parallelization and distribution](/docs/concepts/ci-concepts/parallelization-distribution).
 
 ## Distribute across machines
 
@@ -336,6 +338,9 @@ Heavy targets like `e2e` and `build` need more memory than `lint`.
 [Assignment rules](/docs/kb/assignment-rules) pin matching tasks to specific agent types, so heavy
 work gets large machines and everything else runs on cheap ones.
 
+For a side-by-side comparison of running on one machine against distributing across many, see
+[parallelization and distribution](/docs/concepts/ci-concepts/parallelization-distribution).
+
 ## Split slow tasks into smaller ones
 
 Distribution only helps if the work divides.
@@ -359,9 +364,9 @@ Three files can run on three agents.
 The cost is that you now maintain the division by hand, and files drift back toward being too large
 as tests get added.
 
-Nx Cloud [splits slow tasks by file](/docs/features/ci-features/split-e2e-tasks) once you connect
-the workspace and add the plugin for your test runner.
-It then creates one task per spec file you already have, without changing your filenames.
+Nx Cloud [splits slow tasks by file](/docs/features/ci-features/split-e2e-tasks) once you add the Nx
+plugin for your test runner.
+It creates one task per spec file you already have, without changing your filenames.
 Each task is scheduled and cached like any other, so unchanged specs are read from cache, changed
 ones run, and the results are merged back into a single report.
 
