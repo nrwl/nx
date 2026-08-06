@@ -104,7 +104,6 @@ describe('react app generator (legacy)', () => {
         "options": {
           "buildTarget": "my-app:build",
           "hmr": true,
-          "port": 4200,
         },
       }
     `);
@@ -133,42 +132,47 @@ describe('react app generator (legacy)', () => {
     `);
   });
 
-  it('should give each app its own dev-server port', async () => {
+  it('should not write a dev-server port that was never requested', async () => {
     await applicationGenerator(appTree, {
       ...schema,
-      directory: 'first-app',
-      bundler: 'webpack',
-      skipFormat: true,
-    });
-    await applicationGenerator(appTree, {
-      ...schema,
-      directory: 'second-app',
+      directory: 'default-app',
       bundler: 'webpack',
       skipFormat: true,
     });
 
-    // findFreePort reads the port back off the existing serve targets, so the
-    // second app only moves off 4200 if the first one recorded its port.
+    // @nx/webpack:dev-server already defaults to 4200; restating it here would be noise.
     expect(
-      readProjectConfiguration(appTree, 'first-app').targets.serve.options.port
-    ).toBe(4200);
-    expect(
-      readProjectConfiguration(appTree, 'second-app').targets.serve.options.port
-    ).toBe(4201);
+      readProjectConfiguration(appTree, 'default-app').targets.serve.options
+    ).not.toHaveProperty('port');
   });
 
-  it('should use an explicit --devServerPort for the serve target', async () => {
+  it('should write an explicitly requested port to the serve target', async () => {
     await applicationGenerator(appTree, {
       ...schema,
       directory: 'pinned-app',
       bundler: 'webpack',
-      devServerPort: 4321,
+      port: 4321,
       skipFormat: true,
     });
 
     expect(
       readProjectConfiguration(appTree, 'pinned-app').targets.serve.options.port
     ).toBe(4321);
+  });
+
+  it('should accept the deprecated devServerPort from programmatic callers', async () => {
+    await applicationGenerator(appTree, {
+      ...schema,
+      directory: 'aliased-app',
+      bundler: 'webpack',
+      devServerPort: 4322,
+      skipFormat: true,
+    });
+
+    expect(
+      readProjectConfiguration(appTree, 'aliased-app').targets.serve.options
+        .port
+    ).toBe(4322);
   });
 
   it('should setup vite', async () => {

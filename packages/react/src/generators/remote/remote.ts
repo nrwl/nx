@@ -231,7 +231,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     if (options.bundler !== 'rspack') {
       const setupSsrTask = await setupSsrGenerator(host, {
         project: options.projectName,
-        serverPort: options.devServerPort,
+        serverPort: options.port,
         skipFormat: true,
         bundler: options.bundler,
       });
@@ -277,7 +277,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     addRemoteToDynamicHost(
       host,
       options.projectName,
-      options.devServerPort,
+      options.port,
       pathToMFManifest
     );
   }
