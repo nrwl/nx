@@ -137,9 +137,10 @@
       "x-priority": "important",
       "alias": "consumer"
     },
-    "devServerPort": {
+    "port": {
       "type": "number",
-      "description": "The port for the dev server of the Producer (remote) app.",
+      "description": "The port on which this Producer (remote) app should be served.",
+      "aliases": ["devServerPort"],
       "x-priority": "important"
     },
     "ssr": {

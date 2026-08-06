@@ -57,7 +57,7 @@ export async function setupSsrForHost(
             ),
             mainServer: `./server.ts`,
           },
-          port: Number(options?.devServerPort) || 4200,
+          port: Number(options?.port) || 4200,
           appName,
           static: !options?.dynamic,
           remotes: defaultRemoteManifest.map(({ name, port }) => {
@@ -70,7 +70,7 @@ export async function setupSsrForHost(
       : {
           ...options,
           static: !options?.dynamic,
-          port: Number(options?.devServerPort) || 4200,
+          port: Number(options?.port) || 4200,
           appName,
           tmpl: '',
           browserBuildOutputPath: project.targets.build?.options?.outputPath,

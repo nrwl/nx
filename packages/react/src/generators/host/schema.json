@@ -132,10 +132,10 @@
       "x-priority": "important",
       "alias": "producers"
     },
-    "devServerPort": {
+    "port": {
       "type": "number",
-      "description": "The port for the dev server of the Producer (remote) app.",
-      "default": 4200,
+      "description": "The port at which the Consumer (host) application should be served. Defaults to 4200.",
+      "aliases": ["devServerPort"],
       "x-priority": "important"
     },
     "ssr": {
