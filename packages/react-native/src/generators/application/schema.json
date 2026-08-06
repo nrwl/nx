@@ -44,7 +44,6 @@
       "description": "The tool to use for running lint checks.",
       "type": "string",
       "enum": ["eslint", "oxlint", "none"],
-      "default": "none",
       "x-priority": "important"
     },
     "unitTestRunner": {

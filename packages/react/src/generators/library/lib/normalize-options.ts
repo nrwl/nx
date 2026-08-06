@@ -13,6 +13,7 @@ import {
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import {
+  detectLinter,
   getProjectSourceRoot,
   getProjectType,
   isUsingTsSolutionSetup,
@@ -118,6 +119,9 @@ export async function normalizeOptions(
   assertValidStyle(normalized.style);
 
   normalized.isUsingTsSolutionConfig = isUsingTsSolutionConfig;
+  // The React-specific ESLint shaping is guarded on `=== 'eslint'`, so an
+  // unresolved `undefined` would create a bare config with none of it.
+  normalized.linter ??= detectLinter(host);
 
   return normalized;
 }
