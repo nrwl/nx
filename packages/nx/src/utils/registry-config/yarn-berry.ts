@@ -30,6 +30,7 @@ import {
  * - Sources, highest first: YARN_* env vars > project .yarnrc.yml > ancestor
  *   .yarnrc.yml files (closer dir wins) > ~/.yarnrc.yml > defaults
  *   (first-writer-wins for scalars; npmScopes/npmRegistries merge per entry).
+ *   See https://github.com/yarnpkg/berry/blob/a26895a80d2784a5be92c54d5e7622bc9b0864a5/packages/yarnpkg-core/sources/Configuration.ts#L1424
  * - Fetch registry for @scope/pkg: npmScopes.<scope-without-@>.npmRegistryServer,
  *   else npmRegistryServer (default https://registry.yarnpkg.com).
  * - .npmrc files are completely ignored.
@@ -47,8 +48,6 @@ import {
  * value of the same key, so for those keys alone it outranks the env vars too.
  * enableNetwork is resolved the same way but has no npm counterpart, so a host
  * berry refuses to reach is reported rather than reproduced.
- *
- * See https://github.com/yarnpkg/berry/blob/a26895a80d2784a5be92c54d5e7622bc9b0864a5/packages/yarnpkg-core/sources/Configuration.ts#L1424
  */
 
 const BERRY_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';

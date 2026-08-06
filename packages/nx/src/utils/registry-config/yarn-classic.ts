@@ -478,7 +478,7 @@ function yarnHomeTiers(home: string): {
  * collects them through getRcPaths, a wider set than the tiers the registry
  * client reads, and merges them last-wins, so this list runs the other way
  * round: highest precedence first, to be read first-wins.
- * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/rc.js#L11-L63
+ * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/util/rc.js#L11-L62
  */
 function yarnCliRcPaths(
   root: string,
@@ -649,7 +649,7 @@ interface YarnrcReaders {
  * honors what the retry accepts, which is how `registry: https://host/` works
  * despite the lockfile grammar throwing on it. A `.yml` skips straight to the
  * retry's parser.
- * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/lockfile/parse.js#L384-L397
+ * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/lockfile/parse.js#L384-L409
  *
  * @yarnpkg/lockfile on npm is a 2018 snapshot of that parser and has since
  * diverged: its name token excludes `.`, so it rejects the `cafile ./ca.pem`
@@ -664,6 +664,8 @@ function readYarnrcMap(
   if (!readers.ungated && !existsSync(path)) {
     return null;
   }
+  // Unconditional even for a `.yml`, which parses from the path below: this
+  // open is what classifies the fault, and neither parser carries a tolerance.
   let raw: string;
   try {
     raw = readFileSync(path, 'utf-8');
@@ -671,6 +673,7 @@ function readYarnrcMap(
     // The CLI-arg pass spares ENOENT and EISDIR. A file the registry client
     // also reads keeps only ENOENT, since a directory passes its lookup and
     // then dies on the open. Anything left leaves no resolution to reproduce.
+    // See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/util/rc.js#L64-L79
     if (e?.code === 'ENOENT' || (e?.code === 'EISDIR' && !readers.lookedUp)) {
       return null;
     }
@@ -682,6 +685,7 @@ function readYarnrcMap(
     const map = parseYarnrcAsYaml(path);
     // yarn keeps `yarn-path` alone from a .yml that names one, dropping the CLI
     // args read here.
+    // See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/rc.js#L55-L70
     return typeof map.get('yarnPath') === 'string' ? new Map() : map;
   }
   try {
