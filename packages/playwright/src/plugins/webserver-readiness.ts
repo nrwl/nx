@@ -107,6 +107,20 @@ export async function resolveWebServersUnderEnv(
   }
 }
 
+function isWorkerMessage(
+  message: unknown
+): message is WebserverConfigWorkerMessage {
+  if (typeof message !== 'object' || message === null) {
+    return false;
+  }
+  const candidate = message as { type?: unknown; webServers?: unknown };
+  return (
+    candidate.type === 'webserver-config-error' ||
+    (candidate.type === 'webserver-config-result' &&
+      Array.isArray(candidate.webServers))
+  );
+}
+
 function forkChildEval(
   configFilePath: string,
   workspaceRoot: string,
@@ -154,19 +168,27 @@ function forkChildEval(
       );
     }, CHILD_EVAL_TIMEOUT);
 
-    child.on('message', (message: WebserverConfigWorkerMessage) => {
-      if (typeof message !== 'object' || message === null) {
+    child.on('message', (message: unknown) => {
+      // Anything that fails the guard came from the evaluated config itself;
+      // ignore it.
+      if (!isWorkerMessage(message)) {
         return;
       }
-      if (message.type === 'webserver-config-error') {
-        finish(() => reject(new Error(withStderr(message.error))));
-      } else if (
-        message.type === 'webserver-config-result' &&
-        Array.isArray(message.webServers)
-      ) {
-        finish(() => resolve(message.webServers));
+      switch (message.type) {
+        case 'webserver-config-error':
+          finish(() => reject(new Error(withStderr(message.error))));
+          break;
+        case 'webserver-config-result':
+          finish(() => resolve(message.webServers));
+          break;
+        default: {
+          // A new message variant has to say how it settles the resolution.
+          const unhandled: never = message;
+          throw new Error(
+            `Unhandled worker message ${JSON.stringify(unhandled)}`
+          );
+        }
       }
-      // Anything else came from the evaluated config itself; ignore it.
     });
     child.on('error', (error) => finish(() => reject(error)));
     // `close` rather than `exit` so the stderr the failure folds in has fully
