@@ -604,6 +604,58 @@ describe('formatFilesWithOxfmt', () => {
         expect([...formatted.keys()]).toEqual(['libs/lib1/src/index.ts']);
       }
     );
+
+    it('does not let one ignore file re-include what the other excluded', async () => {
+      // The `merge: false` this path passes to `createIgnoreChainResolver`.
+      // Merged instead, the `!` would win and the file would be rewritten -
+      // and nothing else here would notice, since every other case uses one
+      // ignore file at a time. The tree-backed twin is pinned separately in
+      // `packages/nx/src/utils/ignore.spec.ts`.
+      writeFileSync(join(workspaceRoot, '.gitignore'), 'both.ts\n', 'utf-8');
+      writeFileSync(
+        join(workspaceRoot, '.prettierignore'),
+        '!both.ts\n',
+        'utf-8'
+      );
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [
+          { path: 'both.ts', content: 'const x =  1' },
+          { path: 'kept.ts', content: 'const y =  1' },
+        ],
+        workspaceRoot
+      );
+
+      expect(errors).toBeUndefined();
+      expect([...formatted.keys()]).toEqual(['kept.ts']);
+    });
+  });
+
+  describe('a config carried in the batch', () => {
+    it('is used even when the caller passes no seedConfig', async () => {
+      // A caller holding a tree may have the only copy of a just-written
+      // config; on disk it is stale or absent until the tree flushes. Callers
+      // that know which file it is still pass it explicitly - this is the
+      // fallback, so `nx migrate`'s path and a generator's agree.
+      writeFileSync(
+        join(workspaceRoot, '.oxfmtrc.json'),
+        JSON.stringify({ useTabs: false }),
+        'utf-8'
+      );
+
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [
+          // `useTabs` rather than a quote style: false is oxfmt's default, so
+          // an on-disk win and a batch win would look identical otherwise.
+          { path: '.oxfmtrc.json', content: JSON.stringify({ useTabs: true }) },
+          { path: 'a.ts', content: 'function f() {\nif (a) {\nb();\n}\n}' },
+        ],
+        workspaceRoot
+      );
+
+      expect(errors).toBeUndefined();
+      expect(formatted.get('a.ts')).toContain('\tif (a) {');
+    });
   });
 
   describe('absolute paths', () => {
