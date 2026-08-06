@@ -212,7 +212,7 @@ export function createTreeIgnoreChecker(
 } {
   const { filenames, cascade, combine } = AUTHORITIES[authority];
   const resolve = createIgnoreChainResolver(
-    (path) => (tree.exists(path) ? tree.read(path, 'utf-8') : null),
+    (path) => tree.read(path, 'utf-8'),
     filenames,
     combine
   );
