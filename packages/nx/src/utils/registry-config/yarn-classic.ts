@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { readYamlFile } from '../fileutils';
@@ -542,13 +542,18 @@ function resolveYarnPath(value: string, root: string, home: string): string {
   return resolve(root, value);
 }
 
-// yarn itself dies on an .npmrc in its chain it cannot open, so there is no
-// resolution left to reproduce. Reading on without the file would resolve the
-// registry from the remaining ones, silently landing on an ancestor's or the
-// default.
+// yarn looks each .npmrc in its chain up before opening it, and unlike .yarnrc
+// nothing reads it a second time ungated, so whatever the lookup misses counts
+// as absent and only a file it finds and cannot open aborts yarn.
 function readChainNpmrcMap(path: string): Map<string, string> | null {
+  if (!existsSync(path)) {
+    return null;
+  }
   const map = readNpmrcMap(path);
   if (map === 'unreadable') {
+    // No resolution left to reproduce. Reading on without the file would
+    // resolve the registry from the remaining ones, silently landing on an
+    // ancestor's or the default.
     throw new Error(`The .npmrc at ${path} could not be read.`);
   }
   return map;
