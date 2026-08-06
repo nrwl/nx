@@ -196,7 +196,7 @@ describe('posixDirname', () => {
 // Each constructor bundles three values - which files it reads, whether they
 // cascade, and whether they merge. They are unreachable from a caller, so the
 // only way to pin them is through what the returned predicates do.
-describe('the ignore authorities', () => {
+describe('the ignore checkers', () => {
   function treeWith(files: Record<string, string>) {
     const tree = createTree();
     for (const [path, contents] of Object.entries(files)) {
