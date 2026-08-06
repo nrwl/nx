@@ -1014,7 +1014,7 @@ async function runVerificationPass<T>(
   pluginPath: string,
   createNodes: CreateNodes<T> | undefined,
   createNodesV2: CreateNodes<T> | undefined
-): Promise<ConfigurationResult | undefined> {
+): Promise<{ result: ConfigurationResult | undefined; errors: string[] }> {
   const nxJson = readNxJson(tree);
   const registrations = (nxJson.plugins ?? []).filter(
     (plugin): plugin is string | ExpandedPluginConfiguration =>
@@ -1022,7 +1022,7 @@ async function runVerificationPass<T>(
       (typeof plugin !== 'string' && plugin.plugin === pluginPath)
   );
   if (registrations.length === 0) {
-    return undefined;
+    return { result: undefined, errors: [] };
   }
 
   global.NX_GRAPH_CREATION = true;
@@ -1034,14 +1034,22 @@ async function runVerificationPass<T>(
           registration
         )
     );
-    return await retrieveProjectConfigurations(
-      { specifiedPlugins: plugins, defaultPlugins: [] },
-      tree.root,
-      nxJson
-    );
+    return {
+      result: await retrieveProjectConfigurations(
+        { specifiedPlugins: plugins, defaultPlugins: [] },
+        tree.root,
+        nxJson
+      ),
+      errors: [],
+    };
   } catch (e) {
     if (e instanceof ProjectConfigurationsError) {
-      return e.partialProjectConfigurationsResult;
+      // Verify against the partial result, but keep the causes — they are the
+      // only diagnostic for why affected projects fall back.
+      return {
+        result: e.partialProjectConfigurationsResult,
+        errors: e.errors.map((error) => error.message ?? String(error)),
+      };
     }
     throw e;
   } finally {
@@ -1056,9 +1064,11 @@ async function runVerificationPass<T>(
  * effective config for a target is `merge(project.json deviation, verified
  * inferred+targetDefaults)`. It must deep-equal `baselineFinal` (the previous
  * engine's migrated effective config, from Phase 2). Any project that fails —
- * or that the intended target no longer infers for at all — falls back to a
- * full project.json override (dropping only its hoist), and every fallback is
- * summarized in a single `logger.warn`.
+ * or that the intended target no longer infers for at all — is restored to the
+ * exact pre-centralization migration output (a full residual; an empty
+ * residual removes the target), and every fallback is summarized in a single
+ * `logger.warn` that asks for manual review rather than asserting equivalence
+ * the pass could not establish.
  */
 async function verifyAndFallback<T>(
   tree: Tree,
@@ -1078,12 +1088,8 @@ async function verifyAndFallback<T>(
     return;
   }
 
-  const verifyResult = await runVerificationPass(
-    tree,
-    pluginPath,
-    createNodes,
-    createNodesV2
-  );
+  const { result: verifyResult, errors: verificationErrors } =
+    await runVerificationPass(tree, pluginPath, createNodes, createNodesV2);
   if (!verifyResult) {
     return;
   }
@@ -1156,6 +1162,7 @@ async function verifyAndFallback<T>(
   }
 
   const fallbacks: string[] = [];
+  let anyMissingFromVerification = false;
 
   for (const [projectName, targetMap] of residualByProject) {
     const root = projectGraph.nodes[projectName]?.data?.root;
@@ -1168,6 +1175,9 @@ async function verifyAndFallback<T>(
       const verifiedInferred = verifyResult.projects?.[root]?.targets?.[
         targetName
       ] as TargetConfiguration | undefined;
+      if (!verifiedInferred) {
+        anyMissingFromVerification = true;
+      }
 
       let equivalent = false;
       if (verifiedInferred) {
@@ -1200,10 +1210,20 @@ async function verifyAndFallback<T>(
   }
 
   if (fallbacks.length > 0) {
+    // Surface the pass's own errors only when a target vanished from the
+    // verification result — the one fallback class an inference error can
+    // explain. Divergence fallbacks have a verified config; appending
+    // unrelated pass errors to them would misattribute the cause.
+    const causes =
+      anyMissingFromVerification && verificationErrors.length > 0
+        ? ` The verification pass reported errors: ${verificationErrors.join(
+            '; '
+          )}`
+        : '';
     (logger ?? devkitLogger).warn(
-      `convert-to-inferred kept a full project.json override for ${fallbacks.length} target(s) whose centralized configuration could not be verified as equivalent: ${fallbacks.join(
+      `convert-to-inferred restored the pre-centralization migration output for ${fallbacks.length} target(s) that could not be verified as equivalent after migration: ${fallbacks.join(
         ', '
-      )}. Their behavior is preserved; the shared nx.json targetDefaults do not apply to them.`
+      )}. Centralized nx.json defaults are shadowed where their keys overlap, but the live inferred configuration may differ from the pre-migration behavior — review these targets manually.${causes}`
     );
   }
 }

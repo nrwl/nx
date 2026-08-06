@@ -1114,11 +1114,110 @@ describe('Phase 4 — verify + equivalence oracle + fallback', () => {
         options: { mode: 'production' },
       },
     ]);
-    // exactly one warn, naming only the fallback project
+    // exactly one warn, naming only the fallback project — and making no
+    // behavioral-equivalence claim the code cannot check: the restored output
+    // matches the pre-centralization engine, but the live inferred
+    // configuration diverged, so the warn must ask for manual review instead
+    // of asserting preservation.
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain('app3 > build');
     expect(warn.mock.calls[0][0]).not.toContain('app1');
     expect(warn.mock.calls[0][0]).not.toContain('app2');
+    expect(warn.mock.calls[0][0]).not.toContain('behavior is preserved');
+    expect(warn.mock.calls[0][0]).toContain('could not be verified');
+    expect(warn.mock.calls[0][0]).toContain('review');
+  });
+
+  it('does not claim an override was kept when the residual is empty', async () => {
+    // Pure executor targets: the whole target is inferred, so the residual is
+    // `{}` and the fallback "restore" deletes the project.json target. The
+    // warning must not assert an override exists or that behavior is
+    // preserved — the divergent inferred config IS the live config.
+    ctx = setupFixture('fallback-empty-residual');
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: {
+          options: { config: SYNTHETIC_CONFIG_FILE },
+          cache: true,
+          outputs: ['{projectRoot}/dist'],
+        },
+      });
+    }
+    const plugin = createSyntheticPlugin(
+      (root, targetName, _options, invocation) => {
+        const target = defaultInferredTarget(root, targetName);
+        if (root === 'app3' && invocation >= 2) {
+          target.outputs = ['{projectRoot}/divergent'];
+        }
+        return target;
+      }
+    );
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // the empty residual removes the target — no override exists
+    expect(
+      readJson(ctx.tree, 'app3/project.json').targets.build
+    ).toBeUndefined();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('app3 > build');
+    expect(warn.mock.calls[0][0]).not.toContain('behavior is preserved');
+    expect(warn.mock.calls[0][0]).toContain('could not be verified');
+  });
+
+  it('surfaces verification-pass errors in the fallback warning', async () => {
+    ctx = setupFixture('fallback-verify-error');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+      });
+    }
+    const plugin = createSyntheticPlugin(
+      (root, targetName, _options, invocation) => {
+        if (invocation >= 2) {
+          throw new Error('synthetic verification boom');
+        }
+        return defaultInferredTarget(root, targetName);
+      }
+    );
+    const warn = jest.fn();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    // both projects fall back (missing from the partial verification result),
+    // and the warn carries the underlying cause instead of discarding it
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.build).toEqual({
+        options: { mode: 'production' },
+      });
+    }
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('verification pass reported');
   });
 
   it('scopes the plugin include to the migrated subset (root project -> "*")', async () => {
