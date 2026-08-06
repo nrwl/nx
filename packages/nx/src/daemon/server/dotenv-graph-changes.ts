@@ -109,10 +109,11 @@ function graphTimeDotEnvRoots(
 
 /**
  * Whether `path` is a dotenv file that getEnvPathsForTask would load from the
- * workspace root or a project root. The name relative to the root may contain
- * `/` because a target/configuration identifier can, and every root ancestor is
- * tried, so a nested project root does not shadow a parent's slash-identifier
- * dotenv.
+ * workspace root or a project root. For a project root, the name relative to
+ * the root may contain `/` because a target/configuration identifier can, and
+ * every root ancestor is tried, so a nested project root does not shadow a
+ * parent's slash-identifier dotenv. At the workspace root, only
+ * single-segment names match.
  */
 function isDotEnvUnderRoot(path: string, roots: Set<string>): boolean {
   for (

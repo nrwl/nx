@@ -71,8 +71,11 @@ export function getTaskSpecificEnv(task: Task, graph: ProjectGraph) {
 }
 
 /**
- * Reconstructs, at graph-construction time, the ambient env plus the dotenv
- * files a task would load (`.env.<target>`, project-scoped `.env`, ...).
+ * Reconstructs, at graph-construction time, the env a task would see: the
+ * root dotenv files Nx loaded at init are unloaded from the ambient env, then
+ * the dotenv files the task would load (`.env.<target>`, project-scoped
+ * `.env`, ...) are applied, so a task-scoped file wins over an init-time root
+ * load while a genuinely shell-set value still wins over both.
  *
  * `createNodes` runs before any task, so the per-task dotenv files that
  * `getTaskSpecificEnv` loads at run time are not in `process.env` yet. A plugin
