@@ -17,7 +17,7 @@ import {
  * sent over the IPC channel as a tagged `webserver-config-result` message, or
  * `webserver-config-error` on failure.
  */
-async function main(): Promise<void> {
+export async function evaluateAndSendWebserverConfig(): Promise<void> {
   const [configFilePath, workspaceRoot] = process.argv.slice(2);
   const config = await loadConfigFile<PlaywrightTestConfig>(
     join(workspaceRoot, configFilePath)
@@ -41,19 +41,23 @@ function send(message: WebserverConfigWorkerMessage): Promise<void> {
   });
 }
 
-main().then(
-  () => process.exit(0),
-  async (error) => {
-    // A non-empty message so the failure the parent surfaces stays diagnosable.
-    const detail =
-      (error && (error.stack || error.message)) ||
-      String(error) ||
-      'Unknown error while evaluating the Playwright config.';
-    try {
-      await send({ type: 'webserver-config-error', error: detail });
-    } catch {
-      // The channel is gone; the nonzero exit below still signals the failure.
+// Only the forked entrypoint runs the evaluation; importing the module (as the
+// tests do) must not.
+if (require.main === module) {
+  evaluateAndSendWebserverConfig().then(
+    () => process.exit(0),
+    async (error) => {
+      // A non-empty message so the failure the parent surfaces stays diagnosable.
+      const detail =
+        (error && (error.stack || error.message)) ||
+        String(error) ||
+        'Unknown error while evaluating the Playwright config.';
+      try {
+        await send({ type: 'webserver-config-error', error: detail });
+      } catch {
+        // The channel is gone; the nonzero exit below still signals the failure.
+      }
+      process.exit(1);
     }
-    process.exit(1);
-  }
-);
+  );
+}
