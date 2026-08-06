@@ -203,6 +203,7 @@ export default [
             'events',
             'process',
             'prettier',
+            'oxfmt',
             'util',
             '@nx/nx-darwin-x64',
             '@nx/nx-darwin-arm64',

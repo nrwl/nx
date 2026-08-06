@@ -28,6 +28,11 @@
       "x-prompt": "Which linter would you like to use?",
       "x-priority": "important"
     },
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier", "oxfmt"]
+    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["vitest", "jest", "none"],

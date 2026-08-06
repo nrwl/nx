@@ -251,7 +251,9 @@ export function runCreateWorkspace(
     nextAppDir,
     nextSrcDir,
     linter = 'eslint',
-    formatter = 'prettier',
+    // Matches `create-nx-workspace`'s own default, so the e2e suites exercise
+    // what users actually get. Suites that need prettier pass it explicitly.
+    formatter = 'oxfmt',
     unitTestRunner,
     e2eTestRunner,
     ssr,
@@ -282,7 +284,7 @@ export function runCreateWorkspace(
       | 'vitest-analog'
       | 'none';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
-    formatter?: 'prettier' | 'none';
+    formatter?: 'prettier' | 'oxfmt' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;

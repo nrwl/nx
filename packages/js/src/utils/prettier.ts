@@ -7,7 +7,9 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { prettierConfigFiles } from '@nx/devkit/internal';
 import type { Options } from 'prettier';
+import { assertNxSupportsFormatters } from './nx-formatter-internals';
 import { prettierVersion } from './versions';
 
 export interface ExistingPrettierConfig {
@@ -62,23 +64,12 @@ export function generatePrettierSetup(
   tree: Tree,
   options: { skipPackageJson?: boolean }
 ): GeneratorCallback {
-  // https://prettier.io/docs/en/configuration.html
-  const prettierrcNameOptions = [
-    '.prettierrc',
-    '.prettierrc.json',
-    '.prettierrc.yml',
-    '.prettierrc.yaml',
-    '.prettierrc.json5',
-    '.prettierrc.js',
-    '.prettierrc.cjs',
-    '.prettierrc.mjs',
-    '.prettierrc.toml',
-    'prettier.config.js',
-    'prettier.config.cjs',
-    'prettier.config.mjs',
-  ];
+  assertNxSupportsFormatters();
 
-  if (prettierrcNameOptions.every((name) => !tree.exists(name))) {
+  // Imported rather than copied: detection and setup have to agree on this
+  // list, or a workspace whose config format is missing from one side gets a
+  // second, redundant `.prettierrc` written beside the one it already has.
+  if (prettierConfigFiles.every((name) => !tree.exists(name))) {
     writeJson(tree, '.prettierrc', { singleQuote: true });
   }
 
@@ -113,6 +104,8 @@ export function generatePrettierSetup(
 export async function resolvePrettierConfigPath(
   tree: Tree
 ): Promise<string | null> {
+  assertNxSupportsFormatters();
+
   const prettier = await importPrettier();
   if (!prettier) {
     return null;
@@ -127,24 +120,11 @@ export async function resolvePrettierConfigPath(
     return null;
   }
 
-  // if we haven't find a config file in the file system, we try to find it in the virtual tree
-  // https://prettier.io/docs/en/configuration.html
-  const prettierrcNameOptions = [
-    '.prettierrc',
-    '.prettierrc.json',
-    '.prettierrc.yml',
-    '.prettierrc.yaml',
-    '.prettierrc.json5',
-    '.prettierrc.js',
-    '.prettierrc.cjs',
-    '.prettierrc.mjs',
-    '.prettierrc.toml',
-    'prettier.config.js',
-    'prettier.config.cjs',
-    'prettier.config.mjs',
-  ];
-
-  const filePath = prettierrcNameOptions.find((file) => tree.exists(file));
+  // Same shared list as the setup above, so a config this can't see is one the
+  // setup would overwrite. The copy this replaced was missing the `.ts`,
+  // `.mts` and `.cts` forms.
+  // https://prettier.io/docs/configuration
+  const filePath = prettierConfigFiles.find((file) => tree.exists(file));
   if (filePath) {
     return filePath;
   }

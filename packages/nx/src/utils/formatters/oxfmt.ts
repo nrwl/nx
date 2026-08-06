@@ -1,0 +1,1045 @@
+import ignore = require('ignore');
+import { Minimatch } from 'minimatch';
+import { execFile, execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import type { Tree } from '../../generators/tree';
+import { readFileIfExisting } from '../fileutils';
+import {
+  createIgnoreChainResolver,
+  isIgnoredByChain,
+  OXFMT_IGNORE_OPTIONS,
+  type ScopedIgnoreMatcher,
+} from '../ignore';
+import { parseJson } from '../json';
+import { readModulePackageJson } from '../package-json';
+import { FORMATTER_MAX_BUFFER } from './shared';
+
+const dynamicImport = new Function('specifier', 'return import(specifier)') as (
+  specifier: string
+) => Promise<any>;
+
+/**
+ * oxfmt reports a file it has no parser for as an error rather than skipping
+ * it, and nx hands it every changed file.
+ */
+const UNSUPPORTED_FILE_TYPE = 'Unsupported file type';
+
+type OxfmtFormat = (
+  fileName: string,
+  sourceText: string,
+  options?: Record<string, unknown>
+) => Promise<{
+  code: string;
+  // `codeframe` carries the path and line; `message` on its own does not.
+  // oxfmt's own `dist/index.d.ts` has both `errors` and `codeframe` required
+  // (`codeframe: string | null`); they are widened to optional here so the
+  // jest mock's shape fits.
+  errors?: { message: string; codeframe?: string | null }[];
+}>;
+
+/**
+ * Config filenames oxfmt *discovers*. This is narrower than the set `-c`
+ * accepts: measured against oxfmt 0.60.0, `oxfmt.config.{js,cjs,mjs,cts}` load
+ * fine when named explicitly but are never searched for, so treating one as a
+ * config would have a generator format on options oxfmt itself ignores.
+ *
+ * These have no precedence order - oxfmt refuses to guess, failing with
+ * "Both '<a>' and '<b>' found in <dir>" when a directory holds two.
+ */
+export const oxfmtConfigFiles = [
+  '.oxfmtrc.json',
+  '.oxfmtrc.jsonc',
+  'oxfmt.config.ts',
+  'oxfmt.config.mts',
+];
+
+export function isUsingOxfmt(root: string): boolean {
+  for (const file of oxfmtConfigFiles) {
+    if (existsSync(path.join(root, file))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isUsingOxfmtInTree(tree: Tree): boolean {
+  for (const file of oxfmtConfigFiles) {
+    if (tree.exists(file)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * oxfmt silently skips paths it does not recognise, and exits 2 when *every*
+ * path was skipped. Nx routinely passes mixed file lists, so treat an empty
+ * match as success rather than a failure.
+ */
+const OXFMT_BASE_ARGS = ['--no-error-on-unmatched-pattern'];
+
+const enum OxfmtExitCode {
+  Success = 0,
+  Mismatch = 1,
+  Failure = 2,
+}
+
+let cachedOxfmtBin: string | undefined;
+
+export function getOxfmtBinPath(): string {
+  if (cachedOxfmtBin) {
+    return cachedOxfmtBin;
+  }
+
+  const { packageJson, path: packageJsonPath } = readModulePackageJson('oxfmt');
+  const bin =
+    typeof packageJson.bin === 'string'
+      ? packageJson.bin
+      : packageJson.bin?.['oxfmt'];
+  if (!bin) {
+    throw new Error(`Could not find the oxfmt binary in ${packageJsonPath}`);
+  }
+  cachedOxfmtBin = path.resolve(path.dirname(packageJsonPath), bin);
+
+  return cachedOxfmtBin;
+}
+
+export function writeWithOxfmt(
+  patterns: string[],
+  // Defaults to the caller's cwd. `nx init` sets it so it can pass paths
+  // relative to the repo root rather than absolute ones the user has to read.
+  cwd?: string
+): void {
+  const oxfmtPath = getOxfmtBinPath();
+  execFileSync(
+    'node',
+    [oxfmtPath, ...OXFMT_BASE_ARGS, '--write', '--', ...patterns],
+    {
+      cwd,
+      stdio: [0, 1, 2],
+      windowsHide: true,
+    }
+  );
+}
+
+export function checkWithOxfmt(patterns: string[]): Promise<string[]> {
+  const oxfmtPath = getOxfmtBinPath();
+  return new Promise((resolve, reject) => {
+    execFile(
+      'node',
+      [oxfmtPath, ...OXFMT_BASE_ARGS, '--list-different', '--', ...patterns],
+      {
+        encoding: 'utf-8' as const,
+        windowsHide: true,
+        maxBuffer: FORMATTER_MAX_BUFFER,
+      },
+      (error, stdout, stderr) => {
+        // A failure that never produced an exit code - the binary could not be
+        // spawned, the process was killed, stdout overran maxBuffer - reports
+        // a string `code` or none at all. Treating those as exit 0 would let
+        // `nx format:check` pass on a formatter that never ran, so they have
+        // to reject before the exit code is read.
+        if (error && typeof error['code'] !== 'number') {
+          reject(
+            new Error(
+              `oxfmt could not be run to completion (${
+                error['code'] ?? error.signal ?? 'unknown'
+              }): ${error.message}`
+            )
+          );
+          return;
+        }
+
+        // oxfmt writes the differing paths to stdout *before* it reports any
+        // error, so a non-empty stdout does not mean the run succeeded. The
+        // exit code is the only reliable signal.
+        const code = error ? (error['code'] as number) : OxfmtExitCode.Success;
+        if (code === OxfmtExitCode.Success) {
+          resolve([]);
+        } else if (
+          code === OxfmtExitCode.Mismatch &&
+          stdout.trim().length > 0
+        ) {
+          resolve(stdout.trim().split('\n'));
+        } else {
+          // Exit 1 with no stdout means an invalid config; exit 2 means oxfmt
+          // failed outright (parse error, unreadable file).
+          reject(
+            new Error(
+              stderr?.trim() ||
+                error?.message ||
+                `oxfmt exited with code ${code}`
+            )
+          );
+        }
+      }
+    );
+  });
+}
+
+let cachedOxfmtModule: Promise<{ format: OxfmtFormat }> | undefined;
+
+/**
+ * Loads oxfmt's programmatic API, which ships only as ESM.
+ *
+ * `require` is tried first: Node resolves an ESM-only package through `require`
+ * on its own (20.19+/22.12+), and going through the bare package name is what
+ * lets jest intercept it with a CommonJS mock. Older runtimes throw there, so
+ * the fallback imports the entry point directly - `import()` is reached through
+ * `new Function` so TypeScript cannot downlevel it back to a `require`.
+ *
+ * The two paths resolve differently and deliberately so: the bare `require`
+ * resolves from nx's own directory chain, while the fallback (like
+ * `getOxfmtBinPath`) resolves from the workspace's install, because nx does not
+ * depend on oxfmt itself.
+ */
+function loadOxfmtModule(): Promise<{ format: OxfmtFormat }> {
+  if (!cachedOxfmtModule) {
+    cachedOxfmtModule = (async () => {
+      try {
+        // Node resolves an ESM-only package through `require` on its own, and
+        // going through the package name keeps the module mockable.
+        const required = require('oxfmt');
+        return required.format ? required : required.default;
+      } catch {
+        // Older runtimes cannot `require` an ESM package, so import the entry
+        // point the same way the binary is resolved - from the workspace's own
+        // install, because nx does not depend on oxfmt itself.
+        const { packageJson, path: packageJsonPath } =
+          readModulePackageJson('oxfmt');
+        const entryPoint = path.resolve(
+          path.dirname(packageJsonPath),
+          packageJson.main ?? 'dist/index.js'
+        );
+        const imported = await dynamicImport(pathToFileURL(entryPoint).href);
+        return imported.format ? imported : imported.default;
+      }
+    })().catch((error) => {
+      // Do not hold on to the failure - the next call gets to try again.
+      cachedOxfmtModule = undefined;
+      throw error;
+    });
+  }
+
+  return cachedOxfmtModule;
+}
+
+function isJsonOxfmtConfig(name: string): boolean {
+  return name.endsWith('.json') || name.endsWith('.jsonc');
+}
+
+/**
+ * `register` is required lazily so that reading a JSON config does not pull in
+ * the TypeScript transpiler machinery.
+ *
+ * `loadTsFile` deliberately does not handle the ESM-redispatch codes - its own
+ * JSDoc says they "bubble unchanged … so async-aware callers can dispatch to
+ * `import()`". This is that caller, and a config using top-level await cannot be
+ * `require`d on any runtime.
+ *
+ * The retry is not gated on those codes. Depending on whether swc/ts-node ends
+ * up registered, the same config can surface as `ERR_REQUIRE_ASYNC_MODULE` or
+ * as a transpile artifact like `exports is not defined` - both mean "this is
+ * ESM, import it".
+ *
+ * Neither error is discardable when the retry also fails. The `require` attempt
+ * may have failed before the module body was evaluated (the redispatch codes) or
+ * during transpilation, and only `import()` ever actually evaluated the config -
+ * so the `import()` error is thrown with the `require` one attached as its cause
+ * rather than either being chosen over the other.
+ *
+ * No unit test pins this: for a `.ts` config both paths surface the same
+ * transpile error, and the case where they differ (`.mts` with top-level await)
+ * is unreachable from jest. `create-nx-workspace-formatter.test.ts` covers it.
+ */
+async function loadTsOxfmtConfig(configPath: string): Promise<unknown> {
+  try {
+    return (
+      require('../../plugins/js/utils/register') as typeof import('../../plugins/js/utils/register')
+    ).loadTsFile(configPath);
+  } catch (loadError) {
+    try {
+      return await dynamicImport(pathToFileURL(configPath).href);
+    } catch (importError) {
+      throw Object.assign(importError, { cause: loadError });
+    }
+  }
+}
+
+/**
+ * True when an ignore file along the chain covers the file, or when the resolved
+ * config's own `ignorePatterns` do.
+ *
+ * `ignorePatterns` is not an ignore file: it comes from the config and oxfmt
+ * roots it at that config's directory, so it is matched separately from the
+ * chain rather than folded into it.
+ */
+function isIgnored(
+  chain: ScopedIgnoreMatcher[],
+  relativePath: string,
+  config: DirectoryConfig,
+  absoluteFilePath: string
+): boolean {
+  if (isIgnoredByChain(chain, relativePath)) {
+    return true;
+  }
+
+  if (config.ignoreMatcher) {
+    const relative = toRelativeWithin(config.dir, absoluteFilePath);
+    if (relative !== undefined && config.ignoreMatcher.ignores(relative)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+type EditorConfigSection = {
+  matches: (filePath: string) => boolean;
+  properties: Record<string, string>;
+};
+
+/** One `.editorconfig`, with the directory its section globs are relative to. */
+type EditorConfigFile = {
+  dir: string;
+  sections: EditorConfigSection[];
+  isRoot: boolean;
+};
+
+/**
+ * Reads one `.editorconfig` and compiles each section's glob once for the whole
+ * batch - the globs are invariant, and recompiling them per file is the
+ * difference between O(sections) and O(files x sections) regex builds.
+ */
+function readEditorConfigInDir(
+  dir: string
+): { sections: EditorConfigSection[]; isRoot: boolean } | undefined {
+  let contents: string;
+  try {
+    contents = readFileSync(path.join(dir, '.editorconfig'), 'utf-8');
+  } catch (e) {
+    // Not having one is the common case. Anything else - unreadable, a
+    // directory, a broken mount - would otherwise look identical to that and
+    // silently format to different widths than `nx format` produces.
+    if (e.code !== 'ENOENT') {
+      throw new Error(`Could not read .editorconfig: ${e.message}`);
+    }
+    return undefined;
+  }
+
+  const sections: EditorConfigSection[] = [];
+  let current: EditorConfigSection | undefined;
+  let isRoot = false;
+
+  for (const line of contents.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
+      continue;
+    }
+
+    const header = /^\[(.*)\]$/.exec(trimmed);
+    if (header) {
+      current = { matches: compileEditorConfigGlob(header[1]), properties: {} };
+      sections.push(current);
+      continue;
+    }
+
+    const separator = trimmed.indexOf('=');
+    if (separator === -1) {
+      continue;
+    }
+    const key = trimmed.slice(0, separator).trim().toLowerCase();
+    const value = trimmed
+      .slice(separator + 1)
+      .trim()
+      .toLowerCase();
+
+    // Anything before the first section is preamble, where `root = true` stops
+    // the walk-up.
+    if (!current) {
+      if (key === 'root' && value === 'true') {
+        isRoot = true;
+      }
+      continue;
+    }
+    current.properties[key] = value;
+  }
+
+  return { sections, isRoot };
+}
+
+/**
+ * The `.editorconfig` files that apply to a directory, farthest first, walking
+ * up until one declares `root = true` - the spec's own termination rule, and
+ * what the oxfmt CLI follows. The walk deliberately continues above the
+ * workspace root, because that is where a repo nested inside a larger checkout
+ * keeps its shared settings.
+ *
+ * Cached per directory; the returned order is the order properties should be
+ * applied, so a nearer file overwrites a farther one.
+ */
+function createEditorConfigResolver(): (fileDir: string) => EditorConfigFile[] {
+  const cache = new Map<string, EditorConfigFile[]>();
+
+  return (fileDir: string) => {
+    const key = path.resolve(fileDir);
+    let chain = cache.get(key);
+    if (chain) {
+      return chain;
+    }
+
+    const found: EditorConfigFile[] = [];
+    let current = key;
+    while (true) {
+      const parsed = readEditorConfigInDir(current);
+      if (parsed) {
+        found.push({ ...parsed, dir: current });
+        if (parsed.isRoot) {
+          break;
+        }
+      }
+      const parent = path.dirname(current);
+      if (parent === current) {
+        break;
+      }
+      current = parent;
+    }
+
+    chain = found.reverse();
+    cache.set(key, chain);
+    return chain;
+  };
+}
+
+/**
+ * Compiles one `.editorconfig` section header into a matcher.
+ *
+ * Per the spec, a pattern containing `/` anywhere is relative to the directory
+ * holding the `.editorconfig` (a leading `/` is only an anchor and is stripped);
+ * a pattern with no separator at all applies at any depth.
+ */
+function compileEditorConfigGlob(glob: string): (filePath: string) => boolean {
+  const pattern = glob.startsWith('/')
+    ? glob.slice(1)
+    : glob.includes('/')
+      ? glob
+      : `**/${glob}`;
+
+  const matcher = new Minimatch(pattern, { dot: true });
+
+  return (filePath) => matcher.match(filePath);
+}
+
+/**
+ * Translates the `.editorconfig` properties that have an oxfmt equivalent. Any
+ * value oxfmt has no meaning for - including the spec's `unset` - is left out
+ * so that oxfmt's own default applies.
+ */
+function editorConfigOptionsForFile(
+  files: EditorConfigFile[],
+  absoluteFilePath: string
+): Record<string, unknown> {
+  const properties: Record<string, string> = {};
+  for (const file of files) {
+    // Globs are relative to the directory holding the `.editorconfig`.
+    const relative = toRelativeWithin(file.dir, absoluteFilePath);
+    if (relative === undefined) {
+      continue;
+    }
+    for (const section of file.sections) {
+      if (section.matches(relative)) {
+        // Later sections win, matching how editorconfig resolves a property.
+        Object.assign(properties, section.properties);
+      }
+    }
+  }
+
+  const options: Record<string, unknown> = {};
+
+  const indentStyle = properties['indent_style'];
+  if (indentStyle === 'tab' || indentStyle === 'space') {
+    options.useTabs = indentStyle === 'tab';
+  }
+
+  // The spec makes `indent_size` the indentation width and `tab_width` only a
+  // fallback for it, which is also what oxfmt's CLI does *when `indent_style`
+  // is set* - the shape essentially every .editorconfig has, and the one the
+  // two paths therefore agree on.
+  //
+  // Measured divergence, left alone deliberately: with no `indent_style` at
+  // all, the CLI ignores `indent_size` and uses `tab_width` (or its own
+  // default of 2 when there is none), while this follows the spec and honours
+  // `indent_size`. Matching the quirk would mean dropping a width the user
+  // asked for, so the spec wins here.
+  const indentSize = properties['indent_size'] ?? properties['tab_width'];
+  if (indentSize === 'tab') {
+    options.useTabs = true;
+  } else if (indentSize && /^\d+$/.test(indentSize)) {
+    options.tabWidth = Number(indentSize);
+  }
+
+  const maxLineLength = properties['max_line_length'];
+  if (maxLineLength && /^\d+$/.test(maxLineLength)) {
+    options.printWidth = Number(maxLineLength);
+  }
+
+  const quoteType = properties['quote_type'];
+  if (quoteType === 'single' || quoteType === 'double') {
+    options.singleQuote = quoteType === 'single';
+  }
+
+  const endOfLine = properties['end_of_line'];
+  if (endOfLine === 'lf' || endOfLine === 'crlf' || endOfLine === 'cr') {
+    options.endOfLine = endOfLine;
+  }
+
+  const insertFinalNewline = properties['insert_final_newline'];
+  if (insertFinalNewline === 'true' || insertFinalNewline === 'false') {
+    options.insertFinalNewline = insertFinalNewline === 'true';
+  }
+
+  return options;
+}
+
+type OxfmtOverride = {
+  matches: (filePath: string) => boolean;
+  options: Record<string, unknown>;
+};
+
+/**
+ * Either a usable config or the reason there isn't one - never both. That half
+ * *is* enforced: the error arm types every payload key as `undefined`, so a
+ * value cannot be attached to it.
+ *
+ * Reading `options` *without* checking `error` first is not enforced, because
+ * `strict: false` erases the `| undefined` that would make it an error. Callers
+ * must check `error` first - `formatFilesWithOxfmt` does - and the case that
+ * matters is the one that would otherwise format past a workspace's own
+ * `ignorePatterns`. Making it a compile error needs a required discriminant on
+ * both arms.
+ */
+type ResolvedOxfmtConfig =
+  | {
+      error: string;
+      options?: undefined;
+      overrides?: undefined;
+      ignorePatterns?: undefined;
+    }
+  | {
+      error?: undefined;
+      /** Options shaped the way `format()` accepts them. */
+      options?: Record<string, unknown>;
+      overrides?: OxfmtOverride[];
+      ignorePatterns?: string[];
+    };
+
+/**
+ * `overrides` and `ignorePatterns` belong to oxfmt's *config file* schema, not
+ * to the `FormatConfig` its programmatic API accepts - handing them to
+ * `format()` would silently drop them, so a generator would format a file
+ * differently from `nx format`. They are split out here and applied per file by
+ * `formatFilesWithOxfmt` instead.
+ */
+function splitOxfmtConfig(config: unknown): ResolvedOxfmtConfig {
+  if (config === undefined) {
+    return {};
+  }
+  // Anything that is not a plain object is a config oxfmt refuses to load:
+  // measured, `123` / `"x"` / `[]` / `null` / `true` each exit 1 with
+  // "invalid type: ... expected struct Oxfmtrc" and format nothing. Returning
+  // `{}` here would instead format the batch on oxfmt's bare defaults - the
+  // divergence the `error` arm below exists to prevent. Note `[]` needs the
+  // explicit check: `typeof [] === 'object'`.
+  //
+  // `config` is `unknown` so this stays a live check. A narrower parameter
+  // would reject these shapes at the type level while they still arrive at
+  // runtime, leaving the guard looking dead to anyone reading it.
+  if (config === null || typeof config !== 'object' || Array.isArray(config)) {
+    return { error: 'the config must be an object' };
+  }
+
+  const {
+    overrides: rawOverrides,
+    ignorePatterns: rawIgnorePatterns,
+    ...options
+  } = config as {
+    overrides?: {
+      files?: string[];
+      excludeFiles?: string[];
+      options?: object;
+    }[];
+    ignorePatterns?: string[];
+  } & Record<string, unknown>;
+
+  // oxfmt reads an explicit `null` as an absent key and formats without
+  // complaint, so it is normalised rather than rejected - erroring here would
+  // skip the whole batch over a config `nx format` accepts.
+  const overrides = rawOverrides ?? undefined;
+  const ignorePatterns = rawIgnorePatterns ?? undefined;
+
+  // Shapes oxfmt refuses to load are reported rather than dropped. Quietly
+  // ignoring them would leave the batch formatting past exclusions the config
+  // asked for, while `nx format` on the same workspace fails outright.
+  if (
+    ignorePatterns !== undefined &&
+    (!Array.isArray(ignorePatterns) ||
+      ignorePatterns.some((pattern) => typeof pattern !== 'string'))
+  ) {
+    return { error: '"ignorePatterns" must be an array of strings' };
+  }
+  if (
+    overrides !== undefined &&
+    (!Array.isArray(overrides) ||
+      overrides.some(
+        (override) =>
+          override === null ||
+          typeof override !== 'object' ||
+          // `files` is required by oxfmt, not merely typed: an override that
+          // omits it fails the whole config with "missing field `files`".
+          override.files === undefined ||
+          !isGlobSet(override.files) ||
+          !isGlobSet(override.excludeFiles)
+      ))
+  ) {
+    return {
+      error:
+        '"overrides" must be an array of { files, excludeFiles } string arrays, each with "files"',
+    };
+  }
+
+  return {
+    options,
+    ignorePatterns,
+    overrides: Array.isArray(overrides)
+      ? overrides.map((override) => {
+          // oxfmt matches these against paths relative to the config file,
+          // which for a workspace batch is the workspace root.
+          const include = compileGlobSet(override?.files);
+          const exclude = compileGlobSet(override?.excludeFiles);
+          return {
+            matches: (filePath: string) =>
+              include(filePath) && !exclude(filePath),
+            options: (override?.options ?? {}) as Record<string, unknown>,
+          };
+        })
+      : undefined,
+  };
+}
+
+/**
+ * oxfmt's `GlobSet` is `string[]`; anything else is not one. Absent passes here
+ * because it is legal for `excludeFiles` - `files` is required, and its caller
+ * checks for that separately.
+ */
+function isGlobSet(globs: unknown): boolean {
+  return (
+    globs === undefined ||
+    (Array.isArray(globs) && globs.every((g) => typeof g === 'string'))
+  );
+}
+
+function compileGlobSet(globs: string[] | undefined): (p: string) => boolean {
+  // Deliberately not lenient about a bare string here, even though a prettier
+  // config allows one: oxfmt's own type is `GlobSet = string[]`, and its CLI
+  // rejects the whole config with "invalid type: string, expected a sequence".
+  // Accepting it would make a generator apply an override that `nx format`
+  // refuses to run at all.
+  if (!Array.isArray(globs) || globs.length === 0) {
+    return () => false;
+  }
+  const matchers = globs.map((glob) => {
+    // oxfmt lifts a pattern with no separator to match at any depth, and reads
+    // a leading `./` as "anchored to the config file's directory". minimatch
+    // does neither on its own, so `*.md` would otherwise match only at the
+    // root - the shape `oxfmt migrate-prettier` emits most often.
+    // See GlobSet::new in crates/oxc_config/src/glob_set.rs.
+    const lifted = glob.startsWith('./')
+      ? glob.slice(2)
+      : glob.includes('/')
+        ? glob
+        : `**/${glob}`;
+
+    // Under negation oxfmt collapses a *single* leading globstar to exactly one
+    // segment: `!**/t.ts` selects the same set as `!*/t.ts` (matching `t.ts`
+    // and `a/b/t.ts`, not `a/t.ts`), while minimatch's zero-or-more `**` would
+    // exclude every `t.ts` including the two oxfmt still matches. An interior
+    // `**` is unaffected on both sides
+    // (`!a/**/t.ts` agrees as written), and so is a *doubled* leading one -
+    // measured, `!**/**/t.ts` selects every path that is *not* a `t.ts` at any
+    // depth, identically on both sides, so rewriting it would introduce the
+    // divergence rather than close it. Against oxfmt 0.60.0.
+    const pattern =
+      lifted.startsWith('!**/') && !lifted.startsWith('!**/**/')
+        ? `!*/${lifted.slice(4)}`
+        : lifted;
+
+    // minimatch's own `!` handling is left on: oxfmt normalizes the pattern and
+    // then matches with fast-glob, whose `glob_match` treats a leading `!` as
+    // an inversion too, so `!sub/*.ts` selects everything outside `sub/` on
+    // both sides. (A separator-less `!*.ts` is lifted to `**/!*.ts` above, so
+    // the `!` stops being leading and neither side inverts.) The one form that
+    // needed rewriting is handled just above.
+    return new Minimatch(pattern, { dot: true });
+  });
+  return (filePath) => matchers.some((matcher) => matcher.match(filePath));
+}
+
+/**
+ * Options from every override matching this file; later overrides win.
+ * Override globs are rooted at the workspace, so a path that could not be made
+ * relative to it matches nothing.
+ */
+function overrideOptionsForFile(
+  overrides: OxfmtOverride[] | undefined,
+  filePath: string | undefined
+): Record<string, unknown> | undefined {
+  if (!overrides?.length || filePath === undefined) {
+    return undefined;
+  }
+  let options: Record<string, unknown> | undefined;
+  for (const override of overrides) {
+    if (override.matches(filePath)) {
+      options = { ...options, ...override.options };
+    }
+  }
+  return options;
+}
+
+/**
+ * oxfmt's programmatic API takes options directly rather than discovering a
+ * config file, so the workspace's config is read here. A config the generator
+ * just created lives only in the tree, so it is passed in as `seedConfig` and
+ * takes precedence over whatever is on disk. Nx only ever generates the JSON
+ * form, so a seed is parsed rather than executed; a seed in any other form
+ * falls through to the config on disk rather than formatting with oxfmt's bare
+ * defaults.
+ *
+ * A config that has to be executed to be understood is loaded the same way Nx
+ * loads any other config file, through the workspace's TypeScript transpiler.
+ * There is no JavaScript branch: oxfmt does not discover `oxfmt.config.js`.
+ *
+ * Nested configs are discovered the way the CLI does: the nearest config at or
+ * above the file's own directory wins, and it *replaces* the one above rather
+ * than merging with it. Measured against oxfmt 0.60.0 - a nested config setting
+ * only `printWidth` leaves `singleQuote` at oxfmt's default, not at the root
+ * config's value - so merging would format differently from `nx format:write`.
+ *
+ * All of this exists because oxfmt's npm package ships the formatter without a
+ * resolver: `format()` takes options and discovers nothing, so config lookup,
+ * `.editorconfig` and ignore handling are reimplemented here. Prettier's path
+ * needs none of it because `prettier.resolveConfig` does the same job per file.
+ * Tracked upstream at https://github.com/oxc-project/oxc/issues/19922 - if that
+ * lands, most of this collapses into one call.
+ */
+async function resolveOxfmtConfigInDir(
+  dir: string,
+  workspaceRoot: string,
+  seedConfig?: { name: string; content: string }
+): Promise<ResolvedOxfmtConfig | undefined> {
+  // The seed is the root config the generator just created, so it only stands
+  // in for a config at the root itself.
+  if (
+    seedConfig &&
+    isJsonOxfmtConfig(seedConfig.name) &&
+    path.resolve(dir) === path.resolve(workspaceRoot)
+  ) {
+    try {
+      return splitOxfmtConfig(parseJson(seedConfig.content));
+    } catch (e) {
+      return { error: `Could not read ${seedConfig.name}: ${e.message}` };
+    }
+  }
+
+  for (const name of oxfmtConfigFiles) {
+    const configPath = path.join(dir, name);
+    if (!existsSync(configPath)) {
+      continue;
+    }
+
+    try {
+      if (isJsonOxfmtConfig(name)) {
+        return splitOxfmtConfig(parseJson(readFileSync(configPath, 'utf-8')));
+      }
+
+      // Every discovered name is JSON above or TypeScript here - there is no
+      // JavaScript branch, because oxfmt does not discover `oxfmt.config.js`.
+      const loaded = (await loadTsOxfmtConfig(configPath)) as
+        | { default?: unknown }
+        | undefined;
+
+      return splitOxfmtConfig(loaded?.default ?? loaded);
+    } catch (e) {
+      // Unlike the CLI, oxfmt never sees this file - it is handed options in
+      // memory - so nothing else will report that the config is unusable.
+      return {
+        error: `Could not read ${path.relative(workspaceRoot, configPath)}: ${
+          e.message
+        }`,
+      };
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * The config that applies to each file, keyed by the file's directory. Every
+ * batch re-resolves the same handful of directories, so the walk is cached
+ * rather than repeated per file.
+ *
+ * `dir` is where the winning config was found; `ignorePatterns` are
+ * gitignore-style and rooted there, not at the workspace root.
+ */
+type DirectoryConfig = ResolvedOxfmtConfig & {
+  dir: string;
+  /** `ignorePatterns` compiled once per directory rather than per file. */
+  ignoreMatcher?: ReturnType<typeof ignore>;
+};
+
+function createOxfmtConfigResolver(
+  workspaceRoot: string,
+  seedConfig?: { name: string; content: string }
+): (fileDir: string) => Promise<DirectoryConfig> {
+  const cache = new Map<string, Promise<DirectoryConfig>>();
+
+  const resolve = async (fileDir: string): Promise<DirectoryConfig> => {
+    for (const dir of ancestorsWithin(workspaceRoot, fileDir)) {
+      const config = await resolveOxfmtConfigInDir(
+        dir,
+        workspaceRoot,
+        seedConfig
+      );
+      if (config) {
+        return {
+          ...config,
+          dir,
+          ignoreMatcher: config.ignorePatterns?.length
+            ? ignore().add(config.ignorePatterns)
+            : undefined,
+        };
+      }
+    }
+    return { dir: workspaceRoot };
+  };
+
+  return (fileDir: string) => {
+    const key = path.resolve(fileDir);
+    let pending = cache.get(key);
+    if (!pending) {
+      pending = resolve(key);
+      cache.set(key, pending);
+    }
+    return pending;
+  };
+}
+
+/**
+ * `dir` and every directory between it and `workspaceRoot`, nearest first.
+ * Yields nothing when `dir` is outside the workspace.
+ */
+function* ancestorsWithin(
+  workspaceRoot: string,
+  dir: string
+): Generator<string> {
+  const root = path.resolve(workspaceRoot);
+  let current = path.resolve(dir);
+
+  if (current !== root && !current.startsWith(root + path.sep)) {
+    return;
+  }
+
+  while (true) {
+    yield current;
+    if (current === root) {
+      return;
+    }
+    const parent = path.dirname(current);
+    // `dirname` of a filesystem root returns itself; without this a path that
+    // somehow escaped the check above would spin forever.
+    if (parent === current) {
+      return;
+    }
+    current = parent;
+  }
+}
+
+/** `path.dirname` for the workspace-relative POSIX paths the chain is keyed by. */
+function posixDirname(relativePath: string): string {
+  const separator = relativePath.lastIndexOf('/');
+  return separator === -1 ? '' : relativePath.slice(0, separator);
+}
+
+/**
+ * `ignore` rejects anything that is not already a relative path, and callers
+ * pass both workspace-relative paths (from a tree) and absolute ones (from
+ * `writeFormattedJsonFile`).
+ *
+ * Returns undefined for a path that is not under the workspace root, including
+ * the root itself. The caller treats that as "no ignore rules apply" rather
+ * than passing the raw path on - that is the shape `ignore` throws for. On
+ * Windows a path on another drive comes back looking relative (`D:/…`), which
+ * is a wrong answer rather than an undefined one; no shipped caller does that.
+ */
+function toRelativeWithin(
+  baseDir: string,
+  filePath: string
+): string | undefined {
+  const relative = path
+    .relative(baseDir, path.resolve(baseDir, filePath))
+    .split(path.sep)
+    .join('/');
+
+  return relative && !relative.startsWith('../') ? relative : undefined;
+}
+
+/** The batch's own oxfmt config, if it carries one. */
+function findOxfmtConfigInBatch(
+  files: { path: string; content: string }[]
+): { name: string; content: string } | undefined {
+  for (const name of oxfmtConfigFiles) {
+    const match = files.find((file) => file.path === name);
+    if (match) {
+      return { name, content: match.content };
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Formats a batch of in-memory files through oxfmt's programmatic API.
+ *
+ * The files exist only in a virtual tree, and formatting them must not touch
+ * the workspace: staging copies of project files (project.json, package.json)
+ * inside a workspace races the daemon's file watcher and the project graph
+ * while a generator is running. oxfmt's `format` takes the content directly and
+ * only reads the file name to pick a parser, so nothing is written to disk.
+ *
+ * Returns the formatted content keyed by the path the caller passed in. A file
+ * is absent from the map when oxfmt has no parser for it, when an ignore file
+ * covers it, or when it is already formatted - callers leave those untouched.
+ * A file oxfmt cannot parse fails only itself: the rest of the batch is still
+ * applied, and every failure is reported through `errors`, one entry per file.
+ */
+export async function formatFilesWithOxfmt(
+  files: { path: string; content: string }[],
+  workspaceRoot: string,
+  seedConfig?: { name: string; content: string }
+): Promise<{ formatted: Map<string, string>; errors?: string[] }> {
+  const formatted = new Map<string, string>();
+  if (files.length === 0) {
+    return { formatted };
+  }
+
+  const { format } = await loadOxfmtModule();
+  // Config, ignore files and .editorconfig are all resolved from the file's own
+  // directory upwards, as the CLI does, and cached per directory.
+  // A config in the batch itself is the freshest one there is, and for a caller
+  // holding a tree it may be the only copy - the on-disk file is stale or
+  // absent until the tree flushes. Callers that already know which file that is
+  // still pass it; this is the fallback for the ones that do not, so the answer
+  // does not depend on which entry point you came through.
+  const resolveConfig = createOxfmtConfigResolver(
+    workspaceRoot,
+    seedConfig ?? findOxfmtConfigInBatch(files)
+  );
+  // The same values the generator side binds, read from the same constant so
+  // the two cannot drift: oxfmt honours `.prettierignore` as well as
+  // `.gitignore` (measured against its CLI, and part of being a drop-in for
+  // prettier), and keeps one matcher per file rather than merging them, so a
+  // `!` in one cannot re-include what the other excluded.
+  const resolveIgnores = createIgnoreChainResolver(
+    (relativePath) =>
+      readFileIfExisting(path.join(workspaceRoot, relativePath)),
+    OXFMT_IGNORE_OPTIONS.filenames,
+    OXFMT_IGNORE_OPTIONS.merge
+  );
+  const resolveEditorConfig = createEditorConfigResolver();
+
+  const errors: string[] = [];
+  await Promise.all(
+    files.map(async (file) => {
+      try {
+        const absolutePath = path.resolve(workspaceRoot, file.path);
+        const fileDir = path.dirname(absolutePath);
+
+        const config = await resolveConfig(fileDir);
+        if (config.error) {
+          // An unreadable config costs us the workspace's style *and* its
+          // `ignorePatterns`. Formatting on oxfmt's bare defaults would then
+          // rewrite files the config asks to skip, and `tree.write` is not
+          // undone by a warning - so report and leave this file alone. Only
+          // files under that config are affected; the rest of the batch still
+          // formats.
+          errors.push(config.error);
+          return;
+        }
+
+        // Still inside the try: `ignores()` throws on a path it considers
+        // non-relative, and an unhandled rejection here would discard the
+        // formatting of every other file in the batch.
+        //
+        // A path outside the workspace cannot be covered by the workspace's own
+        // ignore files, so there is nothing to check for it.
+        const relativePath = toRelativeWithin(workspaceRoot, file.path);
+        if (
+          relativePath !== undefined &&
+          isIgnored(
+            resolveIgnores(posixDirname(relativePath)),
+            relativePath,
+            config,
+            absolutePath
+          )
+        ) {
+          return;
+        }
+
+        // Overrides are globs in the config's own file, so they match relative
+        // to wherever that config was found rather than to the workspace root.
+        const relativeToConfig = toRelativeWithin(config.dir, absolutePath);
+
+        const result = await format(absolutePath, file.content, {
+          // Precedence runs .editorconfig < the config's own options < a
+          // matching override, which is the order the CLI resolves them in.
+          ...editorConfigOptionsForFile(
+            resolveEditorConfig(fileDir),
+            absolutePath
+          ),
+          ...config.options,
+          ...overrideOptionsForFile(config.overrides, relativeToConfig),
+        });
+
+        if (result.errors?.length) {
+          // oxfmt is handed every changed file, most of which it has no parser
+          // for. Those are skipped rather than reported, matching the CLI's
+          // --no-error-on-unmatched-pattern; a real parse failure is reported
+          // but costs only its own file.
+          //
+          // Every diagnostic is read, not just the first: a file can come back
+          // with an `Unsupported file type` entry ahead of a real one, and
+          // stopping at [0] would drop it.
+          for (const failure of result.errors) {
+            if (failure.message.startsWith(UNSUPPORTED_FILE_TYPE)) {
+              continue;
+            }
+            // `message` alone is context-free ("Unexpected token"); the path
+            // and line live in the codeframe.
+            errors.push(
+              `${file.path}: ${failure.codeframe?.trim() || failure.message}`
+            );
+          }
+          return;
+        }
+
+        if (result.code !== file.content) {
+          formatted.set(file.path, result.code);
+        }
+      } catch (e) {
+        errors.push(`${file.path}: ${e.message}`);
+      }
+    })
+  );
+
+  return { formatted, errors: errors.length > 0 ? errors : undefined };
+}

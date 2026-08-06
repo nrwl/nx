@@ -19,8 +19,13 @@ async function createPreset(tree: Tree, options: Schema) {
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
-  if (options.preset === Preset.Apps) {
-    return;
+  if (options.preset === Preset.Apps || options.preset === Preset.NPM) {
+    // These presets generate no project, so nothing downstream would set the
+    // formatter up and the choice would be dropped. Only the formatter is
+    // configured here - `@nx/js:init` would also add TypeScript and a root
+    // tsconfig, which both presets deliberately leave out.
+    const { setUpFormatter } = require('@nx' + '/js');
+    return setUpFormatter(tree, options.formatter);
   } else if (options.preset === Preset.AngularMonorepo) {
     const { applicationGenerator: angularApplicationGenerator } = require(
       '@nx' + '/angular/generators'
@@ -48,6 +53,7 @@ async function createPreset(tree: Tree, options: Schema) {
       ssr: options.ssr,
       prefix: options.prefix,
       zoneless: options.zoneless,
+      formatter: options.formatter,
       nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.AngularStandalone) {
@@ -78,6 +84,7 @@ async function createPreset(tree: Tree, options: Schema) {
       ssr: options.ssr,
       prefix: options.prefix,
       zoneless: options.zoneless,
+      formatter: options.formatter,
       nxCloudToken: options.nxCloudToken,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
@@ -159,6 +166,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.unitTestRunner ?? 'vitest',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.Nuxt) {
     const { applicationGenerator: nuxtApplicationGenerator } = require(
@@ -193,6 +201,7 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner: options.unitTestRunner ?? 'vitest',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require(
@@ -244,6 +253,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.Nest) {
     const { applicationGenerator: nestApplicationGenerator } = require(
@@ -324,6 +334,7 @@ async function createPreset(tree: Tree, options: Schema) {
       js: options.js,
       rootProject: true,
       addPlugin,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NodeStandalone) {
     const { applicationGenerator: nodeApplicationGenerator } = require(
@@ -341,6 +352,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       unitTestRunner: options.unitTestRunner,
       addPlugin,
+      formatter: options.formatter,
     });
   } else if (options.preset === Preset.NodeMonorepo) {
     const { applicationGenerator: nodeApplicationGenerator } = require(

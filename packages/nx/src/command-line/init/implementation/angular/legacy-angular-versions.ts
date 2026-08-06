@@ -16,6 +16,7 @@ import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/co
 import { initCloud, setNeverConnectToCloud } from '../utils';
 import { MessageOptionKey } from '../../../../utils/ab-testing';
 import type { Options } from './types';
+import { recordInitWrite } from '../format';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
 // key is major Angular version and value is Nx version to use
@@ -179,6 +180,7 @@ async function installDependencies(
     json.dependencies = sortObjectByKeys(json.dependencies);
   }
   writeJsonFile(`package.json`, json);
+  recordInitWrite('package.json');
 
   execSync(pmc.install, { stdio: [0, 1, 2], windowsHide: true });
 }

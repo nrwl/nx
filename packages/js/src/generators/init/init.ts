@@ -11,10 +11,12 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { detectFormatterInTree } from '@nx/devkit/internal';
 import { join } from 'path';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
-import { generatePrettierSetup } from '../../utils/prettier';
+import { getFormatterSetup } from '../../utils/formatter-setup';
+import { assertNxSupportsFormatters } from '../../utils/nx-formatter-internals';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
@@ -23,7 +25,6 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import {
   nxVersion,
-  prettierVersion,
   swcHelpersVersion,
   tsLibVersion,
   typescriptVersion,
@@ -35,8 +36,22 @@ export async function initGenerator(
   schema: InitSchema
 ): Promise<GeneratorCallback> {
   schema.addTsPlugin ??= false;
+  assertNxSupportsFormatters();
   const isUsingNewTsSetup = schema.addTsPlugin || isUsingTsSolutionSetup(tree);
-  schema.formatter ??= isUsingNewTsSetup ? 'none' : 'prettier';
+  // Whatever the workspace already uses wins, so a prettier workspace does not
+  // gain a stray `.oxfmtrc.json` that then outranks its own config. Detection
+  // is deferred to `detectFormatterInTree` rather than re-derived here: it
+  // encodes the oxfmt-over-prettier precedence, which a prettier-first check
+  // gets backwards for a workspace configured with both. Only a workspace with
+  // no formatter at all falls through, and the TS solution setup declines to
+  // impose one there.
+  //
+  // This resolves for *programmatic* callers only. `schema.json` sets
+  // `"default": "none"`, which the generator runner applies before this runs,
+  // so `nx g @nx/js:init` never reaches it - unchanged from how the previous
+  // prettier default behaved.
+  schema.formatter ??=
+    detectFormatterInTree(tree) ?? (isUsingNewTsSetup ? 'none' : 'oxfmt');
 
   return initGeneratorInternal(tree, {
     addTsConfigBase: true,
@@ -129,11 +144,16 @@ export async function initGeneratorInternal(
     devDependencies['typescript'] = typescriptVersion;
   }
 
-  if (schema.formatter === 'prettier') {
-    const prettierTask = generatePrettierSetup(tree, {
-      skipPackageJson: schema.skipPackageJson,
-    });
-    tasks.push(prettierTask);
+  // One table drives both halves of formatter setup - writing the config and
+  // making the package resolvable further down. They were separate `if` chains
+  // over the same union, forty lines apart, so a third formatter meant finding
+  // both.
+  const formatterSetup = getFormatterSetup(schema.formatter);
+
+  if (formatterSetup) {
+    tasks.push(
+      formatterSetup.setUp(tree, { skipPackageJson: schema.skipPackageJson })
+    );
   }
 
   const rootTsConfigFileName = getRootTsConfigFileName(tree);
@@ -157,18 +177,36 @@ export async function initGeneratorInternal(
     : () => {};
   tasks.push(installTask);
 
-  if (
-    !schema.skipPackageJson &&
-    // For `create-nx-workspace` or `nx g @nx/js:init`, we want to make sure users didn't set formatter to none.
-    // For programmatic usage, the formatter is normally undefined, and we want prettier to continue to be ensured, even if not ultimately installed.
-    schema.formatter !== 'none'
-  ) {
-    ensurePackage('prettier', prettierVersion);
-  }
-
   if (!schema.skipFormat) {
-    // even if skipPackageJson === true, we can safely run formatFiles, prettier might
-    // have been installed earlier and if not, the formatFiles function still handles it
+    // `installTask` is queued, not run, so a formatter this generator just
+    // added to package.json is not on disk yet and `formatFiles` would find
+    // nothing to load. ensurePackage installs it out of band and puts it on
+    // NODE_PATH so the load below resolves.
+    //
+    // Not when `skipPackageJson` is set: that asks this generator not to manage
+    // dependencies at all, and an out-of-band install is still an install. The
+    // formatter may already be present, and if it is not, formatFiles warns.
+    //
+    // Not when NX_SKIP_FORMAT is set either - the same condition formatFiles
+    // returns on. `create-nx-workspace` sets it for the whole run and formats
+    // once at the end, so installing here would be a network round trip whose
+    // result is never read.
+    //
+    // Not under --dry-run: `ensurePackage` throws outright when the package is
+    // not already resolvable, which during init is the normal state.
+    const isDryRun =
+      !!process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false';
+    if (
+      formatterSetup &&
+      !schema.skipPackageJson &&
+      !isDryRun &&
+      process.env.NX_SKIP_FORMAT !== 'true'
+    ) {
+      // `schema.formatter` is the table key here, so it is also the npm
+      // package name - it got past `getFormatterSetup` to produce
+      // `formatterSetup`.
+      ensurePackage(schema.formatter, formatterSetup.version);
+    }
     await formatFiles(tree);
   }
 

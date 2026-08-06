@@ -30,7 +30,17 @@ export { readProjectConfigurationsFromRootMap } from './project-graph/utils/proj
 export { findMatchingConfigFiles } from './project-graph/utils/project-configuration-utils';
 export { findMatchingProjects } from './utils/find-matching-projects';
 export { readTargetDefaultsForTarget } from './project-graph/utils/project-configuration/target-defaults';
-export { getIgnoreObjectForTree } from './utils/ignore';
+// Only the tree-bound checkers and their type cross the boundary. The
+// primitives they are built from carry preconditions a caller can violate - a
+// chain must be resolved from the file's own directory, and the array it
+// returns is the memo cache itself - and nothing outside this package needs
+// them.
+export {
+  createGitIgnoreChecker,
+  createOxfmtIgnoreChecker,
+  createPrettierIgnoreChecker,
+  type TreeIgnoreChecker,
+} from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';
@@ -62,7 +72,16 @@ export {
 } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export { isCI } from './utils/is-ci';
-export { isUsingPrettierInTree } from './utils/is-using-prettier';
+export {
+  isUsingPrettierInTree,
+  prettierConfigFiles,
+} from './utils/formatters/prettier';
+export { detectFormatter, detectFormatterInTree } from './utils/formatters';
+export type { FormatterType } from './utils/formatters';
+export {
+  formatFilesWithOxfmt,
+  oxfmtConfigFiles,
+} from './utils/formatters/oxfmt';
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';

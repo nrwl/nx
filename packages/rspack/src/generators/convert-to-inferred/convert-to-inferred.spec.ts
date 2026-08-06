@@ -523,10 +523,7 @@ describe('convert-to-inferred', () => {
           serve: {
             default: {
               hmr: true,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
               historyApiFallback: {
@@ -669,10 +666,7 @@ describe('convert-to-inferred', () => {
           serve: {
             default: {
               hmr: true,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
               historyApiFallback: {
@@ -1110,10 +1104,7 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
           serve: {
             default: {
               hmr: true,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               memoryLimit: 8192,
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },
@@ -1197,10 +1188,7 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
           serve: {
             default: {
               hmr: true,
-              server: {
-                type: 'https',
-                options: { cert: './server.crt', key: './server.key' },
-              },
+              server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
               memoryLimit: 4096,
               port: 4200,
               headers: { 'Access-Control-Allow-Origin': '*' },

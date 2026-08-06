@@ -73,14 +73,26 @@ export const createNodes: CreateNodes = [
                     'default',
                     '^default',
                     '{workspaceRoot}/tsconfig.json',
+                    // prettier resolves .editorconfig per formatted file;
+                    // oxfmt resolves it once by walking up from the working
+                    // directory. Either way an example run from inside this
+                    // repo picks up the root one.
+                    '{workspaceRoot}/.editorconfig',
                     {
                       dependentTasksOutputFiles: '**/*',
                       transitive: true,
                     },
                   ],
                   // The inner build/e2e write dist inside the example
-                  // (module-federation members write <member>/dist).
-                  outputs: ['{projectRoot}/dist', '{projectRoot}/*/dist'],
+                  // (module-federation members write <member>/dist; a
+                  // packages/* workspace writes packages/<lib>/dist). Scoped to
+                  // packages/* rather than **/dist so node_modules is not swept
+                  // into the cached outputs.
+                  outputs: [
+                    '{projectRoot}/dist',
+                    '{projectRoot}/*/dist',
+                    '{projectRoot}/packages/*/dist/**',
+                  ],
                   cache: true,
                 },
               },

@@ -27,7 +27,9 @@ describe('setup-ai-agents generator', () => {
   let getInstalledNxVersionSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    // No formatter: these assertions compare against the exact string the
+    // generator builds, so any formatting in the loop breaks them.
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
     // Use local implementation instead of fetching from latest
     process.env.NX_AI_FILES_USE_LOCAL = 'true';
 

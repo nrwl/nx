@@ -91,10 +91,29 @@ type AngularUnitTestRunner =
   | 'vitest-angular'
   | 'vitest-analog';
 
+// Kept in sync with the formatter enum in the generator schemas by hand - this
+// package deliberately has no `nx` dependency, so nx's `FormatterType` cannot
+// be imported here.
+type Formatter = 'oxfmt' | 'prettier' | 'none';
+
+// Order is the prompt order; oxfmt is the default. `satisfies` stops a typo
+// getting in, and the coverage assertion below stops a member being dropped -
+// on its own the array would happily be a subset, and the prompt would then
+// reject a value the generator schemas still accept.
+const FORMATTERS = [
+  'oxfmt',
+  'prettier',
+  'none',
+] as const satisfies readonly Formatter[];
+
+type MissingFormatter = Exclude<Formatter, (typeof FORMATTERS)[number]>;
+const _formattersAreExhaustive: MissingFormatter extends never ? true : never =
+  true;
+
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
   linter?: 'none' | 'eslint';
-  formatter?: 'none' | 'prettier';
+  formatter?: Formatter;
   workspaces?: boolean;
   useProjectJson?: boolean;
 }
@@ -244,6 +263,9 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
             type: 'string',
+            // Fail at the CLI on a typo rather than downstream in schema
+            // validation, where the message is much further from the cause.
+            choices: FORMATTERS,
           })
           .option('framework', {
             describe: chalk.dim`Framework option to be used with certain stacks.`,
@@ -1106,32 +1128,37 @@ async function determinePresetOptions(
   }
 }
 
-async function determineFormatterOptions(
-  args: {
-    formatter?: 'none' | 'prettier';
-    interactive?: boolean;
-  },
-  opts?: { preferPrettier?: boolean }
-) {
+async function determineFormatterOptions(args: {
+  formatter?: Formatter;
+  interactive?: boolean;
+}) {
   if (args.formatter) return args.formatter;
-  const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
+  const reply = await enquirer.prompt<{
+    formatter: Formatter;
+  }>([
     {
-      name: 'prettier',
-      message: `Would you like to use Prettier for code formatting?`,
+      name: 'formatter',
+      message: `Which code formatter would you like to use?`,
       type: 'autocomplete',
       choices: [
         {
-          name: 'Yes',
+          name: 'oxfmt',
+          message: 'oxfmt             [ https://oxc.rs  ]',
         },
         {
-          name: 'No',
+          name: 'prettier',
+          message: 'prettier          [ https://prettier.io  ]',
+        },
+        {
+          name: 'none',
+          message: 'none',
         },
       ],
-      initial: opts?.preferPrettier ? 0 : 1,
+      initial: 0,
       skip: !args.interactive || isCI(),
     },
   ]);
-  return reply.prettier === 'Yes' ? 'prettier' : 'none';
+  return reply.formatter;
 }
 
 async function determineLinterOptions(
@@ -1194,7 +1221,7 @@ async function determineNoneOptions(
     }
 
     if (preset === Preset.TS) {
-      return { preset, formatter: 'prettier' };
+      return { preset, formatter: parsedArgs.formatter ?? 'oxfmt' };
     }
 
     if (parsedArgs.js !== undefined) {
@@ -1240,7 +1267,7 @@ async function determineReactOptions(
   let nextAppDir = false;
   let nextSrcDir = false;
   let linter: undefined | 'none' | 'eslint';
-  let formatter: undefined | 'none' | 'prettier';
+  let formatter: undefined | Formatter;
 
   const workspaces = parsedArgs.workspaces;
 
@@ -1359,12 +1386,10 @@ async function determineReactOptions(
 
   if (workspaces) {
     linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
+    formatter = await determineFormatterOptions(parsedArgs);
   } else {
     linter = 'eslint';
-    formatter = 'prettier';
+    formatter = parsedArgs.formatter ?? 'oxfmt';
   }
 
   return {
@@ -1393,7 +1418,7 @@ async function determineVueOptions(
   let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let linter: undefined | 'none' | 'eslint';
-  let formatter: undefined | 'none' | 'prettier';
+  let formatter: undefined | Formatter;
 
   const workspaces = parsedArgs.workspaces;
 
@@ -1471,12 +1496,10 @@ async function determineVueOptions(
 
   if (workspaces) {
     linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
+    formatter = await determineFormatterOptions(parsedArgs);
   } else {
     linter = 'eslint';
-    formatter = 'prettier';
+    formatter = parsedArgs.formatter ?? 'oxfmt';
   }
 
   return {
@@ -1501,11 +1524,13 @@ async function determineAngularOptions(
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
+  let formatter: undefined | Formatter;
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
   const prefix = parsedArgs.prefix;
   const zoneless = parsedArgs.zoneless;
+  const workspaces = parsedArgs.workspaces;
 
   if (prefix) {
     // https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/validation.ts#L11-L14
@@ -1676,6 +1701,12 @@ async function determineAngularOptions(
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
+  if (workspaces) {
+    formatter = await determineFormatterOptions(parsedArgs);
+  } else {
+    formatter = parsedArgs.formatter ?? 'oxfmt';
+  }
+
   return {
     preset,
     style,
@@ -1688,6 +1719,8 @@ async function determineAngularOptions(
     ssr,
     prefix,
     zoneless,
+    formatter,
+    workspaces,
   };
 }
 
@@ -1699,7 +1732,7 @@ async function determineNodeOptions(
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
   let linter: undefined | 'none' | 'eslint';
-  let formatter: undefined | 'none' | 'prettier';
+  let formatter: undefined | Formatter;
   let unitTestRunner: undefined | 'none' | 'jest' = undefined;
   const workspaces = parsedArgs.workspaces;
 
@@ -1767,12 +1800,10 @@ async function determineNodeOptions(
 
   if (workspaces) {
     linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
-    formatter = await determineFormatterOptions(parsedArgs, {
-      preferPrettier: true,
-    });
+    formatter = await determineFormatterOptions(parsedArgs);
   } else {
     linter = 'eslint';
-    formatter = 'prettier';
+    formatter = parsedArgs.formatter ?? 'oxfmt';
   }
 
   return {

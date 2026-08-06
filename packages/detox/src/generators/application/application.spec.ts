@@ -289,10 +289,7 @@ describe('detox application generator', () => {
         "{
           "preset": "../../jest.preset",
           "rootDir": ".",
-          "testMatch": [
-            "<rootDir>/src/**/*.test.ts?(x)",
-            "<rootDir>/src/**/*.spec.ts?(x)"
-          ],
+          "testMatch": ["<rootDir>/src/**/*.test.ts?(x)", "<rootDir>/src/**/*.spec.ts?(x)"],
           "testTimeout": 120000,
           "maxWorkers": 1,
           "globalSetup": "detox/runners/jest/globalSetup",
@@ -302,10 +299,7 @@ describe('detox application generator', () => {
           "verbose": true,
           "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
           "transform": {
-            "^.+\\\\.(ts|js|html)$": [
-              "ts-jest",
-              { "tsconfig": "<rootDir>/tsconfig.e2e.json" }
-            ]
+            "^.+\\\\.(ts|js|html)$": ["ts-jest", { "tsconfig": "<rootDir>/tsconfig.e2e.json" }]
           }
         }
         "

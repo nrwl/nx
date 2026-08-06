@@ -267,6 +267,7 @@
       "exclude": [
         "examples/angular-rspack/**/*",
         "examples/react/**/*",
+        "examples/typescript/**/*",
         "nx-dev/**/*",
         "e2e/**/*"
       ],

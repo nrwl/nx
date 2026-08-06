@@ -25,6 +25,7 @@ import { acknowledgeBuildScripts } from '../../../utils/acknowledge-build-script
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { recordInitWrite } from './format';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { connectWorkspaceToCloud } from '../../nx-cloud/connect/connect-to-nx-cloud';
 import { deduceDefaultBase } from './deduce-default-base';
@@ -79,6 +80,7 @@ export function createNxJsonFile(
     nxJson.defaultBase ??= defaultBase;
   }
   writeJsonFile(nxJsonPath, nxJson);
+  recordInitWrite(nxJsonPath);
 }
 
 /**
@@ -267,6 +269,7 @@ export function addDepsToPackageJson(
     }
   }
   writeJsonFile(path, json);
+  recordInitWrite(path);
   // nx has a postinstall script, which pnpm 11+ refuses to install
   // unacknowledged.
   acknowledgeBuildScripts(repoRoot, packageManager, { nx: true });
@@ -404,6 +407,7 @@ export function setNeverConnectToCloud(repoRoot: string): void {
   const nxJson = readJsonFile(nxJsonPath);
   nxJson.neverConnectToCloud = true;
   writeJsonFile(nxJsonPath, nxJson);
+  recordInitWrite(nxJsonPath);
 }
 
 export function addVsCodeRecommendedExtensions(
@@ -423,8 +427,10 @@ export function addVsCodeRecommendedExtensions(
     });
 
     writeJsonFile(vsCodeExtensionsPath, vsCodeExtensionsJson);
+    recordInitWrite(vsCodeExtensionsPath);
   } else {
     writeJsonFile(vsCodeExtensionsPath, { recommendations: extensions });
+    recordInitWrite(vsCodeExtensionsPath);
   }
 }
 
@@ -452,6 +458,7 @@ export function markRootPackageJsonAsNxProjectLegacy(
     }
   }
   writeJsonFile(`package.json`, json);
+  recordInitWrite('package.json');
 }
 
 export function markPackageJsonAsNxProject(packageJsonPath: string) {
@@ -462,6 +469,7 @@ export function markPackageJsonAsNxProject(packageJsonPath: string) {
 
   json.nx = {};
   writeJsonFile(packageJsonPath, json);
+  recordInitWrite(packageJsonPath);
 }
 
 export function printFinalMessage({

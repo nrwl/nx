@@ -1,10 +1,17 @@
 import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
+import type { FormatterType, TreeIgnoreChecker } from 'nx/src/devkit-internals';
 import {
+  createOxfmtIgnoreChecker,
+  createPrettierIgnoreChecker,
+  detectFormatterInTree,
+  formatFilesWithOxfmt,
   isUsingPrettierInTree,
+  oxfmtConfigFiles,
   sortObjectByKeys,
 } from 'nx/src/devkit-internals';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
+import { NOTHING_IGNORED } from '../utils/nx-ignore-internals';
 
 // Prettier v3 (ESM) exposes its API as named exports; v2 (CJS) exposes it under
 // `.default` when loaded via `import()`. Return whichever carries the API, or
@@ -21,18 +28,21 @@ async function importPrettier(): Promise<typeof Prettier | null> {
 }
 
 /**
- * Formats all the created or updated files using Prettier
+ * Formats the created or updated files using the configured formatter, skipping
+ * `node_modules`, `.git`, the nx and yarn caches, and anything the workspace's
+ * `.gitignore` or `.prettierignore` covers. Which of those ignore files apply
+ * follows the formatter: prettier reads the workspace root only, oxfmt cascades.
  * @param tree - the file system tree
  * @param options - options for the formatFiles function
  *
  * @remarks
- * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip Prettier
- * formatting. This is useful for repositories that use alternative formatters
- * like Biome, dprint, or have custom formatting requirements.
+ * Set the environment variable `NX_SKIP_FORMAT` to `true` to skip
+ * formatting. This is useful for repositories that format with a tool Nx does
+ * not drive (Biome, dprint) or that have custom formatting requirements.
  *
- * Note: `NX_SKIP_FORMAT` only skips Prettier formatting. TSConfig path sorting
- * (controlled by `sortRootTsconfigPaths` option or `NX_FORMAT_SORT_TSCONFIG_PATHS`)
- * will still occur.
+ * Note: `NX_SKIP_FORMAT` skips formatting only - it does not skip TSConfig
+ * path sorting, which is controlled by the `sortRootTsconfigPaths` option or
+ * `NX_FORMAT_SORT_TSCONFIG_PATHS`.
  */
 export async function formatFiles(
   tree: Tree,
@@ -47,29 +57,82 @@ export async function formatFiles(
     sortTsConfig(tree);
   }
 
-  // Skip Prettier formatting if NX_SKIP_FORMAT is set
+  // Skip formatting if NX_SKIP_FORMAT is set
   // This is checked after tsconfig sorting since sorting is a separate concern
   if (process.env.NX_SKIP_FORMAT === 'true') {
     return;
   }
 
-  let prettier: typeof Prettier | null;
-  try {
-    prettier = await importPrettier();
-    /**
-     * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
-     * before proceeding to format with it.
-     */
-    if (!isUsingPrettierInTree(tree)) {
-      return;
+  let formatterType: FormatterType | null = null;
+  // devkit supports nx +/- 1 major and these exports do not exist in older
+  // versions. A missing CommonJS named export is `undefined` rather than a
+  // throw, so a presence check is what handles it - not a try/catch.
+  if (detectFormatterInTree) {
+    formatterType = detectFormatterInTree(tree);
+  } else {
+    try {
+      if ((await importPrettier()) && isUsingPrettierInTree(tree)) {
+        formatterType = 'prettier';
+      }
+    } catch {}
+  }
+
+  if (!formatterType) return;
+
+  // Each formatter gets the ignore rules its own CLI applies, so a generator
+  // does not rewrite a file that formatter would skip. prettier reads the root
+  // ignore files only; oxfmt cascades. Both measured against the real CLIs.
+  // `.nxignore` is the exception in both directions: `format.ts` filters the
+  // command's own file list through it, and neither checker reads it.
+  //
+  // `getFileInfo` in the prettier branch below looks like it filters ignored
+  // files but only covers its own built-in `node_modules` skip: with no
+  // `ignorePath` it never reads the workspace's ignore files, so `ignored` is
+  // false for everything else (measured).
+  //
+  // The optional call is the older-nx path - see `NOTHING_IGNORED`.
+  const changedFiles = (
+    createChecker: ((tree: Tree) => TreeIgnoreChecker) | undefined
+  ) => {
+    const { isIgnoredFile } = createChecker?.(tree) ?? NOTHING_IGNORED;
+    return new Set(
+      tree
+        .listChanges()
+        .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
+    );
+  };
+
+  // One switch rather than a checker ternary plus a dispatch `if`: those defaulted
+  // differently, so a third formatter would have been filtered with prettier's
+  // rules and then not formatted at all. One of the guarded sites
+  // `FormatterType` inventories.
+  switch (formatterType) {
+    case 'prettier':
+      await formatWithPrettier(tree, changedFiles(createPrettierIgnoreChecker));
+      break;
+    case 'oxfmt':
+      await formatWithOxfmt(tree, changedFiles(createOxfmtIgnoreChecker));
+      break;
+    default: {
+      const unhandled: never = formatterType;
+      throw new Error(`Unhandled formatter: ${unhandled}`);
     }
-  } catch {}
+  }
+}
 
-  if (!prettier) return;
-
-  const files = new Set(
-    tree.listChanges().filter((file) => file.type !== 'DELETE')
-  );
+async function formatWithPrettier(
+  tree: Tree,
+  files: Set<{ path: string; content: Buffer }>
+) {
+  const prettier = await importPrettier();
+  if (!prettier) {
+    // Detection said this workspace formats with prettier, so silence here
+    // would leave a generator's files unformatted for no stated reason.
+    console.warn(
+      'Could not format files with prettier: prettier is configured for this workspace but is not installed.'
+    );
+    return;
+  }
 
   const changedPrettierInTree = getChangedPrettierConfigInTree(tree);
 
@@ -108,6 +171,68 @@ export async function formatFiles(
   );
 }
 
+async function formatWithOxfmt(
+  tree: Tree,
+  files: Set<{ path: string; content: Buffer }>
+) {
+  if (!formatFilesWithOxfmt) return;
+
+  const staged = Array.from(files).map((file) => ({
+    path: file.path,
+    content: file.content.toString('utf-8'),
+  }));
+
+  try {
+    const { formatted, errors } = await formatFilesWithOxfmt(
+      staged,
+      tree.root,
+      getGeneratedOxfmtConfig(oxfmtConfigFiles, files)
+    );
+    for (const [filePath, content] of formatted) {
+      tree.write(filePath, content);
+    }
+    if (errors?.length) {
+      // One warning for the batch, but every failing file is named - oxfmt's
+      // `message` alone ("Unexpected token") says nothing about which file.
+      console.warn(
+        [`Could not format some files with oxfmt:`, ...errors].join('\n  ')
+      );
+    }
+  } catch (e) {
+    console.warn(`Could not format files with oxfmt. Error: "${e.message}"`);
+  }
+}
+
+/**
+ * A config the generator just created exists only in the tree, so oxfmt cannot
+ * discover it on disk. Hand it over so the files it writes match the config it
+ * ships with.
+ */
+function getGeneratedOxfmtConfig(
+  // `readonly` because this only iterates: nx's `oxfmtConfigFiles` is a plain
+  // array today, and marking it `as const` there should not break devkit here.
+  configFiles: readonly string[] | undefined,
+  // The caller's already-filtered set, rather than a second `listChanges()`:
+  // that walk stats every recorded change, and deletions are excluded from it
+  // for us. A deleted config is not one the generator "just created", and
+  // treating it as one would report an unreadable config and skip the batch.
+  files: Set<{ path: string; content: Buffer }>
+): { name: string; content: string } | undefined {
+  // Keyed by path so the content comes from that same set. Re-reading through
+  // `tree.read` would reintroduce a `string | null` the filtering already
+  // rules out.
+  const changed = new Map(
+    Array.from(files, (file) => [file.path, file.content] as const)
+  );
+  for (const name of configFiles ?? []) {
+    const content = changed.get(name);
+    if (content !== undefined) {
+      return { name, content: content.toString('utf-8') };
+    }
+  }
+  return undefined;
+}
+
 function sortTsConfig(tree: Tree) {
   try {
     const tsConfigPath = getRootTsConfigPath(tree);
@@ -116,7 +241,6 @@ function sortTsConfig(tree: Tree) {
     }
     const tsconfig = readJson(tree, tsConfigPath);
     if (!tsconfig.compilerOptions?.paths) {
-      // no paths to sort
       return;
     }
     writeJson(tree, tsConfigPath, {

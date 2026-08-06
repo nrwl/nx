@@ -71,6 +71,13 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     output.setCliName(cliName ?? 'NX');
   }
 
+  // Skip formatting during generation - the single pass at the end covers
+  // everything once dependencies are on disk. A user who set this deliberately
+  // still gets no formatting at all, so remember their value rather than
+  // silently taking it over.
+  const skipFormatRequested = process.env.NX_SKIP_FORMAT === 'true';
+  process.env.NX_SKIP_FORMAT = 'true';
+
   let directory: string;
 
   if (options.template) {
@@ -242,6 +249,46 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   if (nxCloud !== 'skip' && nxCloud !== 'never' && !isTemplate) {
     const ciProvider = nxCloud === 'yes' ? 'github' : nxCloud;
     await setupCI(directory, ciProvider, packageManager);
+  }
+
+  // Format once now that dependencies are on disk: the passes inside
+  // `@nx/workspace:new` run before the install, when no formatter resolves yet.
+  // Non-fatal - the workspace is usable unformatted.
+  if (skipFormatRequested) {
+    process.env.NX_SKIP_FORMAT = 'true';
+  } else {
+    delete process.env.NX_SKIP_FORMAT;
+    try {
+      const pmc = getPackageManagerCommand(packageManager);
+      // `--all` because git is not initialised yet, so there is nothing to diff
+      // changed files against.
+      await execAndWait(`${pmc.exec} nx format --all`, directory);
+    } catch (e) {
+      // `execAndWait` points at a log file only when the command produced no
+      // output at all - in which case that file holds just "\n" and is deleted
+      // below. Say what happened instead.
+      const reason =
+        e?.logFile && e?.message?.includes(e.logFile)
+          ? `The command failed with exit code ${
+              e.exitCode ?? 'unknown'
+            } and produced no output.`
+          : e?.message;
+      output.warn({
+        title: 'Could not format the new workspace.',
+        bodyLines: [
+          'The workspace was created successfully, but its files are not formatted.',
+          ...(reason ? [reason] : []),
+          'Run "nx format:write" inside the workspace to format them.',
+        ],
+      });
+      // Otherwise `initializeGitRepo`'s `git add .` puts an error.log in the
+      // workspace's first commit; the .gitignore templates do not cover it.
+      if (e?.logFile && existsSync(e.logFile)) {
+        try {
+          unlinkSync(e.logFile);
+        } catch {}
+      }
+    }
   }
 
   let pushedToVcs = VcsPushStatus.SkippedGit;

@@ -32,6 +32,10 @@ import {
   installPluginPackages,
 } from '../init/configure-plugins';
 import {
+  formatInitWrites,
+  recordInitWrite,
+} from '../init/implementation/format';
+import {
   checkCompatibleWithPlugins,
   updatePluginsInNxJson,
 } from '../init/implementation/check-compatible-with-plugins';
@@ -423,6 +427,7 @@ export async function importHandler(options: ImportOptions) {
       const incompatiblePlugins = await checkCompatibleWithPlugins();
       if (Object.keys(incompatiblePlugins).length > 0) {
         updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
+        await formatInitWrites(workspaceRoot, 'nx import');
         await destinationGitClient.amendCommit();
       }
     }
@@ -437,6 +442,7 @@ export async function importHandler(options: ImportOptions) {
           verbose
         );
         if (succeededPlugins.length > 0) {
+          await formatInitWrites(workspaceRoot, 'nx import');
           await destinationGitClient.amendCommit();
         }
       }
@@ -638,6 +644,7 @@ async function handlePluginOnlyMode(
         verbose
       );
       if (succeededPlugins.length > 0) {
+        await formatInitWrites(workspaceRoot, 'nx import');
         await destinationGitClient.amendCommit();
       }
     }
@@ -688,6 +695,7 @@ async function runInstallDestinationRepo(
       packageManager,
       getPackageManagerCommand(packageManager)
     );
+    await formatInitWrites(workspaceRoot, 'nx import');
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;
@@ -708,6 +716,7 @@ async function runPluginsInstall(
   output.log({ title: 'Installing Plugins' });
   try {
     installPluginPackages(workspaceRoot, pmc, plugins);
+    await formatInitWrites(workspaceRoot, 'nx import');
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;
@@ -794,6 +803,11 @@ async function handleMissingWorkspacesEntry(
     }
 
     addPackagePathToWorkspaces(pkgPath, pm, workspaces, workspaceRoot);
+    // That helper is shared, so it does not record for us - without this the
+    // drain below has nothing to do and the rewritten package.json ships
+    // unformatted.
+    recordInitWrite(join(workspaceRoot, 'package.json'));
+    await formatInitWrites(workspaceRoot, 'nx import');
     await destinationGitClient.amendCommit();
     output.success({
       title: `Project added in workspaces`,

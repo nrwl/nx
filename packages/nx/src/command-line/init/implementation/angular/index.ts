@@ -22,6 +22,7 @@ import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
 import { MessageOptionKey } from '../../../../utils/ab-testing';
+import { recordInitWrite } from '../format';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -164,6 +165,7 @@ function addPluginDependencies(): void {
   packageJson.devDependencies = sortObjectByKeys(packageJson.devDependencies);
 
   writeJsonFile(packageJsonPath, packageJson);
+  recordInitWrite(packageJsonPath);
 }
 
 async function setupWorkspace(

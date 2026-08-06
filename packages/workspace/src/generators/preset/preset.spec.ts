@@ -1,6 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { presetGenerator } from './preset';
 import { Preset } from '../utils/presets';
@@ -12,12 +12,85 @@ describe('preset', () => {
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    // No formatter: the preset is what should be setting one up.
+    tree = createTreeWithEmptyWorkspace({
+      layout: 'apps-libs',
+      formatter: 'none',
+    });
   });
 
   afterEach(() => {
     if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
     else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  describe('formatter', () => {
+    // The apps preset generates no project, so nothing downstream configures
+    // the formatter and the choice the user passed would be dropped - the next
+    // generator to run would then pick the default instead.
+    it.each([
+      ['prettier', '.prettierrc', '.oxfmtrc.json'],
+      ['oxfmt', '.oxfmtrc.json', '.prettierrc'],
+    ])(
+      'should honour --formatter=%s on the apps preset',
+      async (formatter, expected, notExpected) => {
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'apps-preset',
+          preset: Preset.Apps,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(tree.exists(expected)).toBe(true);
+        expect(tree.exists(notExpected)).toBe(false);
+        // The config alone is not enough: a workspace configured for a
+        // formatter it never installed fails `nx format` outright.
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it.each([
+      ['prettier', '.prettierrc', '.oxfmtrc.json'],
+      ['oxfmt', '.oxfmtrc.json', '.prettierrc'],
+    ])(
+      'should honour --formatter=%s on the npm preset',
+      async (formatter, expected, notExpected) => {
+        // The npm preset generates no project either, so it had been dropping
+        // --formatter the same way the apps preset did.
+        tree.delete('.prettierrc');
+
+        await presetGenerator(tree, {
+          name: 'npm-preset',
+          preset: Preset.NPM,
+          linter: 'eslint',
+          formatter,
+        } as any);
+
+        expect(tree.exists(expected)).toBe(true);
+        expect(tree.exists(notExpected)).toBe(false);
+        expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+          formatter
+        );
+      }
+    );
+
+    it('should configure nothing when the formatter is none', async () => {
+      tree.delete('.prettierrc');
+
+      await presetGenerator(tree, {
+        name: 'apps-preset',
+        preset: Preset.Apps,
+        linter: 'eslint',
+        formatter: 'none',
+      } as any);
+
+      expect(tree.exists('.prettierrc')).toBe(false);
+      expect(tree.exists('.oxfmtrc.json')).toBe(false);
+    });
   });
 
   it(`should create files (preset = angular-monorepo)`, async () => {
@@ -139,11 +212,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
-        server:{
+        server: {
           port: 4200,
           host: 'localhost',
         },
-        preview:{
+        preview: {
           port: 4300,
           host: 'localhost',
         },
@@ -170,7 +243,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: '../../coverage/apps/vue-preset-monorepo',
             provider: 'v8' as const,
-          }
+          },
         },
       }));
       "
@@ -295,11 +368,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: './node_modules/.vite/react-standalone-preset-vite',
-        server:{
+        server: {
           port: 4200,
           host: 'localhost',
         },
-        preview:{
+        preview: {
           port: 4300,
           host: 'localhost',
         },
@@ -326,7 +399,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: './coverage/react-standalone-preset-vite',
             provider: 'v8' as const,
-          }
+          },
         },
       }));
       "
@@ -352,11 +425,11 @@ describe('preset', () => {
       export default defineConfig(() => ({
         root: import.meta.dirname,
         cacheDir: './node_modules/.vite/vue-standalone-preset',
-        server:{
+        server: {
           port: 4200,
           host: 'localhost',
         },
-        preview:{
+        preview: {
           port: 4300,
           host: 'localhost',
         },
@@ -383,7 +456,7 @@ describe('preset', () => {
           coverage: {
             reportsDirectory: './coverage/vue-standalone-preset',
             provider: 'v8' as const,
-          }
+          },
         },
       }));
       "
