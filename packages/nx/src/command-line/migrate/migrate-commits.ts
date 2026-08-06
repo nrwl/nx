@@ -1,5 +1,11 @@
 import * as pc from 'picocolors';
-import { hasUncommittedChanges, tryCommitChanges } from '../../utils/git-utils';
+import { readNxJson } from '../../config/configuration';
+import { getBaseRef } from '../../utils/command-line-utils';
+import {
+  getGitCurrentBranch,
+  hasUncommittedChanges,
+  tryCommitChanges,
+} from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import type { ResolvedAgentic } from './agentic/types';
@@ -152,20 +158,22 @@ export function commitCheckpointBeforeMigrations(
  */
 export function resolveCreateCommits(args: {
   createCommits: boolean | undefined;
-  agenticKind: ResolvedAgentic['kind'];
+  // An orchestrated run always takes the agentic defaults, so the two can
+  // never disagree and one field carries both.
+  mode: ResolvedAgentic['kind'] | 'orchestrated';
   isGitRepo: boolean;
   commitPrefixIsCustom?: boolean;
-  orchestrated?: boolean;
 }): {
   effective: boolean;
   agenticHasDiffContext: boolean;
   warning?: string;
   error?: string;
 } {
-  const { createCommits, agenticKind, isGitRepo, commitPrefixIsCustom } = args;
+  const { createCommits, mode, isGitRepo, commitPrefixIsCustom } = args;
   // The orchestrator forces the agentic defaults without the `--agentic` flag,
   // so its warnings must not name a flag the user never passed.
-  const orchestrated = args.orchestrated === true;
+  const orchestrated = mode === 'orchestrated';
+  const agenticKind = orchestrated ? 'enabled' : mode;
 
   if (createCommits === true && !isGitRepo) {
     return {
@@ -219,9 +227,36 @@ export function resolveCreateCommits(args: {
 }
 
 /**
+ * Asks before a run starts committing on the workspace's default branch, and
+ * reports the decision when the answer is no. Returns whether to proceed.
+ *
  * Callers gate this on commits being effective and on prompting being
- * possible, so non-interactive runs (CI, `--no-interactive`) never reach here.
+ * possible, so non-interactive runs (CI, `--no-interactive`) never reach here;
+ * `confirmCommitsOnDefaultBranch` has no guard of its own and would block on a
+ * prompt nobody can answer.
  */
+export async function confirmMigrationCommitsOnDefaultBranch(
+  root: string,
+  whatWouldRun: 'running migrations' | 'running the migration'
+): Promise<boolean> {
+  const currentBranch = getGitCurrentBranch(root);
+  const proceed = await confirmCommitsOnDefaultBranch({
+    currentBranch,
+    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
+    // generator); compare against the local branch name.
+    defaultBranch: getBaseRef(readNxJson(root)).replace(/^origin\//, ''),
+  });
+  if (!proceed) {
+    output.log({
+      title: `Skipped ${whatWouldRun} to avoid committing to the default branch '${currentBranch}'.`,
+      bodyLines: [
+        'Switch to a different branch and re-run, or re-run and confirm to proceed.',
+      ],
+    });
+  }
+  return proceed;
+}
+
 export async function confirmCommitsOnDefaultBranch(args: {
   currentBranch: string | null;
   defaultBranch: string | null;

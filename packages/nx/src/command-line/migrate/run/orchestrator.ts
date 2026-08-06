@@ -17,7 +17,7 @@ import {
   type HandoffReadFailureReason,
 } from '../agentic/handoff';
 import { applyAgenticHandoffGitignoreFallback } from '../agentic/handoff-gitignore';
-import type { HandoffFile } from '../agentic/types';
+import { MIGRATE_RUNS_RELATIVE_DIR, type HandoffFile } from '../agentic/types';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
@@ -32,10 +32,10 @@ import { createRunId, computePlanHash, RUN_ID_SAFE } from './run-id';
 import {
   createRun,
   findActiveRun,
+  hasRunState,
   readRunState,
   runDir,
   CURRENT_RUN_STATE_FORMAT_VERSION,
-  RUN_STATE_FILE_NAME,
   type MigrateCommitLedgerEntry,
   type MigrateRunState,
   type MigrateStep,
@@ -49,6 +49,7 @@ import {
   coveringLandedEntries,
   hasPendingCommitDebt,
   latestRound,
+  markInstallFailed,
   splitMigrationId,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
@@ -65,6 +66,7 @@ import {
   isPidAlive,
   nowIso,
   pmExecPrefix,
+  pmInstallCommand,
   summarizeError,
   warnCommitFailed,
 } from './util';
@@ -106,9 +108,6 @@ export interface RunOrchestratorReconcileInput {
   stepAction?: StepAction;
 }
 
-// The run scratch path as git sees it, relative to the workspace root.
-const MIGRATE_RUNS_PATH = '.nx/migrate-runs';
-
 const INIT_CONTINUE_HINT =
   're-run the command, or unset NX_MIGRATE_ORCHESTRATOR to use the standard migrate flow.';
 
@@ -126,7 +125,7 @@ function continueRunHint(runId: string): string {
 // to a stale snapshot.
 function assertScratchDirSafeForCommits(root: string, thenWhat: string): void {
   refuseUnsafeScratchExposure(
-    getPathCommitExposure(MIGRATE_RUNS_PATH, root),
+    getPathCommitExposure(MIGRATE_RUNS_RELATIVE_DIR, root),
     thenWhat
   );
 }
@@ -140,17 +139,17 @@ function refuseUnsafeScratchExposure(
       return;
     case 'tracked':
       throw new Error(
-        `Files under ${MIGRATE_RUNS_PATH} are committed to git, and ignore rules do not apply to tracked files, so migrate's commits would keep capturing this run's scratch state. ` +
-          `Untrack them with \`git rm -r --cached ${MIGRATE_RUNS_PATH}\`, commit that change, make sure .gitignore lists ${MIGRATE_RUNS_PATH}, then ${thenWhat}`
+        `Files under ${MIGRATE_RUNS_RELATIVE_DIR} are committed to git, and ignore rules do not apply to tracked files, so migrate's commits would keep capturing this run's scratch state. ` +
+          `Untrack them with \`git rm -r --cached ${MIGRATE_RUNS_RELATIVE_DIR}\`, commit that change, make sure .gitignore lists ${MIGRATE_RUNS_RELATIVE_DIR}, then ${thenWhat}`
       );
     case 'unignored':
       throw new Error(
-        `${MIGRATE_RUNS_PATH} is not ignored by git, so migrate's commits would capture this run's scratch state. ` +
-          `Add a \`${MIGRATE_RUNS_PATH}\` entry to .gitignore, then ${thenWhat}`
+        `${MIGRATE_RUNS_RELATIVE_DIR} is not ignored by git, so migrate's commits would capture this run's scratch state. ` +
+          `Add a \`${MIGRATE_RUNS_RELATIVE_DIR}\` entry to .gitignore, then ${thenWhat}`
       );
     case 'unknown':
       throw new Error(
-        `Could not verify with git that ${MIGRATE_RUNS_PATH} is ignored, so migrate's commits could capture this run's scratch state. ` +
+        `Could not verify with git that ${MIGRATE_RUNS_RELATIVE_DIR} is ignored, so migrate's commits could capture this run's scratch state. ` +
           `Make sure git is usable in this workspace, then ${thenWhat}`
       );
     default: {
@@ -213,7 +212,7 @@ export async function runOrchestratorInit(
   // fallback below may still add the entry. 'ignored' also stands in for
   // "no hazard" when commits are off.
   const scratchExposure: PathCommitExposure = createCommits
-    ? getPathCommitExposure(MIGRATE_RUNS_PATH, root)
+    ? getPathCommitExposure(MIGRATE_RUNS_RELATIVE_DIR, root)
     : 'ignored';
   if (scratchExposure !== 'unignored') {
     refuseUnsafeScratchExposure(scratchExposure, INIT_CONTINUE_HINT);
@@ -238,7 +237,7 @@ export async function runOrchestratorInit(
     // refuse when it could not add the entry (v23+ conscious removal, no
     // .gitignore, Lerna without nx.json).
     refuseUnsafeScratchExposure(
-      getPathCommitExposure(MIGRATE_RUNS_PATH, root),
+      getPathCommitExposure(MIGRATE_RUNS_RELATIVE_DIR, root),
       INIT_CONTINUE_HINT
     );
   }
@@ -318,7 +317,7 @@ function findActiveRunForPlan(
   if (uninterpretable.length > 0) {
     const noun = uninterpretable.length === 1 ? 'directory' : 'directories';
     const details = uninterpretable.map(
-      (u) => `${MIGRATE_RUNS_PATH}/${u.dirName}: ${u.reason}`
+      (u) => `${MIGRATE_RUNS_RELATIVE_DIR}/${u.dirName}: ${u.reason}`
     );
     if (!active) {
       throw new Error(
@@ -338,7 +337,7 @@ function findActiveRunForPlan(
     throw new Error(
       `A migrate run '${active.runId}' is already active with a different plan. ` +
         `Finish it first by running \`${reconcileCommand(root, active.runId)}\`, ` +
-        `or remove .nx/migrate-runs/${active.runId} to abandon it.`
+        `or remove ${MIGRATE_RUNS_RELATIVE_DIR}/${active.runId} to abandon it.`
     );
   }
   return active;
@@ -464,9 +463,9 @@ export async function runOrchestratorReconcile(
     throw new Error(`Invalid run id '${runId}'.`);
   }
   const dir = runDir(root, runId);
-  if (!existsSync(join(dir, RUN_STATE_FILE_NAME))) {
+  if (!hasRunState(dir)) {
     throw new Error(
-      `No migrate run '${runId}' was found under .nx/migrate-runs. Start one with \`${pmExecPrefix(
+      `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}. Start one with \`${pmExecPrefix(
         root
       )} nx migrate --run-migrations\` before reconciling.`
     );
@@ -496,13 +495,13 @@ export async function runOrchestratorReconcile(
     // An adopted death commits its working tree; that git side effect runs
     // before the lock, then the transition and its ledger entry land in one
     // fresh-state write so a crash can't leave the step succeeded unrecorded.
-    const entry =
+    const { entry, installFailed }: StepSideEffects =
       stepAction === 'adopt' &&
       state.createCommits &&
       target.kind === 'migration' &&
       target.migrationId
-        ? await commitForStep(root, state, target)
-        : null;
+        ? await commitForStep(root, dir, state, target)
+        : { entry: null, installFailed: false };
     // A rearm starts a fresh attempt; drop the stale handoff before the rearm
     // is persisted so a crash in between can't refold the old outcome into the
     // new attempt. Losing the handoff without the rearm is safe: the step is
@@ -528,7 +527,10 @@ export async function runOrchestratorReconcile(
         freshRejection = reapplied.reason;
         return null;
       }
-      return entry ? appendCommit(reapplied.state, entry) : reapplied.state;
+      const next = installFailed
+        ? markInstallFailed(reapplied.state, target.id)
+        : reapplied.state;
+      return entry ? appendCommit(next, entry) : next;
     });
     if (freshRejection) {
       emitError(root, runId, freshRejection);
@@ -580,7 +582,11 @@ async function foldHandoffs(
   state: MigrateRunState
 ): Promise<MigrateRunState> {
   let current = state;
-  for (const step of state.steps) {
+  // Step ids are fixed for the life of a run, so the ids come from the caller's
+  // snapshot while every status read comes from `current`: each iteration can
+  // have advanced the run.
+  for (const { id } of state.steps) {
+    const step = current.steps.find((s) => s.id === id);
     if (step.status !== 'awaiting-prompt-outcome') continue;
     if (step.kind !== 'migration' || !step.migrationId) continue;
     const result = readHandoffWithReason(
@@ -588,70 +594,97 @@ async function foldHandoffs(
     );
     if (!result.ok) continue; // still awaiting; the dispense asks to settle it
     const promptOutcome = handoffToPromptOutcome(result.handoff);
-    // The commit is a git side effect, so it happens before the fold, outside
-    // the lock; the transition and its ledger entry then land in one
-    // fresh-state write. A crash cannot leave the step settled with its commit
-    // forgotten.
-    const entry = await foldLedgerEntry(root, current, step, promptOutcome);
-    // The fold re-validates against fresh disk state. If a concurrent reconcile
-    // already folded this step the fold is dropped (equivalent to the
-    // crash-refold window: the commit landed but the ledger misses it).
+    // The commit and the install are side effects, so they happen before the
+    // fold, outside the lock; the transition and its ledger entry then land in
+    // one fresh-state write. A crash cannot leave the step settled with its
+    // commit forgotten.
+    const { entry, installFailed } = await foldLedgerEntry(
+      root,
+      dir,
+      current,
+      step,
+      promptOutcome
+    );
+    // The fold re-validates against fresh disk state, on the attempt this
+    // handoff was read for. That window is wide (a git commit plus a package
+    // install), and 'awaiting-prompt-outcome' recurs, so without the attempt
+    // check a concurrent reconcile's retry could take this outcome as its own.
+    // A dropped fold is equivalent to the crash-refold window: the commit
+    // landed but the ledger misses it.
     let folded = false;
     current = updateRunState(dir, (fresh) => {
       const applied = applyStepEvent(fresh, {
         type: 'foldPromptOutcome',
         stepId: step.id,
+        attempt: step.attempt,
         promptOutcome,
       });
       if (applied.kind === 'error') return null;
       folded = true;
-      return entry ? appendCommit(applied.state, entry) : applied.state;
+      const next = installFailed
+        ? markInstallFailed(applied.state, step.id)
+        : applied.state;
+      return entry ? appendCommit(next, entry) : next;
     });
-    // A folded handoff is consumed; leaving it would refold a later attempt.
+    // Only the handoff this fold consumed is removed. A rejected fold leaves
+    // it in place: it belongs to whichever attempt is on disk now, and that
+    // attempt's own reconcile still has to read it.
     if (folded) removeHandoff(dir, step.migrationId);
   }
   return current;
 }
 
-// What a folded prompt outcome owes the ledger. A completed prompt is
-// committed and its result classified as usual. A failed or skipped prompt is
-// not committed, but it can still have left edits behind, so a tree that is
-// not verifiably clean records debt: the changes then read as pending for a
-// later commit to absorb, and the completion warning knows about them. A
-// failed probe counts as dirty, matching every other retry-safety decision in
-// this file; debt a later landed entry covers costs nothing.
+// What a folded prompt outcome owes the run state. A completed prompt with
+// commits on is committed and its result classified as usual, the install
+// riding in on the commit path. Every other outcome still reconciles the
+// dependencies itself: the prompt (or the generator half before it) can have
+// edited package.json whether or not it completed, and skipping the install
+// there strands that change with nothing left to detect it, since the next
+// step's dispense captures the already-modified state as its own baseline.
+//
+// A failed or skipped prompt is not committed, but it can still have left
+// edits behind, so a tree that is not verifiably clean records debt: the
+// changes then read as pending for a later commit to absorb, and the
+// completion warning knows about them. A failed probe counts as dirty,
+// matching every other retry-safety decision in this file; debt a later landed
+// entry covers costs nothing.
 async function foldLedgerEntry(
   root: string,
+  dir: string,
   state: MigrateRunState,
   step: MigrateStep,
   promptOutcome: MigrateStepPromptOutcome
-): Promise<MigrateCommitLedgerEntry | null> {
-  if (promptOutcome.status !== 'completed') {
-    return state.createCommits && getWorkingTreeStatus(root) !== 'clean'
-      ? { kind: 'failed', stepIds: [step.id], issueIds: [] }
-      : null;
+): Promise<StepSideEffects> {
+  if (promptOutcome.status === 'completed' && state.createCommits) {
+    return commitForStep(root, dir, state, step);
   }
-  if (state.createCommits) {
-    return commitForStep(root, state, step);
-  }
-  // Nothing to record with commits off, but a prompt that changed dependencies
-  // still needs the install the commit path runs on its way in. A failure is
-  // reported rather than thrown: reconcile still owes the agent a dispense.
+  // A failure is recorded rather than thrown: reconcile still owes the agent a
+  // dispense, and a warning alone dies with this process.
+  let installFailed = false;
   try {
     await installDepsChangedSinceDispense(
       root,
+      dir,
       step,
       state.skipInstall === true,
       reconcileCommand(root, state.runId)
     );
   } catch (e) {
+    installFailed = true;
     output.warn({
       title: `The dependencies changed by ${step.migrationId} could not be installed (${summarizeError(
         e
-      )}); install them before continuing.`,
+      )}).`,
+      bodyLines: [`Run \`${pmInstallCommand(root)}\` before continuing.`],
     });
   }
-  return null;
+  const entry =
+    promptOutcome.status !== 'completed' &&
+    state.createCommits &&
+    getWorkingTreeStatus(root) !== 'clean'
+      ? { kind: 'failed' as const, stepIds: [step.id], issueIds: [] }
+      : null;
+  return { entry, installFailed };
 }
 
 // A failed handoff fails the prompt; a success handoff completes it, unless it
@@ -670,18 +703,23 @@ function handoffToPromptOutcome(
 
 function detectDeaths(dir: string, state: MigrateRunState): MigrateRunState {
   let current = state;
-  for (const step of state.steps) {
+  // As in foldHandoffs: ids from the caller's snapshot, statuses from
+  // `current`, so an earlier iteration's write is visible to the next.
+  for (const { id } of state.steps) {
+    const step = current.steps.find((s) => s.id === id);
     // Only migration steps carry a real worker pid; structural placeholders are
     // driven synchronously and never left running across invocations.
     if (step.kind !== 'migration' || step.status !== 'running') continue;
     if (step.pid === undefined || isPidAlive(step.pid)) continue;
-    // markDied re-validates against fresh disk state: if the worker finished
-    // between this snapshot and the write, the transition is illegal on fresh
-    // and the step is left as the worker recorded it (correct).
+    // markDied re-validates against fresh disk state, on the attempt and pid
+    // this observation was made for: if the worker finished between the
+    // snapshot and the write, or a retry already put a live worker on the
+    // step, the transition is rejected and the step is left as recorded.
     current = updateRunState(dir, (fresh) => {
       const applied = applyStepEvent(fresh, {
         type: 'markDied',
         stepId: step.id,
+        attempt: step.attempt,
       });
       return applied.kind === 'ok' ? applied.state : null;
     });
@@ -734,6 +772,15 @@ function applyReconcileStepAction(
   return { kind: 'ok', state: applied.state, targetStep: step };
 }
 
+// What a reconcile's git and install side effects owe the run state, applied
+// in the same locked write as the step transition they belong to. The two are
+// independent: a step can be committed with its dependencies uninstalled, and
+// the ledger says nothing about the latter.
+interface StepSideEffects {
+  entry: MigrateCommitLedgerEntry | null;
+  installFailed: boolean;
+}
+
 // Commits the working tree left by a folded prompt outcome or an adopted
 // death, returning the ledger entry the caller persists together with the
 // step transition (null when there was nothing to commit). The worker's
@@ -747,9 +794,10 @@ function applyReconcileStepAction(
 // tree before warning about debt.
 async function commitForStep(
   root: string,
+  dir: string,
   state: MigrateRunState,
   step: MigrateStep
-): Promise<MigrateCommitLedgerEntry | null> {
+): Promise<StepSideEffects> {
   const { name } = splitMigrationId(step.migrationId);
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
@@ -764,6 +812,7 @@ async function commitForStep(
       () =>
         installDepsChangedSinceDispense(
           root,
+          dir,
           step,
           state.skipInstall === true,
           reconcileCommand(root, state.runId)
@@ -771,17 +820,26 @@ async function commitForStep(
       stepsToPendingMigrations(state, absorbedStepIds)
     );
   } catch (e) {
-    // Only the pre-commit dependency install can throw here: the commit
-    // attempt itself reports through result.status. Either way the diff is
-    // left uncommitted, so record the debt without aborting reconcile; the
-    // next dispense still fires.
+    // The dependency install is the only thing that throws here: the commit
+    // attempt itself reports through result.status, and the install's own
+    // bookkeeping never throws. Both consequences are recorded, and neither
+    // aborts reconcile so the next dispense still fires. The debt cannot stand
+    // in for the install failure: a later step's commit absorbs this diff and
+    // lands an entry naming this step, which clears the debt while the
+    // dependencies are still missing.
     warnCommitFailed(name, e);
-    return { kind: 'failed', stepIds: [step.id], issueIds: [] };
+    return {
+      entry: { kind: 'failed', stepIds: [step.id], issueIds: [] },
+      installFailed: true,
+    };
   }
   if (result.status === 'failed') {
     warnCommitFailed(name);
   }
-  return commitResultToLedgerEntry(result, step.id, absorbedStepIds);
+  return {
+    entry: commitResultToLedgerEntry(result, step.id, absorbedStepIds),
+    installFailed: false,
+  };
 }
 
 // --- dispense ---------------------------------------------------------------
@@ -907,9 +965,8 @@ function dispenseNextStep(
   // Read the pre-migration baselines (git and package.json reads) before the
   // lock; the dispense transition and the baselines then apply to the fresh
   // state in one write.
-  const head = getLatestCommitSha(root);
   const baselines: DispenseBaselines = {
-    ...(head ? { gitRefBefore: head } : {}),
+    gitRefBefore: getLatestCommitSha(root) ?? undefined,
     treeCleanAtDispense: getWorkingTreeStatus(root) === 'clean',
     depsHashAtDispense: depsHash(root),
   };
@@ -1042,6 +1099,10 @@ function emitDied(
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
   const cleanRetry = canOfferCleanRetry(root, state, step);
+  // The generator half is recorded, so a retry that keeps the tree as it
+  // stands has the rest of the step left to run: a hybrid's prompt, or the
+  // install and commit its worker never reached.
+  const resume = step.generatorCompleted === true;
   const lines = [
     `The worker for ${migrationId} died; its process is gone.`,
     `  started from: ${ref ?? '(unknown)'}`,
@@ -1049,24 +1110,27 @@ function emitDied(
     `  working tree: ${tree === null ? '(unknown)' : tree ? `\n${tree}` : '(clean)'}`,
     ``,
   ];
-  const adoptLine = `  adopt: keep the current working-tree state as this migration's result, then run: ${reconcileCommand(
-    root,
-    runId,
-    'adopt'
-  )}`;
+  const options: string[] = [];
+  if (resume) {
+    options.push(
+      `  retry: keep everything this migration already produced (its commit, if any, and the current tree) and run only the part that did not complete, then run: ${reconcileCommand(
+        root,
+        runId,
+        'retry'
+      )}`
+    );
+  }
   if (cleanRetry) {
-    lines.push(
-      `Choose exactly one:`,
+    options.push(
       `  retry-clean: restore the tree to ${
         ref ?? 'the pre-migration ref'
       } first (e.g. \`git reset --hard ${
         ref ?? '<ref>'
-      } && git clean -fd -e .nx/migrate-runs\`, keeping the run state out of the clean), then run: ${reconcileCommand(
+      } && git clean -fd -e ${MIGRATE_RUNS_RELATIVE_DIR}\`, keeping the run state out of the clean), then retry from that clean state by running: ${reconcileCommand(
         root,
         runId,
         'retry-clean'
-      )}`,
-      adoptLine
+      )}`
     );
   } else {
     lines.push(
@@ -1074,12 +1138,29 @@ function emitDied(
         root,
         state,
         step
-      )}`,
-      adoptLine
+      )}`
     );
   }
+  options.push(
+    `  adopt: keep the current working-tree state as this migration's result, then run: ${reconcileCommand(
+      root,
+      runId,
+      'adopt'
+    )}`
+  );
+  lines.push(options.length > 1 ? `Choose exactly one:` : `Resolve it with:`);
+  lines.push(...options);
+  // `retry` is preselected wherever it is legal: it is the only resolution
+  // that neither discards work nor records a result the run never produced.
+  // An agent that follows `then` without reading the options gets the safe
+  // one, which is why offering `retry` in the text alone would not be enough.
+  const preselected: StepAction = resume
+    ? 'retry'
+    : cleanRetry
+      ? 'retry-clean'
+      : 'adopt';
   emit(runId, step, 'died', {
-    then: reconcileCommand(root, runId, cleanRetry ? 'retry-clean' : 'adopt'),
+    then: reconcileCommand(root, runId, preselected),
     instructions: lines.join('\n'),
   });
 }
@@ -1247,11 +1328,24 @@ function completeRun(
   if (commitDebt) {
     output.warn({ title: debtLine });
   }
+  const uninstalled = current.steps.filter((s) => s.installFailed);
+  const installLine =
+    uninstalled.length > 0
+      ? `The dependency changes made by ${uninstalled
+          .map((s) => s.migrationId ?? s.id)
+          .join(', ')} were not installed; run \`${pmInstallCommand(
+          root
+        )}\` before using the workspace.`
+      : null;
+  if (installLine) {
+    output.warn({ title: installLine });
+  }
   const instructions = [
     `Migrate run ${runId} is complete.`,
     `  applied: ${completed}`,
     `  skipped: ${skipped}`,
     ...(commitDebt ? [debtLine] : []),
+    ...(installLine ? [installLine] : []),
   ].join('\n');
   output.log({
     title: 'nx migrate: complete',
@@ -1347,31 +1441,40 @@ function appendCommit(
 }
 
 interface DispenseBaselines {
-  gitRefBefore?: string;
+  // Undefined when there is no HEAD to capture; every field here replaces what
+  // the step held, so an absent value clears rather than inherits.
+  gitRefBefore: string | undefined;
   treeCleanAtDispense: boolean;
-  depsHashAtDispense: string;
+  // Null when the probe failed. Recording nothing leaves the step with no
+  // baseline, which a later comparison reads as unknown and installs on;
+  // recording a stand-in hash would let it read as "unchanged" instead.
+  depsHashAtDispense: string | null;
 }
 
 // Records what the workspace looked like as this attempt starts. The git ref
 // and the tree state are re-captured per dispense, since a retry restarts from
-// wherever the tree is now. The dependency baseline is captured once and kept
-// across attempts: a retry that only has the commit left to do must compare
-// against the dependencies the first attempt started from, not against the
-// ones it already wrote.
+// wherever the tree is now. The dependency baseline is not: it tracks the last
+// dependencies that were actually installed, moving only when an install
+// lands, so a retry that only has the commit left to do still sees the
+// previous attempt's package.json edits as needing one.
 function setDispenseBaselines(
   state: MigrateRunState,
   stepId: string,
   baselines: DispenseBaselines
 ): MigrateRunState {
+  const depsBaseline = state.steps.find(
+    (s) => s.id === stepId
+  )?.depsHashAtDispense;
   return {
     ...state,
     steps: state.steps.map((s) =>
       s.id === stepId
         ? {
             ...s,
-            ...baselines,
+            gitRefBefore: baselines.gitRefBefore,
+            treeCleanAtDispense: baselines.treeCleanAtDispense,
             depsHashAtDispense:
-              s.depsHashAtDispense ?? baselines.depsHashAtDispense,
+              depsBaseline ?? baselines.depsHashAtDispense ?? undefined,
           }
         : s
     ),

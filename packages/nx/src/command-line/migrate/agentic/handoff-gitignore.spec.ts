@@ -191,7 +191,7 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     );
     const messages = mockInfo.mock.calls.map((c) => stripAnsi(c[0]));
     expect(messages).toEqual([
-      `- Added .nx/migrate-runs to .gitignore so this run's handoff scratch is ignored.`,
+      `- Added .nx/migrate-runs to .gitignore so this run's scratch state is ignored.`,
       `  Commit: abc123`,
     ]);
   });
@@ -214,7 +214,7 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     expect(mockHas).not.toHaveBeenCalled();
     const messages = mockInfo.mock.calls.map((c) => stripAnsi(c[0]));
     expect(messages).toEqual([
-      `- Added .nx/migrate-runs to .gitignore so this run's handoff scratch is ignored.`,
+      `- Added .nx/migrate-runs to .gitignore so this run's scratch state is ignored.`,
     ]);
   });
 
@@ -294,7 +294,7 @@ describe('applyAgenticHandoffGitignoreFallback', () => {
     // we have nothing meaningful to print when the sha could not be
     // resolved, and the diff cleared from the working tree.
     expect(messages).toEqual([
-      `- Added .nx/migrate-runs to .gitignore so this run's handoff scratch is ignored.`,
+      `- Added .nx/migrate-runs to .gitignore so this run's scratch state is ignored.`,
     ]);
   });
 });

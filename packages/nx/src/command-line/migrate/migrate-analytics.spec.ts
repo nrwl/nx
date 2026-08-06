@@ -91,7 +91,7 @@ describe('GA4 event name length cap', () => {
       'migrate_orchestrator_dispense',
       'migrate_orchestrator_complete',
       'migrate_single_migration_recorded',
-      'migrate_single_migration_standalone',
+      'migrate_single_migration_invocation',
       ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
       ...Object.keys(GENERATE_ERROR_CODES).map(
         (c) => `migrate_generate_error_${c}`
@@ -500,7 +500,7 @@ describe('migrate-analytics events', () => {
       expect(paramsFor('migrate_single_migration_recorded')).toEqual({
         promptChoice: 'hybrid',
       });
-      expect(paramsFor('migrate_single_migration_standalone')).toEqual({
+      expect(paramsFor('migrate_single_migration_invocation')).toEqual({
         promptChoice: 'prompt',
       });
     });

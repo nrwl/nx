@@ -5,7 +5,9 @@ const mockLogSkippedInstall = jest.fn();
 const mockChangedDepInstallerCtor = jest.fn();
 const mockStringifiedDeps = jest.fn();
 const mockRunInstall = jest.fn();
+const mockInstallDepsIfChanged = jest.fn();
 let mockSkippedInstall = false;
+let mockInstalled = false;
 jest.mock('../execute-migration', () => ({
   // Real implementation: pure formatting, and the ChangedDepInstaller ctor
   // assertions depend on its output.
@@ -14,16 +16,19 @@ jest.mock('../execute-migration', () => ({
   ChangedDepInstaller: jest.fn().mockImplementation((...args: unknown[]) => {
     mockChangedDepInstallerCtor(...args);
     return {
-      installDepsIfChanged: jest.fn().mockResolvedValue(undefined),
+      installDepsIfChanged: (...called: unknown[]) =>
+        mockInstallDepsIfChanged(...called),
       get skippedInstall() {
         return mockSkippedInstall;
+      },
+      get installed() {
+        return mockInstalled;
       },
     };
   }),
   logSkippedPostMigrationInstall: (...args: unknown[]) =>
     mockLogSkippedInstall(...args),
-  getStringifiedPackageJsonDeps: (...args: unknown[]) =>
-    mockStringifiedDeps(...args),
+  readPackageJsonDeps: (...args: unknown[]) => mockStringifiedDeps(...args),
   runInstall: (...args: unknown[]) => mockRunInstall(...args),
   runNxOrAngularMigration: (...args: unknown[]) => mockRunMigration(...args),
   readMigrationCollection: (...args: unknown[]) =>
@@ -129,7 +134,7 @@ jest.mock('../../../utils/package-json', () => ({
 
 jest.mock('../../../utils/package-manager', () => ({
   detectPackageManager: () => 'npm',
-  getPackageManagerCommand: () => ({ exec: 'npx' }),
+  getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
@@ -249,7 +254,9 @@ describe('runSingleMigrationWorker', () => {
     mockChangedDepInstallerCtor.mockReset();
     mockStringifiedDeps.mockReset().mockReturnValue('{"deps":1}');
     mockRunInstall.mockReset().mockResolvedValue(undefined);
+    mockInstallDepsIfChanged.mockReset().mockResolvedValue(undefined);
     mockSkippedInstall = false;
+    mockInstalled = false;
   });
 
   afterEach(() => {
@@ -1214,6 +1221,85 @@ describe('runSingleMigrationWorker', () => {
       );
     });
 
+    it('re-points the dependency baseline once its generator half installed, so the prompt fold does not install again', async () => {
+      // The installer already reconciled the generator's package.json edits;
+      // leaving the baseline behind would make the next actor read them as an
+      // unapplied change and pay a second full install.
+      mockIsInsideAgent.mockReturnValue(true);
+      mockInstalled = true;
+      mockStringifiedDeps.mockReturnValue('{"deps":1}');
+      const baseline = depsHash(root);
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'dispensed'),
+            depsHashAtDispense: baseline,
+          },
+        ],
+        migrations: [hybridMig('@nx/js', 'h')],
+      });
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+
+      await runSingleMigrationWorker({
+        ...recordedInput('@nx/js:h', 'run-1'),
+        skipInstall: false,
+      });
+
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('awaiting-prompt-outcome');
+      expect(step.depsHashAtDispense).toBe(depsHash(root));
+      expect(step.depsHashAtDispense).not.toBe(baseline);
+    });
+
+    it('leaves the baseline alone when the dependencies never changed, so no install ran to move it', async () => {
+      // `skippedInstall` is only about the skip-install flag; unchanged
+      // dependencies leave it false with nothing installed either.
+      mockIsInsideAgent.mockReturnValue(true);
+      mockStringifiedDeps.mockReturnValue('{"deps":1}');
+      const baseline = depsHash(root);
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'dispensed'),
+            depsHashAtDispense: baseline,
+          },
+        ],
+        migrations: [hybridMig('@nx/js', 'h')],
+      });
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+
+      await runSingleMigrationWorker({
+        ...recordedInput('@nx/js:h', 'run-1'),
+        skipInstall: false,
+      });
+
+      expect(readRunState(dir).steps[0].depsHashAtDispense).toBe(baseline);
+    });
+
+    it('leaves the dependency baseline alone when the run skips installs, so the change stays pending', async () => {
+      mockIsInsideAgent.mockReturnValue(true);
+      mockStringifiedDeps.mockReturnValue('{"deps":1}');
+      const baseline = depsHash(root);
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:h', 'dispensed'),
+            depsHashAtDispense: baseline,
+          },
+        ],
+        migrations: [hybridMig('@nx/js', 'h')],
+        skipInstall: true,
+      });
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+
+      await runSingleMigrationWorker({
+        ...recordedInput('@nx/js:h', 'run-1'),
+        skipInstall: false,
+      });
+
+      expect(readRunState(dir).steps[0].depsHashAtDispense).toBe(baseline);
+    });
+
     it('skips the generator half on a hybrid retry once its generator already completed', async () => {
       mockIsInsideAgent.mockReturnValue(true);
       const dir = setupRun('run-1', {
@@ -1253,6 +1339,54 @@ describe('runSingleMigrationWorker', () => {
       expect(step.status).toBe('failed');
       // Only the first line, so the agent gets a summary, not a stack.
       expect(step.outcome.summary).toBe('boom: something broke');
+    });
+
+    it('records the install failure on the step, not just the failed status', async () => {
+      // 'failed' says this attempt did not finish. It stops saying anything
+      // about node_modules the moment the agent skips the step, which is what
+      // leaves the completion report with nothing to warn about.
+      mockInstallDepsIfChanged.mockRejectedValue(
+        new Error('registry unreachable')
+      );
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow('registry unreachable');
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('failed');
+      expect(step.installFailed).toBe(true);
+    });
+
+    it('records the install failure when a retry that only had its commit left could not install', async () => {
+      mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
+      mockStringifiedDeps.mockReturnValue('{"deps":1}');
+      const baseline = depsHash(root);
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            generatorCompleted: true,
+            depsHashAtDispense: baseline,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: false,
+      });
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+
+      await expect(
+        runSingleMigrationWorker({
+          ...recordedInput('@nx/js:gen', 'run-1'),
+          skipInstall: false,
+        })
+      ).rejects.toThrow('registry unreachable');
+      const step = readRunState(dir).steps[0];
+      expect(step.status).toBe('failed');
+      expect(step.installFailed).toBe(true);
     });
 
     it('refuses to start a step that was never dispensed, leaving it pending', async () => {

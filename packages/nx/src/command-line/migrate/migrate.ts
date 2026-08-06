@@ -35,11 +35,9 @@ import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
 import {
-  getGitCurrentBranch,
   getUncommittedChangesSnapshot,
   isGitRepository,
 } from '../../utils/git-utils';
-import { getBaseRef } from '../../utils/command-line-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -138,7 +136,7 @@ import type { ResolvedAgentic } from './agentic/types';
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
-  confirmCommitsOnDefaultBranch,
+  confirmMigrationCommitsOnDefaultBranch,
   resolveCreateCommits,
 } from './migrate-commits';
 import {
@@ -2689,7 +2687,9 @@ export async function executeMigrations(
     hoistHandoffGitignore: agentic?.kind === 'enabled',
   });
 
-  // Lazy-load the agentic chain so non-agentic runs don't pay its startup cost.
+  // `run-step` is the part worth deferring: it pulls in the prompt builders,
+  // which nothing but an enabled agentic flow needs. `handoff` is already in
+  // the static graph through `./run`.
   let agenticRun: AgenticRunContext | undefined;
   if (agentic?.kind === 'enabled' && sortedMigrations.length > 0) {
     const { initRunDir, resolveAgenticRunId } =
@@ -3208,10 +3208,9 @@ async function runMigrations(
       error: createCommitsError,
     } = resolveCreateCommits({
       createCommits: shouldCreateCommits,
-      agenticKind: 'enabled',
+      mode: 'orchestrated',
       isGitRepo: isGitRepository(root),
       commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
-      orchestrated: true,
     });
     if (createCommitsError) {
       throw new Error(createCommitsError);
@@ -3221,27 +3220,15 @@ async function runMigrations(
     }
     // The run commits on the user's behalf across many invocations, so the
     // default-branch confirmation belongs here, once, before any of them.
-    if (effectiveCreateCommits && canPrompt(opts.interactive)) {
-      const currentBranch = getGitCurrentBranch(root);
-      // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
-      // generator); compare against the local branch name.
-      const defaultBranch = getBaseRef(readNxJson(root)).replace(
-        /^origin\//,
-        ''
-      );
-      const proceed = await confirmCommitsOnDefaultBranch({
-        currentBranch,
-        defaultBranch,
-      });
-      if (!proceed) {
-        output.log({
-          title: `Skipped running migrations to avoid committing to the default branch '${currentBranch}'.`,
-          bodyLines: [
-            'Switch to a different branch and re-run, or re-run and confirm to proceed.',
-          ],
-        });
-        return;
-      }
+    if (
+      effectiveCreateCommits &&
+      canPrompt(opts.interactive) &&
+      !(await confirmMigrationCommitsOnDefaultBranch(
+        root,
+        'running migrations'
+      ))
+    ) {
+      return;
     }
     const { packageJson: orchestratorNxPackageJson } = readModulePackageJson(
       'nx',
@@ -3284,7 +3271,7 @@ async function runMigrations(
     error: createCommitsError,
   } = resolveCreateCommits({
     createCommits: shouldCreateCommits,
-    agenticKind: agentic.kind,
+    mode: agentic.kind,
     isGitRepo: isGitRepository(root),
     commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
   });
@@ -3295,24 +3282,12 @@ async function runMigrations(
     output.warn({ title: createCommitsWarning });
   }
 
-  if (effectiveCreateCommits && canPrompt(opts.interactive)) {
-    const currentBranch = getGitCurrentBranch(root);
-    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
-    // generator); compare against the local branch name.
-    const defaultBranch = getBaseRef(readNxJson(root)).replace(/^origin\//, '');
-    const proceed = await confirmCommitsOnDefaultBranch({
-      currentBranch,
-      defaultBranch,
-    });
-    if (!proceed) {
-      output.log({
-        title: `Skipped running migrations to avoid committing to the default branch '${currentBranch}'.`,
-        bodyLines: [
-          'Switch to a different branch and re-run, or re-run and confirm to proceed.',
-        ],
-      });
-      return;
-    }
+  if (
+    effectiveCreateCommits &&
+    canPrompt(opts.interactive) &&
+    !(await confirmMigrationCommitsOnDefaultBranch(root, 'running migrations'))
+  ) {
+    return;
   }
 
   const shouldRunValidation = resolveShouldRunValidation({

@@ -241,6 +241,7 @@ export function logSkippedPostMigrationInstall(root: string): void {
 export class ChangedDepInstaller {
   private initialDeps: string;
   private _skippedInstall = false;
+  private _installed = false;
 
   constructor(
     private readonly root: string,
@@ -254,6 +255,15 @@ export class ChangedDepInstaller {
     return this._skippedInstall;
   }
 
+  /**
+   * Whether an install actually ran. Distinct from `!skippedInstall`, which is
+   * only about the skip-install flag: dependencies that never changed leave
+   * both false.
+   */
+  public get installed(): boolean {
+    return this._installed;
+  }
+
   public async installDepsIfChanged(): Promise<void> {
     const currentDeps = getStringifiedPackageJsonDeps(this.root);
     if (this.initialDeps !== currentDeps) {
@@ -261,6 +271,7 @@ export class ChangedDepInstaller {
         this._skippedInstall = true;
       } else {
         await runInstall(this.root, 'post-migration', this.rerunCommand);
+        this._installed = true;
       }
     }
     this.initialDeps = currentDeps;
@@ -371,7 +382,13 @@ export async function runNxOrAngularMigration(
   return { changes, nextSteps, agentContext, skipAgentic, logs, madeChanges };
 }
 
-export function getStringifiedPackageJsonDeps(root: string): string {
+/**
+ * The workspace's declared dependencies, serialized for equality comparison,
+ * or `null` when package.json could not be read or parsed. Callers that
+ * persist the value across processes need that distinction: an unreadable
+ * package.json is not an empty dependency set.
+ */
+export function readPackageJsonDeps(root: string): string | null {
   try {
     const { dependencies, devDependencies } = readJsonFile<PackageJson>(
       join(root, 'package.json')
@@ -379,10 +396,14 @@ export function getStringifiedPackageJsonDeps(root: string): string {
 
     return JSON.stringify([dependencies, devDependencies]);
   } catch {
-    // We don't really care if the .nx/installation property changes,
-    // whenever nxw is invoked it will handle the dep updates.
-    return '';
+    return null;
   }
+}
+
+export function getStringifiedPackageJsonDeps(root: string): string {
+  // We don't really care if the .nx/installation property changes,
+  // whenever nxw is invoked it will handle the dep updates.
+  return readPackageJsonDeps(root) ?? '';
 }
 
 export async function runNxMigration(

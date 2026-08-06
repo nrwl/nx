@@ -5865,7 +5865,7 @@ module.exports = {
         expect(
           resolveCreateCommits({
             createCommits,
-            agenticKind,
+            mode: agenticKind,
             isGitRepo: true,
           })
         ).toEqual(expected);
@@ -5874,7 +5874,7 @@ module.exports = {
       it('warns and drops diff context when createCommits=false is explicit alongside agentic', () => {
         const result = resolveCreateCommits({
           createCommits: false,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: true,
         });
         expect(result.effective).toBe(false);
@@ -5885,9 +5885,8 @@ module.exports = {
       it('words the explicit --no-create-commits warning without naming --agentic on the orchestrated path', () => {
         const result = resolveCreateCommits({
           createCommits: false,
-          agenticKind: 'enabled',
+          mode: 'orchestrated',
           isGitRepo: true,
-          orchestrated: true,
         });
         expect(result.effective).toBe(false);
         expect(result.warning).toMatch(/orchestrated migrate runs/);
@@ -5898,9 +5897,8 @@ module.exports = {
       it('words the no-git warning without naming --agentic on the orchestrated path', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'enabled',
+          mode: 'orchestrated',
           isGitRepo: false,
-          orchestrated: true,
         });
         expect(result.effective).toBe(false);
         expect(result.warning).toMatch(/Orchestrated migrate runs/);
@@ -5911,7 +5909,7 @@ module.exports = {
       it('errors when --create-commits is explicit without a git repo', () => {
         const result = resolveCreateCommits({
           createCommits: true,
-          agenticKind: 'disabled',
+          mode: 'disabled',
           isGitRepo: false,
         });
         expect(result.effective).toBe(false);
@@ -5923,7 +5921,7 @@ module.exports = {
       it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: false,
         });
         expect(result.effective).toBe(false);
@@ -5935,7 +5933,7 @@ module.exports = {
       it('notes the dropped --commit-prefix in the agentic-without-git warning when the prefix is customized', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: false,
           commitPrefixIsCustom: true,
         });
@@ -5946,7 +5944,7 @@ module.exports = {
       it('notes the dropped --commit-prefix in the --no-create-commits + agentic warning when the prefix is customized', () => {
         const result = resolveCreateCommits({
           createCommits: false,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: true,
           commitPrefixIsCustom: true,
         });
@@ -5958,7 +5956,7 @@ module.exports = {
       it('does not mention --commit-prefix when the prefix is unchanged', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'enabled',
+          mode: 'enabled',
           isGitRepo: false,
           commitPrefixIsCustom: false,
         });
@@ -5968,7 +5966,7 @@ module.exports = {
       it('warns that a configured commit prefix has no effect when commits stay disabled', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'disabled',
+          mode: 'disabled',
           isGitRepo: true,
           commitPrefixIsCustom: true,
         });
@@ -5980,7 +5978,7 @@ module.exports = {
       it('does not warn about the commit prefix when commits are disabled and the prefix is default', () => {
         const result = resolveCreateCommits({
           createCommits: undefined,
-          agenticKind: 'disabled',
+          mode: 'disabled',
           isGitRepo: true,
           commitPrefixIsCustom: false,
         });
@@ -5990,7 +5988,7 @@ module.exports = {
       it('does not warn when commits are enabled even though the agentic flow is disabled', () => {
         const result = resolveCreateCommits({
           createCommits: true,
-          agenticKind: 'disabled',
+          mode: 'disabled',
           isGitRepo: true,
           commitPrefixIsCustom: true,
         });

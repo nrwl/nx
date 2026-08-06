@@ -13,8 +13,7 @@ const mockStringifiedDeps = jest.fn();
 const mockRunInstall = jest.fn();
 const mockLogSkippedInstall = jest.fn();
 jest.mock('../execute-migration', () => ({
-  getStringifiedPackageJsonDeps: (...args: unknown[]) =>
-    mockStringifiedDeps(...args),
+  readPackageJsonDeps: (...args: unknown[]) => mockStringifiedDeps(...args),
   runInstall: (...args: unknown[]) => mockRunInstall(...args),
   logSkippedPostMigrationInstall: (...args: unknown[]) =>
     mockLogSkippedInstall(...args),
@@ -50,7 +49,7 @@ jest.mock('../../../utils/git-utils', () => ({
 
 jest.mock('../../../utils/package-manager', () => ({
   detectPackageManager: () => 'npm',
-  getPackageManagerCommand: () => ({ exec: 'npx' }),
+  getPackageManagerCommand: () => ({ exec: 'npx', install: 'npm install' }),
 }));
 
 import {
@@ -241,6 +240,7 @@ describe('orchestrator', () => {
   async function parkedPromptStep(opts: {
     createCommits: boolean;
     skipInstall?: boolean;
+    attempt?: number;
   }): Promise<string> {
     const dir = setupRun('run-1', {
       steps: [migStep('step-1', '@nx/js:p', 'pending')],
@@ -257,6 +257,7 @@ describe('orchestrator', () => {
           ...state.steps[0],
           status: 'awaiting-prompt-outcome',
           finishedAt: '2026-01-01T00:01:00.000Z',
+          ...(opts.attempt !== undefined ? { attempt: opts.attempt } : {}),
         },
       ],
     });
@@ -1076,10 +1077,14 @@ describe('orchestrator', () => {
     });
 
     it('refuses a reconcile when scratch became unsafe while the run was paused, before folding handoffs', async () => {
+      // The ordering is load-bearing: folding a completed prompt reaches a
+      // `git add -A`, which would sweep the exposed scratch into the commit.
       const dir = setupRun('run-1', {
-        steps: [migStep('step-1', '@nx/js:a', 'failed')],
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
         createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
       });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
       const before = readRunState(dir);
       mockGetPathCommitExposure.mockReturnValue('unignored');
 
@@ -1087,6 +1092,7 @@ describe('orchestrator', () => {
         runOrchestratorReconcile({ root, runId: 'run-1' })
       ).rejects.toThrow(/not ignored by git/);
 
+      expect(mockCommit).not.toHaveBeenCalled();
       expect(readRunState(dir)).toEqual(before);
       expect(parseBlocks()).toHaveLength(0);
     });
@@ -1213,6 +1219,35 @@ describe('orchestrator', () => {
       );
     });
 
+    it('folds a handoff onto a step that is on a later attempt', async () => {
+      // The guard compares the observed attempt against the one on disk, so it
+      // has to read the step rather than assume a run's first attempt.
+      const dir = await parkedPromptStep({ createCommits: false, attempt: 2 });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('succeeded');
+    });
+
+    it('installs and records debt when a failed prompt changed dependencies on a committing run', async () => {
+      // Both halves of the non-completed branch at once: the commit path is
+      // skipped, so the install still has to happen here, and the tree the
+      // prompt left behind is debt for a later commit to absorb.
+      mockGetWorkingTreeStatus.mockReturnValue('dirty');
+      const dir = await parkedPromptStep({ createCommits: true });
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+      writeHandoff(dir, '@nx/js', 'p', { status: 'failed', summary: 'boom' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(mockRunInstall).toHaveBeenCalledTimes(1);
+      expect(mockCommit).not.toHaveBeenCalled();
+      expect(readRunState(dir).commits).toEqual([
+        { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
+      ]);
+    });
+
     it('installs on the way into the commit when the prompt changed dependencies', async () => {
       mockCommit.mockImplementation(async (...args: unknown[]) => {
         await (args[4] as () => Promise<void>)();
@@ -1227,6 +1262,89 @@ describe('orchestrator', () => {
       expect(mockRunInstall).toHaveBeenCalledTimes(1);
       expect(readRunState(dir).commits).toEqual([
         { kind: 'landed', sha: 'sha-1', stepIds: ['step-1'], issueIds: [] },
+      ]);
+    });
+
+    it.each([
+      ['failed', { status: 'failed', summary: 'boom' }],
+      ['skipped', { status: 'success', summary: 'n/a', outcome: 'skipped' }],
+    ] as const)(
+      'installs when a %s prompt changed the dependencies: nothing else is left to detect the change',
+      async (_case, handoff) => {
+        // The next step's dispense records the already-modified package.json as
+        // its own baseline, so an install skipped here never happens at all.
+        const dir = await parkedPromptStep({ createCommits: false });
+        mockStringifiedDeps.mockReturnValue('{"deps":2}');
+        writeHandoff(dir, '@nx/js', 'p', handoff);
+
+        await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+        expect(mockRunInstall).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    it('records the install failure on the step and surfaces it at completion', async () => {
+      // A warning alone dies with this process; the next invocation and the
+      // completion report have to be able to tell "installed" from "failed".
+      mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
+      const dir = await parkedPromptStep({ createCommits: false });
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.steps[0].installFailed).toBe(true);
+      expect(state.status).toBe('completed');
+      const warned = (output.warn as jest.Mock).mock.calls
+        .map((call) => JSON.stringify(call[0]))
+        .join('\n');
+      expect(warned).toContain('registry unreachable');
+      expect(warned).toContain('npm install');
+      const block = lastBlock();
+      expect(block.action).toBe('complete');
+      expect(block.payload.instructions).toContain('npm install');
+    });
+
+    it('records the install failure when the commit path could not install, even though it also records debt', async () => {
+      // The debt is not a stand-in for the install state: a later step's
+      // commit absorbs this diff and lands an entry naming this step, which
+      // clears the debt while node_modules stays stale.
+      mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
+      mockCommit.mockImplementation(async (...args: unknown[]) => {
+        await (args[4] as () => Promise<void>)();
+        return { status: 'committed', sha: 'sha-1' };
+      });
+      const dir = await parkedPromptStep({ createCommits: true });
+      mockStringifiedDeps.mockReturnValue('{"deps":2}');
+      writeHandoff(dir, '@nx/js', 'p', { status: 'success', summary: 'done' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.steps[0].installFailed).toBe(true);
+      const block = lastBlock();
+      expect(block.action).toBe('complete');
+      expect(block.payload.instructions).toContain('npm install');
+    });
+
+    it('counts a failed working-tree probe as dirty when recording debt', async () => {
+      // Narrowing this to `=== 'dirty'` would drop the debt whenever the probe
+      // itself fails, and the edits would then have nothing tracking them.
+      mockGetWorkingTreeStatus.mockReturnValue('unknown');
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:p', 'awaiting-prompt-outcome')],
+        createCommits: true,
+        plan: [promptMig('@nx/js', 'p')],
+      });
+      writeHandoff(dir, '@nx/js', 'p', { status: 'failed', summary: 'boom' });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).commits).toEqual([
+        { kind: 'failed', stepIds: ['step-1'], issueIds: [] },
       ]);
     });
 
@@ -1309,6 +1427,28 @@ describe('orchestrator', () => {
       expect(block.payload.then).toContain('--step-action=retry-clean');
     });
 
+    it('classifies a dead worker on a later attempt as died', async () => {
+      // The guard compares the observed attempt against the one on disk, so it
+      // has to read the step rather than assume a run's first attempt.
+      jest.spyOn(process, 'kill').mockImplementation(() => {
+        throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            attempt: 2,
+            pid: 999999,
+            startedAt: '2026-01-01T00:00:00.000Z',
+          }),
+        ],
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      expect(readRunState(dir).steps[0].status).toBe('died');
+    });
+
     it.each([
       ['the tree was already dirty when the step was dispensed', false],
       ['the run predates the tree probe, so nothing was recorded', undefined],
@@ -1343,6 +1483,85 @@ describe('orchestrator', () => {
       );
       expect(block.payload.instructions).not.toContain('retry-clean');
       expect(block.payload.then).toContain('--step-action=adopt');
+    });
+
+    it('offers retry first when the dead worker had already recorded its generator half', async () => {
+      // Its generator ran, so the redispensed worker has only the prompt (or
+      // the install and commit) left; a reset would throw that work away.
+      jest.spyOn(process, 'kill').mockImplementation(() => {
+        throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+      });
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: 999999,
+            startedAt: '2026-01-01T00:00:00.000Z',
+            gitRefBefore: 'ref-before',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('died');
+      expect(block.payload.instructions).toMatch(/--step-action=retry(?!-)/);
+      expect(block.payload.instructions).toContain('Choose exactly one');
+      expect(block.payload.then).toMatch(/--step-action=retry$/);
+    });
+
+    it('does not offer retry when the dead worker never recorded its generator half', async () => {
+      // Keeping that tree could apply the migration twice.
+      jest.spyOn(process, 'kill').mockImplementation(() => {
+        throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+      });
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: 999999,
+            startedAt: '2026-01-01T00:00:00.000Z',
+            gitRefBefore: 'ref-before',
+            treeCleanAtDispense: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.payload.instructions).not.toMatch(
+        /--step-action=retry(?!-)/
+      );
+      expect(block.payload.then).toContain('--step-action=retry-clean');
+    });
+
+    it('names the single remaining option instead of asking the agent to choose', async () => {
+      jest.spyOn(process, 'kill').mockImplementation(() => {
+        throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
+      });
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'running', {
+            pid: 999999,
+            startedAt: '2026-01-01T00:00:00.000Z',
+            gitRefBefore: 'ref-before',
+          }),
+        ],
+        createCommits: false,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.payload.instructions).toContain('Resolve it with');
+      expect(block.payload.instructions).not.toContain('Choose exactly one');
     });
 
     it('rejects a hand-crafted retry-clean for a step dispensed against a dirty tree', async () => {
@@ -1823,6 +2042,36 @@ describe('orchestrator', () => {
         stepIds: ['step-1'],
         issueIds: [],
       });
+    });
+
+    it('records the install failure when adopting a died step whose commit could not install', async () => {
+      jest.spyOn(process, 'kill').mockReturnValue(true as never);
+      mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
+      mockCommit.mockImplementation(async (...args: unknown[]) => {
+        await (args[4] as () => Promise<void>)();
+        return { status: 'committed', sha: 'adopt-sha' };
+      });
+      const dir = setupRun('run-1', {
+        steps: [
+          // Any baseline the current deps do not hash to makes the commit
+          // path install, which is what fails here.
+          migStep('step-1', '@nx/js:gen', 'died', {
+            depsHashAtDispense: 'baseline-from-an-earlier-dispense',
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'adopt',
+      });
+
+      const state = readRunState(dir);
+      expect(state.steps[0].status).toBe('succeeded');
+      expect(state.steps[0].installFailed).toBe(true);
     });
 
     it('does not refold a stale handoff after a retry re-arms the step', async () => {

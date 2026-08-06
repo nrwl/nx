@@ -1,13 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { readNxJson } from '../../../config/configuration';
 import type { FileChange } from '../../../generators/tree';
-import {
-  getGitCurrentBranch,
-  getLatestCommitSha,
-  isGitRepository,
-} from '../../../utils/git-utils';
-import { getBaseRef } from '../../../utils/command-line-utils';
+import { getLatestCommitSha, isGitRepository } from '../../../utils/git-utils';
 import { readJsonFile } from '../../../utils/fileutils';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
@@ -28,7 +22,11 @@ import {
   resolveShouldRunValidation,
   type AgenticArg,
 } from '../agentic/select';
-import type { EnabledResolvedAgentic, ResolvedAgentic } from '../agentic/types';
+import {
+  MIGRATE_RUNS_RELATIVE_DIR,
+  type EnabledResolvedAgentic,
+  type ResolvedAgentic,
+} from '../agentic/types';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX } from '../command-object';
 import {
   ChangedDepInstaller,
@@ -46,7 +44,7 @@ import {
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
-  confirmCommitsOnDefaultBranch,
+  confirmMigrationCommitsOnDefaultBranch,
   resolveCreateCommits,
   type CommitResult,
 } from '../migrate-commits';
@@ -62,10 +60,10 @@ import {
 import { canPrompt } from '../safe-prompt';
 import {
   findActiveRun,
+  hasRunState,
   NewerRunStateFormatError,
   readRunState,
   runDir,
-  RUN_STATE_FILE_NAME,
   type MigrateCommitLedgerEntry,
   type MigrateRunState,
   type MigrateStep,
@@ -76,6 +74,7 @@ import {
   applyStepEvent,
   commitResultToLedgerEntry,
   latestRound,
+  markInstallFailed,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
   type StepEvent,
@@ -87,6 +86,7 @@ import {
   installDepsChangedSinceDispense,
   nowIso,
   pmExecPrefix,
+  recordInstallLanded,
   summarizeError,
   warnCommitFailed,
 } from './util';
@@ -170,7 +170,7 @@ export async function runSingleMigrationWorker(
 
   const resolved = resolveCreateCommits({
     createCommits: input.createCommits,
-    agenticKind: agentic.kind,
+    mode: agentic.kind,
     isGitRepo: isGitRepository(root),
     commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
   });
@@ -182,24 +182,15 @@ export async function runSingleMigrationWorker(
   }
   const createCommits = resolved.effective;
 
-  if (createCommits && canPrompt(interactive)) {
-    const currentBranch = getGitCurrentBranch(root);
-    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
-    // generator); compare against the local branch name.
-    const defaultBranch = getBaseRef(readNxJson(root)).replace(/^origin\//, '');
-    const proceed = await confirmCommitsOnDefaultBranch({
-      currentBranch,
-      defaultBranch,
-    });
-    if (!proceed) {
-      output.log({
-        title: `Skipped running the migration to avoid committing to the default branch '${currentBranch}'.`,
-        bodyLines: [
-          'Switch to a different branch and re-run, or re-run and confirm to proceed.',
-        ],
-      });
-      return;
-    }
+  if (
+    createCommits &&
+    canPrompt(interactive) &&
+    !(await confirmMigrationCommitsOnDefaultBranch(
+      root,
+      'running the migration'
+    ))
+  ) {
+    return;
   }
 
   await runStandalone(root, migration, {
@@ -223,12 +214,10 @@ function readMigrationsSource(
   if (runId) {
     const dir = runDir(root, runId);
     // A missing run.json would surface a raw ENOENT from readRunState's
-    // readFileSync; report it the way the orchestrator does instead. Checking
-    // the file rather than the directory also covers a legacy agentic scratch
-    // dir, which exists under the same parent but holds no run.
-    if (!existsSync(join(dir, RUN_STATE_FILE_NAME))) {
+    // readFileSync; report it the way the orchestrator does instead.
+    if (!hasRunState(dir)) {
       throw new Error(
-        `No migrate run '${runId}' was found under .nx/migrate-runs. Start one with \`${pmExecPrefix(
+        `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}. Start one with \`${pmExecPrefix(
           root
         )} nx migrate --run-migrations\` before recording into it.`
       );
@@ -607,8 +596,9 @@ async function runRecorded(
   // may have claimed a later attempt whose flag its entry snapshot predates.
   const startedStep = state.steps.find((s) => s.id === step.id);
   const generatorAlreadyCompleted = startedStep.generatorCompleted === true;
-  // Dispensed worker commands pin skip-install for their own pre-migration
-  // install, so the run's recorded policy is what governs this one.
+  // The run records its own install policy because dispensed worker commands
+  // are re-invoked by the loop and never carry the user's flags; an explicit
+  // --skip-install on this invocation still applies on top of it.
   const effectiveSkipInstall = state.skipInstall === true || skipInstall;
 
   let outcome: MigrateStepOutcome | undefined;
@@ -666,49 +656,30 @@ async function runRecorded(
         forwardDroppedAgentContext(migration, agentContext, agenticKind);
       }
 
+      const install = () =>
+        recordingInstallFailure(dir, step.id, () =>
+          installer.installDepsIfChanged()
+        );
       // Commits follow the run config, not CLI flags, and only when the
       // generator changed something: a no-op step must not create a commit (nor
       // a ledger entry) that absorbs prior pending diffs under its name.
       if (state.createCommits && madeChanges) {
-        // Computed before the commit so the ledger entry and the commit body
-        // name the same absorbed steps.
-        const absorbedStepIds = uncoveredFailedStepIds(state).filter(
-          (id) => id !== step.id
-        );
-        let result: Awaited<ReturnType<typeof commitMigrationIfRequested>>;
-        try {
-          result = await commitMigrationIfRequested(
-            root,
-            migration,
-            true,
-            state.commitPrefix,
-            () => installer.installDepsIfChanged(),
-            stepsToPendingMigrations(state, absorbedStepIds)
-          );
-        } catch (commitError) {
-          // A post-migration install failure leaves the diff uncommitted;
-          // record the debt so only a landed entry can cover it.
-          state = appendCommit(dir, {
-            kind: 'failed',
-            stepIds: [step.id],
-            issueIds: [],
-          });
-          throw commitError;
-        }
-        state = recordCommitInLedger(
+        state = await commitStepChanges(
           dir,
+          root,
           state,
           step,
           migration,
-          result,
-          absorbedStepIds
+          install
         );
       } else {
-        await installer.installDepsIfChanged();
+        await install();
       }
 
       if (installer.skippedInstall) {
         logSkippedPostMigrationInstall(root);
+      } else if (installer.installed) {
+        recordInstallLanded(root, dir, step.id);
       }
 
       printNextSteps(migration, nextSteps);
@@ -777,11 +748,28 @@ function transition(dir: string, event: StepEvent): MigrateRunState {
   });
 }
 
+// Records a dependency install failure on the step before letting it fail the
+// attempt. The 'failed' status says this attempt did not finish, not that the
+// workspace's dependencies are missing, and the two part ways as soon as the
+// agent skips the step or a later step's commit absorbs its diff: either one
+// completes the run with node_modules stale and nothing left to warn about.
+async function recordingInstallFailure<T>(
+  dir: string,
+  stepId: string,
+  install: () => Promise<T>
+): Promise<T> {
+  try {
+    return await install();
+  } catch (e) {
+    updateRunState(dir, (fresh) => markInstallFailed(fresh, stepId));
+    throw e;
+  }
+}
+
 // Finishes a step whose generator ran in an earlier attempt that then failed
 // on the install or the commit. The generator's changes are already in the
 // tree, so only those two are left, and the install compares against the
-// dependency baseline the step's first dispense recorded rather than against
-// what that generator wrote.
+// step's persisted baseline rather than against what that generator wrote.
 async function finishCompletedGenerator(
   dir: string,
   root: string,
@@ -793,20 +781,38 @@ async function finishCompletedGenerator(
 ): Promise<MigrateRunState> {
   const migrationId = `${migration.package}:${migration.name}`;
   const installDeps = () =>
-    installDepsChangedSinceDispense(
-      root,
-      step,
-      skipInstall,
-      `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+    recordingInstallFailure(dir, step.id, () =>
+      installDepsChangedSinceDispense(
+        root,
+        dir,
+        step,
+        skipInstall,
+        `${formatSingleMigrationRerunCommand(migrationId)} --run-id=${runId}`
+      )
     );
   if (!state.createCommits) {
     await installDeps();
     return state;
   }
+  return commitStepChanges(dir, root, state, step, migration, installDeps);
+}
+
+// Installs what the step changed, commits it, and records the result in the
+// ledger, shared by a step's first attempt and by one that only has the commit
+// left to do. The absorbed step ids are computed before the commit so the
+// ledger entry and the commit body name the same ones.
+async function commitStepChanges(
+  dir: string,
+  root: string,
+  state: MigrateRunState,
+  step: MigrateStep,
+  migration: PlannedMigration,
+  installDeps: () => Promise<void>
+): Promise<MigrateRunState> {
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
-  let result: Awaited<ReturnType<typeof commitMigrationIfRequested>>;
+  let result: CommitResult;
   try {
     result = await commitMigrationIfRequested(
       root,
@@ -817,33 +823,15 @@ async function finishCompletedGenerator(
       stepsToPendingMigrations(state, absorbedStepIds)
     );
   } catch (commitError) {
-    // Same as the first attempt: an install failure leaves the diff
-    // uncommitted, so the debt stands until a landed entry covers it.
-    state = appendCommit(dir, {
+    // A post-migration install failure leaves the diff uncommitted; record the
+    // debt so only a landed entry can cover it.
+    appendCommit(dir, {
       kind: 'failed',
       stepIds: [step.id],
       issueIds: [],
     });
     throw commitError;
   }
-  return recordCommitInLedger(
-    dir,
-    state,
-    step,
-    migration,
-    result,
-    absorbedStepIds
-  );
-}
-
-function recordCommitInLedger(
-  dir: string,
-  state: MigrateRunState,
-  step: MigrateStep,
-  migration: PlannedMigration,
-  result: Awaited<ReturnType<typeof commitMigrationIfRequested>>,
-  absorbedStepIds: string[]
-): MigrateRunState {
   if (result.status === 'failed') {
     warnCommitFailed(migration.name);
   }
@@ -887,8 +875,11 @@ function buildOutcome(
   return outcome;
 }
 
-// The handoff and run-step machinery is `require`d here so this module pulls
-// it in only when agentic is enabled.
+// Only `run-step` is actually deferred by these requires, and it is the one
+// worth deferring: it pulls in the prompt builders, which nothing but an
+// enabled agentic flow needs. The other two are loaded either way, since the
+// `run/` barrel every caller comes through re-exports `orchestrator.ts`, which
+// imports both statically.
 async function prepareAgenticRun(
   root: string,
   migration: PlannedMigration,

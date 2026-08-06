@@ -7,11 +7,15 @@ import {
   tryCommitChanges,
 } from '../../../utils/git-utils';
 import { logger } from '../../../utils/logger';
-import { isHandoffGitignoreMigration } from './types';
+import {
+  isHandoffGitignoreMigration,
+  MIGRATE_RUNS_RELATIVE_DIR,
+} from './types';
 
 /**
- * Under `--agentic`, the runner writes per-run scratch under
- * `.nx/migrate-runs/<run-id>/`. The v23 migration
+ * Both the agentic runner and the orchestrator write per-run scratch under
+ * `.nx/migrate-runs/<run-id>/`: handoff files in both cases, plus the durable
+ * run state and its plan snapshots for the orchestrator. The v23 migration
  * `23-0-0-add-migrate-runs-to-git-ignore` adds `.nx/migrate-runs` to
  * `.gitignore`; in its declared slot (typically late) earlier per-migration
  * commits would absorb the scratch into the user-visible diff.
@@ -97,7 +101,7 @@ export async function applyAgenticHandoffGitignoreFallback({
   flushChanges(root, changes);
   logger.info(
     pc.dim(
-      `- Added .nx/migrate-runs to .gitignore so this run's handoff scratch is ignored.`
+      `- Added ${MIGRATE_RUNS_RELATIVE_DIR} to .gitignore so this run's scratch state is ignored.`
     )
   );
 
@@ -106,7 +110,7 @@ export async function applyAgenticHandoffGitignoreFallback({
 
   try {
     const sha = tryCommitChanges(
-      `${commitPrefix}add .nx/migrate-runs to .gitignore`,
+      `${commitPrefix}add ${MIGRATE_RUNS_RELATIVE_DIR} to .gitignore`,
       root
     );
     if (sha) {
