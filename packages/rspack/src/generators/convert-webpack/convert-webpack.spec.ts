@@ -147,25 +147,24 @@ describe('Convert webpack', () => {
               }
           `);
       expect(project.targets.serve).toMatchInlineSnapshot(`
-              {
-                "configurations": {
-                  "development": {
-                    "buildTarget": "demo:build:development",
-                  },
-                  "production": {
-                    "buildTarget": "demo:build:production",
-                    "hmr": false,
-                  },
-                },
-                "defaultConfiguration": "development",
-                "executor": "@nx/rspack:dev-server",
-                "options": {
-                  "buildTarget": "demo:build",
-                  "hmr": true,
-                  "port": 4200,
-                },
-              }
-          `);
+        {
+          "configurations": {
+            "development": {
+              "buildTarget": "demo:build:development",
+            },
+            "production": {
+              "buildTarget": "demo:build:production",
+              "hmr": false,
+            },
+          },
+          "defaultConfiguration": "development",
+          "executor": "@nx/rspack:dev-server",
+          "options": {
+            "buildTarget": "demo:build",
+            "hmr": true,
+          },
+        }
+      `);
     });
 
     it('should convert react module federation webpack projects to rspack', async () => {
