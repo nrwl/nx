@@ -1,13 +1,13 @@
 import { type ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import {
-  getCatalogManager,
-  getWorkspacePackagesFromGraph,
-  createPrunedLockfile,
-  type PackageJson,
-} from '@nx/devkit/internal';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
+import {
+  createPrunedLockfile,
+  getCatalogManager,
+  getWorkspacePackagesFromGraph,
+  type PackageJson,
+} from '@nx/devkit/internal';
 import pruneLockfileExecutor, {
   resolveCatalogReferences,
 } from './prune-lockfile';

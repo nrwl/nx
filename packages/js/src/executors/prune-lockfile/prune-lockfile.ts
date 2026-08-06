@@ -7,20 +7,20 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
+import { existsSync, lstatSync, writeFileSync } from 'fs';
+import { dirname, join } from 'path';
 import {
-  getCatalogManager,
-  interpolate,
+  createPrunedLockfile,
   dropEmptyPeerDependencySections,
+  getCatalogManager,
+  getLockFileName,
+  getWorkspacePackagesFromGraph,
+  interpolate,
   movePeerDependencyToDependencies,
   type PackageJson,
   type PackageJsonDependencySection,
-  getLockFileName,
-  createPrunedLockfile,
-  getWorkspacePackagesFromGraph,
   writePrunedPnpmInstallSettings,
 } from '@nx/devkit/internal';
-import { existsSync, lstatSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
