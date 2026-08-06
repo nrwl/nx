@@ -60,9 +60,7 @@ import {
 import { escapeXmlAttr } from '../agentic/print-dropped-agent-context';
 import type { PlannedMigration } from '../migration-shape';
 import {
-  assertPlatformSupported,
   depsHash,
-  EXISTING_RUN_WINDOWS_REMEDIATION,
   installDepsChangedSinceDispense,
   isPidAlive,
   nowIso,
@@ -95,9 +93,8 @@ export interface RunOrchestratorInitInput {
   migrationsJson: { migrations?: PlannedMigration[]; [k: string]: unknown };
   createCommits: boolean;
   commitPrefix: string;
-  // The run's install policy. Dispensed workers pin skip-install for their own
-  // pre-migration install, so the run has to carry the user's flag itself for
-  // the loop's own post-migration installs to honor it.
+  // The run's install policy. Dispensed commands carry no flags of the user's,
+  // so the run has to record it here for the installs the loop itself runs.
   skipInstall: boolean;
   // Workspace-local nx version; the v23 cutoff for the .gitignore fallback.
   installedNxVersion: string;
@@ -163,9 +160,6 @@ function refuseUnsafeScratchExposure(
 export async function runOrchestratorInit(
   input: RunOrchestratorInitInput
 ): Promise<void> {
-  assertPlatformSupported(
-    'Unset NX_MIGRATE_ORCHESTRATOR to use the standard migrate flow.'
-  );
   const {
     root,
     migrationsJson,
@@ -451,17 +445,17 @@ function finishInit(
 export async function runOrchestratorReconcile(
   input: RunOrchestratorReconcileInput
 ): Promise<void> {
-  assertPlatformSupported(EXISTING_RUN_WINDOWS_REMEDIATION);
   const { root, runId, stepAction } = input;
   if (!RUN_ID_SAFE.test(runId)) {
     throw new Error(`Invalid run id '${runId}'.`);
   }
   const dir = runDir(root, runId);
   if (!hasRunState(dir)) {
+    // No remediation beyond the id: starting a run is a separate, gated entry
+    // point, so pointing at it here would hand most callers a command that
+    // does something else entirely.
     throw new Error(
-      `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}. Start one with \`${pmExecPrefix(
-        root
-      )} nx migrate --run-migrations\` before reconciling.`
+      `No migrate run '${runId}' was found under ${MIGRATE_RUNS_RELATIVE_DIR}.`
     );
   }
   // Version refusal (NewerRunStateFormatError) propagates.
@@ -1028,11 +1022,11 @@ function emitDied(
   }
   if (cleanRetry) {
     options.push(
+      // Two commands rather than one `&&` chain: the agent runs these in its
+      // own shell, and not every shell joins statements that way.
       `  retry-clean: restore the tree to ${
         ref ?? 'the pre-migration ref'
-      } first (e.g. \`git reset --hard ${
-        ref ?? '<ref>'
-      } && git clean -fd -e ${MIGRATE_RUNS_RELATIVE_DIR}\`, keeping the run state out of the clean), then retry from that clean state by running: ${reconcileCommand(
+      } first (e.g. \`git reset --hard ${ref ?? '<ref>'}\` then \`git clean -fd -e ${MIGRATE_RUNS_RELATIVE_DIR}\`, keeping the run state out of the clean), then retry from that clean state by running: ${reconcileCommand(
         root,
         runId,
         'retry-clean'
@@ -1309,22 +1303,17 @@ function workerCommand(
   migrationId: string,
   runId: string
 ): string {
-  return `NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true ${pmExecPrefix(
+  return `${pmExecPrefix(
     root
   )} nx migrate --run-migration=${migrationId} --run-id=${runId}`;
 }
 
-// A bare `--run-id` parse requires the orchestrator gate (migrate.ts), so the
-// dispensed reconcile carries it rather than relying on a session-wide export.
-// The worker command keeps `--run-migration`, whose parse needs no gate.
 function reconcileCommand(
   root: string,
   runId: string,
   action?: StepAction
 ): string {
-  const base = `NX_MIGRATE_ORCHESTRATOR=true NX_MIGRATE_USE_LOCAL=true NX_MIGRATE_SKIP_INSTALL=true ${pmExecPrefix(
-    root
-  )} nx migrate --run-id=${runId}`;
+  const base = `${pmExecPrefix(root)} nx migrate --run-id=${runId}`;
   return action ? `${base} --step-action=${action}` : base;
 }
 
