@@ -1355,13 +1355,14 @@ async function determineReactOptions(
     style = reply.style;
   }
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs);
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
     });
   } else {
-    linter = parsedArgs.linter ?? 'eslint';
     formatter = 'prettier';
   }
 
@@ -1467,13 +1468,14 @@ async function determineVueOptions(
     style = reply.style;
   }
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs);
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
     });
   } else {
-    linter = parsedArgs.linter ?? 'eslint';
     formatter = 'prettier';
   }
 
@@ -1763,13 +1765,14 @@ async function determineNodeOptions(
     exclude: 'vitest',
   });
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs);
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
     });
   } else {
-    linter = parsedArgs.linter ?? 'eslint';
     formatter = 'prettier';
   }
 
