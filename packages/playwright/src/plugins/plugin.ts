@@ -18,6 +18,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
+  logger,
   normalizePath,
   type ProjectConfiguration,
   type TargetConfiguration,
@@ -719,9 +720,11 @@ function getDotEnvPairsForTask(
 // command tasks, and returns no readiness servers. Otherwise, when the chain's
 // task env differs from the graph-time ambient env, the config is re-evaluated
 // in a child under that env so an env-derived address resolves the way the task
-// will; a matching env reuses the ambient config. A failed re-evaluation throws:
-// the daemon caches the resulting graph, so a silent fallback would bake a wrong
-// gate that no retry corrects until the graph is invalidated.
+// will; a matching env reuses the ambient config. A failed re-evaluation falls
+// back to the ambient servers and skips the gate for the chain: an unverified
+// address must not become a gate the daemon then caches, but a config bug or
+// timeout should degrade to master's behavior, not kill graph construction for
+// most commands.
 async function resolveChainWebserver(
   configFilePath: string,
   projectRoot: string,
@@ -735,6 +738,7 @@ async function resolveChainWebserver(
     return { commandTasks: [], readinessServers: [] };
   }
   let webServers = ambientWebServers;
+  let taskEnvEvalFailed = false;
   if (inferReadiness) {
     const taskEnv = getGraphTimeDotEnvForTask(
       projectRoot,
@@ -750,23 +754,22 @@ async function resolveChainWebserver(
           taskEnv
         );
       } catch (e) {
-        // Nx's createNodes error formatter renders `message`/`stack` but not
-        // `cause`, so fold the child's failure into the message to surface it.
+        taskEnvEvalFailed = true;
         const detail = e instanceof Error ? e.message : String(e);
-        throw new Error(
-          `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server readiness address. Set "waitForWebServer": false in the @nx/playwright plugin options in nx.json to opt out of the readiness gate.\n${detail}`,
-          { cause: e }
+        logger.warn(
+          `@nx/playwright: could not evaluate ${configFilePath} under the ${target} task env to resolve the web server address. Targets are inferred from the ambient config evaluation and no web server readiness task is inferred for ${target}.\n${detail}`
         );
       }
     }
   }
 
   const commandTasks = getWebserverCommandTasks(webServers);
-  const readinessServers = inferReadiness
-    ? (commandTasks
-        .map(toReadinessServer)
-        .filter(Boolean) as WebserverReadinessServer[])
-    : [];
+  const readinessServers =
+    inferReadiness && !taskEnvEvalFailed
+      ? (commandTasks
+          .map(toReadinessServer)
+          .filter(Boolean) as WebserverReadinessServer[])
+      : [];
   return { commandTasks, readinessServers };
 }
 

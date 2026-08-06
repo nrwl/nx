@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContext, logger } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as jsUtils from '@nx/js';
 import { PlaywrightTestConfig } from '@playwright/test';
@@ -1495,15 +1495,17 @@ describe('@nx/playwright/plugin', () => {
     }
   });
 
-  it('fails createNodes when the config cannot be evaluated under the task env', async () => {
+  it('falls back to the ambient config and skips the gate when the config cannot be evaluated under the task env', async () => {
     const originalBaseUrl = process.env.BASE_URL;
     const originalWorkspaceRoot = workspaceRoot;
     delete process.env.BASE_URL;
     setWorkspaceRoot(tempFs.tempDir);
-    // A failed evaluation must surface, not bake a wrong gate into the graph.
+    // An unverified address must not become a gate the daemon then caches, but
+    // graph construction must survive the failed evaluation.
     _setChildEval(async () => {
       throw new Error('boom');
     });
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
 
     try {
       await mockPlaywrightConfig(
@@ -1522,17 +1524,29 @@ describe('@nx/playwright/plugin', () => {
         '.env': 'BASE_URL=http://localhost:4301\n',
       });
 
-      const error = await createNodesFunction(
+      const results = await createNodesFunction(
         ['playwright.config.js'],
         { targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
-      ).catch((e) => e);
-      const innerMessages = (error.errors ?? [])
-        .map(([, e]: [unknown, Error]) => e.message)
-        .join('\n');
-      expect(innerMessages).toMatch(/could not evaluate/);
-      expect(innerMessages).toMatch(/"waitForWebServer": false/);
+      );
+      const { targets } = results[0][1].projects['.'];
+
+      // The serve dependency comes from the ambient evaluation; no gate is
+      // inferred for the failed chain.
+      expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e-ci--wait-for-webserver']).toBeUndefined();
+      expect(targets['e2e'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+      ]);
+      expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+        { projects: ['app1'], target: 'serve' },
+      ]);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringMatching(/could not evaluate playwright\.config\.js/)
+      );
+      expect(warn).toHaveBeenCalledWith(expect.stringMatching(/boom/));
     } finally {
+      warn.mockRestore();
       _setChildEval(null);
       setWorkspaceRoot(originalWorkspaceRoot);
       if (originalBaseUrl === undefined) {
