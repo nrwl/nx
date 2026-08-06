@@ -116,19 +116,16 @@ describe('daemonPermissionException', () => {
     expect(error.message).toContain('NX_SOCKET_DIR');
   });
 
-  // Both halves. Measured against the wording this commit replaced — not
-  // against the start of the review round, where the neutral sentence was also
-  // present and briefly removed. That immediately-prior wording already carried
-  // `allowAllUnixSockets` and the link, so pinning only those two passes on a
-  // revert; the vendor-neutral instruction and `Claude Code` are what this
-  // change adds and what actually pin it. Scoping is deliberate: the KB page
-  // attributes connect-not-create to Claude Code's `allowUnixSockets`, not to
-  // scoped allowlists at large.
+  // The KB page attributes connect-not-create to Claude Code's
+  // `allowUnixSockets`, not to scoped allowlists at large, so the clause naming
+  // the limitation has to name Claude Code in the same breath.
   it('should scope the allowAllUnixSockets advice to Claude Code', () => {
     const { message } = daemonPermissionException(socketPath, 'connect EPERM');
 
     expect(message).toContain('allow unix sockets under the Nx socket root');
-    expect(message).toContain('Claude Code');
+    expect(message).toContain(
+      'in Claude Code a scoped `allowUnixSockets` only permits connecting'
+    );
     expect(message).toContain('allowAllUnixSockets: true');
     expect(message).toContain('https://nx.dev/docs/kb/nx-sandbox-unix-sockets');
   });
@@ -332,13 +329,13 @@ describe('startInBackground', () => {
   // the callee's contract but not the hand-off that feeds it: deleting the
   // argument at the `startDaemonIfNecessary` call site left the whole suite
   // green. Here the errno comes from the kernel — a directory with no search
-  // permission makes connect() fail EACCES — travels through
-  // `isServerAvailable`, and has to arrive at the classification.
+  // permission makes connect() fail EACCES — travels through `probeServer`, and
+  // has to arrive at the classification.
   const rootlessPosix =
     process.platform === 'win32' || process.getuid?.() === 0 ? it.skip : it;
 
   rootlessPosix(
-    'should carry a real probe refusal from isServerAvailable into the report',
+    'should carry a real probe refusal from probeServer into the report',
     async () => {
       const base = mkdtempSync(join(tmpdir(), 'nx-spec-handoff-'));
       const locked = join(base, 'locked');
@@ -380,10 +377,8 @@ describe('startInBackground', () => {
         daemonClient.reset();
         await (daemonClient as any).startDaemonIfNecessary().catch((e) => e);
 
-        // Round two: no process json at all, so getSocketPath throws and
-        // isServerAvailable returns false *without* recording anything. Status
-        // is moved back by hand rather than via reset(), which would clear the
-        // field and hide exactly what this is checking.
+        // Status is moved back by hand rather than via reset(), which would
+        // also tear down the messengers.
         (readDaemonProcessJsonCache as jest.Mock).mockReturnValue(undefined);
         (daemonClient as any)._daemonStatus = 1; // DISCONNECTED
         const error = await (daemonClient as any)

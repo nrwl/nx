@@ -275,8 +275,6 @@ export class DaemonClient {
     this.currentResolve = null;
     this.currentReject = null;
     this._enabled = undefined;
-    // A refusal describes one startup attempt. Left behind, it would misdiagnose
-    // the next command in this process as a permission problem.
 
     // Clean up file watcher and project graph listener connections
     this.fileWatcherMessenger?.close();
@@ -980,12 +978,9 @@ export class DaemonClient {
   }
 
   /**
-   * The pre-start probe, returning why it failed instead of leaving it on the
-   * instance. `_daemonStatus` serializes `startDaemonIfNecessary` against
-   * itself but not the five public callers of `isServerAvailable`, which used
-   * to clear and write that field outside any guard — so the "one writer, one
-   * reader" its doc claimed was never structural. A return value needs no such
-   * claim, and matches `waitForServerToBeAvailable`.
+   * The pre-start probe, returning why it failed rather than leaving it on the
+   * instance: `_daemonStatus` does not serialize `isServerAvailable`'s five
+   * public callers against `startDaemonIfNecessary`.
    */
   private async probeServer(): Promise<{
     available: boolean;
@@ -1003,10 +998,8 @@ export class DaemonClient {
           resolve({ available: true });
         });
         socket.once('error', (err) => {
-          // Kept rather than discarded: this is the probe that runs before the
-          // daemon is started, so it is where the errno for "the socket is
-          // there but refuses us" is produced, and it is the only thing that
-          // separates that from "no daemon yet".
+          // The only place the errno for "the socket is there but refuses us"
+          // is produced, and the only thing separating it from "no daemon yet".
           resolve({ available: false, refusal: { error: err, socketPath } });
         });
       } catch (err) {
@@ -1043,8 +1036,7 @@ export class DaemonClient {
         }
       }
       if (!probe.available) {
-        // The probe's verdict on the daemon that was already there, carried as
-        // a value so no other caller's probe can substitute for it.
+        // Carried as a value so no other caller's probe can substitute for it.
         daemonPid = await this.startInBackground(probe.refusal);
       }
       this.setUpConnection();
@@ -1198,10 +1190,9 @@ export class DaemonClient {
       `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
 
-    // Both poll-scoped. Instance state cannot hold either: the reconnect paths
-    // are guarded by their own separate flags, so a file-watcher reconnect, a
-    // project-graph-listener reconnect and a startup poll can be in flight at
-    // once, and a shared slot lets one attempt report another's socket.
+    // Poll-scoped, not instance state: reconnect paths have their own flags, so
+    // several attempts can be in flight and a shared slot would let one report
+    // another's socket.
     let stoppedOnRefusal = false;
     let refusal: ConnectRefusal | undefined;
 
@@ -1225,13 +1216,10 @@ export class DaemonClient {
         onConnectError: (error, socketPath) => {
           refusal = { error, socketPath };
           // A refusal is not expected to become an acceptance, so polling the
-          // full 60s budget only delays the same answer and the message the
-          // user eventually gets is worse for the wait. Not an absolute:
-          // `server.ts` binds and only then chmods the socket to 0600, so under
-          // a umask that strips owner write there is a microsecond window where
-          // a same-user connect sees EACCES. Losing that race costs a specific
-          // error instead of a successful connect on a retry, which is a better
-          // trade than the 60s hang it replaces.
+          // full 60s budget only delays the same answer. Not absolute:
+          // `server.ts` binds before it chmods to 0600, so a same-user connect
+          // can lose a microsecond race and see EACCES. That costs a specific
+          // error rather than a retry — a better trade than a 60s hang.
           return (stoppedOnRefusal = isPermissionErrno(error));
         },
       }
@@ -1243,10 +1231,9 @@ export class DaemonClient {
       return { available: true };
     }
 
-    // Keyed on the early exit actually taken, not on whether an errno was
-    // recorded. Every failed connect records one — including the ENOENT of an
-    // ordinary cold start — so keying on the field reports "refused, stopped
-    // polling" for a poll that was refused by nobody and ran to exhaustion.
+    // Keyed on the early exit taken, not on whether an errno was recorded:
+    // every failed connect records one, including an ordinary cold start's
+    // ENOENT.
     clientLogger.log(
       stoppedOnRefusal
         ? `[Client] Server refused the connection (${refusal?.error.code}), stopped polling`
@@ -1369,11 +1356,9 @@ export class DaemonClient {
   }
 
   /**
-   * @param probeRefusal what the caller's pre-start probe saw, if anything. The
-   *        only evidence when a daemon exists but refuses us and then exits: the
-   *        poll below cannot reproduce it once that daemon has unlinked its
-   *        process json, because the path resolver returns `null` and no connect
-   *        is attempted. `nx daemon --start` passes nothing.
+   * @param probeRefusal what the caller's pre-start probe saw. The only evidence
+   *        when a daemon refuses us and then exits — the poll cannot reproduce it
+   *        once the process json is gone. `nx daemon --start` passes nothing.
    */
   async startInBackground(
     probeRefusal?: ConnectRefusal
@@ -1435,26 +1420,17 @@ export class DaemonClient {
       return backgroundProcess.pid;
     } else {
       // A permission refusal from either source wins, then the poll's errno,
-      // then the probe's. Recency alone would report the ENOENT of a daemon
-      // that unlinked its socket over the EACCES the probe saw a moment
-      // earlier, and lose the diagnosis this whole path exists to produce.
-      // Both are values held by this call, so no other attempt can substitute
-      // one.
+      // then the probe's. Recency alone would report a daemon's ENOENT over the
+      // EACCES the probe saw a moment earlier, losing the diagnosis.
       const refusal =
         [polled, probeRefusal].find((r) => r && isPermissionErrno(r.error)) ??
         polled ??
         probeRefusal;
       if (refusal && isPermissionErrno(refusal.error)) {
-        // The flagship case this PR ships a KB page for: a sandbox refusing
-        // unix-socket connects, or a socket owned by another user. Reported
-        // here rather than as a generic startup failure, so it degrades
-        // without disabling the daemon until `nx reset`.
-        //
-        // Both operands come from the refusal itself. Anything that resolves a
-        // path here instead would run after a daemon that failed to bind has
-        // already unlinked its process json, and `getSocketPath()` throws in
-        // that case — replacing this diagnosis with the internalDaemonError it
-        // exists to avoid.
+        // Reported here rather than as a generic startup failure, so it degrades
+        // without disabling the daemon until `nx reset`. Both operands come from
+        // the refusal: resolving a path here instead would throw once a daemon
+        // that failed to bind has unlinked its process json.
         throw daemonPermissionException(
           refusal.socketPath,
           refusal.error.message

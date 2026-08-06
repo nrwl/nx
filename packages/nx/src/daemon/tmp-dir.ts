@@ -128,16 +128,10 @@ export function isDaemonDisabled() {
 }
 
 /**
- * One short root beneath the current user's owner-only runtime directory. The
- * stable `/tmp/.nx` ancestor lets a POSIX sandbox allow unix socket access with
- * one team-wide rule, while the uid boundary keeps peers out.
- *
- * Neither reason applies on Windows: named pipes are not filesystem objects, so
- * there is nothing to allowlist or to lock down, and the OS temp dir is already
- * per-user. The extra `\.nx\sockets` would only spend 12 characters of the
- * 95-char budget `assertValidSocketPath` enforces — which it does on Windows too
- * — and the temp dir already contains the username, so long account names would
- * newly overrun it. Sockets go straight in the OS temp dir there, as before.
+ * One short root beneath the current user's owner-only runtime directory. No
+ * extra segment on Windows: `%TMP%` is already per-user and already contains the
+ * username, so `\.nx\sockets` would spend 12 characters of the 95-char budget
+ * `assertValidSocketPath` enforces and newly overrun it for long account names.
  */
 function defaultSocketRoot(): string {
   return process.platform === 'win32'
@@ -150,29 +144,16 @@ function homeSocketRoot(): string | undefined {
 }
 
 /**
- * The spelling to compare a directory by. `resolve` alone normalizes `..` and
- * trailing slashes but does not dereference symlinks, and on macOS `/tmp` *is* a
- * symlink to `/private/tmp` — so `/private/tmp/.nx` is the same directory as
- * `/tmp/.nx` under a spelling an exact-match list would wave through, after
- * which `ensureOwnedPrivateDir` re-locks the shared container to `0700` and
- * `removeSocketDir` aims a recursive delete at it.
+ * The spelling to compare a directory by. `resolve` does not dereference
+ * symlinks, and on macOS `/tmp` is a symlink to `/private/tmp`, so an
+ * exact-match list would wave through an alias of a root it means to refuse.
  *
- * Resolves the longest ancestor that exists and re-appends the rest, because
- * both sides of the comparison go through here and **Nx's own roots are absent
- * before its first run** — the system temp dir always exists, but `/tmp/.nx`,
- * `~/.nx` and the cache roots do not. Canonicalizing only whole existing paths
- * would leave the check degraded to the exact string match it replaced on
- * precisely a fresh machine, where `/tmp/.nx` does not exist yet but `/tmp`
- * already resolves to `/private/tmp`.
+ * Resolves the longest ancestor that exists and re-appends the rest: Nx's own
+ * roots are absent before its first run, and canonicalizing whole paths only
+ * would degrade this to a string match on exactly a fresh machine.
  *
- * Only `ENOENT` walks up. `ELOOP`, `ENOTDIR` and `EACCES` mean the path exists
- * and cannot be read through, and inventing a spelling for it would be a guess;
- * the normalized form is returned as a best effort. That is a soft edge, and it
- * is tolerable because a path `realpathSync` cannot read through is one
- * `ensureOwnedPrivateDir` cannot establish either: its `lstat` sees the symlink
- * or non-directory, and an ancestor we cannot traverse blocks `mkdirSync` the
- * same way it blocked us. The edge cannot be walked into an accepted alias of a
- * refused root.
+ * Only `ENOENT` walks up — any other errno means the path exists and cannot be
+ * read through, which `ensureOwnedPrivateDir` cannot establish either.
  */
 function canonicalDir(dir: string): string {
   const resolved = resolve(dir);
@@ -197,23 +178,10 @@ function canonicalDir(dir: string): string {
 }
 
 /**
- * Whether `~/.nx` is somewhere other than the shared container.
- *
- * With `HOME=/tmp` they are the same path, and offering it as a second tier
- * would point `ensureOwnedPrivateDir` at `/tmp/.nx` itself the moment tier 1
- * fails. That only rewrites the container when the directory is already ours —
- * against a root-owned one it means Nx is running as root — but there it takes
- * a `1777` container to `0700`, silently undoing the documented provisioning,
- * dropping every other user's native cache, and breaking a sandbox allowlist
- * scoped to that path. Nothing puts it back.
- *
- * Other users are not stopped by `isSafeSharedRoot`: it exempts uid 0, and
- * `0700` carries no group or other write, so a root-owned container passes both
- * clauses. They get as far as creating their own directory beneath it and fail
- * there with EACCES.
- *
- * It is also the path `InvalidSocketDirConfigured` refuses when set explicitly,
- * so auto-selecting it would contradict a rule Nx enforces one function away.
+ * Whether `~/.nx` is somewhere other than the shared container. With
+ * `HOME=/tmp` they are the same path, and offering it as a second tier would
+ * point `ensureOwnedPrivateDir` at `/tmp/.nx` itself — taking a `1777` container
+ * to `0700` and undoing the documented provisioning, with nothing to put it back.
  */
 function homeTierIsDistinct(): boolean {
   if (!NX_HOME_TMP_DIR) {
@@ -235,14 +203,9 @@ function homeTierIsDistinct(): boolean {
  * before it can be used; the first that succeeds wins, and the workspace data
  * dir is the last resort when none does.
  *
- * `/tmp` first because it is the shortest path — the socket path budget is 95
- * characters — and is cleared on reboot. Home second because it needs no
- * administrator: a peer who created `/tmp/.nx` first locks everyone else out of
- * the shared container, and before this chain that dropped straight to the
- * workspace, whose path grows with checkout depth.
- *
- * Windows has one tier. Named pipes are not filesystem objects, so there is no
- * containment to establish and nothing a second location would buy.
+ * `/tmp` first because it is the shortest path — the socket budget is 95
+ * characters. Home second because it needs no administrator. Windows has one
+ * tier: named pipes are not filesystem objects, so there is nothing to establish.
  */
 function socketRootTiers(): {
   root: string;
@@ -321,35 +284,22 @@ function establishSocketRoot(
   return undefined;
 }
 
-/**
- * Directories that may not *be* the socket directory, and why. Every one is
- * either a root Nx manages the contents of or the OS temp root itself; whether
- * other users can also reach one is a separate question, answered per directory
- * because the answer differs by platform. Nx's actual socket directories live
- * under these roots.
- */
+/** Directories that may not *be* the socket directory, and why. */
 function dirsUnusableAsSocketDir(): {
   dir: string;
   reason: SocketDirRefusal;
 }[] {
   const onWindows = process.platform === 'win32';
   return [
-    // Keyed on the directory, not the platform. `os.tmpdir()` is a
-    // world-writable `/tmp` on Linux, but a private `0700` `/var/folders/…` on
-    // macOS and a per-account path on Windows — so a platform test tells most
-    // macOS users their own private directory lets a local attacker execute
-    // code in their daemon. It is still refused when it is nobody else's:
-    // a configured directory becomes the socket directory itself rather than
-    // getting a subdirectory, and `removeSocketDir` deletes that recursively
-    // when the daemon stops — here, the user's whole temp directory.
+    // Refused even when no peer can reach it: a configured directory becomes the
+    // socket directory itself, and `removeSocketDir` deletes that recursively —
+    // here, the user's whole temp directory.
     {
       dir: systemTmpDir,
       reason: isPeerWritable(systemTmpDir)
         ? 'shared-with-other-users'
         : 'os-temp-root',
     },
-    // Same test, different fallback: this root is Nx's own, so when peers
-    // cannot reach it the honest reason is that Nx manages it.
     {
       dir: NX_TMP_DIR,
       reason: isPeerWritable(NX_TMP_DIR)
@@ -358,9 +308,7 @@ function dirsUnusableAsSocketDir(): {
     },
     { dir: NX_USER_TMP_DIR, reason: 'nx-managed' },
     { dir: defaultSocketRoot(), reason: 'nx-managed' },
-    // Skipped on Windows, where `socketRootTiers()` offers a single tier and
-    // the home location is never reached, so refusing it explains a rule that
-    // does not apply there.
+    // Skipped on Windows, where the home tier is never offered.
     ...(!onWindows && NX_HOME_TMP_DIR
       ? [
           { dir: NX_HOME_TMP_DIR, reason: 'nx-managed' as const },
@@ -416,16 +364,12 @@ function socketDirUnderFirstUsableRoot(
     return createOwnerOnlySocketDir(configuredDir, false);
   }
 
-  // Cleared here as well as in createOwnerOnlySocketDir: the no-tier exit below
-  // returns without ever entering it, and a value left from an earlier
-  // resolution would have assertValidSocketPath blame an NX_SOCKET_DIR the user
-  // no longer has set while suppressing the advice that is correct there.
+  // Cleared here too: the no-tier exit below returns without entering
+  // createOwnerOnlySocketDir, and a stale value would have assertValidSocketPath
+  // blame an NX_SOCKET_DIR the user no longer has set.
   socketDirFallbackCause = undefined;
   refusedConfiguredSocketDir = undefined;
 
-  // Collected rather than discarded: the warning below tells the user to rerun
-  // with --verbose to see why the roots were rejected, and the guards are the
-  // only place that knows.
   const refusals: DirRefusal[] = [];
   const established = establishSocketRoot(refusals);
   if (established === undefined) {
@@ -453,20 +397,13 @@ function socketDirUnderFirstUsableRoot(
 }
 
 /**
- * Record a successful demotion to a later tier.
+ * Record a successful demotion to a later tier. Verbose, not warn: nothing
+ * failed. The cause is still set because `assertValidSocketPath` keys its
+ * "run with --verbose" block off it, and without it a later length failure
+ * reads as though the user chose the path.
  *
- * Silence is the right default for a demotion that works — nothing failed from
- * the user's point of view. The one cost is that `assertValidSocketPath` keys
- * its "Nx fell back to … run with --verbose" block off this cause, so without
- * it a socket-length failure on a later tier is explained as though the user
- * had chosen the path. They have not — this function only runs when
- * `configuredSocketDir()` returned undefined — so what the generic advice omits
- * is the demotion itself, which is the part they would need to know to act.
- *
- * `refusals` names the directory that was actually refused. `preferred` is the
- * tier root, one level below it, which a user cannot even `stat` when the
- * parent is the foreign-owned one — so without this the verbose line points at
- * a path they can neither inspect nor act on.
+ * `refusals` can name any of the three directories tier 0 establishes, so it is
+ * not always `preferred`.
  */
 function noteSocketRootDemotion(
   preferred: string,
@@ -535,12 +472,8 @@ export function getRefusedConfiguredSocketDir(): string | undefined {
  * @param usingDefaultRoot whether `dir` sits under the default root, in which
  *        case Nx verifies the stable shared container and establishes the
  *        current user's owner-only roots first.
- */
-/**
- * @param priorRefusals why the tiers *above* this one were skipped, if any. The
- *        leaf's own refusal is appended to it, so the fallback reports the whole
- *        chain: reaching the home tier at all means `/tmp/.nx` was refused, and
- *        that refusal carries the only actionable remedy in the scenario.
+ * @param priorRefusals why the tiers above this one were skipped. Ignored unless
+ *        `usingDefaultRoot`.
  */
 function createOwnerOnlySocketDir(
   dir: string,
@@ -568,11 +501,6 @@ function createOwnerOnlySocketDir(
     }
     // Separately from its parents: mkdirSync does not throw on a pre-planted
     // symlink, so creating and locking down in one step would adopt it.
-    //
-    // The guard's own refusal becomes the error. The generic message it
-    // replaces named ownership whatever the cause, so a mode that could not be
-    // tightened, a planted symlink and a path that is not a directory all read
-    // as "owned by someone else" — wrong in three of the four cases it covered.
     const created = ensureOwnedPrivateDir(dir);
     if (created.status === 'refused') {
       throw new DirectoryRefusedError(created.refusal);
@@ -585,20 +513,15 @@ function createOwnerOnlySocketDir(
         : priorRefusals;
     // Recoverable: fall back to the owner-controlled workspace data dir.
     if (usingDefaultRoot) {
-      // Aggregated over the whole chain, not just the leaf: no default socket
-      // directory was established either way, and the tiers skipped on the way
-      // here are what `--verbose` promises to explain.
       return fallBackToWorkspaceSocketDir(
         refusals.length ? socketRootsUnavailable(refusals) : e,
         dir,
         refusals
       );
     }
-    // Never swap out a configured directory silently — the substitute is longer and
-    // would resurface as assertValidSocketPath complaining about a path the user
-    // never set.
-    // Latched like the workspace-fallback warning below, and for the same
-    // reason: a task-per-PseudoTerminal command resolves this once per task.
+    // Never swap out a configured directory silently — the substitute is longer
+    // and would resurface as a length complaint about a path the user never set.
+    // Latched: a task-per-PseudoTerminal command resolves this once per task.
     if (!warnedAboutConfiguredSocketDir) {
       warnedAboutConfiguredSocketDir = true;
       console.warn(
@@ -607,10 +530,9 @@ function createOwnerOnlySocketDir(
         }\nFalling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`
       );
     }
-    // Tracked separately from socketDirFallbackCause: this is not a default-root
-    // fallback, and describing it as one would be false. It exists so the length
-    // error can stop telling someone to set a shorter NX_SOCKET_DIR when the one
-    // they set was refused for a reason that has nothing to do with length.
+    // Tracked separately from socketDirFallbackCause so the length error stops
+    // telling someone to shorten an NX_SOCKET_DIR that was refused for another
+    // reason.
     refusedConfiguredSocketDir = dir;
     return establishWorkspaceSocketDir(e);
   }
@@ -654,35 +576,22 @@ function fallBackToWorkspaceSocketDir(
     }. Falling back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
     cause
   );
-  // Warned, not just logged verbosely. A demotion between the default roots is
-  // silent on purpose — nothing is broken. Landing in the workspace is
-  // different in kind: the path grows with checkout depth, so this is where the
-  // 95-character socket budget is most likely to trip, and anything that
-  // allowed Nx's usual roots by path no longer covers where the sockets went.
+  // Warned rather than verbose: the workspace path grows with checkout depth, so
+  // this is where the 95-character budget is most likely to trip, and an
+  // allowlist scoped to Nx's usual roots no longer covers it.
   //
-  // Once per process. Neither socket-dir accessor is memoized, and one CLI
-  // process resolves several — the daemon socket, one per spawned plugin
-  // worker, one per `PseudoTerminal` — so without the latch a single command
-  // repeats an identical three-sentence warning many times over. (Workers are
-  // separate processes with their own module instance and their own latch; the
-  // repetition this removes is the within-process one.) The verbose line above
-  // can repeat because it is a no-op by default; this cannot.
-  //
-  // The allowlist line is gated on `isSandbox()`. This path is reached far more
-  // often for ordinary reasons — a peer owning the shared container, a
-  // read-only home — and naming a sandbox unprompted is what the socket
-  // guidance was corrected for once already. Gated, it reaches the people it
-  // describes and nobody else.
+  // Latched once per process — neither socket-dir accessor is memoized and one
+  // CLI process resolves several, so without it a single command repeats this
+  // many times.
   if (!warnedAboutWorkspaceFallback) {
     warnedAboutWorkspaceFallback = true;
     logger.warn(
       [
         `Nx could not use any of its usual socket directories and fell back to ${DAEMON_DIR_FOR_CURRENT_WORKSPACE}.`,
-        refusals.map(remedyFor).find(Boolean),
+        ...new Set(refusals.map(remedyFor).filter(Boolean)),
         isSandbox()
-          ? // Built from the roots that exist: NX_HOME_TMP_DIR is undefined
-            // when there is no home directory, which is itself one of the
-            // reasons this fallback is reached.
+          ? // NX_HOME_TMP_DIR is undefined when there is no home directory,
+            // which is itself one reason this fallback is reached.
             `A sandbox allowlist covering only ${[NX_TMP_DIR, NX_HOME_TMP_DIR]
               .filter(Boolean)
               .join(' or ')} does not cover this path.`
@@ -701,8 +610,6 @@ function establishWorkspaceSocketDir(cause: unknown): string {
   // The fallback is only safe if it passes the same checks the primary did.
   const established = ensureOwnedPrivateDir(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
   if (established.status === 'refused') {
-    // The last resort failing is the one case with nowhere left to go, so it
-    // says which check refused rather than the generic sentence it replaces.
     throw new Error(
       `Nx could not establish a socket directory: ${describeRefusal(
         established.refusal

@@ -42,10 +42,8 @@ export function isForeignWorkspaceMessage(
  * responds with the mismatch; the plugin worker catches it and drops the
  * message. `receiverDescription` names whichever raised it.
  *
- * Named for the one thing it checks. It asserts nothing about a message being
- * valid — an unstamped message is deliberately accepted, since this is accident
- * detection rather than a control — and half its callers are plugin workers
- * rather than daemons.
+ * An unstamped message is deliberately accepted: this is accident detection,
+ * not a control.
  */
 export function assertNotForeignWorkspaceMessage(
   msg: WorkspaceScopedMessage,

@@ -210,17 +210,11 @@ server.on('error', (err: NodeJS.ErrnoException) => {
   );
   process.exit(1);
 });
-// A worker killed without its 'end' handler leaves the socket behind. The name
-// is the host pid, a per-host counter and 4 random bytes, so drawing an existing
-// one takes a recycled host pid landing on the same counter *and* the same
-// random draw. The previous owner is normally gone by then, but not guaranteed —
-// workers are detached and the name carries the host's pid, not the worker's.
-// A failed bind surfaces through the error handler above.
-//
-// The random component is what this unlink rests on, and on Windows it is the
-// only barrier this change contributes: the directory guards reduce to an
-// is-a-directory check there, and the endpoint is a namespace object rather
-// than a file, so the mode never applies.
+// A worker killed without its 'end' handler leaves the socket behind. Colliding
+// takes a recycled host pid landing on the same counter *and* the same 4 random
+// bytes; the random component is what this unlink rests on, and on Windows it is
+// the only barrier, since the endpoint is a namespace object and the mode never
+// applies.
 try {
   unlinkSync(socketPath);
 } catch {}

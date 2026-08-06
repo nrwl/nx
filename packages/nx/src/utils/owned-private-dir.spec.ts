@@ -326,8 +326,8 @@ describe('ensureOwnedPrivateDir', () => {
     });
 
     it('should not offer the chown remedy for a per-user directory', () => {
-      // Same kind, no `shared`: handing this to root cannot help, because
-      // ensureOwnedPrivateDir has no uid-0 exemption.
+      // The per-user kind, not the shared container's: handing this to root
+      // cannot help, because ensureOwnedPrivateDir has no uid-0 exemption.
       const remedy = remedyFor({
         kind: 'foreign-owner',
         dir: '/tmp/.nx/501/sockets',
@@ -345,6 +345,19 @@ describe('ensureOwnedPrivateDir', () => {
       // assertion here.
       expect(remedy).toContain('yourself');
       expect(remedy).toContain('administrator');
+    });
+
+    it('should offer a way out of a filesystem that ignores permissions', () => {
+      const remedy = remedyFor({
+        kind: 'not-tightenable',
+        dir: '/mnt/c/ws/.nx/workspace-data/d',
+        mode: 0o40777,
+      });
+      expect(remedy).toContain('/mnt/c/ws/.nx/workspace-data/d');
+      expect(remedy).toContain('NX_SOCKET_DIR');
+      // Not the chown advice: no owner can fix a mount that discards modes.
+      expect(remedy).not.toContain('chown');
+      expect(remedy).not.toContain('1777');
     });
 
     it('should not offer to remove a per-user directory', () => {

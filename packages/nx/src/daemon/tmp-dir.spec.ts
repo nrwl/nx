@@ -12,6 +12,7 @@ import {
 } from './tmp-dir';
 import {
   describeRefusal,
+  type DirRefusal,
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isPeerWritable,
@@ -69,7 +70,11 @@ const dirsPassedTo = (fn: unknown): string[] =>
   (fn as jest.Mock).mock.calls.map((c) => c[0]);
 
 const accept = (dir: string) => ({ status: 'ok', path: dir });
-const reject = (dir: string, refusal?: object) => ({
+// Typed as DirRefusal, not `object`: these mocks stand in for the real guards,
+// so a staged shape the guards cannot produce is the one mistake worth failing
+// on. Specs are not typechecked in CI, so this catches it in the editor and in
+// an explicit `tsc` run.
+const reject = (dir: string, refusal?: DirRefusal) => ({
   status: 'refused',
   refusal: refusal ?? { kind: 'not-a-directory', dir },
 });
@@ -305,10 +310,9 @@ describe('socket directories', () => {
   it('assembles the fallback warning the user actually reads', () => {
     setPlatform('linux');
     const container = {
-      kind: 'foreign-owner' as const,
+      kind: 'foreign-shared-container' as const,
       dir: SHARED_TMP_ROOT,
       uid: 1001,
-      shared: true as const,
     };
     (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
       reject(d, container)
@@ -345,10 +349,9 @@ describe('socket directories', () => {
   it('explains each rejected root at verbose level', () => {
     setPlatform('linux');
     const shared = {
-      kind: 'foreign-owner' as const,
+      kind: 'foreign-shared-container' as const,
       dir: SHARED_TMP_ROOT,
       uid: 1001,
-      shared: true as const,
     };
     const home = {
       kind: 'not-tightenable' as const,
@@ -396,6 +399,25 @@ describe('socket directories', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('sudo chown root')
     );
+  });
+
+  it('reports the leaf remedy as well as the skipped tier it sits under', () => {
+    setPlatform('linux');
+    (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
+      reject(d, { kind: 'foreign-shared-container', dir: d, uid: 1001 })
+    );
+    // The home tier establishes; its per-run leaf is a planted symlink.
+    (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
+      d.startsWith(HOME_SOCKET_ROOT + '/')
+        ? reject(d, { kind: 'not-a-directory', dir: d, symlink: true })
+        : accept(d)
+    );
+
+    expect(getSocketDir()).toBe(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
+
+    const [warning] = (logger.warn as jest.Mock).mock.calls[0];
+    expect(warning).toContain('sudo chown root');
+    expect(warning).toContain('treat it as hostile');
   });
 
   it('does not warn when a later tier succeeds', () => {
@@ -501,7 +523,7 @@ describe('socket directories', () => {
   it('records why each default root was rejected, which is what --verbose promises', () => {
     setPlatform('linux');
     (ensureSafeSharedRoot as jest.Mock).mockImplementation((d: string) =>
-      reject(d, { kind: 'foreign-owner', dir: d, uid: 1001, shared: true })
+      reject(d, { kind: 'foreign-shared-container', dir: d, uid: 1001 })
     );
     (ensureOwnedPrivateDir as jest.Mock).mockImplementation((d: string) =>
       d.startsWith(HOME_TMP_ROOT)
@@ -514,10 +536,12 @@ describe('socket directories', () => {
     // Asserted on the structure, so a reword cannot silently swap the claim.
     const cause = getSocketDirFallbackCause() as AggregateError;
     expect(cause.errors.map((e: any) => e.refusal.kind)).toEqual([
-      'foreign-owner',
+      'foreign-shared-container',
       'not-tightenable',
     ]);
-    expect(cause.message).toContain('is owned by uid 1001, not by you');
+    expect(cause.message).toContain(
+      'belongs to another user (uid 1001) rather than to you or to root'
+    );
     expect(cause.message).toContain('could not be tightened to 0700');
   });
 

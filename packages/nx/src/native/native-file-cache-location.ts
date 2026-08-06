@@ -60,11 +60,8 @@ export function ensureSecureNativeFileCacheLocation(
   if (configured !== undefined) {
     const dir = configured;
     try {
-      // Owned by us and mode 0700, same as the default location: a `.node` is
-      // loaded out of here, so a directory another user can write to is the
-      // vulnerability this module exists to close. Unlike NX_SOCKET_DIR it is
-      // not additionally refused for naming one of Nx's own roots, and it warns
-      // rather than throwing.
+      // Held to the same 0700 bar as the default location: a `.node` is loaded
+      // out of here. Unlike NX_SOCKET_DIR this warns rather than throwing.
       mkdirSync(dirname(dir), { recursive: true });
       const established = ensureOwnedPrivateDir(dir);
       if (established.status !== 'ok') {
