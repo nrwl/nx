@@ -391,6 +391,27 @@ describe('app', () => {
       }
     );
 
+    // The Playwright branch forwarded `options.linter` while the Cypress branch
+    // passed a literal `'eslint'`, so a Cypress e2e project ignored the app's
+    // linter entirely.
+    it.each(['cypress', 'playwright'] as const)(
+      'should give the %s e2e project the same linter as the app',
+      async (e2eTestRunner) => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+          linter: 'oxlint',
+          e2eTestRunner,
+        });
+
+        const { devDependencies } = readJson(tree, 'package.json');
+        expect(devDependencies ?? {}).not.toHaveProperty('@nx/eslint');
+        expect(devDependencies ?? {}).not.toHaveProperty('eslint');
+      }
+    );
+
     describe('default (eslint)', () => {
       it('should add flat config as needed MJS', async () => {
         tree.write('eslint.config.mjs', 'export default {};');
