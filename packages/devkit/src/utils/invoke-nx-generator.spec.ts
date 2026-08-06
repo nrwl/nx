@@ -56,6 +56,11 @@ describe('Convert Nx Generator', () => {
     expect(results.encoded).toBeNull();
     expect(results.raw).toBeNull();
     expect(results.present).toEqual('const hello = "hello world";');
+    expect(results.presentRaw).toEqual(
+      Buffer.from('const hello = "hello world";')
+    );
+    expect(results.emptyEncoded).toEqual('');
+    expect(results.emptyRaw).toEqual(Buffer.alloc(0));
   });
 
   it('should let visitNotIgnoredFiles walk the adapter tree', async () => {
@@ -92,13 +97,19 @@ async function newFileGenerator(tree: Tree, options: {}) {
 async function readsAMissingFileGenerator(tree: Tree, options: {}) {
   // The schematics tree returns null here; the adapter must not dereference it.
   // `visitNotIgnoredFiles` and `formatFiles` both probe for ignore files that
-  // are usually absent, so this is the path every converted generator takes.
+  // are usually absent, so this is the path any converted generator that walks
+  // or formats takes.
   results.encoded = tree.read('.nxignore', 'utf-8');
   results.raw = tree.read('.nxignore');
   // A present file must still come back decoded, so the null path is not just
   // swallowing everything.
   tree.write('present.ts', 'const hello = "hello world";');
   results.present = tree.read('present.ts', 'utf-8');
+  results.presentRaw = tree.read('present.ts');
+  // Empty is not missing. A falsy check here would collapse the two.
+  tree.write('empty.ts', '');
+  results.emptyEncoded = tree.read('empty.ts', 'utf-8');
+  results.emptyRaw = tree.read('empty.ts');
 }
 
 async function walksTheTreeGenerator(tree: Tree, options: {}) {

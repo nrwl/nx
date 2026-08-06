@@ -12,8 +12,8 @@ import { join, relative, sep } from 'path';
  * nested negation overrides the root. They are read from the tree, not disk, so
  * one a generator wrote in the same run counts.
  *
- * `node_modules`, `.git` and the nx caches are never visited, whatever the
- * workspace's ignore files say.
+ * `node_modules`, `.git` and the nx and yarn caches are never visited, whatever
+ * the workspace's ignore files say.
  */
 export function visitNotIgnoredFiles(
   tree: Tree,
