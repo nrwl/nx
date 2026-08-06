@@ -134,6 +134,7 @@ describe('application generator', () => {
 
   it('should generate files', async () => {
     await applicationGenerator(tree, {
+      linter: 'eslint',
       directory: appDirectory,
       addPlugin: true,
     });
@@ -291,6 +292,7 @@ describe('application generator', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         unitTestRunner: 'jest',
         addPlugin: true,
@@ -510,6 +512,7 @@ describe('application generator', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         e2eTestRunner: 'jest',
         useProjectJson: true,

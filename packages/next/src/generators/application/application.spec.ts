@@ -418,6 +418,7 @@ describe('app', () => {
         const name = uniq();
 
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -445,6 +446,7 @@ describe('app', () => {
         const name = uniq();
 
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -471,6 +473,7 @@ describe('app', () => {
       it('should install eslint-config-next@15 when generating a new Next.js application in an empty Nx workspace', async () => {
         const name = uniq();
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -498,6 +501,7 @@ describe('app', () => {
 
         const name = uniq();
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -525,6 +529,7 @@ describe('app', () => {
 
         const name = uniq();
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: name,
           style: 'css',
         });
@@ -543,6 +548,7 @@ describe('app', () => {
       it('should add .eslintrc.json and dependencies', async () => {
         process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'myapp',
           style: 'css',
         });
@@ -609,6 +615,7 @@ describe('app', () => {
         const name = uniq();
 
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name,
           directory: '.',
           style: 'css',
@@ -757,6 +764,7 @@ describe('app', () => {
     it('should not ignore "out-tsc" from eslint', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         style: 'css',
         skipFormat: true,
@@ -770,6 +778,7 @@ describe('app', () => {
       tree.write('eslint.config.mjs', 'export default [];');
 
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         style: 'css',
         skipFormat: true,
@@ -828,6 +837,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         appDir: true,
         unitTestRunner: 'jest',
@@ -1020,6 +1030,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         appDir: true,
         unitTestRunner: 'jest',
@@ -1066,6 +1077,7 @@ describe('app', () => {
     it('should ignore "out-tsc" from eslint', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         style: 'css',
         skipFormat: true,
@@ -1079,6 +1091,7 @@ describe('app', () => {
       tree.write('eslint.config.mjs', 'export default [];');
 
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         style: 'css',
         skipFormat: true,

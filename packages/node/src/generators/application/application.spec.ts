@@ -180,6 +180,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-node-app',
         addPlugin: true,
       });
@@ -376,6 +377,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'my-node-app',
         directory: 'my-dir/my-node-app/',
         addPlugin: true,
@@ -513,6 +515,7 @@ describe('app', () => {
     it('should generate .eslintrc.json when ESLINT_USE_FLAT_CONFIG=false', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-node-app',
         addPlugin: true,
       });
@@ -720,6 +723,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',
@@ -1050,6 +1054,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',
