@@ -306,7 +306,7 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     System.err.flush()
   }
 
-  private fun buildArguments(mavenBatchTask: MavenBatchTask): List<String> {
+  internal fun buildArguments(mavenBatchTask: MavenBatchTask): List<String> {
     val arguments = mutableListOf<String>()
 
     // Verbose and quiet flags
@@ -329,6 +329,76 @@ class MavenInvokerRunner(private val workspaceRoot: File, private val options: M
     // Add task-specific arguments (e.g., -Dtest=TestClass for atomized tests)
     arguments.addAll(mavenBatchTask.args)
 
+    // Add global arguments (e.g., --settings=settings.xml)
+    // Filter out arguments that Maven doesn't recognize or that are already handled
+    val filteredArgs = filterMavenArguments(options.args)
+    arguments.addAll(filteredArgs)
+
     return arguments
+  }
+
+  private fun filterMavenArguments(args: List<String>): List<String> {
+    val filtered = mutableListOf<String>()
+    var i = 0
+    while (i < args.size) {
+      val arg = args[i]
+      when {
+        arg == "--verbose" -> {
+          filtered.add("-X")
+          filtered.add("-e")
+        }
+
+        arg == "--quiet" -> filtered.add("-q")
+        arg.startsWith("--") -> {
+          val flag = arg.substringBefore("=").substring(2)
+          if (isAllowedMavenLongFlag(flag)) {
+            filtered.add(arg)
+            // If it takes a value and it's not in the same argument (no '=')
+            if (!arg.contains("=") && takesValue(flag) && i + 1 < args.size && !args[i + 1].startsWith("-")) {
+              filtered.add(args[++i])
+            }
+          } else {
+            log.debug("Skipping unrecognized Maven argument: $arg")
+            // If it might take a value and it's not in the same argument (no '=')
+            // we should probably skip the next one too if it looks like a value
+            if (!arg.contains("=") && i + 1 < args.size && !args[i + 1].startsWith("-")) {
+              log.debug("Skipping potential value for unrecognized argument: ${args[i + 1]}")
+              i++
+            }
+          }
+        }
+
+        else -> filtered.add(arg) // Keep -D, short flags, and values
+      }
+      i++
+    }
+    return filtered
+  }
+
+  private fun isAllowedMavenLongFlag(flag: String): Boolean {
+    return MAVEN_LONG_FLAGS.contains(flag)
+  }
+
+  private fun takesValue(flag: String): Boolean {
+    return MAVEN_LONG_FLAGS_WITH_VALUE.contains(flag)
+  }
+
+  companion object {
+    private val MAVEN_LONG_FLAGS = setOf(
+      "also-make", "also-make-dependents", "batch-mode", "builder", "strict-checksums", "lax-checksums",
+      "color", "check-plugin-updates", "define", "errors", "encrypt-master-password", "encrypt-password",
+      "file", "fail-at-end", "fail-fast", "fail-never", "global-settings", "global-toolchains",
+      "help", "ignore-transitive-repositories", "log-file", "legacy-local-repository", "non-recursive",
+      "no-plugin-registry", "no-plugin-updates", "no-snapshot-updates", "no-transfer-progress",
+      "offline", "activate-profiles", "projects", "quiet", "raw-streams", "resume-from",
+      "settings", "toolchains", "threads", "update-snapshots", "update-plugins", "version",
+      "show-version", "debug"
+    )
+
+    private val MAVEN_LONG_FLAGS_WITH_VALUE = setOf(
+      "builder", "color", "define", "encrypt-master-password", "encrypt-password", "file",
+      "global-settings", "global-toolchains", "log-file", "activate-profiles", "projects",
+      "resume-from", "settings", "toolchains", "threads"
+    )
   }
 }
