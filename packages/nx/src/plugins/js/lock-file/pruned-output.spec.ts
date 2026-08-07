@@ -1913,6 +1913,24 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
     expect(readFileSync(artifacts[0].sourcePath, 'utf-8')).toBe('REAL');
   });
 
+  it('warns and skips a local-path root that resolves to the workspace root', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    mkdirSync(join(tempDir, 'libs'), { recursive: true });
+    writeFileSync(join(tempDir, 'libs/unrelated.js'), 'UNRELATED');
+    mkdirSync(join(tempDir, 'vendor'));
+    symlinkSync(tempDir, join(tempDir, 'vendor/linked'));
+
+    expect(
+      getPrunedPnpmLocalPathArtifacts(
+        tempDir,
+        linkImporterLockfile('vendor/linked')
+      )
+    ).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('resolves to the workspace root itself')
+    );
+  });
+
   it('warns and skips a dangling symlinked local-path root', () => {
     const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
     mkdirSync(join(tempDir, 'vendor'));
