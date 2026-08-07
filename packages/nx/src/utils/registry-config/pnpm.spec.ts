@@ -531,6 +531,182 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
       expect(logger.warn).not.toHaveBeenCalled();
     });
+
+    describe('nested under another workspace', () => {
+      let nested: string;
+
+      beforeEach(() => {
+        nested = join(root, 'nested');
+        mkdirSync(nested);
+      });
+
+      function writeNestedNpmrc(contents: string): void {
+        writeFileSync(join(nested, '.npmrc'), contents);
+      }
+      function writeAncestorNpmrc(contents: string): void {
+        writeFileSync(join(root, '.npmrc'), contents);
+      }
+
+      it('bridges the ancestor .npmrc, which the spawned npm has no tier for', () => {
+        // The credential belongs to the registry the ancestor yaml sends npm to,
+        // so bridging one without the other authenticates nowhere.
+        writeYaml(
+          'packages:\n  - "nested"\nregistries:\n  default: https://reg-outer.example.com/\n'
+        );
+        writeAncestorNpmrc(
+          '//reg-outer.example.com/:_authToken=outer-token\n//reg-b.example.com/:_authToken=other-token'
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_registry: 'https://reg-outer.example.com/',
+          'npm_config_//reg-outer.example.com/:_authToken': 'outer-token',
+          'npm_config_//reg-b.example.com/:_authToken': 'other-token',
+        });
+      });
+
+      it('bridges nothing when the workspace is its own root, where npm reads that file', () => {
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc(
+          'registry=https://reg-a.example.com/\n//reg-a.example.com/:_authToken=token'
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({});
+      });
+
+      it('lets the nested .npmrc shadow the ancestor one, which pnpm ranks below it', () => {
+        // Injecting the ancestor value would put it at npm's env tier, above the
+        // file npm reads for itself, inverting pnpm's own order. An emptied value
+        // shadows the same way, which is how a project clears what it inherits.
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc('registry=https://reg-outer.example.com/');
+        writeNestedNpmrc('registry=https://reg-nested.example.com/');
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual(
+          {}
+        );
+        writeNestedNpmrc('registry=');
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual(
+          {}
+        );
+      });
+
+      it('leaves a setting the ambient environment declares, which pnpm reads on this line', () => {
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc('registry=https://reg-outer.example.com/');
+        process.env.npm_config_registry = 'https://reg-env.example.com/';
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual(
+          {}
+        );
+      });
+
+      it('keeps the yaml registry above the ancestor .npmrc, which pnpm assigns it over', () => {
+        writeYaml(
+          'packages:\n  - "nested"\nregistries:\n  default: https://reg-yaml.example.com/\n'
+        );
+        writeAncestorNpmrc('registry=https://reg-outer.example.com/');
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_registry: 'https://reg-yaml.example.com/',
+        });
+      });
+
+      it('keeps the yaml network settings above the ancestor .npmrc ones', () => {
+        writeYaml(
+          [
+            'packages:',
+            '  - "nested"',
+            'strictSsl: true',
+            'httpsProxy: http://yaml-proxy.example.com:8080',
+            'noProxy: yaml.example.com',
+          ].join('\n')
+        );
+        writeAncestorNpmrc(
+          [
+            'strict-ssl=false',
+            'https-proxy=http://npmrc-proxy.example.com:8080',
+            'no-proxy=npmrc.example.com',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_strict_ssl: 'true',
+          npm_config_https_proxy: 'http://yaml-proxy.example.com:8080',
+          npm_config_noproxy: 'yaml.example.com',
+        });
+      });
+
+      it("bridges the ancestor file's TLS and proxy settings", () => {
+        // pnpm reads a relative cafile with a bare readFileSync on this line, so
+        // it lands on the directory the command runs in and not on the ancestor's.
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc(
+          [
+            'cafile=./ca.pem',
+            'strict-ssl=false',
+            'https-proxy=http://proxy.example.com:8080',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_cafile: join(nested, 'ca.pem'),
+          npm_config_strict_ssl: 'false',
+          npm_config_https_proxy: 'http://proxy.example.com:8080',
+        });
+      });
+
+      it('falls through to the ancestor no-proxy, and lets an emptied nested one clear it', () => {
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc('no-proxy=internal.example.com');
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_noproxy: 'internal.example.com',
+        });
+        writeNestedNpmrc('no-proxy=');
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual(
+          {}
+        );
+      });
+
+      it('lets the ancestor through when pnpm discarded the nested .npmrc', () => {
+        // A file pnpm dropped whole shadows nothing in pnpm, even though npm
+        // goes on reading that same file for itself.
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc(
+          'registry=https://reg-outer.example.com/\n//reg-outer.example.com/:_authToken=outer-token'
+        );
+        writeNestedNpmrc(
+          'registry=https://reg-nested.example.com/\ncafile=${NX_TEST_HOST}/ca.pem'
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_registry: 'https://reg-outer.example.com/',
+          'npm_config_//reg-outer.example.com/:_authToken': 'outer-token',
+        });
+      });
+
+      it('bridges a registry-scoped certfile but neither inline PEM nor a bare credential', () => {
+        // pnpm pairs a registry with `:certfile`/`:keyfile` paths, the same keys
+        // npm resolves per URI; scoped inline PEM is dead config in both. A bare
+        // credential pnpm pins to the registry its npmrc chain resolves, which is
+        // not the one the yaml sends the fetch to, so npm is given no dart for it.
+        writeYaml(
+          'packages:\n  - "nested"\nregistries:\n  default: https://reg-outer.example.com/\n'
+        );
+        writeAncestorNpmrc(
+          [
+            '//reg-outer.example.com/:certfile=/etc/ssl/client.pem',
+            '//reg-outer.example.com/:cert=-----BEGIN CERTIFICATE-----',
+            '_authToken=bare-token',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_registry: 'https://reg-outer.example.com/',
+          'npm_config_//reg-outer.example.com/:certfile': '/etc/ssl/client.pem',
+        });
+      });
+
+      it('bridges the scoped registry the ancestor declares for the package', () => {
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc('@types:registry=https://reg-scoped.example.com/');
+        expect(
+          getPnpmSpawnRegistryEnv('@types/node', nested, '10.16.0')
+        ).toEqual({
+          'npm_config_@types:registry': 'https://reg-scoped.example.com/',
+        });
+      });
+    });
   });
 
   describe('>= 11.0.0 (per-key merge, pnpm_config_* env, auth.ini)', () => {

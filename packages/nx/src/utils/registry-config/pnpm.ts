@@ -124,9 +124,15 @@ export function getPnpmSpawnRegistryEnv(
     if (scope && pick) {
       setScopedRegistry(env, scope, pick);
     }
-    // auth.ini is an 11.x file, so the workspace .npmrc is the only layer whose
-    // bypass list can need re-spelling here.
-    bridgeNoProxy(env, root, pnpmVersion);
+    // Both .npmrc files pnpm reads here, project first, which is the order both
+    // the bridge and the bypass list resolve them in.
+    const npmrcPaths = pnpmNpmrcPaths(root, workspaceFile);
+    bridgeWorkspaceNpmrc(env, npmrcPaths, scope, pnpmVersion);
+    // auth.ini is an 11.x file, so these are the only layers whose bypass list
+    // can need re-spelling here.
+    bridgeNoProxy(env, npmrcPaths, pnpmVersion);
+    // Applied last: pnpm assigns the yaml over the whole npmrc-derived config,
+    // so what it declares outranks everything the files above contributed.
     applyYamlNetworkSettings(env, settings);
     // On this version line pnpm's user config is npm's own (no auth.ini, no
     // npmrcAuthFile), always a file npm reads for itself.
@@ -453,7 +459,10 @@ function resolveNoProxy(
   if (settings.noProxy) {
     return settings.noProxy;
   }
-  const fromFiles = fileNoProxy(npmrcDir, pnpmVersion, authIniPath);
+  const fromFiles = fileNoProxy(
+    [join(npmrcDir, '.npmrc'), authIniPath],
+    pnpmVersion
+  );
   if (fromFiles) {
     return fromFiles;
   }
@@ -829,6 +838,143 @@ function readPnpmNpmrcEntries(
   return { map, rawStrictSsl, rescoped, dart };
 }
 
+/**
+ * The .npmrc files pnpm reads below its own environment, highest first: the one
+ * beside the package.json the command runs from, then the one beside the
+ * workspace manifest it walked up to. They are the same file for a workspace
+ * that is its own root, and the second is the tier npm has none of.
+ */
+function pnpmNpmrcPaths(root: string, workspaceFile: string | null): string[] {
+  const project = join(root, '.npmrc');
+  const workspaceDir = workspaceFile ? dirname(workspaceFile) : root;
+  return workspaceDir === root
+    ? [project]
+    : [project, join(workspaceDir, '.npmrc')];
+}
+
+/**
+ * An npmrc-family file with its keys expanded, rebuilt in file order so a later
+ * key that expands onto the same setting wins the way pnpm's own assignment
+ * does. Values stay as written, because parseField types a Boolean setting from
+ * the literal before any `${VAR}` in it is expanded.
+ */
+function expandPnpmNpmrcKeys(raw: Map<string, string>): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const [rawKey, rawValue] of raw) {
+    map.set(expandPnpmEnvVars(rawKey), rawValue);
+  }
+  return map;
+}
+
+/**
+ * The workspace .npmrc pnpm below 11 layers under the project one. npm has no
+ * tier for it at all, so a setting the project file leaves undeclared has to
+ * reach npm through the environment; one the project file declares npm resolves
+ * for itself, and injecting the workspace value would put it above that file
+ * rather than below it. The ambient npm_config_* both readers honor on this line
+ * outranks either file, so a setting declared there is left alone as well.
+ *
+ * A bare credential is deliberately not bridged. pnpm has no per-file rescoping
+ * here and pins one to nerfDart(allSettings.registry), the registry the npmrc
+ * chain resolves rather than the one the pnpm-workspace.yaml sends the fetch to,
+ * so npm's nerf-darted form cannot be derived from what this can see.
+ */
+function bridgeWorkspaceNpmrc(
+  env: NpmConfigEnv,
+  npmrcPaths: string[],
+  scope: string | null,
+  pnpmVersion: string
+): void {
+  const [projectPath, workspacePath] = npmrcPaths;
+  if (!workspacePath) {
+    return;
+  }
+  const workspaceRaw = readPnpmNpmrcMap(workspacePath, pnpmVersion);
+  if (!workspaceRaw) {
+    return;
+  }
+  const workspaceNpmrc = expandPnpmNpmrcKeys(workspaceRaw);
+  // pnpm's view of the shadowing tier: a file its reader discarded shadows
+  // nothing, even though npm goes on reading that same file for itself.
+  const projectRaw = readPnpmNpmrcMap(projectPath, pnpmVersion);
+  const projectNpmrc = projectRaw ? expandPnpmNpmrcKeys(projectRaw) : null;
+
+  /** The value as written, unless a tier above the workspace file declares one. */
+  const declared = (key: string): string | undefined =>
+    projectNpmrc?.has(key) || readNpmConfigEnv(process.env, key) !== undefined
+      ? undefined
+      : workspaceNpmrc.get(key);
+  // An empty value declares nothing to derive from: pnpm's own readers re-check
+  // for an empty registry, and npm skips an empty env value outright. Deriving
+  // from one is what does damage (an empty cafile resolves to its own directory).
+  const bridged = (key: string): string | undefined =>
+    expandPnpmEnvVars(declared(key) ?? '') || undefined;
+
+  // A registry the yaml already forced in outranks these files in pnpm, so it
+  // keeps winning here.
+  const registry = bridged('registry');
+  if (!env['npm_config_registry'] && registry) {
+    setRegistry(env, registry);
+  }
+  const scopedRegistry = scope ? bridged(`${scope}:registry`) : undefined;
+  if (scope && !env[`npm_config_${scope}:registry`] && scopedRegistry) {
+    setScopedRegistry(env, scope, scopedRegistry);
+  }
+  // Every dart is copied, not just the contacted registry's: npm resolves auth
+  // per fetched URI and sends only the matching key, so a tarball served from a
+  // second authenticated host keeps working. Filtering here would strip it.
+  for (const key of workspaceNpmrc.keys()) {
+    // npm has no tokenHelper setting, and pnpm takes one from its user config
+    // alone, so a scoped helper here stands for no credential the fetch had.
+    // `:cert`/`:key` carry inline PEM, which neither tool reads in scoped form
+    // (pnpm's getNetworkConfigs pairs a registry with `:certfile`/`:keyfile`
+    // paths, the same keys npm resolves per URI, and those do go through).
+    if (
+      !key.startsWith('//') ||
+      key.endsWith(':tokenHelper') ||
+      key.endsWith(':cert') ||
+      key.endsWith(':key')
+    ) {
+      continue;
+    }
+    const value = bridged(key);
+    if (value) {
+      env[`npm_config_${key}`] = value;
+    }
+  }
+
+  const cafile = bridged('cafile');
+  if (cafile) {
+    // pnpm's only reader on this line is loadCAFile, a bare readFileSync on the
+    // raw value, so a relative one resolves against the cwd the command runs in,
+    // which is the root the spawn uses. It expands no leading `~`, and npm
+    // ignores a cafile it cannot open, so getting the base wrong drops the trust
+    // anchor with no diagnostic at all. (11.2.0 moved that base to the directory
+    // of the declaring file.)
+    setCafile(env, resolve(dirname(projectPath), cafile));
+  }
+  // Flat keys on this line: pnpm pins neither trust anchors nor client TLS
+  // material to a registry before 11, and npm reads all three the same way.
+  for (const key of ['ca', 'cert', 'key'] as const) {
+    const value = bridged(key);
+    if (value) {
+      env[`npm_config_${key}`] = value;
+    }
+  }
+  const rawStrictSsl = declared('strict-ssl');
+  if (rawStrictSsl !== undefined) {
+    // strict-ssl is typed Boolean-only, so parseField turns just 'true'/'false'
+    // (plus '' -> true and the null/undefined literals) into non-strings and
+    // leaves everything else a truthy string: '0', 'no' and 'off' all keep TLS
+    // verification on in pnpm. Only an explicit 'false' turns it off.
+    setStrictSsl(env, rawStrictSsl !== 'false');
+  }
+  setProxies(env, {
+    httpProxy: bridged('proxy'),
+    httpsProxy: bridged('https-proxy'),
+  });
+}
+
 function bridgeNpmrcSources(
   env: NpmConfigEnv,
   root: string,
@@ -1058,30 +1204,33 @@ function bridgeNpmrcSources(
  */
 function bridgeNoProxy(
   env: NpmConfigEnv,
-  root: string,
+  npmrcPaths: string[],
   pnpmVersion: string
 ): void {
-  const value = fileNoProxy(root, pnpmVersion);
+  const value = fileNoProxy(npmrcPaths, pnpmVersion);
   if (value) {
     setProxies(env, { noProxy: value });
   }
 }
 
+/** The bypass list the highest of `npmrcPaths` to declare one contributes. */
 function fileNoProxy(
-  npmrcDir: string,
-  pnpmVersion: string,
-  authIniPath?: string
+  npmrcPaths: string[],
+  pnpmVersion: string
 ): string | undefined {
-  const projectNpmrc = readPnpmNpmrcMap(join(npmrcDir, '.npmrc'), pnpmVersion);
-  // The workspace .npmrc outranks auth.ini, and declaring the key empty there
-  // is pnpm's way of clearing an inherited bypass list.
-  const value = projectNpmrc?.has('no-proxy')
-    ? projectNpmrc.get('no-proxy')
-    : authIniPath &&
-      readPnpmNpmrcMap(authIniPath, pnpmVersion)?.get('no-proxy');
-  // npm ignores `no-proxy` in the file it does read, so the value never goes
-  // through npm's own expansion under that key; expand it with pnpm's grammar.
-  return value ? expandPnpmEnvVars(value) : undefined;
+  for (const path of npmrcPaths) {
+    const npmrc = readPnpmNpmrcMap(path, pnpmVersion);
+    // Declaring the key empty is pnpm's way of clearing a list it inherits, so
+    // presence settles the layer and an empty value stops the search here.
+    if (!npmrc?.has('no-proxy')) {
+      continue;
+    }
+    const value = npmrc.get('no-proxy');
+    // npm ignores `no-proxy` in the file it does read, so the value never goes
+    // through npm's own expansion under that key; expand it with pnpm's grammar.
+    return value ? expandPnpmEnvVars(value) : undefined;
+  }
+  return undefined;
 }
 
 /**
