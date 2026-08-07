@@ -33,11 +33,11 @@ Page: {pageUrl}
 
 Nx runs the same scripts, so what you gain is the work Turborepo leaves to you.
 
-Polyglot workspaces are the clearest gap. First-party plugins for [Maven](/docs/technologies/java/maven/introduction), [Gradle](/docs/technologies/java/gradle/introduction), and [.NET](/docs/technologies/dotnet/introduction) put those projects in the same graph as your JavaScript packages, and community plugins cover [Python](https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python), [Rust](https://github.com/cammisuli/monodon/tree/main/packages/rust), and [Go](https://github.com/naxodev/oss/tree/main/packages/gonx). Turborepo can wrap any CLI in a `package.json` script, and an experimental flag teaches it Cargo workspaces, but outside those it builds no dependency graph, so a Go service and the app calling it stay islands.
+First-party plugins for [Maven](/docs/technologies/java/maven/introduction), [Gradle](/docs/technologies/java/gradle/introduction), and [.NET](/docs/technologies/dotnet/introduction) put those projects in the same graph as your JavaScript packages, and community plugins cover [Python](https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python), [Rust](https://github.com/cammisuli/monodon/tree/main/packages/rust), and [Go](https://github.com/naxodev/oss/tree/main/packages/gonx). Turborepo can wrap any CLI in a `package.json` script, and an experimental flag teaches it Cargo workspaces, but outside those it builds no dependency graph, so a Go service and the app calling it stay islands.
 
-CI is the other gap. Turborepo scales past one machine through manual binning, where you assign tasks to runners by hand and rebalance as the workspace grows, while Nx Agents distributes at the task level using historical timings. On one workspace across four machines that was 9m 20s against Turborepo's 19m 18s. Nx Cloud also splits e2e suites by file, re-runs flaky tasks, and runs an agent that diagnoses and fixes broken tasks on CI.
+Turborepo scales past one machine through manual binning, where you assign tasks to runners by hand and rebalance as the workspace grows, while Nx Agents distributes at the task level using historical timings. On one workspace across four machines that was 9m 20s against Turborepo's 19m 18s. Nx Cloud also splits e2e suites by file, re-runs flaky tasks, and runs an agent that diagnoses and fixes broken tasks on CI.
 
-Two smaller differences. Task sandboxing surfaces the files a task read or wrote without declaring them, and Turborepo has no equivalent. Generators run as code against the project graph and do AST-level transforms rather than filling in templates.
+Task sandboxing surfaces the files a task read or wrote without declaring them, and Turborepo has no equivalent. Generators run as code against the project graph and do AST-level transforms rather than filling in templates.
 
 For the full comparison, see [Nx vs Turborepo](/docs/kb/nx-vs-turborepo).
 
@@ -172,7 +172,7 @@ nx show project docs
 
 ## 4. Mark long-running tasks as continuous
 
-`persistent: true` does not survive the conversion. Nx calls the same thing [`continuous`](/docs/kb/defining-task-pipeline#continuous-task-dependencies):
+`persistent: true` does not survive the conversion, and Nx calls the same thing [`continuous`](/docs/kb/defining-task-pipeline#continuous-task-dependencies):
 
 ```json
 // nx.json
@@ -186,7 +186,7 @@ nx show project docs
 }
 ```
 
-Nx uses the flag for more than bookkeeping. A task that depends on a continuous task starts as soon as the server it needs is up, rather than waiting for a process that never exits. That is how you express "run the e2e tests against the dev server" as a task dependency.
+A task that depends on a continuous task starts as soon as the server it needs is up, rather than waiting for a process that never exits. That is how you express "run the e2e tests against the dev server" as a task dependency.
 
 ## 5. Carry over task-level environment variables
 
@@ -215,7 +215,7 @@ Turborepo's `passThroughEnv` and `globalPassThroughEnv` have no counterpart, bec
 
 `nx init` converts `globalEnv` and `globalDependencies` into a `sharedGlobals` named input that targets pick up through `default`. A target with its own `inputs` never reads `default`, so every turbo task that had an `inputs` list loses those globals.
 
-Turborepo hashes them into every task. Add the reference back so those targets keep invalidating the same way:
+Turborepo hashes them into every task, so add the reference back to keep those targets invalidating the same way:
 
 ```json
 // nx.json
