@@ -559,28 +559,7 @@ describe('Storybook - Convert To Inferred', () => {
         {
           "build-storybook": {
             "options": {
-              "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
-            },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
-          },
-          "storybook": {
-            "configurations": {
-              "ci": {
-                "args": [
-                  "--quiet",
-                ],
-              },
-            },
-            "options": {
-              "config-dir": ".storybook",
-              "port": 4400,
             },
           },
         }
@@ -591,28 +570,7 @@ describe('Storybook - Convert To Inferred', () => {
         {
           "build-storybook": {
             "options": {
-              "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/project2",
-            },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
-          },
-          "storybook": {
-            "configurations": {
-              "ci": {
-                "args": [
-                  "--quiet",
-                ],
-              },
-            },
-            "options": {
-              "config-dir": ".storybook",
-              "port": 4400,
             },
           },
         }
@@ -625,6 +583,34 @@ describe('Storybook - Convert To Inferred', () => {
       );
       expect(storybookPlugin).toBeTruthy();
       expect(storybookPlugin.include).toBeUndefined();
+
+      // the config shared by both projects was hoisted into plugin-scoped
+      // targetDefaults entries, not dropped, and the workspace's pre-existing
+      // defaults are preserved
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        build: { cache: true },
+        lint: { cache: true },
+        'build-storybook': [
+          {
+            filter: { plugin: '@nx/storybook/plugin' },
+            options: { 'config-dir': '.storybook' },
+            outputs: [
+              '{projectRoot}/{options.output-dir}',
+              '{projectRoot}/storybook-static',
+              '{options.output-dir}',
+              '{options.outputDir}',
+              '{options.o}',
+            ],
+          },
+        ],
+        storybook: [
+          {
+            filter: { plugin: '@nx/storybook/plugin' },
+            configurations: { ci: { args: ['--quiet'] } },
+            options: { 'config-dir': '.storybook', port: 4400 },
+          },
+        ],
+      });
     });
   });
 });

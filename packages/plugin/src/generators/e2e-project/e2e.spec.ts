@@ -270,6 +270,10 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(globalSetup).toContain(
       "export { default as teardown } from './stop-local-registry'"
     );
+
+    expect(tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8')).toContain(
+      '  }, 120_000);'
+    );
   });
 
   it('should setup the eslint builder', async () => {

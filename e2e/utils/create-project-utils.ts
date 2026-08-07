@@ -101,6 +101,12 @@ export function newProject({
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
+    if (packageManager === 'yarn') {
+      // E2E workspaces are mutated dynamically; Yarn Berry's CI default would
+      // otherwise reject lockfile updates before the workspace is cached.
+      process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
+    }
+
     const projScope = 'proj';
 
     let createNxWorkspaceMeasure: PerformanceMeasure;
@@ -161,10 +167,20 @@ export function newProject({
       } else {
         console.info('No packages to install');
       }
+      if (packageManager === 'yarn') {
+        execSync(getPackageManagerCommand({ packageManager }).install, {
+          cwd: `${e2eCwd}/proj`,
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+          env: process.env,
+          windowsHide: true,
+        });
+      }
       // stop the daemon
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: `${e2eCwd}/proj`,
         stdio: isVerbose() ? 'inherit' : 'pipe',
+        env: process.env,
+        windowsHide: true,
       });
 
       moveSync(`${e2eCwd}/proj`, backupPath);
