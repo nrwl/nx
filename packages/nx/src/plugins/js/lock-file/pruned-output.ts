@@ -71,9 +71,8 @@ export const PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS =
  * Drops the resolution-time pnpm config a pruned standalone lockfile already
  * resolves into its snapshots, then drops an emptied `pnpm` block. Re-declaring
  * it next to a pruned lockfile makes pnpm <=10 fail with
- * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Called by `createPrunedLockfile` after a
- * successful prune; the root-lockfile fallback keeps the config, which that
- * lockfile still declares.
+ * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Only for an actually pruned lockfile: the
+ * root-lockfile fallback keeps the config, which that lockfile still declares.
  *
  * Counterpart to `stripStandaloneLockfileConfig` in the pnpm lock-file parser,
  * which drops the same fields from the generated lockfile.
@@ -377,7 +376,7 @@ function parsePnpmLockfileYaml(content: string): object | null {
  * - a pre-v9 lockfile, whose `/name@version` (v6) and `/name/version` (v5) keys
  *   this parse would mangle;
  * - a lockfile with an importer other than the output itself, which is
- *   createLockFile's root-lockfile fallback. It lists the workspace's projects
+ *   the root-lockfile fallback. It lists the workspace's projects
  *   under `importers` and never `packages`, so a workspace module the output
  *   ships as a `file:` directory dependency, which pnpm does gate on the
  *   approval list, has no name here to match.
@@ -1616,9 +1615,10 @@ export function rewritePrunedLocalPathSpecifiers(
  * as a compilation asset after this returns, so the pnpm <=10 additions are
  * mutated onto `packageJson` rather than written; the file-writing executors use
  * `writePrunedPnpmInstallSettings` instead.
- * Pass `includeLocalPathArtifacts: false` when the lockfile is createLockFile's
- * root-lockfile fallback: its importer references the whole workspace, so
- * shipping its local-path trees would copy unrelated sources into the output.
+ * Pass `includeLocalPathArtifacts: false` when the lockfile is the root-lockfile
+ * fallback, which `createPrunedLockfile` reports as `pruned: false`: its importer
+ * references the whole workspace, so shipping its local-path trees would copy
+ * unrelated sources into the output.
  */
 export function emitPrunedPnpmInstallAssets(
   workspaceRootPath: string,
@@ -1684,9 +1684,10 @@ export function emitPrunedPnpmInstallAssets(
  * prior deploy left when the output no longer has settings. `allowBuilds` and the
  * patch scope come from `lockfileContent` when the caller already has it in hand,
  * otherwise from the pruned lockfile it just wrote to `outputDirectory`.
- * Pass `includeLocalPathArtifacts: false` when the lockfile is createLockFile's
- * root-lockfile fallback: its importer references the whole workspace, so
- * shipping its local-path trees would copy unrelated sources into the output.
+ * Pass `includeLocalPathArtifacts: false` when the lockfile is the root-lockfile
+ * fallback, which `createPrunedLockfile` reports as `pruned: false`: its importer
+ * references the whole workspace, so shipping its local-path trees would copy
+ * unrelated sources into the output.
  */
 export function writePrunedPnpmInstallSettings(
   outputDirectory: string,

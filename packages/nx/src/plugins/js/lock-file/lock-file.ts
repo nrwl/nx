@@ -416,7 +416,7 @@ function buildLockFile(
  * `pnpm.patchedDependencies` is dropped on both paths, since the sinks below
  * declare the patches the output actually ships.
  *
- * `pruned` is false when `createLockFile` fell back to the root lockfile on a
+ * `pruned` is false when the prune failed and the root lockfile was returned on a
  * pruning error: the fallback's importer describes the whole workspace, so the
  * manifest mutations are rolled back (the root lockfile matches the manifest as
  * authored: original local-path specifiers, the rest of the pnpm config kept),
@@ -470,7 +470,7 @@ export function createPrunedLockfile(
       delete (packageJson as unknown as Record<string, unknown>)[key];
     }
     Object.assign(packageJson, originalPackageJson);
-    // createLockFile's own error output is suppressed under a postinstall, so
+    // The pruning error output is suppressed under a postinstall, so
     // this is the only signal there naming the cause and what the fallback
     // output is missing.
     const bodyLines = [`The lockfile pruning failed: ${pruneError?.message}`];
