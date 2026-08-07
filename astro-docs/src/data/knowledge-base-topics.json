@@ -86,6 +86,16 @@
     "description": "Add .NET projects to an Nx workspace and configure incremental builds."
   },
   {
+    "id": "java",
+    "label": "Java",
+    "description": "Run Java builds through Nx with caching, affected analysis, and task orchestration."
+  },
+  {
+    "id": "gradle",
+    "label": "Gradle",
+    "description": "Add Nx to a Gradle workspace and run Gradle tasks through Nx."
+  },
+  {
     "id": "module-federation",
     "label": "Module Federation",
     "description": "Build and operate host, remote, and micro frontend architectures with Nx."
