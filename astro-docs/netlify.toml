@@ -181,6 +181,11 @@ to = "/docs/reference/deprecated/self-hosted-cache-packages"
 from = "/docs/getting-started/tutorials/self-healing-ci-tutorial"
 to = "/docs/getting-started/setup-ci"
 
+# Gradle tutorial moved out of tutorials into the Knowledge Base
+[[redirects]]
+from = "/docs/getting-started/tutorials/gradle-tutorial"
+to = "/docs/kb/gradle-tutorial"
+
 # Resource usage consolidated into the Nx Cloud add-ons platform feature pages
 [[redirects]]
 from = "/docs/guides/nx-cloud/ci-resource-usage"
