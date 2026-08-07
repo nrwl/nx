@@ -656,6 +656,41 @@ describe('formatFilesWithOxfmt', () => {
       expect(errors).toBeUndefined();
       expect(formatted.get('a.ts')).toContain('\tif (a) {');
     });
+
+    it('loses to a seedConfig the caller passed', async () => {
+      // The batch fallback is for callers that have no seed, not an override.
+      // Both lookups agree today, so only this pins which one wins.
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [
+          { path: '.oxfmtrc.json', content: JSON.stringify({ useTabs: true }) },
+          { path: 'a.ts', content: 'function f() {\nif (a) {\nb();\n}\n}' },
+        ],
+        workspaceRoot,
+        { name: '.oxfmtrc.json', content: JSON.stringify({ useTabs: false }) }
+      );
+
+      expect(errors).toBeUndefined();
+      expect(formatted.get('a.ts')).toContain('  if (a) {');
+    });
+
+    it('ignores a config it cannot read in memory rather than half-applying it', async () => {
+      // `.ts`/`.mts` configs need a loader and a real file, so the seed path
+      // drops them. Formatting on defaults is the honest outcome; returning
+      // them would look applied and then be discarded further in.
+      const { formatted, errors } = await formatFilesWithOxfmt(
+        [
+          {
+            path: 'oxfmt.config.ts',
+            content: 'export default { useTabs: true };',
+          },
+          { path: 'a.ts', content: 'function f() {\nif (a) {\nb();\n}\n}' },
+        ],
+        workspaceRoot
+      );
+
+      expect(errors).toBeUndefined();
+      expect(formatted.get('a.ts')).toContain('  if (a) {');
+    });
   });
 
   describe('absolute paths', () => {

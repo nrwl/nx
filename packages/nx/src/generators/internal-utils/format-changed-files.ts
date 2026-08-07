@@ -53,10 +53,10 @@ export async function formatChangedFiles(
   // Probing disk config here would also read the real workspace config in
   // tests, which is why callers previously needed fs mocks.
   //
-  // Detection reads the tree but oxfmt's *options* still come from disk - no
-  // `seedConfig` is threaded through `formatDetectedFiles`, which devkit's
-  // `formatFiles` does pass. Unreachable today because no generator on this
-  // path writes an oxfmt config; one that did would format on bare defaults.
+  // No `seedConfig` is threaded through `formatDetectedFiles`, which devkit's
+  // `formatFiles` does pass. It no longer has to be: `formatFilesWithOxfmt`
+  // falls back to a JSON config carried in the batch itself, so a generator on
+  // this path that writes one is formatted with it rather than bare defaults.
   const formatterType = detectFormatterInTree(tree);
   if (!formatterType) {
     return;
