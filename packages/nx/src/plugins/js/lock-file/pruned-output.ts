@@ -9,7 +9,7 @@ import {
   statSync,
   writeFileSync,
 } from 'fs';
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
+import { dirname, isAbsolute, join, posix, relative, resolve, sep } from 'path';
 import { getCatalogManager } from '../../../utils/catalog';
 import {
   readJsonFile,
@@ -457,18 +457,21 @@ function getPrunedPatchedDependencies(
  * `..` asset name is not one a bundler can emit. The whole source sub-structure
  * is kept under `patches/`, including a source `patches/` segment, so two
  * patches that share a file name in different directories keep separate
- * destinations. `.` and `..` segments are dropped wherever they appear (not just
- * a leading run) so the result can never resolve outside `patches/`, which is
- * also the one way two sources can still meet on one destination: paths that
- * differ only by dropped segments alias, and `getPrunedPnpmPatchArtifacts`
- * rejects that pair rather than shipping one file for both.
+ * destinations. The path is collapsed first, the way pnpm collapses it before
+ * recording it in the lockfile (`./x` and `a/../x` are both stored as `x`), so
+ * the declared path this reads and the recorded path the lockfile side reads
+ * produce the same destination. Any `..` left after collapsing escapes the
+ * workspace and is dropped so the result cannot resolve outside `patches/`,
+ * which is the one way two sources can still meet on one destination:
+ * `getPrunedPnpmPatchArtifacts` rejects that pair rather than shipping one file
+ * for both.
  * `filterPatchedDependenciesToPrunedPackages` in the pnpm lock-file parser calls
  * this same helper for the lockfile's object-form path (pnpm 9-10), which pnpm
  * --frozen-lockfile cross-checks against this config path, so the two agree.
  */
 export function normalizePrunedPatchPath(patchPath: string): string {
-  const segments = patchPath
-    .replace(/\\/g, '/')
+  const segments = posix
+    .normalize(patchPath.replace(/\\/g, '/'))
     .split('/')
     .filter((segment) => segment !== '' && segment !== '.' && segment !== '..');
   return `patches/${segments.join('/')}`;
