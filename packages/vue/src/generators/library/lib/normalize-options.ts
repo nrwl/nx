@@ -58,27 +58,8 @@ export async function normalizeOptions(
 
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
-  const normalized = {
-    addPlugin,
-    ...options,
-    projectName:
-      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
-    bundler,
-    fileName,
-    routePath: `/${projectNames.projectFileName}`,
-    name: projectName,
-    projectRoot,
-    parsedTags,
-    importPath,
-    isUsingTsSolutionConfig,
-    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
-  } as NormalizedSchema;
-
-  // Libraries with a bundler or is publishable must also be buildable.
-  normalized.bundler =
-    normalized.bundler !== 'none' || options.publishable ? 'vite' : 'none';
-
-  normalized.inSourceTests === normalized.minimal || normalized.inSourceTests;
+  let appMain: string | undefined;
+  let appSourceRoot: string | undefined;
 
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);
@@ -94,11 +75,11 @@ export async function normalizeOptions(
       );
     }
 
-    const appSourceRoot = getProjectSourceRoot(appProjectConfig, host);
+    const projectSourceRoot = getProjectSourceRoot(appProjectConfig, host);
 
     try {
-      normalized.appMain = appProjectConfig.targets.build.options.main;
-      normalized.appSourceRoot = normalizePath(appSourceRoot);
+      appMain = appProjectConfig.targets.build.options.main;
+      appSourceRoot = normalizePath(projectSourceRoot);
     } catch (e) {
       throw new Error(
         `Could not locate project main for ${options.appProject}`
@@ -106,9 +87,32 @@ export async function normalizeOptions(
     }
   }
 
-  // Framework-specific ESLint shaping is guarded on `=== 'eslint'`, so an
-  // unresolved `undefined` would create a bare config with none of it.
-  normalized.linter = await normalizeLinterOption(host, normalized.linter);
+  // No `as NormalizedSchema`: the assertion would stop the compiler checking
+  // that every required field is present, which is the point of the type.
+  const normalized: NormalizedSchema = {
+    addPlugin,
+    ...options,
+    projectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
+    // Libraries with a bundler or that are publishable must also be buildable.
+    bundler: bundler !== 'none' || options.publishable ? 'vite' : 'none',
+    fileName,
+    routePath: `/${projectNames.projectFileName}`,
+    name: projectName,
+    projectRoot,
+    parsedTags,
+    importPath,
+    isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
+    // `NormalizedSchema` has always declared this non-optional; the assertion
+    // was hiding that nothing set it.
+    js: options.js ?? false,
+    appMain,
+    appSourceRoot,
+    // Framework-specific ESLint shaping is guarded on `=== 'eslint'`, so an
+    // unresolved `undefined` would create a bare config with none of it.
+    linter: await normalizeLinterOption(host, options.linter),
+  };
 
   return normalized;
 }

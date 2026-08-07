@@ -34,7 +34,9 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const normalized = {
+  // No `as NormalizedSchema`: the assertion would stop the compiler checking
+  // that every required field is present, which is the point of the type.
+  const normalized: NormalizedSchema = {
     ...options,
     projectName: appProjectName,
     appProjectRoot,
@@ -44,16 +46,15 @@ export async function normalizeOptions(
     parsedTags,
     isUsingTsSolutionConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
-  } as NormalizedSchema;
-
-  normalized.style = options.style ?? 'css';
-  normalized.routing = normalized.routing ?? false;
-  normalized.unitTestRunner ??= 'vitest';
-  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
-  normalized.bundler = normalized.bundler ?? 'vite';
-  // Resolved here rather than at the `addLinting` call, so the `=== 'eslint'`
-  // check that builds the tsconfig excludes reads the same value.
-  normalized.linter = await normalizeLinterOption(host, normalized.linter);
+    style: options.style ?? 'css',
+    routing: options.routing ?? false,
+    unitTestRunner: options.unitTestRunner ?? 'vitest',
+    e2eTestRunner: options.e2eTestRunner ?? 'playwright',
+    bundler: options.bundler ?? 'vite',
+    // Resolved here rather than at the `addLinting` call, so the `=== 'eslint'`
+    // check that builds the tsconfig excludes reads the same value.
+    linter: await normalizeLinterOption(host, options.linter),
+  };
 
   return normalized;
 }
