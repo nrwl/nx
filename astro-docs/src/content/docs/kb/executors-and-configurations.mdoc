@@ -10,7 +10,10 @@ Executors are reusable task implementations that define how Nx runs a task.
 
 To use an executor, install the plugin that contains the executor and then configure the executor in the project's `project.json` file.
 
-```jsonc title="apps/cart/project.json"
+Add a `command` when a target needs to run a shell command.
+Nx normalizes this shorthand to the `nx:run-commands` executor.
+
+```jsonc title="packages/mylib/package.json"
 {
   "root": "apps/cart",
   "sourceRoot": "apps/cart/src",
@@ -69,26 +72,56 @@ If defining a new target that needs to run a single shell command, there is a sh
 }
 ```
 
-For more info, see the [run-commands documentation](/docs/kb/run-commands-executor)
+For multiple commands, environment variables, and working-directory options, see the
+[`run-commands` executor](/docs/kb/run-commands-executor).
 
-## Build your own executor
+## Run an executor
 
-Nx comes with a Devkit that allows you to build your own executor to automate your Nx workspace. Learn more about it in the [docs page about creating a local executor](/docs/kb/local-executors).
+An executor is an implementation provided by an Nx plugin.
+Executors are useful when a task needs behavior that a command alone doesn't provide.
+Configure one with an `executor` value in the form `<package-name>:<executor-name>`.
 
-## Running executors with a configuration
+For example, the `@nx/js:node` executor coordinates a build target with a running Node.js process.
+It rebuilds and restarts the process as source files change.
 
-You can use a specific configuration preset like this:
-
-```shell
-nx [command] [project] --configuration=[configuration]
-nx build cart --configuration=production
+```jsonc title="packages/api/package.json"
+{
+  "name": "api",
+  "nx": {
+    "targets": {
+      "serve": {
+        "executor": "@nx/js:node",
+        "continuous": true,
+        "dependsOn": ["build"],
+        "options": {
+          "buildTarget": "api:build",
+        },
+      },
+    },
+  },
+}
 ```
 
-## Use task configurations
+This target contains the following fields:
 
-The `configurations` property provides extra sets of values that will be merged into the options map.
+- `executor` identifies the plugin package and executor implementation.
+- `options` provides default values defined by that executor's schema.
+- `continuous` tells Nx that the task remains running.
 
-```json title="project.json"
+Run an executor-backed target in the same way as any other target:
+
+```shell
+nx serve api
+```
+
+Browse available executors in the [plugin registry](/docs/plugin-registry).
+
+## Use configurations
+
+The `configurations` property defines named option overrides.
+Nx merges the selected configuration into `options`, then applies command-line arguments.
+
+```jsonc title="packages/api/package.json"
 {
   "build": {
     "executor": "@nx/js:tsc",
@@ -136,12 +169,8 @@ For example, running e2e tests for multiple environments. By default it would ma
       "dev": {
         "devServerTarget": "my-app:serve"
       },
-      "qa": {
-        "baseUrl": "https://some-internal-url.example.com"
-      }
     },
-    "defaultConfiguration": "dev"
-  }
+  },
 }
 ```
 

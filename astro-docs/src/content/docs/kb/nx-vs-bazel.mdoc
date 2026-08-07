@@ -46,7 +46,7 @@ Nx adopts in place. Existing scripts run unchanged, [plugins automatically confi
 
 Bazel's caching is rigorous. It caches per action, and its execution sandbox blocks undeclared file reads by construction, so cache hits are structurally trustworthy. The caveats are operational rather than architectural: hermeticity depends on team discipline (`no-sandbox` tags, unsandboxed repository rules, host toolchain leaks), and there's no sandboxing on Windows.
 
-Nx caches per task, with inputs derived from tool configuration by plugins and composable [`namedInputs`](/docs/reference/inputs). Cache integrity is backed by [Nx Cloud task sandboxing](/docs/features/ci-features/sandboxing), which runs tasks in a sandbox and surfaces undeclared reads or writes, with an opt-in strict mode that fails the task. The difference from Bazel is when it applies: Bazel enforces at every action by default, while Nx sandboxing is an opt-in layer through Nx Cloud. [Nx Replay](/docs/features/ci-features/remote-cache) provides the managed remote cache with [branch-scoped isolation](/docs/kb/cache-security).
+Nx caches per task, with inputs derived from tool configuration by plugins and composable [`namedInputs`](/docs/reference/inputs). Cache integrity is backed by [Nx Cloud task sandboxing](/docs/features/ci-features/sandboxing), which runs tasks in a sandbox and surfaces undeclared reads or writes, with an opt-in strict mode that fails the task. The difference from Bazel is when it applies: Bazel enforces at every action by default, while Nx sandboxing is an opt-in layer through Nx Cloud. [Nx Cloud remote caching](/docs/features/ci-features/remote-cache) provides a managed remote cache with [branch-scoped isolation](/docs/kb/cache-security).
 
 ## Distribution
 

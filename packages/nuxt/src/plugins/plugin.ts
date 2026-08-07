@@ -3,6 +3,7 @@ import {
   getNamedInputs,
   calculateHashesForCreateNodes,
   PluginCache,
+  workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -17,7 +18,6 @@ import {
   TargetConfiguration,
   workspaceRoot,
 } from '@nx/devkit';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { readdirSync } from 'fs';

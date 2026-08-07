@@ -190,6 +190,35 @@ This will exclude all e2e projects except `toolkit-workspace-e2e`.
 - The last matching pattern determines if a file is included
 - If the first pattern is a negation, all files are matched initially
 
+## Plugins config
+
+`pluginsConfig` holds options for a plugin that apply workspace-wide, rather than to a single registered plugin entry. It is keyed by plugin package name.
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  }
+}
+```
+
+### projectsAffectedByDependencyUpdates
+
+Controls which projects Nx marks as affected when the package manager lock file changes.
+
+| Value      | Description                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `"all"`    | **(default)** Every project in the workspace is affected. Safest, and the most CI work.                                       |
+| `"auto"`   | Only projects whose resolved dependencies changed. Nx parses the lock file at both revisions and diffs the resolved packages. |
+| `string[]` | Project names or glob patterns, for example `["app-*", "shared-lib"]`. Only matching projects are affected.                   |
+
+In `"auto"` mode Nx supports `pnpm-lock.yaml`, `pnpm-lock.yml`, `package-lock.json`, `yarn.lock`, `bun.lock`, and `bun.lockb`. Binary Bun lock files are rendered by Bun before diffing, so Bun must be available wherever `nx affected` runs.
+
+For how the affected set is computed, see [run only tasks affected by a PR](/docs/features/ci-features/affected).
+
 ## Task options
 
 The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.

@@ -12,7 +12,7 @@ import {
   loadViteDynamicImport,
   loadVitestDynamicImport,
 } from '../../../utils/executor-utils';
-import { isCI } from 'nx/src/devkit-internals';
+import { isCI } from '@nx/devkit/internal';
 
 export async function getOptions(
   options: VitestExecutorOptions,

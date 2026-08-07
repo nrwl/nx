@@ -1,13 +1,12 @@
 import { interpolateVersionPattern } from './version-pattern-utils';
-import * as gitUtils from 'nx/src/utils/git-utils';
+import { getLatestCommitSha } from '@nx/devkit/internal';
 
 jest.mock('nx/src/utils/git-utils');
 
 describe('version-pattern-utils', () => {
-  const mockGetLatestCommitSha =
-    gitUtils.getLatestCommitSha as jest.MockedFunction<
-      typeof gitUtils.getLatestCommitSha
-    >;
+  const mockGetLatestCommitSha = getLatestCommitSha as jest.MockedFunction<
+    typeof getLatestCommitSha
+  >;
 
   beforeEach(() => {
     jest.clearAllMocks();

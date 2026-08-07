@@ -13,14 +13,15 @@ Nx coordinates work in your workspace through a few core concepts: the project g
 
 The project graph represents the source code in your repository and external dependencies such as Vite, React, and Angular.
 
-![project-graph](../../../assets/concepts/mental-model/project-graph.svg)
+![A project graph with applications and libraries](../../../assets/concepts/mental-model/project-graph.svg)
 
 Nx analyzes your file system to detect projects. It identifies projects from a `project.json` file or a `package.json` file included in your package manager's workspaces configuration. Plugins can also customize how Nx identifies projects. You can manually define dependencies between
 the project nodes, but you don't have to do it very often. Nx analyzes source code, your installed dependencies, and TypeScript
 configuration to figure out these dependencies for you. Nx also stores the cached project graph, so it only
 reanalyzes the files you have changed.
 
-![project-graph-updated](../../../assets/concepts/mental-model/project-graph-updated.svg)
+Nx caches the project graph and recomputes the parts affected by file changes.
+The updated graph reflects the current state of your workspace.
 
 Nx updates the graph after each analysis.
 
@@ -55,12 +56,12 @@ To move an older workspace onto inferred tasks, follow the [Migrate to Inferred 
 
 ## The task graph
 
-Nx uses the project graph to create a task graph. Any time you run anything, Nx creates a task graph from the project
-graph and then executes the tasks in that graph.
+Nx creates a task graph whenever you run tasks.
+Each node is a task, which is a specific target invoked for a project, such as `myapp:build`.
+Edges represent the dependencies between tasks.
+For example, `nx test lib` creates a task graph with one node:
 
-For instance `nx test lib` creates a task graph with a single node:
-
-{% graph height="100px" type="task" %}
+{% graph title="Task graph for nx test lib" height="160px" type="task" %}
 
 ```json
 {
@@ -69,6 +70,8 @@ For instance `nx test lib` creates a task graph with a single node:
       "name": "lib",
       "type": "lib",
       "data": {
+        "root": "libs/lib",
+        "projectType": "library",
         "tags": [],
         "targets": {
           "test": {}
@@ -86,18 +89,28 @@ For instance `nx test lib` creates a task graph with a single node:
           "project": "lib",
           "target": "test"
         },
+        "outputs": [],
         "projectRoot": "libs/lib",
-        "overrides": {}
+        "overrides": {},
+        "cache": true,
+        "parallelism": true,
+        "continuous": false
       }
     },
-    "dependencies": {}
+    "dependencies": {
+      "lib:test": []
+    },
+    "continuousDependencies": {
+      "lib:test": []
+    }
   }
 }
 ```
 
 {% /graph %}
 
-A task is an invocation of a target. If you invoke the same target twice, you create two tasks.
+The project graph and task graph aren't identical.
+In this project graph, both applications depend on `lib`:
 
 Nx uses the [project graph](#the-project-graph) to figure out which tasks exist, but the task graph isn't a mirror of the
 project graph. In the case below, `app1` and `app2` depend on `lib`:
@@ -122,8 +135,8 @@ project graph. In the case below, `app1` and `app2` depend on `lib`:
       }
     },
     {
-      "name": "lib",
-      "type": "lib",
+      "name": "app1",
+      "type": "app",
       "data": {
         "tags": []
       }
@@ -145,7 +158,7 @@ project graph. In the case below, `app1` and `app2` depend on `lib`:
 
 Running `nx run-many -t test -p app1 app2 lib` creates a task graph with three disconnected nodes:
 
-{% graph height="200px" type="task" %}
+![Tasks running in dependency order and in parallel](../../../assets/concepts/mental-model/task-graph-execution.svg)
 
 ```json
 {
@@ -332,16 +345,19 @@ execution time.
 
 ## Affected commands
 
-When you run `nx test app1`, you are telling Nx to run the `app1:test` task plus all the tasks it depends on.
+Running `nx test app1` creates the `app1:test` task and any tasks it depends on.
+Running `nx run-many -t test -p app1 lib` creates tasks for both projects.
+Without a project filter, `nx run-many -t test` creates a test task for every project with that target.
 
-When you run `nx run-many -t test -p app1 lib`, you are telling Nx to do the same for two
-tasks `app1:test`
-and `lib:test`.
+Use `nx affected -t test` to limit the task graph to projects affected by your changes.
+Nx maps changed files to projects, applies plugin-specific change analysis, and follows the project
+graph to include dependent projects.
+It then runs the requested target for that set.
 
-When you run `nx run-many -t test`, you are telling Nx to do this for all the projects.
+For example, if a change affects `lib`, and both `app1` and `app2` depend on it, the affected project
+set contains all three projects.
 
-As your workspace grows, retesting all projects becomes too slow. To address this Nx implements code change analysis via the [`affected` command](/docs/features/ci-features/affected) to
-get the min set of projects that need to be retested. How does it work?
+![Affected projects after a library change](../../../assets/concepts/mental-model/affected.svg)
 
 When you run `nx affected -t test`, Nx identifies the files changed in your PR and follows their project dependencies and imports to determine which projects the change can affect. It then runs the `run-many` command with that list.
 
@@ -356,13 +372,15 @@ that `app2` cannot be affected by it, so it only retests `app1`.
 
 Before running a task, Nx computes a hash based on source files, configuration, dependencies, and other inputs. If the hash matches a previous run, Nx replays the cached result, including terminal output and file artifacts. If not, Nx runs the task and stores the result for next time.
 
-![computation-hashing](../../../assets/concepts/mental-model/computation-hashing.svg)
+![Inputs used to calculate a task hash](../../../assets/concepts/mental-model/computation-hashing.svg)
 
-Nx checks the local cache first, then the [remote cache](/docs/features/ci-features/remote-cache) if configured. From the user's point of view, the command ran the same, only a lot faster.
+Nx checks the local cache first and then checks the
+[remote cache](/docs/features/ci-features/remote-cache) when one is configured.
+A cache hit has the same result as executing the task, but avoids the computation.
 
-![cache](../../../assets/concepts/mental-model/cache.svg)
+![Nx checking local and remote caches](../../../assets/concepts/mental-model/cache.svg)
 
-See [How Caching Works](/docs/concepts/how-caching-works) for the complete list of hash inputs, cache configuration options, and optimization details.
+For the complete hashing and cache model, see [how caching works](/docs/concepts/how-caching-works).
 
 ## Distributed task execution
 

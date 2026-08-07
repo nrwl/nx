@@ -27,8 +27,9 @@ export async function downloadTemplate(
 ): Promise<void> {
   let body: ReadableStream<Uint8Array> | undefined;
   const attempts: string[] = [];
-  // A thrown fetch is a connectivity problem; a non-ok response is a missing
-  // branch/repo. Distinguish them so the error code (and its hints) are right.
+  // 404 means the repo/branch does not exist; any other failure (thrown fetch,
+  // 403 from a sandbox proxy, 407/429/5xx) means blocked or failed egress.
+  // The distinction picks the error code and its hints.
   let networkError = false;
   for (const branch of DEFAULT_BRANCHES) {
     const url = `https://github.com/${template}/archive/refs/heads/${branch}.tar.gz`;
@@ -38,6 +39,7 @@ export async function downloadTemplate(
         body = res.body;
         break;
       }
+      if (res.status !== 404) networkError = true;
       attempts.push(`${branch}: HTTP ${res.status}`);
     } catch (e) {
       networkError = true;
@@ -46,9 +48,16 @@ export async function downloadTemplate(
   }
 
   if (!body) {
+    if (networkError) {
+      throw new CnwError(
+        'NETWORK_ERROR',
+        `Failed to download template '${template}' (${attempts.join('; ')}).\n` +
+          `github.com may be blocked or unreachable in this environment. Check your network and sandbox configuration and try again, or run with --preset=empty (instead of --template) to create a minimal workspace without downloading a template.`
+      );
+    }
     throw new CnwError(
-      networkError ? 'NETWORK_ERROR' : 'TEMPLATE_CLONE_FAILED',
-      `Failed to download template '${template}' (${attempts.join('; ')})`
+      'TEMPLATE_CLONE_FAILED',
+      `Failed to download template '${template}' (${attempts.join('; ')}). Check that the template name is correct.`
     );
   }
 

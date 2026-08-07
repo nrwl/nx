@@ -1,13 +1,21 @@
 import type { Link, PerformanceSummaryPayload } from '../../native';
 import { formatDuration } from '../../native';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { supportsHyperlinks, terminalLink } from '../../utils/terminal-link';
+import { isNxCloudDisabled, isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { createNxCloudOnboardingURL } from '../../nx-cloud/utilities/url-shorten';
+import { getCloudUrl } from '../../nx-cloud/utilities/get-cloud-options';
+import { getVcsRemoteInfo } from '../../utils/git-utils';
+import { logger } from '../../utils/logger';
 import type {
   PerformanceSummary,
   TaskDurationRow,
 } from './performance-analysis';
 
 const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
-const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
+// Fallback for the remote-cache CTA when the short onboarding URL can't be
+// fetched: the generic Cloud get-started page (still drives to onboarding).
+const NX_CLOUD_GET_STARTED_URL = 'https://cloud.nx.app/get-started';
 const NX_PERFORMANCE_URL =
   'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution';
 /** utm tag attributing report clicks back to it; the content names the CTA clicked. */
@@ -15,7 +23,73 @@ const utm = (content: string) =>
   `?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=${content}`;
 const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${utm('parallelization')}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${utm('nx-agents')}`;
-const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${utm('remote-cache')}`;
+const NX_REMOTE_CACHE_LINK = `${NX_CLOUD_GET_STARTED_URL}${utm('remote-cache')}`;
+
+// Defaults to the get-started link; a disconnected workspace gets a short Nx
+// Cloud onboarding URL instead (see prefetchRemoteCacheOnboardingUrl).
+let remoteCacheLink = NX_REMOTE_CACHE_LINK;
+
+// Give up on the short URL after this long so a slow/hung Cloud API never
+// lingers past the exit report. Covers two sequential round trips (features
+// GET, onboarding POST); the 30s CTA floor leaves room. Timing out also aborts
+// the request - Promise.race alone would leave the socket holding the event
+// loop open, which strands programmatic callers that never process.exit.
+const ONBOARDING_URL_TIMEOUT = 5000;
+
+/**
+ * Point the remote-cache CTA at a short Nx Cloud onboarding URL for a
+ * disconnected GitHub workspace - the VCS flow where Cloud opens the nx.json PR.
+ * Non-GitHub remotes keep the get-started link (handles every provider) and skip
+ * the network entirely. Runs in CI too - terminal + job summary.
+ *
+ * Best-effort: the get-started link stays on failure/timeout. Fired at run start;
+ * the CTA needs a >30s run (MIN_RECOMMENDATION_RUN_DURATION), so the fetch
+ * always resolves first.
+ */
+export async function prefetchRemoteCacheOnboardingUrl(
+  nxJson: NxJsonConfiguration
+): Promise<void> {
+  if (isNxCloudDisabled(nxJson) || isNxCloudUsed(nxJson)) {
+    return;
+  }
+  if (getVcsRemoteInfo()?.domain !== 'github.com') {
+    return;
+  }
+  const abortController = new AbortController();
+  try {
+    const url = await Promise.race([
+      createNxCloudOnboardingURL(
+        'nx-cli-perf-report',
+        undefined,
+        undefined,
+        false,
+        false,
+        undefined,
+        abortController.signal
+      ),
+      new Promise<null>((resolve) => {
+        // unref so the pending timer never keeps the CLI alive on its own.
+        setTimeout(() => {
+          abortController.abort();
+          resolve(null);
+        }, ONBOARDING_URL_TIMEOUT).unref();
+      }),
+    ]);
+    // createNxCloudOnboardingURL never throws - on an unreachable API it returns a
+    // paste-a-token URL (accessToken=undefined). Only accept a real short link.
+    if (url?.startsWith(`${getCloudUrl()}/connect/`)) {
+      remoteCacheLink = url;
+    } else {
+      logger.verbose(
+        `Keeping the get-started remote-cache link (${
+          url === null ? 'onboarding URL timed out' : `got: ${url}`
+        })`
+      );
+    }
+  } catch (e) {
+    logger.verbose(`Keeping the get-started remote-cache link: ${e}`);
+  }
+}
 /**
  * Whole-phrase CTA: the whole sentence is the link. The Rust TUI popup keeps no
  * copy of this string; it gets the phrase + href from the exit payload's `links`.
@@ -275,7 +349,7 @@ const RECOMMENDATIONS: RecommendationCandidate[] = [
       c.cacheableCount > 0 &&
       !c.remoteCacheEnabled &&
       c.cacheHits / c.cacheableCount <= LOW_CACHE_HIT_RATE,
-    build: () => [phraseLink(NX_REMOTE_CACHE_CTA, NX_REMOTE_CACHE_LINK), `.`],
+    build: () => [phraseLink(NX_REMOTE_CACHE_CTA, remoteCacheLink), `.`],
   },
   {
     // Cache skipped: drop the flag to restore unchanged tasks instantly.

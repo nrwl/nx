@@ -1,5 +1,5 @@
 ---
-name: nx-docs-style-check
+name: check-docs-style
 description: Check modified Nx documentation pages against the astro-docs style guide. Auto-trigger after writing or editing docs content in the nx repo. Also trigger on "check style", "style guide", "docs review", "validate docs". Should run as a final step whenever docs files are modified. IMPORTANT: anytime astro-docs/**/*.mdoc files are modified, this should always run automatically without being asked.
 allowed-tools: Read, Glob, Grep
 ---

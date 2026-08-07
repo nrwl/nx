@@ -1,5 +1,5 @@
 import { buildEsbuildOptions } from './build-esbuild-options';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { ExecutorContext } from '@nx/devkit';
 import path = require('path');
 
 describe('buildEsbuildOptions', () => {

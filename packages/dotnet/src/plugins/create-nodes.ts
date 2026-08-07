@@ -8,7 +8,7 @@ import {
   analyzeProjects,
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
-import { mergeTargetConfigurations } from 'nx/src/project-graph/utils/project-configuration-utils';
+import { mergeTargetConfigurations } from '@nx/devkit/internal';
 
 export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
   /**

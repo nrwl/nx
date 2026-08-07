@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { getWebpackE2EWebServerInfo } from './e2e-web-server-info-utils';
+import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 describe('getWebpackE2EWebServerInfo', () => {
   let tree: Tree;

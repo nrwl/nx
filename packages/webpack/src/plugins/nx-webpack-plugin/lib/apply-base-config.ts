@@ -1,5 +1,4 @@
 import * as path from 'path';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import type {
   Configuration,
   WebpackOptionsNormalized,
@@ -16,6 +15,7 @@ import { createLoaderFromCompiler } from './compiler-loaders';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNonBuildableLibs } from './utils';
+import { ExecutorContext } from '@nx/devkit';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
