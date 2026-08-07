@@ -53,7 +53,7 @@ Nx merges task configuration from three sources, with later sources winning:
 For all configuration options, see [project configuration](/docs/reference/project-configuration).
 To move an older workspace onto inferred tasks, follow the [Migrate to Inferred Tasks](/docs/kb/convert-to-inferred) guide.
 
-Nx stores everything it learns about your projects and tasks as metadata for Nx itself, the VS Code and WebStorm integrations, the GitHub integration, and third-party tools.
+Nx stores everything it learns about your projects and tasks as metadata for editor integrations such as VS Code and WebStorm, and for third-party tools.
 
 ![metadata](../../../assets/concepts/mental-model/metadata.png)
 
@@ -347,9 +347,7 @@ When you run `nx run-many -t test`, you are telling Nx to do this for all the pr
 As your workspace grows, retesting all projects becomes too slow. To address this Nx implements code change analysis via the [`affected` command](/docs/features/ci-features/affected) to
 get the min set of projects that need to be retested. How does it work?
 
-When you run `nx affected -t test`, Nx looks at the files you changed in your PR, it will look at the nature of
-change (what exactly did you update in those files), and it uses this to figure out the list of projects in the workspace
-that can be affected by this change. It then runs the `run-many` command with that list.
+When you run `nx affected -t test`, Nx identifies the files changed in your PR and follows their project dependencies and imports to determine which projects the change can affect. It then runs the `run-many` command with that list.
 
 For instance, if my PR changes `lib`, and I then run `nx affected -t test`, Nx figures out that `app1` and `app2`
 depend on `lib`, so it will invoke `nx run-many -t test -p app1 app2 lib`.
