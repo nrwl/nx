@@ -110,18 +110,15 @@ The `configurations` property provides extra sets of values that will be merged 
 You can select a configuration like this: `nx build mylib --configuration=production`
 or `nx run mylib:build:production`.
 
-The following code snippet shows how the executor options get constructed:
+A configuration starts with the target's `options` and overrides any values it specifies. Command-line arguments override both.
 
-```javascript
-require(`@nx/jest`).executors['jest']({
-  ...options,
-  ...selectedConfiguration,
-  ...commandLineArgs,
-}); // Pseudocode
+For example, if `options` sets `"sourceMap": true` and the `production` configuration sets `"sourceMap": false`, running:
+
+```shell
+nx build mylib --configuration=production
 ```
 
-The selected configuration adds/overrides the default options, and the provided command line args add/override the
-configuration options.
+uses `"sourceMap": false`. Passing `--sourceMap=true` overrides it again for that run.
 
 ### Default configuration
 
@@ -150,3 +147,10 @@ For example, running e2e tests for multiple environments. By default it would ma
 
 When running `nx e2e my-app-e2e`, the _dev_ configuration will be used. In this case using the local dev server for `my-app`.
 You can always run the other configurations by explicitly providing the configuration i.e. `nx e2e my-app-e2e --configuration=qa` or `nx run my-app-e2e:e2e:qa`
+
+
+## Next steps
+
+- [Run tasks](/docs/features/run-tasks) across your workspace.
+- [Configure projects and targets](/docs/reference/project-configuration).
+- [Create a local executor](/docs/kb/local-executors) when you need custom task behavior.
