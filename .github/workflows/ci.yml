@@ -21,6 +21,8 @@ env:
 jobs:
   main-linux:
     runs-on: ubuntu-latest
+    outputs:
+      segfault-cores: ${{ steps.collect-segfault-cores.outputs.cores-found }}
     env:
       NX_BATCH_MODE: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
@@ -45,7 +47,9 @@ jobs:
 
       - name: Set verbose logging from debug mode
         if: runner.debug == '1'
-        run: echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+        run: |
+          echo "NX_VERBOSE_LOGGING=true" >> "$GITHUB_ENV"
+          echo "SEGFAULT_DIAGNOSTICS_LOG=true" >> "$GITHUB_ENV"
 
       - name: Fetch Master
         run: git fetch origin master:master
@@ -92,8 +96,40 @@ jobs:
         run:
           pnpm nx report
 
+      - name: Enable core dumps for segfault diagnostics
+        # Diagnostics-only precondition; it must never be what turns a green
+        # build red.
+        continue-on-error: true
+        run: |
+          sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+          # ubuntu-latest installs systemd-coredump, not apport, so the default
+          # handler does keep cores (retrievable with `coredumpctl`). It is
+          # overridden anyway because systemd-coredump drops anything over its
+          # ProcessSizeMax/ExternalSizeMax caps, and the node cores this step is
+          # hunting run to hundreds of MB. A plain file pattern keeps them whole
+          # and puts them where "Collect segfault cores" can glob them without
+          # root. %s records the signal, so the artifact can say which one fired
+          # instead of assuming SIGSEGV.
+          sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p.%s'
+          # RLIMIT_CORE is per-process and fixed at fork, so the daemon spawned
+          # by "Nx Report" above is still capped at 0 and would never dump — and
+          # the nx commands in the next step reuse it rather than re-forking it.
+          # Stop it here so the first nx command below respawns it inside the
+          # raised limit.
+          pnpm nx daemon --stop
+
       - name: Run Checks/Lint/Test/Build
         run: |
+          # Intermittent SIGSEGV kills of nx clients have been observed in this
+          # step; keep cores so "Collect segfault cores" can capture a native
+          # backtrace. Two caveats worth knowing before reading a green run as
+          # "no crash happened":
+          #   - RLIMIT_CORE only covers processes forked from this shell.
+          #   - Most work here is distributed to Nx Cloud agents, and a task
+          #     that crashes on an agent leaves its core on that machine, out of
+          #     this harness's reach.
+          # Diagnostics must not fail the step, hence the `|| true`.
+          ulimit -c unlimited || true
           pids=()
 
           pnpm nx record -- nx format:check &
@@ -115,9 +151,158 @@ jobs:
             wait "$pid"
           done
         timeout-minutes: 100
+      - name: Collect segfault cores
+        id: collect-segfault-cores
+        if: failure()
+        # gdb over multi-hundred-MB cores is unbounded, and there is no
+        # job-level timeout to fall back on.
+        timeout-minutes: 15
+        run: |
+          shopt -s nullglob
+          cores=(/tmp/cores/core.*)
+          if [ ${#cores[@]} -eq 0 ]; then
+            echo 'No core dumps found'
+            exit 0
+          fi
+
+          # Cores run to hundreds of MB each and /tmp is the same filesystem the
+          # e2e workspaces use, so discard everything past the symbolization
+          # budget up front rather than after gdb has already processed it.
+          max_cores=3
+          if [ ${#cores[@]} -gt "$max_cores" ]; then
+            echo "Found ${#cores[@]} cores; symbolizing the first $max_cores and discarding the rest"
+            for surplus in "${cores[@]:$max_cores}"; do
+              rm -f "$surplus"
+            done
+            cores=("${cores[@]:0:$max_cores}")
+          fi
+
+          if ! command -v gdb >/dev/null; then
+            # gdb is not on the ubuntu-latest image, so this install is the
+            # everyday path, not a fallback.
+            sudo apt-get update -q && sudo apt-get install -y -q gdb \
+              || echo 'gdb install failed'
+          fi
+          if ! command -v gdb >/dev/null; then
+            echo 'gdb is unavailable, so no core could be symbolized.' \
+              | tee -a /tmp/cores/backtraces.txt
+            echo "::error::Captured ${#cores[@]} core dump(s) but gdb could not be installed; no backtrace was produced"
+            rm -f /tmp/cores/core.*
+            exit 1
+          fi
+
+          # Only gdb's text output ever leaves the runner, so it must not carry
+          # memory contents:
+          #   * no `bt full` / `info locals` / `x/s` — they print data outright;
+          #   * `set print frame-arguments none`, because gdb renders a `char *`
+          #     argument as `0x... "the string"`, which is how a token in an
+          #     argv/env-adjacent frame would end up in the artifact. `scalars`
+          #     is NOT enough — a pointer is a scalar and is still dereferenced;
+          #   * passed with -iex, not -ex, so it is in force before the core is
+          #     loaded. gdb announces the crashing frame (with arguments) at load
+          #     time, i.e. before any -ex command runs.
+          # `bt` and `info threads` also get separate caps: sharing one `head`
+          # budget meant a deep stack silently swallowed the thread listing,
+          # which is the more useful half for a concurrency crash.
+          dump_section() { # $1 = label, $2 = gdb command, $3 = line cap
+            local out lines
+            out=$(gdb -q -batch -iex 'set print frame-arguments none' \
+              -ex 'set pagination off' -ex "$2" "$exe" "$c" 2>&1) || true
+            lines=$(printf '%s\n' "$out" | wc -l)
+            echo "----- $1 -----"
+            # `|| true` so that adding `defaults: run: shell: bash -eo pipefail`
+            # to this workflow later cannot turn head's SIGPIPE into a red step.
+            printf '%s\n' "$out" | head -n "$3" || true
+            if [ "$lines" -gt "$3" ]; then
+              echo "[truncated: $lines lines of output, showing the first $3]"
+            fi
+          }
+
+          for c in "${cores[@]}"; do
+            # core_pattern ends in %s, so the signal is the last field. Nothing
+            # else records it, and SIGABRT (node's OOM path) dumps under the same
+            # rlimit as SIGSEGV.
+            sig=${c##*.}
+            case "$sig" in
+              ''|*[!0-9]*) signal_desc='unknown signal' ;;
+              *) signal_desc="signal $sig ($(kill -l "$sig" 2>/dev/null || echo unknown))" ;;
+            esac
+            {
+              echo "===== $c — $signal_desc ====="
+              # `command -v node` resolves to the mise shim; symbolizing a core
+              # against the wrong executable yields garbage frames. Read the
+              # crashed process's real executable path from the core itself.
+              # A truncated core carries no execfn:, and this step also sees
+              # java/dotnet/gradle/vale cores — falling back to node there would
+              # print plausible-looking nonsense, so say so and skip instead.
+              exe=$(file -b "$c" | sed -n "s/.*execfn: '\([^']*\)'.*/\1/p")
+              if [[ "$exe" != /* ]] || [ ! -x "$exe" ]; then
+                echo "could not determine the executable for this core (execfn: '${exe}'); skipping symbolization"
+              else
+                echo "executable: $exe"
+                dump_section 'info threads' 'info threads' 100
+                dump_section 'bt' 'bt' 300
+              fi
+            } >> /tmp/cores/backtraces.txt
+            # The core itself never leaves the runner, so drop it as soon as gdb
+            # is done with it — that is also what keeps /tmp from filling.
+            rm -f "$c"
+          done
+
+          echo "Captured ${#cores[@]} core dump(s); symbolized backtraces are in the segfault-backtraces-linux artifact"
+          # Full gdb output is noisy; only mirror it into the job log when the
+          # run is re-run in debug mode, which sets this flag in "Set verbose
+          # logging from debug mode".
+          if [ "$SEGFAULT_DIAGNOSTICS_LOG" = 'true' ]; then
+            cat /tmp/cores/backtraces.txt
+          fi
+          # Written last, and only once something actually symbolized, so the
+          # notification can never announce a backtrace that does not exist.
+          if grep -q '^----- ' /tmp/cores/backtraces.txt; then
+            echo "cores-found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Captured ${#cores[@]} core dump(s) but none could be symbolized; see the segfault-backtraces-linux artifact"
+          fi
+
+      - name: Upload segfault backtraces
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: segfault-backtraces-linux
+          # Symbolized text only — never the core itself. A core is a full memory
+          # image of a process holding every secret in this job's environment
+          # (NX_CLOUD_ACCESS_TOKEN included), Actions artifacts inherit
+          # repository visibility, and upload-artifact has no ACL knob, so on a
+          # public repo an uploaded core is world-downloadable. backtraces.txt is
+          # symbols and addresses only; see the gdb flags in the step above.
+          path: /tmp/cores/backtraces.txt
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Fix CI
         run: pnpm nx fix-ci
         if: failure()
+
+  notify-segfault-capture:
+    name: Report captured segfault cores
+    runs-on: ubuntu-latest
+    needs: main-linux
+    # Fires only when "Collect segfault cores" symbolized at least one core.
+    # Skipped on forks, which cannot read the webhook secret — same guard the
+    # other Slack notify jobs in this repo use.
+    if: ${{ always() && needs.main-linux.outputs.segfault-cores == 'true' && github.repository_owner == 'nrwl' }}
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v11
+        with:
+          status: 'failure'
+          # Not "SIGSEGV": SIGABRT dumps under the same rlimit, and node's OOM
+          # path aborts. The captured signal is recorded per core in the artifact.
+          message_format: '{emoji} Core dump captured in main-linux (`${{ github.ref_name }}`) — backtraces in the `segfault-backtraces-linux` artifact'
+          notification_title: 'CI segfault catcher'
+          footer: '<{run_url}|View run + artifact> / Last commit <{commit_url}|{commit_sha}>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
   main-macos:
     runs-on: macos-latest
