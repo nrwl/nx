@@ -6,6 +6,7 @@ import {
   ignoresNpmConfigEnv,
   mergeNpmConfigEnv,
   nerfDart,
+  pnpmEnvVarsResolve,
   readEnvVar,
   readNpmConfigEnv,
 } from './utils';
@@ -102,6 +103,29 @@ describe('expandPnpmEnvVars', () => {
     expect(expandPnpmEnvVars('\\${TOKEN}', { TOKEN: 'secret' })).toBe(
       '\\${TOKEN}'
     );
+  });
+});
+
+describe('pnpmEnvVarsResolve', () => {
+  it('answers true for a value with nothing to resolve', () => {
+    expect(pnpmEnvVarsResolve('plain', {})).toBe(true);
+  });
+
+  it('answers false only for a reference pnpm finds nothing for', () => {
+    expect(pnpmEnvVarsResolve('${TOKEN}', { TOKEN: 'secret' })).toBe(true);
+    expect(pnpmEnvVarsResolve('${TOKEN}', {})).toBe(false);
+    // A fallback resolves, an empty value included.
+    expect(pnpmEnvVarsResolve('${TOKEN-fallback}', {})).toBe(true);
+    expect(pnpmEnvVarsResolve('${TOKEN}', { TOKEN: '' })).toBe(true);
+  });
+
+  it('answers false when any one of several references fails', () => {
+    expect(pnpmEnvVarsResolve('${A}-${B}', { A: 'a', B: 'b' })).toBe(true);
+    expect(pnpmEnvVarsResolve('${A}-${B}', { A: 'a' })).toBe(false);
+  });
+
+  it('ignores an escaped \\${VAR}, which pnpm never resolves either', () => {
+    expect(pnpmEnvVarsResolve('\\${TOKEN}', {})).toBe(true);
   });
 });
 
