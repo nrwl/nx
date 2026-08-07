@@ -19,6 +19,7 @@ import {
   SYNTHETIC_EXECUTOR,
   SYNTHETIC_PLUGIN_PATH,
   type FixtureContext,
+  type SyntheticPluginOptions,
 } from './executor-to-plugin-migrator.test-utils';
 import type { ExpandedPluginConfiguration } from 'nx/src/devkit-exports';
 
@@ -332,7 +333,7 @@ describe('computeResidualByProject (Phase 2)', () => {
       undefined
     );
     const nxJson = readNxJson(ctx.tree);
-    const { inferredByRoot } = await inferOncePerOptionSet(
+    const { inferredTargetsByOptionSet } = await inferOncePerOptionSet(
       ctx.tree,
       plugin.pluginPath,
       plugin.createNodes,
@@ -344,9 +345,12 @@ describe('computeResidualByProject (Phase 2)', () => {
       ctx.tree,
       ctx.projectGraph,
       scope,
-      inferredByRoot,
+      inferredTargetsByOptionSet,
       nxJson
     );
+    const inferredByRoot = inferredTargetsByOptionSet.get(
+      scope.optionSetGroups[0].id
+    )!;
 
     // residual = only the non-inferred deviation (mode was not inferred; config
     // was deleted by the postTargetTransformer; cache/outputs match inferred).
@@ -374,6 +378,108 @@ describe('computeResidualByProject (Phase 2)', () => {
     }
   });
 
+  it('keeps inferred targets isolated when option sets infer the same target name', async () => {
+    ctx = setupFixture('residual-option-set-isolation');
+    const otherExecutor = '@acme/other:build';
+    const removeConfigOption = (target: any) => {
+      if (target.options) {
+        delete target.options.config;
+        if (Object.keys(target.options).length === 0) {
+          delete target.options;
+        }
+      }
+      return target;
+    };
+    const plugin = createSyntheticPlugin((root, targetName, options) => ({
+      ...defaultInferredTarget(root, targetName),
+      command: `acme-build-${options?.variant}`,
+      outputs: [`{projectRoot}/dist-${options?.variant}`],
+    }));
+
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'app1',
+      targetName: 'build',
+      executor: SYNTHETIC_EXECUTOR,
+      target: {
+        options: { config: SYNTHETIC_CONFIG_FILE },
+        cache: true,
+        outputs: ['{projectRoot}/dist-primary'],
+      },
+    });
+    addExecutorProject(ctx, {
+      name: 'app2',
+      root: 'app2',
+      targetName: 'build',
+      executor: otherExecutor,
+      target: {
+        options: { config: SYNTHETIC_CONFIG_FILE },
+        cache: true,
+        outputs: ['{projectRoot}/dist-secondary'],
+      },
+    });
+
+    const migrations: Array<{
+      executors: string[];
+      targetPluginOptionMapper: (
+        targetName: string
+      ) => Partial<SyntheticPluginOptions>;
+      postTargetTransformer: (target: any) => any;
+    }> = [
+      {
+        executors: [SYNTHETIC_EXECUTOR],
+        targetPluginOptionMapper: (targetName: string) => ({
+          targetName,
+          variant: 'primary',
+        }),
+        postTargetTransformer: removeConfigOption,
+      },
+      {
+        executors: [otherExecutor],
+        targetPluginOptionMapper: (targetName: string) => ({
+          targetName,
+          variant: 'secondary',
+        }),
+        postTargetTransformer: removeConfigOption,
+      },
+    ];
+    const scope = collectMigrationScope<SyntheticPluginOptions>(
+      ctx.tree,
+      ctx.projectGraph,
+      migrations,
+      { targetName: 'build' },
+      undefined,
+      undefined
+    );
+    expect(scope.optionSetGroups).toHaveLength(2);
+
+    const nxJson = readNxJson(ctx.tree);
+    const { inferredTargetsByOptionSet } = await inferOncePerOptionSet(
+      ctx.tree,
+      plugin.pluginPath,
+      plugin.createNodes,
+      undefined,
+      nxJson,
+      scope
+    );
+    const residualByProject = await computeResidualByProject(
+      ctx.tree,
+      ctx.projectGraph,
+      scope,
+      inferredTargetsByOptionSet,
+      nxJson
+    );
+
+    expect(residualByProject.get('app1').get('build').residual).toEqual({});
+    expect(residualByProject.get('app2').get('build').residual).toEqual({});
+    expect(
+      residualByProject.get('app1').get('build').baselineFinal.options.command
+    ).toBe('acme-build-primary');
+    expect(
+      residualByProject.get('app2').get('build').baselineFinal.options.command
+    ).toBe('acme-build-secondary');
+  });
+
   it('residual equals what a single-project migration writes into project.json', async () => {
     // In single-project (`--project`) mode nothing is hoisted, so the full
     // residual stays in project.json — the byte-identical guarantee.
@@ -398,7 +504,7 @@ describe('computeResidualByProject (Phase 2)', () => {
       undefined
     );
     const nxJson = readNxJson(ctx.tree);
-    const { inferredByRoot } = await inferOncePerOptionSet(
+    const { inferredTargetsByOptionSet } = await inferOncePerOptionSet(
       ctx.tree,
       plugin.pluginPath,
       plugin.createNodes,
@@ -410,7 +516,7 @@ describe('computeResidualByProject (Phase 2)', () => {
       ctx.tree,
       ctx.projectGraph,
       scope,
-      inferredByRoot,
+      inferredTargetsByOptionSet,
       nxJson
     );
     const expectedResidual = structuredClone(

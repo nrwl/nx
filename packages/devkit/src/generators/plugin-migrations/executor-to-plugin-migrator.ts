@@ -68,6 +68,8 @@ type MigrationDefinition<T> = {
  * responsible for producing.
  */
 interface InferenceOptionSet<T> {
+  /** Stable id used to keep inference results isolated by option set. */
+  id: number;
   /** Raw mapper output — plugin defaults are never applied to inference sets. */
   options: Partial<T>;
   targetNames: Set<string>;
@@ -77,6 +79,7 @@ interface ExecutorScope<T> {
   executor: string;
   migration: MigrationDefinition<T>;
   targetAndProjects: Map<string, Set<string>>;
+  inferenceOptionSetIdsByTarget: Map<string, number>;
 }
 
 /**
@@ -147,6 +150,7 @@ export function collectMigrationScope<T>(
 
     for (const executor of migration.executors) {
       const targetAndProjects = new Map<string, Set<string>>();
+      const inferenceOptionSetIdsByTarget = new Map<string, number>();
       // Fresh per executor to preserve the previous per-migrator semantics
       // (each executor got its own migrator + skipped set).
       const skippedForExecutor = new Set<string>();
@@ -209,8 +213,6 @@ export function collectMigrationScope<T>(
         continue;
       }
 
-      executorScopes.push({ executor, migration, targetAndProjects });
-
       for (const [targetName, projs] of targetAndProjects) {
         if (!targetsToMigrate.has(targetName)) {
           targetsToMigrate.set(targetName, new Set());
@@ -224,11 +226,14 @@ export function collectMigrationScope<T>(
         const key = stableStringify(inferenceOptions);
         if (!optionSetGroupsByKey.has(key)) {
           optionSetGroupsByKey.set(key, {
+            id: optionSetGroupsByKey.size,
             options: inferenceOptions,
             targetNames: new Set(),
           });
         }
-        optionSetGroupsByKey.get(key).targetNames.add(targetName);
+        const optionSetGroup = optionSetGroupsByKey.get(key);
+        optionSetGroup.targetNames.add(targetName);
+        inferenceOptionSetIdsByTarget.set(targetName, optionSetGroup.id);
 
         // Invert to per-project registration options, mirroring the previous
         // `migrateProjects` inversion loop (target-grouped insertion order).
@@ -239,6 +244,13 @@ export function collectMigrationScope<T>(
           } as T);
         }
       }
+
+      executorScopes.push({
+        executor,
+        migration,
+        targetAndProjects,
+        inferenceOptionSetIdsByTarget,
+      });
     }
   }
 
@@ -276,6 +288,11 @@ export interface ResidualEntry {
 
 /** project name -> (target name -> residual entry) */
 export type ResidualByProject = Map<string, Map<string, ResidualEntry>>;
+export type InferredTargetsByRoot = Map<
+  string,
+  Map<string, TargetConfiguration>
+>;
+export type InferredTargetsByOptionSet = Map<number, InferredTargetsByRoot>;
 
 function stripInferredTarget(
   fullInferredTarget: TargetConfiguration
@@ -288,11 +305,15 @@ function stripInferredTarget(
 }
 
 function getFullInferredTarget(
-  inferredByRoot: Map<string, Map<string, TargetConfiguration>>,
+  inferredTargetsByOptionSet: InferredTargetsByOptionSet,
+  optionSetId: number,
   projectRoot: string,
   targetName: string
 ): TargetConfiguration {
-  const inferredTarget = inferredByRoot.get(projectRoot)?.get(targetName);
+  const inferredTarget = inferredTargetsByOptionSet
+    .get(optionSetId)
+    ?.get(projectRoot)
+    ?.get(targetName);
   if (!inferredTarget) {
     throw new Error(
       `The nx plugin did not find a project inside ${projectRoot}. File an issue at https://github.com/nrwl/nx with information about your project structure.`
@@ -313,7 +334,7 @@ export async function computeResidualByProject<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
   scope: MigrationScope<T>,
-  inferredByRoot: Map<string, Map<string, TargetConfiguration>>,
+  inferredTargetsByOptionSet: InferredTargetsByOptionSet,
   nxJson: NxJsonConfiguration,
   projectConfigsByName: Map<string, ProjectConfiguration> = getProjects(tree)
 ): Promise<ResidualByProject> {
@@ -328,10 +349,18 @@ export async function computeResidualByProject<T>(
     );
 
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
+      const optionSetId =
+        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
+      if (optionSetId === undefined) {
+        throw new Error(
+          `Could not find an inference option set for target "${targetName}".`
+        );
+      }
       for (const projectName of projectNames) {
         const root = projectGraph.nodes[projectName].data.root;
         const fullInferredTarget = getFullInferredTarget(
-          inferredByRoot,
+          inferredTargetsByOptionSet,
+          optionSetId,
           root,
           targetName
         );
@@ -900,11 +929,11 @@ export async function migrateProjectExecutorsToPluginV1<T>(
 /**
  * Phase 1 — Infer (once per distinct option set). Runs a whole-workspace
  * inference per distinct plugin-option set (usually one) instead of once per
- * target and once per project. Builds `inferredByRoot` (project root -> target
- * name -> FULL inferred target; residual computation strips `command` /
- * `options.cwd` at the point of use) that every later phase reads from, plus
- * the matched config files owned by an inferred project root (used for
- * analytic include coverage).
+ * target and once per project. Builds `inferredTargetsByOptionSet` (option set
+ * id -> project root -> target name -> FULL inferred target; residual
+ * computation strips `command` / `options.cwd` at the point of use) that every
+ * later phase reads from, plus the matched config files owned by an inferred
+ * project root (used for analytic include coverage).
  */
 export async function inferOncePerOptionSet<T>(
   tree: Tree,
@@ -914,20 +943,22 @@ export async function inferOncePerOptionSet<T>(
   nxJson: NxJsonConfiguration,
   scope: MigrationScope<T>
 ): Promise<{
-  inferredByRoot: Map<string, Map<string, TargetConfiguration>>;
+  inferredTargetsByOptionSet: InferredTargetsByOptionSet;
   matchedConfigFiles: string[];
 }> {
-  const inferredByRoot = new Map<string, Map<string, TargetConfiguration>>();
+  const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
   const rawMatchedFiles = new Set<string>();
   const inferredRoots = new Set<string>();
 
   if (scope.optionSetGroups.length === 0) {
-    return { inferredByRoot, matchedConfigFiles: [] };
+    return { inferredTargetsByOptionSet, matchedConfigFiles: [] };
   }
 
   global.NX_GRAPH_CREATION = true;
   try {
     for (const group of scope.optionSetGroups) {
+      const inferredByRoot: InferredTargetsByRoot = new Map();
+      inferredTargetsByOptionSet.set(group.id, inferredByRoot);
       const result = await getCreateNodesResultsForPlugin(
         tree,
         { plugin: pluginPath, options: group.options },
@@ -983,7 +1014,7 @@ export async function inferOncePerOptionSet<T>(
     roots.some((root) => isFileUnderRoot(file, root))
   );
 
-  return { inferredByRoot, matchedConfigFiles };
+  return { inferredTargetsByOptionSet, matchedConfigFiles };
 }
 
 /** Whether `file` (workspace-relative) belongs to project root `root`. */
@@ -1345,14 +1376,15 @@ async function migrateProjects<T>(
 
   // Phase 1 — Infer (once per distinct option set) for the whole workspace.
   const nxJson = readNxJson(tree);
-  const { inferredByRoot, matchedConfigFiles } = await inferOncePerOptionSet(
-    tree,
-    pluginPath,
-    createNodes,
-    createNodesV2,
-    nxJson,
-    scope
-  );
+  const { inferredTargetsByOptionSet, matchedConfigFiles } =
+    await inferOncePerOptionSet(
+      tree,
+      pluginPath,
+      createNodes,
+      createNodesV2,
+      nxJson,
+      scope
+    );
 
   // Phase 2 — Per-project residual (in-memory, no re-inference). Also captures
   // `baselineFinal` (the equivalence oracle consumed in Phase 4).
@@ -1360,7 +1392,7 @@ async function migrateProjects<T>(
     tree,
     projectGraph,
     scope,
-    inferredByRoot,
+    inferredTargetsByOptionSet,
     nxJson,
     projectConfigsByName
   );
