@@ -5,7 +5,8 @@ import { readYamlFile } from '../fileutils';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
-  expandEnvVars,
+  escapeNpmEnvExpr,
+  expandYarnEnvVars,
   getPackageScope,
   nerfDart,
   readEnvVar,
@@ -128,6 +129,13 @@ export function getYarnClassicSpawnRegistryEnv(
   // yarn tilde-expands paths against userHomeDir.default (the primary home).
   resolveOptions(env, npmrcChain, yarnrcChain, root, primary.dir);
   resolveAuth(env, npmrcChain, scope, authRegistry);
+  // Everything above is what yarn itself ends up with: an .npmrc value with its
+  // own escape rule applied, and a .yarnrc one it never env-replaces at all.
+  // Both can still hold a `${VAR}` the spawned npm would resolve, so escape
+  // them back into the text npm hands on unchanged.
+  for (const [key, value] of Object.entries(env)) {
+    env[key] = escapeNpmEnvExpr(value);
+  }
   return env;
 }
 
@@ -630,13 +638,13 @@ function toYarnValueMap(
   if (!map) {
     return null;
   }
-  // yarn env-replaces `${VAR}` in .npmrc values itself, so expand here rather
-  // than leaving the spawned npm to apply its own grammar to what we bridge.
+  // yarn env-replaces `${VAR}` in .npmrc values itself, and with a grammar of
+  // its own, so expand here rather than leaving the spawned npm to apply its.
   // The ini reader yields strings; coercing the bare booleans lines these values
   // up with the .yarnrc side.
   const result = new Map<string, YarnValue>();
   for (const [key, value] of map) {
-    result.set(key, normalizeYarnConfigValue(expandEnvVars(value)));
+    result.set(key, normalizeYarnConfigValue(expandYarnEnvVars(value)));
   }
   return result;
 }

@@ -1096,6 +1096,64 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
   });
 
+  describe('env references, which yarn expands with a grammar of its own', () => {
+    const ANCESTOR = dirname(ROOT);
+
+    beforeEach(() => {
+      process.env.YC_TEST_TOKEN = 'yc-token';
+    });
+    afterEach(() => {
+      delete process.env.YC_TEST_TOKEN;
+      delete process.env.YC_TEST_EMPTY;
+    });
+
+    it('expands one in an .npmrc only yarn reads', () => {
+      files[`${ANCESTOR}/.npmrc`] =
+        '//reg-a.example.com/:_authToken=${YC_TEST_TOKEN}\nalways-auth=true\nregistry=https://reg-a.example.com/\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'yc-token',
+      });
+    });
+
+    it('keeps every backslash of an odd run, unlike npm, and escapes it back', () => {
+      // yarn returns the whole match for an odd run, backslash included, so the
+      // credential it sends carries one. npm halves the run it receives, which
+      // is what the escape here is sized for.
+      files[`${ANCESTOR}/.npmrc`] =
+        '//reg-a.example.com/:_authToken=\\${YC_TEST_TOKEN}\nalways-auth=true\nregistry=https://reg-a.example.com/\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': '\\\\\\${YC_TEST_TOKEN}',
+      });
+    });
+
+    it('drops every backslash of an even run, where npm keeps half', () => {
+      // Four in the file, since the ini reader in front of yarn's replacer
+      // halves them before it ever sees the run.
+      files[`${ANCESTOR}/.npmrc`] =
+        '//reg-a.example.com/:_authToken=\\\\\\\\${YC_TEST_TOKEN}\nalways-auth=true\nregistry=https://reg-a.example.com/\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'yc-token',
+      });
+    });
+
+    it('falls open on one it resolves nothing for, the way yarn aborts', () => {
+      files[`${ANCESTOR}/.npmrc`] = 'registry=https://${YC_TEST_UNSET}/\n';
+      expect(() => getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toThrow(
+        /Failed to replace env in config/
+      );
+    });
+
+    it('escapes one in a .yarnrc, which yarn never expands at all', () => {
+      files[`${ANCESTOR}/.yarnrc`] = 'registry "https://${YC_TEST_TOKEN}/"\n';
+      expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+        npm_config_registry: 'https://\\${YC_TEST_TOKEN}/',
+      });
+    });
+  });
+
   describe('reporting a credential yarn would not send', () => {
     // The overlay cannot stop npm reading the same .npmrc, so npm authenticates
     // on a registry yarn resolved but would have queried anonymously.

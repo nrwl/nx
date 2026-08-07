@@ -693,9 +693,12 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
         "npmAuthToken: '\\${NOT_A_VAR}'",
       ].join('\n')
     );
+    // Escaped again on the way out: berry sends the reference as text, and npm
+    // resolves one it receives, so the token would otherwise leave as whatever
+    // NOT_A_VAR happens to hold.
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
       npm_config_registry: 'https://reg-a.example.com/',
-      'npm_config_//reg-a.example.com/:_authToken': '${NOT_A_VAR}',
+      'npm_config_//reg-a.example.com/:_authToken': '\\${NOT_A_VAR}',
     });
   });
 
@@ -726,7 +729,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       ].join('\n')
     );
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.13.0')).toEqual({
-      npm_config_registry: '${_BERRY_TEST_REGISTRY}',
+      npm_config_registry: '\\${_BERRY_TEST_REGISTRY}',
     });
   });
 
