@@ -17,6 +17,13 @@ jest.mock('nx/src/devkit-internals', () => {
     detectFormatterInTree,
     formatFilesWithOxfmt,
     oxfmtConfigFiles,
+    // The ignore checkers landed in the same nx version as the formatter
+    // exports, so an nx missing one is missing all of them. Leaving these in
+    // would simulate a version that never shipped - and would hide that
+    // `formatFiles` reaches them on the fallback path.
+    createGitIgnoreChecker,
+    createOxfmtIgnoreChecker,
+    createPrettierIgnoreChecker,
     ...olderNx
   } = actual;
   return {
@@ -44,6 +51,12 @@ describe('formatFiles against an nx without the formatter exports', () => {
     const seen = require('nx/src/devkit-internals');
     expect(seen.detectFormatterInTree).toBeUndefined();
     expect(seen.formatFilesWithOxfmt).toBeUndefined();
+    // Asserted alongside the formatter exports so the two lists cannot drift -
+    // a mock that stripped only some of them would simulate a version of nx
+    // that never existed.
+    expect(seen.createGitIgnoreChecker).toBeUndefined();
+    expect(seen.createOxfmtIgnoreChecker).toBeUndefined();
+    expect(seen.createPrettierIgnoreChecker).toBeUndefined();
     expect(seen.isUsingPrettierInTree).toEqual(expect.any(Function));
   });
 

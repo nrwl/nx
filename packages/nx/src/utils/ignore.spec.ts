@@ -2,6 +2,7 @@ import { createTree } from '../generators/testing-utils/create-tree';
 import {
   createGitIgnoreChecker,
   createIgnoreChainResolver,
+  createOxfmtIgnoreChecker,
   createPrettierIgnoreChecker,
   isIgnoredByChain,
   posixDirname,
@@ -274,9 +275,44 @@ describe('the ignore checkers', () => {
     });
   });
 
+  describe('createOxfmtIgnoreChecker', () => {
+    it('reads .gitignore and .prettierignore, not .nxignore', () => {
+      const oxfmt = createOxfmtIgnoreChecker(
+        treeWith({
+          '.gitignore': 'a.ts\n',
+          '.prettierignore': 'b.ts\n',
+          '.nxignore': 'c.ts\n',
+        })
+      );
+
+      expect(oxfmt.isIgnoredFile('a.ts')).toBe(true);
+      expect(oxfmt.isIgnoredFile('b.ts')).toBe(true);
+      expect(oxfmt.isIgnoredFile('c.ts')).toBe(false);
+    });
+
+    // The one axis oxfmt differs from prettier on, measured against both CLIs.
+    it('cascades, unlike prettier', () => {
+      const oxfmt = createOxfmtIgnoreChecker(
+        treeWith({ 'apps/foo/.prettierignore': 'nested.ts\n' })
+      );
+
+      expect(oxfmt.isIgnoredFile('apps/foo/nested.ts')).toBe(true);
+      expect(oxfmt.isIgnoredFile('apps/bar/nested.ts')).toBe(false);
+    });
+
+    it('keeps the files separate, so .prettierignore cannot re-include', () => {
+      const oxfmt = createOxfmtIgnoreChecker(
+        treeWith({ '.gitignore': 'a.ts\n', '.prettierignore': '!a.ts\n' })
+      );
+
+      expect(oxfmt.isIgnoredFile('a.ts')).toBe(true);
+    });
+  });
+
   it.each([
     ['git', createGitIgnoreChecker],
     ['prettier', createPrettierIgnoreChecker],
+    ['oxfmt', createOxfmtIgnoreChecker],
   ])('%s always ignores the hardcoded directories', (_name, create) => {
     const checker = create(treeWith({ '.gitignore': '!node_modules\n' }));
 

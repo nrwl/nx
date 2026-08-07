@@ -9,6 +9,7 @@ import { readFileIfExisting } from '../fileutils';
 import {
   createIgnoreChainResolver,
   isIgnoredByChain,
+  OXFMT_IGNORE_OPTIONS,
   type ScopedIgnoreMatcher,
 } from '../ignore';
 import { parseJson } from '../json';
@@ -943,12 +944,16 @@ export async function formatFilesWithOxfmt(
     workspaceRoot,
     seedConfig ?? findOxfmtConfigInBatch(files)
   );
-  // oxfmt honours `.prettierignore` as well as `.gitignore` - measured against
-  // its CLI, and part of being a drop-in for prettier.
+  // The same values the generator side binds, read from the same constant so
+  // the two cannot drift: oxfmt honours `.prettierignore` as well as
+  // `.gitignore` (measured against its CLI, and part of being a drop-in for
+  // prettier), and keeps one matcher per file rather than merging them, so a
+  // `!` in one cannot re-include what the other excluded.
   const resolveIgnores = createIgnoreChainResolver(
     (relativePath) =>
       readFileIfExisting(path.join(workspaceRoot, relativePath)),
-    ['.gitignore', '.prettierignore']
+    OXFMT_IGNORE_OPTIONS.filenames,
+    OXFMT_IGNORE_OPTIONS.merge
   );
   const resolveEditorConfig = createEditorConfigResolver();
 
