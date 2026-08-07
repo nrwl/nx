@@ -3861,6 +3861,132 @@ importers:
       expect(result).not.toContain('linked-peer@');
     });
 
+    it('keeps the resolved edges of a local-path peer the prune already carries', () => {
+      // The app depends on the vendored directory directly and mylib
+      // peer-depends on it, so the peer backfill hits a target the prune
+      // already carries. The synthesized entry has no dependency edges, so
+      // letting it win drops lodash from the vendored package's install. The
+      // vendored path sorts before the shipped directory's own name, which is
+      // what decides which of the two colliding keys survives relocation.
+      vol.fromJSON({
+        '/virtual/libs/mylib/package.json': JSON.stringify({
+          name: 'mylib',
+          version: '1.0.0',
+          peerDependencies: { 'dir-peer': 'file:../../libs/vendor/dir-peer' },
+        }),
+        '/virtual/libs/vendor/dir-peer/package.json': JSON.stringify({
+          name: 'dir-peer',
+          version: '1.0.0',
+          dependencies: { lodash: '^4.17.21' },
+        }),
+      });
+
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      mylib:
+        specifier: workspace:*
+        version: link:libs/mylib
+      dir-peer:
+        specifier: file:../../libs/vendor/dir-peer
+        version: file:libs/vendor/dir-peer
+
+  libs/mylib: {}
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-lodash}
+
+  dir-peer@file:libs/vendor/dir-peer:
+    resolution: {directory: libs/vendor/dir-peer, type: directory}
+    version: 1.0.0
+
+snapshots:
+
+  lodash@4.17.21: {}
+
+  dir-peer@file:libs/vendor/dir-peer:
+    dependencies:
+      lodash: 4.17.21`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          lodash: '^4.17.21',
+          mylib: 'workspace:*',
+          'dir-peer': 'file:../../libs/vendor/dir-peer',
+        },
+      };
+
+      const graph = makeGraph(
+        [{ projectName: 'mylib', packageName: 'mylib', root: 'libs/mylib' }],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-lodash',
+            },
+          },
+          'npm:dir-peer': {
+            type: 'npm',
+            name: 'npm:dir-peer',
+            data: {
+              version: 'file:libs/vendor/dir-peer',
+              packageName: 'dir-peer',
+              hash: 'sha512-dirpeer',
+            },
+          },
+        } as any
+      );
+
+      const prunedGraph = pruneProjectGraph(
+        graph,
+        packageJson,
+        undefined,
+        'pnpm'
+      );
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      const { load } = require('@zkochan/js-yaml');
+      const parsed = load(result) as {
+        packages: Record<string, unknown>;
+        snapshots: Record<string, unknown>;
+      };
+      // The vendored directory ships under the relocated key alone...
+      expect(Object.keys(parsed.packages)).toEqual([
+        'dir-peer@file:local_path_modules/libs/vendor/dir-peer',
+        'lodash@4.17.21',
+        'mylib@file:workspace_modules/mylib',
+      ]);
+      // ...and keeps the edges pnpm resolved for it.
+      expect(
+        parsed.snapshots[
+          'dir-peer@file:local_path_modules/libs/vendor/dir-peer'
+        ]
+      ).toEqual({ dependencies: { lodash: '4.17.21' } });
+    });
+
     it('backfills a module local-path tarball peer with a tarball package entry', () => {
       // A file: peer pointing at a packed tarball synthesizes a tarball
       // resolution instead of a directory one; integrity is optional for a
