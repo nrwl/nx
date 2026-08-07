@@ -1,6 +1,6 @@
 ---
 title: Add Language Support to Nx
-description: 'Build an Nx plugin that brings multi-language support to your workspace, creating projects, tasks, and dependencies from configuration files, with Python and uv as the worked example.'
+description: 'Build an Nx plugin that brings multi-language support to your workspace, creating projects, tasks, and dependencies from configuration files, using Python and uv as the example.'
 sidebar:
   order: 1
 filter: 'type:Guides'
@@ -8,17 +8,32 @@ topics:
   - 'Extending Nx'
 ---
 
-Nx plugins package knowledge about a tool or toolchain so every project doesn't need to recreate the same integration.
+Nx plugins package knowledge about a toolchain so every project doesn't need to recreate the same integration.
 A plugin can contribute projects and tasks to the [project graph](/docs/features/explore-graph), dependencies between projects, [code generators](/docs/features/generate-code), and migrations.
 
-This guide builds the graph side of a plugin, the part that adds [multi-language support](/docs/features/multi-language-support) to a workspace:
+{% aside type="note" title="You don't need a plugin to get started" %}
+A [`project.json`](/docs/reference/project-configuration) file configures projects and tasks for any language without a plugin. A plugin lets Nx read the toolchain configuration files you already maintain instead.
+{% /aside %}
 
-1. Declare a glob for the configuration files that mark a project (for example `**/pyproject.toml`).
-2. Turn each matching file into a project with tasks (`createNodes`).
-3. Connect projects with dependencies read from those files (`createDependencies`).
+{% llm_copy_prompt title="Let an AI agent build the plugin" %}
+Build an Nx plugin that adds support for my toolchain to this workspace, following the structure below.
 
-The worked example is a plugin for Python projects managed with [uv](https://docs.astral.sh/uv/).
-The same structure applies to any toolchain, so substitute your language's manifest and commands as you follow along.
+1. Ask me which toolchain to support and which manifest file marks a project (for example `pyproject.toml`, `go.mod`, `Cargo.toml`).
+2. Generate the plugin with `npx nx add @nx/plugin` and `npx nx g plugin packages/<plugin-name>`.
+3. Export `createNodes` from the plugin entry point: glob the manifest, and for each match return a project with cacheable targets that run the toolchain's own commands.
+4. Export `createDependencies`: map dependency declarations in the manifests to workspace projects and emit static dependencies.
+5. Register the plugin in `nx.json`, then verify with `NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false nx show project <project-name> --json` and `nx graph`.
+
+Page: {pageUrl}
+{% /llm_copy_prompt %}
+
+A plugin that adds [multi-language support](/docs/features/multi-language-support) to a workspace does three things:
+
+1. Declares a glob for the configuration files that mark a project (for example `**/pyproject.toml`).
+2. Turns each matching file into a project with tasks (`createNodes`).
+3. Connects projects with dependencies read from those files (`createDependencies`).
+
+The examples below use Python projects managed with [uv](https://docs.astral.sh/uv/), but the same structure applies to any toolchain, so substitute your manifest and commands as you follow along.
 
 ## Set up a plugin
 
@@ -30,7 +45,7 @@ Scaffold one with:
 
 ```shell
 npx nx add @nx/plugin
-npx nx g plugin tools/nx-uv
+npx nx g plugin packages/nx-uv
 ```
 
 {% /tabitem %}
@@ -42,6 +57,34 @@ npx create-nx-plugin nx-uv
 
 {% /tabitem %}
 {% /tabs %}
+
+The plugin entry point exports the two functions, each tied to the glob and options you'll fill in over the next sections:
+
+```ts
+// packages/nx-uv/src/index.ts
+import { CreateDependencies, CreateNodes } from '@nx/devkit';
+
+// Options users can set in nx.json
+export interface UvPluginOptions {
+  testTargetName?: string;
+}
+
+// A tuple of the file glob and a function that creates projects and tasks
+export const createNodes: CreateNodes<UvPluginOptions> = [
+  '**/pyproject.toml',
+  async (configFiles, options, context) => {
+    // Covered in "Create projects and tasks"
+  },
+];
+
+// Connects projects, reading the same configuration files
+export const createDependencies: CreateDependencies<UvPluginOptions> = (
+  options,
+  context
+) => {
+  // Covered in "Create dependencies between projects"
+};
+```
 
 Register the plugin in `nx.json` so Nx calls it when computing the project graph:
 
@@ -59,6 +102,7 @@ Register the plugin in `nx.json` so Nx calls it when computing the project graph
 }
 ```
 
+The `plugin` string must match the `name` in the plugin's `package.json`, so a scoped name like `@acme/nx-uv` works the same way.
 The `options` object is passed to both functions, and its shape is yours to define.
 First-party plugins use it to let users rename the targets the plugin creates.
 
@@ -86,7 +130,7 @@ For each file, return the project it defines: the project root, a name, and the 
 Wrap your per-file logic in `createNodesFromFiles`, which handles fanning out over the batch and error reporting for you:
 
 ```ts
-// tools/nx-uv/src/index.ts
+// packages/nx-uv/src/index.ts
 import {
   createNodesFromFiles,
   CreateNodes,
@@ -96,10 +140,6 @@ import {
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parse } from 'smol-toml'; // any TOML parser works
-
-export interface UvPluginOptions {
-  testTargetName?: string;
-}
 
 export const createNodes: CreateNodes<UvPluginOptions> = [
   '**/pyproject.toml',
@@ -157,11 +197,11 @@ With this in place, `nx test <project-name>` runs pytest for any project that ha
 
 A few things to know about the returned configuration:
 
-- **The config file is the project marker.** For language plugins, the manifest itself is enough proof of a project, so there's no need to check for `project.json` or `package.json` the way JS tooling plugins do. If a matched file turns out not to define a project, return `{}` for it.
-- **Targets are regular Nx targets.** `command`, `cache`, `inputs`, `outputs`, and `dependsOn` behave exactly as they do in `project.json`. Set `outputs` for tasks that produce files (for example `outputs: ['{projectRoot}/dist']` for a build task) so Nx can restore them from cache.
-- **Include the lockfile in `inputs`.** JS plugins list npm packages via `externalDependencies`. For other toolchains, the equivalent is hashing the lockfile (`uv.lock`, `go.sum`, `Cargo.lock`) so tasks re-run when dependency versions change.
+- **The config file is the project marker.** For language plugins, the manifest marks the project, so there's no need to check for `project.json` or `package.json` the way JS tooling plugins do. Return `{}` to skip creating a project for a matched file.
+- **Targets are regular Nx targets.** `command`, `cache`, `inputs`, `outputs`, and `dependsOn` behave exactly as they do in `project.json`. Paths must start with `{projectRoot}` or `{workspaceRoot}`, and set `outputs` for tasks that produce files so Nx can restore them from cache. See the [inputs reference](/docs/reference/inputs) for details.
+- **Consider the lockfile in `inputs`.** Hashing the lockfile (`uv.lock`, `go.sum`, `Cargo.lock`) re-runs tasks when dependency versions change, but any lockfile change busts the cache for every project. The built-in JS support avoids this by hashing only the external packages each project uses, which is worth copying if your lockfile churns often.
 - **Returned configuration is merged, not final.** Users can override anything your plugin infers by adding a `project.json` file to the project or `targetDefaults` in `nx.json`. Plugin-inferred values have the lowest priority.
-- **The `metadata` fields** show up in the project details view, which is where users debug what your plugin inferred.
+- **The `metadata` fields** show up in the project details view (`nx show project <project-name>`), which is where users debug what your plugin inferred.
 
 ## Create dependencies between projects
 
@@ -183,9 +223,8 @@ shared-utils = { workspace = true }
 Map each package name to the Nx project that declares it, then emit a dependency for every match:
 
 ```ts
-// tools/nx-uv/src/index.ts
+// packages/nx-uv/src/index.ts
 import {
-  CreateDependencies,
   DependencyType,
   RawProjectGraphDependency,
   validateDependency,
@@ -254,7 +293,7 @@ Check the results of your plugin directly:
 For automated coverage, call your functions directly in a unit test with a fixture directory as the workspace root, and snapshot the returned projects and dependencies:
 
 ```ts
-// tools/nx-uv/src/index.spec.ts
+// packages/nx-uv/src/index.spec.ts
 import { createNodes } from './index';
 
 const [, createNodesFn] = createNodes;
@@ -277,13 +316,7 @@ Plugins scaffolded with `create-nx-plugin` also include an e2e setup that publis
 
 Everything shown above comes from the public `@nx/devkit` entry point, which is stable and supports one major version of `nx` in either direction.
 First-party plugins also use a few lower-stability helpers from `@nx/devkit/internal`, mainly for caching computed targets to disk so graph computation stays fast in large workspaces.
-Those import paths can change between major versions, and Nx ships [automated migrations](/docs/features/automate-updating-dependencies) when they do.
-If your plugin needs to support a wide range of Nx versions, implement the equivalent behavior yourself, which amounts to a content hash plus a JSON file on disk.
+Some of these utilities will be promoted to the public API in the future, but for now they are subject to change between versions.
+If you need the behavior today, implement it yourself, which amounts to a content hash plus a JSON file on disk.
 
-## Next steps
-
-- Once your plugin works, make it fast: [write a performant project graph plugin](/docs/kb/performant-project-graph-plugins) covers the disk caching and batching patterns first-party plugins use.
-- [Create local generators](/docs/kb/local-generators) to scaffold new projects for your toolchain.
-- [Write migration generators](/docs/kb/migration-generators) to update configuration automatically when your plugin changes.
-- [Publish your plugin](/docs/kb/publish-plugin) to npm and the Nx plugin registry.
-- Browse the [Nx Devkit reference](/docs/reference/devkit) for the full API.
+Once your plugin works, continue with [write a performant project graph plugin](/docs/kb/performant-project-graph-plugins) for the disk caching and batching patterns first-party plugins use.
