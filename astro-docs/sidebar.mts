@@ -112,6 +112,10 @@ const learnGroups: SidebarItems = [
       },
       { label: 'Enhance your coding agent', link: 'features/enhance-ai' },
       {
+        label: 'Multi-language support',
+        link: 'features/multi-language-support',
+      },
+      {
         label: 'Code organization',
         collapsed: true,
         items: [
