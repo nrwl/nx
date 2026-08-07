@@ -130,6 +130,12 @@ import {
 
 import { getDaemonEnv } from './daemon-environment';
 
+/** A refused connect: the errno, and the path it was made against. */
+type ConnectRefusal = {
+  error: NodeJS.ErrnoException;
+  socketPath: string;
+};
+
 export type UnregisterCallback = () => void;
 export type ChangedFile = {
   path: string;
@@ -474,9 +480,9 @@ export class DaemonClient {
     // Wait for daemon server to be available before trying to reconnect
     let serverAvailable: boolean;
     try {
-      serverAvailable = await this.waitForServerToBeAvailable({
+      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      });
+      }));
     } catch (err) {
       // Version mismatch - pass error to callbacks so they can handle it
       clientLogger.log(
@@ -667,9 +673,9 @@ export class DaemonClient {
     // Wait for daemon server to be available before trying to reconnect
     let serverAvailable: boolean;
     try {
-      serverAvailable = await this.waitForServerToBeAvailable({
+      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      });
+      }));
     } catch (err) {
       // Version mismatch - pass error to callbacks so they can handle it
       clientLogger.log(
@@ -971,28 +977,42 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
-  async isServerAvailable(): Promise<boolean> {
+  /**
+   * The pre-start probe, returning why it failed rather than leaving it on the
+   * instance: `_daemonStatus` does not serialize `isServerAvailable`'s five
+   * public callers against `startDaemonIfNecessary`.
+   */
+  private async probeServer(): Promise<{
+    available: boolean;
+    refusal?: ConnectRefusal;
+  }> {
     return new Promise((resolve, reject) => {
       try {
         const socketPath = this.getSocketPath();
         if (!socketPath) {
-          resolve(false);
+          resolve({ available: false });
           return;
         }
         const socket = connect(socketPath, () => {
           socket.destroy();
-          resolve(true);
+          resolve({ available: true });
         });
-        socket.once('error', () => {
-          resolve(false);
+        socket.once('error', (err) => {
+          // The only place the errno for "the socket is there but refuses us"
+          // is produced, and the only thing separating it from "no daemon yet".
+          resolve({ available: false, refusal: { error: err, socketPath } });
         });
       } catch (err) {
         if (err instanceof VersionMismatchError) {
           reject(err); // Let version mismatch bubble up
         }
-        resolve(false);
+        resolve({ available: false });
       }
     });
+  }
+
+  async isServerAvailable(): Promise<boolean> {
+    return (await this.probeServer()).available;
   }
 
   private async startDaemonIfNecessary() {
@@ -1004,19 +1024,20 @@ export class DaemonClient {
       this._daemonStatus = DaemonStatus.CONNECTING;
 
       let daemonPid: number | null = null;
-      let serverAvailable: boolean;
+      let probe: { available: boolean; refusal?: ConnectRefusal };
       try {
-        serverAvailable = await this.isServerAvailable();
+        probe = await this.probeServer();
       } catch (err) {
         // Version mismatch - treat as server not available, start new one
         if (err instanceof VersionMismatchError) {
-          serverAvailable = false;
+          probe = { available: false };
         } else {
           throw err;
         }
       }
-      if (!serverAvailable) {
-        daemonPid = await this.startInBackground();
+      if (!probe.available) {
+        // Carried as a value so no other caller's probe can substitute for it.
+        daemonPid = await this.startInBackground(probe.refusal);
       }
       this.setUpConnection();
       this._daemonStatus = DaemonStatus.CONNECTED;
@@ -1079,6 +1100,10 @@ export class DaemonClient {
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
           error = daemonProcessException('The Daemon Server is not running');
+        } else if (isPermissionErrno(err as NodeJS.ErrnoException)) {
+          // The 0700 dir and 0600 socket mean the OS refuses this rather than the
+          // connect silently succeeding.
+          error = daemonPermissionException(socketPath, err.message);
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
           error = daemonProcessException(
             `A server instance had not been fully shut down. Please try running the command again.`
@@ -1108,9 +1133,9 @@ export class DaemonClient {
 
     let serverAvailable: boolean;
     try {
-      serverAvailable = await this.waitForServerToBeAvailable({
+      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      });
+      }));
     } catch (err) {
       if (err instanceof VersionMismatchError) {
         // New daemon has different version - reject with error so caller can handle
@@ -1160,10 +1185,16 @@ export class DaemonClient {
    */
   private async waitForServerToBeAvailable(options: {
     ignoreVersionMismatch: boolean;
-  }): Promise<boolean> {
+  }): Promise<{ available: boolean; refusal?: ConnectRefusal }> {
     clientLogger.log(
       `[Client] Waiting for server (max: ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts, ${WAIT_FOR_SERVER_CONFIG.delayMs}ms interval)`
     );
+
+    // Poll-scoped, not instance state: reconnect paths have their own flags, so
+    // several attempts can be in flight and a shared slot would let one report
+    // another's socket.
+    let stoppedOnRefusal = false;
+    let refusal: ConnectRefusal | undefined;
 
     const socket = await waitForSocketConnection(
       () => {
@@ -1182,19 +1213,34 @@ export class DaemonClient {
       {
         maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
         delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
+        onConnectError: (error, socketPath) => {
+          refusal = { error, socketPath };
+          // A refusal is not expected to become an acceptance, so polling the
+          // full 60s budget only delays the same answer. Not absolute:
+          // `server.ts` binds before it chmods to 0600, so under a umask that
+          // strips owner write a same-user connect can lose a microsecond race
+          // and see EACCES. That costs a specific error rather than a retry — a
+          // better trade than a 60s hang.
+          return (stoppedOnRefusal = isPermissionErrno(error));
+        },
       }
     );
 
     if (socket) {
       socket.destroy();
       clientLogger.log(`[Client] Server available`);
-      return true;
+      return { available: true };
     }
 
+    // Keyed on the early exit taken, not on whether an errno was recorded:
+    // every failed connect records one, including an ordinary cold start's
+    // ENOENT.
     clientLogger.log(
-      `[Client] Server not available after ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts`
+      stoppedOnRefusal
+        ? `[Client] Server refused the connection (${refusal?.error.code}), stopped polling`
+        : `[Client] Server not available after ${WAIT_FOR_SERVER_CONFIG.maxAttempts} attempts`
     );
-    return false;
+    return { available: false, refusal };
   }
 
   private envReflectionSent = false;
@@ -1310,7 +1356,14 @@ export class DaemonClient {
     }
   }
 
-  async startInBackground(): Promise<ChildProcess['pid']> {
+  /**
+   * @param probeRefusal what the caller's pre-start probe saw. The only evidence
+   *        when a daemon refuses us and then exits — the poll cannot reproduce it
+   *        once the process json is gone. `nx daemon --start` passes nothing.
+   */
+  async startInBackground(
+    probeRefusal?: ConnectRefusal
+  ): Promise<ChildProcess['pid']> {
     if (global.NX_PLUGIN_WORKER) {
       throw new Error(
         'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
@@ -1359,15 +1412,31 @@ export class DaemonClient {
     /**
      * Ensure the server is actually available to connect to via IPC before resolving
      */
-    const serverAvailable = await this.waitForServerToBeAvailable({
-      ignoreVersionMismatch: true,
-    });
-    if (serverAvailable) {
+    const { available, refusal: polled } =
+      await this.waitForServerToBeAvailable({ ignoreVersionMismatch: true });
+    if (available) {
       clientLogger.log(
         `[Client] Daemon server started, pid=${backgroundProcess.pid}`
       );
       return backgroundProcess.pid;
     } else {
+      // A permission refusal from either source wins, then the poll's errno,
+      // then the probe's. Recency alone would report a daemon's ENOENT over the
+      // EACCES the probe saw a moment earlier, losing the diagnosis.
+      const refusal =
+        [polled, probeRefusal].find((r) => r && isPermissionErrno(r.error)) ??
+        polled ??
+        probeRefusal;
+      if (refusal && isPermissionErrno(refusal.error)) {
+        // Reported here rather than as a generic startup failure, so it degrades
+        // without disabling the daemon until `nx reset`. Both operands come from
+        // the refusal: resolving a path here instead would throw once a daemon
+        // that failed to bind has unlinked its process json.
+        throw daemonPermissionException(
+          refusal.socketPath,
+          refusal.error.message
+        );
+      }
       throw daemonProcessException(
         'Failed to start or connect to the Nx Daemon process.'
       );
@@ -1417,25 +1486,69 @@ function nxJsonIsNotPresent() {
   return !hasNxJson(workspaceRoot);
 }
 
-function daemonProcessException(message: string) {
+/**
+ * EACCES and EPERM are the two errnos that mean the OS refused us rather than
+ * that nothing was listening. They need opposite remedies — a socket owned by
+ * someone else versus a sandbox refusing the connect syscall — but they share
+ * the property that retrying cannot change the answer.
+ */
+export function isPermissionErrno(error: NodeJS.ErrnoException): boolean {
+  return error?.code === 'EACCES' || error?.code === 'EPERM';
+}
+
+/**
+ * The operating system refused the connection. Most often the socket belongs to
+ * another user, which is the guarantee the owner-only socket directory buys —
+ * but a sandbox that denies unix-socket connects produces the same errno, so the
+ * message does not assert which. Either way it is an environment condition
+ * rather than a defect in Nx, and it deliberately does not
+ * carry `internalDaemonError`: that tag tells the user to file an issue and
+ * disables the daemon until `nx reset`, which would outlast the stale socket
+ * that caused it.
+ *
+ * It also skips the daemon log that `daemonProcessException` appends. The log
+ * belongs to *our* daemon; the process holding this socket is someone else's, so
+ * quoting it would describe an unrelated run.
+ */
+export function daemonPermissionException(socketPath: string, cause: string) {
+  const error = new Error(
+    [
+      `The operating system refused the connection to the Nx Daemon socket (${cause}).`,
+      '',
+      `Socket: ${socketPath}`,
+      '',
+      'Most often the socket belongs to a different user: a daemon left behind by running Nx under `sudo`, a different uid inside a container, or a working copy shared between accounts. If the socket is your own, a sandbox is refusing the connection instead.',
+      'If it belongs to another user, delete the socket above or set NX_SOCKET_DIR to a directory only your user can reach. If you are in a sandbox, allow unix sockets under the Nx socket root — in Claude Code a scoped `allowUnixSockets` only permits connecting, so starting a daemon there needs `allowAllUnixSockets: true`. See https://nx.dev/docs/kb/nx-sandbox-unix-sockets',
+    ].join('\n')
+  );
+  (error as any).daemonPermissionError = true;
+  return error;
+}
+
+/**
+ * Exported for testing: the `internalDaemonError` tag decides whether a daemon
+ * failure degrades to a daemonless graph build or aborts the command.
+ */
+export function daemonProcessException(message: string) {
+  // The log is an enrichment, not the classifier: it is absent on a first run,
+  // which is exactly when the daemon is most likely to fail to start.
+  let body = message;
   try {
     let log = readFileSync(DAEMON_OUTPUT_LOG_FILE).toString().split('\n');
     if (log.length > 20) {
       log = log.slice(log.length - 20);
     }
-    const error = new Error(
-      [
-        message,
-        '',
-        'Messages from the log:',
-        ...log,
-        '\n',
-        `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
-      ].join('\n')
-    );
-    (error as any).internalDaemonError = true;
-    return error;
-  } catch (e) {
-    return new Error(message);
-  }
+    body = [
+      message,
+      '',
+      'Messages from the log:',
+      ...log,
+      '\n',
+      `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
+    ].join('\n');
+  } catch {}
+
+  const error = new Error(body);
+  (error as any).internalDaemonError = true;
+  return error;
 }
