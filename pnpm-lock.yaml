@@ -215,10 +215,10 @@ catalogs:
       specifier: ^22.1.0
       version: 22.1.0
     '@typescript-eslint/type-utils':
-      specifier: ^8.0.0
+      specifier: ^8.58.0
       version: 8.59.0
     '@typescript-eslint/utils':
-      specifier: ^8.0.0
+      specifier: ^8.58.0
       version: 8.59.0
     angular-eslint:
       specifier: ^22.1.0
@@ -2641,6 +2641,9 @@ importers:
       confusing-browser-globals:
         specifier: ^1.0.9
         version: 1.0.11
+      eslint:
+        specifier: ^9.0.0 || ^10.0.0
+        version: 9.39.4(jiti@2.7.0)
       eslint-config-prettier:
         specifier: catalog:eslint
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
