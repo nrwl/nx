@@ -563,5 +563,10 @@
     "name": "@anarchitects/nx-typeorm",
     "description": "Nx plugin for TypeORM integration in Nx backend applications and libraries.",
     "url": "https://github.com/anarchitects/anarchitecture-plugins/tree/main/packages/typeorm"
+  },
+  {
+    "name": "@itssky/nx-sonar",
+    "url": "https://github.com/xItsSky/nx-sonar",
+    "description": "A Nx plugin that runs SonarQube or SonarCloud scans on any project in your workspace"
   }
 ]
