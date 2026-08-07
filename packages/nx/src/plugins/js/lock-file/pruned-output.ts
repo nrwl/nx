@@ -163,6 +163,31 @@ export function getPrunedPnpmInstallSettingsYaml(
   prunedLockfileContent?: string,
   precomputed?: PrunedPnpmConfig
 ): string | null {
+  const settings = getPrunedPnpmWorkspaceSettings(
+    workspaceRootPath,
+    prunedLockfileContent,
+    precomputed
+  );
+  if (settings === null) {
+    return null;
+  }
+  const { dump } = require('@zkochan/js-yaml');
+  // pnpm 9 rejects a pnpm-workspace.yaml without a `packages` field; an empty
+  // list is accepted by pnpm 9-11 without pulling any importer into the install.
+  return dump({ packages: [], ...settings });
+}
+
+/**
+ * The settings `getPrunedPnpmInstallSettingsYaml` emits, before serialization,
+ * so a caller can tell which of them the workspace actually declares. Null when
+ * the workspace declares none, or on a pnpm major that reads them from the
+ * emitted package.json instead.
+ */
+function getPrunedPnpmWorkspaceSettings(
+  workspaceRootPath: string,
+  prunedLockfileContent?: string,
+  precomputed?: PrunedPnpmConfig
+): Record<string, unknown> | null {
   // pnpm 11 was the first major to read these settings only from
   // pnpm-workspace.yaml; later majors keep that behavior. pnpm 10 and below
   // still read them from the emitted package.json, so nothing to carry.
@@ -213,13 +238,7 @@ export function getPrunedPnpmInstallSettingsYaml(
     settings.patchedDependencies =
       normalizePrunedPatchedDependencies(patchedDependencies);
   }
-  if (Object.keys(settings).length === 0) {
-    return null;
-  }
-  const { dump } = require('@zkochan/js-yaml');
-  // pnpm 9 rejects a pnpm-workspace.yaml without a `packages` field; an empty
-  // list is accepted by pnpm 9-11 without pulling any importer into the install.
-  return dump({ packages: [], ...settings });
+  return Object.keys(settings).length > 0 ? settings : null;
 }
 
 const pnpmMajorByWorkspaceRoot = new Map<string, number | null>();
@@ -1187,6 +1206,31 @@ export function getPrunedPnpmLocalPathArtifacts(
 }
 
 /**
+ * Whether the pruned lockfile references a non-workspace local path at all.
+ * Reads the same refs as `getPrunedPnpmLocalPathArtifacts` without walking the
+ * trees behind them, so a caller that only needs the answer neither lists every
+ * shipped file nor repeats that function's per-target warnings.
+ */
+function prunedLockfileReferencesLocalPaths(
+  prunedLockfileContent: string
+): boolean {
+  const parsed = parsePrunedLockfile(prunedLockfileContent);
+  if (!parsed) {
+    return false;
+  }
+  for (const snapshot of Object.values(parsed.packages ?? {})) {
+    if (snapshot?.resolution?.tarball?.startsWith('file:')) {
+      return true;
+    }
+    const directory = snapshot?.resolution?.directory;
+    if (directory && !isUnderWorkspaceModules(directory)) {
+      return true;
+    }
+  }
+  return collectPrunedLinkTargetDirs(parsed).length > 0;
+}
+
+/**
  * Fails the pruned build when a shipped local-path target has a required
  * dependency that will not be resolvable in the standalone deploy. Two shapes
  * are validated:
@@ -1377,9 +1421,15 @@ export function warnIncompletePrunedPnpmOutput(
   workspaceRootPath: string = workspaceRoot
 ): void {
   const missing: string[] = [];
+  // Keyed on the approvals themselves rather than on the emitted file, which a
+  // workspace declaring only patches still gets.
+  const workspaceSettings = getPrunedPnpmWorkspaceSettings(
+    workspaceRootPath,
+    lockFileContent
+  );
   if (
-    getPrunedPnpmInstallSettingsYaml(workspaceRootPath, lockFileContent) !==
-      null ||
+    workspaceSettings?.allowBuilds !== undefined ||
+    workspaceSettings?.supportedArchitectures !== undefined ||
     getPrunedPnpmPackageJsonBuildSettings(workspaceRootPath, lockFileContent)
   ) {
     missing.push(
@@ -1393,10 +1443,7 @@ export function warnIncompletePrunedPnpmOutput(
   ) {
     missing.push('the patch files its patchedDependencies declare');
   }
-  if (
-    getPrunedPnpmLocalPathArtifacts(workspaceRootPath, lockFileContent).length >
-    0
-  ) {
+  if (prunedLockfileReferencesLocalPaths(lockFileContent)) {
     missing.push('the vendored file:/link: dependencies it references');
   }
   if (missing.length === 0) {

@@ -6,6 +6,7 @@ import { stringifyPnpmLockfile } from './pnpm-parser';
 import {
   rewritePrunedLocalPathSpecifiers,
   validatePrunedLocalPathClosure,
+  warnIncompletePrunedPnpmOutput,
 } from './pruned-output';
 
 jest.mock('node:fs', () => ({
@@ -28,6 +29,7 @@ jest.mock('./pruned-output', () => ({
   ...jest.requireActual('./pruned-output'),
   rewritePrunedLocalPathSpecifiers: jest.fn(),
   validatePrunedLocalPathClosure: jest.fn(),
+  warnIncompletePrunedPnpmOutput: jest.fn(),
 }));
 jest.mock('../../../utils/output', () => ({
   output: { log: jest.fn(), error: jest.fn(), warn: jest.fn() },
@@ -64,8 +66,6 @@ describe('createLockFile', () => {
     expect(packageJson.pnpm).toEqual({ onlyBuiltDependencies: ['sharp'] });
   });
 
-  it('keeps the pnpm config when pruning falls back to the root lockfile', () => {
-    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
   it('drops an inherited patchedDependencies the pruned lockfile rescopes', () => {
     // The prune scopes the lockfile's patches to the packages that survive it
     // and rewrites their paths, so a manifest keeping the workspace's own set
@@ -84,6 +84,8 @@ describe('createLockFile', () => {
     expect(packageJson.pnpm).toBeUndefined();
   });
 
+  it('keeps the pnpm config when pruning falls back to the root lockfile', () => {
+    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
       throw new Error('prune failed');
     });
     const packageJson: PackageJson = {
