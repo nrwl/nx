@@ -19,10 +19,14 @@ jest.mock('../../utils/provenance', () => ({
     mockEnsurePackageHasProvenance(...args),
 }));
 
+// Both spawn helpers are mocked: the hand-off calls runNxArgvSync, and leaving
+// runNxSync live would let its fallback path spawn a real nx.
 const mockRunNxSync = jest.fn();
+const mockRunNxArgvSync = jest.fn();
 jest.mock('../../utils/child-process', () => ({
   ...jest.requireActual('../../utils/child-process'),
   runNxSync: (...args: unknown[]) => mockRunNxSync(...args),
+  runNxArgvSync: (...args: unknown[]) => mockRunNxArgvSync(...args),
 }));
 
 const mockRunInstall = jest.fn();
@@ -85,7 +89,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
 
   beforeEach(() => {
     mockAssertWorkspaceNx.mockReset().mockReturnValue(undefined);
-    mockRunNxSync.mockReset();
+    mockRunNxArgvSync.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     delete process.env.NX_MIGRATE_SKIP_INSTALL;
     jest.spyOn(output, 'log').mockImplementation(() => {});
@@ -116,9 +120,9 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
       expect(mockAssertWorkspaceNx).toHaveBeenCalledWith(
         expect.objectContaining({ argv })
       );
-      expect(mockRunNxSync).toHaveBeenCalledTimes(1);
+      expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
       expect(mockAssertWorkspaceNx.mock.invocationCallOrder[0]).toBeLessThan(
-        mockRunNxSync.mock.invocationCallOrder[0]
+        mockRunNxArgvSync.mock.invocationCallOrder[0]
       );
     });
 
@@ -139,7 +143,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
         mockAssertWorkspaceNx.mock.invocationCallOrder[0]
       );
       expect(mockAssertWorkspaceNx.mock.invocationCallOrder[0]).toBeLessThan(
-        mockRunNxSync.mock.invocationCallOrder[0]
+        mockRunNxArgvSync.mock.invocationCallOrder[0]
       );
     });
 
@@ -180,7 +184,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
       );
 
       expect(exitCode).toBe(1);
-      expect(mockRunNxSync).not.toHaveBeenCalled();
+      expect(mockRunNxArgvSync).not.toHaveBeenCalled();
     });
   });
 });
@@ -195,7 +199,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     mockResolveRunTarget.mockReset().mockResolvedValue('temp-cli');
     mockEnsurePackageHasProvenance.mockReset();
     mockResolvePackageVersion.mockReset().mockResolvedValue('23.2.0');
-    mockRunNxSync.mockReset();
+    mockRunNxArgvSync.mockReset();
     jest.spyOn(output, 'log').mockImplementation(() => {});
     jest.spyOn(output, 'warn').mockImplementation(() => {});
     jest.spyOn(output, 'error').mockImplementation(() => {});
@@ -255,10 +259,11 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
 
     expect(exitCode).toBe(0);
     expect(mockEnsurePackageHasProvenance).not.toHaveBeenCalled();
-    expect(mockRunNxSync).toHaveBeenCalledTimes(1);
-    expect(mockRunNxSync.mock.calls[0][0]).toBe(
-      '_migrate --run-migration=@nx/js:gen'
-    );
+    expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
+    expect(mockRunNxArgvSync.mock.calls[0][0]).toEqual([
+      '_migrate',
+      '--run-migration=@nx/js:gen',
+    ]);
   });
 
   it('neither installs the temp CLI nor runs the local nx when the router refuses', async () => {
@@ -270,6 +275,6 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
 
     expect(exitCode).toBe(1);
     expect(mockEnsurePackageHasProvenance).not.toHaveBeenCalled();
-    expect(mockRunNxSync).not.toHaveBeenCalled();
+    expect(mockRunNxArgvSync).not.toHaveBeenCalled();
   });
 });
