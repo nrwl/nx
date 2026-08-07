@@ -17,6 +17,7 @@ import {
   writeJsonFile,
 } from '../../../utils/fileutils';
 import { logger } from '../../../utils/logger';
+import type { Lockfile } from '@pnpm/lockfile-types';
 import type {
   PackageJson,
   PackageJsonDependencySection,
@@ -26,25 +27,63 @@ import { normalizePath } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { extractMainLockfileDocument } from './utils/pnpm-normalizer';
 
+type PnpmManifestConfigField = keyof NonNullable<PackageJson['pnpm']>;
+export type PnpmLockfileConfigField = keyof Lockfile | 'catalogs';
+
 /**
- * Drop the pnpm config fields (`overrides`, `ignoredOptionalDependencies`,
- * `packageExtensions`) a pruned standalone lockfile already resolves into its
- * snapshots, then drop an emptied `pnpm` block. Re-declaring them next to a
- * pruned lockfile makes pnpm <=10 fail with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
- * Called by `createPrunedLockfile` after a successful prune; the root-lockfile
- * fallback keeps the config, which that lockfile still declares.
+ * The resolution-time pnpm config a pruned standalone output must not carry,
+ * with the name each emitted file gives it: `manifest` is the `pnpm.*` key in
+ * `package.json`, `lockfile` the top-level lockfile key, and `null` means that
+ * file never declares the field. The two names differ often enough
+ * (`packageExtensions` against `packageExtensionsChecksum`) that pairing them
+ * in one table is what keeps the manifest strip and the lockfile strip from
+ * drifting apart when pnpm adds a field.
+ *
+ * `patchedDependencies` is deliberately absent: it is filtered and re-declared
+ * against the shipped patch files rather than dropped.
+ */
+const PNPM_RESOLUTION_CONFIG: readonly {
+  manifest: PnpmManifestConfigField | null;
+  lockfile: PnpmLockfileConfigField;
+}[] = [
+  { manifest: 'overrides', lockfile: 'overrides' },
+  {
+    manifest: 'ignoredOptionalDependencies',
+    lockfile: 'ignoredOptionalDependencies',
+  },
+  { manifest: 'packageExtensions', lockfile: 'packageExtensionsChecksum' },
+  { manifest: null, lockfile: 'pnpmfileChecksum' },
+  { manifest: null, lockfile: 'settings' },
+  { manifest: null, lockfile: 'catalogs' },
+];
+
+/** The `pnpm.*` manifest keys a pruned output drops. */
+const PNPM_MANIFEST_RESOLUTION_CONFIG_FIELDS = PNPM_RESOLUTION_CONFIG.flatMap(
+  (field) => (field.manifest === null ? [] : [field.manifest])
+);
+
+/** The top-level lockfile keys a pruned output drops. */
+export const PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS =
+  PNPM_RESOLUTION_CONFIG.map((field) => field.lockfile);
+
+/**
+ * Drops the resolution-time pnpm config a pruned standalone lockfile already
+ * resolves into its snapshots, then drops an emptied `pnpm` block. Re-declaring
+ * it next to a pruned lockfile makes pnpm <=10 fail with
+ * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Called by `createPrunedLockfile` after a
+ * successful prune; the root-lockfile fallback keeps the config, which that
+ * lockfile still declares.
  *
  * Counterpart to `stripStandaloneLockfileConfig` in the pnpm lock-file parser,
- * which strips the matching fields from the generated lockfile; keep the two in
- * sync when pnpm adds config fields.
+ * which drops the same fields from the generated lockfile.
  */
 export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
   if (!packageJson.pnpm) {
     return;
   }
-  delete packageJson.pnpm.overrides;
-  delete packageJson.pnpm.ignoredOptionalDependencies;
-  delete packageJson.pnpm.packageExtensions;
+  for (const field of PNPM_MANIFEST_RESOLUTION_CONFIG_FIELDS) {
+    delete packageJson.pnpm[field];
+  }
   if (Object.keys(packageJson.pnpm).length === 0) {
     delete packageJson.pnpm;
   }
