@@ -8,13 +8,6 @@ topics:
   - 'Extending Nx'
 ---
 
-Nx plugins package knowledge about a toolchain so every project doesn't need to recreate the same integration.
-A plugin can contribute projects and tasks to the [project graph](/docs/features/explore-graph), dependencies between projects, [code generators](/docs/features/generate-code), and migrations.
-
-{% aside type="note" title="You don't need a plugin to get started" %}
-A [`project.json`](/docs/reference/project-configuration) file configures projects and tasks for any language without a plugin. A plugin lets Nx read the toolchain configuration files you already maintain instead.
-{% /aside %}
-
 {% llm_copy_prompt title="Let an AI agent build the plugin" %}
 Build an Nx plugin that adds support for my toolchain to this workspace, following the structure below.
 
@@ -26,6 +19,13 @@ Build an Nx plugin that adds support for my toolchain to this workspace, followi
 
 Page: {pageUrl}
 {% /llm_copy_prompt %}
+
+Nx plugins package knowledge about a toolchain so every project doesn't need to recreate the same integration.
+A plugin can contribute projects and tasks to the [project graph](/docs/features/explore-graph), dependencies between projects, [code generators](/docs/features/generate-code), and migrations.
+
+{% aside type="note" title="You don't need a plugin to get started" %}
+A [`project.json`](/docs/reference/project-configuration) file configures projects and tasks for any language without a plugin. A plugin lets Nx read the toolchain configuration files you already maintain instead.
+{% /aside %}
 
 A plugin that adds [multi-language support](/docs/features/multi-language-support) to a workspace does three things:
 
