@@ -187,8 +187,9 @@ function installedRspackSupportsVirtualModules(root: string): boolean {
 }
 
 /**
- * The hosts the application engine accepts while serving, following the dev
- * server's own host check semantics.
+ * The hosts the application engine accepts while serving. The forked server
+ * process is browsed directly, so the engine check is the only host check on
+ * the SSR dev path.
  */
 function getServeModeAllowedHosts(
   devServer: NormalizedDevServerOptions
@@ -197,12 +198,24 @@ function getServeModeAllowedHosts(
     devServer.disableHostCheck || devServer.allowedHosts === true
       ? ['*']
       : Array.isArray(devServer.allowedHosts)
-        ? // The dev server marks wildcard subdomains with a leading dot; the
-          // engine expects the '*.' form.
-          devServer.allowedHosts.map((host) =>
-            host.startsWith('.') ? `*${host}` : host
+        ? // The dev server matches a leading-dot entry against the apex and
+          // its subdomains; the engine's '*.' form only matches subdomains,
+          // so emit both.
+          devServer.allowedHosts.flatMap((host) =>
+            host.startsWith('.') ? [host.slice(1), `*${host}`] : [host]
           )
         : [];
-  // Always allow the host the dev server itself listens on.
-  return [...allowedHosts, devServer.host];
+  return Array.from(
+    new Set([
+      ...allowedHosts,
+      // The engine matcher has no implicit local set; seed the hosts the dev
+      // server accepts implicitly. Other IP literals cannot be enumerated;
+      // NG_ALLOWED_HOSTS covers those.
+      'localhost',
+      '*.localhost',
+      '127.0.0.1',
+      '[::1]',
+      devServer.host,
+    ])
+  );
 }
