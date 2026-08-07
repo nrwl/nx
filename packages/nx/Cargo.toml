@@ -136,8 +136,21 @@ static_vcruntime = '3.0'
 
 [dev-dependencies]
 assert_fs = "1.0.10"
+criterion = { version = "0.5", features = ["html_reports"] }
 insta = "1.42.2"
 # This is only used for unit tests
 swc_ecma_dep_graph = "0.109.1"
 tempfile = "3.13.0"
 uuid = { version = "1.0", features = ["v4"] }
+
+[[bench]]
+name = "cache_restore"
+harness = false
+
+[[bench]]
+name = "file_ops_bench"
+harness = false
+
+[[bench]]
+name = "hashmap_bench"
+harness = false

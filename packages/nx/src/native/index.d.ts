@@ -432,6 +432,24 @@ export declare function getHardcodedIgnorePatterns(): Array<string>
  */
 export declare function getMainWorktreeRoot(workspaceRoot: string): string | null
 
+/**
+ * Returns a JSON array of `{ name, durationMs }` objects, or `null` if
+ * profiling was not enabled. Called from the JS layer on process exit.
+ *
+ * Draining: the returned spans are removed from the store, so a second call
+ * reports only what was recorded since the first. This keeps a long-lived
+ * process (e.g. the daemon) from growing the list without bound and stops
+ * repeat calls from double-reporting the same span.
+ *
+ * ```js
+ * // TypeScript
+ * import { getNativeTimings } from './native';
+ * const raw = getNativeTimings();
+ * const entries = raw ? JSON.parse(raw) : [];
+ * ```
+ */
+export declare function getNativeTimings(): string | null
+
 export declare function getTransformableOutputs(outputs: Array<string>): Array<string>
 
 /**
