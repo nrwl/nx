@@ -26,7 +26,7 @@ type OxlintGenerators = {
     }
   ) => Promise<GeneratorCallback>;
 };
-import { detectLinter, type LinterType } from './linter';
+import { detectLinters, type LinterType } from './linter';
 
 export interface AddLintingToProjectOptions {
   /** Required, but `undefined` still reaches here — see the normalization below. */
@@ -79,7 +79,7 @@ export async function addLintingToProject(
   // Callers should resolve this themselves, since their own guards need a
   // concrete value. Resolving again here keeps a caller that forgets from
   // silently getting ESLint in a workspace that uses something else.
-  const linter = options.linter ?? detectLinter(tree);
+  const linter = options.linter ?? detectLinters(tree)[0] ?? 'none';
 
   if (linter === 'none') {
     return () => {};

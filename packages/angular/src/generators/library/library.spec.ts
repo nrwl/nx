@@ -1212,7 +1212,7 @@ describe('lib', () => {
         ).toBeDefined();
       });
 
-      // `detectLinter` answers `none` for a workspace with no linter, so an
+      // `detectLinters` comes back empty for a workspace with no linter, so an
       // opt-out is preserved rather than having ESLint inferred for it.
       it('should set up no linter when the workspace has none', async () => {
         await runWithoutLinter();

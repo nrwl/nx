@@ -18,7 +18,7 @@ const baseLibraryConfig = {
   compiler: 'tsc' as const,
   addPlugin: true,
   // Stated rather than inferred: these specs assert ESLint output, and
-  // `detectLinter` answers `none` for a workspace with no linter installed.
+  // `detectLinters` comes back empty for a workspace with no linter installed.
   linter: 'eslint' as const,
 };
 
