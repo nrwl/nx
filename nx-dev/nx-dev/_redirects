@@ -888,7 +888,7 @@
 /getting-started/tutorials/typescript-packages-tutorial /docs/getting-started/tutorials/typescript-packages-tutorial 301
 /getting-started/tutorials/react-monorepo-tutorial /docs/getting-started/tutorials/react-monorepo-tutorial 301
 /getting-started/tutorials/angular-monorepo-tutorial /docs/getting-started/tutorials/angular-monorepo-tutorial 301
-/getting-started/tutorials/gradle-tutorial /docs/getting-started/tutorials/gradle-tutorial 301
+/getting-started/tutorials/gradle-tutorial /docs/kb/gradle-tutorial 301
 /getting-started/* /docs/getting-started/intro 301
 /ci/getting-started /docs/getting-started/nx-cloud 301
 /ci/getting-started/intro /docs/getting-started/nx-cloud 301

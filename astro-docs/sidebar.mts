@@ -71,10 +71,6 @@ const learnGroups: SidebarItems = [
             label: 'Reducing boilerplate',
             link: 'getting-started/tutorials/reducing-configuration-boilerplate',
           },
-          {
-            label: 'Gradle monorepo',
-            link: 'getting-started/tutorials/gradle-tutorial',
-          },
         ],
       },
     ],
