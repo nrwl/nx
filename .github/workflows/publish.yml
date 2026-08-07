@@ -352,7 +352,10 @@ jobs:
             ~/.cargo/git/db/
             .cargo-cache
             target/
-          key: ${{ matrix.settings.target }}-cargo-registry
+          # Scoped to the ref being released, so a release build only restores a
+          # cache written from that same ref rather than any branch that shares
+          # the target name.
+          key: ${{ matrix.settings.target }}-cargo-registry-${{ github.ref_name }}
 
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
@@ -375,7 +378,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
-          cache: pnpm
           architecture: x86
 
       - name: Build in docker
