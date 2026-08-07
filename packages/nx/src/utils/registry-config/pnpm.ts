@@ -470,20 +470,65 @@ function pnpmFindsWorkspaceFile(path: string, pnpmVersion: string): boolean {
   return lt(pnpmVersion, '11.8.0') ? fileExists(path) : existsSync(path);
 }
 
+const WORKSPACE_MANIFEST_FILENAME = 'pnpm-workspace.yaml';
+/**
+ * pnpm's INVALID_WORKSPACE_MANIFEST_FILENAME: names near enough the real one
+ * that it looks for them alongside it and refuses to walk past one it finds.
+ */
+const MISSPELLED_WORKSPACE_MANIFEST_NAMES = [
+  'pnpm-workspaces.yaml',
+  'pnpm-workspaces.yml',
+  'pnpm-workspace.yml',
+];
+/** 11.0.0 added the dot-prefixed spellings to that list. */
+const MISSPELLED_WORKSPACE_MANIFEST_NAMES_11 = [
+  ...MISSPELLED_WORKSPACE_MANIFEST_NAMES,
+  '.pnpm-workspace.yaml',
+  '.pnpm-workspace.yml',
+  '.pnpm-workspaces.yaml',
+  '.pnpm-workspaces.yml',
+];
+
 /**
  * pnpm resolves pnpm-workspace.yaml by walking up from the directory it runs
  * in and stopping at the nearest hit, so a workspace nested under another one
  * inherits the outer file's settings. Null when no directory on the way up has
  * one.
+ * See findWorkspaceDir in pnpm's workspace root finder.
  */
 function findPnpmWorkspaceFile(
   root: string,
   pnpmVersion: string
 ): string | null {
+  // The env var names the directory outright, skipping the walk without
+  // checking that the file is there, so a missing one reads as a workspace
+  // declaring nothing rather than sending the lookup back up the tree.
+  const fromEnv = readEnvVar(process.env, 'NPM_CONFIG_WORKSPACE_DIR');
+  if (fromEnv) {
+    return join(resolve(root, fromEnv), WORKSPACE_MANIFEST_FILENAME);
+  }
+  const misspelled = lt(pnpmVersion, '11.0.0')
+    ? MISSPELLED_WORKSPACE_MANIFEST_NAMES
+    : MISSPELLED_WORKSPACE_MANIFEST_NAMES_11;
   for (const dir of [root, ...ancestorDirectories(root)]) {
-    const path = join(dir, 'pnpm-workspace.yaml');
+    const path = join(dir, WORKSPACE_MANIFEST_FILENAME);
+    // Looked up first, because pnpm searches the names in this order within a
+    // directory and takes the first hit: a correctly named file beside a
+    // misspelled one is the one it reads.
     if (pnpmFindsWorkspaceFile(path, pnpmVersion)) {
       return path;
+    }
+    for (const name of misspelled) {
+      const misspelledPath = join(dir, name);
+      if (pnpmFindsWorkspaceFile(misspelledPath, pnpmVersion)) {
+        // pnpm aborts the command here (BAD_WORKSPACE_MANIFEST_NAME) instead of
+        // walking on, so there is no resolution left to reproduce. Propagating
+        // to the caller's fall-open warns instead of silently resolving against
+        // a correctly named file further up that pnpm never reaches.
+        throw new Error(
+          `The pnpm workspace manifest file should be named "${WORKSPACE_MANIFEST_FILENAME}". File found: ${misspelledPath}`
+        );
+      }
     }
   }
   return null;
