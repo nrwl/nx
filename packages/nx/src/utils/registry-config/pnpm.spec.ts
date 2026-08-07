@@ -2612,6 +2612,34 @@ describe('getPnpmSpawnRegistryEnv', () => {
     });
 
     describe('TLS and proxy settings in a yaml settings file', () => {
+      it('restores TLS verification for a strictSsl that is not the boolean', () => {
+        // pnpm builds the agent that stops verifying for `strictSsl === false`
+        // alone, so a string of the same spelling leaves verification on and
+        // has to outrank a strict-ssl=false from a file below.
+        writeFileSync(join(root, '.npmrc'), 'strict-ssl=false\n');
+        writeYaml('strictSsl: "false"\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_strict_ssl: 'true',
+        });
+      });
+
+      it('leaves an undeclared strictSsl to the files below', () => {
+        writeFileSync(join(root, '.npmrc'), 'strict-ssl=false\n');
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
+      });
+
+      it('bridges inline TLS material, which pnpm reads here unpinned', () => {
+        writeYaml(['ca: ca-pem', 'cert: cert-pem', 'key: key-pem'].join('\n'));
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_ca: 'ca-pem',
+          npm_config_cert: 'cert-pem',
+          npm_config_key: 'key-pem',
+        });
+      });
+
       it('bridges an httpProxy only where npm asks for the scheme it serves', () => {
         // npm's `proxy` serves https as well when `https-proxy` is unset, so
         // bridging an http-only one would route a request pnpm sends direct.
@@ -2651,6 +2679,112 @@ describe('getPnpmSpawnRegistryEnv', () => {
           npm_config_registry: 'http://reg-a.example.com/',
           npm_config_proxy: 'http://proxy-http.example.com:8080',
           npm_config_https_proxy: 'http://proxy-https.example.com:8080',
+        });
+      });
+    });
+
+    describe('a top-level registry in a yaml settings file', () => {
+      it('is honored from 11.10.0, over the registries map beside it', () => {
+        writeYaml(
+          [
+            'registry: https://reg-scalar.example.com/',
+            'registries:',
+            '  default: https://reg-map.example.com/',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.9.0')).toEqual({
+          npm_config_registry: 'https://reg-map.example.com/',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-scalar.example.com/',
+        });
+      });
+
+      it('loses to the named env registry and wins over the JSON auth tier', () => {
+        writeYaml('registry: https://reg-scalar.example.com/\n');
+        writeGlobalConfigYaml(
+          '_auth:\n  https://reg-json.example.com/:\n    "@": { authToken: tok }\n'
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-scalar.example.com/',
+          'npm_config_//reg-json.example.com/:_authToken': 'tok',
+        });
+        process.env.PNPM_CONFIG_REGISTRY = 'https://reg-env.example.com/';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-env.example.com/',
+          'npm_config_//reg-json.example.com/:_authToken': 'tok',
+        });
+      });
+
+      it('does not select a registry for a scope of its own', () => {
+        // pnpm applies it onto registries.default alone, so a scoped package
+        // still falls through to whatever declares that scope.
+        writeYaml(
+          [
+            'registry: https://reg-scalar.example.com/',
+            'registries:',
+            '  "@types": https://reg-types.example.com/',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('@types/node', root, '11.10.0')).toEqual(
+          {
+            npm_config_registry: 'https://reg-scalar.example.com/',
+            'npm_config_@types:registry': 'https://reg-types.example.com/',
+          }
+        );
+      });
+    });
+
+    describe('settings in the global config.yaml', () => {
+      it('bridges its registries from 11.11.0, under the workspace file', () => {
+        writeGlobalConfigYaml(
+          'registries:\n  default: https://reg-g.example.com/\n'
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({});
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.11.0')).toEqual({
+          npm_config_registry: 'https://reg-g.example.com/',
+        });
+        writeYaml('registries:\n  default: https://reg-w.example.com/\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.11.0')).toEqual({
+          npm_config_registry: 'https://reg-w.example.com/',
+        });
+      });
+
+      it('bridges its registry scalar from 11.5.3, under the workspace map until 11.10.0', () => {
+        writeGlobalConfigYaml('registry: https://reg-g.example.com/\n');
+        writeYaml('registries:\n  default: https://reg-w.example.com/\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.2')).toEqual({
+          npm_config_registry: 'https://reg-w.example.com/',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.3')).toEqual({
+          npm_config_registry: 'https://reg-w.example.com/',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.10.0')).toEqual({
+          npm_config_registry: 'https://reg-g.example.com/',
+        });
+      });
+
+      it('bridges its network settings from 11.0.0, under the workspace file', () => {
+        writeGlobalConfigYaml(
+          [
+            'strictSsl: false',
+            'httpsProxy: http://proxy-g.example.com:8080',
+            'noProxy: g.example.com',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.18.0')).toEqual({});
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.0')).toEqual({
+          npm_config_strict_ssl: 'false',
+          npm_config_proxy: 'http://proxy-g.example.com:8080',
+          npm_config_https_proxy: 'http://proxy-g.example.com:8080',
+          npm_config_noproxy: 'g.example.com',
+        });
+        writeYaml('httpsProxy: http://proxy-w.example.com:8080\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.0')).toEqual({
+          npm_config_strict_ssl: 'false',
+          npm_config_proxy: 'http://proxy-w.example.com:8080',
+          npm_config_https_proxy: 'http://proxy-w.example.com:8080',
+          npm_config_noproxy: 'g.example.com',
         });
       });
     });
