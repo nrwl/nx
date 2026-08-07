@@ -86,6 +86,7 @@ interface PnpmWorkspaceSettings {
   registries?: unknown;
   strictSsl?: unknown;
   proxy?: string;
+  httpProxy?: string;
   httpsProxy?: string;
   noProxy?: string;
   // The one key here pnpm also answers to in npm's spelling. Its siblings are
@@ -133,13 +134,25 @@ export function getPnpmSpawnRegistryEnv(
     // Both .npmrc files pnpm reads here, project first, which is the order both
     // the bridge and the bypass list resolve them in.
     const npmrcPaths = pnpmNpmrcPaths(root, workspaceFile);
-    bridgeWorkspaceNpmrc(env, npmrcPaths, scope, pnpmVersion);
+    const npmrcProxies = bridgeWorkspaceNpmrc(
+      env,
+      npmrcPaths,
+      scope,
+      pnpmVersion
+    );
     // auth.ini is an 11.x file, so these are the only layers whose bypass list
     // can need re-spelling here.
     bridgeNoProxy(env, npmrcPaths, pnpmVersion);
     // Applied last: pnpm assigns the yaml over the whole npmrc-derived config,
     // so what it declares outranks everything the files above contributed.
     applyYamlNetworkSettings(env, settings);
+    applyResolvedProxies(
+      env,
+      [settings, npmrcProxies],
+      root,
+      scope,
+      managerIgnoresEnv
+    );
     // On this version line pnpm's user config is npm's own (no auth.ini, no
     // npmrcAuthFile), always a file npm reads for itself.
     reportTokenHelper(
@@ -183,7 +196,7 @@ export function getPnpmSpawnRegistryEnv(
   // (loadNpmrcConfig's `workspaceDir ?? localPrefix`). npm reads the latter for
   // itself, so a nested workspace puts the two readers on different files.
   const workspaceDir = workspaceFile ? dirname(workspaceFile) : root;
-  bridgeNpmrcSources(
+  const npmrcProxies = bridgeNpmrcSources(
     env,
     root,
     workspaceDir,
@@ -205,6 +218,13 @@ export function getPnpmSpawnRegistryEnv(
   // does not write it here.
   applyYamlNetworkSettings(env, settings, false);
   applyEnvNetworkSettings(env, pnpmVersion);
+  applyResolvedProxies(
+    env,
+    [envProxyDeclarations(pnpmVersion), settings, npmrcProxies],
+    root,
+    scope,
+    managerIgnoresEnv
+  );
   const noProxy = resolveNoProxy(
     settings,
     workspaceDir,
@@ -426,10 +446,10 @@ function applyJsonAuthCredentials(
 }
 
 /**
- * The TLS and proxy settings pnpm >= 11 takes from its own `PNPM_CONFIG_*`
- * prefix. They outrank pnpm-workspace.yaml, so they are applied after it.
- * `cafile` is left out on purpose: pnpm accepts it and then never uses it for
- * the fetch, the same dead config as the yaml key.
+ * The TLS settings pnpm >= 11 takes from its own `PNPM_CONFIG_*` prefix. They
+ * outrank pnpm-workspace.yaml, so they are applied after it. `cafile` is left
+ * out on purpose: pnpm accepts it and then never uses it for the fetch, the
+ * same dead config as the yaml key.
  */
 function applyEnvNetworkSettings(env: NpmConfigEnv, pnpmVersion: string): void {
   const strictSsl = readPnpmEnvVar('strict_ssl', pnpmVersion);
@@ -438,10 +458,53 @@ function applyEnvNetworkSettings(env: NpmConfigEnv, pnpmVersion: string): void {
     // verification off.
     setStrictSsl(env, strictSsl !== 'false');
   }
-  setProxies(env, {
-    httpProxy: readPnpmEnvVar('proxy', pnpmVersion),
+}
+
+/** The proxy settings pnpm >= 11 takes from its own `PNPM_CONFIG_*` prefix. */
+function envProxyDeclarations(pnpmVersion: string): ProxyDeclarations {
+  return {
+    proxy: readPnpmEnvVar('proxy', pnpmVersion),
+    httpProxy: readPnpmEnvVar('http_proxy', pnpmVersion),
     httpsProxy: readPnpmEnvVar('https_proxy', pnpmVersion),
-  });
+  };
+}
+
+/** The proxy settings one configuration tier declares, in pnpm's spellings. */
+interface ProxyDeclarations {
+  proxy?: string;
+  httpProxy?: string;
+  httpsProxy?: string;
+}
+
+/**
+ * The two proxies npm should end up with for `registry`. pnpm resolves each of
+ * the three settings across every tier first, and only then falls back from
+ * httpsProxy to the legacy proxy and from httpProxy to whichever of those won,
+ * so the derivation cannot be done per tier: a workspace file's httpsProxy is
+ * what an environment-supplied `proxy` leaves undeclared, and so still wins.
+ *
+ * npm has no http-only proxy, its `proxy` serving https too when `https-proxy`
+ * is unset, so an http-only one is withheld unless http is what npm requests.
+ * A value npm already resolves for itself under the same key is left to it.
+ */
+function resolveProxies(
+  tiers: ProxyDeclarations[],
+  registry: string,
+  npmSees: (key: string) => string | undefined
+): { httpProxy?: string; httpsProxy?: string } {
+  const declared = (key: keyof ProxyDeclarations): string | undefined =>
+    tiers.map((tier) => tier[key]).find(Boolean);
+  const httpsProxy = declared('httpsProxy') || declared('proxy');
+  const httpProxy = declared('httpProxy') || httpsProxy;
+  const send = (value: string | undefined, npmKey: string) =>
+    value === npmSees(npmKey) ? undefined : value;
+  return {
+    httpProxy: send(
+      httpsProxy || registry.startsWith('http://') ? httpProxy : undefined,
+      'proxy'
+    ),
+    httpsProxy: send(httpsProxy, 'https-proxy'),
+  };
 }
 
 /**
@@ -587,6 +650,9 @@ function normalizePnpmWorkspaceSettings(
   if (doc.proxy && typeof doc.proxy !== 'string') {
     fail('a proxy that is not a string');
   }
+  if (doc.httpProxy && typeof doc.httpProxy !== 'string') {
+    fail('an httpProxy that is not a string');
+  }
   if (doc.httpsProxy && typeof doc.httpsProxy !== 'string') {
     fail('an httpsProxy that is not a string');
   }
@@ -596,6 +662,7 @@ function normalizePnpmWorkspaceSettings(
     registries: doc.registries,
     strictSsl: doc.strictSsl,
     proxy: text('proxy'),
+    httpProxy: text('httpProxy'),
     httpsProxy: text('httpsProxy'),
     noProxy: text('noProxy'),
     noproxy: text('noproxy'),
@@ -904,20 +971,35 @@ function bridgeWorkspaceNpmrc(
   npmrcPaths: string[],
   scope: string | null,
   pnpmVersion: string
-): void {
+): ProxyDeclarations {
   const [projectPath, workspacePath] = npmrcPaths;
-  if (!workspacePath) {
-    return;
-  }
-  const workspaceRaw = readPnpmNpmrcMap(workspacePath, pnpmVersion);
-  if (!workspaceRaw) {
-    return;
-  }
-  const workspaceNpmrc = expandPnpmNpmrcKeys(workspaceRaw);
   // pnpm's view of the shadowing tier: a file its reader discarded shadows
   // nothing, even though npm goes on reading that same file for itself.
   const projectRaw = readPnpmNpmrcMap(projectPath, pnpmVersion);
   const projectNpmrc = projectRaw ? expandPnpmNpmrcKeys(projectRaw) : null;
+  const workspaceRaw = workspacePath
+    ? readPnpmNpmrcMap(workspacePath, pnpmVersion)
+    : null;
+  const workspaceNpmrc = workspaceRaw
+    ? expandPnpmNpmrcKeys(workspaceRaw)
+    : null;
+  /** What pnpm resolves from these files and the env tier over them. */
+  const resolved = (key: string): string | undefined =>
+    expandPnpmEnvVars(
+      readNpmConfigEnv(process.env, key) ??
+        (projectNpmrc?.has(key)
+          ? projectNpmrc.get(key)
+          : workspaceNpmrc?.get(key)) ??
+        ''
+    ) || undefined;
+  const proxies: ProxyDeclarations = {
+    proxy: resolved('proxy'),
+    httpProxy: resolved('http-proxy'),
+    httpsProxy: resolved('https-proxy'),
+  };
+  if (!workspaceNpmrc) {
+    return proxies;
+  }
 
   /** The value as written, unless a tier above the workspace file declares one. */
   const declared = (key: string): string | undefined =>
@@ -990,13 +1072,12 @@ function bridgeWorkspaceNpmrc(
     setStrictSsl(env, rawStrictSsl !== 'false');
   }
   setProxies(env, {
-    httpProxy: bridged('proxy'),
-    httpsProxy: bridged('https-proxy'),
     // The spelling npm reads natively, which it can still only read from its own
     // project config. pnpm prefers `no-proxy` across every layer over `noproxy`
     // across every layer, so bridgeNoProxy runs after this and overwrites it.
     noProxy: bridged('noproxy'),
   });
+  return proxies;
 }
 
 function bridgeNpmrcSources(
@@ -1007,7 +1088,7 @@ function bridgeNpmrcSources(
   authIniPath: string,
   pnpmVersion: string,
   managerIgnoresEnv: IgnoresNpmConfigEnv
-): void {
+): ProxyDeclarations {
   // The file npm resolves as its project config, beside the package.json the
   // spawn runs from.
   const projectRaw = readNpmrcOrWarn(join(root, '.npmrc'));
@@ -1037,13 +1118,19 @@ function bridgeNpmrcSources(
     });
   }
   if (sources.length === 0) {
-    return;
+    return {};
   }
   const projectNpmrc = projectRaw ?? new Map();
 
   /** The highest source declaring `key`; an empty value still shadows the rest. */
   const declaringSource = (key: string): PnpmNpmrcSource | undefined =>
     sources.find((source) => source.map.has(key));
+  /**
+   * What pnpm resolves from these files, npm-native or not: a value it derives
+   * another setting from is one npm does not derive for itself.
+   */
+  const declaredValue = (key: string): string | undefined =>
+    declaringSource(key)?.map.get(key) || undefined;
   /** That source, unless npm reads it for itself and needs no bridging. */
   const bridging = (key: string): PnpmNpmrcSource | undefined => {
     const source = declaringSource(key);
@@ -1210,10 +1297,11 @@ function bridgeNpmrcSources(
     // verification on in pnpm. Only an explicit 'false' turns it off.
     setStrictSsl(env, strictSslSource.rawStrictSsl === 'false' ? false : true);
   }
-  setProxies(env, {
-    httpProxy: bridging('proxy')?.map.get('proxy'),
-    httpsProxy: bridging('https-proxy')?.map.get('https-proxy'),
-  });
+  return {
+    proxy: declaredValue('proxy'),
+    httpProxy: declaredValue('http-proxy'),
+    httpsProxy: declaredValue('https-proxy'),
+  };
 }
 
 /**
@@ -1278,6 +1366,33 @@ function contactedRegistry(
       : undefined) ||
     npmResolved(env, projectNpmrc, 'registry', managerIgnoresEnv) ||
     DEFAULT_REGISTRY
+  );
+}
+
+/**
+ * Writes the proxy pair pnpm ends up with, once every tier has declared. The
+ * registry npm is about to contact decides whether an http-only proxy is worth
+ * bridging, and what npm reads for itself decides whether a value needs to be.
+ */
+function applyResolvedProxies(
+  env: NpmConfigEnv,
+  tiers: ProxyDeclarations[],
+  root: string,
+  scope: string | null,
+  managerIgnoresEnv: IgnoresNpmConfigEnv
+): void {
+  const projectNpmrc = readNpmrcOrWarn(join(root, '.npmrc')) ?? new Map();
+  setProxies(
+    env,
+    resolveProxies(
+      tiers,
+      contactedRegistry(env, projectNpmrc, scope, managerIgnoresEnv),
+      (key) =>
+        (managerIgnoresEnv(key)
+          ? undefined
+          : readNpmConfigEnv(process.env, key)) ??
+        readExpandedKey(projectNpmrc, key, expandNpmEnvVars)
+    )
   );
 }
 
@@ -1497,10 +1612,9 @@ function applyYamlNetworkSettings(
   if (typeof settings.strictSsl === 'boolean') {
     setStrictSsl(env, settings.strictSsl);
   }
-  setProxies(env, {
-    httpProxy: settings.proxy,
-    httpsProxy: settings.httpsProxy,
-    // pnpm honors either spelling and prefers noProxy when both are set.
-    noProxy: applyNoProxy ? (settings.noProxy ?? settings.noproxy) : undefined,
-  });
+  // pnpm honors either spelling and prefers noProxy when both are set. The
+  // proxies themselves are resolved with every other tier's rather than here.
+  if (applyNoProxy) {
+    setProxies(env, { noProxy: settings.noProxy ?? settings.noproxy });
+  }
 }

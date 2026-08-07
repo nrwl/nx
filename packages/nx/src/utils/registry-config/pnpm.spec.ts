@@ -22,6 +22,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'PNPM_CONFIG_PROXY',
     'pnpm_config_https_proxy',
     'PNPM_CONFIG_HTTPS_PROXY',
+    'pnpm_config_http_proxy',
+    'PNPM_CONFIG_HTTP_PROXY',
     'pnpm_config_no_proxy',
     'PNPM_CONFIG_NO_PROXY',
     'pnpm_config_noproxy',
@@ -322,7 +324,10 @@ describe('getPnpmSpawnRegistryEnv', () => {
         join(root, '.npmrc'),
         'https-proxy=http://proxy.example.com:8080\nno-proxy=internal.example.com'
       );
+      // npm resolves https-proxy from the .npmrc itself, but not the http proxy
+      // pnpm derives from it (measured on 11.20.0), so that one is bridged.
       expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
+        npm_config_proxy: 'http://proxy.example.com:8080',
         npm_config_noproxy: 'internal.example.com',
       });
     });
@@ -422,6 +427,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
         npm_config_strict_ssl: 'false',
+        // pnpm falls back from httpProxy to httpsProxy, so the one declaration
+        // covers an http request too, which npm reads from its own `proxy`.
+        npm_config_proxy: 'http://proxy.example.com:8080',
         npm_config_https_proxy: 'http://proxy.example.com:8080',
         npm_config_noproxy: 'internal.example.com',
       });
@@ -441,6 +449,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       );
       expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
         npm_config_registry: 'https://reg-a.example.com/',
+        npm_config_proxy: 'http://proxy.example.com:8080',
         npm_config_https_proxy: 'http://proxy.example.com:8080',
         npm_config_noproxy: 'internal.example.com',
       });
@@ -637,6 +646,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         );
         expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
           npm_config_strict_ssl: 'true',
+          npm_config_proxy: 'http://yaml-proxy.example.com:8080',
           npm_config_https_proxy: 'http://yaml-proxy.example.com:8080',
           npm_config_noproxy: 'yaml.example.com',
         });
@@ -656,6 +666,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
           npm_config_cafile: join(nested, 'ca.pem'),
           npm_config_strict_ssl: 'false',
+          npm_config_proxy: 'http://proxy.example.com:8080',
           npm_config_https_proxy: 'http://proxy.example.com:8080',
         });
       });
@@ -1511,6 +1522,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
         npm_config_cafile: join(configHome, 'pnpm', 'ca.pem'),
         npm_config_strict_ssl: 'false',
+        npm_config_proxy: 'http://proxy.example.com:8443',
         npm_config_https_proxy: 'http://proxy.example.com:8443',
       });
     });
@@ -1618,6 +1630,15 @@ describe('getPnpmSpawnRegistryEnv', () => {
 
     // npm knows only `noproxy` and warns about `no-proxy` as an unknown config, so
     // whichever layer pnpm takes the bypass list from has to be re-spelled.
+    it('bridges an npmrc http-proxy, which npm reads under no key of its own', () => {
+      writeAuthIni('http-proxy=http://proxy.example.com:8080');
+      writeYaml('registries:\n  default: http://reg-a.example.com/\n');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'http://reg-a.example.com/',
+        npm_config_proxy: 'http://proxy.example.com:8080',
+      });
+    });
+
     it("bridges an auth.ini no-proxy under npm's noproxy spelling", () => {
       writeAuthIni(
         [
@@ -1626,6 +1647,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
         ].join('\n')
       );
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_proxy: 'http://proxy.example.com:8080',
         npm_config_https_proxy: 'http://proxy.example.com:8080',
         npm_config_noproxy: 'internal.example.com',
       });
@@ -1639,9 +1661,10 @@ describe('getPnpmSpawnRegistryEnv', () => {
           'no-proxy=internal.example.com',
         ].join('\n')
       );
-      // npm resolves https-proxy from the .npmrc itself, so only the bypass list
-      // needs an env entry.
+      // npm resolves https-proxy from the .npmrc itself, but not the http proxy
+      // pnpm derives from it, so that one is bridged beside the bypass list.
       expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_proxy: 'http://proxy.example.com:8080',
         npm_config_noproxy: 'internal.example.com',
       });
     });
@@ -2422,9 +2445,75 @@ describe('getPnpmSpawnRegistryEnv', () => {
         );
         process.env.PNPM_CONFIG_PROXY = 'http://env.example.com:8080';
         process.env.PNPM_CONFIG_HTTPS_PROXY = 'https://env.example.com:8443';
+        // The legacy `proxy` only ever stands in for an httpsProxy that is
+        // missing, and httpProxy falls back to whichever won, so a declared
+        // httpsProxy leaves it serving neither scheme (measured on 11.20.0: an
+        // unparseable `proxy` beside it never reaches the fetch).
         expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
-          npm_config_proxy: 'http://env.example.com:8080',
+          npm_config_proxy: 'https://env.example.com:8443',
           npm_config_https_proxy: 'https://env.example.com:8443',
+        });
+      });
+
+      it('sends an http request through the env httpsProxy, as pnpm does', () => {
+        // pnpm falls back from httpProxy to whichever proxy won, so one
+        // declaration covers both schemes. Left on npm's `https-proxy` alone,
+        // an http registry would be fetched direct.
+        writeYaml('registries:\n  default: http://reg-a.example.com/\n');
+        process.env.PNPM_CONFIG_HTTPS_PROXY = 'http://env.example.com:8080';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'http://reg-a.example.com/',
+          npm_config_proxy: 'http://env.example.com:8080',
+          npm_config_https_proxy: 'http://env.example.com:8080',
+        });
+      });
+
+      it('bridges the env httpProxy only for the scheme it serves', () => {
+        process.env.PNPM_CONFIG_HTTP_PROXY = 'http://env.example.com:8080';
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
+        writeYaml('registries:\n  default: http://reg-a.example.com/\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'http://reg-a.example.com/',
+          npm_config_proxy: 'http://env.example.com:8080',
+        });
+      });
+
+      it('leaves a yaml httpsProxy standing under an env proxy, as pnpm does', () => {
+        // pnpm resolves each proxy key across every tier before deriving one
+        // from another, so an env `proxy` never displaces a yaml `httpsProxy`:
+        // it only stands in for one that is missing. Measured on 11.20.0 with
+        // a loopback proxy on each side.
+        writeYaml(
+          [
+            'registries:',
+            '  default: http://reg-a.example.com/',
+            'httpsProxy: http://yaml.example.com:8080',
+          ].join('\n')
+        );
+        process.env.PNPM_CONFIG_PROXY = 'http://env.example.com:8080';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'http://reg-a.example.com/',
+          npm_config_proxy: 'http://yaml.example.com:8080',
+          npm_config_https_proxy: 'http://yaml.example.com:8080',
+        });
+      });
+
+      it('keeps a yaml httpProxy for the http request under an env httpsProxy', () => {
+        writeYaml(
+          [
+            'registries:',
+            '  default: http://reg-a.example.com/',
+            'httpProxy: http://yaml.example.com:8080',
+          ].join('\n')
+        );
+        process.env.PNPM_CONFIG_HTTPS_PROXY = 'http://env.example.com:8443';
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'http://reg-a.example.com/',
+          npm_config_proxy: 'http://yaml.example.com:8080',
+          npm_config_https_proxy: 'http://env.example.com:8443',
         });
       });
 
@@ -2495,6 +2584,9 @@ describe('getPnpmSpawnRegistryEnv', () => {
         process.env.pnpm_config_https_proxy = 'https://env.example.com:8443';
         process.env.PNPM_CONFIG_PROXY = 'http://env.example.com:8080';
         expect(getPnpmSpawnRegistryEnv('is-even', root, '11.0.5')).toEqual({
+          // The uppercase spelling is unread here, and the httpsProxy the
+          // lowercase one declares serves an http request too.
+          npm_config_proxy: 'https://env.example.com:8443',
           npm_config_https_proxy: 'https://env.example.com:8443',
         });
       });
@@ -2504,6 +2596,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
         process.env.PNPM_CONFIG_PROXY = '';
         expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
           npm_config_proxy: 'http://yaml.example.com:8080',
+          // pnpm reads its legacy `proxy` as the https one too.
+          npm_config_https_proxy: 'http://yaml.example.com:8080',
         });
       });
 
@@ -2513,6 +2607,50 @@ describe('getPnpmSpawnRegistryEnv', () => {
         process.env.PNPM_CONFIG_PROXY = 'http://env.example.com:8080';
         expect(getPnpmSpawnRegistryEnv('is-even', root, '10.15.0')).toEqual({
           npm_config_registry: 'https://reg-a.example.com/',
+        });
+      });
+    });
+
+    describe('TLS and proxy settings in a yaml settings file', () => {
+      it('bridges an httpProxy only where npm asks for the scheme it serves', () => {
+        // npm's `proxy` serves https as well when `https-proxy` is unset, so
+        // bridging an http-only one would route a request pnpm sends direct.
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://reg-a.example.com/',
+            'httpProxy: http://proxy.example.com:8080',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
+        writeYaml(
+          [
+            'registries:',
+            '  default: http://reg-a.example.com/',
+            'httpProxy: http://proxy.example.com:8080',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'http://reg-a.example.com/',
+          npm_config_proxy: 'http://proxy.example.com:8080',
+        });
+      });
+
+      it('prefers httpProxy over the httpsProxy it would fall back to', () => {
+        writeYaml(
+          [
+            'registries:',
+            '  default: http://reg-a.example.com/',
+            'httpProxy: http://proxy-http.example.com:8080',
+            'httpsProxy: http://proxy-https.example.com:8080',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'http://reg-a.example.com/',
+          npm_config_proxy: 'http://proxy-http.example.com:8080',
+          npm_config_https_proxy: 'http://proxy-https.example.com:8080',
         });
       });
     });
