@@ -22,6 +22,7 @@ import {
   getPrunedPnpmPackageJsonBuildSettings,
   getPrunedPnpmPatchArtifacts,
   normalizePrunedPatchPath,
+  relocatePrunedLocalPathSpec,
   rewritePrunedLocalPathSpecifiers,
   uncontainLocalPath,
   validatePrunedLocalPathClosure,
@@ -2076,6 +2077,29 @@ describe('containLocalPath', () => {
 
     expect(contained).toBe(`local_path_modules/${wsRelativePath}`);
     expect(uncontainLocalPath(contained)).toBe(wsRelativePath);
+  });
+});
+
+describe('relocatePrunedLocalPathSpec', () => {
+  it.each([
+    ['file:../../vendor/lib', 'file:local_path_modules/vendor/lib'],
+    // a Windows-authored spec must resolve to the same target as its posix form
+    ['file:..\\..\\vendor\\lib', 'file:local_path_modules/vendor/lib'],
+    ['link:..\\..\\vendor\\lib', 'link:local_path_modules/vendor/lib'],
+    ['file:.\\sub', 'file:local_path_modules/apps/app/sub'],
+  ])('relocates %s to %s', (spec, expected) => {
+    expect(relocatePrunedLocalPathSpec(spec, 'apps/app', '')).toEqual({
+      spec: expected,
+    });
+  });
+
+  it('still reports a backslash-authored spec that leaves the workspace', () => {
+    expect(
+      relocatePrunedLocalPathSpec('file:..\\..\\..\\outside', 'apps/app', '')
+    ).toEqual({
+      spec: 'file:..\\..\\..\\outside',
+      reason: 'outside-workspace',
+    });
   });
 });
 

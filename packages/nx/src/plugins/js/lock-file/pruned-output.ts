@@ -1312,7 +1312,10 @@ export function relocatePrunedLocalPathSpec(
   if (!protocol) {
     return null;
   }
-  const rawPath = spec.slice(protocol.length);
+  // Normalize separators before joining, matching the artifact shipping side:
+  // a backslash-authored spec is one opaque segment to a posix join(), so its
+  // `..` never resolves and an in-workspace target reads as escaping.
+  const rawPath = normalizePath(spec.slice(protocol.length));
   // join() does not reset on an absolute segment; it would silently rebase the
   // target under sourceDir, so reject absolutes up front.
   if (isAbsolute(rawPath)) {
