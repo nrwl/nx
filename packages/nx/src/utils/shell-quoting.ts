@@ -47,20 +47,24 @@ export function isAlreadyQuoted(str: string): boolean {
  *
  * On POSIX shells quoting preserves the content exactly: the argument is
  * wrapped in single quotes (which suppress all interpolation), escaping
- * embedded single quotes. On Windows it is wrapped in double quotes
- * following the MSVCRT argv parsing rules (backslashes are only special
- * when they precede a double quote); cmd.exe-level metacharacters (`%`, `^`)
- * are not escaped.
+ * embedded single quotes. On Windows it is wrapped in double quotes following
+ * the MSVCRT argv parsing rules (backslashes are only special when they precede
+ * a double quote), which also stops cmd.exe from reading a `^` as its escape
+ * character. `%` is the one character left uncovered, since cmd.exe expands
+ * %VAR% inside double quotes too.
  */
 export function quoteShellArg(arg: string): string {
+  const isWindows = process.platform === 'win32';
   if (arg === '') {
     // an unquoted empty string would vanish when joined into a command line
-    return process.platform === 'win32' ? '""' : "''";
+    return isWindows ? '""' : "''";
   }
-  if (!needsShellQuoting(arg)) {
+  // `^` is cmd.exe syntax rather than shell syntax, so it earns quoting only
+  // where cmd.exe parses the command line.
+  if (!needsShellQuoting(arg) && !(isWindows && arg.includes('^'))) {
     return arg;
   }
-  return process.platform === 'win32'
+  return isWindows
     ? `"${arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1')}"`
     : `'${arg.replace(/'/g, `'\\''`)}'`;
 }
