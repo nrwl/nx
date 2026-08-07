@@ -137,6 +137,46 @@ export default { root: __dirname };
     expect(tree.read('packages/ui/vite.config.mts', 'utf-8')).toBe(config);
   });
 
+  it('leaves a renamed destructuring key alone while still rewriting real references', async () => {
+    tree.write(
+      'packages/ui/vite.config.mts',
+      `const { __dirname: dir } = someOptions;
+
+export default { root: __dirname, dir };
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('packages/ui/vite.config.mts', 'utf-8')).toBe(
+      `const { __dirname: dir } = someOptions;
+
+export default { root: import.meta.dirname, dir };
+`
+    );
+  });
+
+  it('leaves an aliased import specifier alone', async () => {
+    const config = `import { __dirname as dir } from './paths.mjs';
+
+export default { root: dir };
+`;
+    tree.write('packages/ui/vite.config.mts', config);
+
+    await migration(tree);
+
+    expect(tree.read('packages/ui/vite.config.mts', 'utf-8')).toBe(config);
+  });
+
+  it('leaves a re-export of __dirname alone', async () => {
+    const config = `export { __dirname } from './paths.mjs';\n`;
+    tree.write('packages/ui/vite.config.mts', config);
+
+    await migration(tree);
+
+    expect(tree.read('packages/ui/vite.config.mts', 'utf-8')).toBe(config);
+  });
+
   it('leaves non-config files alone', async () => {
     const source = `export const root = __dirname;\n`;
     tree.write('packages/ui/src/other.mts', source);

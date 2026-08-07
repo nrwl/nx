@@ -85,12 +85,37 @@ export function rewriteDirname(source: string): string {
 /**
  * `bail` abandons the whole file: the config either declares its own
  * `__dirname` (already native-loader safe) or uses it as a shorthand property,
- * where rewriting the value would also rewrite the key.
+ * where rewriting the value would also rewrite the key. `skip` leaves the one
+ * identifier alone; it names a property or an imported binding rather than the
+ * CJS global, and `import.meta.dirname` is not legal in those positions.
  */
 function classify(node: Node): 'bail' | 'reference' | 'skip' {
   const parent = node.parent;
   if (!parent) {
     return 'reference';
+  }
+  // The left side of a rename: `{ __dirname: dir }`, `__dirname as dir`.
+  // Checked before the binding-name cases below, which share these node kinds.
+  if (
+    (ts!.isBindingElement(parent) ||
+      ts!.isImportSpecifier(parent) ||
+      ts!.isExportSpecifier(parent)) &&
+    parent.propertyName === node
+  ) {
+    return 'skip';
+  }
+  // `foo.__dirname`, `{ __dirname: x }`.
+  if (
+    (ts!.isPropertyAccessExpression(parent) ||
+      ts!.isPropertyAssignment(parent) ||
+      ts!.isPropertySignature(parent) ||
+      ts!.isMethodDeclaration(parent)) &&
+    parent.name === node
+  ) {
+    return 'skip';
+  }
+  if (ts!.isShorthandPropertyAssignment(parent)) {
+    return 'bail';
   }
   if (
     (ts!.isVariableDeclaration(parent) ||
@@ -98,21 +123,12 @@ function classify(node: Node): 'bail' | 'reference' | 'skip' {
       ts!.isBindingElement(parent) ||
       ts!.isFunctionDeclaration(parent) ||
       ts!.isImportSpecifier(parent) ||
-      ts!.isImportClause(parent)) &&
+      ts!.isImportClause(parent) ||
+      ts!.isNamespaceImport(parent) ||
+      ts!.isExportSpecifier(parent)) &&
     (parent as { name?: Node }).name === node
   ) {
     return 'bail';
-  }
-  if (ts!.isShorthandPropertyAssignment(parent)) {
-    return 'bail';
-  }
-  // `foo.__dirname` and `{ __dirname: x }` do not reference the CJS global.
-  if (
-    (ts!.isPropertyAccessExpression(parent) ||
-      ts!.isPropertyAssignment(parent)) &&
-    parent.name === node
-  ) {
-    return 'skip';
   }
   return 'reference';
 }
