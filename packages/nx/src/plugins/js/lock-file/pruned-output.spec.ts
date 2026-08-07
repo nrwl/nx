@@ -325,9 +325,18 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   it('carries allowBuilds verbatim when the pruned lockfile is unparseable', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
 
-    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir, 'not: [valid: yaml');
+    // Distinct from the other unparseable-lockfile cases: the parse is memoized
+    // on content, so shared content would warn only on whichever runs first.
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      'allowBuilds: [broken: yaml'
+    );
 
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('Could not parse the pruned pnpm lockfile')
+    );
     const { load } = require('@zkochan/js-yaml');
     // Scoping needs the lockfile's package names; without them, dropping an
     // approval silently skips a needed build script, so carry them all.

@@ -325,7 +325,15 @@ function parsePnpmLockfileYaml(content: string): object | null {
         require('@zkochan/js-yaml').load(
           extractMainLockfileDocument(content)
         ) ?? {};
-    } catch {
+    } catch (e) {
+      // One failure disables three independent output-correctness steps at
+      // once, and the result is memoized, so it would stay invisible for the
+      // rest of the process.
+      logger.warn(
+        `Could not parse the pruned pnpm lockfile (${
+          e instanceof Error ? e.message : e
+        }); the pruned output will not carry patch declarations, local-path artifacts, or a validated link closure.`
+      );
       parsed = null;
     }
     lastParsedPnpmLockfile = {
