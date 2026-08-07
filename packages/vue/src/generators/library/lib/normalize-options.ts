@@ -87,8 +87,6 @@ export async function normalizeOptions(
     }
   }
 
-  // No `as NormalizedSchema`: the assertion would stop the compiler checking
-  // that every required field is present, which is the point of the type.
   const normalized: NormalizedSchema = {
     addPlugin,
     ...options,
@@ -104,8 +102,6 @@ export async function normalizeOptions(
     importPath,
     isUsingTsSolutionConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
-    // `NormalizedSchema` has always declared this non-optional; the assertion
-    // was hiding that nothing set it.
     js: options.js ?? false,
     appMain,
     appSourceRoot,

@@ -58,9 +58,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
   }
   options.useReactRouter = options.routing ? options.useReactRouter : false;
 
-  // No `as NormalizedSchema`: the assertion would stop the compiler checking
-  // that every required field is present, which is the point of the type. Each
-  // default below matches what the mutation it replaced produced.
   const normalized: NormalizedSchema = {
     ...options,
     projectName: appProjectName,

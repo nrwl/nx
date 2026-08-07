@@ -43,8 +43,6 @@ export async function normalizeOptions(
   // Set useAppDir default based on version (v4 defaults to true, v3 defaults to false)
   const useAppDir = options.useAppDir ?? nuxtMajorVersion >= 4;
 
-  // No `as NormalizedSchema`: the assertion would stop the compiler checking
-  // that every required field is present, which is the point of the type.
   const normalized: NormalizedSchema = {
     ...options,
     name: projectNames.projectFileName,

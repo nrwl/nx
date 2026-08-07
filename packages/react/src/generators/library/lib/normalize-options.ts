@@ -99,8 +99,6 @@ export async function normalizeOptions(
 
   assertValidStyle(options.style);
 
-  // No `as NormalizedSchema`: the assertion would stop the compiler checking
-  // that every required field is present, which is the point of the type.
   const normalized: NormalizedSchema = {
     ...options,
     compiler: options.compiler ?? 'babel',
@@ -113,9 +111,6 @@ export async function normalizeOptions(
     importPath,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
     isUsingTsSolutionConfig,
-    // `NormalizedSchema` has always declared these non-optional; the assertion
-    // was hiding that nothing set them. Both defaults match the schema's, so an
-    // omitted option behaves as it did when it stayed `undefined`.
     js: options.js ?? false,
     unitTestRunner: options.unitTestRunner ?? 'none',
     // Libraries with a bundler or that are publishable must also be buildable.
