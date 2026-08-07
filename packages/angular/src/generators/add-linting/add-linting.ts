@@ -7,7 +7,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addLintingToProject } from '@nx/js';
-import { detectLinter } from '@nx/js/internal';
+import { normalizeLinterOption } from '@nx/js/internal';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   javaScriptOverride,
@@ -35,7 +35,9 @@ export async function addLintingGenerator(
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
   // Resolved once, up front: `undefined !== 'eslint'` is true, so an unresolved
   // linter would take the early return below and skip the angular-eslint arm.
-  const linter = options.linter ?? detectLinter(tree);
+  // Callers that already resolved it pass it in, so this only prompts when the
+  // generator is run directly.
+  const linter = await normalizeLinterOption(tree, options.linter);
   tasks.push(
     await addLintingToProject(tree, {
       linter,

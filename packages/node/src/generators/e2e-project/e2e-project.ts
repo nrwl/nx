@@ -21,7 +21,7 @@ import {
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
 import { addLintingToProject } from '@nx/js';
-import { detectLinter } from '@nx/js/internal';
+import { normalizeLinterOption } from '@nx/js/internal';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -360,7 +360,7 @@ async function normalizeOptions(
     ...options,
     // Both arms below test for a concrete linter, so an unresolved `undefined`
     // would fall through them and leave the e2e project with no linter at all.
-    linter: options.linter ?? detectLinter(tree),
+    linter: await normalizeLinterOption(tree, options.linter),
     e2eProjectRoot,
     e2eProjectName,
     importPath,

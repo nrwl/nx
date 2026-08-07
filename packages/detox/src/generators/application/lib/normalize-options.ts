@@ -1,7 +1,7 @@
 import { names, readNxJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
 import { Schema } from '../schema';
-import { detectLinter, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export interface NormalizedSchema extends Omit<Schema, 'e2eName'> {
   appFileName: string; // the file name of app to be tested in kebab case
@@ -48,7 +48,7 @@ export async function normalizeOptions(
     ...options,
     // The two guards downstream spell the check differently and disagree on
     // `undefined`, so resolve it to a concrete linter here.
-    linter: options.linter ?? detectLinter(host),
+    linter: await normalizeLinterOption(host, options.linter),
     appFileName,
     appClassName,
     appDisplayName: options.appDisplayName || appClassName,

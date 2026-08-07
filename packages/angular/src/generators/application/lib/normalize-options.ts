@@ -3,7 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { detectLinter } from '@nx/js/internal';
+import { normalizeLinterOption } from '@nx/js/internal';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
@@ -78,7 +78,7 @@ export async function normalizeOptions(
     // Resolved after the spread, so the `=== 'none'` and `!== 'eslint'` guards
     // downstream see a concrete linter. Both read `undefined` as "some linter,
     // but not ESLint", which sets up linting and then skips its config.
-    linter: options.linter ?? detectLinter(host),
+    linter: await normalizeLinterOption(host, options.linter),
     prefix: options.prefix || 'app',
     name: appProjectName,
     appProjectRoot,
