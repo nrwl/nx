@@ -96,9 +96,9 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
  * `getPrunedPnpmPatchArtifacts` derives from the lockfile shipping beside it; an
  * inherited one names the workspace's patch paths rather than the output's, and
  * survives even when the output ships no patch file at all, which fails the
- * install as pnpm hashes every declared patch. Called on both the pruned and the
- * fallback path: pnpm reads the field from the workspace root alone, so a
- * project-level block was inert at home and cannot be trusted here either.
+ * install as pnpm hashes every declared patch. pnpm reads the field from the
+ * workspace root alone, so a project-level block was inert at home and cannot be
+ * trusted here either.
  */
 export function dropInheritedPnpmPatchedDependencies(
   packageJson: PackageJson

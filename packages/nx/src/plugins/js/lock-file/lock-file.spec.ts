@@ -66,6 +66,24 @@ describe('createLockFile', () => {
 
   it('keeps the pnpm config when pruning falls back to the root lockfile', () => {
     (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
+  it('drops an inherited patchedDependencies the pruned lockfile rescopes', () => {
+    // The prune scopes the lockfile's patches to the packages that survive it
+    // and rewrites their paths, so a manifest keeping the workspace's own set
+    // disagrees with it. Both sides empty still installs; a stale manifest side
+    // does not.
+    const packageJson: PackageJson = {
+      name: 'app',
+      version: '1.0.0',
+      pnpm: {
+        patchedDependencies: { 'is-number@7.0.0': 'patches/is-number.patch' },
+      },
+    };
+
+    createLockFile(packageJson, graph, 'pnpm');
+
+    expect(packageJson.pnpm).toBeUndefined();
+  });
+
       throw new Error('prune failed');
     });
     const packageJson: PackageJson = {
