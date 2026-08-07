@@ -7,16 +7,57 @@ filter: 'type:Features'
 ---
 
 Nx works with any language or toolchain.
-The task runner, caching, and [affected](/docs/features/ci-features/affected) commands all operate on the project graph, and the graph is plain data.
-Plugins produce that data by reading configuration files that already exist in your repository, so adding support for a new language means teaching Nx to read the files that language already uses.
+The task runner, caching, and [affected](/docs/features/ci-features/affected) commands all operate on the project graph.
+Plugins build that graph by reading existing configuration files, so adding support for a new language or tool means teaching Nx to read those existing files.
 
-## Projects and tasks are inferred
+## Basic configuration
 
 Nx doesn't need a plugin to run tasks for another language.
-Any directory with a [`project.json`](/docs/reference/project-configuration) file is an Nx project, and its targets can run `pytest` or `cargo build` with the same caching and orchestration as any JS task.
+Any directory with a [`project.json`](/docs/reference/project-configuration) file is an Nx project, and its targets run any command with the same caching and orchestration as a JS task:
 
-A plugin removes the duplicate configuration.
-Your toolchain already describes each project in its own files, so maintaining a `project.json` next to every `pyproject.toml` or `Cargo.toml` means writing the same information twice.
+{% tabs %}
+{% tabitem label="Python + uv" %}
+
+```jsonc
+// packages/api/project.json
+{
+  "name": "api",
+  "targets": {
+    "test": {
+      "command": "uv run pytest",
+      "options": { "cwd": "packages/api" },
+      "cache": true,
+      "inputs": ["{projectRoot}/**/*.py", "{workspaceRoot}/uv.lock"],
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Rust + Cargo" %}
+
+```jsonc
+// crates/parser/project.json
+{
+  "name": "parser",
+  "targets": {
+    "build": {
+      "command": "cargo build --release",
+      "options": { "cwd": "crates/parser" },
+      "cache": true,
+      "inputs": ["{projectRoot}/src/**/*.rs", "{projectRoot}/Cargo.toml"],
+      "outputs": ["{workspaceRoot}/target/release"],
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Automatically configure projects and tasks
+
+Plugins remove the need to write that configuration by hand.
 A language plugin declares which files mark a project, usually the toolchain's manifest: `pyproject.toml` for Python, `go.mod` for Go, `Cargo.toml` for Rust, `build.gradle` for Gradle.
 For every match, the plugin creates a project and its tasks, with caching, inputs, and outputs configured once in the plugin instead of per project.
 This is the same [inferred tasks](/docs/concepts/mental-model#inferred-tasks) mechanism the JavaScript plugins use to read `vite.config.ts` or `jest.config.ts`.
@@ -30,19 +71,78 @@ Enabling a language plugin is one entry in `nx.json`:
 }
 ```
 
-From there, `nx test <project-name>` runs the toolchain's own test command, `nx affected` picks up changes to any project, and cache hits restore outputs no matter what language produced them.
+From there, Nx runs each toolchain's own commands, and cache hits restore outputs no matter what language produced them:
+
+```shell {% meta="prompt=true" %}
+$ nx test api
+> nx run api:test
+12 passed in 1.2s
+$ nx build parser
+> nx run parser:build
+Finished `release` profile [optimized] target(s) in 4.1s
+$ nx test app
+> nx run app:test
+BUILD SUCCESSFUL in 6s
+```
+
 Run `nx show project <project-name>` to see everything a plugin inferred for a project.
 
 ## Dependencies come from your toolchain
 
-Plugins also tell Nx how projects relate by reading the dependency information your toolchain already wrote down, like the `dependencies` entries in a `pyproject.toml` or the project references in a Gradle build.
-Those edges are what make `nx affected`, task ordering, and the [graph visualization](/docs/features/explore-graph) accurate across languages, and they connect cross-language boundaries too, such as a deploy task that depends on both a JS frontend and a Java backend.
+Plugins also tell Nx how projects relate by reading the dependency information your toolchain already wrote down:
+
+{% tabs %}
+{% tabitem label="Python + uv" %}
+
+```toml {% meta="{4,6-7}" %}
+# packages/api/pyproject.toml
+[project]
+name = "api"
+dependencies = ["shared-utils"]
+
+[tool.uv.sources]
+shared-utils = { workspace = true }
+```
+
+{% /tabitem %}
+{% tabitem label="Rust + Cargo" %}
+
+```toml {% meta="{5-6}" %}
+# crates/parser/Cargo.toml
+[package]
+name = "parser"
+
+[dependencies]
+shared-utils = { path = "../shared-utils" }
+```
+
+{% /tabitem %}
+{% tabitem label="Gradle" %}
+
+```groovy {% meta="{3}" %}
+// apps/app/build.gradle
+dependencies {
+    implementation project(':shared-utils')
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+These edges are what make `nx affected`, task ordering, and the [graph visualization](/docs/features/explore-graph) accurate across languages, and they connect cross-language boundaries too, such as a deploy task that depends on both a JS frontend and a Java backend.
 
 ## Use an existing plugin
 
-Nx maintains first-party plugins for [Gradle](/docs/technologies/java/gradle/introduction), [Maven](/docs/technologies/java/maven/introduction), and [.NET](/docs/technologies/dotnet/introduction).
-Community plugins cover more ecosystems, such as [@nxlv/python](https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python), [@nx-go/nx-go](https://github.com/nx-go/nx-go), and [@monodon/rust](https://github.com/cammisuli/monodon/tree/main/packages/rust).
-Check the [plugin registry](/docs/plugin-registry) before writing your own.
+Check what already covers your toolchain before writing a plugin:
+
+- [Gradle](/docs/technologies/java/gradle/introduction)
+- [Maven](/docs/technologies/java/maven/introduction)
+- [.NET](/docs/technologies/dotnet/introduction)
+- [@nxlv/python](https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python) (Community)
+- [@nx-go/nx-go](https://github.com/nx-go/nx-go) (Community)
+- [@monodon/rust](https://github.com/cammisuli/monodon/tree/main/packages/rust) (Community)
+
+Browse the [plugin registry](/docs/plugin-registry) for the full list.
 
 ## Build your own plugin
 
