@@ -83,7 +83,7 @@ You can also use `npx nx run shop:serve` as an alternative syntax. The `<project
 
 ### Inferred tasks
 
-By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/inferred-tasks) such as `package.json` scripts and `vite.config.ts`.
+By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/mental-model#inferred-tasks) such as `package.json` scripts and `vite.config.ts`.
 
 In `nx.json` there's already the `@nx/vite` plugin registered which automatically identifies `build`, `serve`, and other Vite-related tasks.
 
