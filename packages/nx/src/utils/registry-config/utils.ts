@@ -362,29 +362,56 @@ export function expandEnvVars(
 const PNPM_ENV_DEFAULT = /([^:-]+)(:?)-(.+)/;
 
 /**
- * Expands `${VAR}` the way pnpm's @pnpm/config.env-replace does, which also
- * honors a `${VAR-default}` fallback and its `${VAR:-default}` form (that one
- * falls back for an empty value too, not just an unset one). A reference that
- * resolves to nothing becomes an empty string, matching the envReplaceLossy
- * reader pnpm has used since 11.2.0; keeping it verbatim would put a literal
- * `${VAR}` on the wire as if it were a credential.
+ * One `${...}` reference as pnpm's getEnvValue resolves it: the variable, or the
+ * `${VAR-default}` fallback and its `${VAR:-default}` form, which falls back for
+ * an empty value too and not just an unset one. Undefined for a reference pnpm
+ * finds nothing for, which is what its two readers part ways over.
+ */
+function resolvePnpmEnvValue(
+  name: string,
+  env: NodeJS.ProcessEnv
+): string | undefined {
+  const matched = name.match(PNPM_ENV_DEFAULT);
+  if (!matched) {
+    return env[name];
+  }
+  const [, variableName, colon, fallback] = matched;
+  const resolved = env[variableName];
+  if (resolved === undefined) {
+    return fallback;
+  }
+  return !resolved && colon ? fallback : resolved;
+}
+
+/**
+ * Expands `${VAR}` the way pnpm's @pnpm/config.env-replace does. A reference
+ * that resolves to nothing becomes an empty string, matching the envReplaceLossy
+ * reader pnpm takes its config through from 11.0.0; keeping it verbatim would
+ * put a literal `${VAR}` on the wire as if it were a credential. Below 11 the
+ * reader throws instead and the whole file goes with it (readPnpmNpmrcMap), so
+ * on that line nothing reaching this carries an unresolvable reference.
  */
 export function expandPnpmEnvVars(
   value: string,
   env: NodeJS.ProcessEnv = process.env
 ): string {
-  return replaceEnvExpr(value, (name) => {
-    const matched = name.match(PNPM_ENV_DEFAULT);
-    if (!matched) {
-      return env[name] ?? '';
-    }
-    const [, variableName, colon, fallback] = matched;
-    const resolved = env[variableName];
+  return replaceEnvExpr(value, (name) => resolvePnpmEnvValue(name, env) ?? '');
+}
+
+/** Whether every `${VAR}` in `value` is one pnpm's throwing reader gets past. */
+export function pnpmEnvVarsResolve(
+  value: string,
+  env: NodeJS.ProcessEnv = process.env
+): boolean {
+  let resolves = true;
+  replaceEnvExpr(value, (name) => {
+    const resolved = resolvePnpmEnvValue(name, env);
     if (resolved === undefined) {
-      return fallback;
+      resolves = false;
     }
-    return !resolved && colon ? fallback : resolved;
+    return resolved ?? '';
   });
+  return resolves;
 }
 
 export function readEnvVar(
