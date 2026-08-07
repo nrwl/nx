@@ -8,7 +8,6 @@ import {
   assertValidStyle,
 } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
-import { findFreePort } from './find-free-port';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function normalizeOptions<T extends Schema = Schema>(
@@ -82,7 +81,9 @@ export async function normalizeOptions<T extends Schema = Schema>(
   normalized.unitTestRunner = normalized.unitTestRunner ?? 'jest';
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
   normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
-  normalized.devServerPort ??= options.port ?? findFreePort(host);
+  // `port` is canonical. The schema aliases `--devServerPort` for CLI users, but
+  // aliases are only applied at the CLI boundary, so programmatic callers need this.
+  normalized.port ??= options.devServerPort;
   normalized.minimal = normalized.minimal ?? false;
 
   return normalized;
