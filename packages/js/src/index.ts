@@ -16,7 +16,7 @@ export { initGenerator } from './generators/init/init';
 export { setupPrettierGenerator } from './generators/setup-prettier/generator';
 export { setupVerdaccio } from './generators/setup-verdaccio/generator';
 export { isValidVariable } from './utils/is-valid-variable';
-// `detectLinter` is deliberately not here — it is a heuristic for first-party
+// `detectLinters` is deliberately not here — it is a heuristic for first-party
 // generators and lives in `@nx/js/internal`. Only the type is public, because
 // `@nx/eslint` re-exports it and generator `schema.d.ts` files import it.
 export { type LinterType } from './utils/linter';

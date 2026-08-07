@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { promptWhenInteractive } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from './typescript/ts-solution-setup';
-import { detectLinter, type LinterType } from './linter';
+import { detectLinters, type LinterType } from './linter';
 
 export async function normalizeLinterOption(
   tree: Tree,
@@ -13,9 +13,9 @@ export async function normalizeLinterOption(
 
   // Offer the linter the workspace already uses first, so a workspace that has
   // adopted Oxlint is not pushed back onto ESLint by the prompt's own ordering.
-  // `detectLinter` answers `none` for a workspace with no linter, so the
+  // An empty result means the workspace opted out of linting, so the
   // opted-out case needs no separate branch here.
-  const detected = detectLinter(tree);
+  const detected = detectLinters(tree)[0] ?? 'none';
   const others = (['eslint', 'oxlint', 'none'] as const).filter(
     (l) => l !== detected
   );

@@ -69,8 +69,8 @@ describe('Normalize Options', () => {
       importPath: '@proj/my-app-e2e',
       framework: 'react-native',
       isUsingTsSolutionConfig: false,
-      // Resolved by `detectLinter`, which answers `none` for a workspace with
-      // no linter installed.
+      // Resolved by `detectLinters`, which comes back empty for a workspace
+      // with no linter installed.
       linter: 'none',
       js: false,
       useProjectJson: true,
@@ -104,8 +104,8 @@ describe('Normalize Options', () => {
       e2eProjectName: 'directory-my-app-e2e',
       framework: 'react-native',
       isUsingTsSolutionConfig: false,
-      // Resolved by `detectLinter`, which answers `none` for a workspace with
-      // no linter installed.
+      // Resolved by `detectLinters`, which comes back empty for a workspace
+      // with no linter installed.
       linter: 'none',
       js: false,
       useProjectJson: true,

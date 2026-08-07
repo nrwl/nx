@@ -1,8 +1,8 @@
 import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { detectLinter, detectLinters } from './linter';
+import { detectLinters } from './linter';
 
-describe('detectLinter', () => {
+describe('detectLinters', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -27,14 +27,14 @@ describe('detectLinter', () => {
   // A workspace with no linter installed opted out of linting; inferring ESLint
   // for it would override that choice rather than follow it.
   it('should return none when no linter is installed', () => {
-    expect(detectLinter(tree)).toBe('none');
+    expect(detectLinters(tree)).toEqual([]);
   });
 
   it.each(['@nx/eslint', 'eslint'])(
     'should detect eslint from the %s dependency',
     (pkg) => {
       addDevDependency(pkg);
-      expect(detectLinter(tree)).toBe('eslint');
+      expect(detectLinters(tree)).toEqual(['eslint']);
     }
   );
 
@@ -42,38 +42,38 @@ describe('detectLinter', () => {
     'should detect oxlint from the %s dependency',
     (pkg) => {
       addDevDependency(pkg);
-      expect(detectLinter(tree)).toBe('oxlint');
+      expect(detectLinters(tree)).toEqual(['oxlint']);
     }
   );
 
   it('should detect oxlint from the inference plugin', () => {
     addPlugin('@nx/oxlint');
-    expect(detectLinter(tree)).toBe('oxlint');
+    expect(detectLinters(tree)).toEqual(['oxlint']);
   });
 
-  // ESLint is also the fallback, so these pin that an ESLint workspace is not
-  // mistaken for an Oxlint one — they cannot distinguish detection from the
-  // fallthrough, and are not meant to.
   it.each(['@nx/eslint', 'eslint'])(
-    'should stay on eslint with the %s dependency present',
+    'should detect eslint from the %s dependency alone',
     (pkg) => {
       addDevDependency(pkg);
-      expect(detectLinter(tree)).toBe('eslint');
+      expect(detectLinters(tree)).toEqual(['eslint']);
     }
   );
 
-  it('should stay on eslint with the inference plugin present', () => {
+  it('should detect eslint from the inference plugin', () => {
     addPlugin('@nx/eslint/plugin');
-    expect(detectLinter(tree)).toBe('eslint');
+    expect(detectLinters(tree)).toEqual(['eslint']);
   });
 
-  it('should prefer oxlint in a hybrid workspace', () => {
+  // Both, rather than just the winner. A caller asking "does this workspace use
+  // ESLint at all" would otherwise see `oxlint` and wrongly conclude no — and a
+  // project generated for Oxlint still lives under the root ESLint config.
+  it('should return both in a hybrid workspace, oxlint first', () => {
     addPlugin('@nx/eslint/plugin');
     addDevDependency('eslint');
     addPlugin('@nx/oxlint');
     addDevDependency('oxlint');
 
-    expect(detectLinter(tree)).toBe('oxlint');
+    expect(detectLinters(tree)).toEqual(['oxlint', 'eslint']);
   });
 
   it('should read expanded plugin registrations', () => {
@@ -83,39 +83,15 @@ describe('detectLinter', () => {
     ];
     updateNxJson(tree, nxJson);
 
-    expect(detectLinter(tree)).toBe('oxlint');
+    expect(detectLinters(tree)).toEqual(['oxlint']);
   });
 
-  describe('detectLinters', () => {
-    it('should return nothing when no linter is installed', () => {
-      expect(detectLinters(tree)).toEqual([]);
-    });
+  it('should not report a linter that is only resolvable on disk', () => {
+    // `eslint` is a peer dependency of several first-party plugins, so
+    // `require('eslint')` succeeds in workspaces that do not use it. Reading
+    // the tree is what keeps an empty workspace empty.
+    expect(() => require('eslint')).not.toThrow();
 
-    it('should return the one linter a workspace uses', () => {
-      addDevDependency('eslint');
-
-      expect(detectLinters(tree)).toEqual(['eslint']);
-    });
-
-    // The reason this exists: `detectLinter` can only name the winner, so a
-    // caller asking "does this workspace use ESLint at all" gets `oxlint` and
-    // wrongly concludes no. A project generated for Oxlint still lives under
-    // the root ESLint config.
-    it('should return both in a hybrid workspace, oxlint first', () => {
-      addDevDependency('eslint');
-      addDevDependency('oxlint');
-
-      expect(detectLinters(tree)).toEqual(['oxlint', 'eslint']);
-      expect(detectLinters(tree)).toContain('eslint');
-    });
-
-    it('should not report a linter that is only resolvable on disk', () => {
-      // `eslint` is a peer dependency of several first-party plugins, so
-      // `require('eslint')` succeeds in workspaces that do not use it. This
-      // reads the tree, so an empty workspace stays empty.
-      expect(() => require('eslint')).not.toThrow();
-
-      expect(detectLinters(tree)).toEqual([]);
-    });
+    expect(detectLinters(tree)).toEqual([]);
   });
 });
