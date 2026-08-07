@@ -858,12 +858,21 @@ function resolveLocalPathSource(
   return { source: attempted, attempted, resolved };
 }
 
-/** Contains a workspace-relative `file:` path, leaving unshippable ones as-is. */
-function containVendoredFilePath(wsRelativePath: string): string {
+/**
+ * Contains a workspace-relative `file:` path, leaving unshippable ones as-is.
+ * `synthesized` holds the copied-workspace-module paths the caller assembled,
+ * which are already output paths: they are recognized by identity rather than by
+ * their `workspace_modules/` prefix, so a workspace directory that happens to
+ * carry that name relocates like any other source.
+ */
+function containVendoredFilePath(
+  wsRelativePath: string,
+  synthesized: ReadonlySet<string>
+): string {
   if (
     wsRelativePath === '' ||
     wsRelativePath === '.' ||
-    isUnderWorkspaceModules(wsRelativePath) ||
+    synthesized.has(wsRelativePath) ||
     localPathEscapesOutput(wsRelativePath)
   ) {
     return wsRelativePath;
@@ -872,27 +881,57 @@ function containVendoredFilePath(wsRelativePath: string): string {
 }
 
 /** Contains the path of a `file:` spec (`file:X` -> `file:<contained X>`). */
-function containFileSpec(spec: string): string {
+function containFileSpec(
+  spec: string,
+  synthesized: ReadonlySet<string>
+): string {
   if (!spec.startsWith('file:')) {
     return spec;
   }
   const path = spec.slice('file:'.length);
-  const contained = containVendoredFilePath(path);
+  const contained = containVendoredFilePath(path, synthesized);
   return contained === path ? spec : `file:${contained}`;
 }
 
 /** Contains the `file:` path in a package key (`name@file:X`). */
-function containFilePackageKey(key: string): string {
+function containFilePackageKey(
+  key: string,
+  synthesized: ReadonlySet<string>
+): string {
   const marker = '@file:';
   const index = key.indexOf(marker);
   if (index === -1) {
     return key;
   }
   const path = key.slice(index + marker.length);
-  const contained = containVendoredFilePath(path);
+  const contained = containVendoredFilePath(path, synthesized);
   return contained === path
     ? key
     : `${key.slice(0, index)}${marker}${contained}`;
+}
+
+/**
+ * Warns when a workspace directory occupies the output path of a copied
+ * workspace module. Both spell `workspace_modules/<name>`, so no later pass can
+ * tell them apart: the vendored source is read as the copied module and never
+ * ships, leaving the lockfile pointing at a path the output does not carry.
+ */
+export function warnOnWorkspaceModulePathCollision(
+  sourcePackages: Record<string, unknown> | undefined,
+  synthesizedModulePaths: ReadonlySet<string>
+): void {
+  for (const snapshot of Object.values(sourcePackages ?? {})) {
+    const directory = (snapshot as { resolution?: { directory?: string } })
+      ?.resolution?.directory;
+    if (
+      typeof directory === 'string' &&
+      synthesizedModulePaths.has(normalizePath(directory))
+    ) {
+      logger.warn(
+        `Local-path dependency "file:${directory}" sits where the pruned output copies a workspace module of the same name, so it cannot ship separately. Move it out of ${WORKSPACE_MODULES_DIR}/ to deploy it.`
+      );
+    }
+  }
 }
 
 /**
@@ -912,8 +951,10 @@ function containFilePackageKey(key: string): string {
  * old path.
  */
 export function containShippedLocalFilePaths(
-  lockfile: Partial<Pick<Lockfile, 'importers' | 'packages'>>
+  lockfile: Partial<Pick<Lockfile, 'importers' | 'packages'>>,
+  synthesizedModulePaths: ReadonlySet<string> = new Set()
 ): void {
+  const synthesized = synthesizedModulePaths;
   const containSnapshot = (snapshot: unknown): void => {
     if (!snapshot || typeof snapshot !== 'object') {
       return;
@@ -928,11 +969,12 @@ export function containShippedLocalFilePaths(
         // (getPrunedPnpmLocalPathArtifacts), so a backslash directory contains
         // to the same posix path the artifacts ship to.
         resolution.directory = containVendoredFilePath(
-          normalizePath(resolution.directory)
+          normalizePath(resolution.directory),
+          synthesized
         );
       }
       if (typeof resolution.tarball === 'string') {
-        resolution.tarball = containFileSpec(resolution.tarball);
+        resolution.tarball = containFileSpec(resolution.tarball, synthesized);
       }
     }
     for (const section of LOCKFILE_DEP_SECTIONS) {
@@ -942,7 +984,7 @@ export function containShippedLocalFilePaths(
       }
       for (const [name, ref] of Object.entries(deps)) {
         if (typeof ref === 'string') {
-          deps[name] = containFileSpec(ref);
+          deps[name] = containFileSpec(ref, synthesized);
         }
       }
     }
@@ -952,7 +994,7 @@ export function containShippedLocalFilePaths(
     const contained: Lockfile['packages'] = {};
     for (const [key, snapshot] of Object.entries(lockfile.packages)) {
       containSnapshot(snapshot);
-      contained[containFilePackageKey(key)] = snapshot;
+      contained[containFilePackageKey(key, synthesized)] = snapshot;
     }
     lockfile.packages = contained;
   }

@@ -3861,6 +3861,79 @@ importers:
       expect(result).not.toContain('linked-peer@');
     });
 
+    it('ships a vendored directory that sits under workspace_modules/', () => {
+      // `workspace_modules/vendor` is a real workspace directory here, not a
+      // module the prune copied. It must relocate like any other vendored path,
+      // or the output references a directory nothing writes.
+      vol.fromJSON({
+        '/virtual/workspace_modules/vendor/package.json': JSON.stringify({
+          name: 'vendored-lib',
+          version: '1.0.0',
+        }),
+      });
+
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      vendored-lib:
+        specifier: file:./workspace_modules/vendor
+        version: file:workspace_modules/vendor
+
+packages:
+
+  vendored-lib@file:workspace_modules/vendor:
+    resolution: {directory: workspace_modules/vendor, type: directory}
+    version: 1.0.0
+
+snapshots:
+
+  vendored-lib@file:workspace_modules/vendor: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'vendored-lib': 'file:./workspace_modules/vendor' },
+      };
+
+      const graph = makeGraph([], {}, {
+        'npm:vendored-lib': {
+          type: 'npm',
+          name: 'npm:vendored-lib',
+          data: {
+            version: 'file:workspace_modules/vendor',
+            packageName: 'vendored-lib',
+            hash: 'sha512-vendored',
+          },
+        },
+      } as any);
+
+      const prunedGraph = pruneProjectGraph(
+        graph,
+        packageJson,
+        undefined,
+        'pnpm'
+      );
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      expect(result).toContain(
+        'vendored-lib@file:local_path_modules/workspace_modules/vendor:'
+      );
+      expect(result).toContain(
+        'resolution: {directory: local_path_modules/workspace_modules/vendor, type: directory}'
+      );
+      expect(result).not.toContain(
+        'vendored-lib@file:workspace_modules/vendor:'
+      );
+    });
+
     it('keeps the resolved edges of a local-path peer the prune already carries', () => {
       // The app depends on the vendored directory directly and mylib
       // peer-depends on it, so the peer backfill hits a target the prune

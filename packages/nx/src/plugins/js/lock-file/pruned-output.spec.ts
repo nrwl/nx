@@ -2185,7 +2185,10 @@ describe('containShippedLocalFilePaths', () => {
       },
     };
 
-    containShippedLocalFilePaths(lockfile);
+    containShippedLocalFilePaths(
+      lockfile,
+      new Set(['workspace_modules/wsmod'])
+    );
 
     // Vendored file: keys/resolutions relocate; workspace-module and npm entries
     // are left untouched.
@@ -2214,6 +2217,37 @@ describe('containShippedLocalFilePaths', () => {
     expect(lockfile.importers['.'].specifiers.vendored).toBe(
       'file:../vendor/dir'
     );
+  });
+
+  it('relocates a workspace directory that shares a copied module path', () => {
+    // `workspace_modules/vendor` here is a real source directory, not a module
+    // the prune copied, so it must relocate like any other vendored path. Only
+    // the assembly knows the difference, which is why the synthesized paths are
+    // passed in rather than recognized by their prefix.
+    const lockfile = {
+      packages: {
+        'vendored@file:workspace_modules/vendor': {
+          resolution: {
+            directory: 'workspace_modules/vendor',
+            type: 'directory',
+          },
+        },
+      },
+    };
+
+    containShippedLocalFilePaths(
+      lockfile,
+      new Set(['workspace_modules/copied'])
+    );
+
+    expect(Object.keys(lockfile.packages)).toEqual([
+      'vendored@file:local_path_modules/workspace_modules/vendor',
+    ]);
+    expect(
+      (lockfile.packages as any)[
+        'vendored@file:local_path_modules/workspace_modules/vendor'
+      ].resolution.directory
+    ).toBe('local_path_modules/workspace_modules/vendor');
   });
 
   it('leaves an escaping path untouched', () => {

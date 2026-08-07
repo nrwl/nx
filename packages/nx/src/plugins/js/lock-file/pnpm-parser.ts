@@ -29,6 +29,7 @@ import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import {
   containShippedLocalFilePaths,
+  warnOnWorkspaceModulePathCollision,
   normalizePrunedPatchPath,
   PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS,
   type PnpmLockfileConfigField,
@@ -712,6 +713,11 @@ export function stringifyPnpmLockfile(
   // `<name>@file:<relocated-path>` keys for backfilled file: peers, mapped to
   // the relocated target path; entries are synthesized after the loop.
   const localPathPeerEntries = new Map<string, string>();
+  // Output paths for the copied workspace modules, so the relocation pass can
+  // recognize them by identity. A workspace directory named `workspace_modules`
+  // is a real source that must relocate, and only the assembly knows which of
+  // the two a path is.
+  const synthesizedModulePaths = new Set<string>();
   // Snapshots whose manifest-declared peers are backfilled after the relocation
   // pass, so the refs that pass writes are not relocated a second time.
   const pendingPeerBackfills: {
@@ -756,6 +762,7 @@ export function stringifyPnpmLockfile(
 
     pendingPeerBackfills.push({ snapshot, importerPath });
 
+    synthesizedModulePaths.add(`workspace_modules/${packageName}`);
     workspaceModulePackages[
       `${packageName}@file:workspace_modules/${packageName}`
     ] = snapshot;
@@ -776,7 +783,8 @@ export function stringifyPnpmLockfile(
   // relocated at its synthesis site, which is why it is added afterwards: a
   // second pass over an already-relocated path cannot tell it apart from a
   // workspace path that genuinely starts with the shipped directory's name.
-  containShippedLocalFilePaths(output);
+  warnOnWorkspaceModulePathCollision(snapshots, synthesizedModulePaths);
+  containShippedLocalFilePaths(output, synthesizedModulePaths);
 
   // Peers pnpm left out of the importer (autoInstallPeers off) still ship as
   // real dependencies, matching the copied manifest that moves every
