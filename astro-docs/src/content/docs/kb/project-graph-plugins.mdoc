@@ -16,7 +16,7 @@ Project graph plugins are able to add new nodes or dependencies to the project g
 - [createDependencies](#adding-new-dependencies-to-the-project-graph): This function allows a plugin to tell Nx about dependencies between projects.
 
 {% aside type="caution" title="Disable the Nx Daemon during development" %}
-When developing project graph plugins, disable the [Nx Daemon](/docs/concepts/nx-daemon) by setting `NX_DAEMON=false`. The daemon caches your plugin code, so changes to your plugin won't be reflected until the daemon restarts.
+When developing project graph plugins, disable the [Nx Daemon](/docs/reference/nx-daemon) by setting `NX_DAEMON=false`. The daemon caches your plugin code, so changes to your plugin won't be reflected until the daemon restarts.
 {% /aside %}
 
 {% aside type="note" title="Writing a fast plugin" %}

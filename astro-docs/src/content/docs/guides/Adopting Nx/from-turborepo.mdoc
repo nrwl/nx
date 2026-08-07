@@ -110,7 +110,7 @@ Most settings in the old `turbo.json` file can be converted directly into `nx.js
 | Turborepo Property     | Nx Equivalent                                                                                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cacheDir`             | Set in [`cacheDirectory`](/docs/reference/nx-json#task-options)                                                                                                  |
-| `daemon`               | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/concepts/nx-daemon#disable-the-daemon) in `nx.json`                                               |
+| `daemon`               | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/reference/nx-daemon#disable-the-daemon) in `nx.json`                                              |
 | `envMode`              | Nx core does not block any environment variables. See [Loading Environment Variables](/docs/reference/environment-variables#loading-environment-variables)       |
 | `globalDependencies`   | Add to the [`sharedGlobals` `namedInput`](/docs/kb/configure-inputs)                                                                                             |
 | `globalEnv`            | Add to the [`sharedGlobals` `namedInput`](/docs/kb/configure-inputs) as an [`env` input](/docs/reference/inputs#environment-variables)                           |
@@ -147,12 +147,12 @@ Here's how Turborepo commands map to Nx:
 | `--continue`                 | [Use `--nx-bail`](/docs/reference/nx-commands#nxbail) with the inverse value                                                                                     |
 | `--cpuprofile`               | Use [`NX_PROFILE=profile.json`](/docs/kb/performance-profiling)                                                                                                  |
 | `--cwd`                      | Available in [`run-commands` executor](/docs/reference/nx/executors#run-commands#cwd)                                                                            |
-| `--daemon`                   | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/concepts/nx-daemon#disable-the-daemon)                                                            |
+| `--daemon`                   | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/docs/reference/nx-daemon#disable-the-daemon)                                                           |
 | `--dry-run`                  | Use [`nx show target <project>:<target> --inputs --outputs`](/docs/reference/nx-commands#nx-show-target) to preview inputs and outputs (available since 22.6.0+) |
 | `--env-mode`                 | See [Loading Environment Variables](/docs/reference/environment-variables#loading-environment-variables)                                                         |
 | `--filter`                   | Use lots of advanced project matcher syntax like [`-p admin-*` or `-p tag:api-*`](/docs/reference/nx-commands#nx-run-many)                                       |
 | `--force`                    | [`nx reset`](/docs/reference/nx-commands#nx-reset) and then run the command again                                                                                |
-| `--framework-inference`      | N/A. [Nx plugins infer tasks automatically as a first class feature](/docs/concepts/inferred-tasks)                                                              |
+| `--framework-inference`      | N/A. [Nx plugins infer tasks automatically as a first class feature](/docs/concepts/mental-model#inferred-tasks)                                                 |
 | `--global-deps`              | Use the [`sharedGlobals` `namedInput`](/docs/kb/configure-inputs). Nx is far more flexible with composable [`namedInputs`](/docs/reference/inputs)               |
 | `--graph`                    | [Similar syntax](/docs/reference/nx-commands#graph) or [`nx graph`](/docs/reference/nx-commands#nx-graph) for full interactive experience                        |
 | `--heap`                     | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                      |

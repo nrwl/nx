@@ -109,7 +109,7 @@ If you prefer not to enable blanket Unix socket access, you can disable the Nx f
 NX_DAEMON=false nx <command>
 ```
 
-The [Nx daemon](/docs/concepts/nx-daemon) keeps a persistent process running to speed up repeated operations. Disabling it means Nx starts fresh on every invocation, resulting in slower cold starts (especially in large workspaces).
+The [Nx daemon](/docs/reference/nx-daemon) keeps a persistent process running to speed up repeated operations. Disabling it means Nx starts fresh on every invocation, resulting in slower cold starts (especially in large workspaces).
 
 ### Disable plugin isolation
 
@@ -117,7 +117,7 @@ The [Nx daemon](/docs/concepts/nx-daemon) keeps a persistent process running to 
 NX_ISOLATE_PLUGINS=false nx <command>
 ```
 
-[Plugin isolation](/docs/concepts/inferred-tasks) runs each plugin in a separate forked process to prevent conflicts between multiple TypeScript compilers, module-level caches, and global state. Disabling it runs all plugins in the main process, which can cause issues in workspaces with plugins that have conflicting dependencies.
+[Plugin isolation](/docs/concepts/mental-model#inferred-tasks) runs each plugin in a separate forked process to prevent conflicts between multiple TypeScript compilers, module-level caches, and global state. Disabling it runs all plugins in the main process, which can cause issues in workspaces with plugins that have conflicting dependencies.
 
 {% aside type="caution" title="Workarounds are not recommended for regular use" %}
 Both environment variables work around the symptom rather than fixing the root cause. The `allowAllUnixSockets` setting is the proper fix and doesn't sacrifice any Nx functionality.
