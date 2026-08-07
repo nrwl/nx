@@ -30,7 +30,16 @@ export { readProjectConfigurationsFromRootMap } from './project-graph/utils/proj
 export { findMatchingConfigFiles } from './project-graph/utils/project-configuration-utils';
 export { findMatchingProjects } from './utils/find-matching-projects';
 export { readTargetDefaultsForTarget } from './project-graph/utils/project-configuration/target-defaults';
-export { getIgnoreObjectForTree } from './utils/ignore';
+// Only the tree-bound checkers and their type cross the boundary. The
+// primitives they are built from carry preconditions a caller can violate - a
+// chain must be resolved from the file's own directory, and the array it
+// returns is the memo cache itself - and nothing outside this package needs
+// them.
+export {
+  createGitIgnoreChecker,
+  createPrettierIgnoreChecker,
+  type TreeIgnoreChecker,
+} from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';
 export { sortObjectByKeys } from './utils/object-sort';

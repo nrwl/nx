@@ -182,6 +182,20 @@ pub(crate) const HARDCODED_IGNORE_PATTERNS: &[&str] = &[
     "**/.yarn/cache",
 ];
 
+/// The same list, for JavaScript callers that walk a tree rather than the
+/// filesystem - `visitNotIgnoredFiles` - so both sides apply one baseline
+/// instead of maintaining a second copy that drifts.
+///
+/// The patterns are gitignore-shaped, so they read the same to the `ignore`
+/// crate here and the `ignore` npm package there.
+#[napi]
+pub fn get_hardcoded_ignore_patterns() -> Vec<String> {
+    HARDCODED_IGNORE_PATTERNS
+        .iter()
+        .map(|pattern| pattern.to_string())
+        .collect()
+}
+
 pub(crate) fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
     P: AsRef<Path>,
