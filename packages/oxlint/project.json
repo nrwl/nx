@@ -1,0 +1,44 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/oxlint",
+  "projectType": "library",
+  "implicitDependencies": ["eslint-plugin"],
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js oxlint packages/oxlint/readme-template.md packages/oxlint/README.md",
+      "inputs": ["copyReadme"],
+      "outputs": ["{projectRoot}/README.md"],
+      "dependsOn": ["^build", "build-base"]
+    },
+    "oxlint": {
+      "command": "oxlint .",
+      "options": {
+        "cwd": "packages/oxlint",
+        "max-warnings": 0
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "externalDependencies": ["oxlint"]
+        }
+      ],
+      "metadata": {
+        "technologies": ["oxlint"],
+        "description": "Runs Oxlint on project",
+        "help": {
+          "command": "pnpm exec oxlint --help",
+          "example": {
+            "options": {
+              "max-warnings": 0
+            }
+          }
+        }
+      }
+    },
+    "lint": {
+      "dependsOn": ["...", "oxlint"]
+    }
+  }
+}

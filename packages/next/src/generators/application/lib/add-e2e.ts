@@ -80,7 +80,6 @@ export async function addE2e(
 
     const e2eTask = await configurationGenerator(host, {
       ...options,
-      linter: 'eslint',
       project: options.e2eProjectName,
       directory: 'src',
       skipFormat: true,

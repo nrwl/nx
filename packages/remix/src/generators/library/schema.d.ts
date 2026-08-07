@@ -9,7 +9,7 @@ export interface NxRemixGeneratorSchema {
   /** @deprecated Use bundler instead. */
   buildable?: boolean;
   bundler?: 'none' | 'vite' | 'rollup';
-  linter?: 'none' | 'eslint';
+  linter?: 'none' | 'eslint' | 'oxlint';
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   js?: boolean;
   skipFormat?: boolean;

@@ -5,7 +5,7 @@ import {
   Tree,
   joinPathFragments,
 } from '@nx/devkit';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -24,11 +24,12 @@ import {
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
 } from './versions';
+import { addLintingToProject } from '@nx/js';
 
 export async function addLinting(
   host: Tree,
   options: {
-    linter: Linter | LinterType;
+    linter: LinterType;
     name: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
@@ -44,22 +45,26 @@ export async function addLinting(
   },
   projectType: 'lib' | 'app'
 ) {
-  if (options.linter === 'eslint') {
-    const tasks: GeneratorCallback[] = [];
-    const lintTask = await lintProjectGenerator(host, {
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
+      oxlintPlugins: ['vue'],
       linter: options.linter,
       project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
       enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
 
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter === 'eslint') {
     if (useFlatConfig(host)) {
     } else {
       const addExtendsTask = addExtendsToLintConfig(
@@ -100,11 +105,9 @@ export async function addLinting(
       );
       tasks.push(installTask);
     }
-
-    return runTasksInSerial(...tasks);
-  } else {
-    return () => {};
   }
+
+  return runTasksInSerial(...tasks);
 }
 
 function editEslintConfigFiles(tree: Tree, projectRoot: string) {

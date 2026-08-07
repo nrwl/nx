@@ -50,6 +50,7 @@ describe('Remix Application', () => {
 
       // ACT
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'test',
         directory: '.',
         addPlugin: true,
@@ -73,6 +74,7 @@ describe('Remix Application', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'test',
         directory: '.',
         addPlugin: true,
@@ -136,6 +138,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: '.',
           unitTestRunner: 'vitest',
@@ -161,6 +164,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: '.',
           unitTestRunner: 'jest',
@@ -188,6 +192,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: '.',
           e2eTestRunner: 'cypress',
@@ -208,6 +213,7 @@ describe('Remix Application', () => {
 
       // ACT
       await applicationGenerator(tree, {
+        linter: 'eslint',
         name: 'test',
         directory: '.',
         e2eTestRunner: 'playwright',
@@ -229,6 +235,7 @@ describe('Remix Application', () => {
 
       // ACT
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'test',
         addPlugin: true,
       });
@@ -248,6 +255,7 @@ describe('Remix Application', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'test',
         addPlugin: true,
         skipFormat: true,
@@ -308,6 +316,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: 'demo',
           addPlugin: true,
@@ -332,6 +341,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           name: 'test',
           directory: 'apps/demo',
           addPlugin: true,
@@ -357,6 +367,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'test',
           unitTestRunner: 'vitest',
           addPlugin: true,
@@ -381,6 +392,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'test',
           unitTestRunner: 'jest',
           addPlugin: true,
@@ -404,6 +416,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'test',
           e2eTestRunner: 'cypress',
           addPlugin: true,
@@ -423,6 +436,7 @@ describe('Remix Application', () => {
 
         // ACT
         await applicationGenerator(tree, {
+          linter: 'eslint',
           directory: 'test',
           e2eTestRunner: 'playwright',
           addPlugin: true,
@@ -462,6 +476,7 @@ describe('Remix Application', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         e2eTestRunner: 'playwright',
         unitTestRunner: 'jest',
@@ -808,6 +823,7 @@ describe('Remix Application', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(tree, {
+        linter: 'eslint',
         directory: 'myapp',
         e2eTestRunner: 'playwright',
         addPlugin: true,

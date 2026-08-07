@@ -6,4 +6,6 @@ export const enum Linter {
   None = 'none',
 }
 
-export type LinterType = 'eslint' | 'none';
+// Standalone copy of the canonical `LinterType` in `@nx/js`: `@nx/workspace`
+// does not depend on `@nx/js`. Keep the two in sync.
+export type LinterType = 'eslint' | 'oxlint' | 'none';

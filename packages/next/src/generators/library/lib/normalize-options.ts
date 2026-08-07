@@ -4,9 +4,12 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/internal';
 import { Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import { normalizeLinterOption, isUsingTsSolutionSetup } from '@nx/js/internal';
+import type { LinterType } from '@nx/js';
 
 export interface NormalizedSchema extends Schema {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   importPath: string;
   projectRoot: string;
   isUsingTsSolutionConfig: boolean;
@@ -36,6 +39,9 @@ export async function normalizeOptions(
 
   return {
     ...options,
+    // Resolved after the spread: the framework's ESLint shaping is guarded on
+    // `=== 'eslint'`, and an unresolved `undefined` would skip all of it.
+    linter: await normalizeLinterOption(host, options.linter),
     importPath,
     projectRoot,
     isUsingTsSolutionConfig,

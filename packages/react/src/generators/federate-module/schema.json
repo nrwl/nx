@@ -50,10 +50,9 @@
       "alias": "s"
     },
     "linter": {
-      "description": "The tool to use for running lint checks.",
+      "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "enum": ["eslint"],
-      "default": "eslint"
+      "enum": ["eslint", "oxlint"]
     },
     "skipFormat": {
       "description": "Skip formatting files.",

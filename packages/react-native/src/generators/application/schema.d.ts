@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   directory: string;
@@ -10,7 +10,7 @@ export interface Schema {
   unitTestRunner: 'jest' | 'none'; // default is jest
   classComponent?: boolean;
   js?: boolean;
-  linter: Linter | LinterType;
+  linter?: LinterType;
   enableTypedLinting?: boolean;
   /**
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.

@@ -1,4 +1,3 @@
-import { lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -23,29 +22,32 @@ import {
   getEslintConfigNextDependenciesVersionsToInstall,
   isNext16,
 } from '../../../utils/version-utils';
+import { addLintingToProject } from '@nx/js';
 
 export async function addLinting(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  if (options.linter !== 'eslint') return () => {};
-
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(
-    await lintProjectGenerator(host, {
+    await addLintingToProject(host, {
+      oxlintPlugins: ['nextjs', 'react', 'react-perf', 'jsx-a11y'],
       linter: options.linter,
       project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
       rootProject: options.rootProject,
       enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
+      skipPackageJson: options.skipPackageJson,
     })
   );
+
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
 
   if (options.linter === 'eslint' && isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
@@ -111,7 +113,7 @@ export async function addLinting(
     ]);
   }
 
-  if (!options.skipPackageJson) {
+  if (options.linter === 'eslint' && !options.skipPackageJson) {
     const eslintConfigNextVersion =
       await getEslintConfigNextDependenciesVersionsToInstall(host);
 

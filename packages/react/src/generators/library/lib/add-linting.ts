@@ -1,4 +1,3 @@
-import { lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -6,6 +5,7 @@ import {
   Tree,
   joinPathFragments,
 } from '@nx/devkit';
+import { addLintingToProject } from '@nx/js';
 
 import { NormalizedSchema } from '../schema';
 import { extraEslintDependencies } from '../../../utils/lint';
@@ -20,22 +20,29 @@ import {
 } from '@nx/eslint/internal';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === 'eslint') {
-    const tasks: GeneratorCallback[] = [];
-    const lintTask = await lintProjectGenerator(host, {
+  if (options.linter === 'none') {
+    return () => {};
+  }
+
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(
+    await addLintingToProject(host, {
+      oxlintPlugins: ['react', 'react-perf', 'jsx-a11y'],
       linter: options.linter,
       project: options.name,
       tsConfigPaths: [
         joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
+    })
+  );
 
+  // Predefined configs, `extends` and ignore entries are ESLint concepts with
+  // no equivalent in other linters.
+  if (options.linter === 'eslint') {
     if (isEslintConfigSupported(host)) {
       if (useFlatConfig(host)) {
         addPredefinedConfigToFlatLintConfig(
@@ -67,20 +74,18 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       }
     }
 
-    let installTask = () => {};
     if (!options.skipPackageJson) {
-      installTask = addDependenciesToPackageJson(
-        host,
-        extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies,
-        undefined,
-        true
+      tasks.push(
+        addDependenciesToPackageJson(
+          host,
+          extraEslintDependencies.dependencies,
+          extraEslintDependencies.devDependencies,
+          undefined,
+          true
+        )
       );
-      tasks.push(installTask);
     }
-
-    return runTasksInSerial(...tasks);
-  } else {
-    return () => {};
   }
+
+  return runTasksInSerial(...tasks);
 }

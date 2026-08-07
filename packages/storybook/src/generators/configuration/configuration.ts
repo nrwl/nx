@@ -33,7 +33,6 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   getStorybookVersionToInstall,
@@ -244,7 +243,6 @@ function normalizeSchema(
 
   const defaults = {
     interactionTests: true,
-    linter: 'eslint' as LinterType,
     js: false,
     tsConfiguration: true,
     addPlugin,

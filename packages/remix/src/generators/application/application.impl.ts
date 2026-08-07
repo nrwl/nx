@@ -18,7 +18,11 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { initGenerator as jsInitGenerator, extractTsConfigBase } from '@nx/js';
+import {
+  addLintingToProject,
+  initGenerator as jsInitGenerator,
+  extractTsConfigBase,
+} from '@nx/js';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
   isbotVersion,
@@ -258,7 +262,19 @@ export async function remixApplicationGeneratorInternal(
     );
   }
 
-  if (options.linter !== 'none') {
+  if (options.linter !== 'eslint' && options.linter !== 'none') {
+    tasks.push(
+      await addLintingToProject(tree, {
+        oxlintPlugins: ['react', 'react-perf', 'jsx-a11y'],
+        unitTestRunner: options.unitTestRunner,
+        linter: options.linter,
+        project: options.projectName,
+        addPlugin: options.addPlugin,
+      })
+    );
+  }
+
+  if (options.linter === 'eslint') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',
       nxVersion

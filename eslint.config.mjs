@@ -159,13 +159,15 @@ export const baseConfig = [
           enforceBuildableLibDependency: true,
           checkDynamicDependenciesExceptions: ['.*'],
           allow: [],
-          // These cycles are intentional: plugin packages declare graph
-          // edges to their lazy-loaded (ensurePackage) peers via
-          // `implicitDependencies` in project.json. The project graph is
-          // cyclic by design; the task graph is kept acyclic via explicit
-          // `dependsOn` overrides on the relevant build-base targets.
+          // These cycles are intentional: plugin packages declare graph edges to
+          // their lazy-loaded (ensurePackage) peers, via `implicitDependencies`
+          // in project.json or, for `js`, devDependencies in package.json. The
+          // project graph is cyclic by design; the task graph is kept acyclic
+          // via explicit `dependsOn` overrides on the relevant build-base
+          // targets.
           ignoredCircularDependencies: [
             ['js', 'workspace'],
+            ['js', '@nx/oxlint'],
             ['angular', 'workspace'],
             ['express', 'node'],
             ['nest', 'node'],

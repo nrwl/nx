@@ -1,9 +1,9 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   directory: string;
   name?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   formatter?: 'none' | 'prettier';
   skipFormat?: boolean;
   unitTestRunner?: 'vitest' | 'none';
@@ -25,6 +25,8 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
+  // `normalizeOptions` always resolves this, so it is no longer optional.
+  linter: LinterType;
   projectName: string;
   appProjectRoot: string;
   importPath: string;

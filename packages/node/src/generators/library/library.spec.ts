@@ -17,6 +17,9 @@ const baseLibraryConfig = {
   directory: 'my-lib',
   compiler: 'tsc' as const,
   addPlugin: true,
+  // Stated rather than inferred: these specs assert ESLint output, and
+  // `detectLinters` comes back empty for a workspace with no linter installed.
+  linter: 'eslint' as const,
 };
 
 describe('lib', () => {
@@ -174,6 +177,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         ...baseLibraryConfig,
         directory: 'my-dir/my-lib',
       });
@@ -249,6 +253,7 @@ describe('lib', () => {
 
     it('should generate filenames that do not contain directory with --simpleModuleName', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         ...baseLibraryConfig,
         directory: 'my-dir/my-lib',
         simpleModuleName: true,
@@ -530,6 +535,7 @@ describe('lib', () => {
 
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         addPlugin: true,
@@ -645,6 +651,7 @@ describe('lib', () => {
 
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         addPlugin: true,
@@ -795,6 +802,7 @@ describe('lib', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         addPlugin: true,

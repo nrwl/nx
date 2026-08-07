@@ -192,7 +192,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     await addLinting(tree, {
       projectName: options.projectName,
       projectRoot: options.appProjectRoot,
-      linter: options.linter ?? 'eslint',
+      linter: options.linter,
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
       enableTypedLinting: isTypedLintingEnabled(options),

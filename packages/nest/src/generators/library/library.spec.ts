@@ -164,6 +164,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-lib',
       });
 
@@ -176,6 +177,7 @@ describe('lib', () => {
     it('should generate the .eslintrc.json file (eslintrc)', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-lib',
       });
 
@@ -200,6 +202,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'my-dir/my-lib',
       });
 
@@ -381,6 +384,7 @@ describe('lib', () => {
 
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         useProjectJson: false,
@@ -516,6 +520,7 @@ describe('lib', () => {
 
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         useProjectJson: false,
@@ -625,6 +630,7 @@ describe('lib', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await libraryGenerator(tree, {
+        linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
         useProjectJson: true,

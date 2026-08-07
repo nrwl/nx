@@ -1,4 +1,4 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface Schema {
   directory: string;
@@ -8,7 +8,7 @@ export interface Schema {
   skipFormat?: boolean;
   tags?: string;
   unitTestRunner?: 'jest' | 'none';
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   buildable?: boolean;
   publishable?: boolean;
   importPath?: string;

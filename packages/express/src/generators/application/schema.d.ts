@@ -1,4 +1,7 @@
-import type { Linter, LinterType } from '@nx/eslint';
+// `LinterType` comes from `@nx/js`, which this package declares; `@nx/eslint`
+// is not a dependency here, so importing it would resolve to a published
+// tarball rather than workspace source.
+import type { LinterType } from '@nx/js';
 import type { UnitTestRunner } from '../../utils/test-runners';
 
 export interface Schema {
@@ -8,7 +11,7 @@ export interface Schema {
   skipPackageJson: boolean;
   unitTestRunner: UnitTestRunner;
   tags?: string;
-  linter: Linter | LinterType;
+  linter?: LinterType;
   frontendProject?: string;
   swcJest?: boolean;
   /** @deprecated use `swcJest` instead */

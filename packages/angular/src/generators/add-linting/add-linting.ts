@@ -6,7 +6,8 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { lintProjectGenerator } from '@nx/eslint';
+import { addLintingToProject } from '@nx/js';
+import { normalizeLinterOption } from '@nx/js/internal';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   javaScriptOverride,
@@ -29,23 +30,38 @@ export async function addLintingGenerator(
   options: AddLintingGeneratorSchema
 ): Promise<GeneratorCallback> {
   assertSupportedAngularVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
-  const lintTask = await lintProjectGenerator(tree, {
-    linter: 'eslint',
-    project: options.projectName,
-    tsConfigPaths: [
-      joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    enableTypedLinting: isTypedLintingEnabled(options),
-    skipFormat: true,
-    rootProject: rootProject,
-    addPlugin: options.addPlugin ?? false,
-    addExplicitTargets: true,
-    skipPackageJson: options.skipPackageJson,
-  });
-  tasks.push(lintTask);
+  // Resolved once, up front: `undefined !== 'eslint'` is true, so an unresolved
+  // linter would take the early return below and skip the angular-eslint arm.
+  // Callers that already resolved it pass it in, so this only prompts when the
+  // generator is run directly.
+  const linter = await normalizeLinterOption(tree, options.linter);
+  tasks.push(
+    await addLintingToProject(tree, {
+      linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      enableTypedLinting: isTypedLintingEnabled(options),
+      rootProject: rootProject,
+      addPlugin: options.addPlugin ?? false,
+      addExplicitTargets: true,
+      skipPackageJson: options.skipPackageJson,
+    })
+  );
+
+  // The angular-eslint presets, selector rules and dependency install below have
+  // no equivalent in other linters. Only the formatting tail is shared.
+  if (linter !== 'eslint') {
+    if (!options.skipFormat) {
+      await formatFiles(tree);
+    }
+    return runTasksInSerial(...tasks);
+  }
 
   if (isEslintConfigSupported(tree)) {
     if (useFlatConfig(tree)) {

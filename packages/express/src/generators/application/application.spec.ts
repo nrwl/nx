@@ -40,6 +40,7 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await applicationGenerator(appTree, {
+      linter: 'eslint',
       directory: 'my-node-app',
     } as Schema);
 
@@ -72,6 +73,7 @@ describe('app', () => {
   it('should generate the .eslintrc.json file (eslintrc)', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, {
+      linter: 'eslint',
       directory: 'my-node-app',
     } as Schema);
 
@@ -195,6 +197,7 @@ describe('app', () => {
 
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(appTree, {
+        linter: 'eslint',
         directory: 'myapp',
         useProjectJson: false,
       } as Schema);
@@ -428,6 +431,7 @@ describe('app', () => {
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(appTree, {
+        linter: 'eslint',
         directory: 'myapp',
         useProjectJson: true,
         skipFormat: true,

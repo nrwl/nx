@@ -1,5 +1,5 @@
 import type { Linter as EsLintLinter } from 'eslint';
-import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { LinterType } from '@nx/js';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -22,11 +22,12 @@ import {
   nuxtEslintConfigVersion,
   nuxtEslintConfigLegacyVersion,
 } from './versions';
+import { addLintingToProject } from '@nx/js';
 
 export async function addLinting(
   host: Tree,
   options: {
-    linter: Linter | LinterType;
+    linter: LinterType;
     projectName: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
@@ -39,20 +40,23 @@ export async function addLinting(
   }
 ) {
   const tasks: GeneratorCallback[] = [];
-  if (options.linter === 'eslint') {
-    const enableTypedLinting = isTypedLintingEnabled(options);
-    const lintTask = await lintProjectGenerator(host, {
+  tasks.push(
+    await addLintingToProject(host, {
+      oxlintPlugins: ['vue'],
       linter: options.linter,
       project: options.projectName,
       tsConfigPaths: [joinPathFragments(options.projectRoot, 'tsconfig.json')],
       unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
       rootProject: options.rootProject,
-      enableTypedLinting,
+      enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: true,
-    });
-    tasks.push(lintTask);
+    })
+  );
 
+  // Everything below configures ESLint — predefined configs, `extends`, ignore
+  // entries — which have no equivalent in other linters.
+  if (options.linter === 'eslint') {
+    const enableTypedLinting = isTypedLintingEnabled(options);
     const isFlatConfig = useFlatConfig(host);
 
     // Version-aware dependencies:

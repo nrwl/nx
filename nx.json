@@ -264,12 +264,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": [
-        "examples/angular-rspack/**/*",
-        "examples/react/**/*",
-        "nx-dev/**/*",
-        "e2e/**/*"
-      ],
+      "exclude": ["examples/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {
@@ -289,7 +284,7 @@
     },
     {
       "plugin": "@nx/playwright/plugin",
-      "exclude": ["examples/react/**"],
+      "exclude": ["examples/**"],
       "options": {
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
@@ -297,7 +292,7 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/**/__fixtures__/**/*", "examples/react/**/*"],
+      "exclude": ["packages/**/__fixtures__/**/*", "examples/**/*"],
       "options": {
         "targetName": "lint"
       }

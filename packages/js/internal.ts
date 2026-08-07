@@ -103,6 +103,7 @@ export {
   normalizeLinterOption,
   normalizeUnitTestRunnerOption,
 } from './src/utils/generator-prompts';
+export { detectLinters } from './src/utils/linter';
 export { createGlobPatternsForDependencies } from './src/utils/generate-globs';
 export { getImportPath } from './src/utils/get-import-path';
 export { stripGlobToBaseDir } from './src/utils/strip-glob-to-base-dir';

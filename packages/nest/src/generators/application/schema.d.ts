@@ -1,10 +1,10 @@
-import type { Linter, LinterType } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 
 export interface ApplicationGeneratorOptions {
   directory: string;
   name?: string;
   frontendProject?: string;
-  linter?: Linter | LinterType;
+  linter?: LinterType;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   tags?: string;

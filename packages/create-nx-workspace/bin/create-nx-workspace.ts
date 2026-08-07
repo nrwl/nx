@@ -22,10 +22,13 @@ import {
   determineAnalytics,
   determineDefaultBase,
   determineIfGitHubWillBeUsed,
+  determineLinterOptions,
   determineNxCloud,
   determineNxCloudV2,
   determinePackageManager,
   determineTemplate,
+  LINTERS,
+  type Linter,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
@@ -93,7 +96,7 @@ type AngularUnitTestRunner =
 
 interface BaseArguments extends CreateWorkspaceOptions {
   preset?: Preset;
-  linter?: 'none' | 'eslint';
+  linter?: Linter;
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
   useProjectJson?: boolean;
@@ -155,6 +158,10 @@ interface NodeArguments extends BaseArguments {
   unitTestRunner: 'none' | 'jest';
 }
 
+interface WebArguments extends BaseArguments {
+  stack: 'web';
+}
+
 interface UnknownStackArguments extends BaseArguments {
   stack: 'unknown';
 }
@@ -165,6 +172,7 @@ type Arguments =
   | AngularArguments
   | VueArguments
   | NodeArguments
+  | WebArguments
   | UnknownStackArguments;
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
@@ -243,6 +251,15 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
+            type: 'string',
+          })
+          // `choices` is load-bearing, not documentation: `determineLinterOptions`
+          // returns `--linter` as-is and nothing downstream validates it — the
+          // `new`/`preset` schemas declare no enum — so a typo would surface only
+          // as an `Unsupported linter` throw partway through scaffolding.
+          .option('linter', {
+            describe: chalk.dim`Linter to use.`,
+            choices: [...LINTERS],
             type: 'string',
           })
           .option('framework', {
@@ -1012,7 +1029,7 @@ async function promptForFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'unknown'> {
+): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'web' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -1044,6 +1061,7 @@ async function determineStack(
       case Preset.TsStandalone:
         return 'none';
       case Preset.WebComponents:
+        return 'web';
       default:
         return 'unknown';
     }
@@ -1087,7 +1105,7 @@ async function determineStack(
   return stack;
 }
 
-async function determinePresetOptions(
+export async function determinePresetOptions(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<Partial<Arguments>> {
   switch (parsedArgs.stack) {
@@ -1101,9 +1119,22 @@ async function determinePresetOptions(
       return determineVueOptions(parsedArgs);
     case 'node':
       return determineNodeOptions(parsedArgs);
+    case 'web':
+      return determineWebOptions(parsedArgs);
     default:
       return parsedArgs;
   }
+}
+
+/**
+ * `web-components` prompts for nothing of its own — `style` and `e2eTestRunner`
+ * come from the CLI or fall back downstream — but the preset does generate a
+ * lintable app, so it still needs a linter.
+ */
+async function determineWebOptions(
+  parsedArgs: yargs.Arguments<WebArguments>
+): Promise<Partial<WebArguments>> {
+  return { linter: await determineLinterOptions(parsedArgs) };
 }
 
 async function determineFormatterOptions(
@@ -1132,30 +1163,6 @@ async function determineFormatterOptions(
     },
   ]);
   return reply.prettier === 'Yes' ? 'prettier' : 'none';
-}
-
-async function determineLinterOptions(
-  args: { interactive?: boolean },
-  opts?: { preferEslint?: boolean }
-) {
-  const reply = await enquirer.prompt<{ eslint: 'Yes' | 'No' }>([
-    {
-      name: 'eslint',
-      message: `Would you like to use ESLint?`,
-      type: 'autocomplete',
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: opts?.preferEslint ? 0 : 1,
-      skip: !args.interactive || isCI(),
-    },
-  ]);
-  return reply.eslint === 'Yes' ? 'eslint' : 'none';
 }
 
 async function determineNoneOptions(
@@ -1222,7 +1229,15 @@ async function determineNoneOptions(
       js = reply.ts === 'No';
     }
 
-    return { preset, js, appName };
+    // `ts-standalone` is the only preset on this stack that generates a
+    // lintable project; `apps`, `ts` and `npm` reach no generator that takes a
+    // linter, so asking would discard the answer.
+    const linter =
+      preset === Preset.TsStandalone
+        ? await determineLinterOptions(parsedArgs)
+        : undefined;
+
+    return { preset, js, appName, linter };
   }
 }
 
@@ -1239,7 +1254,7 @@ async function determineReactOptions(
   let routing = true;
   let nextAppDir = false;
   let nextSrcDir = false;
-  let linter: undefined | 'none' | 'eslint';
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
@@ -1357,13 +1372,14 @@ async function determineReactOptions(
     style = reply.style;
   }
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
     });
   } else {
-    linter = 'eslint';
     formatter = 'prettier';
   }
 
@@ -1392,7 +1408,7 @@ async function determineVueOptions(
   let appName: string;
   let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let linter: undefined | 'none' | 'eslint';
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
@@ -1469,13 +1485,14 @@ async function determineVueOptions(
     style = reply.style;
   }
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
     });
   } else {
-    linter = 'eslint';
     formatter = 'prettier';
   }
 
@@ -1675,6 +1692,7 @@ async function determineAngularOptions(
   }
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  const linter = await determineLinterOptions(parsedArgs);
 
   return {
     preset,
@@ -1688,6 +1706,7 @@ async function determineAngularOptions(
     ssr,
     prefix,
     zoneless,
+    linter,
   };
 }
 
@@ -1698,7 +1717,7 @@ async function determineNodeOptions(
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
-  let linter: undefined | 'none' | 'eslint';
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
   let unitTestRunner: undefined | 'none' | 'jest' = undefined;
   const workspaces = parsedArgs.workspaces;
@@ -1765,13 +1784,14 @@ async function determineNodeOptions(
     exclude: 'vitest',
   });
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
     });
   } else {
-    linter = 'eslint';
     formatter = 'prettier';
   }
 

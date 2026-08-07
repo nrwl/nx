@@ -86,6 +86,7 @@
     "tslib": "catalog:typescript"
   },
   "devDependencies": {
+    "@nx/storybook": "workspace:*",
     "@nx/vitest": "workspace:*",
     "nx": "workspace:*"
   },

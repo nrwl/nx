@@ -13,6 +13,7 @@ import type {
   PresetGeneratorSchema,
 } from './schema';
 import { type PackageJson } from '@nx/devkit/internal';
+import { normalizeLinterOption } from '@nx/js/internal';
 
 export async function presetGenerator(
   tree: Tree,
@@ -30,11 +31,11 @@ export async function presetGeneratorInternal(
   rawOptions: PresetGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
-  const options = normalizeOptions(rawOptions);
+  const options = await normalizeOptions(tree, rawOptions);
 
   const pluginTask = await pluginGenerator(tree, {
     compiler: 'tsc',
-    linter: 'eslint',
+    linter: options.linter,
     skipFormat: true,
     unitTestRunner: 'jest',
     importPath: options.pluginName,
@@ -62,7 +63,7 @@ export async function presetGeneratorInternal(
       project: options.pluginName,
       skipFormat: true,
       unitTestRunner: 'jest',
-      linter: 'eslint',
+      linter: options.linter,
       compiler: 'tsc',
       useProjectJson: options.useProjectJson,
       addPlugin: options.addPlugin,
@@ -86,9 +87,10 @@ function moveNxPluginToDevDeps(tree: Tree) {
   });
 }
 
-function normalizeOptions(
+async function normalizeOptions(
+  tree: Tree,
   options: PresetGeneratorSchema
-): NormalizedPresetGeneratorOptions {
+): Promise<NormalizedPresetGeneratorOptions> {
   return {
     ...options,
     pluginName: names(
@@ -100,6 +102,9 @@ function normalizeOptions(
       options.createPackageName === 'false' // for command line in e2e, it is passed as a string
         ? undefined
         : options.createPackageName,
+    // Resolved once here rather than left to the two child generators, which
+    // each prompt on their own and would ask the same question twice.
+    linter: await normalizeLinterOption(tree, options.linter),
   };
 }
 

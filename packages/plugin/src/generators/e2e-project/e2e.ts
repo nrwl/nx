@@ -22,13 +22,17 @@ import {
   type GeneratorCallback,
   type ProjectConfiguration,
 } from '@nx/devkit';
-import { LinterType, lintProjectGenerator } from '@nx/eslint';
+import type { LinterType } from '@nx/js';
 import {
   addPropertyToJestConfig,
   configurationGenerator,
   findJestConfig,
 } from '@nx/jest';
-import { getRelativePathToRootTsConfig, setupVerdaccio } from '@nx/js';
+import {
+  addLintingToProject,
+  getRelativePathToRootTsConfig,
+  setupVerdaccio,
+} from '@nx/js';
 import {
   addLocalRegistryScripts,
   normalizeLinterOption,
@@ -346,19 +350,16 @@ async function addLintingToApplication(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const lintTask = await lintProjectGenerator(tree, {
+  return addLintingToProject(tree, {
     linter: options.linter,
     project: options.projectName,
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
     unitTestRunner: options.testRunner ?? 'jest',
-    skipFormat: true,
     enableTypedLinting: false,
     addPlugin: options.addPlugin,
   });
-
-  return lintTask;
 }
 
 function updatePluginPackageJson(tree: Tree, options: NormalizedSchema) {
