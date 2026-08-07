@@ -223,6 +223,36 @@ export function createPrettierIgnoreChecker(tree: Tree): TreeIgnoreChecker {
   });
 }
 
+/**
+ * What oxfmt ignores: the same two files prettier reads, but resolved from each
+ * file's own directory upwards rather than the workspace root - measured
+ * against the oxfmt 0.60.0 CLI, which differs from prettier on exactly that
+ * axis. Still one matcher per file rather than merged, as prettier does.
+ *
+ * `ignorePatterns` from an oxfmt config is not an ignore file and is not read
+ * here; `formatFilesWithOxfmt` applies it rooted at that config's directory.
+ *
+ * Reads from the tree rather than disk, as above.
+ */
+export function createOxfmtIgnoreChecker(tree: Tree): TreeIgnoreChecker {
+  return createTreeIgnoreChecker(tree, OXFMT_IGNORE_OPTIONS);
+}
+
+/**
+ * Exported, unlike git's and prettier's, because oxfmt is the one tool with two
+ * consumers: this tree-backed checker and the disk-backed resolver in
+ * `formatters/oxfmt.ts`. They must agree, and a shared value is the only thing
+ * that makes them, so do not restate these three anywhere.
+ *
+ * `satisfies` rather than an annotation so `IgnoreCheckerOptions` itself stays
+ * private - the type is what stops a caller assembling its own set.
+ */
+export const OXFMT_IGNORE_OPTIONS = {
+  filenames: ['.gitignore', '.prettierignore'],
+  cascade: true,
+  merge: false,
+} satisfies IgnoreCheckerOptions;
+
 function createTreeIgnoreChecker(
   tree: Tree,
   { filenames, cascade, merge }: IgnoreCheckerOptions

@@ -1,6 +1,7 @@
 import { readJson, Tree, writeJson } from 'nx/src/devkit-exports';
-import type { FormatterType } from 'nx/src/devkit-internals';
+import type { FormatterType, TreeIgnoreChecker } from 'nx/src/devkit-internals';
 import {
+  createOxfmtIgnoreChecker,
   createPrettierIgnoreChecker,
   detectFormatterInTree,
   formatFilesWithOxfmt,
@@ -29,7 +30,8 @@ async function importPrettier(): Promise<typeof Prettier | null> {
 /**
  * Formats the created or updated files using the configured formatter, skipping
  * `node_modules`, `.git`, the nx and yarn caches, and anything the workspace's
- * root `.gitignore` or `.prettierignore` covers
+ * `.gitignore` or `.prettierignore` covers. Which of those ignore files apply
+ * follows the formatter: prettier reads the workspace root only, oxfmt cascades.
  * @param tree - the file system tree
  * @param options - options for the formatFiles function
  *
@@ -77,24 +79,44 @@ export async function formatFiles(
 
   if (!formatterType) return;
 
-  // `getFileInfo` below looks like it filters ignored files but only covers its
-  // own built-in `node_modules` skip: with no `ignorePath` it never reads the
-  // workspace's ignore files, so `ignored` is false for everything else
-  // (measured).
+  // Each formatter gets the ignore rules its own CLI applies, so a generator
+  // does not rewrite a file that formatter would skip. prettier reads the root
+  // ignore files only; oxfmt cascades. Both measured against the real CLIs.
+  // `.nxignore` is the exception in both directions: `format.ts` filters the
+  // command's own file list through it, and neither checker reads it.
+  //
+  // `getFileInfo` in the prettier branch below looks like it filters ignored
+  // files but only covers its own built-in `node_modules` skip: with no
+  // `ignorePath` it never reads the workspace's ignore files, so `ignored` is
+  // false for everything else (measured).
   //
   // The optional call is the older-nx path - see `NOTHING_IGNORED`.
-  const { isIgnoredFile } =
-    createPrettierIgnoreChecker?.(tree) ?? NOTHING_IGNORED;
-  const files = new Set(
-    tree
-      .listChanges()
-      .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
-  );
+  const changedFiles = (
+    createChecker: ((tree: Tree) => TreeIgnoreChecker) | undefined
+  ) => {
+    const { isIgnoredFile } = createChecker?.(tree) ?? NOTHING_IGNORED;
+    return new Set(
+      tree
+        .listChanges()
+        .filter((file) => file.type !== 'DELETE' && !isIgnoredFile(file.path))
+    );
+  };
 
-  if (formatterType === 'prettier') {
-    await formatWithPrettier(tree, files);
-  } else if (formatterType === 'oxfmt') {
-    await formatWithOxfmt(tree, files);
+  // One switch rather than a checker ternary plus a dispatch `if`: those defaulted
+  // differently, so a third formatter would have been filtered with prettier's
+  // rules and then not formatted at all. One of the guarded sites
+  // `FormatterType` inventories.
+  switch (formatterType) {
+    case 'prettier':
+      await formatWithPrettier(tree, changedFiles(createPrettierIgnoreChecker));
+      break;
+    case 'oxfmt':
+      await formatWithOxfmt(tree, changedFiles(createOxfmtIgnoreChecker));
+      break;
+    default: {
+      const unhandled: never = formatterType;
+      throw new Error(`Unhandled formatter: ${unhandled}`);
+    }
   }
 }
 

@@ -99,15 +99,16 @@ describe('formatFiles', () => {
   });
 
   describe('ignore files', () => {
-    // These assert on formatted output, which needs the formatter's module to
-    // load - both reach it through a dynamic import that jest only permits
-    // under NODE_OPTIONS=--experimental-vm-modules. `nx test devkit` sets that
-    // (nx.json), a bare `npx jest` does not, and without it nothing formats and
-    // every case here is vacuous. The `kept` assertions - the ones expecting
-    // *formatted* output - are what catch that: they fail rather than passing.
-    //
     // The tree from `beforeEach` is oxfmt, which is what a new workspace gets;
     // the one prettier-specific case builds its own.
+    //
+    // Only that prettier case needs NODE_OPTIONS=--experimental-vm-modules:
+    // prettier is reached through a dynamic import jest refuses without it,
+    // and `nx test devkit` sets it via nx.json where a bare `npx jest` does
+    // not. Its `kept` assertion is what catches the flag going missing. The
+    // oxfmt cases are unaffected - `loadOxfmtModule` tries bare `require`
+    // first, which jest.preset.js maps to a CommonJS mock (measured: without
+    // the flag they still format).
     const unformatted = 'const   x   =   1';
     const formatted = 'const x = 1;\n';
 

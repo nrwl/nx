@@ -37,6 +37,7 @@ export { readTargetDefaultsForTarget } from './project-graph/utils/project-confi
 // them.
 export {
   createGitIgnoreChecker,
+  createOxfmtIgnoreChecker,
   createPrettierIgnoreChecker,
   type TreeIgnoreChecker,
 } from './utils/ignore';
