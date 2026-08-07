@@ -1748,7 +1748,21 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('symbolic link'));
   });
 
-  it('warns and skips a symlinked local-path root instead of shipping its target tree', () => {
+  const linkImporterLockfile = (target: string) =>
+    [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      linked-lib:',
+      `        specifier: link:${target}`,
+      `        version: link:${target}`,
+      '',
+    ].join('\n');
+
+  it('warns and skips a symlinked local-path root resolving outside the workspace', () => {
     const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
     // The lexical escape check sees vendor/linked, but the symlink resolves
     // outside the workspace; following it would ship the outside tree.
@@ -1758,26 +1772,54 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
       mkdirSync(join(tempDir, 'vendor'));
       symlinkSync(outsideDir, join(tempDir, 'vendor/linked'));
 
-      const lockfile = [
-        "lockfileVersion: '9.0'",
-        '',
-        'importers:',
-        '',
-        '  .:',
-        '    dependencies:',
-        '      linked-lib:',
-        '        specifier: link:vendor/linked',
-        '        version: link:vendor/linked',
-        '',
-      ].join('\n');
-
-      expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([]);
+      expect(
+        getPrunedPnpmLocalPathArtifacts(
+          tempDir,
+          linkImporterLockfile('vendor/linked')
+        )
+      ).toEqual([]);
       expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('symbolic link')
+        expect.stringContaining('outside the workspace root')
       );
     } finally {
       rmSync(outsideDir, { recursive: true, force: true });
     }
+  });
+
+  it('ships a symlinked local-path root resolving inside the workspace', () => {
+    // The pruned manifest and lockfile already point at the relocated path, so
+    // skipping the copy installs clean and fails at runtime with MODULE_NOT_FOUND.
+    mkdirSync(join(tempDir, 'libs/real'), { recursive: true });
+    writeFileSync(join(tempDir, 'libs/real/index.js'), 'REAL');
+    mkdirSync(join(tempDir, 'vendor'));
+    symlinkSync(join(tempDir, 'libs/real'), join(tempDir, 'vendor/linked'));
+
+    const artifacts = getPrunedPnpmLocalPathArtifacts(
+      tempDir,
+      linkImporterLockfile('vendor/linked')
+    );
+
+    expect(artifacts).toEqual([
+      {
+        path: 'vendor/linked/index.js',
+        sourcePath: join(tempDir, 'vendor/linked/index.js'),
+      },
+    ]);
+    expect(readFileSync(artifacts[0].sourcePath, 'utf-8')).toBe('REAL');
+  });
+
+  it('warns and skips a dangling symlinked local-path root', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    mkdirSync(join(tempDir, 'vendor'));
+    symlinkSync(join(tempDir, 'libs/gone'), join(tempDir, 'vendor/linked'));
+
+    expect(
+      getPrunedPnpmLocalPathArtifacts(
+        tempDir,
+        linkImporterLockfile('vendor/linked')
+      )
+    ).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('was not found'));
   });
 
   it('warns and skips a symlinked file: tarball', () => {
@@ -1798,11 +1840,31 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
         )
       ).toEqual([]);
       expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('symbolic link')
+        expect.stringContaining('outside the workspace root')
       );
     } finally {
       rmSync(outsideDir, { recursive: true, force: true });
     }
+  });
+
+  it('ships a symlinked file: tarball resolving inside the workspace', () => {
+    mkdirSync(join(tempDir, 'dist'), { recursive: true });
+    const bytes = Buffer.from([9, 8, 7]);
+    writeFileSync(join(tempDir, 'dist/real.tgz'), bytes);
+    mkdirSync(join(tempDir, 'vendor'));
+    symlinkSync(
+      join(tempDir, 'dist/real.tgz'),
+      join(tempDir, 'vendor/vendored-lib-1.0.0.tgz')
+    );
+
+    const artifacts = getPrunedPnpmLocalPathArtifacts(
+      tempDir,
+      lockfileWithTarball('file:vendor/vendored-lib-1.0.0.tgz')
+    );
+
+    expect(artifacts).toHaveLength(1);
+    expect(artifacts[0].path).toBe('vendor/vendored-lib-1.0.0.tgz');
+    expect(readFileSync(artifacts[0].sourcePath).equals(bytes)).toBe(true);
   });
 
   it('ships a contained directory at its shipped path, reading from the source', () => {
