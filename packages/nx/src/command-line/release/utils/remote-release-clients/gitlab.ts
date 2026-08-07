@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
+import { openUrl } from '../../../../native';
 import { orange, output } from '../../../../utils/output';
 import type { PostGitTask } from '../../changelog';
 import type { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
@@ -251,24 +252,19 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       return;
     }
 
-    const { default: open } = await (new Function(
-      'return import("open")'
-    )() as Promise<typeof import('open')>);
-    await open(result.url)
-      .then(() => {
-        console.info(
-          `\nFollow up in the browser to manually create the release:\n\n` +
-            pc.underline(pc.cyan(result.url)) +
-            `\n`
-        );
-      })
-      .catch(() => {
-        console.info(
-          `Open this link to manually create a release: \n` +
-            pc.underline(pc.cyan(result.url)) +
-            '\n'
-        );
-      });
+    if (openUrl(result.url)) {
+      console.info(
+        `\nFollow up in the browser to manually create the release:\n\n` +
+          pc.underline(pc.cyan(result.url)) +
+          `\n`
+      );
+    } else {
+      console.info(
+        `Open this link to manually create a release: \n` +
+          pc.underline(pc.cyan(result.url)) +
+          '\n'
+      );
+    }
   }
 
   private async promptForContinueInGitLab(): Promise<boolean> {
