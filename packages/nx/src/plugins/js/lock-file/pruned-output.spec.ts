@@ -324,6 +324,28 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     ).toBeNull();
   });
 
+  it('warns when the pruned lockfile parses to something other than a mapping', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    // Valid YAML, but a scalar rather than a lockfile document. Unique content,
+    // since the parse is memoized (see the unparseable case below).
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      'NOT_A_LOCKFILE_DOCUMENT'
+    );
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('does not parse to a YAML mapping')
+    );
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: { esbuild: true },
+    });
+  });
+
   it('carries allowBuilds verbatim when the pruned lockfile is unparseable', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');

@@ -339,6 +339,14 @@ let lastParsedPnpmLockfile: {
  */
 function parsePnpmLockfileYaml(content: string): object | null {
   if (lastParsedPnpmLockfile?.content !== content) {
+    // One failure disables three independent output-correctness steps at once,
+    // and the result is memoized, so it would stay invisible for the rest of
+    // the process.
+    const warnUnusable = (cause: string): void => {
+      logger.warn(
+        `Could not parse the pruned pnpm lockfile (${cause}); the pruned output will not carry patch declarations, local-path artifacts, or a validated link closure.`
+      );
+    };
     let parsed: unknown;
     try {
       parsed =
@@ -346,20 +354,14 @@ function parsePnpmLockfileYaml(content: string): object | null {
           extractMainLockfileDocument(content)
         ) ?? {};
     } catch (e) {
-      // One failure disables three independent output-correctness steps at
-      // once, and the result is memoized, so it would stay invisible for the
-      // rest of the process.
-      logger.warn(
-        `Could not parse the pruned pnpm lockfile (${
-          e instanceof Error ? e.message : e
-        }); the pruned output will not carry patch declarations, local-path artifacts, or a validated link closure.`
-      );
+      warnUnusable(e instanceof Error ? e.message : String(e));
       parsed = null;
     }
-    lastParsedPnpmLockfile = {
-      content,
-      parsed: typeof parsed === 'object' ? parsed : null,
-    };
+    if (parsed !== null && typeof parsed !== 'object') {
+      warnUnusable('it does not parse to a YAML mapping');
+      parsed = null;
+    }
+    lastParsedPnpmLockfile = { content, parsed: parsed as object | null };
   }
   return lastParsedPnpmLockfile.parsed;
 }
