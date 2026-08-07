@@ -32,7 +32,7 @@ import {
   normalizePrunedPatchPath,
   relocatePrunedLocalPathSpec,
   uncontainLocalPath,
-} from '../../../utils/package-json';
+} from './pruned-output';
 import {
   findLocalPathNode,
   findNodeMatchingVersion,
@@ -847,14 +847,14 @@ export function stringifyPnpmLockfile(
  * resolved snapshots, so removing them keeps the install identical.
  *
  * The manifest-side counterpart is `stripPrunedLockfilePnpmConfig` in
- * `utils/package-json`, which removes the matching `pnpm.*` fields from the
- * emitted `package.json`; keep the two in sync when pnpm adds config fields.
+ * `pruned-output`, which removes the matching `pnpm.*` fields from the emitted
+ * `package.json`; keep the two in sync when pnpm adds config fields.
  *
  * `patchedDependencies` is kept, but scoped to the patches whose package
  * survives the prune: an entry for a dropped package has no snapshot to attach
  * to and aborts the install with a config mismatch. The `.patch` files and the
  * matching config are carried into the pruned output separately (see
- * `getPrunedPnpmPatchArtifacts` in utils/package-json).
+ * `getPrunedPnpmPatchArtifacts` in pruned-output).
  */
 function stripStandaloneLockfileConfig(lockfile: Lockfile): void {
   delete lockfile.overrides;

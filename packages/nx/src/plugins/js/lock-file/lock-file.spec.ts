@@ -6,7 +6,7 @@ import { stringifyPnpmLockfile } from './pnpm-parser';
 import {
   rewritePrunedLocalPathSpecifiers,
   validatePrunedLocalPathClosure,
-} from '../../../utils/package-json';
+} from './pruned-output';
 
 jest.mock('node:fs', () => ({
   ...jest.requireActual('node:fs'),
@@ -24,8 +24,8 @@ jest.mock('./project-graph-pruning', () => ({
   ...jest.requireActual('./project-graph-pruning'),
   pruneProjectGraph: jest.fn((graph) => graph),
 }));
-jest.mock('../../../utils/package-json', () => ({
-  ...jest.requireActual('../../../utils/package-json'),
+jest.mock('./pruned-output', () => ({
+  ...jest.requireActual('./pruned-output'),
   rewritePrunedLocalPathSpecifiers: jest.fn(),
   validatePrunedLocalPathClosure: jest.fn(),
 }));

@@ -256,15 +256,15 @@ export type {
   PackageJson,
   PackageJsonDependencySection,
 } from './utils/package-json';
+export { readNxMigrateConfig } from './utils/package-json';
 export {
   dropEmptyPeerDependencySections,
   emitPrunedPnpmInstallAssets,
   movePeerDependencyToDependencies,
-  readNxMigrateConfig,
   relocatePrunedLocalPathSpec,
   warnUnshippableLocalPathSpec,
   writePrunedPnpmInstallSettings,
-} from './utils/package-json';
+} from './plugins/js/lock-file/pruned-output';
 export type { PackageManagerCommands } from './utils/package-manager';
 // Sourced from the leaf module rather than ./utils/plugins: the barrel index
 // pulls output.ts and core-plugins.ts into the eager closure for a function that

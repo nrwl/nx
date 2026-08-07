@@ -10,7 +10,7 @@ import {
 } from '../../../config/project-graph';
 import { vol } from 'memfs';
 import { pruneProjectGraph } from './project-graph-pruning';
-import { getPrunedPnpmLocalPathArtifacts } from '../../../utils/package-json';
+import { getPrunedPnpmLocalPathArtifacts } from './pruned-output';
 import {
   ProjectGraphBuilder,
   RawProjectGraphDependency,
@@ -25,8 +25,8 @@ jest.mock('node:fs', () => {
   };
 });
 
-// The artifact collector (utils/package-json) reads through 'fs', so mirror the
-// mock there for the stringify -> collect round-trip test.
+// The artifact collector (pruned-output) reads through 'fs', so mirror the mock
+// there for the stringify -> collect round-trip test.
 jest.mock('fs', () => {
   const memFs = require('memfs').fs;
   return {
