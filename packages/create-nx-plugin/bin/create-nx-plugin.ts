@@ -107,9 +107,9 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
             describe: 'Name of the CLI package to create workspace with plugin',
             type: 'string',
           })
-          // `choices` is load-bearing, not documentation: the value is passed
-          // straight through to the preset, whose schema declares no enum, so a
-          // typo would surface only as a failure partway through scaffolding.
+          // `choices` is load-bearing, not documentation: it rejects a typo at
+          // argv parse. The preset's own enum would catch it too, but only after
+          // the workspace has been created and installed.
           .option('linter', {
             describe: pc.dim(`Linter to use`),
             choices: [...LINTERS],
