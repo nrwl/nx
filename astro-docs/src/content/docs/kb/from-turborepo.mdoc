@@ -140,7 +140,7 @@ Turborepo lets you override a task for one package, either with a `<package>#<ta
 }
 ```
 
-In Nx, a `targetDefaults` key holds either a plain object or an ordered array of entries, and each entry can carry a `filter` that scopes it:
+In Nx, that key takes an array instead, with a base entry and an override scoped by `filter`:
 
 ```json
 // nx.json
@@ -157,33 +157,11 @@ In Nx, a `targetDefaults` key holds either a plain object or an ordered array of
 }
 ```
 
-The unfiltered entry is the baseline that every `build` target gets, and filtered entries apply on top in document order. `web` keeps `dependsOn` and `cache` from the baseline, and its `outputs` replace the baseline `outputs`. Two consequences are worth knowing before you write more entries:
+An override replaces the base value for each key it sets, so a filtered entry that sets `inputs` needs the baseline inputs listed again. The [target defaults reference](/docs/reference/nx-json#target-defaults) covers the rest.
 
-- A key set in a filtered entry replaces the baseline value rather than merging into it, arrays included. A filtered entry that sets `inputs` drops every baseline input, so re-list them.
-- Turborepo resolves the other direction. A `web#build` entry replaces the generic `build` for that package, so keys it omits fall back to Turborepo's defaults rather than to your generic entry. Spell out the keys that matter, usually `env`.
+A per-package `turbo.json` gets the same treatment. Its task config becomes one more override keyed to that project, and the file itself goes away in step 8.
 
-The [target defaults reference](/docs/reference/nx-json#target-defaults) covers the resolution rules in full.
-
-A per-package `turbo.json` gets the same treatment. Its task config becomes one more filtered entry keyed to that project, and the file itself goes away in step 8.
-
-Scope by directory rather than by project name when the rule covers several packages. `filter.projects` also accepts directory patterns such as `apps/*`, name globs, and negation with `!`:
-
-```json
-// nx.json
-{
-  "targetDefaults": {
-    "build": [
-      { "dependsOn": ["^build"], "cache": true },
-      {
-        "filter": { "projects": ["apps/*"] },
-        "outputs": ["{projectRoot}/.next/**", "!{projectRoot}/.next/cache/**"]
-      }
-    ]
-  }
-}
-```
-
-Name globs need a shared prefix, which package names in a `create-turbo` workspace rarely have. Tags work once the projects carry them, and you set those in each project's [configuration](/docs/reference/project-configuration#tags) rather than in `nx.json`. `filter.plugin` and `filter.executor` narrow by what created the target rather than by project.
+When one rule covers several packages, scope by directory rather than listing names, as in `"projects": ["apps/*"]`. `filter.projects` also takes name globs, [tags](/docs/reference/project-configuration#tags) that you set in each project's own configuration, and negation with `!`.
 
 Confirm the scoping in both directions before moving on. Check a project the filter should hit, then one it should not:
 
@@ -242,6 +220,10 @@ Turborepo hashes them into every task. Add the reference back so those targets k
 ```json
 // nx.json
 {
+  "namedInputs": {
+    "sharedGlobals": ["{workspaceRoot}/.env.shared", { "env": "NODE_ENV" }],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"]
+  },
   "targetDefaults": {
     "build": {
       "inputs": [
@@ -254,6 +236,8 @@ Turborepo hashes them into every task. Add the reference back so those targets k
   }
 }
 ```
+
+`nx init` writes the `namedInputs` block for you. The `sharedGlobals` entry under `build.inputs` is the part you add.
 
 Edit a file listed in `globalDependencies` and re-run the target to confirm it misses the cache.
 
@@ -330,7 +314,7 @@ Get-ChildItem -Recurse -Include package.json,*.js,*.mjs |
 {% /tabitem %}
 {% /tabs %}
 
-A `create-turbo` workspace ships two that this catches. `packages/ui` runs `turbo gen react-component`, a script in a package rather than at the root, and it fails the moment the dependency goes. Port it to a [generator](/docs/features/generate-code). The shared ESLint config depends on `eslint-plugin-turbo` for a rule that reads the `turbo.json` you deleted, so drop both.
+For example, a `create-turbo` workspace ships two of these. `packages/ui` runs `turbo gen react-component`, a script in a package rather than at the root, and it fails the moment the dependency goes. Port it to a [generator](/docs/features/generate-code). The shared ESLint config depends on `eslint-plugin-turbo` for a rule that reads the `turbo.json` you deleted, so drop both.
 
 ## Additional considerations
 
