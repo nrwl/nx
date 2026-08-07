@@ -11,6 +11,7 @@ import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import * as catalog from '../../../utils/catalog';
 import { logger } from '../../../utils/logger';
+import { output } from '../../../utils/output';
 import type { PackageJson } from '../../../utils/package-json';
 import * as pacakgeManager from '../../../utils/package-manager';
 import {
@@ -26,6 +27,7 @@ import {
   rewritePrunedLocalPathSpecifiers,
   uncontainLocalPath,
   validatePrunedLocalPathClosure,
+  warnIncompletePrunedPnpmOutput,
   writePrunedPnpmInstallSettings,
 } from './pruned-output';
 
@@ -2570,5 +2572,80 @@ describe('validatePrunedLocalPathClosure', () => {
         lockfileWithDirEntry('\n    dependencies:\n      missing-dep: 1.0.0')
       )
     ).not.toThrow();
+  });
+});
+
+describe('warnIncompletePrunedPnpmOutput', () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-pruned-incomplete-'));
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('11.2.2');
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+    jest.restoreAllMocks();
+  });
+
+  const lockfileWith = (body = '') =>
+    ["lockfileVersion: '9.0'", '', 'packages:', '', ...body.split('\n')].join(
+      '\n'
+    );
+
+  it('stays silent when the workspace declares nothing the lockfile alone misses', () => {
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+
+    warnIncompletePrunedPnpmOutput(lockfileWith(), tempDir);
+
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('names the build-script approvals a bare lockfile would drop', () => {
+    writeFileSync(
+      join(tempDir, 'pnpm-workspace.yaml'),
+      'allowBuilds:\n  esbuild: true\n'
+    );
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+
+    warnIncompletePrunedPnpmOutput(
+      lockfileWith(
+        '  esbuild@0.25.0:\n    resolution: {integrity: sha512-abc}'
+      ),
+      tempDir
+    );
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bodyLines: [
+          expect.stringContaining('build-script approvals'),
+          expect.stringContaining('createPrunedLockfile'),
+        ],
+      })
+    );
+  });
+
+  it('names the vendored local paths a bare lockfile would drop', () => {
+    mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/lib/index.js'), 'REAL');
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+
+    warnIncompletePrunedPnpmOutput(
+      lockfileWith(
+        '  lib@file:vendor/lib:\n    resolution: {directory: vendor/lib, type: directory}'
+      ),
+      tempDir
+    );
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bodyLines: [
+          expect.stringContaining('vendored file:/link: dependencies'),
+          expect.anything(),
+        ],
+      })
+    );
   });
 });

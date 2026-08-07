@@ -24,6 +24,7 @@ import {
   rewritePrunedLocalPathSpecifiers,
   stripPrunedLockfilePnpmConfig,
   validatePrunedLocalPathClosure,
+  warnIncompletePrunedPnpmOutput,
 } from './pruned-output';
 import {
   detectPackageManager,
@@ -294,12 +295,47 @@ export function getLockFilePath(packageManager: PackageManager): string {
 /**
  * Create lock file based on the root level lock file and (pruned) package.json
  *
- * On a pruning error the root lockfile is returned as a fail-open fallback;
- * `options.onPruneFallback` fires just before that so callers can skip work
- * that only makes sense for an actually pruned lockfile (e.g. link-closure
- * validation and local-path artifact shipping).
+ * A pruned pnpm lockfile no longer declares the resolution-time pnpm config it
+ * bakes into its snapshots, so the config is dropped from `packageJson` too:
+ * pnpm 10 and below validate the manifest against the lockfile and abort a
+ * frozen install with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH when the two disagree.
+ * The manifest is left alone for npm and yarn, which never read that block.
+ * Mutating it means callers must write or emit the manifest after this returns.
+ *
+ * The lockfile alone does not make a complete pnpm output. A workspace
+ * declaring build-script approvals, patches or vendored local paths also needs
+ * the artifacts `createPrunedLockfile` and the emitters carry, and this warns
+ * when that is the case.
+ *
+ * On a pruning error the root lockfile is returned as a fail-open fallback,
+ * with the manifest left as authored.
  */
 export function createLockFile(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+): string {
+  let pruned = true;
+  const lockFileContent = buildLockFile(packageJson, graph, packageManager, {
+    onPruneFallback: () => {
+      pruned = false;
+    },
+  });
+  if (pruned && packageManager === 'pnpm') {
+    stripPrunedLockfilePnpmConfig(packageJson);
+    warnIncompletePrunedPnpmOutput(lockFileContent);
+  }
+  return lockFileContent;
+}
+
+/**
+ * `createLockFile` without the manifest reconciliation, for callers that own
+ * that step themselves. `options.onPruneFallback` fires just before the
+ * root-lockfile fallback is returned, so a caller can skip work that only makes
+ * sense for an actually pruned lockfile (e.g. link-closure validation and
+ * local-path artifact shipping).
+ */
+function buildLockFile(
   packageJson: PackageJson,
   graph: ProjectGraph,
   packageManager: PackageManager = detectPackageManager(workspaceRoot),
@@ -408,7 +444,7 @@ export function createPrunedLockfile(
     );
   }
   let pruneError: Error | undefined;
-  const lockFileContent = createLockFile(packageJson, graph, packageManager, {
+  const lockFileContent = buildLockFile(packageJson, graph, packageManager, {
     onPruneFallback: (error) => {
       pruneError = error;
     },

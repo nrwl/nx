@@ -17,6 +17,7 @@ import {
   writeJsonFile,
 } from '../../../utils/fileutils';
 import { logger } from '../../../utils/logger';
+import { output } from '../../../utils/output';
 import type { Lockfile } from '@pnpm/lockfile-types';
 import type {
   PackageJson,
@@ -1358,6 +1359,56 @@ export function relocatePrunedLocalPathSpec(
       ? shippedTarget
       : normalizePath(relative(destDir, shippedTarget));
   return { spec: `${protocol}${relocated}` };
+}
+
+/**
+ * Warns when a pruned pnpm lockfile needs install-time artifacts that only the
+ * emitters ship, naming the ones this workspace actually needs. For callers of
+ * the bare `createLockFile`, which hands back a lockfile and nothing else: the
+ * pieces below live outside it, so an output assembled from the lockfile and
+ * the manifest alone installs without the workspace's build-script approvals,
+ * patches, or vendored local paths. Silent when the workspace needs none of
+ * them, which is the common case.
+ */
+export function warnIncompletePrunedPnpmOutput(
+  lockFileContent: string,
+  workspaceRootPath: string = workspaceRoot
+): void {
+  const missing: string[] = [];
+  if (
+    getPrunedPnpmInstallSettingsYaml(workspaceRootPath, lockFileContent) !==
+      null ||
+    getPrunedPnpmPackageJsonBuildSettings(workspaceRootPath, lockFileContent)
+  ) {
+    missing.push(
+      'the build-script approvals and supportedArchitectures the workspace declares'
+    );
+  }
+  if (
+    Object.keys(
+      getPrunedPatchedDependencies(workspaceRootPath, lockFileContent)
+    ).length > 0
+  ) {
+    missing.push('the patch files its patchedDependencies declare');
+  }
+  if (
+    getPrunedPnpmLocalPathArtifacts(workspaceRootPath, lockFileContent).length >
+    0
+  ) {
+    missing.push('the vendored file:/link: dependencies it references');
+  }
+  if (missing.length === 0) {
+    return;
+  }
+  output.warn({
+    title: 'The pruned pnpm lockfile needs artifacts this call does not return',
+    bodyLines: [
+      `A standalone install of the output will be missing ${missing.join(
+        ', and '
+      )}.`,
+      'Use createPrunedLockfile together with emitPrunedPnpmInstallAssets or writePrunedPnpmInstallSettings to ship them.',
+    ],
+  });
 }
 
 /** Warns that a local-path target cannot ship, with the reason-specific remedy. */
