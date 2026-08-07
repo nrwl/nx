@@ -9,7 +9,8 @@ filter: 'type:Features'
 Nx works with any language or toolchain.
 The task runner, caching, and [affected](/docs/features/ci-features/affected) commands all operate on the project graph, and the graph is plain data.
 Plugins produce that data by reading configuration files that already exist in your repository, so adding support for a new language means teaching Nx to read the files that language already uses.
-The first-party Gradle and Maven plugins are built exactly this way, and community plugins use the same API for Go, Rust, Python, and more.
+The first-party [Gradle](/docs/technologies/java/gradle/introduction), [Maven](/docs/technologies/java/maven/introduction), and [.NET](/docs/technologies/dotnet/introduction) plugins are built exactly this way.
+So are community plugins such as [@nxlv/python](https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python), [@nx-go/nx-go](https://github.com/nx-go/nx-go), and [@monodon/rust](https://github.com/cammisuli/monodon/tree/main/packages/rust), so check the [plugin registry](/docs/plugin-registry) before writing your own.
 
 A plugin that adds language support does three things:
 
@@ -67,13 +68,12 @@ First-party plugins use it to let users rename the targets the plugin creates.
 The glob is the entry point for everything else.
 Match the file that marks the root of a project in your toolchain, usually the manifest or configuration file the tool itself reads:
 
-| Toolchain    | Files to glob                            |
-| ------------ | ---------------------------------------- |
-| Python + uv  | `**/pyproject.toml`                      |
-| Go           | `**/go.mod`                              |
-| Rust + Cargo | `**/Cargo.toml`                          |
-| Java + Maven | `**/pom.xml`                             |
-| Gradle       | `**/build.gradle`, `**/build.gradle.kts` |
+| Toolchain      | Files to glob       |
+| -------------- | ------------------- |
+| Python + uv    | `**/pyproject.toml` |
+| Go             | `**/go.mod`         |
+| Rust + Cargo   | `**/Cargo.toml`     |
+| PHP + Composer | `**/composer.json`  |
 
 Keep the glob narrow.
 Matching `**/*.py` would call your plugin for every source file, while matching `**/pyproject.toml` calls it once per project.
