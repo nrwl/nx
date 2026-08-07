@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import * as catalog from '../../../utils/catalog';
 import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
@@ -33,8 +33,9 @@ import {
 
 describe('normalizePrunedPatchPath', () => {
   it.each([
-    // the default patches/ layout is unchanged
-    ['patches/is-number.patch', 'patches/is-number.patch'],
+    // the default patches/ layout keeps its own segment, so it cannot collide
+    // with a same-named patch declared outside patches/
+    ['patches/is-number.patch', 'patches/patches/is-number.patch'],
     // a custom directory keeps its subpath under patches/
     ['tools/patches/is-number.patch', 'patches/tools/patches/is-number.patch'],
     // a leading parent-relative segment is dropped, not carried outside patches/
@@ -566,7 +567,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(load(yaml)).toEqual({
       packages: [],
       patchedDependencies: {
-        'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+        'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
       },
     });
   });
@@ -587,7 +588,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(load(yaml)).toEqual({
       packages: [],
       patchedDependencies: {
-        'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+        'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
       },
     });
   });
@@ -610,7 +611,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
 
     expect(patchFiles).toEqual([
-      { path: 'patches/is-number.patch', content: 'THE PATCH\n' },
+      { path: 'patches/patches/is-number.patch', content: 'THE PATCH\n' },
     ]);
   });
 
@@ -634,7 +635,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
 
     expect(patchFiles).toEqual([
-      { path: 'patches/is-number@7.patch', content: 'THE PATCH\n' },
+      { path: 'patches/patches/is-number@7.patch', content: 'THE PATCH\n' },
     ]);
   });
 
@@ -652,7 +653,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       );
 
     expect(patchFiles).toEqual([
-      { path: 'patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
+      { path: 'patches/patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
     ]);
     // pnpm 11 carries the declaration in pnpm-workspace.yaml, not package.json
     expect(packageJsonPatchedDependencies).toBeNull();
@@ -676,7 +677,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     const { patchFiles } = getPrunedPnpmPatchArtifacts(tempDir, lockfile);
 
     expect(patchFiles).toEqual([
-      { path: 'patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
+      { path: 'patches/patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
     ]);
   });
 
@@ -703,7 +704,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     expect(patchFiles).toHaveLength(1);
     expect(packageJsonPatchedDependencies).toEqual({
-      'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+      'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
     });
   });
 
@@ -858,7 +859,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
 
     expect(patchFiles.map((file) => file.path)).toEqual([
-      'patches/is-number@7.0.0.patch',
+      'patches/patches/is-number@7.0.0.patch',
     ]);
   });
 
@@ -887,7 +888,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     // The declaration is kept: dropping only it would mismatch the pruned
     // lockfile, which still lists the patch.
     expect(packageJsonPatchedDependencies).toEqual({
-      'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+      'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
     });
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('patches/is-number@7.0.0.patch')
@@ -941,14 +942,17 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
     // the patch file is copied preserving its relative path
     expect(
-      readFileSync(join(outputDir, 'patches/is-number@7.0.0.patch'), 'utf-8')
+      readFileSync(
+        join(outputDir, 'patches/patches/is-number@7.0.0.patch'),
+        'utf-8'
+      )
     ).toBe('PATCH BODY\n');
     // and the declaration lands in the emitted package.json
     const manifest = JSON.parse(
       readFileSync(join(outputDir, 'package.json'), 'utf-8')
     );
     expect(manifest.pnpm.patchedDependencies).toEqual({
-      'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+      'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
     });
   });
 
@@ -977,12 +981,12 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     ).toEqual({
       packages: [],
       patchedDependencies: {
-        'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+        'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
       },
     });
-    expect(existsSync(join(outputDir, 'patches/is-number@7.0.0.patch'))).toBe(
-      true
-    );
+    expect(
+      existsSync(join(outputDir, 'patches/patches/is-number@7.0.0.patch'))
+    ).toBe(true);
     // pnpm 11 ignores the package.json pnpm field, so it stays as emitted
     const manifest = JSON.parse(
       readFileSync(join(outputDir, 'package.json'), 'utf-8')
@@ -1014,11 +1018,11 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(load(yamlAsset.content)).toEqual({
       packages: [],
       patchedDependencies: {
-        'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+        'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
       },
     });
     expect(emitted).toContainEqual({
-      path: 'patches/is-number@7.0.0.patch',
+      path: 'patches/patches/is-number@7.0.0.patch',
       content: 'THE PATCH\n',
     });
     // pnpm 11 carries the declaration in pnpm-workspace.yaml, not package.json
@@ -1082,7 +1086,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(paths).toEqual(
       expect.arrayContaining([
         'pnpm-workspace.yaml',
-        'patches/is-number.patch',
+        'patches/patches/is-number.patch',
         'local_path_modules/vendor/lib/index.js',
       ])
     );
@@ -1118,12 +1122,12 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
 
     // pnpm <=10 has no pnpm-workspace.yaml; only the patch file is emitted
     expect(emitted).toEqual([
-      { path: 'patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
+      { path: 'patches/patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
     ]);
     expect(packageJson.pnpm).toEqual({
       onlyBuiltDependencies: ['esbuild'],
       patchedDependencies: {
-        'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+        'is-number@7.0.0': 'patches/patches/is-number@7.0.0.patch',
       },
     });
   });
@@ -1144,11 +1148,11 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(packageJson.pnpm).toBeUndefined();
   });
 
-  it('throws when two patch sources would ship to the same path', () => {
+  it('ships a same-named patch from inside and outside patches/ separately', () => {
     mockPnpmVersion('11.2.2');
-    // `patches/dupe.patch` and `dupe.patch` are different files but both
-    // normalize to `patches/dupe.patch`; shipping one for both would apply the
-    // wrong patch, so fail loudly instead.
+    // `patches/dupe.patch` and `dupe.patch` are different files. The shipped
+    // path keeps the whole source subpath, so they land apart instead of one
+    // overwriting the other.
     writeRootWorkspaceYaml(
       [
         'patchedDependencies:',
@@ -1160,15 +1164,55 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     writeRootPatch('patches/dupe.patch', 'A\n');
     writeRootPatch('dupe.patch', 'B\n');
 
-    expect(() =>
-      getPrunedPnpmPatchArtifacts(
-        tempDir,
-        prunedLockfileWithPatches(
-          ['is-number@7.0.0', 'is-odd@3.0.1'],
-          ['is-number@7.0.0', 'is-odd@3.0.1']
-        )
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(
+      tempDir,
+      prunedLockfileWithPatches(
+        ['is-number@7.0.0', 'is-odd@3.0.1'],
+        ['is-number@7.0.0', 'is-odd@3.0.1']
       )
-    ).toThrow(/both ship to "patches\/dupe\.patch"/);
+    );
+
+    expect(patchFiles).toEqual(
+      expect.arrayContaining([
+        { path: 'patches/patches/dupe.patch', content: 'A\n' },
+        { path: 'patches/dupe.patch', content: 'B\n' },
+      ])
+    );
+  });
+
+  it('throws when two patch sources still alias to one shipped path', () => {
+    mockPnpmVersion('11.2.2');
+    // Dropping `..` segments is what keeps a shipped path inside patches/, and
+    // it is the one way two distinct sources can still meet: a path that
+    // escapes the workspace and an in-workspace one with the same tail.
+    // Shipping one file for both would apply the wrong patch, so fail loudly.
+    const siblingName = `nx-pruned-alias-${basename(tempDir)}`;
+    const outsideDir = join(dirname(tempDir), siblingName);
+    try {
+      mkdirSync(outsideDir, { recursive: true });
+      writeFileSync(join(outsideDir, 'dupe.patch'), 'A\n');
+      writeRootPatch(`${siblingName}/dupe.patch`, 'B\n');
+      writeRootWorkspaceYaml(
+        [
+          'patchedDependencies:',
+          `  is-number@7.0.0: ../${siblingName}/dupe.patch`,
+          `  is-odd@3.0.1: ${siblingName}/dupe.patch`,
+          '',
+        ].join('\n')
+      );
+
+      expect(() =>
+        getPrunedPnpmPatchArtifacts(
+          tempDir,
+          prunedLockfileWithPatches(
+            ['is-number@7.0.0', 'is-odd@3.0.1'],
+            ['is-number@7.0.0', 'is-odd@3.0.1']
+          )
+        )
+      ).toThrow(/both ship to "patches\//);
+    } finally {
+      rmSync(outsideDir, { recursive: true, force: true });
+    }
   });
 
   it('ships a single file when two keys reference the same patch', () => {
@@ -1194,7 +1238,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
 
     expect(patchFiles).toEqual([
-      { path: 'patches/shared.patch', content: 'SHARED\n' },
+      { path: 'patches/patches/shared.patch', content: 'SHARED\n' },
     ]);
   });
 
@@ -1226,7 +1270,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
 
     expect(patchFiles).toEqual([
-      { path: 'patches/current.patch', content: 'CURRENT\n' },
+      { path: 'patches/patches/current.patch', content: 'CURRENT\n' },
     ]);
   });
 

@@ -454,12 +454,14 @@ function getPrunedPatchedDependencies(
  * under the output's declared `patches/` directory: a source path outside it (a
  * custom directory, or a parent-relative `../` path) would fall outside the
  * prune target's cached `patches` output and be dropped on a cache replay, and a
- * `..` asset name is not one a bundler can emit. The source sub-structure is
- * kept under `patches/`, so two patches that share a file name in different
- * directories do not collide; `.` and `..` segments are dropped anywhere they
- * appear (not just a leading run) so the result can never resolve outside
- * `patches/`, and a leading `patches/` is stripped so the common layout is not
- * nested under a second `patches/`.
+ * `..` asset name is not one a bundler can emit. The whole source sub-structure
+ * is kept under `patches/`, including a source `patches/` segment, so two
+ * patches that share a file name in different directories keep separate
+ * destinations. `.` and `..` segments are dropped wherever they appear (not just
+ * a leading run) so the result can never resolve outside `patches/`, which is
+ * also the one way two sources can still meet on one destination: paths that
+ * differ only by dropped segments alias, and `getPrunedPnpmPatchArtifacts`
+ * rejects that pair rather than shipping one file for both.
  * `filterPatchedDependenciesToPrunedPackages` in the pnpm lock-file parser calls
  * this same helper for the lockfile's object-form path (pnpm 9-10), which pnpm
  * --frozen-lockfile cross-checks against this config path, so the two agree.
@@ -469,9 +471,6 @@ export function normalizePrunedPatchPath(patchPath: string): string {
     .replace(/\\/g, '/')
     .split('/')
     .filter((segment) => segment !== '' && segment !== '.' && segment !== '..');
-  if (segments[0] === 'patches') {
-    segments.shift();
-  }
   return `patches/${segments.join('/')}`;
 }
 
