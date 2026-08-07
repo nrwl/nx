@@ -3449,10 +3449,12 @@ function stringifyCaught(e: unknown): string {
 // A resolver-based lookup (including `resolvePackageJsonWithoutCachePollution`,
 // which does defeat Node's package self-reference) is the wrong tool here:
 // resolvers fall back to NODE_PATH after the explicit paths, and NODE_PATH
-// names the temp installation when this runs there, while the hand-off spawn
-// locates nx through the package manager's bin lookup, which ignores
-// NODE_PATH. The PnP branch below stays bespoke either way: a resolver cannot
-// see into the zip cache without the PnP runtime.
+// names the temp installation when this runs there. The scan below reads its
+// candidate directories itself, so neither NODE_PATH nor self-reference can
+// reach it; `getNxBin` (utils/child-process.ts), which locates the nx the
+// hand-off spawns, walks the same directories for the same reason. The PnP
+// branch below stays bespoke either way: a resolver cannot see into the zip
+// cache without the PnP runtime.
 export function readLocalNxVersion(root: string): string | undefined {
   // A PnP manifest is consulted only when yarn drives the hand-off:
   // `getRunNxBaseCommand` builds the hand-off command through this same
@@ -3698,8 +3700,9 @@ export async function runMigration() {
     // that parsed the flags, so it needs no capability check. Two lookups
     // can still diverge from the running install, both properties of the
     // spawn machinery rather than of this fallback: a `.nx/installation`
-    // beside a root package.json, and a spawn that misses the workspace
-    // install and falls back to an nx on PATH (pnpm exec).
+    // beside a root package.json, and, once the spawn falls back to the
+    // package manager, a lookup that misses the workspace install and lands
+    // on an nx on PATH (pnpm exec).
     const forwardedArgv = process.argv.slice(3);
     const runLocalMigrate = () =>
       runOrReturnExitCode(() =>
