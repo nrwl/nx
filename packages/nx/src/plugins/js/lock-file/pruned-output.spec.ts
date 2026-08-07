@@ -208,6 +208,35 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     }
   });
 
+  it('retries the pnpm version after a failed detection', () => {
+    // getPackageManagerVersion throws when it has to shell out and the spawn
+    // fails, which is transient. Remembering that would drop the settings from
+    // every later prune in the process.
+    const workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-retry-'));
+    try {
+      writeFileSync(
+        join(workspaceRoot, 'pnpm-workspace.yaml'),
+        'allowBuilds:\n  esbuild: true\n'
+      );
+      const outputDir = join(workspaceRoot, 'dist');
+      mkdirSync(outputDir);
+      jest
+        .spyOn(pacakgeManager, 'getPackageManagerVersion')
+        .mockImplementationOnce(() => {
+          throw new Error('spawn pnpm EAGAIN');
+        })
+        .mockReturnValue('11.2.2');
+
+      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
+      expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
+
+      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
+      expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(true);
+    } finally {
+      rmSync(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
   it('skips the settings file on pnpm 10', () => {
     // A separate workspace root per pnpm major: the detected version is
     // memoized per root, as it is for the duration of a real process.
