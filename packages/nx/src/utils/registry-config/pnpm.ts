@@ -41,7 +41,9 @@ import {
  *   camelCase (https://github.com/pnpm/pnpm/pull/9211) and the parsed yaml
  *   object is Object.assign-ed over the npmrc-derived config, so a
  *   `registries` map (default/@scope keys) wholesale-replaces the
- *   npmrc/env/CLI registry selection.
+ *   npmrc/env/CLI registry selection. That config keeps npm's own tiers plus a
+ *   `workspace` one, the .npmrc beside the workspace manifest, ranked under the
+ *   project .npmrc and over the user one.
  * - >= 11.0.0: the config reader merges per key: registries =
  *   {...fromNpmrc, ...fromYaml}, then `pnpm_config_registry` env overrides
  *   only `registries.default`. npm_config_* env vars are no longer read (11.6.0
@@ -1198,9 +1200,9 @@ function bridgeNpmrcSources(
  * exact opposite (it warns about `no-proxy` as an unknown config and moves on).
  * pnpm 10.x honors both, so only the spelling npm cannot read needs bridging on
  * either line. Either way pnpm's `no-proxy` never reaches the spawned npm from
- * any file, the workspace .npmrc included, and the layer that wins in pnpm has
- * to be re-spelled. A `noProxy` in pnpm-workspace.yaml outranks both files and
- * is applied after this.
+ * any file it reads, so the layer that wins in pnpm has to be re-spelled. A
+ * `noProxy` in pnpm-workspace.yaml outranks every one of them and is applied
+ * after this.
  */
 function bridgeNoProxy(
   env: NpmConfigEnv,
@@ -1462,9 +1464,8 @@ function warnUnscopedCredential(dart: string, keys: string[]): void {
 
 /**
  * Network settings pnpm honors from pnpm-workspace.yaml. `caFile`/`cafile` is
- * dead config there (pnpm loads CA material from the npmrc-family files only:
- * .npmrc and auth.ini, both bridged in bridgeNpmrcSources), so
- * the YAML key is deliberately not bridged.
+ * dead config there (pnpm loads CA material from the npmrc-family files alone),
+ * so the YAML key is deliberately not bridged.
  */
 function applyYamlNetworkSettings(
   env: NpmConfigEnv,
