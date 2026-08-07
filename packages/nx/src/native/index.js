@@ -3,7 +3,6 @@ const {
   copyFileSync,
   existsSync,
   mkdirSync,
-  readFileSync,
   renameSync,
   statSync,
   unlinkSync,
@@ -13,6 +12,10 @@ const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
 const { getWasmFallbackWarning } = require('./wasm-fallback-warning');
+const {
+  isMusl,
+  getMissingNativePackage,
+} = require('./native-package-resolution');
 
 const MAX_COPY_RETRIES = 3;
 
@@ -78,19 +81,6 @@ function statsOrNull(path) {
 
 function isNoExecError(e) {
   return e.code === 'EACCES' || e.code === 'EPERM';
-}
-
-// Mirrors the musl detection in the generated native-bindings.js, which does not export it.
-function isMusl() {
-  if (process.platform !== 'linux') {
-    return false;
-  }
-  try {
-    return readFileSync('/usr/bin/ldd', 'utf-8').includes('musl');
-  } catch (e) {
-    process.report.excludeNetwork = true;
-    return !process.report.getReport().header.glibcVersionRuntime;
-  }
 }
 
 // We override the _load function so that when a native file is required,
@@ -192,6 +182,7 @@ if (indexModule.IS_WASM) {
       arch: process.arch,
       isMusl,
       env: process.env,
+      nativePackageResolvable: getMissingNativePackage() === null,
     });
     if (warning) {
       // Sync write: once the synchronous WASM work blocks the event loop a queued async

@@ -14,15 +14,7 @@ const NATIVE_PACKAGES = {
   'win32-x64': '@nx/nx-win32-x64-msvc',
 };
 
-function getWasmFallbackWarning({ platform, arch, isMusl, env = {} } = {}) {
-  if (
-    env.NAPI_RS_FORCE_WASI ||
-    env.NX_ALLOW_WASM_FALLBACK === 'true' ||
-    env.NX_WASM_FALLBACK_WARNED === 'true'
-  ) {
-    return null;
-  }
-
+function getExpectedNativePackage({ platform, arch, isMusl } = {}) {
   const template = NATIVE_PACKAGES[`${platform}-${arch}`];
   if (!template) {
     return null;
@@ -34,7 +26,34 @@ function getWasmFallbackWarning({ platform, arch, isMusl, env = {} } = {}) {
   } catch (e) {
     libc = 'gnu';
   }
-  const pkg = template.replace('{libc}', libc);
+  return template.replace('{libc}', libc);
+}
+
+function getWasmFallbackWarning({
+  platform,
+  arch,
+  isMusl,
+  env = {},
+  nativePackageResolvable,
+} = {}) {
+  if (
+    env.NAPI_RS_FORCE_WASI ||
+    env.NX_ALLOW_WASM_FALLBACK === 'true' ||
+    env.NX_WASM_FALLBACK_WARNED === 'true'
+  ) {
+    return null;
+  }
+
+  // The package being resolvable means it installed fine and failed to load, which is normal in
+  // WebContainers/StackBlitz. Only an unresolvable package is the broken install this warns about.
+  if (nativePackageResolvable === true) {
+    return null;
+  }
+
+  const pkg = getExpectedNativePackage({ platform, arch, isMusl });
+  if (!pkg) {
+    return null;
+  }
 
   return [
     '',
@@ -57,4 +76,4 @@ function getWasmFallbackWarning({ platform, arch, isMusl, env = {} } = {}) {
   ].join('\n');
 }
 
-module.exports = { getWasmFallbackWarning };
+module.exports = { getExpectedNativePackage, getWasmFallbackWarning };
