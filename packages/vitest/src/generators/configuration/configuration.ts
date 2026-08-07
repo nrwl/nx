@@ -297,7 +297,7 @@ getTestBed().initTestEnvironment(
     const vitestMajorVersion = getInstalledVitestMajorVersion(tree);
 
     if (vitestMajorVersion === null || vitestMajorVersion >= 4) {
-      const hasWorkspaceFile = ['ts', 'js', 'json'].some(
+      const hasWorkspaceFile = ['ts', 'mts', 'js', 'json'].some(
         (ext) =>
           tree.exists(`vitest.workspace.${ext}`) ||
           tree.exists(`vitest.projects.${ext}`)
@@ -363,8 +363,10 @@ getTestBed().initTestEnvironment(
         // root vite.config added later; exclude both so neither is resolved as
         // an extra project that, carrying no `include`, re-runs every spec via
         // the default glob.
+        // `.mts` keeps it ESM whatever the root package.json `type` is; a
+        // CommonJS-loaded config trips Vite's `configLoader: 'native'` warning.
         tree.write(
-          'vitest.config.ts',
+          'vitest.config.mts',
           `import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -377,13 +379,15 @@ export default defineConfig({
       }
     } else if (
       !tree.exists(`vitest.workspace.ts`) &&
+      !tree.exists(`vitest.workspace.mts`) &&
       !tree.exists(`vitest.workspace.js`) &&
       !tree.exists(`vitest.workspace.json`) &&
       !tree.exists(`vitest.projects.ts`) &&
+      !tree.exists(`vitest.projects.mts`) &&
       !tree.exists(`vitest.projects.js`) &&
       !tree.exists(`vitest.projects.json`)
     ) {
-      tree.write('vitest.workspace.ts', `export default [${projectGlobs}];`);
+      tree.write('vitest.workspace.mts', `export default [${projectGlobs}];`);
     }
   }
 
