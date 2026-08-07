@@ -12,6 +12,11 @@ Plugins produce that data by reading configuration files that already exist in y
 
 ## Projects and tasks are inferred
 
+Nx doesn't need a plugin to run tasks for another language.
+Any directory with a [`project.json`](/docs/reference/project-configuration) file is an Nx project, and its targets can run `pytest` or `cargo build` with the same caching and orchestration as any JS task.
+
+A plugin removes the duplicate configuration.
+Your toolchain already describes each project in its own files, so maintaining a `project.json` next to every `pyproject.toml` or `Cargo.toml` means writing the same information twice.
 A language plugin declares which files mark a project, usually the toolchain's manifest: `pyproject.toml` for Python, `go.mod` for Go, `Cargo.toml` for Rust, `build.gradle` for Gradle.
 For every match, the plugin creates a project and its tasks, with caching, inputs, and outputs configured once in the plugin instead of per project.
 This is the same [inferred tasks](/docs/concepts/mental-model#inferred-tasks) mechanism the JavaScript plugins use to read `vite.config.ts` or `jest.config.ts`.
@@ -42,4 +47,4 @@ Check the [plugin registry](/docs/plugin-registry) before writing your own.
 ## Build your own plugin
 
 If your toolchain isn't covered, a plugin that creates projects, tasks, and dependencies is a few hundred lines of TypeScript built on two functions, `createNodes` and `createDependencies`.
-Follow [create an Nx plugin](/docs/kb/create-a-plugin) for a complete walkthrough, using Python with uv as the worked example, that you can adapt to any language.
+Follow [add language support to Nx](/docs/kb/add-language-support) for a complete walkthrough, using Python with uv as the worked example, that you can adapt to any language.
