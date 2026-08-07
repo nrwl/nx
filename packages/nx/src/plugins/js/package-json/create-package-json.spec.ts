@@ -855,6 +855,7 @@ describe('createPackageJson', () => {
           })
       );
 
+      // Without a pruned lockfile a fresh install needs the overrides to resolve.
       expect(
         createPackageJson('lib1', graph, {
           root: '',

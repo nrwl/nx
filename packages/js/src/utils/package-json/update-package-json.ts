@@ -1,5 +1,12 @@
-import { createLockFile, getLockFileName } from '@nx/devkit/internal';
-import { createPackageJson } from '@nx/devkit/internal';
+import {
+  createPackageJson,
+  createPrunedLockfile,
+  fileExists,
+  getLockFileName,
+  type PackageJson,
+  readFileMapCache,
+  writePrunedPnpmInstallSettings,
+} from '@nx/devkit/internal';
 
 import {
   detectPackageManager,
@@ -18,9 +25,6 @@ import {
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
-import { fileExists } from '@nx/devkit/internal';
-import type { PackageJson } from '@nx/devkit/internal';
-import { readFileMapCache } from '@nx/devkit/internal';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 import { stripGlobToBaseDir } from '../strip-glob-to-base-dir';
@@ -112,28 +116,42 @@ export function updatePackageJson(
   // update package specific settings
   packageJson = getUpdatedPackageJsonContent(packageJson, options);
 
+  const packageManager = detectPackageManager(context.root);
+  let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
+  if (options.generateLockfile && packageManager !== 'bun') {
+    prunedLockfile = createPrunedLockfile(
+      packageJson,
+      context.projectGraph,
+      options.projectRoot,
+      context.root,
+      packageManager
+    );
+  }
+
   // save files
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 
   if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
     if (packageManager === 'bun') {
       logger.warn(
         `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
       );
     } else {
-      const lockFile = createLockFile(
-        packageJson,
-        context.projectGraph,
-        packageManager
-      );
       writeFileSync(
         `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
+        prunedLockfile.lockFileContent,
         {
           encoding: 'utf-8',
         }
       );
+      if (packageManager === 'pnpm') {
+        writePrunedPnpmInstallSettings(
+          options.outputPath,
+          context.root,
+          prunedLockfile.lockFileContent,
+          { includeLocalPathArtifacts: prunedLockfile.pruned }
+        );
+      }
     }
   }
 }

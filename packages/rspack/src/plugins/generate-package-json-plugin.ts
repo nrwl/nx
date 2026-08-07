@@ -6,8 +6,9 @@ import {
 } from '@nx/devkit';
 import {
   HelperDependency,
-  createLockFile,
   createPackageJson,
+  createPrunedLockfile,
+  emitPrunedPnpmInstallAssets,
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
   readTsConfig,
@@ -69,10 +70,6 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
 
-          compilation.emitAsset(
-            'package.json',
-            new sources.RawSource(serializeJson(packageJson))
-          );
           const packageManager = detectPackageManager(this.context.root);
 
           if (packageManager === 'bun') {
@@ -82,13 +79,36 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
                 'Bun lockfile generation is not supported. Only package.json will be generated.'
               );
           } else {
+            const { lockFileContent, pruned } = createPrunedLockfile(
+              packageJson,
+              this.projectGraph,
+              this.projectGraph.nodes[this.context.projectName].data.root,
+              this.context.root,
+              packageManager
+            );
             compilation.emitAsset(
               getLockFileName(packageManager),
-              new sources.RawSource(
-                createLockFile(packageJson, this.projectGraph, packageManager)
-              )
+              new sources.RawSource(lockFileContent)
             );
+            if (packageManager === 'pnpm') {
+              emitPrunedPnpmInstallAssets(
+                this.context.root,
+                lockFileContent,
+                packageJson,
+                (assetPath, content) =>
+                  compilation.emitAsset(
+                    assetPath,
+                    new sources.RawSource(content)
+                  ),
+                { includeLocalPathArtifacts: pruned }
+              );
+            }
           }
+
+          compilation.emitAsset(
+            'package.json',
+            new sources.RawSource(serializeJson(packageJson))
+          );
         }
       );
     });

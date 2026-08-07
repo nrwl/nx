@@ -8,6 +8,7 @@ import { reverse } from '../../../project-graph/operators';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { getCatalogManager } from '../../../utils/catalog';
 import { PackageJson } from '../../../utils/package-json';
+import { PackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
@@ -18,7 +19,8 @@ import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-f
 export function pruneProjectGraph(
   graph: ProjectGraph,
   prunedPackageJson: PackageJson,
-  workspaceRootPath: string = workspaceRoot
+  workspaceRootPath: string = workspaceRoot,
+  packageManager?: PackageManager
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
@@ -26,7 +28,8 @@ export function pruneProjectGraph(
     prunedPackageJson,
     graph,
     workspacePackages,
-    workspaceRootPath
+    workspaceRootPath,
+    packageManager
   );
 
   addNodesAndDependencies(
@@ -54,7 +57,8 @@ function normalizeDependencies(
   packageJson: PackageJson,
   graph: ProjectGraph,
   workspacePackages: Map<string, ProjectGraphProjectNode>,
-  workspaceRootPath: string
+  workspaceRootPath: string,
+  packageManager?: PackageManager
 ) {
   const {
     dependencies,
@@ -105,10 +109,32 @@ function normalizeDependencies(
         packageName,
         resolvedVersionRange
       );
+      // A file:/link: local-path dependency (e.g. a vendored tarball) records its
+      // path relative to the declaring package in the manifest but relative to
+      // the workspace root in the lockfile, so the two specifiers never match by
+      // string. Match by name instead once the version-based lookups above fail
+      // (pnpm-only, matching the rest of the local-path handling;
+      // findLocalPathNode throws when the name is ambiguous).
+      const localPathNode =
+        !node &&
+        packageManager === 'pnpm' &&
+        !workspacePackages.has(packageName) &&
+        isLocalPathSpecifier(resolvedVersionRange)
+          ? findLocalPathNode(graph, packageName)
+          : undefined;
       if (node) {
         combinedDependencies[packageName] = node.data.version;
       } else if (workspacePackages.has(packageName)) {
         // workspace module, leave as is
+        combinedDependencies[packageName] = resolvedVersionRange;
+      } else if (localPathNode) {
+        combinedDependencies[packageName] = localPathNode.data.version;
+      } else if (
+        packageManager === 'pnpm' &&
+        resolvedVersionRange.startsWith('link:')
+      ) {
+        // Only a link: is valid importer-only in a pnpm lockfile (see
+        // mapRootSnapshot); a nodeless file: (stale lockfile) or npm/yarn still throw.
         combinedDependencies[packageName] = resolvedVersionRange;
       } else {
         throw new Error(
@@ -118,6 +144,44 @@ function normalizeDependencies(
     }
   );
   return combinedDependencies;
+}
+
+/**
+ * A `file:` (local tarball or directory) or `link:` specifier resolves to a
+ * single local package. pnpm records its path relative to the workspace root in
+ * the lockfile, while the manifest records it relative to the declaring package,
+ * so the two never match by string.
+ */
+export function isLocalPathSpecifier(versionExpr: string): boolean {
+  return versionExpr.startsWith('file:') || versionExpr.startsWith('link:');
+}
+
+/**
+ * The external node for a `file:`/`link:` local-path dependency, matched by
+ * package name (its path-based version cannot be matched by string across the
+ * manifest/lockfile boundary; see `isLocalPathSpecifier`). Two local-path
+ * packages sharing a name cannot be told apart by it, so that throws rather
+ * than risking a match to the wrong one.
+ */
+export function findLocalPathNode(
+  graph: ProjectGraph,
+  packageName: string
+): ProjectGraphExternalNode | undefined {
+  const matches = Object.values(graph.externalNodes).filter(
+    (node) =>
+      node.data.packageName === packageName &&
+      isLocalPathSpecifier(node.data.version)
+  );
+  if (matches.length > 1) {
+    throw new Error(
+      `Pruned lock file creation failed. Multiple local-path packages named "${packageName}" were found in the lock file (${matches
+        .map((node) => node.data.version)
+        .join(
+          ', '
+        )}), so the manifest's "${packageName}" dependency cannot be matched to one of them. Rename the packages so their names are unique.`
+    );
+  }
+  return matches[0];
 }
 
 export function findNodeMatchingVersion(

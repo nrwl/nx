@@ -140,17 +140,33 @@ export function getPruneTargets(
   'prune-lockfile': TargetConfiguration;
   'copy-workspace-modules': TargetConfiguration;
 } {
-  const lockFileName =
-    getLockFileName(detectPackageManager() ?? 'npm') ?? 'package-lock.json';
+  const packageManager = detectPackageManager() ?? 'npm';
+  const lockFileName = getLockFileName(packageManager) ?? 'package-lock.json';
+  const pruneLockfileOutputs = [
+    `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
+    `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
+  ];
+  if (packageManager === 'pnpm') {
+    // On pnpm 11+ the prune-lockfile executor also emits a settings-only
+    // pnpm-workspace.yaml, a `pnpm patch` workspace emits the referenced `.patch`
+    // files under `patches/`, and any non-workspace local-path deps (`file:`
+    // tarballs/dirs, `link:` targets) ship under `local_path_modules/`; declare
+    // all three so a cache replay restores them and native build-script
+    // approvals, patches, or vendored dependencies are not silently dropped.
+    // Declared for any pnpm since the generator can't know the pnpm major or
+    // whether the workspace uses such settings; Nx tolerates absent outputs.
+    pruneLockfileOutputs.push(
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'pnpm-workspace.yaml')}`,
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'patches')}`,
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'local_path_modules')}`
+    );
+  }
   return {
     'prune-lockfile': {
       dependsOn: ['build'],
       cache: true,
       executor: '@nx/js:prune-lockfile',
-      outputs: [
-        `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
-        `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
-      ],
+      outputs: pruneLockfileOutputs,
       options: {
         buildTarget,
       },

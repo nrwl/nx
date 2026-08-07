@@ -158,6 +158,7 @@ export {
   createPackageJson,
   createProjectGraphAndSourceMapsAsync,
   createProjectRootMappings,
+  createPrunedLockfile,
   createRunManyDynamicOutputRenderer,
   createTaskId,
   daemonClient,
@@ -165,6 +166,8 @@ export {
   defaultFileRead,
   deriveGroupNameFromTarget,
   directoryExists,
+  dropEmptyPeerDependencySections,
+  emitPrunedPnpmInstallAssets,
   expandDependencyConfigSyntaxSugar,
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
@@ -223,6 +226,7 @@ export {
   killProcessTreeGraceful,
   loadTsFile,
   mergeTargetConfigurations,
+  movePeerDependencyToDependencies,
   normalizeDependencyConfigDefinition,
   normalizeDependencyConfigProjects,
   normalizeTargetDependencyWithStringProjects,
@@ -240,6 +244,7 @@ export {
   readProjectAndTargetFromTargetString,
   registerTsConfigPaths,
   registerTsProject,
+  relocatePrunedLocalPathSpec,
   removeTasksFromTaskGraph,
   requireWithTsconfigFallback,
   resetWorkspaceContext,
@@ -253,8 +258,10 @@ export {
   transformLegacyOutputs,
   unparse,
   validateOutputs,
+  warnUnshippableLocalPathSpec,
   workspaceDataDirectory,
   workspaceRootInner,
+  writePrunedPnpmInstallSettings,
 } from 'nx/src/devkit-internals';
 
 // Release runtime values (releasePublish, releaseVersion, VersionActions) are

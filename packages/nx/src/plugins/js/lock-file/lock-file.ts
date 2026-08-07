@@ -18,12 +18,19 @@ import {
 import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
-import { PackageJson } from '../../../utils/package-json';
+import {
+  dropInheritedPnpmPatchedDependencies,
+  PackageJson,
+  rewritePrunedLocalPathSpecifiers,
+  stripPrunedLockfilePnpmConfig,
+  validatePrunedLocalPathClosure,
+} from '../../../utils/package-json';
 import {
   detectPackageManager,
   PackageManager,
 } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import {
   BUN_LOCK_FILE,
   BUN_TEXT_LOCK_FILE,
@@ -287,6 +294,11 @@ export function getLockFilePath(packageManager: PackageManager): string {
 /**
  * Create lock file based on the root level lock file and (pruned) package.json
  *
+ * On a pruning error the root lockfile is returned as a fail-open fallback;
+ * `options.onPruneFallback` fires just before that so callers can skip work
+ * that only makes sense for an actually pruned lockfile (e.g. link-closure
+ * validation and local-path artifact shipping).
+ *
  * @param packageJson
  * @param isProduction
  * @param packageManager
@@ -295,18 +307,30 @@ export function getLockFilePath(packageManager: PackageManager): string {
 export function createLockFile(
   packageJson: PackageJson,
   graph: ProjectGraph,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+  packageManager: PackageManager = detectPackageManager(workspaceRoot),
+  options?: { onPruneFallback?: (error: Error) => void }
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFilePath(packageManager), 'utf8');
 
   try {
+    if (packageManager === 'bun') {
+      output.log({
+        title:
+          "Unable to create bun lock files. Run bun install it's just as quick",
+      });
+      return '';
+    }
+    const prunedGraph = pruneProjectGraph(
+      graph,
+      packageJson,
+      workspaceRoot,
+      packageManager
+    );
     if (packageManager === 'yarn') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'pnpm') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyPnpmLockfile(
         prunedGraph,
         content,
@@ -315,17 +339,10 @@ export function createLockFile(
       );
     }
     if (packageManager === 'npm') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
-    if (packageManager === 'bun') {
-      output.log({
-        title:
-          "Unable to create bun lock files. Run bun install it's just as quick",
-      });
-      return '';
-    }
   } catch (e) {
+    options?.onPruneFallback?.(e);
     if (!isPostInstallProcess()) {
       const additionalInfo = [
         'To prevent the build from breaking we are returning the root lock file.',
@@ -347,6 +364,100 @@ export function createLockFile(
     }
     return content;
   }
+}
+
+/**
+ * Creates the pruned lockfile for a generate-package-json flow, running the
+ * steps such a flow needs around `createLockFile`. For pnpm, the manifest's
+ * `file:`/`link:` local-path specifiers are relocated to their shipped location
+ * first (pnpm re-resolves them on a non-frozen install, and the lockfile copies
+ * the manifest's form), and the local-path dependency closure is validated
+ * after pruning so a shipped `link:` target that requires an unresolvable
+ * dependency fails the build instead of the deploy. After a successful prune,
+ * the manifest's pnpm config block is stripped for every package manager:
+ * re-declaring config a pruned pnpm lockfile bakes into its snapshots trips
+ * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH, and npm and yarn never read the block at
+ * install time, so dropping it does not change their installs. An inherited
+ * `pnpm.patchedDependencies` is dropped on both paths, since the sinks below
+ * declare the patches the output actually ships.
+ *
+ * `pruned` is false when `createLockFile` fell back to the root lockfile on a
+ * pruning error: the fallback's importer describes the whole workspace, so the
+ * manifest mutations are rolled back (the root lockfile matches the manifest as
+ * authored: original local-path specifiers, the rest of the pnpm config kept),
+ * the closure validation is skipped, and the caller must not ship local-path
+ * artifacts for it. Pass `pruned` as `includeLocalPathArtifacts` to
+ * `emitPrunedPnpmInstallAssets`/`writePrunedPnpmInstallSettings`, which carry
+ * the remaining install-time pieces (the pnpm 11 settings-only
+ * pnpm-workspace.yaml, the patch files, the local-path artifacts, and the
+ * pnpm <=10 package.json declarations).
+ *
+ * Mutates `packageJson` (the pnpm-only specifier relocation and the config
+ * strip), so write or emit the manifest after calling this. Not for bun, which
+ * has no lockfile generation.
+ */
+export function createPrunedLockfile(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  projectRoot: string,
+  workspaceRootPath: string = workspaceRoot,
+  packageManager: PackageManager = detectPackageManager(workspaceRootPath)
+): { lockFileContent: string; pruned: boolean } {
+  const originalPackageJson = structuredClone(packageJson);
+  if (packageManager === 'pnpm') {
+    rewritePrunedLocalPathSpecifiers(
+      packageJson,
+      projectRoot,
+      workspaceRootPath,
+      new Set(getWorkspacePackagesFromGraph(graph).keys())
+    );
+  }
+  let pruneError: Error | undefined;
+  const lockFileContent = createLockFile(packageJson, graph, packageManager, {
+    onPruneFallback: (error) => {
+      pruneError = error;
+    },
+  });
+  const pruned = pruneError === undefined;
+  if (pruned) {
+    stripPrunedLockfilePnpmConfig(packageJson);
+    if (packageManager === 'pnpm') {
+      validatePrunedLocalPathClosure(
+        packageJson,
+        workspaceRootPath,
+        lockFileContent
+      );
+    }
+  } else {
+    // The root lockfile matches the manifest as authored, so undo the
+    // specifier relocation and keep the pnpm config it still declares.
+    for (const key of Object.keys(packageJson)) {
+      delete (packageJson as unknown as Record<string, unknown>)[key];
+    }
+    Object.assign(packageJson, originalPackageJson);
+    // createLockFile's own error output is suppressed under a postinstall, so
+    // this is the only signal there naming the cause and what the fallback
+    // output is missing.
+    const bodyLines = [`The lockfile pruning failed: ${pruneError?.message}`];
+    if (packageManager === 'pnpm') {
+      bodyLines.push(
+        'The emitted package.json keeps its pnpm config, its vendored local-path specifiers point at their original workspace locations, and no local-path artifacts are shipped for it.'
+      );
+    }
+    bodyLines.push(
+      packageManager === 'npm'
+        ? '`npm ci` in the output will fail; run `npm install` instead.'
+        : packageManager === 'yarn'
+          ? 'An immutable install of the output (`--immutable`, or `--frozen-lockfile` on yarn 1) may fail; run an install without immutability instead (yarn 2+ turns it on by default in CI).'
+          : 'A `--frozen-lockfile` install of the output will fail; run a regular install instead.'
+    );
+    output.warn({
+      title: 'The pruned output falls back to the root lockfile',
+      bodyLines,
+    });
+  }
+  dropInheritedPnpmPatchedDependencies(packageJson);
+  return { lockFileContent, pruned };
 }
 
 // generate body lines for error message

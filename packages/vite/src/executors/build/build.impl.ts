@@ -19,9 +19,10 @@ import { ViteBuildExecutorOptions } from './schema';
 import schema from './schema.json';
 import {
   copyAssets,
-  createLockFile,
   createPackageJson,
+  createPrunedLockfile,
   getLockFileName,
+  writePrunedPnpmInstallSettings,
 } from '@nx/js';
 import { existsSync, writeFileSync } from 'fs';
 import { relative, resolve } from 'path';
@@ -169,29 +170,42 @@ export async function* viteBuildExecutor(
 
       builtPackageJson.type ??= 'module';
 
+      const packageManager = detectPackageManager(context.root);
+      let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
+      if (packageManager !== 'bun') {
+        prunedLockfile = createPrunedLockfile(
+          builtPackageJson,
+          context.projectGraph,
+          projectRoot,
+          context.root,
+          packageManager
+        );
+      }
       writeJsonFile(
         `${outDirRelativeToWorkspaceRoot}/package.json`,
         builtPackageJson
       );
-      const packageManager = detectPackageManager(context.root);
 
       if (packageManager === 'bun') {
         logger.warn(
           'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
         );
       } else {
-        const lockFile = createLockFile(
-          builtPackageJson,
-          context.projectGraph,
-          packageManager
-        );
         writeFileSync(
           `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
-          lockFile,
+          prunedLockfile.lockFileContent,
           {
             encoding: 'utf-8',
           }
         );
+        if (packageManager === 'pnpm') {
+          writePrunedPnpmInstallSettings(
+            outDirRelativeToWorkspaceRoot,
+            context.root,
+            prunedLockfile.lockFileContent,
+            { includeLocalPathArtifacts: prunedLockfile.pruned }
+          );
+        }
       }
     }
     // For buildable libs, copy package.json if it exists.

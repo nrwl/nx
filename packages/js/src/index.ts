@@ -17,5 +17,11 @@ export { setupPrettierGenerator } from './generators/setup-prettier/generator';
 export { setupVerdaccio } from './generators/setup-verdaccio/generator';
 export { isValidVariable } from './utils/is-valid-variable';
 
-export { createLockFile, getLockFileName } from '@nx/devkit/internal';
-export { createPackageJson } from '@nx/devkit/internal';
+export {
+  createLockFile,
+  createPackageJson,
+  createPrunedLockfile,
+  emitPrunedPnpmInstallAssets,
+  getLockFileName,
+  writePrunedPnpmInstallSettings,
+} from '@nx/devkit/internal';
