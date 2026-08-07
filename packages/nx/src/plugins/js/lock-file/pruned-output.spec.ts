@@ -2720,6 +2720,30 @@ describe('warnIncompletePrunedPnpmOutput', () => {
     );
   });
 
+  it('does not name build-script approvals for a workspace that only patches', () => {
+    writeFileSync(
+      join(tempDir, 'pnpm-workspace.yaml'),
+      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
+    );
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+
+    warnIncompletePrunedPnpmOutput(
+      [
+        lockfileWith(
+          '  is-number@7.0.0:\n    resolution: {integrity: sha512-abc}'
+        ),
+        'patchedDependencies:',
+        '  is-number@7.0.0: hash-is-number',
+        '',
+      ].join('\n'),
+      tempDir
+    );
+
+    const { bodyLines } = warn.mock.calls[0][0] as { bodyLines: string[] };
+    expect(bodyLines[0]).toContain('patch files');
+    expect(bodyLines[0]).not.toContain('build-script approvals');
+  });
+
   it('names the vendored local paths a bare lockfile would drop', () => {
     mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
     writeFileSync(join(tempDir, 'vendor/lib/index.js'), 'REAL');
