@@ -9,6 +9,7 @@ import {
 import {
   npmrcEntriesToMap,
   readNpmrcEntries,
+  readNpmrcMap,
   type NpmrcEntry,
 } from '../package-manager-config/npmrc';
 import { fileExists } from '../fileutils';
@@ -32,6 +33,7 @@ import {
   setRegistry,
   setScopedRegistry,
   setStrictSsl,
+  warnNativeCredential,
   type IgnoresNpmConfigEnv,
   type NpmConfigEnv,
 } from './utils';
@@ -160,11 +162,12 @@ export function getPnpmSpawnRegistryEnv(
     );
     // On this version line pnpm's user config is npm's own (no auth.ini, no
     // npmrcAuthFile), always a file npm reads for itself.
-    reportTokenHelper(
+    reportCredentialDivergences(
       env,
       root,
       scope,
       getNpmUserConfigPath(root),
+      npmrcPaths.map((path) => ({ path, filtered: false })),
       pnpmVersion,
       managerIgnoresEnv
     );
@@ -228,11 +231,15 @@ export function getPnpmSpawnRegistryEnv(
     pnpmVersion,
     managerIgnoresEnv
   );
-  reportTokenHelper(
+  reportCredentialDivergences(
     env,
     root,
     scope,
     getPnpmUserConfigPath(pnpmVersion, root),
+    [
+      { path: join(workspaceDir, '.npmrc'), filtered: true },
+      { path: authIniPath, filtered: false },
+    ],
     pnpmVersion,
     managerIgnoresEnv
   );
@@ -1598,6 +1605,52 @@ function npmResolved(
   return declared === undefined ? undefined : expandNpmEnvVars(declared.trim());
 }
 
+/**
+ * What the spawned npm resolves a key to on its own: its env tier, minus the
+ * bridged spellings the spawn strips, then the two .npmrc files it opens here.
+ * An unreadable one is silently absent, which is what npm makes of it.
+ */
+function npmVisibleReader(
+  env: NpmConfigEnv,
+  root: string,
+  projectNpmrc: Map<string, string>,
+  managerIgnoresEnv: IgnoresNpmConfigEnv
+): (key: string) => string | undefined {
+  const userConfig = readNpmrcMap(getNpmUserConfigPath(root));
+  return (key) => {
+    const declared = npmResolved(env, projectNpmrc, key, managerIgnoresEnv);
+    if (declared !== undefined || !(userConfig instanceof Map)) {
+      return declared;
+    }
+    const value = readExpandedKey(userConfig, key, expandNpmEnvVars);
+    return value === undefined ? undefined : expandNpmEnvVars(value.trim());
+  };
+}
+
+/**
+ * What pnpm itself ends up with for a key, across the tiers the overlay already
+ * carries and the npmrc-family files it reads for itself, each as its own
+ * reader leaves it: a file it discarded whole declares nothing, and neither
+ * does an entry it withheld. A key it answers is one npm answering the same way
+ * reproduces rather than diverges from.
+ */
+function pnpmResolvedReader(
+  env: NpmConfigEnv,
+  files: { path: string; filtered: boolean }[],
+  pnpmVersion: string,
+  managerIgnoresEnv: IgnoresNpmConfigEnv
+): (key: string) => string | undefined {
+  const maps = files.map(({ path, filtered }) => {
+    const raw = readPnpmNpmrcMap(path, pnpmVersion);
+    return raw && readPnpmNpmrcEntries(raw, pnpmVersion, filtered).map;
+  });
+  return (key) =>
+    // The overlay is pnpm's own resolution of every tier above these files.
+    env[`npm_config_${key}`] ||
+    (managerIgnoresEnv(key) ? undefined : readNpmConfigEnv(process.env, key)) ||
+    maps.find((map) => map?.get(key))?.get(key);
+}
+
 function hasCredentials(
   env: NpmConfigEnv,
   projectNpmrc: Map<string, string>,
@@ -1668,29 +1721,57 @@ function getNpmUserConfigPath(root: string): string {
 }
 
 /**
- * Reports a credential pnpm produces by running a token helper, which npm has
- * no setting for and no way to reproduce. Both supported lines take a helper
- * only from the user config pnpm resolves (10.x getAuthHeadersFromConfig reads
- * it from userSettings alone; 11 additionally aborts the command outright with
- * TOKEN_HELPER_IN_PROJECT_CONFIG when one reaches it from any other file), so
- * `userConfigPath` is the one place worth reading.
+ * Reports the two credentials the overlay cannot reproduce for the registry npm
+ * is about to contact: one pnpm produces by running a token helper, which npm
+ * has no setting for, and one npm holds in a file of its own that pnpm would
+ * not send. Both supported lines take a helper only from the user config pnpm
+ * resolves (10.x getAuthHeadersFromConfig reads it from userSettings alone; 11
+ * additionally aborts the command outright with TOKEN_HELPER_IN_PROJECT_CONFIG
+ * when one reaches it from any other file), so `userConfigPath` is the one
+ * place worth reading for it.
  */
-function reportTokenHelper(
+function reportCredentialDivergences(
   env: NpmConfigEnv,
   root: string,
   scope: string | null,
   userConfigPath: string,
+  npmrcFiles: { path: string; filtered: boolean }[],
   pnpmVersion: string,
   managerIgnoresEnv: IgnoresNpmConfigEnv
 ): void {
-  const userConfig = readPnpmNpmrcMap(userConfigPath, pnpmVersion);
-  if (!userConfig) {
-    return;
-  }
   const projectNpmrc = readNpmrcOrWarn(join(root, '.npmrc')) ?? new Map();
   const contactedDart = nerfDart(
     contactedRegistry(env, projectNpmrc, scope, managerIgnoresEnv)
   );
+  const npmVisible = npmVisibleReader(
+    env,
+    root,
+    projectNpmrc,
+    managerIgnoresEnv
+  );
+  if (contactedDart) {
+    // pnpm goes without one where it resolved the registry but not a credential
+    // for it: a file it discards whole over an unresolvable reference, an entry
+    // it withholds from 11.5.3, or the .npmrc beside an outer workspace file
+    // that it reads in place of the one npm opens here.
+    const pnpmSends = pnpmResolvedReader(
+      env,
+      [...npmrcFiles, { path: userConfigPath, filtered: false }],
+      pnpmVersion,
+      managerIgnoresEnv
+    );
+    warnNativeCredential(
+      env,
+      contactedDart,
+      'pnpm',
+      'Declare it where pnpm reads it too if it should authenticate there, or remove it from .npmrc if npm should not.',
+      (key) => (pnpmSends(key) ? undefined : npmVisible(key))
+    );
+  }
+  const userConfig = readPnpmNpmrcMap(userConfigPath, pnpmVersion);
+  if (!userConfig) {
+    return;
+  }
   // Where pnpm pins a `tokenHelper` written without a registry prefix.
   const pinnedDart = gte(pnpmVersion, '11.0.0')
     ? // 11 rescopes it per file, onto the registry that same file declares
@@ -1712,20 +1793,8 @@ function reportTokenHelper(
   ) {
     return;
   }
-  // npm opens its own user config, so a plain credential sitting beside the
-  // helper is one npm still sends. A file pnpm was pointed at on its own is one
-  // npm never opens, and nothing in it counts.
-  const npmReadsUserConfig = userConfigPath === getNpmUserConfigPath(root);
-  const npmVisible = (key: string): string | undefined => {
-    const declared = npmResolved(env, projectNpmrc, key, managerIgnoresEnv);
-    if (declared !== undefined || !npmReadsUserConfig) {
-      return declared;
-    }
-    const fromUserConfig = readExpandedKey(userConfig, key, expandNpmEnvVars);
-    return fromUserConfig === undefined
-      ? undefined
-      : expandNpmEnvVars(fromUserConfig.trim());
-  };
+  // A plain credential npm holds beside the helper is one npm still sends, so
+  // there is nothing to report about the helper it never runs.
   if (!hasCredentialFor(contactedDart, npmVisible)) {
     warnTokenHelper(contactedDart);
   }
