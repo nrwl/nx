@@ -364,6 +364,9 @@ describe('determinePresetOptions', () => {
   } as any;
 
   beforeEach(() => {
+    // Recorded calls persist across tests otherwise, so any assertion on which
+    // questions were asked would see every earlier test's prompts too.
+    (enquirer.prompt as jest.Mock).mockClear();
     // A sentinel the prompt could not produce by accident, so what these tests
     // pin is the threading through each stack rather than the prompt's own
     // default.
@@ -375,7 +378,7 @@ describe('determinePresetOptions', () => {
   // workspace with no prompt and no error.
   // Each stack needs enough non-interactive args to reach its return statement.
   const perStack: Record<string, Record<string, unknown>> = {
-    none: { preset: Preset.Apps },
+    none: { preset: Preset.TsStandalone },
     react: {
       preset: Preset.ReactMonorepo,
       appName: 'app',
@@ -445,9 +448,6 @@ describe('determinePresetOptions', () => {
     expect(result.linter).toBe('eslint');
   });
 
-  // `web-components` is the only preset on the `web` stack, and it takes a
-  // linter like any other. It reached `determineStack`'s catch-all arm until
-  // it got a stack of its own, which left it the one preset created unlinted.
   it('should resolve a linter for the web stack', async () => {
     const result = await determinePresetOptions({
       ...base,
@@ -457,4 +457,23 @@ describe('determinePresetOptions', () => {
 
     expect(result.linter).toBe('oxlint');
   });
+
+  // `apps`, `ts` and `npm` reach no generator that takes a linter, so asking
+  // would put the question to the user and then discard the answer.
+  it.each([Preset.Apps, Preset.NPM, Preset.TS])(
+    'should not ask for a linter when %s cannot use one',
+    async (preset) => {
+      const result = await determinePresetOptions({
+        ...base,
+        stack: 'none',
+        preset,
+      } as any);
+
+      expect(result.linter).toBeUndefined();
+      const linterQuestions = (enquirer.prompt as jest.Mock).mock.calls.filter(
+        ([[question]]) => question.name === 'linter'
+      );
+      expect(linterQuestions).toHaveLength(0);
+    }
+  );
 });
