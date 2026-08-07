@@ -68,9 +68,11 @@ export function readNpmrcMap(
   path: string
 ): Map<string, string> | 'unreadable' | null {
   const entries = readNpmrcEntries(path);
-  if (!Array.isArray(entries)) {
-    return entries;
-  }
+  return Array.isArray(entries) ? npmrcEntriesToMap(entries) : entries;
+}
+
+/** Those entries under ini's semantics for repeated keys. */
+export function npmrcEntriesToMap(entries: NpmrcEntry[]): Map<string, string> {
   const map = new Map<string, string>();
   for (const { key, value, array } of entries) {
     // ini collects repeated `key[]` values into an array under the bare key, and
