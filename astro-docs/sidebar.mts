@@ -311,10 +311,6 @@ const learnGroups: SidebarItems = [
             label: 'Preserving Git histories',
             link: 'guides/adopting-nx/preserving-git-histories',
           },
-          {
-            label: 'Migrating from Turborepo',
-            link: 'guides/adopting-nx/from-turborepo',
-          },
         ],
       },
       {

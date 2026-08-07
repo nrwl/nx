@@ -126,6 +126,11 @@ to = "/docs/guides/adopting-nx/adding-to-monorepo"
 from = "/docs/guides/adopting-nx/nx-vs-turborepo"
 to = "/docs/guides/comparisons/nx-vs-turborepo"
 
+# Turborepo migration guide moved to the Knowledge Base (DOC-571)
+[[redirects]]
+from = "/docs/guides/adopting-nx/from-turborepo"
+to = "/docs/kb/from-turborepo"
+
 # Angular multiple workspace migration page removed (DOC-419)
 [[redirects]]
 from = "/docs/technologies/angular/migration/angular-multiple"
