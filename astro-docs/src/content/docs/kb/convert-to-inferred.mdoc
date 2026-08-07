@@ -6,7 +6,7 @@ topics:
   - 'Tasks & caching'
 ---
 
-In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/docs/concepts/inferred-tasks).
+In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/docs/concepts/mental-model#inferred-tasks).
 
 The main benefits of migrating to inferred tasks are
 
@@ -14,11 +14,26 @@ The main benefits of migrating to inferred tasks are
 - inferring the correct cache settings based on the tool configuration files
 - [splitting tasks (Atomizer)](/docs/features/ci-features/split-e2e-tasks) for plugins that support it
 
+{% youtube
+src="https://youtu.be/wADNsVItnsM"
+title="Inferred Tasks"
+/%}
+
 For the best experience, we recommend that you [migrate](/docs/features/automate-updating-dependencies) to the latest Nx version before continuing.
 
 ```shell
 npx nx migrate latest
 ```
+
+## Enable inferred tasks for older workspaces
+
+If your workspace was upgraded from an Nx version that predates inferred tasks, a migration may have set `useInferencePlugins` to `false` in `nx.json`.
+When `useInferencePlugins` is `false`:
+
+1. A newly generated project will have all targets defined with executors, not with inferred tasks.
+2. Running `nx add @nx/some-plugin` will not register the plugin in `nx.json`, so that plugin will not infer tasks.
+
+Remove the property, or set it to `true`, before you migrate your projects.
 
 ## Migrate all plugins
 

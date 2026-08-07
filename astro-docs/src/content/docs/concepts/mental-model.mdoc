@@ -1,43 +1,56 @@
 ---
-title: Mental model
-description: Understand how Nx creates project and task graphs to coordinate affected projects, caching, and task execution in a workspace.
+title: Mental Model
+description: Understand how project graphs, inferred tasks, task graphs, affected commands, and caching work together in Nx.
 sidebar:
   order: 1
 filter: 'type:Concepts'
 ---
 
-Think of Nx as a coordinator for the tools in your workspace.
-Vite, Jest, and other tools still do their own work, while Nx maps how projects and tasks relate and
-then decides what to run, in what order, and whether previous work can be reused.
+Nx coordinates work in your workspace through a few core concepts: the project graph, inferred tasks, the task graph, affected commands, and computation caching.
+[Plugins](/docs/concepts/nx-plugins) apply these concepts to the tools and frameworks in your repository.
 
 ## The project graph
 
-The project graph represents projects in your workspace and the dependencies between them.
-It also includes external dependencies, such as Vite, React, and Angular.
+The project graph represents the source code in your repository and external dependencies such as Vite, React, and Angular.
 
 ![A project graph with applications and libraries](../../../assets/concepts/mental-model/project-graph.svg)
 
-Nx plugins identify projects from files such as `package.json`, `project.json`, and tool configuration
-files.
-Nx then analyzes source code, TypeScript configuration, and package dependencies to find the
-connections between projects.
-You can add dependencies manually when Nx can't determine them from the workspace.
+Nx analyzes your file system to detect projects. It identifies projects from a `project.json` file or a `package.json` file included in your package manager's workspaces configuration. Plugins can also customize how Nx identifies projects. You can manually define dependencies between
+the project nodes, but you don't have to do it very often. Nx analyzes source code, your installed dependencies, and TypeScript
+configuration to figure out these dependencies for you. Nx also stores the cached project graph, so it only
+reanalyzes the files you have changed.
 
 Nx caches the project graph and recomputes the parts affected by file changes.
 The updated graph reflects the current state of your workspace.
 
-![The project graph after a change](../../../assets/concepts/mental-model/project-graph-updated.svg)
+## Inferred tasks
 
-## Metadata-driven
+Every project has tasks you can run, such as `build`, `test`, or `lint`. Tasks can come from three places:
 
-Nx combines project configuration with metadata inferred by plugins.
-For example, the `@nx/vite` plugin can [infer tasks](/docs/concepts/inferred-tasks) from a project's
-`vite.config.ts` file, including commands, cache inputs, and outputs.
+- Nx can use a script in the project's `package.json`.
+- Nx can use a target defined in the project's `project.json`.
+- A plugin can infer a task from tool configuration.
 
-Nx, Nx Console, coding agents, and other integrations use this metadata to understand and interact
-with your workspace.
+Your tools already describe how they run.
+A `vite.config.ts` file defines where the build output goes.
+Rather than asking you to repeat that information, Nx plugins read the tool configuration and create tasks for you.
+The `@nx/vite` plugin, for example, detects `vite.config.ts` files and infers tasks such as `build`, `dev`, and `preview` with the correct command, cache settings, [inputs](/docs/kb/configure-inputs), [outputs](/docs/kb/configure-outputs), and task dependencies.
 
-![Tools using Nx metadata](../../../assets/concepts/mental-model/metadata.png)
+To see every task Nx detected for a project, and where each setting came from, show the project details:
+
+```shell
+nx show project my-project
+```
+
+When a plugin infers settings you want to change, override them.
+Nx merges task configuration from three sources, with later sources winning:
+
+1. Task configuration inferred by plugins registered in `nx.json`.
+2. `targetDefaults` in `nx.json`.
+3. The project's own configuration in `package.json` or `project.json`.
+
+For all configuration options, see [project configuration](/docs/reference/project-configuration).
+To move an older workspace onto inferred tasks, follow the [Migrate to Inferred Tasks](/docs/kb/convert-to-inferred) guide.
 
 ## The task graph
 
@@ -97,7 +110,10 @@ For example, `nx test lib` creates a task graph with one node:
 The project graph and task graph aren't identical.
 In this project graph, both applications depend on `lib`:
 
-{% graph title="Project dependencies" height="240px" type="project" %}
+Nx uses the [project graph](#the-project-graph) to figure out which tasks exist, but the task graph isn't a mirror of the
+project graph. In the case below, `app1` and `app2` depend on `lib`:
+
+{% graph height="200px" type="project" %}
 
 ```json
 {
@@ -106,69 +122,43 @@ In this project graph, both applications depend on `lib`:
       "name": "app1",
       "type": "app",
       "data": {
-        "root": "apps/app1",
-        "projectType": "application",
-        "tags": [],
-        "targets": {
-          "build": {},
-          "test": {}
-        }
+        "tags": []
       }
     },
     {
       "name": "app2",
       "type": "app",
       "data": {
-        "root": "apps/app2",
-        "projectType": "application",
-        "tags": [],
-        "targets": {
-          "build": {},
-          "test": {}
-        }
+        "tags": []
       }
     },
     {
-      "name": "lib",
-      "type": "lib",
+      "name": "app1",
+      "type": "app",
       "data": {
-        "root": "libs/lib",
-        "projectType": "library",
-        "tags": [],
-        "targets": {
-          "build": {},
-          "test": {}
-        }
+        "tags": []
       }
     }
   ],
   "dependencies": {
-    "app1": [
-      {
-        "source": "app1",
-        "target": "lib",
-        "type": "static"
-      }
-    ],
-    "app2": [
-      {
-        "source": "app2",
-        "target": "lib",
-        "type": "static"
-      }
-    ],
+    "app1": [{ "source": "app1", "target": "lib", "type": "static" }],
+    "app2": [{ "source": "app2", "target": "lib", "type": "static" }],
     "lib": []
   },
-  "affectedProjectIds": []
+  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false
 }
 ```
 
 {% /graph %}
 
-Running `nx run-many -t test -p app1 app2 lib` creates three independent tasks because the task
-pipeline doesn't define dependencies between the `test` targets:
+Running `nx run-many -t test -p app1 app2 lib` creates a task graph with three disconnected nodes:
 
-{% graph title="Independent test tasks" height="240px" type="task" %}
+![Tasks running in dependency order and in parallel](../../../assets/concepts/mental-model/task-graph-execution.svg)
+
+{% graph height="200px" type="task" %}
 
 ```json
 {
@@ -177,8 +167,6 @@ pipeline doesn't define dependencies between the `test` targets:
       "name": "app1",
       "type": "app",
       "data": {
-        "root": "apps/app1",
-        "projectType": "application",
         "tags": [],
         "targets": {
           "test": {}
@@ -189,8 +177,6 @@ pipeline doesn't define dependencies between the `test` targets:
       "name": "app2",
       "type": "app",
       "data": {
-        "root": "apps/app2",
-        "projectType": "application",
         "tags": [],
         "targets": {
           "test": {}
@@ -201,8 +187,6 @@ pipeline doesn't define dependencies between the `test` targets:
       "name": "lib",
       "type": "lib",
       "data": {
-        "root": "libs/lib",
-        "projectType": "library",
         "tags": [],
         "targets": {
           "test": {}
@@ -220,12 +204,8 @@ pipeline doesn't define dependencies between the `test` targets:
           "project": "app1",
           "target": "test"
         },
-        "outputs": [],
         "projectRoot": "apps/app1",
-        "overrides": {},
-        "cache": true,
-        "parallelism": true,
-        "continuous": false
+        "overrides": {}
       },
       "app2:test": {
         "id": "app2:test",
@@ -233,12 +213,8 @@ pipeline doesn't define dependencies between the `test` targets:
           "project": "app2",
           "target": "test"
         },
-        "outputs": [],
         "projectRoot": "apps/app2",
-        "overrides": {},
-        "cache": true,
-        "parallelism": true,
-        "continuous": false
+        "overrides": {}
       },
       "lib:test": {
         "id": "lib:test",
@@ -246,20 +222,11 @@ pipeline doesn't define dependencies between the `test` targets:
           "project": "lib",
           "target": "test"
         },
-        "outputs": [],
         "projectRoot": "libs/lib",
-        "overrides": {},
-        "cache": true,
-        "parallelism": true,
-        "continuous": false
+        "overrides": {}
       }
     },
     "dependencies": {
-      "app1:test": [],
-      "app2:test": [],
-      "lib:test": []
-    },
-    "continuousDependencies": {
       "app1:test": [],
       "app2:test": [],
       "lib:test": []
@@ -270,26 +237,24 @@ pipeline doesn't define dependencies between the `test` targets:
 
 {% /graph %}
 
-Without task dependencies, Nx can run all three test tasks in parallel.
+Even though the apps depend on `lib`, testing `app1` doesn't depend on testing `lib`. This means that the three tasks
+can run in parallel.
 
-Builds commonly need a different relationship because an application may consume the built output of
-its libraries.
-Use `dependsOn` to make each `build` task depend on the `build` tasks of its project dependencies:
+Now let's make the test target depend on the test tasks of its dependencies:
 
-```jsonc title="nx.json"
+```json title="nx.json"
 {
   "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-    },
-  },
+    "test": {
+      "dependsOn": ["^test"]
+    }
+  }
 }
 ```
 
-Running `nx run-many -t build -p app1 app2 lib` now produces task dependencies that follow the project
-graph:
+With this, running the same test command creates the following task graph:
 
-{% graph title="Build tasks with dependencies" height="260px" type="task" %}
+{% graph height="200px" type="task" %}
 
 ```json
 {
@@ -298,11 +263,9 @@ graph:
       "name": "app1",
       "type": "app",
       "data": {
-        "root": "apps/app1",
-        "projectType": "application",
         "tags": [],
         "targets": {
-          "build": {}
+          "test": {}
         }
       }
     },
@@ -310,11 +273,9 @@ graph:
       "name": "app2",
       "type": "app",
       "data": {
-        "root": "apps/app2",
-        "projectType": "application",
         "tags": [],
         "targets": {
-          "build": {}
+          "test": {}
         }
       }
     },
@@ -322,68 +283,49 @@ graph:
       "name": "lib",
       "type": "lib",
       "data": {
-        "root": "libs/lib",
-        "projectType": "library",
         "tags": [],
         "targets": {
-          "build": {}
+          "test": {}
         }
       }
     }
   ],
-  "taskIds": ["app1:build", "app2:build", "lib:build"],
+  "taskIds": ["app1:test", "app2:test", "lib:test"],
   "taskGraph": {
-    "roots": ["lib:build"],
+    "roots": ["lib:test"],
     "tasks": {
-      "app1:build": {
-        "id": "app1:build",
+      "app1:test": {
+        "id": "app1:test",
         "target": {
           "project": "app1",
-          "target": "build"
+          "target": "test"
         },
-        "outputs": ["{workspaceRoot}/dist/apps/app1"],
         "projectRoot": "apps/app1",
-        "overrides": {},
-        "cache": true,
-        "parallelism": true,
-        "continuous": false
+        "overrides": {}
       },
-      "app2:build": {
-        "id": "app2:build",
+      "app2:test": {
+        "id": "app2:test",
         "target": {
           "project": "app2",
-          "target": "build"
+          "target": "test"
         },
-        "outputs": ["{workspaceRoot}/dist/apps/app2"],
         "projectRoot": "apps/app2",
-        "overrides": {},
-        "cache": true,
-        "parallelism": true,
-        "continuous": false
+        "overrides": {}
       },
-      "lib:build": {
-        "id": "lib:build",
+      "lib:test": {
+        "id": "lib:test",
         "target": {
           "project": "lib",
-          "target": "build"
+          "target": "test"
         },
-        "outputs": ["{workspaceRoot}/dist/libs/lib"],
         "projectRoot": "libs/lib",
-        "overrides": {},
-        "cache": true,
-        "parallelism": true,
-        "continuous": false
+        "overrides": {}
       }
     },
     "dependencies": {
-      "app1:build": ["lib:build"],
-      "app2:build": ["lib:build"],
-      "lib:build": []
-    },
-    "continuousDependencies": {
-      "app1:build": [],
-      "app2:build": [],
-      "lib:build": []
+      "app1:test": ["lib:test"],
+      "app2:test": ["lib:test"],
+      "lib:test": []
     }
   }
 }
@@ -391,12 +333,15 @@ graph:
 
 {% /graph %}
 
-With this rule, `app1:build` and `app2:build` wait for `lib:build`.
-After `lib:build` completes, Nx can run both application builds in parallel.
+This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
+similar relationships between targets of the same project, including a test target that depends on the build. Learn more about configuring task pipelines in [Task Pipeline Configuration](/docs/concepts/task-pipeline-configuration).
 
-![Tasks running in dependency order and in parallel](../../../assets/concepts/mental-model/task-graph-execution.svg)
+A task graph can contain different targets that run in parallel. For instance, while Nx builds `app2`, it can test `app1` at the same time.
 
-For more information, see [task pipeline configuration](/docs/concepts/task-pipeline-configuration).
+![task-graph-execution](../../../assets/concepts/mental-model/task-graph-execution.svg)
+
+Nx also runs the tasks in the task graph in the right order. Nx executing tasks in parallel speeds up your overall
+execution time.
 
 ## Affected commands
 
@@ -414,15 +359,18 @@ set contains all three projects.
 
 ![Affected projects after a library change](../../../assets/concepts/mental-model/affected.svg)
 
-For more information, see [affected tasks](/docs/features/ci-features/affected).
+When you run `nx affected -t test`, Nx identifies the files changed in your PR and follows their project dependencies and imports to determine which projects the change can affect. It then runs the `run-many` command with that list.
+
+For instance, when a PR changes `lib`, Nx detects that `app1` and `app2` depend on `lib`, then invokes `nx run-many -t test -p app1 app2 lib`.
+
+![affected](../../../assets/concepts/mental-model/affected.svg)
+
+Nx analyzes the nature of the changes. For example, if you change the version of Next.js in the package.json, Nx knows
+that `app2` cannot be affected by it, so it only retests `app1`.
 
 ## Computation hashing and caching
 
-Before running a cacheable task, Nx hashes its inputs.
-These inputs can include source files, configuration, dependencies, runtime values, and command-line
-arguments.
-If the hash matches a previous run, Nx restores the cached terminal output and file artifacts instead
-of running the task again.
+Before running a task, Nx computes a hash based on source files, configuration, dependencies, and other inputs. If the hash matches a previous run, Nx replays the cached result, including terminal output and file artifacts. If not, Nx runs the task and stores the result for next time.
 
 ![Inputs used to calculate a task hash](../../../assets/concepts/mental-model/computation-hashing.svg)
 
@@ -436,10 +384,14 @@ For the complete hashing and cache model, see [how caching works](/docs/concepts
 
 ## Distributed task execution
 
-A single machine eventually limits how many tasks you can run in parallel.
-[Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute the task graph across
-multiple machines while preserving its dependency order.
-Agents use remote caching to share task artifacts, so a dependent task can use output produced on a
-different machine.
+For large workspaces, even with caching, running all tasks on a single machine can be slow. [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute the task graph across multiple machines, running tasks in parallel while using remote caching to share artifacts between agents. CI receives the results as though everything ran on a single machine.
 
-![A task graph distributed across agent machines](../../../assets/concepts/mental-model/dte.svg)
+![Distribution](../../../assets/concepts/mental-model/dte.svg)
+
+## How it fits together
+
+- Nx analyzes your source code to create a project graph.
+- Nx plugins infer tasks from your tool configuration, so most task settings don't have to be written by hand.
+- Nx uses the project graph and task configuration to create a task graph and run tasks in the right order.
+- Code-change analysis creates the smallest task graph for your PR.
+- [Computation caching](/docs/features/cache-task-results) makes sure the same computation never runs twice. You can plug in a cache provider and distribute cached results.
