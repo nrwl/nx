@@ -264,7 +264,12 @@ function getPnpmMajor(workspaceRootPath: string): number | null {
   } catch {
     major = null;
   }
-  pnpmMajorByWorkspaceRoot.set(workspaceRootPath, major);
+  // Only a successful detection is remembered: `getPackageManagerVersion`
+  // shells out when the root declares no `packageManager`, and caching one
+  // failed spawn would disable the pnpm settings for the rest of the process.
+  if (major !== null) {
+    pnpmMajorByWorkspaceRoot.set(workspaceRootPath, major);
+  }
   return major;
 }
 
