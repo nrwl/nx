@@ -150,16 +150,18 @@ describe('determineLinterOptions', () => {
   });
 
   it('should let the prompt skip itself when not interactive', async () => {
-    // A skipped enquirer prompt resolves to its `initial` choice, so the caller
-    // still gets a linter rather than `undefined`.
     (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'eslint' });
 
-    const result = await determineLinterOptions({ interactive: false });
+    await determineLinterOptions({ interactive: false });
 
-    expect(result).toBe('eslint');
-    expect(enquirer.prompt).toHaveBeenCalledWith([
-      expect.objectContaining({ name: 'linter', skip: true }),
-    ]);
+    // A skipped enquirer prompt resolves to the FIRST choice and ignores
+    // `initial`, so the ordering is what decides the non-interactive default.
+    // Asserting the returned value would only re-read the mock.
+    const [[[question]]] = (enquirer.prompt as jest.Mock).mock.calls;
+    expect(question.skip).toBe(true);
+    expect(question.choices[0]).toEqual(
+      expect.objectContaining({ name: 'eslint' })
+    );
   });
 
   it('should prompt when interactive', async () => {

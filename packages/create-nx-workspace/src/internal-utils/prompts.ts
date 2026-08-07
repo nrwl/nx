@@ -351,7 +351,9 @@ export async function determineLinterOptions(args: {
         { name: 'oxlint', message: 'oxlint (experimental)' },
         { name: 'none' },
       ],
-      // ESLint while Oxlint is experimental. One index change flips it.
+      // A skipped prompt resolves to the first choice and ignores `initial`, so
+      // the order above is what makes ESLint the non-interactive default while
+      // Oxlint is experimental. Reorder the choices to change it.
       initial: 0,
       skip: !args.interactive || isCI(),
     },
