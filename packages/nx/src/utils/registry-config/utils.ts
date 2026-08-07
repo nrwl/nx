@@ -349,6 +349,22 @@ export function expandNpmEnvVars(
 }
 
 /**
+ * The value to bridge so that npm's own expansion produces `value`, for a
+ * resolution that consumed the package manager's escapes rather than leaving
+ * them for npm (a literal a reader never expanded, or an expander whose escape
+ * rule is not npm's). Each reference gets an odd run of backslashes, which npm
+ * halves back to what it started as. Only what npm's reader would act on is
+ * escaped, so a `${` it leaves alone is not turned into a literal backslash.
+ */
+export function escapeNpmEnvExpr(value: string): string {
+  return value.replace(
+    NPM_ENV_EXPR,
+    (_orig: string, esc: string, name: string, optional: string) =>
+      `${'\\'.repeat(esc.length * 2 + 1)}$\{${name}${optional ?? ''}}`
+  );
+}
+
+/**
  * Expands `${VAR}` references from the environment the way npm/bun ini readers
  * do. Unknown variables are left verbatim.
  */
@@ -357,6 +373,32 @@ export function expandEnvVars(
   env: NodeJS.ProcessEnv = process.env
 ): string {
   return replaceEnvExpr(value, (name) => env[name]);
+}
+
+const YARN_ENV_EXPR = /(\\*)\$\{([^}]+)\}/g;
+
+/**
+ * Expands `${VAR}` the way yarn classic's own envReplace does, which parts from
+ * npm's on both halves of its escape rule: an odd run of backslashes keeps
+ * every one of them along with the reference, and an even one drops all of them
+ * rather than half. A reference it resolves nothing for aborts yarn, so it
+ * throws here into the caller's fall-open.
+ * See https://github.com/yarnpkg/yarn/blob/v1.22.22/src/registries/npm-registry.js
+ */
+export function expandYarnEnvVars(
+  value: string,
+  env: NodeJS.ProcessEnv = process.env
+): string {
+  return value.replace(YARN_ENV_EXPR, (orig: string, esc: string, name) => {
+    if (esc.length % 2) {
+      return orig;
+    }
+    const resolved = env[name];
+    if (resolved === undefined) {
+      throw new Error(`Failed to replace env in config: ${orig}`);
+    }
+    return resolved;
+  });
 }
 
 const PNPM_ENV_DEFAULT = /([^:-]+)(:?)-(.+)/;

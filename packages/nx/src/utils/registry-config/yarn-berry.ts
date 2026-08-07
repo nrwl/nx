@@ -8,6 +8,7 @@ import { logger } from '../logger';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
+  escapeNpmEnvExpr,
   expandNpmEnvVars,
   getPackageScope,
   nerfDart,
@@ -258,6 +259,15 @@ export function getYarnBerrySpawnRegistryEnv(
   }
 
   applyTls(env, rcFiles, effectiveRegistry, yarnVersion);
+  // Berry's expander consumes the backslash that escapes a reference, so what
+  // it resolves can hold a `${VAR}` npm would go on to resolve for itself,
+  // sending a credential berry keeps literal. Escaping every value it produced
+  // hands npm the same text back. Keys are left as they are: a reference can
+  // only reach one through a registry host, which is not a host berry resolves
+  // either.
+  for (const [key, value] of Object.entries(env)) {
+    env[key] = escapeNpmEnvExpr(value);
+  }
   return env;
 }
 

@@ -15,6 +15,7 @@ import { fileExists } from '../fileutils';
 import { logger } from '../logger';
 import {
   ancestorDirectories,
+  escapeNpmEnvExpr,
   expandNpmEnvVars,
   expandPnpmEnvVars,
   getPackageScope,
@@ -111,7 +112,7 @@ export function getPnpmSpawnRegistryEnv(
   }
 
   const workspaceFile = findPnpmWorkspaceFile(root, pnpmVersion);
-  const settings = readPnpmWorkspaceSettings(workspaceFile);
+  const settings = readPnpmWorkspaceSettings(workspaceFile, pnpmVersion);
   const scope = getPackageScope(packageName);
   // Kept identical to the predicate the caller hands mergeNpmConfigEnv at spawn
   // time, which drops the bridged ambient npm_config_* this answers true for
@@ -643,7 +644,10 @@ function findPnpmWorkspaceFile(
   return null;
 }
 
-function readPnpmWorkspaceSettings(path: string | null): PnpmWorkspaceSettings {
+function readPnpmWorkspaceSettings(
+  path: string | null,
+  pnpmVersion: string
+): PnpmWorkspaceSettings {
   if (path === null) {
     return {};
   }
@@ -657,7 +661,117 @@ function readPnpmWorkspaceSettings(path: string | null): PnpmWorkspaceSettings {
     // the workspace as declaring no registry.
     throw new Error(`The pnpm workspace file at ${path} could not be read.`);
   }
-  return normalizePnpmWorkspaceSettings(doc, path);
+  return normalizePnpmWorkspaceSettings(
+    resolveYamlEnv(doc, path, pnpmVersion, false),
+    path
+  );
+}
+
+/**
+ * The scalar settings pnpm withholds from an untrusted file rather than
+ * expanding a `${VAR}` into them, its REQUEST_DESTINATION_SCALAR_KEYS.
+ */
+const PNPM_REQUEST_DESTINATION_SCALARS = new Set([
+  'pnprServer',
+  'registry',
+  'httpProxy',
+  'httpsProxy',
+  'noProxy',
+  'proxy',
+  'noproxy',
+]);
+
+/**
+ * A yaml settings file as pnpm's replaceEnvInSettings leaves it. Which
+ * `${VAR}` it touches moved twice, and what it does with one it cannot resolve
+ * moved once:
+ *
+ * - Keys, on every line from 10.7.0, and a key it resolves nothing for aborts
+ *   the command. 10.6.0 has no replacer at all and takes the file verbatim.
+ * - Top-level string values, on the same line, and likewise fatal.
+ * - `registries` and `namedRegistries` values, from 11.1.0.
+ * - From 11.5.3 a value naming a request destination is dropped instead, when
+ *   the file is one a project controls. The global config.yaml is trusted and
+ *   keeps expanding.
+ *
+ * A nested object elsewhere is passed through untouched on every line, so a
+ * placeholder there is neither expanded nor fatal.
+ *
+ * Values come back in the form npm's own expansion turns back into what pnpm
+ * resolved: a line that expands leaves an escaped reference for npm to consume
+ * (expandPnpmEnvVars), and a line that does not escapes what it passes through.
+ */
+function resolveYamlEnv(
+  doc: Record<string, unknown>,
+  path: string,
+  pnpmVersion: string,
+  trusted: boolean
+): Record<string, unknown> {
+  const expand = (value: string): string => {
+    if (!pnpmEnvVarsResolve(value)) {
+      // pnpm aborts the command here, so there is no resolution left to
+      // reproduce. Propagating to the caller's fall-open warns instead.
+      throw new Error(
+        `The pnpm configuration file at ${path} references an environment variable that is not set: ${value}`
+      );
+    }
+    return expandPnpmEnvVars(value);
+  };
+  const expands = gte(pnpmVersion, '10.7.0');
+  const resolveScalar = expands ? expand : escapeNpmEnvExpr;
+  const resolveRegistry = gte(pnpmVersion, '11.1.0')
+    ? resolveScalar
+    : escapeNpmEnvExpr;
+  const drops = !trusted && gte(pnpmVersion, '11.5.3');
+  const resolved: Record<string, unknown> = {};
+  for (const [rawKey, value] of Object.entries(doc)) {
+    const key = expands ? expand(rawKey) : rawKey;
+    if (typeof value === 'string') {
+      if (
+        drops &&
+        PNPM_REQUEST_DESTINATION_SCALARS.has(key) &&
+        PNPM_ENV_PLACEHOLDER.test(value)
+      ) {
+        continue;
+      }
+      resolved[key] = resolveScalar(value);
+    } else if (key === 'registries' || key === 'namedRegistries') {
+      resolved[key] = mapYamlStrings(value, (entry) =>
+        drops && PNPM_ENV_PLACEHOLDER.test(entry)
+          ? undefined
+          : resolveRegistry(entry)
+      );
+    } else {
+      resolved[key] = value;
+    }
+  }
+  return resolved;
+}
+
+/**
+ * `map` over the string values of a plain object, an entry it returns nothing
+ * for dropped. Anything else is passed through, which is how pnpm's own two
+ * mappers treat a shape they were not given.
+ */
+function mapYamlStrings(
+  value: unknown,
+  map: (value: string) => string | undefined
+): unknown {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
+  const mapped: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry !== 'string') {
+      mapped[key] = entry;
+      continue;
+    }
+    const result = map(entry);
+    if (result !== undefined) {
+      mapped[key] = result;
+    }
+  }
+  return mapped;
 }
 
 /**
@@ -766,7 +880,9 @@ function readPnpmGlobalConfigYaml(): Record<string, unknown> | null {
  * applies a workspace manifest, over the npmrc-derived config and under the
  * workspace file's own, but only for the keys it allows there: `registries` is
  * refused with a warning until 11.11.0, while every other key read here is an
- * npm setting name it has always allowed.
+ * npm setting name it has always allowed. The file is the user's own rather
+ * than a project's, so a `${VAR}` naming a request destination is expanded
+ * instead of withheld.
  */
 function readPnpmGlobalSettings(pnpmVersion: string): PnpmWorkspaceSettings {
   if (lt(pnpmVersion, '11.0.0')) {
@@ -776,7 +892,11 @@ function readPnpmGlobalSettings(pnpmVersion: string): PnpmWorkspaceSettings {
   if (doc === null) {
     return {};
   }
-  const settings = normalizePnpmWorkspaceSettings(doc, getGlobalConfigPath());
+  const path = getGlobalConfigPath();
+  const settings = normalizePnpmWorkspaceSettings(
+    resolveYamlEnv(doc, path, pnpmVersion, true),
+    path
+  );
   if (lt(pnpmVersion, '11.11.0')) {
     delete settings.registries;
   }

@@ -2611,6 +2611,142 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    describe('env references in a yaml settings file', () => {
+      it('expands a registries value from 11.1.0', () => {
+        process.env.NX_TEST_HOST = 'reg-env.example.com';
+        writeYaml('registries:\n  default: https://${NX_TEST_HOST}/\n');
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.1.0')).toEqual({
+          npm_config_registry: 'https://reg-env.example.com/',
+        });
+      });
+
+      it('leaves one literal below 11.1.0, escaped so npm reproduces it', () => {
+        // pnpm's replacer skipped the registries map until then, so it contacts
+        // the host spelled out. Handing npm the reference verbatim would have it
+        // resolve one pnpm never did.
+        process.env.NX_TEST_HOST = 'reg-env.example.com';
+        writeYaml('registries:\n  default: https://${NX_TEST_HOST}/\n');
+        for (const version of ['10.6.0', '10.18.0', '11.0.0']) {
+          expect(getPnpmSpawnRegistryEnv('is-even', root, version)).toEqual({
+            npm_config_registry: 'https://\\${NX_TEST_HOST}/',
+          });
+        }
+      });
+
+      it('leaves a scalar literal on 10.6.0, which has no replacer at all', () => {
+        process.env.NX_TEST_HOST = 'proxy-env.example.com';
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://reg-a.example.com/',
+            'httpsProxy: http://${NX_TEST_HOST}:8080',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.6.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          npm_config_proxy: 'http://\\${NX_TEST_HOST}:8080',
+          npm_config_https_proxy: 'http://\\${NX_TEST_HOST}:8080',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.7.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          npm_config_proxy: 'http://proxy-env.example.com:8080',
+          npm_config_https_proxy: 'http://proxy-env.example.com:8080',
+        });
+      });
+
+      it('withholds a request destination holding one from 11.5.3', () => {
+        process.env.NX_TEST_HOST = 'reg-env.example.com';
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://${NX_TEST_HOST}/',
+            'httpsProxy: http://${NX_TEST_HOST}:8080',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.2')).toEqual({
+          npm_config_registry: 'https://reg-env.example.com/',
+          npm_config_proxy: 'http://reg-env.example.com:8080',
+          npm_config_https_proxy: 'http://reg-env.example.com:8080',
+        });
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.3')).toEqual({});
+      });
+
+      it('keeps expanding a setting that names no request destination', () => {
+        // The withholding is scoped to the keys that decide where a request goes
+        // and what authenticates it, so the rest resolve on past 11.5.3.
+        process.env.NX_TEST_TOKEN = 'inline-ca-material';
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://reg-a.example.com/',
+            'ca: ${NX_TEST_TOKEN}',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.20.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          npm_config_ca: 'inline-ca-material',
+        });
+      });
+
+      it('leaves an escaped reference for npm to consume, not resolved twice', () => {
+        process.env.NX_TEST_TOKEN = 'resolved';
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://reg-a.example.com/',
+            'ca: keep-\\${NX_TEST_TOKEN}',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+          npm_config_ca: 'keep-\\${NX_TEST_TOKEN}',
+        });
+      });
+
+      it('fails on a reference pnpm resolves nothing for, the way it aborts', () => {
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://reg-a.example.com/',
+            'nodeLinker: ${NX_TEST_UNSET_VAR}',
+          ].join('\n')
+        );
+        // Not a request destination, so no version withholds it instead.
+        for (const version of ['10.7.0', '11.5.2', '11.20.0']) {
+          expect(() =>
+            getPnpmSpawnRegistryEnv('is-even', root, version)
+          ).toThrow(/references an environment variable that is not set/);
+        }
+        // 10.6.0 has no replacer, so the reference is never resolved and the
+        // command it would have aborted runs.
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '10.6.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
+      });
+
+      it('fails on an unresolvable key, which no version withholds', () => {
+        writeYaml('${NX_TEST_UNSET_VAR}Proxy: http://proxy.example.com:8080\n');
+        expect(() =>
+          getPnpmSpawnRegistryEnv('is-even', root, '11.20.0')
+        ).toThrow(/references an environment variable that is not set/);
+      });
+
+      it('passes a nested setting through, which pnpm never expands', () => {
+        writeYaml(
+          [
+            'registries:',
+            '  default: https://reg-a.example.com/',
+            'auditConfig:',
+            '  ignoreCves:',
+            '    - ${NX_TEST_UNSET_VAR}',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.20.0')).toEqual({
+          npm_config_registry: 'https://reg-a.example.com/',
+        });
+      });
+    });
+
     describe('TLS and proxy settings in a yaml settings file', () => {
       it('restores TLS verification for a strictSsl that is not the boolean', () => {
         // pnpm builds the agent that stops verifying for `strictSsl === false`
@@ -2785,6 +2921,15 @@ describe('getPnpmSpawnRegistryEnv', () => {
           npm_config_proxy: 'http://proxy-w.example.com:8080',
           npm_config_https_proxy: 'http://proxy-w.example.com:8080',
           npm_config_noproxy: 'g.example.com',
+        });
+      });
+      it('expands a request destination there, which pnpm trusts this file for', () => {
+        process.env.NX_TEST_HOST = 'reg-env.example.com';
+        writeGlobalConfigYaml(
+          'registries:\n  default: https://${NX_TEST_HOST}/\n'
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.20.0')).toEqual({
+          npm_config_registry: 'https://reg-env.example.com/',
         });
       });
     });
