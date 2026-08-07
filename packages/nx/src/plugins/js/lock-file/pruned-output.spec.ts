@@ -952,6 +952,50 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(packageJson.pnpm).toBeUndefined();
   });
 
+  it('emits each artifact exactly once', () => {
+    // The sink appends, so a double emit would ship a duplicate asset rather
+    // than overwrite one, and the bundlers reject a duplicate emit outright.
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
+    );
+    writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
+    mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/lib/index.js'), 'REAL');
+    const emit = jest.fn();
+
+    emitPrunedPnpmInstallAssets(
+      tempDir,
+      [
+        "lockfileVersion: '9.0'",
+        '',
+        'packages:',
+        '',
+        '  is-number@7.0.0:',
+        '    resolution: {integrity: sha512-abc}',
+        '  lib@file:local_path_modules/vendor/lib:',
+        '    resolution: {directory: local_path_modules/vendor/lib, type: directory}',
+        '',
+        'patchedDependencies:',
+        '  is-number@7.0.0: hash-is-number',
+        '',
+      ].join('\n'),
+      { name: 'app', version: '0.0.1' },
+      emit,
+      { includeLocalPathArtifacts: true }
+    );
+
+    const paths = emit.mock.calls.map(([path]) => path);
+    expect(paths).toEqual([...new Set(paths)]);
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        'pnpm-workspace.yaml',
+        'patches/is-number@7.0.0.patch',
+        'local_path_modules/vendor/lib/index.js',
+      ])
+    );
+  });
+
   it('ships the patch file and folds patchedDependencies into the in-memory manifest on pnpm 10', () => {
     mockPnpmVersion('10.13.1');
     writeFileSync(
@@ -2364,6 +2408,37 @@ describe('validatePrunedLocalPathClosure', () => {
       JSON.stringify({ name: 'linked-lib', version: '1.0.0', ...manifest })
     );
   }
+
+  it('reads the manifest of a link target under a local_path_modules workspace directory', () => {
+    // The lockfile records the target relocated, so a workspace directory
+    // already named local_path_modules/ is doubly prefixed there. Resolving
+    // that back must reach the real manifest and not a same-named root
+    // directory, or the validator silently checks the wrong closure.
+    mkdirSync(join(tempDir, 'local_path_modules/linked'), { recursive: true });
+    writeFileSync(
+      join(tempDir, 'local_path_modules/linked/package.json'),
+      JSON.stringify({
+        name: 'linked-lib',
+        version: '1.0.0',
+        dependencies: { lodash: '^4.0.0' },
+      })
+    );
+    // the decoy the old prefix test would have read instead
+    mkdirSync(join(tempDir, 'linked'), { recursive: true });
+    writeFileSync(
+      join(tempDir, 'linked/package.json'),
+      JSON.stringify({ name: 'linked-lib', version: '1.0.0' })
+    );
+    const app: PackageJson = { name: 'app', version: '0.0.1' };
+
+    expect(() =>
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileLinking(containLocalPath('local_path_modules/linked'))
+      )
+    ).toThrow(/lodash/);
+  });
 
   it('passes when the linked package required deps are app direct dependencies', () => {
     writeLinkedManifest({ dependencies: { lodash: '^4.0.0' } });
