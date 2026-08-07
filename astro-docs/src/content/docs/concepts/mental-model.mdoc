@@ -349,8 +349,7 @@ get the min set of projects that need to be retested. How does it work?
 
 When you run `nx affected -t test`, Nx identifies the files changed in your PR and follows their project dependencies and imports to determine which projects the change can affect. It then runs the `run-many` command with that list.
 
-For instance, if my PR changes `lib`, and I then run `nx affected -t test`, Nx figures out that `app1` and `app2`
-depend on `lib`, so it will invoke `nx run-many -t test -p app1 app2 lib`.
+For instance, when a PR changes `lib`, Nx detects that `app1` and `app2` depend on `lib`, then invokes `nx run-many -t test -p app1 app2 lib`.
 
 ![affected](../../../assets/concepts/mental-model/affected.svg)
 
