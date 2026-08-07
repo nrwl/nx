@@ -1,4 +1,5 @@
-import { ensurePackage, readJson, stripIndents, type Tree } from '@nx/devkit';
+import { ensurePackage, stripIndents, type Tree } from '@nx/devkit';
+import { detectLinters } from '@nx/js/internal';
 import { nxVersion } from './versions';
 
 export async function ignoreViteTempFiles(
@@ -26,7 +27,9 @@ async function ignoreViteTempFilesInEslintConfig(
   tree: Tree,
   projectRoot: string | undefined
 ): Promise<void> {
-  if (!isEslintInstalled(tree)) {
+  // Checked before `ensurePackage` so an Oxlint workspace does not install
+  // `@nx/eslint` only for `isEslintConfigSupported` to send it straight back.
+  if (!detectLinters(tree).includes('eslint')) {
     return;
   }
 
@@ -58,18 +61,4 @@ async function ignoreViteTempFilesInEslintConfig(
   const directory = isUsingFlatConfig ? '' : (projectRoot ?? '');
 
   addIgnoresToLintConfig(tree, directory, ['**/vite.config.*.timestamp*']);
-}
-
-export function isEslintInstalled(tree: Tree): boolean {
-  try {
-    require('eslint');
-    return true;
-  } catch {}
-
-  // it might not be installed yet, but it might be in the tree pending install
-  const { devDependencies, dependencies } = tree.exists('package.json')
-    ? readJson(tree, 'package.json')
-    : {};
-
-  return !!devDependencies?.['eslint'] || !!dependencies?.['eslint'];
 }

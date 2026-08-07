@@ -1,6 +1,6 @@
 import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { detectLinter } from './linter';
+import { detectLinter, detectLinters } from './linter';
 
 describe('detectLinter', () => {
   let tree: Tree;
@@ -84,5 +84,38 @@ describe('detectLinter', () => {
     updateNxJson(tree, nxJson);
 
     expect(detectLinter(tree)).toBe('oxlint');
+  });
+
+  describe('detectLinters', () => {
+    it('should return nothing when no linter is installed', () => {
+      expect(detectLinters(tree)).toEqual([]);
+    });
+
+    it('should return the one linter a workspace uses', () => {
+      addDevDependency('eslint');
+
+      expect(detectLinters(tree)).toEqual(['eslint']);
+    });
+
+    // The reason this exists: `detectLinter` can only name the winner, so a
+    // caller asking "does this workspace use ESLint at all" gets `oxlint` and
+    // wrongly concludes no. A project generated for Oxlint still lives under
+    // the root ESLint config.
+    it('should return both in a hybrid workspace, oxlint first', () => {
+      addDevDependency('eslint');
+      addDevDependency('oxlint');
+
+      expect(detectLinters(tree)).toEqual(['oxlint', 'eslint']);
+      expect(detectLinters(tree)).toContain('eslint');
+    });
+
+    it('should not report a linter that is only resolvable on disk', () => {
+      // `eslint` is a peer dependency of several first-party plugins, so
+      // `require('eslint')` succeeds in workspaces that do not use it. This
+      // reads the tree, so an empty workspace stays empty.
+      expect(() => require('eslint')).not.toThrow();
+
+      expect(detectLinters(tree)).toEqual([]);
+    });
   });
 });

@@ -3,7 +3,6 @@ import {
   type GeneratorCallback,
   joinPathFragments,
   ensurePackage,
-  readJson,
 } from '@nx/devkit';
 import {
   addExtendsToLintConfig,
@@ -14,7 +13,7 @@ import {
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/internal';
+import { addSwcDependencies, detectLinters } from '@nx/js/internal';
 import { addLintingToProject } from '@nx/js';
 import { extraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
@@ -90,7 +89,9 @@ async function ignoreReactRouterFilesInEslintConfig(
   tree: Tree,
   projectRoot: string | undefined
 ): Promise<void> {
-  if (!isEslintInstalled(tree)) {
+  // Checked before `ensurePackage` so an Oxlint workspace does not install
+  // `@nx/eslint` only for `isEslintConfigSupported` to send it straight back.
+  if (!detectLinters(tree).includes('eslint')) {
     return;
   }
 
@@ -116,18 +117,4 @@ async function ignoreReactRouterFilesInEslintConfig(
   const directory = isUsingFlatConfig ? '' : (projectRoot ?? '');
 
   addIgnoresToLintConfig(tree, directory, ['**/build', '**/.react-router']);
-}
-
-export function isEslintInstalled(tree: Tree): boolean {
-  try {
-    require('eslint');
-    return true;
-  } catch {}
-
-  // it might not be installed yet, but it might be in the tree pending install
-  const { devDependencies, dependencies } = tree.exists('package.json')
-    ? readJson(tree, 'package.json')
-    : {};
-
-  return !!devDependencies?.['eslint'] || !!dependencies?.['eslint'];
 }
