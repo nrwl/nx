@@ -1028,11 +1028,19 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   it('emits each artifact exactly once', () => {
     // The sink appends, so a double emit would ship a duplicate asset rather
     // than overwrite one, and the bundlers reject a duplicate emit outright.
+    // Both producers are given a genuine duplicate to collapse: two patch keys
+    // sharing one patch file, and one vendored directory reached as a `file:`
+    // package and as a `link:` importer ref.
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(
-      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
+      [
+        'patchedDependencies:',
+        '  is-number@7.0.0: patches/is-number.patch',
+        '  is-number@7.0.1: patches/is-number.patch',
+        '',
+      ].join('\n')
     );
-    writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
+    writeRootPatch('patches/is-number.patch', 'THE PATCH\n');
     mkdirSync(join(tempDir, 'vendor/lib'), { recursive: true });
     writeFileSync(join(tempDir, 'vendor/lib/index.js'), 'REAL');
     const emit = jest.fn();
@@ -1042,15 +1050,26 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       [
         "lockfileVersion: '9.0'",
         '',
+        'importers:',
+        '',
+        '  .:',
+        '    dependencies:',
+        '      linked-lib:',
+        '        specifier: link:local_path_modules/vendor/lib',
+        '        version: link:local_path_modules/vendor/lib',
+        '',
         'packages:',
         '',
         '  is-number@7.0.0:',
         '    resolution: {integrity: sha512-abc}',
+        '  is-number@7.0.1:',
+        '    resolution: {integrity: sha512-def}',
         '  lib@file:local_path_modules/vendor/lib:',
         '    resolution: {directory: local_path_modules/vendor/lib, type: directory}',
         '',
         'patchedDependencies:',
-        '  is-number@7.0.0: hash-is-number',
+        '  is-number@7.0.0: hash-is-number-0',
+        '  is-number@7.0.1: hash-is-number-1',
         '',
       ].join('\n'),
       { name: 'app', version: '0.0.1' },
@@ -1063,7 +1082,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(paths).toEqual(
       expect.arrayContaining([
         'pnpm-workspace.yaml',
-        'patches/is-number@7.0.0.patch',
+        'patches/is-number.patch',
         'local_path_modules/vendor/lib/index.js',
       ])
     );
