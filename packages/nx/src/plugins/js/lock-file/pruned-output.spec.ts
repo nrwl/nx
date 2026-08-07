@@ -2196,6 +2196,25 @@ describe('relocatePrunedLocalPathSpec', () => {
       reason: 'outside-workspace',
     });
   });
+
+  // A trailing separator survives the join, so these reach the workspace-root
+  // check as './' rather than '.'.
+  it.each([
+    ['file:../../', 'apps/app'],
+    ['link:../../', 'apps/app'],
+    ['file:./', ''],
+  ])('reports %s from %s as the workspace root', (spec, sourceDir) => {
+    expect(relocatePrunedLocalPathSpec(spec, sourceDir, '')).toEqual({
+      spec,
+      reason: 'workspace-root',
+    });
+  });
+
+  it('drops a trailing separator from a shippable target', () => {
+    expect(
+      relocatePrunedLocalPathSpec('file:../../vendor/lib/', 'apps/app', '')
+    ).toEqual({ spec: 'file:local_path_modules/vendor/lib' });
+  });
 });
 
 describe('rewritePrunedLocalPathSpecifiers', () => {
@@ -2448,6 +2467,36 @@ describe('validatePrunedLocalPathClosure', () => {
       JSON.stringify({ name: 'linked-lib', version: '1.0.0', ...manifest })
     );
   }
+
+  it('does not validate a local-path package that resolves to the workspace root', () => {
+    // A trailing-separator spec relocated to `local_path_modules/./`, which
+    // reads back as the workspace root and failed the build over the root
+    // manifest's own dependencies.
+    writeFileSync(
+      join(tempDir, 'package.json'),
+      JSON.stringify({
+        name: 'root',
+        dependencies: { 'only-at-root': '1.0.0' },
+      })
+    );
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      '  root@file:local_path_modules/./:',
+      '    resolution: {directory: local_path_modules/./, type: directory}',
+      '',
+    ].join('\n');
+
+    expect(() =>
+      validatePrunedLocalPathClosure(
+        { name: 'app', version: '1.0.0' },
+        tempDir,
+        lockfile
+      )
+    ).not.toThrow();
+  });
 
   it('reads the manifest of a link target under a local_path_modules workspace directory', () => {
     // The lockfile records the target relocated, so a workspace directory

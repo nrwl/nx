@@ -1280,8 +1280,13 @@ export function validatePrunedLocalPathClosure(
     if (!directory || isUnderWorkspaceModules(directory)) {
       continue;
     }
-    const source = uncontainLocalPath(normalizePath(directory));
-    if (localPathEscapesOutput(source)) {
+    const source = uncontainLocalPath(normalizePath(directory)).replace(
+      /\/+$/,
+      ''
+    );
+    // The workspace root is not a shippable target, and validating it would
+    // fail the build over the root manifest's own dependencies.
+    if (source === '' || source === '.' || localPathEscapesOutput(source)) {
       continue;
     }
     const snapshot = parsed.snapshots?.[key] ?? entry;
@@ -1391,7 +1396,12 @@ export function relocatePrunedLocalPathSpec(
   if (isAbsolute(rawPath)) {
     return { spec, reason: 'outside-workspace' };
   }
-  const wsRelativeTarget = normalizePath(join(sourceDir, rawPath));
+  // join() keeps a trailing separator, so `../../` arrives as './' rather than
+  // '.' and would slip past the workspace-root check below.
+  const wsRelativeTarget = normalizePath(join(sourceDir, rawPath)).replace(
+    /\/+$/,
+    ''
+  );
   if (wsRelativeTarget.split('/').includes('..')) {
     return { spec, reason: 'outside-workspace' };
   }
