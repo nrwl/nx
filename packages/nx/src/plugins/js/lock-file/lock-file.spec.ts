@@ -97,6 +97,7 @@ describe('createLockFile', () => {
     expect(createLockFile(packageJson, graph, 'pnpm')).toBe('ROOT_LOCKFILE');
 
     expect(packageJson.pnpm).toEqual({ overrides: { foo: '1.0.0' } });
+    expect(warnIncompletePrunedPnpmOutput).not.toHaveBeenCalled();
   });
 
   it('leaves the manifest alone for npm, which never reads the pnpm block', () => {
@@ -111,6 +112,20 @@ describe('createLockFile', () => {
     );
 
     expect(packageJson.pnpm).toEqual({ overrides: { foo: '1.0.0' } });
+  });
+
+  it('warns that the returned lockfile is missing its install-time artifacts', () => {
+    createLockFile({ name: 'app', version: '1.0.0' }, graph, 'pnpm');
+
+    expect(warnIncompletePrunedPnpmOutput).toHaveBeenCalledWith(
+      'PRUNED_LOCKFILE'
+    );
+  });
+
+  it('does not warn about missing artifacts for a package manager without them', () => {
+    createLockFile({ name: 'app', version: '1.0.0' }, graph, 'npm');
+
+    expect(warnIncompletePrunedPnpmOutput).not.toHaveBeenCalled();
   });
 });
 
