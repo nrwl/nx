@@ -709,9 +709,15 @@ export function stringifyPnpmLockfile(
   // the modules resolve as file: directory packages, not workspace packages, so
   // no `packages:` workspace file and no importer blocks for them.
   const workspaceModulePackages: PackageSnapshots = {};
-  // `<name>@file:<ws-relative-path>` keys for backfilled file: peers, mapped to
-  // the workspace-relative target path; entries are synthesized after the loop.
+  // `<name>@file:<relocated-path>` keys for backfilled file: peers, mapped to
+  // the relocated target path; entries are synthesized after the loop.
   const localPathPeerEntries = new Map<string, string>();
+  // Snapshots whose manifest-declared peers are backfilled after the relocation
+  // pass, so the refs that pass writes are not relocated a second time.
+  const pendingPeerBackfills: {
+    snapshot: PackageSnapshot;
+    importerPath: string;
+  }[] = [];
   for (const [packageName, importerPath] of Object.entries(
     allRequiredImporters
   )) {
@@ -748,67 +754,11 @@ export function stringifyPnpmLockfile(
       snapshot[depType] = resolved;
     }
 
-    // Peers pnpm left out of the importer (autoInstallPeers off) still ship as
-    // real dependencies, matching the copied manifest that moves every
-    // peer-declared workspace module or local path into dependencies. A
-    // local-path peer gets the snapshot edge pnpm records when it auto-installs
-    // the peer, relocated to its shipped location; an unshippable target keeps
-    // its spec, matching the copied manifest (copy-workspace-modules already
-    // warned).
-    const { workspaceSiblings, localPathPeers } =
-      getManifestPeers(importerPath);
-    if (workspaceSiblings.length > 0 || localPathPeers.length > 0) {
-      snapshot.dependencies ??= {};
-      for (const depName of workspaceSiblings) {
-        snapshot.dependencies[depName] ??= `file:workspace_modules/${depName}`;
-      }
-      for (const [depName, spec] of localPathPeers) {
-        if (snapshot.dependencies[depName]) {
-          continue;
-        }
-        const relocation = relocatePrunedLocalPathSpec(spec, importerPath, '');
-        const ref = relocation?.spec ?? spec;
-        snapshot.dependencies[depName] = ref;
-        if (ref.startsWith('file:') && !relocation?.reason) {
-          localPathPeerEntries.set(
-            `${depName}@${ref}`,
-            ref.slice('file:'.length)
-          );
-        }
-      }
-    }
+    pendingPeerBackfills.push({ snapshot, importerPath });
 
     workspaceModulePackages[
       `${packageName}@file:workspace_modules/${packageName}`
     ] = snapshot;
-  }
-
-  // A backfilled file: peer has no package entry to carry (pnpm never resolved
-  // it), so synthesize the entry pnpm itself writes when it auto-installs the
-  // peer: a directory resolution for a directory target, a tarball resolution
-  // for a packed file (integrity is optional for a local tarball). link: refs
-  // need no entry. Entries the prune already carries win.
-  const localPathPeerPackages: PackageSnapshots = {};
-  for (const [key, wsRelativePath] of localPathPeerEntries) {
-    if (key in snapshots || key in workspaceModulePackages) {
-      continue;
-    }
-    let isFile = false;
-    try {
-      // wsRelativePath is already relocated under LOCAL_PATH_MODULES_DIR (the
-      // relocated ref); read the source from its original workspace location.
-      isFile = statSync(
-        join(workspaceRoot, uncontainLocalPath(wsRelativePath))
-      ).isFile();
-    } catch {
-      // Missing target: emit the directory shape; the install surfaces the
-      // missing path either way.
-    }
-    localPathPeerPackages[key] = {
-      resolution: isFile
-        ? { tarball: `file:${wsRelativePath}` }
-        : { directory: wsRelativePath, type: 'directory' },
-    } as PackageSnapshot;
   }
 
   const output: Lockfile = {
@@ -817,17 +767,78 @@ export function stringifyPnpmLockfile(
     importers: {
       '.': rootSnapshot,
     },
-    packages: sortObjectByKeys({
-      ...snapshots,
-      ...workspaceModulePackages,
-      ...localPathPeerPackages,
-    }),
+    packages: { ...snapshots, ...workspaceModulePackages },
   };
 
   // Relocate vendored file: refs (keys, resolutions, snapshot/importer refs) to
   // their shipped location under LOCAL_PATH_MODULES_DIR; link: refs and the
-  // manifest are already relocated upstream.
+  // manifest are already relocated upstream. Everything assembled below is
+  // relocated at its synthesis site, which is why it is added afterwards: a
+  // second pass over an already-relocated path cannot tell it apart from a
+  // workspace path that genuinely starts with the shipped directory's name.
   containShippedLocalFilePaths(output);
+
+  // Peers pnpm left out of the importer (autoInstallPeers off) still ship as
+  // real dependencies, matching the copied manifest that moves every
+  // peer-declared workspace module or local path into dependencies. A
+  // local-path peer gets the snapshot edge pnpm records when it auto-installs
+  // the peer, relocated to its shipped location; an unshippable target keeps
+  // its spec, matching the copied manifest (copy-workspace-modules already
+  // warned).
+  for (const { snapshot, importerPath } of pendingPeerBackfills) {
+    const { workspaceSiblings, localPathPeers } =
+      getManifestPeers(importerPath);
+    if (workspaceSiblings.length === 0 && localPathPeers.length === 0) {
+      continue;
+    }
+    snapshot.dependencies ??= {};
+    for (const depName of workspaceSiblings) {
+      snapshot.dependencies[depName] ??= `file:workspace_modules/${depName}`;
+    }
+    for (const [depName, spec] of localPathPeers) {
+      if (snapshot.dependencies[depName]) {
+        continue;
+      }
+      const relocation = relocatePrunedLocalPathSpec(spec, importerPath, '');
+      const ref = relocation?.spec ?? spec;
+      snapshot.dependencies[depName] = ref;
+      if (ref.startsWith('file:') && !relocation?.reason) {
+        localPathPeerEntries.set(
+          `${depName}@${ref}`,
+          ref.slice('file:'.length)
+        );
+      }
+    }
+  }
+
+  // A backfilled file: peer has no package entry to carry (pnpm never resolved
+  // it), so synthesize the entry pnpm itself writes when it auto-installs the
+  // peer: a directory resolution for a directory target, a tarball resolution
+  // for a packed file (integrity is optional for a local tarball). link: refs
+  // need no entry. Entries the prune already carries win, compared against the
+  // relocated keys since both sides are relocated by this point.
+  for (const [key, shippedPath] of localPathPeerEntries) {
+    if (key in output.packages) {
+      continue;
+    }
+    let isFile = false;
+    try {
+      // Read the source from its original workspace location; the ref, and so
+      // the entry the output ships, names the relocated location.
+      isFile = statSync(
+        join(workspaceRoot, uncontainLocalPath(shippedPath))
+      ).isFile();
+    } catch {
+      // Missing target: emit the directory shape; the install surfaces the
+      // missing path either way.
+    }
+    output.packages[key] = {
+      resolution: isFile
+        ? { tarball: `file:${shippedPath}` }
+        : { directory: shippedPath, type: 'directory' },
+    } as PackageSnapshot;
+  }
+  output.packages = sortObjectByKeys(output.packages);
 
   stripStandaloneLockfileConfig(output);
 
