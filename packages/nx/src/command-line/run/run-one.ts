@@ -69,6 +69,7 @@ export async function runOne(
       },
       workspaceRoot
     );
+    await output.drain();
     process.exit(0);
   }
 
@@ -100,6 +101,7 @@ export async function runOne(
       extraTargetDependencies,
       extraOptions
     );
+    await output.drain();
     process.exit(status);
   }
 }

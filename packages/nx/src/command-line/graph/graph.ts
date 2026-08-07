@@ -395,7 +395,6 @@ export async function generateGraph(
       )
     );
     await output.drain();
-    await new Promise((res) => setImmediate(res));
     process.exit(0);
   }
 
@@ -480,7 +479,7 @@ export async function generateGraph(
       });
       process.exit(1);
     }
-    await new Promise((res) => setImmediate(res));
+    await output.drain();
     process.exit(0);
   } else {
     const environmentJs = buildEnvironmentJs(
