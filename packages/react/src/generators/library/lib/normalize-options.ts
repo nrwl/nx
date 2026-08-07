@@ -67,25 +67,8 @@ export async function normalizeOptions(
     }
   }
 
-  const normalized = {
-    ...options,
-    compiler: options.compiler ?? 'babel',
-    bundler,
-    fileName,
-    routePath: `/${projectNames.projectSimpleName}`,
-    name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
-    projectRoot,
-    parsedTags,
-    importPath,
-    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
-  } as NormalizedSchema;
-
-  // Libraries with a bundler or is publishable must also be buildable.
-  normalized.buildable = Boolean(
-    normalized.bundler !== 'none' || options.buildable || options.publishable
-  );
-
-  normalized.inSourceTests === normalized.minimal || normalized.inSourceTests;
+  let appMain: string | undefined;
+  let appSourceRoot: string | undefined;
 
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);
@@ -101,27 +84,50 @@ export async function normalizeOptions(
       );
     }
 
-    const appSourceRoot = getProjectSourceRoot(appProjectConfig, host);
-
-    normalized.appMain =
+    appMain =
       appProjectConfig.targets.build?.options?.main ??
       findMainEntry(host, appProjectConfig.root);
-    normalized.appSourceRoot = normalizePath(appSourceRoot);
+    appSourceRoot = normalizePath(getProjectSourceRoot(appProjectConfig, host));
 
     // TODO(jack): We should use appEntryFile instead of appProject so users can directly set it rather than us inferring it.
-    if (!normalized.appMain) {
+    if (!appMain) {
       throw new Error(
         `Could not locate project main for ${options.appProject}`
       );
     }
   }
 
-  assertValidStyle(normalized.style);
+  assertValidStyle(options.style);
 
-  normalized.isUsingTsSolutionConfig = isUsingTsSolutionConfig;
-  // The React-specific ESLint shaping is guarded on `=== 'eslint'`, so an
-  // unresolved `undefined` would create a bare config with none of it.
-  normalized.linter = await normalizeLinterOption(host, normalized.linter);
+  // No `as NormalizedSchema`: the assertion would stop the compiler checking
+  // that every required field is present, which is the point of the type.
+  const normalized: NormalizedSchema = {
+    ...options,
+    compiler: options.compiler ?? 'babel',
+    bundler,
+    fileName,
+    routePath: `/${projectNames.projectSimpleName}`,
+    name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
+    projectRoot,
+    parsedTags,
+    importPath,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
+    isUsingTsSolutionConfig,
+    // `NormalizedSchema` has always declared these non-optional; the assertion
+    // was hiding that nothing set them. Both defaults match the schema's, so an
+    // omitted option behaves as it did when it stayed `undefined`.
+    js: options.js ?? false,
+    unitTestRunner: options.unitTestRunner ?? 'none',
+    // Libraries with a bundler or that are publishable must also be buildable.
+    buildable: Boolean(
+      bundler !== 'none' || options.buildable || options.publishable
+    ),
+    appMain,
+    appSourceRoot,
+    // The React-specific ESLint shaping is guarded on `=== 'eslint'`, so an
+    // unresolved `undefined` would create a bare config with none of it.
+    linter: await normalizeLinterOption(host, options.linter),
+  };
 
   return normalized;
 }

@@ -43,7 +43,9 @@ export async function normalizeOptions(
   // Set useAppDir default based on version (v4 defaults to true, v3 defaults to false)
   const useAppDir = options.useAppDir ?? nuxtMajorVersion >= 4;
 
-  const normalized = {
+  // No `as NormalizedSchema`: the assertion would stop the compiler checking
+  // that every required field is present, which is the point of the type.
+  const normalized: NormalizedSchema = {
     ...options,
     name: projectNames.projectFileName,
     projectName: appProjectName,
@@ -57,13 +59,12 @@ export async function normalizeOptions(
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
     useAppDir,
     nuxtMajorVersion,
-  } as NormalizedSchema;
-
-  normalized.unitTestRunner ??= 'vitest';
-  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
-  // Resolved here rather than at the `addLinting` call, so every later reader
-  // in this generator sees the same value.
-  normalized.linter = await normalizeLinterOption(host, normalized.linter);
+    unitTestRunner: options.unitTestRunner ?? 'vitest',
+    e2eTestRunner: options.e2eTestRunner ?? 'playwright',
+    // Resolved here rather than at the `addLinting` call, so every later reader
+    // in this generator sees the same value.
+    linter: await normalizeLinterOption(host, options.linter),
+  };
 
   return normalized;
 }

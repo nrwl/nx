@@ -58,7 +58,10 @@ export async function normalizeOptions<T extends Schema = Schema>(
   }
   options.useReactRouter = options.routing ? options.useReactRouter : false;
 
-  const normalized = {
+  // No `as NormalizedSchema`: the assertion would stop the compiler checking
+  // that every required field is present, which is the point of the type. Each
+  // default below matches what the mutation it replaced produced.
+  const normalized: NormalizedSchema = {
     ...options,
     projectName: appProjectName,
     appProjectRoot,
@@ -71,23 +74,22 @@ export async function normalizeOptions<T extends Schema = Schema>(
     names: names(projectNames.projectSimpleName),
     isUsingTsSolutionConfig,
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
-  } as NormalizedSchema;
-
-  normalized.routing = normalized.routing ?? false;
-  normalized.useReactRouter = normalized.useReactRouter ?? false;
-  normalized.strict = normalized.strict ?? true;
-  normalized.classComponent = normalized.classComponent ?? false;
-  normalized.compiler = normalized.compiler ?? 'babel';
-  normalized.bundler = normalized.bundler ?? 'webpack';
-  normalized.unitTestRunner = normalized.unitTestRunner ?? 'jest';
-  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
-  normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
-  normalized.devServerPort ??= options.port ?? findFreePort(host);
-  normalized.minimal = normalized.minimal ?? false;
-  // Programmatic callers such as the host and remote generators leave this
-  // unset; the guards downstream read an unresolved `undefined` as "not eslint"
-  // and would half-configure the project.
-  normalized.linter = await normalizeLinterOption(host, normalized.linter);
+    routing: options.routing ?? false,
+    useReactRouter: options.useReactRouter ?? false,
+    strict: options.strict ?? true,
+    classComponent: options.classComponent ?? false,
+    compiler: options.compiler ?? 'babel',
+    bundler: options.bundler ?? 'webpack',
+    unitTestRunner: options.unitTestRunner ?? 'jest',
+    e2eTestRunner: options.e2eTestRunner ?? 'playwright',
+    inSourceTests: options.minimal || options.inSourceTests,
+    devServerPort: options.devServerPort ?? options.port ?? findFreePort(host),
+    minimal: options.minimal ?? false,
+    // Programmatic callers such as the host and remote generators leave this
+    // unset; the guards downstream read an unresolved `undefined` as "not eslint"
+    // and would half-configure the project.
+    linter: await normalizeLinterOption(host, options.linter),
+  };
 
   return normalized;
 }
