@@ -26,11 +26,11 @@ Nx updates the graph after each analysis.
 
 ## Inferred tasks
 
-Every project has tasks you can run, such as `build`, `test`, or `lint`. A task can come from three places:
+Every project has tasks you can run, such as `build`, `test`, or `lint`. Tasks can come from three places:
 
-- a script in the project's `package.json`
-- a target defined in the project's `project.json`
-- a task inferred by a plugin from tool configuration
+- Nx can use a script in the project's `package.json`.
+- Nx can use a target defined in the project's `project.json`.
+- A plugin can infer a task from tool configuration.
 
 Your tools already describe how they run.
 A `vite.config.ts` file defines where the build output goes.
@@ -40,7 +40,7 @@ The `@nx/vite` plugin, for example, detects `vite.config.ts` files and infers ta
 To see every task Nx detected for a project, and where each setting came from, show the project details:
 
 ```shell
-nx show project my-project --web
+nx show project my-project
 ```
 
 When a plugin infers settings you want to change, override them.
