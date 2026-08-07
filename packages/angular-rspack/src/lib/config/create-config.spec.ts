@@ -312,43 +312,47 @@ describe('createConfig', () => {
     ) as { options: Record<string, unknown> } | undefined;
   }
 
-  it('should wire the server entry loader with the engine manifest inputs', async () => {
-    const root = await createSsrProjectRoot();
-    try {
-      const configs = await _createConfig({
-        ...configBase,
-        root,
-        server: './src/main.server.ts',
-        ssr: { entry: './src/server.ts' },
-        baseHref: '/app/',
-        security: { allowedHosts: ['example.com'] },
-      });
+  it.each(['2.0.0', '1.5.0'])(
+    'should wire the server entry loader with the engine manifest inputs when the project @rspack/core is %s',
+    async (rspackCoreVersion) => {
+      const root = await createSsrProjectRoot('22.0.0', rspackCoreVersion);
+      try {
+        const configs = await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          baseHref: '/app/',
+          security: { allowedHosts: ['example.com'] },
+        });
 
-      expect(configs).toHaveLength(2);
-      const serverExportsRule = findServerExportsRule(configs[1]);
+        expect(configs).toHaveLength(2);
+        const serverExportsRule = findServerExportsRule(configs[1]);
 
-      expect(serverExportsRule).toBeDefined();
-      expect(serverExportsRule.options.engineWiring).toMatchObject({
-        mainServerEntry: join(root, 'src', 'main.server.ts'),
-        baseHref: '/app/',
-        // Posix-normalized by the config, so a native join would fail on
-        // Windows.
-        browserOutputRelativePath: '../browser',
-        indexOutputName: 'index.html',
-        allowedHosts: ['example.com'],
-        manifestModuleRequest: expect.stringContaining(
-          '__ng-rspack-ssr-entry-manifest__'
-        ),
-      });
-      expect(
-        configs[1].plugins?.some(
-          (plugin) => plugin?.constructor.name === 'EngineManifestPlugin'
-        )
-      ).toBe(true);
-    } finally {
-      await rm(root, { recursive: true, force: true });
-    }
-  }, 10000);
+        expect(serverExportsRule).toBeDefined();
+        expect(serverExportsRule.options.engineWiring).toMatchObject({
+          mainServerEntry: join(root, 'src', 'main.server.ts'),
+          baseHref: '/app/',
+          // Posix-normalized by the config, so a native join would fail on
+          // Windows.
+          browserOutputRelativePath: '../browser',
+          indexOutputName: 'index.html',
+          allowedHosts: ['example.com'],
+          manifestModuleRequest: expect.stringContaining(
+            '__ng-rspack-ssr-entry-manifest__'
+          ),
+        });
+        expect(
+          configs[1].plugins?.some(
+            (plugin) => plugin?.constructor.name === 'EngineManifestPlugin'
+          )
+        ).toBe(true);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
 
   it.each([
     ['does not support virtual modules', '1.4.5'],

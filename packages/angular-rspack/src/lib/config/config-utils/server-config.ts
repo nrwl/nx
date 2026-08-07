@@ -17,12 +17,12 @@ import {
   ENGINE_MANIFEST_VIRTUAL_NAME,
   generateEngineManifestSource,
   type EngineWiringOptions,
-  type PlatformServerExportsLoaderOptions,
-} from '../../plugins/loaders/platform-server-exports.loader';
+} from '../../plugins/loaders/engine-manifest';
+import { type PlatformServerExportsLoaderOptions } from '../../plugins/loaders/platform-server-exports.loader';
 import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import {
-  getInstalledPackageVersion,
+  getInstalledPackageVersionFromRoot,
   isPackageInstalled,
 } from '../../utils/misc-helpers';
 import { getDevServerConfig } from './dev-server-config-utils';
@@ -177,8 +177,10 @@ export async function getServerConfig(
   };
 }
 
+// TODO(v24): drop the probe and the loader's inline fallback once
+// @rspack/core v1 is out of the support window.
 function installedRspackSupportsVirtualModules(root: string): boolean {
-  const version = getInstalledPackageVersion(root, '@rspack/core');
+  const version = getInstalledPackageVersionFromRoot(root, '@rspack/core');
   if (!version) {
     return false;
   }

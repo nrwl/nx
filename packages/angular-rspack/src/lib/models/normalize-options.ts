@@ -17,7 +17,7 @@ import {
   findProjectForPath,
   normalizeProjectRoot,
 } from '../utils/find-project-for-path';
-import { getInstalledPackageVersion } from '../utils/misc-helpers';
+import { getInstalledPackageVersionFromRoot } from '../utils/misc-helpers';
 import { retrieveOrCreateProjectGraph } from '../utils/graph';
 import type {
   AngularRspackPluginOptions,
@@ -187,7 +187,7 @@ export async function normalizeOptions(
     // The engine only reads the manifest's allowedHosts from @angular/ssr
     // 21.2 (backported to 20.3.17 and 21.1.5); on older versions the option
     // would be silently ignored.
-    const ssrVersion = getInstalledPackageVersion(root, '@angular/ssr');
+    const ssrVersion = getInstalledPackageVersionFromRoot(root, '@angular/ssr');
     if (ssrVersion) {
       const [major, minor, patch] = ssrVersion
         .split('.')

@@ -7,7 +7,7 @@ import {
   extractInlineSourceMap,
   isForwardableSourceMap,
 } from './inline-source-map';
-import { ENGINE_MANIFEST_VIRTUAL_NAME } from './platform-server-exports.loader';
+import { ENGINE_MANIFEST_VIRTUAL_NAME } from './engine-manifest';
 
 export default function loader(
   this: LoaderContext<unknown>,
