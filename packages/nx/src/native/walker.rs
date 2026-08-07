@@ -1,4 +1,5 @@
 use ignore::WalkBuilder;
+use std::collections::HashSet;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 
@@ -6,7 +7,10 @@ use crate::native::glob::build_glob_set;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::native::logger::enable_logger;
-use crate::native::utils::{Normalize, get_mod_time, git::parent_gitignore_files};
+use crate::native::utils::{
+    Normalize, get_mod_time,
+    git::{nested_linked_worktrees, parent_gitignore_files},
+};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -209,6 +213,16 @@ where
     walker.require_git(false);
     walker.hidden(false);
 
+    // Linked worktrees are full checkouts of the workspace nested inside it.
+    // Walking one multiplies the file set for no gain. This applies whatever
+    // `use_ignores` says: the daemon's output watcher walks the workspace
+    // root with `use_ignores: false` (`watchOutputFiles` in
+    // daemon/server/watcher.ts) and takes a non-recursive inotify descriptor
+    // per directory the walk yields, where exhausting the limit is fatal.
+    // Resolution costs a handful of syscalls and nothing per entry when the
+    // repository has no worktrees.
+    let worktrees: HashSet<PathBuf> = nested_linked_worktrees(&directory).into_iter().collect();
+
     if use_ignores {
         // Handle parent .gitignore files based on git repository boundaries
         if let Some(gitignore_paths) = parent_gitignore_files(&directory) {
@@ -229,9 +243,24 @@ where
     }
 
     // We should make sure to always ignore node_modules and the .git folder
+    let walk_root = directory.clone();
     walker.filter_entry(move |entry| {
         let path = entry.path().to_string_lossy();
-        !ignore_glob_set.is_match(path.as_ref())
+        if ignore_glob_set.is_match(path.as_ref()) {
+            return false;
+        }
+
+        if worktrees.is_empty() {
+            return true;
+        }
+
+        // Entry paths are built from the walk root, so stripping it back off
+        // yields the same relative form the worktree roots were stored in.
+        entry
+            .path()
+            .strip_prefix(&walk_root)
+            .map(|relative| !worktrees.contains(relative))
+            .unwrap_or(true)
     });
     walker
 }
@@ -286,6 +315,70 @@ mod test {
                 (temp_dir.join("foo.txt"), PathBuf::from("foo.txt")),
                 (temp_dir.join("test.txt"), PathBuf::from("test.txt")),
             ]
+        );
+    }
+
+    /// A workspace with two linked worktrees and one submodule nested in it.
+    fn setup_worktree_fs() -> TempDir {
+        use crate::native::utils::git::test_support::{register_submodule, register_worktree};
+
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child(".git/HEAD")
+            .write_str("ref: refs/heads/main")
+            .unwrap();
+        temp_dir.child("test.txt").write_str("content").unwrap();
+
+        // Agent tooling nests worktrees under `.claude/worktrees`, but a
+        // worktree is just as valid anywhere else - both have to be pruned.
+        for (name, path) in [("wt1", ".claude/worktrees/wt1"), ("wt2", "other/wt2")] {
+            register_worktree(temp_dir.path(), name, &temp_dir.path().join(path));
+            temp_dir.child(path).child("app.ts").write_str("x").unwrap();
+        }
+
+        // A submodule uses the very same gitfile mechanism, but its contents
+        // are real workspace files that must keep being scanned.
+        register_submodule(temp_dir.path(), "libs/sub");
+        temp_dir.child("libs/sub/lib.ts").write_str("x").unwrap();
+
+        temp_dir
+    }
+
+    #[test]
+    fn it_skips_linked_worktrees_but_keeps_submodules() {
+        let temp_dir = setup_worktree_fs();
+
+        let mut files = nx_walker(&temp_dir, true)
+            .map(|f| f.normalized_path)
+            .collect::<Vec<_>>();
+        files.sort();
+
+        assert_eq!(
+            files,
+            vec!["libs/sub/lib.ts".to_string(), "test.txt".to_string()]
+        );
+    }
+
+    #[test]
+    fn it_skips_linked_worktrees_without_ignores() {
+        // `watchOutputFiles` builds its watcher over the workspace root with
+        // ignores off, and every directory the walk yields costs an inotify
+        // descriptor. Gating the prune on `use_ignores` handed a worktree's
+        // whole checkout back to it.
+        let temp_dir = setup_worktree_fs();
+
+        let mut files = nx_walker(&temp_dir, false)
+            .map(|f| f.normalized_path)
+            .collect::<Vec<_>>();
+        files.sort();
+
+        assert!(
+            !files.iter().any(|f| f.contains("wt1") || f.contains("wt2")),
+            "worktree contents must be pruned with ignores off too; got {files:?}"
+        );
+        assert!(
+            files.iter().any(|f| f == "libs/sub/lib.ts"),
+            "submodule contents must still be walked; got {files:?}"
         );
     }
 

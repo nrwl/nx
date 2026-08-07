@@ -16,11 +16,45 @@ pub struct WatchFilterer {
     /// Per-directory gitignore instances, sorted deepest-first (most path components first).
     /// Each entry is (directory the .gitignore applies in, compiled Gitignore).
     git_ignores: Vec<(PathBuf, Gitignore)>,
+    /// Roots of linked worktrees, seeded when the watcher booted and topped up
+    /// from the event stream by [`WatchFilterer::track_worktree`]. Matched as
+    /// path prefixes rather than compiled into the synthetic gitignore above,
+    /// so a worktree directory containing gitignore metacharacters can't
+    /// produce a bad pattern - or fail the watcher's construction outright.
+    worktrees: Vec<PathBuf>,
 }
 
 impl WatchFilterer {
+    /// Start blocking everything under `root`. The boot-time list only covers
+    /// worktrees that already existed, and agent tooling runs
+    /// `git worktree add` against a running daemon - on macOS, where the root
+    /// is watched recursively, this is the only thing that keeps the new
+    /// checkout's events out until a restart.
+    pub fn track_worktree(&mut self, root: &std::path::Path) {
+        let root = dunce::simplified(root);
+
+        // Blocking the origin would silence the watcher permanently, and a
+        // path we can't place under the origin is not ours to block.
+        if !root.starts_with(&self.origin) || root == self.origin {
+            return;
+        }
+
+        if !self.worktrees.iter().any(|known| known == root) {
+            self.worktrees.push(root.to_path_buf());
+        }
+    }
+
     fn filter_path(&self, path: &std::path::Path, is_dir: bool) -> bool {
         let path = dunce::simplified(path);
+
+        if self
+            .worktrees
+            .iter()
+            .any(|worktree| path.starts_with(worktree))
+        {
+            trace!(?path, "inside a linked worktree - blocked");
+            return false;
+        }
 
         // .nxignore takes precedence over .gitignore. Only consult it for
         // paths under the origin — gitignore-style matchers are scoped to
@@ -119,6 +153,7 @@ impl WatchFilterer {
 pub(super) fn create_filter(
     origin: &str,
     additional_globs: &[String],
+    worktrees: &[PathBuf],
     use_ignore: bool,
 ) -> anyhow::Result<WatchFilterer> {
     let ignore_files = use_ignore.then(|| get_gitignore_files(origin));
@@ -188,5 +223,9 @@ pub(super) fn create_filter(
         origin: PathBuf::from(origin),
         git_ignores,
         nx_ignore,
+        worktrees: worktrees
+            .iter()
+            .map(|worktree| dunce::simplified(worktree).to_path_buf())
+            .collect(),
     })
 }

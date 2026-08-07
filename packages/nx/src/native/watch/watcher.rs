@@ -12,6 +12,7 @@ use tracing::{debug, trace};
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
+use crate::native::utils::git::{is_linked_worktree_root, nested_linked_worktrees};
 use crate::native::walker::HARDCODED_IGNORE_PATTERNS;
 #[cfg(not(target_os = "macos"))]
 use crate::native::walker::create_walker;
@@ -126,8 +127,19 @@ impl WatchPipeline {
         additional_globs: &[String],
         use_ignore: bool,
     ) -> std::result::Result<Self, String> {
-        let filterer = watch_filterer::create_filter(&origin, additional_globs, use_ignore)
-            .map_err(|e| format!("failed to create watch filter: {e}"))?;
+        // Linked worktrees are full checkouts nested in the workspace. The
+        // walker prunes them from the initial registration, but the filterer
+        // needs them too: macOS watches the root recursively, so pruning the
+        // walk alone would not keep their events out. This is only the
+        // starting set - `track_new_worktrees` adds any created later.
+        let worktrees: Vec<PathBuf> = nested_linked_worktrees(&origin)
+            .into_iter()
+            .map(|relative| Path::new(&origin).join(relative))
+            .collect();
+
+        let filterer =
+            watch_filterer::create_filter(&origin, additional_globs, &worktrees, use_ignore)
+                .map_err(|e| format!("failed to create watch filter: {e}"))?;
 
         let (notify_tx, notify_rx) = unbounded::<NotifyResult>();
         let mut watcher = notify::recommended_watcher(move |event| {
@@ -191,6 +203,30 @@ impl WatchPipeline {
         self.flush_deadline = None;
     }
 
+    /// Teach the filterer about a worktree created since it booted.
+    ///
+    /// `git worktree add` writes the checkout's `.git` gitfile before it
+    /// populates the tree, so catching that one event keeps the rest of the
+    /// checkout out. Runs on every platform: on macOS the recursive watch on
+    /// the root means the filterer is the *only* thing standing between a new
+    /// worktree and the daemon, and `new_directories_from_event` below - which
+    /// covers the Linux/Windows per-directory registration - is not compiled
+    /// there.
+    fn track_new_worktrees(&mut self, event: &RawWatchEvent) {
+        let new_worktrees: Vec<PathBuf> = event
+            .paths()
+            .filter(|(path, _)| path.file_name().is_some_and(|name| name == ".git"))
+            .filter_map(|(path, _)| path.parent())
+            .filter(|root| is_linked_worktree_root(root))
+            .map(Path::to_path_buf)
+            .collect();
+
+        for root in new_worktrees {
+            debug!(?root, "linked worktree appeared - blocking its events");
+            self.filterer.track_worktree(&root);
+        }
+    }
+
     #[cfg(not(target_os = "macos"))]
     fn new_directories_from_event(&self, event: &RawWatchEvent) -> Vec<PathBuf> {
         use crate::native::watch::types::meta_is_dir;
@@ -207,6 +243,12 @@ impl WatchPipeline {
             .paths()
             .filter(|(path, metadata)| meta_is_dir(metadata) && !self.ignore_globs.is_match(path))
             .map(|(path, _)| path.to_path_buf())
+            // Registering a worktree root would take a descriptor per
+            // directory in it and backfill the checkout file by file.
+            // `track_new_worktrees` handles the case where the directory
+            // arrives before its gitfile: everything under it is filtered out
+            // before reaching here, so nothing deeper gets registered.
+            .filter(|path| !is_linked_worktree_root(path))
             .collect()
     }
 
@@ -267,6 +309,10 @@ impl WatchPipeline {
         };
 
         let raw = RawWatchEvent::new(event);
+
+        // Before the filter, so the gitfile of a worktree created just now
+        // registers it rather than being discarded as a `.git` path.
+        self.track_new_worktrees(&raw);
 
         if !self.filterer.check_event(&raw) {
             return Ok(());
@@ -542,6 +588,7 @@ impl Watcher {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::utils::git::test_support::register_worktree;
     use crate::native::watch::types::EventType;
     use std::fs;
     use std::sync::Mutex;
@@ -905,6 +952,76 @@ mod tests {
             matches!(new_evt.r#type, EventType::create),
             "rename destination should classify as Create; got {:?}",
             new_evt.r#type
+        );
+    }
+
+    #[test]
+    fn linked_worktree_paths_never_reach_callback() {
+        // The walker keeps a worktree's directories out of the initial
+        // registration, but macOS watches the root recursively - the filterer
+        // has to block them on its own.
+        let dir = tempdir().expect("tempdir");
+        let root = dir.path().canonicalize().expect("canonicalize");
+
+        let worktree = root.join("other/wt");
+        register_worktree(&root, "wt", &worktree);
+        fs::write(worktree.join("seed.txt"), "x").expect("seed write");
+
+        let (_watcher, captured) = start_watcher(&root);
+
+        fs::write(worktree.join("touched.txt"), "y").expect("worktree write");
+        // Un-ignored write proves the watcher is alive.
+        fs::write(root.join("alive.txt"), "z").expect("alive write");
+
+        let events = collect(&captured);
+        assert!(
+            events.iter().any(|e| e.path == "alive.txt"),
+            "expected an event for alive.txt; got {events:?}"
+        );
+
+        let leaked: Vec<_> = events.iter().filter(|e| e.path.contains("wt/")).collect();
+        assert!(
+            leaked.is_empty(),
+            "expected no events inside the worktree; got {leaked:?}"
+        );
+    }
+
+    #[test]
+    fn a_worktree_created_after_boot_is_blocked() {
+        // The motivating workflow: agent tooling runs `git worktree add`
+        // against a daemon that is already watching. The boot-time snapshot
+        // can't know about it, and on macOS the root is watched recursively,
+        // so without picking it up from the event stream the whole checkout
+        // floods the pipeline until the daemon restarts.
+        let dir = tempdir().expect("tempdir");
+        let root = dir.path().canonicalize().expect("canonicalize");
+        fs::create_dir_all(root.join(".git")).expect("mkdir .git");
+
+        let (_watcher, captured) = start_watcher(&root);
+
+        let worktree = root.join(".claude/worktrees/wt");
+        register_worktree(&root, "wt", &worktree);
+        // Let the gitfile's event land before the checkout is populated,
+        // the way `git worktree add` orders it.
+        std::thread::sleep(Duration::from_millis(300));
+
+        fs::write(worktree.join("app.ts"), "x").expect("worktree write");
+        // Un-ignored write proves the watcher is alive.
+        fs::write(root.join("alive.txt"), "z").expect("alive write");
+
+        let events = collect(&captured);
+        assert!(
+            events.iter().any(|e| e.path == "alive.txt"),
+            "expected an event for alive.txt; got {events:?}"
+        );
+
+        let leaked: Vec<_> = events
+            .iter()
+            .filter(|e| e.path.contains("worktrees/wt/"))
+            .collect();
+        assert!(
+            leaked.is_empty(),
+            "expected no events inside a worktree created after boot; got {leaked:?}"
         );
     }
 
