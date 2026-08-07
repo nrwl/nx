@@ -9,12 +9,6 @@ filter: 'type:References'
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
 
-{% aside type="note" title="Nx 22 Changes" %}
-Release tag configuration now uses a nested `releaseTag` object (e.g., `releaseTag.pattern` instead of `releaseTagPattern`). Old properties work until Nx 23.
-
-See [Release Tag](#release-tag) for details.
-{% /aside %}
-
 The following is an expanded example showing all options. Your `nx.json` will likely be much shorter.
 
 ```json
