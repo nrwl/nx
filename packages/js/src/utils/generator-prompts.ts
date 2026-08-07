@@ -11,15 +11,17 @@ export async function normalizeLinterOption(
     return linter;
   }
 
-  // Offer the linter the workspace already uses first, so a workspace that has
-  // adopted Oxlint is not pushed back onto ESLint by the prompt's own ordering.
-  // An empty result means the workspace opted out of linting, so the
-  // opted-out case needs no separate branch here.
-  const detected = detectLinters(tree)[0] ?? 'none';
-  const others = (['eslint', 'oxlint', 'none'] as const).filter(
-    (l) => l !== detected
-  );
+  // Following the workspace is not a question. When it already has a linter,
+  // use it — including in a hybrid workspace, where `detectLinters` puts the
+  // one being migrated *to* first. Pass `--linter` to choose something else.
+  const [detected] = detectLinters(tree);
+  if (detected) {
+    return detected;
+  }
 
+  // Nothing to follow, so this is a real choice. `none` leads because a
+  // workspace with no linter has opted out, and a skipped prompt resolves to
+  // the first choice rather than to `initial`.
   return await promptWhenInteractive<{
     linter: LinterType;
   }>(
@@ -27,10 +29,10 @@ export async function normalizeLinterOption(
       type: 'autocomplete',
       name: 'linter',
       message: `Which linter would you like to use?`,
-      choices: [{ name: detected }, ...others.map((name) => ({ name }))],
+      choices: [{ name: 'none' }, { name: 'eslint' }, { name: 'oxlint' }],
       initial: 0,
     },
-    { linter: detected }
+    { linter: 'none' }
   ).then(({ linter }) => linter);
 }
 
