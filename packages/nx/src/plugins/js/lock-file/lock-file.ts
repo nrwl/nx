@@ -299,6 +299,9 @@ export function getLockFilePath(packageManager: PackageManager): string {
  * bakes into its snapshots, so the config is dropped from `packageJson` too:
  * pnpm 10 and below validate the manifest against the lockfile and abort a
  * frozen install with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH when the two disagree.
+ * An inherited `pnpm.patchedDependencies` goes with it, since the prune scopes
+ * the lockfile's patches to the packages that survive it and rewrites their
+ * paths onto the output.
  * The manifest is left alone for npm and yarn, which never read that block.
  * Mutating it means callers must write or emit the manifest after this returns.
  *
@@ -323,6 +326,7 @@ export function createLockFile(
   });
   if (pruned && packageManager === 'pnpm') {
     stripPrunedLockfilePnpmConfig(packageJson);
+    dropInheritedPnpmPatchedDependencies(packageJson);
     warnIncompletePrunedPnpmOutput(lockFileContent);
   }
   return lockFileContent;
