@@ -1,15 +1,15 @@
 import {
   copyFileSync,
   existsSync,
-  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   statSync,
   writeFileSync,
 } from 'fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import { getCatalogManager } from '../../../utils/catalog';
 import {
   readJsonFile,
@@ -990,11 +990,11 @@ function collectPrunedLinkTargetDirs(
  *   skipped here).
  * - a `link:` target (a root importer `link:` version, or a package `link:`
  *   snapshot ref) -> the target directory tree.
- * `node_modules` is filtered from every directory copy; symlinked sources, the
- * root and entries within it alike, are skipped with a warning; entries are
- * deduped by destination. A source that resolves outside the workspace root, or
- * is missing on disk, is skipped with a warning (it is not reproducibly
- * deployable). Returns source paths rather than
+ * `node_modules` is filtered from every directory copy; a symlink inside a
+ * shipped tree is skipped with a warning, while a symlinked root ships when it
+ * resolves inside the workspace; entries are deduped by destination. A source
+ * that resolves outside the workspace root, or is missing on disk, is skipped
+ * with a warning (it is not reproducibly deployable). Returns source paths rather than
  * bytes so the file-writing prune paths can copy without buffering whole trees;
  * the bundler asset pipelines read the bytes as they emit.
  */
@@ -1014,9 +1014,19 @@ export function getPrunedPnpmLocalPathArtifacts(
   const shippedRoots = new Set<string>();
   const seenDestinations = new Set<string>();
 
+  // Compared against every resolved source below, so the containment check is
+  // not defeated by a workspace root that is itself reached through a link
+  // (`/tmp` on macOS). Falls back to the declared root when it cannot be
+  // resolved; the per-target resolution then reports the failure.
+  let workspaceRootRealPath: string;
+  try {
+    workspaceRootRealPath = realpathSync(workspaceRootPath);
+  } catch {
+    workspaceRootRealPath = workspaceRootPath;
+  }
+
   // The absolute source for a shippable target, or null (with a warning) when
-  // the target escapes the workspace root, is missing on disk, or is itself a
-  // symbolic link.
+  // the target escapes the workspace root or is missing on disk.
   const resolveShippableSource = (
     wsRelativePath: string,
     origin: string
@@ -1028,20 +1038,25 @@ export function getPrunedPnpmLocalPathArtifacts(
       return null;
     }
     const source = join(workspaceRootPath, wsRelativePath);
-    let stat: ReturnType<typeof lstatSync>;
+    let resolvedSource: string;
     try {
-      stat = lstatSync(source);
+      // The check above is lexical, so it cannot see where a symlinked source
+      // points. Resolving it is what separates a link into the workspace, which
+      // ships like any other directory, from one that leaves it. Also reports a
+      // dangling link, which lstat would have accepted.
+      resolvedSource = realpathSync(source);
     } catch {
       logger.warn(
         `Local-path dependency "${origin}" was not found at ${source}; the pruned output references it but cannot ship it.`
       );
       return null;
     }
-    // The escape check above is lexical, so a symlinked root would silently
-    // ship its resolved target; reject it like the in-tree entries below.
-    if (stat.isSymbolicLink()) {
+    if (
+      resolvedSource !== workspaceRootRealPath &&
+      !resolvedSource.startsWith(`${workspaceRootRealPath}${sep}`)
+    ) {
       logger.warn(
-        `Local-path dependency "${origin}" is a symbolic link at ${source}, which is not shipped into the pruned output.`
+        `Local-path dependency "${origin}" resolves to ${resolvedSource}, outside the workspace root, and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
       );
       return null;
     }
