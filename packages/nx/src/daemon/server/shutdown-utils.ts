@@ -185,15 +185,19 @@ export function respondToClient(
   });
 }
 
-export async function respondWithErrorAndExit(
+/**
+ * Send an error to the client without terminating the daemon. Use this when the
+ * daemon should keep running for other clients after refusing a request.
+ */
+export async function respondWithError(
   socket: Socket,
   description: string,
   error: Error
 ) {
-  const isProjectGraphError = error instanceof DaemonProjectGraphError;
-  const normalizedError = isProjectGraphError
-    ? ProjectGraphError.fromDaemonProjectGraphError(error)
-    : error;
+  const normalizedError =
+    error instanceof DaemonProjectGraphError
+      ? ProjectGraphError.fromDaemonProjectGraphError(error)
+      : error;
 
   // print some extra stuff in the error message
   serverLogger.requestLog(
@@ -205,9 +209,17 @@ export async function respondWithErrorAndExit(
 
   // Respond with the original error
   await respondToClient(socket, serializeResult(error, null, null), null);
+}
+
+export async function respondWithErrorAndExit(
+  socket: Socket,
+  description: string,
+  error: Error
+) {
+  await respondWithError(socket, description, error);
 
   // Project Graph errors are okay. Restarting the daemon won't help with this.
-  if (!isProjectGraphError) {
+  if (!(error instanceof DaemonProjectGraphError)) {
     process.exit(1);
   }
 }

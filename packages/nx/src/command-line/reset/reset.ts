@@ -9,7 +9,7 @@ import {
   workspaceDataDirectoryForWorkspace,
 } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
-import { getNativeFileCacheLocation } from '../../native/native-file-cache-location';
+import { getNativeFileCacheLocationToDelete } from '../../native/native-file-cache-location';
 import { getMainWorktreeRoot } from '../../native';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ResetCommandOptions } from './command-object';
@@ -167,7 +167,12 @@ function cleanupNativeFileCache() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(getNativeFileCacheLocation(), { recursive: true, force: true });
+      // Null when the native cache root is not a real directory we own, which
+      // would mean deleting through a path another user planted.
+      const cacheDir = getNativeFileCacheLocationToDelete();
+      if (cacheDir) {
+        rmSync(cacheDir, { recursive: true, force: true });
+      }
     }
   );
 }

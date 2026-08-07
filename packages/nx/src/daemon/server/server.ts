@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { chmodSync, existsSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { deserialize, serialize } from 'v8';
@@ -26,7 +26,10 @@ import {
   RESET_CONFIGURE_AI_AGENTS_STATUS,
 } from '../message-types/configure-ai-agents';
 import { applyDaemonEnvFromClient } from '../client/daemon-environment';
-import { isDaemonMessage } from '../message-types/daemon-message';
+import {
+  assertNotForeignWorkspaceMessage,
+  isDaemonMessage,
+} from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   isHandleFlushSyncGeneratorChangesToDiskMessage,
@@ -156,6 +159,7 @@ import {
   handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
   respondToClient,
+  respondWithError,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputWatcherInstance,
@@ -255,6 +259,17 @@ async function handleMessage(socket: Socket, data: string) {
     );
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
+
+  // A mismatch means the client reached the wrong daemon (e.g. a shared
+  // NX_SOCKET_DIR). Respond, but stay alive for our own workspace.
+  if (isDaemonMessage(payload)) {
+    try {
+      assertNotForeignWorkspaceMessage(payload, workspaceRoot);
+    } catch (e) {
+      await respondWithError(socket, `Workspace root mismatch`, e);
+      return;
+    }
+  }
 
   if (isDaemonMessage(payload) && payload.env) {
     const changedEnvKeys = applyDaemonEnvFromClient(payload.env);
@@ -740,6 +755,17 @@ export async function startServer(): Promise<Server> {
       server.listen(socketPath, async () => {
         try {
           serverLogger.log(`Started listening on: ${socketPath}`);
+
+          // Linux gates connect() on write permission to the socket file; macOS/BSD gate
+          // on the directory, which is already 0700. Done after listen because
+          // net.Server.listen takes no mode and umask is process-global.
+          if (!isWindows) {
+            try {
+              chmodSync(socketPath, 0o600);
+            } catch {
+              // Best effort; the 0700 socket directory is the primary control.
+            }
+          }
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
