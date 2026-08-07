@@ -244,8 +244,11 @@ export function createOxfmtIgnoreChecker(tree: Tree): TreeIgnoreChecker {
  * `formatters/oxfmt.ts`. They must agree, and a shared value is the only thing
  * that makes them, so do not restate these three anywhere.
  *
- * `satisfies` rather than an annotation so `IgnoreCheckerOptions` itself stays
- * private - the type is what stops a caller assembling its own set.
+ * `satisfies` rather than an annotation so the values stay literal - an
+ * annotation widens `cascade` and `merge` to `boolean` (measured in the
+ * declaration emit). Privacy is not what it buys: an unexported type is emitted
+ * inline beside the constant either way. What keeps a caller from assembling
+ * its own set is that `createTreeIgnoreChecker` is not exported.
  */
 export const OXFMT_IGNORE_OPTIONS = {
   filenames: ['.gitignore', '.prettierignore'],

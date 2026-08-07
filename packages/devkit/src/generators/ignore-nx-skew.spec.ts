@@ -19,6 +19,7 @@ import { visitNotIgnoredFiles } from './visit-not-ignored-files';
 // `assertNxSupportsIgnoreCheckers` too if it becomes the symbol that probes for.
 const ABSENT_ON_OLDER_NX = [
   'createGitIgnoreChecker',
+  'createOxfmtIgnoreChecker',
   'createPrettierIgnoreChecker',
 ] as const;
 
@@ -27,6 +28,7 @@ jest.mock('nx/src/devkit-internals', () => {
   const olderNx = { ...actual };
   for (const name of [
     'createGitIgnoreChecker',
+    'createOxfmtIgnoreChecker',
     'createPrettierIgnoreChecker',
   ]) {
     delete olderNx[name];
@@ -67,11 +69,15 @@ describe('ignore checkers against an nx without them', () => {
 
   it('should still format, filtering nothing, rather than failing', async () => {
     // Filtering nothing is what this nx pairing always did, so a generator that
-    // formats is the right answer here - not one that refuses to run.
-    tree.write('.prettierrc', '{}');
+    // formats is the right answer here - not one that refuses to run. The
+    // fixture leaves the default oxfmt config in place, so this runs the oxfmt
+    // arm; the sibling formatter skew spec covers the prettier one.
     tree.write('.gitignore', 'ignored.ts\n');
     tree.write('ignored.ts', 'const   x   =   1');
 
     await expect(formatFiles(tree)).resolves.toBeUndefined();
+    // The `.gitignore` above is what makes this "filtering nothing" rather than
+    // "did not throw" - with a checker it would come back untouched.
+    expect(tree.read('ignored.ts', 'utf-8')).toBe('const x = 1;\n');
   });
 });

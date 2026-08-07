@@ -20,8 +20,9 @@ import { isUsingPrettier, isUsingPrettierInTree } from './prettier';
  * `formatFiles` each carry a `never` assertion in their `default` arm, and
  * `format.ts`'s binary-resolution table, `createTreeWithEmptyWorkspace`'s
  * config-file table and `@nx/js`'s `formatterSetups` are keyed by this type.
- * The last one reads the type from nx's *emitted* declarations, so it only
- * fails once `packages/nx` has been rebuilt.
+ * The two outside `packages/nx` - devkit's `formatFiles` and `@nx/js`'s
+ * `formatterSetups` - read the type from nx's *emitted* declarations, so they
+ * only fail once `packages/nx` has been rebuilt.
  *
  * What still needs visiting by hand: the `formatterType === 'prettier'`
  * ternary and `if` in `format.ts`, and `nx init`'s formatter pass - all

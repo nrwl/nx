@@ -894,11 +894,17 @@ function toRelativeWithin(
   return relative && !relative.startsWith('../') ? relative : undefined;
 }
 
-/** The batch's own oxfmt config, if it carries one. */
+/**
+ * The batch's own oxfmt config, if it carries one this path can read.
+ *
+ * JSON only: a seed is parsed in memory, and `.ts`/`.mts` configs need a
+ * loader and a real file on disk. Returning one would look like it applied and
+ * then be dropped further in, so the ones we cannot honour never leave here.
+ */
 function findOxfmtConfigInBatch(
   files: { path: string; content: string }[]
 ): { name: string; content: string } | undefined {
-  for (const name of oxfmtConfigFiles) {
+  for (const name of oxfmtConfigFiles.filter(isJsonOxfmtConfig)) {
     const match = files.find((file) => file.path === name);
     if (match) {
       return { name, content: match.content };
@@ -944,11 +950,12 @@ export async function formatFilesWithOxfmt(
     workspaceRoot,
     seedConfig ?? findOxfmtConfigInBatch(files)
   );
-  // The same values the generator side binds, read from the same constant so
-  // the two cannot drift: oxfmt honours `.prettierignore` as well as
-  // `.gitignore` (measured against its CLI, and part of being a drop-in for
-  // prettier), and keeps one matcher per file rather than merging them, so a
-  // `!` in one cannot re-include what the other excluded.
+  // All three of the generator side's values, read from the same constant so
+  // the two cannot drift - `cascade` is consumed where the chain is resolved,
+  // below. oxfmt honours `.prettierignore` as well as `.gitignore` (measured
+  // against its CLI, and part of being a drop-in for prettier), and keeps one
+  // matcher per file rather than merging them, so a `!` in one cannot
+  // re-include what the other excluded.
   const resolveIgnores = createIgnoreChainResolver(
     (relativePath) =>
       readFileIfExisting(path.join(workspaceRoot, relativePath)),
@@ -986,7 +993,9 @@ export async function formatFilesWithOxfmt(
         if (
           relativePath !== undefined &&
           isIgnored(
-            resolveIgnores(posixDirname(relativePath)),
+            resolveIgnores(
+              OXFMT_IGNORE_OPTIONS.cascade ? posixDirname(relativePath) : ''
+            ),
             relativePath,
             config,
             absolutePath
