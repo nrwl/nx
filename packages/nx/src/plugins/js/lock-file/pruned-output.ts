@@ -815,6 +815,45 @@ export function uncontainLocalPath(shippedPath: string): string {
     : shippedPath;
 }
 
+/**
+ * The absolute source of a local-path target, or the reason it cannot ship into
+ * the pruned output. The containment check is lexical, so it cannot see where a
+ * symlinked source points: resolving it is what separates a link into the
+ * workspace, which ships like any other directory, from one that lands on the
+ * workspace root or leaves it. A dangling link is reported rather than accepted,
+ * which `lstat` would have done. Shared so the artifact collector and the
+ * closure validation cannot disagree about what the output actually carries.
+ */
+function resolveLocalPathSource(
+  wsRelativePath: string,
+  workspaceRootPath: string,
+  workspaceRootRealPath: string
+): {
+  source: string | null;
+  reason?: 'outside-workspace' | 'workspace-root' | 'missing';
+  attempted?: string;
+  resolved?: string;
+} {
+  if (localPathEscapesOutput(wsRelativePath)) {
+    return { source: null, reason: 'outside-workspace' };
+  }
+  const attempted = join(workspaceRootPath, wsRelativePath);
+  let resolved: string;
+  try {
+    resolved = realpathSync(attempted);
+  } catch {
+    return { source: null, reason: 'missing', attempted };
+  }
+  // Shipping the root itself would copy the whole workspace into the output.
+  if (resolved === workspaceRootRealPath) {
+    return { source: null, reason: 'workspace-root', attempted, resolved };
+  }
+  if (!resolved.startsWith(`${workspaceRootRealPath}${sep}`)) {
+    return { source: null, reason: 'outside-workspace', attempted, resolved };
+  }
+  return { source: attempted, attempted, resolved };
+}
+
 /** Contains a workspace-relative `file:` path, leaving unshippable ones as-is. */
 function containVendoredFilePath(wsRelativePath: string): string {
   if (
@@ -1094,38 +1133,28 @@ export function getPrunedPnpmLocalPathArtifacts(
     wsRelativePath: string,
     origin: string
   ): string | null => {
-    if (localPathEscapesOutput(wsRelativePath)) {
-      logger.warn(
-        `Local-path dependency "${origin}" resolves outside the workspace root and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
-      );
-      return null;
+    const resolution = resolveLocalPathSource(
+      wsRelativePath,
+      workspaceRootPath,
+      workspaceRootRealPath
+    );
+    if (resolution.source) {
+      return resolution.source;
     }
-    const source = join(workspaceRootPath, wsRelativePath);
-    let resolvedSource: string;
-    try {
-      // The check above is lexical, so it cannot see where a symlinked source
-      // points. Resolving it is what separates a link into the workspace, which
-      // ships like any other directory, from one that leaves it. Also reports a
-      // dangling link, which lstat would have accepted.
-      resolvedSource = realpathSync(source);
-    } catch {
+    if (resolution.reason === 'missing') {
       logger.warn(
-        `Local-path dependency "${origin}" was not found at ${source}; the pruned output references it but cannot ship it.`
+        `Local-path dependency "${origin}" was not found at ${resolution.attempted}; the pruned output references it but cannot ship it.`
       );
-      return null;
-    }
-    // Shipping the root itself would copy the whole workspace into the output.
-    if (resolvedSource === workspaceRootRealPath) {
+    } else if (resolution.reason === 'workspace-root') {
       warnUnshippableLocalPathSpec(`"${origin}"`, 'workspace-root');
-      return null;
-    }
-    if (!resolvedSource.startsWith(`${workspaceRootRealPath}${sep}`)) {
+    } else {
       logger.warn(
-        `Local-path dependency "${origin}" resolves to ${resolvedSource}, outside the workspace root, and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
+        resolution.resolved
+          ? `Local-path dependency "${origin}" resolves to ${resolution.resolved}, outside the workspace root, and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
+          : `Local-path dependency "${origin}" resolves outside the workspace root and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
       );
-      return null;
     }
-    return source;
+    return null;
   };
 
   // Callers pass the shipped path (relocated under LOCAL_PATH_MODULES_DIR, as the
@@ -1321,8 +1350,24 @@ export function validatePrunedLocalPathClosure(
   ]);
   const rootDev = new Set(Object.keys(packageJson.devDependencies ?? {}));
   const appName = packageJson.name || 'the app';
+  let workspaceRootRealPath: string;
+  try {
+    workspaceRootRealPath = realpathSync(workspaceRootPath);
+  } catch {
+    workspaceRootRealPath = workspaceRootPath;
+  }
 
   for (const [target, kind] of targets) {
+    // A target the output cannot carry has no closure to break in the deploy,
+    // and the artifact collector reports why it cannot ship. Resolving it here
+    // too is what keeps a symlinked target from failing the build over the
+    // manifest of whatever it points at.
+    if (
+      !resolveLocalPathSource(target, workspaceRootPath, workspaceRootRealPath)
+        .source
+    ) {
+      continue;
+    }
     const manifestPath = join(workspaceRootPath, target, 'package.json');
     if (!existsSync(manifestPath)) {
       continue;
