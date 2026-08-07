@@ -66,10 +66,21 @@ export async function retrieveWorkspaceFiles(
  * between specified and default plugin processing phases.
  */
 export async function retrieveProjectConfigurations(
-  separatedPlugins: SeparatedPlugins,
+  pluginsOrSeparatedPlugins: SeparatedPlugins | LoadedNxPlugin[],
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ): Promise<ConfigurationResult> {
+  // Backwards compatibility: `@nx/devkit` <= 22 (whose peer range permits nx 23)
+  // calls this with a plain `LoadedNxPlugin[]` as the first argument. Nx 23
+  // changed the signature to accept `SeparatedPlugins`. Normalize the legacy
+  // array shape so those older devkit callers (e.g. `addPlugin` invoked during
+  // `create-nx-workspace --preset=...`) don't crash on `.filter` of undefined.
+  const separatedPlugins: SeparatedPlugins = Array.isArray(
+    pluginsOrSeparatedPlugins
+  )
+    ? { specifiedPlugins: pluginsOrSeparatedPlugins, defaultPlugins: [] }
+    : pluginsOrSeparatedPlugins;
+
   const specifiedWithCreateNodes = separatedPlugins.specifiedPlugins.filter(
     (p) => !!p.createNodes
   );

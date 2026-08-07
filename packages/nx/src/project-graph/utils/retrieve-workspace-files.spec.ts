@@ -102,6 +102,34 @@ describe('retrieve-workspace-files', () => {
       expect(result.projects['project3']).toBeDefined();
     });
 
+    // Regression test for https://github.com/nrwl/nx/issues/36144
+    // `@nx/devkit` <= 22 (whose peer range permits nx 23) calls
+    // `retrieveProjectConfigurations` with a plain `LoadedNxPlugin[]` as the
+    // first argument, which the nx 23 signature change to `SeparatedPlugins`
+    // broke, crashing `create-nx-workspace@22 --preset=nest` with
+    // "Cannot read properties of undefined (reading 'filter')".
+    it('should accept a plain plugin array (legacy @nx/devkit <= 22 shape)', async () => {
+      await fs.createFile(
+        'project1/project.json',
+        JSON.stringify({
+          name: 'project1',
+          root: 'project1',
+        })
+      );
+
+      const mockPlugin = createTestPlugin('test-plugin', '**/project.json');
+
+      const result = await retrieveProjectConfigurations(
+        // legacy array shape passed by @nx/devkit <= 22
+        [mockPlugin] as any,
+        fs.tempDir,
+        {}
+      );
+
+      expect(result.projects).toBeDefined();
+      expect(result.projects['project1']).toBeDefined();
+    });
+
     it('multiple plugins should not affect other plugins', async () => {
       await fs.createFile(
         'project1/project.json',
