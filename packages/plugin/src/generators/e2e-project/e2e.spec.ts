@@ -256,6 +256,9 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(vitestConfig).toContain(
       "globalSetup: '../tools/scripts/vitest-global-setup.ts'"
     );
+    expect(tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8')).toContain(
+      '}, 120_000);'
+    );
     // vitest has no globalTeardown option; teardown is exported from the
     // globalSetup file instead
     expect(vitestConfig).not.toContain('globalTeardown');

@@ -99,6 +99,7 @@ describe('env vars', () => {
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
         );
         expect(run1).toContain('All specs passed!');
+        await killPort(4200);
         // tests should not fail because of a config change. The ESM
         // shape (import / export default) uses `import.meta.url` rather
         // than `__filename` so it works under both Nx's native TS strip
@@ -134,6 +135,7 @@ export default defineConfig({
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
         );
         expect(run2).toContain('All specs passed!');
+        await killPort(4200);
 
         // make sure project.json env vars also work
         checkFilesExist(`apps/${myapp}-e2e/src/e2e/env.cy.ts`);
@@ -162,6 +164,7 @@ export default defineConfig({
         );
         const run3 = runCLI(`e2e ${myapp}-e2e`);
         expect(run3).toContain('All specs passed!');
+        await killPort(4200);
       }
     },
     TEN_MINS_MS

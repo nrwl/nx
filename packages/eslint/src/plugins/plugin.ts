@@ -63,7 +63,7 @@ const internalCreateNodesV2 = async (
   options: EslintPluginOptions,
   context: CreateNodesContext,
   projectRootsByEslintRoots: Map<string, string[]>,
-  lintableFilesPerProjectRoot: Map<string, string[]>,
+  getLintableFilesForProjectRoot: (projectRoot: string) => Promise<string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
   projectsCache: PluginCache<EslintProjects>,
   hashByRoot: Map<string, string>,
@@ -100,7 +100,7 @@ const internalCreateNodesV2 = async (
       let hasNonIgnoredLintableFiles = false;
       if (configDir !== projectRoot || projectRoot === '.') {
         const eslint = getEslint(projectRoot);
-        for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
+        for (const file of await getLintableFilesForProjectRoot(projectRoot)) {
           if (
             !(await eslint.isPathIgnored(join(context.workspaceRoot, file)))
           ) {
@@ -168,7 +168,10 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
       splitConfigFiles(configFiles);
-    const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
+    if (eslintConfigFiles.length === 0) {
+      return [];
+    }
+    const getLintableFilesForProjectRoot = createGetLintableFilesForProjectRoot(
       projectRoots,
       options,
       context
@@ -200,9 +203,6 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       projectRoots.map((r, i) => [r, hashes[i]])
     );
     try {
-      if (eslintConfigFiles.length === 0) {
-        return [];
-      }
       // Determine flat vs legacy from root config, matching ESLint's own
       // behavior (find-up from cwd). Nested .eslintrc.* files are irrelevant
       // when a root flat config exists. Prefer flat config at root when both
@@ -222,7 +222,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
             options,
             context,
             projectRootsByEslintRoots,
-            lintableFilesPerProjectRoot,
+            getLintableFilesForProjectRoot,
             tsconfigChainsByProjectRoot,
             targetsCache,
             hashByRoot,
@@ -355,6 +355,25 @@ function collectTsconfigChainsByProjectRoot(
     result.set(projectRoot, outside);
   }
   return result;
+}
+
+function createGetLintableFilesForProjectRoot(
+  projectRoots: string[],
+  options: EslintPluginOptions,
+  context: CreateNodesContext
+): (projectRoot: string) => Promise<string[]> {
+  // The workspace-wide glob is expensive in large repositories, so it runs
+  // lazily and at most once, shared by every project root that needs it.
+  let lintableFilesPerProjectRoot: Promise<Map<string, string[]>>;
+
+  return async (projectRoot: string) => {
+    lintableFilesPerProjectRoot ??= collectLintableFilesByProjectRoot(
+      projectRoots,
+      options,
+      context
+    );
+    return (await lintableFilesPerProjectRoot).get(projectRoot) ?? [];
+  };
 }
 
 async function collectLintableFilesByProjectRoot(

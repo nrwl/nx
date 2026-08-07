@@ -9,6 +9,23 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
+const mockGlobWithWorkspaceContext = jest.fn();
+const mockGetFilesInDirectoryUsingContext = jest.fn();
+jest.mock('nx/src/utils/workspace-context', () => {
+  const actual = jest.requireActual('nx/src/utils/workspace-context');
+  return {
+    ...actual,
+    globWithWorkspaceContext: (...args) => {
+      mockGlobWithWorkspaceContext(...args);
+      return actual.globWithWorkspaceContext(...args);
+    },
+    getFilesInDirectoryUsingContext: (...args) => {
+      mockGetFilesInDirectoryUsingContext(...args);
+      return actual.getFilesInDirectoryUsingContext(...args);
+    },
+  };
+});
+
 const resolveESLintClassSpy = jest.fn();
 jest.mock('../utils/resolve-eslint-class', () => ({
   resolveESLintClass: (...args) => {
@@ -49,6 +66,8 @@ describe('@nx/eslint/plugin', () => {
   afterEach(() => {
     jest.resetModules();
     resolveESLintClassSpy.mockClear();
+    mockGlobWithWorkspaceContext.mockClear();
+    mockGetFilesInDirectoryUsingContext.mockClear();
     tempFs.cleanup();
     tempFs = null;
     rmSync('tmp/project-graph-cache', { recursive: true, force: true });
@@ -590,6 +609,68 @@ describe('@nx/eslint/plugin', () => {
   });
 
   describe('root eslint config and nested eslint configs', () => {
+    it('should only discover lintable files for uncached projects', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+
+      await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
+      // the first (uncached) invocation must actually discover files, so a
+      // broken mock interception cannot make this test pass on 0 === 0
+      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(1);
+
+      await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
+
+      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(1);
+      expect(mockGetFilesInDirectoryUsingContext).not.toHaveBeenCalled();
+    });
+
+    it('should not discover lintable files for projects with local eslint configs', async () => {
+      createFiles({
+        'apps/my-app/.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'libs/my-lib/.eslintrc.json': `{}`,
+        'libs/my-lib/project.json': `{}`,
+        'libs/my-lib/index.ts': `console.log('hello world')`,
+      });
+
+      await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
+
+      expect(mockGlobWithWorkspaceContext).not.toHaveBeenCalled();
+      expect(mockGetFilesInDirectoryUsingContext).not.toHaveBeenCalled();
+    });
+
+    it('should discover lintable files with a single deferred workspace glob for projects using an inherited eslint config', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+      });
+
+      await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
+
+      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(1);
+      expect(mockGetFilesInDirectoryUsingContext).not.toHaveBeenCalled();
+    });
+
+    it('should run the deferred workspace glob only once when multiple projects inherit the root eslint config', async () => {
+      createFiles({
+        '.eslintrc.json': `{}`,
+        'apps/my-app/project.json': `{}`,
+        'apps/my-app/index.ts': `console.log('hello world')`,
+        'libs/my-lib/project.json': `{}`,
+        'libs/my-lib/index.ts': `console.log('hello world')`,
+      });
+
+      await invokeCreateNodesOnMatchingFiles(context, { targetName: 'lint' });
+
+      expect(mockGlobWithWorkspaceContext).toHaveBeenCalledTimes(1);
+      expect(mockGetFilesInDirectoryUsingContext).not.toHaveBeenCalled();
+    });
+
     it('should insert projects in input order when one root config governs multiple nested projects', async () => {
       // Regression coverage for the `Promise.all`-with-shared-mutation race
       // in `internalCreateNodesV2`: pre-fix, `projects[projectRoot] = project`
