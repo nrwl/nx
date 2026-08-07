@@ -22,6 +22,13 @@ export interface EngineWiringOptions {
   supportedLocales: Record<string, string>;
   allowedHosts: string[];
   /**
+   * Skips the engine host validation while serving. Effective from
+   * `@angular/ssr` 20.3.25 / 21.2.1 (`ɵdisableAllowedHostsCheck`); older
+   * versions have no disable mechanism and keep validating against
+   * `allowedHosts`.
+   */
+  disableHostCheck?: boolean;
+  /**
    * Absolute path of the virtual module carrying the manifest registration.
    * When set, the loader imports it instead of inlining the registration
    * statements, so they run before the user entry's own imports evaluate.
@@ -98,5 +105,13 @@ export function generateEngineManifestSource(
   // refuses to render prerender-marked routes at request time, which 404s
   // every route under the default server route configuration.
   __ngRspackAngularAppEngine.ɵallowStaticRouteRender = true;
+  ${
+    engineWiring.disableHostCheck
+      ? `// The host matcher ignores a literal '*' entry before 21.2.4; this
+  // static skips validation on 20.3.25+ and 21.2.1+ and is an inert write
+  // on older versions, which have no disable mechanism.
+  __ngRspackAngularAppEngine.ɵdisableAllowedHostsCheck = true;`
+      : ''
+  }
   `;
 }

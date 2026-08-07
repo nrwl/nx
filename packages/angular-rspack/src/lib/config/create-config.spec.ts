@@ -477,33 +477,103 @@ describe('createConfig', () => {
           '[::1]',
         ],
       });
+      expect(
+        (serverExportsRule.options.engineWiring as Record<string, unknown>)
+          .disableHostCheck
+      ).toBeUndefined();
     } finally {
       vi.unstubAllEnvs();
       await rm(root, { recursive: true, force: true });
     }
   }, 10000);
 
-  it('should allow every host in the engine manifest when the dev-server host check is disabled', async () => {
-    const root = await createSsrProjectRoot();
-    vi.stubEnv('WEBPACK_SERVE', 'true');
-    try {
-      const configs = await _createConfig({
-        ...configBase,
-        root,
-        server: './src/main.server.ts',
-        ssr: { entry: './src/server.ts' },
-        devServer: { disableHostCheck: true },
-      });
+  it.each([
+    ['the dev-server host check is disabled', { disableHostCheck: true }],
+    ['every dev-server host is allowed', { allowedHosts: true as const }],
+  ])(
+    'should allow every host in the engine manifest when %s',
+    async (_, devServer) => {
+      const root = await createSsrProjectRoot();
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      try {
+        const configs = await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          devServer,
+        });
 
-      const serverExportsRule = findServerExportsRule(configs[1]);
-      expect(serverExportsRule.options.engineWiring).toMatchObject({
-        allowedHosts: ['*', 'localhost', '*.localhost', '127.0.0.1', '[::1]'],
-      });
-    } finally {
-      vi.unstubAllEnvs();
-      await rm(root, { recursive: true, force: true });
-    }
-  }, 10000);
+        const serverExportsRule = findServerExportsRule(configs[1]);
+        expect(serverExportsRule.options.engineWiring).toMatchObject({
+          allowedHosts: ['*', 'localhost', '*.localhost', '127.0.0.1', '[::1]'],
+          disableHostCheck: true,
+        });
+      } finally {
+        vi.unstubAllEnvs();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it.each(['20.3.17', '20.3.24', '21.1.5', '21.2.0'])(
+    'should warn when @angular/ssr %s cannot disable the engine host check',
+    async (ssrVersion) => {
+      const root = await createSsrProjectRoot(ssrVersion);
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      try {
+        await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          devServer: { disableHostCheck: true },
+        });
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'cannot disable the application engine host validation'
+          )
+        );
+      } finally {
+        vi.unstubAllEnvs();
+        warnSpy.mockRestore();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it.each(['20.3.25', '21.2.1', '22.0.0'])(
+    'should not warn about the engine host check when @angular/ssr %s can disable it',
+    async (ssrVersion) => {
+      const root = await createSsrProjectRoot(ssrVersion);
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.stubEnv('WEBPACK_SERVE', 'true');
+      try {
+        await _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          devServer: { disableHostCheck: true },
+        });
+
+        expect(warnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining(
+            'cannot disable the application engine host validation'
+          )
+        );
+      } finally {
+        vi.unstubAllEnvs();
+        warnSpy.mockRestore();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
 
   it('should not wire the engine when locale inlining is enabled', async () => {
     const root = await createSsrProjectRoot();

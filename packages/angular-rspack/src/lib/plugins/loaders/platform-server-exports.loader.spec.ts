@@ -134,6 +134,28 @@ describe('platform-server-exports.loader', () => {
     );
   });
 
+  it('should disable the engine host check when the wiring requests it', () => {
+    const result = runLoader(userContent, {
+      angularSSRInstalled: true,
+      isZoneJsInstalled: true,
+      engineWiring: { ...engineWiring, disableHostCheck: true },
+    });
+
+    expect(result).toContain(
+      '__ngRspackAngularAppEngine.ɵdisableAllowedHostsCheck = true;'
+    );
+  });
+
+  it('should not disable the engine host check by default', () => {
+    const result = runLoader(userContent, {
+      angularSSRInstalled: true,
+      isZoneJsInstalled: true,
+      engineWiring,
+    });
+
+    expect(result).not.toContain('ɵdisableAllowedHostsCheck');
+  });
+
   it('should trim the trailing slash from the engine manifest base path', () => {
     const result = runLoader(userContent, {
       angularSSRInstalled: true,

@@ -68,6 +68,7 @@ Since `@angular/ssr` version 21.2.0 (also backported to 20.3.17 and 21.1.5), the
 Configure the allowed hosts for production with the `security.allowedHosts` option, or with the `NG_ALLOWED_HOSTS` environment variable (comma-separated), which the `AngularNodeAppEngine` API from `@angular/ssr/node` reads.
 While serving, the allowlist automatically includes the dev server host and the common local hosts (`localhost` and its subdomains, `127.0.0.1`, `[::1]`).
 When accessing the served application through another address, such as a LAN IP, add it to `devServer.allowedHosts` or use `NG_ALLOWED_HOSTS`.
+Disabling the host check entirely while serving (`devServer.disableHostCheck` or `devServer.allowedHosts: true`) requires `@angular/ssr` version 21.2.1 or greater (also backported to 20.3.25).
 
 {% /aside %}
 
