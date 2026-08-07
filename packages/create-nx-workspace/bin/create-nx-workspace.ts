@@ -1108,49 +1108,33 @@ async function determineStack(
 export async function determinePresetOptions(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<Partial<Arguments>> {
-  // Resolved here rather than inside each `determine*Options` so that a stack
-  // cannot skip it. Once the schemas stopped defaulting the linter, a stack that
-  // returned none left nothing downstream to supply one, and the workspace was
-  // created unlinted without ever asking.
-  const linter = await determineLinterOptions(parsedArgs);
-
-  // `linter` is spread last so the resolved value wins even where the stack's
-  // own options object carries one. It is threaded in per case rather than
-  // hoisted into one object because `Arguments` is discriminated on `stack`,
-  // which only narrows inside the switch.
   switch (parsedArgs.stack) {
     case 'none':
-      return {
-        ...(await determineNoneOptions({ ...parsedArgs, linter })),
-        linter,
-      };
+      return determineNoneOptions(parsedArgs);
     case 'react':
-      return {
-        ...(await determineReactOptions({ ...parsedArgs, linter })),
-        linter,
-      };
+      return determineReactOptions(parsedArgs);
     case 'angular':
-      return {
-        ...(await determineAngularOptions({ ...parsedArgs, linter })),
-        linter,
-      };
+      return determineAngularOptions(parsedArgs);
     case 'vue':
-      return {
-        ...(await determineVueOptions({ ...parsedArgs, linter })),
-        linter,
-      };
+      return determineVueOptions(parsedArgs);
     case 'node':
-      return {
-        ...(await determineNodeOptions({ ...parsedArgs, linter })),
-        linter,
-      };
-    // `web` has no options of its own to prompt for; the linter above is the
-    // only one it takes. A stack that reaches the default arm still gets one,
-    // so a preset added without a case here cannot silently go unlinted.
+      return determineNodeOptions(parsedArgs);
     case 'web':
+      return determineWebOptions(parsedArgs);
     default:
-      return { ...parsedArgs, linter };
+      return parsedArgs;
   }
+}
+
+/**
+ * `web-components` prompts for nothing of its own — `style` and `e2eTestRunner`
+ * come from the CLI or fall back downstream — but the preset does generate a
+ * lintable app, so it still needs a linter.
+ */
+async function determineWebOptions(
+  parsedArgs: yargs.Arguments<WebArguments>
+): Promise<Partial<WebArguments>> {
+  return { linter: await determineLinterOptions(parsedArgs) };
 }
 
 async function determineFormatterOptions(
@@ -1245,7 +1229,15 @@ async function determineNoneOptions(
       js = reply.ts === 'No';
     }
 
-    return { preset, js, appName };
+    // `ts-standalone` is the only preset on this stack that generates a
+    // lintable project; `apps`, `ts` and `npm` reach no generator that takes a
+    // linter, so asking would discard the answer.
+    const linter =
+      preset === Preset.TsStandalone
+        ? await determineLinterOptions(parsedArgs)
+        : undefined;
+
+    return { preset, js, appName, linter };
   }
 }
 
@@ -1262,6 +1254,7 @@ async function determineReactOptions(
   let routing = true;
   let nextAppDir = false;
   let nextSrcDir = false;
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
@@ -1379,6 +1372,9 @@ async function determineReactOptions(
     style = reply.style;
   }
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
@@ -1398,6 +1394,7 @@ async function determineReactOptions(
     e2eTestRunner,
     useReactRouter,
     routing,
+    linter,
     formatter,
     workspaces,
   };
@@ -1411,6 +1408,7 @@ async function determineVueOptions(
   let appName: string;
   let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
@@ -1487,6 +1485,9 @@ async function determineVueOptions(
     style = reply.style;
   }
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
@@ -1501,6 +1502,7 @@ async function determineVueOptions(
     appName,
     unitTestRunner,
     e2eTestRunner,
+    linter,
     formatter,
     workspaces,
   };
@@ -1690,6 +1692,7 @@ async function determineAngularOptions(
   }
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  const linter = await determineLinterOptions(parsedArgs);
 
   return {
     preset,
@@ -1703,6 +1706,7 @@ async function determineAngularOptions(
     ssr,
     prefix,
     zoneless,
+    linter,
   };
 }
 
@@ -1713,6 +1717,7 @@ async function determineNodeOptions(
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
+  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
   let unitTestRunner: undefined | 'none' | 'jest' = undefined;
   const workspaces = parsedArgs.workspaces;
@@ -1779,6 +1784,9 @@ async function determineNodeOptions(
     exclude: 'vitest',
   });
 
+  // Asked outside the gate: the linter is independent of package-manager
+  // workspaces, and `--no-workspaces` used to force ESLint without asking.
+  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
@@ -1792,6 +1800,7 @@ async function determineNodeOptions(
     appName,
     framework,
     docker,
+    linter,
     formatter,
     workspaces,
     unitTestRunner,
