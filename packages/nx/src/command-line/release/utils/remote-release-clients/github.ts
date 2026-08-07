@@ -169,6 +169,12 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       [...authors.keys()].map(async (authorName) => {
         const meta = authors.get(authorName);
         for (const email of meta.email) {
+          // An empty email makes the URL `/users/find/`, so ungh attributes
+          // the commit to the "find" user rather than the real author.
+          // Non-emails just 404, but skip those too to avoid a wasted lookup.
+          if (!email || !email.includes('@')) {
+            continue;
+          }
           if (email.endsWith('@users.noreply.github.com')) {
             const match = email.match(
               /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/

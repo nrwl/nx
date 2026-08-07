@@ -332,11 +332,11 @@ export default class DefaultChangelogRenderer {
         if (!name || name.includes('[bot]')) {
           continue;
         }
-        if (_authors.has(name)) {
-          const entry = _authors.get(name);
-          entry.email.add(author.email);
-        } else {
-          _authors.set(name, { email: new Set([author.email]) });
+        if (!_authors.has(name)) {
+          _authors.set(name, { email: new Set<string>() });
+        }
+        if (author.email) {
+          _authors.get(name).email.add(author.email);
         }
       }
     }
