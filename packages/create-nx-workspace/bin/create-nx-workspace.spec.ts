@@ -445,13 +445,16 @@ describe('determinePresetOptions', () => {
     expect(result.linter).toBe('eslint');
   });
 
-  it('should not invent a linter for a third-party preset', async () => {
+  // `web-components` is the only preset on the `web` stack, and it takes a
+  // linter like any other. It reached `determineStack`'s catch-all arm until
+  // it got a stack of its own, which left it the one preset created unlinted.
+  it('should resolve a linter for the web stack', async () => {
     const result = await determinePresetOptions({
       ...base,
-      stack: 'unknown',
-      preset: 'some-community-preset',
+      stack: 'web',
+      preset: Preset.WebComponents,
     } as any);
 
-    expect(result.linter).toBeUndefined();
+    expect(result.linter).toBe('oxlint');
   });
 });
