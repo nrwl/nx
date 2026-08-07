@@ -53,6 +53,7 @@ export default defineConfig({
     '/technologies/react/guides/use-environment-variables-in-react':
       '/docs/reference/environment-variables#loading-environment-variables',
     '/knowledge-base/installation': '/docs/kb/installation-and-updates',
+    '/kb/project-graph-plugins': '/docs/features/multi-language-support',
     '/guides/nx-cloud/source-control-integration/github':
       '/docs/features/ci-features/github-integration',
     '/concepts/decisions/overview': '/docs/kb/monorepo-vs-polyrepo',

@@ -337,7 +337,11 @@ to = "/docs/kb/performant-project-graph-plugins"
 
 [[redirects]]
 from = "/docs/extending-nx/project-graph-plugins"
-to = "/docs/kb/project-graph-plugins"
+to = "/docs/features/multi-language-support"
+
+[[redirects]]
+from = "/docs/kb/project-graph-plugins"
+to = "/docs/features/multi-language-support"
 
 [[redirects]]
 from = "/docs/extending-nx/publish-plugin"
