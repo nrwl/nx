@@ -150,16 +150,17 @@ Non-workspace local-path dependencies (`file:` tarballs or directories and `link
 Add `{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml`, `{workspaceRoot}/apps/my-app/dist/patches`, and `{workspaceRoot}/apps/my-app/dist/local_path_modules` to the `outputs` so a cached run restores them instead of dropping those approvals, patches, or vendored dependencies.
 
 {% aside type="caution" title="Installing the output with --ignore-workspace" %}
-On pnpm 11 and above, `pnpm install --ignore-workspace` skips the emitted `pnpm-workspace.yaml`, so the settings in it never apply.
-A workspace using `pnpm patch` gets an output that installs cleanly without the flag and fails with it, because the lockfile declares patches the install no longer sees:
+`pnpm install --ignore-workspace` skips a `pnpm-workspace.yaml` sitting beside the output, so the settings in it never apply.
+On pnpm 11 and above, a workspace using `pnpm patch` therefore gets an output that installs cleanly without the flag and fails with it, because the lockfile declares patches the install no longer sees:
 
 ```
 ERR_PNPM_LOCKFILE_CONFIG_MISMATCH  Cannot proceed with the frozen installation. The current "patchedDependencies" configuration doesn't match the value found in the lockfile
 ```
 
-Install the output without the flag.
-The emitted file declares an empty `packages` list, which already stops pnpm from treating a parent directory as a workspace, so the flag has nothing left to guard against here.
-On pnpm 10 and below the executor emits no `pnpm-workspace.yaml` at all and puts those settings in the output's `package.json`, which the flag does not skip.
+Install that output without the flag.
+The emitted file declares an empty `packages` list, which already stops pnpm from treating a parent directory as a workspace.
+The executor emits no `pnpm-workspace.yaml` at all on pnpm 10 and below, or when the workspace has no approvals, architectures, or patches to carry.
+There is nothing for the flag to skip in that case, so keep it if the output is installed inside another pnpm workspace.
 {% /aside %}
 
 Then run:
