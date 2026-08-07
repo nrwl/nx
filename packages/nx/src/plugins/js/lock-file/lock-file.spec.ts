@@ -1,6 +1,6 @@
 import type { ProjectGraph } from '../../../config/project-graph';
 import type { PackageJson } from '../../../utils/package-json';
-import { createPrunedLockfile } from './lock-file';
+import { createLockFile, createPrunedLockfile } from './lock-file';
 import { stringifyNpmLockfile } from './npm-parser';
 import { stringifyPnpmLockfile } from './pnpm-parser';
 import {
@@ -32,6 +32,67 @@ jest.mock('./pruned-output', () => ({
 jest.mock('../../../utils/output', () => ({
   output: { log: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
+
+describe('createLockFile', () => {
+  const graph: ProjectGraph = {
+    nodes: {},
+    dependencies: {},
+    externalNodes: {},
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('drops the pnpm config the pruned lockfile no longer declares', () => {
+    // pnpm 10 and below validate the manifest against the lockfile, so a
+    // manifest still declaring what the prune baked into its snapshots aborts a
+    // frozen install with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    const packageJson: PackageJson = {
+      name: 'app',
+      version: '1.0.0',
+      pnpm: {
+        overrides: { foo: '1.0.0' },
+        ignoredOptionalDependencies: ['fsevents'],
+        packageExtensions: { 'foo@1': { dependencies: { bar: '1.0.0' } } },
+        onlyBuiltDependencies: ['sharp'],
+      },
+    };
+
+    expect(createLockFile(packageJson, graph, 'pnpm')).toBe('PRUNED_LOCKFILE');
+
+    expect(packageJson.pnpm).toEqual({ onlyBuiltDependencies: ['sharp'] });
+  });
+
+  it('keeps the pnpm config when pruning falls back to the root lockfile', () => {
+    (stringifyPnpmLockfile as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('prune failed');
+    });
+    const packageJson: PackageJson = {
+      name: 'app',
+      version: '1.0.0',
+      pnpm: { overrides: { foo: '1.0.0' } },
+    };
+
+    expect(createLockFile(packageJson, graph, 'pnpm')).toBe('ROOT_LOCKFILE');
+
+    expect(packageJson.pnpm).toEqual({ overrides: { foo: '1.0.0' } });
+  });
+
+  it('leaves the manifest alone for npm, which never reads the pnpm block', () => {
+    const packageJson: PackageJson = {
+      name: 'app',
+      version: '1.0.0',
+      pnpm: { overrides: { foo: '1.0.0' } },
+    };
+
+    expect(createLockFile(packageJson, graph, 'npm')).toBe(
+      'PRUNED_NPM_LOCKFILE'
+    );
+
+    expect(packageJson.pnpm).toEqual({ overrides: { foo: '1.0.0' } });
+  });
+});
 
 describe('createPrunedLockfile', () => {
   let packageJson: PackageJson;
