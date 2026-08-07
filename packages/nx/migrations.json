@@ -184,6 +184,12 @@
       "version": "23.0.0-beta.18",
       "description": "Adds .nx/migrate-runs to .gitignore",
       "implementation": "./dist/src/migrations/update-23-0-0/add-migrate-runs-to-git-ignore"
+    },
+    "23-2-0-set-cache-on-executor-target-defaults": {
+      "version": "23.2.0-beta.3",
+      "description": "Sets \"cache\" on an executor-based target default when every target resolving through it enables caching via its own target name default and none of them can be continuous, maintaining compatibility with how cacheability resolved before Nx 23.",
+      "implementation": "./dist/src/migrations/update-23-2-0/set-cache-on-executor-target-defaults",
+      "documentation": "./dist/src/migrations/update-23-2-0/set-cache-on-executor-target-defaults.md"
     }
   }
 }
