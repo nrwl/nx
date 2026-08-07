@@ -3,7 +3,9 @@ import {
   validateWorkspaceName,
   resolveSpecialFolderName,
   determineFolder,
+  determinePresetOptions,
 } from './create-nx-workspace';
+import enquirer from 'enquirer';
 import { CnwError } from '../src/utils/error-utils';
 import { Preset } from '../src/utils/preset/preset';
 import {
@@ -349,5 +351,107 @@ describe('applyEmptyPresetAlias', () => {
     const template = { template: 'empty' };
     applyEmptyPresetAlias(template);
     expect(template).toEqual({ template: 'empty' });
+  });
+});
+
+describe('determinePresetOptions', () => {
+  const base = {
+    _: [],
+    $0: '',
+    interactive: false,
+    workspaces: true,
+    name: 'myorg',
+  } as any;
+
+  beforeEach(() => {
+    // A sentinel the prompt could not produce by accident, so what these tests
+    // pin is the threading through each stack rather than the prompt's own
+    // default.
+    (enquirer.prompt as jest.Mock).mockResolvedValue({ linter: 'oxlint' });
+  });
+
+  // Every stack must come back with the resolved linter. Once the schemas
+  // stopped defaulting it, a stack that dropped it produced an unlinted
+  // workspace with no prompt and no error.
+  // Each stack needs enough non-interactive args to reach its return statement.
+  const perStack: Record<string, Record<string, unknown>> = {
+    none: { preset: Preset.Apps },
+    react: {
+      preset: Preset.ReactMonorepo,
+      appName: 'app',
+      framework: 'none',
+      style: 'css',
+      bundler: 'vite',
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'playwright',
+      useReactRouter: false,
+      workspaceType: 'integrated',
+    },
+    angular: {
+      preset: Preset.AngularMonorepo,
+      appName: 'app',
+      style: 'css',
+      bundler: 'esbuild',
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'playwright',
+      standaloneApi: true,
+      routing: true,
+      ssr: false,
+      prefix: 'app',
+      zoneless: true,
+      workspaceType: 'integrated',
+    },
+    vue: {
+      preset: Preset.VueMonorepo,
+      appName: 'app',
+      framework: 'none',
+      style: 'css',
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'playwright',
+      workspaceType: 'integrated',
+    },
+    node: {
+      preset: Preset.NodeMonorepo,
+      appName: 'app',
+      framework: 'none',
+      docker: false,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'jest',
+      workspaceType: 'integrated',
+    },
+  };
+
+  it.each(Object.keys(perStack))(
+    'should thread the resolved linter through the %s stack',
+    async (stack) => {
+      const result = await determinePresetOptions({
+        ...base,
+        stack,
+        ...perStack[stack],
+      } as any);
+
+      expect(result.linter).toBe('oxlint');
+    }
+  );
+
+  it('should keep an explicitly passed linter', async () => {
+    const result = await determinePresetOptions({
+      ...base,
+      stack: 'angular',
+      ...perStack.angular,
+      linter: 'eslint',
+    } as any);
+
+    expect(result.linter).toBe('eslint');
+  });
+
+  it('should not invent a linter for a third-party preset', async () => {
+    const result = await determinePresetOptions({
+      ...base,
+      stack: 'unknown',
+      preset: 'some-community-preset',
+    } as any);
+
+    expect(result.linter).toBeUndefined();
   });
 });

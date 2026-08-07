@@ -1099,24 +1099,53 @@ async function determineStack(
   return stack;
 }
 
-async function determinePresetOptions(
+export async function determinePresetOptions(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<Partial<Arguments>> {
+  // A third-party preset declares its own options, so we cannot know it takes a
+  // linter at all.
+  if (parsedArgs.stack === 'unknown' && !isNxPluginPreset(parsedArgs.preset)) {
+    return parsedArgs;
+  }
+
+  // Resolved here rather than inside each `determine*Options` so that a stack
+  // cannot skip it. Once the schemas stopped defaulting the linter, a stack that
+  // returned none left nothing downstream to supply one, and the workspace was
+  // created unlinted without ever asking.
+  const linter = await determineLinterOptions(parsedArgs);
+
+  // `linter` is spread last so the resolved value wins even where the stack's
+  // own options object carries one. It is threaded in per case rather than
+  // hoisted into one object because `Arguments` is discriminated on `stack`,
+  // which only narrows inside the switch.
   switch (parsedArgs.stack) {
     case 'none':
-      return determineNoneOptions(parsedArgs);
+      return {
+        ...(await determineNoneOptions({ ...parsedArgs, linter })),
+        linter,
+      };
     case 'react':
-      return determineReactOptions(parsedArgs);
+      return {
+        ...(await determineReactOptions({ ...parsedArgs, linter })),
+        linter,
+      };
     case 'angular':
-      return determineAngularOptions(parsedArgs);
+      return {
+        ...(await determineAngularOptions({ ...parsedArgs, linter })),
+        linter,
+      };
     case 'vue':
-      return determineVueOptions(parsedArgs);
+      return {
+        ...(await determineVueOptions({ ...parsedArgs, linter })),
+        linter,
+      };
     case 'node':
-      return determineNodeOptions(parsedArgs);
+      return {
+        ...(await determineNodeOptions({ ...parsedArgs, linter })),
+        linter,
+      };
     default:
-      return isNxPluginPreset(parsedArgs.preset)
-        ? { ...parsedArgs, linter: await determineLinterOptions(parsedArgs) }
-        : parsedArgs;
+      return { ...parsedArgs, linter };
   }
 }
 
