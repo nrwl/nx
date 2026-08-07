@@ -1,6 +1,12 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Checks the PR out only inside an isolated sandbox container, then runs four fixed reviewers: implementation (correctness, errors, types, performance), verification (tests, ticket grounding, comments, and docs), approach, and security. A reproduce-verifier executes a runnable repro only when verification identifies one. The skill saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md and never posts it. Claude reads/executes PR code only through `docker exec`; credentials never enter the sandbox.
+description: >-
+  Deep code review of a single open PR in nrwl/nx. Checks the PR out only inside an isolated
+  sandbox container, then runs four fixed reviewers: implementation (correctness, errors, types,
+  performance), verification (tests, ticket grounding, comments, and docs), approach, and security.
+  A reproduce-verifier executes a runnable repro only when verification identifies one. The skill
+  saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md and never posts it. Claude
+  reads/executes PR code only through `docker exec`; credentials never enter the sandbox.
 allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh pr diff *), Bash(gh issue view *), Bash(gh auth status*), Bash(polygraph whoami *), Bash(polygraph session search *), Bash(polygraph session show *), Bash(uname *), Bash(docker run *), Bash(docker exec *), Bash(docker rm *), Bash(docker ps *), Bash(docker inspect *), Bash(docker info *), Bash(docker images *), Bash(docker build *), Bash(bash tools/review-sandbox/*), Bash(git -C *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(rm -f /tmp/pr-*), Bash(rm -f /tmp/repro-*), Bash(mv /tmp/*), Bash(xargs *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), mcp__plugin_linear_linear__get_issue, mcp__plugin_linear_linear__list_comments, Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
@@ -154,26 +160,34 @@ docker run -d --name "$CONTAINER" $RUNTIME_FLAG \
   --memory 6g --cpus 4 --pids-limit 2048 \
   "$SANDBOX_IMAGE" sleep infinity
 
-# Shallow-fetch this PR's head into /work/nx AND the base ref into /work/base.
-# Both checkouts are created here, up front, so every downstream agent can rely
-# on them existing (the analyzers read base state from /work/base).
+# Keep repository administration in a bare repo, then create HEAD and base as
+# peer worktrees. Neither shared worktree is the privileged "main checkout",
+# so agents can create isolated worktrees without moving either reference tree.
 docker exec "$CONTAINER" bash -lc '
   export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"
   set -e
-  mkdir -p /work/nx && cd /work/nx
-  git init -q && git remote add origin https://github.com/nrwl/nx
-  git fetch -q --depth 1 origin pull/<NUMBER>/head
-  git checkout -q FETCH_HEAD
-  git fetch -q --depth 1 origin <BASE_REF_NAME>
-  git worktree add --detach /work/base "origin/<BASE_REF_NAME>"
-  git rev-parse HEAD          # HEAD_SHA
+  git init -q --bare /work/repo.git
+  git -C /work/repo.git remote add origin https://github.com/nrwl/nx
+  git -C /work/repo.git fetch -q --depth 1 origin \
+    "+pull/<NUMBER>/head:refs/review/head" \
+    "+refs/heads/<BASE_REF_NAME>:refs/review/base"
+  git -C /work/repo.git worktree add -q --detach /work/nx refs/review/head
+  git -C /work/repo.git worktree add -q --detach /work/base refs/review/base
+  mkdir -p /work/mutations
+  git -C /work/nx rev-parse HEAD          # HEAD_SHA
 '
 
-# Install the workspace ONCE, here, before any agent is dispatched. Agents run test
-# suites, mutate sources to prove a test can fail, and execute the repo's own eslint
-# and tsc — all of which need node_modules. Installing on demand instead means several
-# agents racing `pnpm install` in the same directory, which can corrupt node_modules,
-# and gives them whatever versions they happen to pick rather than the repo's pinned ones.
+# Copy in a small trusted helper before dispatch. It accepts only a fixed review
+# ref and path-safe owner name, then ALWAYS prepares the worktree before returning.
+# Keeping this in scripts/ avoids repeating implementation details in agent prompts.
+docker exec -i "$CONTAINER" bash -lc \
+  'cat >/usr/local/bin/nx-review-create-worktree && chmod 0755 /usr/local/bin/nx-review-create-worktree' \
+  < "$(git rev-parse --show-toplevel)/.claude/skills/review-pr/scripts/nx-review-create-worktree"
+
+# Prepare BOTH shared reference worktrees before dispatch. This gives every agent a
+# ready HEAD and base without racing installs. `--frozen-lockfile` is deliberate: a
+# fallback install could rewrite the lockfile in a reference worktree. A failure is a
+# review signal and means agents must stay read-only in that tree.
 # The image bakes the mise toolchain but no node_modules, so nothing is installed until this runs.
 # cwd must sit under a mise.toml or the shims report "No version is set for shim: npm".
 # No `mise trust` needed: the image sets MISE_YES=1, which auto-trusts the PR's mise.toml on first
@@ -183,37 +197,42 @@ docker exec "$CONTAINER" bash -lc '
 # reason that has nothing to do with the PR.
 docker exec "$CONTAINER" bash -lc '
   export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"
-  cd /work/nx
-  mise install >/dev/null 2>&1                    # installs any tool version the PR bumped
-  if   pnpm install --frozen-lockfile >/tmp/install.log 2>&1; then
-    echo "workspace install OK"
-  elif pnpm install >>/tmp/install.log 2>&1; then
-    echo "workspace install OK — but only WITHOUT --frozen-lockfile: the lockfile is out of sync with package.json (a review signal; note it)"
-  else
-    # Print the cause. A bare "FAILED" sends you diagnosing the PR when the fault is usually the
-    # environment, and the log is inside a container that Step 9 destroys.
-    echo "workspace install FAILED — agents cannot run tests or the repo eslint"
-    tail -20 /tmp/install.log
-  fi
+  prepare_worktree() {
+    dir="$1"
+    label="$2"
+    log="/tmp/install-$label.log"
+    cd "$dir"
+    if mise install >"$log" 2>&1 && pnpm install --frozen-lockfile >>"$log" 2>&1; then
+      echo "$label worktree install OK"
+    else
+      echo "$label worktree install FAILED — keep it read-only; do not run tests or repo tooling there"
+      tail -20 "$log"
+      return 1
+    fi
+  }
+
+  head_install=OK
+  base_install=OK
+  prepare_worktree /work/nx head || head_install=FAILED
+  prepare_worktree /work/base base || base_install=FAILED
+  echo "HEAD_INSTALL=$head_install BASE_INSTALL=$base_install"
 '
 ```
 
-This is the slowest step in the skill, but the image ships a warm pnpm store, so it mostly links rather than downloads. It buys correctness as much as speed: one deterministic install instead of N racing ones, at the versions the repo pins. Skip it only for a diff with nothing runnable (docs-only), and say so in the charter so agents don't discover it one failed command at a time.
+This is the slowest step in the skill, but the image ships a warm pnpm store, so both installs mostly link rather than download. It buys correctness as much as speed: deterministic, prepared comparison trees at the versions each ref pins. Do not skip either setup, even for docs-only changes: every worktree created by this skill must run `mise install` and `pnpm install --frozen-lockfile`.
 
 If it is unexpectedly slow, the image predates the warm store — rebuild it via `setup-review-sandbox`.
 
-`/work/base` is deliberately left uninstalled. Only the reproduce-verifier executes base-side, and pnpm's content-addressable store makes that second install cheap when it does.
-
-Use `origin/<BASE_REF_NAME>` here, **not** `FETCH_HEAD`. `FETCH_HEAD` is a per-worktree pseudoref written into the main worktree's git dir, so it is invisible from a linked worktree — any later command that re-points `/work/base` via `FETCH_HEAD` fails, and git compounds it by reinterpreting the unresolvable token as a pathspec (`--detach does not take a path argument`), which points nowhere near the real cause. Remote-tracking refs live in the common git dir and resolve from every worktree.
+The stable `refs/review/head` and `refs/review/base` refs live in `/work/repo.git`, the common git dir. Use them when creating disposable worktrees; never use `FETCH_HEAD`, whose value is fetch-local and easy to overwrite.
 
 Notes:
 
 - **No `-v` host mounts** — the checkout must live only in the container. All caps dropped, no privilege escalation, resources bounded.
 - **Efficiency:** the gh-only close-without-merge signals (Step 4.5, signals 1–4 and 6–8) need no container. For a **first** review, you may run those cheap signals first and only start the container if no strong close signal fired — a superseded/unnecessary PR then costs no sandbox. For a **re-review**, Step 4's incremental diff needs the container, so start it before Step 4. Either way, once created it must be torn down in Step 9.
 - The image carries the repo toolchain (node/java/dotnet/rust/bun via mise) baked from `mise.toml`, and `mise` auto-installs the PR's _pinned_ toolchain on first exec, so in-container execution (repro, builds) works without host help. It bakes **no** `node_modules` — that is what the install step above is for.
-- `tsc` and `eslint` come from the workspace install, so agents get the versions the repo pins rather than an arbitrary latest. Report the install's outcome in the charter (Step 5).
-- **Run every in-container command with cwd inside `/work/nx`.** mise resolves tool versions by walking up from cwd, so a command run from `/tmp` (or any path outside a `mise.toml` tree) fails with `No version is set for shim: npm` even though `node` happens to resolve — a confusing error with nothing to do with the PR.
-- The `--depth 1` PR-head fetch gives the full working tree at HEAD — enough for reading every changed and surrounding file. This step also adds the base ref as a second worktree at `/work/base` in the same container, before any agent is dispatched — one container per PR holds everything. The agents never create, move, or re-point either checkout; they only read them (only the reproduce-verifier also runs things).
+- `tsc` and `eslint` come from the worktree installs, so agents get the versions each ref pins rather than an arbitrary latest. Report both install outcomes in the charter (Step 5).
+- **Run every in-container command with cwd inside the worktree it targets.** mise resolves tool versions by walking up from cwd, so a command run from `/tmp` (or any path outside a `mise.toml` tree) fails with `No version is set for shim: npm` even though `node` happens to resolve — a confusing error with nothing to do with the PR.
+- The `--depth 1` fetch gives full working trees at HEAD and base — enough for reading every changed and surrounding file. `/work/nx` and `/work/base` are shared reference worktrees. Never edit tracked files, apply patches, switch refs, reset, or stash in them.
 - **Read base state from `/work/base`, not from a host clone.** It is fetched fresh from the remote on every run, so it is always the PR's actual base. A maintainer's local clone can be weeks stale, which would silently answer "was this behavior already there?" against the wrong tree — the question calibration 7 exists to settle.
 
 ### The sandbox reading protocol (used by every agent below)
@@ -233,6 +252,22 @@ To **run** anything against the checkout (installs/builds/tests/repro), go throu
 docker exec "$CONTAINER" bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && <CMD>'
 ```
 
+Treat `/work/nx` and `/work/base` as shared references. If an agent must edit tracked files, apply a
+patch, or run a command known to rewrite sources, it must first create its own uniquely named
+detached worktree from the appropriate review ref, then prepare that worktree before touching it:
+
+```bash
+docker exec "$CONTAINER" nx-review-create-worktree <AGENT> head
+```
+
+The helper creates `/work/mutations/<AGENT>` and runs `mise install` followed by
+`pnpm install --frozen-lockfile` before it succeeds. Pass `base` instead of `head` only when the
+experiment must mutate the baseline. One agent owns one path; never share or reuse another agent's
+mutation worktree. Do not mutate the references when a disposable worktree cannot be prepared—report
+that the dynamic check was unavailable instead. Build output and ignored caches from ordinary
+non-rewriting commands are allowed in the reference worktrees; the prohibition is against changes
+to tracked source or refs.
+
 The **diff** — the primary review surface — is fetched host-side (it's public PR info) and written to a host file the agents can `Read` directly:
 
 ```bash
@@ -251,7 +286,7 @@ Write-then-verify-then-move, rather than redirecting straight onto the final pat
 
 If `$TRIAGE_DIR/<NUMBER>.md` already exists and its `verdict` is not `failed`, this is a **re-review** triggered by new commits. Build context for the toolkit so it can be conversational instead of starting fresh.
 
-(If the existing draft's `verdict` is `failed` **and its `## Review draft` body is empty or has no findings**, the prior attempt produced nothing usable — skip this step and review fresh. Do NOT discard it merely because the token says `failed`: since Step 7 now sets `failed` when any single agent fails its EVIDENCE check, a `failed` draft routinely still contains eight agents' worth of real findings, and throwing that away loses the reconciliation this step exists for. The file's history is preserved by Step 8 either way.)
+(If the existing draft's `verdict` is `failed` **and its `## Review draft` body is empty or has no findings**, the prior attempt produced nothing usable — skip this step and review fresh. Do NOT discard it merely because the token says `failed`: since Step 7 now sets `failed` when any single agent fails its EVIDENCE check, a `failed` draft can still contain other reviewers' real findings, and throwing those away loses the reconciliation this step exists for. The file's history is preserved by Step 8 either way.)
 
 1. Read the existing triage file **in full** — the whole `## Review draft` plus every entry under `## Prior reviews`. This is for **you**, the orchestrator: Step 5b reconciliation is explicitly yours to do ("don't dispatch another agent — you already have all the context"), so you need the complete history to sort findings into Addressed / Still concerning / New. Extract:
    - The frontmatter `head_sha` (call it `$PRIOR_SHA`) and `verdict`.
@@ -513,18 +548,23 @@ once, deliberately, before the first `Agent` call.
 
 ### How to do it
 
-1. **Snapshot first.** Copy the tree inside the container (`cp -a /work/nx/packages /snap/packages`)
-   and measure against the snapshot. Agents run concurrently and some mutate `/work/nx` (the test
-   analyzer mutates source deliberately to prove tests can fail); measuring the live checkout makes
-   your result a race.
-2. **Use the workspace install** from Step 3 — `cd /work/nx` first so mise resolves the toolchain.
+1. **Keep the reference worktrees immutable.** Read from `/work/nx` and `/work/base` directly. If
+   the measurement needs to create a harness, edit tracked files, or run source-rewriting tooling,
+   run `docker exec "$CONTAINER" nx-review-create-worktree orchestrator-head head`; the helper
+   creates and prepares `/work/mutations/orchestrator-head`. Use a separately prepared
+   `orchestrator-base base` worktree if the baseline measurement also writes. Never copy or patch
+   files into the shared reference worktrees.
+2. **Use the prepared worktree's install** — `cd` into that worktree first so mise resolves the
+   correct toolchain.
 3. **Prefer the method that reproduces the real build.** For "is this import lazy?", transpile the
    entry module with `tsc --module commonjs` and walk `require()` calls at **column 0** of the emit
    (indented ⇒ inside a function ⇒ lazy). Only TypeScript's own emit applies its real elision rules,
    so a hand-written import parser over-approximates and a grep is simply wrong.
 4. **Measure the comparison points too** — the base (`/work/base`) and, on a re-review, the prior
-   SHA (`git worktree add --detach /work/prior <PRIOR_SHA>`). A number without its baseline cannot
-   answer "is this net-new?", which is calibration 7's question.
+   SHA. If prior needs its own worktree, fetch it into `/work/repo.git`, add a uniquely named
+   `refs/review/prior`, then run `nx-review-create-worktree orchestrator-prior prior`; the helper
+   runs both required setup commands before returning. A number without its baseline cannot answer
+   "is this net-new?", which is calibration 7's question.
 5. **Measure the corollaries each dimension will ask for, not just the headline conclusion.** This is
    what decides whether the step actually suppresses duplication. An agent whose own question sits
    one hop from your conclusion will rebuild the whole harness to answer that hop, and the
@@ -553,12 +593,14 @@ once, deliberately, before the first `Agent` call.
    reproduce-verifier each solved module resolution, each wrote the transpile boilerplate, and
    several each hit the same `cd`-outside-the-mise-tree failure first.
 
-   So: when your measurement needed a harness, save it in the container at a stable path
-   (`/work/nx/<something>-probe.js` — under `/work/nx`, or `require()` cannot resolve workspace
-   modules), make its inputs a parameter rather than a hard-coded list, and give the charter the
-   literal command that runs it.
+   So: when your measurement needed a harness, save it in the prepared orchestrator mutation
+   worktree at a stable path (`/work/mutations/orchestrator-head/<something>-probe.js` — under the
+   worktree, or `require()` cannot resolve workspace modules), make its inputs a parameter rather
+   than a hard-coded list, and give the charter the literal command that runs it. Agents may run
+   that shared rig read-only; if they need to edit it, they copy it into their own prepared mutation
+   worktree first.
 
-   **Reuse the plumbing, never the cases.** The adversarial value of nine agents lives entirely in
+   **Reuse the plumbing, never the cases.** The adversarial value of independent agents lives in
    which inputs each one thinks to try; it lives not at all in who wrote the `ts.transpileModule`
    call. Hand over the loader and the runner; let every agent bring its own matrix. Word the charter
    entry that way explicitly — "here is a rig that executes the shipped code, bring your own inputs"
@@ -589,11 +631,11 @@ the obvious place for this change to break — the shape a reader would reach fo
 tested it and that it held. Otherwise every agent that has the same good instinct spends the same
 tool calls confirming your silence. Observed working: a charter that recorded "the guard-shape
 difference produces no divergence, including the case that difference would most plausibly expose"
-drew zero re-tests from nine agents, while the one measurement left out of the charter was re-derived
+drew zero re-tests from every agent, while the one measurement left out of the charter was re-derived
 by three.
 
-**Never put a conclusion here that you did not personally run.** This section is trusted by nine
-agents at once, so an error in it is nine wrong reviews rather than one.
+**Never put a conclusion here that you did not personally run.** Every reviewer trusts this section,
+so one error fans out across the whole review.
 
 ## Step 5: Run the review toolkit
 
@@ -604,7 +646,7 @@ First, write a review charter at `/tmp/pr-<NUMBER>.review-charter.md` (host-side
 
 ## Where the code is (READ THIS FIRST)
 
-The PR is checked out at `/work/nx` **inside a sandbox container named `nx-review-pr-<NUMBER>`** (base ref at `/work/base`),
+The PR HEAD and base are peer worktrees at `/work/nx` and `/work/base` **inside a sandbox container named `nx-review-pr-<NUMBER>`**,
 NOT on the host filesystem. Your native Read/Grep/Glob tools will NOT find the PR source. Reach it
 only with `docker exec` against that container:
 
@@ -619,21 +661,35 @@ only with `docker exec` against that container:
   the reproduction) MUST go through
   `docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && <cmd>'`.
   Running it bare on the host is a protocol violation.
+- `/work/nx` and `/work/base` are shared reference worktrees. Never edit tracked files, apply a
+  patch, switch refs, reset, or stash in either one. If a check must mutate source—or invokes tooling
+  known to rewrite it—create your assigned `MUTATION_WORKTREE` first:
+
+      docker exec nx-review-pr-<NUMBER> nx-review-create-worktree <AGENT> head
+
+  The helper creates `/work/mutations/<AGENT>` from HEAD and runs `mise install` plus
+  `pnpm install --frozen-lockfile` before returning. Pass `base` only for a baseline mutation. Never
+  create a worktree by hand or borrow another agent's. If setup fails, leave the references untouched
+  and report the dynamic check as unavailable.
 
 ## Toolchain (already installed — do not install your own)
 
-The workspace is installed at `/work/nx`, so `tsc`, `eslint`, `jest` and the repo's own scripts are
-available at the versions the repo pins. Do not install your own copies — you would get different
-versions and could corrupt `node_modules` for the agents running alongside you.
+Both `/work/nx` and `/work/base` are installed, so `tsc`, `eslint`, `jest` and the repo's own scripts
+are available at the versions each ref pins. Do not install your own copies in these shared trees —
+you would get different versions and could corrupt `node_modules` for the agents running alongside
+you. A newly created mutation worktree is the exception: always run its own `mise install` and
+`pnpm install --frozen-lockfile` before using it.
 
-**Always `cd /work/nx` first.** mise resolves tool versions by walking up from cwd, so a command run
-from elsewhere fails with `No version is set for shim: npm` even though `node` resolves:
+**Always `cd` into the target worktree first.** mise resolves tool versions by walking up from cwd,
+so a command run from elsewhere fails with `No version is set for shim: npm` even though `node`
+resolves:
 
     docker exec nx-review-pr-<NUMBER> bash -lc 'cd /work/nx && pnpm --version'
 
-<IF the Step 3 install did not report OK, REPLACE the first paragraph with what actually happened —
-"the workspace install failed, so you cannot run tests or eslint; restrict yourself to reading" —
-rather than leaving agents to discover it one failed command at a time.>
+<IF either Step 3 install did not report OK, REPLACE the first paragraph with the per-worktree
+outcome — for example, "the HEAD install failed, so do not run tests or eslint against HEAD;
+restrict that tree to reading" — rather than leaving agents to discover it one failed command at a
+time.>
 
 ## The problem being solved
 
@@ -689,11 +745,11 @@ the path, the literal command that runs it, and what it does.
 State plainly that the inputs are the agent's to choose — the rig exists so nobody rewrites the
 plumbing, NOT so everyone reuses one case list. Example wording:
 
-    /work/nx/<name>-probe.js executes the SHIPPED implementation (it transpiles the real source;
+    /work/mutations/orchestrator-head/<name>-probe.js executes the SHIPPED implementation (it transpiles the real source;
     it is not a reimplementation). Run it with:
-        docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/nx && node <name>-probe.js'
-    Add your own cases to the matrix at the top. Bring inputs your dimension cares about — the
-    case list already there is mine, not a boundary on yours.
+        docker exec nx-review-pr-<NUMBER> bash -lc 'export PATH="/root/.local/bin:/root/.local/share/mise/shims:$PATH"; cd /work/mutations/orchestrator-head && node <name>-probe.js <inputs>'
+    Supply inputs your dimension cares about without editing this shared rig. If an edit is
+    unavoidable, copy it to your own prepared mutation worktree first.
 
 Also list any expensive setup that is reusable rather than re-creatable: a base-side dependency you
 installed, an extracted tarball, a `/snap` snapshot.>
@@ -710,6 +766,9 @@ installed, an extracted tarball, a `/snap` snapshot.>
   when the block was actually run. Test the _exact shipped bytes_: a clean-room reimplementation
   can pass while the shipped snippet is broken (e.g. a `case` arm that `echo`s FAILED but does not
   `exit` still falls through to the next command).
+- **Isolate source mutation.** If any methodology step needs to edit a tracked file, apply a patch,
+  mutate a test to prove it can fail, or run source-rewriting tooling, create and prepare your
+  assigned `MUTATION_WORKTREE` first. Never perform that experiment in `/work/nx` or `/work/base`.
 - **Trace the whole source→sink path, then sweep same-class siblings.** When an untrusted value
   reaches a dangerous sink, do NOT stop at the sink. Walk every hop the value takes — _including
   how it is assigned or read into a variable_ (a bare `VAR=<untrusted>` is itself a sink; see the
@@ -818,7 +877,8 @@ find yourself with an empty file list, you have the wrong scope — re-read the 
 
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with `Read`; this is what you review)
 - CHANGED FILES: /tmp/pr-<NUMBER>.files  (host file — one path per line; `Read` it)
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
+- CONTAINER: nx-review-pr-<NUMBER>  (HEAD and base are peer worktrees at /work/nx and /work/base inside this sandbox container)
+- MUTATION_WORKTREE: /work/mutations/<AGENT>  (create only if needed; the charter gives the required setup command)
 - BASE_REF: <BASE_REF_NAME>
 <ONLY IF <EVIDENCE_FILE> is the incremental diff, ADD:>
 - FULL DIFF (reference only): /tmp/pr-<NUMBER>.diff — the whole PR against its base. Consult it to
@@ -976,13 +1036,13 @@ Evaluate whether PR <NUMBER> in nrwl/nx takes the right approach to the problem 
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
+- CONTAINER: nx-review-pr-<NUMBER>  (HEAD and base are peer worktrees at /work/nx and /work/base inside this sandbox container)
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
 - FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
 - BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
-Read the CHARTER first. It defines the sandbox-only, read-only protocol and the required proof-of-work block; apply both to findings and endorsements.
+Read the CHARTER first. It defines the sandbox-only reference-worktree protocol and the required proof-of-work block; apply both to findings and endorsements. This agent is read-only and does not need a mutation worktree.
 
 <ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
 Also read `/tmp/pr-<NUMBER>.review-context.md`. It records the caller's one-time check of open and fixed items. Carry those statuses forward; revisit an item only when your own evidence contradicts it.
@@ -1015,13 +1075,14 @@ Review PR <NUMBER> in nrwl/nx for untrusted-input paths, command execution, file
 
 Inputs:
 - PR_NUMBER: <NUMBER>
-- CONTAINER: nx-review-pr-<NUMBER>  (PR checked out at /work/nx inside this sandbox container; base ref at /work/base)
+- CONTAINER: nx-review-pr-<NUMBER>  (HEAD and base are peer worktrees at /work/nx and /work/base inside this sandbox container)
+- MUTATION_WORKTREE: /work/mutations/security-reviewer  (create only if needed; the charter gives the required setup command)
 - REVIEW TARGET: <EVIDENCE_FILE>  (host file — read it with Read; this is what you review)
 - FULL DIFF (reference only, and only when REVIEW TARGET is the incremental diff): /tmp/pr-<NUMBER>.diff
 - CHARTER: /tmp/pr-<NUMBER>.review-charter.md  (host file — sandbox protocol, pre-installed analysis toolchain, established measurements, severity policy, calibrations)
 - BASE_REF: <BASE_REF_NAME>  (checked out at /work/base in the same container — read base state there)
 
-Read the CHARTER first. It defines the sandbox-only, read-only protocol and required proof-of-work block.
+Read the CHARTER first. It defines the sandbox-only reference-worktree protocol and required proof-of-work block.
 
 <ONLY IF Step 4 set $HAS_PRIOR_CONTEXT=true, ADD:>
 Also read `/tmp/pr-<NUMBER>.review-context.md`. It records the caller's one-time check of open and fixed items. Carry those statuses forward; revisit an item only when your own evidence contradicts it.

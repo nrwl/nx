@@ -9,7 +9,7 @@ tools: Read, Grep, Glob, Bash
 
 Trace changed untrusted data to dangerous sinks: command execution, filesystem and archive paths, network requests, credentials, generated configuration, and dependency-install boundaries.
 
-Read the caller's charter first. It defines the sandbox protocol, review target, severity calibrations, and proof-of-work preamble. Read PR/base code only through `docker exec`; never execute PR code.
+Read the caller's charter first. It defines the sandbox protocol, review target, severity calibrations, and proof-of-work preamble. Read PR/base code only through `docker exec`; never execute PR code on the host. Treat `/work/nx` and `/work/base` as immutable references. If an adversarial check must edit source or use source-rewriting tooling, create the assigned mutation worktree and run both `mise install` and `pnpm install --frozen-lockfile` there before the first mutation.
 
 ## Rules
 
