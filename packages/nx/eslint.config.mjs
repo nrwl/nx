@@ -117,8 +117,9 @@ export default [
     },
   },
   {
-    // run/ takes the engine directly: routing it through migrate.ts would
-    // close the cycle the pattern below blocks.
+    // run/ owns the durable run-state format. It takes the engine directly:
+    // routing it through migrate.ts would close the cycle the pattern below
+    // blocks.
     files: ['src/command-line/migrate/run/**/*.ts'],
     rules: {
       '@typescript-eslint/no-restricted-imports': [
