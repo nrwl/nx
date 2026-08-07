@@ -383,20 +383,66 @@ describe('createConfig', () => {
     10000
   );
 
-  it('should reject the "security.allowedHosts" option when @angular/ssr does not support it', async () => {
-    const root = await createSsrProjectRoot('21.1.0');
-    try {
-      await expect(
-        _createConfig({
+  it.each(['20.3.16', '21.0.6', '21.1.0', '21.1.4'])(
+    'should reject the "security.allowedHosts" option when @angular/ssr %s does not support it',
+    async (ssrVersion) => {
+      const root = await createSsrProjectRoot(ssrVersion);
+      try {
+        await expect(
+          _createConfig({
+            ...configBase,
+            root,
+            server: './src/main.server.ts',
+            ssr: { entry: './src/server.ts' },
+            security: { allowedHosts: ['example.com'] },
+          })
+        ).rejects.toThrow(
+          `The "security.allowedHosts" option requires "@angular/ssr" version 21.2.0 or greater, 21.1.5 or greater within 21.1, or 20.3.17 or greater within 20.3. You are currently using version ${ssrVersion}.`
+        );
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it.each(['20.3.17', '21.1.5', '21.2.0'])(
+    'should accept the "security.allowedHosts" option when @angular/ssr %s supports it',
+    async (ssrVersion) => {
+      const root = await createSsrProjectRoot(ssrVersion);
+      try {
+        const configs = await _createConfig({
           ...configBase,
           root,
           server: './src/main.server.ts',
           ssr: { entry: './src/server.ts' },
           security: { allowedHosts: ['example.com'] },
-        })
-      ).rejects.toThrow(
-        'The "security.allowedHosts" option requires "@angular/ssr" version 21.2.0 or greater. You are currently using version 21.1.0.'
-      );
+        });
+
+        const serverExportsRule = findServerExportsRule(configs[1]);
+        expect(serverExportsRule.options.engineWiring).toMatchObject({
+          allowedHosts: ['example.com'],
+        });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
+  it('should ignore an empty "security.allowedHosts" when @angular/ssr does not support the option', async () => {
+    const root = await createSsrProjectRoot('21.1.0');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        security: { allowedHosts: [] },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toBeDefined();
     } finally {
       await rm(root, { recursive: true, force: true });
     }

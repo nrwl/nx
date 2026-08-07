@@ -183,17 +183,22 @@ export async function normalizeOptions(
 
   const hasServer = getHasServer(root, server, normalizedSsr, outputMode);
 
-  if (hasServer && options.security?.allowedHosts) {
+  if (hasServer && options.security?.allowedHosts?.length) {
     // The engine only reads the manifest's allowedHosts from @angular/ssr
-    // 21.2; on older versions the option would be silently ignored.
+    // 21.2 (backported to 20.3.17 and 21.1.5); on older versions the option
+    // would be silently ignored.
     const ssrVersion = getInstalledPackageVersion(root, '@angular/ssr');
     if (ssrVersion) {
-      const [major, minor] = ssrVersion
+      const [major, minor, patch] = ssrVersion
         .split('.')
         .map((part) => parseInt(part, 10));
-      if (major < 21 || (major === 21 && minor < 2)) {
+      const isSupported =
+        major >= 22 ||
+        (major === 21 && (minor >= 2 || (minor === 1 && patch >= 5))) ||
+        (major === 20 && (minor > 3 || (minor === 3 && patch >= 17)));
+      if (!isSupported) {
         throw new Error(
-          `The "security.allowedHosts" option requires "@angular/ssr" version 21.2.0 or greater. You are currently using version ${ssrVersion}.`
+          `The "security.allowedHosts" option requires "@angular/ssr" version 21.2.0 or greater, 21.1.5 or greater within 21.1, or 20.3.17 or greater within 20.3. You are currently using version ${ssrVersion}.`
         );
       }
     }
