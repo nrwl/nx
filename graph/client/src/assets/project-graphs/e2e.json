@@ -1189,111 +1189,27 @@
           }
         ],
         "targets": {
-          "lint": {
-            "cache": true,
-            "options": {
-              "cwd": "apps/cart-e2e",
-              "command": "eslint ."
-            },
-            "inputs": [
-              "default",
-              "^default",
-              "{workspaceRoot}/.eslintrc.json",
-              "{projectRoot}/.eslintrc.json",
-              "{workspaceRoot}/tools/eslint-rules/**/*",
-              {
-                "externalDependencies": ["eslint"]
-              }
-            ],
-            "executor": "nx:run-commands",
-            "configurations": {}
-          },
           "e2e": {
-            "cache": true,
-            "inputs": ["default", "^production"],
-            "outputs": [
-              "{workspaceRoot}/dist/cypress/apps/cart-e2e/videos",
-              "{workspaceRoot}/dist/cypress/apps/cart-e2e/screenshots"
-            ],
-            "metadata": {
-              "technologies": ["cypress"],
-              "description": "Runs Cypress Tests"
-            },
-            "executor": "nx:run-commands",
+            "executor": "@nrwl/cypress:cypress",
             "options": {
-              "cwd": "apps/cart-e2e",
-              "command": "cypress run"
+              "cypressConfig": "apps/cart-e2e/cypress.config.ts",
+              "devServerTarget": "cart:serve",
+              "testingType": "e2e"
             },
-            "configurations": {}
-          },
-          "e2e-ci--src/e2e/app.cy.ts": {
-            "outputs": [
-              "{workspaceRoot}/dist/cypress/apps/cart-e2e/videos",
-              "{workspaceRoot}/dist/cypress/apps/cart-e2e/screenshots"
-            ],
-            "inputs": [
-              "default",
-              "^production",
-              {
-                "externalDependencies": ["cypress"]
+            "configurations": {
+              "production": {
+                "devServerTarget": "cart:serve:production"
               }
-            ],
-            "cache": true,
+            },
+            "inputs": ["default", "^production"]
+          },
+          "lint": {
+            "executor": "@nrwl/linter:eslint",
             "options": {
-              "cwd": "apps/cart-e2e",
-              "command": "cypress run --env webServerCommand=\"nx run cart:serve\" --spec src/e2e/app.cy.ts"
+              "lintFilePatterns": ["apps/cart-e2e/**/*.{ts,tsx,js,jsx}"]
             },
-            "metadata": {
-              "technologies": ["cypress"],
-              "description": "Runs Cypress Tests in src/e2e/app.cy.ts in CI"
-            },
-            "executor": "nx:run-commands",
-            "configurations": {}
-          },
-          "e2e-ci": {
-            "executor": "nx:noop",
-            "cache": true,
-            "inputs": [
-              "default",
-              "^production",
-              {
-                "externalDependencies": ["cypress"]
-              }
-            ],
-            "outputs": [
-              "{workspaceRoot}/dist/cypress/apps/cart-e2e/videos",
-              "{workspaceRoot}/dist/cypress/apps/cart-e2e/screenshots"
-            ],
-            "dependsOn": [
-              {
-                "target": "e2e-ci--src/e2e/app.cy.ts",
-                "projects": "self",
-                "params": "forward"
-              }
-            ],
-            "metadata": {
-              "technologies": ["cypress"],
-              "description": "Runs Cypress Tests in CI"
-            },
-            "options": {},
-            "configurations": {}
-          },
-          "open-cypress": {
-            "options": {
-              "cwd": "apps/cart-e2e",
-              "command": "cypress open"
-            },
-            "metadata": {
-              "technologies": ["cypress"],
-              "description": "Opens Cypress"
-            },
-            "executor": "nx:run-commands",
-            "configurations": {}
-          }
-        },
-        "metadata": {
-          "targetGroups": {
-            "E2E (CI)": ["e2e-ci--src/e2e/app.cy.ts", "e2e-ci"]
+            "outputs": ["{options.outputFile}"],
+            "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
           }
         }
       }
@@ -1900,10 +1816,6 @@
       },
       {
         "source": "cart",
-        "type": "static"
-      },
-      {
-        "source": "cart",
         "target": "shared-header",
         "type": "static"
       },
@@ -1921,5 +1833,6 @@
   "affected": [],
   "focus": null,
   "groupByFolder": false,
+  "fileMap": {},
   "exclude": []
 }
