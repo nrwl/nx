@@ -309,7 +309,11 @@ to = "/docs/kb/creating-files"
 
 [[redirects]]
 from = "/docs/extending-nx/intro"
-to = "/docs/kb/intro"
+to = "/docs/kb/create-a-plugin"
+
+[[redirects]]
+from = "/docs/kb/intro"
+to = "/docs/kb/create-a-plugin"
 
 [[redirects]]
 from = "/docs/extending-nx/local-executors"
@@ -337,11 +341,11 @@ to = "/docs/kb/performant-project-graph-plugins"
 
 [[redirects]]
 from = "/docs/extending-nx/project-graph-plugins"
-to = "/docs/features/multi-language-support"
+to = "/docs/kb/create-a-plugin"
 
 [[redirects]]
 from = "/docs/kb/project-graph-plugins"
-to = "/docs/features/multi-language-support"
+to = "/docs/kb/create-a-plugin"
 
 [[redirects]]
 from = "/docs/extending-nx/publish-plugin"
@@ -353,7 +357,11 @@ to = "/docs/kb/task-running-lifecycle"
 
 [[redirects]]
 from = "/docs/extending-nx/tooling-plugin"
-to = "/docs/kb/tooling-plugin"
+to = "/docs/kb/create-a-plugin"
+
+[[redirects]]
+from = "/docs/kb/tooling-plugin"
+to = "/docs/kb/create-a-plugin"
 
 [[redirects]]
 from = "/docs/guides/comparisons/nx-vs-bazel"
