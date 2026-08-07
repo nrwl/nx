@@ -10,13 +10,15 @@
 import { transformFromPromise } from 'ng-packagr/src/lib/graph/transform';
 import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import {
+  byEntryPoint,
   isEntryPointInProgress,
   isPackage,
 } from 'ng-packagr/src/lib/ng-package/nodes';
 import type { NgPackagrOptions } from 'ng-packagr/src/lib/ng-package/options.di';
 import { NgPackage } from 'ng-packagr/src/lib/ng-package/package';
+import { ensureUnixPath } from 'ng-packagr/src/lib/utils/path';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { dirname, join, normalize } from 'node:path';
+import { dirname, join, normalize, relative, resolve } from 'node:path';
 import { createNgEntryPoint, type NgEntryPointType } from './entry-point';
 
 async function shouldWriteFile(
@@ -43,16 +45,37 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
     entryPointNode.data.entryPoint = entryPoint;
     entryPointNode.data.destinationFiles = entryPoint.destinationFiles;
 
+    // ngc builds the flat module file in memory and never writes it to disk, so
+    // the declaration map emitted for it points at a source that doesn't exist.
+    const flatModuleDeclarations = normalize(
+      entryPointNode.data.destinationFiles.declarations
+    );
+    const flatModuleDeclarationsMap = `${flatModuleDeclarations}.map`;
+
     for (const [
       path,
       outputCache,
     ] of entryPointNode.cache.outputCache.entries()) {
+      const originalPath = normalize(path);
+      if (originalPath === flatModuleDeclarationsMap) {
+        continue;
+      }
+
       const normalizedPath = normalizeEsm2022Path(path, entryPoint);
+      let content = outputCache.content;
+      if (originalPath === flatModuleDeclarations) {
+        // its declaration map is dropped above, so don't leave a reference behind
+        content = removeSourceMappingUrl(content);
+      } else if (normalizedPath.endsWith('.d.ts.map')) {
+        // Declaration maps under tmp-typings land one directory up, so their
+        // source paths need rebasing; maps that don't move are left untouched.
+        content = remapDeclarationMapSources(path, normalizedPath, content);
+      }
 
       // Only write if content has changed
-      if (await shouldWriteFile(normalizedPath, outputCache.content)) {
+      if (await shouldWriteFile(normalizedPath, content)) {
         await mkdir(dirname(normalizedPath), { recursive: true });
-        await writeFile(normalizedPath, outputCache.content);
+        await writeFile(normalizedPath, content);
       }
     }
     if (
@@ -62,8 +85,22 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
       await mkdir(entryPoint.destinationPath, { recursive: true });
     }
 
-    // Update package node only when processing the primary entry point
+    // Adjust the remaining entry points and the package node once the primary
+    // one is reached
     if (!entryPoint.isSecondaryEntryPoint) {
+      // the package manifest maps every entry point and is written while the
+      // primary one is in progress, so the rest need their destination files
+      // adjusted by now even though they may not have been processed yet
+      for (const node of graph.filter(byEntryPoint())) {
+        if (node === entryPointNode) {
+          continue;
+        }
+
+        const nodeEntryPoint = toCustomNgEntryPoint(node.data.entryPoint);
+        node.data.entryPoint = nodeEntryPoint;
+        node.data.destinationFiles = nodeEntryPoint.destinationFiles;
+      }
+
       const packageNode = graph.find(isPackage);
       if (packageNode) {
         packageNode.data = new NgPackage(
@@ -77,6 +114,46 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
     }
   });
 };
+
+export function removeSourceMappingUrl(content: string): string {
+  return content.replace(/\/\/# sourceMappingURL=[^\r\n]*\s*$/, '');
+}
+
+export function remapDeclarationMapSources(
+  originalPath: string,
+  newPath: string,
+  content: string
+): string {
+  const originalDir = dirname(normalize(originalPath));
+  const newDir = dirname(normalize(newPath));
+  if (originalDir === newDir) {
+    return content;
+  }
+
+  let map: { sources?: unknown; sourceRoot?: unknown };
+  try {
+    map = JSON.parse(content);
+  } catch {
+    return content;
+  }
+  if (!map || typeof map !== 'object' || !Array.isArray(map.sources)) {
+    return content;
+  }
+  // ng-packagr forces `sourceRoot: ''`, so sources are relative to the map file.
+  // A non-empty root is prepended to each source, so the entries are not plain
+  // map-relative paths and rebasing them on their own would be wrong.
+  if (map.sourceRoot) {
+    return content;
+  }
+
+  map.sources = map.sources.map((source) =>
+    typeof source === 'string'
+      ? ensureUnixPath(relative(newDir, resolve(originalDir, source)))
+      : source
+  );
+
+  return JSON.stringify(map);
+}
 
 function normalizeEsm2022Path(
   path: string,
