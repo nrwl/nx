@@ -1027,7 +1027,7 @@ function collectPrunedLinkTargetDirs(
  *   snapshot ref) -> the target directory tree.
  * `node_modules` is filtered from every directory copy; a symlink inside a
  * shipped tree is skipped with a warning, while a symlinked root ships when it
- * resolves inside the workspace; entries are deduped by destination. A source
+ * resolves under the workspace root; entries are deduped by destination. A source
  * that resolves outside the workspace root, or is missing on disk, is skipped
  * with a warning (it is not reproducibly deployable). Returns source paths rather than
  * bytes so the file-writing prune paths can copy without buffering whole trees;
@@ -1086,10 +1086,12 @@ export function getPrunedPnpmLocalPathArtifacts(
       );
       return null;
     }
-    if (
-      resolvedSource !== workspaceRootRealPath &&
-      !resolvedSource.startsWith(`${workspaceRootRealPath}${sep}`)
-    ) {
+    // Shipping the root itself would copy the whole workspace into the output.
+    if (resolvedSource === workspaceRootRealPath) {
+      warnUnshippableLocalPathSpec(`"${origin}"`, 'workspace-root');
+      return null;
+    }
+    if (!resolvedSource.startsWith(`${workspaceRootRealPath}${sep}`)) {
       logger.warn(
         `Local-path dependency "${origin}" resolves to ${resolvedSource}, outside the workspace root, and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
       );
