@@ -29,17 +29,15 @@ Page: {pageUrl}
 
 `nx init` reads your `turbo.json` and writes the equivalent `nx.json`. Your `package.json` scripts stay as they are, and Nx runs them through the package manager you already use.
 
-Package-specific task overrides, per-package `turbo.json` files, long-running tasks, and task-level environment variables don't convert. Steps 3 through 5 handle each one.
-
 ## Why switch to Nx
 
 Nx runs the same scripts, so what you gain is the work Turborepo leaves to you.
 
 Polyglot workspaces are the clearest gap. First-party plugins for [Maven](/docs/technologies/java/maven/introduction), [Gradle](/docs/technologies/java/gradle/introduction), and [.NET](/docs/technologies/dotnet/introduction) put those projects in the same graph as your JavaScript packages, and community plugins cover [Python](https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python), [Rust](https://github.com/cammisuli/monodon/tree/main/packages/rust), and [Go](https://github.com/naxodev/oss/tree/main/packages/gonx). Turborepo can wrap any CLI in a `package.json` script, and an experimental flag teaches it Cargo workspaces, but outside those it builds no dependency graph, so a Go service and the app calling it stay islands.
 
-CI is the other. Turborepo scales past one machine through manual binning, where you assign tasks to runners by hand and rebalance as the workspace grows. Nx Agents distributes at the task level using historical timings, which on one workspace across four machines ran 9m 20s against Turborepo's 19m 18s. Nx Cloud also splits e2e suites by file, re-runs flaky tasks, and runs an agent that diagnoses and fixes broken tasks on CI.
+CI is the other gap. Turborepo scales past one machine through manual binning, where you assign tasks to runners by hand and rebalance as the workspace grows, while Nx Agents distributes at the task level using historical timings. On one workspace across four machines that was 9m 20s against Turborepo's 19m 18s. Nx Cloud also splits e2e suites by file, re-runs flaky tasks, and runs an agent that diagnoses and fixes broken tasks on CI.
 
-Two smaller ones. Task sandboxing, which Turborepo has no equivalent for, surfaces the files a task read or wrote without declaring them, so a cache hit means what it says. Generators run as code against the project graph and do AST-level transforms rather than filling in templates.
+Two smaller differences. Task sandboxing surfaces the files a task read or wrote without declaring them, and Turborepo has no equivalent. Generators run as code against the project graph and do AST-level transforms rather than filling in templates.
 
 For the full comparison, see [Nx vs Turborepo](/docs/kb/nx-vs-turborepo).
 
@@ -159,15 +157,16 @@ In Nx, a `targetDefaults` key holds either a plain object or an ordered array of
 }
 ```
 
-The unfiltered entry is the baseline that every `build` target gets. Filtered entries apply on top, in document order, so a later entry overrides an earlier one.
+The unfiltered entry is the baseline that every `build` target gets, and filtered entries apply on top in document order. `web` keeps `dependsOn` and `cache` from the baseline, and its `outputs` replace the baseline `outputs`. Two consequences are worth knowing before you write more entries:
 
-The override is per key, and a key that appears in a filtered entry replaces the baseline value outright. It does not merge into it. Above, `web` keeps `dependsOn` and `cache` from the baseline while its `outputs` replace the baseline `outputs`, which is what you want here. Arrays behave the same way, so a filtered entry that sets `inputs` drops every baseline input rather than appending to them. Re-list the baseline inputs in the filtered entry whenever you add one.
+- A key set in a filtered entry replaces the baseline value rather than merging into it, arrays included. A filtered entry that sets `inputs` drops every baseline input, so re-list them.
+- Turborepo resolves the other direction. A `web#build` entry replaces the generic `build` for that package, so keys it omits fall back to Turborepo's defaults rather than to your generic entry. Spell out the keys that matter, usually `env`.
 
-Turborepo and Nx disagree on the rest of the semantics, and the difference is easy to miss. A `web#build` entry replaces the generic `build` definition for that package, so keys it leaves out fall back to Turborepo's defaults. The Nx equivalent inherits those keys from the baseline entry instead. Where that matters, usually with `env`, spell the keys out in the filtered entry rather than relying on either fallback.
+The [target defaults reference](/docs/reference/nx-json#target-defaults) covers the resolution rules in full.
 
 A per-package `turbo.json` gets the same treatment. Its task config becomes one more filtered entry keyed to that project, and the file itself goes away in step 8.
 
-Do not scope by project name when the rule covers several packages. `filter.projects` also accepts directory patterns such as `apps/*`, name globs, and negation with `!`:
+Scope by directory rather than by project name when the rule covers several packages. `filter.projects` also accepts directory patterns such as `apps/*`, name globs, and negation with `!`:
 
 ```json
 // nx.json
@@ -184,7 +183,7 @@ Do not scope by project name when the rule covers several packages. `filter.proj
 }
 ```
 
-Name globs only help when the names share a prefix, which package names in a `create-turbo` workspace usually do not. Directory patterns are the ones that tend to fit. Tags work too, once the projects carry them, and you set those in each project's [configuration](/docs/reference/project-configuration#tags) rather than in `nx.json`. `filter.plugin` and `filter.executor` narrow by what created the target rather than by project. The [target defaults reference](/docs/reference/nx-json#target-defaults) lists every field.
+Name globs need a shared prefix, which package names in a `create-turbo` workspace rarely have. Tags work once the projects carry them, and you set those in each project's [configuration](/docs/reference/project-configuration#tags) rather than in `nx.json`. `filter.plugin` and `filter.executor` narrow by what created the target rather than by project.
 
 Confirm the scoping in both directions before moving on. Check a project the filter should hit, then one it should not:
 
@@ -209,7 +208,7 @@ nx show project docs
 }
 ```
 
-Nx uses the flag for more than bookkeeping. A task that depends on a continuous task starts as soon as the server it needs is up, rather than waiting for a process that never exits, which is how you express "run the e2e suite against the dev server" as a task dependency.
+Nx uses the flag for more than bookkeeping. A task that depends on a continuous task starts as soon as the server it needs is up, rather than waiting for a process that never exits. That is how you express "run the e2e tests against the dev server" as a task dependency.
 
 ## 5. Carry over task-level environment variables
 
@@ -236,9 +235,9 @@ Turborepo's `passThroughEnv` and `globalPassThroughEnv` have no counterpart, bec
 
 {% aside type="caution" title="Re-attach sharedGlobals to any target that declares inputs" %}
 
-`nx init` converts `globalEnv` and `globalDependencies` into a `sharedGlobals` named input and references it from `default`. Targets reach it through that fallback, and a target that declares its own `inputs` does not use the fallback. Every turbo task that had an `inputs` list comes out of the conversion with an explicit `inputs` array that omits `sharedGlobals`, so your globals stop invalidating exactly those targets.
+`nx init` converts `globalEnv` and `globalDependencies` into a `sharedGlobals` named input that targets pick up through `default`. A target with its own `inputs` never reads `default`, so every turbo task that had an `inputs` list loses those globals.
 
-Turborepo hashes `globalEnv` and `globalDependencies` into every task, so the cache gets quietly weaker at this point unless you add the reference back:
+Turborepo hashes them into every task. Add the reference back so those targets keep invalidating the same way:
 
 ```json
 // nx.json
@@ -292,7 +291,7 @@ Then connect the workspace so CI and your team share one cache:
 nx connect
 ```
 
-Remote caching on Nx Cloud is the direct replacement for Turborepo's Remote Cache. [Distributing tasks across agents](/docs/features/ci-features/distribute-task-execution) and [splitting e2e runs by file](/docs/features/ci-features/split-e2e-tasks) are the parts with no Turborepo equivalent, and they matter more than the cache once the workspace is large. The [CI setup guide](/docs/getting-started/setup-ci) walks through a full pipeline.
+Remote caching on Nx Cloud is the direct replacement for Turborepo's Remote Cache. [Distributing tasks across agents](/docs/features/ci-features/distribute-task-execution) and [splitting e2e runs by file](/docs/features/ci-features/split-e2e-tasks) have no Turborepo equivalent, and they speed up the runs a cache cannot help with, such as a change to a shared package. The [CI setup guide](/docs/getting-started/setup-ci) walks through a full pipeline.
 
 ## 8. Remove Turborepo
 
@@ -310,19 +309,34 @@ Once CI is green on Nx, delete the root `turbo.json` and any package-level ones,
 }
 ```
 
-The root scripts are the obvious references. The ones that break are further down, so sweep for the rest before you commit:
+The references that break are the ones below the root, so search the workspace before you commit:
+
+{% tabs %}
+{% tabitem label="macOS / Linux" %}
 
 ```shell
-grep -rn "turbo" --include=package.json --include="*.js" --include="*.mjs" . | grep -v node_modules
+grep -rn turbo --include=package.json --include="*.js" --include="*.mjs" . | grep -v node_modules
 ```
 
-A `create-turbo` workspace ships two that this catches. `packages/ui` runs `turbo gen react-component`, which is a script in a package rather than at the root, and it fails the moment the dependency goes. Port it to a [generator](/docs/features/generate-code). The shared ESLint config also depends on `eslint-plugin-turbo` for a rule that reads the `turbo.json` you deleted, so drop both.
+{% /tabitem %}
+{% tabitem label="Windows" %}
+
+```powershell
+Get-ChildItem -Recurse -Include package.json,*.js,*.mjs |
+  Where-Object { $_.FullName -notmatch 'node_modules' } |
+  Select-String turbo
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+A `create-turbo` workspace ships two that this catches. `packages/ui` runs `turbo gen react-component`, a script in a package rather than at the root, and it fails the moment the dependency goes. Port it to a [generator](/docs/features/generate-code). The shared ESLint config depends on `eslint-plugin-turbo` for a rule that reads the `turbo.json` you deleted, so drop both.
 
 ## Additional considerations
 
 ### Let plugins infer your tasks
 
-The migration above keeps every task defined by a `package.json` script, which is how Turborepo works and is a perfectly good way to run an Nx workspace.
+The migration above keeps every task defined by a `package.json` script. That is how Turborepo works, and it runs an Nx workspace fine.
 
 Nx can also derive tasks from the tools you already configured. Add [`@nx/vite`](/docs/technologies/build-tools/vite) and a package with a `vite.config.ts` gets a `build` target whose inputs and outputs are read from that config, with no script and no `targetDefaults` entry to maintain. The same applies to Jest, Playwright, ESLint, Cypress, Gradle, and others. That removes the class of cache bug where a tool's output directory changes and the config that lists it does not.
 
