@@ -2169,6 +2169,81 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    describe('reporting a credential pnpm would not send', () => {
+      function warnFor(version: string, pkg = 'is-even'): jest.Mock {
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh(pkg, root, version);
+        });
+        return logger.warn as jest.Mock;
+      }
+
+      it('reports the one withheld from an entry holding an env reference', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeFileSync(
+          join(root, '.npmrc'),
+          '//reg-a.example.com/:_authToken=${NX_TEST_TOKEN}\n'
+        );
+        process.env.NX_TEST_TOKEN = 'a-token';
+        // 11.5.2 expands it, so pnpm sends the same credential npm does.
+        expect(warnFor('11.5.2')).not.toHaveBeenCalled();
+        expect(warnFor('11.5.3').mock.calls[0][0]).toMatch(
+          /npm will send the credential your .npmrc holds for \/\/reg-a.example.com\/ .*pnpm would not send it/s
+        );
+      });
+
+      it('reports the one in the .npmrc a nested workspace hides from pnpm', () => {
+        // pnpm reads the .npmrc beside the outer workspace file; npm opens the
+        // inner one, which carries a credential pnpm never saw.
+        const nested = join(root, 'nested');
+        mkdirSync(nested, { recursive: true });
+        writeYaml(
+          'packages:\n  - "nested"\nregistries:\n  default: https://reg-a.example.com/\n'
+        );
+        writeFileSync(
+          join(nested, '.npmrc'),
+          '//reg-a.example.com/:_authToken=inner-token\n'
+        );
+        const { logger } = require('../logger');
+        (logger.warn as jest.Mock).mockClear();
+        jest.isolateModules(() => {
+          const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+          fresh('is-even', nested, '11.5.0');
+        });
+        expect((logger.warn as jest.Mock).mock.calls[0][0]).toMatch(
+          /pnpm would not send it/
+        );
+      });
+
+      it('stays quiet when pnpm reads that credential too', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        writeFileSync(
+          join(root, '.npmrc'),
+          '//reg-a.example.com/:_authToken=a-token\n'
+        );
+        expect(warnFor('11.5.3')).not.toHaveBeenCalled();
+        expect(warnFor('10.16.0')).not.toHaveBeenCalled();
+      });
+
+      it('stays quiet for an ambient credential the 10.x line reads for itself', () => {
+        writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+        process.env['npm_config_//reg-a.example.com/:_authToken'] = 'env-token';
+        expect(warnFor('10.16.0')).not.toHaveBeenCalled();
+      });
+
+      it('stays quiet where npm resolved the registry for itself', () => {
+        // Nothing was bridged, so npm is using its own resolution and the
+        // credentials that come with it, as it does outside migrate.
+        writeFileSync(
+          join(root, '.npmrc'),
+          'registry=https://reg-a.example.com/\n//reg-a.example.com/:_authToken=a-token\n'
+        );
+        expect(warnFor('11.5.3')).not.toHaveBeenCalled();
+      });
+    });
+
     describe('token helpers', () => {
       // pnpm runs the command and sends what it prints (verified on 11.9.0). npm has
       // no equivalent setting.
@@ -2923,6 +2998,7 @@ describe('getPnpmSpawnRegistryEnv', () => {
           npm_config_noproxy: 'g.example.com',
         });
       });
+
       it('expands a request destination there, which pnpm trusts this file for', () => {
         process.env.NX_TEST_HOST = 'reg-env.example.com';
         writeGlobalConfigYaml(
