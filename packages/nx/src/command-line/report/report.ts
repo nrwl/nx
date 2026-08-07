@@ -41,6 +41,7 @@ import {
 } from '../../tasks-runner/cache';
 import { daemonClient } from '../../daemon/client/client';
 import { readNxPackageGroup } from '../../utils/nx-package-group';
+import { getMissingNativePackage } from '../../native/native-package-resolution';
 
 const nxPackageJson = readJsonFile<NxPackageJson>(
   require.resolve('nx/package.json')
@@ -86,6 +87,7 @@ export async function reportHandler() {
     mismatchedNxVersions,
     projectGraphError,
     nativeTarget,
+    nativeRuntime,
     cache,
     daemon,
   } = await getReportData();
@@ -94,6 +96,7 @@ export async function reportHandler() {
     ['Node', process.versions.node],
     ['OS', `${process.platform}-${process.arch}`],
     ['Native Target', nativeTarget ?? 'Unavailable'],
+    ['Native runtime', nativeRuntime ?? 'Unavailable'],
     [pm, pmVersion],
     [
       'daemon',
@@ -309,6 +312,7 @@ export interface ReportData {
   }>;
   projectGraphError?: Error | null;
   nativeTarget: string | null;
+  nativeRuntime: string | null;
   cache: {
     max: number;
     used: number;
@@ -443,6 +447,7 @@ export async function getReportData(): Promise<ReportData> {
     mismatchedNxVersions,
     projectGraphError,
     nativeTarget: native ? native.getBinaryTarget() : null,
+    nativeRuntime: native ? getNativeRuntime(native.IS_WASM) : null,
     cache,
     daemon: await getDaemonStatus(),
   };
@@ -597,6 +602,15 @@ export function findInstalledPackagesWeCareAbout() {
     package: pkg,
     version,
   }));
+}
+
+function getNativeRuntime(isWasm: boolean): string {
+  if (!isWasm) {
+    return 'native';
+  }
+  // Only name a package when it is genuinely absent; WASM is expected where the binary cannot load.
+  const missing = getMissingNativePackage();
+  return missing ? `wasm (missing ${missing})` : 'wasm';
 }
 
 function isNativeAvailable(): typeof import('../../native') | false {

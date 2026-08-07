@@ -15,7 +15,7 @@
       "inputs": ["native"],
       "outputs": [
         "{projectRoot}/src/native/*.wasm",
-        "{projectRoot}/src/native/!(index|browser).js",
+        "{projectRoot}/src/native/!(index|browser|wasm-fallback-warning).js",
         "{projectRoot}/src/native/*.cjs",
         "{projectRoot}/src/native/*.mjs",
         "{projectRoot}/src/native/index.d.ts"
@@ -32,7 +32,7 @@
       "outputs": [
         "{projectRoot}/src/native/*.node",
         "{projectRoot}/src/native/*.wasm",
-        "{projectRoot}/src/native/!(index|browser).js",
+        "{projectRoot}/src/native/!(index|browser|wasm-fallback-warning).js",
         "{projectRoot}/src/native/index.d.ts"
       ],
       "executor": "@monodon/rust:napi",
