@@ -74,14 +74,22 @@ export async function getServerConfig(
             .join(posix.sep),
           indexOutputName: normalizedOptions.index?.output,
           supportedLocales: { [i18n.sourceLocale]: '' },
-          // The engine rejects every request when its allowlist is empty, so
-          // serving must allow the dev-server hosts instead of the
+          // An empty allowlist matches no host: since @angular/ssr 22 the
+          // engine rejects every request, older versions fall back to CSR.
+          // Serving must allow the dev-server hosts instead of the
           // production allowlist.
           allowedHosts: isDevServer
             ? getServeModeAllowedHosts(normalizedOptions.devServer)
             : (normalizedOptions.security?.allowedHosts ?? []),
+          ...(isDevServer &&
+          devServerDisablesHostCheck(normalizedOptions.devServer)
+            ? { disableHostCheck: true }
+            : {}),
         }
       : undefined;
+  if (engineWiring?.disableHostCheck) {
+    warnIfEngineHostCheckNotDisableable(root);
+  }
   let engineManifestPlugin: EngineManifestPlugin | undefined;
   // Virtual modules require rspack 1.5, probed on the workspace's own
   // @rspack/core: the copy that runs the build, which can differ from this
@@ -196,17 +204,16 @@ function installedRspackSupportsVirtualModules(root: string): boolean {
 function getServeModeAllowedHosts(
   devServer: NormalizedDevServerOptions
 ): string[] {
-  const allowedHosts =
-    devServer.disableHostCheck || devServer.allowedHosts === true
-      ? ['*']
-      : Array.isArray(devServer.allowedHosts)
-        ? // The dev server matches a leading-dot entry against the apex and
-          // its subdomains; the engine's '*.' form only matches subdomains,
-          // so emit both.
-          devServer.allowedHosts.flatMap((host) =>
-            host.startsWith('.') ? [host.slice(1), `*${host}`] : [host]
-          )
-        : [];
+  const allowedHosts = devServerDisablesHostCheck(devServer)
+    ? ['*']
+    : Array.isArray(devServer.allowedHosts)
+      ? // The dev server matches a leading-dot entry against the apex and
+        // its subdomains; the engine's '*.' form only matches subdomains,
+        // so emit both.
+        devServer.allowedHosts.flatMap((host) =>
+          host.startsWith('.') ? [host.slice(1), `*${host}`] : [host]
+        )
+      : [];
   return Array.from(
     new Set([
       ...allowedHosts,
@@ -220,4 +227,33 @@ function getServeModeAllowedHosts(
       devServer.host,
     ])
   );
+}
+
+function devServerDisablesHostCheck(
+  devServer: NormalizedDevServerOptions
+): boolean {
+  return !!devServer.disableHostCheck || devServer.allowedHosts === true;
+}
+
+// Host validation exists from @angular/ssr 20.3.17 / 21.1.5 / 21.2.0, but
+// the engine can only skip it from 20.3.25 / 21.2.1
+// (`ɵdisableAllowedHostsCheck`; a literal '*' entry works from 21.2.4): in
+// between, no mechanism disables the check.
+function warnIfEngineHostCheckNotDisableable(root: string): void {
+  const version = getInstalledPackageVersionFromRoot(root, '@angular/ssr');
+  if (!version) {
+    return;
+  }
+  const [major, minor, patch] = version
+    .split('.')
+    .map((part) => parseInt(part, 10));
+  const cannotDisable =
+    (major === 20 && minor === 3 && patch >= 17 && patch < 25) ||
+    (major === 21 && minor === 1 && patch >= 5) ||
+    (major === 21 && minor === 2 && patch === 0);
+  if (cannotDisable) {
+    console.warn(
+      `The dev-server host check is disabled, but the installed "@angular/ssr" version (${version}) cannot disable the application engine host validation. Requests from hosts not listed in "devServer.allowedHosts" are rejected with a 400 response. Upgrade "@angular/ssr" to version 21.2.1 or greater, or 20.3.25 or greater within 20.3, to fully disable the check.`
+    );
+  }
 }
