@@ -313,6 +313,12 @@ Controls build optimization settings for scripts, styles, and fonts.
 `OutputHashing` `default: 'none'`
 Defines the hashing strategy for output files. Can be 'none', 'all', 'media', or 'bundles'.
 
+### outputMode
+
+`'server' | 'static'`
+Defines the build output target for server-side rendered applications.
+Only 'server' is currently supported; 'static' (build-time prerendering of the full application) is rejected.
+
 ### outputPath
 
 `string | OutputPath`
@@ -332,6 +338,13 @@ The root directory of the project where the rspack.config.ts file is located.
 
 `ScriptOrStyleEntry[]`
 Array of global scripts to include in the build, with options for bundling and injection.
+
+### security
+
+`{ allowedHosts?: string[]; autoCsp?: boolean | { unsafeEval?: boolean } }`
+Security features for the server-side application.
+`allowedHosts` lists the hostnames the `@angular/ssr` application engine accepts; it requires `@angular/ssr` version 21.2.0 or greater (also backported to 20.3.17 and 21.1.5).
+`autoCsp` is not supported yet and is rejected.
 
 ### server
 
