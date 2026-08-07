@@ -7,7 +7,7 @@ import {
   type SpawnSyncOptions,
 } from 'child_process';
 import { existsSync } from 'fs';
-import { join, relative } from 'path';
+import { dirname, join, relative } from 'path';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -16,7 +16,7 @@ import {
 import { workspaceRoot, workspaceRootInner } from './workspace-root';
 import { ChildProcess } from '../native';
 import { messageToCode } from './exit-codes';
-import { getNxRequirePaths } from './installation-directory';
+import { readJsonFile } from './fileutils';
 import { quoteShellArg } from './shell-quoting';
 
 export function getRunNxBaseCommand(
@@ -26,7 +26,8 @@ export function getRunNxBaseCommand(
   if (existsSync(join(workspaceRoot, 'package.json'))) {
     if (!packageManagerCommand) {
       // `readLocalNxVersion` (command-line/migrate/migrate.ts) mirrors this
-      // selector to predict which nx the spawn will run; keep the two in sync.
+      // selector to predict which nx a spawn will run, for the workspaces
+      // `getNxBin` declines to resolve; keep the two in sync.
       const pm = detectPackageManager(workspaceRoot);
       packageManagerCommand = getPackageManagerCommand(pm, workspaceRoot);
     }
@@ -42,25 +43,69 @@ export function getRunNxBaseCommand(
 }
 
 /**
- * Resolve the local nx CLI entry point, including `.nx/installation` wrapper
- * layouts. Returns null when nx cannot be resolved from disk (e.g. Yarn PnP).
+ * Locate the nx entry point the workspace at `root` would run, so a caller can
+ * spawn it directly instead of going through a shell.
+ *
+ * Returns null whenever that answer is not certain, leaving the caller to fall
+ * back to `getRunNxBaseCommand` and let the package manager locate nx. Null is
+ * therefore always safe: it costs the argument fidelity a direct spawn buys,
+ * never the ability to run.
  */
 export function getNxBin(root: string = workspaceRoot): string | null {
-  try {
-    return require.resolve('nx/bin/nx.js', { paths: getNxRequirePaths(root) });
-  } catch {
+  // A workspace with no root package.json runs nx through the `./nx` wrapper,
+  // which reinstalls `.nx/installation` whenever it drifts from nx.json's
+  // `installation.version`. Spawning the resolved entry point would skip that
+  // sync, and a migration is precisely when the version changes.
+  if (!existsSync(join(root, 'package.json'))) {
     return null;
+  }
+
+  return findInstalledNxBin(root);
+}
+
+// Mirrors a package manager's own bin lookup: ascend to the nearest installed
+// nx (npx and bun ascend always, pnpm and yarn inside an outer workspace) and
+// take the entry point its `bin` field names, which is the file the manager
+// links into `node_modules/.bin`.
+//
+// Deliberately not a resolver. Resolvers answer from NODE_PATH once their
+// explicit paths miss, and `nxCliPath` (command-line/migrate/migrate.ts) points
+// NODE_PATH at the temp installation before spawning it; they also answer
+// through package self-reference, which hands back the running nx whatever
+// `paths` they are given. Either one lets the temp installation hand off to
+// itself, which for `--run-migrations` re-enters the same hand-off and respawns
+// without end.
+function findInstalledNxBin(root: string): string | null {
+  for (let dir = root; ; dir = dirname(dir)) {
+    const packageDir = join(dir, 'node_modules', 'nx');
+    const manifest = join(packageDir, 'package.json');
+    if (existsSync(manifest)) {
+      let bin: string | Record<string, string> | undefined;
+      try {
+        ({ bin } = readJsonFile<{ bin?: string | Record<string, string> }>(
+          manifest
+        ));
+      } catch {
+        return null;
+      }
+      // npm accepts both the single-entry shorthand and the map form.
+      const entry = typeof bin === 'string' ? bin : bin?.nx;
+      return typeof entry === 'string' ? join(packageDir, entry) : null;
+    }
+    if (dir === dirname(dir)) {
+      return null;
+    }
   }
 }
 
 /**
  * Run a nx command, passing the arguments through as an argv array.
  *
- * When the nx entry point can be resolved, the child is spawned directly with
- * no shell in between, so every argument reaches the child exactly as
- * provided — shell metacharacters (`(`, `%`, `^`, spaces, quotes) are data,
- * not syntax. When nx cannot be resolved from disk (e.g. Yarn PnP), falls
- * back to the package-manager + shell path with each argument quoted.
+ * When `getNxBin` names an entry point, the child is spawned directly with no
+ * shell in between, so every argument reaches the child exactly as provided:
+ * shell metacharacters (`(`, `%`, `^`, spaces, quotes) are data, not syntax.
+ * Otherwise falls back to the package-manager + shell path with each argument
+ * quoted.
  */
 export function runNxArgvSync(
   argv: string[],
