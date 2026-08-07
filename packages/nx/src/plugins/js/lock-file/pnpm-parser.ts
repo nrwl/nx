@@ -30,6 +30,8 @@ import { getCatalogManager } from '../../../utils/catalog';
 import {
   containShippedLocalFilePaths,
   normalizePrunedPatchPath,
+  PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS,
+  type PnpmLockfileConfigField,
   relocatePrunedLocalPathSpec,
   uncontainLocalPath,
 } from './pruned-output';
@@ -846,9 +848,9 @@ export function stringifyPnpmLockfile(
  * with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Their effect is already baked into the
  * resolved snapshots, so removing them keeps the install identical.
  *
- * The manifest-side counterpart is `stripPrunedLockfilePnpmConfig` in
- * `pruned-output`, which removes the matching `pnpm.*` fields from the emitted
- * `package.json`; keep the two in sync when pnpm adds config fields.
+ * The fields come from `PNPM_RESOLUTION_CONFIG` in `pruned-output`, which pairs
+ * each one with the `pnpm.*` manifest key `stripPrunedLockfilePnpmConfig` drops
+ * from the emitted `package.json`, so the two strips cannot drift.
  *
  * `patchedDependencies` is kept, but scoped to the patches whose package
  * survives the prune: an entry for a dropped package has no snapshot to attach
@@ -857,12 +859,11 @@ export function stringifyPnpmLockfile(
  * `getPrunedPnpmPatchArtifacts` in pruned-output).
  */
 function stripStandaloneLockfileConfig(lockfile: Lockfile): void {
-  delete lockfile.overrides;
-  delete lockfile.packageExtensionsChecksum;
-  delete lockfile.ignoredOptionalDependencies;
-  delete lockfile.pnpmfileChecksum;
-  delete lockfile.settings;
-  delete (lockfile as { catalogs?: unknown }).catalogs;
+  // `catalogs` is absent from the Lockfile type but present in pnpm 10+ files.
+  const config = lockfile as Partial<Record<PnpmLockfileConfigField, unknown>>;
+  for (const field of PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS) {
+    delete config[field];
+  }
   filterPatchedDependenciesToPrunedPackages(lockfile);
 }
 
