@@ -1,6 +1,6 @@
 ---
 title: Mental Model
-description: Understand how Nx works with project graphs, inferred tasks, task graphs, affected commands, and caching to efficiently manage your monorepo development workflow.
+description: Understand how project graphs, inferred tasks, task graphs, affected commands, and caching work together in Nx.
 sidebar:
   order: 1
 filter: 'type:Concepts'
@@ -52,10 +52,6 @@ Nx merges task configuration from three sources, with later sources winning:
 
 For all configuration options, see [project configuration](/docs/reference/project-configuration).
 To move an older workspace onto inferred tasks, follow the [Migrate to Inferred Tasks](/docs/kb/convert-to-inferred) guide.
-
-Nx stores everything it learns about your projects and tasks as metadata for editor integrations such as VS Code and WebStorm, and for third-party tools.
-
-![metadata](../../../assets/concepts/mental-model/metadata.png)
 
 ## The task graph
 
