@@ -11,19 +11,18 @@ Nx coordinates work in your workspace through a few core concepts: the project g
 
 ## The project graph
 
-A project graph is used to reflect the source code in your repository and all the external dependencies that aren't
-authored in your repository, such as Vite, React, Angular, and so forth.
+The project graph represents the source code in your repository and external dependencies such as Vite, React, and Angular.
 
 ![project-graph](../../../assets/concepts/mental-model/project-graph.svg)
 
-Nx analyzes your file system to detect projects. Projects are identified by the presence of a `project.json` file, or a `package.json` file that is part of your package manager's workspaces configuration. Project identification can also be customized through plugins. You can manually define dependencies between
+Nx analyzes your file system to detect projects. It identifies projects from a `project.json` file or a `package.json` file included in your package manager's workspaces configuration. Plugins can also customize how Nx identifies projects. You can manually define dependencies between
 the project nodes, but you don't have to do it very often. Nx analyzes source code, your installed dependencies, and TypeScript
 configuration to figure out these dependencies for you. Nx also stores the cached project graph, so it only
 reanalyzes the files you have changed.
 
 ![project-graph-updated](../../../assets/concepts/mental-model/project-graph-updated.svg)
 
-Nx provides an updated graph after each analysis is done.
+Nx updates the graph after each analysis.
 
 ## Inferred tasks
 
@@ -54,7 +53,7 @@ Nx merges task configuration from three sources, with later sources winning:
 For all configuration options, see [project configuration](/docs/reference/project-configuration).
 To move an older workspace onto inferred tasks, follow the [Migrate to Inferred Tasks](/docs/kb/convert-to-inferred) guide.
 
-Everything Nx learns about your projects and tasks is stored as metadata, which is used by Nx itself, the VSCode and WebStorm integrations, the GitHub integration, and third-party tools.
+Nx stores everything it learns about your projects and tasks as metadata for Nx itself, the VS Code and WebStorm integrations, the GitHub integration, and third-party tools.
 
 ![metadata](../../../assets/concepts/mental-model/metadata.png)
 
@@ -328,8 +327,7 @@ With this, running the same test command creates the following task graph:
 This often makes more sense for builds, where to build `app1`, you want to build `lib` first. You can also define
 similar relationships between targets of the same project, including a test target that depends on the build. Learn more about configuring task pipelines in [Task Pipeline Configuration](/docs/concepts/task-pipeline-configuration).
 
-A task graph can contain different targets, and those can run in parallel. For instance, as Nx is building `app2`, it
-can be testing `app1` at the same time.
+A task graph can contain different targets that run in parallel. For instance, while Nx builds `app2`, it can test `app1` at the same time.
 
 ![task-graph-execution](../../../assets/concepts/mental-model/task-graph-execution.svg)
 
@@ -363,7 +361,7 @@ that `app2` cannot be affected by it, so it only retests `app1`.
 
 ## Computation hashing and caching
 
-Before running a task, Nx computes a hash based on source files, configuration, dependencies, and other inputs. If the hash matches a previous run, the cached result is replayed, including terminal output and file artifacts. If not, Nx runs the task and stores the result for next time.
+Before running a task, Nx computes a hash based on source files, configuration, dependencies, and other inputs. If the hash matches a previous run, Nx replays the cached result, including terminal output and file artifacts. If not, Nx runs the task and stores the result for next time.
 
 ![computation-hashing](../../../assets/concepts/mental-model/computation-hashing.svg)
 
@@ -375,7 +373,7 @@ See [How Caching Works](/docs/concepts/how-caching-works) for the complete list 
 
 ## Distributed task execution
 
-For large workspaces, even with caching, running all tasks on a single machine can be slow. [Nx Agents](/docs/features/ci-features/distribute-task-execution) can distribute the task graph across multiple machines, running tasks in parallel while using remote caching to share artifacts between agents. From your CI's perspective, the results appear as if everything ran on a single machine.
+For large workspaces, even with caching, running all tasks on a single machine can be slow. [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute the task graph across multiple machines, running tasks in parallel while using remote caching to share artifacts between agents. CI receives the results as though everything ran on a single machine.
 
 ![Distribution](../../../assets/concepts/mental-model/dte.svg)
 
@@ -385,4 +383,4 @@ For large workspaces, even with caching, running all tasks on a single machine c
 - Nx plugins infer tasks from your tool configuration, so most task settings don't have to be written by hand.
 - Nx uses the project graph and task configuration to create a task graph and run tasks in the right order.
 - Code-change analysis creates the smallest task graph for your PR.
-- [Computation caching](/docs/features/cache-task-results) makes sure the same computation never runs twice. The cache is pluggable and can be distributed.
+- [Computation caching](/docs/features/cache-task-results) makes sure the same computation never runs twice. You can plug in a cache provider and distribute cached results.
