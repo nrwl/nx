@@ -6,7 +6,11 @@ import {
   getPnpmConfigDir,
   readPnpmYamlConfig,
 } from '../package-manager-config/pnpm-config';
-import { readNpmrcMap } from '../package-manager-config/npmrc';
+import {
+  npmrcEntriesToMap,
+  readNpmrcEntries,
+  type NpmrcEntry,
+} from '../package-manager-config/npmrc';
 import { fileExists } from '../fileutils';
 import { logger } from '../logger';
 import {
@@ -667,14 +671,19 @@ function warnUnreadableFile(path: string): void {
   );
 }
 
-/** An npmrc-family file as written, null when it could not be read. */
-function readNpmrcOrWarn(path: string): Map<string, string> | null {
-  const map = readNpmrcMap(path);
-  if (map !== 'unreadable') {
-    return map;
+function readNpmrcEntriesOrWarn(path: string): NpmrcEntry[] | null {
+  const entries = readNpmrcEntries(path);
+  if (entries !== 'unreadable') {
+    return entries;
   }
   warnUnreadableFile(path);
   return null;
+}
+
+/** An npmrc-family file as written, null when it could not be read. */
+function readNpmrcOrWarn(path: string): Map<string, string> | null {
+  const entries = readNpmrcEntriesOrWarn(path);
+  return entries && npmrcEntriesToMap(entries);
 }
 
 /**
@@ -690,16 +699,25 @@ function readPnpmNpmrcMap(
   path: string,
   pnpmVersion: string
 ): Map<string, string> | null {
-  const map = readNpmrcOrWarn(path);
-  if (map === null || gte(pnpmVersion, '11.0.0')) {
-    return map;
+  const entries = readNpmrcEntriesOrWarn(path);
+  if (entries === null || gte(pnpmVersion, '11.0.0')) {
+    return entries && npmrcEntriesToMap(entries);
   }
-  for (const [key, value] of map) {
-    if (!pnpmEnvVarsResolve(key) || !pnpmEnvVarsResolve(value)) {
+  // parseField hands a `key[]` array straight back, so the values under a key
+  // ini collected into one are never expanded and never throw. The key is, and
+  // one repeated line is enough to make every value under it an array.
+  const arrayKeys = new Set(
+    entries.filter((entry) => entry.array).map((entry) => entry.key)
+  );
+  for (const { key, value } of entries) {
+    if (
+      !pnpmEnvVarsResolve(key) ||
+      (!arrayKeys.has(key) && !pnpmEnvVarsResolve(value))
+    ) {
       return null;
     }
   }
-  return map;
+  return npmrcEntriesToMap(entries);
 }
 
 // pnpm's AUTH_VALUE_KEYS. BARE_AUTH_KEYS is the subset this file re-keys onto a
@@ -974,6 +992,10 @@ function bridgeWorkspaceNpmrc(
   setProxies(env, {
     httpProxy: bridged('proxy'),
     httpsProxy: bridged('https-proxy'),
+    // The spelling npm reads natively, which it can still only read from its own
+    // project config. pnpm prefers `no-proxy` across every layer over `noproxy`
+    // across every layer, so bridgeNoProxy runs after this and overwrites it.
+    noProxy: bridged('noproxy'),
   });
 }
 

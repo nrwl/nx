@@ -355,6 +355,18 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({});
     });
 
+    it('keeps a file whose only unresolvable reference sits in a key[] value', () => {
+      // parseField hands an array straight back, so nothing pnpm collected under
+      // a repeated key is expanded and none of it can throw.
+      writeFileSync(
+        join(root, '.npmrc'),
+        'no-proxy=internal.example.com\nca[]=${NX_TEST_HOST}'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
+        npm_config_noproxy: 'internal.example.com',
+      });
+    });
+
     it('keeps the file when every reference resolves, fallbacks included', () => {
       process.env.NX_TEST_HOST = 'internal';
       writeFileSync(
@@ -646,6 +658,32 @@ describe('getPnpmSpawnRegistryEnv', () => {
           npm_config_strict_ssl: 'false',
           npm_config_https_proxy: 'http://proxy.example.com:8080',
         });
+      });
+
+      it("bridges an ancestor noproxy, which pnpm honors in npm's own spelling too", () => {
+        // Measured on 10.18.0: with an https-proxy set, either spelling sends the
+        // fetch direct. npm reads `noproxy` natively, but only out of its own
+        // project config, so the ancestor's still has to be carried across.
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc('noproxy=internal.example.com');
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_noproxy: 'internal.example.com',
+        });
+        // pnpm prefers `no-proxy` across every layer over `noproxy` across every
+        // layer, so the nested file's spelling wins here.
+        writeNestedNpmrc('no-proxy=nested.example.com');
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+          npm_config_noproxy: 'nested.example.com',
+        });
+      });
+
+      it('leaves an ancestor noproxy the nested .npmrc already declares', () => {
+        writeYaml('packages:\n  - "nested"\n');
+        writeAncestorNpmrc('noproxy=outer.example.com');
+        writeNestedNpmrc('noproxy=nested.example.com');
+        expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual(
+          {}
+        );
       });
 
       it('falls through to the ancestor no-proxy, and lets an emptied nested one clear it', () => {
