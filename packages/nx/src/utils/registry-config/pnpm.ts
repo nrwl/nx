@@ -85,6 +85,7 @@ interface PnpmWorkspaceSettings {
   // rejecting it, so each stays unknown for the consumer that narrows it.
   registries?: unknown;
   strictSsl?: unknown;
+  registry?: string;
   proxy?: string;
   httpProxy?: string;
   httpsProxy?: string;
@@ -92,6 +93,9 @@ interface PnpmWorkspaceSettings {
   // The one key here pnpm also answers to in npm's spelling. Its siblings are
   // camelCase-only, so nothing else needs an alias.
   noproxy?: string;
+  ca?: string;
+  cert?: string;
+  key?: string;
 }
 
 export function getPnpmSpawnRegistryEnv(
@@ -173,17 +177,35 @@ export function getPnpmSpawnRegistryEnv(
   // registries sit above the yaml and below the named env registry, which pnpm
   // applies onto registries.default after every spread.
   const jsonAuth = readJsonAuthTier(pnpmVersion);
+  const globalSettings = readPnpmGlobalSettings(pnpmVersion);
+  const globalPath = getGlobalConfigPath();
   const scopedRegistry = scope
     ? (jsonAuth?.registries[scope] ??
-      pickYamlRegistry(settings, scope, workspaceFile))
+      pickYamlRegistry(settings, scope, workspaceFile) ??
+      pickYamlRegistry(globalSettings, scope, globalPath))
     : undefined;
   if (scope && scopedRegistry) {
     setScopedRegistry(env, scope, scopedRegistry);
   }
+  // A top-level `registry` in a yaml file is an explicitly set key, which pnpm
+  // applies onto registries.default on its own. Where it does that moved: from
+  // 11.5.3 before the workspace file is even read, so only the global file's
+  // reaches it and every map still outranks it, and from 11.10.0 again after
+  // every map has merged, which puts both files' above the JSON auth tier.
+  const lateScalar = gte(pnpmVersion, '11.10.0')
+    ? settings.registry || globalSettings.registry
+    : undefined;
+  const earlyScalar =
+    gte(pnpmVersion, '11.5.3') && lt(pnpmVersion, '11.10.0')
+      ? globalSettings.registry
+      : undefined;
   const defaultRegistry =
     readPnpmEnvVar('registry', pnpmVersion) ??
+    lateScalar ??
     jsonAuth?.registries['default'] ??
-    pickYamlRegistry(settings, 'default', workspaceFile);
+    pickYamlRegistry(settings, 'default', workspaceFile) ??
+    earlyScalar ??
+    pickYamlRegistry(globalSettings, 'default', globalPath);
   if (defaultRegistry) {
     setRegistry(env, defaultRegistry);
   }
@@ -216,17 +238,19 @@ export function getPnpmSpawnRegistryEnv(
 
   // resolveNoProxy takes the bypass list across every layer below, so the yaml
   // does not write it here.
+  applyYamlNetworkSettings(env, globalSettings, false);
   applyYamlNetworkSettings(env, settings, false);
   applyEnvNetworkSettings(env, pnpmVersion);
   applyResolvedProxies(
     env,
-    [envProxyDeclarations(pnpmVersion), settings, npmrcProxies],
+    [envProxyDeclarations(pnpmVersion), settings, globalSettings, npmrcProxies],
     root,
     scope,
     managerIgnoresEnv
   );
   const noProxy = resolveNoProxy(
     settings,
+    globalSettings,
     workspaceDir,
     authIniPath,
     pnpmVersion
@@ -511,12 +535,13 @@ function resolveProxies(
  * The proxy-bypass list pnpm >= 11 ends up using. It reads the `no-proxy`
  * spelling and only falls back to `noproxy`, so the spelling decides before the
  * layer does: a workspace .npmrc `no-proxy` beats a pnpm-workspace.yaml
- * `noproxy`. Within one spelling the env sits above the yaml, which sits above
- * the files.
+ * `noproxy`. Within one spelling the env sits above the yaml files, the
+ * workspace one above the global one, and those above the npmrc-family files.
  * See createPackageManagerNetworkConfig in pnpm's config reader.
  */
 function resolveNoProxy(
   settings: PnpmWorkspaceSettings,
+  globalSettings: PnpmWorkspaceSettings,
   npmrcDir: string,
   authIniPath: string,
   pnpmVersion: string
@@ -525,8 +550,9 @@ function resolveNoProxy(
   if (envNoProxy) {
     return envNoProxy;
   }
-  if (settings.noProxy) {
-    return settings.noProxy;
+  const yamlNoProxy = settings.noProxy ?? globalSettings.noProxy;
+  if (yamlNoProxy) {
+    return yamlNoProxy;
   }
   const fromFiles = fileNoProxy(
     [join(npmrcDir, '.npmrc'), authIniPath],
@@ -535,7 +561,11 @@ function resolveNoProxy(
   if (fromFiles) {
     return fromFiles;
   }
-  return readPnpmEnvVar('noproxy', pnpmVersion) ?? settings.noproxy;
+  return (
+    readPnpmEnvVar('noproxy', pnpmVersion) ??
+    settings.noproxy ??
+    globalSettings.noproxy
+  );
 }
 
 /**
@@ -638,14 +668,15 @@ function readPnpmWorkspaceSettings(path: string | null): PnpmWorkspaceSettings {
  * wrong-shaped noProxy also survives pnpm, so it is dropped
  * rather than handed to the string-typed spawn env. `registries` and
  * `strictSsl` stay unnarrowed for the consumer that reads them, because pnpm
- * only reacts to the registry value it picks and reads strictSsl for truthiness.
+ * only reacts to the registry value it picks, and turns TLS verification off
+ * for the boolean alone.
  */
 function normalizePnpmWorkspaceSettings(
   doc: Record<string, unknown>,
   path: string
 ): PnpmWorkspaceSettings {
   const fail = (what: string): never => {
-    throw new Error(`The pnpm workspace file at ${path} declares ${what}.`);
+    throw new Error(`The pnpm configuration file at ${path} declares ${what}.`);
   };
   if (doc.proxy && typeof doc.proxy !== 'string') {
     fail('a proxy that is not a string');
@@ -661,11 +692,15 @@ function normalizePnpmWorkspaceSettings(
   return {
     registries: doc.registries,
     strictSsl: doc.strictSsl,
+    registry: text('registry'),
     proxy: text('proxy'),
     httpProxy: text('httpProxy'),
     httpsProxy: text('httpsProxy'),
     noProxy: text('noProxy'),
     noproxy: text('noproxy'),
+    ca: text('ca'),
+    cert: text('cert'),
+    key: text('key'),
   };
 }
 
@@ -695,7 +730,7 @@ function pickYamlRegistry(
   }
   if (typeof value !== 'string') {
     throw new Error(
-      `The pnpm workspace file at ${path} declares a registries["${key}"] that is not a string.`
+      `The pnpm configuration file at ${path} declares a registries["${key}"] that is not a string.`
     );
   }
   return value;
@@ -705,6 +740,10 @@ function getAuthIniPath(): string {
   return join(getPnpmConfigDir(process.env), 'auth.ini');
 }
 
+function getGlobalConfigPath(): string {
+  return join(getPnpmConfigDir(process.env), 'config.yaml');
+}
+
 /**
  * The global config.yaml, null when absent. pnpm reads this one straight,
  * without the existence check it puts in front of pnpm-workspace.yaml, so every
@@ -712,7 +751,7 @@ function getAuthIniPath(): string {
  * caller's fall-open instead of resolving on without the file's settings.
  */
 function readPnpmGlobalConfigYaml(): Record<string, unknown> | null {
-  const path = join(getPnpmConfigDir(process.env), 'config.yaml');
+  const path = getGlobalConfigPath();
   const doc = readPnpmYamlConfig(path);
   if (doc === 'unusable') {
     throw new Error(
@@ -720,6 +759,28 @@ function readPnpmGlobalConfigYaml(): Record<string, unknown> | null {
     );
   }
   return doc;
+}
+
+/**
+ * The settings pnpm >= 11 takes from that file. It applies them the way it
+ * applies a workspace manifest, over the npmrc-derived config and under the
+ * workspace file's own, but only for the keys it allows there: `registries` is
+ * refused with a warning until 11.11.0, while every other key read here is an
+ * npm setting name it has always allowed.
+ */
+function readPnpmGlobalSettings(pnpmVersion: string): PnpmWorkspaceSettings {
+  if (lt(pnpmVersion, '11.0.0')) {
+    return {};
+  }
+  const doc = readPnpmGlobalConfigYaml();
+  if (doc === null) {
+    return {};
+  }
+  const settings = normalizePnpmWorkspaceSettings(doc, getGlobalConfigPath());
+  if (lt(pnpmVersion, '11.11.0')) {
+    delete settings.registries;
+  }
+  return settings;
 }
 
 // pnpm keeps resolving from the remaining layers for an npmrc-family file it
@@ -1600,17 +1661,31 @@ function warnUnscopedCredential(dart: string, keys: string[]): void {
 }
 
 /**
- * Network settings pnpm honors from pnpm-workspace.yaml. `caFile`/`cafile` is
- * dead config there (pnpm loads CA material from the npmrc-family files alone),
- * so the YAML key is deliberately not bridged.
+ * Network settings pnpm honors from a yaml configuration file. `caFile`/
+ * `cafile` is the one it accepts and then never uses (it loads a CA file from
+ * the npmrc-family files alone, measured on 10.18.0 and 11.20.0), so that key
+ * is deliberately not bridged; inline `ca`/`cert`/`key` declared here do reach
+ * its fetch, unpinned, exactly as npm's own spelling of them does.
  */
 function applyYamlNetworkSettings(
   env: NpmConfigEnv,
   settings: PnpmWorkspaceSettings,
   applyNoProxy = true
 ): void {
-  if (typeof settings.strictSsl === 'boolean') {
-    setStrictSsl(env, settings.strictSsl);
+  // Only the boolean turns verification off (rejectUnauthorized is
+  // `strictSsl ?? true`, and the agent that carries it is built for
+  // `strictSsl === false`), so any other declared value restores npm's default
+  // over a `strict-ssl=false` from a file below.
+  if (settings.strictSsl !== undefined) {
+    setStrictSsl(env, settings.strictSsl !== false);
+  }
+  if (settings.ca) {
+    env['npm_config_ca'] = settings.ca;
+  }
+  for (const key of ['cert', 'key'] as const) {
+    if (settings[key]) {
+      env[`npm_config_${key}`] = settings[key];
+    }
   }
   // pnpm honors either spelling and prefers noProxy when both are set. The
   // proxies themselves are resolved with every other tier's rather than here.
