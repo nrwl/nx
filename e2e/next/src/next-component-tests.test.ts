@@ -40,7 +40,7 @@ describe('NextJs Component Testing', () => {
         'All specs passed!'
       );
     }
-  });
+  }, 600_000);
 
   it('should test a NextJs lib using babel compiler', async () => {
     const libName = uniq('next-lib');

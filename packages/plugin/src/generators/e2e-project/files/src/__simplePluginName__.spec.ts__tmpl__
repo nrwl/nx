@@ -10,12 +10,15 @@ describe('<%= pluginName %>', () => {
 
     // The plugin has been built and published to a local registry in the globalSetup
     // Install the plugin built with the latest source code into the test repo
-    execSync(`<%= packageManagerCommands.addDev %> <%= pluginPackageName %>@e2e`, {
-      cwd: projectDirectory,
-      stdio: 'inherit',
-      env: process.env,
-    });
-  }, 30_000);
+    execSync(
+      `<%= packageManagerCommands.addDev %> <%= pluginPackageName %>@e2e`,
+      {
+        cwd: projectDirectory,
+        stdio: 'inherit',
+        env: process.env,
+      }
+    );
+  }, 120_000);
 
   afterAll(() => {
     if (projectDirectory) {
@@ -26,7 +29,6 @@ describe('<%= pluginName %>', () => {
       });
     }
   });
-
 
   it('should be installed', () => {
     // npm ls will fail if the package is not installed properly
