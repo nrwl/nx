@@ -2,8 +2,8 @@
 title: Nx Daemon
 description: Learn how the Nx Daemon watches workspace files and keeps project graph computation fast between commands.
 sidebar:
-  order: 1
-filter: 'type:Concepts'
+  order: 6
+filter: 'type:References'
 ---
 
 The Nx Daemon is a background process that watches workspace files and keeps project graph data in
@@ -75,8 +75,8 @@ Ephemeral CI containers should keep the daemon disabled.
 
 ## Daemon behavior in containers
 
-Nx detects Docker by checking `/.dockerenv` and Docker references in `/proc/self/cgroup`.
-The daemon stays disabled unless `NX_DAEMON=true` is set.
+Nx automatically disables the daemon in Docker containers, CI environments, and sandboxed AI-agent environments. The daemon's performance benefits come from maintaining state between commands and watching for file changes.
+In ephemeral environments where each command runs in a fresh container, this state cannot be reused, so the overhead of starting a background process provides no benefit.
 
 A persistent development container can benefit from the daemon, but check these constraints before
 enabling it:

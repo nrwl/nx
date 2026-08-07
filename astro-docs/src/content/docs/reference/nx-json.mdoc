@@ -9,12 +9,6 @@ filter: 'type:References'
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
 
-{% aside type="note" title="Nx 22 Changes" %}
-Release tag configuration now uses a nested `releaseTag` object (e.g., `releaseTag.pattern` instead of `releaseTagPattern`). Old properties work until Nx 23.
-
-See [Release Tag](#release-tag) for details.
-{% /aside %}
-
 The following is an expanded example showing all options. Your `nx.json` will likely be much shorter.
 
 ```json
@@ -105,7 +99,7 @@ The following is an expanded example showing all options. Your `nx.json` will li
 
 ## Plugins
 
-Nx plugins improve the experience of using different tools with Nx. One key feature of plugins is that they can [automatically configure the way Nx runs tasks](/docs/concepts/inferred-tasks) for a tool based on that tool's configuration. In order for a plugin to configure tasks for Nx, it needs to be registered in the `plugins` array. If a plugin has no options, it can be listed as a string. Otherwise, it should be listed as an object with a `plugin` property and an `options` property.
+Nx plugins improve the experience of using different tools with Nx. One key feature of plugins is that they can [automatically configure the way Nx runs tasks](/docs/concepts/mental-model#inferred-tasks) for a tool based on that tool's configuration. In order for a plugin to configure tasks for Nx, it needs to be registered in the `plugins` array. If a plugin has no options, it can be listed as a string. Otherwise, it should be listed as an object with a `plugin` property and an `options` property.
 
 Every plugin behaves differently, so consult the plugin's own documentation for information about what it does. You can browse the [plugin registry](/docs/plugin-registry) for available plugins.
 
@@ -125,6 +119,15 @@ To learn about creating your own plugin read about [extending Nx](/docs/kb/intro
   ]
 }
 ```
+
+### Plugin order
+
+Plugins are processed in the order that they appear in the `plugins` array.
+If multiple plugins create a task with the same name, the plugin listed last wins.
+For example, if a project has both a `vite.config.ts` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task.
+The `build` task that is executed belongs to the plugin listed lower in the `plugins` array.
+When the two targets are compatible (they run the same executor and command), their configuration is merged property by property with the later plugin's values winning.
+When they are incompatible, the later target replaces the earlier one entirely.
 
 ### Scope plugins to specific projects
 
@@ -287,7 +290,7 @@ When some targets matching an entry in the map should have different defaults th
 Within a key's array, entries apply in document order. **Later entries override prior entries**. An entry with **no `filter`** is a catch-all baseline that applies to every variant of that target; an entry **with a `filter`** applies only where its `plugin`, `projects`, and `executor` match. Because a later entry overrides an earlier one, a trailing catch-all can reset a value set above it. Target defaults apply after targets have been inferred by plugins but before project configuration in `project.json` or `package.json`.
 
 {% aside type="caution" title="Beware" %}
-When a key's value is a plain object (or an array entry has no `filter`), Nx matches by the key alone. Make sure all defaults make sense to all targets that match the key. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/inferred-tasks).
+When a key's value is a plain object (or an array entry has no `filter`), Nx matches by the key alone. Make sure all defaults make sense to all targets that match the key. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/mental-model#inferred-tasks).
 {% /aside %}
 
 Some common scenarios for this follow.
@@ -445,7 +448,7 @@ You can configure options specific to a target's executor. As an example, if you
 }
 ```
 
-You can also provide defaults for [inferred targets](/docs/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
+You can also provide defaults for [inferred targets](/docs/concepts/mental-model#inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
 
 ```json
 // nx.json
@@ -530,7 +533,7 @@ Nx uses glob patterns to match against the target name. This means that the `**/
 
 ### Spread token
 
-By default, a target default replaces the corresponding value from a matching [inferred task](/docs/concepts/inferred-tasks) (and from any lower-priority configuration source) rather than merging with it. The spread token (`"..."`) lets a target default contribute to the base value instead of overwriting it.
+By default, a target default replaces the corresponding value from a matching [inferred task](/docs/concepts/mental-model#inferred-tasks) (and from any lower-priority configuration source) rather than merging with it. The spread token (`"..."`) lets a target default contribute to the base value instead of overwriting it.
 
 **In arrays**, `"..."` is substituted with the items from the base array at that position. For example, to add an input to every `build` target while keeping the inputs its plugin already infers:
 
