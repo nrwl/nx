@@ -18,13 +18,13 @@ import {
 import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
+import { PackageJson } from '../../../utils/package-json';
 import {
   dropInheritedPnpmPatchedDependencies,
-  PackageJson,
   rewritePrunedLocalPathSpecifiers,
   stripPrunedLockfilePnpmConfig,
   validatePrunedLocalPathClosure,
-} from '../../../utils/package-json';
+} from './pruned-output';
 import {
   detectPackageManager,
   PackageManager,
