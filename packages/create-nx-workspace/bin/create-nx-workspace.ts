@@ -158,6 +158,10 @@ interface NodeArguments extends BaseArguments {
   unitTestRunner: 'none' | 'jest';
 }
 
+interface WebArguments extends BaseArguments {
+  stack: 'web';
+}
+
 interface UnknownStackArguments extends BaseArguments {
   stack: 'unknown';
 }
@@ -168,6 +172,7 @@ type Arguments =
   | AngularArguments
   | VueArguments
   | NodeArguments
+  | WebArguments
   | UnknownStackArguments;
 
 export const commandsObject: yargs.Argv<Arguments> = yargs
@@ -1024,7 +1029,7 @@ async function promptForFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'unknown'> {
+): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'web' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -1056,6 +1061,7 @@ async function determineStack(
       case Preset.TsStandalone:
         return 'none';
       case Preset.WebComponents:
+        return 'web';
       default:
         return 'unknown';
     }
@@ -1102,12 +1108,6 @@ async function determineStack(
 export async function determinePresetOptions(
   parsedArgs: yargs.Arguments<Arguments>
 ): Promise<Partial<Arguments>> {
-  // A third-party preset declares its own options, so we cannot know it takes a
-  // linter at all.
-  if (parsedArgs.stack === 'unknown' && !isNxPluginPreset(parsedArgs.preset)) {
-    return parsedArgs;
-  }
-
   // Resolved here rather than inside each `determine*Options` so that a stack
   // cannot skip it. Once the schemas stopped defaulting the linter, a stack that
   // returned none left nothing downstream to supply one, and the workspace was
@@ -1144,17 +1144,13 @@ export async function determinePresetOptions(
         ...(await determineNodeOptions({ ...parsedArgs, linter })),
         linter,
       };
+    // `web` has no options of its own to prompt for; the linter above is the
+    // only one it takes. A stack that reaches the default arm still gets one,
+    // so a preset added without a case here cannot silently go unlinted.
+    case 'web':
     default:
       return { ...parsedArgs, linter };
   }
-}
-
-/**
- * `@nx/plugin` is not a `Preset` member — it is passed by package name, and
- * `create-nx-plugin` appends a version to it.
- */
-function isNxPluginPreset(preset: string | undefined): boolean {
-  return preset === '@nx/plugin' || !!preset?.startsWith('@nx/plugin@');
 }
 
 async function determineFormatterOptions(
@@ -1266,7 +1262,6 @@ async function determineReactOptions(
   let routing = true;
   let nextAppDir = false;
   let nextSrcDir = false;
-  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
@@ -1384,9 +1379,6 @@ async function determineReactOptions(
     style = reply.style;
   }
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
-  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
@@ -1406,7 +1398,6 @@ async function determineReactOptions(
     e2eTestRunner,
     useReactRouter,
     routing,
-    linter,
     formatter,
     workspaces,
   };
@@ -1420,7 +1411,6 @@ async function determineVueOptions(
   let appName: string;
   let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
 
   const workspaces = parsedArgs.workspaces;
@@ -1497,9 +1487,6 @@ async function determineVueOptions(
     style = reply.style;
   }
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
-  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
@@ -1514,7 +1501,6 @@ async function determineVueOptions(
     appName,
     unitTestRunner,
     e2eTestRunner,
-    linter,
     formatter,
     workspaces,
   };
@@ -1727,7 +1713,6 @@ async function determineNodeOptions(
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
-  let linter: undefined | Linter;
   let formatter: undefined | 'none' | 'prettier';
   let unitTestRunner: undefined | 'none' | 'jest' = undefined;
   const workspaces = parsedArgs.workspaces;
@@ -1794,9 +1779,6 @@ async function determineNodeOptions(
     exclude: 'vitest',
   });
 
-  // Asked outside the gate: the linter is independent of package-manager
-  // workspaces, and `--no-workspaces` used to force ESLint without asking.
-  linter = await determineLinterOptions(parsedArgs);
   if (workspaces) {
     formatter = await determineFormatterOptions(parsedArgs, {
       preferPrettier: true,
@@ -1810,7 +1792,6 @@ async function determineNodeOptions(
     appName,
     framework,
     docker,
-    linter,
     formatter,
     workspaces,
     unitTestRunner,
