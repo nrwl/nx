@@ -87,12 +87,11 @@ export async function addLintingToProject(
 
   if (linter === 'oxlint') {
     // `ensurePackage` installs by package name, so the subpath is required
-    // separately. `nx-ignore-next-line` keeps this out of the import graph so
-    // `@nx/dependency-checks` does not demand `@nx/oxlint` in this package's
-    // package.json — it is installed on demand, not depended on. The deliberate
-    // `js` <-> `@nx/oxlint` graph cycle comes from `implicitDependencies` in
-    // packages/js/project.json and is recorded in `ignoredCircularDependencies`
-    // in the root eslint config.
+    // separately. `nx-ignore-next-line` keeps this out of the import graph, so
+    // the dependency stays a devDependency of this package rather than a runtime
+    // one. That devDependency is what makes the `js` <-> `@nx/oxlint` cycle,
+    // which is deliberate and recorded in `ignoredCircularDependencies` in the
+    // root eslint config.
     ensurePackage('@nx/oxlint', nxVersion);
     // `@nx/oxlint` is the only ESM package under `packages/` and its
     // `./generators` subpath has no `require` condition, so a bare `require()`
