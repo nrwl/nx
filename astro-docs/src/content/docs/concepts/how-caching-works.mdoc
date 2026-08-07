@@ -158,7 +158,7 @@ By default the cache considers all project files (e.g. `{projectRoot}/**/*`). Th
   "name": "some-project",
   "targets": {
     "build": {
-      "inputs": ["!{projectRoot}/**/*.md"],
+      "inputs": ["...", "!{projectRoot}/**/*.md"],
       ...
     },
     "test": {
@@ -172,12 +172,12 @@ By default the cache considers all project files (e.g. `{projectRoot}/**/*`). Th
 {% /tabitem %}
 {% /tabs %}
 
-Inputs may include
+Inputs may include the following:
 
-- source files
-- environment variables
-- runtime inputs
-- command line arguments
+- Source files that affect the task.
+- Environment variables that affect the task.
+- Runtime inputs that affect the task.
+- Command-line arguments passed to the task.
 
 Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/docs/kb/configure-inputs).
 
