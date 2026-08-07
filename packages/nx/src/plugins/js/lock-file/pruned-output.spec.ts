@@ -47,8 +47,13 @@ describe('normalizePrunedPatchPath', () => {
     ],
     // an absolute path does not produce a double slash
     ['/abs/is-number.patch', 'patches/abs/is-number.patch'],
-    // embedded ../ segments are dropped so the result cannot escape patches/
-    ['a/../../../etc/passwd.patch', 'patches/a/etc/passwd.patch'],
+    // the path is collapsed the way pnpm collapses it before recording it, so
+    // a declared `./x` or `a/../x` lands where the lockfile's own path does
+    ['./patches/is-number.patch', 'patches/patches/is-number.patch'],
+    ['nested/../patches/is-number.patch', 'patches/patches/is-number.patch'],
+    // segments left over after collapsing escape the workspace and are dropped,
+    // so the result cannot resolve outside patches/
+    ['a/../../../etc/passwd.patch', 'patches/etc/passwd.patch'],
   ])('maps %j to %j under patches/', (input, expected) => {
     expect(normalizePrunedPatchPath(input)).toBe(expected);
   });
