@@ -23,6 +23,7 @@ import {
   getPrunedPnpmPatchArtifacts,
   normalizePrunedPatchPath,
   rewritePrunedLocalPathSpecifiers,
+  uncontainLocalPath,
   validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from './pruned-output';
@@ -1395,6 +1396,38 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
     expect(readFileSync(artifacts[0].sourcePath).equals(bytes)).toBe(true);
   });
 
+  it('reads a workspace directory named after the shipped directory from its own tree', () => {
+    // The shipped path of a workspace package that already sits under
+    // local_path_modules/ is doubly prefixed, so resolving it back must land on
+    // the real source rather than on a same-named directory at the root.
+    mkdirSync(join(tempDir, 'local_path_modules/lib'), { recursive: true });
+    writeFileSync(join(tempDir, 'local_path_modules/lib/index.js'), 'REAL');
+    mkdirSync(join(tempDir, 'lib'), { recursive: true });
+    writeFileSync(join(tempDir, 'lib/index.js'), 'DECOY');
+    const shippedPath = containLocalPath('local_path_modules/lib');
+
+    const artifacts = getPrunedPnpmLocalPathArtifacts(
+      tempDir,
+      [
+        "lockfileVersion: '9.0'",
+        '',
+        'packages:',
+        '',
+        `  lib@file:${shippedPath}:`,
+        `    resolution: {directory: ${shippedPath}, type: directory}`,
+        '',
+      ].join('\n')
+    );
+
+    expect(artifacts).toEqual([
+      {
+        path: `${shippedPath}/index.js`,
+        sourcePath: join(tempDir, 'local_path_modules/lib/index.js'),
+      },
+    ]);
+    expect(readFileSync(artifacts[0].sourcePath, 'utf-8')).toBe('REAL');
+  });
+
   it('does not ship an https tarball', () => {
     expect(
       getPrunedPnpmLocalPathArtifacts(
@@ -1862,15 +1895,9 @@ describe('containShippedLocalFilePaths', () => {
     );
   });
 
-  it('leaves an already-contained or escaping path untouched', () => {
+  it('leaves an escaping path untouched', () => {
     const lockfile = {
       packages: {
-        'a@file:local_path_modules/vendor/a': {
-          resolution: {
-            directory: 'local_path_modules/vendor/a',
-            type: 'directory',
-          },
-        },
         'b@file:../outside': {
           resolution: { directory: '../outside', type: 'directory' },
         },
@@ -1879,10 +1906,34 @@ describe('containShippedLocalFilePaths', () => {
 
     containShippedLocalFilePaths(lockfile);
 
-    expect(Object.keys(lockfile.packages).sort()).toEqual([
-      'a@file:local_path_modules/vendor/a',
-      'b@file:../outside',
+    expect(Object.keys(lockfile.packages)).toEqual(['b@file:../outside']);
+  });
+
+  it('contains a workspace path that starts with the shipped directory name', () => {
+    // A workspace directory literally named local_path_modules/ is a source
+    // path like any other; treating it as already contained would make the
+    // output ship bytes read from the wrong tree.
+    const lockfile = {
+      packages: {
+        'a@file:local_path_modules/vendor/a': {
+          resolution: {
+            directory: 'local_path_modules/vendor/a',
+            type: 'directory',
+          },
+        },
+      },
+    };
+
+    containShippedLocalFilePaths(lockfile);
+
+    expect(Object.keys(lockfile.packages)).toEqual([
+      'a@file:local_path_modules/local_path_modules/vendor/a',
     ]);
+    expect(
+      (lockfile.packages as any)[
+        'a@file:local_path_modules/local_path_modules/vendor/a'
+      ].resolution.directory
+    ).toBe('local_path_modules/local_path_modules/vendor/a');
   });
 
   it('normalizes backslash separators in a directory resolution before containing', () => {
@@ -1904,11 +1955,16 @@ describe('containShippedLocalFilePaths', () => {
 });
 
 describe('containLocalPath', () => {
-  it('contains a workspace-relative path and is idempotent for a contained one', () => {
-    expect(containLocalPath('vendor/a')).toBe('local_path_modules/vendor/a');
-    expect(containLocalPath('local_path_modules/vendor/a')).toBe(
-      'local_path_modules/vendor/a'
-    );
+  it.each([
+    'vendor/a',
+    // a workspace directory sharing the shipped directory's name is not an
+    // already-contained path, so it relocates like any other
+    'local_path_modules/vendor/a',
+  ])('round-trips %s through uncontainLocalPath', (wsRelativePath) => {
+    const contained = containLocalPath(wsRelativePath);
+
+    expect(contained).toBe(`local_path_modules/${wsRelativePath}`);
+    expect(uncontainLocalPath(contained)).toBe(wsRelativePath);
   });
 });
 

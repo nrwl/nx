@@ -734,13 +734,12 @@ export const LOCAL_PATH_MODULES_DIR = 'local_path_modules';
 
 /**
  * Relocates a workspace-relative local-path into the shipped output directory.
- * Idempotent: an already-contained path is returned unchanged, so no caller
- * can nest the directory by containing twice.
+ * Injective, so `uncontainLocalPath` recovers the source path for every input:
+ * a workspace directory literally named `local_path_modules/` relocates like
+ * any other rather than being mistaken for an already-relocated path. Callers
+ * must therefore relocate each path exactly once.
  */
 export function containLocalPath(wsRelativePath: string): string {
-  if (wsRelativePath.startsWith(`${LOCAL_PATH_MODULES_DIR}/`)) {
-    return wsRelativePath;
-  }
   return `${LOCAL_PATH_MODULES_DIR}/${wsRelativePath}`;
 }
 
