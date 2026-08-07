@@ -89,6 +89,61 @@ describe('runTypeCheck', () => {
     expect(existsSync(join(cacheDir, '.tsbuildinfo'))).toBe(true);
   });
 
+  it('should type-check a baseUrl-less config using ${configDir} paths passed via a relative path', async () => {
+    // The relative config path esbuild passes here must not trip TS5090.
+    writeFileSync(
+      join(workspaceRoot, 'tsconfig.base.json'),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            skipLibCheck: true,
+            strict: false,
+            module: 'esnext',
+            moduleResolution: 'bundler',
+            paths: {
+              '@/*': ['${configDir}/src/*'],
+              '~/*': ['${configDir}/src/*'],
+            },
+          },
+        },
+        null,
+        2
+      )
+    );
+    const relativeTsConfigPath = 'proj/tsconfig.json';
+    writeFileSync(
+      join(workspaceRoot, relativeTsConfigPath),
+      JSON.stringify(
+        {
+          extends: '../tsconfig.base.json',
+          include: ['src/**/*.ts'],
+        },
+        null,
+        2
+      )
+    );
+    mkdirSync(join(projectRoot, 'src'), { recursive: true });
+    writeFileSync(
+      join(projectRoot, 'src', 'valid-source.ts'),
+      `export const msg = 'Hello';`
+    );
+
+    // chdir so the relative tsConfigPath resolves from the workspace root.
+    const originalCwd = process.cwd();
+    process.chdir(workspaceRoot);
+    try {
+      const result = await runTypeCheck({
+        workspaceRoot,
+        tsConfigPath: relativeTsConfigPath,
+        mode: 'noEmit',
+      });
+
+      expect(result.errors).toHaveLength(0);
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
+
   it('should support emitting declarations', async () => {
     const outDir = join(workspaceRoot, 'dist');
     writeFileSync(
