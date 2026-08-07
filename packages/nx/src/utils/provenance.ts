@@ -27,11 +27,10 @@ export async function ensurePackageHasProvenance(
   }
 
   try {
-    const result = await packageRegistryView(
-      packageName,
-      packageVersion,
-      '--json --silent'
-    );
+    const result = await packageRegistryView(packageName, packageVersion, [
+      '--json',
+      '--silent',
+    ]);
     const parsed = JSON.parse(result);
     // `npm view <pkg>@<spec> --json` returns a bare object on npm <= 11 but an
     // array on npm 12 and pnpm, even for a single resolved version. A version

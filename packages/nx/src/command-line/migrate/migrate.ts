@@ -1867,15 +1867,34 @@ async function getPackageMigrationsUsingRegistry(
   );
 }
 
+// Matched exactly: a hostname that merely contains one of these is a different
+// registry. registry.yarnpkg.com is npmjs' CNAME, so it serves the same
+// metadata; the two loopback literals are the spellings of a local registry
+// that the substring below cannot reach, since neither contains "localhost".
+const FULL_METADATA_REGISTRIES: readonly string[] = [
+  'registry.npmjs.org',
+  'registry.yarnpkg.com',
+  '127.0.0.1',
+  '[::1]',
+];
+// Matched as substrings, since neither names a single host: a local registry
+// can sit on a subdomain of localhost, and an Artifactory instance is
+// identified only by that word appearing somewhere in its hostname.
+const FULL_METADATA_REGISTRY_MARKERS: readonly string[] = [
+  'localhost',
+  'artifactory',
+];
+
 async function getPackageMigrationsConfigFromRegistry(
   packageName: string,
   packageVersion: string
 ) {
-  const result = await packageRegistryView(
-    packageName,
-    packageVersion,
-    'nx-migrations ng-update dist --json'
-  );
+  const result = await packageRegistryView(packageName, packageVersion, [
+    'nx-migrations',
+    'ng-update',
+    'dist',
+    '--json',
+  ]);
 
   if (!result) {
     return null;
@@ -1888,11 +1907,10 @@ async function getPackageMigrationsConfigFromRegistry(
       .hostname;
 
     // Registries other than npmjs and the local registry may not support full metadata via npm view
-    // so throw error so that fetcher falls back to getting config via install
+    // so throw error so that fetcher falls back to getting config via install.
     if (
-      !['registry.npmjs.org', 'localhost', 'artifactory'].some((v) =>
-        registry.includes(v)
-      )
+      !FULL_METADATA_REGISTRIES.includes(registry) &&
+      !FULL_METADATA_REGISTRY_MARKERS.some((v) => registry.includes(v))
     ) {
       throw new Error(
         `Getting migration config from registry is not supported from ${registry}`
