@@ -1226,7 +1226,7 @@ async function determineNoneOptions(
   }
 }
 
-async function determineReactOptions(
+export async function determineReactOptions(
   parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<Partial<ReactArguments>> {
   let preset: Preset;
@@ -1333,23 +1333,8 @@ async function determineReactOptions(
             message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
-            name: 'less',
-            message: 'LESS              [ https://lesscss.org     ]',
-          },
-          {
-            name: 'styled-components',
-            message:
-              'styled-components [ https://styled-components.com            ]',
-          },
-          {
-            name: '@emotion/styled',
-            message:
-              'emotion           [ https://emotion.sh                       ]',
-          },
-          {
-            name: 'styled-jsx',
-            message:
-              'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
+            name: 'none',
+            message: 'None',
           },
         ],
       },
@@ -1491,7 +1476,7 @@ async function determineVueOptions(
   };
 }
 
-async function determineAngularOptions(
+export async function determineAngularOptions(
   parsedArgs: yargs.Arguments<AngularArguments>
 ): Promise<Partial<AngularArguments>> {
   let preset: Preset;
@@ -1599,6 +1584,10 @@ async function determineAngularOptions(
           {
             name: 'scss',
             message: 'SASS(.scss)       [ https://sass-lang.com   ]',
+          },
+          {
+            name: 'sass',
+            message: 'SASS(.sass)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
