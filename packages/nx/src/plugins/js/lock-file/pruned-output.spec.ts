@@ -2490,6 +2490,55 @@ describe('validatePrunedLocalPathClosure', () => {
     );
   }
 
+  it('does not validate a link target that resolves to the workspace root', () => {
+    // The declared path is inside the workspace, so only resolving it shows
+    // that the target is the workspace root itself. Validating it would fail
+    // the build over the root manifest's own dependencies.
+    writeFileSync(
+      join(tempDir, 'package.json'),
+      JSON.stringify({
+        name: 'root',
+        dependencies: { 'only-at-root': '1.0.0' },
+      })
+    );
+    mkdirSync(join(tempDir, 'tools'), { recursive: true });
+    symlinkSync(tempDir, join(tempDir, 'tools/ws-link'));
+
+    expect(() =>
+      validatePrunedLocalPathClosure(
+        { name: 'app', version: '1.0.0' },
+        tempDir,
+        lockfileLinking('tools/ws-link')
+      )
+    ).not.toThrow();
+  });
+
+  it('does not validate a link target that resolves outside the workspace', () => {
+    const outsideDir = mkdtempSync(join(tmpdir(), 'nx-link-outside-'));
+    try {
+      writeFileSync(
+        join(outsideDir, 'package.json'),
+        JSON.stringify({
+          name: 'outside-lib',
+          version: '1.0.0',
+          dependencies: { lodash: '^4.0.0' },
+        })
+      );
+      mkdirSync(join(tempDir, 'vendor'), { recursive: true });
+      symlinkSync(outsideDir, join(tempDir, 'vendor/linked'));
+
+      expect(() =>
+        validatePrunedLocalPathClosure(
+          { name: 'app', version: '1.0.0' },
+          tempDir,
+          lockfileLinking('vendor/linked')
+        )
+      ).not.toThrow();
+    } finally {
+      rmSync(outsideDir, { recursive: true, force: true });
+    }
+  });
+
   it('does not validate a local-path package that resolves to the workspace root', () => {
     // A trailing-separator spec relocated to `local_path_modules/./`, which
     // reads back as the workspace root and failed the build over the root
