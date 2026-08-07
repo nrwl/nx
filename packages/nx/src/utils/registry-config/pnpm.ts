@@ -17,6 +17,7 @@ import {
   hasCredentialFor,
   ignoresNpmConfigEnv,
   nerfDart,
+  pnpmEnvVarsResolve,
   readEnvVar,
   readExpandedKey,
   readNpmConfigEnv,
@@ -125,7 +126,7 @@ export function getPnpmSpawnRegistryEnv(
     }
     // auth.ini is an 11.x file, so the workspace .npmrc is the only layer whose
     // bypass list can need re-spelling here.
-    bridgeNoProxy(env, root);
+    bridgeNoProxy(env, root, pnpmVersion);
     applyYamlNetworkSettings(env, settings);
     // On this version line pnpm's user config is npm's own (no auth.ini, no
     // npmrcAuthFile), always a file npm reads for itself.
@@ -134,7 +135,7 @@ export function getPnpmSpawnRegistryEnv(
       root,
       scope,
       getNpmUserConfigPath(root),
-      'resolved-registry',
+      pnpmVersion,
       managerIgnoresEnv
     );
     return env;
@@ -184,7 +185,7 @@ export function getPnpmSpawnRegistryEnv(
     root,
     scope,
     getPnpmUserConfigPath(pnpmVersion, root),
-    'declaring-file',
+    pnpmVersion,
     managerIgnoresEnv
   );
 
@@ -441,7 +442,7 @@ function applyEnvNetworkSettings(env: NpmConfigEnv, pnpmVersion: string): void {
  */
 function resolveNoProxy(
   settings: PnpmWorkspaceSettings,
-  root: string,
+  npmrcDir: string,
   authIniPath: string,
   pnpmVersion: string
 ): string | undefined {
@@ -452,7 +453,7 @@ function resolveNoProxy(
   if (settings.noProxy) {
     return settings.noProxy;
   }
-  const fromFiles = fileNoProxy(root, authIniPath);
+  const fromFiles = fileNoProxy(npmrcDir, pnpmVersion, authIniPath);
   if (fromFiles) {
     return fromFiles;
   }
@@ -655,13 +656,39 @@ function warnUnreadableFile(path: string): void {
   );
 }
 
-function readPnpmNpmrcMap(path: string): Map<string, string> | null {
+/** An npmrc-family file as written, null when it could not be read. */
+function readNpmrcOrWarn(path: string): Map<string, string> | null {
   const map = readNpmrcMap(path);
   if (map !== 'unreadable') {
     return map;
   }
   warnUnreadableFile(path);
   return null;
+}
+
+/**
+ * The same file as pnpm ends up with it, which below 11 can be not at all: its
+ * reader expands `${VAR}` in both halves of an entry through a function that
+ * throws on a reference it resolves nothing for, and the config chain catches
+ * that per file, so one bad reference costs every entry in the file and pnpm
+ * carries on from the layers below. From 11 the lossy reader substitutes an
+ * empty string per entry instead and the file survives.
+ * See parseKey/parseField and Conf.addFile in pnpm's bundled npm-conf.
+ */
+function readPnpmNpmrcMap(
+  path: string,
+  pnpmVersion: string
+): Map<string, string> | null {
+  const map = readNpmrcOrWarn(path);
+  if (map === null || gte(pnpmVersion, '11.0.0')) {
+    return map;
+  }
+  for (const [key, value] of map) {
+    if (!pnpmEnvVarsResolve(key) || !pnpmEnvVarsResolve(value)) {
+      return null;
+    }
+  }
+  return map;
 }
 
 // pnpm's AUTH_VALUE_KEYS. BARE_AUTH_KEYS is the subset this file re-keys onto a
@@ -813,7 +840,7 @@ function bridgeNpmrcSources(
 ): void {
   // The file npm resolves as its project config, beside the package.json the
   // spawn runs from.
-  const projectRaw = readPnpmNpmrcMap(join(root, '.npmrc'));
+  const projectRaw = readNpmrcOrWarn(join(root, '.npmrc'));
   // pnpm reads exactly one workspace .npmrc, beside the workspace manifest it
   // walked up to, and merges it over auth.ini. That file is npm's own only when
   // the two directories coincide; above the spawn's, it is a source only pnpm
@@ -821,8 +848,8 @@ function bridgeNpmrcSources(
   const workspaceRaw =
     workspaceDir === root
       ? projectRaw
-      : readPnpmNpmrcMap(join(workspaceDir, '.npmrc'));
-  const authIniRaw = readPnpmNpmrcMap(authIniPath);
+      : readNpmrcOrWarn(join(workspaceDir, '.npmrc'));
+  const authIniRaw = readNpmrcOrWarn(authIniPath);
   // Highest pnpm precedence first.
   const sources: PnpmNpmrcSource[] = [];
   if (workspaceRaw) {
@@ -1029,20 +1056,29 @@ function bridgeNpmrcSources(
  * to be re-spelled. A `noProxy` in pnpm-workspace.yaml outranks both files and
  * is applied after this.
  */
-function bridgeNoProxy(env: NpmConfigEnv, root: string): void {
-  const value = fileNoProxy(root);
+function bridgeNoProxy(
+  env: NpmConfigEnv,
+  root: string,
+  pnpmVersion: string
+): void {
+  const value = fileNoProxy(root, pnpmVersion);
   if (value) {
     setProxies(env, { noProxy: value });
   }
 }
 
-function fileNoProxy(root: string, authIniPath?: string): string | undefined {
-  const projectNpmrc = readPnpmNpmrcMap(join(root, '.npmrc'));
+function fileNoProxy(
+  npmrcDir: string,
+  pnpmVersion: string,
+  authIniPath?: string
+): string | undefined {
+  const projectNpmrc = readPnpmNpmrcMap(join(npmrcDir, '.npmrc'), pnpmVersion);
   // The workspace .npmrc outranks auth.ini, and declaring the key empty there
   // is pnpm's way of clearing an inherited bypass list.
   const value = projectNpmrc?.has('no-proxy')
     ? projectNpmrc.get('no-proxy')
-    : authIniPath && readPnpmNpmrcMap(authIniPath)?.get('no-proxy');
+    : authIniPath &&
+      readPnpmNpmrcMap(authIniPath, pnpmVersion)?.get('no-proxy');
   // npm ignores `no-proxy` in the file it does read, so the value never goes
   // through npm's own expansion under that key; expand it with pnpm's grammar.
   return value ? expandPnpmEnvVars(value) : undefined;
@@ -1163,14 +1199,6 @@ function getNpmUserConfigPath(root: string): string {
 }
 
 /**
- * Where pnpm pins a `tokenHelper` written without a registry prefix. 11
- * rescopes it per file, onto the registry that same file declares
- * (rescopeUnscopedCreds); 10.x pins it onto the registry that wins overall
- * instead (getAuthHeadersFromConfig keys it on allSettings.registry).
- */
-type UnscopedHelperPin = 'declaring-file' | 'resolved-registry';
-
-/**
  * Reports a credential pnpm produces by running a token helper, which npm has
  * no setting for and no way to reproduce. Both supported lines take a helper
  * only from the user config pnpm resolves (10.x getAuthHeadersFromConfig reads
@@ -1183,30 +1211,32 @@ function reportTokenHelper(
   root: string,
   scope: string | null,
   userConfigPath: string,
-  unscopedPin: UnscopedHelperPin,
+  pnpmVersion: string,
   managerIgnoresEnv: IgnoresNpmConfigEnv
 ): void {
-  const userConfig = readPnpmNpmrcMap(userConfigPath);
+  const userConfig = readPnpmNpmrcMap(userConfigPath, pnpmVersion);
   if (!userConfig) {
     return;
   }
-  const projectNpmrc = readPnpmNpmrcMap(join(root, '.npmrc')) ?? new Map();
+  const projectNpmrc = readNpmrcOrWarn(join(root, '.npmrc')) ?? new Map();
   const contactedDart = nerfDart(
     contactedRegistry(env, projectNpmrc, scope, managerIgnoresEnv)
   );
-  const pinnedDart =
-    unscopedPin === 'declaring-file'
-      ? // pnpm expands `${VAR}` in this file before reading the registry off it.
-        nerfDart(
-          expandPnpmEnvVars(userConfig.get('registry') ?? '') ||
-            DEFAULT_REGISTRY
-        )
-      : // The default registry, never a scoped one: pnpm keys the helper on
-        // `registry` alone, so a scoped package goes elsewhere without it.
-        nerfDart(
-          npmResolved(env, projectNpmrc, 'registry', managerIgnoresEnv) ||
-            DEFAULT_REGISTRY
-        );
+  // Where pnpm pins a `tokenHelper` written without a registry prefix.
+  const pinnedDart = gte(pnpmVersion, '11.0.0')
+    ? // 11 rescopes it per file, onto the registry that same file declares
+      // (rescopeUnscopedCreds), expanding `${VAR}` before reading it off.
+      nerfDart(
+        expandPnpmEnvVars(userConfig.get('registry') ?? '') || DEFAULT_REGISTRY
+      )
+    : // 10.x pins it onto the registry that wins overall instead
+      // (getAuthHeadersFromConfig keys it on allSettings.registry). The default
+      // registry, never a scoped one: pnpm keys the helper on
+      // `registry` alone, so a scoped package goes elsewhere without it.
+      nerfDart(
+        npmResolved(env, projectNpmrc, 'registry', managerIgnoresEnv) ||
+          DEFAULT_REGISTRY
+      );
   if (
     !contactedDart ||
     !declaresTokenHelper(userConfig, contactedDart, pinnedDart)

@@ -332,6 +332,66 @@ describe('getPnpmSpawnRegistryEnv', () => {
       expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({});
     });
 
+    it('drops a whole .npmrc over one unresolvable env reference, the way pnpm below 11 does', () => {
+      // Its reader throws on the reference and the config chain catches that per
+      // file, so the resolvable key beside it goes down with it. From 11 the
+      // lossy reader substitutes an empty string for that one entry and keeps
+      // the rest.
+      writeFileSync(
+        join(root, '.npmrc'),
+        'no-proxy=internal.example.com\ncafile=${NX_TEST_HOST}/ca.pem'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({});
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_noproxy: 'internal.example.com',
+      });
+    });
+
+    it('drops it over an unresolvable reference in a key, which pnpm expands first', () => {
+      writeFileSync(
+        join(root, '.npmrc'),
+        'no-proxy=internal.example.com\n//${NX_TEST_HOST}/:_authToken=secret'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({});
+    });
+
+    it('keeps the file when every reference resolves, fallbacks included', () => {
+      process.env.NX_TEST_HOST = 'internal';
+      writeFileSync(
+        join(root, '.npmrc'),
+        'no-proxy=${NX_TEST_HOST}.example.com'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
+        npm_config_noproxy: 'internal.example.com',
+      });
+      // pnpm resolves a `${VAR-default}` reference to its fallback rather than
+      // failing on the unset variable.
+      delete process.env.NX_TEST_HOST;
+      writeFileSync(
+        join(root, '.npmrc'),
+        'no-proxy=${NX_TEST_HOST-fallback}.example.com'
+      );
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({
+        npm_config_noproxy: 'fallback.example.com',
+      });
+    });
+
+    it('reports no token helper from a user config pnpm drops that way', () => {
+      // pnpm never gets the helper out of the file, so there is no credential
+      // npm is missing.
+      const { logger } = require('../logger');
+      (logger.warn as jest.Mock).mockClear();
+      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+      writeUserConfig(
+        '//reg-a.example.com/:tokenHelper=/usr/local/bin/get-token\ncafile=${NX_TEST_HOST}/ca.pem'
+      );
+      jest.isolateModules(() => {
+        const { getPnpmSpawnRegistryEnv: fresh } = require('./pnpm');
+        fresh('is-even', root, '10.16.0');
+      });
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
     it('bridges nothing for an unscoped package when the map has only scoped entries (pnpm itself crashes here)', () => {
       writeYaml('registries:\n  "@types": https://reg-e.example.com/\n');
       expect(getPnpmSpawnRegistryEnv('is-even', root, '10.16.0')).toEqual({});
