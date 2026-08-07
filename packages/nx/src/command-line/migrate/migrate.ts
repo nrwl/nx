@@ -33,6 +33,7 @@ import {
 } from '../../utils/fileutils';
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
+import { quoteShellArg } from '../../utils/shell-quoting';
 import { logger } from '../../utils/logger';
 import {
   getGitCurrentBranch,
@@ -82,7 +83,7 @@ import {
   getInstalledVersion,
 } from '../../utils/installed-nx-version';
 import { readNxJson } from '../../config/configuration';
-import { runNxSync } from '../../utils/child-process';
+import { runNxArgvSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -3057,12 +3058,11 @@ export async function executeMigrations(
 
 // Forwards this invocation's raw argv to the workspace-local nx, used from
 // each run path's temp-installation check (`!__dirname.startsWith(workspaceRoot)`)
-// right after its gated `runInstall` pre-install. `runNxSync` resolves nx
-// through the workspace's package manager at spawn time, so the child runs
-// the bytes that pre-install put in place.
+// right after its gated `runInstall` pre-install. nx is located at spawn time,
+// so the child runs the bytes that pre-install put in place.
 function handOffToLocalNx(args: string[]): number | undefined {
   const exitCode = runOrReturnExitCode(() =>
-    runNxSync(`migrate ${args.join(' ')}`, {
+    runNxArgvSync(['migrate', ...args], {
       stdio: ['inherit', 'inherit', 'inherit'],
       env: {
         ...process.env,
@@ -3700,9 +3700,10 @@ export async function runMigration() {
     // spawn machinery rather than of this fallback: a `.nx/installation`
     // beside a root package.json, and a spawn that misses the workspace
     // install and falls back to an nx on PATH (pnpm exec).
+    const forwardedArgv = process.argv.slice(3);
     const runLocalMigrate = () =>
       runOrReturnExitCode(() =>
-        runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
+        runNxArgvSync(['_migrate', ...forwardedArgv], {
           stdio: ['inherit', 'inherit', 'inherit'],
         })
       );
@@ -3746,15 +3747,25 @@ export async function runMigration() {
       ) {
         delete process.env.npm_config_registry;
       }
-      // Intentionally not runNxSync: `p` is an nx CLI freshly installed into a
-      // temp dir by nxCliPath() (latest, or NX_MIGRATE_CLI_VERSION), so
-      // migrations run with an up-to-date migrate implementation instead of
-      // the workspace's current nx.
+      // Intentionally not the workspace's nx: `p` is an nx CLI freshly
+      // installed into a temp dir by nxCliPath() (latest, or
+      // NX_MIGRATE_CLI_VERSION), so migrations run with an up-to-date migrate
+      // implementation. `p` is that install's bin shim; spawn its JS entry
+      // directly so the forwarded argv is not re-parsed by a shell.
+      const tempNxEntry = join(dirname(dirname(p)), 'nx', 'bin', 'nx.js');
       return runOrReturnExitCode(() =>
-        execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
-          stdio: ['inherit', 'inherit', 'inherit'],
-          windowsHide: true,
-        })
+        existsSync(tempNxEntry)
+          ? runNxArgvSync(['_migrate', ...forwardedArgv], {
+              stdio: ['inherit', 'inherit', 'inherit'],
+              nxBin: tempNxEntry,
+            })
+          : execSync(
+              `${p} _migrate ${forwardedArgv.map(quoteShellArg).join(' ')}`,
+              {
+                stdio: ['inherit', 'inherit', 'inherit'],
+                windowsHide: true,
+              }
+            )
       );
     }
 
