@@ -463,7 +463,37 @@ describe('createConfig', () => {
 
       const serverExportsRule = findServerExportsRule(configs[1]);
       expect(serverExportsRule.options.engineWiring).toMatchObject({
-        allowedHosts: ['*.example.com', 'foo.dev', 'localhost'],
+        allowedHosts: [
+          'example.com',
+          '*.example.com',
+          'foo.dev',
+          'localhost',
+          '*.localhost',
+          '127.0.0.1',
+          '[::1]',
+        ],
+      });
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should allow every host in the engine manifest when the dev-server host check is disabled', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        devServer: { disableHostCheck: true },
+      });
+
+      const serverExportsRule = findServerExportsRule(configs[1]);
+      expect(serverExportsRule.options.engineWiring).toMatchObject({
+        allowedHosts: ['*', 'localhost', '*.localhost', '127.0.0.1', '[::1]'],
       });
     } finally {
       vi.unstubAllEnvs();
