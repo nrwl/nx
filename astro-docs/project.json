@@ -171,6 +171,22 @@
         "{projectRoot}/scripts/vale-changed.mjs"
       ]
     },
+    "pylon-sync": {
+      "//": "Mirrors src/content/docs/kb into the Pylon knowledge base. Needs PYLON_API_TOKEN. Runs nightly via .github/workflows/pylon-kb-sync.yml",
+      "cache": false,
+      "command": "tsx scripts/pylon/sync-kb.ts",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "pylon-preview": {
+      "//": "Renders kb articles through the Pylon converter offline, no API token needed",
+      "cache": false,
+      "command": "tsx scripts/pylon/render-preview.ts",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
     "format": {
       "cache": true,
       "//": "nx format doesn't respect overrides, so we manually run prettier for mdoc files",
