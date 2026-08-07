@@ -56,7 +56,7 @@ export function isPackageInstalled(root: string, name: string): boolean {
   }
 }
 
-export function getInstalledPackageVersion(
+export function getInstalledPackageVersionFromRoot(
   root: string,
   name: string
 ): string | null {
@@ -66,8 +66,17 @@ export function getInstalledPackageVersion(
     });
 
     return (require(packageJsonPath) as { version?: string }).version ?? null;
-  } catch {
-    return null;
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    // Not installed, or the package does not export its package.json; the
+    // version is unknown either way.
+    if (
+      code === 'MODULE_NOT_FOUND' ||
+      code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+    ) {
+      return null;
+    }
+    throw error;
   }
 }
 

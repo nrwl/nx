@@ -73,7 +73,7 @@ function createDiskAsset(filePath: string): ServerAsset | undefined {
     if (error.code !== 'ENOENT') {
       throw error;
     }
-    // Removed between the listing and the stat by a concurrent rebuild;
+    // Never emitted under this name, or removed by a concurrent rebuild;
     // rendering reports the missing asset.
     return undefined;
   }
