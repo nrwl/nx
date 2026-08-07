@@ -104,6 +104,37 @@ describe('copyWorkspaceModules', () => {
     );
   }
 
+  it('copies a module whose graph root is workspace-relative', async () => {
+    // The project graph records `data.root` relative to the workspace root; the
+    // absolute form the other cases use is the exception, not the rule.
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+      }),
+      'libs/liba/index.js': 'module.exports = 1;',
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map([['@scope/liba', { data: { root: 'libs/liba' } } as any]])
+    );
+
+    await runExecutor();
+
+    expect(readCopiedManifest('@scope/liba').name).toBe('@scope/liba');
+    expect(
+      existsSync(
+        join(tempFs.tempDir, 'dist/app/workspace_modules/@scope/liba/index.js')
+      )
+    ).toBe(true);
+  });
+
   it('resolves catalog references in a copied workspace module manifest', async () => {
     tempFs.createFilesSync({
       [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
