@@ -111,6 +111,8 @@ async function main() {
     root: projectGraph.nodes[projectName].data.root,
   });
 
+  // For pnpm this also reconciles "packageJson" with the pruned lockfile, so
+  // write the manifest after it rather than before.
   const lockFile = createLockFile(
     packageJson,
     projectGraph,
@@ -179,6 +181,8 @@ export default async function buildExecutor(
 
   // do any additional manipulations to "package.json" here
 
+  // For pnpm this also reconciles "packageJson" with the pruned lockfile, so
+  // write the manifest after it rather than before.
   const lockFile = createLockFile(
     packageJson,
     context.projectGraph,
