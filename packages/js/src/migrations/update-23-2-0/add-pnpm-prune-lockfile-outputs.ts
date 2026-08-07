@@ -31,6 +31,15 @@ interface PruneTargetRef {
   matcherExecutor: string | undefined;
 }
 
+/**
+ * A prune target with the `targetDefaults` key the runtime would resolve for
+ * it, carried together so the two cannot fall out of step.
+ */
+interface KeyedPruneTargetRef {
+  ref: PruneTargetRef;
+  selectedKey: string | null;
+}
+
 export default async function update(tree: Tree) {
   const nxJson = readNxJson(tree);
   const pruneTargets: PruneTargetRef[] = [];
@@ -77,21 +86,15 @@ export default async function update(tree: Tree) {
     // runtime applies only the first key that resolves for a target
     // (executor, exact name, then longest glob), so anchor each prune target
     // to its selected key
-    const selectedKeys = pruneTargets.map((ref) =>
-      selectDefaultsKey(ref, targetDefaults)
-    );
+    const keyedPruneTargets = pruneTargets.map<KeyedPruneTargetRef>((ref) => ({
+      ref,
+      selectedKey: selectDefaultsKey(ref, targetDefaults),
+    }));
     let defaultsChanged = false;
     for (const [key, value] of Object.entries(targetDefaults)) {
       // a value may be the plain object form or the filtered array form
       for (const config of Array.isArray(value) ? value : [value]) {
-        if (
-          !appliesToPruneLockfileTargets(
-            key,
-            config,
-            pruneTargets,
-            selectedKeys
-          )
-        ) {
+        if (!appliesToPruneLockfileTargets(key, config, keyedPruneTargets)) {
           continue;
         }
         defaultsChanged = appendPnpmPruneOutputs(config) || defaultsChanged;
@@ -211,8 +214,7 @@ function selectDefaultsKey(
 function appliesToPruneLockfileTargets(
   key: string,
   config: TargetDefaultArrayEntry,
-  pruneTargets: PruneTargetRef[],
-  selectedKeys: (string | null)[]
+  pruneTargets: KeyedPruneTargetRef[]
 ): boolean {
   const filter = config.filter;
   if (
@@ -243,13 +245,13 @@ function appliesToPruneLockfileTargets(
     return locatesExecutor && filter?.projects === undefined;
   }
   return pruneTargets.some(
-    ({ targetName, projectName, projectNode, matcherExecutor }, index) =>
-      selectedKeys[index] === key &&
+    ({ ref, selectedKey }) =>
+      selectedKey === key &&
       readTargetDefaultsForTarget(
-        targetName,
+        ref.targetName,
         { [key]: [config] },
-        matcherExecutor,
-        { projectName, projectNode }
+        ref.matcherExecutor,
+        { projectName: ref.projectName, projectNode: ref.projectNode }
       ) !== null
   );
 }
