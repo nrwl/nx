@@ -34,8 +34,6 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  // No `as NormalizedSchema`: the assertion would stop the compiler checking
-  // that every required field is present, which is the point of the type.
   const normalized: NormalizedSchema = {
     ...options,
     projectName: appProjectName,
