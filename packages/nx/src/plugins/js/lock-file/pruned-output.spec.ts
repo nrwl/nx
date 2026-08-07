@@ -324,20 +324,42 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     ).toBeNull();
   });
 
-  it('warns when the pruned lockfile parses to something other than a mapping', () => {
+  // Valid YAML that is not a lockfile document. Each case needs its own content,
+  // since the parse is memoized (see the unparseable case below).
+  it.each([
+    ['a scalar', 'NOT_A_LOCKFILE_DOCUMENT'],
+    ['a sequence', '- packages\n- snapshots'],
+  ])('warns when the pruned lockfile parses to %s', (_kind, content) => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
     const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
 
-    // Valid YAML, but a scalar rather than a lockfile document. Unique content,
-    // since the parse is memoized (see the unparseable case below).
-    const yaml = getPrunedPnpmInstallSettingsYaml(
-      tempDir,
-      'NOT_A_LOCKFILE_DOCUMENT'
-    );
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir, content);
 
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('does not parse to a YAML mapping')
+    );
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      packages: [],
+      allowBuilds: { esbuild: true },
+    });
+  });
+
+  it('warns when the pruned lockfile carries no document after its start marker', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    // Opens a YAML document and never separates a second one, so the extraction
+    // is empty and used to read back as an empty lockfile.
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      "---\nlockfileVersion: '9.0'\n"
+    );
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('carries no lockfile document')
     );
     const { load } = require('@zkochan/js-yaml');
     expect(load(yaml)).toEqual({
@@ -359,7 +381,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
 
     expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('Could not parse the pruned pnpm lockfile')
+      expect.stringContaining('Could not parse the pnpm lockfile')
     );
     const { load } = require('@zkochan/js-yaml');
     // Scoping needs the lockfile's package names; without them, dropping an

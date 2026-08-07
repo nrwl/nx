@@ -343,20 +343,28 @@ function parsePnpmLockfileYaml(content: string): object | null {
     // the process.
     const warnUnusable = (cause: string): void => {
       logger.warn(
-        `Could not parse the pruned pnpm lockfile (${cause}); the pruned output will not carry patch declarations, local-path artifacts, or a validated link closure.`
+        `Could not parse the pnpm lockfile (${cause}); the pruned output will not carry patch declarations, local-path artifacts, or a validated link closure.`
       );
     };
     let parsed: unknown;
-    try {
-      parsed =
-        require('@zkochan/js-yaml').load(
-          extractMainLockfileDocument(content)
-        ) ?? {};
-    } catch (e) {
-      warnUnusable(e instanceof Error ? e.message : String(e));
+    // A lockfile that opens a YAML document and never separates a second one
+    // extracts to nothing, which would otherwise read as an empty lockfile.
+    const document = extractMainLockfileDocument(content);
+    if (document.trim() === '' && content.trim() !== '') {
+      warnUnusable('it carries no lockfile document');
       parsed = null;
+    } else {
+      try {
+        parsed = require('@zkochan/js-yaml').load(document) ?? {};
+      } catch (e) {
+        warnUnusable(e instanceof Error ? e.message : String(e));
+        parsed = null;
+      }
     }
-    if (parsed !== null && typeof parsed !== 'object') {
+    if (
+      parsed !== null &&
+      (typeof parsed !== 'object' || Array.isArray(parsed))
+    ) {
       warnUnusable('it does not parse to a YAML mapping');
       parsed = null;
     }
