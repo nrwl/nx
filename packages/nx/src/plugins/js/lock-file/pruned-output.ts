@@ -221,20 +221,32 @@ export function getPrunedPnpmInstallSettingsYaml(
   return dump({ packages: [], ...settings });
 }
 
+const pnpmMajorByWorkspaceRoot = new Map<string, number | null>();
+
 /**
  * The pnpm major of the workspace's package manager, or null when it cannot be
- * determined (unknown or unparseable version).
+ * determined (unknown or unparseable version). Memoized per workspace root:
+ * `getPackageManagerVersion` re-reads the root manifest on every call and shells
+ * out to `pnpm --version` when it declares no `packageManager`, while the
+ * bundler plugins reach this once per compilation, so a watched build would pay
+ * it on every rebuild.
  */
 function getPnpmMajor(workspaceRootPath: string): number | null {
+  if (pnpmMajorByWorkspaceRoot.has(workspaceRootPath)) {
+    return pnpmMajorByWorkspaceRoot.get(workspaceRootPath);
+  }
+  let major: number | null;
   try {
-    const major = Number.parseInt(
+    const parsed = Number.parseInt(
       getPackageManagerVersion('pnpm', workspaceRootPath).split('.')[0],
       10
     );
-    return Number.isNaN(major) ? null : major;
+    major = Number.isNaN(parsed) ? null : parsed;
   } catch {
-    return null;
+    major = null;
   }
+  pnpmMajorByWorkspaceRoot.set(workspaceRootPath, major);
+  return major;
 }
 
 /**

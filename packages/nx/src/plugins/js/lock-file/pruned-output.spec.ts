@@ -181,25 +181,74 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
   });
 
-  it('writes the settings file on pnpm 11 and skips it on pnpm 10', () => {
-    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
-    const outputDir = join(tempDir, 'dist');
-    mkdirSync(outputDir);
-    const outputFile = join(outputDir, 'pnpm-workspace.yaml');
+  it('detects the pnpm version once per workspace root across writes', () => {
+    // The bundler plugins emit once per compilation, and resolving the version
+    // re-reads the root manifest and can shell out to `pnpm --version`.
+    const workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-memo-'));
+    try {
+      writeFileSync(
+        join(workspaceRoot, 'pnpm-workspace.yaml'),
+        'allowBuilds:\n  esbuild: true\n'
+      );
+      const outputDir = join(workspaceRoot, 'dist');
+      mkdirSync(outputDir);
+      const readVersion = jest
+        .spyOn(pacakgeManager, 'getPackageManagerVersion')
+        .mockReturnValue('11.2.2');
 
-    mockPnpmVersion('10.5.0');
-    writePrunedPnpmInstallSettings(outputDir, tempDir);
-    expect(existsSync(outputFile)).toBe(false);
+      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
+      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
 
-    jest.restoreAllMocks();
-    mockPnpmVersion('11.2.2');
-    writePrunedPnpmInstallSettings(outputDir, tempDir);
-    expect(existsSync(outputFile)).toBe(true);
-    const { load } = require('@zkochan/js-yaml');
-    expect(load(readFileSync(outputFile, 'utf-8'))).toEqual({
-      packages: [],
-      allowBuilds: { esbuild: true },
-    });
+      expect(readVersion).toHaveBeenCalledTimes(1);
+    } finally {
+      rmSync(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('skips the settings file on pnpm 10', () => {
+    // A separate workspace root per pnpm major: the detected version is
+    // memoized per root, as it is for the duration of a real process.
+    const workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-10-'));
+    try {
+      writeFileSync(
+        join(workspaceRoot, 'pnpm-workspace.yaml'),
+        'allowBuilds:\n  esbuild: true\n'
+      );
+      const outputDir = join(workspaceRoot, 'dist');
+      mkdirSync(outputDir);
+      mockPnpmVersion('10.5.0');
+
+      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
+
+      expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
+    } finally {
+      rmSync(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('writes the settings file on pnpm 11', () => {
+    const workspaceRoot = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-11-'));
+    try {
+      writeFileSync(
+        join(workspaceRoot, 'pnpm-workspace.yaml'),
+        'allowBuilds:\n  esbuild: true\n'
+      );
+      const outputDir = join(workspaceRoot, 'dist');
+      mkdirSync(outputDir);
+      const outputFile = join(outputDir, 'pnpm-workspace.yaml');
+      mockPnpmVersion('11.2.2');
+
+      writePrunedPnpmInstallSettings(outputDir, workspaceRoot);
+
+      expect(existsSync(outputFile)).toBe(true);
+      const { load } = require('@zkochan/js-yaml');
+      expect(load(readFileSync(outputFile, 'utf-8'))).toEqual({
+        packages: [],
+        allowBuilds: { esbuild: true },
+      });
+    } finally {
+      rmSync(workspaceRoot, { recursive: true, force: true });
+    }
   });
 
   const prunedLockfileWith = (...packageKeys: string[]) =>
