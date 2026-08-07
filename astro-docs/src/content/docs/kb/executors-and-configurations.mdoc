@@ -129,14 +129,14 @@ Nx merges the selected configuration into `options`, then applies command-line a
     "dependsOn": ["^build"],
     "options": {
       "tsConfig": "libs/mylib/tsconfig.lib.json",
-      "main": "libs/mylib/src/main.ts"
+      "main": "libs/mylib/src/main.ts",
     },
     "configurations": {
       "production": {
-        "tsConfig": "libs/mylib/tsconfig-prod.lib.json"
-      }
-    }
-  }
+        "tsConfig": "libs/mylib/tsconfig-prod.lib.json",
+      },
+    },
+  },
 }
 ```
 
@@ -168,15 +168,14 @@ For example, running e2e tests for multiple environments. By default it would ma
     "configurations": {
       "dev": {
         "devServerTarget": "my-app:serve"
-      },
-    },
-  },
+      }
+    }
+  }
 }
 ```
 
 When you run `nx e2e my-app-e2e`, Nx uses the _dev_ configuration and starts the local dev server for `my-app`.
 To run another configuration, pass it explicitly: `nx e2e my-app-e2e --configuration=qa` or `nx run my-app-e2e:e2e:qa`.
-
 
 ## Next steps
 
