@@ -162,7 +162,7 @@ describe('app', () => {
           });
 
           expect(
-            tree.read(`${name}/vitest.config.ts`, 'utf-8')
+            tree.read(`${name}/vitest.config.mts`, 'utf-8')
           ).toMatchSnapshot();
           expect(
             tree.read(`${name}/tsconfig.spec.json`, 'utf-8')
@@ -170,6 +170,20 @@ describe('app', () => {
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
           expect(packageJson.devDependencies['vitest']).toEqual('~4.1.0');
+        });
+
+        it('should fall back to a .ts vitest config on eslintrc', async () => {
+          tree.write('.eslintrc.json', '{}');
+
+          await applicationGenerator(tree, {
+            directory: name,
+            unitTestRunner: 'vitest',
+            linter: 'eslint',
+            useAppDir: false,
+          });
+
+          expect(tree.exists(`${name}/vitest.config.ts`)).toBe(true);
+          expect(tree.exists(`${name}/vitest.config.mts`)).toBe(false);
         });
 
         it('should configure tsconfig and project.json correctly', async () => {

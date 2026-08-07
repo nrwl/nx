@@ -54,9 +54,9 @@ describe('@nx/vitest:configuration', () => {
       skipFormat: true,
     });
 
-    expect(tree.exists('vitest.workspace.ts')).toBe(false);
-    expect(tree.exists('vitest.config.ts')).toBe(true);
-    expect(tree.read('vitest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.exists('vitest.workspace.mts')).toBe(false);
+    expect(tree.exists('vitest.config.mts')).toBe(true);
+    expect(tree.read('vitest.config.mts', 'utf-8')).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vitest/config';
 
       export default defineConfig({
@@ -68,7 +68,7 @@ describe('@nx/vitest:configuration', () => {
     `);
   });
 
-  it('should create a root vitest.workspace.ts for vitest 3', async () => {
+  it('should create a root vitest.workspace.mts for vitest 3', async () => {
     setVitestVersion('^3.0.0');
 
     await configurationGenerator(tree, {
@@ -82,7 +82,7 @@ describe('@nx/vitest:configuration', () => {
     });
 
     expect(tree.exists('vitest.config.ts')).toBe(false);
-    expect(tree.read('vitest.workspace.ts', 'utf-8')).toMatchInlineSnapshot(
+    expect(tree.read('vitest.workspace.mts', 'utf-8')).toMatchInlineSnapshot(
       `"export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];"`
     );
   });
@@ -321,7 +321,7 @@ export default defineConfig(() => ({ plugins: [] }));
       skipFormat: true,
     });
 
-    expect(tree.exists('vitest.workspace.ts')).toBe(false);
-    expect(tree.exists('vitest.config.ts')).toBe(true);
+    expect(tree.exists('vitest.workspace.mts')).toBe(false);
+    expect(tree.exists('vitest.config.mts')).toBe(true);
   });
 });
