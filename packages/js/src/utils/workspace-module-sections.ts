@@ -1,3 +1,5 @@
+import type { PackageJsonDependencySection } from '@nx/devkit/internal';
+
 /**
  * App-level dependency sections that can declare a workspace module the pruned
  * standalone output must install. copy-workspace-modules copies the module from
@@ -18,4 +20,4 @@ export const WORKSPACE_MODULE_INSTALL_SECTIONS = [
   'optionalDependencies',
   'devDependencies',
   'peerDependencies',
-] as const;
+] as const satisfies readonly PackageJsonDependencySection[];

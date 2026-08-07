@@ -65,10 +65,11 @@ export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
 const YAML_DOCUMENT_START = '---\n';
 const YAML_DOCUMENT_SEPARATOR = '\n---\n';
 
-// pnpm 11 writes a two-document lockfile when `managePackageManagerVersions` is
-// enabled: the first document holds package-manager metadata, and the second
-// holds the workspace lockfile. Mirror pnpm's own positional extraction so we
-// always read the workspace document.
+// pnpm 11 writes a two-document lockfile when `shouldPersistLockfile` holds
+// (the package manager came from `devEngines`, or declares major 12 or above):
+// the first document holds package-manager metadata, and the second holds the
+// workspace lockfile. Mirror pnpm's own positional extraction so we always read
+// the workspace document.
 // https://github.com/pnpm/pnpm/blob/main/lockfile/fs/src/yamlDocuments.ts
 export function extractMainLockfileDocument(content: string): string {
   // Lockfiles written on Windows may use CRLF line endings, which would never

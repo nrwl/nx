@@ -581,7 +581,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
     writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
     // The prune falls back to the root lockfile on a pruning error, and pnpm 11
-    // writes that lockfile as two documents under managePackageManagerVersions.
+    // writes that lockfile as two documents for a package manager it persists.
     const lockfile = [
       '---',
       'packageManager: pnpm@11.2.2',
@@ -916,7 +916,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     );
     writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
     const packageJson: PackageJson = { name: 'app', version: '0.0.1' };
-    const emitted: Array<{ path: string; content: string }> = [];
+    const emitted: Array<{ path: string; content: string | Buffer }> = [];
 
     emitPrunedPnpmInstallAssets(
       tempDir,
@@ -960,7 +960,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       version: '0.0.1',
       pnpm: { onlyBuiltDependencies: ['esbuild'] },
     };
-    const emitted: Array<{ path: string; content: string }> = [];
+    const emitted: Array<{ path: string; content: string | Buffer }> = [];
 
     emitPrunedPnpmInstallAssets(
       tempDir,
@@ -984,7 +984,7 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   it('emits nothing and leaves package.json untouched when there are no pnpm install settings', () => {
     mockPnpmVersion('11.2.2');
     const packageJson: PackageJson = { name: 'app', version: '0.0.1' };
-    const emitted: Array<{ path: string; content: string }> = [];
+    const emitted: Array<{ path: string; content: string | Buffer }> = [];
 
     emitPrunedPnpmInstallAssets(
       tempDir,
