@@ -298,11 +298,6 @@ export function getLockFilePath(packageManager: PackageManager): string {
  * `options.onPruneFallback` fires just before that so callers can skip work
  * that only makes sense for an actually pruned lockfile (e.g. link-closure
  * validation and local-path artifact shipping).
- *
- * @param packageJson
- * @param isProduction
- * @param packageManager
- * @returns
  */
 export function createLockFile(
   packageJson: PackageJson,

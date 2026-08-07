@@ -311,9 +311,9 @@ let lastParsedPnpmLockfile: {
  * the same content for the patch scope, the build-script approvals, the
  * local-path artifacts, and the link-closure validation, and a watch-mode
  * rebuild re-reads an unchanged lockfile. The fallback path passes the root
- * lockfile in, which pnpm 11 writes as two YAML documents when
- * `managePackageManagerVersions` is on, so the workspace document is extracted
- * the way the pnpm lockfile parser does. Returns null when the content is not
+ * lockfile in, which pnpm 11 writes as two YAML documents for a package manager
+ * it persists (see `shouldPersistLockfile`), so the workspace document is
+ * extracted the way the pnpm lockfile parser does. Returns null when the content is not
  * valid YAML or does not parse to an object. Consumers must not mutate the
  * returned document.
  */
@@ -480,14 +480,25 @@ function readRootPatchedDependencies(
   return merged;
 }
 
-type RootPnpmBuildSettings = {
-  onlyBuiltDependencies?: string[];
-  neverBuiltDependencies?: string[];
-  allowBuilds?: Record<string, boolean>;
-  supportedArchitectures?: NonNullable<
-    PackageJson['pnpm']
-  >['supportedArchitectures'];
-};
+/**
+ * The build-script subset of the root `pnpm` config, taken from `PackageJson`
+ * so the two cannot describe the same fields differently. `pnpm-workspace.yaml`
+ * declares them at the top level, which is why this is read from both.
+ */
+type RootPnpmBuildSettings = Pick<
+  NonNullable<PackageJson['pnpm']>,
+  | 'onlyBuiltDependencies'
+  | 'neverBuiltDependencies'
+  | 'allowBuilds'
+  | 'supportedArchitectures'
+>;
+
+/** Copies `key` from `source` to `target` unless the source leaves it unset. */
+function assignDefined<T, K extends keyof T>(target: T, source: T, key: K) {
+  if (source[key] !== undefined) {
+    target[key] = source[key];
+  }
+}
 
 /**
  * The workspace root's pnpm build-script settings, read from both the
@@ -503,7 +514,7 @@ function readRootPnpmBuildSettings(
     'neverBuiltDependencies',
     'allowBuilds',
     'supportedArchitectures',
-  ] as const;
+  ] as const satisfies readonly (keyof RootPnpmBuildSettings)[];
   const merged: RootPnpmBuildSettings = {};
   const sources: RootPnpmBuildSettings[] = [];
   // Each source is read in its own try so a broken one does not discard the
@@ -533,9 +544,7 @@ function readRootPnpmBuildSettings(
   // Later source (pnpm-workspace.yaml) wins per field.
   for (const source of sources) {
     for (const field of fields) {
-      if (source[field] !== undefined) {
-        merged[field] = source[field] as any;
-      }
+      assignDefined(merged, source, field);
     }
   }
   return merged;
@@ -812,14 +821,19 @@ function containFilePackageKey(key: string): string {
  * refs) under `LOCAL_PATH_MODULES_DIR`, matching where the artifacts ship, so a
  * standalone `pnpm install` resolves them. `link:` refs are relocated upstream
  * by `relocatePrunedLocalPathSpec`; only `file:` paths (carried verbatim from
- * the source lockfile) are contained here. Workspace-module, escaping, and
- * already-contained paths are left untouched. Mutates `lockfile` in place; the
- * key rename and every ref use the same `file:` path, so they stay in sync.
+ * the source lockfile) are contained here. Workspace-module and escaping paths
+ * are left untouched. Mutates `lockfile` in place; the key rename and every ref
+ * use the same `file:` path, so they stay in sync.
+ *
+ * Takes the normalized document rather than a looser shape: dependency refs are
+ * rewritten only where they are plain strings, which is what normalization
+ * guarantees. A raw v9 file records an importer ref as `{ specifier, version }`
+ * and would have its package key renamed while that ref kept pointing at the
+ * old path.
  */
-export function containShippedLocalFilePaths(lockfile: {
-  importers?: Record<string, unknown>;
-  packages?: Record<string, unknown>;
-}): void {
+export function containShippedLocalFilePaths(
+  lockfile: Partial<Pick<Lockfile, 'importers' | 'packages'>>
+): void {
   const containSnapshot = (snapshot: unknown): void => {
     if (!snapshot || typeof snapshot !== 'object') {
       return;
@@ -855,7 +869,7 @@ export function containShippedLocalFilePaths(lockfile: {
   };
 
   if (lockfile.packages) {
-    const contained: Record<string, unknown> = {};
+    const contained: Lockfile['packages'] = {};
     for (const [key, snapshot] of Object.entries(lockfile.packages)) {
       containSnapshot(snapshot);
       contained[containFilePackageKey(key)] = snapshot;
