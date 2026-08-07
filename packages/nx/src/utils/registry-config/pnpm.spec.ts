@@ -51,6 +51,8 @@ describe('getPnpmSpawnRegistryEnv', () => {
     'PNPM_CONFIG_USERCONFIG',
     'npm_config_userconfig',
     'NPM_CONFIG_USERCONFIG',
+    'NPM_CONFIG_WORKSPACE_DIR',
+    'npm_config_workspace_dir',
   ];
   const savedEnv: Record<string, string | undefined> = {};
 
@@ -161,6 +163,96 @@ describe('getPnpmSpawnRegistryEnv', () => {
     );
     expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
       npm_config_registry: 'https://reg-b.example.com/',
+    });
+  });
+
+  it('takes the workspace directory from NPM_CONFIG_WORKSPACE_DIR instead of walking up', () => {
+    // pnpm joins the manifest name onto that directory and skips the lookup, so
+    // the file the walk would have found never comes into it.
+    const nested = join(root, 'nested');
+    const elsewhere = join(root, 'elsewhere');
+    mkdirSync(nested);
+    mkdirSync(elsewhere);
+    writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+    writeFileSync(
+      join(elsewhere, 'pnpm-workspace.yaml'),
+      'registries:\n  default: https://reg-b.example.com/\n'
+    );
+    process.env.NPM_CONFIG_WORKSPACE_DIR = elsewhere;
+    expect(getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toEqual({
+      npm_config_registry: 'https://reg-b.example.com/',
+    });
+    expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+      npm_config_registry: 'https://reg-b.example.com/',
+    });
+  });
+
+  it('falls back to the lowercase spelling only while the uppercase one is unset', () => {
+    // pnpm reaches for the lowercase entry with `??`, so an uppercase one set to
+    // an empty string shadows it, and being falsy sends pnpm back to the walk.
+    const elsewhere = join(root, 'elsewhere');
+    mkdirSync(elsewhere);
+    writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+    writeFileSync(
+      join(elsewhere, 'pnpm-workspace.yaml'),
+      'registries:\n  default: https://reg-b.example.com/\n'
+    );
+    process.env.npm_config_workspace_dir = elsewhere;
+    expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+      npm_config_registry: 'https://reg-b.example.com/',
+    });
+    process.env.NPM_CONFIG_WORKSPACE_DIR = '';
+    expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
+  it('reads a NPM_CONFIG_WORKSPACE_DIR without a manifest as a workspace declaring nothing', () => {
+    // pnpm never checks that the file is there, so the directory it was pointed
+    // at stays the workspace rather than the lookup resuming above it.
+    const nested = join(root, 'nested');
+    mkdirSync(nested);
+    writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+    process.env.NPM_CONFIG_WORKSPACE_DIR = nested;
+    expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({});
+  });
+
+  it('fails on a misspelled workspace manifest, the way pnpm refuses to look past one', () => {
+    // pnpm searches the misspellings alongside the real name and aborts on a hit
+    // (BAD_WORKSPACE_MANIFEST_NAME), so the file above is one it never reads.
+    const nested = join(root, 'nested');
+    mkdirSync(nested);
+    writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+    writeFileSync(join(nested, 'pnpm-workspaces.yaml'), 'packages:\n  - "*"\n');
+    expect(() => getPnpmSpawnRegistryEnv('is-even', nested, '11.5.0')).toThrow(
+      /should be named "pnpm-workspace.yaml". File found: .*pnpm-workspaces.yaml/
+    );
+    expect(() => getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toThrow(
+      /should be named "pnpm-workspace.yaml"/
+    );
+  });
+
+  it('reads a correctly named manifest beside a misspelled one', () => {
+    // Within a directory pnpm takes the first name that matches, and the real one
+    // heads its list.
+    writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+    writeFileSync(join(root, 'pnpm-workspace.yml'), 'packages:\n  - "*"\n');
+    expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+    });
+  });
+
+  it('counts the dot-prefixed misspellings from 11.0.0, which added them', () => {
+    const nested = join(root, 'nested');
+    mkdirSync(nested);
+    writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+    writeFileSync(join(nested, '.pnpm-workspace.yaml'), 'packages:\n  - "*"\n');
+    expect(() => getPnpmSpawnRegistryEnv('is-even', nested, '11.0.0')).toThrow(
+      /should be named "pnpm-workspace.yaml"/
+    );
+    // 10.x walks straight past it to the file above.
+    expect(getPnpmSpawnRegistryEnv('is-even', nested, '10.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
     });
   });
 
