@@ -146,7 +146,10 @@ import {
   scheduleProjectGraphRecomputation,
   registerProjectGraphRecomputationListener,
   invalidateGraphCache,
+  isKnownWorkspaceFile,
+  currentProjectGraph,
 } from './project-graph-incremental-recomputation';
+import { outputsChangesInvalidatingGraphEnv } from './dotenv-graph-changes';
 import {
   hasRegisteredProjectGraphListenerSockets,
   registeredProjectGraphListenerSockets,
@@ -664,6 +667,41 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
       disableOutputsTracking();
       return;
     }
+
+    // A dotenv change that a task chain loads must refresh the graph so
+    // createNodes re-resolves config reading process.env. This runs above the
+    // outputsWatcherError guard: the two concerns are independent, and a
+    // disabled outputs tracker must not leave the graph stale on a dotenv edit.
+    // A change to a file the workspace watcher tracks already schedules a
+    // recomputation that reads the new content; invalidating for it here too
+    // would discard that recomputation at commit and force a second one. The
+    // committed file map approximates what the watcher tracks: a file it does
+    // not know is either ignored (never reaches the watcher, so it needs the
+    // invalidation) or created since the last recompute (the watcher handles
+    // it; the extra invalidation is fail-safe). Its own try/catch so a fault
+    // here cannot trip the
+    // outputs-tracking kill switch below, which belongs to an unrelated
+    // subsystem. It fails safe by invalidating: a stale graph on a dotenv edit
+    // is the bug this prevents, and invalidateGraphCache only clears the
+    // cached promise (idempotent, lazy).
+    try {
+      if (
+        outputsChangesInvalidatingGraphEnv(
+          changeEvents,
+          currentProjectGraph
+        ).some((path) => !isKnownWorkspaceFile(path))
+      ) {
+        invalidateGraphCache();
+      }
+    } catch (e) {
+      serverLogger.watcherLog(
+        'Failed to evaluate dotenv changes for graph invalidation; invalidating the graph cache to be safe',
+        e instanceof Error ? e.message : String(e)
+      );
+      console.error(e);
+      invalidateGraphCache();
+    }
+
     if (outputsWatcherError) {
       return;
     }

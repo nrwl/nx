@@ -17,6 +17,7 @@ export {
   // ship to external plugins under the +/- 1 tolerance, so they must keep
   // importing nx/src/utils/catalog directly. See packages/devkit/CLAUDE.md.
   getCatalogManager,
+  getGraphTimeDotEnvForTask,
 } from 'nx/src/devkit-internals';
 
 // Generators
@@ -182,6 +183,7 @@ export {
   getCliPath,
   getCustomHasher,
   getDependencyConfigs,
+  getEnvPathsForTask,
   getExecutorForTask,
   getExecutorInformation,
   getExecutorNameForTask,

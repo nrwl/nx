@@ -1,8 +1,10 @@
 import {
+  createFile,
   runCLI,
   runE2ETests,
   cleanupProject,
   newProject,
+  removeFile,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
@@ -23,6 +25,36 @@ describe('React Playwright e2e tests', () => {
   });
 
   afterAll(() => cleanupProject());
+
+  it('resolves the task dotenv env when baking the web server readiness gate', () => {
+    const e2eProject = `${appName}-e2e`;
+    const configPath = `${e2eProject}/playwright.config.mts`;
+    const gateAddress = 'http://localhost:4301';
+
+    // Write .env before editing the config: both writes trigger a graph
+    // recompute, and this order guarantees the recompute the assertion reads
+    // has seen the dotenv file regardless of how the watcher batches them.
+    createFile(`${e2eProject}/.env`, `BASE_URL=${gateAddress}\n`);
+    let originalConfig = '';
+    updateFile(configPath, (content) => {
+      originalConfig = content;
+      return content.replace(/url: 'http:\/\/[^']*'/, 'url: baseURL');
+    });
+
+    try {
+      const project = JSON.parse(runCLI(`show project ${e2eProject} --json`));
+      const gateTarget = Object.keys(project.targets).find((t) =>
+        t.endsWith('--wait-for-webserver')
+      );
+      expect(gateTarget).toBeDefined();
+      expect(project.targets[gateTarget].options.servers[0].url).toBe(
+        gateAddress
+      );
+    } finally {
+      updateFile(configPath, originalConfig);
+      removeFile(`${e2eProject}/.env`);
+    }
+  });
 
   it('should execute e2e tests using playwright', async () => {
     if (await runE2ETests()) {
