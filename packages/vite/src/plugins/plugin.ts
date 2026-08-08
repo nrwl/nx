@@ -216,7 +216,18 @@ async function buildViteTargets(
   } catch {
     // Plugin not installed or not needed, ignore
   }
-  const { resolveConfig } = await loadViteDynamicImport();
+  const { resolveConfig, loadConfigFromFile } = await loadViteDynamicImport();
+  const configEnv = {
+    command: 'build' as const,
+    mode: 'development' as const,
+    isSsrBuild: false,
+    isPreview: false,
+  };
+  const userConfigResult = await loadConfigFromFile(
+    configEnv,
+    absoluteConfigFilePath,
+    projectRoot
+  );
   const viteBuildConfig = await resolveConfig(
     {
       configFile: absoluteConfigFilePath,
@@ -231,7 +242,8 @@ async function buildViteTargets(
   const { buildOutputs, isBuildable, hasServeConfig } = getOutputs(
     viteBuildConfig,
     projectRoot,
-    context.workspaceRoot
+    context.workspaceRoot,
+    Boolean(userConfigResult?.config?.server)
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -483,7 +495,8 @@ function serveStaticTarget(
 function getOutputs(
   viteBuildConfig: ResolvedConfig | undefined,
   projectRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  hasUserServeConfig = false
 ): {
   buildOutputs: string[];
   isBuildable: boolean;
@@ -493,7 +506,7 @@ function getOutputs(
   // "nodenext". Vite 8's rolldown types are ESM-only (.d.mts) and not
   // resolvable under moduleResolution: "node", which breaks rolldownOptions
   // on ResolvedConfig.
-  const { build, server } = viteBuildConfig as any;
+  const { build } = viteBuildConfig as any;
 
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
@@ -510,7 +523,9 @@ function getOutputs(
       existsSync(join(workspaceRoot, projectRoot, 'index.html'))
   );
 
-  const hasServeConfig = Boolean(server?.host || server?.port);
+  // Vite always resolves default server.port/host even when the user did not
+  // configure a dev server. Only treat an explicit server block as serveable.
+  const hasServeConfig = hasUserServeConfig;
 
   return {
     buildOutputs: [buildOutputPath],
