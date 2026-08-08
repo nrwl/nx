@@ -4,6 +4,9 @@ const mocks = {
   deriveSpecifierFromVersionPlan: jest.fn(),
   resolveVersionActionsForProject: jest.fn(),
   prompt: jest.fn(),
+  // Captures every message that the (mocked) ProjectLogger actually flushes,
+  // as `"<projectName> <message>"`, so tests can assert on flushed output.
+  flushedProjectLogs: [] as string[],
 };
 
 // Aliases for test usage
@@ -54,11 +57,25 @@ jest.mock('./project-logger', () => {
   const actual = jest.requireActual('./project-logger');
   return {
     ...actual,
-    // Don't slow down or add noise to unit tests output unnecessarily
+    // Faithful-but-silent double: `buffer` accumulates and `flush` "emits" the
+    // buffered lines into `mocks.flushedProjectLogs` (mirroring the real flush,
+    // which clears the buffer after emitting) instead of printing. This keeps
+    // the suite quiet while letting tests assert on what was actually flushed.
     ProjectLogger: class ProjectLogger {
-      buffer() {}
+      private logs: string[] = [];
 
-      flush() {}
+      constructor(private projectName: string) {}
+
+      buffer(msg: string) {
+        this.logs.push(msg);
+      }
+
+      flush() {
+        for (const msg of this.logs) {
+          mocks.flushedProjectLogs.push(`${this.projectName} ${msg}`);
+        }
+        this.logs = [];
+      }
     },
   };
 });
@@ -207,6 +224,8 @@ describe('releaseVersionGenerator (ported tests)', () => {
     mockResolveVersionActionsForProject.mockImplementation(
       mockResolveVersionActionsForProjectImplementation
     );
+
+    mocks.flushedProjectLogs.length = 0;
   });
 
   afterEach(() => {
@@ -2248,6 +2267,568 @@ Valid values are: "auto", "", "~", "^", "="`,
           "version": "2.0.0",
         }
       `);
+    });
+  });
+
+  // Regression coverage for the subset-release bug: when releasing ONLY a
+  // dependent project, its local (workspace:/file:) dependencies on packages
+  // that are NOT part of the release set were left unresolved in the manifest
+  // (even with preserveLocalDependencyProtocols: false), because the
+  // out-of-set dependency never entered `dependenciesToUpdate`.
+  describe('out-of-set local dependencies on a subset release', () => {
+    it('should resolve and rewrite an out-of-set `workspace:` dependency to a concrete version when preserveLocalDependencyProtocols is false', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - package-a@1.0.0 [js]
+                -> depends on package-b(workspace:*)
+                -> depends on package-b(workspace:*) {peerDependencies}
+              - package-b@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          {
+            // Release ONLY package-a (the dependent). package-b is NOT released
+            // and is therefore not part of allProjectsToProcess.
+            projects: ['package-a'],
+          }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      const packageA = readJson(tree, 'package-a/package.json');
+      expect(packageA.version).toBe('1.0.1');
+      // The bug: these used to remain "workspace:*". They must resolve to
+      // package-b's concrete current version (2.5.0), resolved via package-b's
+      // own configured currentVersionResolver.
+      expect(packageA.dependencies['package-b']).toBe('2.5.0');
+      expect(packageA.peerDependencies['package-b']).toBe('2.5.0');
+
+      // package-b was not released, so its own version stays untouched.
+      expect(readJson(tree, 'package-b/package.json').version).toBe('2.5.0');
+    });
+
+    it('should preserve the semver range prefix when rewriting an out-of-set `workspace:^` dependency', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - package-c@1.0.0 [js]
+                -> depends on package-d(workspace:^)
+              - package-d@3.1.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['package-c'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      // workspace:^ must become ^<resolved version>, not a bare version.
+      expect(
+        readJson(tree, 'package-c/package.json').dependencies['package-d']
+      ).toBe('^3.1.0');
+    });
+
+    it('should keep the local protocol untouched when preserveLocalDependencyProtocols is true', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - package-e@1.0.0 [js]
+                -> depends on package-f(workspace:*)
+              - package-f@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: true,
+            },
+          },
+          undefined,
+          { projects: ['package-e'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      // preserve=true: the protocol must be kept as-is.
+      expect(
+        readJson(tree, 'package-e/package.json').dependencies['package-f']
+      ).toBe('workspace:*');
+    });
+
+    it('should resolve an out-of-set `file:` dependency to the exact resolved version', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-file-src@1.0.0 [js]
+                -> depends on pkg-file-dep(file:../pkg-file-dep)
+              - pkg-file-dep@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-file-src'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      // file: has no range semantics, so it resolves to the exact version.
+      expect(
+        readJson(tree, 'pkg-file-src/package.json').dependencies['pkg-file-dep']
+      ).toBe('2.5.0');
+    });
+
+    it('should preserve the `~` range prefix when rewriting an out-of-set `workspace:~` dependency', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-tilde-src@1.0.0 [js]
+                -> depends on pkg-tilde-dep(workspace:~)
+              - pkg-tilde-dep@3.1.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-tilde-src'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      expect(
+        readJson(tree, 'pkg-tilde-src/package.json').dependencies[
+          'pkg-tilde-dep'
+        ]
+      ).toBe('~3.1.0');
+    });
+
+    it('should pass pinned `workspace:` ranges through verbatim (pnpm publish parity) without resolving the current version', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-pin-src@1.0.0 [js]
+                -> depends on pkg-pin-caret(workspace:^1.2.3)
+                -> depends on pkg-pin-exact(workspace:2.5.0) {peerDependencies}
+              - pkg-pin-caret@9.9.9 [js]
+              - pkg-pin-exact@8.8.8 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-pin-src'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      const pkg = readJson(tree, 'pkg-pin-src/package.json');
+      // The user-authored ranges must survive verbatim - NOT be rewritten to
+      // the deps' resolved current versions (9.9.9 / 8.8.8).
+      expect(pkg.dependencies['pkg-pin-caret']).toBe('^1.2.3');
+      expect(pkg.peerDependencies['pkg-pin-exact']).toBe('2.5.0');
+    });
+
+    it('should leave an out-of-set dependency referenced via a plain registry range untouched', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-reg-src@1.0.0 [js]
+                -> depends on pkg-reg-dep(^2.0.0)
+              - pkg-reg-dep@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-reg-src'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      // Not a local protocol -> out of scope for on-demand resolution.
+      expect(
+        readJson(tree, 'pkg-reg-src/package.json').dependencies['pkg-reg-dep']
+      ).toBe('^2.0.0');
+    });
+
+    it('should apply an explicit versionPrefix to a rewritten out-of-set `workspace:*` dependency', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-pref-src@1.0.0 [js]
+                -> depends on pkg-pref-dep(workspace:*)
+              - pkg-pref-dep@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+              versionPrefix: '^',
+            },
+          },
+          undefined,
+          { projects: ['pkg-pref-src'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      // Explicit versionPrefix '^' wins over the bare 'workspace:*' (exact).
+      expect(
+        readJson(tree, 'pkg-pref-src/package.json').dependencies['pkg-pref-dep']
+      ).toBe('^2.5.0');
+    });
+
+    it('should complete the release and leave the protocol untouched when an out-of-set dependency version cannot be resolved (currentVersionResolver "none")', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-none-src@1.0.0 [js]
+                -> depends on pkg-none-dep(workspace:*)
+              - pkg-none-dep@2.5.0 [js]
+                -> release config overrides { "version": { "currentVersionResolver": "none" } }
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-none-src'] }
+        );
+
+      // The released project resolves from disk; only the out-of-set dependency
+      // is unresolvable (its own currentVersionResolver is 'none').
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      const pkg = readJson(tree, 'pkg-none-src/package.json');
+      expect(pkg.version).toBe('1.0.1');
+      // Unresolvable dependency -> protocol left untouched, release still ran.
+      expect(pkg.dependencies['pkg-none-dep']).toBe('workspace:*');
+    });
+
+    it('should not fail the release when resolving an out-of-set dependency version throws', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-throw-src@1.0.0 [js]
+                -> depends on pkg-throw-dep(workspace:*)
+              - pkg-throw-dep@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-throw-src'] }
+        );
+
+      // Force resolveCurrentVersion to reject for the out-of-set dependency,
+      // simulating e.g. a git-tag resolver with no matching tag and no fallback.
+      const resolveCurrentVersionModule = require('./resolve-current-version');
+      const original = resolveCurrentVersionModule.resolveCurrentVersion;
+      const spy = jest
+        .spyOn(resolveCurrentVersionModule, 'resolveCurrentVersion')
+        .mockImplementation(((...args: any[]) => {
+          const projectGraphNode = args[1];
+          if (projectGraphNode?.name === 'pkg-throw-dep') {
+            return Promise.reject(
+              new Error('simulated current-version resolution failure')
+            );
+          }
+          return original(...args);
+        }) as any);
+
+      try {
+        await releaseVersionGeneratorForTest(tree, {
+          nxReleaseConfig,
+          projectGraph,
+          filters,
+          userGivenSpecifier: 'patch' as SemverBumpType,
+        });
+      } finally {
+        spy.mockRestore();
+      }
+
+      const pkg = readJson(tree, 'pkg-throw-src/package.json');
+      // Released project still versioned; failing dep left as workspace:*.
+      expect(pkg.version).toBe('1.0.1');
+      expect(pkg.dependencies['pkg-throw-dep']).toBe('workspace:*');
+    });
+
+    it('should resolve an out-of-set `workspace:*` dependency from git tags when the on-disk version is a placeholder (motivating customer scenario)', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-tag-src@1.0.0 [js]
+                -> depends on pkg-tag-dep(workspace:*)
+              - pkg-tag-dep@0.0.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'git-tag',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-tag-src'] }
+        );
+
+      // The real versions live only in git tags (on-disk pkg-tag-dep is 0.0.0).
+      // Mock the tag lookup so pkg-tag-dep resolves to 4.2.0 from a tag.
+      const gitModule = require('../utils/git');
+      const versionsByProject: Record<string, string> = {
+        'pkg-tag-src': '1.0.0',
+        'pkg-tag-dep': '4.2.0',
+      };
+      const spy = jest
+        .spyOn(gitModule, 'getLatestGitTagForPattern')
+        .mockImplementation(((_pattern: any, { projectName }: any) => {
+          const extractedVersion = versionsByProject[projectName];
+          if (!extractedVersion) {
+            return Promise.resolve(null);
+          }
+          return Promise.resolve({
+            tag: `${projectName}@${extractedVersion}`,
+            extractedVersion,
+          });
+        }) as any);
+
+      try {
+        await releaseVersionGeneratorForTest(tree, {
+          nxReleaseConfig,
+          projectGraph,
+          filters,
+          userGivenSpecifier: 'patch' as SemverBumpType,
+        });
+      } finally {
+        spy.mockRestore();
+      }
+
+      // Must be the git-tag version (4.2.0), NOT the on-disk placeholder 0.0.0.
+      expect(
+        readJson(tree, 'pkg-tag-src/package.json').dependencies['pkg-tag-dep']
+      ).toBe('4.2.0');
+    });
+
+    it('should surface the unresolvable-dependency warning even when the dependency is in a different, filtered-out release group', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            groupA ({ "projectsRelationship": "independent" }):
+              - pkg-warn-src@1.0.0 [js]
+                -> depends on pkg-warn-dep(workspace:*)
+            groupB ({ "projectsRelationship": "independent" }):
+              - pkg-warn-dep@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          // Release ONLY pkg-warn-src (groupA). pkg-warn-dep lives in groupB,
+          // which is filtered out and whose processGroup never runs.
+          { projects: ['pkg-warn-src'] }
+        );
+
+      // Force resolveCurrentVersion to throw for the out-of-set dependency so
+      // that the catch block buffers its remediation warning.
+      const resolveCurrentVersionModule = require('./resolve-current-version');
+      const original = resolveCurrentVersionModule.resolveCurrentVersion;
+      const spy = jest
+        .spyOn(resolveCurrentVersionModule, 'resolveCurrentVersion')
+        .mockImplementation(((...args: any[]) => {
+          const projectGraphNode = args[1];
+          if (projectGraphNode?.name === 'pkg-warn-dep') {
+            return Promise.reject(
+              new Error('simulated current-version resolution failure')
+            );
+          }
+          return original(...args);
+        }) as any);
+
+      try {
+        await releaseVersionGeneratorForTest(tree, {
+          nxReleaseConfig,
+          projectGraph,
+          filters,
+          userGivenSpecifier: 'patch' as SemverBumpType,
+        });
+      } finally {
+        spy.mockRestore();
+      }
+
+      // Release still completed and left the protocol untouched.
+      expect(
+        readJson(tree, 'pkg-warn-src/package.json').dependencies['pkg-warn-dep']
+      ).toBe('workspace:*');
+
+      // The warning must have been flushed (surfaced to the user), even though
+      // pkg-warn-dep's release group was never processed.
+      const warnings = mocks.flushedProjectLogs.filter((line) =>
+        line.includes('Could not resolve the current version of "pkg-warn-dep"')
+      );
+      expect(warnings).toHaveLength(1);
+    });
+
+    it('should surface the unresolvable-dependency warning exactly once when the dependency is in the same release group', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - pkg-same-src@1.0.0 [js]
+                -> depends on pkg-same-dep(workspace:*)
+              - pkg-same-dep@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['pkg-same-src'] }
+        );
+
+      const resolveCurrentVersionModule = require('./resolve-current-version');
+      const original = resolveCurrentVersionModule.resolveCurrentVersion;
+      const spy = jest
+        .spyOn(resolveCurrentVersionModule, 'resolveCurrentVersion')
+        .mockImplementation(((...args: any[]) => {
+          const projectGraphNode = args[1];
+          if (projectGraphNode?.name === 'pkg-same-dep') {
+            return Promise.reject(
+              new Error('simulated current-version resolution failure')
+            );
+          }
+          return original(...args);
+        }) as any);
+
+      try {
+        await releaseVersionGeneratorForTest(tree, {
+          nxReleaseConfig,
+          projectGraph,
+          filters,
+          userGivenSpecifier: 'patch' as SemverBumpType,
+        });
+      } finally {
+        spy.mockRestore();
+      }
+
+      // The immediate catch flush emits it and clears the buffer, so the group's
+      // own end-of-processGroup flush does not print it a second time.
+      const warnings = mocks.flushedProjectLogs.filter((line) =>
+        line.includes('Could not resolve the current version of "pkg-same-dep"')
+      );
+      expect(warnings).toHaveLength(1);
     });
   });
 
