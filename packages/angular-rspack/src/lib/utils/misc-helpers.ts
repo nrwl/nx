@@ -56,6 +56,30 @@ export function isPackageInstalled(root: string, name: string): boolean {
   }
 }
 
+export function getInstalledPackageVersionFromRoot(
+  root: string,
+  name: string
+): string | null {
+  try {
+    const packageJsonPath = require.resolve(`${name}/package.json`, {
+      paths: [root],
+    });
+
+    return (require(packageJsonPath) as { version?: string }).version ?? null;
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    // Not installed, or the package does not export its package.json; the
+    // version is unknown either way.
+    if (
+      code === 'MODULE_NOT_FOUND' ||
+      code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+    ) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 export function assertNever(input: never): never {
   throw new Error(
     `Unexpected call to assertNever() with input: ${JSON.stringify(
