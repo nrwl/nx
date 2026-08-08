@@ -429,7 +429,7 @@ jobs:
 
       - name: Build
         id: build
-        uses: cross-platform-actions/action@462ed697694d2ac9aa49e1225f395f7bb6dd49fe # v0.29.0
+        uses: cross-platform-actions/action@e8a7b572196ff79ded1979dc2bb9ee67d1ddb252 # v0.29.0
         env:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1

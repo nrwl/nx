@@ -23,7 +23,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install pnpm
-        uses: pnpm/action-setup@7088e561eb65bb68695d245aa206f005ef30921d # v4.1.0
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
         id: pnpm-install
         with:
           version: 11.2.2
