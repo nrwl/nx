@@ -1326,6 +1326,32 @@ describe('shared', () => {
       expect(scopedCommits?.[0].isProjectScopedCommit).toBe(true);
     });
 
+    it('should ignore commit scope when useCommitScope is disabled', async () => {
+      mockReleaseConfig!.conventionalCommits = {
+        ...mockReleaseConfig!.conventionalCommits,
+        useCommitScope: false,
+      };
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'scopeoff',
+          ['libs/lib-a/src/index.ts'],
+          'feat(lib-b): scope should be ignored',
+          'lib-b'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['lib-a'],
+        mockReleaseConfig!,
+        mockReleaseGraph
+      );
+
+      expect(result.get('lib-a')).toHaveLength(1);
+      expect(result.get('lib-a')?.[0].isProjectScopedCommit).toBe(false);
+    });
+
     it('should throw when commit scope matches multiple projects (ambiguous scope)', async () => {
       const commits: GitCommit[] = [
         createMockCommit(
