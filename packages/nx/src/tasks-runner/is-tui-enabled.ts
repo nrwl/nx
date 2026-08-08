@@ -49,9 +49,13 @@ export function shouldUseTui(
   }
 
   if (
-    ['static', 'stream', 'stream-without-prefixes', 'dynamic-legacy'].includes(
-      nxArgs.outputStyle
-    )
+    [
+      'static',
+      'static-full',
+      'stream',
+      'stream-without-prefixes',
+      'dynamic-legacy',
+    ].includes(nxArgs.outputStyle)
   ) {
     // If the user has specified a non-TUI output style, we disable the TUI
     return false;

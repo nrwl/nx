@@ -2,6 +2,7 @@ import type { ChildProcess, Serializable } from 'child_process';
 import { killProcessTreeGraceful } from '../../native';
 import type { TaskResult } from '../../config/misc-interfaces';
 import { signalToCode } from '../../utils/exit-codes';
+import { shouldGroupBatchOutput } from '../../utils/output';
 import {
   BatchMessage,
   BatchMessageType,
@@ -15,6 +16,16 @@ export class BatchProcess {
     (task: string, result: TaskResult) => void
   > = [];
   private outputCallbacks: Array<(output: string) => void> = [];
+  /**
+   * All stdout/stderr held back from the live stream under log grouping. A
+   * successful batch is rendered from its per-task terminalOutput and this is
+   * discarded; a failed one is rendered from this as a single fold, so that a
+   * diagnostic no task claimed — a crash, a config-phase error, a runner's
+   * summary — is not lost. Tail-capped so a long-lived batch (Gradle runs one
+   * for the whole command) cannot grow it without bound.
+   */
+  private capturedOutput = '';
+  private static readonly CAPTURED_OUTPUT_CAP = 1_000_000;
 
   constructor(
     private childProcess: ChildProcess,
@@ -59,8 +70,15 @@ export class BatchProcess {
       this.childProcess.stdout.on('data', (chunk) => {
         const output = chunk.toString();
 
-        // Maintain current terminal output behavior
-        process.stdout.write(chunk);
+        // When batch output is being folded, the live copy is suppressed to
+        // keep each group contiguous; it is retained (see capturedOutput) so a
+        // failed batch can still surface everything. Otherwise, maintain
+        // current terminal output behavior.
+        if (shouldGroupBatchOutput()) {
+          this.capture(output);
+        } else {
+          process.stdout.write(chunk);
+        }
 
         // Notify callbacks for TUI
         for (const cb of this.outputCallbacks) {
@@ -74,8 +92,12 @@ export class BatchProcess {
       this.childProcess.stderr.on('data', (chunk) => {
         const output = chunk.toString();
 
-        // Maintain current terminal output behavior
-        process.stderr.write(chunk);
+        if (shouldGroupBatchOutput()) {
+          this.capture(output);
+        } else {
+          // Maintain current terminal output behavior
+          process.stderr.write(chunk);
+        }
 
         // Notify callbacks for TUI
         for (const cb of this.outputCallbacks) {
@@ -99,6 +121,24 @@ export class BatchProcess {
 
   onOutput(cb: (output: string) => void) {
     this.outputCallbacks.push(cb);
+  }
+
+  private capture(output: string) {
+    this.capturedOutput += output;
+    if (this.capturedOutput.length > BatchProcess.CAPTURED_OUTPUT_CAP) {
+      this.capturedOutput = this.capturedOutput.slice(
+        -BatchProcess.CAPTURED_OUTPUT_CAP
+      );
+    }
+  }
+
+  /**
+   * All stdout/stderr held back from the live stream under log grouping. Empty
+   * unless the batch was being grouped; used to render a failed batch as one
+   * fold so output no task claimed is not lost. Tail-capped.
+   */
+  getCapturedOutput(): string {
+    return this.capturedOutput;
   }
 
   async getResults(): Promise<BatchResults> {

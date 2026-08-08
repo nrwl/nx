@@ -643,6 +643,15 @@ export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
   ];
 }
 
+/**
+ * `static-full` is `static` that prints every task's output in full rather than
+ * collapsing successes, so it behaves identically everywhere the life cycle is
+ * selected or output is routed.
+ */
+export function isStaticOutputStyle(outputStyle: string | undefined): boolean {
+  return outputStyle === 'static' || outputStyle === 'static-full';
+}
+
 export function shouldStreamOutput(
   task: Task,
   initiatingProject: string | null

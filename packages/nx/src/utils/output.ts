@@ -1,11 +1,47 @@
+import * as figures from 'figures';
 import { EOL } from 'os';
 import * as pc from 'picocolors';
 import * as readline from 'readline';
 import { WriteStream } from 'tty';
 import type { TaskStatus } from '../tasks-runner/tasks-runner';
 
+/**
+ * The statuses whose output can be collapsed to a single line: the task did the
+ * work, or the cache stood in for it.
+ */
+export type CollapsibleTaskStatus = Extract<
+  TaskStatus,
+  'success' | 'local-cache' | 'local-cache-kept-existing' | 'remote-cache'
+>;
+
 const GH_GROUP_PREFIX = '::group::';
 const GH_GROUP_SUFFIX = '::endgroup::';
+
+/**
+ * Whether task output should be wrapped in collapsible log groups. Grouping
+ * requires each task's output to be written as one contiguous block, which is
+ * why batch mode's implicit streaming backs off when this is on. It does not
+ * govern streaming in general — an explicit `--output-style`, the TUI, and
+ * long running tasks all still stream.
+ */
+export function isLogGroupingEnabled(): boolean {
+  return (
+    process.env.NX_SKIP_LOG_GROUPING !== 'true' && !!process.env.GITHUB_ACTIONS
+  );
+}
+
+/**
+ * Whether a batch task's output should be collapsed into its per-task log group
+ * rather than forwarded live. A batch worker writes its output to stdout/stderr
+ * live and also reports the same text back as each task's terminalOutput, which
+ * the grouped block prints; forwarding the live copy too would duplicate it
+ * outside the group and defeat the fold. This is only worth doing when grouping
+ * is on and the user has not asked to stream — an explicit stream style (which
+ * sets NX_STREAM_OUTPUT) wants the live copy, folds or not.
+ */
+export function shouldGroupBatchOutput(): boolean {
+  return isLogGroupingEnabled() && process.env.NX_STREAM_OUTPUT !== 'true';
+}
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -86,8 +122,28 @@ class CLIOutput {
   underline = pc.underline;
   dim = pc.dim;
 
+  /**
+   * Whether stdout is positioned at the start of a line, tracking only writes
+   * made through this class. Task output does not reliably end in a newline, so
+   * writers that must begin on a fresh line ask for one via
+   * {@link ensureLineStart} rather than guessing. Code that writes to
+   * `process.stdout` directly can leave this stale; it is relied on only where
+   * grouping suppresses those direct writes, so the value is authoritative
+   * there.
+   */
+  private atLineStart = true;
+
   private writeToStream(str: string, stream: WriteStream = process.stdout) {
+    if (stream === process.stdout && str.length > 0) {
+      this.atLineStart = str.endsWith('\n');
+    }
     stream.write(str);
+  }
+
+  private ensureLineStart() {
+    if (!this.atLineStart) {
+      this.addNewline();
+    }
   }
 
   overwriteLine(lineText: string = '') {
@@ -273,10 +329,8 @@ class CLIOutput {
       taskStatus
     );
 
-    if (
-      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
-      process.env.GITHUB_ACTIONS
-    ) {
+    const grouped = isLogGroupingEnabled();
+    if (grouped) {
       const icon = this.getStatusIcon(taskStatus);
       commandOutputWithStatus = `${GH_GROUP_PREFIX}${icon} ${commandOutputWithStatus}`;
     }
@@ -287,11 +341,67 @@ class CLIOutput {
     this.addNewline();
     this.writeToStream(output);
 
-    if (
-      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
-      process.env.GITHUB_ACTIONS
-    ) {
-      this.writeToStream(GH_GROUP_SUFFIX);
+    if (grouped) {
+      // GitHub only recognizes ::endgroup:: as a workflow command when it
+      // starts a line, and task output routinely lacks a trailing newline.
+      this.ensureLineStart();
+      this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
+    }
+  }
+
+  /**
+   * A single line standing in for a task's full output, used when the output
+   * itself carries no information worth printing (a success, or a cache hit).
+   * Statuses that carry a diagnosable body are deliberately not accepted here.
+   */
+  logCommandSummary(message: string, taskStatus: CollapsibleTaskStatus) {
+    // The preceding task may have left the cursor mid-line, and this line must
+    // not be glued onto the end of that task's output.
+    this.ensureLineStart();
+    const icon = pc.green(figures.tick);
+    const command = this.addTaskStatus(
+      taskStatus,
+      this.formatCommand(this.normalizeMessage(message))
+    );
+    this.writeToStream(`${icon}  ${command}${EOL}`);
+  }
+
+  /**
+   * A one-line stand-in for a task whose full output is shown elsewhere — used
+   * for the tasks of a failed batch, which are rendered together in the batch's
+   * own log group. `note` points the reader at that group.
+   */
+  logCommandRedirect(message: string, taskStatus: TaskStatus, note: string) {
+    this.ensureLineStart();
+    const failed = taskStatus === 'failure' || taskStatus === 'stopped';
+    const icon = failed ? pc.red(figures.cross) : pc.green(figures.tick);
+    const command = this.formatCommand(this.normalizeMessage(message));
+    this.writeToStream(`${icon}  ${command}  ${pc.dim(note)}${EOL}`);
+  }
+
+  /**
+   * Prints a failed batch's combined output as one log group. A batch runner's
+   * diagnostics — a crash, a config-phase error, a runner summary — belong to no
+   * single task, so the group is labelled with the batch rather than a task.
+   */
+  logBatchFailureGroup(label: string, output: string) {
+    const grouped = isLogGroupingEnabled();
+    let header = `${pc.dim('> ')}${pc.bold(label)}`;
+    if (grouped) {
+      header = `${GH_GROUP_PREFIX}${this.getStatusIcon('failure')} ${header}`;
+    }
+
+    this.addNewline();
+    this.writeToStream(header);
+    this.addNewline();
+    this.addNewline();
+    this.writeToStream(output);
+
+    if (grouped) {
+      this.ensureLineStart();
+      this.writeToStream(`${GH_GROUP_SUFFIX}${EOL}`);
+    } else {
+      this.ensureLineStart();
     }
   }
 

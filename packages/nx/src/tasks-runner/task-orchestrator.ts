@@ -27,7 +27,7 @@ import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
 } from '../utils/exit-codes';
-import { output } from '../utils/output';
+import { output, shouldGroupBatchOutput } from '../utils/output';
 import { combineOptionsForExecutor, Options } from '../utils/params';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
@@ -42,6 +42,7 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
+import { BatchProcess } from './running-tasks/batch-process';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { RunningTask } from './running-tasks/running-task';
@@ -61,6 +62,7 @@ import {
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
   removeTasksFromTaskGraph,
+  isStaticOutputStyle,
   shouldStreamOutput,
 } from './utils';
 
@@ -152,6 +154,8 @@ export class TaskOrchestrator {
   private bailed = false;
   private resolveStopPromise: (() => void) | null = null;
   private stopRequested = false;
+  /** Disambiguates failed-batch log groups; the same executor can run several. */
+  private batchFailureGroupCount = 0;
 
   private runningContinuousTasks = new Map<
     string,
@@ -842,14 +846,14 @@ export class TaskOrchestrator {
     groupId: number
   ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
+    let batchProcess: BatchProcess | undefined;
     try {
-      const batchProcess =
-        await this.forkedProcessTaskRunner.forkProcessForBatch(
-          batch,
-          this.projectGraph,
-          this.fullTaskGraph,
-          env
-        );
+      batchProcess = await this.forkedProcessTaskRunner.forkProcessForBatch(
+        batch,
+        this.projectGraph,
+        this.fullTaskGraph,
+        env
+      );
 
       // Stream output from batch process to the batch
       batchProcess.onOutput((output) => {
@@ -875,7 +879,12 @@ export class TaskOrchestrator {
         // Skipped tasks didn't run, so they have no terminal output and don't
         // need a per-task PTY — calling printTaskTerminalOutput would otherwise
         // allocate one just to write a cursor-hide escape.
-        if (status !== 'skipped') {
+        //
+        // When the batch is being folded, printing is deferred to batch end
+        // (printGroupedBatchOutput): a batch that succeeds renders as per-task
+        // folds, one that fails renders as a single fold carrying everything —
+        // including any output no task claimed.
+        if (status !== 'skipped' && !shouldGroupBatchOutput()) {
           this.options.lifeCycle.printTaskTerminalOutput(
             task,
             status,
@@ -899,7 +908,7 @@ export class TaskOrchestrator {
       const results = await batchProcess.getResults();
       const batchResultEntries = Object.entries(results);
 
-      return batchResultEntries.map(([taskId, result]) => {
+      const taskResults = batchResultEntries.map(([taskId, result]) => {
         const task = this.taskGraph.tasks[taskId];
         task.startTime = result.startTime;
         task.endTime = result.endTime;
@@ -911,10 +920,20 @@ export class TaskOrchestrator {
           terminalOutput: result.terminalOutput,
         };
       });
+
+      if (shouldGroupBatchOutput()) {
+        this.printGroupedBatchOutput(
+          batch,
+          taskResults,
+          batchProcess.getCapturedOutput()
+        );
+      }
+
+      return taskResults;
     } catch (e) {
       const isBatchStopping = this.stopRequested;
 
-      return Object.keys(batch.taskGraph.tasks).map((taskId) => {
+      const taskResults = Object.keys(batch.taskGraph.tasks).map((taskId) => {
         const task = this.taskGraph.tasks[taskId];
         if (isBatchStopping) {
           task.endTime = Date.now();
@@ -926,6 +945,23 @@ export class TaskOrchestrator {
           terminalOutput: isBatchStopping ? '' : (e.stack ?? e.message ?? ''),
         };
       });
+
+      // The worker died without reporting results, so no per-task fold ran. Its
+      // only diagnostic went to stdout/stderr, held back under log grouping —
+      // surface it as one fold, keeping the exit-code error too. Outside
+      // grouping it already streamed live.
+      if (!isBatchStopping && shouldGroupBatchOutput()) {
+        const captured = batchProcess?.getCapturedOutput() ?? '';
+        const diagnostic = [captured, e.message]
+          .filter(Boolean)
+          .join('\n')
+          .trim();
+        if (diagnostic) {
+          this.printBatchFailureFold(batch, taskResults, diagnostic);
+        }
+      }
+
+      return taskResults;
     } finally {
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
       performance.measure(
@@ -933,6 +969,65 @@ export class TaskOrchestrator {
         runBatchStart.name,
         runBatchEnd.name
       );
+    }
+  }
+
+  /**
+   * Prints a completed batch's output once, under log grouping. A batch that
+   * succeeded is rendered from each task's own terminalOutput as per-task
+   * folds. One that failed is rendered from everything the worker wrote as a
+   * single fold, because batch runners emit diagnostics — a runner summary, a
+   * config-phase error, output no task claimed — that live on stdout/stderr and
+   * in no task's terminalOutput. Live forwarding was suppressed while grouping,
+   * so this is the only copy either way.
+   */
+  private printGroupedBatchOutput(
+    batch: Batch,
+    taskResults: TaskResult[],
+    capturedOutput: string
+  ) {
+    const failed = taskResults.some(
+      (r) => r.status === 'failure' || r.status === 'stopped'
+    );
+
+    if (failed && capturedOutput.trim()) {
+      this.printBatchFailureFold(batch, taskResults, capturedOutput);
+      return;
+    }
+
+    for (const { task, status, terminalOutput } of taskResults) {
+      if (status !== 'skipped') {
+        this.options.lifeCycle.printTaskTerminalOutput(
+          task,
+          status,
+          terminalOutput ?? ''
+        );
+      }
+    }
+  }
+
+  /**
+   * Renders a failed batch's whole output as one fold, then a line per task
+   * pointing at it. The fold is labelled with the executor and a run-unique id
+   * (the same executor can run more than one batch), rather than an arbitrary
+   * task. Safe to write to `output` directly: grouping implies GitHub Actions
+   * implies a non-TTY, static lifecycle.
+   */
+  private printBatchFailureFold(
+    batch: Batch,
+    taskResults: TaskResult[],
+    body: string
+  ) {
+    const label = `${batch.executorName} batch #${++this.batchFailureGroupCount}`;
+    output.logBatchFailureGroup(label, body);
+    for (const { task, status } of taskResults) {
+      if (status !== 'skipped') {
+        output.logCommandRedirect(
+          getPrintableCommandArgsForTask(task).join(' '),
+          status,
+          `(output in "${label}" above)`
+        );
+      }
     }
   }
 
@@ -1060,10 +1155,9 @@ export class TaskOrchestrator {
 
     const pipeOutput = await this.pipeOutputCapture(task);
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput =
-      this.outputStyle === 'static'
-        ? false
-        : shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput = isStaticOutputStyle(this.outputStyle)
+      ? false
+      : shouldStreamOutput(task, this.initiatingProject);
 
     const env = pipeOutput
       ? getEnvVariablesForTask(
@@ -1369,10 +1463,9 @@ export class TaskOrchestrator {
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput =
-      this.outputStyle === 'static'
-        ? false
-        : shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput = isStaticOutputStyle(this.outputStyle)
+      ? false
+      : shouldStreamOutput(task, this.initiatingProject);
 
     let env = pipeOutput
       ? getEnvVariablesForTask(
