@@ -1,6 +1,8 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
+import { detectPackageManager, getPackageManagerVersion } from '@nx/devkit';
+import { gte } from 'semver';
 import { PackageJson } from '@nx/devkit/internal';
 
 export async function parseRegistryOptions(
@@ -97,11 +99,29 @@ export async function getNpmTag(cwd: string): Promise<string> {
 }
 
 async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
+  // pnpm v11+ resolves config itself and may be the only binary on PATH (e.g. Node
+  // provisioned via `pnpm runtime` / the `pnpm/setup` action, which ships no bundled
+  // npm). Everything else resolves config through npm.
+  const pm = detectPackageManager(cwd);
+  const bin = pm === 'pnpm' && isPnpmV11Plus(cwd) ? 'pnpm' : 'npm';
   try {
-    const result = await execAsync(`npm config get ${key}`, cwd);
-    return result === 'undefined' ? undefined : result;
-  } catch (e) {
-    return Promise.resolve(undefined);
+    const result = await execAsync(`${bin} config get ${key}`, cwd);
+    return result && result !== 'undefined' ? result : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Whether the workspace's pnpm is v11+, which can publish, resolve registry
+ * metadata, and resolve config without npm on PATH. pnpm v10 and below still
+ * require npm.
+ */
+export function isPnpmV11Plus(cwd: string): boolean {
+  try {
+    return gte(getPackageManagerVersion('pnpm', cwd), '11.0.0');
+  } catch {
+    return false;
   }
 }
 
