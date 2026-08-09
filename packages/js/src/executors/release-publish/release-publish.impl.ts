@@ -9,7 +9,7 @@ import { statSync } from 'fs';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
-import { parseRegistryOptions } from '../../utils/npm-config';
+import { isPnpmV11Plus, parseRegistryOptions } from '../../utils/npm-config';
 import { extractNpmPublishJsonData } from './extract-npm-publish-json-data';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
@@ -62,24 +62,36 @@ export default async function runExecutor(
 ) {
   const pm = detectPackageManager();
 
+  // pnpm v11+ resolves registry metadata, config, and publishing through pnpm itself,
+  // so npm is never invoked — not even when it is installed. pnpm v10 and below still
+  // require npm. bun always publishes via its own binary (npm only as an auth fallback).
+  const usePnpmNatively = pm === 'pnpm' && isPnpmV11Plus(context.root);
+
   // Check if npm is installed (needed for dist-tag management and as fallback for view command)
   let isNpmInstalled = false;
-  try {
-    isNpmInstalled =
-      execSync('npm --version', {
-        encoding: 'utf-8',
-        windowsHide: true,
-        stdio: ['ignore', 'pipe', 'ignore'],
-      }).trim() !== '';
-  } catch {
-    // Allow missing npm only when using bun
-    if (pm !== 'bun') {
-      console.error(
-        `npm was not found in the current environment. This is only supported when using \`bun\` as a package manager, but your detected package manager is "${pm}"`
-      );
-      return {
-        success: false,
-      };
+  if (!usePnpmNatively) {
+    try {
+      isNpmInstalled =
+        execSync('npm --version', {
+          encoding: 'utf-8',
+          windowsHide: true,
+          stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim() !== '';
+    } catch {
+      // bun can publish without npm, and only uses it as an auth-error fallback (best effort).
+      // For everyone else: npm and yarn both invoke `npm publish` under the hood, and pnpm
+      // v10 and below rely on npm for registry metadata, so npm is required on PATH.
+      // pnpm v11+ (above) never probes npm at all, which matters for environments provisioned
+      // via `pnpm runtime` / the `pnpm/setup` action (pnpm v11+), which intentionally do not
+      // extract the bundled npm, npx, or corepack.
+      if (pm !== 'bun') {
+        console.error(
+          `npm was not found in the current environment. This is required when using \`${pm}\` as a package manager, unless you are using pnpm v11+ or bun, which can publish without npm on PATH. Install npm, or upgrade to pnpm v11+ / switch to bun.`
+        );
+        return {
+          success: false,
+        };
+      }
     }
   }
 
@@ -194,16 +206,18 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     warnFn
   );
 
-  // Use bun info when bun is the package manager, otherwise use npm view
-  // (npm view works across npm/pnpm/yarn environments and is the established default)
+  // pnpm v11+ resolves registry metadata through pnpm itself, even when npm is installed.
+  // npm view / npm dist-tag remain the default for every other package manager.
+  // (bun uses `bun info` for view and has no dist-tag command.)
+  const metadataBin = usePnpmNatively ? 'pnpm' : 'npm';
   const npmViewCommandSegments =
     pm === 'bun'
       ? ['bun info', packageName, `--json --"${registryConfigKey}=${registry}"`]
       : [
-          `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
+          `${metadataBin} view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
         ];
   const npmDistTagAddCommandSegments = [
-    `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
+    `${metadataBin} dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];
 
   /**
@@ -235,7 +249,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         };
       }
 
-      if (isNpmInstalled) {
+      if (isNpmInstalled || usePnpmNatively) {
         // If only one version of a package exists in the registry, versions will be a string instead of an array.
         const versions = Array.isArray(resultJson.versions)
           ? resultJson.versions
@@ -280,7 +294,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
                   err.stderr?.toString().includes('no such package available')
                 )
               ) {
-                console.error('npm dist-tag add error:');
+                console.error(`${metadataBin} dist-tag add error:`);
                 // npm returns error.summary and error.detail
                 if (stdoutData.error?.summary) {
                   console.error(stdoutData.error.summary);
@@ -297,7 +311,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
                 }
 
                 if (context.isVerbose) {
-                  console.error('npm dist-tag add stdout:');
+                  console.error(`${metadataBin} dist-tag add stdout:`);
                   console.error(JSON.stringify(stdoutData, null, 2));
                 }
                 return {
@@ -368,7 +382,9 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
   }
 
   if (options.firstRelease && context.isVerbose) {
-    console.log('Skipped npm view because --first-release was set');
+    console.log(
+      `Skipped ${pm === 'bun' ? 'bun info' : metadataBin} view because --first-release was set`
+    );
   }
 
   /**

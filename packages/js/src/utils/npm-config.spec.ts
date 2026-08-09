@@ -1,8 +1,20 @@
 import { ExecException } from 'child_process';
 import { join } from 'path';
-import { getNpmRegistry, getNpmTag, parseRegistryOptions } from './npm-config';
+import {
+  getNpmRegistry,
+  getNpmTag,
+  isPnpmV11Plus,
+  parseRegistryOptions,
+} from './npm-config';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { detectPackageManager, getPackageManagerVersion } from '@nx/devkit';
 import { PackageJson } from '@nx/devkit/internal';
+
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  detectPackageManager: jest.fn(() => 'npm'),
+  getPackageManagerVersion: jest.fn(() => '11.0.0'),
+}));
 
 jest.mock('child_process', () => {
   const original = jest.requireActual('child_process');
@@ -33,6 +45,15 @@ jest.mock('child_process', () => {
             case 'npm config get tag':
               callback(null, 'next', null);
               break;
+            case 'pnpm config get @scope:registry':
+              callback(null, 'https://pnpm-scoped-registry.com', null);
+              break;
+            case 'pnpm config get registry':
+              callback(null, 'https://pnpm-registry.com', null);
+              break;
+            case 'pnpm config get tag':
+              callback(null, 'pnpm-next', null);
+              break;
             default:
               callback(
                 new Error(`unexpected command: ${command}`),
@@ -47,9 +68,68 @@ jest.mock('child_process', () => {
 
 describe('npm-config', () => {
   let tempFs: TempFs;
+  const mockDetectPackageManager = detectPackageManager as jest.MockedFunction<
+    typeof detectPackageManager
+  >;
+  const mockGetPackageManagerVersion =
+    getPackageManagerVersion as jest.MockedFunction<
+      typeof getPackageManagerVersion
+    >;
 
   beforeEach(() => {
     tempFs = new TempFs('npm-config');
+    mockDetectPackageManager.mockReset();
+    mockGetPackageManagerVersion.mockReset();
+    mockDetectPackageManager.mockReturnValue('npm');
+    mockGetPackageManagerVersion.mockReturnValue('11.0.0');
+  });
+
+  describe('isPnpmV11Plus', () => {
+    it('should return true for pnpm v11+', () => {
+      mockGetPackageManagerVersion.mockReturnValue('11.0.0');
+      expect(isPnpmV11Plus(tempFs.tempDir)).toBe(true);
+    });
+
+    it('should return false for pnpm v10 and below', () => {
+      mockGetPackageManagerVersion.mockReturnValue('10.15.0');
+      expect(isPnpmV11Plus(tempFs.tempDir)).toBe(false);
+    });
+
+    it('should return false when the pnpm version cannot be determined', () => {
+      mockGetPackageManagerVersion.mockImplementation(() => {
+        throw new Error('pnpm not found');
+      });
+      expect(isPnpmV11Plus(tempFs.tempDir)).toBe(false);
+    });
+  });
+
+  describe('pnpm v11+ config resolution', () => {
+    it('should resolve scoped registry via pnpm for pnpm v11+', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockGetPackageManagerVersion.mockReturnValue('11.2.1');
+      const registry = await getNpmRegistry(tempFs.tempDir, '@scope');
+      expect(registry).toEqual('https://pnpm-scoped-registry.com');
+    });
+
+    it('should resolve tag via pnpm for pnpm v11+', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockGetPackageManagerVersion.mockReturnValue('11.2.1');
+      const tag = await getNpmTag(tempFs.tempDir);
+      expect(tag).toEqual('pnpm-next');
+    });
+
+    it('should resolve registry via npm for pnpm v10 and below', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockGetPackageManagerVersion.mockReturnValue('10.15.0');
+      const registry = await getNpmRegistry(tempFs.tempDir, '@scope');
+      expect(registry).toEqual('https://scoped-registry.com');
+    });
+
+    it('should resolve registry via npm for npm workspaces', async () => {
+      mockDetectPackageManager.mockReturnValue('npm');
+      const registry = await getNpmRegistry(tempFs.tempDir, '@scope');
+      expect(registry).toEqual('https://scoped-registry.com');
+    });
   });
 
   describe('getNpmRegistry', () => {
