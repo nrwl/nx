@@ -44,6 +44,11 @@ export function isAlreadyQuoted(str: string): boolean {
     return false;
   }
 
+  const quote = str[0];
+  if ((quote !== "'" && quote !== '"') || str[str.length - 1] !== quote) {
+    return false;
+  }
+
   const script = parse(str);
   if (script.errors?.length || script.commands.length !== 1) {
     return false;

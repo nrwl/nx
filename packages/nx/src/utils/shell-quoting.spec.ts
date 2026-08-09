@@ -145,6 +145,8 @@ describe('isAlreadyQuoted', () => {
     ['a pipeline', '"a" | tee "b"'],
     ['a redirect', '"a" > "out.txt"'],
     ['an assignment prefix', 'FOO="a" "b"'],
+    ['a quoted prefix with an unquoted glob', '"safe"*'],
+    ['a quoted prefix with an unquoted substitution', '"safe"$(printf x)'],
   ])('returns false for %s: %j', (_, value) => {
     expect(isAlreadyQuoted(value)).toBe(false);
   });
