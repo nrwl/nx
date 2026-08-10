@@ -10,10 +10,27 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { output } from '../../../utils/output';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import type { PackageJson } from '../../../utils/package-json';
 import { generatePrunedDeployOutput } from './lock-file';
 import { getPrunedPnpmInstallArtifacts } from './pruned-output';
 
+// The root lockfile path is a module-level constant off nx's own workspace
+// root, so the `workspaceRoot` option below cannot redirect this read. Every
+// other read is the fixture's own, which the assertions depend on.
+const mockRootLockfile = join(workspaceRoot, 'pnpm-lock.yaml');
+// Not a jest.fn: a mock reset would strip the passthrough and every read would
+// return undefined.
+jest.mock('node:fs', () => {
+  const actual = jest.requireActual('node:fs');
+  return {
+    ...actual,
+    readFileSync: (path, ...args) =>
+      path === mockRootLockfile
+        ? 'ROOT_LOCKFILE'
+        : actual.readFileSync(path, ...args),
+  };
+});
 jest.mock('./pnpm-parser', () => ({
   ...jest.requireActual('./pnpm-parser'),
   stringifyPnpmLockfile: jest.fn(() => 'PRUNED_LOCKFILE'),
