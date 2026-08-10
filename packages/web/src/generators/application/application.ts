@@ -28,10 +28,10 @@ import {
   writeJson,
 } from '@nx/devkit';
 import {
-  addLintingToProject,
   getRelativePathToRootTsConfig,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 import {
   swcCoreVersion,
   getNpmScope,

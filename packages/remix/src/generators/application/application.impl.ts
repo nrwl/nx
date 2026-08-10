@@ -18,11 +18,8 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import {
-  addLintingToProject,
-  initGenerator as jsInitGenerator,
-  extractTsConfigBase,
-} from '@nx/js';
+import { initGenerator as jsInitGenerator, extractTsConfigBase } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
   isbotVersion,

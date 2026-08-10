@@ -28,11 +28,8 @@ import {
   configurationGenerator,
   findJestConfig,
 } from '@nx/jest';
-import {
-  addLintingToProject,
-  getRelativePathToRootTsConfig,
-  setupVerdaccio,
-} from '@nx/js';
+import { getRelativePathToRootTsConfig, setupVerdaccio } from '@nx/js';
+import { addLintingToProject } from '@nx/js/internal';
 import {
   addLocalRegistryScripts,
   normalizeLinterOption,

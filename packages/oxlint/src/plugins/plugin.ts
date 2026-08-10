@@ -516,6 +516,7 @@ function enumerateLintableFilesWithOxlint(
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'ignore'],
         maxBuffer: 64 * 1024 * 1024,
+        windowsHide: true,
         // Graph construction must not hang on a wedged subprocess; a timeout
         // throws, which is the same fall-back-to-globbing path as any other
         // failure here.
