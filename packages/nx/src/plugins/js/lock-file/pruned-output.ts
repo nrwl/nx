@@ -942,8 +942,9 @@ export function warnOnWorkspaceModulePathCollision(
  * pruned lockfile (package keys, resolutions, and snapshot/importer dependency
  * refs) under `LOCAL_PATH_MODULES_DIR`, matching where the artifacts ship, so a
  * standalone `pnpm install` resolves them. `link:` refs are relocated upstream
- * by `relocatePrunedLocalPathSpec`; only `file:` paths (carried verbatim from
- * the source lockfile) are contained here. Workspace-module and escaping paths
+ * (`containShippedLocalLinkRefs` for the source snapshots, the assembly's own
+ * synthesis sites for the rest); only `file:` paths, which the source lockfile
+ * carries verbatim, are contained here. Workspace-module and escaping paths
  * are left untouched. Mutates `lockfile` in place; the key rename and every ref
  * use the same `file:` path, so they stay in sync.
  *
@@ -1003,6 +1004,43 @@ export function containShippedLocalFilePaths(
   }
   for (const importer of Object.values(lockfile.importers ?? {})) {
     containSnapshot(importer);
+  }
+}
+
+/**
+ * Relocates the shippable `link:` refs a source lockfile's package snapshots
+ * carry, so they resolve from the pruned output's root. pnpm reads a snapshot
+ * `link:` ref against the lockfile directory, which is the workspace root at
+ * source and the deploy root in the output, so a ref left verbatim points at a
+ * path the standalone output does not carry once the target ships under
+ * `LOCAL_PATH_MODULES_DIR`. A target that cannot ship keeps its ref, matching
+ * the copied manifest; the artifact collector reports why.
+ *
+ * Takes the source snapshots alone rather than the assembled document: the
+ * assembly relocates its own refs at their synthesis site, and a second pass
+ * cannot tell an already-relocated path from a workspace path that starts with
+ * the shipped directory's name. Mutates the snapshots in place.
+ */
+export function containShippedLocalLinkRefs(
+  sourceSnapshots: Record<string, unknown> | undefined
+): void {
+  for (const snapshot of Object.values(sourceSnapshots ?? {})) {
+    if (!snapshot || typeof snapshot !== 'object') {
+      continue;
+    }
+    const record = snapshot as Record<string, unknown>;
+    for (const section of LOCKFILE_DEP_SECTIONS) {
+      const deps = record[section] as Record<string, unknown> | undefined;
+      if (!deps || typeof deps !== 'object') {
+        continue;
+      }
+      for (const [name, ref] of Object.entries(deps)) {
+        if (typeof ref !== 'string' || !ref.startsWith('link:')) {
+          continue;
+        }
+        deps[name] = relocatePrunedLocalPathSpec(ref, '', '')?.spec ?? ref;
+      }
+    }
   }
 }
 

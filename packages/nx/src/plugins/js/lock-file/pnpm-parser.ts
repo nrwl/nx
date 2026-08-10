@@ -29,6 +29,7 @@ import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import {
   containShippedLocalFilePaths,
+  containShippedLocalLinkRefs,
   warnOnWorkspaceModulePathCollision,
   normalizePrunedPatchPath,
   PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS,
@@ -767,6 +768,10 @@ export function stringifyPnpmLockfile(
       `${packageName}@file:workspace_modules/${packageName}`
     ] = snapshot;
   }
+
+  // Relocate the source snapshots' link: refs before the merge below, while the
+  // assembly's own already-relocated entries are still separate from them.
+  containShippedLocalLinkRefs(snapshots);
 
   const output: Lockfile = {
     ...data,

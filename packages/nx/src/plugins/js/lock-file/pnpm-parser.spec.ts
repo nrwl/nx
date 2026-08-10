@@ -4654,6 +4654,81 @@ snapshots: {}`;
         'local_path_modules/vendor/thing/package.json',
       ]);
     });
+
+    it('relocates a link: ref a source package snapshot carries', () => {
+      // pnpm reads a snapshot link: ref against the lockfile directory, which is
+      // the deploy root in the pruned output, so a ref left at its workspace path
+      // points outside the shipped tree. The target then ships at that raw path,
+      // outside the declared task outputs, and a cache replay drops it: the
+      // install still exits 0 and the linked module is missing at runtime.
+      vol.fromJSON(
+        {
+          'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+          'libs/linked/package.json':
+            '{"name":"linked-thing","version":"1.0.0"}',
+          'libs/vendor/package.json': '{"name":"vendor-dir","version":"1.0.0"}',
+        },
+        '/root'
+      );
+
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      vendor-dir:
+        specifier: file:libs/vendor
+        version: file:libs/vendor
+
+packages:
+
+  vendor-dir@file:libs/vendor:
+    resolution: {directory: libs/vendor, type: directory}
+
+snapshots:
+
+  vendor-dir@file:libs/vendor:
+    dependencies:
+      linked-thing: link:libs/linked`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'vendor-dir': 'file:local_path_modules/libs/vendor' },
+      };
+
+      const graph = makeGraph([], {}, {
+        'npm:vendor-dir': {
+          type: 'npm',
+          name: 'npm:vendor-dir',
+          data: { version: 'file:libs/vendor', packageName: 'vendor-dir' },
+        },
+      } as any);
+
+      const prunedGraph = pruneProjectGraph(
+        graph,
+        packageJson,
+        '/root',
+        'pnpm'
+      );
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      expect(result).toContain(
+        'linked-thing: link:local_path_modules/libs/linked'
+      );
+      expect(result).not.toContain('linked-thing: link:libs/linked');
+      // The target ships where the ref now points, i.e. inside the declared
+      // output a cache replay restores.
+      expect(
+        getPrunedPnpmLocalPathArtifacts('/root', result).map((a) => a.path)
+      ).toContain('local_path_modules/libs/linked/package.json');
+    });
   });
 
   describe('missing .modules.yaml', () => {
