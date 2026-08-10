@@ -24,15 +24,9 @@ public class SupportsTestSplittingTests
     [Fact]
     public void BothProperties_AreRequiredAndSufficient()
     {
-        Assert.True(Analyzer.SupportsTestSplitting(
-            Props((Runner, "true"), (DotnetTestSupport, "true"))));
-    }
-
-    [Fact]
-    public void MsTestSdk_IsCoveredByThoseProperties()
-    {
-        // MSBuild does not surface a project's Sdk attribute, but MSTest.Sdk
-        // sets both, so projects using it are recognized without one.
+        // Also covers a project using the MSTest.Sdk project SDK: MSBuild does
+        // not surface a project's Sdk attribute, but MSTest.Sdk sets both of
+        // these properties, so such a project is recognized without one.
         Assert.True(Analyzer.SupportsTestSplitting(
             Props((Runner, "true"), (DotnetTestSupport, "true"))));
     }

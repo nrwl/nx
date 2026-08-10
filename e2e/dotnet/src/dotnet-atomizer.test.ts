@@ -224,7 +224,9 @@ public class SearchTests
       // it, so Nx core hard-exits rather than letting it run.
       const output = runCLI(`run ${project}:test-ci`, { silenceError: true });
 
-      expect(output).toContain('Nx Cloud');
+      expect(output).toContain(
+        `The ${project}:test-ci task should only be run with Nx Cloud.`
+      );
     });
 
     it('should run the parent when the check is bypassed', () => {
