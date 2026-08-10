@@ -7,9 +7,10 @@ import {
 /**
  * The linters Nx generators can set up for a project.
  *
- * Canonical home. `@nx/eslint` re-exports this for back-compat; the copy in
- * `@nx/workspace` is standalone because `@nx/workspace` does not depend on
- * `@nx/js`.
+ * Canonical home. `@nx/eslint` re-exports this for back-compat. Two standalone
+ * copies exist because neither package can depend on `@nx/js`: `@nx/workspace`
+ * (which `@nx/js` itself depends on) and `LINTERS` in `create-nx-workspace`.
+ * Nothing enforces that the three agree.
  */
 export type LinterType = 'eslint' | 'oxlint' | 'none';
 
