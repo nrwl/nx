@@ -124,12 +124,17 @@ describe('GeneratePackageJsonPlugin', () => {
     ).toBeLessThan(emitAsset.mock.invocationCallOrder[packageJsonEmitIndex]);
   });
 
-  it('generates no deploy output for bun, which has no lockfile generation', async () => {
+  it('leaves the bun decision to the deploy output', async () => {
     (detectPackageManager as jest.Mock).mockReturnValue('bun');
 
     const emitAsset = await runPlugin();
 
-    expect(generatePrunedDeployOutput).not.toHaveBeenCalled();
+    expect(generatePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ packageManager: 'bun' })
+    );
     expect(emitAsset.mock.calls.map(([name]) => name)).toEqual([
       'package.json',
     ]);

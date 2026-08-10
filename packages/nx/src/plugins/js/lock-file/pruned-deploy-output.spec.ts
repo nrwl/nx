@@ -9,6 +9,7 @@ import {
 import { tmpdir } from 'os';
 import { join } from 'path';
 import type { ProjectGraph } from '../../../config/project-graph';
+import { output } from '../../../utils/output';
 import type { PackageJson } from '../../../utils/package-json';
 import { generatePrunedDeployOutput } from './lock-file';
 import { getPrunedPnpmInstallArtifacts } from './pruned-output';
@@ -144,5 +145,29 @@ describe('generatePrunedDeployOutput sinks', () => {
     });
 
     expect([...emit().keys()]).toEqual(['pnpm-lock.yaml']);
+  });
+
+  it('ships nothing for bun and leaves the manifest as authored', () => {
+    const warn = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    const outputDirectory = join(tempDir, 'dist');
+    const packageJson = { name: 'app', version: '1.0.0' } as PackageJson;
+    const emitted: string[] = [];
+
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      outputDirectory,
+      packageManager: 'bun',
+      workspaceRoot: tempDir,
+    });
+    generatePrunedDeployOutput(packageJson, graph, 'apps/app', {
+      emit: (path) => emitted.push(path),
+      packageManager: 'bun',
+      workspaceRoot: tempDir,
+    });
+
+    expect(existsSync(outputDirectory)).toBe(false);
+    expect(emitted).toEqual([]);
+    expect(packageJson).toEqual({ name: 'app', version: '1.0.0' });
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
   });
 });

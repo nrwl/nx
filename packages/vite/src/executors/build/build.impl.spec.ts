@@ -116,12 +116,17 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
     ).toBeLessThan((writeJsonFile as jest.Mock).mock.invocationCallOrder[0]);
   });
 
-  it('generates no deploy output for bun, which has no lockfile generation', async () => {
+  it('leaves the bun decision to the deploy output', async () => {
     (detectPackageManager as jest.Mock).mockReturnValue('bun');
 
     await runExecutor();
 
-    expect(generatePrunedDeployOutput).not.toHaveBeenCalled();
+    expect(generatePrunedDeployOutput).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ packageManager: 'bun' })
+    );
     expect(writeJsonFile).toHaveBeenCalled();
   });
 });

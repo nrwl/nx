@@ -519,19 +519,29 @@ type PrunedDeploySink =
  * local-path specifiers, the pnpm config strip, the pnpm <=10 build settings),
  * so write or emit the manifest after this returns.
  *
- * Not for bun, which has no lockfile generation.
+ * Bun has no lockfile generation, so it warns and ships nothing, leaving the
+ * manifest as authored.
  */
 export function generatePrunedDeployOutput(
   packageJson: PackageJson,
   graph: ProjectGraph,
   projectRoot: string,
   options: PrunedDeploySink & {
-    packageManager: Exclude<PackageManager, 'bun'>;
+    packageManager: PackageManager;
     workspaceRoot?: string;
   }
 ): void {
   const workspaceRootPath = options.workspaceRoot ?? workspaceRoot;
   const { packageManager } = options;
+  if (packageManager === 'bun') {
+    output.warn({
+      title: 'Bun lockfile generation is not supported',
+      bodyLines: [
+        'Only the package.json is generated. Run `bun install` in the output directory if needed.',
+      ],
+    });
+    return;
+  }
   const { lockFileContent, pruned } = createPrunedLockfile(
     packageJson,
     graph,

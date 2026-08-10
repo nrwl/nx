@@ -169,22 +169,16 @@ export async function* viteBuildExecutor(
       builtPackageJson.type ??= 'module';
 
       const packageManager = detectPackageManager(context.root);
-      if (packageManager === 'bun') {
-        logger.warn(
-          'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
-        );
-      } else {
-        generatePrunedDeployOutput(
-          builtPackageJson,
-          context.projectGraph,
-          projectRoot,
-          {
-            outputDirectory: outDirRelativeToWorkspaceRoot,
-            packageManager,
-            workspaceRoot: context.root,
-          }
-        );
-      }
+      generatePrunedDeployOutput(
+        builtPackageJson,
+        context.projectGraph,
+        projectRoot,
+        {
+          outputDirectory: outDirRelativeToWorkspaceRoot,
+          packageManager,
+          workspaceRoot: context.root,
+        }
+      );
       writeJsonFile(
         `${outDirRelativeToWorkspaceRoot}/package.json`,
         builtPackageJson

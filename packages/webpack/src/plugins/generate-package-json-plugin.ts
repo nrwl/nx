@@ -96,29 +96,20 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
 
           const packageManager = detectPackageManager(this.options.root);
 
-          if (packageManager === 'bun') {
-            compilation
-              .getLogger('GeneratePackageJsonPlugin')
-              .warn(
-                'Bun lockfile generation is not supported. Only package.json will be generated.'
-              );
-          } else {
-            generatePrunedDeployOutput(
-              packageJson,
-              this.options.projectGraph,
-              this.options.projectGraph.nodes[this.options.projectName].data
-                .root,
-              {
-                emit: (assetPath, content) =>
-                  compilation.emitAsset(
-                    assetPath,
-                    new sources.RawSource(content)
-                  ),
-                packageManager,
-                workspaceRoot: this.options.root,
-              }
-            );
-          }
+          generatePrunedDeployOutput(
+            packageJson,
+            this.options.projectGraph,
+            this.options.projectGraph.nodes[this.options.projectName].data.root,
+            {
+              emit: (assetPath, content) =>
+                compilation.emitAsset(
+                  assetPath,
+                  new sources.RawSource(content)
+                ),
+              packageManager,
+              workspaceRoot: this.options.root,
+            }
+          );
 
           compilation.emitAsset(
             'package.json',
