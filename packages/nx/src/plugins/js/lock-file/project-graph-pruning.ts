@@ -11,6 +11,10 @@ import { PackageJson } from '../../../utils/package-json';
 import { PackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
+import {
+  normalizeLocalPathSpec,
+  uncontainLocalPathSpec,
+} from './pruned-output';
 
 /**
  * Prune project graph's external nodes and their dependencies
@@ -24,7 +28,7 @@ export function pruneProjectGraph(
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
-  const combinedDependencies = normalizeDependencies(
+  const { combinedDependencies, localPathNodes } = normalizeDependencies(
     prunedPackageJson,
     graph,
     workspacePackages,
@@ -38,6 +42,13 @@ export function pruneProjectGraph(
     workspacePackages,
     builder
   );
+  // A local-path dependency is keyed in the lockfile by the target's real
+  // package name, which an aliased one does not share with its manifest entry,
+  // so the name-based lookup above cannot reach its node. Add the nodes matched
+  // by target path rather than repeating that match here.
+  for (const node of localPathNodes) {
+    traverseNode(graph, builder, node);
+  }
 
   for (const project of workspacePackages.values()) {
     const node = graph.nodes[project.name];
@@ -53,13 +64,18 @@ export function pruneProjectGraph(
 
 // ensure that dependency ranges from package.json (e.g. ^1.0.0)
 // are replaced with the actual version based on the available nodes (e.g. 1.0.1)
+// Also returns the external nodes matched for local-path dependencies, whose
+// names the caller cannot re-derive from the returned map.
 function normalizeDependencies(
   packageJson: PackageJson,
   graph: ProjectGraph,
   workspacePackages: Map<string, ProjectGraphProjectNode>,
   workspaceRootPath: string,
   packageManager?: PackageManager
-) {
+): {
+  combinedDependencies: Record<string, string>;
+  localPathNodes: ProjectGraphExternalNode[];
+} {
   const {
     dependencies,
     devDependencies,
@@ -73,6 +89,7 @@ function normalizeDependencies(
     ...optionalDependencies,
     ...peerDependencies,
   };
+  const localPathNodes: ProjectGraphExternalNode[] = [];
 
   const manager = getCatalogManager(workspaceRootPath);
   Object.entries(combinedDependencies).forEach(
@@ -109,18 +126,16 @@ function normalizeDependencies(
         packageName,
         resolvedVersionRange
       );
-      // A file:/link: local-path dependency (e.g. a vendored tarball) records its
-      // path relative to the declaring package in the manifest but relative to
-      // the workspace root in the lockfile, so the two specifiers never match by
-      // string. Match by name instead once the version-based lookups above fail
-      // (pnpm-only, matching the rest of the local-path handling;
-      // findLocalPathNode throws when the name is ambiguous).
+      // A file:/link: local-path dependency (e.g. a vendored tarball) records a
+      // path where a version would go, so the version-based lookups above never
+      // match it; findLocalPathNode matches it on that path instead (pnpm-only,
+      // matching the rest of the local-path handling).
       const localPathNode =
         !node &&
         packageManager === 'pnpm' &&
         !workspacePackages.has(packageName) &&
         isLocalPathSpecifier(resolvedVersionRange)
-          ? findLocalPathNode(graph, packageName)
+          ? findLocalPathNode(graph, packageName, resolvedVersionRange)
           : undefined;
       if (node) {
         combinedDependencies[packageName] = node.data.version;
@@ -129,6 +144,7 @@ function normalizeDependencies(
         combinedDependencies[packageName] = resolvedVersionRange;
       } else if (localPathNode) {
         combinedDependencies[packageName] = localPathNode.data.version;
+        localPathNodes.push(localPathNode);
       } else if (
         packageManager === 'pnpm' &&
         resolvedVersionRange.startsWith('link:')
@@ -143,7 +159,7 @@ function normalizeDependencies(
       }
     }
   );
-  return combinedDependencies;
+  return { combinedDependencies, localPathNodes };
 }
 
 /**
@@ -157,20 +173,39 @@ export function isLocalPathSpecifier(versionExpr: string): boolean {
 }
 
 /**
- * The external node for a `file:`/`link:` local-path dependency, matched by
- * package name (its path-based version cannot be matched by string across the
- * manifest/lockfile boundary; see `isLocalPathSpecifier`). Two local-path
- * packages sharing a name cannot be told apart by it, so that throws rather
- * than risking a match to the wrong one.
+ * The external node for a `file:`/`link:` local-path dependency.
+ *
+ * The target path is what identifies one: an aliased dependency (`"alias":
+ * "file:libs/x"`) is keyed in the lockfile by the target's real package name, so
+ * the manifest's own name matches nothing. A manifest the pruned output already
+ * rewrote carries a workspace-root-relative path, relocated under the shipped
+ * output directory, which strips back to the path the lockfile records.
+ *
+ * A manifest that was not rewritten records the path relative to the declaring
+ * package instead, and this has no way to resolve that against the workspace
+ * root, so it falls back to the package name. Two local-path packages sharing a
+ * name cannot be told apart by it, so that throws rather than risking a match to
+ * the wrong one.
  */
 export function findLocalPathNode(
   graph: ProjectGraph,
-  packageName: string
+  packageName: string,
+  versionExpr: string
 ): ProjectGraphExternalNode | undefined {
-  const matches = Object.values(graph.externalNodes).filter(
-    (node) =>
-      node.data.packageName === packageName &&
-      isLocalPathSpecifier(node.data.version)
+  const localPathNodes = Object.values(graph.externalNodes).filter((node) =>
+    isLocalPathSpecifier(node.data.version)
+  );
+  // Only the manifest side is read back from its shipped location; the lock
+  // file records the source path, which relocation never touched.
+  const sourceSpec = uncontainLocalPathSpec(versionExpr);
+  const targetMatch = localPathNodes.find(
+    (node) => normalizeLocalPathSpec(node.data.version) === sourceSpec
+  );
+  if (targetMatch) {
+    return targetMatch;
+  }
+  const matches = localPathNodes.filter(
+    (node) => node.data.packageName === packageName
   );
   if (matches.length > 1) {
     throw new Error(

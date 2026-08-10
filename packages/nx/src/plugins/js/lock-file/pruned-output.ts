@@ -823,6 +823,42 @@ export function uncontainLocalPath(shippedPath: string): string {
 }
 
 /**
+ * A `file:`/`link:` specifier with its path separators unified, so specifiers
+ * that differ only in how they were authored compare equal. Returns anything
+ * that is not a local-path specifier unchanged.
+ */
+export function normalizeLocalPathSpec(spec: string): string {
+  const protocol = spec.startsWith('link:')
+    ? 'link:'
+    : spec.startsWith('file:')
+      ? 'file:'
+      : null;
+  return protocol
+    ? `${protocol}${normalizePath(spec.slice(protocol.length))}`
+    : spec;
+}
+
+/**
+ * A relocated `file:`/`link:` specifier read back as the source path it was
+ * relocated from, so it compares equal to the source specifier for the same
+ * target (`normalizeLocalPathSpec`). Relocation is injective and strips exactly
+ * one level, so only the relocated side of a comparison may go through this: a
+ * source path that itself starts with the shipped directory's name relocates
+ * like any other, and stripping it too would read it as a different target.
+ */
+export function uncontainLocalPathSpec(spec: string): string {
+  const normalized = normalizeLocalPathSpec(spec);
+  const protocol = normalized.startsWith('link:')
+    ? 'link:'
+    : normalized.startsWith('file:')
+      ? 'file:'
+      : null;
+  return protocol
+    ? `${protocol}${uncontainLocalPath(normalized.slice(protocol.length))}`
+    : normalized;
+}
+
+/**
  * The absolute source of a local-path target, or the reason it cannot ship into
  * the pruned output. The containment check is lexical, so it cannot see where a
  * symlinked source points: resolving it is what separates a link into the
@@ -883,34 +919,31 @@ function containVendoredFilePath(
   return containLocalPath(wsRelativePath);
 }
 
-/** Contains the path of a `file:` spec (`file:X` -> `file:<contained X>`). */
-function containFileSpec(
-  spec: string,
+/**
+ * Contains the `file:` path in a lockfile token, which is either a bare spec
+ * (`file:X`) or one carrying the target's real package name (`name@file:X`, the
+ * shape pnpm records for an aliased dependency and uses as that package's key).
+ * Package keys and the refs that point at them go through this one function, so
+ * a renamed key and its refs cannot drift apart; pnpm rejects that mismatch with
+ * ERR_PNPM_LOCKFILE_MISSING_DEPENDENCY. A resolved-peer suffix rides along in
+ * the sliced path (`name@file:X(peer@1.0.0)`) and survives untouched because
+ * containment only prepends.
+ */
+function containFileToken(
+  token: string,
   synthesized: ReadonlySet<string>
 ): string {
-  if (!spec.startsWith('file:')) {
-    return spec;
-  }
-  const path = spec.slice('file:'.length);
-  const contained = containVendoredFilePath(path, synthesized);
-  return contained === path ? spec : `file:${contained}`;
-}
-
-/** Contains the `file:` path in a package key (`name@file:X`). */
-function containFilePackageKey(
-  key: string,
-  synthesized: ReadonlySet<string>
-): string {
-  const marker = '@file:';
-  const index = key.indexOf(marker);
+  const marker = token.startsWith('file:') ? 'file:' : '@file:';
+  const index = token.startsWith('file:') ? 0 : token.indexOf(marker);
   if (index === -1) {
-    return key;
+    return token;
   }
-  const path = key.slice(index + marker.length);
+  const pathStart = index + marker.length;
+  const path = token.slice(pathStart);
   const contained = containVendoredFilePath(path, synthesized);
   return contained === path
-    ? key
-    : `${key.slice(0, index)}${marker}${contained}`;
+    ? token
+    : `${token.slice(0, pathStart)}${contained}`;
 }
 
 /**
@@ -978,7 +1011,7 @@ export function containShippedLocalFilePaths(
         );
       }
       if (typeof resolution.tarball === 'string') {
-        resolution.tarball = containFileSpec(resolution.tarball, synthesized);
+        resolution.tarball = containFileToken(resolution.tarball, synthesized);
       }
     }
     for (const section of LOCKFILE_DEP_SECTIONS) {
@@ -988,7 +1021,7 @@ export function containShippedLocalFilePaths(
       }
       for (const [name, ref] of Object.entries(deps)) {
         if (typeof ref === 'string') {
-          deps[name] = containFileSpec(ref, synthesized);
+          deps[name] = containFileToken(ref, synthesized);
         }
       }
     }
@@ -998,7 +1031,7 @@ export function containShippedLocalFilePaths(
     const contained: Lockfile['packages'] = {};
     for (const [key, snapshot] of Object.entries(lockfile.packages)) {
       containSnapshot(snapshot);
-      contained[containFilePackageKey(key, synthesized)] = snapshot;
+      contained[containFileToken(key, synthesized)] = snapshot;
     }
     lockfile.packages = contained;
   }

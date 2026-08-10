@@ -494,9 +494,123 @@ describe('project-graph-pruning', () => {
         },
       };
 
-      expect(() => findLocalPathNode(graph, 'vendored-lib')).toThrow(
+      expect(() =>
+        findLocalPathNode(graph, 'vendored-lib', 'file:../../libs/vendored-a')
+      ).toThrow(
         'Multiple local-path packages named "vendored-lib" were found in the lock file (file:libs/vendored-a, file:libs/vendored-b)'
       );
+    });
+
+    it('matches the target path before the package name', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendored-lib@file:libs/vendored-a': {
+            type: 'npm',
+            name: 'npm:vendored-lib@file:libs/vendored-a',
+            data: {
+              packageName: 'vendored-lib',
+              version: 'file:libs/vendored-a',
+            },
+          },
+          'npm:vendored-lib@file:libs/vendored-b': {
+            type: 'npm',
+            name: 'npm:vendored-lib@file:libs/vendored-b',
+            data: {
+              packageName: 'vendored-lib',
+              version: 'file:libs/vendored-b',
+            },
+          },
+        },
+      };
+
+      expect(
+        findLocalPathNode(
+          graph,
+          'vendored-lib',
+          'file:local_path_modules/libs/vendored-b'
+        )?.name
+      ).toBe('npm:vendored-lib@file:libs/vendored-b');
+    });
+
+    it('matches an aliased dependency, whose name the lock file never carries', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendor-real-name': {
+            type: 'npm',
+            name: 'npm:vendor-real-name',
+            data: {
+              packageName: 'vendor-real-name',
+              version: 'file:libs/vendor',
+            },
+          },
+        },
+      };
+
+      expect(
+        findLocalPathNode(
+          graph,
+          'aliased-vendor',
+          'file:local_path_modules/libs/vendor'
+        )?.name
+      ).toBe('npm:vendor-real-name');
+    });
+
+    it('does not match a link: manifest spec to a file: package at the same path', () => {
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendor-real-name': {
+            type: 'npm',
+            name: 'npm:vendor-real-name',
+            data: {
+              packageName: 'vendor-real-name',
+              version: 'file:libs/vendor',
+            },
+          },
+        },
+      };
+
+      expect(
+        findLocalPathNode(
+          graph,
+          'aliased-vendor',
+          'link:local_path_modules/libs/vendor'
+        )
+      ).toBeUndefined();
+    });
+
+    it('matches a source path that itself starts with the shipped directory name', () => {
+      // Relocation is injective: a workspace directory named local_path_modules
+      // relocates like any other, so the manifest carries the prefix twice while
+      // the lock file carries it once. Reading it back off both sides would
+      // compare two different paths, and an alias has no name to fall back to.
+      const graph: ProjectGraph = {
+        nodes: {},
+        dependencies: {},
+        externalNodes: {
+          'npm:vendor-real-name': {
+            type: 'npm',
+            name: 'npm:vendor-real-name',
+            data: {
+              packageName: 'vendor-real-name',
+              version: 'file:local_path_modules/vendor',
+            },
+          },
+        },
+      };
+
+      expect(
+        findLocalPathNode(
+          graph,
+          'aliased-vendor',
+          'file:local_path_modules/local_path_modules/vendor'
+        )?.name
+      ).toBe('npm:vendor-real-name');
     });
   });
 
