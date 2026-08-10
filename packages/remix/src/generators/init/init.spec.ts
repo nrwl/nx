@@ -2,8 +2,7 @@ import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addDependenciesToPackageJson, readJson } from '@nx/devkit';
-import initGenerator from './init';
-import { remixInitGeneratorInternal } from './init';
+import initGenerator, { remixInitGeneratorInternal } from './init';
 
 describe('Remix Init Generator', () => {
   it('should setup the workspace and add dependencies', async () => {
