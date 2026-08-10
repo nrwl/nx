@@ -16,6 +16,10 @@ process.env.NX_DEV_URL = resolveNxDevUrl();
 
 const BASE = '/docs';
 
+// Set on non-production builds (versioned snapshots, canary) so the archived
+// pages don't compete with nx.dev in search results.
+const NO_INDEX = process.env.NX_DOCS_NO_INDEX === 'true';
+
 // This is exposed as window.__CONFIG
 const PUBLIC_CONFIG = {
   gtmMeasurementId: 'GTM-KW8423B6',
@@ -104,6 +108,14 @@ export default defineConfig({
       disable404Route: true,
       lastUpdated: true,
       head: [
+        ...(NO_INDEX
+          ? [
+              {
+                tag: 'meta',
+                attrs: { name: 'robots', content: 'noindex' },
+              },
+            ]
+          : []),
         {
           tag: 'script',
           content: `window.__CONFIG = ${JSON.stringify(PUBLIC_CONFIG)};`,
