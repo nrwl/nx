@@ -803,9 +803,6 @@
 # --- gettingStartedRedirects ---
 /getting-started/why-nx /docs/getting-started/intro 301
 
-# --- pricingRedirects ---
-/pricing /nx-cloud#plans 301
-
 # --- ciTutorialRedirects ---
 /ci/intro/tutorials/circle /docs/guides/nx-cloud/setup-ci 301
 /ci/intro/tutorials/github-actions /ci/recipes/set-up/monorepo-ci-github-actions 301
