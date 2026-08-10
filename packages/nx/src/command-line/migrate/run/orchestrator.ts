@@ -727,13 +727,21 @@ function applyReconcileStepAction(
   // A retry-clean the death dispense would not have offered must be refused
   // here too, or a hand-crafted reconcile could reset a tree with no restore
   // point and destroy prior steps' work.
-  if (action === 'retry-clean' && !canOfferCleanRetry(root, state, step)) {
-    return {
-      kind: 'error',
-      reason: `Cannot apply action 'retry-clean' to step '${
-        step.id
-      }': ${cleanRetryUnavailableReason(root, state, step)} Use 'adopt' instead.`,
-    };
+  if (action === 'retry-clean') {
+    const head = getLatestCommitSha(root);
+    if (!canOfferCleanRetry(root, state, step, head)) {
+      return {
+        kind: 'error',
+        reason: `Cannot apply action 'retry-clean' to step '${
+          step.id
+        }': ${cleanRetryUnavailableReason(
+          root,
+          state,
+          step,
+          head
+        )} Use 'adopt' instead.`,
+      };
+    }
   }
   const applied = applyStepEvent(state, {
     type: 'stepAction',
@@ -946,22 +954,26 @@ function emitRetryFailed(root: string, runId: string, step: MigrateStep): void {
 // destroy; without a captured ref there is nothing to reset to; edits already
 // in the tree when this step was dispensed (the user's own, or an earlier
 // step's the checkpoint never saw) are not represented by the ref either; and
-// a landed commit of this step's own that the ref does not contain would be
-// discarded by the reset (the death window between the worker's ledger write
-// and its succeed write).
-// The tree state has to say clean explicitly: a failed probe records dirty,
-// and a run created before that field existed carries nothing to check, so
-// neither can be read as a restore point that exists.
+// HEAD anywhere other than the ref means something was committed since the
+// step was dispensed that the reset would discard, whether that is this step's
+// own commit (recorded, or made in the window before the worker died writing
+// its ledger entry) or one the user made alongside the run.
+// Cleanliness and position both have to say so explicitly: a failed tree probe
+// records dirty, a run created before that field existed carries nothing to
+// check, and an unreadable HEAD is no ref at all, so none of the three can be
+// read as a restore point that exists.
 function canOfferCleanRetry(
   root: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  head: string | null
 ): boolean {
   return (
     state.createCommits &&
     !state.checkpointFailed &&
     !hasPendingCommitDebt(state) &&
     !!step.gitRefBefore &&
+    head === step.gitRefBefore &&
     step.treeCleanAtDispense === true &&
     !endangeredLandedEntry(root, state, step)
   );
@@ -994,15 +1006,21 @@ function endangeredLandedEntry(
 function cleanRetryUnavailableReason(
   root: string,
   state: MigrateRunState,
-  step: MigrateStep
+  step: MigrateStep,
+  head: string | null
 ): string {
   const endangered = endangeredLandedEntry(root, state, step);
-  if (!endangered) {
-    return `resetting the tree could discard uncommitted work that no restore point accounts for.`;
+  if (endangered) {
+    return endangered.sha
+      ? `this migration's changes already landed in commit ${endangered.sha}, which a reset would discard.`
+      : `this migration's changes already landed in a commit, which a reset would discard.`;
   }
-  return endangered.sha
-    ? `this migration's changes already landed in commit ${endangered.sha}, which a reset would discard.`
-    : `this migration's changes already landed in a commit, which a reset would discard.`;
+  if (step.gitRefBefore && head !== step.gitRefBefore) {
+    return `HEAD is at ${
+      head ?? '(unreadable)'
+    } rather than the ${step.gitRefBefore} this migration started from, so a reset would discard what was committed in between.`;
+  }
+  return `resetting the tree could discard uncommitted work that no restore point accounts for.`;
 }
 
 function emitDied(
@@ -1015,7 +1033,7 @@ function emitDied(
   const ref = step.gitRefBefore;
   const head = getLatestCommitSha(root);
   const tree = dirtyTreeSummary(root);
-  const cleanRetry = canOfferCleanRetry(root, state, step);
+  const cleanRetry = canOfferCleanRetry(root, state, step, head);
   // The generator half is recorded, so a retry that keeps the tree as it
   // stands has the rest of the step left to run: a hybrid's prompt, or the
   // install and commit its worker never reached.
@@ -1054,7 +1072,8 @@ function emitDied(
       `A clean retry is unavailable: ${cleanRetryUnavailableReason(
         root,
         state,
-        step
+        step,
+        head
       )}`
     );
   }

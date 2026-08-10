@@ -1430,7 +1430,7 @@ describe('orchestrator', () => {
       jest.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
-      mockGetLatestCommitSha.mockReturnValue('head-now');
+      mockGetLatestCommitSha.mockReturnValue('ref-before');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'running', {
@@ -1450,7 +1450,6 @@ describe('orchestrator', () => {
       const block = lastBlock();
       expect(block.action).toBe('died');
       expect(block.payload.instructions).toContain('ref-before');
-      expect(block.payload.instructions).toContain('head-now');
       expect(block.payload.instructions).toContain('working tree');
       expect(block.payload.instructions).toContain('retry-clean');
       expect(block.payload.then).toContain('--step-action=retry-clean');
@@ -1548,6 +1547,7 @@ describe('orchestrator', () => {
       jest.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
+      mockGetLatestCommitSha.mockReturnValue('ref-before');
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'running', {
@@ -1594,6 +1594,7 @@ describe('orchestrator', () => {
     });
 
     it('rejects a hand-crafted retry-clean for a step dispensed against a dirty tree', async () => {
+      mockGetLatestCommitSha.mockReturnValue('ref-before');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
@@ -1764,6 +1765,7 @@ describe('orchestrator', () => {
     });
 
     it('offers only adopt when the died step is already covered by a landed ledger entry, naming the commit', async () => {
+      mockGetLatestCommitSha.mockReturnValue('ref-before');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
@@ -1795,6 +1797,7 @@ describe('orchestrator', () => {
     });
 
     it('rejects retry-clean when the died step is already covered by a landed ledger entry, leaving state untouched', async () => {
+      mockGetLatestCommitSha.mockReturnValue('ref-before');
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
@@ -1824,6 +1827,65 @@ describe('orchestrator', () => {
       expect(block.action).toBe('error');
       expect(block.payload.instructions).toContain('already landed');
       expect(block.payload.instructions).toContain('landed-sha');
+    });
+
+    it('offers only adopt when a commit landed that the dying worker never recorded', async () => {
+      // The worker commits before it appends the ledger entry, so a death
+      // between the two leaves no entry to spot while HEAD sits past the ref a
+      // clean retry would reset to.
+      mockGetLatestCommitSha.mockReturnValue('unrecorded-sha');
+      setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            gitRefBefore: 'ref-before',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+
+      await runOrchestratorReconcile({ root, runId: 'run-1' });
+
+      const block = lastBlock();
+      expect(block.action).toBe('died');
+      expect(block.payload.instructions).toContain(
+        'A clean retry is unavailable'
+      );
+      expect(block.payload.instructions).toContain(
+        'current HEAD: unrecorded-sha'
+      );
+      expect(block.payload.instructions).not.toContain('retry-clean');
+      expect(block.payload.then).toMatch(/--step-action=retry$/);
+    });
+
+    it('rejects a hand-crafted retry-clean when a commit landed that the ledger never recorded, leaving state untouched', async () => {
+      mockGetLatestCommitSha.mockReturnValue('unrecorded-sha');
+      const dir = setupRun('run-1', {
+        steps: [
+          migStep('step-1', '@nx/js:gen', 'died', {
+            gitRefBefore: 'ref-before',
+            treeCleanAtDispense: true,
+            generatorCompleted: true,
+          }),
+        ],
+        createCommits: true,
+        plan: [genMig('@nx/js', 'gen')],
+      });
+      const before = readFileSync(join(dir, 'run.json'), 'utf-8');
+
+      await runOrchestratorReconcile({
+        root,
+        runId: 'run-1',
+        stepAction: 'retry-clean',
+      });
+
+      expect(readFileSync(join(dir, 'run.json'), 'utf-8')).toBe(before);
+      const block = lastBlock();
+      expect(block.action).toBe('error');
+      expect(block.payload.instructions).toContain('unrecorded-sha');
+      expect(block.payload.instructions).toContain('ref-before');
     });
 
     it('accepts adopt when the died step is already covered by a landed ledger entry, leaving the ledger unchanged', async () => {
@@ -1865,6 +1927,7 @@ describe('orchestrator', () => {
       // A retried step re-captures gitRefBefore after the earlier attempt's
       // commit landed, so resetting to it keeps that commit in history.
       mockIsAncestorCommit.mockReturnValue(true);
+      mockGetLatestCommitSha.mockReturnValue('ref-before');
       setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:gen', 'died', {
