@@ -17,6 +17,12 @@ namespace MsbuildAnalyzer.Tests;
 /// method missed by discovery gets no target of its own, and a filter that is
 /// too broad runs the same test in two targets at once. Every rule the scanner
 /// applies is pinned below.
+///
+/// Fixture classes carry a throwaway `[TestMethod] public void T() { }` unless
+/// the test is specifically about a class with no runnable members — a class
+/// with neither a local test method nor a base class is excluded, so an empty
+/// body would silently fail to discover for a reason unrelated to what most of
+/// these tests actually check.
 /// </summary>
 public class TestClassScannerTests
 {
@@ -36,7 +42,8 @@ public class TestClassScannerTests
     {
         Assert.Equal(
             ["Acme.Tests.LoginTests"],
-            Ids(SplitBy.Class, "namespace Acme.Tests; [TestClass] public class LoginTests { }"));
+            Ids(SplitBy.Class,
+                "namespace Acme.Tests; [TestClass] public class LoginTests { [TestMethod] public void T() { } }"));
     }
 
     [Fact]
@@ -44,7 +51,9 @@ public class TestClassScannerTests
     {
         Assert.Equal(
             ["Acme.Tests.LoginTests"],
-            Ids(SplitBy.Class, "namespace Acme.Tests { [TestClass] public class LoginTests { } }"));
+            Ids(SplitBy.Class,
+                "namespace Acme.Tests { [TestClass] public class LoginTests " +
+                "{ [TestMethod] public void T() { } } }"));
     }
 
     [Fact]
@@ -52,17 +61,36 @@ public class TestClassScannerTests
     {
         Assert.Equal(
             ["Acme.Tests.LoginTests"],
-            Ids(SplitBy.Class, "namespace Acme { namespace Tests { [TestClass] public class LoginTests { } } }"));
+            Ids(SplitBy.Class,
+                "namespace Acme { namespace Tests { [TestClass] public class LoginTests " +
+                "{ [TestMethod] public void T() { } } } }"));
     }
 
     [Fact]
     public void GlobalNamespace_ProducesUnqualifiedIdAndWildcardFilter()
     {
-        var unit = Assert.Single(Scan(SplitBy.Class, "[TestClass] public class LoginTests { }"));
+        var unit = Assert.Single(Scan(SplitBy.Class,
+            "[TestClass] public class LoginTests { [TestMethod] public void T() { } }"));
 
         Assert.Equal("LoginTests", unit.Id);
         // A class in the global namespace has no namespace to qualify with.
         Assert.Equal(["--filter", "\"ClassName=LoginTests\""], unit.FilterArgs);
+    }
+
+    [Fact]
+    public void NamespaceWithUnusualFormatting_DoesNotLeakIntoTheId()
+    {
+        // A qualified namespace name is one syntax node, and ToString() on it
+        // would include whatever trivia sits between the dotted segments. This
+        // must resolve the same as "Acme.Tests" regardless.
+        var source = """
+            namespace Acme
+                . /* why is this here */ Tests;
+            [TestClass]
+            public class LoginTests { [TestMethod] public void T() { } }
+            """;
+
+        Assert.Equal(["Acme.Tests.LoginTests"], Ids(SplitBy.Class, source));
     }
 
     // --- Attribute recognition ---------------------------------------------
@@ -72,13 +100,12 @@ public class TestClassScannerTests
     [InlineData("[TestClassAttribute]")]
     [InlineData("[MSTest.TestClass]")]
     [InlineData("[global::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]")]
-    [InlineData("[TestClass, Ignore]")]
-    [InlineData("[Ignore]\n[TestClass]")]
     public void TestClassAttribute_IsRecognizedInAllSpellings(string attribute)
     {
         Assert.Equal(
             ["Acme.LoginTests"],
-            Ids(SplitBy.Class, $"namespace Acme; {attribute} public class LoginTests {{ }}"));
+            Ids(SplitBy.Class,
+                $"namespace Acme; {attribute} public class LoginTests {{ [TestMethod] public void T() {{ }} }}"));
     }
 
     [Fact]
@@ -102,7 +129,8 @@ public class TestClassScannerTests
         Assert.Equal(
             ["Acme.Outer"],
             Ids(SplitBy.Class,
-                "namespace Acme; [TestClass] public class Outer { [TestClass] public class Inner { } }"));
+                "namespace Acme; [TestClass] public class Outer " +
+                "{ [TestMethod] public void T() { } [TestClass] public class Inner { } }"));
     }
 
     [Fact]
@@ -120,11 +148,57 @@ public class TestClassScannerTests
     [Fact]
     public void ConcreteSubclassOfAbstractBase_IsAtomized()
     {
+        // No local test method: everything it runs is inherited from
+        // BaseTests, invisible to this syntax-only pass. The base list is what
+        // keeps it from looking empty.
         var ids = Ids(SplitBy.Class,
             "namespace Acme; [TestClass] public abstract class BaseTests { }",
             "namespace Acme; [TestClass] public class LoginTests : BaseTests { }");
 
         Assert.Equal(["Acme.LoginTests"], ids);
+    }
+
+    [Fact]
+    public void EmptyTestClass_WithNoMethodsOrBase_IsNotAtomized()
+    {
+        // Nothing here could ever pass: no local test method, and no base
+        // class that might carry inherited ones. A target for it would only
+        // fail on --minimum-expected-tests.
+        var result = Discover(SplitBy.Class, "namespace Acme; [TestClass] public class Empty { }");
+
+        Assert.Empty(result.Units);
+        Assert.Equal(1, result.SkippedUnrunnable);
+    }
+
+    [Fact]
+    public void IgnoredTestClass_IsNotAtomized()
+    {
+        var result = Discover(SplitBy.Class,
+            "namespace Acme; [TestClass, Ignore] public class LoginTests " +
+            "{ [TestMethod] public void T() { } }");
+
+        Assert.Empty(result.Units);
+        Assert.Equal(1, result.SkippedUnrunnable);
+    }
+
+    [Fact]
+    public void NonPublicTestClass_IsNotAtomized()
+    {
+        var result = Discover(SplitBy.Class,
+            "namespace Acme; [TestClass] internal class LoginTests { [TestMethod] public void T() { } }");
+
+        Assert.Empty(result.Units);
+        Assert.Equal(1, result.SkippedUnrunnable);
+    }
+
+    [Fact]
+    public void NonPublicTestClass_WithAssemblyDiscoverInternals_IsAtomized()
+    {
+        var units = Scan(SplitBy.Class,
+            "using Microsoft.VisualStudio.TestTools.UnitTesting; [assembly: DiscoverInternals]",
+            "namespace Acme; [TestClass] internal class LoginTests { [TestMethod] public void T() { } }");
+
+        Assert.Equal(["Acme.LoginTests"], units.Select(u => u.Id));
     }
 
     // --- Parsing robustness -------------------------------------------------
@@ -139,6 +213,7 @@ public class TestClassScannerTests
             [TestClass]
             public class RealTests
             {
+                [TestMethod] public void T() { }
                 /* [TestClass] public class CommentedOut { } */
                 const string Raw = """
                     [TestClass] public class InRawString { }
@@ -154,7 +229,8 @@ public class TestClassScannerTests
     public void MultipleTestClassesInOneFile_EachBecomeAUnit()
     {
         var ids = Ids(SplitBy.Class,
-            "namespace Acme; [TestClass] public class A { } [TestClass] public class B { }");
+            "namespace Acme; [TestClass] public class A { [TestMethod] public void T() { } } " +
+            "[TestClass] public class B { [TestMethod] public void T() { } }");
 
         Assert.Equal(["Acme.A", "Acme.B"], ids);
     }
@@ -167,7 +243,7 @@ public class TestClassScannerTests
         // Deriving names from file names would emit two targets here, each
         // running the entire class.
         var ids = Ids(SplitBy.Class,
-            "namespace Acme; [TestClass] public partial class LoginTests { }",
+            "namespace Acme; [TestClass] public partial class LoginTests { [TestMethod] public void T() { } }",
             "namespace Acme; [TestClass] public partial class LoginTests { }");
 
         Assert.Equal(["Acme.LoginTests"], ids);
@@ -187,10 +263,24 @@ public class TestClassScannerTests
     public void PartialClass_DoNotParallelizeOnEitherHalf_AppliesToTheUnit()
     {
         var unit = Assert.Single(Scan(SplitBy.Class,
-            "namespace Acme; [TestClass] public partial class LoginTests { }",
+            "namespace Acme; [TestClass] public partial class LoginTests { [TestMethod] public void T() { } }",
             "namespace Acme; [TestClass, DoNotParallelize] public partial class LoginTests { }"));
 
         Assert.True(unit.DoNotParallelize);
+    }
+
+    [Fact]
+    public void PartialClass_RunnableSignalOnEitherHalf_KeepsTheUnit()
+    {
+        // Neither half looks runnable on its own — no local test method here,
+        // no base list there — but they are the same class, and one half's
+        // test method is a real reason to keep it. Unioned the same way
+        // DoNotParallelize is.
+        var unit = Assert.Single(Scan(SplitBy.Class,
+            "namespace Acme; [TestClass] public partial class LoginTests { }",
+            "namespace Acme; [TestClass] public partial class LoginTests { [TestMethod] public void T() { } }"));
+
+        Assert.Equal("Acme.LoginTests", unit.Id);
     }
 
     // --- Same name in different namespaces ----------------------------------
@@ -199,8 +289,8 @@ public class TestClassScannerTests
     public void SameClassNameInTwoNamespaces_StaysDistinct()
     {
         var units = Scan(SplitBy.Class,
-            "namespace Acme.Api; [TestClass] public class SmokeTests { }",
-            "namespace Acme.Web; [TestClass] public class SmokeTests { }");
+            "namespace Acme.Api; [TestClass] public class SmokeTests { [TestMethod] public void T() { } }",
+            "namespace Acme.Web; [TestClass] public class SmokeTests { [TestMethod] public void T() { } }");
 
         Assert.Equal(["Acme.Api.SmokeTests", "Acme.Web.SmokeTests"], units.Select(u => u.Id));
 
@@ -292,6 +382,23 @@ public class TestClassScannerTests
     }
 
     [Fact]
+    public void MethodMode_IgnoredMethod_IsNotAtomized()
+    {
+        var result = Discover(SplitBy.Method, """
+            namespace Acme;
+            [TestClass]
+            public class Tests
+            {
+                [TestMethod] public void Runs() { }
+                [TestMethod, Ignore] public void Skipped() { }
+            }
+            """);
+
+        Assert.Equal(["Acme.Tests.Runs"], result.Units.Select(u => u.Id));
+        Assert.Equal(1, result.SkippedUnrunnable);
+    }
+
+    [Fact]
     public void MethodMode_MethodsOfExcludedClasses_AreNotDiscovered()
     {
         Assert.Empty(Scan(SplitBy.Method,
@@ -305,8 +412,8 @@ public class TestClassScannerTests
     {
         var units = Scan(SplitBy.Class,
             "using Microsoft.VisualStudio.TestTools.UnitTesting; [assembly: DoNotParallelize]",
-            "namespace Acme; [TestClass] public class A { }",
-            "namespace Acme; [TestClass] public class B { }");
+            "namespace Acme; [TestClass] public class A { [TestMethod] public void T() { } }",
+            "namespace Acme; [TestClass] public class B { [TestMethod] public void T() { } }");
 
         Assert.All(units, unit => Assert.True(unit.DoNotParallelize));
     }
@@ -315,8 +422,8 @@ public class TestClassScannerTests
     public void ClassLevelDoNotParallelize_MarksOnlyThatClass()
     {
         var units = Scan(SplitBy.Class,
-            "namespace Acme; [TestClass, DoNotParallelize] public class Serial { }",
-            "namespace Acme; [TestClass] public class Parallel { }");
+            "namespace Acme; [TestClass, DoNotParallelize] public class Serial { [TestMethod] public void T() { } }",
+            "namespace Acme; [TestClass] public class Parallel { [TestMethod] public void T() { } }");
 
         Assert.True(units.Single(u => u.ClassName == "Serial").DoNotParallelize);
         Assert.False(units.Single(u => u.ClassName == "Parallel").DoNotParallelize);
@@ -344,7 +451,7 @@ public class TestClassScannerTests
     {
         var units = Scan(SplitBy.Class,
             "[assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]",
-            "namespace Acme; [TestClass] public class A { }");
+            "namespace Acme; [TestClass] public class A { [TestMethod] public void T() { } }");
 
         Assert.False(Assert.Single(units).DoNotParallelize);
     }
@@ -358,9 +465,9 @@ public class TestClassScannerTests
         // order would vary between runs and change the project graph hash.
         string[] sources =
         [
-            "namespace Acme; [TestClass] public class Charlie { }",
-            "namespace Acme; [TestClass] public class Alpha { }",
-            "namespace Acme; [TestClass] public class Bravo { }"
+            "namespace Acme; [TestClass] public class Charlie { [TestMethod] public void T() { } }",
+            "namespace Acme; [TestClass] public class Alpha { [TestMethod] public void T() { } }",
+            "namespace Acme; [TestClass] public class Bravo { [TestMethod] public void T() { } }"
         ];
 
         var forward = Ids(SplitBy.Class, sources);
@@ -387,10 +494,12 @@ public class TestClassScannerTests
     public void NestedTestClasses_AreCounted()
     {
         var result = Discover(SplitBy.Class,
-            "namespace Acme; [TestClass] public class Outer { [TestClass] public class Inner { } }");
+            "namespace Acme; [TestClass] public class Outer " +
+            "{ [TestMethod] public void T() { } [TestClass] public class Inner { } }");
 
         Assert.Equal(1, result.SkippedNested);
         Assert.Equal(0, result.SkippedGeneric);
+        Assert.Equal(0, result.SkippedUnrunnable);
     }
 
     [Fact]
@@ -420,6 +529,17 @@ public class TestClassScannerTests
     }
 
     [Fact]
+    public void UnrunnableClasses_AreCounted()
+    {
+        var result = Discover(SplitBy.Class,
+            "namespace Acme; [TestClass] public class Empty { }",
+            "namespace Acme; [TestClass, Ignore] public class Ignored { [TestMethod] public void T() { } }");
+
+        Assert.Empty(result.Units);
+        Assert.Equal(2, result.SkippedUnrunnable);
+    }
+
+    [Fact]
     public void AbstractBaseClasses_AreNotCountedAsExclusions()
     {
         // A shared abstract test base is the normal shape of inheritance, not
@@ -430,6 +550,7 @@ public class TestClassScannerTests
 
         Assert.Equal(0, result.SkippedNested);
         Assert.Equal(0, result.SkippedGeneric);
+        Assert.Equal(0, result.SkippedUnrunnable);
     }
 
     [Fact]
@@ -442,6 +563,7 @@ public class TestClassScannerTests
 
         Assert.Equal(0, result.SkippedNested);
         Assert.Equal(0, result.SkippedGeneric);
+        Assert.Equal(0, result.SkippedUnrunnable);
     }
 
     [Fact]
@@ -449,7 +571,8 @@ public class TestClassScannerTests
     {
         // Only the MSBuild-driven Scan overload knows where files live; the
         // pure-source path has nothing to report.
-        Assert.Empty(Discover(SplitBy.Class, "namespace Acme; [TestClass] public class A { }")
+        Assert.Empty(Discover(SplitBy.Class,
+            "namespace Acme; [TestClass] public class A { [TestMethod] public void T() { } }")
             .ExternalSources);
     }
 
@@ -507,8 +630,10 @@ public class TestClassScannerTests
     public void ExclusionsAreTalliedAcrossFiles()
     {
         var result = Discover(SplitBy.Class,
-            "namespace Acme; [TestClass] public class A { [TestClass] public class Inner { } }",
-            "namespace Acme; [TestClass] public class B { [TestClass] public class Inner { } }",
+            "namespace Acme; [TestClass] public class A " +
+            "{ [TestMethod] public void T() { } [TestClass] public class Inner { } }",
+            "namespace Acme; [TestClass] public class B " +
+            "{ [TestMethod] public void T() { } [TestClass] public class Inner { } }",
             "namespace Acme; [TestClass] public class Generic<T> { }");
 
         Assert.Equal(["Acme.A", "Acme.B"], result.Units.Select(u => u.Id));

@@ -35,6 +35,17 @@ public sealed record TestUnit
     /// </summary>
     public bool HasDataRows { get; init; }
 
+    /// <summary>
+    /// Whether this unit has anything that could actually run.
+    /// </summary>
+    /// <remarks>
+    /// Always true for a method unit, which already required a
+    /// <c>[TestMethod]</c>. A class unit sets it from a local test method, or
+    /// from a base list — the only signal syntax-only scanning has for
+    /// inherited tests.
+    /// </remarks>
+    public bool HasRunnableMembers { get; init; } = true;
+
     public string ClassFqn =>
         string.IsNullOrEmpty(Namespace) ? ClassName : $"{Namespace}.{ClassName}";
 
@@ -53,6 +64,9 @@ public sealed record TestUnit
     /// rejects it. <c>=</c> matches exactly rather than by prefix, keeping
     /// <c>LoginTest</c> and <c>LoginTestWithMfa</c> in separate tasks, and
     /// <c>ClassName</c> matches nothing without the namespace.
+    ///
+    /// Values are quoted for the shell; namespace and class name come from
+    /// identifier tokens, which cannot contain a double-quote.
     /// </remarks>
     public string[] FilterArgs =>
     [
