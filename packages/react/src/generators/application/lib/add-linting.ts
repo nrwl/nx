@@ -89,8 +89,6 @@ async function ignoreReactRouterFilesInEslintConfig(
   tree: Tree,
   projectRoot: string | undefined
 ): Promise<void> {
-  // Checked before `ensurePackage` so an Oxlint workspace does not install
-  // `@nx/eslint` only for `isEslintConfigSupported` to send it straight back.
   if (!detectLinters(tree).includes('eslint')) {
     return;
   }
