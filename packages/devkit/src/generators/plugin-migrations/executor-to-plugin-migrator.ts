@@ -724,12 +724,25 @@ function hoistCommonAndWrite<T>(
   // Deterministic target-name order for stable nx.json output.
   for (const targetName of [...residualsByTarget.keys()].sort()) {
     const residuals = residualsByTarget.get(targetName);
+    // A residual that carries `executor`/`command` gives the project's target
+    // an identity in the default (project.json) layer, so Nx's
+    // `resolveSourcePlugin` refuses to apply a `filter: { plugin }` default to
+    // it (see nx/.../project-configuration/target-defaults.ts). Centralizing
+    // such a target would silently drop the hoisted keys — the verification
+    // pass can't see it either, because that pass has no project.json layer —
+    // so keep the full residual per project instead. (@nx/detox is the one
+    // first-party generator that stamps a per-project `command`.)
+    const carriesIdentity = residuals.some(
+      (residual) =>
+        residual.executor !== undefined || residual.command !== undefined
+    );
     // Centralization only pays off when at least two projects share the same
     // target; a single migrated project keeps its full residual in
-    // project.json. The hoisted entry is scoped to this plugin's targets via
-    // its `filter`, and the verification pass reverts it if a non-migrated
-    // root still inherits it — the guard here is about de-bloat, not safety.
-    const common = residuals.length >= 2 ? computeStrictCommon(residuals) : {};
+    // project.json.
+    const common =
+      residuals.length >= 2 && !carriesIdentity
+        ? computeStrictCommon(residuals)
+        : {};
     commonByTarget.set(targetName, common);
   }
 
@@ -1121,9 +1134,15 @@ async function runVerificationPass<T>(
  * Phase 4 — run the single verification inference pass, then apply the
  * equivalence oracle. `retrieveProjectConfigurations` already merges
  * `targetDefaults` into the inferred targets, so the real post-migration
- * effective config for a target is `merge(project.json deviation, verified
- * inferred+targetDefaults)`. It must deep-equal `baselineFinal` (the previous
- * engine's migrated effective config, from Phase 2). Any project that fails —
+ * effective config for a target is approximated by `merge(project.json
+ * deviation, verified inferred+targetDefaults)`. It must deep-equal
+ * `baselineFinal` (the previous engine's migrated effective config, from Phase
+ * 2). CAVEAT: this pass runs with no `project.json` (default) layer, so it
+ * cannot observe cases where the deviation's own presence changes whether a
+ * `targetDefaults` entry applies at all — e.g. a `filter: { plugin }` entry is
+ * rejected by `resolveSourcePlugin` once the residual carries `executor` /
+ * `command`. Those targets are kept per-project at the hoist site (they never
+ * reach a plugin-scoped entry), not caught here. Any project that fails —
  * or that the intended target no longer infers for at all — is restored to the
  * exact pre-centralization migration output (a full residual; an empty
  * residual removes the target), and every fallback is summarized in a single

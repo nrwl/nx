@@ -706,6 +706,59 @@ describe('Phase 3 — strict-common hoist', () => {
     );
   });
 
+  it('does not centralize a target whose residual carries a per-project command', async () => {
+    // A residual carrying `executor`/`command` gives the project's target an
+    // identity in the default (project.json) layer, so Nx's
+    // `resolveSourcePlugin` refuses to apply a `filter: { plugin }` default to
+    // it — the hoisted keys would be silently dropped. This mirrors @nx/detox,
+    // whose postTargetTransformer stamps a per-project `command`.
+    ctx = setupFixture('hoist-identity-residual');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: {
+          options: { config: SYNTHETIC_CONFIG_FILE, shared: 'value' },
+        },
+      });
+    }
+    const plugin = createSyntheticPlugin();
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      [
+        {
+          executors: [SYNTHETIC_EXECUTOR],
+          targetPluginOptionMapper: (targetName: string) => ({ targetName }),
+          postTargetTransformer: (target: any, _tree, { projectName }) => {
+            if (target.options) {
+              delete target.options.config;
+            }
+            // per-project command, like @nx/detox's processBuildOptions
+            target.command = `nx run ${projectName}:build`;
+            return target;
+          },
+        },
+      ]
+    );
+
+    // the shared `options.shared` must NOT be hoisted — a plugin-scoped default
+    // would be dropped by Nx because each residual carries `command`.
+    expect(readNxJson(ctx.tree).targetDefaults.build).toEqual({ cache: true });
+    for (const name of ['app1', 'app2']) {
+      const pj = readJson(ctx.tree, `${name}/project.json`);
+      expect(pj.targets.build).toEqual({
+        command: `nx run ${name}:build`,
+        options: { shared: 'value' },
+      });
+    }
+  });
+
   it('D: preserves pre-existing target-name default keys the hoist does not touch', async () => {
     ctx = setupFixture('hoist-preserve-existing');
     for (const name of ['app1', 'app2']) {
