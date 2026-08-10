@@ -269,7 +269,7 @@
     "remark-gfm": "^4.0.0",
     "remark-stringify": "^11.0.0",
     "resolve.exports": "2.0.3",
-    "rollup": "^4.14.0",
+    "rollup": "^4.62.4",
     "rxjs": "catalog:",
     "sass": "catalog:css",
     "sass-embedded": "catalog:css",
