@@ -20,6 +20,15 @@ public sealed record TestDiscoveryResult
     public int SkippedGeneric { get; init; }
 
     /// <summary>
+    /// Test classes and methods that would never produce a passing result:
+    /// <c>[Ignore]</c>d, not public without <c>[assembly: DiscoverInternals]</c>,
+    /// or (in class mode) a class with no local test method and no base class
+    /// that might carry inherited ones. Excluded so a filter matching zero
+    /// tests can't turn a previously-green suite red.
+    /// </summary>
+    public int SkippedUnrunnable { get; init; }
+
+    /// <summary>
     /// Workspace-relative paths of scanned sources that lie outside the project
     /// directory — linked files, shared sources, anything a
     /// <c>&lt;Compile Include="../..." /&gt;</c> pulls in.
