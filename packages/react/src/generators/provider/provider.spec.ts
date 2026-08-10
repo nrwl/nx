@@ -41,7 +41,7 @@ describe('@nx/react:provider', () => {
       directory: 'apps/product-catalog',
       bundler: 'vite',
     });
-    const config = tree.read('apps/product-catalog/vite.config.ts', 'utf-8');
+    const config = tree.read('apps/product-catalog/vite.config.mts', 'utf-8');
     expect(config).toContain(`name: 'product_catalog'`);
   });
 
@@ -51,7 +51,7 @@ describe('@nx/react:provider', () => {
       bundler: 'vite',
       port: 7777,
     });
-    const config = tree.read('apps/shell/vite.config.ts', 'utf-8');
+    const config = tree.read('apps/shell/vite.config.mts', 'utf-8');
     expect(config).toContain('const PORT = 7777');
   });
 
@@ -62,7 +62,7 @@ describe('@nx/react:provider', () => {
       exposeName: 'Cart',
     });
     expect(tree.exists('apps/cart/src/Cart.tsx')).toBe(true);
-    const config = tree.read('apps/cart/vite.config.ts', 'utf-8');
+    const config = tree.read('apps/cart/vite.config.mts', 'utf-8');
     expect(config).toContain(`'./Cart': './src/Cart.tsx'`);
   });
 
@@ -80,7 +80,7 @@ describe('@nx/react:provider', () => {
     const component = tree.read('apps/cart/src/CartWidget.tsx', 'utf-8') ?? '';
     expect(component).toContain('export function CartWidget()');
     // Expose key keeps the raw value; file points at the component.
-    const config = tree.read('apps/cart/vite.config.ts', 'utf-8') ?? '';
+    const config = tree.read('apps/cart/vite.config.mts', 'utf-8') ?? '';
     expect(config).toContain(`'./cart-widget': './src/CartWidget.tsx'`);
     // bootstrap imports the component identifier.
     const bootstrap = tree.read('apps/cart/src/bootstrap.tsx', 'utf-8') ?? '';
@@ -112,7 +112,7 @@ describe('@nx/react:provider', () => {
   // Providers must serve cross-origin so a consumer on a
   // different port can fetch mf-manifest.json + chunks without a CORS error.
   it.each<[SupportedBundler, string, RegExp]>([
-    ['vite', 'vite.config.ts', /cors:\s*true/],
+    ['vite', 'vite.config.mts', /cors:\s*true/],
     ['rsbuild', 'rsbuild.config.ts', /'Access-Control-Allow-Origin':\s*'\*'/],
     ['rspack', 'rspack.config.ts', /'Access-Control-Allow-Origin':\s*'\*'/],
   ])(
