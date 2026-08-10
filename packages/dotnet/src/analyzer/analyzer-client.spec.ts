@@ -29,6 +29,8 @@ const mocks = {
   safeSpawn: vi.fn(),
   killChildOnHostExit: vi.fn(),
   killProcessTreeGraceful: vi.fn(() => Promise.resolve()),
+  hashFile: vi.fn(),
+  hashArray: vi.fn(),
 };
 
 vi.mock('@nx/devkit/internal', async () => ({
@@ -36,6 +38,8 @@ vi.mock('@nx/devkit/internal', async () => ({
   isCI: () => false,
   hashWithWorkspaceContext: (...args: unknown[]) =>
     mocks.hashWithWorkspaceContext(...args),
+  hashFile: (filePath: string) => mocks.hashFile(filePath),
+  hashArray: (content: string[]) => mocks.hashArray(content),
   // Derived from the options so a different registration lands on a different
   // cache file, which is what the real per-options filename does.
   hashObject: (options: unknown) => JSON.stringify(options ?? null),
@@ -66,6 +70,7 @@ vi.mock('@nx/devkit/internal', async () => ({
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/ws',
+  hashArray: (content: string[]) => mocks.hashArray(content),
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
 }));
 
@@ -97,6 +102,8 @@ describe('analyzeProjects', () => {
     mocks.hashWithWorkspaceContext.mockImplementation(async (_root, globs) =>
       globs.join('|')
     );
+    mocks.hashFile.mockImplementation((filePath) => `hash:${filePath}`);
+    mocks.hashArray.mockImplementation((content) => content.join('|'));
     ({
       analyzeProjects,
       getAnalysisTimeoutMs,
@@ -369,6 +376,9 @@ describe('analyzer-client caching', () => {
   const hashedGlobs = () =>
     mocks.hashWithWorkspaceContext.mock.calls.map(([, g]) => g);
 
+  /** File paths passed to hashFile, in call order. */
+  const hashedFiles = () => mocks.hashFile.mock.calls.map(([path]) => path);
+
   /** How many times the analyzer was actually spawned. */
   const spawnCount = () => mocks.safeSpawn.mock.calls.length;
 
@@ -381,6 +391,9 @@ describe('analyzer-client caching', () => {
     mocks.hashWithWorkspaceContext.mockImplementation(async (_root, globs) =>
       globs.join('|')
     );
+    // Same, for the exact-path hashes external sources go through instead.
+    mocks.hashFile.mockImplementation((filePath) => `hash:${filePath}`);
+    mocks.hashArray.mockImplementation((content) => content.join('|'));
     ({ analyzeProjects, clearCache } = await import('./analyzer-client'));
   });
 
@@ -458,10 +471,25 @@ describe('analyzer-client caching', () => {
 
       await analyzeProjects(PROJECT_FILES);
 
-      expect(hashedGlobs()[1]).toEqual([
-        'apps/it/**/*.cs',
-        'libs/shared-tests/Linked.cs',
-      ]);
+      expect(hashedGlobs()[1]).toEqual(['apps/it/**/*.cs']);
+      expect(hashedFiles()).toEqual(['/ws/libs/shared-tests/Linked.cs']);
+    });
+
+    it('hashes an external source by its exact path, not as a glob pattern', async () => {
+      // atomizedExternalSources are literal paths a <Compile Include="..."> named,
+      // not patterns. Folded into the glob group above, a path containing a
+      // metacharacter would silently change what the group matches — a leading
+      // "!" makes it an exclusion, "*"/"["/"{" widen it into a pattern. Hashing
+      // it by exact path instead means the native glob matcher never sees it.
+      analyzerReturns({
+        ...ATOMIZED_ANALYSIS,
+        atomizedExternalSources: ['libs/!weird[name]/Linked.cs'],
+      });
+
+      await analyzeProjects(PROJECT_FILES);
+
+      expect(hashedFiles()).toEqual(['/ws/libs/!weird[name]/Linked.cs']);
+      expect(hashedGlobs()[1]).toEqual(['apps/it/**/*.cs']);
     });
 
     it('re-runs when a linked source outside the project root changes', async () => {
@@ -473,10 +501,10 @@ describe('analyzer-client caching', () => {
       expect(spawnCount()).toBe(1);
 
       clearCache();
-      mocks.hashWithWorkspaceContext.mockImplementation(async (_root, globs) =>
-        globs.some((g) => g.includes('shared-tests'))
+      mocks.hashFile.mockImplementation((filePath) =>
+        filePath.includes('shared-tests')
           ? 'linked-source-changed'
-          : globs.join('|')
+          : `hash:${filePath}`
       );
 
       await analyzeProjects(PROJECT_FILES);
