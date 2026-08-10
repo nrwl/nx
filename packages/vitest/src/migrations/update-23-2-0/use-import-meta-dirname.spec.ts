@@ -177,6 +177,52 @@ export default { root: dir };
     expect(tree.read('packages/ui/vite.config.mts', 'utf-8')).toBe(config);
   });
 
+  it('leaves class members, accessors and enum members alone', async () => {
+    tree.write(
+      'packages/ui/vite.config.mts',
+      `class Paths {
+  __dirname = 1;
+  get __dirname2() {
+    return __dirname;
+  }
+}
+
+enum E {
+  __dirname = 'a',
+}
+
+export default { root: __dirname, Paths, E };
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('packages/ui/vite.config.mts', 'utf-8')).toBe(
+      `class Paths {
+  __dirname = 1;
+  get __dirname2() {
+    return import.meta.dirname;
+  }
+}
+
+enum E {
+  __dirname = 'a',
+}
+
+export default { root: import.meta.dirname, Paths, E };
+`
+    );
+  });
+
+  it('leaves a config that does not parse alone', async () => {
+    const broken = `export default { root: __dirname,\n`;
+    tree.write('packages/ui/vite.config.mts', broken);
+
+    await migration(tree);
+
+    expect(tree.read('packages/ui/vite.config.mts', 'utf-8')).toBe(broken);
+  });
+
   it('leaves non-config files alone', async () => {
     const source = `export const root = __dirname;\n`;
     tree.write('packages/ui/src/other.mts', source);

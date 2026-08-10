@@ -50,6 +50,14 @@ export function rewriteDirname(source: string): string {
     ts.ScriptKind.TS
   );
 
+  // A config TypeScript can only error-recover on may not mean what its AST
+  // says, so leave it for a human rather than rewrite it blind.
+  if (
+    (sourceFile as { parseDiagnostics?: unknown[] }).parseDiagnostics?.length
+  ) {
+    return source;
+  }
+
   const references: Node[] = [];
   let bailOut = false;
 
@@ -83,52 +91,48 @@ export function rewriteDirname(source: string): string {
 }
 
 /**
- * `bail` abandons the whole file: the config either declares its own
- * `__dirname` (already native-loader safe) or uses it as a shorthand property,
- * where rewriting the value would also rewrite the key. `skip` leaves the one
- * identifier alone; it names a property or an imported binding rather than the
- * CJS global, and `import.meta.dirname` is not legal in those positions.
+ * `bail` abandons the whole file: something binds `__dirname` in scope, so the
+ * identifier no longer means the CJS global, or it is a shorthand property
+ * where key and value are one token. `skip` leaves a single identifier alone.
+ *
+ * The name-position test is inverted on purpose - anything sitting in a
+ * parent's `name` or `propertyName` slot is excluded by default, so node kinds
+ * nobody enumerated (class fields, accessors, enum members) cannot be rewritten
+ * into invalid syntax.
  */
 function classify(node: Node): 'bail' | 'reference' | 'skip' {
-  const parent = node.parent;
+  const parent = node.parent as
+    | (Node & { name?: Node; propertyName?: Node })
+    | undefined;
   if (!parent) {
     return 'reference';
-  }
-  // The left side of a rename: `{ __dirname: dir }`, `__dirname as dir`.
-  // Checked before the binding-name cases below, which share these node kinds.
-  if (
-    (ts!.isBindingElement(parent) ||
-      ts!.isImportSpecifier(parent) ||
-      ts!.isExportSpecifier(parent)) &&
-    parent.propertyName === node
-  ) {
-    return 'skip';
-  }
-  // `foo.__dirname`, `{ __dirname: x }`.
-  if (
-    (ts!.isPropertyAccessExpression(parent) ||
-      ts!.isPropertyAssignment(parent) ||
-      ts!.isPropertySignature(parent) ||
-      ts!.isMethodDeclaration(parent)) &&
-    parent.name === node
-  ) {
-    return 'skip';
   }
   if (ts!.isShorthandPropertyAssignment(parent)) {
     return 'bail';
   }
-  if (
-    (ts!.isVariableDeclaration(parent) ||
-      ts!.isParameter(parent) ||
-      ts!.isBindingElement(parent) ||
-      ts!.isFunctionDeclaration(parent) ||
-      ts!.isImportSpecifier(parent) ||
-      ts!.isImportClause(parent) ||
-      ts!.isNamespaceImport(parent) ||
-      ts!.isExportSpecifier(parent)) &&
-    (parent as { name?: Node }).name === node
-  ) {
+  if (bindsDirname(parent, node)) {
     return 'bail';
   }
+  if (parent.name === node || parent.propertyName === node) {
+    return 'skip';
+  }
   return 'reference';
+}
+
+/** Declarations that put a new `__dirname` in scope, shadowing the global. */
+function bindsDirname(parent: Node & { name?: Node }, node: Node): boolean {
+  if (parent.name !== node) {
+    return false;
+  }
+  return (
+    ts!.isVariableDeclaration(parent) ||
+    ts!.isParameter(parent) ||
+    ts!.isBindingElement(parent) ||
+    ts!.isFunctionDeclaration(parent) ||
+    ts!.isClassDeclaration(parent) ||
+    ts!.isImportClause(parent) ||
+    ts!.isImportSpecifier(parent) ||
+    ts!.isNamespaceImport(parent) ||
+    ts!.isExportSpecifier(parent)
+  );
 }
