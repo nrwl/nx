@@ -50,7 +50,7 @@
     "linter": {
       "description": "The tool to use for running lint checks. Defaults to the linter the workspace already uses.",
       "type": "string",
-      "enum": ["eslint", "oxlint"]
+      "enum": ["eslint", "oxlint", "none"]
     },
     "dynamic": {
       "type": "boolean",
