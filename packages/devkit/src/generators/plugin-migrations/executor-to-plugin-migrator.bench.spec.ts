@@ -154,9 +154,20 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
     expect(inferencePasses).toBeLessThan(10);
     expect(inferencePasses).toBe(4);
 
-    // De-bloat: centralized config must not exceed the per-project executor
-    // config it replaced.
-    expect(postBytes).toBeLessThanOrEqual(preBytes);
+    // De-bloat: centralization must MATERIALLY shrink the emitted config, not
+    // merely avoid growing it. For this fixture (uniform config + a handful of
+    // deviating projects) shared config collapses from per-project copies into
+    // one plugin-scoped default per target, so the total compresses well past
+    // 2x. A ratio bound pins the de-bloat claim the PR body makes; a plain
+    // `<=` would pass even if nothing were centralized.
+    const compressionRatio = preBytes / postBytes;
+    // eslint-disable-next-line no-console
+    console.log(
+      `[bench] config bytes: ${preBytes} -> ${postBytes} (${compressionRatio.toFixed(
+        2
+      )}x smaller)`
+    );
+    expect(compressionRatio).toBeGreaterThan(2);
 
     // Shared config is centralized as a plugin-scoped entry; only the
     // deviating projects keep an override.
